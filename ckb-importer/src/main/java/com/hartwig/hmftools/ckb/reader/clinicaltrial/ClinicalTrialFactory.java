@@ -114,7 +114,7 @@ public class ClinicalTrialFactory {
         clinicalTrailMolecularProfileChecker.check(jsonObject);
 
         return ImmutableMolecularProfileInfo.builder()
-                .id(JsonFunctions.nullableString(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
                 .build();
     }
@@ -129,7 +129,7 @@ public class ClinicalTrialFactory {
             clinicalTrailTherapiesChecker.check(therapyObject);
 
             therapies.add(ImmutableTherapyInfo.builder()
-                    .id(JsonFunctions.string(therapyObject, "id"))
+                    .id(JsonFunctions.integer(therapyObject, "id"))
                     .therapyName(JsonFunctions.string(therapyObject, "therapyName"))
                     .synonyms(JsonFunctions.optionalNullableString(therapyObject, "synonyms"))
                     .build());
@@ -147,7 +147,7 @@ public class ClinicalTrialFactory {
             clinicalTrailIndicationsChecker.check(clinicalTrialIndicationObject);
 
             clinicalTrialsIndications.add(ImmutableIndicationInfo.builder()
-                    .id(JsonFunctions.string(clinicalTrialIndicationObject, "id"))
+                    .id(JsonFunctions.integer(clinicalTrialIndicationObject, "id"))
                     .name(JsonFunctions.string(clinicalTrialIndicationObject, "name"))
                     .source(JsonFunctions.string(clinicalTrialIndicationObject, "source"))
                     .build());

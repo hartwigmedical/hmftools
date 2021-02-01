@@ -56,7 +56,7 @@ public class TreatmentApproachFactory {
                     treatmentApprochObjectChecker.check(treatmentApprochEntryObject);
 
                     treatmentAppraoch.add(ImmutableTreatmentApproach.builder()
-                            .id(JsonFunctions.string(treatmentApprochEntryObject, "id"))
+                            .id(JsonFunctions.integer(treatmentApprochEntryObject, "id"))
                             .name(JsonFunctions.string(treatmentApprochEntryObject, "name"))
                             .profileName(JsonFunctions.string(treatmentApprochEntryObject, "profileName"))
                             .drugClass(treatmentApprochEntryObject.has("drugClass") && !treatmentApprochEntryObject.get("drugClass")
@@ -83,7 +83,7 @@ public class TreatmentApproachFactory {
         drugClassObjectChecker.check(jsonObject);
 
         return ImmutableDrugClassInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .drugClass(JsonFunctions.string(jsonObject, "drugClass"))
                 .build();
     }
@@ -94,7 +94,7 @@ public class TreatmentApproachFactory {
         therapyObjectChecker.check(jsonObject);
 
         return ImmutableTherapyInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
                 .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
                 .build();
@@ -110,7 +110,7 @@ public class TreatmentApproachFactory {
             referenceObjectChecker.check(referenceJsonObject);
 
             references.add(ImmutableReferenceInfo.builder()
-                    .id(JsonFunctions.string(referenceJsonObject, "id"))
+                    .id(JsonFunctions.integer(referenceJsonObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
                     .title(JsonFunctions.string(referenceJsonObject, "title"))
                     .url(JsonFunctions.nullableString(referenceJsonObject, "url"))

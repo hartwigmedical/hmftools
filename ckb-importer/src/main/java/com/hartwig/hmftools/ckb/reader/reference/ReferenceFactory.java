@@ -67,7 +67,7 @@ public class ReferenceFactory {
                     referenceChecker.check(referenceEntryObject);
 
                     references.add(ImmutableReference.builder()
-                            .id(JsonFunctions.string(referenceEntryObject, "id"))
+                            .id(JsonFunctions.integer(referenceEntryObject, "id"))
                             .pubMedId(JsonFunctions.nullableString(referenceEntryObject, "pubMedId"))
                             .title(JsonFunctions.nullableString(referenceEntryObject, "title"))
                             .url(JsonFunctions.nullableString(referenceEntryObject, "url"))
@@ -104,7 +104,7 @@ public class ReferenceFactory {
             drugChecker.check(drugJsonObject);
 
             referenceDrugs.add(ImmutableDrugInfo.builder()
-                    .id(JsonFunctions.string(drugJsonObject, "id"))
+                    .id(JsonFunctions.integer(drugJsonObject, "id"))
                     .drugName(JsonFunctions.string(drugJsonObject, "drugName"))
                     .term(JsonFunctions.stringList(drugJsonObject, "terms"))
                     .build());
@@ -123,7 +123,7 @@ public class ReferenceFactory {
             geneChecker.check(geneJsonObject);
 
             referenceGenes.add(ImmutableGeneInfo.builder()
-                    .id(JsonFunctions.string(geneJsonObject, "id"))
+                    .id(JsonFunctions.integer(geneJsonObject, "id"))
                     .geneSymbol(JsonFunctions.string(geneJsonObject, "geneSymbol"))
                     .term(JsonFunctions.stringList(geneJsonObject, "terms"))
                     .build());
@@ -142,7 +142,7 @@ public class ReferenceFactory {
             evidenceChecker.check(evidenceJsonObject);
 
             referenceEvidences.add(ImmutableEvidenceInfo.builder()
-                    .id(JsonFunctions.string(evidenceJsonObject, "id"))
+                    .id(JsonFunctions.integer(evidenceJsonObject, "id"))
                     .approvalStatus(JsonFunctions.string(evidenceJsonObject, "approvalStatus"))
                     .evidenceType(JsonFunctions.string(evidenceJsonObject, "evidenceType"))
                     .efficacyEvidence(JsonFunctions.string(evidenceJsonObject, "efficacyEvidence"))
@@ -166,7 +166,7 @@ public class ReferenceFactory {
         molecularProfileChecker.check(jsonObject);
 
         return ImmutableMolecularProfileInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
                 .build();
     }
@@ -177,7 +177,7 @@ public class ReferenceFactory {
         therapyChecker.check(jsonObject);
 
         return ImmutableTherapyInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
                 .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
                 .build();
@@ -189,7 +189,7 @@ public class ReferenceFactory {
         indicationChecker.check(jsonObject);
 
         return ImmutableIndicationInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
                 .build();
@@ -205,7 +205,7 @@ public class ReferenceFactory {
             referenceChecker.check(referenceJsonObject);
 
             references.add(ImmutableReferenceInfo.builder()
-                    .id(JsonFunctions.string(referenceJsonObject, "id"))
+                    .id(JsonFunctions.integer(referenceJsonObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
                     .title(JsonFunctions.nullableString(referenceJsonObject, "title"))
                     .url(JsonFunctions.nullableString(referenceJsonObject, "url"))
@@ -224,7 +224,7 @@ public class ReferenceFactory {
             therapyChecker.check(therapyJsonObject);
 
             referenceTherapies.add(ImmutableTherapyInfo.builder()
-                    .id(JsonFunctions.string(therapyJsonObject, "id"))
+                    .id(JsonFunctions.integer(therapyJsonObject, "id"))
                     .therapyName(JsonFunctions.string(therapyJsonObject, "therapyName"))
                     .synonyms(JsonFunctions.nullableString(therapyJsonObject, "synonyms"))
                     .build());
@@ -244,7 +244,7 @@ public class ReferenceFactory {
             treatmentApproachChecker.check(treatmentApproachJsonObject);
 
             referenceTreatmentApproaches.add(ImmutableTreatmentApproachInfo.builder()
-                    .id(JsonFunctions.string(treatmentApproachJsonObject, "id"))
+                    .id(JsonFunctions.integer(treatmentApproachJsonObject, "id"))
                     .name(JsonFunctions.string(treatmentApproachJsonObject, "name"))
                     .profileName(JsonFunctions.string(treatmentApproachJsonObject, "profileName"))
                     .build());
@@ -264,7 +264,7 @@ public class ReferenceFactory {
             variantChecker.check(variantJsonObject);
 
             referenceVariants.add(ImmutableVariantInfo.builder()
-                    .id(JsonFunctions.string(variantJsonObject, "id"))
+                    .id(JsonFunctions.integer(variantJsonObject, "id"))
                     .fullName(JsonFunctions.string(variantJsonObject, "fullName"))
                     .impact(JsonFunctions.nullableString(variantJsonObject, "impact"))
                     .proteinEffect(JsonFunctions.nullableString(variantJsonObject, "proteinEffect"))

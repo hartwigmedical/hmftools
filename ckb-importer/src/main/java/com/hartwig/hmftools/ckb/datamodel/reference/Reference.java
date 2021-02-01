@@ -17,8 +17,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Reference {
 
-    @NotNull
-    public abstract String id();
+    public abstract int id();
 
     @Nullable
     public abstract String pubMedId();

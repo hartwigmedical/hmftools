@@ -60,7 +60,7 @@ public class GlobalTherapyApprovalStatusFactory {
                     globalTherapyApprovalStatusChecker.check(globalTherapyApprovalStatusEntryObject);
 
                     globalTherapyApprovalStatusses.add(ImmutableGlobalTherapyApprovalStatus.builder()
-                            .totalCount(JsonFunctions.string(globalTherapyApprovalStatusEntryObject, "totalCount"))
+                            .totalCount(JsonFunctions.integer(globalTherapyApprovalStatusEntryObject, "totalCount"))
                             .globalApprovalStatus(extractGlobalTherapyApprovalStatus(globalTherapyApprovalStatusEntryObject.getAsJsonArray(
                                     "globalTherapyApprovalStatuses")))
                             .build());
@@ -84,7 +84,7 @@ public class GlobalTherapyApprovalStatusFactory {
             globalTherapyApprovalStatusListChecker.check(globalTherapyApprovalStatusJsonObject);
 
             globalTherapyApprovalStatusses.add(ImmutableGlobalApprovalStatusInfo.builder()
-                    .id(JsonFunctions.string(globalTherapyApprovalStatusJsonObject, "id"))
+                    .id(JsonFunctions.integer(globalTherapyApprovalStatusJsonObject, "id"))
                     .therapy(extractGlobalTherapyApprovalStatusTherapy(globalTherapyApprovalStatusJsonObject.getAsJsonObject("therapy")))
                     .indication(extractGlobalTherapyApprovalStatusIndication(globalTherapyApprovalStatusJsonObject.getAsJsonObject(
                             "indication")))
@@ -104,7 +104,7 @@ public class GlobalTherapyApprovalStatusFactory {
         globalTherapyApprovalStatusTherapyChecker.check(jsonObject);
 
         return ImmutableTherapyInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
                 .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
                 .build();
@@ -117,7 +117,7 @@ public class GlobalTherapyApprovalStatusFactory {
         globalTherapyApprovalStatusIndicationChecker.check(jsonObject);
 
         return ImmutableIndicationInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
                 .build();
@@ -131,7 +131,7 @@ public class GlobalTherapyApprovalStatusFactory {
         globalTherapyApprovalStatusMolecularProfileChecker.check(jsonObject);
 
         return ImmutableMolecularProfileInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
                 .build();
     }

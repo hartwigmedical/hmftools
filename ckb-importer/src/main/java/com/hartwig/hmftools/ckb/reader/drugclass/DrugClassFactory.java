@@ -53,7 +53,7 @@ public class DrugClassFactory {
                     drugsClassChecker.check(drugClassEntryObject);
 
                     drugClasses.add(ImmutableDrugClass.builder()
-                            .id(JsonFunctions.string(drugClassEntryObject, "id"))
+                            .id(JsonFunctions.integer(drugClassEntryObject, "id"))
                             .drugClass(JsonFunctions.string(drugClassEntryObject, "drugClass"))
                             .createDate(JsonFunctions.string(drugClassEntryObject, "createDate"))
                             .drug(retrieveDrugs(drugClassEntryObject.getAsJsonArray("drugs")))
@@ -75,7 +75,7 @@ public class DrugClassFactory {
             drugsClassDrugChecker.check(drugsObject);
 
             drugs.add(ImmutableDrugInfo.builder()
-                    .id(JsonFunctions.string(drugsObject, "id"))
+                    .id(JsonFunctions.integer(drugsObject, "id"))
                     .drugName(JsonFunctions.string(drugsObject, "drugName"))
                     .term(JsonFunctions.optionalStringList(drugsObject, "terms"))
                     .build());
@@ -92,7 +92,7 @@ public class DrugClassFactory {
             drugsClassTreatmentApprochChecker.check(treatmentApproachObject);
 
             treatmentApproaches.add(ImmutableTreatmentApproachInfo.builder()
-                    .id(JsonFunctions.string(treatmentApproachObject, "id"))
+                    .id(JsonFunctions.integer(treatmentApproachObject, "id"))
                     .name(JsonFunctions.string(treatmentApproachObject, "name"))
                     .profileName(JsonFunctions.string(treatmentApproachObject, "profileName"))
                     .build());

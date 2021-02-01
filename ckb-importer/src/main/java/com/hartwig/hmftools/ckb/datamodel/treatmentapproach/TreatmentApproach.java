@@ -14,8 +14,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class TreatmentApproach {
 
-    @NotNull
-    public abstract String id();
+    public abstract int id();
 
     @NotNull
     public abstract String name();

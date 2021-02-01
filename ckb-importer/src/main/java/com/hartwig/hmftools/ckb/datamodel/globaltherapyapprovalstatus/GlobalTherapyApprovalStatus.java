@@ -12,8 +12,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GlobalTherapyApprovalStatus {
 
-    @NotNull
-    public abstract String totalCount();
+    public abstract int totalCount();
 
     @NotNull
     public abstract List<GlobalApprovalStatusInfo> globalApprovalStatus();

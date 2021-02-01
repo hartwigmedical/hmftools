@@ -99,6 +99,16 @@ public final class JsonFunctions {
         return string(object, field);
     }
 
+    public static int integer(@NotNull JsonObject object, @NotNull String field) {
+        assert object.has(field);
+
+        JsonElement element = object.get(field);
+        if (!element.isJsonPrimitive()) {
+            LOGGER.warn("Converting {} to String for element {}.", field, element);
+        }
+        return element.getAsJsonPrimitive().getAsInt();
+    }
+
     @Nullable
     public static String nullableString(@NotNull JsonObject object, @NotNull String field) {
         assert object.has(field);

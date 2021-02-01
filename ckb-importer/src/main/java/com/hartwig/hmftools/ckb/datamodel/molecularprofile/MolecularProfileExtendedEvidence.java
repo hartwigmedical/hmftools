@@ -12,8 +12,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MolecularProfileExtendedEvidence {
 
-    @NotNull
-    public abstract String totalCount();
+    public abstract int totalCount();
 
     @NotNull
     public abstract List<EvidenceInfo> evidence();

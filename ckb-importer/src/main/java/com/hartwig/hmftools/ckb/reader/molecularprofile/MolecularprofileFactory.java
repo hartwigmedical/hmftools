@@ -68,7 +68,7 @@ public class MolecularprofileFactory {
                     molecularProfileChecker.check(molecularProfileEntryObject);
 
                     molecularProfiles.add(ImmutableMolecularProfile.builder()
-                            .id(JsonFunctions.string(molecularProfileEntryObject, "id"))
+                            .id(JsonFunctions.integer(molecularProfileEntryObject, "id"))
                             .profileName(JsonFunctions.string(molecularProfileEntryObject, "profileName"))
                             .geneVariant(extractGeneVariant(molecularProfileEntryObject.getAsJsonArray("geneVariants")))
                             .treatmentApproach(extractProfileTreatmentApproach(molecularProfileEntryObject.getAsJsonArray(
@@ -103,7 +103,7 @@ public class MolecularprofileFactory {
             geneVariantChecker.check(geneVariantJsonObject);
 
             geneVariants.add(ImmutableVariantInfo.builder()
-                    .id(JsonFunctions.string(geneVariantJsonObject, "id"))
+                    .id(JsonFunctions.integer(geneVariantJsonObject, "id"))
                     .fullName(JsonFunctions.string(geneVariantJsonObject, "fullName"))
                     .impact(JsonFunctions.nullableString(geneVariantJsonObject, "impact"))
                     .proteinEffect(JsonFunctions.nullableString(geneVariantJsonObject, "proteinEffect"))
@@ -123,7 +123,7 @@ public class MolecularprofileFactory {
             profileTreatmentApproachChecker.check(profileTreatmentApproachJsonObject);
 
             profileTreatmentApproaches.add(ImmutableTreatmentApproachInfo.builder()
-                    .id(JsonFunctions.string(profileTreatmentApproachJsonObject, "id"))
+                    .id(JsonFunctions.integer(profileTreatmentApproachJsonObject, "id"))
                     .name(JsonFunctions.string(profileTreatmentApproachJsonObject, "name"))
                     .profileName(JsonFunctions.string(profileTreatmentApproachJsonObject, "profileName"))
                     .build());
@@ -138,7 +138,7 @@ public class MolecularprofileFactory {
         complexMolecularProfileEvidenceChecker.check(jsonObject);
 
         return ImmutableMolecularProfileExtendedEvidence.builder()
-                .totalCount(JsonFunctions.string(jsonObject, "totalCount"))
+                .totalCount(JsonFunctions.integer(jsonObject, "totalCount"))
                 .evidence(extractComplexMolecularProfileEvidenceList(jsonObject.getAsJsonArray(
                         "complexMolecularProfileEvidence")))
                 .build();
@@ -156,7 +156,7 @@ public class MolecularprofileFactory {
             complexMolecularProfileEvidenceListChecker.check(complexMolecularProfileEvidenceJsonObject);
 
             complexMolecularProfileEvidenceList.add(ImmutableEvidenceInfo.builder()
-                    .id(JsonFunctions.string(complexMolecularProfileEvidenceJsonObject, "id"))
+                    .id(JsonFunctions.integer(complexMolecularProfileEvidenceJsonObject, "id"))
                     .approvalStatus(JsonFunctions.string(complexMolecularProfileEvidenceJsonObject, "approvalStatus"))
                     .evidenceType(JsonFunctions.string(complexMolecularProfileEvidenceJsonObject, "evidenceType"))
                     .efficacyEvidence(JsonFunctions.string(complexMolecularProfileEvidenceJsonObject, "efficacyEvidence"))
@@ -180,7 +180,7 @@ public class MolecularprofileFactory {
         molecularProfileChecker.check(jsonObject);
 
         return ImmutableMolecularProfileInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
                 .build();
     }
@@ -191,7 +191,7 @@ public class MolecularprofileFactory {
         therapyChecker.check(jsonObject);
 
         return ImmutableTherapyInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
                 .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
                 .build();
@@ -203,7 +203,7 @@ public class MolecularprofileFactory {
         indicationChecker.check(jsonObject);
 
         return ImmutableIndicationInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
                 .build();
@@ -219,7 +219,7 @@ public class MolecularprofileFactory {
             referenceChecker.check(referenceJsonObject);
 
             references.add(ImmutableReferenceInfo.builder()
-                    .id(JsonFunctions.string(referenceJsonObject, "id"))
+                    .id(JsonFunctions.integer(referenceJsonObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
                     .title(JsonFunctions.nullableString(referenceJsonObject, "title"))
                     .url(JsonFunctions.nullableString(referenceJsonObject, "url"))
@@ -239,7 +239,7 @@ public class MolecularprofileFactory {
             relevantTreatmentApproachChecker.check(relevantTreatmentApproachJsonObject);
 
             relevantTreatmentApproaches.add(ImmutableTreatmentApproachInfo.builder()
-                    .id(JsonFunctions.string(relevantTreatmentApproachJsonObject, "id"))
+                    .id(JsonFunctions.integer(relevantTreatmentApproachJsonObject, "id"))
                     .name(JsonFunctions.string(relevantTreatmentApproachJsonObject, "name"))
                     .profileName(JsonFunctions.string(relevantTreatmentApproachJsonObject, "profileName"))
                     .build());
@@ -254,7 +254,7 @@ public class MolecularprofileFactory {
         treatmentApproachEvidenceeChecker.check(jsonObject);
 
         return ImmutableMolecularProfileExtendedEvidence.builder()
-                .totalCount(JsonFunctions.string(jsonObject, "totalCount"))
+                .totalCount(JsonFunctions.integer(jsonObject, "totalCount"))
                 .evidence(extractTreatmentApproachEvidenceList(jsonObject.getAsJsonArray("treatmentApproachEvidence")))
                 .build();
     }
@@ -270,7 +270,7 @@ public class MolecularprofileFactory {
             treatmentApproachEvidenceListChecker.check(treatmentApproachEvidenceJsonObject);
 
             treatmentApproachEvidenceList.add(ImmutableEvidenceInfo.builder()
-                    .id(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "id"))
+                    .id(JsonFunctions.integer(treatmentApproachEvidenceJsonObject, "id"))
                     .approvalStatus(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "approvalStatus"))
                     .evidenceType(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "evidenceType"))
                     .efficacyEvidence(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "efficacyEvidence"))
@@ -319,7 +319,7 @@ public class MolecularprofileFactory {
             therapyChecker.check(therapyJsonObject);
 
             therapies.add(ImmutableTherapyInfo.builder()
-                    .id(JsonFunctions.string(therapyJsonObject, "id"))
+                    .id(JsonFunctions.integer(therapyJsonObject, "id"))
                     .therapyName(JsonFunctions.string(therapyJsonObject, "therapyName"))
                     .synonyms(JsonFunctions.nullableString(therapyJsonObject, "synonyms"))
                     .build());
@@ -335,7 +335,7 @@ public class MolecularprofileFactory {
         variantLevelEvidenceChecker.check(jsonObject);
 
         return ImmutableMolecularProfileExtendedEvidence.builder()
-                .totalCount(JsonFunctions.string(jsonObject, "totalCount"))
+                .totalCount(JsonFunctions.integer(jsonObject, "totalCount"))
                 .evidence(extractVariantlevelEvidenceList(jsonObject.getAsJsonArray("variantLevelEvidences")))
                 .build();
     }
@@ -351,7 +351,7 @@ public class MolecularprofileFactory {
             variantlevelEvidenceListChecker.check(variantLevelEvidenceJsonObject);
 
             variantlevelEvidenceList.add(ImmutableEvidenceInfo.builder()
-                    .id(JsonFunctions.string(variantLevelEvidenceJsonObject, "id"))
+                    .id(JsonFunctions.integer(variantLevelEvidenceJsonObject, "id"))
                     .approvalStatus(JsonFunctions.string(variantLevelEvidenceJsonObject, "approvalStatus"))
                     .evidenceType(JsonFunctions.string(variantLevelEvidenceJsonObject, "evidenceType"))
                     .efficacyEvidence(JsonFunctions.string(variantLevelEvidenceJsonObject, "efficacyEvidence"))
@@ -376,7 +376,7 @@ public class MolecularprofileFactory {
         extendedEvidenceChecker.check(jsonObject);
 
         return ImmutableMolecularProfileExtendedEvidence.builder()
-                .totalCount(JsonFunctions.string(jsonObject, "totalCount"))
+                .totalCount(JsonFunctions.integer(jsonObject, "totalCount"))
                 .evidence(extractExtendedEvidenceList(jsonObject.getAsJsonArray("extendedEvidence")))
                 .build();
     }
@@ -392,7 +392,7 @@ public class MolecularprofileFactory {
             extendedEvidenceListChecker.check(extendedEvidenceJsonObject);
 
             extendedEvidenceList.add(ImmutableEvidenceInfo.builder()
-                    .id(JsonFunctions.string(extendedEvidenceJsonObject, "id"))
+                    .id(JsonFunctions.integer(extendedEvidenceJsonObject, "id"))
                     .approvalStatus(JsonFunctions.string(extendedEvidenceJsonObject, "approvalStatus"))
                     .evidenceType(JsonFunctions.string(extendedEvidenceJsonObject, "evidenceType"))
                     .efficacyEvidence(JsonFunctions.string(extendedEvidenceJsonObject, "efficacyEvidence"))

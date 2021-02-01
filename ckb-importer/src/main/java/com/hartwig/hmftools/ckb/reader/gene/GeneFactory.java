@@ -70,7 +70,7 @@ public class GeneFactory {
                     geneChecker.check(geneEntryObject);
 
                     genes.add(ImmutableGene.builder()
-                            .id(JsonFunctions.string(geneEntryObject, "id"))
+                            .id(JsonFunctions.integer(geneEntryObject, "id"))
                             .geneSymbol(JsonFunctions.string(geneEntryObject, "geneSymbol"))
                             .term(JsonFunctions.stringList(geneEntryObject, "terms"))
                             .entrezId(JsonFunctions.nullableString(geneEntryObject, "entrezId"))
@@ -124,7 +124,7 @@ public class GeneFactory {
             geneReferenceChecker.check(geneReferenceJsonObject);
 
             references.add(ImmutableReferenceInfo.builder()
-                    .id(JsonFunctions.string(geneReferenceJsonObject, "id"))
+                    .id(JsonFunctions.integer(geneReferenceJsonObject, "id"))
                     .pubMedId(JsonFunctions.nullableString(geneReferenceJsonObject, "pubMedId"))
                     .title(JsonFunctions.nullableString(geneReferenceJsonObject, "title"))
                     .url(JsonFunctions.nullableString(geneReferenceJsonObject, "url"))
@@ -164,7 +164,7 @@ public class GeneFactory {
             geneTherapiesChecker.check(geneTherapyJsonObject);
 
             geneTherapies.add(ImmutableTherapyInfo.builder()
-                    .id(JsonFunctions.string(geneTherapyJsonObject, "id"))
+                    .id(JsonFunctions.integer(geneTherapyJsonObject, "id"))
                     .therapyName(JsonFunctions.string(geneTherapyJsonObject, "therapyName"))
                     .synonyms(JsonFunctions.nullableString(geneTherapyJsonObject, "synonyms"))
                     .build());
@@ -182,7 +182,7 @@ public class GeneFactory {
             geneEvidenceChecker.check(geneEvidenceObject);
 
             geneEvidences.add(ImmutableEvidenceInfo.builder()
-                    .id(JsonFunctions.string(geneEvidenceObject, "id"))
+                    .id(JsonFunctions.integer(geneEvidenceObject, "id"))
                     .approvalStatus(JsonFunctions.string(geneEvidenceObject, "approvalStatus"))
                     .evidenceType(JsonFunctions.string(geneEvidenceObject, "evidenceType"))
                     .efficacyEvidence(JsonFunctions.string(geneEvidenceObject, "efficacyEvidence"))
@@ -204,7 +204,7 @@ public class GeneFactory {
         geneMolecularProfileChecker.check(jsonObject);
 
         return ImmutableMolecularProfileInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
                 .build();
     }
@@ -215,7 +215,7 @@ public class GeneFactory {
         geneTherapyChecker.check(jsonObject);
 
         return ImmutableTherapyInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
                 .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
                 .build();
@@ -227,7 +227,7 @@ public class GeneFactory {
         geneIndicationChecker.check(jsonObject);
 
         return ImmutableIndicationInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
                 .build();
@@ -243,7 +243,7 @@ public class GeneFactory {
             geneVariantChecker.check(geneVariantObject);
 
             geneVariants.add(ImmutableVariantInfo.builder()
-                    .id(JsonFunctions.string(geneVariantObject, "id"))
+                    .id(JsonFunctions.integer(geneVariantObject, "id"))
                     .fullName(JsonFunctions.string(geneVariantObject, "fullName"))
                     .impact(JsonFunctions.nullableString(geneVariantObject, "impact"))
                     .proteinEffect(JsonFunctions.nullableString(geneVariantObject, "proteinEffect"))
@@ -280,7 +280,7 @@ public class GeneFactory {
             geneMolecularProfileChecker.check(molecularProfileObject);
 
             molecularProfiles.add(ImmutableMolecularProfileInfo.builder()
-                    .id(JsonFunctions.string(molecularProfileObject, "id"))
+                    .id(JsonFunctions.integer(molecularProfileObject, "id"))
                     .profileName(JsonFunctions.string(molecularProfileObject, "profileName"))
                     .treatmentApproach(extractProfileTreatmentApproach(molecularProfileObject.getAsJsonArray("profileTreatmentApproaches")))
                     .build());
@@ -298,7 +298,7 @@ public class GeneFactory {
             geneProfileTreatmentApprochChecker.check(profileTreatmentApproachObject);
 
             geneProfileTreatmentApproaches.add(ImmutableTreatmentApproachInfo.builder()
-                    .id(JsonFunctions.string(profileTreatmentApproachObject, "id"))
+                    .id(JsonFunctions.integer(profileTreatmentApproachObject, "id"))
                     .name(JsonFunctions.string(profileTreatmentApproachObject, "name"))
                     .profileName(JsonFunctions.string(profileTreatmentApproachObject, "profileName"))
                     .build());
@@ -316,7 +316,7 @@ public class GeneFactory {
             geneProfileTreatmentApprochChecker.check(geneCategoryVariantObject);
 
             geneCategoryVariants.add(ImmutableEffectInfo.builder()
-                    .id(JsonFunctions.string(geneCategoryVariantObject, "id"))
+                    .id(JsonFunctions.integer(geneCategoryVariantObject, "id"))
                     .fullName(JsonFunctions.string(geneCategoryVariantObject, "fullName"))
                     .impact(JsonFunctions.nullableString(geneCategoryVariantObject, "impact"))
                     .proteinEffect(JsonFunctions.nullableString(geneCategoryVariantObject, "proteinEffect"))
