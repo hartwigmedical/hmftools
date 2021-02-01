@@ -10,34 +10,34 @@
 
     <modules>
         <module>hmf-common</module>
-        <!--<module>patient-db</module>-->
-        <!--<module>hmf-extensions</module>-->
-        <!--<module>hmf-gene-panel-builder</module>-->
-        <!--<module>hmf-id-generator</module>-->
-        <!--<module>bam-slicer</module>-->
-        <!--<module>gripss</module>-->
-        <!--<module>lilac</module>-->
-        <!--<module>paddle</module>-->
-        <!--<module>health-checker</module>-->
-        <!--<module>fastq-stats</module>-->
-        <!--<module>amber</module>-->
-        <!--<module>count-bam-lines</module>-->
-        <!--<module>purity-ploidy-estimator</module>-->
-        <!--<module>sage</module>-->
-        <!--<module>bachelor</module>-->
-        <!--<module>sv-linx</module>-->
-        <!--<module>sv-tools</module>-->
-        <!--<module>imuno</module>-->
-        <!--<module>sig-analyser</module>-->
-        <!--<module>cuppa</module>-->
-        <!--<module>isofox</module>-->
-        <!--<module>stat-calcs</module>-->
+        <module>patient-db</module>
+        <module>hmf-extensions</module>
+        <module>hmf-gene-panel-builder</module>
+        <module>hmf-id-generator</module>
+        <module>bam-slicer</module>
+        <module>gripss</module>
+        <module>lilac</module>
+        <module>paddle</module>
+        <module>health-checker</module>
+        <module>fastq-stats</module>
+        <module>amber</module>
+        <module>count-bam-lines</module>
+        <module>purity-ploidy-estimator</module>
+        <module>sage</module>
+        <module>bachelor</module>
+        <module>sv-linx</module>
+        <module>sv-tools</module>
+        <module>imuno</module>
+        <module>sig-analyser</module>
+        <module>cuppa</module>
+        <module>isofox</module>
+        <module>stat-calcs</module>
         <module>ckb-importer</module>
-        <!--<module>iclusion-importer</module>-->
-        <!--<module>vicc-importer</module>-->
-        <!--<module>serve</module>-->
-        <!--<module>protect</module>-->
-        <!--<module>patient-reporter</module>-->
+        <module>iclusion-importer</module>
+        <module>vicc-importer</module>
+        <module>serve</module>
+        <module>protect</module>
+        <module>patient-reporter</module>
     </modules>
 
     <properties>
