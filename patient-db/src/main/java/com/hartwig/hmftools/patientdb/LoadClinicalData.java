@@ -26,9 +26,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsAnalysisType;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.reportingdb.ReportingDatabase;
 import com.hartwig.hmftools.common.reportingdb.ReportingEntry;
 import com.hartwig.hmftools.patientdb.context.RunContext;
@@ -65,7 +63,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -74,8 +71,6 @@ public final class LoadClinicalData {
     private static final Logger LOGGER = LogManager.getLogger(LoadClinicalData.class);
     private static final String VERSION = LoadClinicalData.class.getPackage().getImplementationVersion();
     private static final String PIPELINE_VERSION = "pipeline_version_file";
-
-    private static final String REPORTING_DB_TSV = "reporting_db_tsv";
 
     private static final String RUNS_DIRECTORY = "runs_dir";
 
@@ -86,6 +81,9 @@ public final class LoadClinicalData {
     private static final String DO_LOAD_CLINICAL_DATA = "do_load_clinical_data";
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
 
+    private static final String LIMS_DIRECTORY = "lims_dir";
+    private static final String REPORTING_DB_TSV = "reporting_db_tsv";
+
     private static final String CURATED_PRIMARY_TUMOR_TSV = "curated_primary_tumor_tsv";
     private static final String MISSING_DOID_TSV = "missing_doid_tsv";
 
@@ -95,8 +93,6 @@ public final class LoadClinicalData {
     private static final String WIDE_AVL_TREATMENT_CSV = "wide_avl_treatment_csv";
     private static final String WIDE_RESPONSE_CSV = "wide_response_csv";
     private static final String WIDE_FIVE_DAYS_CSV = "wide_five_days_csv";
-
-    private static final String LIMS_DIRECTORY = "lims_dir";
 
     private static final String DOID_JSON = "doid_json";
     private static final String TUMOR_LOCATION_MAPPING_TSV = "tumor_location_mapping_tsv";
@@ -140,7 +136,7 @@ public final class LoadClinicalData {
         EcrfModels ecrfModels = loadEcrfModels(cmd);
 
         Map<String, Patient> patients =
-                loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, primaryTumorCurator, biopsySiteCurator, treatmentCurator, lims);
+                interpretPatients(sampleDataPerPatient, ecrfModels, primaryTumorCurator, biopsySiteCurator, treatmentCurator, lims);
 
         LOGGER.info("Check for missing curation tumor location when info is known");
         Map<String, String> patientsWithMissingDoid =
@@ -170,14 +166,13 @@ public final class LoadClinicalData {
     }
 
     private static Map<String, String> checkForMissingCuratedTumorLocations(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
-            @NotNull Collection<Patient> patients, @NotNull String reportingDBTSv, @NotNull Lims lims) throws IOException {
-
+            @NotNull Collection<Patient> patients, @NotNull String reportingDbTsv, @NotNull Lims lims) throws IOException {
         List<String> patientsInLims = Lists.newArrayList();
         Map<String, String> patientsWithMissingDoid = Maps.newHashMap();
         List<String> patientArray = Lists.newArrayList();
         List<String> reportedSamples = Lists.newArrayList();
 
-        for (ReportingEntry entry : ReportingDatabase.read(reportingDBTSv)) {
+        for (ReportingEntry entry : ReportingDatabase.read(reportingDbTsv)) {
             reportedSamples.add(entry.tumorBarcode());
         }
 
@@ -232,7 +227,7 @@ public final class LoadClinicalData {
             }
         }
 
-        for (String patient: patientsInLims) {
+        for (String patient : patientsInLims) {
             if (!patientArray.contains(patient)) {
                 patientsWithMissingDoid.put(patient, "patientNotExtracted");
             }
@@ -460,7 +455,7 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Map<String, Patient> loadAndInterpretPatients(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
+    private static Map<String, Patient> interpretPatients(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
             @NotNull EcrfModels ecrfModels, @NotNull PrimaryTumorCurator primaryTumorCurator, @NotNull BiopsySiteCurator biopsySiteCurator,
             @NotNull TreatmentCurator treatmentCurator, @NotNull Lims lims) {
         EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
@@ -480,11 +475,11 @@ public final class LoadClinicalData {
 
         LOGGER.info("Interpreting and curating data for WIDE patients");
         Map<String, Patient> widePatients =
-                readWidePatients(ecrfModels.wideModel(), sampleDataPerPatient, primaryTumorCurator, treatmentCurator, lims);
+                readWidePatients(ecrfModels.wideModel(), sampleDataPerPatient, primaryTumorCurator, treatmentCurator);
         LOGGER.info(" Finished curation of {} WIDE patients", widePatients.size());
 
         LOGGER.info("Interpreting and curating data for CORE patients");
-        Map<String, Patient> corePatients = readCorePatients(sampleDataPerPatient, primaryTumorCurator, lims);
+        Map<String, Patient> corePatients = readCorePatients(sampleDataPerPatient, primaryTumorCurator);
         LOGGER.info(" Finished curation of {} CORE patients", corePatients.size());
 
         Map<String, Patient> mergedPatients = Maps.newHashMap();
@@ -511,25 +506,18 @@ public final class LoadClinicalData {
     @NotNull
     private static Map<String, Patient> readWidePatients(@NotNull WideEcrfModel wideEcrfModel,
             @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull PrimaryTumorCurator primaryTumorCurator,
-            @NotNull TreatmentCurator treatmentCurator, @NotNull Lims lims) {
+            @NotNull TreatmentCurator treatmentCurator) {
         Map<String, Patient> patientMap = Maps.newHashMap();
 
         WidePatientReader widePatientReader = new WidePatientReader(wideEcrfModel, primaryTumorCurator, treatmentCurator);
         for (Map.Entry<String, List<SampleData>> entry : sampleDataPerPatient.entrySet()) {
-            List<SampleData> samples = entry.getValue();
-
-            List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
-            if (!tumorSamples.isEmpty()) {
-                LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
-
-                if (cohort == null) {
-                    LOGGER.warn("Could not resolve cohort config for sample with barcode {}", tumorSamples.get(0).sampleBarcode());
-                } else if (cohort.cohortId().equals("WIDE")) {
-                    String patientId = entry.getKey();
-                    Patient widePatient =
-                            widePatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));
-                    patientMap.put(patientId, widePatient);
-                }
+            List<SampleData> tumorSamples = extractTumorSamples(entry.getValue());
+            if (!tumorSamples.isEmpty() && tumorSamples.get(0).cohortId().equals("WIDE")) {
+                String patientId = entry.getKey();
+                // We assume every sample for a single patient has the same primary tumor.
+                String primaryTumor = tumorSamples.get(0).limsPrimaryTumor();
+                Patient widePatient = widePatientReader.read(patientId, primaryTumor, sequencedOnly(tumorSamples));
+                patientMap.put(patientId, widePatient);
             }
         }
         return patientMap;
@@ -537,24 +525,18 @@ public final class LoadClinicalData {
 
     @NotNull
     private static Map<String, Patient> readCorePatients(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
-            @NotNull PrimaryTumorCurator primaryTumorCurator, @NotNull Lims lims) {
+            @NotNull PrimaryTumorCurator primaryTumorCurator) {
         Map<String, Patient> patientMap = Maps.newHashMap();
         CorePatientReader corePatientReader = new CorePatientReader(primaryTumorCurator);
 
         for (Map.Entry<String, List<SampleData>> entry : sampleDataPerPatient.entrySet()) {
-            List<SampleData> samples = entry.getValue();
-            List<SampleData> tumorSamples = extractTumorSamples(samples, lims);
-            if (!tumorSamples.isEmpty()) {
-                LimsCohortConfig cohort = lims.cohortConfig(tumorSamples.get(0).sampleBarcode());
-
-                if (cohort == null) {
-                    LOGGER.warn("Could not resolve cohort config for sample with barcode {}", tumorSamples.get(0).sampleBarcode());
-                } else if (cohort.cohortId().contains("CORE")) {
-                    String patientId = entry.getKey();
-                    Patient corePatient =
-                            corePatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));
-                    patientMap.put(patientId, corePatient);
-                }
+            List<SampleData> tumorSamples = extractTumorSamples(entry.getValue());
+            if (!tumorSamples.isEmpty() && tumorSamples.get(0).cohortId().equals("CORE")) {
+                String patientId = entry.getKey();
+                // We assume every sample for a single patient has the same primary tumor.
+                String primaryTumor = tumorSamples.get(0).limsPrimaryTumor();
+                Patient corePatient = corePatientReader.read(patientId, primaryTumor, sequencedOnly(tumorSamples));
+                patientMap.put(patientId, corePatient);
             }
         }
 
@@ -562,13 +544,11 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static List<SampleData> extractTumorSamples(@NotNull Iterable<SampleData> samples, @NotNull Lims lims) {
+    private static List<SampleData> extractTumorSamples(@NotNull Iterable<SampleData> samples) {
         List<SampleData> tumorSamples = Lists.newArrayList();
 
         for (SampleData sample : samples) {
-            LimsAnalysisType analysisType = lims.extractAnalysisType(sample.sampleBarcode());
-
-            if (analysisType == LimsAnalysisType.SOMATIC_T) {
+            if (sample.isSomaticTumorSample()) {
                 tumorSamples.add(sample);
             }
         }

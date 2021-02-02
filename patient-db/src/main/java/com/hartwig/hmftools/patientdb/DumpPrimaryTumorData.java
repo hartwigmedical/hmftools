@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
@@ -30,7 +29,7 @@ final class DumpPrimaryTumorData {
 
     static void writePatientsWithMissingDoidToTSV(@NotNull String outputTsv, @NotNull Map<String, String> patients) throws IOException {
         PatientMissingDoidFile.writeMissingDoid(outputTsv, patients);
-        LOGGER.info(" Written {} primary tumors to {}", patients.size(), outputTsv);
+        LOGGER.info(" Written {} missing doid entries to {}", patients.size(), outputTsv);
     }
 
     static void writeCuratedPrimaryTumorsToTSV(@NotNull String outputTsv, @NotNull Collection<Patient> patients) throws IOException {

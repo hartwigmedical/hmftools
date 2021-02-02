@@ -17,6 +17,7 @@ public final class TestDatamodelFactory {
         return ImmutableSampleData.builder()
                 .sampleId("sample-" + arrivalDate.toString())
                 .sampleBarcode("ABC")
+                .cohortId(Strings.EMPTY)
                 .setName(Strings.EMPTY)
                 .sequenced(false)
                 .isSomaticTumorSample(true)

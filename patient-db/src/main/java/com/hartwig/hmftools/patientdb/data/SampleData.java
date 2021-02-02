@@ -17,6 +17,8 @@ public abstract class SampleData implements Comparable<SampleData> {
     @NotNull
     public abstract String sampleBarcode();
 
+    @NotNull
+    public abstract String cohortId();
 
     public abstract boolean sequenced();
 
