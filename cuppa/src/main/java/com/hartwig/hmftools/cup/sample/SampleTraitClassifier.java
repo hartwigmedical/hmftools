@@ -206,7 +206,7 @@ public class SampleTraitClassifier implements CuppaClassifier
     private void addTraitLikelihoods(final SampleData sample, final SampleTraitsData sampleTraits, final List<SampleResult> results)
     {
         int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
-        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.CancerType) : 0;
+        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.cancerType()) : 0;
 
         final Map<String,double[]> indelPercentiles = mRefTraitPercentiles.get(MS_INDELS_TMB);
         double indelMb = sampleTraits.IndelsMbPerMb;

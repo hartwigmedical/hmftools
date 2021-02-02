@@ -179,7 +179,7 @@ public class AltSjClassifier implements CuppaClassifier
             if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
                 continue;
 
-            boolean matchesCancerType = sample.CancerType.equals(refCancerType);
+            boolean matchesCancerType = sample.cancerType().equals(refCancerType);
 
             final double[] refAsjFragCounts = sample.isRefSample() && matchesCancerType ?
                     adjustRefCounts(mRefCancerTypeMatrix.getCol(i), mSampleFragCounts) : mRefCancerTypeMatrix.getCol(i);
@@ -208,7 +208,7 @@ public class AltSjClassifier implements CuppaClassifier
                 }
 
                 CUP_LOGGER.debug("sample({}) cancer({}) refCancer({}) css({}) sites(sample={} ref={} matched={})",
-                        sample.Id, sample.CancerType, refCancerType, String.format("%.4f", css),
+                        sample.Id, sample.cancerType(), refCancerType, String.format("%.4f", css),
                         sampleSites, refSites, matchedSites);
             }
 
@@ -339,7 +339,7 @@ public class AltSjClassifier implements CuppaClassifier
                 if(probabilityTotal == null)
                     probabilityTotal = 1.0;
 
-                boolean adjustMatchingCancerPrev = sample.CancerType.equals(cancerType);
+                boolean adjustMatchingCancerPrev = sample.cancerType().equals(cancerType);
 
                 double driverPrevValue;
                 double prevalenceTotal = refAltSJ.PrevalenceTotal;

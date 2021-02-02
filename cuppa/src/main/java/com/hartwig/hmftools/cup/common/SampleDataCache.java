@@ -63,12 +63,6 @@ public class SampleDataCache
                 .map(x -> x.Id).collect(Collectors.toList());
     }
 
-    public void markRefSamples()
-    {
-        // mark any samples included in the ref data set so they can be excluded from self-comparison
-        SampleDataList.stream().filter(x -> RefSampleCancerTypeMap.containsKey(x.Id)).forEach(x -> x.setRefSample());
-    }
-
     public SampleData findRefSampleData(final String sampleId)
     {
         for(List<SampleData> sampleDataList : RefCancerSampleData.values())
@@ -90,22 +84,36 @@ public class SampleDataCache
     {
         if(sample.isKnownCancerType())
         {
-            List<SampleData> cancerSampleData = RefCancerSampleData.get(sample.CancerType);
+            List<SampleData> cancerSampleData = RefCancerSampleData.get(sample.cancerType());
 
             if(cancerSampleData == null)
-                RefCancerSampleData.put(sample.CancerType, Lists.newArrayList(sample));
+                RefCancerSampleData.put(sample.cancerType(), Lists.newArrayList(sample));
             else
                 cancerSampleData.add(sample);
         }
 
-        RefSampleCancerTypeMap.put(sample.Id, sample.CancerType);
+        RefSampleCancerTypeMap.put(sample.Id, sample.cancerType());
         RefSampleDataList.add(sample);
     }
 
-    public void addTestSample(final SampleData sample)
+    public SampleData addTestSample(final SampleData sample)
     {
+        if(SampleIds.contains(sample.Id))
+        {
+            CUP_LOGGER.error("attempted to add sample({}) twice", sample.Id);
+            return null;
+        }
+
+        if(RefSampleCancerTypeMap.containsKey(sample.Id))
+        {
+            // override if known
+            sample.setRefSample();
+            sample.setCancerType(RefSampleCancerTypeMap.get(sample.Id));
+        }
+
         SampleDataList.add(sample);
         SampleIds.add(sample.Id);
+        return sample;
     }
 
     public void loadSampleData(final String specificSampleData, final String sampleDataFile)
@@ -123,14 +131,8 @@ public class SampleDataCache
             if(sampleItems.length == 3)
                 cancerSubtype = sampleItems[2];
 
-            if(RefSampleCancerTypeMap.containsKey(sampleId))
-            {
-                // override if known
-                cancerType = RefSampleCancerTypeMap.get(sampleId);
-            }
-
-            SpecificSample = new SampleData(sampleId, cancerType, cancerSubtype);
-            addTestSample(SpecificSample);
+            SampleData sample = new SampleData(sampleId, cancerType, cancerSubtype);
+            SpecificSample = addTestSample(sample);
         }
         else if(sampleDataFile != null)
         {

@@ -15,13 +15,13 @@ import com.hartwig.hmftools.common.purple.gender.Gender;
 public class SampleData
 {
     public final String Id;
-    public final String CancerType;
     public final String CancerSubtype;
     public final String PrimaryLocation;
     public final String PrimarySubLocation;
     public final String PrimaryType;
     public final String PrimarySubtype;
 
+    private String mCancerType; // can be overridden if matches a reference sample
     private boolean mIsRefSample;
     private Gender mGenderType;
 
@@ -35,7 +35,7 @@ public class SampleData
             final String location, final String locationSubtype, final String primaryType, final String primarySubtype)
     {
         Id = id;
-        CancerType = cancerType;
+        mCancerType = cancerType;
         CancerSubtype = cancerSubtype;
         PrimaryLocation = location;
         PrimarySubLocation = locationSubtype;
@@ -46,13 +46,16 @@ public class SampleData
         mIsRefSample = false;
     }
 
+    public String cancerType() { return mCancerType; }
+    public void setCancerType(final String cancerType) { mCancerType = cancerType; }
+
     public Gender gender() { return mGenderType; }
     public void setGender(final Gender gender) { mGenderType = gender; }
 
     public boolean isRefSample() { return mIsRefSample; }
     public void setRefSample() { mIsRefSample = true; }
 
-    public boolean isKnownCancerType() { return isKnownCancerType(CancerType); }
+    public boolean isKnownCancerType() { return isKnownCancerType(mCancerType); }
 
     public static boolean isKnownCancerType(final String cancerType)
     {

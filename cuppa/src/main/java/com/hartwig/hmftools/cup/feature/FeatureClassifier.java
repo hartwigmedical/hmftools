@@ -146,7 +146,7 @@ public class FeatureClassifier implements CuppaClassifier
             if(!checkIsValidCancerType(sample, cancerType, cancerProbTotals))
                 continue;
 
-            boolean adjustMatchingCancerPrev = sample.CancerType.equals(cancerType);
+            boolean adjustMatchingCancerPrev = sample.cancerType().equals(cancerType);
 
             final List<FeaturePrevData> samplePrevs = entry.getValue();
 

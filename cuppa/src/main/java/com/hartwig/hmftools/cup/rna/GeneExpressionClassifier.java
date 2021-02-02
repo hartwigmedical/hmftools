@@ -238,7 +238,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
             if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
                 continue;
 
-            boolean matchesCancerType = sample.CancerType.equals(refCancerType);
+            boolean matchesCancerType = sample.cancerType().equals(refCancerType);
 
             final double[] refPosFreqs = sample.isRefSample() && matchesCancerType ?
                     adjustRefCounts(mRefCancerTypeGeneExpression.getCol(i), sampleGeneTPMs, 1) : mRefCancerTypeGeneExpression.getCol(i);

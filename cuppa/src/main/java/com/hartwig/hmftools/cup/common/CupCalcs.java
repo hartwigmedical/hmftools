@@ -59,7 +59,7 @@ public class CupCalcs
 
             double percentile = getPercentile(percentiles, threshold);
 
-            if(sampleCancerCount > 0 && cancerType.equals(sample.CancerType))
+            if(sampleCancerCount > 0 && cancerType.equals(sample.cancerType()))
             {
                 // adjust percentile value to remove this sample
                 if(useLowThreshold && value < threshold)

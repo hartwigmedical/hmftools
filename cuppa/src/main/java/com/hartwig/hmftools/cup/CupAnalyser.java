@@ -95,7 +95,6 @@ public class CupAnalyser
     {
         mSampleDataCache.loadReferenceSampleData(mConfig.RefSampleDataFile);
         mSampleDataCache.loadSampleData(cmd.getOptionValue(SPECIFIC_SAMPLE_DATA), mConfig.SampleDataFile);
-        mSampleDataCache.markRefSamples();
     }
 
     public void run()
@@ -302,7 +301,7 @@ public class CupAnalyser
                 if(matchedSample != null)
                 {
                     mSampleSimilarityWriter.write(String.format(",%s,%s,%s,%s,%s",
-                            matchedSample.CancerType, matchedSample.PrimaryType, matchedSample.PrimarySubtype,
+                            matchedSample.cancerType(), matchedSample.PrimaryType, matchedSample.PrimarySubtype,
                             matchedSample.PrimaryLocation, matchedSample.PrimarySubLocation));
                 }
                 else

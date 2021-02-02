@@ -265,7 +265,7 @@ public class SomaticClassifier implements CuppaClassifier
         results.add(result);
 
         int cancerTypeCount = mSampleDataCache.RefCancerSampleData.size();
-        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.CancerType) : 0;
+        int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.cancerType()) : 0;
 
         final Map<String,Double> cancerPrevsLow = calcPercentilePrevalence(
                 sample, cancerSampleCount, cancerTypeCount, mRefCancerSnvCountPercentiles, snvTotal,  true);
@@ -402,7 +402,7 @@ public class SomaticClassifier implements CuppaClassifier
             if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
                 continue;
 
-            boolean matchesCancerType = sample.CancerType.equals(refCancerType);
+            boolean matchesCancerType = sample.cancerType().equals(refCancerType);
 
             double adjustMultiplier = sampleTotal > SNV_POS_FREQ_SNV_TOTAL_THRESHOLD ? SNV_POS_FREQ_SNV_TOTAL_THRESHOLD / sampleTotal : 1;
 

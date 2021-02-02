@@ -51,16 +51,12 @@ public class CuppaUtilsTest
     {
         String cancerType = CANCER_TYPE_UNKNOWN;
 
-        if(dataCache.RefSampleCancerTypeMap.containsKey(sampleId))
-            cancerType = dataCache.RefSampleCancerTypeMap.get(sampleId);
-
         SampleData sample = new SampleData(sampleId, cancerType, "");
 
         if(dataCache.findSampleData(sampleId) != null)
             return null;
 
         dataCache.addTestSample(sample);
-        dataCache.markRefSamples();
 
         return sample;
     }
