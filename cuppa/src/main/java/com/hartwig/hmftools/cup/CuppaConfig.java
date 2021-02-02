@@ -263,4 +263,42 @@ public class CuppaConfig
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
     }
 
+    public CuppaConfig()
+    {
+        IncludedCategories = Lists.newArrayList();
+        RefDataDir = "";
+        RefSampleDataFile = "";
+        RefSnvCountsFile = "";
+        RefSvPercFile = "";
+        RefSigContributionFile = "";
+        RefFeaturePrevFile = "";
+        RefTraitPercFile = "";
+        RefTraitRateFile = "";
+        RefSnvCancerPosFreqFile = "";
+        RefSnvSamplePosFreqFile = "";
+        RefDriverAvgFile = "";
+
+        RefGeneExpCancerFile = "";
+        RefGeneExpSampleFile = "";
+        RefAltSjPrevFile = "";
+
+        // sample data, if not sourced from the database
+        SampleDataDir = "";
+
+        SampleDataFile = "";
+        SampleFeatureFile = "";
+        SampleTraitsFile = "";
+        SampleSnvCountsFile = "";
+        SampleSnvPosFreqFile = "";
+        SampleSigContribFile = "";
+        SampleSomaticVcf = "";
+        SampleSvFile = "";
+        SampleRnaExpFile = "";
+
+        DbAccess = null;
+        WriteSimilarities = false;
+        WriteClassifiersOnly = false;
+        OutputDir = "";
+        OutputFileId = "";
+    }
 }

@@ -80,6 +80,28 @@ public class SampleDataCache
         return SampleDataList.stream().filter(x -> x.Id.equals(sampleId)).findFirst().orElse(null);
     }
 
+    public void addRefSample(final SampleData sample)
+    {
+        if(sample.isKnownCancerType())
+        {
+            List<SampleData> cancerSampleData = RefCancerSampleData.get(sample.CancerType);
+
+            if(cancerSampleData == null)
+                RefCancerSampleData.put(sample.CancerType, Lists.newArrayList(sample));
+            else
+                cancerSampleData.add(sample);
+        }
+
+        RefSampleCancerTypeMap.put(sample.Id, sample.CancerType);
+        RefSampleDataList.add(sample);
+    }
+
+    public void addTestSample(final SampleData sample)
+    {
+        SampleDataList.add(sample);
+        SampleIds.add(sample.Id);
+    }
+
     public void loadSampleData(final String specificSampleData, final String sampleDataFile)
     {
         if(specificSampleData != null)
@@ -102,7 +124,7 @@ public class SampleDataCache
             }
 
             SpecificSample = new SampleData(sampleId, cancerType, cancerSubtype);
-            SampleDataList.add(SpecificSample);
+            addTestSample(SpecificSample);
         }
         else if(sampleDataFile != null)
         {
@@ -118,8 +140,7 @@ public class SampleDataCache
                 for(final String line : fileData)
                 {
                     SampleData sample = SampleData.from(fieldsIndexMap, line);
-
-                    SampleDataList.add(sample);
+                    addTestSample(sample);
                 }
             }
             catch (IOException e)
@@ -128,8 +149,6 @@ public class SampleDataCache
                 mIsValid = false;
             }
         }
-
-        SampleDataList.forEach(x -> SampleIds.add(x.Id));
     }
 
     public void loadReferenceSampleData(final String refSampleDataFile)
@@ -152,19 +171,7 @@ public class SampleDataCache
             for(final String line : fileData)
             {
                 SampleData sample = SampleData.from(fieldsIndexMap, line);
-
-                if(sample.isKnownCancerType())
-                {
-                    List<SampleData> cancerSampleData = RefCancerSampleData.get(sample.CancerType);
-
-                    if(cancerSampleData == null)
-                        RefCancerSampleData.put(sample.CancerType, Lists.newArrayList(sample));
-                    else
-                        cancerSampleData.add(sample);
-                }
-
-                RefSampleCancerTypeMap.put(sample.Id, sample.CancerType);
-                RefSampleDataList.add(sample);
+                addRefSample(sample);
             }
         }
         catch (IOException e)
