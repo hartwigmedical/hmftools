@@ -4,7 +4,8 @@ import java.sql.Timestamp;
 import java.util.List;
 
 interface BufferedWriterConsumer<T> {
-    void intialise();
+
+    void initialise();
 
     void accept(Timestamp timestamp, List<T> entries);
 }

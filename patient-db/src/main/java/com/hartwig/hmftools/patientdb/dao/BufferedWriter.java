@@ -22,14 +22,14 @@ public class BufferedWriter<T> implements Consumer<T>, AutoCloseable {
 
     public void initialise() {
         initialised = true;
-        consumer.intialise();
+        consumer.initialise();
     }
 
     @Override
     public void accept(final T entry) {
         if (!initialised) {
             initialised = true;
-            consumer.intialise();
+            consumer.initialise();
         }
 
         buffer.add(entry);

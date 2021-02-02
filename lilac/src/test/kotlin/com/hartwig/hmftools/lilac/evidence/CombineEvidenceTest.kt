@@ -7,8 +7,15 @@ import org.junit.Test
 class CombineEvidenceTest {
 
     @Test
-    fun testRealLife() {
+    fun testCheckSingles() {
+        val left = PhasedEvidence(listOf(344).toIntArray(), mapOf(Pair("T", 13), Pair("S", 71)))
+        val right = PhasedEvidence(listOf(348).toIntArray(), mapOf(Pair("S", 20), Pair("C", 20)))
+        val combined = PhasedEvidence(listOf(344, 348).toIntArray(), mapOf(Pair("SS", 9), Pair("SC", 4)))
+        assertFalse(CombineEvidence.canCombine(left, combined, right))
+    }
 
+    @Test
+    fun testRealLife() {
         val left = PhasedEvidence(listOf(1, 3).toIntArray(), mapOf(Pair("AM", 36), Pair("LM", 16),  Pair("RT", 11),  Pair("RM", 35)))
         val right = PhasedEvidence(listOf(1, 3, 7).toIntArray(), mapOf(Pair("AMT", 31), Pair("AMA", 1), Pair("LMT", 15),  Pair("RTT", 9),  Pair("RTA", 1),  Pair("RMA", 16)))
         assertTrue(CombineEvidence.canCombine(left, right))

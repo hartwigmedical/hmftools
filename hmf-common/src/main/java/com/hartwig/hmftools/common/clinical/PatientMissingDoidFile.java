@@ -5,46 +5,40 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringJoiner;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PatientMissingDoidFile {
-    private static final String TAB_DELIMITER = "\t";
+public final class PatientMissingDoidFile {
 
-    private PatientMissingDoidFile(){
+    private static final String DELIMITER = "\t";
 
+    private PatientMissingDoidFile() {
     }
 
     public static void writeMissingDoid(@NotNull String outputPath, @NotNull Map<String, String> patients) throws IOException {
-        Files.write(new File(outputPath).toPath(), toLinesMissingDoid(patients));
+        Files.write(new File(outputPath).toPath(), toLines(patients));
     }
 
     @NotNull
-    @VisibleForTesting
-    static List<String> toLinesMissingDoid(@NotNull Map<String, String> patients) {
+    static List<String> toLines(@NotNull Map<String, String> patients) {
         List<String> lines = Lists.newArrayList();
-        lines.add(headerMissingDoid());
+        lines.add(header());
         for (String patient : patients.keySet()) {
-            String patientMessage = patient + TAB_DELIMITER + patients.get(patient);
-            lines.add(toStringMissingDoid(patientMessage));
+            lines.add(toLine(patient, patients.get(patient)));
         }
         return lines;
     }
 
     @NotNull
-    private static String headerMissingDoid() {
-        return new StringJoiner(TAB_DELIMITER).add("patientIdentifier").add("reason")
-                .toString();
+    private static String header() {
+        return new StringJoiner(DELIMITER).add("patientIdentifier").add("reason").toString();
     }
 
     @NotNull
-    private static String toStringMissingDoid(@NotNull String patient) {
-        return new StringJoiner(TAB_DELIMITER).add(patient)
-                .toString();
+    private static String toLine(@NotNull String patient, @NotNull String reason) {
+        return new StringJoiner(DELIMITER).add(patient).add(reason).toString();
     }
 }

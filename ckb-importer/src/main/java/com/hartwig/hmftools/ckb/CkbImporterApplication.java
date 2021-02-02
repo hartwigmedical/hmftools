@@ -8,6 +8,8 @@ import java.util.List;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.ImmutableCkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
+import com.hartwig.hmftools.ckb.interpretation.CkbEntryInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.InterpretationFactory;
 import com.hartwig.hmftools.ckb.reader.clinicaltrial.ClinicalTrialFactory;
 import com.hartwig.hmftools.ckb.dao.CkbDAO;
 import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
@@ -71,12 +73,13 @@ public class CkbImporterApplication {
         }
 
         CkbEntry ckbEntry = readJsonData(config);
+        List<CkbEntryInterpretation> ckbEntryInterpretation = InterpretationFactory.interpretationCkb(ckbEntry);
 
         if (config.skipDatabaseWriting()) {
             LOGGER.info("Skipping DB writing.");
         } else {
             CkbDAO ckbDAO = connect(config);
-            LOGGER.info("Deleting all from CKB db");
+            LOGGER.info("Deleting all data from CKB db");
             ckbDAO.deleteAll();
             LOGGER.info("Starting insertion of all CKB entries");
             ckbDAO.writeCkb(ckbEntry);
@@ -112,7 +115,7 @@ public class CkbImporterApplication {
                 TreatmentApproachFactory.readingTreatmentApproch(ckbPath + File.separator + TREATMENT_APPROACHES);
         List<Variant> variants = VariantFactory.readingVariant(ckbPath + File.separator + VARIANTS);
 
-        LOGGER.info("All files are readed");
+        LOGGER.info("All files are read");
 
         return ImmutableCkbEntry.builder()
                 .clinicalTrial(clinicalTrials)
@@ -128,5 +131,4 @@ public class CkbImporterApplication {
                 .variant(variants)
                 .build();
     }
-
 }

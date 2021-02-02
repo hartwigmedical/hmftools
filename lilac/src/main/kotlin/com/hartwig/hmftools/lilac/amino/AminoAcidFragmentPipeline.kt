@@ -1,52 +1,33 @@
 package com.hartwig.hmftools.lilac.amino
 
+import com.hartwig.hmftools.lilac.hla.HlaContext
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
-import com.hartwig.hmftools.lilac.nuc.NucleotideGeneEnrichment
+import com.hartwig.hmftools.lilac.nuc.NucleotideQualEnrichment
 import com.hartwig.hmftools.lilac.nuc.NucleotideSpliceEnrichment
 
-class AminoAcidFragmentPipeline(private val minBaseQuality: Int, private val minBaseCount: Int,
-                                private val aBoundaries: Set<Int>, private val bBoundaries: Set<Int>, private val cBoundaries: Set<Int>,
-                                nucleotideFragment: List<NucleotideFragment>) {
-    private val geneEnriched = NucleotideGeneEnrichment(aBoundaries, bBoundaries, cBoundaries).enrich(nucleotideFragment)
-    private val heterozygousIntersector = AminoAcidFragmentEnrichment(minBaseQuality, minBaseCount)
+class AminoAcidFragmentPipeline(private val minBaseQuality: Int, private val minBaseCount: Int, private val geneEnriched: List<NucleotideFragment>) {
+    private val aminoAcidEnricher = AminoAcidQualEnrichment(minBaseQuality, minBaseCount)
+    private val nucleotideQualEnrichment = NucleotideQualEnrichment(minBaseQuality, minBaseCount)
 
-    fun typeA(): List<AminoAcidFragment> {
-        val gene = "HLA-A"
-        val spliceEnricher = NucleotideSpliceEnrichment(minBaseQuality, minBaseCount, aBoundaries)
-
+    fun type(context: HlaContext): List<AminoAcidFragment> {
+        val gene = "HLA-${context.gene}"
         val geneSpecific = geneEnriched.filter { it.genes.contains(gene) }
-        val spliceEnriched = spliceEnricher.enrich(geneSpecific)
-        val result =  heterozygousIntersector.heterozygousIntersect(gene, spliceEnriched)
 
-        return result
-                .map { it.qualityFilterNucleotides(minBaseQuality) }
+        return process(context.aminoAcidBoundaries, geneSpecific)
     }
 
-    fun typeB(): List<AminoAcidFragment> {
-        val gene = "HLA-B"
-        val spliceEnricher = NucleotideSpliceEnrichment(minBaseQuality, minBaseCount, bBoundaries)
-
-        val geneSpecific = geneEnriched.filter { it.genes.contains(gene) }
-        val spliceEnriched = spliceEnricher.enrich(geneSpecific)
-        return heterozygousIntersector.heterozygousIntersect(gene, spliceEnriched)
-                .map { it.qualityFilterNucleotides(minBaseQuality) }
+    fun combined(combinedBoundaries: Set<Int>): List<AminoAcidFragment> {
+        return process(combinedBoundaries, geneEnriched)
     }
 
-    fun typeC(): List<AminoAcidFragment> {
-        val gene = "HLA-C"
-        val spliceEnricher = NucleotideSpliceEnrichment(minBaseQuality, minBaseCount, cBoundaries)
+    fun process(boundaries: Set<Int>, fragments: List<NucleotideFragment>): List<AminoAcidFragment> {
+        val spliceEnricher = NucleotideSpliceEnrichment(minBaseQuality, minBaseCount, boundaries)
 
-        val geneSpecific = geneEnriched.filter { it.genes.contains(gene) }
-        val spliceEnriched = spliceEnricher.enrich(geneSpecific)
-        return heterozygousIntersector.heterozygousIntersect(gene, spliceEnriched)
-                .map { it.qualityFilterNucleotides(minBaseQuality) }
+        val qualEnriched = nucleotideQualEnrichment.enrich(fragments)
+        val spliceEnriched = spliceEnricher.enrich(qualEnriched)
+        val result = aminoAcidEnricher.enrich(spliceEnriched)
+
+        return result.map { it.qualityFilterNucleotides(minBaseQuality) }
     }
 
-    fun combined(): List<AminoAcidFragment> {
-        val combinedBoundaries = (aBoundaries + bBoundaries + cBoundaries)
-        val spliceEnricher = NucleotideSpliceEnrichment(minBaseQuality, minBaseCount, combinedBoundaries)
-        val spliceEnriched = spliceEnricher.enrich(geneEnriched)
-        return heterozygousIntersector.heterozygousIntersect("ALL", spliceEnriched)
-                .map { it.qualityFilterNucleotides(minBaseQuality) }
-    }
 }

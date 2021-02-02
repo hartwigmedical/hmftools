@@ -2,6 +2,9 @@ package com.hartwig.hmftools.lilac.nuc
 
 import com.hartwig.hmftools.lilac.SequenceCount
 
+/**
+ * Add missing homozygous exon boundaries to fragments
+ */
 class NucleotideSpliceEnrichment(private val minBaseQuality: Int, private val minBaseCount: Int, private val aminoAcidBoundary: Set<Int>) {
 
     fun enrich(fragments: List<NucleotideFragment>): List<NucleotideFragment> {

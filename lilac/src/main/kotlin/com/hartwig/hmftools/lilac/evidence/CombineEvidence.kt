@@ -15,7 +15,6 @@ object CombineEvidence {
     }
 
     fun canCombine(left: PhasedEvidence, right: PhasedEvidence): Boolean {
-
         val indexIntersection = (left.aminoAcidIndices.toSet() intersect right.aminoAcidIndices.toSet()).toList().sorted()
         if (indexIntersection.isEmpty()) {
             return false

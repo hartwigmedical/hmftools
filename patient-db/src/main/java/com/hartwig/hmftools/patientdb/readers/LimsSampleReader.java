@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsAnalysisType;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.patientdb.data.ImmutableSampleData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
@@ -55,9 +56,11 @@ public class LimsSampleReader {
             LOGGER.warn("Could not resolve set name for sequenced sample {}", sampleId);
         }
 
+        LimsCohortConfig cohortConfig = lims.cohortConfig(sampleBarcode);
         return ImmutableSampleData.builder()
                 .sampleId(sampleId)
                 .sampleBarcode(sampleBarcode)
+                .cohortId(cohortConfig != null ? cohortConfig.cohortId() : Strings.EMPTY)
                 .sequenced(isSequenced)
                 .isSomaticTumorSample(lims.extractAnalysisType(sampleBarcode) == LimsAnalysisType.SOMATIC_T)
                 .setName(setName != null ? setName : Strings.EMPTY)
@@ -92,6 +95,7 @@ public class LimsSampleReader {
         return ImmutableSampleData.builder()
                 .sampleId(sampleId)
                 .sampleBarcode(Strings.EMPTY)
+                .cohortId(Strings.EMPTY)
                 .sequenced(true)
                 .isSomaticTumorSample(true)
                 .setName(setName != null ? setName : Strings.EMPTY)

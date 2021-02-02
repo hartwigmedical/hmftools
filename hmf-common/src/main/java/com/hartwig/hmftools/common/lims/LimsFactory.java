@@ -44,7 +44,7 @@ public final class LimsFactory {
     private static final String SAMPLES_WITHOUT_SAMPLING_DATE_TSV = "samples_without_sampling_date.tsv";
     private static final String LIMS_SHALLOW_SEQ_TSV = "shallow_seq_purity.tsv";
     private static final String PATIENT_BLACKLIST_TSV = "patient_blacklist.tsv";
-    private static final String PATIENT_BLACKLIST_CURATION_TUMORLOCATION_TSV = "patient_blacklist_curation_tumor_location.tsv";
+    private static final String PATIENT_BLACKLIST_CURATION_TUMOR_LOCATION_TSV = "patient_blacklist_curation_tumor_location.tsv";
     private static final String COHORT_CONFIG_TSV = "cohort_config.tsv";
 
     private static final String FIELD_SEPARATOR = "\t";
@@ -64,7 +64,7 @@ public final class LimsFactory {
         Set<String> sampleIdsWithoutSamplingDate = readSingleColumnTsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_TSV);
         Set<String> blacklistedPatients = readSingleColumnTsv(limsDirectory + File.separator + PATIENT_BLACKLIST_TSV);
         Set<String> blacklistedPatientsCurationTumorLocations =
-                readSingleColumnTsv(limsDirectory + File.separator + PATIENT_BLACKLIST_CURATION_TUMORLOCATION_TSV);
+                readSingleColumnTsv(limsDirectory + File.separator + PATIENT_BLACKLIST_CURATION_TUMOR_LOCATION_TSV);
 
         HospitalModel hospitalModel = HospitalModelFactory.fromLimsDirectory(limsDirectory);
 

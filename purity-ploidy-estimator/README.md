@@ -1074,7 +1074,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
-- Upcoming
+- [2.52](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.52) 
   - Support for COBALT tumor only mode
   - Indels over splice regions should be marked as such
   - Add `PARTIAL_AMP` driver type for amplifications where only part of a gene is > 3 * tumor ploidy

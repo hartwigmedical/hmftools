@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac
 
 import com.hartwig.hmftools.common.cli.Configs
+import com.hartwig.hmftools.lilac.hla.HlaAllele
 import org.apache.commons.cli.CommandLine
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
@@ -9,7 +10,7 @@ import java.io.File
 import java.io.IOException
 
 const val SAMPLE = "sample"
-const val INPUT_BAM_OPTION = "input_bam"
+const val INPUT_BAM_OPTION = "sample_bam"
 const val RESOURCE_DIR_OPTION = "resource_dir"
 const val OUTPUT_DIR_OPTION = "output_dir"
 const val REF_GENOME_OPTION = "ref_genome"
@@ -19,6 +20,7 @@ const val THREADS = "threads"
 const val MIN_FRAGMENTS_PER_ALLELE = "min_fragments_per_allele"
 const val MIN_FRAGMENTS_TO_REMOVE_SINGLE = "min_fragments_to_remove_single"
 const val MIN_CONFIRMED_UNIQUE_COVERAGE = "min_confirmed_unique_coverage"
+const val EXPECTED_ALLELES = "expected_alleles"
 
 data class LilacConfig(
         val sample: String,
@@ -31,7 +33,11 @@ data class LilacConfig(
         val minFragmentsPerAllele: Int,
         val minFragmentsToRemoveSingle: Int,
         val minConfirmedUniqueCoverage: Int,
-        val threads: Int) {
+        val threads: Int,
+        val expectedAlleles: List<HlaAllele>
+) {
+
+    val outputFilePrefix = "${outputDir}/$sample"
 
     companion object {
 
@@ -50,6 +56,13 @@ data class LilacConfig(
             val minFragmentsToRemoveSingle = Configs.defaultIntValue(cmd, MIN_FRAGMENTS_TO_REMOVE_SINGLE, defaultConfig.minFragmentsToRemoveSingle)
             val minConfirmedUniqueCoverage = Configs.defaultIntValue(cmd, MIN_CONFIRMED_UNIQUE_COVERAGE, defaultConfig.minConfirmedUniqueCoverage)
             val threads = Configs.defaultIntValue(cmd, THREADS, defaultConfig.threads)
+            val expectedAlleleString = Configs.defaultStringValue(cmd, EXPECTED_ALLELES, "")
+            val expectedAlleles = if (expectedAlleleString.isNotEmpty()) {
+                expectedAlleleString.split(",").map { HlaAllele(it) }
+            } else {
+                listOf()
+            }
+
 
             return LilacConfig(
                     sample,
@@ -61,8 +74,9 @@ data class LilacConfig(
                     minEvidence,
                     minFragmentsPerAllele,
                     minFragmentsToRemoveSingle,
-                    minConfirmedUniqueCoverage, threads)
-
+                    minConfirmedUniqueCoverage,
+                    threads,
+                    expectedAlleles)
         }
 
         private fun default(): LilacConfig {
@@ -76,8 +90,9 @@ data class LilacConfig(
                     3,
                     6,
                     40,
-                    3,
-                    1)
+                    5,
+                    1,
+                    listOf())
         }
 
         fun createOptions(): Options {
@@ -93,11 +108,12 @@ data class LilacConfig(
             options.addOption(optional(MIN_FRAGMENTS_TO_REMOVE_SINGLE, "MIN_FRAGMENTS_TO_REMOVE_SINGLE"))
             options.addOption(optional(MIN_CONFIRMED_UNIQUE_COVERAGE, "MIN_CONFIRMED_UNIQUE_COVERAGE"))
             options.addOption(optional(THREADS, "Number of threads"))
+            options.addOption(optional(EXPECTED_ALLELES, "Common separated expected alleles"))
             return options
         }
 
         @Throws(IOException::class)
-        internal fun CommandLine.requiredFile( argument: String): String {
+        internal fun CommandLine.requiredFile(argument: String): String {
             val result = this.getOptionValue(argument)
             if (!File(result).exists()) {
                 throw IOException("Unable to read file $result")
@@ -107,7 +123,7 @@ data class LilacConfig(
         }
 
         @Throws(IOException::class)
-        internal fun CommandLine.optionalFile( argument: String, default: String): String {
+        internal fun CommandLine.optionalFile(argument: String, default: String): String {
             if (this.hasOption(argument)) {
                 return this.requiredFile(argument)
             }
@@ -116,7 +132,7 @@ data class LilacConfig(
         }
 
         @Throws(IOException::class)
-        internal fun CommandLine.requiredDir( argument: String): String {
+        internal fun CommandLine.requiredDir(argument: String): String {
             val result = this.getOptionValue(argument)
             val dir = File(result)
             if (!dir.exists() && !dir.mkdirs()) {

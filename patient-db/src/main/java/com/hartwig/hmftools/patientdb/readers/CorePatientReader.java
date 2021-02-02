@@ -13,14 +13,10 @@ import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CorePatientReader {
-
-    private static final Logger LOGGER = LogManager.getLogger(CorePatientReader.class);
 
     @NotNull
     private final PrimaryTumorCurator primaryTumorCurator;
@@ -46,7 +42,6 @@ public class CorePatientReader {
 
     @NotNull
     private BaselineData toBaselineData(@Nullable String limsPrimaryTumorLocation) {
-
         CuratedPrimaryTumor curatedPrimaryTumor = primaryTumorCurator.search(limsPrimaryTumorLocation);
 
         return ImmutableBaselineData.builder()

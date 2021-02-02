@@ -123,9 +123,9 @@ public class WidePatientReader {
 
             if (fiveDays != null) {
                 BiopsyData finalBiopsy = toBiopsyData(fiveDays);
-                SampleData sequencedBiopsy = lookupOnPathologySampleId(sequencedBiopsies, clinicalBiopsy.pathologySampleId());
-                if (sequencedBiopsy != null) {
-                    finalBiopsy = ImmutableBiopsyData.builder().from(finalBiopsy).sampleId(sequencedBiopsy.sampleId()).build();
+                SampleData sequencedSample = lookupOnPathologySampleId(sequencedBiopsies, clinicalBiopsy.pathologySampleId());
+                if (sequencedSample != null) {
+                    finalBiopsy = ImmutableBiopsyData.builder().from(finalBiopsy).sampleId(sequencedSample.sampleId()).build();
                 }
 
                 biopsies.add(finalBiopsy);
