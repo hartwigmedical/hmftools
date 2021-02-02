@@ -24,7 +24,7 @@ public class HmfExonPanelBedTest {
         HmfExonRegion finalCodingExon = transcript.exome().get(transcript.exome().size() - 2);
 
         List<? extends GenomeRegion> regions =
-                HmfExonPanelBed.createRegions(false, Sets.newHashSet("TP53"), Lists.newArrayList(transcript, transcript));
+                HmfExonPanelBed.createNamedCodingRegions(false, Sets.newHashSet("TP53"), Lists.newArrayList(transcript, transcript));
 
         assertRegion(regions.get(0), transcript.codingStart(), firstExon.end() + 2);
         assertRegion(regions.get(1), secondExon.start() - 5, secondExon.start() - 5);

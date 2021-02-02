@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.genepanel.HmfExonPanelBed;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 
 import org.apache.commons.compress.utils.Lists;
@@ -80,21 +81,26 @@ public class DriverGenePanelConversion {
 
         // Write out driver gene panel
         LOGGER.info("Creating {} {} bed file", assembly, "somatic");
-        createBedFiles(false, somaticCodingWithoutUtr, somaticGenes, transcripts);
+        createNamedBedFiles(false, somaticCodingWithoutUtr, somaticGenes, transcripts);
 
         LOGGER.info("Creating {} {} bed file", assembly, "germline");
-        createBedFiles(true, germlineCodingWithUtr, allGenes, transcripts);
+        createUnnamedBedFiles(true, germlineCodingWithUtr, allGenes, transcripts);
 
         LOGGER.info("Creating {} {} coverage bed file", assembly, "germline");
-        createBedFiles(false, germlineCodingWithoutUtr, allGenes, transcripts);
+        createNamedBedFiles(false, germlineCodingWithoutUtr, allGenes, transcripts);
 
         // Write out germline hotspot files
         new GermlineHotspotVCF(germlineHotspotGenes(driverGenes)).process(clinvarFile, germlineHotspotFile);
     }
 
-    private static void createBedFiles(boolean includeUTR, String file, Set<String> genes, List<HmfTranscriptRegion> transcripts) throws IOException {
-        final List<NamedBed> somaticBed = HmfExonPanelBed.createRegions(includeUTR, genes, transcripts);
+    private static void createNamedBedFiles(boolean includeUTR, String file, Set<String> genes, List<HmfTranscriptRegion> transcripts) throws IOException {
+        final List<NamedBed> somaticBed = HmfExonPanelBed.createNamedCodingRegions(includeUTR, genes, transcripts);
         NamedBedFile.writeBedFile(file, somaticBed);
+    }
+
+    private static void createUnnamedBedFiles(boolean includeUTR, String file, Set<String> genes, List<HmfTranscriptRegion> transcripts) throws IOException {
+        final List<GenomeRegion> somaticBed = HmfExonPanelBed.createUnnamedCodingRegions(includeUTR, genes, transcripts);
+        NamedBedFile.writeUnnamedBedFile(file, somaticBed);
     }
 
     @NotNull
