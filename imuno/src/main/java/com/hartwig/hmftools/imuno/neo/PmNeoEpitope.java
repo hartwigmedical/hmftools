@@ -22,7 +22,6 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
-import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getAminoAcids;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBaseExcerpt;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBases;
@@ -49,12 +48,16 @@ public class PmNeoEpitope extends NeoEpitope
 {
     private final PointMutationData mPointMutation;
     private final int mIndelBaseDiff;
+    private String mWildtypeBases;
+    private String mWildtypeAcids;
 
     public PmNeoEpitope(final PointMutationData pointMutation)
     {
         super();
         mPointMutation = pointMutation;
         mIndelBaseDiff = mPointMutation.Alt.length() - mPointMutation.Ref.length();
+        mWildtypeBases = "";
+        mWildtypeAcids = "";
     }
 
     public byte orientation(int fs)
@@ -133,6 +136,7 @@ public class PmNeoEpitope extends NeoEpitope
     public int skippedAcceptors() { return 0; }
     public int skippedDonors() { return 0; }
     public void setSkippedSpliceSites(final EnsemblDataCache geneTransCache) {}
+    public String wildtypeAcids() { return mWildtypeAcids; }
 
     public void setTranscriptData(final TranscriptData upTransData, final TranscriptData downTransData)
     {
@@ -437,10 +441,11 @@ public class PmNeoEpitope extends NeoEpitope
             upBases = upBases.substring(0, upBases.length() - upOpenCodonBases);
         }
 
+        mWildtypeBases = upBases + downBases;
+
         final String upstreamAcids = getAminoAcids(upBases, false);
         final String downstreamAcids = getAminoAcids(downBases, true);
-
-        WildtypeAcids = upstreamAcids + downstreamAcids;
+        mWildtypeAcids = upstreamAcids + downstreamAcids;
     }
 
     public String toString()

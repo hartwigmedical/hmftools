@@ -363,9 +363,9 @@ public class NeoEpitopeAnnotator
             }
 
             // filter out missense if in some transcripts their NE is the same as the wild-type
-            if(neData.variantType() == NeoEpitopeType.MISSENSE && !neData.WildtypeAcids.isEmpty())
+            if(neData.variantType() == NeoEpitopeType.MISSENSE && !neData.wildtypeAcids().isEmpty())
             {
-                if(neData.aminoAcidString().contains(neData.WildtypeAcids))
+                if(neData.aminoAcidString().contains(neData.wildtypeAcids()))
                     continue;
             }
 

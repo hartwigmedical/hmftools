@@ -95,6 +95,7 @@ public class SvNeoEpitope extends NeoEpitope
 
     public int skippedDonors() { return mSkippedSpliceAcceptorDonors[FS_UP]; }
     public int skippedAcceptors() { return mSkippedSpliceAcceptorDonors[FS_DOWN]; }
+    public String wildtypeAcids() { return ""; }
 
     public void setTranscriptData(final TranscriptData upTransData, final TranscriptData downTransData)
     {

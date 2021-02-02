@@ -61,7 +61,6 @@ public abstract class NeoEpitope
     public int NmdBasesMax;
     public int CodingBasesLengthMin;
     public int CodingBasesLengthMax;
-    public String WildtypeAcids;
     public String UpstreamWildTypeAcids; // wildtype AAs starting from the upstream AAs
 
     public boolean Valid;
@@ -92,7 +91,6 @@ public abstract class NeoEpitope
         NmdBasesMax = 0;
         CodingBasesLengthMin = 0;
         CodingBasesLengthMax = 0;
-        WildtypeAcids = "";
         UpstreamWildTypeAcids = "";
         Valid = true;
 
@@ -126,6 +124,7 @@ public abstract class NeoEpitope
     public abstract int unsplicedDistance();
     public abstract int skippedAcceptors();
     public abstract int skippedDonors();
+    public abstract String wildtypeAcids();
 
     public void setCodingBases(final RefGenomeInterface refGenome, int reqAminoAcids)
     {
@@ -278,7 +277,7 @@ public abstract class NeoEpitope
                 chromosome(FS_UP), chromosome(FS_DOWN), orientation(FS_UP), orientation(FS_DOWN),
                 UpstreamAcids, DownstreamAcids, NovelAcid, NmdBasesMin, NmdBasesMax, CodingBasesLengthMin, CodingBasesLengthMax,
                 unsplicedDistance(), skippedDonors(), skippedAcceptors(),
-                upTransStr.toString(), downTransStr.toString(), WildtypeAcids,
+                upTransStr.toString(), downTransStr.toString(), wildtypeAcids(),
                 ExtPositions[FS_UP][SE_START], ExtPositions[FS_UP][SE_END], ExtCodingBases[FS_UP], ExtCigars[FS_UP].toString(),
                 ExtPositions[FS_DOWN][SE_START], ExtPositions[FS_DOWN][SE_END], ExtCodingBases[FS_DOWN],
                 ExtCigars[FS_DOWN] != null ? ExtCigars[FS_DOWN].toString() : "",

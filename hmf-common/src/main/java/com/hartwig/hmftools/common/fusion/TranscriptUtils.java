@@ -59,9 +59,10 @@ public class TranscriptUtils
 
         if((strand == POS_STRAND && codingStart == exon.Start) || (strand == NEG_STRAND && codingEnd == exon.End))
         {
-            // coding starts on the first base of this exon - coding bases = 1 means take the initial phase, hence the subtraction of 1
-            int startPhase = exon.PhaseStart == PHASE_NONE ? PHASE_1 : exon.PhaseStart;
-            return (startPhase + (codingBases - 1)) % 3;
+            // coding starts on the first base of this exon - take the initial phase and tick it forward
+            // phasing starts on 1 if not specified (ie is -1)
+            int startPhase = exon.PhaseStart == PHASE_NONE ? PHASE_0 : exon.PhaseStart;
+            return (startPhase + codingBases) % 3;
         }
         else if((strand == POS_STRAND && codingStart < exon.Start) || (strand == NEG_STRAND && codingEnd > exon.End))
         {
