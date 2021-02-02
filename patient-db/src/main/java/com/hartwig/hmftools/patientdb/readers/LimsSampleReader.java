@@ -56,8 +56,11 @@ public class LimsSampleReader {
             LOGGER.warn("Could not resolve set name for sequenced sample {}", sampleId);
         }
 
+        boolean isSomaticTumorSample = lims.extractAnalysisType(sampleBarcode) == LimsAnalysisType.SOMATIC_T;
+
         LimsCohortConfig cohortConfig = lims.cohortConfig(sampleBarcode);
-        if (cohortConfig == null) {
+        if (cohortConfig == null && isSomaticTumorSample) {
+            // It does not seem lab populates cohort info consistently for ref samples, so ignoring for this check.
             LOGGER.warn("No cohort config found for {}", sampleId);
             return null;
         }
@@ -67,7 +70,7 @@ public class LimsSampleReader {
                 .sampleBarcode(sampleBarcode)
                 .cohortId(cohortConfig.cohortId())
                 .sequenced(isSequenced)
-                .isSomaticTumorSample(lims.extractAnalysisType(sampleBarcode) == LimsAnalysisType.SOMATIC_T)
+                .isSomaticTumorSample(isSomaticTumorSample)
                 .setName(setName != null ? setName : Strings.EMPTY)
                 .arrivalDate(arrivalDate)
                 .samplingDate(samplingDate)
