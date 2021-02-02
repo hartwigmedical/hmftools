@@ -191,10 +191,12 @@ public class SomaticClassifier implements CuppaClassifier
     {
         if(!mConfig.SampleSigContribFile.isEmpty())
         {
+            CUP_LOGGER.info("loading SNV sig contributions from file({})", mConfig.SampleSigContribFile);
             return loadSigContribsFromCohortFile(mConfig.SampleSigContribFile, mSampleSigContributions);
         }
         else if(mConfig.DbAccess != null)
         {
+            CUP_LOGGER.info("loading SNV sig contributions from database");
             return loadSigContribsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSigContributions);
         }
 

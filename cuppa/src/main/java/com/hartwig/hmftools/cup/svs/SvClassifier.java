@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cup.svs;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
@@ -152,18 +153,12 @@ public class SvClassifier implements CuppaClassifier
                 }
             }
 
+            CUP_LOGGER.info("loading sample SV data from file({})", mConfig.SampleSvFile);
             return loadSvDataFromCohortFile(mConfig.SampleSvFile, mSampleSvData);
         }
 
         return true;
 
-        /* will load DB data for each sample
-        if(mConfig.DbAccess != null)
-        {
-            return loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSvData);
-        }
-
-        return false;
-        */
+        // will load DB data for each sample on the fly
     }
 }
