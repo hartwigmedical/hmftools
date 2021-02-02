@@ -63,6 +63,12 @@ public class SampleDataCache
                 .map(x -> x.Id).collect(Collectors.toList());
     }
 
+    public void markRefSamples()
+    {
+        // mark any samples included in the ref data set so they can be excluded from self-comparison
+        SampleDataList.stream().filter(x -> RefSampleCancerTypeMap.containsKey(x.Id)).forEach(x -> x.setRefSample());
+    }
+
     public SampleData findRefSampleData(final String sampleId)
     {
         for(List<SampleData> sampleDataList : RefCancerSampleData.values())

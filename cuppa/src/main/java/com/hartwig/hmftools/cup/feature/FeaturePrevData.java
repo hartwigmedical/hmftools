@@ -5,15 +5,15 @@ import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 public class FeaturePrevData
 {
     public final String CancerType;
-    public final String Gene;
+    public final String Name;
     public final FeatureType Type;
     public final double RawPrevalence;
     public double Prevalence;
 
-    public FeaturePrevData(final String cancerType, final String gene, final FeatureType type, final double prevalence)
+    public FeaturePrevData(final String cancerType, final String name, final FeatureType type, final double prevalence)
     {
         CancerType = cancerType;
-        Gene = gene;
+        Name = name;
         Type = type;
         RawPrevalence = prevalence;
         Prevalence = prevalence;
@@ -29,6 +29,6 @@ public class FeaturePrevData
     }
 
     public String toString() { return String.format("ct(%s) gene(%s) type(%s) prev(%.4f adj=%.4f)",
-            CancerType, Gene, Type, RawPrevalence, Prevalence); }
+            CancerType, Name, Type, RawPrevalence, Prevalence); }
 
 }

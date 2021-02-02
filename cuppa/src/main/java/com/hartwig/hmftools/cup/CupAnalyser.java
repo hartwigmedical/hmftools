@@ -95,10 +95,7 @@ public class CupAnalyser
     {
         mSampleDataCache.loadReferenceSampleData(mConfig.RefSampleDataFile);
         mSampleDataCache.loadSampleData(cmd.getOptionValue(SPECIFIC_SAMPLE_DATA), mConfig.SampleDataFile);
-
-        // mark any samples included in the ref data set so they can be excluded from self-comparison
-        mSampleDataCache.SampleDataList.stream()
-                .filter(x -> mSampleDataCache.RefSampleCancerTypeMap.containsKey(x.Id)).forEach(x -> x.setRefSample());
+        mSampleDataCache.markRefSamples();
     }
 
     public void run()

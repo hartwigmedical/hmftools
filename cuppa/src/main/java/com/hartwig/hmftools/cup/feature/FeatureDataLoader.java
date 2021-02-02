@@ -453,12 +453,12 @@ public class FeatureDataLoader
                 if(prevData == null)
                     continue;
 
-                FeaturePrevCounts genePrevTotals = genePrevalenceTotals.get(prevData.Gene);
+                FeaturePrevCounts genePrevTotals = genePrevalenceTotals.get(prevData.Name);
 
                 if(genePrevTotals == null)
                 {
                     genePrevTotals = new FeaturePrevCounts();
-                    genePrevalenceTotals.put(prevData.Gene, genePrevTotals);
+                    genePrevalenceTotals.put(prevData.Name, genePrevTotals);
                 }
 
                 genePrevTotals.MaxPrevalence = max(genePrevTotals.MaxPrevalence, prevData.Prevalence);

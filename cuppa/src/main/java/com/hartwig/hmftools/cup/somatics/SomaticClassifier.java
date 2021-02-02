@@ -493,7 +493,7 @@ public class SomaticClassifier implements CuppaClassifier
 
         if(sampleSigContribs == null)
         {
-            CUP_LOGGER.error("sample({}) sig contributions not found", sample.Id);
+            CUP_LOGGER.debug("sample({}) sig contributions not found", sample.Id);
             return;
         }
 
@@ -568,14 +568,14 @@ public class SomaticClassifier implements CuppaClassifier
         }
     }
 
-    public void addSampleData(final List<double[]> snvCounts, final List<double[]> posFreqCounts)
+    public void addSampleData(final List<String> sampleIds, final List<double[]> snvCounts, final List<double[]> posFreqCounts)
     {
         mSampleCounts = new Matrix(snvCounts.get(0).length, snvCounts.size());
 
         for(int i = 0; i < snvCounts.size(); ++i)
         {
             mSampleCounts.setCol(i, snvCounts.get(i));
-            mSampleCountsIndex.put(mSampleDataCache.SampleIds.get(i), i);
+            mSampleCountsIndex.put(sampleIds.get(i), i);
         }
 
         mSamplePosFrequencies = new Matrix(posFreqCounts.get(0).length, posFreqCounts.size());
@@ -583,7 +583,7 @@ public class SomaticClassifier implements CuppaClassifier
         for(int i = 0; i < posFreqCounts.size(); ++i)
         {
             mSamplePosFrequencies.setCol(i, posFreqCounts.get(i));
-            mSamplePosFreqIndex.put(mSampleDataCache.SampleIds.get(i), i);
+            mSamplePosFreqIndex.put(sampleIds.get(i), i);
         }
     }
 
