@@ -16,4 +16,7 @@ public abstract class CkbEntryInterpretation {
     @NotNull
     public abstract VariantInterpretation variantInterpretation();
 
+    @NotNull
+    public abstract TreatmentInterpretation treatmentInterpretation();
+
 }
