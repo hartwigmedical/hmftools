@@ -46,7 +46,7 @@ class SomaticVariantDAO {
     public BufferedWriter<SomaticVariant> writer(String tumorSample) {
         BufferedWriterConsumer<SomaticVariant> consumer = new BufferedWriterConsumer<SomaticVariant>() {
             @Override
-            public void intialise() {
+            public void initialise() {
                 context.delete(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(tumorSample)).execute();
             }
 

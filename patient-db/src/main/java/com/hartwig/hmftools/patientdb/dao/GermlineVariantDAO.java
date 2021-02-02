@@ -31,7 +31,7 @@ public class GermlineVariantDAO {
     public BufferedWriter<VariantContext> writer(String tumorSample, String referenceSample, String rnaSample) {
         BufferedWriterConsumer<VariantContext> consumer = new BufferedWriterConsumer<VariantContext>() {
             @Override
-            public void intialise() {
+            public void initialise() {
                 context.delete(GERMLINEVARIANT2).where(GERMLINEVARIANT2.SAMPLEID.eq(tumorSample)).execute();
             }
 
@@ -42,7 +42,6 @@ public class GermlineVariantDAO {
         };
 
         return new BufferedWriter<>(consumer);
-
     }
 
     private void writeAll(@NotNull final Timestamp timestamp, String tumorSample, String referenceSample, String rnaSample,
@@ -95,7 +94,6 @@ public class GermlineVariantDAO {
                 GERMLINEVARIANT2.HOTSPOT,
                 GERMLINEVARIANT2.MAPPABILITY,
                 GERMLINEVARIANT2.REPORTED);
-
     }
 
     private static void addRecord(Timestamp timestamp, InsertValuesStepN inserter, String tumorSample, String referenceSample,
@@ -147,7 +145,6 @@ public class GermlineVariantDAO {
                 decorator.hotspot().toString(),
                 decorator.mappability(),
                 decorator.reported()
-
         );
     }
 }
