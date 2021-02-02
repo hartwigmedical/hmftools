@@ -130,6 +130,7 @@ public class SampleTraitClassifier implements CuppaClassifier
 
         if(sampleTraits == null)
         {
+            CUP_LOGGER.warn("sample({}) has missing traits data, classifier invalid", sample.Id);
             mIsValid = false;
             return;
         }

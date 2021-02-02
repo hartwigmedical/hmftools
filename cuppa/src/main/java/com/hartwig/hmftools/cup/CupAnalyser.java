@@ -154,7 +154,7 @@ public class CupAnalyser
         closeBufferedWriter(mSampleDataWriter);
         closeBufferedWriter(mSampleSimilarityWriter);
 
-        CUP_LOGGER.info("CUP analysis complete");
+        CUP_LOGGER.info("CUP analysis complete {}", !allClassifiersValid() ? "with errors" : "");
     }
 
     private boolean allClassifiersValid()
