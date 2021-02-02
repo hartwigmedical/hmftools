@@ -114,10 +114,10 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val cPhasedEvidence = phasedEvidenceFactory.evidence(hlaCContext, cFragments)
 
         // Validate phasing against expected sequences
-        val expectedSequences = aminoAcidSequences.filter {  it.allele in config.expectedAlleles }
-        PhasedEvidenceValidation.validateExpected("A", aPhasedEvidence, expectedSequences )
+        val expectedSequences = aminoAcidSequences.filter { it.allele in config.expectedAlleles }
+        PhasedEvidenceValidation.validateExpected("A", aPhasedEvidence, expectedSequences)
         PhasedEvidenceValidation.validateExpected("B", bPhasedEvidence, expectedSequences)
-        PhasedEvidenceValidation.validateExpected("C", cPhasedEvidence,expectedSequences)
+        PhasedEvidenceValidation.validateExpected("C", cPhasedEvidence, expectedSequences)
 
         // Candidates
         val candidateFactory = Candidates(config, nucleotideSequences, aminoAcidSequences)
@@ -192,7 +192,8 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
                 logger.info(topComplex)
             }
 
-            logger.info("WINNING ALLELES: ${topCoverage.alleles.map { it.allele }}")
+            val complexesWithSameTopScore = complexCoverage.filter { it.totalCoverage == topCoverage.totalCoverage }.count()
+            logger.info("${config.sample} - $complexesWithSameTopScore WINNERS, WINNING ALLELES: ${topCoverage.alleles.map { it.allele }}")
 
             val winningAlleles = topCoverage.alleles.map { it.allele }
             val winningSequences = candidates.filter { candidate -> candidate.allele in winningAlleles }
