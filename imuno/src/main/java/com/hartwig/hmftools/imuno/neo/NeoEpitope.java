@@ -198,9 +198,19 @@ public abstract class NeoEpitope
         CodingBasesLengthMin = CodingBasesLengthMax = upstreamCodingBases + downstreamCodingBases;
     }
 
+    public static String trimIncompleteCodons(final String codingBases)
+    {
+        // strip leading incomplete codon bases from start of coding bases
+        int remainder = codingBases.length() % 3;
+        if(remainder == 0)
+            return codingBases;
+
+        return codingBases.substring(remainder);
+    }
+
     public void setAminoAcids(final RefGenomeInterface refGenome, int reqWildtypeAminoAcids)
     {
-        UpstreamAcids = getAminoAcids(CodingBases[FS_UP], false);
+        UpstreamAcids = getAminoAcids(trimIncompleteCodons(CodingBases[FS_UP]), false);
         NovelAcid = getAminoAcids(NovelCodonBases, true);
         DownstreamAcids = getAminoAcids(CodingBases[FS_DOWN], true);
 
@@ -228,7 +238,7 @@ public abstract class NeoEpitope
             if(strand(FS_UP) == NEG_STRAND)
                 upWildtypeBases = reverseStrandBases(upWildtypeBases);
 
-            UpstreamWildTypeAcids = getAminoAcids(upWildtypeBases, true);
+            UpstreamWildTypeAcids = getAminoAcids(trimIncompleteCodons(upWildtypeBases), true);
         }
 
         IM_LOGGER.trace("ne({}) upAA({}) novel({}) downAA({})",

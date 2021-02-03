@@ -441,7 +441,7 @@ public class PmNeoEpitope extends NeoEpitope
             upBases = upBases.substring(0, upBases.length() - upOpenCodonBases);
         }
 
-        mWildtypeBases = upBases + downBases;
+        mWildtypeBases = trimIncompleteCodons(upBases) + downBases;
 
         final String upstreamAcids = getAminoAcids(upBases, false);
         final String downstreamAcids = getAminoAcids(downBases, true);
