@@ -212,7 +212,9 @@ public final class LoadClinicalData {
                     }
                 }
             } else {
-                patientTumorCurationStatusMap.put(patientId, PatientTumorCurationStatus.NOT_RESOLVED);
+                if (!patientId.startsWith("CORE") || !patientId.startsWith("WIDE")) {
+                    patientTumorCurationStatusMap.put(patientId, PatientTumorCurationStatus.NOT_RESOLVED);
+                }
             }
         }
 
