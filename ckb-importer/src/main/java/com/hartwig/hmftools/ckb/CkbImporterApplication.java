@@ -82,6 +82,7 @@ public class CkbImporterApplication {
 //
 //        LOGGER.info("variant: {}", ckbEntryInterpretation.get(1).variantInterpretation().get(1).variant());
 //        LOGGER.info("gene: {}", ckbEntryInterpretation.get(1).variantInterpretation().get(1).gene());
+        LOGGER.info("size: {}", ckbEntryInterpretation.get(0).treatmentInterpretation().size());
 
         LOGGER.info("treatmentApproach: {}", ckbEntryInterpretation.get(0).treatmentInterpretation());
       //  LOGGER.info("treatmentApproach: {}", ckbEntryInterpretation.get(1).treatmentInterpretation().get(1).treatmentApproach());

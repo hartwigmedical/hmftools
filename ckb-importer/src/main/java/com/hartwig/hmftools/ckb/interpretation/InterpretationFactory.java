@@ -86,16 +86,14 @@ public class InterpretationFactory {
             if (treatmentApproach.id() == treatmentApprochId) {
                 outputBuilder.treatmentApproach(treatmentApproach);
                 outputBuilder.treatmentApproachInterpretation(matchTreatmentApprochInterpretation(ckbEntry,
-                        treatmentApproach.id(),
                         treatmentApproach)); //array
-
             }
         }
         return outputBuilder.build();
     }
 
     @NotNull
-    private static TreatmentApprochInterpretation matchTreatmentApprochInterpretation(@NotNull CkbEntry ckbEntry, int treatmentApprochId,
+    private static TreatmentApprochInterpretation matchTreatmentApprochInterpretation(@NotNull CkbEntry ckbEntry,
             @NotNull TreatmentApproach treatmentApproach) {
         ImmutableTreatmentApprochInterpretation.Builder outputBuilder = ImmutableTreatmentApprochInterpretation.builder();
 
