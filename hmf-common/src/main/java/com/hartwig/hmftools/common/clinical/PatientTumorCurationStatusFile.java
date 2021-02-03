@@ -24,7 +24,7 @@ public final class PatientTumorCurationStatusFile {
     }
 
     @NotNull
-    static List<String> toLines(@NotNull Map<String, PatientTumorCurationStatus> patientTumorCurationStatusMap) {
+    private static List<String> toLines(@NotNull Map<String, PatientTumorCurationStatus> patientTumorCurationStatusMap) {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
         for (String patient : patientTumorCurationStatusMap.keySet()) {
