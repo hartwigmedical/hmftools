@@ -6,13 +6,18 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.VariantInfo;
-import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
 import com.hartwig.hmftools.ckb.datamodel.drugclass.DrugClass;
 import com.hartwig.hmftools.ckb.datamodel.gene.Gene;
 import com.hartwig.hmftools.ckb.datamodel.molecularprofile.MolecularProfile;
 import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
 import com.hartwig.hmftools.ckb.datamodel.treatmentapproach.TreatmentApproach;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
+import com.hartwig.hmftools.ckb.interpretation.treatmenttree.ImmutableTreatmentApprochInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.treatmenttree.ImmutableTreatmentInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.treatmenttree.TreatmentApprochInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.treatmenttree.TreatmentInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.varianttree.ImmutableVariantInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.varianttree.VariantInterpretation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -30,16 +35,17 @@ public class InterpretationFactory {
             outputBuilder.molecularProfile(molecularProfile);
 
             for (VariantInfo variantInfo : molecularProfile.geneVariant()) {
-                VariantInterpretation variantInterpretation = matchVariantInterpretation(ckbEntry, variantInfo.id());
+                VariantInterpretation variantInterpretation = matchVariantInterpretation(ckbEntry, variantInfo.id()); //array
                 outputBuilder.addVariantInterpretation(variantInterpretation);
 
             }
 
-//            for (TreatmentApproachInfo treatmentApproachInfo : molecularProfile.treatmentApproach()) {
-//                TreatmentInterpretation treatmentInterpretation = matchTreatmentInterpretation(ckbEntry, treatmentApproachInfo.id());
-//                outputBuilder.treatmentInterpretation(treatmentInterpretation);
-//
-//            }
+            for (TreatmentApproachInfo treatmentApproachInfo : molecularProfile.treatmentApproach()) {
+                TreatmentInterpretation treatmentInterpretation =
+                        matchTreatmentInterpretation(ckbEntry, treatmentApproachInfo.id()); //array
+                outputBuilder.addTreatmentInterpretation(treatmentInterpretation);
+
+            }
 
             CkbEntryInterpretation.add(outputBuilder.build());
         }
@@ -68,27 +74,37 @@ public class InterpretationFactory {
         ImmutableTreatmentInterpretation.Builder outputBuilder = ImmutableTreatmentInterpretation.builder();
         for (TreatmentApproach treatmentApproach : ckbEntry.treatmentApproach()) {
             if (treatmentApproach.id() == treatmentApprochId) {
-                outputBuilder.treatmentApproach(treatmentApproach);  //Array
+                outputBuilder.treatmentApproach(matchTreatmentApprochInterpretation(ckbEntry,
+                        treatmentApproach.id(),
+                        treatmentApproach)); //array
 
-                for (DrugClass drugClass: ckbEntry.drugClass()) {
-                    if (treatmentApproach.drugClass() != null){
-                        if (drugClass.id() == treatmentApproach.drugClass().id()) {
-                            outputBuilder.drugClass(drugClass);  //object
-                        }
-                    } else {
-                        outputBuilder.drugClass(null);
-                    }
-                }
+            }
+        }
+        return outputBuilder.build();
+    }
 
-                for (Therapy therapy: ckbEntry.therapy()) {
-                    if (treatmentApproach.therapy() != null) {
-                        if (therapy.id() == treatmentApproach.therapy().id()) {
-                            outputBuilder.therapy(therapy); //object
-                        }
-                    } else {
-                        outputBuilder.therapy(null);
-                    }
+    @NotNull
+    private static TreatmentApprochInterpretation matchTreatmentApprochInterpretation(@NotNull CkbEntry ckbEntry, int treatmentApprochId,
+            @NotNull TreatmentApproach treatmentApproach) {
+        ImmutableTreatmentApprochInterpretation.Builder outputBuilder = ImmutableTreatmentApprochInterpretation.builder();
+
+        for (DrugClass drugClass : ckbEntry.drugClass()) {
+            if (treatmentApproach.drugClass() != null) {
+                if (drugClass.id() == treatmentApproach.drugClass().id()) {
+                    outputBuilder.drugClass(drugClass);  //object
                 }
+            } else {
+                outputBuilder.drugClass(null);
+            }
+        }
+
+        for (Therapy therapy : ckbEntry.therapy()) {
+            if (treatmentApproach.therapy() != null) {
+                if (therapy.id() == treatmentApproach.therapy().id()) {
+                    outputBuilder.therapy(therapy); //object
+                }
+            } else {
+                outputBuilder.therapy(null);
             }
         }
         return outputBuilder.build();
