@@ -142,7 +142,7 @@ public final class LoadClinicalData {
                 generatePatientTumorCurationStatusMap(sampleDataPerPatient, patients, cmd.getOptionValue(REPORTING_DB_TSV));
 
         LOGGER.info("Writing patient tumor curation status");
-        DumpPrimaryTumorData.writePatientTumorCurationStatusMap(cmd.getOptionValue(PATIENT_TUMOR_CURATION_STATUS_TSV),
+        DumpPrimaryTumorData.writePatientTumorCurationStatesToTSV(cmd.getOptionValue(PATIENT_TUMOR_CURATION_STATUS_TSV),
                 patientTumorCurationStatusMap);
 
         LOGGER.info("Writing curated primary tumors");

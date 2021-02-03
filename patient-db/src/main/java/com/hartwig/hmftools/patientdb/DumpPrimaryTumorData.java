@@ -28,7 +28,7 @@ final class DumpPrimaryTumorData {
     private DumpPrimaryTumorData() {
     }
 
-    static void writePatientTumorCurationStatusMap(@NotNull String outputTsv,
+    static void writePatientTumorCurationStatesToTSV(@NotNull String outputTsv,
             @NotNull Map<String, PatientTumorCurationStatus> patientTumorCurationStatusMap) throws IOException {
         PatientTumorCurationStatusFile.writeTumorCurationStatusFile(outputTsv, patientTumorCurationStatusMap);
         LOGGER.info(" Written {} patient tumor curation states to {}", patientTumorCurationStatusMap.size(), outputTsv);
