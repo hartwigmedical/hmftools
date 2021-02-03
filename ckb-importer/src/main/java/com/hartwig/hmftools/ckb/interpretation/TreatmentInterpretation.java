@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.ckb.interpretation;
 
-import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
 import com.hartwig.hmftools.ckb.datamodel.drugclass.DrugClass;
 import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
 import com.hartwig.hmftools.ckb.datamodel.treatmentapproach.TreatmentApproach;
@@ -16,12 +15,12 @@ public abstract class TreatmentInterpretation {
     @NotNull
     public abstract TreatmentApproach treatmentApproach();
 
-    @NotNull
+    @Nullable
     public abstract DrugClass drugClass();
 
-    @NotNull
+    @Nullable
     public abstract Therapy therapy();
 
-    @NotNull
-    public abstract Drug drug();
+    //@NotNull
+    //public abstract Drug drug();
 }
