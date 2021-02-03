@@ -57,6 +57,13 @@ object HlaSequenceFile {
         val outputFile = File(deflatedFileName)
         outputFile.writeText("")
 
+//        val indexes = template.sequence.indices.map { it.toString().padStart(3, '0') }
+//        for (i in 0..2) {
+//            outputFile.appendText("Index".padEnd(20, ' ') + "\t")
+//            outputFile.appendText(indexes.map { it[i] }.joinToString (separator = ""))
+//            outputFile.appendText("\n")
+//        }
+
         for (boundary in boundaries) {
             writeBoundary(boundary, deflatedFileName)
         }
