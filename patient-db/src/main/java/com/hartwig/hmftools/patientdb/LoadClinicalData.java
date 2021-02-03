@@ -482,7 +482,7 @@ public final class LoadClinicalData {
 
         for (Map.Entry<String, List<SampleData>> entry : sampleDataPerPatient.entrySet()) {
             List<SampleData> tumorSamples = tumorSamplesOnly(entry.getValue());
-            if (!tumorSamples.isEmpty() && tumorSamples.get(0).cohortId().startsWith("CORE")) {
+            if (!tumorSamples.isEmpty() && tumorSamples.get(0).cohortId().contains("CORE")) {
                 String patientId = entry.getKey();
                 // We assume every sample for a single patient has the same primary tumor.
                 String primaryTumor = tumorSamples.get(0).limsPrimaryTumor();
