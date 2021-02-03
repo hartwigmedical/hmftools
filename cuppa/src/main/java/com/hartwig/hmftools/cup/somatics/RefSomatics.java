@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
+import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.extractPositionFrequencyCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.extractTrinucleotideCounts;
@@ -82,7 +83,7 @@ public class RefSomatics implements RefClassifier
         mPosFreqCounts = null;
         mPosFreqCountsIndex = Maps.newHashMap();
 
-        mPositionFrequencies = new PositionFrequencies(POS_FREQ_BUCKET_SIZE, DEFAULT_POS_FREQ_BUCKET_SIZE);
+        mPositionFrequencies = new PositionFrequencies(POS_FREQ_BUCKET_SIZE, POS_FREQ_MAX_SAMPLE_COUNT);
 
         populateReportableSignatures();
     }
@@ -102,6 +103,9 @@ public class RefSomatics implements RefClassifier
         mPosFreqCounts = loadReferenceSnvCounts(mConfig.RefSnvPositionDataFile, mPosFreqCountsIndex, "position frequency");
 
         retrieveMissingSampleCounts();
+
+        mTriNucCounts.cacheTranspose();
+        mPosFreqCounts.cacheTranspose();
 
         buildSignaturePercentiles();
         buildSnvCountPercentiles();
@@ -229,9 +233,6 @@ public class RefSomatics implements RefClassifier
                 mPosFreqCountsIndex.put(sampleId, refSampleIndex);
             }
         }
-
-        mTriNucCounts.cacheTranspose();
-        mPosFreqCounts.cacheTranspose();
 
         // write out sample matrix data
         writeSampleCounts(mTriNucCounts, mTriNucCountsIndex, REF_FILE_SNV_COUNTS);

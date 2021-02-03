@@ -67,6 +67,12 @@ public class RefDataBuilder
 
     public void run()
     {
+        if(mSampleDataCache.RefSampleDataList.isEmpty() || mSampleDataCache.RefCancerSampleData.isEmpty())
+        {
+            CUP_LOGGER.info("failed to load ref sample data");
+            return;
+        }
+
         CUP_LOGGER.info("CUP building ref data sets");
 
         for(RefClassifier classifier : mClassifiers)
