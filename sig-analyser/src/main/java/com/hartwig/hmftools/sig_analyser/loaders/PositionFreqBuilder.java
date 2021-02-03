@@ -5,6 +5,10 @@ import static java.lang.Math.floor;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT;
+import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getBucketIndex;
+import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getChromosomeFromIndex;
+import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getPositionFromIndex;
+import static com.hartwig.hmftools.common.sigs.PositionFrequencies.initialisePositionCache;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
@@ -72,7 +76,8 @@ public class PositionFreqBuilder
         mOutputDir = parseOutputDir(cmd);
         mOutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID);
 
-        initialisePositionCache();
+        mPositionCacheSize = initialisePositionCache(mBucketSize, mChromosomeLengths, mChromosomePosIndex);
+        SIG_LOGGER.info("position cache size({}) from position bucket position({})", mPositionCacheSize, mBucketSize);
 
         loadSampleData(cmd.getOptionValue(SAMPLE_DATA_FILE));
 
@@ -91,7 +96,8 @@ public class PositionFreqBuilder
         mOutputDir = outputDir;
         mOutputFileId = outputId;
 
-        initialisePositionCache();
+        mPositionCacheSize = initialisePositionCache(mBucketSize, mChromosomeLengths, mChromosomePosIndex);
+        SIG_LOGGER.info("position cache size({}) from position bucket position({})", mPositionCacheSize, mBucketSize);
 
         mSampleList = null;
         mSamplePosCountsFile = null;
@@ -133,7 +139,7 @@ public class PositionFreqBuilder
         SIG_LOGGER.info("position frequencies data sets complete");
     }
 
-    public void writeSampleCounts(final String sampleId, final Map<String,Map<Integer,Integer>> chrPositionCounts)
+    public void writeSampleCounts(final String sampleId, final Map<String,Map<Integer,Integer>> chrPositionCounts, boolean writeCoords)
     {
         SIG_LOGGER.info("sample({}) writing position frequencies data", sampleId);
 
@@ -142,7 +148,11 @@ public class PositionFreqBuilder
             final String filename = mOutputDir + sampleId + ".sig.pos_freq_counts.csv";
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write(sampleId);
+            if(writeCoords)
+                writer.write(String.format("Chromosome,Position,Frequency"));
+            else
+                writer.write(sampleId);
+
             writer.newLine();
 
             final int[] bucketFrequencies = new int[mPositionCacheSize];
@@ -156,14 +166,25 @@ public class PositionFreqBuilder
                     int position = entry.getKey();
                     int frequency = entry.getValue();
 
-                    int posBucketIndex = getBucketIndex(chromosome, position);
+                    int posBucketIndex = getBucketIndex(mBucketSize, mChromosomePosIndex, chromosome, position);
                     bucketFrequencies[posBucketIndex] = frequency;
                 }
             }
 
             for(int b = 0; b < mPositionCacheSize; ++b)
             {
-                writer.write(String.format("%d", bucketFrequencies[b]));
+                if(writeCoords)
+                {
+                    final String chromosome = getChromosomeFromIndex(mChromosomePosIndex, b);
+                    int position = getPositionFromIndex(mChromosomePosIndex, chromosome, b, mBucketSize);
+
+                    writer.write(String.format("%s,%d,%d", chromosome, position, bucketFrequencies[b]));
+                }
+                else
+                {
+                    writer.write(String.format("%d", bucketFrequencies[b]));
+                }
+
                 writer.newLine();
             }
 
@@ -173,44 +194,6 @@ public class PositionFreqBuilder
         {
             SIG_LOGGER.error("failed to write sample pos data output: {}", e.toString());
         }
-    }
-
-    private void initialisePositionCache()
-    {
-        if(mBucketSize == 0)
-            return;
-
-        mChromosomeLengths.clear();
-
-        final RefGenomeCoordinates refGenome37 = RefGenomeCoordinates.COORDS_37;
-        final RefGenomeCoordinates refGenome38 = RefGenomeCoordinates.COORDS_38;
-
-        int lastEndPosIndex = -1;
-
-        for(HumanChromosome chr : HumanChromosome.values())
-        {
-            final String chromosome = chr.toString();
-            int length = max(refGenome37.lengths().get(chr).intValue(), refGenome38.lengths().get(chr).intValue());
-            mChromosomeLengths.put(chromosome, length);
-
-            // chromosomes will have position indices as: chr1 0-9, chr2 10-20 etc
-            int startPosIndex = lastEndPosIndex > 0 ? lastEndPosIndex + 1 : 0;
-            mChromosomePosIndex.put(chromosome, startPosIndex);
-
-            int positionCount = (int)ceil(length/(double)mBucketSize);
-            mPositionCacheSize += positionCount;
-
-            lastEndPosIndex = startPosIndex + positionCount - 1;
-        }
-
-        SIG_LOGGER.info("position cache size({}) from position bucket position({})", mPositionCacheSize, mBucketSize);
-    }
-
-    public int getBucketIndex(final String chromosome, int position)
-    {
-        int chromosomePosIndex = mChromosomePosIndex.get(chromosome);
-        int posBucket = (int)floor(position/(double)mBucketSize);
-        return chromosomePosIndex + posBucket;
     }
 
     private void loadSampleData(final String filename)
@@ -302,7 +285,7 @@ public class PositionFreqBuilder
                     }
                 }
 
-                int posBucketIndex = getBucketIndex(chromosome, position);
+                int posBucketIndex = getBucketIndex(mBucketSize, mChromosomePosIndex, chromosome, position);
                 currentCounts[posBucketIndex] += count;
 
                 line = fileReader.readLine();

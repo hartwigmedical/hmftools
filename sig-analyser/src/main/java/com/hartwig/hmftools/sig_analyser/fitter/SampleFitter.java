@@ -69,6 +69,7 @@ public class SampleFitter
     private final int mPositionBucketSize;
     private final int mMaxSampleCount;
     private final boolean mFitToTotal;
+    private final boolean mWritePosFreqCoords;
 
     private final DatabaseAccess mDbAccess;
     private final String mVcfFile;
@@ -86,6 +87,7 @@ public class SampleFitter
     private static final String MIN_ALLOC = "min_alloc";
     private static final String MIN_ALLOC_PERC = "min_alloc_perc";
     private static final String FIT_TO_TOTAL = "fit_to_total";
+    private static final String WRITE_POS_COORDS = "write_pos_freq_coords";
 
     public SampleFitter(final CommandLine cmd)
     {
@@ -105,6 +107,7 @@ public class SampleFitter
         mVcfFile = cmd.getOptionValue(SOMATIC_VCF_FILE);
         mUploadToDb = Boolean.parseBoolean(cmd.getOptionValue(UPLOAD_TO_DB, "true"));
         mFitToTotal = Boolean.parseBoolean(cmd.getOptionValue(FIT_TO_TOTAL, "true"));
+        mWritePosFreqCoords = cmd.hasOption(WRITE_POS_COORDS);
 
         mPositionBucketSize = Integer.parseInt(cmd.getOptionValue(POSITION_BUCKET_SIZE, "0"));
         mMaxSampleCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, String.valueOf(DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT)));
@@ -240,7 +243,7 @@ public class SampleFitter
                         new PositionFreqBuilder(mOutputDir, mOutputId, mPositionBucketSize, mMaxSampleCount);
 
                 final PositionFrequencies samplePosFrequencies = mSnvLoader.getPositionFrequencies().get(0);
-                posFreqBuilder.writeSampleCounts(sampleId, samplePosFrequencies.getChrPosBucketFrequencies());
+                posFreqBuilder.writeSampleCounts(sampleId, samplePosFrequencies.getChrPosBucketFrequencies(), mWritePosFreqCoords);
             }
         }
 
@@ -366,6 +369,7 @@ public class SampleFitter
         options.addOption(SOMATIC_VCF_FILE, true, "Somatic variant VCF file");
         options.addOption(MIN_ALLOC_PERC, true, "Min signature allocation as percentage (default=0.5%)");
         options.addOption(MIN_ALLOC, true, "Min signature allocation (default=1)");
+        options.addOption(WRITE_POS_COORDS, false, "Include coordinates with pos-frequency counts");
 
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);

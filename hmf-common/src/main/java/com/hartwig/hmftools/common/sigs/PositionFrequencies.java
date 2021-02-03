@@ -31,7 +31,6 @@ public class PositionFrequencies
     public static final int DEFAULT_POS_FREQ_BUCKET_SIZE = 500000;
     public static final int DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT = 20000;
 
-
     public PositionFrequencies(final int bucketSize, final int maxSampleCount)
     {
         mBucketSize = bucketSize;
@@ -41,7 +40,7 @@ public class PositionFrequencies
         mChromosomePosIndex = Maps.newHashMap();
         mChrPosBucketFrequencies = Maps.newHashMap();
 
-        initialisePositionCache();
+        mPositionCacheSize = initialisePositionCache(mBucketSize, mChromosomeLengths, mChromosomePosIndex);
 
         mCounts = new int[mPositionCacheSize];
     }
@@ -65,7 +64,7 @@ public class PositionFrequencies
 
     public void addPosition(final String chromosome, int position)
     {
-        int bucketIndex = getBucketIndex(chromosome, position);
+        int bucketIndex = getBucketIndex(mBucketSize, mChromosomePosIndex, chromosome, position);
 
         if(bucketIndex >= 0 && bucketIndex < mCounts.length)
             ++mCounts[bucketIndex];
@@ -87,12 +86,15 @@ public class PositionFrequencies
             positionMap.put(positionBucket, frequency + 1);
     }
 
-    private void initialisePositionCache()
+    public static int initialisePositionCache(
+            int bucketSize, final Map<String,Integer> chromosomeLengths, final Map<String,Integer> chrPosIndexMap)
     {
-        if(mBucketSize == 0)
-            return;
+        int positionCacheSize = 0;
 
-        mChromosomeLengths.clear();
+        if(bucketSize == 0)
+            return positionCacheSize;
+
+        chromosomeLengths.clear();
 
         final RefGenomeCoordinates refGenome37 = RefGenomeCoordinates.COORDS_37;
         final RefGenomeCoordinates refGenome38 = RefGenomeCoordinates.COORDS_38;
@@ -103,26 +105,57 @@ public class PositionFrequencies
         {
             final String chromosome = chr.toString();
             int length = max(refGenome37.lengths().get(chr).intValue(), refGenome38.lengths().get(chr).intValue());
-            mChromosomeLengths.put(chromosome, length);
+            chromosomeLengths.put(chromosome, length);
 
             // chromosomes will have position indices as: chr1 0-9, chr2 10-20 etc
             int startPosIndex = lastEndPosIndex > 0 ? lastEndPosIndex + 1 : 0;
-            mChromosomePosIndex.put(chromosome, startPosIndex);
+            chrPosIndexMap.put(chromosome, startPosIndex);
 
-            int positionCount = (int)ceil(length/(double)mBucketSize);
-            mPositionCacheSize += positionCount;
+            int positionCount = (int)ceil(length/(double)bucketSize);
+            positionCacheSize += positionCount;
 
             lastEndPosIndex = startPosIndex + positionCount - 1;
         }
 
-        // SIG_LOGGER.info("position cache size({}) from position bucket position({})", mPositionCacheSize, mBucketSize);
+        return positionCacheSize;
     }
 
-    private int getBucketIndex(final String chromosome, int position)
+    public static int getBucketIndex(
+            final int bucketSize, final Map<String,Integer> chrPosIndexMap, final String chromosome, int position)
     {
-        int chromosomePosIndex = mChromosomePosIndex.get(chromosome);
-        int posBucket = (int)floor(position/(double)mBucketSize);
+        int chromosomePosIndex = chrPosIndexMap.get(chromosome);
+        int posBucket = (int)floor(position/(double)bucketSize);
         return chromosomePosIndex + posBucket;
+    }
+
+    public static String getChromosomeFromIndex(final Map<String,Integer> chrPosIndexMap, int bucketIndex)
+    {
+        int lastChrStartIndex = -1;
+        String lastChromosome = "";
+        for(HumanChromosome chr : HumanChromosome.values())
+        {
+            final String chromosome = chr.toString();
+            int chrStartIndex = chrPosIndexMap.get(chromosome);
+
+            if(lastChrStartIndex >= 0)
+            {
+                if(bucketIndex >= lastChrStartIndex && bucketIndex < chrStartIndex)
+                {
+                    return lastChromosome;
+                }
+            }
+
+            lastChrStartIndex = chrStartIndex;
+            lastChromosome = chromosome;
+        }
+
+        return lastChromosome;
+    }
+
+    public static int getPositionFromIndex(final Map<String,Integer> chrPosIndexMap, final String chromosome, int bucketIndex, int bucketSize)
+    {
+        int chrStartIndex = chrPosIndexMap.get(chromosome);
+        return (bucketIndex - chrStartIndex) * bucketSize;
     }
 
     public static BufferedWriter createFrequencyCountsWriter(final String outputDir, int bucketSize)
