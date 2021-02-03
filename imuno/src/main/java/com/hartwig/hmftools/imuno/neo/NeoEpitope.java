@@ -144,7 +144,7 @@ public abstract class NeoEpitope
             return;
         }
 
-        // if upstream ends on a phase other than 2, need to take the bases from the downstream gene to make a novel codon
+        // if upstream ends on a phase other than 0, need to take the bases from the downstream gene to make a novel codon
         if(novelUpstreamBases > 0 || novelDownstreamBases > 0 || !isPhased)
         {
             String upstreamBases = CodingBases[FS_UP];
@@ -152,8 +152,9 @@ public abstract class NeoEpitope
 
             if(novelUpstreamBases > upstreamBases.length() || novelDownstreamBases > downstreamBases.length())
             {
-                IM_LOGGER.error("ne({}) invalid upBases({} noveBases={}) or downBases({} noveBases={})",
+                IM_LOGGER.debug("ne({}) invalid upBases({} noveBases={}) or downBases({} noveBases={})",
                         this, upstreamBases, novelUpstreamBases, downstreamBases, novelDownstreamBases);
+                Valid = false;
                 return;
             }
 
@@ -266,8 +267,10 @@ public abstract class NeoEpitope
 
         if(!NovelAcid.isEmpty())
             downAA = NovelAcid.substring(0, 1);
-        else
+        else if(!DownstreamAcids.isEmpty())
             downAA = DownstreamAcids.substring(0, 1);
+        else
+            return true;
 
         return upWildtypeAA.equals(downAA);
     }

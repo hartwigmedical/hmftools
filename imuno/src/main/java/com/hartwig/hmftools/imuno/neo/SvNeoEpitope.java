@@ -188,7 +188,7 @@ public class SvNeoEpitope extends NeoEpitope
             else
             {
                 upCigarElements.add(0, new CigarElement(codingInsSeqLen, CigarOperator.I));
-                RawCodingBases[FS_UP] = mSvFusion.InsertSequence + CodingBases[FS_UP];
+                RawCodingBases[FS_UP] = mSvFusion.InsertSequence + RawCodingBases[FS_UP];
             }
         }
 
