@@ -9,9 +9,10 @@ import java.util.stream.Collectors;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
-import com.hartwig.hmftools.common.clinical.PatientMissingDoidFile;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
+import com.hartwig.hmftools.common.clinical.PatientTumorCurationStatus;
+import com.hartwig.hmftools.common.clinical.PatientTumorCurationStatusFile;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.patientdb.data.Patient;
 
@@ -27,9 +28,10 @@ final class DumpPrimaryTumorData {
     private DumpPrimaryTumorData() {
     }
 
-    static void writePatientsWithMissingDoidToTSV(@NotNull String outputTsv, @NotNull Map<String, String> patients) throws IOException {
-        PatientMissingDoidFile.writeMissingDoid(outputTsv, patients);
-        LOGGER.info(" Written {} missing doid entries to {}", patients.size(), outputTsv);
+    static void writePatientTumorCurationStatusMap(@NotNull String outputTsv,
+            @NotNull Map<String, PatientTumorCurationStatus> patientTumorCurationStatusMap) throws IOException {
+        PatientTumorCurationStatusFile.writeTumorCurationStatusFile(outputTsv, patientTumorCurationStatusMap);
+        LOGGER.info(" Written {} patient tumor curation states to {}", patientTumorCurationStatusMap.size(), outputTsv);
     }
 
     static void writeCuratedPrimaryTumorsToTSV(@NotNull String outputTsv, @NotNull Collection<Patient> patients) throws IOException {

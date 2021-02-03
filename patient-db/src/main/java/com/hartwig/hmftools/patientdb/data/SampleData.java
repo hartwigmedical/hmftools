@@ -24,6 +24,8 @@ public abstract class SampleData implements Comparable<SampleData> {
 
     public abstract boolean isSomaticTumorSample();
 
+    public abstract boolean requiresCuratedPrimaryTumor();
+
     @NotNull
     public abstract String setName();
 

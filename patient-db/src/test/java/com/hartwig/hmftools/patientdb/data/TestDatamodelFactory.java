@@ -18,9 +18,10 @@ public final class TestDatamodelFactory {
                 .sampleId("sample-" + arrivalDate.toString())
                 .sampleBarcode("ABC")
                 .cohortId(Strings.EMPTY)
-                .setName(Strings.EMPTY)
                 .sequenced(false)
                 .isSomaticTumorSample(true)
+                .requiresCuratedPrimaryTumor(true)
+                .setName(Strings.EMPTY)
                 .arrivalDate(arrivalDate)
                 .pathologyTumorPercentage("N/A")
                 .pathologySampleId("N/A");

@@ -17,6 +17,7 @@ import javax.xml.stream.XMLStreamException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.clinical.PatientTumorCurationStatus;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
@@ -84,7 +85,7 @@ public final class LoadClinicalData {
     private static final String REPORTING_DB_TSV = "reporting_db_tsv";
 
     private static final String CURATED_PRIMARY_TUMOR_TSV = "curated_primary_tumor_tsv";
-    private static final String MISSING_DOID_TSV = "missing_doid_tsv";
+    private static final String PATIENT_TUMOR_CURATION_STATUS_TSV = "patient_tumor_curation_status_tsv";
 
     private static final String DO_PROCESS_WIDE_CLINICAL_DATA = "do_process_wide_clinical_data";
     private static final String WIDE_PRE_AVL_TREATMENT_CSV = "wide_pre_avl_treatment_csv";
@@ -137,11 +138,12 @@ public final class LoadClinicalData {
         List<Patient> patients = interpret(sampleDataPerPatient, ecrfModels, primaryTumorCurator, biopsySiteCurator, treatmentCurator);
 
         LOGGER.info("Check for missing curation tumor location when info is known");
-        Map<String, String> patientsWithMissingDoid =
-                checkForMissingCuratedTumorLocations(sampleDataPerPatient, patients, cmd.getOptionValue(REPORTING_DB_TSV), lims);
+        Map<String, PatientTumorCurationStatus> patientTumorCurationStatusMap =
+                generatePatientTumorCurationStatusMap(sampleDataPerPatient, patients, cmd.getOptionValue(REPORTING_DB_TSV));
 
-        LOGGER.info("Writing patients with missing doids");
-        DumpPrimaryTumorData.writePatientsWithMissingDoidToTSV(cmd.getOptionValue(MISSING_DOID_TSV), patientsWithMissingDoid);
+        LOGGER.info("Writing patient tumor curation status");
+        DumpPrimaryTumorData.writePatientTumorCurationStatusMap(cmd.getOptionValue(PATIENT_TUMOR_CURATION_STATUS_TSV),
+                patientTumorCurationStatusMap);
 
         LOGGER.info("Writing curated primary tumors");
         DumpPrimaryTumorData.writeCuratedPrimaryTumorsToTSV(cmd.getOptionValue(CURATED_PRIMARY_TUMOR_TSV), patients);
@@ -164,9 +166,10 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static Map<String, String> checkForMissingCuratedTumorLocations(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
-            @NotNull List<Patient> patients, @NotNull String reportingDbTsv, @NotNull Lims lims) throws IOException {
-        Map<String, String> patientsWithMissingDoid = Maps.newHashMap();
+    private static Map<String, PatientTumorCurationStatus> generatePatientTumorCurationStatusMap(
+            @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull List<Patient> patients, @NotNull String reportingDbTsv)
+            throws IOException {
+        Map<String, PatientTumorCurationStatus> patientTumorCurationStatusMap = Maps.newHashMap();
 
         List<String> reportedBarcodes = Lists.newArrayList();
         for (ReportingEntry entry : ReportingDatabase.read(reportingDbTsv)) {
@@ -177,12 +180,12 @@ public final class LoadClinicalData {
         for (Map.Entry<String, List<SampleData>> sampleDataEntry : sampleDataPerPatient.entrySet()) {
             String patientId = sampleDataEntry.getKey();
             for (SampleData sampleData : sampleDataEntry.getValue()) {
-                if (lims.isBlacklistedForCurationTumorLocations(patientId)) {
-                    patientsWithMissingDoid.put(patientId, "patientBlacklisted");
+                if (!sampleData.requiresCuratedPrimaryTumor()) {
+                    patientTumorCurationStatusMap.put(patientId, PatientTumorCurationStatus.NEEDS_NO_CURATED_PRIMARY_TUMOR);
                 } else if (sampleData.isSomaticTumorSample()) {
                     if (reportedBarcodes.contains(sampleData.sampleBarcode())) {
                         if (!patientId.startsWith("CORE") && !patientId.startsWith("WIDE")) {
-                            patientsWithMissingDoid.put(patientId, "patientAlreadyReported");
+                            patientTumorCurationStatusMap.put(patientId, PatientTumorCurationStatus.ALREADY_REPORTED);
                         }
                     } else {
                         patientsWithSamplesToBeReported.add(patientId);
@@ -205,15 +208,15 @@ public final class LoadClinicalData {
                     if (patient.patientIdentifier().startsWith("CORE") || patient.patientIdentifier().startsWith("WIDE")) {
                         LOGGER.warn("Could not find input tumor location for patient {}", patient.patientIdentifier());
                     } else {
-                        patientsWithMissingDoid.put(patient.patientIdentifier(), "patientWithMissingDoid");
+                        patientTumorCurationStatusMap.put(patient.patientIdentifier(), PatientTumorCurationStatus.MISSING_TUMOR_CURATION);
                     }
                 }
             } else {
-                patientsWithMissingDoid.put(patientId, "patientNotExtracted");
+                patientTumorCurationStatusMap.put(patientId, PatientTumorCurationStatus.NOT_RESOLVED);
             }
         }
 
-        return patientsWithMissingDoid;
+        return patientTumorCurationStatusMap;
     }
 
     @NotNull
@@ -598,7 +601,7 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(BIOPSY_MAPPING_CSV),
                 cmd.getOptionValue(TUMOR_LOCATION_MAPPING_TSV),
                 cmd.getOptionValue(CURATED_PRIMARY_TUMOR_TSV),
-                cmd.getOptionValue(MISSING_DOID_TSV),
+                cmd.getOptionValue(PATIENT_TUMOR_CURATION_STATUS_TSV),
                 cmd.getOptionValue(DOID_JSON),
                 cmd.getOptionValue(REPORTING_DB_TSV));
 
@@ -643,7 +646,7 @@ public final class LoadClinicalData {
 
         options.addOption(DO_LOAD_CLINICAL_DATA, false, "If set, clinical data will be loaded into the database.");
         options.addOption(CURATED_PRIMARY_TUMOR_TSV, true, "Path towards to the curated primary tumor TSV.");
-        options.addOption(MISSING_DOID_TSV, true, "Path towards to the missing doid TSV");
+        options.addOption(PATIENT_TUMOR_CURATION_STATUS_TSV, true, "Path where patient tumor curation status will be written to");
 
         options.addOption(DO_PROCESS_WIDE_CLINICAL_DATA,
                 false,
