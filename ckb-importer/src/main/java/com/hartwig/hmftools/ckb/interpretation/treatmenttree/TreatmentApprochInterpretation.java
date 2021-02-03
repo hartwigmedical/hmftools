@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.ckb.interpretation.treatmenttree;
 
-import com.hartwig.hmftools.ckb.datamodel.drugclass.DrugClass;
 import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
 
 import org.immutables.value.Value;
@@ -12,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class TreatmentApprochInterpretation {
 
     @Nullable
-    public abstract DrugClass drugClass();
+    public abstract DrugClassInterpretation drugClassInterpretation();
 
     @Nullable
     public abstract Therapy therapy();

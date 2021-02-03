@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.ckb.interpretation.treatmenttree;
 
-import com.hartwig.hmftools.ckb.datamodel.treatmentapproach.TreatmentApproach;
+import java.util.List;
+
+import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
+import com.hartwig.hmftools.ckb.datamodel.drugclass.DrugClass;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -8,12 +11,11 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class TreatmentInterpretation {
+public abstract class DrugClassInterpretation {
 
     @NotNull
-    public abstract TreatmentApproach treatmentApproach();
-    @NotNull
-    public abstract TreatmentApprochInterpretation treatmentApproachInterpretation();
+    public abstract List<DrugClass> drugClass();
 
-
+    @Nullable
+    public abstract Drug drug();
 }
