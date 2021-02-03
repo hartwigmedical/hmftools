@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.interpretation;
+package com.hartwig.hmftools.ckb.interpretation.varianttree;
 
 import com.hartwig.hmftools.ckb.datamodel.gene.Gene;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;

@@ -75,6 +75,20 @@ public class CkbImporterApplication {
         CkbEntry ckbEntry = readJsonData(config);
         List<CkbEntryInterpretation> ckbEntryInterpretation = InterpretationFactory.interpretationCkb(ckbEntry);
 
+       // LOGGER.info("molecularProfile: {}", ckbEntryInterpretation.get(1).molecularProfile());
+
+//        LOGGER.info("variant: {}", ckbEntryInterpretation.get(1).variantInterpretation().get(0).variant());
+//        LOGGER.info("gene: {}", ckbEntryInterpretation.get(1).variantInterpretation().get(0).gene());
+//
+//        LOGGER.info("variant: {}", ckbEntryInterpretation.get(1).variantInterpretation().get(1).variant());
+//        LOGGER.info("gene: {}", ckbEntryInterpretation.get(1).variantInterpretation().get(1).gene());
+        LOGGER.info("size: {}", ckbEntryInterpretation.get(0).treatmentInterpretation().size());
+
+        LOGGER.info("treatmentApproach: {}", ckbEntryInterpretation.get(0).treatmentInterpretation());
+      //  LOGGER.info("treatmentApproach: {}", ckbEntryInterpretation.get(1).treatmentInterpretation().get(1).treatmentApproach());
+    //    LOGGER.info("drugClass {}", ckbEntryInterpretation.get(1).treatmentInterpretation().get(1).treatmentApproachInterpretation().drugClass());
+     //   LOGGER.info("therapy {}", ckbEntryInterpretation.get(1).treatmentInterpretation().get(1).treatmentApproachInterpretation().therapy());
+
         if (config.skipDatabaseWriting()) {
             LOGGER.info("Skipping DB writing.");
         } else {
