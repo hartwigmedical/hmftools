@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.rna.AltSjClassifier;
 import com.hartwig.hmftools.cup.rna.GeneExpressionClassifier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -69,7 +70,7 @@ public class CuppaConfig
     public final String SampleSigContribFile;
     public final String SampleSomaticVcf;
     public final String SampleSvFile;
-    public final String SampleRnaExpFile;
+    public final String SampleGeneExpFile;
 
     // database access
     public final DatabaseAccess DbAccess;
@@ -94,7 +95,7 @@ public class CuppaConfig
     private static final String SAMPLE_SIG_CONTRIB_FILE = "sample_sig_contrib_file";
     private static final String SAMPLE_SOMATIC_VCF = "sample_somatic_vcf";
     private static final String SAMPLE_SV_FILE = "sample_sv_file";
-    private static final String SAMPLE_RNA_EXP_FILE = "sample_gene_exp_file";
+    private static final String SAMPLE_GENE_EXP_FILE = "sample_gene_exp_file";
 
     public static final String REF_DATA_DIR = "ref_data_dir";
 
@@ -163,7 +164,7 @@ public class CuppaConfig
         SampleSnvPosFreqFile = cmd.getOptionValue(SAMPLE_SNV_POS_FREQ_FILE, "");
         SampleSigContribFile = cmd.getOptionValue(SAMPLE_SIG_CONTRIB_FILE, "");
         SampleSvFile = cmd.getOptionValue(SAMPLE_SV_FILE, "");
-        SampleRnaExpFile = cmd.getOptionValue(SAMPLE_RNA_EXP_FILE, "");
+        SampleGeneExpFile = cmd.getOptionValue(SAMPLE_GENE_EXP_FILE, "");
         SampleSomaticVcf = cmd.getOptionValue(SAMPLE_SOMATIC_VCF, "");
 
         RefDataDir = checkAddDirSeparator(cmd.getOptionValue(REF_DATA_DIR, ""));
@@ -233,7 +234,7 @@ public class CuppaConfig
         options.addOption(SAMPLE_FEAT_FILE, true, "Cohort features file (drivers, fusions and viruses)");
         options.addOption(SAMPLE_TRAITS_FILE, true, "Cohort sample traits file");
         options.addOption(SAMPLE_SV_FILE, true, "Cohort SV data");
-        options.addOption(SAMPLE_RNA_EXP_FILE, true, "Sample RNA gene expression TPMs");
+        options.addOption(SAMPLE_GENE_EXP_FILE, true, "Cohort sample RNA gene expression TPMs");
         options.addOption(SAMPLE_SOMATIC_VCF, true, "Sample somatic VCF");
 
         options.addOption(REF_DATA_DIR, true, "Reference data directory");
@@ -257,6 +258,7 @@ public class CuppaConfig
 
         addDatabaseCmdLineArgs(options);
         GeneExpressionClassifier.addCmdLineArgs(options);
+        AltSjClassifier.addCmdLineArgs(options);
 
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(OUTPUT_FILE_ID, true, "Output file ID");
@@ -293,7 +295,7 @@ public class CuppaConfig
         SampleSigContribFile = "";
         SampleSomaticVcf = "";
         SampleSvFile = "";
-        SampleRnaExpFile = "";
+        SampleGeneExpFile = "";
 
         DbAccess = null;
         WriteSimilarities = false;

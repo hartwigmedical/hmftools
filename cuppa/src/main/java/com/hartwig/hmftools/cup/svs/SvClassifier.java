@@ -65,6 +65,7 @@ public class SvClassifier implements CuppaClassifier
 
     public CategoryType categoryType() { return SV; }
     public boolean isValid() { return mIsValid; }
+    public void close() {}
 
     public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {

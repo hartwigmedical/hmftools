@@ -69,6 +69,7 @@ public class FeatureClassifier implements CuppaClassifier
 
     public CategoryType categoryType() { return FEATURE; }
     public boolean isValid() { return mIsValid; }
+    public void close() {}
 
     public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {

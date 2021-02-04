@@ -123,6 +123,7 @@ public class SomaticClassifier implements CuppaClassifier
 
     public CategoryType categoryType() { return SNV; }
     public boolean isValid() { return mIsValid; }
+    public void close() {}
 
     private boolean loadSampleCounts()
     {

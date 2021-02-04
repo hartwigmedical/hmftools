@@ -85,7 +85,7 @@ public class CupAnalyser
             mClassifiers.add(new GeneExpressionClassifier(mConfig, mSampleDataCache, cmd));
 
         if(mConfig.runClassifier(ALT_SJ))
-            mClassifiers.add(new AltSjClassifier(mConfig, mSampleDataCache));
+            mClassifiers.add(new AltSjClassifier(mConfig, mSampleDataCache, cmd));
 
         mSampleDataWriter = null;
         mSampleSimilarityWriter = null;

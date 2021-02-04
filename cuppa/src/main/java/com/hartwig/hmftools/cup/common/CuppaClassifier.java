@@ -9,5 +9,6 @@ public interface CuppaClassifier
     boolean isValid();
 
     void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities);
+    void close();
 
 }

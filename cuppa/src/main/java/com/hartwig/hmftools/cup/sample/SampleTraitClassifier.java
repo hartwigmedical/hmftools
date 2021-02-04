@@ -79,6 +79,7 @@ public class SampleTraitClassifier implements CuppaClassifier
 
     public CategoryType categoryType() { return SAMPLE_TRAIT; }
     public boolean isValid() { return mIsValid; }
+    public void close() {}
 
     private boolean loadSampleTraitsData()
     {

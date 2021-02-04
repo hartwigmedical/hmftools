@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_COHORT;
 import static com.hartwig.hmftools.cup.common.ClassifierType.EXPRESSION_PAIRWISE;
 import static com.hartwig.hmftools.cup.common.CupCalcs.adjustRefCounts;
-import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
@@ -96,7 +95,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
         mIsValid = true;
 
-        if(mConfig.SampleRnaExpFile.isEmpty())
+        if(mConfig.SampleGeneExpFile.isEmpty())
             return;
 
         if(mRunPairwiseCss && mConfig.RefGeneExpSampleFile.isEmpty())
@@ -137,20 +136,20 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
         buildCancerSampleCounts();
 
-        if(mConfig.SampleRnaExpFile.equals(mConfig.RefGeneExpSampleFile))
+        if(mConfig.SampleGeneExpFile.equals(mConfig.RefGeneExpSampleFile))
         {
             mSampleRnaExpression = mRefSampleGeneExpression;
             mSampleIndexMap.putAll(mRefSampleGeneExpIndexMap);
         }
         else
         {
-            if(mConfig.SampleRnaExpFile.endsWith("isf.gene_data.csv") && mSampleDataCache.isSingleSample())
+            if(mConfig.SampleGeneExpFile.endsWith("isf.gene_data.csv") && mSampleDataCache.isSingleSample())
             {
-                loadSampleGeneExpressionData(mConfig.SampleRnaExpFile);
+                loadSampleGeneExpressionData(mConfig.SampleGeneExpFile);
             }
             else
             {
-                mSampleRnaExpression = loadMatrixDataFile(mConfig.SampleRnaExpFile, mSampleIndexMap, ignoreFields);
+                mSampleRnaExpression = loadMatrixDataFile(mConfig.SampleGeneExpFile, mSampleIndexMap, ignoreFields);
 
                 if(mSampleRnaExpression == null || mRefCancerTypeGeneExpression == null)
                 {
@@ -202,6 +201,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
     public CategoryType categoryType() { return GENE_EXP; }
     public boolean isValid() { return mIsValid; }
+    public void close() {}
 
     public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {

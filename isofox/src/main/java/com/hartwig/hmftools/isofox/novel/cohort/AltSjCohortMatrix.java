@@ -68,7 +68,6 @@ public class AltSjCohortMatrix
         mSampleIndexMap = Maps.newHashMap();
 
         mExpectMatrixSize = Integer.parseInt(cmd.getOptionValue(ALT_SJ_EXP_COUNT, "10000"));
-        int sampleCount = mConfig.SampleData.SampleIds.size();
 
         mGroupByCancer = cmd.hasOption(ALT_SJ_BY_CANCER);
 
@@ -318,7 +317,7 @@ public class AltSjCohortMatrix
                 for(int s = 0; s < itemNames.size(); ++s)
                 {
                     int fragCount = mMatrixData[asjIndex][s];
-                    writer.write(String.format(",%.3f", log(fragCount + 1.0)));
+                    writer.write(String.format(",%d", fragCount));
                 }
 
                 writer.newLine();

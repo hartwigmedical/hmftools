@@ -9,10 +9,15 @@ public final class CosineSimilarity
 {
     public static double calcCosineSim(final double[] set1, final double[] set2)
     {
-        return calcCosineSim(set1, set2, false);
+        return calcCosineSim(set1, set2, false, false);
     }
 
     public static double calcCosineSim(final double[] set1, final double[] set2, boolean skipZeros)
+    {
+        return calcCosineSim(set1, set2, skipZeros, skipZeros);
+    }
+
+    public static double calcCosineSim(final double[] set1, final double[] set2, boolean skipZeros1, boolean skipZeros2)
     {
         if(set1.length != set2.length || set1.length == 0)
             return 0;
@@ -24,15 +29,15 @@ public final class CosineSimilarity
 
         for(int i = 0; i < set1.length; ++i)
         {
-            double a = set1[i];
-            double b = set2[i];
+            double val1 = set1[i];
+            double val2 = set2[i];
 
-            if(skipZeros && (a == 0 || b == 0))
+            if((skipZeros1 && val1 == 0) || (skipZeros2 && val2 == 0))
                 continue;
 
-            aaTotal += a*a;
-            bbTotal += b*b;
-            abTotal += a*b;
+            aaTotal += val1 * val1;
+            bbTotal += val2 * val2;
+            abTotal += val1 * val2;
             ++nonZeroCount;
         }
 
