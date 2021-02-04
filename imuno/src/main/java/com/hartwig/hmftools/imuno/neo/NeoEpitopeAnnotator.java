@@ -28,6 +28,8 @@ import static com.hartwig.hmftools.imuno.neo.CohortTpmData.CANCER_VALUE;
 import static com.hartwig.hmftools.imuno.neo.CohortTpmData.COHORT_VALUE;
 import static com.hartwig.hmftools.imuno.neo.NeoConfig.CANCER_TPM_FILE;
 import static com.hartwig.hmftools.imuno.neo.NeoConfig.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.imuno.neo.NeoConfig.HLA_PEPTIDE_FILE_ID;
+import static com.hartwig.hmftools.imuno.neo.NeoConfig.NEO_EPITOPE_FILE_ID;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.convertHlaTypeForPredictions;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.generatePeptides;
 
@@ -456,7 +458,7 @@ public class NeoEpitopeAnnotator
                 if(mConfig.WriteCohortFile)
                     outputFileName += "IMU_NEO_EPITOPES.csv";
                 else
-                    outputFileName += mCurrentSample.Id + ".imu.neo_epitopes.csv";
+                    outputFileName += mCurrentSample.Id + NEO_EPITOPE_FILE_ID;
 
                 mNeoEpitopeWriter = createBufferedWriter(outputFileName, false);
 
@@ -506,7 +508,7 @@ public class NeoEpitopeAnnotator
                 if(mConfig.WriteCohortFile)
                     outputFileName += "IMU_HLA_PEPTIDES.csv";
                 else
-                    outputFileName += mCurrentSample.Id + ".imu.hla_peptides.csv";
+                    outputFileName += mCurrentSample.Id + HLA_PEPTIDE_FILE_ID;
 
                 mPeptideWriter = createBufferedWriter(outputFileName, false);
 

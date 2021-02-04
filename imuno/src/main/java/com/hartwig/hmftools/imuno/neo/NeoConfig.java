@@ -61,6 +61,9 @@ public class NeoConfig
     public static final String WRITE_TRANS_DATA = "write_trans_data";
     public static final String WRITE_COHORT_FILE = "write_cohort_file";
 
+    public static final String NEO_EPITOPE_FILE_ID = ".imu.neo_epitopes.csv";
+    public static final String HLA_PEPTIDE_FILE_ID = ".imu.hla_peptides.csv";
+
     public static final int DEFAULT_AMINO_ACID_REF_COUNT = 18;
 
     public NeoConfig(final CommandLine cmd)

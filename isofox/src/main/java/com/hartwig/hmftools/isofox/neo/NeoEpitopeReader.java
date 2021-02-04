@@ -97,7 +97,7 @@ public class NeoEpitopeReader
         }
         catch(IOException exception)
         {
-            ISF_LOGGER.error("failed to read neo-epitope file({})", filename, exception.toString());
+            ISF_LOGGER.error("failed to read neo-epitope file({}): {}", filename, exception.toString());
         }
     }
 
