@@ -436,21 +436,21 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     public void writeDrupEcrf(@NotNull EcrfModel model, @NotNull Set<String> sequencedPatients) {
-        LOGGER.info("Writing DRUP datamodel...");
+        LOGGER.info(" Writing DRUP datamodel...");
         ecrfDAO.writeDrupDatamodel(model.fields());
-        LOGGER.info(" Done writing DRUP datamodel.");
-        LOGGER.info("Writing raw DRUP patient data...");
+        LOGGER.info("  Done writing DRUP datamodel.");
+        LOGGER.info(" Writing raw DRUP patient data...");
         model.patients().forEach(patient -> ecrfDAO.writeDrupPatient(patient, sequencedPatients.contains(patient.patientId())));
-        LOGGER.info(" Done writing raw DRUP patient data.");
+        LOGGER.info("  Done writing raw DRUP patient data.");
     }
 
     public void writeCpctEcrf(@NotNull EcrfModel model, @NotNull Set<String> sequencedPatients) {
-        LOGGER.info("Writing CPCT datamodel...");
+        LOGGER.info(" Writing CPCT datamodel...");
         ecrfDAO.writeCpctDatamodel(model.fields());
-        LOGGER.info(" Done writing CPCT datamodel.");
-        LOGGER.info("Writing raw CPCT patient data...");
+        LOGGER.info("  Done writing CPCT datamodel.");
+        LOGGER.info(" Writing raw CPCT patient data...");
         model.patients().forEach(patient -> ecrfDAO.writeCpctPatient(patient, sequencedPatients.contains(patient.patientId())));
-        LOGGER.info(" Done writing raw CPCT patient data.");
+        LOGGER.info("  Done writing raw CPCT patient data.");
     }
 
     public void writeValidationFindings(@NotNull List<ValidationFinding> findings) {
@@ -458,8 +458,6 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     public void deleteAllDataForSample(@NotNull String sample) {
-        LOGGER.info("Starting deleting data");
-
         LOGGER.info("Deleting metric data for sample: {}", sample);
         metricDAO.deleteMetricForSample(sample);
 
