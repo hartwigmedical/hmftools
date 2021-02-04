@@ -4,16 +4,22 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
+import com.hartwig.hmftools.ckb.datamodel.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.DrugInfo;
+import com.hartwig.hmftools.ckb.datamodel.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.VariantInfo;
 import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
 import com.hartwig.hmftools.ckb.datamodel.drugclass.DrugClass;
 import com.hartwig.hmftools.ckb.datamodel.gene.Gene;
+import com.hartwig.hmftools.ckb.datamodel.indication.Indication;
 import com.hartwig.hmftools.ckb.datamodel.molecularprofile.MolecularProfile;
 import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
 import com.hartwig.hmftools.ckb.datamodel.treatmentapproach.TreatmentApproach;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
+import com.hartwig.hmftools.ckb.interpretation.clinicaltrialtree.ClinicalTrialInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.clinicaltrialtree.ImmutableClinicalTrialInterpretation;
 import com.hartwig.hmftools.ckb.interpretation.treatmenttree.DrugClassInterpretation;
 import com.hartwig.hmftools.ckb.interpretation.treatmenttree.ImmutableDrugClassInterpretation;
 import com.hartwig.hmftools.ckb.interpretation.treatmenttree.ImmutableTreatmentApprochInterpretation;
@@ -43,19 +49,44 @@ public class InterpretationFactory {
 
             for (VariantInfo variantInfo : molecularProfile.geneVariant()) {
                 VariantInterpretation variantInterpretation = matchVariantInterpretation(ckbEntry, variantInfo.id()); //array
-                outputBuilder.addVariantInterpretation(variantInterpretation);
+                outputBuilder.addVariantInterpretations(variantInterpretation);
 
             }
 
             for (TreatmentApproachInfo treatmentApproachInfo : molecularProfile.treatmentApproach()) {
                 TreatmentInterpretation treatmentInterpretation =
                         matchTreatmentInterpretation(ckbEntry, treatmentApproachInfo.id()); //array
-                outputBuilder.addTreatmentInterpretation(treatmentInterpretation);
+                outputBuilder.addTreatmentInterpretations(treatmentInterpretation);
+            }
+
+            for (ClinicalTrialInfo clinicalTrialInfo: molecularProfile.variantAssociatedClinicalTrial()) {
+                ClinicalTrialInterpretation evidenceInterpretation = matchClinicalTrialInterpretation(ckbEntry, clinicalTrialInfo.nctId()); //array
+                outputBuilder.addClinicalTrialInterpretations(evidenceInterpretation);
             }
 
             CkbEntryInterpretation.add(outputBuilder.build());
         }
         return CkbEntryInterpretation;
+    }
+
+    @NotNull
+    private static ClinicalTrialInterpretation matchClinicalTrialInterpretation(@NotNull CkbEntry ckbEntry, @NotNull String nctId) {
+        ImmutableClinicalTrialInterpretation.Builder outputBuilder = ImmutableClinicalTrialInterpretation.builder();
+
+        for (ClinicalTrial clinicalTrial: ckbEntry.clinicalTrial()) {
+            if (clinicalTrial.nctId().equals(nctId)) {
+                outputBuilder.clinicalTrial(clinicalTrial);
+                for (IndicationInfo indicationInfo: clinicalTrial.indication()) {
+                    for (Indication indication: ckbEntry.indication()) {
+                        if (indicationInfo.id() == indication.id()) {
+                            outputBuilder.addIndications(indication);
+                        }
+                    }
+                }
+
+            }
+        }
+        return outputBuilder.build();
     }
 
     @NotNull
@@ -114,7 +145,7 @@ public class InterpretationFactory {
             @NotNull TreatmentApproach treatmentApproach, @NotNull CkbEntry ckbEntry) {
         ImmutableDrugClassInterpretation.Builder outputBuilder = ImmutableDrugClassInterpretation.builder();
         if (drugClass.id() == treatmentApproach.drugClass().id()) {
-            outputBuilder.addDrugClass(drugClass);  //object
+            outputBuilder.addDrugClasses(drugClass);  //object
             for (DrugInfo drugInfo : drugClass.drug()) { //array
                 for (Drug drug : ckbEntry.drug()) {
                     if (drugInfo.id() == drug.id()) {
