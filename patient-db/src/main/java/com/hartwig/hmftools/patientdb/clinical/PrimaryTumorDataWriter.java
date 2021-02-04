@@ -34,14 +34,14 @@ public final class PrimaryTumorDataWriter {
 
     public static void write(@NotNull ClinicalAlgoConfig config, @NotNull Map<String, List<SampleData>> samplesPerPatient,
             @NotNull List<Patient> patients) throws IOException {
-        LOGGER.info("Check for missing curation tumor location when info is known");
+        LOGGER.info(" Check for missing curation tumor location when info is known");
         Map<String, PatientTumorCurationStatus> patientTumorCurationStatusMap =
                 generatePatientTumorCurationStatusMap(samplesPerPatient, patients, config.reportingDbTsv());
 
-        LOGGER.info("Writing patient tumor curation status");
+        LOGGER.info(" Writing patient tumor curation status");
         PrimaryTumorDataWriter.writePatientTumorCurationStatesToTSV(config.patientTumorCurationStatusTsv(), patientTumorCurationStatusMap);
 
-        LOGGER.info("Writing curated primary tumors");
+        LOGGER.info(" Writing curated primary tumors");
         PrimaryTumorDataWriter.writeCuratedPrimaryTumorsToTSV(config.curatedPrimaryTumorTsv(), patients);
     }
 
@@ -64,7 +64,7 @@ public final class PrimaryTumorDataWriter {
                     patientTumorCurationStatusMap.put(patientId, PatientTumorCurationStatus.NEEDS_NO_CURATED_PRIMARY_TUMOR);
                 } else if (sample.isSomaticTumorSample()) {
                     if (reportedBarcodes.contains(sample.sampleBarcode())) {
-                        if (!patientId.startsWith("CORE") && !patientId.startsWith("WIDE")) {
+                        if (allowExceptionsForPatient(patientId)) {
                             patientTumorCurationStatusMap.put(patientId, PatientTumorCurationStatus.ALREADY_REPORTED);
                         }
                     } else {
@@ -80,19 +80,19 @@ public final class PrimaryTumorDataWriter {
                 String tumorLocationSearchTerm = patient.baselineData().curatedPrimaryTumor().searchTerm();
                 if (tumorLocationSearchTerm != null && !tumorLocationSearchTerm.isEmpty()) {
                     if (patient.baselineData().curatedPrimaryTumor().location() == null) {
-                        LOGGER.warn("Could not curate patient {} for primary tumor '{}'",
+                        LOGGER.warn(" Could not curate patient {} for primary tumor '{}'",
                                 patient.patientIdentifier(),
                                 tumorLocationSearchTerm);
                     }
                 } else {
-                    if (patient.patientIdentifier().startsWith("CORE") || patient.patientIdentifier().startsWith("WIDE")) {
-                        LOGGER.warn("Could not find input tumor location for patient {}", patient.patientIdentifier());
+                    if (!allowExceptionsForPatient(patient.patientIdentifier())) {
+                        LOGGER.warn(" Could not find input tumor location for patient {}", patient.patientIdentifier());
                     } else {
                         patientTumorCurationStatusMap.put(patient.patientIdentifier(), PatientTumorCurationStatus.MISSING_TUMOR_CURATION);
                     }
                 }
             } else {
-                if (!patientId.startsWith("CORE") || !patientId.startsWith("WIDE")) {
+                if (allowExceptionsForPatient(patientId)) {
                     patientTumorCurationStatusMap.put(patientId, PatientTumorCurationStatus.NOT_RESOLVED);
                 }
             }
@@ -110,6 +110,10 @@ public final class PrimaryTumorDataWriter {
         }
 
         return null;
+    }
+
+    private static boolean allowExceptionsForPatient(@NotNull String patientId) {
+        return !patientId.startsWith("CORE") && !patientId.startsWith("WIDE");
     }
 
     private static void writePatientTumorCurationStatesToTSV(@NotNull String outputTsv,
@@ -158,4 +162,5 @@ public final class PrimaryTumorDataWriter {
     private static List<String> nullToEmpty(@Nullable List<String> strings) {
         return strings != null ? strings : Lists.newArrayList();
     }
+
 }

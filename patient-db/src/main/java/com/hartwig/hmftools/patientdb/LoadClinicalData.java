@@ -76,7 +76,7 @@ public final class LoadClinicalData {
             DatabaseAccess.addDatabaseCmdLineArgs(options);
             CommandLine cmd = new DefaultParser().parse(options, args);
 
-            LOGGER.info("Connecting to database {}", cmd.getOptionValue(DB_URL));
+            LOGGER.info("Writing clinical data to database '{}'", cmd.getOptionValue(DB_URL));
             DatabaseAccess dbWriter = databaseAccess(cmd);
 
             if (config.doLoadRawEcrf()) {
@@ -97,38 +97,38 @@ public final class LoadClinicalData {
         Set<String> sequencedPatients = sequencedPatients(samplesPerPatient);
 
         EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
-        LOGGER.info("Writing raw cpct ecrf data for {} patients", cpctEcrfModel.patientCount());
+        LOGGER.info(" Writing raw cpct ecrf data for {} patients", cpctEcrfModel.patientCount());
         dbWriter.clearCpctEcrf();
         dbWriter.writeCpctEcrf(cpctEcrfModel, sequencedPatients);
-        LOGGER.info(" Finished writing raw cpct ecrf data for {} patients", cpctEcrfModel.patientCount());
+        LOGGER.info("  Finished writing raw cpct ecrf data for {} patients", cpctEcrfModel.patientCount());
 
         EcrfModel drupEcrfModel = ecrfModels.drupModel();
-        LOGGER.info("Writing raw drup ecrf data for {} patients", drupEcrfModel.patientCount());
+        LOGGER.info(" Writing raw drup ecrf data for {} patients", drupEcrfModel.patientCount());
         dbWriter.clearDrupEcrf();
         dbWriter.writeDrupEcrf(drupEcrfModel, sequencedPatients);
-        LOGGER.info(" Finished writing raw drup ecrf data for {} patients", drupEcrfModel.patientCount());
+        LOGGER.info("  Finished writing raw drup ecrf data for {} patients", drupEcrfModel.patientCount());
     }
 
     private static void writeClinicalData(@NotNull DatabaseAccess dbAccess, @NotNull Lims lims,
             @NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull List<Patient> patients) {
-        LOGGER.info("Clearing interpreted clinical tables in database");
+        LOGGER.info(" Clearing interpreted clinical tables in database");
         dbAccess.clearClinicalTables();
 
         Set<String> sequencedPatients = sequencedPatients(samplesPerPatient);
 
         int missingPatients = 0;
         int missingSamples = 0;
-        LOGGER.info("Writing clinical data for {} sequenced patients", sequencedPatients.size());
+        LOGGER.info(" Writing clinical data for {} sequenced patients", sequencedPatients.size());
         for (String patientId : sequencedPatients) {
             Patient patient = findByPatientId(patients, patientId);
             if (patient == null) {
-                LOGGER.warn("No clinical data found for patient {}", patientId);
+                LOGGER.warn(" No clinical data found for patient {}", patientId);
                 missingPatients++;
                 List<SampleData> sequencedSamples = sequencedSamples(samplesPerPatient.get(patientId));
                 missingSamples += sequencedSamples.size();
                 dbAccess.writeSampleClinicalData(patientId, lims.isBlacklisted(patientId), sequencedSamples);
             } else if (patient.sequencedBiopsies().isEmpty()) {
-                LOGGER.warn("No sequenced biopsies found for sequenced patient: {}! Skipping writing to db", patientId);
+                LOGGER.warn(" No sequenced biopsies found for sequenced patient: {}! Skipping writing to db", patientId);
             } else {
                 dbAccess.writeFullClinicalData(patient, lims.isBlacklisted(patientId));
                 List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
@@ -139,7 +139,7 @@ public final class LoadClinicalData {
         }
 
         if (missingPatients > 0) {
-            LOGGER.warn("Could not load {} patients ({} samples)!", missingPatients, missingSamples);
+            LOGGER.warn(" Could not load {} patients ({} samples)!", missingPatients, missingSamples);
         }
     }
 
