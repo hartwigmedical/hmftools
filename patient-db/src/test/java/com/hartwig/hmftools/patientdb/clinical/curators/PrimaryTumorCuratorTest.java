@@ -10,7 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.patientdb.clinical.data.CuratedPrimaryTumor;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedPrimaryTumor;
 
 import org.junit.Test;
 

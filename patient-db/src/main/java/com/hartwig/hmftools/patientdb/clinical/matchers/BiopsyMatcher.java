@@ -12,9 +12,9 @@ import com.hartwig.hmftools.common.ecrf.datamodel.ImmutableValidationFinding;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.clinical.ClinicalConstants;
-import com.hartwig.hmftools.patientdb.clinical.data.BiopsyData;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutableBiopsyData;
-import com.hartwig.hmftools.patientdb.clinical.data.SampleData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableBiopsyData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 
 import org.jetbrains.annotations.NotNull;
 

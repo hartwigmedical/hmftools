@@ -9,9 +9,9 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
-import com.hartwig.hmftools.patientdb.clinical.data.BiopsyData;
-import com.hartwig.hmftools.patientdb.clinical.data.CuratedBiopsyType;
-import com.hartwig.hmftools.patientdb.clinical.data.CuratedPrimaryTumor;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedBiopsyType;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedPrimaryTumor;
 
 import org.jetbrains.annotations.NotNull;
 

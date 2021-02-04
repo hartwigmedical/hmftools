@@ -10,11 +10,11 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.clinical.curators.TreatmentCurator;
-import com.hartwig.hmftools.patientdb.clinical.data.CuratedDrug;
-import com.hartwig.hmftools.patientdb.clinical.data.DrugData;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutableDrugData;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutablePreTreatmentData;
-import com.hartwig.hmftools.patientdb.clinical.data.PreTreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedDrug;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.DrugData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableDrugData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutablePreTreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.PreTreatmentData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

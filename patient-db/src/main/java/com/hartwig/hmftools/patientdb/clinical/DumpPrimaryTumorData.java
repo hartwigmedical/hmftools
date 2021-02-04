@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
 import com.hartwig.hmftools.common.clinical.PatientTumorCurationStatus;
 import com.hartwig.hmftools.common.clinical.PatientTumorCurationStatusFile;
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.patientdb.clinical.data.Patient;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

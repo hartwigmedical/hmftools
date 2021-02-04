@@ -8,8 +8,8 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutableRanoMeasurementData;
-import com.hartwig.hmftools.patientdb.clinical.data.RanoMeasurementData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableRanoMeasurementData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.RanoMeasurementData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -39,6 +39,7 @@ final class RanoMeasurementReader {
                     String targetLesionResponse = responseGroup.readItemString(FIELD_TARGET_LESION_RESPONSE);
                     String noTargetLesionResponse = responseGroup.readItemString(FIELD_NO_TARGET_LESION_RESPONSE);
                     String overallResponse = responseGroup.readItemString(FIELD_OVERALL_RESPONSE);
+
                     rano.add(ImmutableRanoMeasurementData.of(patient.patientId(),
                             therapyGiven,
                             responseDate,

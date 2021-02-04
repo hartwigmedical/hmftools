@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.patientdb.clinical.data.CuratedDrug;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedDrug;
 
 import org.junit.Test;
 

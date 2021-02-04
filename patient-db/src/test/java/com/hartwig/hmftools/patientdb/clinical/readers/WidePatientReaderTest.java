@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientdb.clinical.readers;
 
-import static com.hartwig.hmftools.patientdb.clinical.data.TestDatamodelFactory.sampleBuilder;
+import static com.hartwig.hmftools.patientdb.clinical.datamodel.TestDatamodelFactory.sampleBuilder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -11,8 +11,8 @@ import java.time.LocalDate;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.clinical.curators.TestCuratorFactory;
-import com.hartwig.hmftools.patientdb.clinical.data.Patient;
-import com.hartwig.hmftools.patientdb.clinical.data.SampleData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 import com.hartwig.hmftools.patientdb.clinical.readers.wide.ImmutableWideEcrfModel;
 import com.hartwig.hmftools.patientdb.clinical.readers.wide.ImmutableWideResponseData;
 import com.hartwig.hmftools.patientdb.clinical.readers.wide.WideEcrfModel;

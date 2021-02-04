@@ -9,9 +9,9 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
-import com.hartwig.hmftools.patientdb.clinical.data.BaselineData;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutableBaselineData;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutableCuratedPrimaryTumor;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableBaselineData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableCuratedPrimaryTumor;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

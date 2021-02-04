@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientdb.clinical.curators;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import com.hartwig.hmftools.patientdb.clinical.data.CuratedBiopsyType;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedBiopsyType;
 
 import org.junit.Test;
 

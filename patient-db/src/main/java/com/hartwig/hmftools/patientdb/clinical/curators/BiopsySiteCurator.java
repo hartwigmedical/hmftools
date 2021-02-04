@@ -8,8 +8,8 @@ import java.util.Objects;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.patientdb.clinical.data.CuratedBiopsyType;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutableCuratedBiopsyType;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedBiopsyType;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableCuratedBiopsyType;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;

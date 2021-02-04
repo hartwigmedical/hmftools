@@ -19,8 +19,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.patientdb.clinical.data.CuratedDrug;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutableCuratedDrug;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedDrug;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableCuratedDrug;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;

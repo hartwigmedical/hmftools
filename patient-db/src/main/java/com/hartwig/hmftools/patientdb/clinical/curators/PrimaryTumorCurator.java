@@ -12,8 +12,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.patientdb.clinical.data.CuratedPrimaryTumor;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutableCuratedPrimaryTumor;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedPrimaryTumor;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableCuratedPrimaryTumor;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

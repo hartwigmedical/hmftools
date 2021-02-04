@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientdb.clinical.readers.cpct;
 
-import static com.hartwig.hmftools.patientdb.clinical.data.TestDatamodelFactory.sampleBuilder;
+import static com.hartwig.hmftools.patientdb.clinical.datamodel.TestDatamodelFactory.sampleBuilder;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -10,8 +10,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.patientdb.clinical.curators.TestCuratorFactory;
-import com.hartwig.hmftools.patientdb.clinical.data.Patient;
-import com.hartwig.hmftools.patientdb.clinical.data.SampleData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 
 import org.junit.Test;
 

@@ -18,16 +18,16 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-import com.hartwig.hmftools.patientdb.clinical.data.BaselineData;
-import com.hartwig.hmftools.patientdb.clinical.data.BiopsyData;
-import com.hartwig.hmftools.patientdb.clinical.data.BiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.clinical.data.BiopsyTreatmentResponseData;
-import com.hartwig.hmftools.patientdb.clinical.data.DrugData;
-import com.hartwig.hmftools.patientdb.clinical.data.Patient;
-import com.hartwig.hmftools.patientdb.clinical.data.PreTreatmentData;
-import com.hartwig.hmftools.patientdb.clinical.data.RanoMeasurementData;
-import com.hartwig.hmftools.patientdb.clinical.data.SampleData;
-import com.hartwig.hmftools.patientdb.clinical.data.TumorMarkerData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyTreatmentResponseData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.DrugData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.PreTreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.RanoMeasurementData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.TumorMarkerData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

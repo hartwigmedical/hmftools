@@ -2,13 +2,13 @@ package com.hartwig.hmftools.patientdb.clinical.readers;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-import com.hartwig.hmftools.patientdb.clinical.data.BaselineData;
-import com.hartwig.hmftools.patientdb.clinical.data.CuratedPrimaryTumor;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutableBaselineData;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutableCuratedPrimaryTumor;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutablePreTreatmentData;
-import com.hartwig.hmftools.patientdb.clinical.data.Patient;
-import com.hartwig.hmftools.patientdb.clinical.data.PreTreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedPrimaryTumor;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableBaselineData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableCuratedPrimaryTumor;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutablePreTreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.PreTreatmentData;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

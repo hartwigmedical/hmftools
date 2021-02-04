@@ -36,8 +36,8 @@ import com.hartwig.hmftools.patientdb.clinical.context.RunContext;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.TreatmentCurator;
-import com.hartwig.hmftools.patientdb.clinical.data.Patient;
-import com.hartwig.hmftools.patientdb.clinical.data.SampleData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 import com.hartwig.hmftools.patientdb.clinical.readers.ColoPatientReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.CorePatientReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.EcrfPatientReader;
@@ -333,7 +333,7 @@ public final class LoadClinicalData {
             List<WidePreAvlTreatmentData> preAvlTreatments = WideEcrfFileReader.readPreAvlTreatments(preAvlTreatmentCsv);
             LOGGER.info(" Loaded {} WIDE pre-AVL-treatments from {}", preAvlTreatments.size(), preAvlTreatmentCsv);
 
-            String biopsyCsv = config.biopsyMappingCsv();
+            String biopsyCsv = config.wideBiopsyCsv();
             List<WideBiopsyData> biopsies = WideEcrfFileReader.readBiopsies(biopsyCsv);
             LOGGER.info(" Loaded {} WIDE biopsies from {}", biopsies.size(), biopsyCsv);
 

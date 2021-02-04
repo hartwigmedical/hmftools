@@ -10,9 +10,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.clinical.ClinicalConstants;
-import com.hartwig.hmftools.patientdb.clinical.data.BiopsyData;
-import com.hartwig.hmftools.patientdb.clinical.data.BiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutableBiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableBiopsyTreatmentData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

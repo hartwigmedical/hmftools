@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
-import com.hartwig.hmftools.patientdb.clinical.data.BiopsyTreatmentResponseData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyTreatmentResponseData;
 
 import org.jetbrains.annotations.NotNull;
 

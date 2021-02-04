@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientdb.clinical.matchers;
 
-import static com.hartwig.hmftools.patientdb.clinical.data.TestDatamodelFactory.biopsyBuilder;
-import static com.hartwig.hmftools.patientdb.clinical.data.TestDatamodelFactory.biopsyTreatmentBuilder;
+import static com.hartwig.hmftools.patientdb.clinical.datamodel.TestDatamodelFactory.biopsyBuilder;
+import static com.hartwig.hmftools.patientdb.clinical.datamodel.TestDatamodelFactory.biopsyTreatmentBuilder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -11,10 +11,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.patientdb.clinical.data.BiopsyData;
-import com.hartwig.hmftools.patientdb.clinical.data.BiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.clinical.data.DrugData;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutableDrugData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.DrugData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableDrugData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

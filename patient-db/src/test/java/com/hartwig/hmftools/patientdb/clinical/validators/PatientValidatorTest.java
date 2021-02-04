@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.patientdb.clinical.validators;
 
-import static com.hartwig.hmftools.patientdb.clinical.data.TestDatamodelFactory.baselineBuilder;
-import static com.hartwig.hmftools.patientdb.clinical.data.TestDatamodelFactory.biopsyBuilder;
-import static com.hartwig.hmftools.patientdb.clinical.data.TestDatamodelFactory.biopsyTreatmentBuilder;
-import static com.hartwig.hmftools.patientdb.clinical.data.TestDatamodelFactory.biopsyTreatmentResponseBuilder;
-import static com.hartwig.hmftools.patientdb.clinical.data.TestDatamodelFactory.drugBuilder;
+import static com.hartwig.hmftools.patientdb.clinical.datamodel.TestDatamodelFactory.baselineBuilder;
+import static com.hartwig.hmftools.patientdb.clinical.datamodel.TestDatamodelFactory.biopsyBuilder;
+import static com.hartwig.hmftools.patientdb.clinical.datamodel.TestDatamodelFactory.biopsyTreatmentBuilder;
+import static com.hartwig.hmftools.patientdb.clinical.datamodel.TestDatamodelFactory.biopsyTreatmentResponseBuilder;
+import static com.hartwig.hmftools.patientdb.clinical.datamodel.TestDatamodelFactory.drugBuilder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -16,16 +16,16 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-import com.hartwig.hmftools.patientdb.clinical.data.BaselineData;
-import com.hartwig.hmftools.patientdb.clinical.data.BiopsyData;
-import com.hartwig.hmftools.patientdb.clinical.data.BiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.clinical.data.BiopsyTreatmentResponseData;
-import com.hartwig.hmftools.patientdb.clinical.data.CuratedDrug;
-import com.hartwig.hmftools.patientdb.clinical.data.DrugData;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutableCuratedDrug;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutableCuratedPrimaryTumor;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutablePreTreatmentData;
-import com.hartwig.hmftools.patientdb.clinical.data.PreTreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyTreatmentResponseData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedDrug;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.DrugData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableCuratedDrug;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableCuratedPrimaryTumor;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutablePreTreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.PreTreatmentData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

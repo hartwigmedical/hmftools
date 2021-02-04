@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.patientdb.clinical.curators.TestCuratorFactory;
-import com.hartwig.hmftools.patientdb.clinical.data.BaselineData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
 
 import org.junit.Test;
 

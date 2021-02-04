@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.patientdb.clinical.data;
+package com.hartwig.hmftools.patientdb.clinical.datamodel;
 
-import static com.hartwig.hmftools.patientdb.clinical.data.TestDatamodelFactory.biopsyTreatmentResponseBuilder;
+import static com.hartwig.hmftools.patientdb.clinical.datamodel.TestDatamodelFactory.biopsyTreatmentResponseBuilder;
 
 import static org.junit.Assert.assertEquals;
 

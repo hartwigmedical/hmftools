@@ -8,8 +8,8 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutableTumorMarkerData;
-import com.hartwig.hmftools.patientdb.clinical.data.TumorMarkerData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableTumorMarkerData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.TumorMarkerData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -37,6 +37,7 @@ final class TumorMarkerReader {
                     String marker = responseGroup.readItemString(FIELD_MARKER);
                     String measurement = responseGroup.readItemString(FIELD_MEASUREMENT);
                     String unit = responseGroup.readItemString(FIELD_UNIT);
+
                     tumorMarkers.add(ImmutableTumorMarkerData.of(patient.patientId(), date, marker, measurement, unit, form.status()));
                 }
             }

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.clinical.data;
+package com.hartwig.hmftools.patientdb.clinical.datamodel;
 
 import java.util.List;
 

@@ -8,9 +8,9 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-import com.hartwig.hmftools.patientdb.clinical.data.BiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.clinical.data.BiopsyTreatmentResponseData;
-import com.hartwig.hmftools.patientdb.clinical.data.ImmutableBiopsyTreatmentResponseData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyTreatmentResponseData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableBiopsyTreatmentResponseData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
