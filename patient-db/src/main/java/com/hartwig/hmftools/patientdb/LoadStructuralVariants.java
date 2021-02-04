@@ -39,8 +39,8 @@ public class LoadStructuralVariants {
     private static final String SV_DATA_DIRECTORY = "sv_data_dir";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
-        Options options = createBasicOptions();
-        CommandLine cmd = createCommandLine(args, options);
+        Options options = createOptions();
+        CommandLine cmd = new DefaultParser().parse(options, args);
         DatabaseAccess dbAccess = databaseAccess(cmd);
 
         String tumorSample = cmd.getOptionValue(SAMPLE);
@@ -51,7 +51,7 @@ public class LoadStructuralVariants {
         List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfPath, new AlwaysPassFilter());
         List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
 
-        // generate a unique ID for each SV record
+        // Generate a unique ID for each SV record
         int svId = 0;
 
         List<StructuralVariantData> svDataList = Lists.newArrayList();
@@ -63,7 +63,6 @@ public class LoadStructuralVariants {
         dbAccess.writeStructuralVariants(tumorSample, svDataList);
 
         if (svDataOutputDir != null) {
-            // write data to file
             try {
                 String svFilename = StructuralVariantFile.generateFilename(svDataOutputDir, tumorSample);
                 StructuralVariantFile.write(svFilename, svDataList);
@@ -140,7 +139,7 @@ public class LoadStructuralVariants {
     }
 
     @NotNull
-    private static Options createBasicOptions() {
+    private static Options createOptions() {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE.");
         options.addOption(SV_VCF, true, "Path to the PURPLE structural variant VCF file.");
@@ -148,10 +147,5 @@ public class LoadStructuralVariants {
         addDatabaseCmdLineArgs(options);
 
         return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
-        return new DefaultParser().parse(options, args);
     }
 }

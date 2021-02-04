@@ -37,8 +37,8 @@ public class LoadSomaticVariants {
     private static final String SOMATIC_FILTER = "somatic_filter";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
-        Options options = createBasicOptions();
-        CommandLine cmd = createCommandLine(args, options);
+        Options options = createOptions();
+        CommandLine cmd = new DefaultParser().parse(options, args);
         String vcfFileLocation = cmd.getOptionValue(SOMATIC_VCF);
         String sample = cmd.getOptionValue(SAMPLE);
         String referenceSample = cmd.getOptionValue(REFERENCE, null);
@@ -63,7 +63,7 @@ public class LoadSomaticVariants {
     }
 
     @NotNull
-    private static Options createBasicOptions() {
+    private static Options createOptions() {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Name of the tumor sample.");
         options.addOption(REFERENCE, true, "Optional name of the reference sample. ");
@@ -75,10 +75,5 @@ public class LoadSomaticVariants {
         addDatabaseCmdLineArgs(options);
 
         return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
-        return new DefaultParser().parse(options, args);
     }
 }

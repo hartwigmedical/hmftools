@@ -40,8 +40,8 @@ public class LoadPurpleData {
     private static final String PURPLE_DIR = "purple_dir";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
-        Options options = createBasicOptions();
-        CommandLine cmd = createCommandLine(args, options);
+        Options options = createOptions();
+        CommandLine cmd = new DefaultParser().parse(options, args);
         DatabaseAccess dbAccess = databaseAccess(cmd);
 
         String tumorSample = cmd.getOptionValue(SAMPLE);
@@ -88,17 +88,12 @@ public class LoadPurpleData {
     }
 
     @NotNull
-    private static Options createBasicOptions() {
+    private static Options createOptions() {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample.");
         options.addOption(PURPLE_DIR, true, "Path to the purple directory.");
         addDatabaseCmdLineArgs(options);
         return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
-        return new DefaultParser().parse(options, args);
     }
 
     public static void persistToDatabase(@NotNull DatabaseAccess dbAccess, @NotNull String tumorSample,

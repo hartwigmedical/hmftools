@@ -38,14 +38,14 @@ public class CreateShallowSeqDB {
     private static final String PURPLE_PURITY_P4_TSV = "purple_purity_p4_tsv";
     private static final String PURPLE_PURITY_P5_TSV = "purple_purity_p5_tsv";
     private static final String PURPLE_QC_FILE = "purple_qc_file";
-    private static final String PIPELINE_VERSION = "pipeline_version_file";
+    private static final String PIPELINE_VERSION_FILE = "pipeline_version_file";
 
     private static final String PURPLE_DIR = "purple";
     private static final String DELIMITER = "\t";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException {
-        Options options = createBasicOptions();
-        CommandLine cmd = createCommandLine(args, options);
+        Options options = createOptions();
+        CommandLine cmd = new DefaultParser().parse(options, args);
 
         if (!checkInputs(cmd)) {
             HelpFormatter formatter = new HelpFormatter();
@@ -54,7 +54,7 @@ public class CreateShallowSeqDB {
         }
 
         LOGGER.info("Loading shallow seq runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
-        List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY), cmd.getOptionValue(PIPELINE_VERSION));
+        List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY), cmd.getOptionValue(PIPELINE_VERSION_FILE));
 
         List<LimsShallowSeqData> newShallowSeqEntries = extractNewEntriesForShallowDbFromRunContexts(runContexts,
                 cmd.getOptionValue(SHALLOW_SEQ_TSV),
@@ -62,7 +62,7 @@ public class CreateShallowSeqDB {
                 cmd.getOptionValue(PURPLE_QC_FILE),
                 cmd.getOptionValue(PURPLE_PURITY_P4_TSV),
                 cmd.getOptionValue(PURPLE_PURITY_P5_TSV),
-                cmd.getOptionValue(PIPELINE_VERSION));
+                cmd.getOptionValue(PIPELINE_VERSION_FILE));
 
         appendToCsv(cmd.getOptionValue(SHALLOW_SEQ_TSV), newShallowSeqEntries);
 
@@ -168,7 +168,7 @@ public class CreateShallowSeqDB {
                 cmd.getOptionValue(PURPLE_PURITY_P4_TSV),
                 cmd.getOptionValue(PURPLE_PURITY_P5_TSV),
                 cmd.getOptionValue(PURPLE_QC_FILE),
-                cmd.getOptionValue(PIPELINE_VERSION));
+                cmd.getOptionValue(PIPELINE_VERSION_FILE));
 
         boolean validRunDirectories = true;
         if (allParamsPresent) {
@@ -184,12 +184,7 @@ public class CreateShallowSeqDB {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
-        return new DefaultParser().parse(options, args);
-    }
-
-    @NotNull
-    private static Options createBasicOptions() {
+    private static Options createOptions() {
         Options options = new Options();
 
         options.addOption(RUNS_DIRECTORY, true, "Path towards the folder containing all shallow seq runs .");
@@ -200,7 +195,7 @@ public class CreateShallowSeqDB {
         options.addOption(PURPLE_PURITY_P5_TSV, true, "Path towards the purple purity TSV of P5.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
 
-        options.addOption(PIPELINE_VERSION, true, "Path towards the pipeline version");
+        options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version");
 
         return options;
     }

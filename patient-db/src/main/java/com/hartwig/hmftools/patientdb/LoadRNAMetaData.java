@@ -29,7 +29,7 @@ public class LoadRNAMetaData {
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
         Options options = createBasicOptions();
-        CommandLine cmd = createCommandLine(args, options);
+        CommandLine cmd = new DefaultParser().parse(options, args);
 
         String rnaSamplesTsv = cmd.getOptionValue(RNA_SAMPLES_TSV);
 
@@ -60,10 +60,5 @@ public class LoadRNAMetaData {
         options.addOption(RNA_SAMPLES_TSV, true, "RNA samples TSV.");
         addDatabaseCmdLineArgs(options);
         return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
-        return new DefaultParser().parse(options, args);
     }
 }

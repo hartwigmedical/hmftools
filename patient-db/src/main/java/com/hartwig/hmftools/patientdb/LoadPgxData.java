@@ -23,6 +23,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class LoadPgxData {
+
     private static final Logger LOGGER = LogManager.getLogger(LoadPgxData.class);
 
     private static final String SAMPLE = "sample";
