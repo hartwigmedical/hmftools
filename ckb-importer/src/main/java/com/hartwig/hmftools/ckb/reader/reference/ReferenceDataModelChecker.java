@@ -53,6 +53,7 @@ public class ReferenceDataModelChecker {
         map.put("id", true);
         map.put("geneSymbol", true);
         map.put("terms", true);
+
         return new JsonDatamodelChecker("ReferenceGeneObject", map);
     }
 
@@ -79,7 +80,6 @@ public class ReferenceDataModelChecker {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("profileName", true);
-        map.put("profileTreatmentApproache", false); //check if needed
 
         return new JsonDatamodelChecker("ReferenceMolecularprofileObject", map);
     }
@@ -100,7 +100,6 @@ public class ReferenceDataModelChecker {
         map.put("id", true);
         map.put("name", true);
         map.put("source", true);
-
 
         return new JsonDatamodelChecker("ReferenceIndicationObject", map);
     }
@@ -146,5 +145,4 @@ public class ReferenceDataModelChecker {
 
         return new JsonDatamodelChecker("ReferenceVariantObject", map);
     }
-
 }

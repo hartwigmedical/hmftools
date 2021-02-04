@@ -35,8 +35,8 @@ public class DrugClassFactory {
     }
 
     @NotNull
-    public static List<DrugClass> readingDrugClasses(@NotNull String drugClassesDir) throws IOException, ParseException {
-        LOGGER.info("Start reading drug classes");
+    public static List<DrugClass> readingDrugClass(@NotNull String drugClassesDir) throws IOException, ParseException {
+        LOGGER.info("Start reading drug class dir");
 
         List<DrugClass> drugClasses = Lists.newArrayList();
         File[] filesDrugClasses = new File(drugClassesDir).listFiles();
@@ -58,18 +58,18 @@ public class DrugClassFactory {
                             .id(JsonFunctions.integer(drugClassEntryObject, "id"))
                             .drugClass(JsonFunctions.string(drugClassEntryObject, "drugClass"))
                             .createDate(DateConverter.convertDate(JsonFunctions.string(drugClassEntryObject, "createDate")))
-                            .drug(retrieveDrugs(drugClassEntryObject.getAsJsonArray("drugs")))
-                            .treatmentApproach(retrieveTreatmentApproaches(drugClassEntryObject.getAsJsonArray("treatmentApproaches")))
+                            .drug(extractDrugs(drugClassEntryObject.getAsJsonArray("drugs")))
+                            .treatmentApproach(extractTreatmentApproaches(drugClassEntryObject.getAsJsonArray("treatmentApproaches")))
                             .build());
                 }
                 reader.close();
             }
         }
-        LOGGER.info("Finished reading drug classes");
+        LOGGER.info("Finished reading drug class dir");
         return drugClasses;
     }
 
-    private static List<DrugInfo> retrieveDrugs(@NotNull JsonArray jsonArray) {
+    private static List<DrugInfo> extractDrugs(@NotNull JsonArray jsonArray) {
         List<DrugInfo> drugs = Lists.newArrayList();
         JsonDatamodelChecker drugsClassDrugChecker = DrugClassDataModelChecker.drugClassDrugsObjectChecker();
         for (JsonElement drug : jsonArray) {
@@ -85,7 +85,7 @@ public class DrugClassFactory {
         return drugs;
     }
 
-    private static List<TreatmentApproachInfo> retrieveTreatmentApproaches(@NotNull JsonArray jsonArray) {
+    private static List<TreatmentApproachInfo> extractTreatmentApproaches(@NotNull JsonArray jsonArray) {
         List<TreatmentApproachInfo> treatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker drugsClassTreatmentApprochChecker = DrugClassDataModelChecker.drugClassTreatmentApproachesObjectChecker();
 

@@ -18,9 +18,9 @@ public abstract class CkbEntryInterpretation {
     public abstract MolecularProfile molecularProfile();
 
     @NotNull
-    public abstract List<VariantInterpretation> variantInterpretation();
+    public abstract List<VariantInterpretation> variantInterpretations();
 
     @NotNull
-    public abstract List<TreatmentInterpretation> treatmentInterpretation();
+    public abstract List<TreatmentInterpretation> treatmentInterpretations();
 
 }

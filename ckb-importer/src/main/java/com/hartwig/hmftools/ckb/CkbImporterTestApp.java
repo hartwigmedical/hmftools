@@ -5,7 +5,6 @@ import java.net.InetAddress;
 import java.text.ParseException;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.ImmutableCkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
@@ -77,9 +76,9 @@ public class CkbImporterTestApp {
     private static CkbEntry readJsonData(@NotNull String ckbPath) throws IOException, ParseException {
 
         List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
-        List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + DRUGS);
-        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
-        List<Gene> genes = GeneFactory.readingGenes(ckbPath + GENES);
+        List<Drug> drugs = DrugFactory.readingDrug(ckbPath + DRUGS);
+        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClass(ckbPath + DRUG_CLASSES);
+        List<Gene> genes = GeneFactory.readingGene(ckbPath + GENES);
         List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses =
                 GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
         List<Indication> indications = IndicationFactory.readingIndication(ckbPath + INDICATIONS);

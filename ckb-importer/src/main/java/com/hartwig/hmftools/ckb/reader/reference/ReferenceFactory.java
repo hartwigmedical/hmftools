@@ -48,7 +48,7 @@ public class ReferenceFactory {
 
     @NotNull
     public static List<Reference> readingReference(@NotNull String referenceDir) throws IOException {
-        LOGGER.info("Start reading indications");
+        LOGGER.info("Start reading reference dir");
 
         List<Reference> references = Lists.newArrayList();
         File[] filesReferences = new File(referenceDir).listFiles();
@@ -83,19 +83,19 @@ public class ReferenceFactory {
                             .evidence(extractEvidence(referenceEntryObject.getAsJsonArray("evidence")))
                             .therapy(extractTherapy(referenceEntryObject.getAsJsonArray("therapies")))
                             .treatmentApproach(extractTreatmentApproach(referenceEntryObject.getAsJsonArray("treatmentApproaches")))
-                            .variant(extarctVariant(referenceEntryObject.getAsJsonArray("variants")))
+                            .variant(extractVariant(referenceEntryObject.getAsJsonArray("variants")))
                             .build());
                 }
                 reader.close();
             }
         }
-        LOGGER.info("Finished reading reference");
+        LOGGER.info("Finished reading reference dir");
 
         return references;
     }
 
     @NotNull
-    public static List<DrugInfo> extractDrug(@NotNull JsonArray jsonArray) {
+    private static List<DrugInfo> extractDrug(@NotNull JsonArray jsonArray) {
         List<DrugInfo> referenceDrugs = Lists.newArrayList();
         JsonDatamodelChecker drugChecker = ReferenceDataModelChecker.referenceDrugObjectChecker();
 
@@ -114,7 +114,7 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<GeneInfo> extractGene(@NotNull JsonArray jsonArray) {
+    private static List<GeneInfo> extractGene(@NotNull JsonArray jsonArray) {
         List<GeneInfo> referenceGenes = Lists.newArrayList();
         JsonDatamodelChecker geneChecker = ReferenceDataModelChecker.referenceGeneObjectChecker();
 
@@ -133,7 +133,7 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<EvidenceInfo> extractEvidence(@NotNull JsonArray jsonArray) {
+    private static List<EvidenceInfo> extractEvidence(@NotNull JsonArray jsonArray) {
         List<EvidenceInfo> referenceEvidences = Lists.newArrayList();
         JsonDatamodelChecker evidenceChecker = ReferenceDataModelChecker.referenceEvidenceObjectChecker();
 
@@ -161,7 +161,7 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
+    private static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker molecularProfileChecker = ReferenceDataModelChecker.referenceMolecularProfileObjectChecker();
         molecularProfileChecker.check(jsonObject);
 
@@ -172,7 +172,7 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
+    private static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker therapyChecker = ReferenceDataModelChecker.referenceTherapyChecker();
         therapyChecker.check(jsonObject);
 
@@ -184,7 +184,7 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
+    private static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker indicationChecker = ReferenceDataModelChecker.referenceIndicationChecker();
         indicationChecker.check(jsonObject);
 
@@ -196,7 +196,7 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<ReferenceInfo> extractReference(@NotNull JsonArray jsonArray) {
+    private static List<ReferenceInfo> extractReference(@NotNull JsonArray jsonArray) {
         List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker referenceChecker = ReferenceDataModelChecker.referenceReferenceChecker();
 
@@ -215,7 +215,7 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<TherapyInfo> extractTherapy(@NotNull JsonArray jsonArray) {
+    private static List<TherapyInfo> extractTherapy(@NotNull JsonArray jsonArray) {
         List<TherapyInfo> referenceTherapies = Lists.newArrayList();
         JsonDatamodelChecker therapyChecker = ReferenceDataModelChecker.referenceTherapyObjectChecker();
 
@@ -228,14 +228,12 @@ public class ReferenceFactory {
                     .therapyName(JsonFunctions.string(therapyJsonObject, "therapyName"))
                     .synonyms(JsonFunctions.nullableString(therapyJsonObject, "synonyms"))
                     .build());
-
         }
-
         return referenceTherapies;
     }
 
     @NotNull
-    public static List<TreatmentApproachInfo> extractTreatmentApproach(@NotNull JsonArray jsonArray) {
+    private static List<TreatmentApproachInfo> extractTreatmentApproach(@NotNull JsonArray jsonArray) {
         List<TreatmentApproachInfo> referenceTreatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker treatmentApproachChecker = ReferenceDataModelChecker.referenceTreatmentApprochObjectChecker();
 
@@ -248,14 +246,12 @@ public class ReferenceFactory {
                     .name(JsonFunctions.string(treatmentApproachJsonObject, "name"))
                     .profileName(JsonFunctions.string(treatmentApproachJsonObject, "profileName"))
                     .build());
-
         }
-
         return referenceTreatmentApproaches;
     }
 
     @NotNull
-    public static List<VariantInfo> extarctVariant(@NotNull JsonArray jsonArray) {
+    private static List<VariantInfo> extractVariant(@NotNull JsonArray jsonArray) {
         List<VariantInfo> referenceVariants = Lists.newArrayList();
         JsonDatamodelChecker variantChecker = ReferenceDataModelChecker.referenceVariantObjectChecker();
 
@@ -269,7 +265,6 @@ public class ReferenceFactory {
                     .impact(JsonFunctions.nullableString(variantJsonObject, "impact"))
                     .proteinEffect(JsonFunctions.nullableString(variantJsonObject, "proteinEffect"))
                     .build());
-
         }
         return referenceVariants;
     }

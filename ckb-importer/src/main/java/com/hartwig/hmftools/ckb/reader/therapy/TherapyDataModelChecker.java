@@ -73,7 +73,6 @@ public class TherapyDataModelChecker {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("profileName", true);
-        map.put("profileTreatmentApproache", false); //check if needed
 
         return new JsonDatamodelChecker("TherapyMolecularprofileObject", map);
     }
@@ -94,7 +93,6 @@ public class TherapyDataModelChecker {
         map.put("id", true);
         map.put("name", true);
         map.put("source", true);
-
 
         return new JsonDatamodelChecker("TherapyIndicationObject", map);
     }
