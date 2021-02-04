@@ -4,12 +4,32 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele
 
 data class HlaSequenceLoci(val allele: HlaAllele, val sequences: List<String>) {
 
+    fun containsInserts(): Boolean {
+        return sequences.any { it.length > 1 }
+    }
+
+    fun containsDeletes(): Boolean {
+        return sequences.any { it == "." }
+    }
+
+    fun containsIndels(): Boolean {
+        return sequences.any { it == "." || it.length > 1 }
+    }
+
+
     fun sequence(locus: Int): String {
         return sequences[locus]
     }
 
     fun sequence(): String {
         return sequences.joinToString(separator = "").replace(".", "")
+    }
+
+    fun sequence(startLocus: Int, endLocus: Int): String {
+        return sequences
+                .filterIndexed { index, _ -> index in startLocus..endLocus }
+                .joinToString("")
+                .replace(".", "")
     }
 
 
@@ -23,7 +43,7 @@ data class HlaSequenceLoci(val allele: HlaAllele, val sequences: List<String>) {
         fun create(allele: HlaAllele, sequence: String, reference: String): HlaSequenceLoci {
             val sequences = mutableListOf<String>()
 
-            fun isBaseIgnored(i: Int) = (sequence[i] == '.' && reference[i] == '.') ||  (sequence[i] == '|' && reference[i] == '|')
+            fun isBaseIgnored(i: Int) = (sequence[i] == '.' && reference[i] == '.') || (sequence[i] == '|' && reference[i] == '|')
             fun isBaseInserted(i: Int) = sequence[i] != '.' && reference[i] == '.'
             var insLength = 0
 

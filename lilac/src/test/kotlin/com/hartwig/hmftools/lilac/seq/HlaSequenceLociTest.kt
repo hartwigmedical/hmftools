@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.lilac.seq
 
 import com.hartwig.hmftools.lilac.hla.HlaAllele
-import org.junit.Assert.assertEquals
+import org.junit.Assert.*
 import org.junit.Test
 
 class HlaSequenceLociTest {
 
-    val allele = HlaAllele("A*01:01:01:01")
-    val reference = "APRTS..MNV..EPRF"
+    private val allele = HlaAllele("A*01:01:01:01")
+    private val reference = "APRTS..MNV..EPRF"
 
     @Test
     fun testReference() {
@@ -19,6 +19,9 @@ class HlaSequenceLociTest {
         }
 
         assertEquals("APRTSMNVEPRF", victim.sequence())
+        assertFalse(victim.containsIndels())
+        assertFalse(victim.containsInserts())
+        assertFalse(victim.containsDeletes())
     }
 
     @Test
@@ -27,7 +30,12 @@ class HlaSequenceLociTest {
         val victim = HlaSequenceLoci.create(allele, victimSequence, reference)
         assertEquals(12,  victim.sequences.size)
         assertEquals("SET",  victim.sequence(4))
-        assertEquals("APRTSETMNVEPRF", victim.sequence())
+        assertEquals("APRTSETMNVEPRF", victim.sequence(0, 11))
+
+        assertTrue(victim.containsIndels())
+        assertTrue(victim.containsInserts())
+        assertFalse(victim.containsDeletes())
+
     }
 
     @Test
@@ -38,7 +46,11 @@ class HlaSequenceLociTest {
         assertEquals(".",  victim.sequence(0))
         assertEquals(".",  victim.sequence(5))
         assertEquals(".",  victim.sequence(11))
-        assertEquals("PRTSNVEPR", victim.sequence())
+        assertEquals("PRTSNVEPR", victim.sequence(0, 11))
+
+        assertTrue(victim.containsIndels())
+        assertFalse(victim.containsInserts())
+        assertTrue(victim.containsDeletes())
     }
 
 }
