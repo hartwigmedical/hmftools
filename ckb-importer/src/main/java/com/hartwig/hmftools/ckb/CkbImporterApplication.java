@@ -74,6 +74,8 @@ public class CkbImporterApplication {
 
         CkbEntry ckbEntry = readJsonData(config);
         List<CkbEntryInterpretation> ckbEntryInterpretation = InterpretationFactory.interpretationCkbDataModel(ckbEntry);
+        LOGGER.info(ckbEntryInterpretation.get(1).molecularProfile());
+        LOGGER.info(ckbEntryInterpretation.get(1).variantTreeInterpretations());
 
         if (config.skipDatabaseWriting()) {
             LOGGER.info("Skipping DB writing.");
