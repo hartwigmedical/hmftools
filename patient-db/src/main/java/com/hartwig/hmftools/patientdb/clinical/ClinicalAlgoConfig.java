@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface LoadClinicalDataConfig {
+public interface ClinicalAlgoConfig {
 
     String RUNS_DIRECTORY = "runs_dir";
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
@@ -144,9 +144,9 @@ public interface LoadClinicalDataConfig {
     String treatmentMappingCsv();
 
     @NotNull
-    static LoadClinicalDataConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
+    static ClinicalAlgoConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
         boolean doProcessWideClinicalData = cmd.hasOption(DO_PROCESS_WIDE_CLINICAL_DATA);
-        ImmutableLoadClinicalDataConfig.Builder builder = ImmutableLoadClinicalDataConfig.builder()
+        ImmutableClinicalAlgoConfig.Builder builder = ImmutableClinicalAlgoConfig.builder()
                 .runsDirectory(nonOptionalDir(cmd, RUNS_DIRECTORY))
                 .pipelineVersionFile(nonOptionalValue(cmd, PIPELINE_VERSION_FILE))
                 .cpctEcrfFile(nonOptionalFile(cmd, CPCT_ECRF_FILE))
