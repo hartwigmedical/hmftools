@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientdb;
 
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
 import java.io.File;
@@ -32,6 +31,7 @@ import com.hartwig.hmftools.common.reportingdb.ReportingEntry;
 import com.hartwig.hmftools.patientdb.clinical.DumpPrimaryTumorData;
 import com.hartwig.hmftools.patientdb.clinical.EcrfModels;
 import com.hartwig.hmftools.patientdb.clinical.ImmutableEcrfModels;
+import com.hartwig.hmftools.patientdb.clinical.LoadClinicalDataConfig;
 import com.hartwig.hmftools.patientdb.clinical.context.RunContext;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
@@ -74,53 +74,27 @@ public final class LoadClinicalData {
 
     private static final Logger LOGGER = LogManager.getLogger(LoadClinicalData.class);
     private static final String VERSION = LoadClinicalData.class.getPackage().getImplementationVersion();
-    private static final String PIPELINE_VERSION = "pipeline_version_file";
 
-    private static final String RUNS_DIRECTORY = "runs_dir";
-
-    private static final String CPCT_ECRF_FILE = "cpct_ecrf";
-    private static final String CPCT_FORM_STATUS_CSV = "cpct_form_status_csv";
-    private static final String DRUP_ECRF_FILE = "drup_ecrf";
-
-    private static final String DO_LOAD_CLINICAL_DATA = "do_load_clinical_data";
-    private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
-
-    private static final String LIMS_DIRECTORY = "lims_dir";
-    private static final String REPORTING_DB_TSV = "reporting_db_tsv";
-
-    private static final String CURATED_PRIMARY_TUMOR_TSV = "curated_primary_tumor_tsv";
-    private static final String PATIENT_TUMOR_CURATION_STATUS_TSV = "patient_tumor_curation_status_tsv";
-
-    private static final String DO_PROCESS_WIDE_CLINICAL_DATA = "do_process_wide_clinical_data";
-    private static final String WIDE_PRE_AVL_TREATMENT_CSV = "wide_pre_avl_treatment_csv";
-    private static final String WIDE_BIOPSY_CSV = "wide_biopsy_csv";
-    private static final String WIDE_AVL_TREATMENT_CSV = "wide_avl_treatment_csv";
-    private static final String WIDE_RESPONSE_CSV = "wide_response_csv";
-    private static final String WIDE_FIVE_DAYS_CSV = "wide_five_days_csv";
-
-    private static final String DOID_JSON = "doid_json";
-    private static final String TUMOR_LOCATION_MAPPING_TSV = "tumor_location_mapping_tsv";
-    private static final String TREATMENT_MAPPING_CSV = "treatment_mapping_csv";
-    private static final String BIOPSY_MAPPING_CSV = "biopsy_mapping_csv";
-
-    public static void main(@NotNull String[] args) throws ParseException, IOException, XMLStreamException, SQLException {
+    public static void main(@NotNull String[] args) throws IOException, XMLStreamException, SQLException, ParseException {
         LOGGER.info("Running Clinical Patient DB v{}", VERSION);
-        Options options = createOptions();
-        CommandLine cmd = new DefaultParser().parse(options, args);
+        Options options = LoadClinicalDataConfig.createOptions();
 
-        if (!checkInputs(cmd)) {
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db", options);
+        LoadClinicalDataConfig config = null;
+        try {
+            config = LoadClinicalDataConfig.createConfig(new DefaultParser().parse(options, args));
+        } catch (ParseException exception) {
+            LOGGER.warn(exception);
+            new HelpFormatter().printHelp("Clinical-Patient-DB", options);
             System.exit(1);
         }
 
-        List<DoidNode> doidNodes = DiseaseOntology.readDoidOwlEntryFromDoidJson(cmd.getOptionValue(DOID_JSON)).nodes();
-        PrimaryTumorCurator primaryTumorCurator = new PrimaryTumorCurator(cmd.getOptionValue(TUMOR_LOCATION_MAPPING_TSV), doidNodes);
-        BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(cmd.getOptionValue(BIOPSY_MAPPING_CSV));
-        TreatmentCurator treatmentCurator = new TreatmentCurator(cmd.getOptionValue(TREATMENT_MAPPING_CSV));
+        List<DoidNode> doidNodes = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJson()).nodes();
+        PrimaryTumorCurator primaryTumorCurator = new PrimaryTumorCurator(config.tumorLocationMappingTsv(), doidNodes);
+        BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(config.biopsyMappingCsv());
+        TreatmentCurator treatmentCurator = new TreatmentCurator(config.treatmentMappingCsv());
 
-        LOGGER.info("Loading sequence runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
-        List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY), cmd.getOptionValue(PIPELINE_VERSION));
+        LOGGER.info("Loading sequence runs from {}", config.runsDirectory());
+        List<RunContext> runContexts = loadRunContexts(config.runsDirectory(), config.pipelineVersionFile());
         Map<String, List<String>> sequencedSamplesPerPatient = extractSequencedSamplesFromRunContexts(runContexts);
         Map<String, String> sampleToSetNameMap = extractSampleToSetNameMap(runContexts);
         Set<String> sequencedPatientIds = sequencedSamplesPerPatient.keySet();
@@ -129,34 +103,36 @@ public final class LoadClinicalData {
                 sequencedPatientIds.size(),
                 toUniqueSampleIds(sequencedSamplesPerPatient).size());
 
-        LOGGER.info("Loading sample data from LIMS in {}", cmd.getOptionValue(LIMS_DIRECTORY));
-        Lims lims = LimsFactory.fromLimsDirectory(cmd.getOptionValue(LIMS_DIRECTORY));
+        LOGGER.info("Loading sample data from LIMS in {}", config.limsDirectory());
+        Lims lims = LimsFactory.fromLimsDirectory(config.limsDirectory());
         Map<String, List<SampleData>> sampleDataPerPatient =
                 extractAllSamplesFromLims(lims, sampleToSetNameMap, sequencedSamplesPerPatient);
         LOGGER.info(" Loaded samples for {} patient IDs ({} samples)",
                 sampleDataPerPatient.keySet().size(),
                 countValues(sampleDataPerPatient));
 
-        EcrfModels ecrfModels = loadEcrfModels(cmd);
+        EcrfModels ecrfModels = loadEcrfModels(config);
 
         List<Patient> patients = interpret(sampleDataPerPatient, ecrfModels, primaryTumorCurator, biopsySiteCurator, treatmentCurator);
 
         LOGGER.info("Check for missing curation tumor location when info is known");
         Map<String, PatientTumorCurationStatus> patientTumorCurationStatusMap =
-                generatePatientTumorCurationStatusMap(sampleDataPerPatient, patients, cmd.getOptionValue(REPORTING_DB_TSV));
+                generatePatientTumorCurationStatusMap(sampleDataPerPatient, patients, config.reportingDbTsv());
 
         LOGGER.info("Writing patient tumor curation status");
-        DumpPrimaryTumorData.writePatientTumorCurationStatesToTSV(cmd.getOptionValue(PATIENT_TUMOR_CURATION_STATUS_TSV),
-                patientTumorCurationStatusMap);
+        DumpPrimaryTumorData.writePatientTumorCurationStatesToTSV(config.patientTumorCurationStatusTsv(), patientTumorCurationStatusMap);
 
         LOGGER.info("Writing curated primary tumors");
-        DumpPrimaryTumorData.writeCuratedPrimaryTumorsToTSV(cmd.getOptionValue(CURATED_PRIMARY_TUMOR_TSV), patients);
+        DumpPrimaryTumorData.writeCuratedPrimaryTumorsToTSV(config.curatedPrimaryTumorTsv(), patients);
 
-        if (cmd.hasOption(DO_LOAD_CLINICAL_DATA)) {
+        if (config.doLoadClinicalData()) {
+            DatabaseAccess.addDatabaseCmdLineArgs(options);
+            CommandLine cmd = new DefaultParser().parse(options, args);
+
             LOGGER.info("Connecting to database {}", cmd.getOptionValue(DB_URL));
             DatabaseAccess dbWriter = databaseAccess(cmd);
 
-            if (cmd.hasOption(DO_LOAD_RAW_ECRF)) {
+            if (config.doLoadRawEcrf()) {
                 writeRawEcrf(dbWriter, sequencedPatientIds, ecrfModels);
             }
 
@@ -319,60 +295,57 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static EcrfModels loadEcrfModels(@NotNull CommandLine cmd) throws IOException, XMLStreamException {
-        EcrfModel cpctEcrfModel = buildCpctEcrfModel(cmd);
-        EcrfModel drupEcrfModel = buildDrupEcrfModel(cmd);
-        WideEcrfModel wideEcrfModel = buildWideEcrfModel(cmd);
+    private static EcrfModels loadEcrfModels(@NotNull LoadClinicalDataConfig config) throws IOException, XMLStreamException {
+        EcrfModel cpctEcrfModel = buildCpctEcrfModel(config);
+        EcrfModel drupEcrfModel = buildDrupEcrfModel(config);
+        WideEcrfModel wideEcrfModel = buildWideEcrfModel(config);
 
         return ImmutableEcrfModels.builder().cpctModel(cpctEcrfModel).drupModel(drupEcrfModel).wideModel(wideEcrfModel).build();
     }
 
     @NotNull
-    private static EcrfModel buildCpctEcrfModel(@NotNull CommandLine cmd) throws IOException, XMLStreamException {
-        String cpctEcrfFilePath = cmd.getOptionValue(CPCT_ECRF_FILE);
-        String cpctFormStatusCsv = cmd.getOptionValue(CPCT_FORM_STATUS_CSV);
-        LOGGER.info("Loading CPCT eCRF from {}", cpctEcrfFilePath);
-        FormStatusModel cpctFormStatusModel = FormStatusReader.buildModelFromCsv(cpctFormStatusCsv);
-        EcrfModel cpctEcrfModel = EcrfModel.loadFromXMLWithFormStates(cpctEcrfFilePath, cpctFormStatusModel);
+    private static EcrfModel buildCpctEcrfModel(@NotNull LoadClinicalDataConfig config) throws IOException, XMLStreamException {
+        LOGGER.info("Loading CPCT eCRF from {}", config.cpctEcrfFile());
+        FormStatusModel cpctFormStatusModel = FormStatusReader.buildModelFromCsv(config.cpctFormStatusCsv());
+        EcrfModel cpctEcrfModel = EcrfModel.loadFromXMLWithFormStates(config.cpctEcrfFile(), cpctFormStatusModel);
         LOGGER.info(" Finished loading CPCT eCRF. Read {} patients", cpctEcrfModel.patientCount());
 
         return cpctEcrfModel;
     }
 
     @NotNull
-    private static EcrfModel buildDrupEcrfModel(@NotNull CommandLine cmd) throws FileNotFoundException, XMLStreamException {
-        String drupEcrfFilePath = cmd.getOptionValue(DRUP_ECRF_FILE);
-        LOGGER.info("Loading DRUP eCRF from {}", drupEcrfFilePath);
-        EcrfModel drupEcrfModel = EcrfModel.loadFromXMLNoFormStates(drupEcrfFilePath);
+    private static EcrfModel buildDrupEcrfModel(@NotNull LoadClinicalDataConfig config) throws FileNotFoundException, XMLStreamException {
+        LOGGER.info("Loading DRUP eCRF from {}", config.drupEcrfFile());
+        EcrfModel drupEcrfModel = EcrfModel.loadFromXMLNoFormStates(config.drupEcrfFile());
         LOGGER.info(" Finished loading DRUP eCRF. Read {} patients", drupEcrfModel.patientCount());
 
         return drupEcrfModel;
     }
 
     @NotNull
-    private static WideEcrfModel buildWideEcrfModel(@NotNull CommandLine cmd) throws IOException {
+    private static WideEcrfModel buildWideEcrfModel(@NotNull LoadClinicalDataConfig config) throws IOException {
         WideEcrfModel wideEcrfModel;
 
-        if (cmd.hasOption(DO_PROCESS_WIDE_CLINICAL_DATA)) {
+        if (config.doProcessWideClinicalData()) {
             LOGGER.info("Loading WIDE eCRF");
 
-            String preAvlTreatmentCsv = cmd.getOptionValue(WIDE_PRE_AVL_TREATMENT_CSV);
+            String preAvlTreatmentCsv = config.widePreAvlTreatmentCsv();
             List<WidePreAvlTreatmentData> preAvlTreatments = WideEcrfFileReader.readPreAvlTreatments(preAvlTreatmentCsv);
             LOGGER.info(" Loaded {} WIDE pre-AVL-treatments from {}", preAvlTreatments.size(), preAvlTreatmentCsv);
 
-            String biopsyCsv = cmd.getOptionValue(WIDE_BIOPSY_CSV);
+            String biopsyCsv = config.biopsyMappingCsv();
             List<WideBiopsyData> biopsies = WideEcrfFileReader.readBiopsies(biopsyCsv);
             LOGGER.info(" Loaded {} WIDE biopsies from {}", biopsies.size(), biopsyCsv);
 
-            String avlTreatmentCsv = cmd.getOptionValue(WIDE_AVL_TREATMENT_CSV);
+            String avlTreatmentCsv = config.wideAvlTreatmentCsv();
             List<WideAvlTreatmentData> avlTreatments = WideEcrfFileReader.readAvlTreatments(avlTreatmentCsv);
             LOGGER.info(" Loaded {} WIDE AVL treatments from {}", avlTreatments.size(), avlTreatmentCsv);
 
-            String wideResponseCsv = cmd.getOptionValue(WIDE_RESPONSE_CSV);
+            String wideResponseCsv = config.wideResponseCsv();
             List<WideResponseData> responses = WideEcrfFileReader.readResponses(wideResponseCsv);
             LOGGER.info(" Loaded {} WIDE responses from {}", responses.size(), wideResponseCsv);
 
-            String fiveDaysCsv = cmd.getOptionValue(WIDE_FIVE_DAYS_CSV);
+            String fiveDaysCsv = config.wideFiveDaysCsv();
             List<WideFiveDays> fiveDays = WideEcrfFileReader.readFiveDays(fiveDaysCsv);
             LOGGER.info(" Loaded {} WIDE five days entries from {}", fiveDays.size(), fiveDaysCsv);
 
@@ -603,87 +576,5 @@ public final class LoadClinicalData {
             return Strings.EMPTY;
         }
         return names[4];
-    }
-
-
-    private static boolean checkInputs(@NotNull CommandLine cmd) {
-        String runsDirectory = cmd.getOptionValue(RUNS_DIRECTORY);
-
-        boolean allParamsPresent = !Utils.anyNull(runsDirectory,
-                cmd.getOptionValue(CPCT_ECRF_FILE),
-                cmd.getOptionValue(CPCT_FORM_STATUS_CSV),
-                cmd.getOptionValue(DRUP_ECRF_FILE),
-                cmd.getOptionValue(LIMS_DIRECTORY),
-                cmd.getOptionValue(TREATMENT_MAPPING_CSV),
-                cmd.getOptionValue(BIOPSY_MAPPING_CSV),
-                cmd.getOptionValue(TUMOR_LOCATION_MAPPING_TSV),
-                cmd.getOptionValue(CURATED_PRIMARY_TUMOR_TSV),
-                cmd.getOptionValue(PATIENT_TUMOR_CURATION_STATUS_TSV),
-                cmd.getOptionValue(DOID_JSON),
-                cmd.getOptionValue(REPORTING_DB_TSV));
-
-        if (cmd.hasOption(DO_LOAD_CLINICAL_DATA)) {
-            allParamsPresent = allParamsPresent && DatabaseAccess.hasDatabaseConfig(cmd);
-        }
-
-        if (cmd.hasOption(DO_PROCESS_WIDE_CLINICAL_DATA)) {
-            allParamsPresent = allParamsPresent && !Utils.anyNull(cmd.getOptionValue(WIDE_AVL_TREATMENT_CSV),
-                    cmd.getOptionValue(WIDE_PRE_AVL_TREATMENT_CSV),
-                    cmd.getOptionValue(WIDE_BIOPSY_CSV),
-                    cmd.getOptionValue(WIDE_RESPONSE_CSV),
-                    cmd.getOptionValue(WIDE_FIVE_DAYS_CSV));
-        }
-
-        boolean validRunDirectories = true;
-        if (allParamsPresent) {
-            File runDirectoryDb = new File(runsDirectory);
-
-            if (!runDirectoryDb.exists() || !runDirectoryDb.isDirectory()) {
-                validRunDirectories = false;
-                LOGGER.warn("HMF database run directory '{}' does not exist or is not a directory", runDirectoryDb);
-            }
-        }
-
-        return validRunDirectories && allParamsPresent;
-    }
-
-    @NotNull
-    private static Options createOptions() {
-        Options options = new Options();
-        options.addOption(RUNS_DIRECTORY,
-                true,
-                "Path towards the folder containing patient runs that are considered part of HMF database.");
-
-        options.addOption(REPORTING_DB_TSV, true, "Path towards the reporting db tsv file.");
-
-        options.addOption(CPCT_ECRF_FILE, true, "Path towards the CPCT ecrf file.");
-        options.addOption(CPCT_FORM_STATUS_CSV, true, "Path towards the CPCT form status csv file.");
-        options.addOption(DRUP_ECRF_FILE, true, "Path towards the DRUP ecrf file.");
-        options.addOption(DO_LOAD_RAW_ECRF, false, "If set, writes raw ecrf data to database.");
-
-        options.addOption(DO_LOAD_CLINICAL_DATA, false, "If set, clinical data will be loaded into the database.");
-        options.addOption(CURATED_PRIMARY_TUMOR_TSV, true, "Path towards to the curated primary tumor TSV.");
-        options.addOption(PATIENT_TUMOR_CURATION_STATUS_TSV, true, "Path where patient tumor curation status will be written to");
-
-        options.addOption(DO_PROCESS_WIDE_CLINICAL_DATA,
-                false,
-                "if set, creates clinical timeline for WIDE patients and persists to database.");
-        options.addOption(WIDE_AVL_TREATMENT_CSV, true, "Path towards the WIDE avl treatment csv");
-        options.addOption(WIDE_PRE_AVL_TREATMENT_CSV, true, "Path towards the WIDE pre avl treatment csv.");
-        options.addOption(WIDE_BIOPSY_CSV, true, "Path towards the WIDE biopsy csv.");
-        options.addOption(WIDE_RESPONSE_CSV, true, "Path towards the WIDE response csv.");
-        options.addOption(WIDE_FIVE_DAYS_CSV, true, "Path towards the WIDE five days csv.");
-
-        options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
-
-        options.addOption(DOID_JSON, true, "Path towards to the json file of the doid ID of primary tumors.");
-        options.addOption(TUMOR_LOCATION_MAPPING_TSV, true, "Path towards to the tumor location mapping TSV.");
-        options.addOption(TREATMENT_MAPPING_CSV, true, "Path towards to the treatment mapping CSV.");
-        options.addOption(BIOPSY_MAPPING_CSV, true, "Path towards to the biopsy mapping CSV.");
-
-        options.addOption(PIPELINE_VERSION, true, "Path towards the pipeline version");
-
-        addDatabaseCmdLineArgs(options);
-        return options;
     }
 }
