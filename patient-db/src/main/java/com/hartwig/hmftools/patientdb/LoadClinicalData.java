@@ -66,6 +66,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -248,7 +249,7 @@ public final class LoadClinicalData {
     private static Map<String, List<String>> extractSequencedSamplesFromRunContexts(@NotNull List<RunContext> runContexts) {
         Map<String, List<String>> sequencedSamplesPerPatient = Maps.newHashMap();
         for (RunContext runContext : runContexts) {
-            String patientId = Utils.extractPatientIdentifier(runContext.setName());
+            String patientId = extractPatientIdentifier(runContext.setName());
             List<String> currentSampleIds = sequencedSamplesPerPatient.get(patientId);
             if (currentSampleIds == null) {
                 currentSampleIds = Lists.newArrayList(runContext.tumorSample());
@@ -593,6 +594,17 @@ public final class LoadClinicalData {
         }
         return sequencedSamples;
     }
+
+    @NotNull
+    private static String extractPatientIdentifier(@NotNull String setName) {
+        String[] names = setName.split("_");
+        if (names.length < 5) {
+            LOGGER.error("Run name {} had less than 5 parts after splitting on _", setName);
+            return Strings.EMPTY;
+        }
+        return names[4];
+    }
+
 
     private static boolean checkInputs(@NotNull CommandLine cmd) {
         String runsDirectory = cmd.getOptionValue(RUNS_DIRECTORY);

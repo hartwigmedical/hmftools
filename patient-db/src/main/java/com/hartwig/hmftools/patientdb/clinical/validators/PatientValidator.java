@@ -14,7 +14,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-import com.hartwig.hmftools.patientdb.Config;
+import com.hartwig.hmftools.patientdb.clinical.ClinicalConstants;
 import com.hartwig.hmftools.patientdb.clinical.data.BaselineData;
 import com.hartwig.hmftools.patientdb.clinical.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.clinical.data.BiopsyTreatmentData;
@@ -329,8 +329,8 @@ public final class PatientValidator {
                     "treatments " + matchedTreatmentsMissingResponse.stream()
                             .map(BiopsyTreatmentData::toString)
                             .collect(Collectors.toList()) + " should have response since they lasted more than "
-                            + Config.IMMEDIATE_TREATMENT_END_THRESHOLD + " days and started more than "
-                            + Config.START_DATE_RESPONSE_THRESHOLD + " days ago"));
+                            + ClinicalConstants.IMMEDIATE_TREATMENT_END_THRESHOLD + " days and started more than "
+                            + ClinicalConstants.START_DATE_RESPONSE_THRESHOLD + " days ago"));
         }
         return findings;
     }
@@ -338,7 +338,7 @@ public final class PatientValidator {
     private static boolean shouldHaveResponse(@NotNull BiopsyTreatmentData treatment) {
         LocalDate treatmentStart = treatment.startDate();
         return (treatmentStart != null && Duration.between(treatmentStart.atStartOfDay(), LocalDate.now().atStartOfDay()).toDays()
-                > Config.START_DATE_RESPONSE_THRESHOLD) && !endedImmediately(treatment);
+                > ClinicalConstants.START_DATE_RESPONSE_THRESHOLD) && !endedImmediately(treatment);
     }
 
     private static boolean endedImmediately(@NotNull BiopsyTreatmentData treatment) {
@@ -346,7 +346,7 @@ public final class PatientValidator {
         LocalDate treatmentEnd = treatment.endDate();
         return treatmentStart != null && treatmentEnd != null
                 && Duration.between(treatmentStart.atStartOfDay(), treatmentEnd.atStartOfDay()).toDays()
-                < Config.IMMEDIATE_TREATMENT_END_THRESHOLD;
+                < ClinicalConstants.IMMEDIATE_TREATMENT_END_THRESHOLD;
     }
 
     private static boolean hasResponse(@NotNull Integer treatmentId, @NotNull List<BiopsyTreatmentResponseData> responses) {

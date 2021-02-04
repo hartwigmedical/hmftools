@@ -8,7 +8,6 @@ import java.util.Objects;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.patientdb.Utils;
 import com.hartwig.hmftools.patientdb.clinical.data.CuratedBiopsyType;
 import com.hartwig.hmftools.patientdb.clinical.data.ImmutableCuratedBiopsyType;
 
@@ -46,11 +45,20 @@ public class BiopsySiteCurator {
             }
 
             curationMap.put(key,
-                    ImmutableCuratedBiopsyType.of(Utils.capitalize(biopsyType),
+                    ImmutableCuratedBiopsyType.of(capitalize(biopsyType),
                             primaryTumorLocation,
                             cancerSubType,
                             biopsySite,
                             biopsyLocation));
+        }
+    }
+
+    @NotNull
+    private static String capitalize(@NotNull String string) {
+        if (string.isEmpty()) {
+            return string;
+        } else {
+            return string.toUpperCase().substring(0, 1) + string.substring(1);
         }
     }
 

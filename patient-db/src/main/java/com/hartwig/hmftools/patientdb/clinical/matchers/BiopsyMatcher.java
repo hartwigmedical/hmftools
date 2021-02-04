@@ -11,7 +11,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ImmutableValidationFinding;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-import com.hartwig.hmftools.patientdb.Config;
+import com.hartwig.hmftools.patientdb.clinical.ClinicalConstants;
 import com.hartwig.hmftools.patientdb.clinical.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.clinical.data.ImmutableBiopsyData;
 import com.hartwig.hmftools.patientdb.clinical.data.SampleData;
@@ -91,11 +91,12 @@ public final class BiopsyMatcher {
         LocalDate samplingDate = sequencedBiopsy.samplingDate();
         if (samplingDate != null) {
             return Math.abs(Duration.between(biopsyDate.atStartOfDay(), samplingDate.atStartOfDay()).toDays())
-                    < Config.MAX_DAYS_BETWEEN_SAMPLING_AND_BIOPSY_DATE;
+                    < ClinicalConstants.MAX_DAYS_BETWEEN_SAMPLING_AND_BIOPSY_DATE;
         } else {
             long daysFromBiopsyTakenToArrival =
                     Duration.between(biopsyDate.atStartOfDay(), sequencedBiopsy.arrivalDate().atStartOfDay()).toDays();
-            return daysFromBiopsyTakenToArrival >= 0 && daysFromBiopsyTakenToArrival < Config.MAX_DAYS_ARRIVAL_DATE_AFTER_BIOPSY_DATE;
+            return daysFromBiopsyTakenToArrival >= 0
+                    && daysFromBiopsyTakenToArrival < ClinicalConstants.MAX_DAYS_ARRIVAL_DATE_AFTER_BIOPSY_DATE;
         }
     }
 
@@ -114,9 +115,10 @@ public final class BiopsyMatcher {
     @NotNull
     private static String getMatchDateCriteria(@NotNull SampleData sampleData) {
         if (sampleData.samplingDate() != null) {
-            return "Sampling date " + sampleData.samplingDate() + " threshold: " + Config.MAX_DAYS_BETWEEN_SAMPLING_AND_BIOPSY_DATE;
+            return "Sampling date " + sampleData.samplingDate() + " threshold: "
+                    + ClinicalConstants.MAX_DAYS_BETWEEN_SAMPLING_AND_BIOPSY_DATE;
         }
-        return "Arrival date " + sampleData.arrivalDate() + " threshold: " + Config.MAX_DAYS_ARRIVAL_DATE_AFTER_BIOPSY_DATE;
+        return "Arrival date " + sampleData.arrivalDate() + " threshold: " + ClinicalConstants.MAX_DAYS_ARRIVAL_DATE_AFTER_BIOPSY_DATE;
     }
 
     @NotNull

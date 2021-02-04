@@ -3,8 +3,8 @@ package com.hartwig.hmftools.patientdb.dao;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.getValueNotNull;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.DB_BATCH_INSERT_SIZE;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.valueNotNull;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
 
 import java.sql.Timestamp;
@@ -56,7 +56,7 @@ class StructuralVariantDAO {
             // ploidy correction for NONE segment SVs
             Double ploidy = record.getValue(STRUCTURALVARIANT.JUNCTIONCOPYNUMBER);
             if (type == INF && ploidy == null) {
-                ploidy = getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGESTART));
+                ploidy = DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGESTART));
             }
 
             structuralVariants.add(ImmutableStructuralVariantData.builder()
@@ -66,53 +66,53 @@ class StructuralVariantDAO {
                     .startPosition(record.getValue(STRUCTURALVARIANT.STARTPOSITION))
                     .endPosition(isSingleBreakend ? -1 : record.getValue(STRUCTURALVARIANT.ENDPOSITION))
                     .startOrientation(record.getValue(STRUCTURALVARIANT.STARTORIENTATION))
-                    .endOrientation(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDORIENTATION)))
+                    .endOrientation(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ENDORIENTATION)))
                     .startHomologySequence(record.getValue(STRUCTURALVARIANT.STARTHOMOLOGYSEQUENCE))
-                    .endHomologySequence(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE)))
-                    .startAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTAF)))
-                    .endAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDAF)))
-                    .junctionCopyNumber(getValueNotNull(ploidy))
-                    .adjustedStartAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDAFSTART)))
-                    .adjustedEndAF(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDAFEND)))
-                    .adjustedStartCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERSTART)))
-                    .adjustedEndCopyNumber(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBEREND)))
-                    .adjustedStartCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGESTART)))
-                    .adjustedEndCopyNumberChange(getValueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGEEND)))
+                    .endHomologySequence(valueNotNull(record.getValue(STRUCTURALVARIANT.ENDHOMOLOGYSEQUENCE)))
+                    .startAF(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.STARTAF)))
+                    .endAF(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ENDAF)))
+                    .junctionCopyNumber(DatabaseUtil.valueNotNull(ploidy))
+                    .adjustedStartAF(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDAFSTART)))
+                    .adjustedEndAF(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDAFEND)))
+                    .adjustedStartCopyNumber(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERSTART)))
+                    .adjustedEndCopyNumber(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBEREND)))
+                    .adjustedStartCopyNumberChange(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGESTART)))
+                    .adjustedEndCopyNumberChange(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ADJUSTEDCOPYNUMBERCHANGEEND)))
                     .insertSequence(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCE))
                     .type(type)
                     .filter(filterStr)
                     .imprecise(byteToBoolean(record.getValue(STRUCTURALVARIANT.IMPRECISE)))
                     .qualityScore(record.getValue(STRUCTURALVARIANT.QUALSCORE))
-                    .event(getValueNotNull(record.getValue(STRUCTURALVARIANT.EVENT)))
-                    .startTumorVariantFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTTUMORVARIANTFRAGMENTCOUNT)))
-                    .startTumorReferenceFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTTUMORREFERENCEFRAGMENTCOUNT)))
-                    .startNormalVariantFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTNORMALVARIANTFRAGMENTCOUNT)))
-                    .startNormalReferenceFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTNORMALREFERENCEFRAGMENTCOUNT)))
-                    .endTumorVariantFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDTUMORVARIANTFRAGMENTCOUNT)))
-                    .endTumorReferenceFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDTUMORREFERENCEFRAGMENTCOUNT)))
-                    .endNormalVariantFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDNORMALVARIANTFRAGMENTCOUNT)))
-                    .endNormalReferenceFragmentCount(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDNORMALREFERENCEFRAGMENTCOUNT)))
-                    .startIntervalOffsetStart(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETSTART)))
-                    .startIntervalOffsetEnd(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETEND)))
-                    .endIntervalOffsetStart(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETSTART)))
-                    .endIntervalOffsetEnd(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETEND)))
-                    .inexactHomologyOffsetStart(getValueNotNull(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART)))
-                    .inexactHomologyOffsetEnd(getValueNotNull(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND)))
-                    .startLinkedBy(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTLINKEDBY)))
-                    .endLinkedBy(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDLINKEDBY)))
+                    .event(valueNotNull(record.getValue(STRUCTURALVARIANT.EVENT)))
+                    .startTumorVariantFragmentCount(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.STARTTUMORVARIANTFRAGMENTCOUNT)))
+                    .startTumorReferenceFragmentCount(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.STARTTUMORREFERENCEFRAGMENTCOUNT)))
+                    .startNormalVariantFragmentCount(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.STARTNORMALVARIANTFRAGMENTCOUNT)))
+                    .startNormalReferenceFragmentCount(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.STARTNORMALREFERENCEFRAGMENTCOUNT)))
+                    .endTumorVariantFragmentCount(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ENDTUMORVARIANTFRAGMENTCOUNT)))
+                    .endTumorReferenceFragmentCount(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ENDTUMORREFERENCEFRAGMENTCOUNT)))
+                    .endNormalVariantFragmentCount(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ENDNORMALVARIANTFRAGMENTCOUNT)))
+                    .endNormalReferenceFragmentCount(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ENDNORMALREFERENCEFRAGMENTCOUNT)))
+                    .startIntervalOffsetStart(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETSTART)))
+                    .startIntervalOffsetEnd(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.STARTINTERVALOFFSETEND)))
+                    .endIntervalOffsetStart(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETSTART)))
+                    .endIntervalOffsetEnd(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ENDINTERVALOFFSETEND)))
+                    .inexactHomologyOffsetStart(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETSTART)))
+                    .inexactHomologyOffsetEnd(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.INEXACTHOMOLOGYOFFSETEND)))
+                    .startLinkedBy(valueNotNull(record.getValue(STRUCTURALVARIANT.STARTLINKEDBY)))
+                    .endLinkedBy(valueNotNull(record.getValue(STRUCTURALVARIANT.ENDLINKEDBY)))
                     .vcfId(String.valueOf(record.getValue(STRUCTURALVARIANT.VCFID)))
                     .recovered(byteToBoolean(record.getValue(STRUCTURALVARIANT.RECOVERED)))
-                    .recoveryMethod(getValueNotNull(record.getValue(STRUCTURALVARIANT.RECOVERYMETHOD)))
-                    .recoveryFilter(getValueNotNull(record.getValue(STRUCTURALVARIANT.RECOVERYFILTER)))
-                    .startRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTREFCONTEXT)))
-                    .endRefContext(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDREFCONTEXT)))
-                    .insertSequenceAlignments(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS)))
-                    .insertSequenceRepeatClass(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCLASS)))
-                    .insertSequenceRepeatType(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATTYPE)))
-                    .insertSequenceRepeatOrientation(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATORIENTATION)))
-                    .insertSequenceRepeatCoverage(getValueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCOVERAGE)))
-                    .startAnchoringSupportDistance(getValueNotNull(record.getValue(STRUCTURALVARIANT.STARTANCHORINGSUPPORTDISTANCE)))
-                    .endAnchoringSupportDistance(getValueNotNull(record.getValue(STRUCTURALVARIANT.ENDANCHORINGSUPPORTDISTANCE)))
+                    .recoveryMethod(valueNotNull(record.getValue(STRUCTURALVARIANT.RECOVERYMETHOD)))
+                    .recoveryFilter(valueNotNull(record.getValue(STRUCTURALVARIANT.RECOVERYFILTER)))
+                    .startRefContext(valueNotNull(record.getValue(STRUCTURALVARIANT.STARTREFCONTEXT)))
+                    .endRefContext(valueNotNull(record.getValue(STRUCTURALVARIANT.ENDREFCONTEXT)))
+                    .insertSequenceAlignments(valueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEALIGNMENTS)))
+                    .insertSequenceRepeatClass(valueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCLASS)))
+                    .insertSequenceRepeatType(valueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATTYPE)))
+                    .insertSequenceRepeatOrientation(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATORIENTATION)))
+                    .insertSequenceRepeatCoverage(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.INSERTSEQUENCEREPEATCOVERAGE)))
+                    .startAnchoringSupportDistance(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.STARTANCHORINGSUPPORTDISTANCE)))
+                    .endAnchoringSupportDistance(DatabaseUtil.valueNotNull(record.getValue(STRUCTURALVARIANT.ENDANCHORINGSUPPORTDISTANCE)))
                     .build());
         }
         return structuralVariants;

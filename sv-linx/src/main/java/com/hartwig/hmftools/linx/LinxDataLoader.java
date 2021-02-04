@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.SAMPLE;
 import static com.hartwig.hmftools.linx.LinxConfig.SV_DATA_DIR;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.getValueNotNull;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.valueNotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,6 +32,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.linx.types.GermlineFilter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 
 import org.apache.commons.cli.CommandLine;
@@ -219,11 +220,11 @@ public class LinxDataLoader
                 .startHomologySequence(var.start().homology())
                 .endHomologySequence(var.end() == null ? "" : var.end().homology())
                 .junctionCopyNumber(1)
-                .startAF(getValueNotNull(var.start().alleleFrequency()))
-                .endAF(var.end() == null ? 0 : getValueNotNull(var.end().alleleFrequency()))
-                .adjustedStartAF(getValueNotNull(var.start().alleleFrequency()))
-                .adjustedEndAF(var.end() == null ? 0 : getValueNotNull(var.end().alleleFrequency()))
-                .adjustedStartCopyNumber(getValueNotNull(1))
+                .startAF(DatabaseUtil.valueNotNull(var.start().alleleFrequency()))
+                .endAF(var.end() == null ? 0 : DatabaseUtil.valueNotNull(var.end().alleleFrequency()))
+                .adjustedStartAF(DatabaseUtil.valueNotNull(var.start().alleleFrequency()))
+                .adjustedEndAF(var.end() == null ? 0 : DatabaseUtil.valueNotNull(var.end().alleleFrequency()))
+                .adjustedStartCopyNumber(DatabaseUtil.valueNotNull(1))
                 .adjustedEndCopyNumber(var.end() == null ? 0 : 1)
                 .adjustedStartCopyNumberChange(1)
                 .adjustedEndCopyNumberChange(var.end() == null ? 0 : 1)
@@ -231,35 +232,35 @@ public class LinxDataLoader
                 .type(var.type())
                 .filter(var.filter())
                 .imprecise(var.imprecise())
-                .qualityScore(getValueNotNull(var.qualityScore()))
-                .event(getValueNotNull(var.event()))
-                .startTumorVariantFragmentCount(getValueNotNull(var.start().tumorVariantFragmentCount()))
-                .startTumorReferenceFragmentCount(getValueNotNull(var.start().tumorReferenceFragmentCount()))
-                .startNormalVariantFragmentCount(getValueNotNull(var.start().normalVariantFragmentCount()))
-                .startNormalReferenceFragmentCount(getValueNotNull(var.start().normalReferenceFragmentCount()))
+                .qualityScore(DatabaseUtil.valueNotNull(var.qualityScore()))
+                .event(valueNotNull(var.event()))
+                .startTumorVariantFragmentCount(DatabaseUtil.valueNotNull(var.start().tumorVariantFragmentCount()))
+                .startTumorReferenceFragmentCount(DatabaseUtil.valueNotNull(var.start().tumorReferenceFragmentCount()))
+                .startNormalVariantFragmentCount(DatabaseUtil.valueNotNull(var.start().normalVariantFragmentCount()))
+                .startNormalReferenceFragmentCount(DatabaseUtil.valueNotNull(var.start().normalReferenceFragmentCount()))
                 .endTumorVariantFragmentCount(0)
                 .endTumorReferenceFragmentCount(0)
-                .endNormalVariantFragmentCount(var.end() == null ? 0 : getValueNotNull(var.end().normalVariantFragmentCount()))
-                .endNormalReferenceFragmentCount(var.end() == null ? 0 : getValueNotNull(var.end().normalReferenceFragmentCount()))
-                .startIntervalOffsetStart(getValueNotNull(var.start().startOffset()))
-                .startIntervalOffsetEnd(getValueNotNull(var.start().endOffset()))
-                .endIntervalOffsetStart(var.end() == null ? 0 : getValueNotNull(var.end().startOffset()))
-                .endIntervalOffsetEnd(var.end() == null ? 0 : getValueNotNull(var.end().endOffset()))
-                .inexactHomologyOffsetStart(getValueNotNull(var.start().inexactHomologyOffsetStart()))
-                .inexactHomologyOffsetEnd(getValueNotNull(var.start().inexactHomologyOffsetEnd()))
-                .startLinkedBy(getValueNotNull(var.startLinkedBy()))
-                .endLinkedBy(getValueNotNull(var.endLinkedBy()))
-                .vcfId(getValueNotNull(var.id()))
+                .endNormalVariantFragmentCount(var.end() == null ? 0 : DatabaseUtil.valueNotNull(var.end().normalVariantFragmentCount()))
+                .endNormalReferenceFragmentCount(var.end() == null ? 0 : DatabaseUtil.valueNotNull(var.end().normalReferenceFragmentCount()))
+                .startIntervalOffsetStart(DatabaseUtil.valueNotNull(var.start().startOffset()))
+                .startIntervalOffsetEnd(DatabaseUtil.valueNotNull(var.start().endOffset()))
+                .endIntervalOffsetStart(var.end() == null ? 0 : DatabaseUtil.valueNotNull(var.end().startOffset()))
+                .endIntervalOffsetEnd(var.end() == null ? 0 : DatabaseUtil.valueNotNull(var.end().endOffset()))
+                .inexactHomologyOffsetStart(DatabaseUtil.valueNotNull(var.start().inexactHomologyOffsetStart()))
+                .inexactHomologyOffsetEnd(DatabaseUtil.valueNotNull(var.start().inexactHomologyOffsetEnd()))
+                .startLinkedBy(valueNotNull(var.startLinkedBy()))
+                .endLinkedBy(valueNotNull(var.endLinkedBy()))
+                .vcfId(valueNotNull(var.id()))
                 .startRefContext("") // getValueNotNull(var.start().refGenomeContext())
                 .endRefContext(var.end() == null ? "" : "") // getValueNotNull(var.end().refGenomeContext())
                 .recovered(var.recovered())
-                .recoveryMethod((getValueNotNull(var.recoveryMethod())))
-                .recoveryFilter(getValueNotNull(var.recoveryFilter()))
-                .insertSequenceAlignments(getValueNotNull(var.insertSequenceAlignments()))
-                .insertSequenceRepeatClass(getValueNotNull(var.insertSequenceRepeatClass()))
-                .insertSequenceRepeatType(getValueNotNull(var.insertSequenceRepeatType()))
-                .insertSequenceRepeatOrientation(getValueNotNull(var.insertSequenceRepeatOrientation()))
-                .insertSequenceRepeatCoverage(getValueNotNull(var.insertSequenceRepeatCoverage()))
+                .recoveryMethod((valueNotNull(var.recoveryMethod())))
+                .recoveryFilter(valueNotNull(var.recoveryFilter()))
+                .insertSequenceAlignments(valueNotNull(var.insertSequenceAlignments()))
+                .insertSequenceRepeatClass(valueNotNull(var.insertSequenceRepeatClass()))
+                .insertSequenceRepeatType(valueNotNull(var.insertSequenceRepeatType()))
+                .insertSequenceRepeatOrientation(DatabaseUtil.valueNotNull(var.insertSequenceRepeatOrientation()))
+                .insertSequenceRepeatCoverage(DatabaseUtil.valueNotNull(var.insertSequenceRepeatCoverage()))
                 .startAnchoringSupportDistance(var.start().anchoringSupportDistance())
                 .endAnchoringSupportDistance(var.end() == null ? 0 : var.end().anchoringSupportDistance())
                 .build();

@@ -9,7 +9,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-import com.hartwig.hmftools.patientdb.Config;
+import com.hartwig.hmftools.patientdb.clinical.ClinicalConstants;
 import com.hartwig.hmftools.patientdb.clinical.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.clinical.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.clinical.data.ImmutableBiopsyTreatmentData;
@@ -119,7 +119,7 @@ public final class TreatmentMatcher {
 
         return biopsyDate != null && (treatmentStartDate.isAfter(biopsyDate) || treatmentStartDate.isEqual(biopsyDate))
                 && Duration.between(biopsyDate.atStartOfDay(), treatmentStartDate.atStartOfDay()).toDays()
-                < Config.MAX_DAYS_BETWEEN_TREATMENT_AND_BIOPSY;
+                < ClinicalConstants.MAX_DAYS_BETWEEN_TREATMENT_AND_BIOPSY;
     }
 
     @NotNull
