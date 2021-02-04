@@ -15,5 +15,4 @@ public abstract class TherapyInfo {
 
     @Nullable
     public abstract String synonyms();
-
 }

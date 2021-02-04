@@ -58,6 +58,4 @@ public abstract class Drug {
 
     @Nullable
     public abstract List<GlobalApprovalStatusInfo> globalApprovalStatus();
-
-
 }

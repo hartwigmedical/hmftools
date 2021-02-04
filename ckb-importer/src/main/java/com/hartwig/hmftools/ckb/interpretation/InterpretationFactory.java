@@ -35,7 +35,7 @@ public class InterpretationFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(InterpretationFactory.class);
 
-    public static List<CkbEntryInterpretation> interpretationCkb(@NotNull CkbEntry ckbEntry) {
+    public static List<CkbEntryInterpretation> interpretationCkbDataModel(@NotNull CkbEntry ckbEntry) {
         List<CkbEntryInterpretation> CkbEntryInterpretation = Lists.newArrayList();
         for (MolecularProfile molecularProfile : ckbEntry.molecularProfile()) {
             ImmutableCkbEntryInterpretation.Builder outputBuilder = ImmutableCkbEntryInterpretation.builder();
@@ -51,10 +51,6 @@ public class InterpretationFactory {
                 TreatmentInterpretation treatmentInterpretation =
                         matchTreatmentInterpretation(ckbEntry, treatmentApproachInfo.id()); //array
                 outputBuilder.addTreatmentInterpretation(treatmentInterpretation);
-                if (treatmentApproachInfo.id() == 467) {
-                    LOGGER.info(treatmentInterpretation);
-
-                }
             }
 
             CkbEntryInterpretation.add(outputBuilder.build());

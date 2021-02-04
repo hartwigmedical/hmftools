@@ -155,7 +155,6 @@ public class VariantDataModelChecker {
         map.put("name", true);
         map.put("source", true);
 
-
         return new JsonDatamodelChecker("VariantIndicationObject", map);
     }
 
@@ -212,6 +211,4 @@ public class VariantDataModelChecker {
 
         return new JsonDatamodelChecker("VariantMemberVariantObject", map);
     }
-
-
 }

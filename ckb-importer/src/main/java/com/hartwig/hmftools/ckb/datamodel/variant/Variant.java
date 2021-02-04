@@ -69,6 +69,4 @@ public abstract class Variant {
 
     @NotNull
     public abstract List<EffectInfo> memberVariant();
-
-
 }

@@ -41,7 +41,6 @@ public class ClinicalTrialFactory {
     private static final Logger LOGGER = LogManager.getLogger(ClinicalTrialFactory.class);
 
     private ClinicalTrialFactory() {
-
     }
 
     @NotNull
@@ -69,29 +68,29 @@ public class ClinicalTrialFactory {
                             .title(JsonFunctions.string(clinicalTrialsEntryObject, "title"))
                             .phase(JsonFunctions.string(clinicalTrialsEntryObject, "phase"))
                             .recruitment(JsonFunctions.string(clinicalTrialsEntryObject, "recruitment"))
-                            .therapy(retrieveClinicalTrialsTherapies(clinicalTrialsEntryObject.getAsJsonArray("therapies")))
+                            .therapy(extractClinicalTrialsTherapies(clinicalTrialsEntryObject.getAsJsonArray("therapies")))
                             .ageGroup(JsonFunctions.stringList(clinicalTrialsEntryObject, "ageGroups"))
                             .gender(JsonFunctions.optionalNullableString(clinicalTrialsEntryObject, "gender"))
                             .variantRequirement(JsonFunctions.string(clinicalTrialsEntryObject, "variantRequirements"))
                             .sponsors(JsonFunctions.optionalNullableString(clinicalTrialsEntryObject, "sponsors"))
                             .updateDate(DateConverter.convertDate(JsonFunctions.string(clinicalTrialsEntryObject, "updateDate")))
-                            .indication(retrieveClinicalTrialsIndications(clinicalTrialsEntryObject.getAsJsonArray("indications")))
-                            .variantRequirementDetail(retrieveClinicalTrialsVariantRequirementDetails(clinicalTrialsEntryObject.getAsJsonArray(
+                            .indication(extractClinicalTrialsIndications(clinicalTrialsEntryObject.getAsJsonArray("indications")))
+                            .variantRequirementDetail(extractClinicalTrialsVariantRequirementDetails(clinicalTrialsEntryObject.getAsJsonArray(
                                     "variantRequirementDetails")))
-                            .clinicalTrialLocation(retrieveClinicalTrialsLocations(clinicalTrialsEntryObject.getAsJsonArray(
+                            .clinicalTrialLocation(extractClinicalTrialsLocations(clinicalTrialsEntryObject.getAsJsonArray(
                                     "clinicalTrialLocations")))
                             .build());
                 }
                 reader.close();
             }
         }
-        LOGGER.info("Finished reading clinical trials");
+        LOGGER.info("Finished reading clinical trials dir");
 
         return clinicalTrials;
     }
 
     @NotNull
-    private static List<ClinicalTrialVariantRequirementDetail> retrieveClinicalTrialsVariantRequirementDetails(
+    private static List<ClinicalTrialVariantRequirementDetail> extractClinicalTrialsVariantRequirementDetails(
             @NotNull JsonArray jsonArray) {
         List<ClinicalTrialVariantRequirementDetail> variantRequirementDetails = Lists.newArrayList();
         JsonDatamodelChecker clinicalTrailVariantRequirementDetailChecker =
@@ -102,7 +101,7 @@ public class ClinicalTrialFactory {
             clinicalTrailVariantRequirementDetailChecker.check(variantRequirementDetailObject);
 
             variantRequirementDetails.add(ImmutableClinicalTrialVariantRequirementDetail.builder()
-                    .molecularProfile(retrieveClinicalTrialsMolecularProfile(variantRequirementDetailObject.getAsJsonObject("molecularProfile")))
+                    .molecularProfile(extractClinicalTrialsMolecularProfile(variantRequirementDetailObject.getAsJsonObject("molecularProfile")))
                     .requirementType(JsonFunctions.string(variantRequirementDetailObject, "requirementType"))
                     .build());
         }
@@ -110,7 +109,7 @@ public class ClinicalTrialFactory {
     }
 
     @NotNull
-    private static MolecularProfileInfo retrieveClinicalTrialsMolecularProfile(@NotNull JsonObject jsonObject) {
+    private static MolecularProfileInfo extractClinicalTrialsMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker clinicalTrailMolecularProfileChecker =
                 ClinicalTrialDataModelChecker.clinicalTrialMolecularProfileObjectChecker();
         clinicalTrailMolecularProfileChecker.check(jsonObject);
@@ -122,7 +121,7 @@ public class ClinicalTrialFactory {
     }
 
     @NotNull
-    private static List<TherapyInfo> retrieveClinicalTrialsTherapies(@NotNull JsonArray jsonArray) {
+    private static List<TherapyInfo> extractClinicalTrialsTherapies(@NotNull JsonArray jsonArray) {
         List<TherapyInfo> therapies = Lists.newArrayList();
         JsonDatamodelChecker clinicalTrailTherapiesChecker = ClinicalTrialDataModelChecker.clinicalTrialTherapiesObjectChecker();
 
@@ -140,7 +139,7 @@ public class ClinicalTrialFactory {
     }
 
     @NotNull
-    private static List<IndicationInfo> retrieveClinicalTrialsIndications(@NotNull JsonArray jsonArray) {
+    private static List<IndicationInfo> extractClinicalTrialsIndications(@NotNull JsonArray jsonArray) {
         List<IndicationInfo> clinicalTrialsIndications = Lists.newArrayList();
         JsonDatamodelChecker clinicalTrailIndicationsChecker = ClinicalTrialDataModelChecker.clinicalTrialIndicationsObjectChecker();
 
@@ -158,7 +157,7 @@ public class ClinicalTrialFactory {
     }
 
     @NotNull
-    private static List<ClinicalTrialLocation> retrieveClinicalTrialsLocations(@NotNull JsonArray jsonArray) {
+    private static List<ClinicalTrialLocation> extractClinicalTrialsLocations(@NotNull JsonArray jsonArray) {
         List<ClinicalTrialLocation> clinicalTrialLocations = Lists.newArrayList();
         JsonDatamodelChecker clinicalTrailLocationsChecker = ClinicalTrialDataModelChecker.clinicalTrialLocationsObjectChecker();
 
@@ -174,14 +173,14 @@ public class ClinicalTrialFactory {
                     .status(JsonFunctions.optionalNullableString(clinicalTrailLocationObject, "status"))
                     .state(JsonFunctions.optionalNullableString(clinicalTrailLocationObject, "state"))
                     .zip(JsonFunctions.optionalNullableString(clinicalTrailLocationObject, "zip"))
-                    .clinicalTrialContact(retrieveClinicalTrialsContact(clinicalTrailLocationObject.getAsJsonArray("clinicalTrialContacts")))
+                    .clinicalTrialContact(extractClinicalTrialsContact(clinicalTrailLocationObject.getAsJsonArray("clinicalTrialContacts")))
                     .build());
         }
         return clinicalTrialLocations;
     }
 
     @NotNull
-    private static List<ClinicalTrialContact> retrieveClinicalTrialsContact(@NotNull JsonArray jsonArray) {
+    private static List<ClinicalTrialContact> extractClinicalTrialsContact(@NotNull JsonArray jsonArray) {
         List<ClinicalTrialContact> clinicalTrialContacts = Lists.newArrayList();
         JsonDatamodelChecker clinicalTrailContactChecker = ClinicalTrialDataModelChecker.clinicalTrialContactObjectChecker();
 

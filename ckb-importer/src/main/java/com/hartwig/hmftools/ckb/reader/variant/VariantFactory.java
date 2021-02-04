@@ -59,7 +59,7 @@ public class VariantFactory {
 
     @NotNull
     public static List<Variant> readingVariant(@NotNull String variantDir) throws IOException, ParseException {
-        LOGGER.info("Start reading variant");
+        LOGGER.info("Start reading variant dir");
 
         List<Variant> variants = Lists.newArrayList();
         File[] filesVariant = new File(variantDir).listFiles();
@@ -96,7 +96,7 @@ public class VariantFactory {
                             .categoryVariantPath(extractCategoryVariantPath(variantEntryObject.getAsJsonArray("categoryVariantPaths")))
                             .evidence(extractEvidence(variantEntryObject.getAsJsonArray("evidence")))
                             .extendedEvidence(extractExtendedEvidence(variantEntryObject.getAsJsonArray("extendedEvidence")))
-                            .molecularProfile(extarctMolecularProfilesList(variantEntryObject.getAsJsonArray("molecularProfiles")))
+                            .molecularProfile(extractMolecularProfilesList(variantEntryObject.getAsJsonArray("molecularProfiles")))
                             .allTranscriptCoordinate(extractAllTranscriptCoordinates(variantEntryObject.getAsJsonArray(
                                     "allTranscriptCoordinates")))
                             .memberVariant(extractMemberVariants(variantEntryObject.getAsJsonArray("memberVariants")))
@@ -105,14 +105,13 @@ public class VariantFactory {
                 reader.close();
             }
         }
-        LOGGER.info("Finished reading variant");
+        LOGGER.info("Finished reading variant dir");
 
         return variants;
     }
 
     @NotNull
-    public static List<DescriptionInfo> extractGeneDescription(@NotNull JsonArray jsonArray) {
-
+    private static List<DescriptionInfo> extractGeneDescription(@NotNull JsonArray jsonArray) {
         List<DescriptionInfo> geneVariantDescriptions = Lists.newArrayList();
         JsonDatamodelChecker variantGeneVariantDescriptionObjectChecker = VariantDataModelChecker.geneVariantDescriptionObjectChecker();
 
@@ -125,12 +124,11 @@ public class VariantFactory {
                     .reference(extractReferences(geneVariantDescriptionJsonObject.getAsJsonArray("references")))
                     .build());
         }
-
         return geneVariantDescriptions;
     }
 
     @NotNull
-    public static List<ReferenceInfo> extractReferences(@NotNull JsonArray jsonArray) {
+    private static List<ReferenceInfo> extractReferences(@NotNull JsonArray jsonArray) {
         List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker referenceObjectChecker = VariantDataModelChecker.referenceObjectChecker();
 
@@ -145,12 +143,11 @@ public class VariantFactory {
                     .url(JsonFunctions.nullableString(referenceJsonObject, "url"))
                     .build());
         }
-
         return references;
     }
 
     @NotNull
-    public static GeneInfo extractGene(@NotNull JsonObject jsonObject) {
+    private static GeneInfo extractGene(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker geneObjectChecker = VariantDataModelChecker.geneObjectChecker();
         geneObjectChecker.check(jsonObject);
 
@@ -162,7 +159,7 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static VariantTranscriptCoordinate extractReferenceTranscriptCoordinate(@NotNull JsonObject jsonObject) {
+    private static VariantTranscriptCoordinate extractReferenceTranscriptCoordinate(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker geneObjectChecker = VariantDataModelChecker.referenceTranscriptCoordinateObjectChecker();
         geneObjectChecker.check(jsonObject);
 
@@ -178,7 +175,7 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VariantPartnerGene> extractPartnerGene(@NotNull JsonArray jsonArray) {
+    private static List<VariantPartnerGene> extractPartnerGene(@NotNull JsonArray jsonArray) {
         List<VariantPartnerGene> partnerGenes = Lists.newArrayList();
         JsonDatamodelChecker partnerGeneObjectChecker = VariantDataModelChecker.partnerGeneObjectChecker();
 
@@ -195,7 +192,7 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VariantCategoryVariantPath> extractCategoryVariantPath(@NotNull JsonArray jsonArray) {
+    private static List<VariantCategoryVariantPath> extractCategoryVariantPath(@NotNull JsonArray jsonArray) {
         List<VariantCategoryVariantPath> categoryVariantPaths = Lists.newArrayList();
         JsonDatamodelChecker categoryVariantPathObjectChecker = VariantDataModelChecker.categoryVariantPathObjectChecker();
 
@@ -213,7 +210,7 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VariantInfo> extractVariant(@NotNull JsonArray jsonArray) {
+    private static List<VariantInfo> extractVariant(@NotNull JsonArray jsonArray) {
         List<VariantInfo> variants = Lists.newArrayList();
         JsonDatamodelChecker variantObjectChecker = VariantDataModelChecker.variantVariantObjectChecker();
 
@@ -228,12 +225,11 @@ public class VariantFactory {
                     .proteinEffect(JsonFunctions.string(variantJsonObject, "proteinEffect"))
                     .build());
         }
-
         return variants;
     }
 
     @NotNull
-    public static List<EvidenceInfo> extractEvidence(@NotNull JsonArray jsonArray) {
+    private static List<EvidenceInfo> extractEvidence(@NotNull JsonArray jsonArray) {
         List<EvidenceInfo> evidences = Lists.newArrayList();
         JsonDatamodelChecker evidenceChecker = VariantDataModelChecker.evidenceObjectChecker();
 
@@ -259,7 +255,7 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
+    private static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker molecularProfileChecker = VariantDataModelChecker.molecularProfileObjectChecker();
         molecularProfileChecker.check(jsonObject);
 
@@ -270,7 +266,7 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
+    private static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker therapyChecker = VariantDataModelChecker.therapyChecker();
         therapyChecker.check(jsonObject);
 
@@ -282,7 +278,7 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
+    private static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker indicationChecker = VariantDataModelChecker.indicationChecker();
         indicationChecker.check(jsonObject);
 
@@ -294,7 +290,7 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<EvidenceInfo> extractExtendedEvidence(@NotNull JsonArray jsonArray) {
+    private static List<EvidenceInfo> extractExtendedEvidence(@NotNull JsonArray jsonArray) {
         List<EvidenceInfo> extendedEvidences = Lists.newArrayList();
         JsonDatamodelChecker extendedEvidenceChecker = VariantDataModelChecker.extendedEvidenceObjectChecker();
 
@@ -320,7 +316,7 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<MolecularProfileInfo> extarctMolecularProfilesList(@NotNull JsonArray jsonArray) {
+    private static List<MolecularProfileInfo> extractMolecularProfilesList(@NotNull JsonArray jsonArray) {
         List<MolecularProfileInfo> molecularProfiles = Lists.newArrayList();
         JsonDatamodelChecker molecularProfileChecker = VariantDataModelChecker.molecularProfileObjectChecker();
 
@@ -339,7 +335,7 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<TreatmentApproachInfo> extractProfileTreatmentApproches(@NotNull JsonArray jsonArray) {
+    private static List<TreatmentApproachInfo> extractProfileTreatmentApproches(@NotNull JsonArray jsonArray) {
         List<TreatmentApproachInfo> profileTreatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker profileTreatmentApprochChecker = VariantDataModelChecker.profileTreatmentApprochObjectChecker();
 
@@ -358,7 +354,7 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<VariantTranscriptCoordinate> extractAllTranscriptCoordinates(@NotNull JsonArray jsonArray) {
+    private static List<VariantTranscriptCoordinate> extractAllTranscriptCoordinates(@NotNull JsonArray jsonArray) {
         List<VariantTranscriptCoordinate> allTranscriptCoordinates = Lists.newArrayList();
         JsonDatamodelChecker allTranscriptCoordinateChecker = VariantDataModelChecker.allTranscriptCoordinateObjectChecker();
 
@@ -381,7 +377,7 @@ public class VariantFactory {
     }
 
     @NotNull
-    public static List<EffectInfo> extractMemberVariants(@NotNull JsonArray jsonArray) {
+    private static List<EffectInfo> extractMemberVariants(@NotNull JsonArray jsonArray) {
         List<EffectInfo> memberVariants = Lists.newArrayList();
         JsonDatamodelChecker memberVariantChecker = VariantDataModelChecker.memberVariantObjectChecker();
 

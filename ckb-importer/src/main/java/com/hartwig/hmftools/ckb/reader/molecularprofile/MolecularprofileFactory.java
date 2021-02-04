@@ -51,7 +51,7 @@ public class MolecularprofileFactory {
 
     @NotNull
     public static List<MolecularProfile> readingMolecularprofile(@NotNull String molecularprofileDir) throws IOException, ParseException {
-        LOGGER.info("Start reading molecular profiles");
+        LOGGER.info("Start reading molecular profile dir");
 
         List<MolecularProfile> molecularProfiles = Lists.newArrayList();
         File[] filesMolecularProfiles = new File(molecularprofileDir).listFiles();
@@ -90,13 +90,13 @@ public class MolecularprofileFactory {
                 reader.close();
             }
         }
-        LOGGER.info("Finished reading molecular profiles");
+        LOGGER.info("Finished reading molecular profiles dir");
 
         return molecularProfiles;
     }
 
     @NotNull
-    public static List<VariantInfo> extractGeneVariant(@NotNull JsonArray jsonArray) {
+    private static List<VariantInfo> extractGeneVariant(@NotNull JsonArray jsonArray) {
         List<VariantInfo> geneVariants = Lists.newArrayList();
         JsonDatamodelChecker geneVariantChecker = MolecularProfileDataModelChecker.molecularProfileGeneVariantObjectChecker();
 
@@ -115,7 +115,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<TreatmentApproachInfo> extractProfileTreatmentApproach(@NotNull JsonArray jsonArray) {
+    private static List<TreatmentApproachInfo> extractProfileTreatmentApproach(@NotNull JsonArray jsonArray) {
         List<TreatmentApproachInfo> profileTreatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker profileTreatmentApproachChecker =
                 MolecularProfileDataModelChecker.molecularProfileProfileTreatmentApproacjObjectChecker();
@@ -134,7 +134,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static MolecularProfileExtendedEvidence extractComplexMolecularProfileEvidence(@NotNull JsonObject jsonObject) {
+    private static MolecularProfileExtendedEvidence extractComplexMolecularProfileEvidence(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker complexMolecularProfileEvidenceChecker =
                 MolecularProfileDataModelChecker.molecularProfileComplexMolecularProfileEvidence();
         complexMolecularProfileEvidenceChecker.check(jsonObject);
@@ -147,7 +147,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<EvidenceInfo> extractComplexMolecularProfileEvidenceList(
+    private static List<EvidenceInfo> extractComplexMolecularProfileEvidenceList(
             @NotNull JsonArray jsonArray) {
         List<EvidenceInfo> complexMolecularProfileEvidenceList = Lists.newArrayList();
         JsonDatamodelChecker complexMolecularProfileEvidenceListChecker =
@@ -177,7 +177,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
+    private static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker molecularProfileChecker = MolecularProfileDataModelChecker.molecularProfileMolecularprofile();
         molecularProfileChecker.check(jsonObject);
 
@@ -188,7 +188,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
+    private static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker therapyChecker = MolecularProfileDataModelChecker.molecularProfileTherapy();
         therapyChecker.check(jsonObject);
 
@@ -200,7 +200,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
+    private static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker indicationChecker = MolecularProfileDataModelChecker.molecularProfileIndication();
         indicationChecker.check(jsonObject);
 
@@ -212,7 +212,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<ReferenceInfo> extractReference(@NotNull JsonArray jsonArray) {
+    private static List<ReferenceInfo> extractReference(@NotNull JsonArray jsonArray) {
         List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker referenceChecker = MolecularProfileDataModelChecker.molecularProfileReference();
 
@@ -231,7 +231,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<TreatmentApproachInfo> extractRelevantTreatmentApproach(@NotNull JsonArray jsonArray) {
+    private static List<TreatmentApproachInfo> extractRelevantTreatmentApproach(@NotNull JsonArray jsonArray) {
         List<TreatmentApproachInfo> relevantTreatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker relevantTreatmentApproachChecker =
                 MolecularProfileDataModelChecker.molecularProfileRelevantTreatmentApproach();
@@ -250,7 +250,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static MolecularProfileExtendedEvidence extractTreatmentApproachEvidence(@NotNull JsonObject jsonObject) {
+    private static MolecularProfileExtendedEvidence extractTreatmentApproachEvidence(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker treatmentApproachEvidenceeChecker =
                 MolecularProfileDataModelChecker.molecularProfileTreatmentApproachEvidence();
         treatmentApproachEvidenceeChecker.check(jsonObject);
@@ -262,7 +262,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<EvidenceInfo> extractTreatmentApproachEvidenceList(@NotNull JsonArray jsonArray) {
+    private static List<EvidenceInfo> extractTreatmentApproachEvidenceList(@NotNull JsonArray jsonArray) {
         List<EvidenceInfo> treatmentApproachEvidenceList = Lists.newArrayList();
         JsonDatamodelChecker treatmentApproachEvidenceListChecker =
                 MolecularProfileDataModelChecker.molecularProfileTreatmentApproachEvidenceList();
@@ -291,7 +291,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<ClinicalTrialInfo> extractVariantAssociatedClinicalTrials(
+    private static List<ClinicalTrialInfo> extractVariantAssociatedClinicalTrials(
             @NotNull JsonArray jsonArray) {
         List<ClinicalTrialInfo> variantAssociatedClinicalTrials = Lists.newArrayList();
         JsonDatamodelChecker variantAssociatedClinicalTrialChecker = MolecularProfileDataModelChecker.variantAssociatedClinicalTrial();
@@ -312,7 +312,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<TherapyInfo> extractTherapyList(@NotNull JsonArray jsonArray) {
+    private static List<TherapyInfo> extractTherapyList(@NotNull JsonArray jsonArray) {
         List<TherapyInfo> therapies = Lists.newArrayList();
         JsonDatamodelChecker therapyChecker = MolecularProfileDataModelChecker.molecularProfileTherapy();
 
@@ -331,7 +331,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static MolecularProfileExtendedEvidence extractVariantlevelEvidence(@NotNull JsonObject jsonObject) {
+    private static MolecularProfileExtendedEvidence extractVariantlevelEvidence(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker variantLevelEvidenceChecker =
                 MolecularProfileDataModelChecker.molecularProfilevariantLevelEvidence();
         variantLevelEvidenceChecker.check(jsonObject);
@@ -343,7 +343,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<EvidenceInfo> extractVariantlevelEvidenceList(@NotNull JsonArray jsonArray) {
+    private static List<EvidenceInfo> extractVariantlevelEvidenceList(@NotNull JsonArray jsonArray) {
         List<EvidenceInfo> variantlevelEvidenceList = Lists.newArrayList();
         JsonDatamodelChecker variantlevelEvidenceListChecker =
                 MolecularProfileDataModelChecker.molecularProfilevariantLevelEvidenceList();
@@ -372,7 +372,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static MolecularProfileExtendedEvidence extractExtendedEvidence(@NotNull JsonObject jsonObject) {
+    private static MolecularProfileExtendedEvidence extractExtendedEvidence(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker extendedEvidenceChecker =
                 MolecularProfileDataModelChecker.extendedEvidenceEvidence();
         extendedEvidenceChecker.check(jsonObject);
@@ -384,7 +384,7 @@ public class MolecularprofileFactory {
     }
 
     @NotNull
-    public static List<EvidenceInfo> extractExtendedEvidenceList(@NotNull JsonArray jsonArray) {
+    private static List<EvidenceInfo> extractExtendedEvidenceList(@NotNull JsonArray jsonArray) {
         List<EvidenceInfo> extendedEvidenceList = Lists.newArrayList();
         JsonDatamodelChecker extendedEvidenceListChecker =
                 MolecularProfileDataModelChecker.extendedEvidenceList();

@@ -52,8 +52,8 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<Gene> readingGenes(@NotNull String geneDir) throws IOException, ParseException {
-        LOGGER.info("Start reading genes");
+    public static List<Gene> readingGene(@NotNull String geneDir) throws IOException, ParseException {
+        LOGGER.info("Start reading gene dir");
 
         List<Gene> genes = Lists.newArrayList();
         File[] filesGenes = new File(geneDir).listFiles();
@@ -94,13 +94,13 @@ public class GeneFactory {
                 reader.close();
             }
         }
-        LOGGER.info("Finished reading genes");
+        LOGGER.info("Finished reading gene dir");
 
         return genes;
     }
 
     @NotNull
-    public static List<DescriptionInfo> extractGeneDescriptions(@NotNull JsonArray jsonArray) {
+    private static List<DescriptionInfo> extractGeneDescriptions(@NotNull JsonArray jsonArray) {
         List<DescriptionInfo> geneDescriptions = Lists.newArrayList();
         JsonDatamodelChecker geneDescriptionChecker = GeneDataModelChecker.geneDescriptionObjectChecker();
 
@@ -117,7 +117,7 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<ReferenceInfo> extractGeneReferences(@NotNull JsonArray jsonArray) {
+    private static List<ReferenceInfo> extractGeneReferences(@NotNull JsonArray jsonArray) {
         List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker geneReferenceChecker = GeneDataModelChecker.geneReferenceObjectChecker();
 
@@ -137,7 +137,7 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<ClinicalTrialInfo> extractGeneClinicalTrial(@NotNull JsonArray jsonArray) {
+    private static List<ClinicalTrialInfo> extractGeneClinicalTrial(@NotNull JsonArray jsonArray) {
         List<ClinicalTrialInfo> clinicalTrials = Lists.newArrayList();
         JsonDatamodelChecker geneClinicalTrialChecker = GeneDataModelChecker.geneClinicalTrialObjectChecker();
 
@@ -157,7 +157,7 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<TherapyInfo> extractGeneTherapy(@NotNull JsonArray jsonArray) {
+    private static List<TherapyInfo> extractGeneTherapy(@NotNull JsonArray jsonArray) {
         List<TherapyInfo> geneTherapies = Lists.newArrayList();
         JsonDatamodelChecker geneTherapiesChecker = GeneDataModelChecker.geneTherapiesObjectChecker();
 
@@ -175,7 +175,7 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<EvidenceInfo> extractGeneEvidence(@NotNull JsonArray jsonArray) {
+    private static List<EvidenceInfo> extractGeneEvidence(@NotNull JsonArray jsonArray) {
         List<EvidenceInfo> geneEvidences = Lists.newArrayList();
         JsonDatamodelChecker geneEvidenceChecker = GeneDataModelChecker.geneEvidenceObjectChecker();
 
@@ -201,7 +201,7 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static MolecularProfileInfo extractGeneMolecularProfileObject(@NotNull JsonObject jsonObject) {
+    private static MolecularProfileInfo extractGeneMolecularProfileObject(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker geneMolecularProfileChecker = GeneDataModelChecker.geneMolecularProfileObjectChecker();
         geneMolecularProfileChecker.check(jsonObject);
 
@@ -212,7 +212,7 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static TherapyInfo extractGeneTherapyObject(@NotNull JsonObject jsonObject) {
+    private static TherapyInfo extractGeneTherapyObject(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker geneTherapyChecker = GeneDataModelChecker.geneTherapyObjectChecker();
         geneTherapyChecker.check(jsonObject);
 
@@ -224,7 +224,7 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static IndicationInfo extractGeneIndicationObject(@NotNull JsonObject jsonObject) {
+    private static IndicationInfo extractGeneIndicationObject(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker geneIndicationChecker = GeneDataModelChecker.geneIndicationObjectChecker();
         geneIndicationChecker.check(jsonObject);
 
@@ -236,7 +236,7 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<VariantInfo> extractGeneVariant(@NotNull JsonArray jsonArray) {
+    private static List<VariantInfo> extractGeneVariant(@NotNull JsonArray jsonArray) {
         List<VariantInfo> geneVariants = Lists.newArrayList();
         JsonDatamodelChecker geneVariantChecker = GeneDataModelChecker.geneVariantObjectChecker();
 
@@ -256,7 +256,7 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<DescriptionInfo> extractVariantDescription(@NotNull JsonArray jsonArray) {
+    private static List<DescriptionInfo> extractVariantDescription(@NotNull JsonArray jsonArray) {
         List<DescriptionInfo> geneVariantDescriptions = Lists.newArrayList();
         JsonDatamodelChecker geneVariantDescriptionChecker = GeneDataModelChecker.geneVariantDescriptionObjectChecker();
 
@@ -273,7 +273,7 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<MolecularProfileInfo> extarctMolecularProfile(@NotNull JsonArray jsonArray) {
+    private static List<MolecularProfileInfo> extarctMolecularProfile(@NotNull JsonArray jsonArray) {
         List<MolecularProfileInfo> molecularProfiles = Lists.newArrayList();
         JsonDatamodelChecker geneMolecularProfileChecker = GeneDataModelChecker.geneMolecularProfileObjectChecker();
 
@@ -291,7 +291,7 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<TreatmentApproachInfo> extractProfileTreatmentApproach(@NotNull JsonArray jsonArray) {
+    private static List<TreatmentApproachInfo> extractProfileTreatmentApproach(@NotNull JsonArray jsonArray) {
         List<TreatmentApproachInfo> geneProfileTreatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker geneProfileTreatmentApprochChecker = GeneDataModelChecker.geneProfileTreatmentApproachObjectChecker();
 
@@ -309,7 +309,7 @@ public class GeneFactory {
     }
 
     @NotNull
-    public static List<EffectInfo> extractCategoryVariant(@NotNull JsonArray jsonArray) {
+    private static List<EffectInfo> extractCategoryVariant(@NotNull JsonArray jsonArray) {
         List<EffectInfo> geneCategoryVariants = Lists.newArrayList();
         JsonDatamodelChecker geneProfileTreatmentApprochChecker = GeneDataModelChecker.geneCategoryVariantObjectChecker();
 
@@ -327,6 +327,4 @@ public class GeneFactory {
         }
         return geneCategoryVariants;
     }
-
-
 }

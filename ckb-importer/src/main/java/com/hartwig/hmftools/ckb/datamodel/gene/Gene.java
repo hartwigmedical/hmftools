@@ -67,6 +67,4 @@ public abstract class Gene {
 
     @NotNull
     public abstract List<EffectInfo> categoryVariant();
-
-
 }

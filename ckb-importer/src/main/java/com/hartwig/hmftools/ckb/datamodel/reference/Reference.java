@@ -66,12 +66,4 @@ public abstract class Reference {
 
     @NotNull
     public abstract List<VariantInfo> variant();
-
-
-
-
-
-
-
-
 }

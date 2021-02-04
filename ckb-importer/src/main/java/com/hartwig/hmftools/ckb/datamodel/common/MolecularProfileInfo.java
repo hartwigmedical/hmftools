@@ -16,5 +16,4 @@ public abstract class MolecularProfileInfo {
     public abstract String profileName();
 
     public abstract List<TreatmentApproachInfo> treatmentApproach();
-
 }

@@ -33,5 +33,4 @@ public abstract class ClinicalTrialLocation {
 
     @NotNull
     public abstract List<ClinicalTrialContact> clinicalTrialContact();
-
 }

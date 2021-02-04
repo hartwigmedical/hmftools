@@ -40,7 +40,7 @@ public class GlobalTherapyApprovalStatusFactory {
     @NotNull
     public static List<GlobalTherapyApprovalStatus> readingGlobalTherapyApprovalStatus(@NotNull String globalTherapyApprovalStatusDir)
             throws IOException {
-        LOGGER.info("Start reading global therapy approval status");
+        LOGGER.info("Start reading global therapy approval status dir");
 
         List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatusses = Lists.newArrayList();
         File[] filesGlobalTherapyApprovalStatus = new File(globalTherapyApprovalStatusDir).listFiles();
@@ -68,13 +68,13 @@ public class GlobalTherapyApprovalStatusFactory {
                 reader.close();
             }
         }
-        LOGGER.info("Finished reading global therapy approval status");
+        LOGGER.info("Finished reading global therapy approval status dir");
 
         return globalTherapyApprovalStatusses;
     }
 
     @NotNull
-    public static List<GlobalApprovalStatusInfo> extractGlobalTherapyApprovalStatus(@NotNull JsonArray jsonArray) {
+    private static List<GlobalApprovalStatusInfo> extractGlobalTherapyApprovalStatus(@NotNull JsonArray jsonArray) {
         List<GlobalApprovalStatusInfo> globalTherapyApprovalStatusses = Lists.newArrayList();
         JsonDatamodelChecker globalTherapyApprovalStatusListChecker =
                 GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusListObjectChecker();
@@ -98,7 +98,7 @@ public class GlobalTherapyApprovalStatusFactory {
     }
 
     @NotNull
-    public static TherapyInfo extractGlobalTherapyApprovalStatusTherapy(@NotNull JsonObject jsonObject) {
+    private static TherapyInfo extractGlobalTherapyApprovalStatusTherapy(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker globalTherapyApprovalStatusTherapyChecker =
                 GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusTherapyObjectChecker();
         globalTherapyApprovalStatusTherapyChecker.check(jsonObject);
@@ -111,7 +111,7 @@ public class GlobalTherapyApprovalStatusFactory {
     }
 
     @NotNull
-    public static IndicationInfo extractGlobalTherapyApprovalStatusIndication(@NotNull JsonObject jsonObject) {
+    private static IndicationInfo extractGlobalTherapyApprovalStatusIndication(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker globalTherapyApprovalStatusIndicationChecker =
                 GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusIndicationObjectChecker();
         globalTherapyApprovalStatusIndicationChecker.check(jsonObject);
@@ -124,7 +124,7 @@ public class GlobalTherapyApprovalStatusFactory {
     }
 
     @NotNull
-    public static MolecularProfileInfo extractGlobalTherapyApprovalStatusMolecularProfile(
+    private static MolecularProfileInfo extractGlobalTherapyApprovalStatusMolecularProfile(
             @NotNull JsonObject jsonObject) {
         JsonDatamodelChecker globalTherapyApprovalStatusMolecularProfileChecker =
                 GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusMolecularprofileObjectChecker();
@@ -135,5 +135,4 @@ public class GlobalTherapyApprovalStatusFactory {
                 .profileName(JsonFunctions.string(jsonObject, "profileName"))
                 .build();
     }
-
 }

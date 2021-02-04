@@ -46,5 +46,4 @@ public abstract class MolecularProfile {
 
     @NotNull
     public abstract MolecularProfileExtendedEvidence extendedEvidence();
-
 }

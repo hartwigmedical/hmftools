@@ -32,7 +32,7 @@ public class CkbDAO {
             throws SQLException {
         final Connection conn = DriverManager.getConnection(url, userName, password);
         final String catalog = conn.getCatalog();
-        LOGGER.info("Connecting to database {}", catalog);
+        LOGGER.info("Connecting to database CKB {}", catalog);
 
         return new CkbDAO(DSL.using(conn, SQLDialect.MYSQL, settings(catalog)));
     }
@@ -52,26 +52,10 @@ public class CkbDAO {
     }
 
     public void deleteAll() {
-      //  ClinicalTrialDAO.clearClinicalTrial(context);
-       // DrugDAO.clearDrug(context);
+
     }
 
     public void writeCkb(@NotNull CkbEntry ckbEntry) {
-        int count = 0;
-        LOGGER.info("Starting writing clinical trial");
-        for (ClinicalTrial clinicalTrial : ckbEntry.clinicalTrial()) {
-            //ClinicalTrialDAO.writeClinicalTrial(context, clinicalTrial);
-            count = counting(count, "clinical trial object", ckbEntry.clinicalTrial().size());
-        }
-        LOGGER.info("Finished writing clinical trial");
-
-        LOGGER.info("Starting writing drug object");
-        count = 0;
-        for (Drug drug : ckbEntry.drug()) {
-           // DrugDAO.writeDrug(context, drug);
-            count = counting(count, "drug object", ckbEntry.drug().size());
-        }
-        LOGGER.info("Finished writing drug object");
 
     }
 
