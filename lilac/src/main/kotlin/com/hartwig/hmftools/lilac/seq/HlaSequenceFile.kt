@@ -44,7 +44,7 @@ object HlaSequenceFile {
         val resultMap = LinkedHashMap<HlaAllele, HlaSequence>()
 
         for (sequence in this) {
-            val fourDigitName = sequence.allele.specificProtein()
+            val fourDigitName = sequence.allele.asFourDigit()
             if (!resultMap.containsKey(fourDigitName)) {
                 resultMap[fourDigitName] = sequence
             }

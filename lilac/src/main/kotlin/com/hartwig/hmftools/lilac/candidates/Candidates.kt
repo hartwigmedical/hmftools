@@ -35,19 +35,19 @@ class Candidates(private val config: LilacConfig,
         // Amino acid filtering
         val aminoAcidCandidates = aminoAcidCandidates(aminoAcidBoundary, aminoAcidCounts, geneCandidates)
         val aminoAcidCandidateAlleles = aminoAcidCandidates.map { it.allele }.toSet()
-        val aminoAcidSpecificAllelesCandidate = aminoAcidCandidateAlleles.map { it.specificProtein() }.toSet()
+        val aminoAcidSpecificAllelesCandidate = aminoAcidCandidateAlleles.map { it.asFourDigit() }.toSet()
 
         logger.info(" ... ${aminoAcidCandidates.size} candidates after amino acid filtering")
 
         // Nucleotide filtering
         val nucleotideFiltering = NucleotideFiltering(config.minEvidence, aminoAcidBoundary)
         val nucleotideCandidatesAfterAminoAcidFiltering = nucleotideSequences
-                .filter { it.allele.specificProtein() in aminoAcidSpecificAllelesCandidate }
+                .filter { it.allele.asFourDigit() in aminoAcidSpecificAllelesCandidate }
         val nucleotideSpecificAllelesCandidate = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(nucleotideCandidatesAfterAminoAcidFiltering, fragments)
-                .map { it.allele.specificProtein() }
+                .map { it.allele.asFourDigit() }
                 .toSet()
 
-        val nucleotideCandidates = aminoAcidCandidates.filter { it.allele.specificProtein() in nucleotideSpecificAllelesCandidate }
+        val nucleotideCandidates = aminoAcidCandidates.filter { it.allele.asFourDigit() in nucleotideSpecificAllelesCandidate }
         logger.info(" ... ${nucleotideCandidates.size} candidates after exon boundary filtering")
 
         val phasedCandidates = filterCandidates(nucleotideCandidates, phasedEvidence)

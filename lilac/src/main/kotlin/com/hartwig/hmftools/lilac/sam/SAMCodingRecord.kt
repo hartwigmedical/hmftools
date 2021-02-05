@@ -12,6 +12,23 @@ data class SAMCodingRecord(
         val readStart: Int, val readEnd: Int,
         val record: SAMRecord) {
 
+    fun containsSoftClip(): Boolean {
+        return softClipped > 0
+    }
+
+    fun containsIndel(): Boolean {
+        return deleted > 0 || inserted > 0
+    }
+
+    fun read(): String {
+        val forwardBuilder = StringBuilder()
+        for (i in readStart..readEnd) {
+            forwardBuilder.append(record.readBases[i].toChar())
+        }
+
+        return forwardBuilder.toString()
+    }
+
     companion object {
         fun create(codingRegion: GenomeRegion, record: SAMRecord): SAMCodingRecord {
             val softClipStart = record.softClipStart()

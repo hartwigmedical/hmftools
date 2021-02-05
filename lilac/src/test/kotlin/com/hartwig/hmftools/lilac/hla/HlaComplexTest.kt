@@ -23,7 +23,7 @@ class HlaComplexTest {
     @Test
     fun testTwoConfirmedProtein() {
         val confirmedProtein = listOf(a11, a12)
-        val confirmedGroup = confirmedProtein.map { it.alleleGroup() }.distinct()
+        val confirmedGroup = confirmedProtein.map { it.asAlleleGroup() }.distinct()
 
         val result = HlaComplex.gene(confirmedGroup, confirmedProtein, all)
         assertEquals(confirmedProtein, result[0].alleles)
@@ -31,7 +31,7 @@ class HlaComplexTest {
 
     @Test
     fun testOneConfirmedGroup() {
-        val confirmedGroup = listOf(a11.alleleGroup())
+        val confirmedGroup = listOf(a11.asAlleleGroup())
 
         val result = HlaComplex.gene(confirmedGroup, Collections.emptyList(), all)
         for (hlaComplex in result) {
@@ -68,11 +68,11 @@ class HlaComplexTest {
     }
 
     private fun createA(group: Int, protein: Int): HlaAllele {
-        return HlaAllele("A", group.toString(), protein.toString(), "")
+        return HlaAllele("A", group.toString(), protein.toString(), "", "")
     }
 
     private fun createB(group: Int, protein: Int): HlaAllele {
-        return HlaAllele("B", group.toString(), protein.toString(), "")
+        return HlaAllele("B", group.toString(), protein.toString(), "", "")
     }
 
 }

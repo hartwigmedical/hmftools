@@ -36,9 +36,9 @@ class HlaComplexCoverageFactory(
     }
 
     private fun fragmentAlleles(alleles: Collection<HlaAllele>): List<FragmentAlleles> {
-        val specificProteins = alleles.map { it.specificProtein() }
+        val specificProteins = alleles.map { it.asFourDigit() }
         val aminoAcids = aminoAcidSequences.filter { it.allele in alleles }
-        val nucleotides = nucleotideSequences.filter { it.allele.specificProtein() in specificProteins }
+        val nucleotides = nucleotideSequences.filter { it.allele.asFourDigit() in specificProteins }
 
         return FragmentAlleles.create(aminoAcidFragments, aminoAcidLoci, aminoAcids, nucleotideLoci, nucleotides)
     }

@@ -13,7 +13,7 @@ data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val
         }
 
         fun groupCoverage(fragmentSequences: List<FragmentAlleles>): List<HlaAlleleCoverage> {
-            return create(fragmentSequences) { it.alleleGroup() }
+            return create(fragmentSequences) { it.asAlleleGroup() }
         }
 
         fun create(fragmentSequences: List<FragmentAlleles>, type: (HlaAllele) -> HlaAllele): List<HlaAlleleCoverage> {

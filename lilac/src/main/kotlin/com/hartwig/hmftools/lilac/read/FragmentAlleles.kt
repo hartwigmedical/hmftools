@@ -25,7 +25,7 @@ class FragmentAlleles(val aminoAcidFragment: AminoAcidFragment, val full: Collec
                     .map { Pair(it.allele, it.match(fragmentNucleotideLoci, fragmentNucleotides)) }
                     .filter { it.second != HlaSequenceMatch.NONE }
                     .filter { aminoAcidFragment.genes.contains("HLA-${it.first.gene}") }
-                    .map { Pair(it.first.specificProtein(), it.second) }
+                    .map { Pair(it.first.asFourDigit(), it.second) }
                     .distinct()
 
             val fullNucleotideMatch = matchingNucleotideSequences.filter { it.second == HlaSequenceMatch.FULL }.map { it.first }.toSet()
@@ -56,8 +56,8 @@ class FragmentAlleles(val aminoAcidFragment: AminoAcidFragment, val full: Collec
                 return FragmentAlleles(aminoAcidFragment, fullAminoAcidMatch, partialAminoAcidMatch, wildAminoAcidMatch)
             }
 
-            val consistentFull = fullAminoAcidMatch.filter { it.specificProtein() in fullNucleotideMatch }
-            val remainingFull = fullAminoAcidMatch.filter { it.specificProtein() !in fullNucleotideMatch }
+            val consistentFull = fullAminoAcidMatch.filter { it.asFourDigit() in fullNucleotideMatch }
+            val remainingFull = fullAminoAcidMatch.filter { it.asFourDigit() !in fullNucleotideMatch }
 
 //            if (consistentFull.size == 1 && consistentFull.isEmpty() && wildAminoAcidMatch.isEmpty()  && partialAminoAcidMatch.isEmpty() && consistentFull.first() == HlaAllele("C*07:57")) {
 //                println(aminoAcidFragment.id)

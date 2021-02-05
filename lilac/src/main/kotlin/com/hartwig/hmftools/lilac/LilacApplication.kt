@@ -137,10 +137,10 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
 
         val candidateAlleles = candidates.map { it.allele }
-        val candidateAlleleSpecificProteins = candidateAlleles.map { it.specificProtein() }
+        val candidateAlleleSpecificProteins = candidateAlleles.map { it.asFourDigit() }
 
         val aminoAcidCandidates = aminoAcidSequences.filter { it.allele in candidateAlleles }
-        val nucleotideCandidates = nucleotideSequences.filter { it.allele.specificProtein() in candidateAlleleSpecificProteins }
+        val nucleotideCandidates = nucleotideSequences.filter { it.allele.asFourDigit() in candidateAlleleSpecificProteins }
 
         val coverageFactory = HlaComplexCoverageFactory(
                 executorService,
@@ -298,7 +298,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val c = confirmedGroups.filter { it.gene == "C" }
         val map = mapOf(Pair("A", a), Pair("B", b), Pair("C", c))
 
-        return this.filter { map[it.gene]!!.size < 2 || map[it.gene]!!.contains(it.alleleGroup()) }
+        return this.filter { map[it.gene]!!.size < 2 || map[it.gene]!!.contains(it.asAlleleGroup()) }
 
     }
 

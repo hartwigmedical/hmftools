@@ -32,6 +32,9 @@ data class HlaSequenceLoci(val allele: HlaAllele, val sequences: List<String>) {
                 .replace(".", "")
     }
 
+    override fun toString(): String {
+        return "HlaSequenceLoci(allele=$allele, sequence=${sequence()})"
+    }
 
     companion object {
 
@@ -44,7 +47,7 @@ data class HlaSequenceLoci(val allele: HlaAllele, val sequences: List<String>) {
             val sequences = mutableListOf<String>()
 
             fun isBaseIgnored(i: Int) = (sequence[i] == '.' && reference[i] == '.') || (sequence[i] == '|' && reference[i] == '|')
-            fun isBaseInserted(i: Int) = sequence[i] != '.' && reference[i] == '.'
+            fun isBaseInserted(i: Int) = sequence[i] != '.' && (i >= reference.length || reference[i] == '.')
             var insLength = 0
 
             for (i in sequence.indices) {
