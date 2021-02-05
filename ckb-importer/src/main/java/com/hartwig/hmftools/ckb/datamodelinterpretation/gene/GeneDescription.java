@@ -14,5 +14,5 @@ public abstract class GeneDescription {
     public abstract String description();
 
     @NotNull
-    public abstract List<String> references();
+    public abstract List<Reference> references();
 }
