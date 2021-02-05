@@ -14,13 +14,14 @@ class JonJon : CigarHandler {
 }
 
 data class SAMCodingRecord(
-        val softClipped: Int, val deleted: Int, val inserted: Int,
+        val softClippedStart: Int, val softClippedEnd: Int,
+        val deleted: Int, val inserted: Int,
         val positionStart: Int, val positionEnd: Int,
         val readStart: Int, val readEnd: Int,
         val record: SAMRecord) {
 
     fun containsSoftClip(): Boolean {
-        return softClipped > 0
+        return softClippedStart > 0 || softClippedEnd > 0
     }
 
     fun containsIndel(): Boolean {
@@ -69,10 +70,11 @@ data class SAMCodingRecord(
                 positionEnd = latestEnd
             }
 
-            val softClipped = max(0, positionEnd - alignmentEnd) + max(alignmentStart - positionStart, 0)
+            val softClippedStart = max(alignmentStart - positionStart, 0)
+            val softClippedEnd = max(0, positionEnd - alignmentEnd)
             val (insertCount, deleteCount) = indels(positionStart, positionEnd, record)
 
-            return SAMCodingRecord(softClipped, deleteCount, insertCount, positionStart, positionEnd, readIndexStart, readIndexEnd, record)
+            return SAMCodingRecord(softClippedStart, softClippedEnd, deleteCount, insertCount, positionStart, positionEnd, readIndexStart, readIndexEnd, record)
         }
 
         private fun indels(startPosition: Int, endPosition: Int, record: SAMRecord): Pair<Int, Int> {
