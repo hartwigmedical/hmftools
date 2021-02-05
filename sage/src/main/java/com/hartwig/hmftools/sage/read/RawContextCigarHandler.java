@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sage.read;
 
+import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.sam.CigarHandler;
 
 import org.jetbrains.annotations.NotNull;
 

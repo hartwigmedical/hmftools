@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.sam.CigarHandler;
-import com.hartwig.hmftools.sage.sam.CigarTraversal;
+import com.hartwig.hmftools.common.samtools.CigarHandler;
+import com.hartwig.hmftools.common.samtools.CigarTraversal;
 
 import org.jetbrains.annotations.NotNull;
 
