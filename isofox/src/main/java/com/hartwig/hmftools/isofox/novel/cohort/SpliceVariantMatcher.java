@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
+import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.ALT_SPLICE_JUNCTION;
@@ -33,10 +35,12 @@ import static com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache.calcSuppo
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatchType.NOVEL;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatchType.DISRUPTION;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -47,6 +51,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
@@ -55,9 +60,12 @@ import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.jooq.Record;
+import org.jooq.Result;
 
 public class SpliceVariantMatcher
 {
@@ -72,12 +80,14 @@ public class SpliceVariantMatcher
 
     private final SpliceVariantCache mDataCache;
     private final SpliceSiteCache mSpliceSiteCache;
+    private final List<SpliceVariantMatchType> mMatchTypes;
 
     protected static final String SOMATIC_VARIANT_FILE = "somatic_variant_file";
     protected static final String SV_BREAKEND_FILE = "sv_breakend_file";
     protected static final String COHORT_ALT_SJ_FILE = "cohort_alt_sj_file";
 
     private static final String INCLUDE_ALL_TRANSCRIPTS = "include_all_transcripts";
+    private static final String SPLICE_VARIANT_TYPES = "splice_variant_types";
     protected static final String WRITE_VARIANT_CACHE = "write_variant_cache";
 
     private static final int MIN_ALT_SJ_LENGTH = 65;
@@ -100,6 +110,14 @@ public class SpliceVariantMatcher
 
         mAltSjFilter = new AltSjFilter(mConfig.RestrictedGeneIds, mConfig.ExcludedGeneIds, 0);
         mWriter = null;
+
+        mMatchTypes = Lists.newArrayList();
+
+        if(cmd.hasOption(SPLICE_VARIANT_TYPES))
+        {
+            Arrays.stream(cmd.getOptionValue(SPLICE_VARIANT_TYPES).split(";", -1))
+                    .map(x -> SpliceVariantMatchType.valueOf(x)).forEach(x -> mMatchTypes.add(x));
+        }
 
         initialiseWriter();
 
@@ -125,6 +143,7 @@ public class SpliceVariantMatcher
         options.addOption(COHORT_ALT_SJ_FILE, true, "Cohort frequency for alt SJs");
         options.addOption(WRITE_VARIANT_CACHE, false, "Write out somatic variants for subsequent non-DB loading");
         options.addOption(INCLUDE_ALL_TRANSCRIPTS, false, "Consider all transcripts, not just canonical (default: false)");
+        options.addOption(SPLICE_VARIANT_TYPES, true, "Types to include in analysis: NOVEL, DISRUPTION, empty=ALL");
     }
 
     public void processAltSpliceJunctions()
@@ -209,9 +228,9 @@ public class SpliceVariantMatcher
 
         final List<SpliceVariant> spliceVariants = Lists.newArrayList();
 
+        /*
         final List<SomaticVariant> somaticVariants = mConfig.DbAccess.readSomaticVariants(sampleId, VariantType.UNDEFINED);
 
-        // filter to specific gene list
         for(final SomaticVariant variant : somaticVariants)
         {
             if(!mGeneDataMap.isEmpty() && !mGeneDataMap.containsKey(variant.gene()))
@@ -224,6 +243,36 @@ public class SpliceVariantMatcher
                     variant.gene(), variant.chromosome(), (int)variant.position(), variant.type(),variant.ref(), variant.alt(),
                     variant.canonicalEffect(), variant.canonicalHgvsCodingImpact(), variant.trinucleotideContext(),
                     variant.localPhaseSet() != null ? variant.localPhaseSet() : -1));
+        }
+        */
+
+        final Result<Record> result = mConfig.DbAccess.context().select().from(Tables.SOMATICVARIANT)
+                .where(Tables.SOMATICVARIANT.SAMPLEID.eq(sampleId))
+                .and(Tables.SOMATICVARIANT.FILTER.eq(PASS_FILTER))
+                .and(Tables.SOMATICVARIANT.GENE.notEqual(""))
+                .fetch();
+
+        for (Record record : result)
+        {
+            // filter to specific gene list
+            final String gene = record.getValue(Tables.SOMATICVARIANT.GENE);
+
+            if(!mGeneDataMap.isEmpty() && !mGeneDataMap.containsKey(gene))
+                continue;
+
+            String chromosome = record.getValue(Tables.SOMATICVARIANT.CHROMOSOME);
+            int position = record.getValue(Tables.SOMATICVARIANT.POSITION);
+            String ref = record.getValue(Tables.SOMATICVARIANT.REF);
+            String alt = record.getValue(Tables.SOMATICVARIANT.ALT);
+            Integer localPhaseSet = record.get(Tables.SOMATICVARIANT.LOCALPHASESET);
+            String triNecContext = record.getValue(SOMATICVARIANT.TRINUCLEOTIDECONTEXT);
+            String canonicalEffect = record.getValue(SOMATICVARIANT.CANONICALEFFECT);
+            String canonicalCodingImpact = record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT);
+            VariantType type = VariantType.valueOf(record.getValue(SOMATICVARIANT.TYPE));
+
+            spliceVariants.add(new SpliceVariant(
+                    gene, chromosome, position, type, ref, alt,
+                    canonicalEffect, canonicalCodingImpact, triNecContext, localPhaseSet != null ? localPhaseSet : -1));
         }
 
         return spliceVariants;
@@ -271,8 +320,13 @@ public class SpliceVariantMatcher
             return;
         }
 
-        final List<AltSpliceJunction> matchedAltSJs = findCrypticAltSpliceJunctions(sampleId, altSpliceJunctions, variant, geneData);
-        findRelatedAltSpliceJunctions(sampleId, altSpliceJunctions, variant, geneData, matchedAltSJs);
+        final List<AltSpliceJunction> matchedAltSJs = Lists.newArrayList();
+
+        if(mMatchTypes.isEmpty() || mMatchTypes.contains(NOVEL))
+            matchedAltSJs.addAll(findCrypticAltSpliceJunctions(sampleId, altSpliceJunctions, variant, geneData));
+
+        if(mMatchTypes.isEmpty() || mMatchTypes.contains(DISRUPTION))
+            findRelatedAltSpliceJunctions(sampleId, altSpliceJunctions, variant, geneData, matchedAltSJs);
     }
 
     private static boolean withinRange(int pos1, int pos2, int distance) { return abs(pos1 - pos2) <= distance; }
