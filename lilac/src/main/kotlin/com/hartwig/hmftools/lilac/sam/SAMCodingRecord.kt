@@ -1,10 +1,17 @@
 package com.hartwig.hmftools.lilac.sam
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
+import com.hartwig.hmftools.common.samtools.CigarHandler
+import com.hartwig.hmftools.common.samtools.CigarTraversal
+import htsjdk.samtools.CigarElement
 import htsjdk.samtools.CigarOperator
 import htsjdk.samtools.SAMRecord
 import kotlin.math.max
 import kotlin.math.min
+
+class JonJon : CigarHandler {
+
+}
 
 data class SAMCodingRecord(
         val softClipped: Int, val deleted: Int, val inserted: Int,
@@ -63,8 +70,32 @@ data class SAMCodingRecord(
             }
 
             val softClipped = max(0, positionEnd - alignmentEnd) + max(alignmentStart - positionStart, 0)
+            val (insertCount, deleteCount) = indels(positionStart, positionEnd, record)
 
-            return SAMCodingRecord(softClipped, record.deletes(), record.inserts(), positionStart, positionEnd, readIndexStart, readIndexEnd, record)
+            return SAMCodingRecord(softClipped, deleteCount, insertCount, positionStart, positionEnd, readIndexStart, readIndexEnd, record)
+        }
+
+        private fun indels(startPosition: Int, endPosition: Int, record: SAMRecord): Pair<Int, Int> {
+            var insertCount = 0
+            var deleteCount = 0
+
+            val handler = object : CigarHandler {
+
+                override fun handleInsert(record: SAMRecord, element: CigarElement, readIndex: Int, refPosition: Int) {
+                    if (refPosition in startPosition..endPosition) {
+                        insertCount += element.length
+                    }
+                }
+
+                override fun handleDelete(record: SAMRecord, element: CigarElement, readIndex: Int, refPosition: Int) {
+                    if (refPosition in startPosition..endPosition) {
+                        deleteCount += element.length
+                    }
+                }
+            }
+
+            CigarTraversal.traverseCigar(record, handler)
+            return Pair(insertCount, deleteCount)
         }
 
         private fun SAMRecord.softClipStart(): Int {

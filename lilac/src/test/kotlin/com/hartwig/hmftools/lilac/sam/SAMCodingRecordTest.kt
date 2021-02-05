@@ -67,10 +67,24 @@ class SAMCodingRecordTest {
     }
 
     @Test
+    fun testInsertOutsideCodingRegion() {
+        val samRecord = buildSamRecord(1990, "50M3I50M", 103)
+        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        assertIntersect(victim, 0, 0, 0, 1990, 2000, 0, 10)
+    }
+
+    @Test
     fun testDelete() {
         val samRecord = buildSamRecord(1100, "50M3D50M", 100)
         val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
         assertIntersect(victim, 0, 3, 0, 1100, 1202, 0, 99)
+    }
+
+    @Test
+    fun testDeleteOutsideCodingRange() {
+        val samRecord = buildSamRecord(1990, "50M3D50M", 100)
+        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        assertIntersect(victim, 0, 0, 0, 1990, 2000, 0, 10)
     }
 
     @Test
