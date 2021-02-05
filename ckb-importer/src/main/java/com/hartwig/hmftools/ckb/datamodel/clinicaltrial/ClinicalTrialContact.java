@@ -22,5 +22,4 @@ public abstract class ClinicalTrialContact {
 
     @NotNull
     public abstract String role();
-
 }

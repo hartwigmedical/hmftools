@@ -20,7 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class LoadChordData {
+public class LoadChordData {
 
     private static final Logger LOGGER = LogManager.getLogger(LoadChordData.class);
 
@@ -30,7 +30,7 @@ public final class LoadChordData {
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException {
         Options options = createOptions();
-        CommandLine cmd = createCommandLine(args, options);
+        CommandLine cmd = new DefaultParser().parse(options, args);
 
         String predictionFile = cmd.getOptionValue(PREDICTION_FILE);
         String sample = cmd.getOptionValue(SAMPLE);
@@ -67,10 +67,5 @@ public final class LoadChordData {
         options.addOption(PREDICTION_FILE, true, "Path towards the chord prediction file.");
         addDatabaseCmdLineArgs(options);
         return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
-        return new DefaultParser().parse(options, args);
     }
 }

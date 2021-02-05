@@ -73,7 +73,9 @@ public class CkbImporterApplication {
         }
 
         CkbEntry ckbEntry = readJsonData(config);
-        List<CkbEntryInterpretation> ckbEntryInterpretation = InterpretationFactory.interpretationCkb(ckbEntry);
+        List<CkbEntryInterpretation> ckbEntryInterpretation = InterpretationFactory.interpretationCkbDataModel(ckbEntry);
+        LOGGER.info(ckbEntryInterpretation.get(1).molecularProfile());
+        LOGGER.info(ckbEntryInterpretation.get(1).variantTreeInterpretations());
 
         if (config.skipDatabaseWriting()) {
             LOGGER.info("Skipping DB writing.");
@@ -81,7 +83,7 @@ public class CkbImporterApplication {
             CkbDAO ckbDAO = connect(config);
             LOGGER.info("Deleting all data from CKB db");
             ckbDAO.deleteAll();
-            LOGGER.info("Starting insertion of all CKB entries");
+            LOGGER.info("Starting insertion of CKB interpretation data model");
             ckbDAO.writeCkb(ckbEntry);
 
         }
@@ -95,14 +97,14 @@ public class CkbImporterApplication {
 
     @NotNull
     private static CkbEntry readJsonData(@NotNull CkbImporterConfig config) throws IOException, java.text.ParseException {
-        LOGGER.info("Start with reading all files");
+        LOGGER.info("Start with reading all CKB files");
 
         String ckbPath = config.cbkDir();
 
         List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + File.separator + CLINICAL_TRIALS);
-        List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + File.separator + DRUGS);
-        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + File.separator + DRUG_CLASSES);
-        List<Gene> genes = GeneFactory.readingGenes(ckbPath + File.separator + GENES);
+        List<Drug> drugs = DrugFactory.readingDrug(ckbPath + File.separator + DRUGS);
+        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClass(ckbPath + File.separator + DRUG_CLASSES);
+        List<Gene> genes = GeneFactory.readingGene(ckbPath + File.separator + GENES);
         List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses =
                 GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(
                         ckbPath + File.separator + GLOBAL_THERAPY_APPROVAL_STATUSES);
@@ -115,7 +117,7 @@ public class CkbImporterApplication {
                 TreatmentApproachFactory.readingTreatmentApproch(ckbPath + File.separator + TREATMENT_APPROACHES);
         List<Variant> variants = VariantFactory.readingVariant(ckbPath + File.separator + VARIANTS);
 
-        LOGGER.info("All files are read");
+        LOGGER.info("All files have been read");
 
         return ImmutableCkbEntry.builder()
                 .clinicalTrial(clinicalTrials)

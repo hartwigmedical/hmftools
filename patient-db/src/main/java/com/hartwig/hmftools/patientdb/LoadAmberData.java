@@ -50,8 +50,8 @@ public class LoadAmberData {
     private static final String SNPCHECK_VCF = "snpcheck_vcf";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
-        Options options = createBasicOptions();
-        CommandLine cmd = createCommandLine(args, options);
+        Options options = createOptions();
+        CommandLine cmd = new DefaultParser().parse(options, args);
 
         String tumorSample = cmd.getOptionValue(SAMPLE);
         String amberSnpPath = cmd.getOptionValue(AMBER_SNP_VCF);
@@ -108,17 +108,12 @@ public class LoadAmberData {
     }
 
     @NotNull
-    private static Options createBasicOptions() {
+    private static Options createOptions() {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample");
         options.addOption(AMBER_SNP_VCF, true, "Path to the amber snp vcf");
         options.addOption(SNPCHECK_VCF, true, "Path to the downsampled snp check vcf");
         addDatabaseCmdLineArgs(options);
         return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
-        return new DefaultParser().parse(options, args);
     }
 }

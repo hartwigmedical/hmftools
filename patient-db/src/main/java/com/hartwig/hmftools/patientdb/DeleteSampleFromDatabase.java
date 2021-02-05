@@ -22,26 +22,21 @@ public class DeleteSampleFromDatabase {
     private static final String SAMPLE = "sample";
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException {
-        Options options = createBasicOptions();
-        CommandLine cmd = createCommandLine(args, options);
+        Options options = createOptions();
+        CommandLine cmd = new DefaultParser().parse(options, args);
         DatabaseAccess dbAccess = databaseAccess(cmd);
         String sample = cmd.getOptionValue(SAMPLE);
 
-        LOGGER.info("Removing sample: " + sample + " from hmf database");
+        LOGGER.info("Removing sample '{}' from hmf database", sample);
         dbAccess.deleteAllDataForSample(sample);
         LOGGER.info("Complete");
     }
 
     @NotNull
-    private static Options createBasicOptions() {
+    private static Options createOptions() {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample to delete.");
         addDatabaseCmdLineArgs(options);
         return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
-        return new DefaultParser().parse(options, args);
     }
 }

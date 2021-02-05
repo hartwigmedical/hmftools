@@ -170,9 +170,10 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         val boundariesList = listOf(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
 
-        HlaSequenceFile.writeFile("$outputDir/$sample.candidates.inflate.txt", candidates)
         val template = aminoAcidSequences.filter { it.allele == HlaAllele("A*01:01:01:01") }.first()
-        HlaSequenceFile.writeDeflatedFile("$outputDir/$sample.candidates.deflate.txt", boundariesList, template, candidates)
+        val writtenCandidates = (candidates + expectedSequences + template).distinct().sortedBy { it.allele }
+        HlaSequenceFile.writeFile("$outputDir/$sample.candidates.inflate.txt", writtenCandidates)
+        HlaSequenceFile.writeDeflatedFile("$outputDir/$sample.candidates.deflate.txt", boundariesList, template, writtenCandidates)
 
         val complexes = HlaComplex.complexes(
                 confirmedGroups.take(6).map { it.allele },
@@ -180,6 +181,12 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
                 candidates.map { it.allele })
 
         logger.info("Calculating coverage of ${complexes.size} complexes")
+
+        if (expectedSequences.isNotEmpty()) {
+            val expectedCoverage = coverageFactory.proteinCoverage(expectedSequences.map { it.allele })
+            logger.info("Expected coverage: $expectedCoverage")
+        }
+
         val complexCoverage = coverageFactory.complexCoverage(complexes)
         if (complexCoverage.isNotEmpty()) {
             val topCoverage = complexCoverage[0]

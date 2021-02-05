@@ -1,18 +1,18 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.DB_BATCH_INSERT_SIZE;
+
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.patientdb.Config;
-
 public class BufferedWriter<T> implements Consumer<T>, AutoCloseable {
 
     private final BufferedWriterConsumer<T> consumer;
     private final Timestamp timestamp;
-    private final List<T> buffer = new ArrayList<>(Config.DB_BATCH_INSERT_SIZE + 1);
+    private final List<T> buffer = new ArrayList<>(DB_BATCH_INSERT_SIZE + 1);
     private boolean initialised;
 
     public BufferedWriter(final BufferedWriterConsumer<T> consumer) {
@@ -33,7 +33,7 @@ public class BufferedWriter<T> implements Consumer<T>, AutoCloseable {
         }
 
         buffer.add(entry);
-        if (buffer.size() >= Config.DB_BATCH_INSERT_SIZE) {
+        if (buffer.size() >= DB_BATCH_INSERT_SIZE) {
             writeBuffer();
         }
     }

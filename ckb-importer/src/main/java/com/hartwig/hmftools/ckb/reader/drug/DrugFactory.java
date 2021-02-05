@@ -49,8 +49,8 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<Drug> readingDrugs(@NotNull String drugsDir) throws IOException, ParseException {
-        LOGGER.info("Start reading drug");
+    public static List<Drug> readingDrug(@NotNull String drugsDir) throws IOException, ParseException {
+        LOGGER.info("Start reading drug dir");
 
         List<Drug> drugs = Lists.newArrayList();
         File[] filesDrugs = new File(drugsDir).listFiles();
@@ -82,19 +82,21 @@ public class DrugFactory {
                             .clinicalTrial(extractCliniclaTrials(drugsEntryObject.getAsJsonArray("clinicalTrials")))
                             .evidence(extractEvidence(drugsEntryObject.getAsJsonArray("evidence")))
                             .therapy(extractTherapies(drugsEntryObject.getAsJsonArray("therapies")))
-                            .globalApprovalStatus(drugsEntryObject.has("globalApprovaStatus") ? extractGlobalApprovaStatus(drugsEntryObject.getAsJsonArray("globalApprovaStatus")) : null)
+                            .globalApprovalStatus(drugsEntryObject.has("globalApprovaStatus")
+                                    ? extractGlobalApprovaStatus(drugsEntryObject.getAsJsonArray("globalApprovaStatus"))
+                                    : null)
                             .build());
                 }
                 reader.close();
             }
         }
-        LOGGER.info("Finished reading drug");
+        LOGGER.info("Finished reading drug dir ");
 
         return drugs;
     }
 
     @NotNull
-    public static List<DescriptionInfo> extractDrugDescriptions(@NotNull JsonArray jsonArray) {
+    private static List<DescriptionInfo> extractDrugDescriptions(@NotNull JsonArray jsonArray) {
         List<DescriptionInfo> drugDescriptions = Lists.newArrayList();
         JsonDatamodelChecker drugDescriptionChecker = DrugDataModelChecker.drugDescriptionObjectChecker();
         for (JsonElement drugDescription : jsonArray) {
@@ -110,7 +112,7 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<ReferenceInfo> extractDrugReferences(@NotNull JsonArray jsonArray) {
+    private static List<ReferenceInfo> extractDrugReferences(@NotNull JsonArray jsonArray) {
         List<ReferenceInfo> drugReferences = Lists.newArrayList();
         JsonDatamodelChecker drugReferenceChecker = DrugDataModelChecker.drugReferenceObjectChecker();
 
@@ -136,7 +138,7 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<DrugClassInfo> extractDrugsClasses(@NotNull JsonArray jsonArray) {
+    private static List<DrugClassInfo> extractDrugsClasses(@NotNull JsonArray jsonArray) {
         List<DrugClassInfo> drugClasses = Lists.newArrayList();
         JsonDatamodelChecker drugClassChecker = DrugDataModelChecker.drugClassObjectChecker();
 
@@ -153,7 +155,7 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<ClinicalTrialInfo> extractCliniclaTrials(@NotNull JsonArray jsonArray) {
+    private static List<ClinicalTrialInfo> extractCliniclaTrials(@NotNull JsonArray jsonArray) {
         List<ClinicalTrialInfo> clinicalTrials = Lists.newArrayList();
         JsonDatamodelChecker drugClinicalTrialChecker = DrugDataModelChecker.drugClinicalTrialObjectChecker();
 
@@ -173,7 +175,7 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<TherapyInfo> extractDrugTherapies(@NotNull JsonArray jsonArray) {
+    private static List<TherapyInfo> extractDrugTherapies(@NotNull JsonArray jsonArray) {
         List<TherapyInfo> drugTherapies = Lists.newArrayList();
         JsonDatamodelChecker drugClinicalTrialTherapyChecker = DrugDataModelChecker.drugClinicalTrialTherapyObjectChecker();
 
@@ -191,7 +193,7 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<EvidenceInfo> extractEvidence(@NotNull JsonArray jsonArray) {
+    private static List<EvidenceInfo> extractEvidence(@NotNull JsonArray jsonArray) {
         List<EvidenceInfo> evidences = Lists.newArrayList();
         JsonDatamodelChecker drugEvidenceChecker = DrugDataModelChecker.drugEvidenceObjectChecker();
 
@@ -206,7 +208,9 @@ public class DrugFactory {
                     .efficacyEvidence(JsonFunctions.string(evidenceObject, "efficacyEvidence"))
                     .molecularProfile(extractMolecularProfile(evidenceObject.getAsJsonObject("molecularProfile")))
                     .therapy(extractTherapy(evidenceObject.getAsJsonObject("therapy")))
-                    .indication(evidenceObject.has("indications") ? extractIndications(evidenceObject.getAsJsonObject("indications")) : null)
+                    .indication(evidenceObject.has("indications")
+                            ? extractIndications(evidenceObject.getAsJsonObject("indications"))
+                            : null)
                     .responseType(JsonFunctions.string(evidenceObject, "responseType"))
                     .reference(extractEvidenceReferences(evidenceObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(evidenceObject, "ampCapAscoEvidenceLevel"))
@@ -217,7 +221,7 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
+    private static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonObject molecularProfileObject = jsonObject.getAsJsonObject();
         JsonDatamodelChecker drugEvidenceMolecularProfileChecker = DrugDataModelChecker.drugEvidenceMolecularProfileObjectChecker();
         drugEvidenceMolecularProfileChecker.check(molecularProfileObject);
@@ -229,7 +233,7 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
+    private static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
         JsonObject therapyObject = jsonObject.getAsJsonObject();
         JsonDatamodelChecker drugEvidenceTherapyChecker = DrugDataModelChecker.drugEvidenceTherapyObjectChecker();
         drugEvidenceTherapyChecker.check(therapyObject);
@@ -242,7 +246,7 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static IndicationInfo extractIndications(@NotNull JsonObject jsonObject) {
+    private static IndicationInfo extractIndications(@NotNull JsonObject jsonObject) {
         JsonObject indicationObject = jsonObject.getAsJsonObject();
         JsonDatamodelChecker drugEvidenceIndicationChecker = DrugDataModelChecker.drugEvidenceIndicationObjectChecker();
         drugEvidenceIndicationChecker.check(indicationObject);
@@ -255,7 +259,7 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<ReferenceInfo> extractEvidenceReferences(@NotNull JsonArray jsonArray) {
+    private static List<ReferenceInfo> extractEvidenceReferences(@NotNull JsonArray jsonArray) {
         List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker drugEvidenceReferenceChecker = DrugDataModelChecker.drugEvidenceReferenceObjectChecker();
 
@@ -274,7 +278,7 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<TherapyInfo> extractTherapies(@NotNull JsonArray jsonArray) {
+    private static List<TherapyInfo> extractTherapies(@NotNull JsonArray jsonArray) {
         List<TherapyInfo> drugsTherapies = Lists.newArrayList();
         JsonDatamodelChecker drugTherapyChecker = DrugDataModelChecker.drugTherapyObjectChecker();
 
@@ -292,7 +296,7 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static List<GlobalApprovalStatusInfo> extractGlobalApprovaStatus(@NotNull JsonArray jsonArray) {
+    private static List<GlobalApprovalStatusInfo> extractGlobalApprovaStatus(@NotNull JsonArray jsonArray) {
         List<GlobalApprovalStatusInfo> globalApproavalStatuses = Lists.newArrayList();
         JsonDatamodelChecker drugGlobalApprovalStatusChecker = DrugDataModelChecker.drugGlobalApprovalStatusObjectChecker();
 
@@ -313,7 +317,7 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static TherapyInfo extractTherapiesGlobalApprovalStatus(@NotNull JsonObject jsonObject) {
+    private static TherapyInfo extractTherapiesGlobalApprovalStatus(@NotNull JsonObject jsonObject) {
         JsonObject therapiesGlobalApprovalStatusObject = jsonObject.getAsJsonObject();
         JsonDatamodelChecker drugGlobalApprovalStatusTherapyChecker = DrugDataModelChecker.drugGlobalApprovalStatusTherapyObjectChecker();
         drugGlobalApprovalStatusTherapyChecker.check(therapiesGlobalApprovalStatusObject);
@@ -326,9 +330,10 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static IndicationInfo extractIndicationsGlobalApprovalStatus(@NotNull JsonObject jsonObject) {
+    private static IndicationInfo extractIndicationsGlobalApprovalStatus(@NotNull JsonObject jsonObject) {
         JsonObject indicationsGlobalApprovalStatusObject = jsonObject.getAsJsonObject();
-        JsonDatamodelChecker drugGlobalApprovalStatusIndicationChecker = DrugDataModelChecker.drugGlobalApprovalStatusIndicationObjectChecker();
+        JsonDatamodelChecker drugGlobalApprovalStatusIndicationChecker =
+                DrugDataModelChecker.drugGlobalApprovalStatusIndicationObjectChecker();
         drugGlobalApprovalStatusIndicationChecker.check(indicationsGlobalApprovalStatusObject);
 
         return ImmutableIndicationInfo.builder()
@@ -339,9 +344,10 @@ public class DrugFactory {
     }
 
     @NotNull
-    public static MolecularProfileInfo extractMolecularProfileGlobalApprovalStatus(@NotNull JsonObject jsonObject) {
+    private static MolecularProfileInfo extractMolecularProfileGlobalApprovalStatus(@NotNull JsonObject jsonObject) {
         JsonObject molecularProfileGlobalApprovalStatus = jsonObject.getAsJsonObject();
-        JsonDatamodelChecker drugGlobalApprovalStatusMolecularProfileChecker = DrugDataModelChecker.drugGlobalApprovalStatusMolecularProfileObjectChecker();
+        JsonDatamodelChecker drugGlobalApprovalStatusMolecularProfileChecker =
+                DrugDataModelChecker.drugGlobalApprovalStatusMolecularProfileObjectChecker();
         drugGlobalApprovalStatusMolecularProfileChecker.check(molecularProfileGlobalApprovalStatus);
 
         return ImmutableMolecularProfileInfo.builder()

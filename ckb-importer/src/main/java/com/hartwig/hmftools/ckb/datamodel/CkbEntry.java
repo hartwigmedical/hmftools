@@ -54,5 +54,4 @@ public abstract class CkbEntry {
 
     @NotNull
     public abstract List<Variant> variant();
-
 }

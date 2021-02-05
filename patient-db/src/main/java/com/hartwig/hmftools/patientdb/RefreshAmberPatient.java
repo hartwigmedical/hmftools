@@ -28,8 +28,8 @@ public class RefreshAmberPatient {
     private static final Logger LOGGER = LogManager.getLogger(RefreshAmberPatient.class);
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException {
-        Options options = createBasicOptions();
-        CommandLine cmd = createCommandLine(args, options);
+        Options options = createOptions();
+        CommandLine cmd = new DefaultParser().parse(options, args);
 
         try (DatabaseAccess dbAccess = databaseAccess(cmd)) {
             LOGGER.info("Reading sample data");
@@ -65,14 +65,9 @@ public class RefreshAmberPatient {
     }
 
     @NotNull
-    private static Options createBasicOptions() {
+    private static Options createOptions() {
         Options options = new Options();
         addDatabaseCmdLineArgs(options);
         return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
-        return new DefaultParser().parse(options, args);
     }
 }

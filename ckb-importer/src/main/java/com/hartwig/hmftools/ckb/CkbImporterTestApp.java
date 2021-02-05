@@ -67,7 +67,6 @@ public class CkbImporterTestApp {
         }
 
         CkbEntry ckbEntry = readJsonData(ckbPath);
-        writingDataToDatabase(ckbEntry);
 
         LOGGER.info("Complete!");
 
@@ -77,9 +76,9 @@ public class CkbImporterTestApp {
     private static CkbEntry readJsonData(@NotNull String ckbPath) throws IOException, ParseException {
 
         List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
-        List<Drug> drugs = DrugFactory.readingDrugs(ckbPath + DRUGS);
-        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClasses(ckbPath + DRUG_CLASSES);
-        List<Gene> genes = GeneFactory.readingGenes(ckbPath + GENES);
+        List<Drug> drugs = DrugFactory.readingDrug(ckbPath + DRUGS);
+        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClass(ckbPath + DRUG_CLASSES);
+        List<Gene> genes = GeneFactory.readingGene(ckbPath + GENES);
         List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses =
                 GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
         List<Indication> indications = IndicationFactory.readingIndication(ckbPath + INDICATIONS);
@@ -102,20 +101,6 @@ public class CkbImporterTestApp {
                 .treatmentApproach(treatmentApproaches)
                 .variant(variants)
                 .build();
-    }
-
-    private static void writingDataToDatabase(@NotNull CkbEntry ckbEntry) {
-        LOGGER.info("ClinicalTrial {}", ckbEntry.clinicalTrial().get(0));
-        LOGGER.info("Drug {}", ckbEntry.drug().get(0));
-        LOGGER.info("DrugClass {}", ckbEntry.drugClass().get(0));
-        LOGGER.info("Gene {}", ckbEntry.gene().get(0));
-        LOGGER.info("GlobalTherapyApprovalStatus {}", ckbEntry.globalTherapyApprovalStatus().get(0));
-        LOGGER.info("Indication {}", ckbEntry.indication().get(0));
-        LOGGER.info("MolecularProfile {}", ckbEntry.molecularProfile().get(0));
-        LOGGER.info("Reference {}", ckbEntry.reference().get(0));
-        LOGGER.info("Therapy {}", ckbEntry.therapy().get(0));
-        LOGGER.info("TreatmentApproachInfo {}", ckbEntry.treatmentApproach().get(0));
-        LOGGER.info("Variant {}", ckbEntry.variant().get(0));
     }
 
 }

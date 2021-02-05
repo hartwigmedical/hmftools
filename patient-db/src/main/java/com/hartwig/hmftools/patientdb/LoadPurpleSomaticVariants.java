@@ -30,8 +30,8 @@ public class LoadPurpleSomaticVariants {
     private static final String SOMATIC_VCF = "somatic_vcf";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
-        Options options = createBasicOptions();
-        CommandLine cmd = createCommandLine(args, options);
+        Options options = createOptions();
+        CommandLine cmd = new DefaultParser().parse(options, args);
 
         DatabaseAccess dbAccess = databaseAccess(cmd);
 
@@ -51,7 +51,7 @@ public class LoadPurpleSomaticVariants {
     }
 
     @NotNull
-    private static Options createBasicOptions() {
+    private static Options createOptions() {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE.");
         options.addOption(REFERENCE, true, "Optional name of the reference sample. This should correspond to the value used in PURPLE.");
@@ -60,10 +60,5 @@ public class LoadPurpleSomaticVariants {
         addDatabaseCmdLineArgs(options);
 
         return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
-        return new DefaultParser().parse(options, args);
     }
 }

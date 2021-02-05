@@ -18,17 +18,16 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-import com.hartwig.hmftools.patientdb.Utils;
-import com.hartwig.hmftools.patientdb.data.BaselineData;
-import com.hartwig.hmftools.patientdb.data.BiopsyData;
-import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
-import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
-import com.hartwig.hmftools.patientdb.data.DrugData;
-import com.hartwig.hmftools.patientdb.data.Patient;
-import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
-import com.hartwig.hmftools.patientdb.data.RanoMeasurementData;
-import com.hartwig.hmftools.patientdb.data.SampleData;
-import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyTreatmentResponseData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.DrugData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.PreTreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.RanoMeasurementData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
+import com.hartwig.hmftools.patientdb.clinical.datamodel.TumorMarkerData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -101,8 +100,8 @@ class ClinicalDAO {
                 .values(sample.sampleId(),
                         patientId,
                         sample.setName(),
-                        Utils.toSQLDate(sample.arrivalDate()),
-                        Utils.toSQLDate(sample.samplingDate()),
+                        DatabaseUtil.sqlDate(sample.arrivalDate()),
+                        DatabaseUtil.sqlDate(sample.samplingDate()),
                         sample.dnaNanograms(),
                         sample.limsPrimaryTumor(),
                         sample.pathologyTumorPercentage())
@@ -144,8 +143,8 @@ class ClinicalDAO {
                 BASELINE.PRETREATMENTSTYPE,
                 BASELINE.PRETREATMENTSMECHANISM)
                 .values(patientId,
-                        Utils.toSQLDate(patient.registrationDate()),
-                        Utils.toSQLDate(patient.informedConsentDate()),
+                        DatabaseUtil.sqlDate(patient.registrationDate()),
+                        DatabaseUtil.sqlDate(patient.informedConsentDate()),
                         patient.gender(),
                         patient.hospital(),
                         patient.birthYear(),
@@ -155,7 +154,7 @@ class ClinicalDAO {
                         patient.curatedPrimaryTumor().subType(),
                         patient.curatedPrimaryTumor().extraDetails(),
                         primaryTumorOverridden,
-                        Utils.toSQLDate(patient.deathDate()),
+                        DatabaseUtil.sqlDate(patient.deathDate()),
                         preTreatmentData.treatmentGiven(),
                         preTreatmentData.radiotherapyGiven(),
                         preTreatmentData.treatmentName(),
@@ -215,8 +214,8 @@ class ClinicalDAO {
                     PRETREATMENTDRUG.MECHANISM,
                     PRETREATMENTDRUG.BESTRESPONSE)
                     .values(patientId,
-                            Utils.toSQLDate(drug.startDate()),
-                            Utils.toSQLDate(drug.endDate()),
+                            DatabaseUtil.sqlDate(drug.startDate()),
+                            DatabaseUtil.sqlDate(drug.endDate()),
                             curatedTreatment.name(),
                             curatedTreatment.type(),
                             curatedTreatment.mechanism(),
@@ -248,7 +247,7 @@ class ClinicalDAO {
                         biopsy.curatedType(),
                         biopsy.site(),
                         biopsy.location(),
-                        Utils.toSQLDate(biopsy.date()))
+                        DatabaseUtil.sqlDate(biopsy.date()))
                 .execute();
         writeFormStatus(biopsy.id(), BIOPSY.getName(), "biopsy", biopsy.formStatus());
     }
@@ -270,8 +269,8 @@ class ClinicalDAO {
                         patientId,
                         treatment.treatmentGiven(),
                         treatment.radiotherapyGiven(),
-                        Utils.toSQLDate(treatment.startDate()),
-                        Utils.toSQLDate(treatment.endDate()),
+                        DatabaseUtil.sqlDate(treatment.startDate()),
+                        DatabaseUtil.sqlDate(treatment.endDate()),
                         treatment.treatmentName(),
                         treatment.consolidatedType(),
                         treatment.consolidatedMechanism())
@@ -292,8 +291,8 @@ class ClinicalDAO {
                     DRUG.MECHANISM)
                     .values(treatmentId,
                             patientId,
-                            Utils.toSQLDate(drug.startDate()),
-                            Utils.toSQLDate(drug.endDate()),
+                            DatabaseUtil.sqlDate(drug.startDate()),
+                            DatabaseUtil.sqlDate(drug.endDate()),
                             curatedTreatment.name(),
                             curatedTreatment.type(),
                             curatedTreatment.mechanism())
@@ -314,7 +313,7 @@ class ClinicalDAO {
                 TREATMENTRESPONSE.BONEONLYDISEASE)
                 .values(treatmentResponse.treatmentId(),
                         patientId,
-                        Utils.toSQLDate(treatmentResponse.date()),
+                        DatabaseUtil.sqlDate(treatmentResponse.date()),
                         treatmentResponse.response(),
                         treatmentResponse.measurementDone(),
                         treatmentResponse.boneOnlyDisease())
@@ -332,7 +331,11 @@ class ClinicalDAO {
                 TUMORMARKER.MARKER,
                 TUMORMARKER.MEASUREMENT,
                 TUMORMARKER.UNIT)
-                .values(patientId, Utils.toSQLDate(tumorMarker.date()), tumorMarker.marker(), tumorMarker.measurement(), tumorMarker.unit())
+                .values(patientId,
+                        DatabaseUtil.sqlDate(tumorMarker.date()),
+                        tumorMarker.marker(),
+                        tumorMarker.measurement(),
+                        tumorMarker.unit())
                 .returning(TUMORMARKER.ID)
                 .fetchOne()
                 .getValue(TUMORMARKER.ID);
@@ -349,7 +352,7 @@ class ClinicalDAO {
                 RANOMEASUREMENT.NOTARGETLESIONRESPONSE,
                 RANOMEASUREMENT.OVERALLRESPONSE)
                 .values(patientId,
-                        Utils.toSQLDate(RanoMeasurement.responseDate()),
+                        DatabaseUtil.sqlDate(RanoMeasurement.responseDate()),
                         RanoMeasurement.therapyGiven(),
                         RanoMeasurement.targetLesionResponse(),
                         RanoMeasurement.noTargetLesionResponse(),

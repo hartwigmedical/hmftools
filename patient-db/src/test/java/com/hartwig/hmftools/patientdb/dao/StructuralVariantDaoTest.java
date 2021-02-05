@@ -22,5 +22,4 @@ public class StructuralVariantDaoTest {
             assertEquals(one, StructuralVariantDAO.limitSizeOfCSV(i, three));
         }
     }
-
 }

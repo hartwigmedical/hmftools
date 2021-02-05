@@ -45,6 +45,4 @@ public abstract class Therapy {
 
     @NotNull
     public abstract List<GlobalApprovalStatusInfo> globalApprovalStatus();
-
-
 }

@@ -1,6 +1,12 @@
 package com.hartwig.hmftools.ckb.interpretation;
 
+import java.util.List;
+
 import com.hartwig.hmftools.ckb.datamodel.molecularprofile.MolecularProfile;
+import com.hartwig.hmftools.ckb.interpretation.clinicaltrialtree.ClinicalTrialInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.treatmenttree.TreatmentInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.varianttree.VariantInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.varianttree.VariantTreeInterpretation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -14,9 +20,12 @@ public abstract class CkbEntryInterpretation {
     public abstract MolecularProfile molecularProfile();
 
     @NotNull
-    public abstract VariantInterpretation variantInterpretation();
+    public abstract List<VariantTreeInterpretation> variantTreeInterpretations();
 
-    @NotNull
-    public abstract TreatmentInterpretation treatmentInterpretation();
+//    @NotNull
+//    public abstract List<TreatmentInterpretation> treatmentInterpretations();
+//
+//    @NotNull
+//    public abstract List<ClinicalTrialInterpretation> clinicalTrialInterpretations();
 
 }

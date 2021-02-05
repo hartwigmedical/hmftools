@@ -51,7 +51,7 @@ public class TherapyFactory {
 
     @NotNull
     public static List<Therapy> readingTherapy(@NotNull String therapyDir) throws IOException, ParseException {
-        LOGGER.info("Start reading therapies");
+        LOGGER.info("Start reading therapy dir");
 
         List<Therapy> therapies = Lists.newArrayList();
         File[] filesTherapies = new File(therapyDir).listFiles();
@@ -73,7 +73,7 @@ public class TherapyFactory {
                             .id(JsonFunctions.integer(therapyEntryObject, "id"))
                             .therapyName(JsonFunctions.string(therapyEntryObject, "therapyName"))
                             .synonyms(JsonFunctions.nullableString(therapyEntryObject, "synonyms"))
-                            .description(createDescription(therapyEntryObject.getAsJsonArray("therapyDescriptions")))
+                            .description(extractDescription(therapyEntryObject.getAsJsonArray("therapyDescriptions")))
                             .createDate(DateConverter.convertDate(JsonFunctions.string(therapyEntryObject, "createDate")))
                             .updateDate(DateConverter.convertDate(JsonFunctions.nullableString(therapyEntryObject, "updateDate")))
                             .evidence(extractEvidence(therapyEntryObject.getAsJsonArray("evidence")))
@@ -85,13 +85,13 @@ public class TherapyFactory {
                 reader.close();
             }
         }
-        LOGGER.info("Finished reading therapy");
+        LOGGER.info("Finished reading therapy dir");
 
         return therapies;
     }
 
     @NotNull
-    public static List<DescriptionInfo> createDescription(@NotNull JsonArray jsonArray) {
+    private static List<DescriptionInfo> extractDescription(@NotNull JsonArray jsonArray) {
         List<DescriptionInfo> descriptions = Lists.newArrayList();
         JsonDatamodelChecker descriptionChecker = TherapyDataModelChecker.descriptionObjectChecker();
 
@@ -104,12 +104,11 @@ public class TherapyFactory {
                     .reference(extractReferences(descriptionJsonObject.getAsJsonArray("references")))
                     .build());
         }
-
         return descriptions;
     }
 
     @NotNull
-    public static List<ReferenceInfo> extractReferences(@NotNull JsonArray jsonArray) {
+    private static List<ReferenceInfo> extractReferences(@NotNull JsonArray jsonArray) {
         List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker referenceChecker = TherapyDataModelChecker.referencesObjectChecker();
 
@@ -124,12 +123,11 @@ public class TherapyFactory {
                     .url(JsonFunctions.nullableString(referenceJsonObject, "url"))
                     .build());
         }
-
         return references;
     }
 
     @NotNull
-    public static List<EvidenceInfo> extractEvidence(@NotNull JsonArray jsonArray) {
+    private static List<EvidenceInfo> extractEvidence(@NotNull JsonArray jsonArray) {
         List<EvidenceInfo> evidences = Lists.newArrayList();
         JsonDatamodelChecker evidenceChecker = TherapyDataModelChecker.evidenceObjectChecker();
 
@@ -155,7 +153,7 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
+    private static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker molecularProfileChecker = TherapyDataModelChecker.molecularProfileObjectChecker();
         molecularProfileChecker.check(jsonObject);
 
@@ -166,7 +164,7 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
+    private static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker therapyChecker = TherapyDataModelChecker.therapyChecker();
         therapyChecker.check(jsonObject);
 
@@ -178,7 +176,7 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
+    private static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker indicationChecker = TherapyDataModelChecker.indicationChecker();
         indicationChecker.check(jsonObject);
 
@@ -190,7 +188,7 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static List<ReferenceInfo> extractReference(@NotNull JsonArray jsonArray) {
+    private static List<ReferenceInfo> extractReference(@NotNull JsonArray jsonArray) {
         List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker referenceChecker = TherapyDataModelChecker.referenceChecker();
 
@@ -209,7 +207,7 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static List<ClinicalTrialInfo> extractClinicalTrial(@NotNull JsonArray jsonArray) {
+    private static List<ClinicalTrialInfo> extractClinicalTrial(@NotNull JsonArray jsonArray) {
         List<ClinicalTrialInfo> clinicaltrials = Lists.newArrayList();
         JsonDatamodelChecker clinicalTrialChecker = TherapyDataModelChecker.clinicalTrialChecker();
 
@@ -229,7 +227,7 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static List<TherapyInfo> extractTherapyList(@NotNull JsonArray jsonArray) {
+    private static List<TherapyInfo> extractTherapyList(@NotNull JsonArray jsonArray) {
         List<TherapyInfo> therapies = Lists.newArrayList();
         JsonDatamodelChecker therapyChecker = TherapyDataModelChecker.therapyChecker();
 
@@ -247,7 +245,7 @@ public class TherapyFactory {
     }
 
     @NotNull
-    public static List<DrugInfo> extractDrug(@NotNull JsonArray jsonArray) {
+    private static List<DrugInfo> extractDrug(@NotNull JsonArray jsonArray) {
         List<DrugInfo> drugs = Lists.newArrayList();
         JsonDatamodelChecker drugChecker = TherapyDataModelChecker.drugsChecker();
 
@@ -260,13 +258,12 @@ public class TherapyFactory {
                     .drugName(JsonFunctions.string(drugJsonObject, "drugName"))
                     .term(JsonFunctions.stringList(drugJsonObject, "terms"))
                     .build());
-
         }
         return drugs;
     }
 
     @NotNull
-    public static List<GlobalApprovalStatusInfo> extractGlobalApprovalStatus(@NotNull JsonArray jsonArray) {
+    private static List<GlobalApprovalStatusInfo> extractGlobalApprovalStatus(@NotNull JsonArray jsonArray) {
         List<GlobalApprovalStatusInfo> globalApprovalStatuses = Lists.newArrayList();
         JsonDatamodelChecker globalApprovalStatusChecker = TherapyDataModelChecker.globalApprovalStatusChecker();
 
@@ -284,6 +281,5 @@ public class TherapyFactory {
                     .build());
         }
         return globalApprovalStatuses;
-
     }
 }

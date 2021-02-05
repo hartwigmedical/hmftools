@@ -10,6 +10,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
@@ -26,6 +27,11 @@ public final class NamedBedFile {
 
     private static final Logger LOGGER = LogManager.getLogger(BEDFileLoader.class);
     private static final String DELIMITER = "\t";
+
+    public static void writeUnnamedBedFile(@NotNull final String filename, @NotNull final List<GenomeRegion> regions) throws IOException {
+        List<String> strings = regions.stream().map(NamedBedFile::asBed).collect(Collectors.toList());
+        Files.write(new File(filename).toPath(), strings);
+    }
 
     public static void writeBedFile(@NotNull final String filename, @NotNull final List<NamedBed> regions) throws IOException {
         List<String> strings = regions.stream().map(NamedBedFile::asBed).collect(Collectors.toList());
@@ -68,6 +74,14 @@ public final class NamedBedFile {
                 .end(feature.getEnd())
                 .name(name == null ? Strings.EMPTY : name)
                 .build();
+    }
+
+    @NotNull
+    private static String asBed(@NotNull final GenomeRegion region) {
+        return new StringJoiner(DELIMITER).add(region.chromosome())
+                .add(String.valueOf(region.start() - 1))
+                .add(String.valueOf(region.end()))
+                .toString();
     }
 
     @NotNull

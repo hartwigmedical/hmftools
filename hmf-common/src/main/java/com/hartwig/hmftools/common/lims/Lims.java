@@ -26,6 +26,10 @@ public class Lims {
     public static final String PURITY_NOT_RELIABLE_STRING = "below detection threshold";
 
     @NotNull
+    private final LimsCohortModel limsCohortModel;
+    @NotNull
+    private final HospitalModel hospitalModel;
+    @NotNull
     private final Map<String, LimsJsonSampleData> dataPerSampleBarcode;
     @NotNull
     private final Map<String, LimsJsonSubmissionData> dataPerSubmission;
@@ -34,31 +38,27 @@ public class Lims {
     @NotNull
     private final Map<String, LocalDate> preLimsArrivalDatesPerSampleId;
     @NotNull
-    private final Set<String> samplesIdsWithoutSamplingDate;
+    private final Set<String> samplesWithoutSamplingDate;
+    @NotNull
+    private final Set<String> patientsWithoutCuratedPrimaryTumor;
     @NotNull
     private final Set<String> blacklistedPatients;
-    @NotNull
-    private final Set<String> blacklistedPatientsForCurationTumorLocations;
-    @NotNull
-    private final HospitalModel hospitalModel;
-    @NotNull
-    private final LimsCohortModel limsCohortModel;
 
-    public Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSampleBarcode,
+    public Lims(@NotNull final LimsCohortModel limsCohortModel, @NotNull final HospitalModel hospitalModel,
+            @NotNull final Map<String, LimsJsonSampleData> dataPerSampleBarcode,
             @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission,
             @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode,
-            @NotNull final Map<String, LocalDate> preLimsArrivalDatesPerSampleId, @NotNull final Set<String> samplesIdsWithoutSamplingDate,
-            @NotNull final Set<String> blacklistedPatients, @NotNull final Set<String> blacklistedPatientsForCurationTumorLocations,
-            @NotNull final HospitalModel hospitalModel, @NotNull final LimsCohortModel limsCohortModel) {
+            @NotNull final Map<String, LocalDate> preLimsArrivalDatesPerSampleId, @NotNull final Set<String> samplesWithoutSamplingDate,
+            @NotNull final Set<String> patientsWithoutCuratedPrimaryTumor, @NotNull final Set<String> blacklistedPatients) {
+        this.limsCohortModel = limsCohortModel;
+        this.hospitalModel = hospitalModel;
         this.dataPerSampleBarcode = dataPerSampleBarcode;
         this.dataPerSubmission = dataPerSubmission;
         this.shallowSeqPerSampleBarcode = shallowSeqPerSampleBarcode;
         this.preLimsArrivalDatesPerSampleId = preLimsArrivalDatesPerSampleId;
-        this.samplesIdsWithoutSamplingDate = samplesIdsWithoutSamplingDate;
+        this.samplesWithoutSamplingDate = samplesWithoutSamplingDate;
+        this.patientsWithoutCuratedPrimaryTumor = patientsWithoutCuratedPrimaryTumor;
         this.blacklistedPatients = blacklistedPatients;
-        this.blacklistedPatientsForCurationTumorLocations = blacklistedPatientsForCurationTumorLocations;
-        this.hospitalModel = hospitalModel;
-        this.limsCohortModel = limsCohortModel;
     }
 
     public int sampleBarcodeCount() {
@@ -129,15 +129,15 @@ public class Lims {
     }
 
     public boolean confirmedToHaveNoSamplingDate(@NotNull String sampleId) {
-        return samplesIdsWithoutSamplingDate.contains(sampleId);
+        return samplesWithoutSamplingDate.contains(sampleId);
     }
 
     public boolean isBlacklisted(@NotNull String patientId) {
         return blacklistedPatients.contains(patientId);
     }
 
-    public boolean isBlacklistedForCurationTumorLocations(@NotNull String patientId) {
-        return blacklistedPatientsForCurationTumorLocations.contains(patientId);
+    public boolean needsNoCuratedPrimaryTumor(@NotNull String patientId) {
+        return patientsWithoutCuratedPrimaryTumor.contains(patientId);
     }
 
     @NotNull

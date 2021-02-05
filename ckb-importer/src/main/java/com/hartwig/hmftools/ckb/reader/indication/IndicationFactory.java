@@ -43,7 +43,7 @@ public class IndicationFactory {
 
     @NotNull
     public static List<Indication> readingIndication(@NotNull String indicationDir) throws IOException {
-        LOGGER.info("Start reading indications");
+        LOGGER.info("Start reading indication dir");
 
         List<Indication> indications = Lists.newArrayList();
         File[] filesIndications = new File(indicationDir).listFiles();
@@ -77,13 +77,13 @@ public class IndicationFactory {
                 reader.close();
             }
         }
-        LOGGER.info("Finished reading indications");
+        LOGGER.info("Finished reading indication dir");
 
         return indications;
     }
 
     @NotNull
-    public static List<EvidenceInfo> extractEvidence(@NotNull JsonArray jsonArray) {
+    private static List<EvidenceInfo> extractEvidence(@NotNull JsonArray jsonArray) {
         List<EvidenceInfo> evidences = Lists.newArrayList();
         JsonDatamodelChecker indicationEvidenceChecker = IndicationDataModelChecker.indicationEvidenceObjectChecker();
 
@@ -109,7 +109,7 @@ public class IndicationFactory {
     }
 
     @NotNull
-    public static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
+    private static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker indicationEvidenceMolecularProfileChecker = IndicationDataModelChecker.indicationEvidenceMolecularProfileObjectChecker();
         indicationEvidenceMolecularProfileChecker.check(jsonObject);
 
@@ -120,7 +120,7 @@ public class IndicationFactory {
     }
 
     @NotNull
-    public static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
+    private static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker indicationEvidenceTherapyChecker = IndicationDataModelChecker.indicationEvidenceTherapyObjectChecker();
         indicationEvidenceTherapyChecker.check(jsonObject);
 
@@ -132,7 +132,7 @@ public class IndicationFactory {
     }
 
     @NotNull
-    public static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
+    private static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker indicationEvidenceIndicationChecker = IndicationDataModelChecker.indicationEvidenceIndicationObjectChecker();
         indicationEvidenceIndicationChecker.check(jsonObject);
 
@@ -144,7 +144,7 @@ public class IndicationFactory {
     }
 
     @NotNull
-    public static List<ReferenceInfo> extractReference(@NotNull JsonArray jsonArray) {
+    private static List<ReferenceInfo> extractReference(@NotNull JsonArray jsonArray) {
         List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker indicationEvidenceReferenceChecker = IndicationDataModelChecker.indicationEvidenceReferenceObjectChecker();
 
@@ -163,7 +163,7 @@ public class IndicationFactory {
     }
 
     @NotNull
-    public static List<ClinicalTrialInfo> extractClinicalTrials(@NotNull JsonArray jsonArray) {
+    private static List<ClinicalTrialInfo> extractClinicalTrials(@NotNull JsonArray jsonArray) {
         List<ClinicalTrialInfo> clinicalTrials = Lists.newArrayList();
         JsonDatamodelChecker indicationClinicalTrialChecker = IndicationDataModelChecker.indicationClinicaltrialObjectChecker();
 
@@ -183,7 +183,7 @@ public class IndicationFactory {
     }
 
     @NotNull
-    public static List<TherapyInfo> extractTherapyList(@NotNull JsonArray jsonArray) {
+    private static List<TherapyInfo> extractTherapyList(@NotNull JsonArray jsonArray) {
         List<TherapyInfo> therapies = Lists.newArrayList();
         JsonDatamodelChecker indicationClinicalTrialTherapiesChecker = IndicationDataModelChecker.indicationEvidenceTherapyObjectChecker();
 
@@ -198,6 +198,5 @@ public class IndicationFactory {
                     .build());
         }
         return therapies;
-
     }
 }
