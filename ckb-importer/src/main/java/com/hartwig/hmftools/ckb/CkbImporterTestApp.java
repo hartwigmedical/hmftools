@@ -76,7 +76,7 @@ public class CkbImporterTestApp {
     @NotNull
     private static CkbEntry readJsonData(@NotNull String ckbPath) throws IOException, ParseException {
 
-//        List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
+        List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
      //  List<Drug> drugs = DrugFactory.readingDrug(ckbPath + DRUGS);
      //   List<DrugClass> drugClasses = DrugClassFactory.readingDrugClass(ckbPath + DRUG_CLASSES);
 //        List<Gene> genes = GeneFactory.readingGene(ckbPath + GENES);
@@ -85,7 +85,7 @@ public class CkbImporterTestApp {
 //        List<Indication> indications = IndicationFactory.readingIndication(ckbPath + INDICATIONS);
 //        List<MolecularProfile> molecularProfiles = MolecularprofileFactory.readingMolecularprofile(ckbPath + MOLECULAR_PROFILES);
 //        List<Reference> references = ReferenceFactory.readingReference(ckbPath + REFERENCES);
-        List<Therapy> therapies = TherapyFactory.readingTherapy(ckbPath + THERAPIES);
+     //   List<Therapy> therapies = TherapyFactory.readingTherapy(ckbPath + THERAPIES);
       //  List<TreatmentApproach> treatmentApproaches = TreatmentApproachFactory.readingTreatmentApproch(ckbPath + TREATMENT_APPROACHES);
    //     List<Variant> variants = VariantFactory.readingVariant(ckbPath + VARIANTS);
 
