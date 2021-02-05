@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.read
 
 import com.hartwig.hmftools.common.genome.bed.NamedBed
 import com.hartwig.hmftools.common.genome.region.*
+import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory
 import com.hartwig.hmftools.lilac.sam.SAMSlicer
 import htsjdk.samtools.AlignmentBlock
 import htsjdk.samtools.SAMRecord
@@ -13,7 +14,7 @@ import java.util.function.Consumer
 import kotlin.math.max
 import kotlin.math.min
 
-class SAMRecordReader(maxDistance: Int, private val refGenome: String, private val transcripts: List<HmfTranscriptRegion>) {
+class SAMRecordReader(maxDistance: Int, private val refGenome: String, private val transcripts: List<HmfTranscriptRegion>, private val factory: NucleotideFragmentFactory) {
     private val codingRegions = transcripts.map { GenomeRegions.create(it.chromosome(), it.codingStart() - maxDistance, it.codingEnd() + maxDistance) }
 
     companion object {
@@ -52,7 +53,7 @@ class SAMRecordReader(maxDistance: Int, private val refGenome: String, private v
         }
     }
 
-    private fun realign(gene: String, hlaCodingRegionOffset: Int, region: GenomeRegion, reverseStrand: Boolean, bamFileName: String): List<SAMRecordRead> {
+    private fun realign(gene: String, hlaCodingRegionOffset: Int, region: NamedBed, reverseStrand: Boolean, bamFileName: String): List<SAMRecordRead> {
         val slicer = SAMSlicer(1)
         val result = mutableListOf<SAMRecordRead>()
         samReaderFactory().open(File(bamFileName)).use { samReader ->
@@ -60,6 +61,8 @@ class SAMRecordReader(maxDistance: Int, private val refGenome: String, private v
             val consumer = Consumer<SAMRecord> { samRecord ->
 
                 if (samRecord.bothEndsinRangeOfCodingTranscripts()) {
+//                    factory.doStuff(samRecord, reverseStrand, hlaCodingRegionOffset, region)
+
                     for (alignmentBlock in samRecord.getAlignmentBlocksWithSoftClips()) {
                         val alignmentStart = alignmentBlock.referenceStart
                         val alignmentEnd = alignmentStart + alignmentBlock.length - 1
