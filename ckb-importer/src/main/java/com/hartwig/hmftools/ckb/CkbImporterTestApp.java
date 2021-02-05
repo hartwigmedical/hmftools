@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.text.ParseException;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.ImmutableCkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
@@ -75,31 +76,31 @@ public class CkbImporterTestApp {
     @NotNull
     private static CkbEntry readJsonData(@NotNull String ckbPath) throws IOException, ParseException {
 
-        List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
-        List<Drug> drugs = DrugFactory.readingDrug(ckbPath + DRUGS);
-        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClass(ckbPath + DRUG_CLASSES);
-        List<Gene> genes = GeneFactory.readingGene(ckbPath + GENES);
-        List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses =
-                GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
-        List<Indication> indications = IndicationFactory.readingIndication(ckbPath + INDICATIONS);
-        List<MolecularProfile> molecularProfiles = MolecularprofileFactory.readingMolecularprofile(ckbPath + MOLECULAR_PROFILES);
-        List<Reference> references = ReferenceFactory.readingReference(ckbPath + REFERENCES);
-        List<Therapy> therapies = TherapyFactory.readingTherapy(ckbPath + THERAPIES);
-        List<TreatmentApproach> treatmentApproaches = TreatmentApproachFactory.readingTreatmentApproch(ckbPath + TREATMENT_APPROACHES);
-        List<Variant> variants = VariantFactory.readingVariant(ckbPath + VARIANTS);
+//        List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbPath + CLINICAL_TRIALS);
+       List<Drug> drugs = DrugFactory.readingDrug(ckbPath + DRUGS);
+     //   List<DrugClass> drugClasses = DrugClassFactory.readingDrugClass(ckbPath + DRUG_CLASSES);
+//        List<Gene> genes = GeneFactory.readingGene(ckbPath + GENES);
+//        List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses =
+//                GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(ckbPath + GLOBAL_THERAPY_APPROVAL_STATUSES);
+//        List<Indication> indications = IndicationFactory.readingIndication(ckbPath + INDICATIONS);
+//        List<MolecularProfile> molecularProfiles = MolecularprofileFactory.readingMolecularprofile(ckbPath + MOLECULAR_PROFILES);
+//        List<Reference> references = ReferenceFactory.readingReference(ckbPath + REFERENCES);
+//        List<Therapy> therapies = TherapyFactory.readingTherapy(ckbPath + THERAPIES);
+      //  List<TreatmentApproach> treatmentApproaches = TreatmentApproachFactory.readingTreatmentApproch(ckbPath + TREATMENT_APPROACHES);
+   //     List<Variant> variants = VariantFactory.readingVariant(ckbPath + VARIANTS);
 
         return ImmutableCkbEntry.builder()
-                .clinicalTrial(clinicalTrials)
-                .drug(drugs)
-                .drugClass(drugClasses)
-                .gene(genes)
-                .globalTherapyApprovalStatus(globalTherapyApprovalStatuses)
-                .indication(indications)
-                .molecularProfile(molecularProfiles)
-                .reference(references)
-                .therapy(therapies)
-                .treatmentApproach(treatmentApproaches)
-                .variant(variants)
+                .clinicalTrial(Lists.newArrayList())
+                .drug(Lists.newArrayList())
+                .drugClass(Lists.newArrayList())
+                .gene(Lists.newArrayList())
+                .globalTherapyApprovalStatus(Lists.newArrayList())
+                .indication(Lists.newArrayList())
+                .molecularProfile(Lists.newArrayList())
+                .reference(Lists.newArrayList())
+                .therapy(Lists.newArrayList())
+                .treatmentApproach(Lists.newArrayList())
+                .variant(Lists.newArrayList())
                 .build();
     }
 
