@@ -40,6 +40,7 @@ import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohortConfig;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortMatrix;
+import com.hartwig.hmftools.isofox.novel.cohort.RecurrentVariantFinder;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -244,6 +245,7 @@ public class CohortConfig
         ExpressionCohortConfig.addCmdLineOptions(options);
         SpliceSiteCache.addCmdLineOptions(options);
         AltSjCohortMatrix.addCmdLineOptions(options);
+        RecurrentVariantFinder.addCmdLineOptions(options);
 
         addDatabaseCmdLineArgs(options);
 

@@ -27,6 +27,7 @@ import com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortMatrix;
+import com.hartwig.hmftools.isofox.novel.cohort.RecurrentVariantFinder;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher;
 import com.hartwig.hmftools.isofox.results.SummaryStats;
@@ -124,6 +125,13 @@ public class CohortAnalyser
                 {
                     SpliceSiteCache spliceSiteCache = new SpliceSiteCache(mConfig, mCmdLineArgs);
                     spliceSiteCache.createPercentiles();
+                    break;
+                }
+
+                case RECURRENT_SPLICE_VARIANTS:
+                {
+                    RecurrentVariantFinder recurrentVariantFinder = new RecurrentVariantFinder(mConfig, mCmdLineArgs);
+                    recurrentVariantFinder.processCohortSomaticVariants();
                     break;
                 }
 

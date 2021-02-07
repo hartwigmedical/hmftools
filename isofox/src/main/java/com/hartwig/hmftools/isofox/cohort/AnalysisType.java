@@ -18,6 +18,7 @@ public enum AnalysisType
     ALT_SPLICE_JUNCTION, // combine and analyse alternate splice junctions for a cohort
     ALT_SPLICE_JUNCTION_MATRIX, // generates a for a cohort's alt-SJs
     SPLICE_VARIANT_MATCHING, // match alternate splice junctions with (candidate-splicing) somatic variants
+    RECURRENT_SPLICE_VARIANTS,
     FUSION, // process fusions for a cohort - filter passing fusions, form a cohort file, compare with external fusions
     PASSING_FUSION,
     RETAINED_INTRON,
