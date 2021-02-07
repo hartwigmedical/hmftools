@@ -6,9 +6,15 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.ACCEPTOR;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
 
+import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.variant.VariantType;
 
@@ -22,13 +28,15 @@ public class SpliceVariant
     public final String Alt;
     public final VariantType Type;
     public final String CodingEffect;
-    public final String HgvsCodingImpact;
+    public final String CodingImpact; // HGVS canonical coding impact
     public final String TriNucContext;
     public final int LocalPhaseSet;
 
+    public List<String> SampleIds;
+
     public SpliceVariant(
             final String geneName, final String chromosome, int position, final VariantType type,
-            final String ref, final String alt, final String codingEffect, final String hgvsCodingImpact,
+            final String ref, final String alt, final String codingEffect, final String codingImpact,
             final String triNucContext, int localPhaseSet)
     {
         GeneName = geneName;
@@ -37,7 +45,7 @@ public class SpliceVariant
         Ref = ref;
         Alt = alt;
         Type = type;
-        HgvsCodingImpact = hgvsCodingImpact;
+        CodingImpact = codingImpact;
         TriNucContext = triNucContext;
         CodingEffect = codingEffect;
         LocalPhaseSet = localPhaseSet;
@@ -53,10 +61,59 @@ public class SpliceVariant
                 items[fieldIndexMap.get("Ref")],
                 items[fieldIndexMap.get("Alt")],
                 items[fieldIndexMap.get("CodingEffect")],
-                items[fieldIndexMap.get("HgvsImpact")],
+                items[fieldIndexMap.get("CodingImpact")],
                 items[fieldIndexMap.get("TriNucContext")],
                 fieldIndexMap.containsKey("LocalPhaseSet") ? Integer.parseInt(items[fieldIndexMap.get("LocalPhaseSet")]) : 0);
 
+    }
+
+    public static SpliceVariant fromCsv(final String[] items)
+    {
+        int index = 0;
+        return new SpliceVariant(
+                items[index++],
+                items[index++],
+                Integer.parseInt(items[index++]),
+                VariantType.valueOf(items[index++]),
+                items[index],
+                items[index],
+                items[index],
+                items[index],
+                items[index],
+                Integer.parseInt(items[index++]));
+
+    }
+
+    public static String header()
+    {
+        StringJoiner sj = new StringJoiner(DELIMITER);
+        sj.add(FLD_GENE_NAME);
+        sj.add(FLD_CHROMOSOME);
+        sj.add("Position");
+        sj.add("Type");
+        sj.add("Ref");
+        sj.add("Alt");
+        sj.add("CodingEffect");
+        sj.add("CodingImpact");
+        sj.add("TriNucContext");
+        sj.add("LocalPhaseSet");
+        return sj.toString();
+    }
+
+    public String toCsv()
+    {
+        StringJoiner sj = new StringJoiner(DELIMITER);
+        sj.add(GeneName);
+        sj.add(Chromosome);
+        sj.add(String.valueOf(Position));
+        sj.add(String.valueOf(Type));
+        sj.add(Ref);
+        sj.add(Alt);
+        sj.add(CodingEffect);
+        sj.add(CodingImpact);
+        sj.add(TriNucContext);
+        sj.add(String.valueOf(LocalPhaseSet));
+        return sj.toString();
     }
 
     public String toString()
@@ -166,5 +223,33 @@ public class SpliceVariant
         }
 
         return baseContext;
+    }
+
+    public static String formKey(final String chromsome, final int position, final String ref, final String alt)
+    {
+        return String.format("%s-%d-%s-%s", chromsome, position, ref, alt);
+    }
+
+    public String key() { return formKey(Chromosome, Position, Ref, Alt); }
+
+    public boolean matchesLocation(final String chromosome, final int position)
+    {
+        return Chromosome.equals(chromosome) && Position == position;
+    }
+
+    public boolean matches(final String chromosome, final int position, final String ref, final String alt)
+    {
+        return matchesLocation(chromosome, position) && Ref.equals(ref) && Alt.equals(alt);
+    }
+
+    public void addSampleId(final String sampleId)
+    {
+        if(SampleIds == null)
+        {
+            SampleIds = Lists.newArrayList();
+        }
+
+        if(!SampleIds.contains(sampleId))
+            SampleIds.add(sampleId);
     }
 }

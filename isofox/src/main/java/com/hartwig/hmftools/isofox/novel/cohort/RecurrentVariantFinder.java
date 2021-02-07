@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
 import org.apache.commons.cli.CommandLine;
@@ -85,10 +86,16 @@ public class RecurrentVariantFinder
             }
 
             int sampleIdIndex = 0;
+            int geneIndex = 1;
             int chrIndex = 2;
             int posIndex = 3;
+            int typeIndex = 4;
             int refIndex = 5;
             int altIndex = 6;
+            int effectIndex = 7;
+            int proteinIndex = 8;
+            int contextIndex = 9;
+            int lpsIndex = 10;
 
             //sampleId	gene	chromosome	position	type	ref	alt	canonicalEffect	canonicalHgvsCodingImpact	trinucleotideContext	localPhaseSet
             if(!(fieldNames[sampleIdIndex].equalsIgnoreCase("sampleId")
@@ -100,7 +107,7 @@ public class RecurrentVariantFinder
                 return;
             }
 
-            List<RecurrentVariant> chrPosVariants = Lists.newArrayList(); // for the current chromosome and position
+            List<SpliceVariant> chrPosVariants = Lists.newArrayList(); // for the current chromosome and position
             int processed = 0;
             int recurrent = 0;
             int nextLog = LOG_NEXT;
@@ -119,9 +126,9 @@ public class RecurrentVariantFinder
                 final String ref = items[refIndex];
                 final String alt = items[altIndex];
 
-                if(chrPosVariants.isEmpty() || !(chrPosVariants.get(0).Chromsome.equals(chromosome) && chrPosVariants.get(0).Position == position))
+                if(chrPosVariants.isEmpty() || !(chrPosVariants.get(0).matchesLocation(chromosome, position)))
                 {
-                    for(final RecurrentVariant variant : chrPosVariants)
+                    for(final SpliceVariant variant : chrPosVariants)
                     {
                         if(variant.SampleIds.size() > 1)
                         {
@@ -134,16 +141,21 @@ public class RecurrentVariantFinder
                 }
 
                 // add sample to any matching variant, otherwise register a new one at this location
-                RecurrentVariant currentVariant = chrPosVariants.stream()
+                SpliceVariant currentVariant = chrPosVariants.stream()
                         .filter(x -> x.matches(chromosome, position, ref, alt)).findFirst().orElse(null);
 
                 if(currentVariant == null)
                 {
-                    currentVariant = new RecurrentVariant(chromosome, position, ref, alt);
+                    String localPhaseSet = items[lpsIndex];
+                    currentVariant = new SpliceVariant(
+                            items[geneIndex], chromosome, position, VariantType.valueOf(items[typeIndex]), ref, alt,
+                            items[effectIndex], items[proteinIndex], items[contextIndex],
+                            localPhaseSet.equals("NULL") ? -1 : Integer.parseInt(localPhaseSet));
+
                     chrPosVariants.add(currentVariant);
                 }
 
-                currentVariant.SampleIds.add(sampleId);
+                currentVariant.addSampleId(sampleId);
 
                 ++processed;
 
@@ -154,7 +166,7 @@ public class RecurrentVariantFinder
                 }
             }
 
-            for(final RecurrentVariant variant : chrPosVariants)
+            for(final SpliceVariant variant : chrPosVariants)
             {
                 if(variant.SampleIds.size() > 1)
                 {
@@ -179,7 +191,7 @@ public class RecurrentVariantFinder
             final String outputFileName = mConfig.formCohortFilename("recurrent_variants.csv");
             mWriter = createBufferedWriter(outputFileName, false);
 
-            mWriter.write("SampleId,Chromosome,Position,Ref,Alt");
+            mWriter.write(String.format("SampleId,%s", SpliceVariant.header()));
             mWriter.newLine();
         }
         catch(IOException e)
@@ -188,18 +200,18 @@ public class RecurrentVariantFinder
         }
     }
 
-    private void writeRecurrentVariant(final RecurrentVariant variant)
+    private void writeRecurrentVariant(final SpliceVariant variant)
     {
         if(variant.SampleIds.size() < 2)
             return;
 
-        ISF_LOGGER.debug("found recurrent somatic variant({}) samples({})", variant.Key, variant.SampleIds.size());
+        ISF_LOGGER.debug("found recurrent somatic variant({}) samples({})", variant.key(), variant.SampleIds.size());
 
         try
         {
             for(String sampleId : variant.SampleIds)
             {
-                mWriter.write(String.format("%s,%s,%d,%s,%s", sampleId, variant.Chromsome, variant.Position, variant.Ref, variant.Alt));
+                mWriter.write(String.format("%s,%s", sampleId, variant.toCsv()));
                 mWriter.newLine();
             }
         }

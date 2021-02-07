@@ -138,7 +138,7 @@ public class SpliceVariantCache
         {
             mSomaticWriter.write(String.format("%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%d",
                     sampleId, variant.GeneName, variant.Chromosome, variant.Position, variant.Type,
-                    variant.CodingEffect, variant.Ref, variant.Alt, variant.HgvsCodingImpact,
+                    variant.CodingEffect, variant.Ref, variant.Alt, variant.CodingImpact,
                     variant.TriNucContext, variant.LocalPhaseSet));
 
             mSomaticWriter.newLine();

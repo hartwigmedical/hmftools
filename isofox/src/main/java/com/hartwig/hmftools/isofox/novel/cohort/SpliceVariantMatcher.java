@@ -204,6 +204,12 @@ public class SpliceVariantMatcher
                     continue;
             }
 
+            // filter by type if matching is restricted
+            if(mMatchTypes.contains(NOVEL))
+            {
+
+            }
+
             candidateAltSJs.add(altSJ);
         }
 
@@ -574,7 +580,7 @@ public class SpliceVariantMatcher
 
             mWriter.write(String.format(",%d,%s,%s,%s,%s,%s,%s,%d,%s,%d,%d",
                     variant.Position, variant.Type, variant.CodingEffect, variant.Ref, variant.Alt,
-                    variant.HgvsCodingImpact, variant.TriNucContext, variant.LocalPhaseSet, accDonType,
+                    variant.CodingImpact, variant.TriNucContext, variant.LocalPhaseSet, accDonType,
                     exonBaseDistance, exonPosition != null ? exonPosition : -1));
 
             int sampleTotalFrags = 0;
