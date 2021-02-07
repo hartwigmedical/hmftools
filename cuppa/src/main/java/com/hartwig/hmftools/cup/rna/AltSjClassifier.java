@@ -6,6 +6,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.DEFAULT_MATRIX_DELIM;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
@@ -20,6 +21,7 @@ import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -86,29 +88,25 @@ public class AltSjClassifier implements CuppaClassifier
         mSampleIndexMap = Maps.newHashMap();
         mSampleFragCounts = null;
 
-        mFragCountLogValue = Double.parseDouble(cmd.getOptionValue(FRAG_COUNT_LOG_VALUE, "-1"));
+        if(cmd.hasOption(FRAG_COUNT_LOG_VALUE))
+        {
+            mFragCountLogValue = max(Double.parseDouble(cmd.getOptionValue(FRAG_COUNT_LOG_VALUE)), 1.0);
+        }
+        else
+        {
+            mFragCountLogValue = 0; // not applied
+        }
 
         if(config.RefAltSjPrevFile.isEmpty())
             return;
 
         final List<String> ignoreFields = Lists.newArrayList("GeneId", "Chromosome", "PosStart", "PosEnd");
-        loadRefAltSjIndices(config.RefAltSjPrevFile);
-        mRefCancerTypeMatrix = loadMatrixDataFile(config.RefAltSjPrevFile, mRefCancerTypes, ignoreFields);
-
-        if(mRefCancerTypeMatrix ==  null)
-        {
-            mIsValid = false;
-            return;
-        }
-
-        // convert to log values if required
-        convertMatrixFragCounts(mRefCancerTypeMatrix);
-        mRefCancerTypeMatrix.cacheTranspose();
+        loadRefFragCounts(ignoreFields);
 
         // load a cohort sample frag counts matrix if available
         if(cmd.hasOption(SAMPLE_ALT_SJ_FILE))
         {
-            mSampleFragCounts = loadMatrixDataFile(cmd.getOptionValue(SAMPLE_ALT_SJ_FILE), mSampleIndexMap, ignoreFields);
+            loadSampleMatrixData(cmd.getOptionValue(SAMPLE_ALT_SJ_FILE), ignoreFields);
 
             if(mSampleFragCounts ==  null)
             {
@@ -116,10 +114,7 @@ public class AltSjClassifier implements CuppaClassifier
                 return;
             }
 
-            convertMatrixFragCounts(mSampleFragCounts);
-            mSampleFragCounts.cacheTranspose();
-
-            if(mSampleFragCounts.Rows != mRefCancerTypeMatrix.Rows)
+            if(mSampleFragCounts.Cols != mRefCancerTypeMatrix.Rows)
             {
                 CUP_LOGGER.error("alt-SJ matrix mismatch between ref({}) and cohort({})",
                         mRefCancerTypeMatrix.Rows, mSampleFragCounts.Rows);
@@ -176,7 +171,7 @@ public class AltSjClassifier implements CuppaClassifier
 
         final Map<String,Double> cancerCssTotals = Maps.newHashMap();
 
-        Integer sampleIndex = mSampleFragCounts.Cols > 1 ? mSampleIndexMap.get(sample.Id) : 0;
+        Integer sampleIndex = mSampleFragCounts.Rows > 1 ? mSampleIndexMap.get(sample.Id) : 0;
 
         if(sampleIndex == null)
         {
@@ -184,7 +179,7 @@ public class AltSjClassifier implements CuppaClassifier
             return;
         }
 
-        final double[] sampleFragCounts = mSampleFragCounts.getCol(sampleIndex);
+        final double[] sampleFragCounts = mSampleFragCounts.getRow(sampleIndex);
 
         for(int i = 0; i < refCancerCount; ++i)
         {
@@ -197,9 +192,10 @@ public class AltSjClassifier implements CuppaClassifier
                 continue;
 
             boolean matchesCancerType = sample.cancerType().equals(refCancerType);
+            int cancerSampleCount = mSampleDataCache.getCancerSampleCount(refCancerType);
 
             final double[] refAsjFragCounts = sample.isRefSample() && matchesCancerType ?
-                    adjustRefCounts(mRefCancerTypeMatrix.getCol(i), sampleFragCounts) : mRefCancerTypeMatrix.getCol(i);
+                    adjustRefCounts(mRefCancerTypeMatrix.getCol(i), sampleFragCounts, cancerSampleCount) : mRefCancerTypeMatrix.getCol(i);
 
             // skip any alt-SJ not present in the sample, but not the reverse
             double css = calcCosineSim(refAsjFragCounts, sampleFragCounts, false, true);
@@ -247,14 +243,14 @@ public class AltSjClassifier implements CuppaClassifier
                 sample.Id, CLASSIFIER, LIKELIHOOD, ALT_SJ.toString(), String.format("%.4g", totalCss), cancerCssTotals));
     }
 
-    private double[] adjustRefCounts(final double[] refCounts, final double[] sampleCounts)
+    private double[] adjustRefCounts(final double[] refCounts, final double[] sampleCounts, int cancerSampleCount)
     {
         // remove the sample's counts after first de-logging both counts if required
         double[] adjustedCounts = new double[refCounts.length];
 
         for(int b = 0; b < refCounts.length; ++b)
         {
-            if(mFragCountLogValue < 0)
+            if(mFragCountLogValue == 0)
             {
                 adjustedCounts[b] = max(refCounts[b] - sampleCounts[b], 0);
             }
@@ -265,8 +261,9 @@ public class AltSjClassifier implements CuppaClassifier
             else
             {
                 double sampleCount = exp(sampleCounts[b]) - mFragCountLogValue;
-                double refCount = exp(refCounts[b]) - mFragCountLogValue;
-                adjustedCounts[b] = convertFragCount(max(refCount - sampleCount, 0));
+                double actualRefCount = (exp(refCounts[b]) - mFragCountLogValue) * cancerSampleCount;
+                double adjustedRefAvg = max(actualRefCount - sampleCount, 0) / (cancerSampleCount - 1);
+                adjustedCounts[b] = convertFragCount(adjustedRefAvg);
             }
         }
 
@@ -280,25 +277,41 @@ public class AltSjClassifier implements CuppaClassifier
 
     private double convertFragCount(double fragCount)
     {
-        if(mFragCountLogValue < 0)
+        if(mFragCountLogValue < 1)
             return fragCount;
 
-        return fragCount >= 1 ? log(fragCount + mFragCountLogValue) : 0;
+        return log(fragCount + mFragCountLogValue);
     }
 
-    private void convertMatrixFragCounts(final Matrix matrix)
+    private void loadRefFragCounts(final List<String> ignoreFields)
     {
-        if(mFragCountLogValue < 0)
-            return;
+        loadRefAltSjIndices(mConfig.RefAltSjPrevFile);
+        mRefCancerTypeMatrix = loadMatrixDataFile(mConfig.RefAltSjPrevFile, mRefCancerTypes, ignoreFields);
 
-        final double[][] refData = matrix.getData();
-        for(int r = 0; r < matrix.Rows; ++r)
+        if(mRefCancerTypeMatrix ==  null)
         {
-            for(int c = 0; c < matrix.Cols; ++c)
+            mIsValid = false;
+            return;
+        }
+
+        if(mFragCountLogValue > 0)
+        {
+            final double[][] refData = mRefCancerTypeMatrix.getData();
+            for(int c = 0; c < mRefCancerTypeMatrix.Cols; ++c)
             {
-                refData[r][c] = convertFragCount(refData[r][c]);
+                String cancerType = mRefCancerTypes.get(c);
+                double cancerSampleCount = mSampleDataCache.getCancerSampleCount(cancerType);
+
+                for(int r = 0; r < mRefCancerTypeMatrix.Rows; ++r)
+                {
+                    // first calculate the average for the cancer type
+                    double avgFragCount = refData[r][c] / cancerSampleCount;
+                    refData[r][c] = convertFragCount(avgFragCount);
+                }
             }
         }
+
+        mRefCancerTypeMatrix.cacheTranspose();
     }
 
     private boolean loadRefAltSjIndices(final String filename)
@@ -336,6 +349,88 @@ public class AltSjClassifier implements CuppaClassifier
         }
 
         return true;
+    }
+
+    private void loadSampleMatrixData(final String filename, final List<String> ignoreFields)
+    {
+        // load the sample frag counts but transpose the data and apply the log conversion if applicable
+        try
+        {
+            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+
+            // read field names
+            if(fileData.size() <= 1)
+            {
+                CUP_LOGGER.error("empty data CSV file({})", filename);
+                return;
+            }
+
+            final String header = fileData.get(0);
+            final List<String> sampleIds = Lists.newArrayList();
+            sampleIds.addAll(Lists.newArrayList(header.split(DEFAULT_MATRIX_DELIM, -1)));
+            fileData.remove(0);
+
+            List<Integer> ignoreCols = Lists.newArrayList();
+
+            if(ignoreFields != null)
+            {
+                for(int i = 0; i < sampleIds.size(); ++i)
+                {
+                    if(ignoreFields.contains(sampleIds.get(i)))
+                    {
+                        ignoreCols.add(i);
+
+                        if(ignoreCols.size() == ignoreFields.size())
+                            break;
+                    }
+                }
+
+                ignoreFields.forEach(x -> sampleIds.remove(x));
+            }
+
+            for(int i = 0; i < sampleIds.size(); ++i)
+            {
+                mSampleIndexMap.put(sampleIds.get(i), i);
+            }
+
+            int sampleCount = sampleIds.size();
+            int altSjCount = fileData.size();
+            int invalidRowCount = 0;
+
+            mSampleFragCounts = new Matrix(sampleCount, altSjCount);
+            final double[][] matrixData = mSampleFragCounts.getData();
+
+            for(int r = 0; r < altSjCount; ++r)
+            {
+                final String line = fileData.get(r);
+                final String[] items = line.split(DEFAULT_MATRIX_DELIM, -1);
+
+                if(items.length != sampleCount + ignoreCols.size())
+                {
+                    ++invalidRowCount;
+                    continue;
+                }
+
+                int c = 0;
+                for(int i = 0; i < items.length; ++i)
+                {
+                    if(ignoreCols.contains(i))
+                        continue;
+
+                    // data transposed and converted
+                    matrixData[c][r] = convertFragCount(Double.parseDouble(items[i]));
+                    ++c;
+                }
+            }
+
+            CUP_LOGGER.info("loaded matrix(rows={} cols={}) from file({}) {}",
+                    altSjCount, sampleCount, filename, invalidRowCount > 0 ? String.format(", invalidRowCount(%d)", invalidRowCount) : "");
+        }
+        catch (IOException exception)
+        {
+            CUP_LOGGER.error("failed to read matrix data file({}): {}", filename, exception.toString());
+            return;
+        }
     }
 
     private boolean loadSampleAltSJsToArray(final String sampleId)
@@ -382,7 +477,7 @@ public class AltSjClassifier implements CuppaClassifier
                 int fragCount = Integer.parseInt(items[fragCountIndex]);
                 hasRefAltSJs = true;
 
-                sampleFragCounts[matrixIndex][0] = convertFragCount(fragCount);
+                sampleFragCounts[0][matrixIndex] = convertFragCount(fragCount);
             }
 
             return hasRefAltSJs;
