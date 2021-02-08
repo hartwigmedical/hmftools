@@ -7,9 +7,9 @@ import java.io.File
 object HlaSequenceFile {
     val logger = LogManager.getLogger(this::class.java)
 
-    fun readFile(alignment: String): List<HlaSequence> {
+    fun readFile(filename: String): List<HlaSequence> {
         val entries = LinkedHashMap<String, HlaSequence>()
-        for (line in File(alignment).readLines()) {
+        for (line in File(filename).readLines()) {
             val trimmed = line.trim()
 
             if (trimmed.startsWith("*", 1)) {

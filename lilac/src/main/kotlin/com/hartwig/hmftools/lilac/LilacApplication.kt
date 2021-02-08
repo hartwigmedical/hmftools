@@ -3,7 +3,6 @@ package com.hartwig.hmftools.lilac
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier
 import com.hartwig.hmftools.lilac.LilacApplication.Companion.logger
-import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragmentPipeline
 import com.hartwig.hmftools.lilac.candidates.Candidates
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory
@@ -84,9 +83,9 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         logger.info("         minUniqueCoverage = $minConfirmedUniqueCoverage")
 
 
-        val aProteinExonBoundaries = setOf(24, 114, 206, 298, 337, 348, 364, 365)
-        val bProteinExonBoundaries = setOf(24, 114, 206, 298, 337, 348, 362)
-        val cProteinExonBoundaries = setOf(24, 114, 206, 298, 338, 349, 365, 366)
+        val aProteinExonBoundaries = setOf(24, 114, 206, 298, 337, 348, 364)
+        val bProteinExonBoundaries = setOf(24, 114, 206, 298, 337, 348)
+        val cProteinExonBoundaries = setOf(24, 114, 206, 298, 338, 349, 365)
         val allProteinExonBoundaries = (aProteinExonBoundaries + bProteinExonBoundaries + cProteinExonBoundaries)
         val allNucleotideExonBoundaries = allProteinExonBoundaries.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
 
@@ -279,57 +278,16 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
     private fun aminoAcidLoci(inputFilename: String): List<HlaSequenceLoci> {
         val sequences = HlaSequenceFile.readFile(inputFilename)
                 .reduceToFourDigit()
+                .map { if (it.rawSequence.endsWith("X")) it else it.copyWithAdditionalSequence("X") }
 
         return HlaSequenceLoci.create(sequences)
                 .filter { it.sequences.isNotEmpty() }
     }
 
-//    private fun doStuff(inputFilename: String, outputFilename: String): List<HlaSequenceLoci> {
-//        val allowed = listOf(HlaAllele("A*01:01:01:01"), HlaAllele("A*29:126Q"), HlaAllele("A*02:01:01:01"))
-//
-//        val sequences = HlaSequenceFile.readFile(inputFilename).specificProteins();
-//        val sequenceLoci = HlaSequenceLoci.create(sequences)//.filter { it.allele in allowed }
-//        val inserts = sequenceLoci.filter { it.containsInserts() }
-//        val deletes = sequenceLoci.filter { it.containsDeletes() }
-//        val both = sequenceLoci.filter { it.containsDeletes() && it.containsInserts() }
-//
-//        HlaSequenceLociFile.write(outputFilename, sequenceLoci)
-//    }
-
 
     override fun close() {
         executorService.shutdown()
         logger.info("Finished in ${(System.currentTimeMillis() - startTime) / 1000} seconds")
-    }
-
-    private fun filterCandidatesOnNucleotides(minEvidence: Int, candidates: Collection<HlaSequence>, fragments: List<NucleotideFragment>, vararg nucleotides: Int): List<HlaSequence> {
-
-        val reads = fragments
-                .filter { it.containsAllNucleotides(*nucleotides) }
-                .map { it.nucleotides(*nucleotides) }
-                .groupingBy { it }
-                .eachCount()
-                .filter { it.value >= minEvidence }
-                .keys
-                .map { it.toCharArray() }
-
-
-        return candidates.filter { it.consistentWith(nucleotides, reads) }
-
-    }
-
-    private fun filterCandidatesOnExonBoundaryNucleotide(aminoAcidIndex: Int, minEvidence: Int, candidates: Collection<HlaSequence>, aminoAcidFragments: List<AminoAcidFragment>): List<HlaSequence> {
-        val firstBaseCandidates = filterCandidatesOnNucleotides(minEvidence, candidates, aminoAcidFragments, aminoAcidIndex * 3)
-        return filterCandidatesOnNucleotides(minEvidence, firstBaseCandidates, aminoAcidFragments, aminoAcidIndex * 3 + 1, aminoAcidIndex * 3 + 2)
-    }
-
-    private fun filterCandidatesOnExonBoundaries(exonBoundaries: Collection<Int>, minEvidence: Int, candidates: Collection<HlaSequence>, aminoAcidFragments: List<AminoAcidFragment>): List<HlaSequence> {
-        var result = candidates.toList()
-        for (exonBoundary in exonBoundaries) {
-            result = filterCandidatesOnExonBoundaryNucleotide(exonBoundary, minEvidence, result, aminoAcidFragments)
-        }
-
-        return result
     }
 
     private fun List<HlaAllele>.filterWithConfirmedGroups(confirmedGroups: List<HlaAllele>): List<HlaAllele> {

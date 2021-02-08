@@ -22,6 +22,12 @@ object HlaSequenceLociFile {
 
     }
 
+//    private fun boundaryString(boundaries: Collection<Int>, lengths: List<Int>): String {
+//        require(boundaries.isNotEmpty())
+//        val totalRange = (1..boundaries.max()!!)
+//        return totalRange.mapIndexed {index, value}
+//    }
+
     private fun diff(victim: String, reference: String): String {
         return victim
                 .mapIndexed { index, _ -> diff(victim[index], if (index < reference.length) reference[index] else '!') }
