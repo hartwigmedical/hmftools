@@ -272,7 +272,8 @@ public class AltSjClassifier implements CuppaClassifier
         {
             if(mFragCountLogValue == 0)
             {
-                adjustedCounts[b] = max(refCounts[b] - sampleCounts[b], 0);
+                double actualRefCount = refCounts[b] * cancerSampleCount;
+                adjustedCounts[b] = max(actualRefCount - sampleCounts[b], 0) / (cancerSampleCount - 1);
             }
             else if(refCounts[b] == 0 || sampleCounts[b] == 0)
             {
@@ -314,20 +315,18 @@ public class AltSjClassifier implements CuppaClassifier
             return;
         }
 
-        if(mFragCountLogValue > 0)
+        // calculate and use an average frag count per cancer type
+        final double[][] refData = mRefCancerTypeMatrix.getData();
+        for(int c = 0; c < mRefCancerTypeMatrix.Cols; ++c)
         {
-            final double[][] refData = mRefCancerTypeMatrix.getData();
-            for(int c = 0; c < mRefCancerTypeMatrix.Cols; ++c)
-            {
-                String cancerType = mRefCancerTypes.get(c);
-                double cancerSampleCount = mSampleDataCache.getCancerSampleCount(cancerType);
+            String cancerType = mRefCancerTypes.get(c);
+            double cancerSampleCount = mSampleDataCache.getCancerSampleCount(cancerType);
 
-                for(int r = 0; r < mRefCancerTypeMatrix.Rows; ++r)
-                {
-                    // first calculate the average for the cancer type
-                    double avgFragCount = refData[r][c] / cancerSampleCount;
-                    refData[r][c] = convertFragCount(avgFragCount);
-                }
+            for(int r = 0; r < mRefCancerTypeMatrix.Rows; ++r)
+            {
+                // first calculate the average for the cancer type
+                double avgFragCount = refData[r][c] / cancerSampleCount;
+                refData[r][c] = convertFragCount(avgFragCount);
             }
         }
 
@@ -504,7 +503,7 @@ public class AltSjClassifier implements CuppaClassifier
         }
         catch(IOException e)
         {
-            CUP_LOGGER.error("failed to load alt splice junction file({}): {}", filename.toString(), e.toString());
+            CUP_LOGGER.error("failed to load alt splice junction file({}): {}", filename, e.toString());
             return false;
         }
     }
