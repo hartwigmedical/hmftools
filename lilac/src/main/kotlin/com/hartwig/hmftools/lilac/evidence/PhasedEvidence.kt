@@ -1,17 +1,18 @@
 package com.hartwig.hmftools.lilac.evidence
 
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 import java.util.*
 
 
 data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<String, Int>) : Comparable<PhasedEvidence> {
 
-//    fun inconsistentEvidence(candidates: Collection<HlaSequenceLoci>): PhasedEvidence {
-//        fun consistentWithAny(sequence: CharArray): Boolean {
-//            return candidates.any { it.consistentWith(sequence, aminoAcidIndices) }
-//        }
-//        return PhasedEvidence(aminoAcidIndices, evidence.filter { !consistentWithAny(it.key.toCharArray()) })
-//    }
+    fun inconsistentEvidence(candidates: Collection<HlaSequenceLoci>): PhasedEvidence {
+        fun consistentWithAny(sequence: String): Boolean {
+            return candidates.any { it.consistentWith(sequence, *aminoAcidIndices) }
+        }
+        return PhasedEvidence(aminoAcidIndices, evidence.filter { !consistentWithAny(it.key) })
+    }
 
     fun unambiguousHeadIndices(): IntArray {
         return aminoAcidIndices.filterIndexed { index, _ -> index < unambiguousHeadLength() }.toIntArray()

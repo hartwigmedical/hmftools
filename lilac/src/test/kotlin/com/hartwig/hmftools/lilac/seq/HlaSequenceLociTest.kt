@@ -46,7 +46,7 @@ class HlaSequenceLociTest {
         assertEquals(".",  victim.sequence(0))
         assertEquals(".",  victim.sequence(5))
         assertEquals(".",  victim.sequence(11))
-        assertEquals("PRTSNVEPR", victim.sequence(0, 11))
+        assertEquals(".PRTS.NVEPR.", victim.sequence(0, 11))
 
         assertTrue(victim.containsIndels())
         assertFalse(victim.containsInserts())

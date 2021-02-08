@@ -124,7 +124,7 @@ data class HlaSequenceLoci(val allele: HlaAllele, val sequences: List<String>) {
         fun create(allele: HlaAllele, sequence: String, reference: String): HlaSequenceLoci {
             val sequences = mutableListOf<String>()
 
-            fun isBaseIgnored(i: Int) = (sequence[i] == '.' && reference[i] == '.') || (sequence[i] == '|' && reference[i] == '|')
+            fun isBaseIgnored(i: Int) = (sequence[i] == '.' && reference[i] == '.') || (sequence[i] == '|')
             fun isBaseInserted(i: Int) = sequence[i] != '.' && (i >= reference.length || reference[i] == '.')
             var insLength = 0
 

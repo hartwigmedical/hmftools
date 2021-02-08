@@ -40,7 +40,11 @@ class SequenceCount(private val minCount: Int, val length: Int) {
 
 
     private fun increment(index: Int, aminoAcid: String) {
-        count[index].compute(aminoAcid) { _, u -> (u ?: 0) + 1 }
+        try {
+            count[index].compute(aminoAcid) { _, u -> (u ?: 0) + 1 }
+        } catch (e: Exception) {
+            throw e
+        }
     }
 
     fun heterozygousLoci(): List<Int> {

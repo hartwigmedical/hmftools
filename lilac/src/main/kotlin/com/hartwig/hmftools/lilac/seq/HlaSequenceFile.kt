@@ -40,7 +40,7 @@ object HlaSequenceFile {
         return listOf(template) + this.filter { it.allele != template.allele }.map { it.deflate(template.sequence) }
     }
 
-    fun List<HlaSequence>.specificProteins(): List<HlaSequence> {
+    fun List<HlaSequence>.reduceToFourDigit(): List<HlaSequence> {
         return reduce { it.asFourDigit() }
     }
 

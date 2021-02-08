@@ -9,16 +9,16 @@ import htsjdk.samtools.SAMRecord
 import kotlin.math.max
 import kotlin.math.min
 
-class JonJon : CigarHandler {
-
-}
-
 data class SAMCodingRecord(
         val softClippedStart: Int, val softClippedEnd: Int,
         val deleted: Int, val inserted: Int,
         val positionStart: Int, val positionEnd: Int,
         val readStart: Int, val readEnd: Int,
         val record: SAMRecord) {
+
+    fun maxIndelSize(): Int {
+        return max(deleted, inserted)
+    }
 
     fun containsSoftClip(): Boolean {
         return softClippedStart > 0 || softClippedEnd > 0
@@ -28,13 +28,26 @@ data class SAMCodingRecord(
         return deleted > 0 || inserted > 0
     }
 
-    fun read(): String {
-        val forwardBuilder = StringBuilder()
-        for (i in readStart..readEnd) {
-            forwardBuilder.append(record.readBases[i].toChar())
-        }
+    fun codingRegionRead(reverseCompliment: Boolean): CharArray {
+        return if (reverseCompliment)
+            forwardRead().map { it.reverseCompliment() }.reversed().toCharArray()
+        else
+            forwardRead()
+    }
 
-        return forwardBuilder.toString()
+    fun codingRegionQuality(reverseCompliment: Boolean): IntArray {
+        return if (reverseCompliment)
+            forwardQuality().reversed().toIntArray()
+        else
+            forwardQuality()
+    }
+
+    private fun forwardRead(): CharArray {
+        return (readStart..readEnd).map { record.readBases[it].toChar() }.toCharArray()
+    }
+
+    private fun forwardQuality(): IntArray {
+        return (readStart..readEnd).map { record.baseQualities[it].toInt() }.toIntArray()
     }
 
     companion object {
@@ -114,6 +127,17 @@ data class SAMCodingRecord(
 
         private fun SAMRecord.inserts(): Int {
             return this.cigar.cigarElements.filter { it.operator == CigarOperator.I }.map { it.length }.sum()
+        }
+
+        fun Char.reverseCompliment(): Char {
+            when (this) {
+                'G' -> return 'C'
+                'A' -> return 'T'
+                'T' -> return 'A'
+                'C' -> return 'G'
+            }
+
+            return this
         }
     }
 
