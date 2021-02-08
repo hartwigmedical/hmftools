@@ -5,9 +5,12 @@ import static java.lang.Math.log;
 import static java.lang.Math.max;
 import static java.lang.Math.pow;
 
+import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.DEFAULT_MATRIX_DELIM;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
@@ -21,11 +24,13 @@ import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,11 +71,14 @@ public class AltSjClassifier implements CuppaClassifier
     private Matrix mSampleFragCounts;
     private final Map<String,Integer> mSampleIndexMap; // map from sampleId into the sample counts matrix
 
+    private BufferedWriter mCssWriter;
+
     private static final double ZERO_PREVALENCE_ALLOCATION = 0.03;
 
     private static final String SAMPLE_ALT_SJ_FILE = "sample_alt_sj_matrix_file";
     private static final String FRAG_COUNT_LOG_VALUE = "alt_sj_log_value";
     private static final String COHORT_SAMPLE_DATA_FILE = "alt_sj_cohort_sample_data";
+    private static final String LOG_CSS_VALUES = "alt_sj_log_css";
 
     public AltSjClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
@@ -87,6 +95,7 @@ public class AltSjClassifier implements CuppaClassifier
 
         mSampleIndexMap = Maps.newHashMap();
         mSampleFragCounts = null;
+        mCssWriter = null;
 
         if(cmd.hasOption(FRAG_COUNT_LOG_VALUE))
         {
@@ -127,6 +136,9 @@ public class AltSjClassifier implements CuppaClassifier
             mSampleFragCounts = new Matrix(mRefCancerTypeMatrix.Rows, 1);
         }
 
+        if(cmd.hasOption(LOG_CSS_VALUES))
+            initialiseCssWriter();
+
         // as a prevalence file
         // mIsValid &= loadRefAltSJs(config.RefAltSjPrevFile);
     }
@@ -135,11 +147,15 @@ public class AltSjClassifier implements CuppaClassifier
     {
         options.addOption(SAMPLE_ALT_SJ_FILE, true, "Cohort sample RNA alt-SJ frag counts matrix file");
         options.addOption(FRAG_COUNT_LOG_VALUE, true, "Use log of frag counts plus this value");
+        options.addOption(LOG_CSS_VALUES, false, "Log CSS values");
     }
 
     public CategoryType categoryType() { return ALT_SJ; }
     public boolean isValid() { return mIsValid; }
-    public void close() {}
+    public void close()
+    {
+        closeBufferedWriter(mCssWriter);
+    }
 
     public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
@@ -180,6 +196,8 @@ public class AltSjClassifier implements CuppaClassifier
         }
 
         final double[] sampleFragCounts = mSampleFragCounts.getRow(sampleIndex);
+        int totalFrags = (int)sumVector(sampleFragCounts);
+        int altSjSites = (int)Arrays.stream(sampleFragCounts).filter(x -> x > 0).count();
 
         for(int i = 0; i < refCancerCount; ++i)
         {
@@ -198,10 +216,12 @@ public class AltSjClassifier implements CuppaClassifier
                     adjustRefCounts(mRefCancerTypeMatrix.getCol(i), sampleFragCounts, cancerSampleCount) : mRefCancerTypeMatrix.getCol(i);
 
             // skip any alt-SJ not present in the sample, but not the reverse
-            double css = calcCosineSim(refAsjFragCounts, sampleFragCounts, false, true);
+            double css = calcCosineSim(refAsjFragCounts, sampleFragCounts, false, false);
 
             if(css < RNA_GENE_EXP_CSS_THRESHOLD)
                 continue;
+
+            writeCssResult(sample, totalFrags, altSjSites, refCancerType, css);
 
             if(mSampleDataCache.isSingleSample() && CUP_LOGGER.isDebugEnabled())
             {
@@ -486,6 +506,39 @@ public class AltSjClassifier implements CuppaClassifier
         {
             CUP_LOGGER.error("failed to load alt splice junction file({}): {}", filename.toString(), e.toString());
             return false;
+        }
+    }
+
+    private void initialiseCssWriter()
+    {
+        try
+        {
+            final String sampleDataFilename = mConfig.formOutputFilename("ALTSJ_CSS");
+
+            mCssWriter = createBufferedWriter(sampleDataFilename, false);
+            mCssWriter.write("SampleId,CancerType,TotalFrags,AltSjSites,RefCancerType,CSS");
+            mCssWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write alt-SJ CSS data: {}", e.toString());
+        }
+    }
+
+    private void writeCssResult(final SampleData sample, int totalFrags, int altSjSites, final String refCancerType, double css)
+    {
+        if(mCssWriter == null)
+            return;
+
+        try
+        {
+            mCssWriter.write(String.format("%s,%s,%d,%d,%s,%.4f",
+                    sample.Id, sample.cancerType(), totalFrags, altSjSites, refCancerType, css));
+            mCssWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write alt-SJ CSS data: {}", e.toString());
         }
     }
 

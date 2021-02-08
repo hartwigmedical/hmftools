@@ -204,12 +204,6 @@ public class SpliceVariantMatcher
                     continue;
             }
 
-            // filter by type if matching is restricted
-            if(mMatchTypes.contains(NOVEL))
-            {
-
-            }
-
             candidateAltSJs.add(altSJ);
         }
 
@@ -286,6 +280,9 @@ public class SpliceVariantMatcher
             return mDataCache.retrieveSvBreakends(sampleId);
 
         final Map<String,List<Integer>> svBreakends = Maps.newHashMap();
+
+        if(mConfig.DbAccess == null)
+            return svBreakends;
 
         final List<StructuralVariantData> structuralVariants = mConfig.DbAccess.readStructuralVariantData(sampleId);
 

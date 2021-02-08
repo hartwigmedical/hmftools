@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.cup.common;
 
-import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
-import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
-
 import java.util.List;
 
 public class SampleSimilarity

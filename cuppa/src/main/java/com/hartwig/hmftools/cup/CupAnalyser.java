@@ -215,6 +215,8 @@ public class CupAnalyser
 
         writeSampleData(sample, allResults);
         writeSampleSimilarities(sample, similarities);
+
+        mClassifiers.forEach(x -> x.close());
     }
 
     private void initialiseOutputFiles()
