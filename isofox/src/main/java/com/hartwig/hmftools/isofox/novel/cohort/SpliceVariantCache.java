@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.isofox.novel.cohort;
 
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunction.FLD_ALT_SJ_POS_END;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunction.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher.COHORT_ALT_SJ_FILE;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher.SOMATIC_VARIANT_FILE;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher.SV_BREAKEND_FILE;
@@ -25,6 +23,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 
@@ -171,15 +170,12 @@ public class SpliceVariantCache
         }
     }
 
-    public int getCohortAltSjFrequency(final AltSpliceJunction altSJ)
+    public int getCohortAltSjFrequency(final AltSpliceJunctionFile altSJ)
     {
         if(mCohortAltSJs.isEmpty())
             return 0;
 
-        final String altSjKey = String.format("%s;%s;%s",
-                altSJ.Chromosome, altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END]); // altSJ.type(),
-
-        Integer cohortCount = mCohortAltSJs.get(altSjKey);
+        Integer cohortCount = mCohortAltSJs.get(altSJ.key());
         return cohortCount != null ? cohortCount : 0;
     }
 

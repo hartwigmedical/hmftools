@@ -2,7 +2,7 @@ package com.hartwig.hmftools.isofox.novel.cohort;
 
 import java.util.List;
 
-import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 
 public class AltSjFilter
 {
@@ -17,15 +17,15 @@ public class AltSjFilter
         MinFragments = minFragments;
     }
 
-    public boolean passesFilter(final AltSpliceJunction altSJ)
+    public boolean passesFilter(final AltSpliceJunctionFile altSJ)
     {
-        if(MinFragments > 0 && altSJ.getFragmentCount() < MinFragments)
+        if(MinFragments > 0 && altSJ.FragmentCount < MinFragments)
             return false;
 
-        if(!RestrictedGeneIds.isEmpty() && !RestrictedGeneIds.contains(altSJ.getGeneId()))
+        if(!RestrictedGeneIds.isEmpty() && !RestrictedGeneIds.contains(altSJ.GeneId))
             return false;
 
-        if(!ExcludedGeneIds.isEmpty() && ExcludedGeneIds.contains(altSJ.getGeneId()))
+        if(!ExcludedGeneIds.isEmpty() && ExcludedGeneIds.contains(altSJ.GeneId))
             return false;
 
         return true;

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.isofox.novel.cohort;
 
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType;
 
 public class AltSjLocation
 {

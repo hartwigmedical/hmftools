@@ -14,20 +14,19 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_NEG_STRAND_DONO
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.EXONIC;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.MIXED;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.CIRCULAR;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.EXONIC;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.MIXED;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.CIRCULAR;
 
 import java.util.List;
-import java.util.Map;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 
@@ -55,11 +54,6 @@ public class AltSpliceJunction
     private final int[] mNearestExonDistance;
 
     private final String mInitialReadId;
-
-    public static final String FLD_ALT_SJ_POS_START = "SjStart";
-    public static final String FLD_ALT_SJ_POS_END = "SjEnd";
-    public static final String FLD_ALT_SJ_TYPE = "Type";
-    public static final String FLD_ALT_SJ_FRAG_COUNT = "FragCount";
 
     public AltSpliceJunction(
             final String chromosome, final int[] spliceJunction, AltSpliceJunctionType type, final String initialReadId,
@@ -95,7 +89,6 @@ public class AltSpliceJunction
 
     public AltSpliceJunctionType type() { return mType; }
     public void overrideType(AltSpliceJunctionType type) { mType = type; }
-    public String initialReadId() { return mInitialReadId; }
 
     public int length() { return SpliceJunction[SE_END] - SpliceJunction[SE_START]; }
 
@@ -105,18 +98,9 @@ public class AltSpliceJunction
     public int getFragmentCount() { return mFragmentCount;}
     public void addFragmentCount() { ++mFragmentCount;}
 
-    public void addFragmentCount(int count)
-    {
-        mFragmentCount += count;
-    }
-
-    public int getPositionCount(int seIndex) { return mPositionCounts[seIndex]; }
-    public void addPositionCount(int seIndex) { ++mPositionCounts[seIndex]; }
     public void addPositionCount(int seIndex, int count) { mPositionCounts[seIndex] += count; }
 
     public String[] getTranscriptNames() { return mTranscriptNames; }
-    public String[] getBaseContext() { return mBaseContext; }
-    public int[] getNearestExonDistance() { return mNearestExonDistance; }
 
     public void setGeneId(final String geneId) { mGeneId = geneId; }
     public final String getGeneId() { return mGeneId; }
@@ -234,12 +218,10 @@ public class AltSpliceJunction
         return baseContext.length() == 12 ? baseContext.substring(8,10) : "";
     }
 
-    public void setDonorAcceptorBases(final String[] baseContext)
+    public static String getDonorAcceptorBases(final String[] baseContext)
     {
-        mDonorAcceptorBases = startDonorAcceptorBases(baseContext[SE_START]) + DA_DELIM + endDonorAcceptorBases(baseContext[SE_END]);
+        return startDonorAcceptorBases(baseContext[SE_START]) + DA_DELIM + endDonorAcceptorBases(baseContext[SE_END]);
     }
-
-    public String getDonorAcceptorBases() { return mDonorAcceptorBases; }
 
     public int getKnownSpliceBaseStrand()
     {
@@ -344,66 +326,16 @@ public class AltSpliceJunction
 
     public static String csvHeader()
     {
-        return "GeneId,GeneName,Chromosome,Strand,SjStart,SjEnd,FragCount,DepthStart,DepthEnd"
-                + ",Type,ContextStart,ContextEnd,NearestStartExon,NearestEndExon"
-                + ",BasesStart,BasesEnd,TransStart,TransEnd,InitialReadId";
+        return AltSpliceJunctionFile.csvHeader() + ",NearestStartExon,NearestEndExon,InitialReadId";
     }
 
     public String toCsv(final EnsemblGeneData geneData)
     {
-        return new StringJoiner(DELIMITER)
-                .add(getGeneId())
-                .add(geneData.GeneName)
-                .add(Chromosome)
-                .add(String.valueOf(geneData.Strand))
-                .add(String.valueOf(SpliceJunction[SE_START]))
-                .add(String.valueOf(SpliceJunction[SE_END]))
-                .add(String.valueOf(getFragmentCount()))
-                .add(String.valueOf(getPositionCount(SE_START)))
-                .add(String.valueOf(getPositionCount(SE_END)))
-                .add(String.valueOf(type()))
-                .add(String.valueOf(RegionContexts[SE_START]))
-                .add(String.valueOf(RegionContexts[SE_END]))
-                .add(String.valueOf(getNearestExonDistance()[SE_START]))
-                .add(String.valueOf(getNearestExonDistance()[SE_END]))
-                .add(getBaseContext()[SE_START])
-                .add(getBaseContext()[SE_END])
-                .add(getTranscriptNames()[SE_START])
-                .add(getTranscriptNames()[SE_END])
-                .add(mInitialReadId)
-                .toString();
-    }
+        AltSpliceJunctionFile asjFile = new AltSpliceJunctionFile(
+                mGeneId, geneData.GeneName, Chromosome, SpliceJunction, mType,
+                mFragmentCount, mPositionCounts, RegionContexts, mBaseContext, mTranscriptNames);
 
-    public static AltSpliceJunction fromCsv(final String data, final Map<String,Integer> fieldIndexMap)
-    {
-        final String[] items = data.split(DELIMITER);
-
-        final int[] spliceJunction =
-                { Integer.parseInt(items[fieldIndexMap.get(FLD_ALT_SJ_POS_START)]), Integer.parseInt(items[fieldIndexMap.get(FLD_ALT_SJ_POS_END)]) };
-
-        final AltSpliceJunctionContext[] contexts =
-                { AltSpliceJunctionContext.valueOf(items[fieldIndexMap.get("ContextStart")]),
-                        AltSpliceJunctionContext.valueOf(items[fieldIndexMap.get("ContextEnd")]) };
-
-        AltSpliceJunction altSJ = new AltSpliceJunction(
-                items[fieldIndexMap.get("Chromosome")],
-                spliceJunction,
-                AltSpliceJunctionType.valueOf(items[fieldIndexMap.get(FLD_ALT_SJ_TYPE)]),
-                fieldIndexMap.containsKey("InitialReadId") ? items[fieldIndexMap.get("InitialReadId")] : "",
-                contexts,
-                Lists.newArrayList(), Lists.newArrayList());
-
-        altSJ.setGeneId(items[fieldIndexMap.get(FLD_GENE_ID)]);
-        altSJ.addFragmentCount(Integer.parseInt(items[fieldIndexMap.get(FLD_ALT_SJ_FRAG_COUNT)]));
-        altSJ.addPositionCount(SE_START, Integer.parseInt(items[fieldIndexMap.get("DepthStart")]));
-        altSJ.addPositionCount(SE_END, Integer.parseInt(items[fieldIndexMap.get("DepthEnd")]));
-
-        final String[] baseContext = { items[fieldIndexMap.get("BasesStart")], items[fieldIndexMap.get("BasesEnd")] };
-        altSJ.setDonorAcceptorBases(baseContext);
-
-        altSJ.mTranscriptNames[SE_START] = items[fieldIndexMap.get("TransStart")];
-        altSJ.mTranscriptNames[SE_END] = items[fieldIndexMap.get("TransEnd")];
-
-        return altSJ;
+        return String.format("%s,%d,%d,%s",
+                asjFile.toCsv(), mNearestExonDistance[SE_START], mNearestExonDistance[SE_END], mInitialReadId);
     }
 }

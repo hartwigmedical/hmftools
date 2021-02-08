@@ -14,14 +14,14 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FIL
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.ALT_SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.SPLICE_JUNC;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.EXON_INTRON;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.MIXED_TRANS;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_3_PRIME;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_5_PRIME;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_EXON;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.SKIPPED_EXONS;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.UNKNOWN;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.SPLICE_JUNC;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.EXON_INTRON;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.MIXED_TRANS;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.NOVEL_3_PRIME;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.NOVEL_5_PRIME;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.NOVEL_EXON;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.SKIPPED_EXONS;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.UNKNOWN;
 import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.ACCEPTOR;
 import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.DONOR;
 import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.NONE;
@@ -49,13 +49,13 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
-import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext;
-import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
 import org.apache.commons.cli.CommandLine;
@@ -166,7 +166,7 @@ public class SpliceVariantMatcher
             final String sampleId = mConfig.SampleData.SampleIds.get(i);
             final Path altSJFile = filenames.get(i);
 
-            final List<AltSpliceJunction> altSJs = loadFile(altSJFile, mFieldsMap, mAltSjFilter);
+            final List<AltSpliceJunctionFile> altSJs = loadFile(altSJFile, mFieldsMap, mAltSjFilter);
 
             ISF_LOGGER.debug("{}: sample({}) loaded {} alt-SJ records", i, sampleId, altSJs.size());
             evaluateSpliceVariants(sampleId, altSJs);
@@ -177,7 +177,7 @@ public class SpliceVariantMatcher
         closeBufferedWriter(mWriter);mDataCache.close();
     }
 
-    private void evaluateSpliceVariants(final String sampleId, final List<AltSpliceJunction> altSpliceJunctions)
+    private void evaluateSpliceVariants(final String sampleId, final List<AltSpliceJunctionFile> altSpliceJunctions)
     {
         final List<SpliceVariant> spliceVariants = getSomaticVariants(sampleId);
 
@@ -189,16 +189,16 @@ public class SpliceVariantMatcher
 
         final Map<String,List<Integer>> svBreakends = getStructuralVariants(sampleId);
 
-        final Map<String,List<AltSpliceJunction>> candidateAltSJs = Maps.newHashMap();
+        final Map<String,List<AltSpliceJunctionFile>> candidateAltSJs = Maps.newHashMap();
 
-        for(AltSpliceJunction altSJ : altSpliceJunctions)
+        for(AltSpliceJunctionFile altSJ : altSpliceJunctions)
         {
             if(altSJ.length() < MIN_ALT_SJ_LENGTH)
                 continue;
 
             if(mMatchTypes.contains(NOVEL))
             {
-                if(!validCrypticType(altSJ.type()))
+                if(!validCrypticType(altSJ.Type))
                     continue;
             }
 
@@ -210,7 +210,7 @@ public class SpliceVariantMatcher
                     continue;
             }
 
-            List<AltSpliceJunction> chrAltSJs = candidateAltSJs.get(altSJ.Chromosome);
+            List<AltSpliceJunctionFile> chrAltSJs = candidateAltSJs.get(altSJ.Chromosome);
 
             if(chrAltSJs == null)
             {
@@ -307,7 +307,8 @@ public class SpliceVariantMatcher
         return svBreakends;
     }
 
-    private void evaluateSpliceVariant(final String sampleId, final SpliceVariant variant, final Map<String,List<AltSpliceJunction>> altSpliceJunctions)
+    private void evaluateSpliceVariant(
+            final String sampleId, final SpliceVariant variant, final Map<String,List<AltSpliceJunctionFile>> altSpliceJunctions)
     {
         final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(variant.GeneName);
 
@@ -317,12 +318,12 @@ public class SpliceVariantMatcher
             return;
         }
 
-        List<AltSpliceJunction> chrAltSJs = altSpliceJunctions.get(variant.Chromosome);
+        List<AltSpliceJunctionFile> chrAltSJs = altSpliceJunctions.get(variant.Chromosome);
 
         if(chrAltSJs == null || chrAltSJs.isEmpty())
             return;
 
-        final List<AltSpliceJunction> matchedAltSJs = Lists.newArrayList();
+        final List<AltSpliceJunctionFile> matchedAltSJs = Lists.newArrayList();
 
         if(mMatchTypes.isEmpty() || mMatchTypes.contains(NOVEL))
             matchedAltSJs.addAll(findCrypticAltSpliceJunctions(sampleId, chrAltSJs, variant, geneData));
@@ -345,8 +346,8 @@ public class SpliceVariantMatcher
     }
 
     private void findRelatedAltSpliceJunctions(
-            final String sampleId, final List<AltSpliceJunction> altSpliceJunctions,
-            final SpliceVariant variant, final EnsemblGeneData geneData, final List<AltSpliceJunction> matchedAltSJs)
+            final String sampleId, final List<AltSpliceJunctionFile> altSpliceJunctions,
+            final SpliceVariant variant, final EnsemblGeneData geneData, final List<AltSpliceJunctionFile> matchedAltSJs)
     {
         final List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
 
@@ -428,18 +429,18 @@ public class SpliceVariantMatcher
                 final ExonData nextExon = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
 
                 // look for any alt SJs which match with the somatic variant
-                for(final AltSpliceJunction altSJ : altSpliceJunctions)
+                for(final AltSpliceJunctionFile altSJ : altSpliceJunctions)
                 {
                     if(matchedAltSJs.contains(altSJ))
                         continue;
 
-                    if(!altSJ.getGeneId().equals(geneData.GeneId))
+                    if(!altSJ.GeneId.equals(geneData.GeneId))
                         continue;
 
-                    if(!validDisruptionType(altSJ.type(), acceptorDonorType))
+                    if(!validDisruptionType(altSJ.Type, acceptorDonorType))
                         continue;
 
-                    if(altSJ.type() == SKIPPED_EXONS)
+                    if(altSJ.Type == SKIPPED_EXONS)
                     {
                         // SKIPPED-EXONS - must match the previous and next exons, ie only skips the exon in question
                         if(prevExon == null || nextExon == null)
@@ -485,15 +486,15 @@ public class SpliceVariantMatcher
         return type == NOVEL_5_PRIME || type == NOVEL_3_PRIME || type == NOVEL_EXON || type == EXON_INTRON;
     }
 
-    private List<AltSpliceJunction> findCrypticAltSpliceJunctions(
-            final String sampleId, final List<AltSpliceJunction> altSpliceJunctions, final SpliceVariant variant,
+    private List<AltSpliceJunctionFile> findCrypticAltSpliceJunctions(
+            final String sampleId, final List<AltSpliceJunctionFile> altSpliceJunctions, final SpliceVariant variant,
             final EnsemblGeneData geneData)
     {
-        final List<AltSpliceJunction> closeAltSJs = Lists.newArrayList();
+        final List<AltSpliceJunctionFile> closeAltSJs = Lists.newArrayList();
 
-        for(AltSpliceJunction altSJ : altSpliceJunctions)
+        for(AltSpliceJunctionFile altSJ : altSpliceJunctions)
         {
-            if(!validCrypticType(altSJ.type()))
+            if(!validCrypticType(altSJ.Type))
                 continue;
 
             Integer closeIndex = null;
@@ -517,7 +518,7 @@ public class SpliceVariantMatcher
 
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                final String[] transNames = altSJ.getTranscriptNames()[se].split(ITEM_DELIM);
+                final String[] transNames = altSJ.TranscriptNames[se].split(ITEM_DELIM);
                 for(String transName : transNames)
                 {
                     if(!transName.equals("NONE") && !allTransNames.contains(transName))
@@ -569,7 +570,7 @@ public class SpliceVariantMatcher
     }
 
     private void writeMatchData(
-            final String sampleId, final SpliceVariant variant, final EnsemblGeneData geneData, final AltSpliceJunction altSJ,
+            final String sampleId, final SpliceVariant variant, final EnsemblGeneData geneData, final AltSpliceJunctionFile altSJ,
             final SpliceVariantMatchType matchType, final AcceptorDonorType accDonType,
             int exonBaseDistance, Integer exonPosition, final String transDataStr)
     {
@@ -613,9 +614,9 @@ public class SpliceVariantMatcher
             if(altSJ != null)
             {
                 mWriter.write(String.format(",%s,%s,%s,%d,%d,%d,%d,%d",
-                        altSJ.type(), altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END],
+                        altSJ.Type, altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END],
                         altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END],
-                        altSJ.getFragmentCount(), altSJ.getPositionCount(SE_START), altSJ.getPositionCount(SE_END)));
+                        altSJ.FragmentCount, altSJ.DepthCounts[SE_START], altSJ.DepthCounts[SE_END]));
 
                 mWriter.write(String.format(",%s,%s,%d,%s",
                         getBaseContext(variant, altSJ.SpliceJunction[SE_START], geneData.Strand == POS_STRAND ? DONOR : ACCEPTOR),

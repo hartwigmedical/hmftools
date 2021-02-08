@@ -9,11 +9,12 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 
 public class AltSjCohortData
 {
-    public final AltSpliceJunction AltSJ;
+    public final AltSpliceJunctionFile AltSJ;
 
     // cohort data
     private final List<String> mSampleIds;
@@ -31,7 +32,7 @@ public class AltSjCohortData
     private int mMaxFragmentCountCohortB;
     private final int[] mPositionCounts; // counts at the start and end
 
-    public AltSjCohortData(final AltSpliceJunction altSJ)
+    public AltSjCohortData(final AltSpliceJunctionFile altSJ)
     {
         AltSJ = altSJ;
         mSampleIds = Lists.newArrayList();

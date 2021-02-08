@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.novel;
+package com.hartwig.hmftools.common.rna;
 
 public enum AltSpliceJunctionType
 {

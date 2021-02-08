@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox.novel;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.ALT_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
@@ -14,17 +15,17 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.EXONIC;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.SPLICE_JUNC;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.CIRCULAR;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.EXON_INTRON;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.INTRONIC;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.MIXED_TRANS;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_3_PRIME;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_5_PRIME;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_EXON;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_INTRON;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.SKIPPED_EXONS;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.EXONIC;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.SPLICE_JUNC;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.CIRCULAR;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.EXON_INTRON;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.INTRONIC;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.MIXED_TRANS;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.NOVEL_3_PRIME;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.NOVEL_5_PRIME;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.NOVEL_EXON;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.NOVEL_INTRON;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.SKIPPED_EXONS;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -34,6 +35,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -54,8 +57,6 @@ public class AltSpliceJunctionFinder
     private final BufferedWriter mWriter;
 
     private GeneCollection mGenes;
-
-    public static final String ALT_SJ_FILE_ID = "alt_splice_junc.csv";
 
     public AltSpliceJunctionFinder(final IsofoxConfig config, final BufferedWriter writer)
     {
