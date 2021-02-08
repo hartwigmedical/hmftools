@@ -153,6 +153,8 @@ public class CupAnalyser
         closeBufferedWriter(mSampleDataWriter);
         closeBufferedWriter(mSampleSimilarityWriter);
 
+        mClassifiers.forEach(x -> x.close());
+
         CUP_LOGGER.info("CUP analysis complete {}", !allClassifiersValid() ? "with errors" : "");
     }
 
@@ -215,8 +217,6 @@ public class CupAnalyser
 
         writeSampleData(sample, allResults);
         writeSampleSimilarities(sample, similarities);
-
-        mClassifiers.forEach(x -> x.close());
     }
 
     private void initialiseOutputFiles()
