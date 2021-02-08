@@ -189,12 +189,18 @@ public class SpliceVariantMatcher
 
         final Map<String,List<Integer>> svBreakends = getStructuralVariants(sampleId);
 
-        final List<AltSpliceJunction> candidateAltSJs = Lists.newArrayList();
+        final Map<String,List<AltSpliceJunction>> candidateAltSJs = Maps.newHashMap();
 
         for(AltSpliceJunction altSJ : altSpliceJunctions)
         {
             if(altSJ.length() < MIN_ALT_SJ_LENGTH)
                 continue;
+
+            if(mMatchTypes.contains(NOVEL))
+            {
+                if(!validCrypticType(altSJ.type()))
+                    continue;
+            }
 
             List<Integer> breakends = svBreakends.get(altSJ.Chromosome);
 
@@ -204,11 +210,21 @@ public class SpliceVariantMatcher
                     continue;
             }
 
-            candidateAltSJs.add(altSJ);
+            List<AltSpliceJunction> chrAltSJs = candidateAltSJs.get(altSJ.Chromosome);
+
+            if(chrAltSJs == null)
+            {
+                chrAltSJs = Lists.newArrayList(altSJ);
+                candidateAltSJs.put(altSJ.Chromosome, chrAltSJs);
+            }
+            else
+            {
+                chrAltSJs.add(altSJ);
+            }
         }
 
         ISF_LOGGER.debug("sampleId({}) evaluating {} splice variants vs altSJs({})",
-                sampleId, spliceVariants.size(), candidateAltSJs.size());
+                sampleId, spliceVariants.size(), candidateAltSJs.values().stream().mapToInt(x -> x.size()).sum());
 
         mSpliceSiteCache.loadSampleSpliceSites(sampleId);
 
@@ -223,24 +239,6 @@ public class SpliceVariantMatcher
             return mDataCache.retrieveSomaticVariants(sampleId);
 
         final List<SpliceVariant> spliceVariants = Lists.newArrayList();
-
-        /*
-        final List<SomaticVariant> somaticVariants = mConfig.DbAccess.readSomaticVariants(sampleId, VariantType.UNDEFINED);
-
-        for(final SomaticVariant variant : somaticVariants)
-        {
-            if(!mGeneDataMap.isEmpty() && !mGeneDataMap.containsKey(variant.gene()))
-                continue;
-
-            if(!variant.filter().equals(PASS_FILTER))
-                continue;
-
-            spliceVariants.add(new SpliceVariant(
-                    variant.gene(), variant.chromosome(), (int)variant.position(), variant.type(),variant.ref(), variant.alt(),
-                    variant.canonicalEffect(), variant.canonicalHgvsCodingImpact(), variant.trinucleotideContext(),
-                    variant.localPhaseSet() != null ? variant.localPhaseSet() : -1));
-        }
-        */
 
         final Result<Record> result = mConfig.DbAccess.context().select().from(Tables.SOMATICVARIANT)
                 .where(Tables.SOMATICVARIANT.SAMPLEID.eq(sampleId))
@@ -309,7 +307,7 @@ public class SpliceVariantMatcher
         return svBreakends;
     }
 
-    private void evaluateSpliceVariant(final String sampleId, final SpliceVariant variant, final List<AltSpliceJunction> altSpliceJunctions)
+    private void evaluateSpliceVariant(final String sampleId, final SpliceVariant variant, final Map<String,List<AltSpliceJunction>> altSpliceJunctions)
     {
         final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(variant.GeneName);
 
@@ -319,13 +317,18 @@ public class SpliceVariantMatcher
             return;
         }
 
+        List<AltSpliceJunction> chrAltSJs = altSpliceJunctions.get(variant.Chromosome);
+
+        if(chrAltSJs == null || chrAltSJs.isEmpty())
+            return;
+
         final List<AltSpliceJunction> matchedAltSJs = Lists.newArrayList();
 
         if(mMatchTypes.isEmpty() || mMatchTypes.contains(NOVEL))
-            matchedAltSJs.addAll(findCrypticAltSpliceJunctions(sampleId, altSpliceJunctions, variant, geneData));
+            matchedAltSJs.addAll(findCrypticAltSpliceJunctions(sampleId, chrAltSJs, variant, geneData));
 
         if(mMatchTypes.isEmpty() || mMatchTypes.contains(DISRUPTION))
-            findRelatedAltSpliceJunctions(sampleId, altSpliceJunctions, variant, geneData, matchedAltSJs);
+            findRelatedAltSpliceJunctions(sampleId, chrAltSJs, variant, geneData, matchedAltSJs);
     }
 
     private static boolean withinRange(int pos1, int pos2, int distance) { return abs(pos1 - pos2) <= distance; }
