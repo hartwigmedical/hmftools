@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.lilac.seq
 
+import com.hartwig.hmftools.lilac.evidence.PhasedEvidence
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 
 data class HlaSequenceLoci(val allele: HlaAllele, val sequences: List<String>) {
+    val length = sequences.size
+
 
     fun containsInserts(): Boolean {
         return sequences.any { it.length > 1 }
@@ -29,12 +32,87 @@ data class HlaSequenceLoci(val allele: HlaAllele, val sequences: List<String>) {
         return sequences
                 .filterIndexed { index, _ -> index in startLocus..endLocus }
                 .joinToString("")
-                .replace(".", "")
+//                .replace(".", "")
+    }
+
+    private fun sequence(vararg indices: Int): String {
+        return indices.joinToString("") { if (it < sequences.size) sequences[it] else "*" }
     }
 
     override fun toString(): String {
         return "HlaSequenceLoci(allele=$allele, sequence=${sequence()})"
     }
+
+    fun consistentWith(evidence: PhasedEvidence): Boolean {
+        return consistentWithAny(evidence.evidence.keys, *evidence.aminoAcidIndices)
+    }
+
+    fun consistentWithAny(targetSequence: Collection<String>, vararg targetIndices: Int): Boolean {
+        return targetSequence.any { consistentWith(it, *targetIndices) }
+    }
+
+    fun consistentWith(targetSequence: String, vararg targetIndices: Int): Boolean {
+        return match(targetSequence, *targetIndices) != HlaSequenceMatch.NONE
+    }
+
+    fun match(targetSequence: String, vararg targetIndices: Int): HlaSequenceMatch {
+        if (targetIndices.isEmpty()) {
+            return HlaSequenceMatch.NONE
+        }
+
+        val hlaSequence = sequence(*targetIndices)
+        if (hlaSequence.length != targetSequence.length) {
+            return HlaSequenceMatch.NONE
+        }
+
+        var wildCardCount = 0
+        for (index in targetSequence.indices) {
+            val target = targetSequence[index]
+            if (hlaSequence[index] != '*' && hlaSequence[index] != target) {
+                return HlaSequenceMatch.NONE
+            }
+            if (hlaSequence[index] == '*') {
+                wildCardCount++
+            }
+        }
+
+        if (wildCardCount > 0) {
+            return if (wildCardCount == targetIndices.size) return HlaSequenceMatch.WILD else HlaSequenceMatch.PARTIAL
+        }
+
+        return HlaSequenceMatch.FULL
+
+    }
+
+//    fun consistentWith(targetIndices: IntArray, targetSequences: List<String>): Boolean {
+//        return match(targetIndices, targetSequences) != HlaSequenceMatch.NONE
+//    }
+//
+//    fun match(targetIndices: IntArray, targetSequences: List<String>): HlaSequenceMatch {
+//        if (targetIndices.isEmpty()) {
+//            return HlaSequenceMatch.NONE
+//        }
+//
+//        var wildCardCount = 0
+//        for (i in targetIndices.indices) {
+//            val index = targetIndices[i]
+//            val target = targetSequences[i]
+//
+//            if (this.length > index && this.sequences[index] != "*" && this.sequences[index] != target) {
+//                return HlaSequenceMatch.NONE
+//            }
+//
+//            if (this.length > index && this.sequences[index] == "*") {
+//                wildCardCount++
+//            }
+//        }
+//
+//        if (wildCardCount > 0) {
+//            return if (wildCardCount == targetIndices.size) return HlaSequenceMatch.WILD else HlaSequenceMatch.PARTIAL
+//        }
+//
+//        return HlaSequenceMatch.FULL
+//    }
 
     companion object {
 

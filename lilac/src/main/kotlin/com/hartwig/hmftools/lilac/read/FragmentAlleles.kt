@@ -2,7 +2,7 @@ package com.hartwig.hmftools.lilac.read
 
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.hla.HlaAllele
-import com.hartwig.hmftools.lilac.seq.HlaSequence
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 import com.hartwig.hmftools.lilac.seq.HlaSequenceMatch
 
 
@@ -10,19 +10,19 @@ class FragmentAlleles(val aminoAcidFragment: AminoAcidFragment, val full: Collec
 
 
     companion object {
-        fun create(aminoAcidFragments: List<AminoAcidFragment>, hetLoci: Collection<Int>, sequences: Collection<HlaSequence>, nucleotideLoci: Collection<Int>, nucleotideSequences: Collection<HlaSequence>): List<FragmentAlleles> {
+        fun create(aminoAcidFragments: List<AminoAcidFragment>, hetLoci: Collection<Int>, sequences: Collection<HlaSequenceLoci>, nucleotideLoci: Collection<Int>, nucleotideSequences: Collection<HlaSequenceLoci>): List<FragmentAlleles> {
             return aminoAcidFragments.map { create(it, hetLoci, sequences, nucleotideLoci, nucleotideSequences) }.filter { it.full.isNotEmpty() || it.partial.isNotEmpty() }
         }
 
         private fun create(
                 aminoAcidFragment: AminoAcidFragment,
-                aminoAcidLoci: Collection<Int>, aminoAcidSequences: Collection<HlaSequence>,
-                nucleotideLoci: Collection<Int>, nucleotideSequences: Collection<HlaSequence>): FragmentAlleles {
+                aminoAcidLoci: Collection<Int>, aminoAcidSequences: Collection<HlaSequenceLoci>,
+                nucleotideLoci: Collection<Int>, nucleotideSequences: Collection<HlaSequenceLoci>): FragmentAlleles {
 
             val fragmentNucleotideLoci = (aminoAcidFragment.nucleotideLoci() intersect nucleotideLoci).sorted().toIntArray()
-            val fragmentNucleotides = fragmentNucleotideLoci.map { aminoAcidFragment.nucleotide(it) }.toCharArray()
+            val fragmentNucleotides = aminoAcidFragment.nucleotides(*fragmentNucleotideLoci)
             val matchingNucleotideSequences = nucleotideSequences
-                    .map { Pair(it.allele, it.match(fragmentNucleotideLoci, fragmentNucleotides)) }
+                    .map { Pair(it.allele, it.match(fragmentNucleotides, *fragmentNucleotideLoci)) }
                     .filter { it.second != HlaSequenceMatch.NONE }
                     .filter { aminoAcidFragment.genes.contains("HLA-${it.first.gene}") }
                     .map { Pair(it.first.asFourDigit(), it.second) }
@@ -30,14 +30,14 @@ class FragmentAlleles(val aminoAcidFragment: AminoAcidFragment, val full: Collec
 
             val fullNucleotideMatch = matchingNucleotideSequences.filter { it.second == HlaSequenceMatch.FULL }.map { it.first }.toSet()
             val partialNucleotideMatch = matchingNucleotideSequences
-                    .filter { it.second == HlaSequenceMatch.PARTIAL  || it.second == HlaSequenceMatch.WILD}
+                    .filter { it.second == HlaSequenceMatch.PARTIAL || it.second == HlaSequenceMatch.WILD }
                     .map { it.first }
                     .toSet() subtract fullNucleotideMatch
 
             val fragmentAminoAcidLoci = (aminoAcidFragment.aminoAcidIndices() intersect aminoAcidLoci).sorted().toIntArray()
-            val fragmentAminoAcids = fragmentAminoAcidLoci.map { aminoAcidFragment.aminoAcid(it) }.toCharArray()
+            val fragmentAminoAcids = aminoAcidFragment.aminoAcids(*fragmentAminoAcidLoci)
             val matchingAminoAcidSequences = aminoAcidSequences
-                    .map { Pair(it.allele, it.match(fragmentAminoAcidLoci, fragmentAminoAcids)) }
+                    .map { Pair(it.allele, it.match(fragmentAminoAcids, *fragmentAminoAcidLoci)) }
                     .filter { it.second != HlaSequenceMatch.NONE }
                     .filter { aminoAcidFragment.genes.contains("HLA-${it.first.gene}") }
 

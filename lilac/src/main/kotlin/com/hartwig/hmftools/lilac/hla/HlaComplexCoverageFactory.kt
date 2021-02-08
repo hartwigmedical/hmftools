@@ -2,7 +2,7 @@ package com.hartwig.hmftools.lilac.hla
 
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.read.FragmentAlleles
-import com.hartwig.hmftools.lilac.seq.HlaSequence
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
@@ -10,8 +10,8 @@ import java.util.concurrent.Future
 class HlaComplexCoverageFactory(
         private val executorService: ExecutorService,
         private val aminoAcidFragments: List<AminoAcidFragment>,
-        private val aminoAcidLoci: Collection<Int>, private val aminoAcidSequences: Collection<HlaSequence>,
-        private val nucleotideLoci: Collection<Int>, private val nucleotideSequences: Collection<HlaSequence>) {
+        private val aminoAcidLoci: Collection<Int>, private val aminoAcidSequences: Collection<HlaSequenceLoci>,
+        private val nucleotideLoci: Collection<Int>, private val nucleotideSequences: Collection<HlaSequenceLoci>) {
 
     fun complexCoverage(complexes: List<HlaComplex>): List<HlaComplexCoverage> {
         val list = mutableListOf<Future<HlaComplexCoverage>>()

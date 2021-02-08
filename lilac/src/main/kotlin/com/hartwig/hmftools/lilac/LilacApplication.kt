@@ -20,6 +20,7 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.inflate
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToSixDigit
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.specificProteins
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLociFile
 import org.apache.commons.cli.*
 import org.apache.logging.log4j.LogManager
 import java.io.IOException
@@ -96,16 +97,13 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val hlaCContext = hlaContextFactory.hlaC()
 
         logger.info("Reading nucleotide files")
-        val nucleotideSequences = readNucleotideFiles(resourcesDir)
-
         val aNucleotideSequences = nucleotideLoci("${resourcesDir}/A_nuc.txt")
         val bNucleotideSequences = nucleotideLoci("${resourcesDir}/B_nuc.txt")
         val cNucleotideSequences = nucleotideLoci("${resourcesDir}/C_nuc.txt")
-        val combinedNucleotideSequences = aNucleotideSequences + bNucleotideSequences + cNucleotideSequences
-        val nucleotideSequencesWithInserts = combinedNucleotideSequences.filter { it.containsInserts() }
-        val nucleotideSequencesWithDeletes = combinedNucleotideSequences.filter { it.containsDeletes() }
+        val nucleotideSequences = aNucleotideSequences + bNucleotideSequences + cNucleotideSequences
+        val nucleotideSequencesWithInserts = nucleotideSequences.filter { it.containsInserts() }
+        val nucleotideSequencesWithDeletes = nucleotideSequences.filter { it.containsDeletes() }
         val nucleotideFragmentFactory = NucleotideFragmentFactory(nucleotideSequencesWithInserts, nucleotideSequencesWithDeletes)
-
 
         logger.info("Querying records from $bamFile")
         val nucleotideGeneEnrichment = NucleotideGeneEnrichment(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
@@ -116,10 +114,11 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val bFragments = aminoAcidPipeline.type(hlaBContext)
         val cFragments = aminoAcidPipeline.type(hlaCContext)
 
-
-
         logger.info("Reading protein files")
-        val aminoAcidSequences = readProteinFiles(resourcesDir)
+        val aAminoAcidSequences = aminoAcidLoci("${resourcesDir}/A_prot.txt")
+        val bAminoAcidSequences = aminoAcidLoci("${resourcesDir}/B_prot.txt")
+        val cAminoAcidSequences = aminoAcidLoci("${resourcesDir}/C_prot.txt")
+        val aminoAcidSequences = aAminoAcidSequences + bAminoAcidSequences + cAminoAcidSequences
 
         // Phasing
         logger.info("Phasing bam records")
@@ -187,8 +186,8 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         val template = aminoAcidSequences.filter { it.allele == HlaAllele("A*01:01:01:01") }.first()
         val writtenCandidates = (candidates + expectedSequences + template).distinct().sortedBy { it.allele }
-        HlaSequenceFile.writeFile("$outputDir/$sample.candidates.inflate.txt", writtenCandidates)
-        HlaSequenceFile.writeDeflatedFile("$outputDir/$sample.candidates.deflate.txt", boundariesList, template, writtenCandidates)
+        HlaSequenceLociFile.write("$outputDir/$sample.candidates.deflate.txt", writtenCandidates)
+//        HlaSequenceLociFile.writeDeflatedFile("$outputDir/$sample.candidates.deflate.txt", boundariesList, template, writtenCandidates)
 
         val complexes = HlaComplex.complexes(
                 confirmedGroups.take(6).map { it.allele },
@@ -275,6 +274,13 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
     private fun nucleotideLoci(inputFilename: String): List<HlaSequenceLoci> {
         val sequences = HlaSequenceFile.readFile(inputFilename).reduceToSixDigit()
         return HlaSequenceLoci.create(sequences)
+                .filter { it.sequences.isNotEmpty() }
+    }
+
+    private fun aminoAcidLoci(inputFilename: String): List<HlaSequenceLoci> {
+        val sequences = HlaSequenceFile.readFile(inputFilename).specificProteins()
+        return HlaSequenceLoci.create(sequences)
+                .filter { it.sequences.isNotEmpty() }
     }
 
 //    private fun doStuff(inputFilename: String, outputFilename: String): List<HlaSequenceLoci> {

@@ -27,7 +27,7 @@ class NucleotideGeneEnrichmentTest {
     }
 
     fun create(gene: String, indices: List<Int>): NucleotideFragment {
-        return NucleotideFragment("id", setOf(gene), indices, indices.map { 0 }, indices.map { 'G' })
+        return NucleotideFragment("id", setOf(gene), indices, indices.map { 0 }, indices.map { "G" })
     }
 
 

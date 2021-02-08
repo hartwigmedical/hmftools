@@ -9,7 +9,7 @@ open class NucleotideFragment(
         val genes: Set<String>,
         protected val nucleotideLoci: List<Int>,
         protected val nucleotideQuality: List<Int>,
-        protected val nucleotides: List<Char>) {
+        protected val nucleotides: List<String>) {
 
     companion object {
 
@@ -51,7 +51,7 @@ open class NucleotideFragment(
                 genes.add(reads[1].gene)
             }
 
-            return NucleotideFragment(id, genes, nucleotideIndices, nucleotideQuality, nucleotides)
+            return NucleotideFragment(id, genes, nucleotideIndices, nucleotideQuality, nucleotides.map { it.toString() })
         }
     }
 
@@ -72,14 +72,14 @@ open class NucleotideFragment(
     }
 
     fun nucleotides(vararg indices: Int): String {
-        return indices.map { nucleotide(it) }.joinToString("")
+        return indices.joinToString("") { nucleotide(it) }
     }
 
-    fun nucleotide(loci: Int): Char {
+    fun nucleotide(loci: Int): String {
         return nucleotides[nucleotideLoci.indexOf(loci)]
     }
 
-    fun nucleotides(): List<Char> = nucleotides
+    fun nucleotides(): List<String> = nucleotides
 
     fun nucleotideLoci(): List<Int> = nucleotideLoci
 
@@ -111,12 +111,12 @@ open class NucleotideFragment(
                 .filter { nucleotideLoci.contains(it + 1) && nucleotideLoci.contains(it + 2) }
                 .map { it / 3 }
 
-        val aminoAcids = aminoAcidIndices.map { aminoAcid(it) }
+        val aminoAcids = aminoAcidIndices.map { aminoAcid(it) }.map { it.toString() }
 
         return AminoAcidFragment(id, genes, nucleotideLoci, nucleotideQuality, nucleotides, aminoAcidIndices, aminoAcids)
     }
 
-    fun enrich(loci: Int, nucleotide: Char, quality: Int): NucleotideFragment {
+    fun enrich(loci: Int, nucleotide: String, quality: Int): NucleotideFragment {
         assert(!containsNucleotide(loci))
         return NucleotideFragment(id, genes, nucleotideLoci + loci, nucleotideQuality + quality, nucleotides + nucleotide)
     }

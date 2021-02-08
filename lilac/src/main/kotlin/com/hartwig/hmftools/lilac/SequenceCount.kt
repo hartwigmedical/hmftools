@@ -8,7 +8,7 @@ import kotlin.math.min
 
 class SequenceCount(private val minCount: Int, val length: Int) {
 
-    private val count = Array(length) { mutableMapOf<Char, Int>() }
+    private val count = Array(length) { mutableMapOf<String, Int>() }
 
     companion object {
         fun nucleotides(minCount: Int, fragments: List<NucleotideFragment>): SequenceCount {
@@ -31,9 +31,7 @@ class SequenceCount(private val minCount: Int, val length: Int) {
             for (fragment in aminoAcidFragments) {
                 for (index in fragment.aminoAcidIndices()) {
                     val aminoAcid = fragment.aminoAcid(index)
-                    if (aminoAcid != '.') {
                         result.increment(index, aminoAcid)
-                    }
                 }
             }
             return result
@@ -41,7 +39,7 @@ class SequenceCount(private val minCount: Int, val length: Int) {
     }
 
 
-    private fun increment(index: Int, aminoAcid: Char) {
+    private fun increment(index: Int, aminoAcid: String) {
         count[index].compute(aminoAcid) { _, u -> (u ?: 0) + 1 }
     }
 
@@ -64,11 +62,11 @@ class SequenceCount(private val minCount: Int, val length: Int) {
         return mapAtIndex.size > 1
     }
 
-    fun sequenceAt(index: Int): Collection<Char> {
-        val result = mutableSetOf<Char>()
+    fun sequenceAt(index: Int): Collection<String> {
+        val result = mutableSetOf<String>()
         val indexMap = count[index]
         for ((aa, count) in indexMap) {
-            if (aa != '.' && count >= minCount) {
+            if (count >= minCount) {
                 result.add(aa)
             }
         }
