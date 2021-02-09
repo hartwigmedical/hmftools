@@ -2,6 +2,8 @@ package com.hartwig.hmftools.ckb.datamodelinterpretation.drug;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ReferenceExtend;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,5 +16,5 @@ public abstract class DrugDescription {
     public abstract String desription();
 
     @NotNull
-    public abstract List<Reference> references();
+    public abstract List<ReferenceExtend> references();
 }

@@ -2,6 +2,8 @@ package com.hartwig.hmftools.ckb.datamodelinterpretation.variant;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ReferenceInfo;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,5 +16,5 @@ public abstract class VariantDescription {
     public abstract String description();
 
     @NotNull
-    public abstract List<Reference> references();
+    public abstract List<ReferenceInfo> references();
 }

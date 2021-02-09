@@ -3,6 +3,8 @@ package com.hartwig.hmftools.ckb.datamodelinterpretation.treatmentApproch;
 import java.util.Date;
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ReferenceInfo;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,7 +22,7 @@ public abstract class TreatmentApproch {
     public abstract String profileName();
 
     @NotNull
-    public abstract List<Reference> references();
+    public abstract List<ReferenceInfo> references();
 
     @NotNull
     public abstract Date createDate();

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodelinterpretation.drug;
+package com.hartwig.hmftools.ckb.datamodelinterpretation.common;
 
 import java.util.Date;
 
@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Reference {
+public abstract class ReferenceExtend {
 
     public abstract int id();
 
@@ -41,5 +41,4 @@ public abstract class Reference {
 
     @NotNull
     public abstract String year();
-
 }
