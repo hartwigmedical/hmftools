@@ -184,7 +184,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         val template = aminoAcidSequences.filter { it.allele == HlaAllele("A*01:01:01:01") }.first()
         val writtenCandidates = (candidates + expectedSequences + template).distinct().sortedBy { it.allele }
-        HlaSequenceLociFile.write("$outputDir/$sample.candidates.deflate.txt", writtenCandidates)
+        HlaSequenceLociFile.write("$outputDir/$sample.candidates.deflate.txt", aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries, writtenCandidates)
 
         val complexes = HlaComplex.complexes(
                 confirmedGroups.take(6).map { it.allele },
