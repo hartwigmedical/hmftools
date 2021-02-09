@@ -9,18 +9,26 @@ import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTr
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrial;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialContact;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialLocation;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ImmutableReferenceExtend;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ReferenceExtend;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.ImmutableIndication;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapy;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapyDescription;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.TherapyDescription;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialContact;
 import com.hartwig.hmftools.ckb.json.common.ClinicalTrialInfo;
+import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.json.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.json.indication.Indication;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
+import com.hartwig.hmftools.ckb.json.reference.Reference;
 import com.hartwig.hmftools.ckb.json.therapy.Therapy;
+import com.hartwig.hmftools.ckb.util.DateConverter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,7 +52,8 @@ public class InterpretationFactory {
 
             //extract clinical trial information
             for (ClinicalTrialInfo clinicalTrialInfo : molecularProfile.variantAssociatedClinicalTrials()) {
-                ImmutableClinicalTrialInterpretation.Builder outputBuilderClinicalInterpretation = ImmutableClinicalTrialInterpretation.builder();
+                ImmutableClinicalTrialInterpretation.Builder outputBuilderClinicalInterpretation =
+                        ImmutableClinicalTrialInterpretation.builder();
 
                 for (ClinicalTrial clinicalTrial : ckbEntry.clinicalTrials()) {
                     if (clinicalTrialInfo.nctId().equals(clinicalTrial.nctId())) {
@@ -88,7 +97,7 @@ public class InterpretationFactory {
                                             .id(therapy.id())
                                             .therapyName(therapy.therapyName())
                                             .synonyms(therapy.synonyms())
-                                            .descriptions(Lists.newArrayList())
+                                            .descriptions(extractTherapyDescriptions(therapy.descriptions(), ckbEntry))
                                             .createDate(therapy.createDate())
                                             .updateDate(therapy.updateDate())
                                             .build());
@@ -104,7 +113,6 @@ public class InterpretationFactory {
             for (EvidenceInfo evidenceInfo : molecularProfile.variantLevelEvidence().evidence()) {
                 outputBuilder.addEvidenceInterpretation();
             }
-            LOGGER.info(outputBuilder.build());
             CkbEntryInterpretation.add(outputBuilder.build());
         }
         return CkbEntryInterpretation;
@@ -146,6 +154,45 @@ public class InterpretationFactory {
                     .build());
         }
         return clinicalTrialContacts;
+    }
+
+    @NotNull
+    private static List<TherapyDescription> extractTherapyDescriptions(@NotNull List<DescriptionInfo> descriptionInfos,
+            @NotNull CkbJsonDatabase ckbEntry) {
+        List<TherapyDescription> therapyDescriptions = Lists.newArrayList();
+
+        for (DescriptionInfo descriptionInfo : descriptionInfos) {
+            therapyDescriptions.add(ImmutableTherapyDescription.builder()
+                    .description(descriptionInfo.description())
+                    .references(extractReferences(descriptionInfo.references(), ckbEntry))
+                    .build());
+        }
+        return therapyDescriptions;
+    }
+
+    @NotNull
+    private static List<ReferenceExtend> extractReferences(@NotNull List<ReferenceInfo> referenceInfos, @NotNull CkbJsonDatabase ckbEntry) {
+        List<ReferenceExtend> references = Lists.newArrayList();
+        for (ReferenceInfo referenceInfo : referenceInfos) {
+            for (Reference reference : ckbEntry.references()) {
+                if (referenceInfo.id() == reference.id()) {
+                    references.add(ImmutableReferenceExtend.builder()
+                            .id(reference.id())
+                            .pubMedId(reference.pubMedId())
+                            .title(reference.title())
+                            .url(reference.url())
+                            .authors(reference.authors())
+                            .journal(reference.journal())
+                            .volume(reference.volume())
+                            .issue(reference.issue())
+                            .date(reference.date())
+                            .abstractText(reference.abstractText())
+                            .year(reference.year())
+                            .build());
+                }
+            }
+        }
+        return references;
     }
 
 }
