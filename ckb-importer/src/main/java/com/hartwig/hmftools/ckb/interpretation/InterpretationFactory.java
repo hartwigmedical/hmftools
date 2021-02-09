@@ -32,7 +32,7 @@ public class InterpretationFactory {
     public static List<CkbEntryInterpretation> interpretationCkbDataModel(@NotNull CkbJsonDatabase ckbEntry) {
         List<CkbEntryInterpretation> CkbEntryInterpretation = Lists.newArrayList();
         int ckbId = 0;
-        for (MolecularProfile molecularProfile : ckbEntry.molecularProfile()) {
+        for (MolecularProfile molecularProfile : ckbEntry.molecularProfiles()) {
             ++ckbId;
             ImmutableCkbEntryInterpretation.Builder outputBuilder = ImmutableCkbEntryInterpretation.builder();
             outputBuilder.id(ckbId);
@@ -42,7 +42,7 @@ public class InterpretationFactory {
             for (ClinicalTrialInfo clinicalTrialInfo : molecularProfile.variantAssociatedClinicalTrials()) {
                 ImmutableClinicalTrialInterpretation.Builder outputBuilderClinicalInterpretation = ImmutableClinicalTrialInterpretation.builder();
 
-                for (ClinicalTrial clinicalTrial : ckbEntry.clinicalTrial()) {
+                for (ClinicalTrial clinicalTrial : ckbEntry.clinicalTrials()) {
                     if (clinicalTrialInfo.nctId().equals(clinicalTrial.nctId())) {
                         LOGGER.info("clinicalTrial {}", clinicalTrial.nctId());
                         outputBuilderClinicalInterpretation.clinicalTrials(ImmutableClinicalTrial.builder()
@@ -60,7 +60,7 @@ public class InterpretationFactory {
                                 .build());
 
                         for (IndicationInfo indicationInfo : clinicalTrial.indications()) {
-                            for (Indication indication : ckbEntry.indication()) {
+                            for (Indication indication : ckbEntry.indications()) {
                                 if (indicationInfo.id().equals(indication.id())) {
                                     outputBuilderClinicalInterpretation.addIndications(ImmutableIndication.builder()
                                             // TODO Switch to String for ID
@@ -78,7 +78,7 @@ public class InterpretationFactory {
                         }
 
                         for (TherapyInfo therapyInfo : clinicalTrial.therapies()) {
-                            for (Therapy therapy : ckbEntry.therapy()) {
+                            for (Therapy therapy : ckbEntry.therapies()) {
                                 if (therapyInfo.id() == therapy.id()) {
                                     outputBuilderClinicalInterpretation.addTherapies(ImmutableTherapy.builder()
                                             .id(therapy.id())

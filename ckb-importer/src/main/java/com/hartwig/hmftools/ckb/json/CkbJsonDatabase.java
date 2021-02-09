@@ -23,35 +23,35 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CkbJsonDatabase {
 
     @NotNull
-    public abstract List<ClinicalTrial> clinicalTrial();
+    public abstract List<MolecularProfile> molecularProfiles();
 
     @NotNull
-    public abstract List<Drug> drug();
+    public abstract List<Variant> variants();
 
     @NotNull
-    public abstract List<DrugClass> drugClass();
+    public abstract List<Gene> genes();
 
     @NotNull
-    public abstract List<Gene> gene();
+    public abstract List<Indication> indications();
 
     @NotNull
-    public abstract List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatus();
+    public abstract List<TreatmentApproach> treatmentApproaches();
 
     @NotNull
-    public abstract List<Indication> indication();
+    public abstract List<Therapy> therapies();
 
     @NotNull
-    public abstract List<MolecularProfile> molecularProfile();
+    public abstract List<Drug> drugs();
 
     @NotNull
-    public abstract List<Reference> reference();
+    public abstract List<DrugClass> drugClasses();
 
     @NotNull
-    public abstract List<Therapy> therapy();
+    public abstract List<ClinicalTrial> clinicalTrials();
 
     @NotNull
-    public abstract List<TreatmentApproach> treatmentApproach();
+    public abstract List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses();
 
     @NotNull
-    public abstract List<Variant> variant();
+    public abstract List<Reference> references();
 }

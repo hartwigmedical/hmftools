@@ -36,17 +36,17 @@ public final class CkbJsonReader {
 
     private static final Logger LOGGER = LogManager.getLogger(CkbJsonReader.class);
 
-    private static final String CLINICAL_TRIALS = "clinicalTrials";
-    private static final String DRUG_CLASSES = "drugClasses";
-    private static final String DRUGS = "drugs";
-    private static final String GENES = "genes";
-    private static final String GLOBAL_THERAPY_APPROVAL_STATUSES = "globalTherapyApprovalStatuses";
-    private static final String INDICATIONS = "indications";
-    private static final String MOLECULAR_PROFILES = "molecularProfiles";
-    private static final String REFERENCES = "references";
-    private static final String THERAPIES = "therapies";
-    private static final String TREATMENT_APPROACHES = "treatmentApproaches";
-    private static final String VARIANTS = "variants";
+    private static final String MOLECULAR_PROFILES_DIR = "molecularProfiles";
+    private static final String VARIANTS_DIR = "variants";
+    private static final String GENES_DIR = "genes";
+    private static final String INDICATIONS_DIR = "indications";
+    private static final String TREATMENT_APPROACHES_DIR = "treatmentApproaches";
+    private static final String THERAPIES_DIR = "therapies";
+    private static final String DRUGS_DIR = "drugs";
+    private static final String DRUG_CLASSES_DIR = "drugClasses";
+    private static final String CLINICAL_TRIALS_DIR = "clinicalTrials";
+    private static final String GLOBAL_THERAPY_APPROVAL_STATUSES_DIR = "globalTherapyApprovalStatuses";
+    private static final String REFERENCES_DIR = "references";
 
     private CkbJsonReader() {
     }
@@ -60,35 +60,36 @@ public final class CkbJsonReader {
     public static CkbJsonDatabase read(@NotNull String ckbDir, @Nullable Integer maxFilesToReadPerType) throws IOException {
         LOGGER.info("Reading all CKB json files from '{}'", ckbDir);
 
-        List<ClinicalTrial> clinicalTrials = new ClinicalTrialReader(maxFilesToReadPerType).read(ckbDir + File.separator + CLINICAL_TRIALS);
-        List<Drug> drugs = new DrugReader(maxFilesToReadPerType).read(ckbDir + File.separator + DRUGS);
-        List<DrugClass> drugClasses = new DrugClassReader(maxFilesToReadPerType).read(ckbDir + File.separator + DRUG_CLASSES);
-        List<Gene> genes = new GeneReader(maxFilesToReadPerType).read(ckbDir + File.separator + GENES);
-        List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses = new GlobalTherapyApprovalStatusReader(maxFilesToReadPerType).read(
-                ckbDir + File.separator + GLOBAL_THERAPY_APPROVAL_STATUSES);
-        List<Indication> indications = new IndicationReader(maxFilesToReadPerType).read(ckbDir + File.separator + INDICATIONS);
         List<MolecularProfile> molecularProfiles =
-                new MolecularProfileReader(maxFilesToReadPerType).read(ckbDir + File.separator + MOLECULAR_PROFILES);
-        List<Reference> references = new ReferenceReader(maxFilesToReadPerType).read(ckbDir + File.separator + REFERENCES);
-        List<Therapy> therapies = new TherapyReader(maxFilesToReadPerType).read(ckbDir + File.separator + THERAPIES);
+                new MolecularProfileReader(maxFilesToReadPerType).read(ckbDir + File.separator + MOLECULAR_PROFILES_DIR);
+        List<Variant> variants = new VariantReader(maxFilesToReadPerType).read(ckbDir + File.separator + VARIANTS_DIR);
+        List<Gene> genes = new GeneReader(maxFilesToReadPerType).read(ckbDir + File.separator + GENES_DIR);
+        List<Indication> indications = new IndicationReader(maxFilesToReadPerType).read(ckbDir + File.separator + INDICATIONS_DIR);
         List<TreatmentApproach> treatmentApproaches =
-                new TreatmentApproachReader(maxFilesToReadPerType).read(ckbDir + File.separator + TREATMENT_APPROACHES);
-        List<Variant> variants = new VariantReader(maxFilesToReadPerType).read(ckbDir + File.separator + VARIANTS);
+                new TreatmentApproachReader(maxFilesToReadPerType).read(ckbDir + File.separator + TREATMENT_APPROACHES_DIR);
+        List<Therapy> therapies = new TherapyReader(maxFilesToReadPerType).read(ckbDir + File.separator + THERAPIES_DIR);
+        List<Drug> drugs = new DrugReader(maxFilesToReadPerType).read(ckbDir + File.separator + DRUGS_DIR);
+        List<DrugClass> drugClasses = new DrugClassReader(maxFilesToReadPerType).read(ckbDir + File.separator + DRUG_CLASSES_DIR);
+        List<ClinicalTrial> clinicalTrials =
+                new ClinicalTrialReader(maxFilesToReadPerType).read(ckbDir + File.separator + CLINICAL_TRIALS_DIR);
+        List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses = new GlobalTherapyApprovalStatusReader(maxFilesToReadPerType).read(
+                ckbDir + File.separator + GLOBAL_THERAPY_APPROVAL_STATUSES_DIR);
+        List<Reference> references = new ReferenceReader(maxFilesToReadPerType).read(ckbDir + File.separator + REFERENCES_DIR);
 
         LOGGER.info(" Json file reading completed");
 
         return ImmutableCkbJsonDatabase.builder()
-                .clinicalTrial(clinicalTrials)
-                .drug(drugs)
-                .drugClass(drugClasses)
-                .gene(genes)
-                .globalTherapyApprovalStatus(globalTherapyApprovalStatuses)
-                .indication(indications)
-                .molecularProfile(molecularProfiles)
-                .reference(references)
-                .therapy(therapies)
-                .treatmentApproach(treatmentApproaches)
-                .variant(variants)
+                .molecularProfiles(molecularProfiles)
+                .variants(variants)
+                .genes(genes)
+                .indications(indications)
+                .treatmentApproaches(treatmentApproaches)
+                .therapies(therapies)
+                .drugs(drugs)
+                .drugClasses(drugClasses)
+                .clinicalTrials(clinicalTrials)
+                .globalTherapyApprovalStatuses(globalTherapyApprovalStatuses)
+                .references(references)
                 .build();
     }
 }
