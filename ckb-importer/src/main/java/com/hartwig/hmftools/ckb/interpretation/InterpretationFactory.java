@@ -41,8 +41,8 @@ public class InterpretationFactory {
             LOGGER.info("molecular profile {}", molecularProfile.id());
             for (ClinicalTrialInfo clinicalTrialInfo : molecularProfile.variantAssociatedClinicalTrial()) {
                 for (ClinicalTrial clinicalTrial : ckbEntry.clinicalTrial()) {
-                    LOGGER.info("clinicalTrial {}", clinicalTrial.nctId());
                     if (clinicalTrialInfo.nctId().equals(clinicalTrial.nctId())) {
+                        LOGGER.info("clinicalTrial {}", clinicalTrial.nctId());
                         outputBuilder.addClinicalTrial(ImmutableClinicalTrial.builder()
                                 .nctId(clinicalTrial.nctId())
                                 .title(clinicalTrial.title())
