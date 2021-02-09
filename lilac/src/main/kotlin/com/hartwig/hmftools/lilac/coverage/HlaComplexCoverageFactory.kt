@@ -1,6 +1,7 @@
-package com.hartwig.hmftools.lilac.hla
+package com.hartwig.hmftools.lilac.coverage
 
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
+import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.read.FragmentAlleles
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 import java.util.concurrent.Callable

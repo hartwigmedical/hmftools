@@ -1,5 +1,6 @@
-package com.hartwig.hmftools.lilac.hla
+package com.hartwig.hmftools.lilac.coverage
 
+import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.read.FragmentAlleles
 import kotlin.math.roundToInt
 

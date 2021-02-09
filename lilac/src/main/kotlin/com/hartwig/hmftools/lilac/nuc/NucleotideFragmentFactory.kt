@@ -22,8 +22,8 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
         }
     }
 
-    val insertSuffixTrees = inserts.map { Pair(it, SuffixTree(it.sequence())) }.toMap()
-    val deleteSuffixTrees = deletes.map { Pair(it, SuffixTree(it.sequence())) }.toMap()
+    private val insertSuffixTrees = inserts.map { Pair(it, SuffixTree(it.sequence())) }.toMap()
+    private val deleteSuffixTrees = deletes.map { Pair(it, SuffixTree(it.sequence())) }.toMap()
 
     fun createFragment(record: SAMRecord, reverseStrand: Boolean, codingRegionLoci: Int, codingRegion: NamedBed): NucleotideFragment? {
         val samCoding = SAMCodingRecord.create(codingRegion, record)

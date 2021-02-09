@@ -5,10 +5,15 @@ import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier
 import com.hartwig.hmftools.lilac.LilacApplication.Companion.logger
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragmentPipeline
 import com.hartwig.hmftools.lilac.candidates.Candidates
+import com.hartwig.hmftools.lilac.coverage.HlaComplex
+import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage
+import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage.Companion.writeToFile
+import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverageFactory
+import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverageRanking
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceValidation
-import com.hartwig.hmftools.lilac.hla.*
-import com.hartwig.hmftools.lilac.hla.HlaComplexCoverage.Companion.writeToFile
+import com.hartwig.hmftools.lilac.hla.HlaAllele
+import com.hartwig.hmftools.lilac.hla.HlaContextFactory
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory
 import com.hartwig.hmftools.lilac.nuc.NucleotideGeneEnrichment
@@ -24,7 +29,6 @@ import org.apache.commons.cli.*
 import org.apache.logging.log4j.LogManager
 import java.io.IOException
 import java.util.concurrent.Executors
-import kotlin.math.min
 
 fun main(args: Array<String>) {
 
@@ -200,20 +204,20 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         val complexCoverage = coverageFactory.complexCoverage(complexes)
         if (complexCoverage.isNotEmpty()) {
-            val topCoverage = complexCoverage[0]
-            val minCoverage = min(topCoverage.totalCoverage * 0.99, topCoverage.totalCoverage - 10.0)
-            val topComplexes = complexCoverage.filter { it.totalCoverage >= minCoverage }
-            topComplexes.writeToFile("$outputDir/$sample.coverage.txt")
+            val winnerFactory = HlaComplexCoverageRanking()
+            val winningCandidates = winnerFactory.candidateRanking(complexCoverage)
+            val winner = winningCandidates[0]
+
+            winningCandidates.writeToFile("$outputDir/$sample.coverage.txt")
 
             logger.info(HlaComplexCoverage.header())
-            for (topComplex in topComplexes) {
-                logger.info(topComplex)
+            for (winningCandidate in winningCandidates) {
+                logger.info(winningCandidate)
             }
 
-            val complexesWithSameTopScore = complexCoverage.filter { it.totalCoverage == topCoverage.totalCoverage }.count()
-            logger.info("${config.sample} - $complexesWithSameTopScore WINNERS, WINNING ALLELES: ${topCoverage.alleles.map { it.allele }}")
+            logger.info("${config.sample} - ${winningCandidates.size} CANDIDATES, WINNING ALLELES: ${winner.alleles.map { it.allele }}")
 
-            val winningAlleles = topCoverage.alleles.map { it.allele }
+            val winningAlleles = winner.alleles.map { it.allele }
             val winningSequences = candidates.filter { candidate -> candidate.allele in winningAlleles }
             PhasedEvidenceValidation.validateAgainstFinalCandidates("A", aPhasedEvidence, winningSequences)
             PhasedEvidenceValidation.validateAgainstFinalCandidates("B", bPhasedEvidence, winningSequences)
@@ -225,23 +229,6 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val transcripts = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
         val reader = SAMRecordReader(1000, config.refGenome, transcripts, nucleotideFragmentFactory)
         return reader.readFromBam(bamFile)
-    }
-
-    fun unwrapFile(fileName: String) {
-        val input = HlaSequenceFile.readFile(fileName)
-        val output = input.reduceToFourDigit()
-        val inflated = output.map { it.inflate(input[0].rawSequence) }
-        val deflated = inflated.map { it.deflate(inflated[0].rawSequence) }
-        HlaSequenceFile.writeFile(fileName.replace(".txt", ".unwrapped.txt"), output)
-        HlaSequenceFile.writeFile(fileName.replace(".txt", ".deflated.txt"), deflated)
-    }
-
-    private fun readNucleotideFiles(resourcesDir: String): List<HlaSequence> {
-        return readSequenceFiles({ x -> "${resourcesDir}/${x}_nuc.txt" }, { x -> x })
-    }
-
-    private fun readProteinFiles(resourcesDir: String): List<HlaSequence> {
-        return readSequenceFiles({ x -> "${resourcesDir}/${x}_prot.txt" }, { x -> x.reduceToFourDigit() })
     }
 
     private fun readSequenceFiles(filenameSupplier: (Char) -> String, transform: (List<HlaSequence>) -> List<HlaSequence>): List<HlaSequence> {
