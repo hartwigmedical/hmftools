@@ -74,7 +74,6 @@ public class InterpretationFactory {
                                             .build());
                                 }
                             }
-
                         }
 
                         for (TherapyInfo therapyInfo : clinicalTrial.therapies()) {
@@ -89,16 +88,14 @@ public class InterpretationFactory {
                                             .updateDate(therapy.updateDate())
                                             .build());
                                 }
-
                             }
                         }
-
                     }
                 }
             }
 
             //extract variant level information
-            for (EvidenceInfo evidenceInfo: molecularProfile.variantLevelEvidence().evidence()) {
+            for (EvidenceInfo evidenceInfo : molecularProfile.variantLevelEvidence().evidence()) {
 
             }
             LOGGER.info(outputBuilder.build());
@@ -106,5 +103,4 @@ public class InterpretationFactory {
         }
         return CkbEntryInterpretation;
     }
-
 }
