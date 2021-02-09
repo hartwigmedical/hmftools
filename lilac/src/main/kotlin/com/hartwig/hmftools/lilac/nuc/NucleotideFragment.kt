@@ -72,6 +72,10 @@ open class NucleotideFragment(
             val first = nucleotide(index * 3)
             val second = nucleotide(index * 3 + 1)
             val third = nucleotide(index * 3 + 2)
+            if (first == "." && second == "." && third == ".") {
+                return "."
+            }
+
             return Codons.aminoAcids(first + second + third)
         }
 
