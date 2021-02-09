@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class CkbEntryInterpretation {
 
-   // public abstract int id();
+    public abstract int id();
 
 //    @NotNull
 //    public abstract Gene gene();

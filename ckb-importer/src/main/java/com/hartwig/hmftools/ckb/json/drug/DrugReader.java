@@ -286,7 +286,7 @@ public class DrugReader extends CkbJsonDirectoryReader<Drug> {
         return ImmutableTherapyInfo.builder()
                 .id(JsonFunctions.integer(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
-                .synonyms(JsonFunctions.string(jsonObject, "synonyms"))
+                .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
                 .build();
     }
 

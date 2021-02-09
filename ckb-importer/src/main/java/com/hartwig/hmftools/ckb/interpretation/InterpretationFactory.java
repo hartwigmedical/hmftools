@@ -31,9 +31,11 @@ public class InterpretationFactory {
 
     public static List<CkbEntryInterpretation> interpretationCkbDataModel(@NotNull CkbJsonDatabase ckbEntry) {
         List<CkbEntryInterpretation> CkbEntryInterpretation = Lists.newArrayList();
-
+        int ckbId = 0;
         for (MolecularProfile molecularProfile : ckbEntry.molecularProfile()) {
+            ++ckbId;
             ImmutableCkbEntryInterpretation.Builder outputBuilder = ImmutableCkbEntryInterpretation.builder();
+            outputBuilder.id(ckbId);
             LOGGER.info("molecular profile {}", molecularProfile.id());
             for (ClinicalTrialInfo clinicalTrialInfo : molecularProfile.variantAssociatedClinicalTrial()) {
                 for (ClinicalTrial clinicalTrial : ckbEntry.clinicalTrial()) {
