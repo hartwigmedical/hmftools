@@ -79,8 +79,11 @@ public class AmpliconData
     {
         if(dataSource.equals(AMPLICON_SOURCE_AMP_ARCHITECT))
         {
-            if(items.length != 5)
+            if(!fieldsIndexMap.containsKey("SampleId") || !fieldsIndexMap.containsKey("AmpliconIntervals")
+            || !fieldsIndexMap.containsKey("AmpliconClusterId") || !fieldsIndexMap.containsKey("AmpliconClassification"))
+            {
                 return null;
+            }
 
             // SampleBarcode,SampleId,AmpliconClusterId,AmpliconClassification,AmpliconIntervals
 
@@ -102,7 +105,6 @@ public class AmpliconData
                 final String chromosome = regionItems[0];
                 final int[] positions = { Integer.parseInt(regionItems[1]), Integer.parseInt(regionItems[2]) };
                 ampData.Regions.add(new BaseRegion(chromosome, positions));
-
             }
 
             return ampData;
