@@ -19,17 +19,17 @@ public abstract class Indication {
     @NotNull
     public abstract String source();
 
-    @NotNull
+    @Nullable
     public abstract String definition();
 
-    @NotNull
+    @Nullable
     public abstract String currentPreferredTerm();
 
-    @NotNull
+    @Nullable
     public abstract Date lastUpdateDateFromDO();
 
     @NotNull
-    public abstract List<Integer> altIds();
+    public abstract List<String> altIds();
 
     @NotNull
     public abstract String termId();

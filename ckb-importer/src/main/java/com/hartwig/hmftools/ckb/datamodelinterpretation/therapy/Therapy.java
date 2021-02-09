@@ -16,16 +16,16 @@ public abstract class Therapy {
     @NotNull
     public abstract String therapyName();
 
-    @NotNull
+    @Nullable
     public abstract String synonyms();
 
     @NotNull
     public abstract List<TherapyDescription> descriptions();
 
-    @NotNull
+    @Nullable
     public abstract Date createDate();
 
-    @NotNull
+    @Nullable
     public abstract Date updateDate();
 
 }

@@ -22,39 +22,39 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class CkbEntryInterpretation {
 
-    public abstract int id();
+   // public abstract int id();
 
+//    @NotNull
+//    public abstract Gene gene();
+//
+//    @NotNull
+//    public abstract List<Variant> variants(); //complex is possible
+//
+//    @NotNull
+//    public abstract Therapy therapy();
+//
+//    @NotNull
+//    public abstract List<Drug> drugs();
+//
+//    @NotNull
+//    public abstract DrugClass drugClass();
+//
+//    @NotNull
+//    public abstract List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatus();
+//
+//    @NotNull
+//    public abstract TreatmentApproch treatmentApproch();
+//
     @NotNull
-    public abstract Gene gene();
-
-    @NotNull
-    public abstract List<Variant> variants(); //complex is possible
-
-    @NotNull
-    public abstract Therapy therapy();
-
-    @NotNull
-    public abstract List<Drug> drugs();
-
-    @NotNull
-    public abstract DrugClass drugClass();
-
-    @NotNull
-    public abstract List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatus();
-
-    @NotNull
-    public abstract TreatmentApproch treatmentApproch();
-
-    @NotNull
-    public abstract ClinicalTrial clinicalTrial();
-
-    @NotNull
-    public abstract Indication indication();
-
-    @NotNull
-    public abstract MolecularProfile molecularProfile();
-
-    @NotNull
-    public abstract List<Reference> reference();
+    public abstract List<ClinicalTrial> clinicalTrial();
+//
+//    @NotNull
+//    public abstract Indication indication();
+//
+//    @NotNull
+//    public abstract MolecularProfile molecularProfile();
+//
+//    @NotNull
+//    public abstract List<Reference> reference();
 
 }
