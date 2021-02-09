@@ -5,10 +5,10 @@ import java.util.List;
 
 import com.hartwig.hmftools.ckb.json.CkbJsonObject;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
-import com.hartwig.hmftools.ckb.json.common.EffectInfo;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.json.common.GeneInfo;
 import com.hartwig.hmftools.ckb.json.common.MolecularProfileInfo;
+import com.hartwig.hmftools.ckb.json.common.VariantInfo;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -69,5 +69,5 @@ public abstract class Variant implements CkbJsonObject {
     public abstract List<VariantTranscriptCoordinate> allTranscriptCoordinate();
 
     @NotNull
-    public abstract List<EffectInfo> memberVariant();
+    public abstract List<VariantInfo> memberVariant();
 }

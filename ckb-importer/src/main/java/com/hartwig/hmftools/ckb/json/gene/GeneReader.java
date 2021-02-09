@@ -9,11 +9,9 @@ import com.google.gson.JsonObject;
 import com.hartwig.hmftools.ckb.json.CkbJsonDirectoryReader;
 import com.hartwig.hmftools.ckb.json.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
-import com.hartwig.hmftools.ckb.json.common.EffectInfo;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.json.common.ImmutableClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.json.common.ImmutableDescriptionInfo;
-import com.hartwig.hmftools.ckb.json.common.ImmutableEffectInfo;
 import com.hartwig.hmftools.ckb.json.common.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.ckb.json.common.ImmutableIndicationInfo;
 import com.hartwig.hmftools.ckb.json.common.ImmutableMolecularProfileInfo;
@@ -49,21 +47,21 @@ public class GeneReader extends CkbJsonDirectoryReader<Gene> {
         return ImmutableGene.builder()
                 .id(JsonFunctions.integer(object, "id"))
                 .geneSymbol(JsonFunctions.string(object, "geneSymbol"))
-                .term(JsonFunctions.stringList(object, "terms"))
+                .terms(JsonFunctions.stringList(object, "terms"))
                 .entrezId(JsonFunctions.nullableString(object, "entrezId"))
-                .synonym(JsonFunctions.stringList(object, "synonyms"))
+                .synonyms(JsonFunctions.stringList(object, "synonyms"))
                 .chromosome(JsonFunctions.nullableString(object, "chromosome"))
                 .mapLocation(JsonFunctions.nullableString(object, "mapLocation"))
-                .description(extractGeneDescriptions(object.getAsJsonArray("geneDescriptions")))
+                .descriptions(extractGeneDescriptions(object.getAsJsonArray("geneDescriptions")))
                 .canonicalTranscript(JsonFunctions.nullableString(object, "canonicalTranscript"))
                 .geneRole(JsonFunctions.string(object, "geneRole"))
                 .createDate(DateConverter.toDate(JsonFunctions.string(object, "createDate")))
                 .updateDate(DateConverter.toDate(JsonFunctions.nullableString(object, "updateDate")))
-                .clinicalTrial(extractGeneClinicalTrial(object.getAsJsonArray("clinicalTrials")))
+                .clinicalTrials(extractGeneClinicalTrial(object.getAsJsonArray("clinicalTrials")))
                 .evidence(extractGeneEvidence(object.getAsJsonArray("evidence")))
-                .variant(extractGeneVariant(object.getAsJsonArray("variants")))
-                .molecularProfile(extarctMolecularProfile(object.getAsJsonArray("molecularProfiles")))
-                .categoryVariant(extractCategoryVariant(object.getAsJsonArray("categoryVariants")))
+                .variants(extractGeneVariant(object.getAsJsonArray("variants")))
+                .molecularProfiles(extarctMolecularProfile(object.getAsJsonArray("molecularProfiles")))
+                .categoryVariants(extractCategoryVariant(object.getAsJsonArray("categoryVariants")))
                 .build();
     }
 
@@ -78,7 +76,7 @@ public class GeneReader extends CkbJsonDirectoryReader<Gene> {
 
             geneDescriptions.add(ImmutableDescriptionInfo.builder()
                     .description(JsonFunctions.string(geneDescriptionJsonObject, "description"))
-                    .reference(extractGeneReferences(geneDescriptionJsonObject.getAsJsonArray("references")))
+                    .references(extractGeneReferences(geneDescriptionJsonObject.getAsJsonArray("references")))
                     .build());
         }
         return geneDescriptions;
@@ -118,7 +116,7 @@ public class GeneReader extends CkbJsonDirectoryReader<Gene> {
                     .title(JsonFunctions.string(geneClinicalTrialJsonObject, "title"))
                     .phase(JsonFunctions.string(geneClinicalTrialJsonObject, "phase"))
                     .recruitment(JsonFunctions.string(geneClinicalTrialJsonObject, "recruitment"))
-                    .therapy(extractGeneTherapy(geneClinicalTrialJsonObject.getAsJsonArray("therapies")))
+                    .therapies(extractGeneTherapy(geneClinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());
         }
         return clinicalTrials;
@@ -160,7 +158,7 @@ public class GeneReader extends CkbJsonDirectoryReader<Gene> {
                     .therapy(extractGeneTherapyObject(geneEvidenceObject.getAsJsonObject("therapy")))
                     .indication(extractGeneIndicationObject(geneEvidenceObject.getAsJsonObject("indication")))
                     .responseType(JsonFunctions.string(geneEvidenceObject, "responseType"))
-                    .reference(extractGeneReferences(geneEvidenceObject.getAsJsonArray("references")))
+                    .references(extractGeneReferences(geneEvidenceObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(geneEvidenceObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(geneEvidenceObject, "ampCapAscoInferredTier"))
                     .build());
@@ -197,7 +195,7 @@ public class GeneReader extends CkbJsonDirectoryReader<Gene> {
         geneIndicationChecker.check(jsonObject);
 
         return ImmutableIndicationInfo.builder()
-                .id(JsonFunctions.integer(jsonObject, "id"))
+                .id(JsonFunctions.string(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
                 .build();
@@ -217,7 +215,7 @@ public class GeneReader extends CkbJsonDirectoryReader<Gene> {
                     .fullName(JsonFunctions.string(geneVariantObject, "fullName"))
                     .impact(JsonFunctions.nullableString(geneVariantObject, "impact"))
                     .proteinEffect(JsonFunctions.nullableString(geneVariantObject, "proteinEffect"))
-                    .description(extractVariantDescription(geneVariantObject.getAsJsonArray("geneVariantDescriptions")))
+                    .descriptions(extractVariantDescription(geneVariantObject.getAsJsonArray("geneVariantDescriptions")))
                     .build());
         }
         return geneVariants;
@@ -234,7 +232,7 @@ public class GeneReader extends CkbJsonDirectoryReader<Gene> {
 
             geneVariantDescriptions.add(ImmutableDescriptionInfo.builder()
                     .description(JsonFunctions.string(variantDescriptionObject, "description"))
-                    .reference(extractGeneReferences(variantDescriptionObject.getAsJsonArray("references")))
+                    .references(extractGeneReferences(variantDescriptionObject.getAsJsonArray("references")))
                     .build());
         }
         return geneVariantDescriptions;
@@ -252,7 +250,7 @@ public class GeneReader extends CkbJsonDirectoryReader<Gene> {
             molecularProfiles.add(ImmutableMolecularProfileInfo.builder()
                     .id(JsonFunctions.integer(molecularProfileObject, "id"))
                     .profileName(JsonFunctions.string(molecularProfileObject, "profileName"))
-                    .treatmentApproach(extractProfileTreatmentApproach(molecularProfileObject.getAsJsonArray("profileTreatmentApproaches")))
+                    .treatmentApproaches(extractProfileTreatmentApproach(molecularProfileObject.getAsJsonArray("profileTreatmentApproaches")))
                     .build());
         }
         return molecularProfiles;
@@ -277,20 +275,20 @@ public class GeneReader extends CkbJsonDirectoryReader<Gene> {
     }
 
     @NotNull
-    private static List<EffectInfo> extractCategoryVariant(@NotNull JsonArray jsonArray) {
-        List<EffectInfo> geneCategoryVariants = Lists.newArrayList();
+    private static List<VariantInfo> extractCategoryVariant(@NotNull JsonArray jsonArray) {
+        List<VariantInfo> geneCategoryVariants = Lists.newArrayList();
         JsonDatamodelChecker geneProfileTreatmentApprochChecker = GeneDataModelChecker.geneCategoryVariantObjectChecker();
 
         for (JsonElement geneCategoryVariant : jsonArray) {
             JsonObject geneCategoryVariantObject = geneCategoryVariant.getAsJsonObject();
             geneProfileTreatmentApprochChecker.check(geneCategoryVariantObject);
 
-            geneCategoryVariants.add(ImmutableEffectInfo.builder()
+            geneCategoryVariants.add(ImmutableVariantInfo.builder()
                     .id(JsonFunctions.integer(geneCategoryVariantObject, "id"))
                     .fullName(JsonFunctions.string(geneCategoryVariantObject, "fullName"))
                     .impact(JsonFunctions.nullableString(geneCategoryVariantObject, "impact"))
                     .proteinEffect(JsonFunctions.nullableString(geneCategoryVariantObject, "proteinEffect"))
-                    .description(extractVariantDescription(geneCategoryVariantObject.getAsJsonArray("geneVariantDescriptions")))
+                    .descriptions(extractVariantDescription(geneCategoryVariantObject.getAsJsonArray("geneVariantDescriptions")))
                     .build());
         }
         return geneCategoryVariants;

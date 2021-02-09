@@ -69,7 +69,7 @@ public class IndicationReader extends CkbJsonDirectoryReader<Indication> {
                     .therapy(extractTherapy(evidenceJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(evidenceJsonObject.getAsJsonObject("indication")))
                     .responseType(JsonFunctions.string(evidenceJsonObject, "responseType"))
-                    .reference(extractReference(evidenceJsonObject.getAsJsonArray("references")))
+                    .references(extractReference(evidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(evidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(evidenceJsonObject, "ampCapAscoInferredTier"))
                     .build());
@@ -106,7 +106,7 @@ public class IndicationReader extends CkbJsonDirectoryReader<Indication> {
         indicationEvidenceIndicationChecker.check(jsonObject);
 
         return ImmutableIndicationInfo.builder()
-                .id(JsonFunctions.integer(jsonObject, "id"))
+                .id(JsonFunctions.string(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
                 .build();
@@ -145,7 +145,7 @@ public class IndicationReader extends CkbJsonDirectoryReader<Indication> {
                     .title(JsonFunctions.string(clinicalTrialJsonObject, "title"))
                     .phase(JsonFunctions.string(clinicalTrialJsonObject, "phase"))
                     .recruitment(JsonFunctions.string(clinicalTrialJsonObject, "recruitment"))
-                    .therapy(extractTherapyList(clinicalTrialJsonObject.getAsJsonArray("therapies")))
+                    .therapies(extractTherapyList(clinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());
         }
         return clinicalTrials;

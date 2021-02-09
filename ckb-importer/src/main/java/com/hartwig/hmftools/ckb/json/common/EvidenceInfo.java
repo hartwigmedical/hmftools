@@ -34,7 +34,7 @@ public abstract class EvidenceInfo {
     public abstract String responseType();
 
     @NotNull
-    public abstract List<ReferenceInfo> reference();
+    public abstract List<ReferenceInfo> references();
 
     @NotNull
     public abstract String ampCapAscoEvidenceLevel();
@@ -43,5 +43,5 @@ public abstract class EvidenceInfo {
     public abstract String ampCapAscoInferredTier();
 
     @Nullable
-    public abstract List<TreatmentApproachInfo> treatmentApproach();
+    public abstract List<TreatmentApproachInfo> treatmentApproaches();
 }

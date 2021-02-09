@@ -84,7 +84,7 @@ public class GlobalTherapyApprovalStatusReader extends CkbJsonDirectoryReader<Gl
         globalTherapyApprovalStatusIndicationChecker.check(jsonObject);
 
         return ImmutableIndicationInfo.builder()
-                .id(JsonFunctions.integer(jsonObject, "id"))
+                .id(JsonFunctions.string(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
                 .build();

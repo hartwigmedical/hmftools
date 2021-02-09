@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ReferenceInfo implements ReferenceInfoExtended{
+public abstract class ReferenceInfo {
 
     public abstract int id();
 
@@ -18,4 +18,25 @@ public abstract class ReferenceInfo implements ReferenceInfoExtended{
 
     @Nullable
     public abstract String url();
+
+    @Nullable
+    public abstract String authors();
+
+    @Nullable
+    public abstract String journal();
+
+    @Nullable
+    public abstract String volume();
+
+    @Nullable
+    public abstract String issue();
+
+    @Nullable
+    public abstract String date();
+
+    @Nullable
+    public abstract String abstractText();
+
+    @Nullable
+    public abstract String year();
 }

@@ -23,5 +23,5 @@ public abstract class ClinicalTrialInfo {
     public abstract String recruitment();
 
     @NotNull
-    public abstract List<TherapyInfo> therapy();
+    public abstract List<TherapyInfo> therapies();
 }

@@ -15,5 +15,5 @@ public abstract class MolecularProfileInfo {
     @NotNull
     public abstract String profileName();
 
-    public abstract List<TreatmentApproachInfo> treatmentApproach();
+    public abstract List<TreatmentApproachInfo> treatmentApproaches();
 }

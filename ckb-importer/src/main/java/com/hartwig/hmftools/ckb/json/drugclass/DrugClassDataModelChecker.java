@@ -25,22 +25,22 @@ final class DrugClassDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugClassDrugsObjectChecker() {
+    public static JsonDatamodelChecker drugObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("drugName", true);
         map.put("terms", true);
 
-        return new JsonDatamodelChecker("DrugClassDrugsObject", map);
+        return new JsonDatamodelChecker("DrugClassDrugObject", map);
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugClassTreatmentApproachesObjectChecker() {
+    public static JsonDatamodelChecker treatmentApproachObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("name", true);
         map.put("profileName", true);
 
-        return new JsonDatamodelChecker("DrugClassTreatmentApproachesObject", map);
+        return new JsonDatamodelChecker("DrugClassTreatmentApproachObject", map);
     }
 }

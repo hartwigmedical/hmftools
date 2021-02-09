@@ -28,16 +28,16 @@ public abstract class ClinicalTrial implements CkbJsonObject {
     public abstract String recruitment();
 
     @NotNull
-    public abstract List<TherapyInfo> therapy();
+    public abstract List<TherapyInfo> therapies();
 
     @NotNull
-    public abstract List<String> ageGroup();
+    public abstract List<String> ageGroups();
 
     @Nullable
     public abstract String gender();
 
     @NotNull
-    public abstract String variantRequirement();
+    public abstract String variantRequirements();
 
     @Nullable
     public abstract String sponsors();
@@ -46,11 +46,11 @@ public abstract class ClinicalTrial implements CkbJsonObject {
     public abstract Date updateDate();
 
     @NotNull
-    public abstract List<IndicationInfo> indication();
+    public abstract List<IndicationInfo> indications();
 
     @NotNull
-    public abstract List<ClinicalTrialVariantRequirementDetail> variantRequirementDetail();
+    public abstract List<ClinicalTrialVariantRequirementDetail> variantRequirementDetails();
 
     @NotNull
-    public abstract List<ClinicalTrialLocation> clinicalTrialLocation();
+    public abstract List<ClinicalTrialLocation> clinicalTrialLocations();
 }

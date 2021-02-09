@@ -6,7 +6,6 @@ import java.util.List;
 import com.hartwig.hmftools.ckb.json.CkbJsonObject;
 import com.hartwig.hmftools.ckb.json.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
-import com.hartwig.hmftools.ckb.json.common.EffectInfo;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.json.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.json.common.VariantInfo;
@@ -25,13 +24,13 @@ public abstract class Gene implements CkbJsonObject {
     public abstract String geneSymbol();
 
     @NotNull
-    public abstract List<String> term();
+    public abstract List<String> terms();
 
     @Nullable
     public abstract String entrezId();
 
     @NotNull
-    public abstract List<String> synonym();
+    public abstract List<String> synonyms();
 
     @Nullable
     public abstract String chromosome();
@@ -40,7 +39,7 @@ public abstract class Gene implements CkbJsonObject {
     public abstract String mapLocation();
 
     @NotNull
-    public abstract List<DescriptionInfo> description();
+    public abstract List<DescriptionInfo> descriptions();
 
     @Nullable
     public abstract String canonicalTranscript();
@@ -55,17 +54,17 @@ public abstract class Gene implements CkbJsonObject {
     public abstract Date updateDate();
 
     @NotNull
-    public abstract List<ClinicalTrialInfo> clinicalTrial();
+    public abstract List<ClinicalTrialInfo> clinicalTrials();
 
     @NotNull
     public abstract List<EvidenceInfo> evidence();
 
     @NotNull
-    public abstract List<VariantInfo> variant();
+    public abstract List<VariantInfo> variants();
 
     @NotNull
-    public abstract List<MolecularProfileInfo> molecularProfile();
+    public abstract List<MolecularProfileInfo> molecularProfiles();
 
     @NotNull
-    public abstract List<EffectInfo> categoryVariant();
+    public abstract List<VariantInfo> categoryVariants();
 }

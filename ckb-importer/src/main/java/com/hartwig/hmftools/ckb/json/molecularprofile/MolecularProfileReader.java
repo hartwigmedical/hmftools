@@ -128,10 +128,10 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
                     .therapy(extractTherapy(complexMolecularProfileEvidenceJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(complexMolecularProfileEvidenceJsonObject.getAsJsonObject("indication")))
                     .responseType(JsonFunctions.string(complexMolecularProfileEvidenceJsonObject, "responseType"))
-                    .reference(extractReference(complexMolecularProfileEvidenceJsonObject.getAsJsonArray("references")))
+                    .references(extractReference(complexMolecularProfileEvidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(complexMolecularProfileEvidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(complexMolecularProfileEvidenceJsonObject, "ampCapAscoInferredTier"))
-                    .treatmentApproach(extractRelevantTreatmentApproach(complexMolecularProfileEvidenceJsonObject.getAsJsonArray(
+                    .treatmentApproaches(extractRelevantTreatmentApproach(complexMolecularProfileEvidenceJsonObject.getAsJsonArray(
                             "relevantTreatmentApproaches")))
                     .build());
         }
@@ -167,7 +167,7 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
         indicationChecker.check(jsonObject);
 
         return ImmutableIndicationInfo.builder()
-                .id(JsonFunctions.integer(jsonObject, "id"))
+                .id(JsonFunctions.string(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
                 .build();
@@ -242,10 +242,10 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
                     .therapy(extractTherapy(treatmentApproachEvidenceJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(treatmentApproachEvidenceJsonObject.getAsJsonObject("indication")))
                     .responseType(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "responseType"))
-                    .reference(extractReference(treatmentApproachEvidenceJsonObject.getAsJsonArray("references")))
+                    .references(extractReference(treatmentApproachEvidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "ampCapAscoInferredTier"))
-                    .treatmentApproach(extractRelevantTreatmentApproach(treatmentApproachEvidenceJsonObject.getAsJsonArray(
+                    .treatmentApproaches(extractRelevantTreatmentApproach(treatmentApproachEvidenceJsonObject.getAsJsonArray(
                             "relevantTreatmentApproaches")))
                     .build());
         }
@@ -266,7 +266,7 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
                     .title(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "title"))
                     .phase(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "phase"))
                     .recruitment(JsonFunctions.string(variantAssociatedClinicalTrialJsonObject, "recruitment"))
-                    .therapy(extractTherapyList(variantAssociatedClinicalTrialJsonObject.getAsJsonArray("therapies")))
+                    .therapies(extractTherapyList(variantAssociatedClinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());
         }
         return variantAssociatedClinicalTrials;
@@ -320,10 +320,10 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
                     .therapy(extractTherapy(variantLevelEvidenceJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(variantLevelEvidenceJsonObject.getAsJsonObject("indication")))
                     .responseType(JsonFunctions.string(variantLevelEvidenceJsonObject, "responseType"))
-                    .reference(extractReference(variantLevelEvidenceJsonObject.getAsJsonArray("references")))
+                    .references(extractReference(variantLevelEvidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(variantLevelEvidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(variantLevelEvidenceJsonObject, "ampCapAscoInferredTier"))
-                    .treatmentApproach(extractRelevantTreatmentApproach(variantLevelEvidenceJsonObject.getAsJsonArray(
+                    .treatmentApproaches(extractRelevantTreatmentApproach(variantLevelEvidenceJsonObject.getAsJsonArray(
                             "relevantTreatmentApproaches")))
                     .build());
         }
@@ -359,7 +359,7 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
                     .therapy(extractTherapy(extendedEvidenceJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(extendedEvidenceJsonObject.getAsJsonObject("indication")))
                     .responseType(JsonFunctions.string(extendedEvidenceJsonObject, "responseType"))
-                    .reference(extractReference(extendedEvidenceJsonObject.getAsJsonArray("references")))
+                    .references(extractReference(extendedEvidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(extendedEvidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(extendedEvidenceJsonObject, "ampCapAscoInferredTier"))
 

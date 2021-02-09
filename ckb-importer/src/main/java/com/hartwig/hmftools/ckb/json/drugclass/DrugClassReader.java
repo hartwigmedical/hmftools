@@ -34,23 +34,24 @@ public class DrugClassReader extends CkbJsonDirectoryReader<DrugClass> {
                 .id(JsonFunctions.integer(object, "id"))
                 .drugClass(JsonFunctions.string(object, "drugClass"))
                 .createDate(DateConverter.toDate(JsonFunctions.string(object, "createDate")))
-                .drug(extractDrugs(object.getAsJsonArray("drugs")))
-                .treatmentApproach(extractTreatmentApproaches(object.getAsJsonArray("treatmentApproaches")))
+                .drugs(extractDrugs(object.getAsJsonArray("drugs")))
+                .treatmentApproaches(extractTreatmentApproaches(object.getAsJsonArray("treatmentApproaches")))
                 .build();
     }
 
     @NotNull
     private static List<DrugInfo> extractDrugs(@NotNull JsonArray jsonArray) {
         List<DrugInfo> drugs = Lists.newArrayList();
-        JsonDatamodelChecker drugsClassDrugChecker = DrugClassDataModelChecker.drugClassDrugsObjectChecker();
+        JsonDatamodelChecker drugChecker = DrugClassDataModelChecker.drugObjectChecker();
+
         for (JsonElement drug : jsonArray) {
-            JsonObject drugsObject = drug.getAsJsonObject();
-            drugsClassDrugChecker.check(drugsObject);
+            JsonObject drugObject = drug.getAsJsonObject();
+            drugChecker.check(drugObject);
 
             drugs.add(ImmutableDrugInfo.builder()
-                    .id(JsonFunctions.integer(drugsObject, "id"))
-                    .drugName(JsonFunctions.string(drugsObject, "drugName"))
-                    .term(JsonFunctions.optionalStringList(drugsObject, "terms"))
+                    .id(JsonFunctions.integer(drugObject, "id"))
+                    .drugName(JsonFunctions.string(drugObject, "drugName"))
+                    .terms(JsonFunctions.optionalStringList(drugObject, "terms"))
                     .build());
         }
         return drugs;
@@ -59,11 +60,11 @@ public class DrugClassReader extends CkbJsonDirectoryReader<DrugClass> {
     @NotNull
     private static List<TreatmentApproachInfo> extractTreatmentApproaches(@NotNull JsonArray jsonArray) {
         List<TreatmentApproachInfo> treatmentApproaches = Lists.newArrayList();
-        JsonDatamodelChecker drugsClassTreatmentApprochChecker = DrugClassDataModelChecker.drugClassTreatmentApproachesObjectChecker();
+        JsonDatamodelChecker treatmentApproachChecker = DrugClassDataModelChecker.treatmentApproachObjectChecker();
 
         for (JsonElement treatmentApproach : jsonArray) {
             JsonObject treatmentApproachObject = treatmentApproach.getAsJsonObject();
-            drugsClassTreatmentApprochChecker.check(treatmentApproachObject);
+            treatmentApproachChecker.check(treatmentApproachObject);
 
             treatmentApproaches.add(ImmutableTreatmentApproachInfo.builder()
                     .id(JsonFunctions.integer(treatmentApproachObject, "id"))

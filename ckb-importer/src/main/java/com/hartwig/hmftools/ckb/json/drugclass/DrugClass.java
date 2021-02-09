@@ -24,8 +24,8 @@ public abstract class DrugClass implements CkbJsonObject {
     public abstract Date createDate();
 
     @NotNull
-    public abstract List<DrugInfo> drug();
+    public abstract List<DrugInfo> drugs();
 
     @NotNull
-    public abstract List<TreatmentApproachInfo> treatmentApproach();
+    public abstract List<TreatmentApproachInfo> treatmentApproaches();
 }

@@ -8,11 +8,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.hartwig.hmftools.ckb.json.CkbJsonDirectoryReader;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
-import com.hartwig.hmftools.ckb.json.common.EffectInfo;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.json.common.GeneInfo;
 import com.hartwig.hmftools.ckb.json.common.ImmutableDescriptionInfo;
-import com.hartwig.hmftools.ckb.json.common.ImmutableEffectInfo;
 import com.hartwig.hmftools.ckb.json.common.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.ckb.json.common.ImmutableGeneInfo;
 import com.hartwig.hmftools.ckb.json.common.ImmutableIndicationInfo;
@@ -82,7 +80,7 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
 
             geneVariantDescriptions.add(ImmutableDescriptionInfo.builder()
                     .description(JsonFunctions.string(geneVariantDescriptionJsonObject, "description"))
-                    .reference(extractReferences(geneVariantDescriptionJsonObject.getAsJsonArray("references")))
+                    .references(extractReferences(geneVariantDescriptionJsonObject.getAsJsonArray("references")))
                     .build());
         }
         return geneVariantDescriptions;
@@ -115,7 +113,7 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
         return ImmutableGeneInfo.builder()
                 .id(JsonFunctions.integer(jsonObject, "id"))
                 .geneSymbol(JsonFunctions.string(jsonObject, "geneSymbol"))
-                .term(JsonFunctions.stringList(jsonObject, "terms"))
+                .terms(JsonFunctions.stringList(jsonObject, "terms"))
                 .build();
     }
 
@@ -207,7 +205,7 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
                     .therapy(extractTherapy(evidenceJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(evidenceJsonObject.getAsJsonObject("indication")))
                     .responseType(JsonFunctions.string(evidenceJsonObject, "responseType"))
-                    .reference(extractReferences(evidenceJsonObject.getAsJsonArray("references")))
+                    .references(extractReferences(evidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(evidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(evidenceJsonObject, "ampCapAscoInferredTier"))
                     .build());
@@ -244,7 +242,7 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
         indicationChecker.check(jsonObject);
 
         return ImmutableIndicationInfo.builder()
-                .id(JsonFunctions.integer(jsonObject, "id"))
+                .id(JsonFunctions.string(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
                 .build();
@@ -268,7 +266,7 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
                     .therapy(extractTherapy(extendedEvidenceJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(extendedEvidenceJsonObject.getAsJsonObject("indication")))
                     .responseType(JsonFunctions.string(extendedEvidenceJsonObject, "responseType"))
-                    .reference(extractReferences(extendedEvidenceJsonObject.getAsJsonArray("references")))
+                    .references(extractReferences(extendedEvidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(extendedEvidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(extendedEvidenceJsonObject, "ampCapAscoInferredTier"))
                     .build());
@@ -287,7 +285,7 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
             molecularProfiles.add(ImmutableMolecularProfileInfo.builder()
                     .id(JsonFunctions.integer(molecularProfileJsonObject, "id"))
                     .profileName(JsonFunctions.string(molecularProfileJsonObject, "profileName"))
-                    .treatmentApproach(extractProfileTreatmentApproches(molecularProfileJsonObject.getAsJsonArray(
+                    .treatmentApproaches(extractProfileTreatmentApproches(molecularProfileJsonObject.getAsJsonArray(
                             "profileTreatmentApproaches")))
                     .build());
         }
@@ -338,20 +336,20 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
     }
 
     @NotNull
-    private static List<EffectInfo> extractMemberVariants(@NotNull JsonArray jsonArray) {
-        List<EffectInfo> memberVariants = Lists.newArrayList();
+    private static List<VariantInfo> extractMemberVariants(@NotNull JsonArray jsonArray) {
+        List<VariantInfo> memberVariants = Lists.newArrayList();
         JsonDatamodelChecker memberVariantChecker = VariantDataModelChecker.memberVariantObjectChecker();
 
         for (JsonElement memberVariant : jsonArray) {
             JsonObject memberVariantObject = memberVariant.getAsJsonObject();
             memberVariantChecker.check(memberVariantObject);
 
-            memberVariants.add(ImmutableEffectInfo.builder()
+            memberVariants.add(ImmutableVariantInfo.builder()
                     .id(JsonFunctions.integer(memberVariantObject, "id"))
                     .fullName(JsonFunctions.string(memberVariantObject, "fullName"))
                     .impact(JsonFunctions.string(memberVariantObject, "impact"))
                     .proteinEffect(JsonFunctions.string(memberVariantObject, "proteinEffect"))
-                    .description(extractGeneDescription(memberVariantObject.getAsJsonArray("geneVariantDescriptions")))
+                    .descriptions(extractGeneDescription(memberVariantObject.getAsJsonArray("geneVariantDescriptions")))
                     .build());
         }
         return memberVariants;

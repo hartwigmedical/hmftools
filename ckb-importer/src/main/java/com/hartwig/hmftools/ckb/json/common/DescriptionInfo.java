@@ -14,5 +14,5 @@ public abstract class DescriptionInfo {
     public abstract String description();
 
     @NotNull
-    public abstract List<ReferenceInfo> reference();
+    public abstract List<ReferenceInfo> references();
 }

@@ -25,37 +25,37 @@ public abstract class Drug implements CkbJsonObject {
     public abstract String drugName();
 
     @NotNull
-    public abstract List<String> term();
+    public abstract List<String> terms();
 
     @NotNull
-    public abstract List<String> synonym();
+    public abstract List<String> synonyms();
 
     @Nullable
     public abstract String tradeName();
 
     @NotNull
-    public abstract List<DescriptionInfo> description();
+    public abstract List<DescriptionInfo> descriptions();
 
     @NotNull
-    public abstract List<DrugClassInfo> drugClass();
+    public abstract List<DrugClassInfo> drugClasses();
 
     @Nullable
     public abstract String casRegistryNum();
 
     @Nullable
-    public abstract String nctId();
+    public abstract String ncitId();
 
     @Nullable
     public abstract Date createDate();
 
     @NotNull
-    public abstract List<ClinicalTrialInfo> clinicalTrial();
+    public abstract List<ClinicalTrialInfo> clinicalTrials();
 
     @NotNull
     public abstract List<EvidenceInfo> evidence();
 
     @NotNull
-    public abstract List<TherapyInfo> therapy();
+    public abstract List<TherapyInfo> therapies();
 
     @Nullable
     public abstract List<GlobalApprovalStatusInfo> globalApprovalStatus();

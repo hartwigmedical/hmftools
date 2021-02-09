@@ -76,7 +76,7 @@ public class ReferenceReader extends CkbJsonDirectoryReader<Reference> {
             referenceDrugs.add(ImmutableDrugInfo.builder()
                     .id(JsonFunctions.integer(drugJsonObject, "id"))
                     .drugName(JsonFunctions.string(drugJsonObject, "drugName"))
-                    .term(JsonFunctions.stringList(drugJsonObject, "terms"))
+                    .terms(JsonFunctions.stringList(drugJsonObject, "terms"))
                     .build());
 
         }
@@ -95,7 +95,7 @@ public class ReferenceReader extends CkbJsonDirectoryReader<Reference> {
             referenceGenes.add(ImmutableGeneInfo.builder()
                     .id(JsonFunctions.integer(geneJsonObject, "id"))
                     .geneSymbol(JsonFunctions.string(geneJsonObject, "geneSymbol"))
-                    .term(JsonFunctions.stringList(geneJsonObject, "terms"))
+                    .terms(JsonFunctions.stringList(geneJsonObject, "terms"))
                     .build());
 
         }
@@ -120,7 +120,7 @@ public class ReferenceReader extends CkbJsonDirectoryReader<Reference> {
                     .therapy(extractTherapy(evidenceJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(evidenceJsonObject.getAsJsonObject("indication")))
                     .responseType(JsonFunctions.string(evidenceJsonObject, "responseType"))
-                    .reference(extractReference(evidenceJsonObject.getAsJsonArray("references")))
+                    .references(extractReference(evidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(evidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(evidenceJsonObject, "ampCapAscoInferredTier"))
                     .build());
@@ -159,7 +159,7 @@ public class ReferenceReader extends CkbJsonDirectoryReader<Reference> {
         indicationChecker.check(jsonObject);
 
         return ImmutableIndicationInfo.builder()
-                .id(JsonFunctions.integer(jsonObject, "id"))
+                .id(JsonFunctions.string(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
                 .build();

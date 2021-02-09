@@ -32,5 +32,5 @@ public abstract class ClinicalTrialLocation {
     public abstract String zip();
 
     @NotNull
-    public abstract List<ClinicalTrialContact> clinicalTrialContact();
+    public abstract List<ClinicalTrialContact> clinicalTrialContacts();
 }

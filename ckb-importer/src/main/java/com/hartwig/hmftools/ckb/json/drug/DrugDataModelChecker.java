@@ -34,7 +34,7 @@ final class DrugDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugDescriptionObjectChecker() {
+    public static JsonDatamodelChecker descriptionObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("description", true);
         map.put("references", true);
@@ -43,7 +43,7 @@ final class DrugDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugReferenceObjectChecker() {
+    public static JsonDatamodelChecker referenceObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("pubMedId", true);
@@ -70,7 +70,7 @@ final class DrugDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugClinicalTrialObjectChecker() {
+    public static JsonDatamodelChecker clinicalTrialObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("nctId", true);
         map.put("title", true);
@@ -82,7 +82,7 @@ final class DrugDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugClinicalTrialTherapyObjectChecker() {
+    public static JsonDatamodelChecker clinicalTrialTherapyObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("therapyName", true);
@@ -92,7 +92,7 @@ final class DrugDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugEvidenceObjectChecker() {
+    public static JsonDatamodelChecker evidenceObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("approvalStatus", true);
@@ -110,7 +110,7 @@ final class DrugDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugEvidenceMolecularProfileObjectChecker() {
+    public static JsonDatamodelChecker evidenceMolecularProfileObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("profileName", true);
@@ -119,7 +119,7 @@ final class DrugDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugEvidenceTherapyObjectChecker() {
+    public static JsonDatamodelChecker evidenceTherapyObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("therapyName", true);
@@ -129,7 +129,7 @@ final class DrugDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugEvidenceIndicationObjectChecker() {
+    public static JsonDatamodelChecker evidenceIndicationObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("name", true);
@@ -139,7 +139,7 @@ final class DrugDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugEvidenceReferenceObjectChecker() {
+    public static JsonDatamodelChecker evidenceReferenceObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("pubMedId", true);
@@ -150,7 +150,7 @@ final class DrugDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugTherapyObjectChecker() {
+    public static JsonDatamodelChecker therapyObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("therapyName", true);
@@ -160,7 +160,7 @@ final class DrugDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugGlobalApprovalStatusObjectChecker() {
+    public static JsonDatamodelChecker globalApprovalStatusObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("therapy", true);
@@ -173,7 +173,7 @@ final class DrugDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugGlobalApprovalStatusTherapyObjectChecker() {
+    public static JsonDatamodelChecker globalApprovalStatusTherapyObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("therapyName", true);
@@ -183,7 +183,7 @@ final class DrugDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugGlobalApprovalStatusIndicationObjectChecker() {
+    public static JsonDatamodelChecker globalApprovalStatusIndicationObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("name", true);
@@ -193,7 +193,7 @@ final class DrugDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugGlobalApprovalStatusMolecularProfileObjectChecker() {
+    public static JsonDatamodelChecker globalApprovalStatusMolecularProfileObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("profileName", false);

@@ -33,15 +33,15 @@ final class ClinicalTrialDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker clinicalTrialVariantRequirementDetailsObjectChecker() {
+    public static JsonDatamodelChecker variantRequirementDetailObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("molecularProfile", true);
         map.put("requirementType", true);
-        return new JsonDatamodelChecker("ClinicalTrialVariantRequirementDetailsObject", map);
+        return new JsonDatamodelChecker("ClinicalTrialVariantRequirementDetailObject", map);
     }
 
     @NotNull
-    public static JsonDatamodelChecker clinicalTrialMolecularProfileObjectChecker() {
+    public static JsonDatamodelChecker molecularProfileObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("profileName", true);
@@ -49,26 +49,26 @@ final class ClinicalTrialDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker clinicalTrialTherapiesObjectChecker() {
+    public static JsonDatamodelChecker therapyObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("therapyName", true);
         map.put("synonyms", true);
 
-        return new JsonDatamodelChecker("ClinicalTrialTherapiesObject", map);
+        return new JsonDatamodelChecker("ClinicalTrialTherapyObject", map);
     }
 
     @NotNull
-    public static JsonDatamodelChecker clinicalTrialIndicationsObjectChecker() {
+    public static JsonDatamodelChecker indicationObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("name", true);
         map.put("source", true);
-        return new JsonDatamodelChecker("ClinicalTrialIndicationsObject", map);
+        return new JsonDatamodelChecker("ClinicalTrialIndicationObject", map);
     }
 
     @NotNull
-    public static JsonDatamodelChecker clinicalTrialLocationsObjectChecker() {
+    public static JsonDatamodelChecker locationObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("nctId", true);
         map.put("facility", true);
@@ -78,11 +78,11 @@ final class ClinicalTrialDataModelChecker {
         map.put("state", true);
         map.put("zip", true);
         map.put("clinicalTrialContacts", true);
-        return new JsonDatamodelChecker("ClinicalTrialLocationsObject", map);
+        return new JsonDatamodelChecker("ClinicalTrialLocationObject", map);
     }
 
     @NotNull
-    public static JsonDatamodelChecker clinicalTrialContactObjectChecker() {
+    public static JsonDatamodelChecker contactObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("email", true);
