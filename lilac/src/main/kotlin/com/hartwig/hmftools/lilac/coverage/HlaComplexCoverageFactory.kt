@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.coverage
 
+import com.hartwig.hmftools.common.progress.FutureProgressTracker
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.read.FragmentAlleles
@@ -13,14 +14,15 @@ class HlaComplexCoverageFactory(
         private val aminoAcidFragments: List<AminoAcidFragment>,
         private val aminoAcidLoci: Collection<Int>, private val aminoAcidSequences: Collection<HlaSequenceLoci>,
         private val nucleotideLoci: Collection<Int>, private val nucleotideSequences: Collection<HlaSequenceLoci>) {
+    private val fragmentAlleles = FragmentAlleles.create(aminoAcidFragments, aminoAcidLoci, aminoAcidSequences, nucleotideLoci, nucleotideSequences)
+    private val progressTracker = FutureProgressTracker(0.1, 10000)
 
     fun complexCoverage(complexes: List<HlaComplex>): List<HlaComplexCoverage> {
         val list = mutableListOf<Future<HlaComplexCoverage>>()
         for (complex in complexes) {
-            val callable: Callable<HlaComplexCoverage> = Callable {
-                proteinCoverage(complex.alleles)
-            }
-            list.add(executorService.submit(callable))
+            val untrackedCallable: Callable<HlaComplexCoverage> = Callable { proteinCoverage(complex.alleles) }
+            val trackedCallable: Callable<HlaComplexCoverage> = progressTracker.add(untrackedCallable)
+            list.add(executorService.submit(trackedCallable))
         }
 
         return list.map { it.get() }.sortedDescending()
@@ -37,12 +39,7 @@ class HlaComplexCoverageFactory(
     }
 
     private fun fragmentAlleles(alleles: Collection<HlaAllele>): List<FragmentAlleles> {
-        val specificProteins = alleles.map { it.asFourDigit() }
-        val aminoAcids = aminoAcidSequences.filter { it.allele in alleles }
-        val nucleotides = nucleotideSequences.filter { it.allele.asFourDigit() in specificProteins }
-
-        return FragmentAlleles.create(aminoAcidFragments, aminoAcidLoci, aminoAcids, nucleotideLoci, nucleotides)
+        return FragmentAlleles.create(fragmentAlleles, alleles)
     }
-
 
 }

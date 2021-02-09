@@ -6,10 +6,20 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 import com.hartwig.hmftools.lilac.seq.HlaSequenceMatch
 
 
-class FragmentAlleles(val aminoAcidFragment: AminoAcidFragment, val full: Collection<HlaAllele>, val partial: Collection<HlaAllele>, val wild: Collection<HlaAllele>) {
+class FragmentAlleles(val fragment: AminoAcidFragment, val full: Collection<HlaAllele>, val partial: Collection<HlaAllele>, val wild: Collection<HlaAllele>) {
 
 
     companion object {
+
+        private fun FragmentAlleles.filter(alleles: Collection<HlaAllele>): FragmentAlleles {
+            return FragmentAlleles(this.fragment, this.full.filter { it in alleles }, this.partial.filter { it in alleles }, this.wild.filter { it in alleles })
+        }
+
+        fun create(fragmentAlleles: List<FragmentAlleles>, alleles: Collection<HlaAllele>): List<FragmentAlleles> {
+            return fragmentAlleles.map { it.filter(alleles) }.filter { it.full.isNotEmpty() || it.partial.isNotEmpty()}
+        }
+
+
         fun create(aminoAcidFragments: List<AminoAcidFragment>, hetLoci: Collection<Int>, sequences: Collection<HlaSequenceLoci>, nucleotideLoci: Collection<Int>, nucleotideSequences: Collection<HlaSequenceLoci>): List<FragmentAlleles> {
             return aminoAcidFragments.map { create(it, hetLoci, sequences, nucleotideLoci, nucleotideSequences) }.filter { it.full.isNotEmpty() || it.partial.isNotEmpty() }
         }
