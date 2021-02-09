@@ -7,8 +7,9 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion
 import com.hartwig.hmftools.common.genome.region.Strand
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory
+import com.hartwig.hmftools.lilac.sam.Indel
+import com.hartwig.hmftools.lilac.sam.SAMCodingRecord
 import com.hartwig.hmftools.lilac.sam.SAMSlicer
-import htsjdk.samtools.AlignmentBlock
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.SamReaderFactory
 import org.apache.logging.log4j.LogManager
@@ -16,10 +17,16 @@ import java.io.File
 import java.util.function.Consumer
 
 class SAMRecordReader(maxDistance: Int, private val refGenome: String, private val transcripts: List<HmfTranscriptRegion>, private val factory: NucleotideFragmentFactory) {
-    private val codingRegions = transcripts.map { GenomeRegions.create(it.chromosome(), it.codingStart() - maxDistance, it.codingEnd() + maxDistance) }
 
     companion object {
         val logger = LogManager.getLogger(this::class.java)
+    }
+
+    private val codingRegions = transcripts.map { GenomeRegions.create(it.chromosome(), it.codingStart() - maxDistance, it.codingEnd() + maxDistance) }
+    private val unmatchedIndels = mutableMapOf<Indel, Int>()
+
+    fun unmatchedIndels(minCount: Int): Map<Indel, Int> {
+        return unmatchedIndels.filter { it.value >= minCount }
     }
 
     fun readFromBam(bamFile: String): List<NucleotideFragment> {
@@ -57,32 +64,28 @@ class SAMRecordReader(maxDistance: Int, private val refGenome: String, private v
         }
     }
 
-    private fun realign(hlaCodingRegionOffset: Int, region: NamedBed, reverseStrand: Boolean, bamFileName: String): List<NucleotideFragment> {
+    private fun realign(hlaCodingRegionOffset: Int, codingRegion: NamedBed, reverseStrand: Boolean, bamFileName: String): List<NucleotideFragment> {
         val slicer = SAMSlicer(1)
         val result = mutableListOf<NucleotideFragment>()
-        var invalidFragments = 0
         samReaderFactory().open(File(bamFileName)).use { samReader ->
             val consumer = Consumer<SAMRecord> { samRecord ->
-                if (samRecord.bothEndsinRangeOfCodingTranscripts()) {
-                    val fragment = factory.createFragment(samRecord, reverseStrand, hlaCodingRegionOffset, region)
+                if (samRecord.bothEndsInRangeOfCodingTranscripts()) {
+                    val codingRecord = SAMCodingRecord.create(codingRegion, samRecord)
+                    val fragment = factory.createFragment(codingRecord, reverseStrand, hlaCodingRegionOffset, codingRegion)
                     if (fragment != null) {
                         result.add(fragment)
                     } else {
-                        invalidFragments++
+                        codingRecord.indels.forEach { unmatchedIndels.compute(it) { _, u -> (u ?: 0) + 1 } }
                     }
                 }
             }
 
-            slicer.slice(region, samReader, consumer)
+            slicer.slice(codingRegion, samReader, consumer)
         }
         return result
     }
 
-    private fun AlignmentBlock.getReferenceEnd(): Int {
-        return this.referenceStart + this.length - 1
-    }
-
-    private fun SAMRecord.bothEndsinRangeOfCodingTranscripts(): Boolean {
+    private fun SAMRecord.bothEndsInRangeOfCodingTranscripts(): Boolean {
         val thisInRange = codingRegions.any { it.chromosome() == this.contig && this.alignmentStart >= it.start() && this.alignmentStart <= it.end() }
         val mateInRange = codingRegions.any { it.chromosome() == this.contig && this.mateAlignmentStart >= it.start() && this.mateAlignmentStart <= it.end() }
 

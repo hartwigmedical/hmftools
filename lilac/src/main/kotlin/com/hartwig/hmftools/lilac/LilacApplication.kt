@@ -14,7 +14,6 @@ import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceValidation
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.hla.HlaContextFactory
-import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory
 import com.hartwig.hmftools.lilac.nuc.NucleotideGeneEnrichment
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
@@ -115,8 +114,11 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         logger.info("Querying records from $bamFile")
         val nucleotideFragmentFactory = NucleotideFragmentFactory(config.minBaseQual, aminoAcidSequencesWithInserts, aminoAcidSequencesWithDeletes)
+        val transcripts = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
+        val bamReader = SAMRecordReader(1000, config.refGenome, transcripts, nucleotideFragmentFactory)
+        val rawNucleotideFragments = bamReader.readFromBam(bamFile)
+
         val nucleotideGeneEnrichment = NucleotideGeneEnrichment(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
-        val rawNucleotideFragments = readFromBam(bamFile, nucleotideFragmentFactory)
         val geneEnrichedNucleotideFragments = nucleotideGeneEnrichment.enrich(rawNucleotideFragments)
         val aminoAcidPipeline = AminoAcidFragmentPipeline(minBaseQual, minEvidence, geneEnrichedNucleotideFragments)
         val aFragments = aminoAcidPipeline.type(hlaAContext)
@@ -223,13 +225,15 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             PhasedEvidenceValidation.validateAgainstFinalCandidates("B", bPhasedEvidence, winningSequences)
             PhasedEvidenceValidation.validateAgainstFinalCandidates("C", cPhasedEvidence, winningSequences)
         }
+
+        // WARNINGS
+        val fragmentsWithUnmatchedIndel = bamReader.unmatchedIndels(2)
+        for ((indel, count) in fragmentsWithUnmatchedIndel) {
+            logger.warn("UNMATCHED_INDEL - $count fragments excluded with unmatched indel $indel")
+        }
+
     }
 
-    private fun readFromBam(bamFile: String, nucleotideFragmentFactory: NucleotideFragmentFactory): List<NucleotideFragment> {
-        val transcripts = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
-        val reader = SAMRecordReader(1000, config.refGenome, transcripts, nucleotideFragmentFactory)
-        return reader.readFromBam(bamFile)
-    }
 
     private fun readSequenceFiles(filenameSupplier: (Char) -> String, transform: (List<HlaSequence>) -> List<HlaSequence>): List<HlaSequence> {
 

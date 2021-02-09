@@ -18,7 +18,6 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
             }
             val codons = Codons.codons(aminoAcid);
             return listOf(codons[0].toString(), codons[1].toString(), codons.substring(2))
-
         }
     }
 
@@ -27,6 +26,11 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
 
     fun createFragment(record: SAMRecord, reverseStrand: Boolean, codingRegionLoci: Int, codingRegion: NamedBed): NucleotideFragment? {
         val samCoding = SAMCodingRecord.create(codingRegion, record)
+        return createFragment(samCoding, reverseStrand, codingRegionLoci, codingRegion)
+    }
+
+
+    fun createFragment(samCoding: SAMCodingRecord, reverseStrand: Boolean, codingRegionLoci: Int, codingRegion: NamedBed): NucleotideFragment? {
         val samCodingLength = samCoding.positionEnd - samCoding.positionStart + 1
         val samCodingStartLoci = if (reverseStrand) {
             codingRegionLoci + codingRegion.end().toInt() - samCoding.positionEnd
@@ -53,7 +57,7 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
                     .filter { it.second.isNotEmpty() }
             if (matchingInserts.isNotEmpty()) {
                 val best = matchingInserts[0]
-                val result = createNucleotideSequence(record, codingRegion, best.second[0], aminoAcids, best.first)
+                val result = createNucleotideSequence(samCoding.id, codingRegion, best.second[0], aminoAcids, best.first)
                 if (result.containsIndel()) {
                     return result
                 }
@@ -65,7 +69,7 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
                     .filter { it.second.isNotEmpty() }
             if (matchingDeletes.isNotEmpty()) {
                 val best = matchingDeletes[0]
-                val result = createNucleotideSequence(record, codingRegion, best.second[0], aminoAcids, best.first)
+                val result = createNucleotideSequence(samCoding.id, codingRegion, best.second[0], aminoAcids, best.first)
                 if (result.containsIndel()) {
                     return result
                 }
@@ -77,17 +81,15 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
         }
 
         // NORMAL CASE
-        val id = record.readName
         val loci = (samCodingStartLoci..samCodingEndLoci).toList()
         val nucleotides = codingRegionRead.map { it.toString() }
         val qualities = codingRegionQuality.toList()
 
-        return NucleotideFragment(id, setOf(codingRegion.name()), loci, qualities, nucleotides)
+        return NucleotideFragment(samCoding.id, setOf(codingRegion.name()), loci, qualities, nucleotides)
     }
 
-    private fun createNucleotideSequence(record: SAMRecord, codingRegion: NamedBed, startLoci: Int, bamSequence: String, hlaSequence: HlaSequenceLoci): NucleotideFragment {
+    private fun createNucleotideSequence(id: String, codingRegion: NamedBed, startLoci: Int, bamSequence: String, hlaSequence: HlaSequenceLoci): NucleotideFragment {
         val endLoci = endLoci(startLoci, bamSequence, hlaSequence)
-        val id = record.readName
         val aminoAcidLoci = (startLoci..endLoci).toList()
         val nucleotideLoci = aminoAcidLoci.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
         val nucleotides = aminoAcidLoci.map { hlaSequence.sequence(it) }.flatMap { createNucleotidesFromAminoAcid(it) }
