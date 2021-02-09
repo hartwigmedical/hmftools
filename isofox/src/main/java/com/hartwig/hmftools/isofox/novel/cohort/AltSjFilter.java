@@ -17,17 +17,22 @@ public class AltSjFilter
         MinFragments = minFragments;
     }
 
-    public boolean passesFilter(final AltSpliceJunctionFile altSJ)
+    public boolean passesFilter(final String geneId,  int fragCount)
     {
-        if(MinFragments > 0 && altSJ.FragmentCount < MinFragments)
+        if(MinFragments > 0 && fragCount < MinFragments)
             return false;
 
-        if(!RestrictedGeneIds.isEmpty() && !RestrictedGeneIds.contains(altSJ.GeneId))
+        if(!RestrictedGeneIds.isEmpty() && !RestrictedGeneIds.contains(geneId))
             return false;
 
-        if(!ExcludedGeneIds.isEmpty() && ExcludedGeneIds.contains(altSJ.GeneId))
+        if(!ExcludedGeneIds.isEmpty() && ExcludedGeneIds.contains(geneId))
             return false;
 
         return true;
+    }
+
+    public boolean passesFilter(final AltSpliceJunctionFile altSJ)
+    {
+        return passesFilter(altSJ.GeneId, altSJ.FragmentCount);
     }
 }

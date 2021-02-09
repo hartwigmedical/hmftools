@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.isofox.novel.cohort;
 
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_FRAG_COUNT;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_TYPE;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
@@ -11,6 +15,9 @@ import static com.hartwig.hmftools.isofox.cohort.AnalysisType.ALT_SPLICE_JUNCTIO
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunction.getDonorAcceptorBases;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.io.BufferedWriter;
@@ -27,7 +34,6 @@ import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.stats.FisherExactTest;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.isofox.cohort.SampleDataCache;
-import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -187,10 +193,36 @@ public class AltSjCohortAnalyser
 
             lines.remove(0);
 
-            return lines.stream()
-                    .map(x -> AltSpliceJunctionFile.fromCsv(x))
-                    .filter(x -> filter.passesFilter(x))
-                    .collect(Collectors.toList());
+            int geneId = fieldsIndexMap.get(FLD_GENE_ID);
+            int geneName = fieldsIndexMap.get(FLD_GENE_NAME);
+            int chr = fieldsIndexMap.get(FLD_CHROMOSOME);
+            int posStart = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
+            int posEnd = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
+            int type = fieldsIndexMap.get(FLD_ALT_SJ_TYPE);
+            int fragCount = fieldsIndexMap.get(FLD_ALT_SJ_FRAG_COUNT);
+            int depthStart = fieldsIndexMap.get("DepthStart");
+            int depthEnd = fieldsIndexMap.get("DepthEnd");
+            int regionStart = fieldsIndexMap.containsKey("RegionStart") ? fieldsIndexMap.get("RegionStart") : fieldsIndexMap.get("ContextStart");
+            int regionEnd = fieldsIndexMap.containsKey("RegionEnd") ? fieldsIndexMap.get("RegionEnd") : fieldsIndexMap.get("ContextEnd");
+            int basesStart = fieldsIndexMap.get("BasesStart");
+            int basesEnd = fieldsIndexMap.get("BasesEnd");
+            int transStart = fieldsIndexMap.get("TransStart");
+            int transEnd = fieldsIndexMap.get("TransEnd");
+
+            final List<AltSpliceJunctionFile> altSJs = Lists.newArrayList();
+
+            for(String data : lines)
+            {
+                final String[] items = data.split(DELIMITER);
+
+                if(!filter.passesFilter(items[geneId], Integer.parseInt(items[fragCount])))
+                    continue;
+
+                altSJs.add(AltSpliceJunctionFile.fromCsv(items, geneId, geneName, chr, posStart, posEnd, type,
+                fragCount, depthStart, depthEnd, regionStart, regionEnd, basesStart, basesEnd, transStart, transEnd));
+            }
+
+            return altSJs;
         }
         catch(IOException e)
         {

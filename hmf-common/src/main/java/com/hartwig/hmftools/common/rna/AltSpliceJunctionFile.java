@@ -145,4 +145,21 @@ public class AltSpliceJunctionFile
                 geneId, geneName, chromosome, spliceJunction, type,  fragCount, depthCounts,
                 regionContexts, baseContexts, transNames);
     }
+
+    public static AltSpliceJunctionFile fromCsv(
+            final String[] items,
+            int geneId, int geneName, int chr, int posStart, int posEnd, int type,
+            int fragCount, int depthStart, int depthEnd, int regionStart, int regionEnd, int basesStart, int basesEnd, int transStart, int transEnd)
+    {
+        // old format
+        // GeneId,GeneName,Chromosome,Strand,SjStart,SjEnd,FragCount,DepthStart,DepthEnd,Type,ContextStart,ContextEnd,
+        // NearestStartExon,NearestEndExon,BasesStart,BasesEnd,TransStart,TransEnd,InitialReadId
+
+        return new AltSpliceJunctionFile(
+                items[geneId], items[geneName], items[chr], new int[] { Integer.parseInt(items[posStart]), Integer.parseInt(items[posStart]) },
+                AltSpliceJunctionType.valueOf(items[type]),
+                fragCount, new int[] { Integer.parseInt(items[depthStart]), Integer.parseInt(items[depthEnd]) },
+                new AltSpliceJunctionContext[] { AltSpliceJunctionContext.valueOf(items[regionStart]), AltSpliceJunctionContext.valueOf(items[regionEnd]) },
+                new String[] { items[basesStart], items[basesEnd] }, new String[] { items[transStart], items[transEnd] } );
+    }
 }
