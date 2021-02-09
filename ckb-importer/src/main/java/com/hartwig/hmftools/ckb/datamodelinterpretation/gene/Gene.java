@@ -45,4 +45,10 @@ public abstract class Gene {
 
     @NotNull
     public abstract Date updateDate();
+
+    @NotNull
+    public abstract List<GeneClinicalTrial> geneClinicalTrials();
+
+    @NotNull
+    public abstract List<GeneEvidence> geneEvidences();
 }
