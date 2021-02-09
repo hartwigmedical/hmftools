@@ -29,8 +29,8 @@ public class TreatmentApproachReader extends CkbJsonDirectoryReader<TreatmentApp
     @NotNull
     @Override
     protected TreatmentApproach read(@NotNull final JsonObject object) {
-        JsonDatamodelChecker treatmentApprochObjectChecker = TreatmentApproachDataModelChecker.treatmentApprochObjectChecker();
-        treatmentApprochObjectChecker.check(object);
+        JsonDatamodelChecker treatmentApproachObjectChecker = TreatmentApproachDataModelChecker.treatmentApproachObjectChecker();
+        treatmentApproachObjectChecker.check(object);
 
         return ImmutableTreatmentApproach.builder()
                 .id(JsonFunctions.integer(object, "id"))
@@ -41,7 +41,7 @@ public class TreatmentApproachReader extends CkbJsonDirectoryReader<TreatmentApp
                 .therapy(object.has("therapy") && !object.get("therapy").isJsonNull()
                         ? extractTherapy(object.getAsJsonObject("therapy"))
                         : null)
-                .reference(extractReference(object.getAsJsonArray("references")))
+                .references(extractReferences(object.getAsJsonArray("references")))
                 .createDate(DateConverter.toDate(JsonFunctions.string(object, "createDate")))
                 .updateDate(DateConverter.toDate(JsonFunctions.string(object, "updateDate")))
                 .build();
@@ -71,7 +71,7 @@ public class TreatmentApproachReader extends CkbJsonDirectoryReader<TreatmentApp
     }
 
     @NotNull
-    private static List<ReferenceInfo> extractReference(@NotNull JsonArray jsonArray) {
+    private static List<ReferenceInfo> extractReferences(@NotNull JsonArray jsonArray) {
         List<ReferenceInfo> references = Lists.newArrayList();
         JsonDatamodelChecker referenceObjectChecker = TreatmentApproachDataModelChecker.referenceObjectChecker();
 

@@ -16,8 +16,8 @@ public abstract class Therapy {
     @NotNull
     public abstract String therapyName();
 
-    @Nullable
-    public abstract String synonyms();
+    @NotNull
+    public abstract List<String> synonyms();
 
     @NotNull
     public abstract List<TherapyDescription> descriptions();

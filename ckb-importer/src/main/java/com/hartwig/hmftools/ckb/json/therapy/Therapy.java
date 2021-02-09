@@ -23,11 +23,11 @@ public abstract class Therapy implements CkbJsonObject {
     @NotNull
     public abstract String therapyName();
 
-    @Nullable
-    public abstract String synonyms();
+    @NotNull
+    public abstract List<String> synonyms();
 
     @NotNull
-    public abstract List<DescriptionInfo> description();
+    public abstract List<DescriptionInfo> descriptions();
 
     @Nullable
     public abstract Date createDate();
@@ -39,11 +39,11 @@ public abstract class Therapy implements CkbJsonObject {
     public abstract List<EvidenceInfo> evidence();
 
     @NotNull
-    public abstract List<ClinicalTrialInfo> clinicalTrial();
+    public abstract List<ClinicalTrialInfo> clinicalTrials();
 
     @NotNull
-    public abstract List<DrugInfo> drug();
+    public abstract List<DrugInfo> drugs();
 
     @NotNull
-    public abstract List<GlobalApprovalStatusInfo> globalApprovalStatus();
+    public abstract List<GlobalApprovalStatusInfo> globalApprovalStatuses();
 }

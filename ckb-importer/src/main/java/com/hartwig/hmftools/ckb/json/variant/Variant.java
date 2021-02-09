@@ -30,7 +30,7 @@ public abstract class Variant implements CkbJsonObject {
     public abstract String proteinEffect();
 
     @NotNull
-    public abstract List<DescriptionInfo> description();
+    public abstract List<DescriptionInfo> descriptions();
 
     @Nullable
     public abstract String type();
@@ -51,10 +51,10 @@ public abstract class Variant implements CkbJsonObject {
     public abstract VariantTranscriptCoordinate referenceTranscriptCoordinate();
 
     @NotNull
-    public abstract List<VariantPartnerGene> partnerGene();
+    public abstract List<VariantPartnerGene> partnerGenes();
 
     @NotNull
-    public abstract List<VariantCategoryVariantPath> categoryVariantPath();
+    public abstract List<VariantCategoryVariantPath> categoryVariantPaths();
 
     @NotNull
     public abstract List<EvidenceInfo> evidence();
@@ -63,11 +63,11 @@ public abstract class Variant implements CkbJsonObject {
     public abstract List<EvidenceInfo> extendedEvidence();
 
     @NotNull
-    public abstract List<MolecularProfileInfo> molecularProfile();
+    public abstract List<MolecularProfileInfo> molecularProfiles();
 
     @NotNull
-    public abstract List<VariantTranscriptCoordinate> allTranscriptCoordinate();
+    public abstract List<VariantTranscriptCoordinate> allTranscriptCoordinates();
 
     @NotNull
-    public abstract List<VariantInfo> memberVariant();
+    public abstract List<VariantInfo> memberVariants();
 }

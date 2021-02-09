@@ -31,7 +31,7 @@ final class MolecularProfileDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker molecularProfileGeneVariantObjectChecker() {
+    public static JsonDatamodelChecker geneVariantObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("fullName", true);
@@ -42,7 +42,7 @@ final class MolecularProfileDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker molecularProfileProfileTreatmentApproacjObjectChecker() {
+    public static JsonDatamodelChecker profileTreatmentApproachObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("name", true);
@@ -52,7 +52,7 @@ final class MolecularProfileDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker molecularProfileComplexMolecularProfileEvidence() {
+    public static JsonDatamodelChecker complexMolecularProfileEvidenceChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("totalCount", true);
         map.put("complexMolecularProfileEvidence", true);
@@ -61,7 +61,7 @@ final class MolecularProfileDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker molecularProfileComplexMolecularProfileEvidenceList() {
+    public static JsonDatamodelChecker complexMolecularProfileEvidenceListChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("approvalStatus", true);
@@ -80,16 +80,16 @@ final class MolecularProfileDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker molecularProfileMolecularprofile() {
+    public static JsonDatamodelChecker molecularProfileChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("profileName", true);
 
-        return new JsonDatamodelChecker("MolecularProfileMolecularprofileObject", map);
+        return new JsonDatamodelChecker("MolecularProfileMolecularProfileObject", map);
     }
 
     @NotNull
-    public static JsonDatamodelChecker molecularProfileTherapy() {
+    public static JsonDatamodelChecker therapyChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("therapyName", true);
@@ -99,7 +99,7 @@ final class MolecularProfileDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker molecularProfileIndication() {
+    public static JsonDatamodelChecker indicationChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("name", true);
@@ -109,7 +109,7 @@ final class MolecularProfileDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker molecularProfileReference() {
+    public static JsonDatamodelChecker referenceChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("pubMedId", true);
@@ -120,7 +120,7 @@ final class MolecularProfileDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker molecularProfileRelevantTreatmentApproach() {
+    public static JsonDatamodelChecker relevantTreatmentApproachChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("name", true);
@@ -130,7 +130,7 @@ final class MolecularProfileDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker molecularProfileTreatmentApproachEvidence() {
+    public static JsonDatamodelChecker treatmentApproachEvidenceChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("totalCount", true);
         map.put("treatmentApproachEvidence", true);
@@ -139,7 +139,7 @@ final class MolecularProfileDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker molecularProfileTreatmentApproachEvidenceList() {
+    public static JsonDatamodelChecker treatmentApproachEvidenceListChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("approvalStatus", true);
@@ -158,7 +158,7 @@ final class MolecularProfileDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker variantAssociatedClinicalTrial() {
+    public static JsonDatamodelChecker variantAssociatedClinicalTrialChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("nctId", true);
         map.put("title", true);
@@ -170,7 +170,7 @@ final class MolecularProfileDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker molecularProfilevariantLevelEvidence() {
+    public static JsonDatamodelChecker variantLevelEvidenceChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("totalCount", true);
         map.put("variantLevelEvidences", true);
@@ -179,7 +179,7 @@ final class MolecularProfileDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker molecularProfilevariantLevelEvidenceList() {
+    public static JsonDatamodelChecker variantLevelEvidenceListChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("approvalStatus", true);
@@ -198,7 +198,7 @@ final class MolecularProfileDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker extendedEvidenceEvidence() {
+    public static JsonDatamodelChecker extendedEvidenceChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("totalCount", true);
         map.put("extendedEvidence", true);
@@ -207,7 +207,7 @@ final class MolecularProfileDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker extendedEvidenceList() {
+    public static JsonDatamodelChecker extendedEvidenceListChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("approvalStatus", true);

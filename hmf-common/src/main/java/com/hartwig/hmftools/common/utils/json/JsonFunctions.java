@@ -104,7 +104,7 @@ public final class JsonFunctions {
 
         JsonElement element = object.get(field);
         if (!element.isJsonPrimitive()) {
-            LOGGER.warn("Converting {} to String for element {}.", field, element);
+            LOGGER.warn("Converting {} to Integer for element {}.", field, element);
         }
         return element.getAsJsonPrimitive().getAsInt();
     }

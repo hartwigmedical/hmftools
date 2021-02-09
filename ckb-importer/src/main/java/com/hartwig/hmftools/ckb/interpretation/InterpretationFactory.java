@@ -39,7 +39,7 @@ public class InterpretationFactory {
             LOGGER.info("molecular profile {}", molecularProfile.id());
 
             //extract clinical trial information
-            for (ClinicalTrialInfo clinicalTrialInfo : molecularProfile.variantAssociatedClinicalTrial()) {
+            for (ClinicalTrialInfo clinicalTrialInfo : molecularProfile.variantAssociatedClinicalTrials()) {
                 ImmutableClinicalTrialInterpretation.Builder outputBuilderClinicalInterpretation = ImmutableClinicalTrialInterpretation.builder();
 
                 for (ClinicalTrial clinicalTrial : ckbEntry.clinicalTrial()) {

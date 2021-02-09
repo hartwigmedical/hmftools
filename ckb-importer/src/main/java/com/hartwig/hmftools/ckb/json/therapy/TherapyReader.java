@@ -47,19 +47,19 @@ public class TherapyReader extends CkbJsonDirectoryReader<Therapy> {
         return ImmutableTherapy.builder()
                 .id(JsonFunctions.integer(object, "id"))
                 .therapyName(JsonFunctions.string(object, "therapyName"))
-                .synonyms(JsonFunctions.nullableString(object, "synonyms"))
-                .description(extractDescription(object.getAsJsonArray("therapyDescriptions")))
+                .synonyms(JsonFunctions.optionalStringList(object, "synonyms"))
+                .descriptions(extractDescriptions(object.getAsJsonArray("therapyDescriptions")))
                 .createDate(DateConverter.toDate(JsonFunctions.string(object, "createDate")))
                 .updateDate(DateConverter.toDate(JsonFunctions.nullableString(object, "updateDate")))
                 .evidence(extractEvidence(object.getAsJsonArray("evidence")))
-                .clinicalTrial(extractClinicalTrial(object.getAsJsonArray("clinicalTrials")))
-                .drug(extractDrug(object.getAsJsonArray("drugs")))
-                .globalApprovalStatus(extractGlobalApprovalStatus(object.getAsJsonArray("globalApprovalStatus")))
+                .clinicalTrials(extractClinicalTrials(object.getAsJsonArray("clinicalTrials")))
+                .drugs(extractDrugs(object.getAsJsonArray("drugs")))
+                .globalApprovalStatuses(extractGlobalApprovalStatuses(object.getAsJsonArray("globalApprovalStatus")))
                 .build();
     }
 
     @NotNull
-    private static List<DescriptionInfo> extractDescription(@NotNull JsonArray jsonArray) {
+    private static List<DescriptionInfo> extractDescriptions(@NotNull JsonArray jsonArray) {
         List<DescriptionInfo> descriptions = Lists.newArrayList();
         JsonDatamodelChecker descriptionChecker = TherapyDataModelChecker.descriptionObjectChecker();
 
@@ -78,7 +78,7 @@ public class TherapyReader extends CkbJsonDirectoryReader<Therapy> {
     @NotNull
     private static List<ReferenceInfo> extractReferences(@NotNull JsonArray jsonArray) {
         List<ReferenceInfo> references = Lists.newArrayList();
-        JsonDatamodelChecker referenceChecker = TherapyDataModelChecker.referencesObjectChecker();
+        JsonDatamodelChecker referenceChecker = TherapyDataModelChecker.referenceObjectChecker();
 
         for (JsonElement reference : jsonArray) {
             JsonObject referenceJsonObject = reference.getAsJsonObject();
@@ -112,7 +112,7 @@ public class TherapyReader extends CkbJsonDirectoryReader<Therapy> {
                     .therapy(extractTherapy(evidenceJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(evidenceJsonObject.getAsJsonObject("indication")))
                     .responseType(JsonFunctions.string(evidenceJsonObject, "responseType"))
-                    .references(extractReference(evidenceJsonObject.getAsJsonArray("references")))
+                    .references(extractReferences(evidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(evidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(evidenceJsonObject, "ampCapAscoInferredTier"))
                     .build());
@@ -156,34 +156,15 @@ public class TherapyReader extends CkbJsonDirectoryReader<Therapy> {
     }
 
     @NotNull
-    private static List<ReferenceInfo> extractReference(@NotNull JsonArray jsonArray) {
-        List<ReferenceInfo> references = Lists.newArrayList();
-        JsonDatamodelChecker referenceChecker = TherapyDataModelChecker.referenceChecker();
-
-        for (JsonElement reference : jsonArray) {
-            JsonObject referenceJsonObject = reference.getAsJsonObject();
-            referenceChecker.check(referenceJsonObject);
-
-            references.add(ImmutableReferenceInfo.builder()
-                    .id(JsonFunctions.integer(referenceJsonObject, "id"))
-                    .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
-                    .title(JsonFunctions.nullableString(referenceJsonObject, "title"))
-                    .url(JsonFunctions.nullableString(referenceJsonObject, "url"))
-                    .build());
-        }
-        return references;
-    }
-
-    @NotNull
-    private static List<ClinicalTrialInfo> extractClinicalTrial(@NotNull JsonArray jsonArray) {
-        List<ClinicalTrialInfo> clinicaltrials = Lists.newArrayList();
+    private static List<ClinicalTrialInfo> extractClinicalTrials(@NotNull JsonArray jsonArray) {
+        List<ClinicalTrialInfo> clinicalTrials = Lists.newArrayList();
         JsonDatamodelChecker clinicalTrialChecker = TherapyDataModelChecker.clinicalTrialChecker();
 
         for (JsonElement clinicalTrial : jsonArray) {
             JsonObject clinicalTrialJsonObject = clinicalTrial.getAsJsonObject();
             clinicalTrialChecker.check(clinicalTrialJsonObject);
 
-            clinicaltrials.add(ImmutableClinicalTrialInfo.builder()
+            clinicalTrials.add(ImmutableClinicalTrialInfo.builder()
                     .nctId(JsonFunctions.string(clinicalTrialJsonObject, "nctId"))
                     .title(JsonFunctions.string(clinicalTrialJsonObject, "title"))
                     .phase(JsonFunctions.string(clinicalTrialJsonObject, "phase"))
@@ -191,7 +172,7 @@ public class TherapyReader extends CkbJsonDirectoryReader<Therapy> {
                     .therapies(extractTherapyList(clinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());
         }
-        return clinicaltrials;
+        return clinicalTrials;
     }
 
     @NotNull
@@ -213,9 +194,9 @@ public class TherapyReader extends CkbJsonDirectoryReader<Therapy> {
     }
 
     @NotNull
-    private static List<DrugInfo> extractDrug(@NotNull JsonArray jsonArray) {
+    private static List<DrugInfo> extractDrugs(@NotNull JsonArray jsonArray) {
         List<DrugInfo> drugs = Lists.newArrayList();
-        JsonDatamodelChecker drugChecker = TherapyDataModelChecker.drugsChecker();
+        JsonDatamodelChecker drugChecker = TherapyDataModelChecker.drugChecker();
 
         for (JsonElement drug : jsonArray) {
             JsonObject drugJsonObject = drug.getAsJsonObject();
@@ -231,7 +212,7 @@ public class TherapyReader extends CkbJsonDirectoryReader<Therapy> {
     }
 
     @NotNull
-    private static List<GlobalApprovalStatusInfo> extractGlobalApprovalStatus(@NotNull JsonArray jsonArray) {
+    private static List<GlobalApprovalStatusInfo> extractGlobalApprovalStatuses(@NotNull JsonArray jsonArray) {
         List<GlobalApprovalStatusInfo> globalApprovalStatuses = Lists.newArrayList();
         JsonDatamodelChecker globalApprovalStatusChecker = TherapyDataModelChecker.globalApprovalStatusChecker();
 

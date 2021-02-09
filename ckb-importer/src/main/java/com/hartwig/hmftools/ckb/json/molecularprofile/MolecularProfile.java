@@ -22,10 +22,10 @@ public abstract class MolecularProfile implements CkbJsonObject {
     public abstract String profileName();
 
     @NotNull
-    public abstract List<VariantInfo> geneVariant();
+    public abstract List<VariantInfo> geneVariants();
 
     @NotNull
-    public abstract List<TreatmentApproachInfo> treatmentApproach();
+    public abstract List<TreatmentApproachInfo> treatmentApproaches();
 
     @Nullable
     public abstract Date createDate();
@@ -40,7 +40,7 @@ public abstract class MolecularProfile implements CkbJsonObject {
     public abstract MolecularProfileExtendedEvidence treatmentApproachEvidence();
 
     @NotNull
-    public abstract List<ClinicalTrialInfo> variantAssociatedClinicalTrial();
+    public abstract List<ClinicalTrialInfo> variantAssociatedClinicalTrials();
 
     @NotNull
     public abstract MolecularProfileExtendedEvidence variantLevelEvidence();

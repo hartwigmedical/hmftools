@@ -39,14 +39,14 @@ final class TherapyDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker referencesObjectChecker() {
+    public static JsonDatamodelChecker referenceObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("pubMedId", true);
         map.put("title", true);
         map.put("url", true);
 
-        return new JsonDatamodelChecker("TherapyReferencesObject", map);
+        return new JsonDatamodelChecker("TherapyReferenceObject", map);
     }
 
     @NotNull
@@ -73,7 +73,7 @@ final class TherapyDataModelChecker {
         map.put("id", true);
         map.put("profileName", true);
 
-        return new JsonDatamodelChecker("TherapyMolecularprofileObject", map);
+        return new JsonDatamodelChecker("TherapyMolecularProfileObject", map);
     }
 
     @NotNull
@@ -120,13 +120,13 @@ final class TherapyDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker drugsChecker() {
+    public static JsonDatamodelChecker drugChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("drugName", true);
         map.put("terms", true);
 
-        return new JsonDatamodelChecker("TherapyDrugslObject", map);
+        return new JsonDatamodelChecker("TherapyDrugObject", map);
     }
 
     @NotNull

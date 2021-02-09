@@ -31,7 +31,7 @@ public abstract class TreatmentApproach implements CkbJsonObject {
     public abstract TherapyInfo therapy();
 
     @NotNull
-    public abstract List<ReferenceInfo> reference();
+    public abstract List<ReferenceInfo> references();
 
     @Nullable
     public abstract Date createDate();

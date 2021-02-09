@@ -51,20 +51,20 @@ public abstract class Reference implements CkbJsonObject {
     public abstract String year();
 
     @NotNull
-    public abstract List<DrugInfo> drug();
+    public abstract List<DrugInfo> drugs();
 
     @NotNull
-    public abstract List<GeneInfo> gene();
+    public abstract List<GeneInfo> genes();
 
     @NotNull
     public abstract List<EvidenceInfo> evidence();
 
     @NotNull
-    public abstract List<TherapyInfo> therapy();
+    public abstract List<TherapyInfo> therapies();
 
     @NotNull
-    public abstract List<TreatmentApproachInfo> treatmentApproach();
+    public abstract List<TreatmentApproachInfo> treatmentApproaches();
 
     @NotNull
-    public abstract List<VariantInfo> variant();
+    public abstract List<VariantInfo> variants();
 }

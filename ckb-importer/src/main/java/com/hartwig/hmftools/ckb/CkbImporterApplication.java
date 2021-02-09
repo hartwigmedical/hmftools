@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 public class CkbImporterApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(CkbImporterApplication.class);
-    public static final String VERSION = CkbImporterApplication.class.getPackage().getImplementationVersion();
+    private static final String VERSION = CkbImporterApplication.class.getPackage().getImplementationVersion();
 
     public static void main(String[] args) throws IOException, SQLException {
         LOGGER.info("Running CKB importer v{}", VERSION);

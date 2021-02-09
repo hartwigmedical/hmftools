@@ -45,24 +45,24 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
         return ImmutableMolecularProfile.builder()
                 .id(JsonFunctions.integer(object, "id"))
                 .profileName(JsonFunctions.string(object, "profileName"))
-                .geneVariant(extractGeneVariant(object.getAsJsonArray("geneVariants")))
-                .treatmentApproach(extractProfileTreatmentApproach(object.getAsJsonArray("profileTreatmentApproaches")))
+                .geneVariants(extractGeneVariants(object.getAsJsonArray("geneVariants")))
+                .treatmentApproaches(extractProfileTreatmentApproaches(object.getAsJsonArray("profileTreatmentApproaches")))
                 .createDate(DateConverter.toDate(JsonFunctions.string(object, "createDate")))
                 .updateDate(DateConverter.toDate(JsonFunctions.string(object, "updateDate")))
                 .complexMolecularProfileEvidence(extractComplexMolecularProfileEvidence(object.getAsJsonObject(
                         "complexMolecularProfileEvidence")))
                 .treatmentApproachEvidence(extractTreatmentApproachEvidence(object.getAsJsonObject("treatmentApproachEvidence")))
-                .variantAssociatedClinicalTrial(extractVariantAssociatedClinicalTrials(object.getAsJsonArray(
+                .variantAssociatedClinicalTrials(extractVariantAssociatedClinicalTrials(object.getAsJsonArray(
                         "variantAssociatedClinicalTrials")))
-                .variantLevelEvidence(extractVariantlevelEvidence(object.getAsJsonObject("variantLevelEvidence")))
+                .variantLevelEvidence(extractVariantLevelEvidence(object.getAsJsonObject("variantLevelEvidence")))
                 .extendedEvidence(extractExtendedEvidence(object.getAsJsonObject("extendedEvidence")))
                 .build();
     }
 
     @NotNull
-    private static List<VariantInfo> extractGeneVariant(@NotNull JsonArray jsonArray) {
+    private static List<VariantInfo> extractGeneVariants(@NotNull JsonArray jsonArray) {
         List<VariantInfo> geneVariants = Lists.newArrayList();
-        JsonDatamodelChecker geneVariantChecker = MolecularProfileDataModelChecker.molecularProfileGeneVariantObjectChecker();
+        JsonDatamodelChecker geneVariantChecker = MolecularProfileDataModelChecker.geneVariantObjectChecker();
 
         for (JsonElement geneVariant : jsonArray) {
             JsonObject geneVariantJsonObject = geneVariant.getAsJsonObject();
@@ -79,10 +79,9 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
     }
 
     @NotNull
-    private static List<TreatmentApproachInfo> extractProfileTreatmentApproach(@NotNull JsonArray jsonArray) {
+    private static List<TreatmentApproachInfo> extractProfileTreatmentApproaches(@NotNull JsonArray jsonArray) {
         List<TreatmentApproachInfo> profileTreatmentApproaches = Lists.newArrayList();
-        JsonDatamodelChecker profileTreatmentApproachChecker =
-                MolecularProfileDataModelChecker.molecularProfileProfileTreatmentApproacjObjectChecker();
+        JsonDatamodelChecker profileTreatmentApproachChecker = MolecularProfileDataModelChecker.profileTreatmentApproachObjectChecker();
 
         for (JsonElement profileTreatmentApproach : jsonArray) {
             JsonObject profileTreatmentApproachJsonObject = profileTreatmentApproach.getAsJsonObject();
@@ -100,7 +99,7 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
     @NotNull
     private static MolecularProfileExtendedEvidence extractComplexMolecularProfileEvidence(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker complexMolecularProfileEvidenceChecker =
-                MolecularProfileDataModelChecker.molecularProfileComplexMolecularProfileEvidence();
+                MolecularProfileDataModelChecker.complexMolecularProfileEvidenceChecker();
         complexMolecularProfileEvidenceChecker.check(jsonObject);
 
         return ImmutableMolecularProfileExtendedEvidence.builder()
@@ -113,7 +112,7 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
     private static List<EvidenceInfo> extractComplexMolecularProfileEvidenceList(@NotNull JsonArray jsonArray) {
         List<EvidenceInfo> complexMolecularProfileEvidenceList = Lists.newArrayList();
         JsonDatamodelChecker complexMolecularProfileEvidenceListChecker =
-                MolecularProfileDataModelChecker.molecularProfileComplexMolecularProfileEvidenceList();
+                MolecularProfileDataModelChecker.complexMolecularProfileEvidenceListChecker();
 
         for (JsonElement complexMolecularProfileEvidence : jsonArray) {
             JsonObject complexMolecularProfileEvidenceJsonObject = complexMolecularProfileEvidence.getAsJsonObject();
@@ -128,10 +127,10 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
                     .therapy(extractTherapy(complexMolecularProfileEvidenceJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(complexMolecularProfileEvidenceJsonObject.getAsJsonObject("indication")))
                     .responseType(JsonFunctions.string(complexMolecularProfileEvidenceJsonObject, "responseType"))
-                    .references(extractReference(complexMolecularProfileEvidenceJsonObject.getAsJsonArray("references")))
+                    .references(extractReferences(complexMolecularProfileEvidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(complexMolecularProfileEvidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(complexMolecularProfileEvidenceJsonObject, "ampCapAscoInferredTier"))
-                    .treatmentApproaches(extractRelevantTreatmentApproach(complexMolecularProfileEvidenceJsonObject.getAsJsonArray(
+                    .treatmentApproaches(extractRelevantTreatmentApproaches(complexMolecularProfileEvidenceJsonObject.getAsJsonArray(
                             "relevantTreatmentApproaches")))
                     .build());
         }
@@ -140,7 +139,7 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
 
     @NotNull
     private static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
-        JsonDatamodelChecker molecularProfileChecker = MolecularProfileDataModelChecker.molecularProfileMolecularprofile();
+        JsonDatamodelChecker molecularProfileChecker = MolecularProfileDataModelChecker.molecularProfileChecker();
         molecularProfileChecker.check(jsonObject);
 
         return ImmutableMolecularProfileInfo.builder()
@@ -151,7 +150,7 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
 
     @NotNull
     private static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
-        JsonDatamodelChecker therapyChecker = MolecularProfileDataModelChecker.molecularProfileTherapy();
+        JsonDatamodelChecker therapyChecker = MolecularProfileDataModelChecker.therapyChecker();
         therapyChecker.check(jsonObject);
 
         return ImmutableTherapyInfo.builder()
@@ -163,7 +162,7 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
 
     @NotNull
     private static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
-        JsonDatamodelChecker indicationChecker = MolecularProfileDataModelChecker.molecularProfileIndication();
+        JsonDatamodelChecker indicationChecker = MolecularProfileDataModelChecker.indicationChecker();
         indicationChecker.check(jsonObject);
 
         return ImmutableIndicationInfo.builder()
@@ -174,9 +173,9 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
     }
 
     @NotNull
-    private static List<ReferenceInfo> extractReference(@NotNull JsonArray jsonArray) {
+    private static List<ReferenceInfo> extractReferences(@NotNull JsonArray jsonArray) {
         List<ReferenceInfo> references = Lists.newArrayList();
-        JsonDatamodelChecker referenceChecker = MolecularProfileDataModelChecker.molecularProfileReference();
+        JsonDatamodelChecker referenceChecker = MolecularProfileDataModelChecker.referenceChecker();
 
         for (JsonElement reference : jsonArray) {
             JsonObject referenceJsonObject = reference.getAsJsonObject();
@@ -193,10 +192,9 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
     }
 
     @NotNull
-    private static List<TreatmentApproachInfo> extractRelevantTreatmentApproach(@NotNull JsonArray jsonArray) {
+    private static List<TreatmentApproachInfo> extractRelevantTreatmentApproaches(@NotNull JsonArray jsonArray) {
         List<TreatmentApproachInfo> relevantTreatmentApproaches = Lists.newArrayList();
-        JsonDatamodelChecker relevantTreatmentApproachChecker =
-                MolecularProfileDataModelChecker.molecularProfileRelevantTreatmentApproach();
+        JsonDatamodelChecker relevantTreatmentApproachChecker = MolecularProfileDataModelChecker.relevantTreatmentApproachChecker();
 
         for (JsonElement relevantTreatmentApproach : jsonArray) {
             JsonObject relevantTreatmentApproachJsonObject = relevantTreatmentApproach.getAsJsonObject();
@@ -213,9 +211,8 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
 
     @NotNull
     private static MolecularProfileExtendedEvidence extractTreatmentApproachEvidence(@NotNull JsonObject jsonObject) {
-        JsonDatamodelChecker treatmentApproachEvidenceeChecker =
-                MolecularProfileDataModelChecker.molecularProfileTreatmentApproachEvidence();
-        treatmentApproachEvidenceeChecker.check(jsonObject);
+        JsonDatamodelChecker treatmentApproachEvidenceChecker = MolecularProfileDataModelChecker.treatmentApproachEvidenceChecker();
+        treatmentApproachEvidenceChecker.check(jsonObject);
 
         return ImmutableMolecularProfileExtendedEvidence.builder()
                 .totalCount(JsonFunctions.integer(jsonObject, "totalCount"))
@@ -226,8 +223,7 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
     @NotNull
     private static List<EvidenceInfo> extractTreatmentApproachEvidenceList(@NotNull JsonArray jsonArray) {
         List<EvidenceInfo> treatmentApproachEvidenceList = Lists.newArrayList();
-        JsonDatamodelChecker treatmentApproachEvidenceListChecker =
-                MolecularProfileDataModelChecker.molecularProfileTreatmentApproachEvidenceList();
+        JsonDatamodelChecker treatmentApproachEvidenceListChecker = MolecularProfileDataModelChecker.treatmentApproachEvidenceListChecker();
 
         for (JsonElement treatmentApproachEvidence : jsonArray) {
             JsonObject treatmentApproachEvidenceJsonObject = treatmentApproachEvidence.getAsJsonObject();
@@ -242,10 +238,10 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
                     .therapy(extractTherapy(treatmentApproachEvidenceJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(treatmentApproachEvidenceJsonObject.getAsJsonObject("indication")))
                     .responseType(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "responseType"))
-                    .references(extractReference(treatmentApproachEvidenceJsonObject.getAsJsonArray("references")))
+                    .references(extractReferences(treatmentApproachEvidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(treatmentApproachEvidenceJsonObject, "ampCapAscoInferredTier"))
-                    .treatmentApproaches(extractRelevantTreatmentApproach(treatmentApproachEvidenceJsonObject.getAsJsonArray(
+                    .treatmentApproaches(extractRelevantTreatmentApproaches(treatmentApproachEvidenceJsonObject.getAsJsonArray(
                             "relevantTreatmentApproaches")))
                     .build());
         }
@@ -255,7 +251,8 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
     @NotNull
     private static List<ClinicalTrialInfo> extractVariantAssociatedClinicalTrials(@NotNull JsonArray jsonArray) {
         List<ClinicalTrialInfo> variantAssociatedClinicalTrials = Lists.newArrayList();
-        JsonDatamodelChecker variantAssociatedClinicalTrialChecker = MolecularProfileDataModelChecker.variantAssociatedClinicalTrial();
+        JsonDatamodelChecker variantAssociatedClinicalTrialChecker =
+                MolecularProfileDataModelChecker.variantAssociatedClinicalTrialChecker();
 
         for (JsonElement variantAssociatedClinicalTrial : jsonArray) {
             JsonObject variantAssociatedClinicalTrialJsonObject = variantAssociatedClinicalTrial.getAsJsonObject();
@@ -275,7 +272,7 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
     @NotNull
     private static List<TherapyInfo> extractTherapyList(@NotNull JsonArray jsonArray) {
         List<TherapyInfo> therapies = Lists.newArrayList();
-        JsonDatamodelChecker therapyChecker = MolecularProfileDataModelChecker.molecularProfileTherapy();
+        JsonDatamodelChecker therapyChecker = MolecularProfileDataModelChecker.therapyChecker();
 
         for (JsonElement therapy : jsonArray) {
             JsonObject therapyJsonObject = therapy.getAsJsonObject();
@@ -288,30 +285,29 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
                     .build());
         }
         return therapies;
-
     }
 
     @NotNull
-    private static MolecularProfileExtendedEvidence extractVariantlevelEvidence(@NotNull JsonObject jsonObject) {
-        JsonDatamodelChecker variantLevelEvidenceChecker = MolecularProfileDataModelChecker.molecularProfilevariantLevelEvidence();
+    private static MolecularProfileExtendedEvidence extractVariantLevelEvidence(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker variantLevelEvidenceChecker = MolecularProfileDataModelChecker.variantLevelEvidenceChecker();
         variantLevelEvidenceChecker.check(jsonObject);
 
         return ImmutableMolecularProfileExtendedEvidence.builder()
                 .totalCount(JsonFunctions.integer(jsonObject, "totalCount"))
-                .evidence(extractVariantlevelEvidenceList(jsonObject.getAsJsonArray("variantLevelEvidences")))
+                .evidence(extractVariantLevelEvidenceList(jsonObject.getAsJsonArray("variantLevelEvidences")))
                 .build();
     }
 
     @NotNull
-    private static List<EvidenceInfo> extractVariantlevelEvidenceList(@NotNull JsonArray jsonArray) {
-        List<EvidenceInfo> variantlevelEvidenceList = Lists.newArrayList();
-        JsonDatamodelChecker variantlevelEvidenceListChecker = MolecularProfileDataModelChecker.molecularProfilevariantLevelEvidenceList();
+    private static List<EvidenceInfo> extractVariantLevelEvidenceList(@NotNull JsonArray jsonArray) {
+        List<EvidenceInfo> variantLevelEvidenceList = Lists.newArrayList();
+        JsonDatamodelChecker variantLevelEvidenceListChecker = MolecularProfileDataModelChecker.variantLevelEvidenceListChecker();
 
         for (JsonElement variantLevelEvidence : jsonArray) {
             JsonObject variantLevelEvidenceJsonObject = variantLevelEvidence.getAsJsonObject();
-            variantlevelEvidenceListChecker.check(variantLevelEvidenceJsonObject);
+            variantLevelEvidenceListChecker.check(variantLevelEvidenceJsonObject);
 
-            variantlevelEvidenceList.add(ImmutableEvidenceInfo.builder()
+            variantLevelEvidenceList.add(ImmutableEvidenceInfo.builder()
                     .id(JsonFunctions.integer(variantLevelEvidenceJsonObject, "id"))
                     .approvalStatus(JsonFunctions.string(variantLevelEvidenceJsonObject, "approvalStatus"))
                     .evidenceType(JsonFunctions.string(variantLevelEvidenceJsonObject, "evidenceType"))
@@ -320,19 +316,19 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
                     .therapy(extractTherapy(variantLevelEvidenceJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(variantLevelEvidenceJsonObject.getAsJsonObject("indication")))
                     .responseType(JsonFunctions.string(variantLevelEvidenceJsonObject, "responseType"))
-                    .references(extractReference(variantLevelEvidenceJsonObject.getAsJsonArray("references")))
+                    .references(extractReferences(variantLevelEvidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(variantLevelEvidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(variantLevelEvidenceJsonObject, "ampCapAscoInferredTier"))
-                    .treatmentApproaches(extractRelevantTreatmentApproach(variantLevelEvidenceJsonObject.getAsJsonArray(
+                    .treatmentApproaches(extractRelevantTreatmentApproaches(variantLevelEvidenceJsonObject.getAsJsonArray(
                             "relevantTreatmentApproaches")))
                     .build());
         }
-        return variantlevelEvidenceList;
+        return variantLevelEvidenceList;
     }
 
     @NotNull
     private static MolecularProfileExtendedEvidence extractExtendedEvidence(@NotNull JsonObject jsonObject) {
-        JsonDatamodelChecker extendedEvidenceChecker = MolecularProfileDataModelChecker.extendedEvidenceEvidence();
+        JsonDatamodelChecker extendedEvidenceChecker = MolecularProfileDataModelChecker.extendedEvidenceChecker();
         extendedEvidenceChecker.check(jsonObject);
 
         return ImmutableMolecularProfileExtendedEvidence.builder()
@@ -344,7 +340,7 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
     @NotNull
     private static List<EvidenceInfo> extractExtendedEvidenceList(@NotNull JsonArray jsonArray) {
         List<EvidenceInfo> extendedEvidenceList = Lists.newArrayList();
-        JsonDatamodelChecker extendedEvidenceListChecker = MolecularProfileDataModelChecker.extendedEvidenceList();
+        JsonDatamodelChecker extendedEvidenceListChecker = MolecularProfileDataModelChecker.extendedEvidenceListChecker();
 
         for (JsonElement extendedEvidence : jsonArray) {
             JsonObject extendedEvidenceJsonObject = extendedEvidence.getAsJsonObject();
@@ -359,7 +355,7 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
                     .therapy(extractTherapy(extendedEvidenceJsonObject.getAsJsonObject("therapy")))
                     .indication(extractIndication(extendedEvidenceJsonObject.getAsJsonObject("indication")))
                     .responseType(JsonFunctions.string(extendedEvidenceJsonObject, "responseType"))
-                    .references(extractReference(extendedEvidenceJsonObject.getAsJsonArray("references")))
+                    .references(extractReferences(extendedEvidenceJsonObject.getAsJsonArray("references")))
                     .ampCapAscoEvidenceLevel(JsonFunctions.string(extendedEvidenceJsonObject, "ampCapAscoEvidenceLevel"))
                     .ampCapAscoInferredTier(JsonFunctions.string(extendedEvidenceJsonObject, "ampCapAscoInferredTier"))
 

@@ -16,5 +16,5 @@ public abstract class VariantCategoryVariantPath {
     public abstract String variantPath();
 
     @NotNull
-    public abstract List<VariantInfo> variant();
+    public abstract List<VariantInfo> variants();
 }

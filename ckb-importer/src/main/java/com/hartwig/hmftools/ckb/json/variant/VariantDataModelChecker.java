@@ -95,7 +95,7 @@ final class VariantDataModelChecker {
         map.put("variantPath", true);
         map.put("variants", true);
 
-        return new JsonDatamodelChecker("VariantcategoryVariantPathObject", map);
+        return new JsonDatamodelChecker("VariantCategoryVariantPathObject", map);
     }
 
     @NotNull
@@ -176,13 +176,13 @@ final class VariantDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker profileTreatmentApprochObjectChecker() {
+    public static JsonDatamodelChecker profileTreatmentApproachObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("name", true);
         map.put("profileName", true);
 
-        return new JsonDatamodelChecker("VariantProfileTreatmentApprochObject", map);
+        return new JsonDatamodelChecker("VariantProfileTreatmentApproachObject", map);
     }
 
     @NotNull

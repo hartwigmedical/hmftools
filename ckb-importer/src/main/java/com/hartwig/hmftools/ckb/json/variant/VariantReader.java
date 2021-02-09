@@ -49,34 +49,32 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
                 .fullName(JsonFunctions.string(object, "fullName"))
                 .impact(JsonFunctions.nullableString(object, "impact"))
                 .proteinEffect(JsonFunctions.nullableString(object, "proteinEffect"))
-                .description(extractGeneDescription(object.getAsJsonArray("geneVariantDescriptions")))
+                .descriptions(extractGeneDescriptions(object.getAsJsonArray("geneVariantDescriptions")))
                 .type(JsonFunctions.nullableString(object, "type"))
                 .gene(extractGene(object.getAsJsonObject("gene")))
                 .variant(JsonFunctions.string(object, "variant"))
                 .createDate(DateConverter.toDate(JsonFunctions.string(object, "createDate")))
                 .updateDate(DateConverter.toDate(JsonFunctions.string(object, "updateDate")))
-                .referenceTranscriptCoordinate(
-                        object.has("referenceTranscriptCoordinates") && !object.get("referenceTranscriptCoordinates").isJsonNull()
-                                ? extractReferenceTranscriptCoordinate(object.getAsJsonObject("referenceTranscriptCoordinates"))
-                                : null)
-                .partnerGene(extractPartnerGene(object.getAsJsonArray("partnerGenes")))
-                .categoryVariantPath(extractCategoryVariantPath(object.getAsJsonArray("categoryVariantPaths")))
+                .referenceTranscriptCoordinate(extractReferenceTranscriptCoordinate(JsonFunctions.optionalJsonObject(object,
+                        "referenceTranscriptCoordinates")))
+                .partnerGenes(extractPartnerGenes(object.getAsJsonArray("partnerGenes")))
+                .categoryVariantPaths(extractCategoryVariantPaths(object.getAsJsonArray("categoryVariantPaths")))
                 .evidence(extractEvidence(object.getAsJsonArray("evidence")))
                 .extendedEvidence(extractExtendedEvidence(object.getAsJsonArray("extendedEvidence")))
-                .molecularProfile(extractMolecularProfilesList(object.getAsJsonArray("molecularProfiles")))
-                .allTranscriptCoordinate(extractAllTranscriptCoordinates(object.getAsJsonArray("allTranscriptCoordinates")))
-                .memberVariant(extractMemberVariants(object.getAsJsonArray("memberVariants")))
+                .molecularProfiles(extractMolecularProfiles(object.getAsJsonArray("molecularProfiles")))
+                .allTranscriptCoordinates(extractAllTranscriptCoordinates(object.getAsJsonArray("allTranscriptCoordinates")))
+                .memberVariants(extractMemberVariants(object.getAsJsonArray("memberVariants")))
                 .build();
     }
 
     @NotNull
-    private static List<DescriptionInfo> extractGeneDescription(@NotNull JsonArray jsonArray) {
+    private static List<DescriptionInfo> extractGeneDescriptions(@NotNull JsonArray jsonArray) {
         List<DescriptionInfo> geneVariantDescriptions = Lists.newArrayList();
-        JsonDatamodelChecker variantGeneVariantDescriptionObjectChecker = VariantDataModelChecker.geneVariantDescriptionObjectChecker();
+        JsonDatamodelChecker geneVariantDescriptionObjectChecker = VariantDataModelChecker.geneVariantDescriptionObjectChecker();
 
         for (JsonElement geneVariantDescription : jsonArray) {
             JsonObject geneVariantDescriptionJsonObject = geneVariantDescription.getAsJsonObject();
-            variantGeneVariantDescriptionObjectChecker.check(geneVariantDescriptionJsonObject);
+            geneVariantDescriptionObjectChecker.check(geneVariantDescriptionJsonObject);
 
             geneVariantDescriptions.add(ImmutableDescriptionInfo.builder()
                     .description(JsonFunctions.string(geneVariantDescriptionJsonObject, "description"))
@@ -117,10 +115,15 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
                 .build();
     }
 
-    @NotNull
-    private static VariantTranscriptCoordinate extractReferenceTranscriptCoordinate(@NotNull JsonObject jsonObject) {
-        JsonDatamodelChecker geneObjectChecker = VariantDataModelChecker.referenceTranscriptCoordinateObjectChecker();
-        geneObjectChecker.check(jsonObject);
+    @Nullable
+    private static VariantTranscriptCoordinate extractReferenceTranscriptCoordinate(@Nullable JsonObject jsonObject) {
+        if (jsonObject == null) {
+            return null;
+        }
+
+        JsonDatamodelChecker referenceTranscriptCoordinateObjectChecker =
+                VariantDataModelChecker.referenceTranscriptCoordinateObjectChecker();
+        referenceTranscriptCoordinateObjectChecker.check(jsonObject);
 
         return ImmutableVariantTranscriptCoordinate.builder()
                 .id(JsonFunctions.integer(jsonObject, "id"))
@@ -134,7 +137,7 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
     }
 
     @NotNull
-    private static List<VariantPartnerGene> extractPartnerGene(@NotNull JsonArray jsonArray) {
+    private static List<VariantPartnerGene> extractPartnerGenes(@NotNull JsonArray jsonArray) {
         List<VariantPartnerGene> partnerGenes = Lists.newArrayList();
         JsonDatamodelChecker partnerGeneObjectChecker = VariantDataModelChecker.partnerGeneObjectChecker();
 
@@ -151,7 +154,7 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
     }
 
     @NotNull
-    private static List<VariantCategoryVariantPath> extractCategoryVariantPath(@NotNull JsonArray jsonArray) {
+    private static List<VariantCategoryVariantPath> extractCategoryVariantPaths(@NotNull JsonArray jsonArray) {
         List<VariantCategoryVariantPath> categoryVariantPaths = Lists.newArrayList();
         JsonDatamodelChecker categoryVariantPathObjectChecker = VariantDataModelChecker.categoryVariantPathObjectChecker();
 
@@ -161,7 +164,7 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
 
             categoryVariantPaths.add(ImmutableVariantCategoryVariantPath.builder()
                     .variantPath(JsonFunctions.string(categoryVariantPathJsonObject, "variantPath"))
-                    .variant(extractVariant(categoryVariantPathJsonObject.getAsJsonArray("variants")))
+                    .variants(extractVariants(categoryVariantPathJsonObject.getAsJsonArray("variants")))
                     .build());
         }
 
@@ -169,7 +172,7 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
     }
 
     @NotNull
-    private static List<VariantInfo> extractVariant(@NotNull JsonArray jsonArray) {
+    private static List<VariantInfo> extractVariants(@NotNull JsonArray jsonArray) {
         List<VariantInfo> variants = Lists.newArrayList();
         JsonDatamodelChecker variantObjectChecker = VariantDataModelChecker.variantVariantObjectChecker();
 
@@ -275,7 +278,7 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
     }
 
     @NotNull
-    private static List<MolecularProfileInfo> extractMolecularProfilesList(@NotNull JsonArray jsonArray) {
+    private static List<MolecularProfileInfo> extractMolecularProfiles(@NotNull JsonArray jsonArray) {
         List<MolecularProfileInfo> molecularProfiles = Lists.newArrayList();
         JsonDatamodelChecker molecularProfileChecker = VariantDataModelChecker.molecularProfileObjectChecker();
 
@@ -296,16 +299,16 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
     @NotNull
     private static List<TreatmentApproachInfo> extractProfileTreatmentApproches(@NotNull JsonArray jsonArray) {
         List<TreatmentApproachInfo> profileTreatmentApproaches = Lists.newArrayList();
-        JsonDatamodelChecker profileTreatmentApprochChecker = VariantDataModelChecker.profileTreatmentApprochObjectChecker();
+        JsonDatamodelChecker profileTreatmentApproachChecker = VariantDataModelChecker.profileTreatmentApproachObjectChecker();
 
-        for (JsonElement profileTreatmentApproch : jsonArray) {
-            JsonObject profileTreatmentApprochJsonObject = profileTreatmentApproch.getAsJsonObject();
-            profileTreatmentApprochChecker.check(profileTreatmentApprochJsonObject);
+        for (JsonElement profileTreatmentApproach : jsonArray) {
+            JsonObject profileTreatmentApproachJsonObject = profileTreatmentApproach.getAsJsonObject();
+            profileTreatmentApproachChecker.check(profileTreatmentApproachJsonObject);
 
             profileTreatmentApproaches.add(ImmutableTreatmentApproachInfo.builder()
-                    .id(JsonFunctions.integer(profileTreatmentApprochJsonObject, "id"))
-                    .name(JsonFunctions.string(profileTreatmentApprochJsonObject, "name"))
-                    .profileName(JsonFunctions.string(profileTreatmentApprochJsonObject, "profileName"))
+                    .id(JsonFunctions.integer(profileTreatmentApproachJsonObject, "id"))
+                    .name(JsonFunctions.string(profileTreatmentApproachJsonObject, "name"))
+                    .profileName(JsonFunctions.string(profileTreatmentApproachJsonObject, "profileName"))
                     .build());
         }
 
@@ -349,7 +352,7 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
                     .fullName(JsonFunctions.string(memberVariantObject, "fullName"))
                     .impact(JsonFunctions.string(memberVariantObject, "impact"))
                     .proteinEffect(JsonFunctions.string(memberVariantObject, "proteinEffect"))
-                    .descriptions(extractGeneDescription(memberVariantObject.getAsJsonArray("geneVariantDescriptions")))
+                    .descriptions(extractGeneDescriptions(memberVariantObject.getAsJsonArray("geneVariantDescriptions")))
                     .build());
         }
         return memberVariants;

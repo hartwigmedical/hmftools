@@ -37,7 +37,7 @@ final class ReferenceDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker referenceDrugObjectChecker() {
+    public static JsonDatamodelChecker drugObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("drugName", true);
@@ -47,7 +47,7 @@ final class ReferenceDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker referenceGeneObjectChecker() {
+    public static JsonDatamodelChecker geneObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("geneSymbol", true);
@@ -57,7 +57,7 @@ final class ReferenceDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker referenceEvidenceObjectChecker() {
+    public static JsonDatamodelChecker evidenceObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("approvalStatus", true);
@@ -75,16 +75,16 @@ final class ReferenceDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker referenceMolecularProfileObjectChecker() {
+    public static JsonDatamodelChecker molecularProfileObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("profileName", true);
 
-        return new JsonDatamodelChecker("ReferenceMolecularprofileObject", map);
+        return new JsonDatamodelChecker("ReferenceMolecularProfileObject", map);
     }
 
     @NotNull
-    public static JsonDatamodelChecker referenceTherapyChecker() {
+    public static JsonDatamodelChecker therapyChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("therapyName", true);
@@ -94,7 +94,7 @@ final class ReferenceDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker referenceIndicationChecker() {
+    public static JsonDatamodelChecker indicationChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("name", true);
@@ -104,7 +104,7 @@ final class ReferenceDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker referenceReferenceChecker() {
+    public static JsonDatamodelChecker referenceChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("pubMedId", true);
@@ -115,27 +115,17 @@ final class ReferenceDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker referenceTherapyObjectChecker() {
-        Map<String, Boolean> map = Maps.newHashMap();
-        map.put("id", true);
-        map.put("therapyName", true);
-        map.put("synonyms", true);
-
-        return new JsonDatamodelChecker("ReferenceTherapyObject", map);
-    }
-
-    @NotNull
-    public static JsonDatamodelChecker referenceTreatmentApprochObjectChecker() {
+    public static JsonDatamodelChecker treatmentApproachObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("name", true);
         map.put("profileName", true);
 
-        return new JsonDatamodelChecker("ReferenceTreatmentApprochObject", map);
+        return new JsonDatamodelChecker("ReferenceTreatmentApproachObject", map);
     }
 
     @NotNull
-    public static JsonDatamodelChecker referenceVariantObjectChecker() {
+    public static JsonDatamodelChecker variantObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("fullName", true);
