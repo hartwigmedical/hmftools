@@ -50,7 +50,7 @@ public class CohortLineElements
 
     private final Map<String,Map<Integer,LineClusterData>> mSampleClusterLineData;
     private final Map<BaseRegion,Integer> mExtLineSampleCounts;
-    private final Map<String,List<LineRepeatMaskerData>> mChrRepeatMaskerData;
+    private final Map<String,List<RepeatMaskerData>> mChrRepeatMaskerData;
     private final List<BaseRegion> mKnownLineElements;
     private final List<BaseRegion> mPolymorphicLineElements;
     private IndexedFastaSequenceFile mRefGenomeFile;
@@ -281,7 +281,7 @@ public class CohortLineElements
             int strandIndex = fieldsIndexMap.get("Strand");
 
             String currentChr = "";
-            List<LineRepeatMaskerData> rmDataList = null;
+            List<RepeatMaskerData> rmDataList = null;
             int itemCount = 0;
 
             for(final String line : fileContents)
@@ -298,7 +298,7 @@ public class CohortLineElements
 
                 final byte strand = items[strandIndex].equals("+") ? POS_ORIENT : NEG_ORIENT;
 
-                LineRepeatMaskerData rmData = new LineRepeatMaskerData(rmId, new BaseRegion(chromosome, positions), strand);
+                RepeatMaskerData rmData = new RepeatMaskerData(rmId, new BaseRegion(chromosome, positions), strand);
                 ++itemCount;
 
                 if(!currentChr.equals(chromosome))
@@ -437,7 +437,7 @@ public class CohortLineElements
 
                 final BaseRegion pmLineRegion = knownLineRegion == null ? findPolymorphicLineRegion(primarySource.Region) : null;
 
-                LineRepeatMaskerData rmData = findRepeatMaskerMatch(primarySource.Region, knownLineRegion);
+                RepeatMaskerData rmData = findRepeatMaskerMatch(primarySource.Region, knownLineRegion);
 
                 final String rmDataStr = rmData != null ?
                         String.format("%d,%d,%d,%d", rmData.RmId, rmData.Region.start(), rmData.Region.end(), rmData.Strand) : "-1,-1,-1,0";
@@ -522,17 +522,17 @@ public class CohortLineElements
 
     private static final int INTACT_LINE_ELEMENT_LENGTH = 5000;
 
-    private LineRepeatMaskerData findRepeatMaskerMatch(final BaseRegion lineRegion, final BaseRegion knownLineRegion)
+    private RepeatMaskerData findRepeatMaskerMatch(final BaseRegion lineRegion, final BaseRegion knownLineRegion)
     {
-        final List<LineRepeatMaskerData> rmDataList = mChrRepeatMaskerData.get(lineRegion.Chromosome);
+        final List<RepeatMaskerData> rmDataList = mChrRepeatMaskerData.get(lineRegion.Chromosome);
 
         if(rmDataList == null)
             return null;
 
-        LineRepeatMaskerData closestRmData = null;
+        RepeatMaskerData closestRmData = null;
         int closestDistance = -1;
 
-        for(LineRepeatMaskerData rmData : rmDataList)
+        for(RepeatMaskerData rmData : rmDataList)
         {
             if(knownLineRegion != null && knownLineRegion.overlaps(rmData.Region))
             {
@@ -594,11 +594,11 @@ public class CohortLineElements
 
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            for(Map.Entry<String,List<LineRepeatMaskerData>> entry : mChrRepeatMaskerData.entrySet())
+            for(Map.Entry<String,List<RepeatMaskerData>> entry : mChrRepeatMaskerData.entrySet())
             {
                 final String chromosome = entry.getKey();
 
-                for(final LineRepeatMaskerData rmData : entry.getValue())
+                for(final RepeatMaskerData rmData : entry.getValue())
                 {
                     if(rmData.Region.length() < 5000)
                         continue;
