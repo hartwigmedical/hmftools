@@ -7,6 +7,7 @@ import com.hartwig.hmftools.ckb.datamodelinterpretation.CkbEntryInterpretation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.ImmutableCkbEntryInterpretation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrial;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.ImmutableIndication;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.molecularprofile.MolecularProfileEvidence;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapy;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrial;
@@ -15,6 +16,7 @@ import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.json.indication.Indication;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
+import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfileExtendedEvidence;
 import com.hartwig.hmftools.ckb.json.therapy.Therapy;
 import com.hartwig.hmftools.ckb.util.DateConverter;
 
@@ -37,6 +39,8 @@ public class InterpretationFactory {
             ImmutableCkbEntryInterpretation.Builder outputBuilder = ImmutableCkbEntryInterpretation.builder();
             outputBuilder.id(ckbId);
             LOGGER.info("molecular profile {}", molecularProfile.id());
+
+            //extract clinical trial information
             for (ClinicalTrialInfo clinicalTrialInfo : molecularProfile.variantAssociatedClinicalTrial()) {
                 for (ClinicalTrial clinicalTrial : ckbEntry.clinicalTrial()) {
                     if (clinicalTrialInfo.nctId().equals(clinicalTrial.nctId())) {
@@ -93,6 +97,11 @@ public class InterpretationFactory {
                     }
                 }
             }
+
+            //extract variant level information
+//            for (MolecularProfileExtendedEvidence evidenceInfo: molecularProfile.variantLevelEvidence()) {
+//
+//            }
             LOGGER.info(outputBuilder.build());
             CkbEntryInterpretation.add(outputBuilder.build());
         }
