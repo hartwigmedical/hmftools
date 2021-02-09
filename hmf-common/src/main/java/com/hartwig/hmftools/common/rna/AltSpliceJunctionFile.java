@@ -156,9 +156,9 @@ public class AltSpliceJunctionFile
         // NearestStartExon,NearestEndExon,BasesStart,BasesEnd,TransStart,TransEnd,InitialReadId
 
         return new AltSpliceJunctionFile(
-                items[geneId], items[geneName], items[chr], new int[] { Integer.parseInt(items[posStart]), Integer.parseInt(items[posStart]) },
+                items[geneId], items[geneName], items[chr], new int[] { Integer.parseInt(items[posStart]), Integer.parseInt(items[posEnd]) },
                 AltSpliceJunctionType.valueOf(items[type]),
-                fragCount, new int[] { Integer.parseInt(items[depthStart]), Integer.parseInt(items[depthEnd]) },
+                Integer.parseInt(items[fragCount]), new int[] { Integer.parseInt(items[depthStart]), Integer.parseInt(items[depthEnd]) },
                 new AltSpliceJunctionContext[] { AltSpliceJunctionContext.valueOf(items[regionStart]), AltSpliceJunctionContext.valueOf(items[regionEnd]) },
                 new String[] { items[basesStart], items[basesEnd] }, new String[] { items[transStart], items[transEnd] } );
     }

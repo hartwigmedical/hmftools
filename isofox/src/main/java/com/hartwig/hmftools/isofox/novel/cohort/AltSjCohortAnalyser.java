@@ -219,7 +219,7 @@ public class AltSjCohortAnalyser
                     continue;
 
                 altSJs.add(AltSpliceJunctionFile.fromCsv(items, geneId, geneName, chr, posStart, posEnd, type,
-                fragCount, depthStart, depthEnd, regionStart, regionEnd, basesStart, basesEnd, transStart, transEnd));
+                        fragCount, depthStart, depthEnd, regionStart, regionEnd, basesStart, basesEnd, transStart, transEnd));
             }
 
             return altSJs;
@@ -249,26 +249,26 @@ public class AltSjCohortAnalyser
             chrSJs.put(altSJ.GeneId, geneList);
         }
 
-        AltSjCohortData altSjData = geneList.stream().filter(x -> x.AltSJ.matches(altSJ)).findFirst().orElse(null);
+        AltSjCohortData asjCohortData = geneList.stream().filter(x -> x.AltSJ.matches(altSJ)).findFirst().orElse(null);
 
-        if(altSjData == null)
+        if(asjCohortData == null)
         {
-            altSjData = new AltSjCohortData(altSJ);
-            geneList.add(altSjData);
+            asjCohortData = new AltSjCohortData(altSJ);
+            geneList.add(asjCohortData);
         }
 
         if(!mConfig.SampleData.SampleCohort.isEmpty())
         {
             boolean isCohortA = mConfig.SampleData.sampleInCohort(sampleId, SampleDataCache.COHORT_A);
-            altSjData.addSampleCount(sampleId, altSJ.FragmentCount, isCohortA);
+            asjCohortData.addSampleCount(sampleId, altSJ.FragmentCount, isCohortA);
         }
         else
         {
-            altSjData.addSampleCount(sampleId, altSJ.FragmentCount, cancerType);
+            asjCohortData.addSampleCount(sampleId, altSJ.FragmentCount, cancerType);
         }
 
-        altSjData.addPositionCount(SE_START, altSJ.DepthCounts[SE_START]);
-        altSjData.addPositionCount(SE_END, altSJ.DepthCounts[SE_END]);
+        asjCohortData.addPositionCount(SE_START, altSJ.DepthCounts[SE_START]);
+        asjCohortData.addPositionCount(SE_END, altSJ.DepthCounts[SE_END]);
     }
 
     private void writeAltSpliceJunctionData(final String sampleId, final AltSpliceJunctionFile altSJ)
@@ -343,7 +343,7 @@ public class AltSjCohortAnalyser
                         mCohortDataWriter.write(String.format(",%s,%s,%s",
                                 altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END], getDonorAcceptorBases(altSJ.BaseContexts)));
 
-                        mCohortDataWriter.write(String.format(",%.0f,%d,%.0f,%.0f",
+                        mCohortDataWriter.write(String.format(",%.1f,%d,%.0f,%.0f",
                                 altSjData.getAvgFragmentCount(), altSjData.getMaxFragmentCount(),
                                 altSjData.getPositionCount(SE_START) / (double) sampleCount,
                                 altSjData.getPositionCount(SE_END) / (double) sampleCount));
