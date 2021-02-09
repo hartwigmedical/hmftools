@@ -17,6 +17,7 @@ import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.json.indication.Indication;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
 import com.hartwig.hmftools.ckb.json.therapy.Therapy;
+import com.hartwig.hmftools.ckb.util.DateConverter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,10 +41,12 @@ public class InterpretationFactory {
 
             //extract clinical trial information
             for (ClinicalTrialInfo clinicalTrialInfo : molecularProfile.variantAssociatedClinicalTrial()) {
+                ImmutableClinicalTrialInterpretation.Builder outputBuilderClinicalInterpretation = ImmutableClinicalTrialInterpretation.builder();
+
                 for (ClinicalTrial clinicalTrial : ckbEntry.clinicalTrial()) {
                     if (clinicalTrialInfo.nctId().equals(clinicalTrial.nctId())) {
                         LOGGER.info("clinicalTrial {}", clinicalTrial.nctId());
-                        outputBuilder.addClinicalTrial(ImmutableClinicalTrial.builder()
+                        outputBuilderClinicalInterpretation.clinicalTrials(ImmutableClinicalTrial.builder()
                                 .nctId(clinicalTrial.nctId())
                                 .title(clinicalTrial.title())
                                 .phase(clinicalTrial.phase())
@@ -59,16 +62,16 @@ public class InterpretationFactory {
 
                         for (IndicationInfo indicationInfo : clinicalTrial.indications()) {
                             for (Indication indication : ckbEntry.indication()) {
-                                if (indicationInfo.id().equals(indication.id())) {
-                                    LOGGER.info(ImmutableIndication.builder()
-                                            // TODO Switch to String for ID
-                                            .id(Integer.parseInt(indication.id()))
+                                // TODO Use string comparison
+                                if (Integer.parseInt(indicationInfo.id()) == indication.id()) {
+                                    outputBuilderClinicalInterpretation.addIndications(ImmutableIndication.builder()
+                                            .id(indication.id())
                                             .name(indication.name())
                                             .source(indication.source())
                                             .definition(indication.definition())
                                             .currentPreferredTerm(indication.currentPreferredTerm())
-                                            .lastUpdateDateFromDO(indication.lastUpdateDateFromDO())
-                                            .altIds(indication.altIds())
+                                            .lastUpdateDateFromDO(DateConverter.toDate(indication.lastUpdateDateFromDO()))
+                                            .altIds(indication.altId())
                                             .termId(indication.termId())
                                             .build());
                                 }
@@ -78,7 +81,7 @@ public class InterpretationFactory {
                         for (TherapyInfo therapyInfo : clinicalTrial.therapies()) {
                             for (Therapy therapy : ckbEntry.therapy()) {
                                 if (therapyInfo.id() == therapy.id()) {
-                                    LOGGER.info(ImmutableTherapy.builder()
+                                    outputBuilderClinicalInterpretation.addTherapies(ImmutableTherapy.builder()
                                             .id(therapy.id())
                                             .therapyName(therapy.therapyName())
                                             .synonyms(therapy.synonyms())
@@ -91,11 +94,12 @@ public class InterpretationFactory {
                         }
                     }
                 }
+                outputBuilder.addClinicalTrialInterpretation(outputBuilderClinicalInterpretation.build());
             }
 
             //extract variant level information
             for (EvidenceInfo evidenceInfo : molecularProfile.variantLevelEvidence().evidence()) {
-
+                outputBuilder.addEvidenceInterpretation();
             }
             LOGGER.info(outputBuilder.build());
             CkbEntryInterpretation.add(outputBuilder.build());
