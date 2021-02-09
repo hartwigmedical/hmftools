@@ -30,6 +30,14 @@ data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val
                 val partialAlleles = fragment.partial.map(type).toSet()
                 val wildAlleles = fragment.wild.map(type).toSet()
 
+//                if (fragment.aminoAcidFragment.id == "A00624:78:H2MLGDSXY:4:2152:5837:27132") {
+//                    println("AR")
+//                }
+//
+//                if (fragment.aminoAcidFragment.id == "A00624:78:H2MLGDSXY:4:1145:1967:11976") {
+//                    println("AG")
+//                }
+
                 if (fullAlleles.size == 1 && partialAlleles.isEmpty())  {
                     uniqueCoverageMap.compute(fullAlleles.first()) {_, oldValue ->  (oldValue ?: 0) + 1}
 //                    if (fullAlleles.first() == HlaAllele("C*07:57")) {

@@ -17,9 +17,7 @@ import com.hartwig.hmftools.lilac.hla.HlaContextFactory
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory
 import com.hartwig.hmftools.lilac.nuc.NucleotideGeneEnrichment
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
-import com.hartwig.hmftools.lilac.seq.HlaSequence
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile
-import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.inflate
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToFourDigit
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToSixDigit
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
@@ -232,29 +230,6 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             logger.warn("UNMATCHED_INDEL - $count fragments excluded with unmatched indel $indel")
         }
 
-    }
-
-
-    private fun readSequenceFiles(filenameSupplier: (Char) -> String, transform: (List<HlaSequence>) -> List<HlaSequence>): List<HlaSequence> {
-
-        val aFile = filenameSupplier('A')
-        val bFile = filenameSupplier('B')
-        val cFile = filenameSupplier('C')
-
-        val aSequence = transform(HlaSequenceFile.readFile(aFile).inflate())
-        val bSequence = transform(HlaSequenceFile.readFile(bFile).inflate())
-        val cSequence = transform(HlaSequenceFile.readFile(cFile).inflate())
-
-        val result = mutableListOf<HlaSequence>()
-        result.addAll(aSequence)
-        result.addAll(bSequence)
-        result.addAll(cSequence)
-
-        val maxLength = result.map { it.sequence.length }.max()!!
-
-        return result
-                .filter { it.sequence.isNotEmpty() }
-                .map { it.pad(maxLength) }
     }
 
 
