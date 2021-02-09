@@ -13,7 +13,7 @@ public abstract class ClinicalTrialLocation {
     @NotNull
     public abstract String nctId();
 
-    @NotNull
+    @Nullable
     public abstract String facility();
 
     @NotNull
@@ -22,13 +22,13 @@ public abstract class ClinicalTrialLocation {
     @NotNull
     public abstract String country();
 
-    @NotNull
+    @Nullable
     public abstract String status();
 
-    @NotNull
+    @Nullable
     public abstract String state();
 
-    @NotNull
+    @Nullable
     public abstract String zip();
 
     @NotNull

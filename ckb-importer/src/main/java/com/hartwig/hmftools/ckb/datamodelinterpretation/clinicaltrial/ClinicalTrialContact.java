@@ -8,16 +8,16 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ClinicalTrialContact {
 
-    @NotNull
+    @Nullable
     public abstract String name();
 
-    @NotNull
+    @Nullable
     public abstract String email();
 
-    @NotNull
+    @Nullable
     public abstract String phone();
 
-    @NotNull
+    @Nullable
     public abstract String phoneExt();
 
     @NotNull

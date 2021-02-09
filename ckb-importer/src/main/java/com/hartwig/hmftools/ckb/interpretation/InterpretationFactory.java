@@ -5,11 +5,15 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.CkbEntryInterpretation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.ImmutableCkbEntryInterpretation;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTrialLocation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrial;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialContact;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialLocation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.ImmutableIndication;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapy;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrial;
+import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialContact;
 import com.hartwig.hmftools.ckb.json.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
@@ -56,7 +60,7 @@ public class InterpretationFactory {
                                 .sponsor(clinicalTrial.sponsors())
                                 .updateDate(clinicalTrial.updateDate())
                                 .clinicalTrialVariantRequirementDetails(Lists.newArrayList())
-                                .locations(Lists.newArrayList())
+                                .locations(extractClinicalTrialLocation(clinicalTrial.clinicalTrialLocations()))
                                 .build());
 
                         for (IndicationInfo indicationInfo : clinicalTrial.indications()) {
@@ -105,4 +109,43 @@ public class InterpretationFactory {
         }
         return CkbEntryInterpretation;
     }
+
+    @NotNull
+    private static List<ClinicalTrialLocation> extractClinicalTrialLocation(
+            @NotNull List<com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialLocation> clinicalTrialLocations) {
+        List<ClinicalTrialLocation> clinicalTrialLocationsInterpretation = Lists.newArrayList();
+
+        for (com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialLocation location : clinicalTrialLocations) {
+            clinicalTrialLocationsInterpretation.add(ImmutableClinicalTrialLocation.builder()
+                    .nctId(location.nctId())
+                    .facility(location.facility())
+                    .city(location.city())
+                    .country(location.country())
+                    .status(location.status())
+                    .state(location.state())
+                    .zip(location.zip())
+                    .contacts(extractClinicalTrialContacts(location.clinicalTrialContacts()))
+                    .build());
+        }
+        return clinicalTrialLocationsInterpretation;
+    }
+
+    @NotNull
+    private static List<com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTrialContact> extractClinicalTrialContacts(
+            @NotNull List<ClinicalTrialContact> contacts) {
+        List<com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTrialContact> clinicalTrialContacts =
+                Lists.newArrayList();
+
+        for (ClinicalTrialContact contact : contacts) {
+            clinicalTrialContacts.add(ImmutableClinicalTrialContact.builder()
+                    .name(contact.name())
+                    .email(contact.email())
+                    .phone(contact.phone())
+                    .phoneExt(contact.phoneExt())
+                    .role(contact.role())
+                    .build());
+        }
+        return clinicalTrialContacts;
+    }
+
 }
