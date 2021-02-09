@@ -3,8 +3,8 @@ package com.hartwig.hmftools.ckb;
 import java.io.IOException;
 import java.net.InetAddress;
 
-import com.hartwig.hmftools.ckb.datamodel.CkbJsonDatabase;
-import com.hartwig.hmftools.ckb.reader.CkbJsonReader;
+import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
+import com.hartwig.hmftools.ckb.json.CkbJsonReader;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;

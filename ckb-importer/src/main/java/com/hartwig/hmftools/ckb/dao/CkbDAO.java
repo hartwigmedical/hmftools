@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import com.hartwig.hmftools.ckb.datamodel.CkbJsonDatabase;
+import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -2,8 +2,6 @@ package com.hartwig.hmftools.ckb.datamodelinterpretation;
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
-import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.drugclass.DrugClass;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.gene.Gene;
@@ -13,6 +11,8 @@ import com.hartwig.hmftools.ckb.datamodelinterpretation.molecularprofile.Molecul
 import com.hartwig.hmftools.ckb.datamodelinterpretation.reference.Reference;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.treatmentApproch.TreatmentApproch;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.Variant;
+import com.hartwig.hmftools.ckb.json.drug.Drug;
+import com.hartwig.hmftools.ckb.json.therapy.Therapy;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

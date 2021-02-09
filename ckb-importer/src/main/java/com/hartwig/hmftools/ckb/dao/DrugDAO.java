@@ -1,43 +1,5 @@
 package com.hartwig.hmftools.ckb.dao;
 
-import static com.hartwig.hmftools.ckb.database.Tables.DRUG;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGCLINICALTRIAL;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGCLINICALTRIALTHERAPY;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGDESCRIPTION;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGDESCRIPTIONREFERENCE;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGDRUGCLASS;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGEVIDENCE;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGEVIDENCEINDICATION;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGEVIDENCEMOLECULARPROFILE;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGEVIDENCEREFERENCE;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGEVIDENCETHERAPY;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGEVIDENCETREATMENTAPPROCH;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGGLOBALAPPROAVALSTATUS;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGGLOBALAPPROAVALSTATUSINDICATION;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGGLOBALAPPROAVALSTATUSMOLECULARPROFILE;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGGLOBALAPPROAVALSTATUSTHERAPY;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGSYNONYM;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGTERM;
-import static com.hartwig.hmftools.ckb.database.Tables.DRUGTHERAPY;
-
-import java.util.List;
-
-import com.hartwig.hmftools.ckb.datamodel.common.ClinicalTrialInfo;
-import com.hartwig.hmftools.ckb.datamodel.common.DescriptionInfo;
-import com.hartwig.hmftools.ckb.datamodel.common.DrugClassInfo;
-import com.hartwig.hmftools.ckb.datamodel.common.EvidenceInfo;
-import com.hartwig.hmftools.ckb.datamodel.common.GlobalApprovalStatusInfo;
-import com.hartwig.hmftools.ckb.datamodel.common.IndicationInfo;
-import com.hartwig.hmftools.ckb.datamodel.common.MolecularProfileInfo;
-import com.hartwig.hmftools.ckb.datamodel.common.ReferenceInfo;
-import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
-import com.hartwig.hmftools.ckb.datamodel.common.TreatmentApproachInfo;
-import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jooq.DSLContext;
-
 public class DrugDAO {
 
     private DrugDAO() {
