@@ -30,58 +30,52 @@ public class GlobalTherapyApprovalStatusReader extends CkbJsonDirectoryReader<Gl
     @NotNull
     @Override
     protected GlobalTherapyApprovalStatus read(@NotNull final JsonObject object) {
-        JsonDatamodelChecker globalTherapyApprovalStatusChecker =
-                GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusObjectChecker();
-        globalTherapyApprovalStatusChecker.check(object);
+        JsonDatamodelChecker statusChecker = GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusObjectChecker();
+        statusChecker.check(object);
 
         return ImmutableGlobalTherapyApprovalStatus.builder()
                 .totalCount(JsonFunctions.integer(object, "totalCount"))
-                .globalApprovalStatus(extractGlobalTherapyApprovalStatus(object.getAsJsonArray("globalTherapyApprovalStatuses")))
+                .globalApprovalStatuses(extractStatuses(object.getAsJsonArray("globalTherapyApprovalStatuses")))
                 .build();
     }
 
     @NotNull
-    private static List<GlobalApprovalStatusInfo> extractGlobalTherapyApprovalStatus(@NotNull JsonArray jsonArray) {
-        List<GlobalApprovalStatusInfo> globalTherapyApprovalStatusses = Lists.newArrayList();
-        JsonDatamodelChecker globalTherapyApprovalStatusListChecker =
-                GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusListObjectChecker();
+    private static List<GlobalApprovalStatusInfo> extractStatuses(@NotNull JsonArray jsonArray) {
+        List<GlobalApprovalStatusInfo> statuses = Lists.newArrayList();
+        JsonDatamodelChecker listChecker = GlobalTherapyApprovalStatusDataModelChecker.listObjectChecker();
 
-        for (JsonElement globalTherapyApprovalStatus : jsonArray) {
-            JsonObject globalTherapyApprovalStatusJsonObject = globalTherapyApprovalStatus.getAsJsonObject();
-            globalTherapyApprovalStatusListChecker.check(globalTherapyApprovalStatusJsonObject);
+        for (JsonElement status : jsonArray) {
+            JsonObject statusJsonObject = status.getAsJsonObject();
+            listChecker.check(statusJsonObject);
 
-            globalTherapyApprovalStatusses.add(ImmutableGlobalApprovalStatusInfo.builder()
-                    .id(JsonFunctions.integer(globalTherapyApprovalStatusJsonObject, "id"))
-                    .therapy(extractGlobalTherapyApprovalStatusTherapy(globalTherapyApprovalStatusJsonObject.getAsJsonObject("therapy")))
-                    .indication(extractGlobalTherapyApprovalStatusIndication(globalTherapyApprovalStatusJsonObject.getAsJsonObject(
-                            "indication")))
-                    .molecularProfile(extractGlobalTherapyApprovalStatusMolecularProfile(globalTherapyApprovalStatusJsonObject.getAsJsonObject(
-                            "molecularProfile")))
-                    .approvalAuthority(JsonFunctions.string(globalTherapyApprovalStatusJsonObject, "approvalAuthority"))
-                    .approvalStatus(JsonFunctions.string(globalTherapyApprovalStatusJsonObject, "approvalStatus"))
+            statuses.add(ImmutableGlobalApprovalStatusInfo.builder()
+                    .id(JsonFunctions.integer(statusJsonObject, "id"))
+                    .therapy(extractTherapy(statusJsonObject.getAsJsonObject("therapy")))
+                    .indication(extractIndication(statusJsonObject.getAsJsonObject("indication")))
+                    .molecularProfile(extractMolecularProfile(statusJsonObject.getAsJsonObject("molecularProfile")))
+                    .approvalAuthority(JsonFunctions.string(statusJsonObject, "approvalAuthority"))
+                    .approvalStatus(JsonFunctions.string(statusJsonObject, "approvalStatus"))
                     .build());
         }
-        return globalTherapyApprovalStatusses;
+        return statuses;
     }
 
     @NotNull
-    private static TherapyInfo extractGlobalTherapyApprovalStatusTherapy(@NotNull JsonObject jsonObject) {
-        JsonDatamodelChecker globalTherapyApprovalStatusTherapyChecker =
-                GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusTherapyObjectChecker();
-        globalTherapyApprovalStatusTherapyChecker.check(jsonObject);
+    private static TherapyInfo extractTherapy(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker therapyChecker = GlobalTherapyApprovalStatusDataModelChecker.therapyObjectChecker();
+        therapyChecker.check(jsonObject);
 
         return ImmutableTherapyInfo.builder()
                 .id(JsonFunctions.integer(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
-                .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
+                .synonyms(JsonFunctions.optionalStringList(jsonObject, "synonyms"))
                 .build();
     }
 
     @NotNull
-    private static IndicationInfo extractGlobalTherapyApprovalStatusIndication(@NotNull JsonObject jsonObject) {
-        JsonDatamodelChecker globalTherapyApprovalStatusIndicationChecker =
-                GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusIndicationObjectChecker();
-        globalTherapyApprovalStatusIndicationChecker.check(jsonObject);
+    private static IndicationInfo extractIndication(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker indicationChecker = GlobalTherapyApprovalStatusDataModelChecker.indicationObjectChecker();
+        indicationChecker.check(jsonObject);
 
         return ImmutableIndicationInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
@@ -91,10 +85,9 @@ public class GlobalTherapyApprovalStatusReader extends CkbJsonDirectoryReader<Gl
     }
 
     @NotNull
-    private static MolecularProfileInfo extractGlobalTherapyApprovalStatusMolecularProfile(@NotNull JsonObject jsonObject) {
-        JsonDatamodelChecker globalTherapyApprovalStatusMolecularProfileChecker =
-                GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusMolecularProfileObjectChecker();
-        globalTherapyApprovalStatusMolecularProfileChecker.check(jsonObject);
+    private static MolecularProfileInfo extractMolecularProfile(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker molecularProfileChecker = GlobalTherapyApprovalStatusDataModelChecker.molecularProfileObjectChecker();
+        molecularProfileChecker.check(jsonObject);
 
         return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.integer(jsonObject, "id"))

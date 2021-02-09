@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ckb.json.indication;
 
+import java.util.Date;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.json.CkbJsonObject;
@@ -14,7 +15,9 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Indication implements CkbJsonObject {
 
-    public abstract int id();
+    // IDs for indications come from DOID and can have leading zeros, so need to be a String.
+    @NotNull
+    public abstract String id();
 
     @NotNull
     public abstract String name();
@@ -29,10 +32,10 @@ public abstract class Indication implements CkbJsonObject {
     public abstract String currentPreferredTerm();
 
     @Nullable
-    public abstract String lastUpdateDateFromDO();
+    public abstract Date lastUpdateDateFromDO();
 
     @NotNull
-    public abstract List<String> altId();
+    public abstract List<String> altIds();
 
     @NotNull
     public abstract String termId();
@@ -41,5 +44,5 @@ public abstract class Indication implements CkbJsonObject {
     public abstract List<EvidenceInfo> evidence();
 
     @NotNull
-    public abstract List<ClinicalTrialInfo> clinicalTrial();
+    public abstract List<ClinicalTrialInfo> clinicalTrials();
 }

@@ -37,7 +37,7 @@ final class GeneDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker geneDescriptionObjectChecker() {
+    public static JsonDatamodelChecker descriptionObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("description", true);
         map.put("references", true);
@@ -46,7 +46,7 @@ final class GeneDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker geneReferenceObjectChecker() {
+    public static JsonDatamodelChecker referenceObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("pubMedId", true);
@@ -57,7 +57,7 @@ final class GeneDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker geneClinicalTrialObjectChecker() {
+    public static JsonDatamodelChecker clinicalTrialObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("nctId", true);
         map.put("title", true);
@@ -69,17 +69,17 @@ final class GeneDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker geneTherapiesObjectChecker() {
+    public static JsonDatamodelChecker therapyObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("therapyName", true);
         map.put("synonyms", true);
 
-        return new JsonDatamodelChecker("GeneTherapiesObject", map);
+        return new JsonDatamodelChecker("GeneTherapyObject", map);
     }
 
     @NotNull
-    public static JsonDatamodelChecker geneEvidenceObjectChecker() {
+    public static JsonDatamodelChecker evidenceObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("approvalStatus", true);
@@ -97,7 +97,7 @@ final class GeneDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker geneMolecularProfileObjectChecker() {
+    public static JsonDatamodelChecker molecularProfileObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("profileName", true);
@@ -107,17 +107,7 @@ final class GeneDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker geneTherapyObjectChecker() {
-        Map<String, Boolean> map = Maps.newHashMap();
-        map.put("id", true);
-        map.put("therapyName", true);
-        map.put("synonyms", true);
-
-        return new JsonDatamodelChecker("GeneTherapyObject", map);
-    }
-
-    @NotNull
-    public static JsonDatamodelChecker geneIndicationObjectChecker() {
+    public static JsonDatamodelChecker indicationObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("name", true);
@@ -127,7 +117,7 @@ final class GeneDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker geneVariantObjectChecker() {
+    public static JsonDatamodelChecker variantObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("fullName", true);
@@ -139,7 +129,7 @@ final class GeneDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker geneVariantDescriptionObjectChecker() {
+    public static JsonDatamodelChecker variantDescriptionObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("description", true);
         map.put("references", true);
@@ -148,7 +138,7 @@ final class GeneDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker geneProfileTreatmentApproachObjectChecker() {
+    public static JsonDatamodelChecker profileTreatmentApproachObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("name", true);
@@ -158,7 +148,7 @@ final class GeneDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker geneCategoryVariantObjectChecker() {
+    public static JsonDatamodelChecker categoryVariantObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("fullName", true);
@@ -168,5 +158,4 @@ final class GeneDataModelChecker {
 
         return new JsonDatamodelChecker("GeneCategoryVariantObject", map);
     }
-
 }

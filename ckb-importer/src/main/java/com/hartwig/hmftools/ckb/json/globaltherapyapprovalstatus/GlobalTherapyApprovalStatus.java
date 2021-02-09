@@ -16,5 +16,5 @@ public abstract class GlobalTherapyApprovalStatus implements CkbJsonObject {
     public abstract int totalCount();
 
     @NotNull
-    public abstract List<GlobalApprovalStatusInfo> globalApprovalStatus();
+    public abstract List<GlobalApprovalStatusInfo> globalApprovalStatuses();
 }

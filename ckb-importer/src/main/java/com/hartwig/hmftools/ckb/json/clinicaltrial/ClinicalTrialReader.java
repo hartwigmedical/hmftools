@@ -61,7 +61,7 @@ public class ClinicalTrialReader extends CkbJsonDirectoryReader<ClinicalTrial> {
             therapies.add(ImmutableTherapyInfo.builder()
                     .id(JsonFunctions.integer(therapyObject, "id"))
                     .therapyName(JsonFunctions.string(therapyObject, "therapyName"))
-                    .synonyms(JsonFunctions.optionalNullableString(therapyObject, "synonyms"))
+                    .synonyms(JsonFunctions.optionalStringList(therapyObject, "synonyms"))
                     .build());
         }
         return therapies;

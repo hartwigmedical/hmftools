@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.ckb.json.common;
 
+import java.util.List;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,6 +15,6 @@ public abstract class TherapyInfo {
     @NotNull
     public abstract String therapyName();
 
-    @Nullable
-    public abstract String synonyms();
+    @NotNull
+    public abstract List<String> synonyms();
 }

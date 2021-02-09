@@ -52,50 +52,50 @@ public class GeneReader extends CkbJsonDirectoryReader<Gene> {
                 .synonyms(JsonFunctions.stringList(object, "synonyms"))
                 .chromosome(JsonFunctions.nullableString(object, "chromosome"))
                 .mapLocation(JsonFunctions.nullableString(object, "mapLocation"))
-                .descriptions(extractGeneDescriptions(object.getAsJsonArray("geneDescriptions")))
+                .descriptions(extractDescriptions(object.getAsJsonArray("geneDescriptions")))
                 .canonicalTranscript(JsonFunctions.nullableString(object, "canonicalTranscript"))
                 .geneRole(JsonFunctions.string(object, "geneRole"))
                 .createDate(DateConverter.toDate(JsonFunctions.string(object, "createDate")))
                 .updateDate(DateConverter.toDate(JsonFunctions.nullableString(object, "updateDate")))
-                .clinicalTrials(extractGeneClinicalTrial(object.getAsJsonArray("clinicalTrials")))
-                .evidence(extractGeneEvidence(object.getAsJsonArray("evidence")))
-                .variants(extractGeneVariant(object.getAsJsonArray("variants")))
-                .molecularProfiles(extarctMolecularProfile(object.getAsJsonArray("molecularProfiles")))
-                .categoryVariants(extractCategoryVariant(object.getAsJsonArray("categoryVariants")))
+                .clinicalTrials(extractClinicalTrials(object.getAsJsonArray("clinicalTrials")))
+                .evidence(extractEvidence(object.getAsJsonArray("evidence")))
+                .variants(extractVariants(object.getAsJsonArray("variants")))
+                .molecularProfiles(extractMolecularProfiles(object.getAsJsonArray("molecularProfiles")))
+                .categoryVariants(extractCategoryVariants(object.getAsJsonArray("categoryVariants")))
                 .build();
     }
 
     @NotNull
-    private static List<DescriptionInfo> extractGeneDescriptions(@NotNull JsonArray jsonArray) {
-        List<DescriptionInfo> geneDescriptions = Lists.newArrayList();
-        JsonDatamodelChecker geneDescriptionChecker = GeneDataModelChecker.geneDescriptionObjectChecker();
+    private static List<DescriptionInfo> extractDescriptions(@NotNull JsonArray jsonArray) {
+        List<DescriptionInfo> descriptions = Lists.newArrayList();
+        JsonDatamodelChecker descriptionChecker = GeneDataModelChecker.descriptionObjectChecker();
 
-        for (JsonElement geneDescription : jsonArray) {
-            JsonObject geneDescriptionJsonObject = geneDescription.getAsJsonObject();
-            geneDescriptionChecker.check(geneDescriptionJsonObject);
+        for (JsonElement description : jsonArray) {
+            JsonObject descriptionJsonObject = description.getAsJsonObject();
+            descriptionChecker.check(descriptionJsonObject);
 
-            geneDescriptions.add(ImmutableDescriptionInfo.builder()
-                    .description(JsonFunctions.string(geneDescriptionJsonObject, "description"))
-                    .references(extractGeneReferences(geneDescriptionJsonObject.getAsJsonArray("references")))
+            descriptions.add(ImmutableDescriptionInfo.builder()
+                    .description(JsonFunctions.string(descriptionJsonObject, "description"))
+                    .references(extractReferences(descriptionJsonObject.getAsJsonArray("references")))
                     .build());
         }
-        return geneDescriptions;
+        return descriptions;
     }
 
     @NotNull
-    private static List<ReferenceInfo> extractGeneReferences(@NotNull JsonArray jsonArray) {
+    private static List<ReferenceInfo> extractReferences(@NotNull JsonArray jsonArray) {
         List<ReferenceInfo> references = Lists.newArrayList();
-        JsonDatamodelChecker geneReferenceChecker = GeneDataModelChecker.geneReferenceObjectChecker();
+        JsonDatamodelChecker referenceChecker = GeneDataModelChecker.referenceObjectChecker();
 
-        for (JsonElement geneReference : jsonArray) {
-            JsonObject geneReferenceJsonObject = geneReference.getAsJsonObject();
-            geneReferenceChecker.check(geneReferenceJsonObject);
+        for (JsonElement reference : jsonArray) {
+            JsonObject referenceJsonObject = reference.getAsJsonObject();
+            referenceChecker.check(referenceJsonObject);
 
             references.add(ImmutableReferenceInfo.builder()
-                    .id(JsonFunctions.integer(geneReferenceJsonObject, "id"))
-                    .pubMedId(JsonFunctions.nullableString(geneReferenceJsonObject, "pubMedId"))
-                    .title(JsonFunctions.nullableString(geneReferenceJsonObject, "title"))
-                    .url(JsonFunctions.nullableString(geneReferenceJsonObject, "url"))
+                    .id(JsonFunctions.integer(referenceJsonObject, "id"))
+                    .pubMedId(JsonFunctions.nullableString(referenceJsonObject, "pubMedId"))
+                    .title(JsonFunctions.nullableString(referenceJsonObject, "title"))
+                    .url(JsonFunctions.nullableString(referenceJsonObject, "url"))
                     .build());
 
         }
@@ -103,73 +103,73 @@ public class GeneReader extends CkbJsonDirectoryReader<Gene> {
     }
 
     @NotNull
-    private static List<ClinicalTrialInfo> extractGeneClinicalTrial(@NotNull JsonArray jsonArray) {
+    private static List<ClinicalTrialInfo> extractClinicalTrials(@NotNull JsonArray jsonArray) {
         List<ClinicalTrialInfo> clinicalTrials = Lists.newArrayList();
-        JsonDatamodelChecker geneClinicalTrialChecker = GeneDataModelChecker.geneClinicalTrialObjectChecker();
+        JsonDatamodelChecker clinicalTrialChecker = GeneDataModelChecker.clinicalTrialObjectChecker();
 
-        for (JsonElement geneClinicalTrial : jsonArray) {
-            JsonObject geneClinicalTrialJsonObject = geneClinicalTrial.getAsJsonObject();
-            geneClinicalTrialChecker.check(geneClinicalTrialJsonObject);
+        for (JsonElement clinicalTrial : jsonArray) {
+            JsonObject clinicalTrialJsonObject = clinicalTrial.getAsJsonObject();
+            clinicalTrialChecker.check(clinicalTrialJsonObject);
 
             clinicalTrials.add(ImmutableClinicalTrialInfo.builder()
-                    .nctId(JsonFunctions.string(geneClinicalTrialJsonObject, "nctId"))
-                    .title(JsonFunctions.string(geneClinicalTrialJsonObject, "title"))
-                    .phase(JsonFunctions.string(geneClinicalTrialJsonObject, "phase"))
-                    .recruitment(JsonFunctions.string(geneClinicalTrialJsonObject, "recruitment"))
-                    .therapies(extractGeneTherapy(geneClinicalTrialJsonObject.getAsJsonArray("therapies")))
+                    .nctId(JsonFunctions.string(clinicalTrialJsonObject, "nctId"))
+                    .title(JsonFunctions.string(clinicalTrialJsonObject, "title"))
+                    .phase(JsonFunctions.string(clinicalTrialJsonObject, "phase"))
+                    .recruitment(JsonFunctions.string(clinicalTrialJsonObject, "recruitment"))
+                    .therapies(extractTherapies(clinicalTrialJsonObject.getAsJsonArray("therapies")))
                     .build());
         }
         return clinicalTrials;
     }
 
     @NotNull
-    private static List<TherapyInfo> extractGeneTherapy(@NotNull JsonArray jsonArray) {
-        List<TherapyInfo> geneTherapies = Lists.newArrayList();
-        JsonDatamodelChecker geneTherapiesChecker = GeneDataModelChecker.geneTherapiesObjectChecker();
+    private static List<TherapyInfo> extractTherapies(@NotNull JsonArray jsonArray) {
+        List<TherapyInfo> therapies = Lists.newArrayList();
+        JsonDatamodelChecker therapyChecker = GeneDataModelChecker.therapyObjectChecker();
 
-        for (JsonElement geneTherapy : jsonArray) {
-            JsonObject geneTherapyJsonObject = geneTherapy.getAsJsonObject();
-            geneTherapiesChecker.check(geneTherapyJsonObject);
+        for (JsonElement therapy : jsonArray) {
+            JsonObject therapyJsonObject = therapy.getAsJsonObject();
+            therapyChecker.check(therapyJsonObject);
 
-            geneTherapies.add(ImmutableTherapyInfo.builder()
-                    .id(JsonFunctions.integer(geneTherapyJsonObject, "id"))
-                    .therapyName(JsonFunctions.string(geneTherapyJsonObject, "therapyName"))
-                    .synonyms(JsonFunctions.nullableString(geneTherapyJsonObject, "synonyms"))
+            therapies.add(ImmutableTherapyInfo.builder()
+                    .id(JsonFunctions.integer(therapyJsonObject, "id"))
+                    .therapyName(JsonFunctions.string(therapyJsonObject, "therapyName"))
+                    .synonyms(JsonFunctions.optionalStringList(therapyJsonObject, "synonyms"))
                     .build());
         }
-        return geneTherapies;
+        return therapies;
     }
 
     @NotNull
-    private static List<EvidenceInfo> extractGeneEvidence(@NotNull JsonArray jsonArray) {
-        List<EvidenceInfo> geneEvidences = Lists.newArrayList();
-        JsonDatamodelChecker geneEvidenceChecker = GeneDataModelChecker.geneEvidenceObjectChecker();
+    private static List<EvidenceInfo> extractEvidence(@NotNull JsonArray jsonArray) {
+        List<EvidenceInfo> evidences = Lists.newArrayList();
+        JsonDatamodelChecker evidenceChecker = GeneDataModelChecker.evidenceObjectChecker();
 
-        for (JsonElement geneEvidence : jsonArray) {
-            JsonObject geneEvidenceObject = geneEvidence.getAsJsonObject();
-            geneEvidenceChecker.check(geneEvidenceObject);
+        for (JsonElement evidence : jsonArray) {
+            JsonObject evidenceObject = evidence.getAsJsonObject();
+            evidenceChecker.check(evidenceObject);
 
-            geneEvidences.add(ImmutableEvidenceInfo.builder()
-                    .id(JsonFunctions.integer(geneEvidenceObject, "id"))
-                    .approvalStatus(JsonFunctions.string(geneEvidenceObject, "approvalStatus"))
-                    .evidenceType(JsonFunctions.string(geneEvidenceObject, "evidenceType"))
-                    .efficacyEvidence(JsonFunctions.string(geneEvidenceObject, "efficacyEvidence"))
-                    .molecularProfile(extractGeneMolecularProfileObject(geneEvidenceObject.getAsJsonObject("molecularProfile")))
-                    .therapy(extractGeneTherapyObject(geneEvidenceObject.getAsJsonObject("therapy")))
-                    .indication(extractGeneIndicationObject(geneEvidenceObject.getAsJsonObject("indication")))
-                    .responseType(JsonFunctions.string(geneEvidenceObject, "responseType"))
-                    .references(extractGeneReferences(geneEvidenceObject.getAsJsonArray("references")))
-                    .ampCapAscoEvidenceLevel(JsonFunctions.string(geneEvidenceObject, "ampCapAscoEvidenceLevel"))
-                    .ampCapAscoInferredTier(JsonFunctions.string(geneEvidenceObject, "ampCapAscoInferredTier"))
+            evidences.add(ImmutableEvidenceInfo.builder()
+                    .id(JsonFunctions.integer(evidenceObject, "id"))
+                    .approvalStatus(JsonFunctions.string(evidenceObject, "approvalStatus"))
+                    .evidenceType(JsonFunctions.string(evidenceObject, "evidenceType"))
+                    .efficacyEvidence(JsonFunctions.string(evidenceObject, "efficacyEvidence"))
+                    .molecularProfile(extractMolecularProfileObject(evidenceObject.getAsJsonObject("molecularProfile")))
+                    .therapy(extractTherapyObject(evidenceObject.getAsJsonObject("therapy")))
+                    .indication(extractIndicationObject(evidenceObject.getAsJsonObject("indication")))
+                    .responseType(JsonFunctions.string(evidenceObject, "responseType"))
+                    .references(extractReferences(evidenceObject.getAsJsonArray("references")))
+                    .ampCapAscoEvidenceLevel(JsonFunctions.string(evidenceObject, "ampCapAscoEvidenceLevel"))
+                    .ampCapAscoInferredTier(JsonFunctions.string(evidenceObject, "ampCapAscoInferredTier"))
                     .build());
         }
-        return geneEvidences;
+        return evidences;
     }
 
     @NotNull
-    private static MolecularProfileInfo extractGeneMolecularProfileObject(@NotNull JsonObject jsonObject) {
-        JsonDatamodelChecker geneMolecularProfileChecker = GeneDataModelChecker.geneMolecularProfileObjectChecker();
-        geneMolecularProfileChecker.check(jsonObject);
+    private static MolecularProfileInfo extractMolecularProfileObject(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker molecularProfileChecker = GeneDataModelChecker.molecularProfileObjectChecker();
+        molecularProfileChecker.check(jsonObject);
 
         return ImmutableMolecularProfileInfo.builder()
                 .id(JsonFunctions.integer(jsonObject, "id"))
@@ -178,21 +178,21 @@ public class GeneReader extends CkbJsonDirectoryReader<Gene> {
     }
 
     @NotNull
-    private static TherapyInfo extractGeneTherapyObject(@NotNull JsonObject jsonObject) {
-        JsonDatamodelChecker geneTherapyChecker = GeneDataModelChecker.geneTherapyObjectChecker();
-        geneTherapyChecker.check(jsonObject);
+    private static TherapyInfo extractTherapyObject(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker therapyChecker = GeneDataModelChecker.therapyObjectChecker();
+        therapyChecker.check(jsonObject);
 
         return ImmutableTherapyInfo.builder()
                 .id(JsonFunctions.integer(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
-                .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
+                .synonyms(JsonFunctions.optionalStringList(jsonObject, "synonyms"))
                 .build();
     }
 
     @NotNull
-    private static IndicationInfo extractGeneIndicationObject(@NotNull JsonObject jsonObject) {
-        JsonDatamodelChecker geneIndicationChecker = GeneDataModelChecker.geneIndicationObjectChecker();
-        geneIndicationChecker.check(jsonObject);
+    private static IndicationInfo extractIndicationObject(@NotNull JsonObject jsonObject) {
+        JsonDatamodelChecker indicationChecker = GeneDataModelChecker.indicationObjectChecker();
+        indicationChecker.check(jsonObject);
 
         return ImmutableIndicationInfo.builder()
                 .id(JsonFunctions.string(jsonObject, "id"))
@@ -202,95 +202,96 @@ public class GeneReader extends CkbJsonDirectoryReader<Gene> {
     }
 
     @NotNull
-    private static List<VariantInfo> extractGeneVariant(@NotNull JsonArray jsonArray) {
-        List<VariantInfo> geneVariants = Lists.newArrayList();
-        JsonDatamodelChecker geneVariantChecker = GeneDataModelChecker.geneVariantObjectChecker();
+    private static List<VariantInfo> extractVariants(@NotNull JsonArray jsonArray) {
+        List<VariantInfo> variants = Lists.newArrayList();
+        JsonDatamodelChecker variantChecker = GeneDataModelChecker.variantObjectChecker();
 
-        for (JsonElement geneVariant : jsonArray) {
-            JsonObject geneVariantObject = geneVariant.getAsJsonObject();
-            geneVariantChecker.check(geneVariantObject);
+        for (JsonElement variant : jsonArray) {
+            JsonObject variantObject = variant.getAsJsonObject();
+            variantChecker.check(variantObject);
 
-            geneVariants.add(ImmutableVariantInfo.builder()
-                    .id(JsonFunctions.integer(geneVariantObject, "id"))
-                    .fullName(JsonFunctions.string(geneVariantObject, "fullName"))
-                    .impact(JsonFunctions.nullableString(geneVariantObject, "impact"))
-                    .proteinEffect(JsonFunctions.nullableString(geneVariantObject, "proteinEffect"))
-                    .descriptions(extractVariantDescription(geneVariantObject.getAsJsonArray("geneVariantDescriptions")))
+            variants.add(ImmutableVariantInfo.builder()
+                    .id(JsonFunctions.integer(variantObject, "id"))
+                    .fullName(JsonFunctions.string(variantObject, "fullName"))
+                    .impact(JsonFunctions.nullableString(variantObject, "impact"))
+                    .proteinEffect(JsonFunctions.nullableString(variantObject, "proteinEffect"))
+                    .descriptions(extractVariantDescriptions(variantObject.getAsJsonArray("geneVariantDescriptions")))
                     .build());
         }
-        return geneVariants;
+        return variants;
     }
 
     @NotNull
-    private static List<DescriptionInfo> extractVariantDescription(@NotNull JsonArray jsonArray) {
-        List<DescriptionInfo> geneVariantDescriptions = Lists.newArrayList();
-        JsonDatamodelChecker geneVariantDescriptionChecker = GeneDataModelChecker.geneVariantDescriptionObjectChecker();
+    private static List<DescriptionInfo> extractVariantDescriptions(@NotNull JsonArray jsonArray) {
+        List<DescriptionInfo> variantDescriptions = Lists.newArrayList();
+        JsonDatamodelChecker variantDescriptionChecker = GeneDataModelChecker.variantDescriptionObjectChecker();
 
         for (JsonElement variantDescription : jsonArray) {
             JsonObject variantDescriptionObject = variantDescription.getAsJsonObject();
-            geneVariantDescriptionChecker.check(variantDescriptionObject);
+            variantDescriptionChecker.check(variantDescriptionObject);
 
-            geneVariantDescriptions.add(ImmutableDescriptionInfo.builder()
+            variantDescriptions.add(ImmutableDescriptionInfo.builder()
                     .description(JsonFunctions.string(variantDescriptionObject, "description"))
-                    .references(extractGeneReferences(variantDescriptionObject.getAsJsonArray("references")))
+                    .references(extractReferences(variantDescriptionObject.getAsJsonArray("references")))
                     .build());
         }
-        return geneVariantDescriptions;
+        return variantDescriptions;
     }
 
     @NotNull
-    private static List<MolecularProfileInfo> extarctMolecularProfile(@NotNull JsonArray jsonArray) {
+    private static List<MolecularProfileInfo> extractMolecularProfiles(@NotNull JsonArray jsonArray) {
         List<MolecularProfileInfo> molecularProfiles = Lists.newArrayList();
-        JsonDatamodelChecker geneMolecularProfileChecker = GeneDataModelChecker.geneMolecularProfileObjectChecker();
+        JsonDatamodelChecker molecularProfileChecker = GeneDataModelChecker.molecularProfileObjectChecker();
 
         for (JsonElement molecularProfile : jsonArray) {
             JsonObject molecularProfileObject = molecularProfile.getAsJsonObject();
-            geneMolecularProfileChecker.check(molecularProfileObject);
+            molecularProfileChecker.check(molecularProfileObject);
 
             molecularProfiles.add(ImmutableMolecularProfileInfo.builder()
                     .id(JsonFunctions.integer(molecularProfileObject, "id"))
                     .profileName(JsonFunctions.string(molecularProfileObject, "profileName"))
-                    .treatmentApproaches(extractProfileTreatmentApproach(molecularProfileObject.getAsJsonArray("profileTreatmentApproaches")))
+                    .treatmentApproaches(extractProfileTreatmentApproaches(molecularProfileObject.getAsJsonArray(
+                            "profileTreatmentApproaches")))
                     .build());
         }
         return molecularProfiles;
     }
 
     @NotNull
-    private static List<TreatmentApproachInfo> extractProfileTreatmentApproach(@NotNull JsonArray jsonArray) {
-        List<TreatmentApproachInfo> geneProfileTreatmentApproaches = Lists.newArrayList();
-        JsonDatamodelChecker geneProfileTreatmentApprochChecker = GeneDataModelChecker.geneProfileTreatmentApproachObjectChecker();
+    private static List<TreatmentApproachInfo> extractProfileTreatmentApproaches(@NotNull JsonArray jsonArray) {
+        List<TreatmentApproachInfo> profileTreatmentApproaches = Lists.newArrayList();
+        JsonDatamodelChecker profileTreatmentApproachChecker = GeneDataModelChecker.profileTreatmentApproachObjectChecker();
 
         for (JsonElement profileTreatmentApproach : jsonArray) {
             JsonObject profileTreatmentApproachObject = profileTreatmentApproach.getAsJsonObject();
-            geneProfileTreatmentApprochChecker.check(profileTreatmentApproachObject);
+            profileTreatmentApproachChecker.check(profileTreatmentApproachObject);
 
-            geneProfileTreatmentApproaches.add(ImmutableTreatmentApproachInfo.builder()
+            profileTreatmentApproaches.add(ImmutableTreatmentApproachInfo.builder()
                     .id(JsonFunctions.integer(profileTreatmentApproachObject, "id"))
                     .name(JsonFunctions.string(profileTreatmentApproachObject, "name"))
                     .profileName(JsonFunctions.string(profileTreatmentApproachObject, "profileName"))
                     .build());
         }
-        return geneProfileTreatmentApproaches;
+        return profileTreatmentApproaches;
     }
 
     @NotNull
-    private static List<VariantInfo> extractCategoryVariant(@NotNull JsonArray jsonArray) {
-        List<VariantInfo> geneCategoryVariants = Lists.newArrayList();
-        JsonDatamodelChecker geneProfileTreatmentApprochChecker = GeneDataModelChecker.geneCategoryVariantObjectChecker();
+    private static List<VariantInfo> extractCategoryVariants(@NotNull JsonArray jsonArray) {
+        List<VariantInfo> categoryVariants = Lists.newArrayList();
+        JsonDatamodelChecker categoryVariantObjectChecker = GeneDataModelChecker.categoryVariantObjectChecker();
 
-        for (JsonElement geneCategoryVariant : jsonArray) {
-            JsonObject geneCategoryVariantObject = geneCategoryVariant.getAsJsonObject();
-            geneProfileTreatmentApprochChecker.check(geneCategoryVariantObject);
+        for (JsonElement categoryVariant : jsonArray) {
+            JsonObject categoryVariantObject = categoryVariant.getAsJsonObject();
+            categoryVariantObjectChecker.check(categoryVariantObject);
 
-            geneCategoryVariants.add(ImmutableVariantInfo.builder()
-                    .id(JsonFunctions.integer(geneCategoryVariantObject, "id"))
-                    .fullName(JsonFunctions.string(geneCategoryVariantObject, "fullName"))
-                    .impact(JsonFunctions.nullableString(geneCategoryVariantObject, "impact"))
-                    .proteinEffect(JsonFunctions.nullableString(geneCategoryVariantObject, "proteinEffect"))
-                    .descriptions(extractVariantDescription(geneCategoryVariantObject.getAsJsonArray("geneVariantDescriptions")))
+            categoryVariants.add(ImmutableVariantInfo.builder()
+                    .id(JsonFunctions.integer(categoryVariantObject, "id"))
+                    .fullName(JsonFunctions.string(categoryVariantObject, "fullName"))
+                    .impact(JsonFunctions.nullableString(categoryVariantObject, "impact"))
+                    .proteinEffect(JsonFunctions.nullableString(categoryVariantObject, "proteinEffect"))
+                    .descriptions(extractVariantDescriptions(categoryVariantObject.getAsJsonArray("geneVariantDescriptions")))
                     .build());
         }
-        return geneCategoryVariants;
+        return categoryVariants;
     }
 }

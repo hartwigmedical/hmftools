@@ -30,7 +30,7 @@ final class IndicationDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker indicationEvidenceObjectChecker() {
+    public static JsonDatamodelChecker evidenceObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("approvalStatus", true);
@@ -48,7 +48,7 @@ final class IndicationDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker indicationEvidenceMolecularProfileObjectChecker() {
+    public static JsonDatamodelChecker evidenceMolecularProfileObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("profileName", true);
@@ -57,7 +57,7 @@ final class IndicationDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker indicationEvidenceTherapyObjectChecker() {
+    public static JsonDatamodelChecker evidenceTherapyObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("therapyName", true);
@@ -67,7 +67,7 @@ final class IndicationDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker indicationEvidenceIndicationObjectChecker() {
+    public static JsonDatamodelChecker evidenceIndicationObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("name", true);
@@ -77,7 +77,7 @@ final class IndicationDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker indicationEvidenceReferenceObjectChecker() {
+    public static JsonDatamodelChecker evidenceReferenceObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("pubMedId", true);
@@ -88,7 +88,7 @@ final class IndicationDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker indicationClinicaltrialObjectChecker() {
+    public static JsonDatamodelChecker clinicalTrialObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("nctId", true);
         map.put("title", true);

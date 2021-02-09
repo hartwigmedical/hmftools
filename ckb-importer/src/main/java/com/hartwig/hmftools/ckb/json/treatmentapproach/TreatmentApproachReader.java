@@ -66,7 +66,7 @@ public class TreatmentApproachReader extends CkbJsonDirectoryReader<TreatmentApp
         return ImmutableTherapyInfo.builder()
                 .id(JsonFunctions.integer(jsonObject, "id"))
                 .therapyName(JsonFunctions.string(jsonObject, "therapyName"))
-                .synonyms(JsonFunctions.nullableString(jsonObject, "synonyms"))
+                .synonyms(JsonFunctions.optionalStringList(jsonObject, "synonyms"))
                 .build();
     }
 

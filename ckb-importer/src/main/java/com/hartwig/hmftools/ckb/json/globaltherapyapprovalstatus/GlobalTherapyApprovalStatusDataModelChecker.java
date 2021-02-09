@@ -22,7 +22,7 @@ final class GlobalTherapyApprovalStatusDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker globalTherapyApprovalStatusListObjectChecker() {
+    public static JsonDatamodelChecker listObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("therapy", true);
@@ -35,7 +35,7 @@ final class GlobalTherapyApprovalStatusDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker globalTherapyApprovalStatusTherapyObjectChecker() {
+    public static JsonDatamodelChecker therapyObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("therapyName", true);
@@ -45,7 +45,7 @@ final class GlobalTherapyApprovalStatusDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker globalTherapyApprovalStatusIndicationObjectChecker() {
+    public static JsonDatamodelChecker indicationObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("name", true);
@@ -55,7 +55,7 @@ final class GlobalTherapyApprovalStatusDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker globalTherapyApprovalStatusMolecularProfileObjectChecker() {
+    public static JsonDatamodelChecker molecularProfileObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("profileName", true);
