@@ -1,17 +1,11 @@
 package com.hartwig.hmftools.ckb.reader.globaltherapyapprovalstatus;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.datamodel.common.GlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ImmutableGlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ImmutableIndicationInfo;
@@ -22,54 +16,30 @@ import com.hartwig.hmftools.ckb.datamodel.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.datamodel.globaltherapyapprovalstatus.GlobalTherapyApprovalStatus;
 import com.hartwig.hmftools.ckb.datamodel.globaltherapyapprovalstatus.ImmutableGlobalTherapyApprovalStatus;
+import com.hartwig.hmftools.ckb.reader.CkbJsonDirectoryReader;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public final class GlobalTherapyApprovalStatusFactory {
+public class GlobalTherapyApprovalStatusReader extends CkbJsonDirectoryReader<GlobalTherapyApprovalStatus> {
 
-    private static final Logger LOGGER = LogManager.getLogger(GlobalTherapyApprovalStatusFactory.class);
-
-    private GlobalTherapyApprovalStatusFactory() {
+    public GlobalTherapyApprovalStatusReader(@Nullable final Integer maxFilesToRead) {
+        super(maxFilesToRead);
     }
 
     @NotNull
-    public static List<GlobalTherapyApprovalStatus> readingGlobalTherapyApprovalStatus(@NotNull String globalTherapyApprovalStatusDir)
-            throws IOException {
-        LOGGER.info("Start reading global therapy approval status dir");
+    @Override
+    protected GlobalTherapyApprovalStatus read(@NotNull final JsonObject object) {
+        JsonDatamodelChecker globalTherapyApprovalStatusChecker =
+                GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusObjectChecker();
+        globalTherapyApprovalStatusChecker.check(object);
 
-        List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatusses = Lists.newArrayList();
-        File[] filesGlobalTherapyApprovalStatus = new File(globalTherapyApprovalStatusDir).listFiles();
-
-        if (filesGlobalTherapyApprovalStatus != null) {
-            LOGGER.info("The total files in the global therapy approval therapy status dir is {}", filesGlobalTherapyApprovalStatus.length);
-
-            for (File globalTherapyApprovalStatus : filesGlobalTherapyApprovalStatus) {
-                JsonParser parser = new JsonParser();
-                JsonReader reader = new JsonReader(new FileReader(globalTherapyApprovalStatus));
-                reader.setLenient(true);
-
-                while (reader.peek() != JsonToken.END_DOCUMENT) {
-                    JsonObject globalTherapyApprovalStatusEntryObject = parser.parse(reader).getAsJsonObject();
-                    JsonDatamodelChecker globalTherapyApprovalStatusChecker =
-                            GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusObjectChecker();
-                    globalTherapyApprovalStatusChecker.check(globalTherapyApprovalStatusEntryObject);
-
-                    globalTherapyApprovalStatusses.add(ImmutableGlobalTherapyApprovalStatus.builder()
-                            .totalCount(JsonFunctions.integer(globalTherapyApprovalStatusEntryObject, "totalCount"))
-                            .globalApprovalStatus(extractGlobalTherapyApprovalStatus(globalTherapyApprovalStatusEntryObject.getAsJsonArray(
-                                    "globalTherapyApprovalStatuses")))
-                            .build());
-                }
-                reader.close();
-            }
-        }
-        LOGGER.info("Finished reading global therapy approval status dir");
-
-        return globalTherapyApprovalStatusses;
+        return ImmutableGlobalTherapyApprovalStatus.builder()
+                .totalCount(JsonFunctions.integer(object, "totalCount"))
+                .globalApprovalStatus(extractGlobalTherapyApprovalStatus(object.getAsJsonArray("globalTherapyApprovalStatuses")))
+                .build();
     }
 
     @NotNull
@@ -123,8 +93,7 @@ public final class GlobalTherapyApprovalStatusFactory {
     }
 
     @NotNull
-    private static MolecularProfileInfo extractGlobalTherapyApprovalStatusMolecularProfile(
-            @NotNull JsonObject jsonObject) {
+    private static MolecularProfileInfo extractGlobalTherapyApprovalStatusMolecularProfile(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker globalTherapyApprovalStatusMolecularProfileChecker =
                 GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusMolecularProfileObjectChecker();
         globalTherapyApprovalStatusMolecularProfileChecker.check(jsonObject);

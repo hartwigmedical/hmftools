@@ -1,17 +1,11 @@
 package com.hartwig.hmftools.ckb.reader.reference;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.datamodel.common.DrugInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.GeneInfo;
@@ -32,66 +26,44 @@ import com.hartwig.hmftools.ckb.datamodel.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.VariantInfo;
 import com.hartwig.hmftools.ckb.datamodel.reference.ImmutableReference;
 import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
+import com.hartwig.hmftools.ckb.reader.CkbJsonDirectoryReader;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public final class ReferenceFactory {
+public class ReferenceReader extends CkbJsonDirectoryReader<Reference> {
 
-    private static final Logger LOGGER = LogManager.getLogger(ReferenceFactory.class);
-
-    private ReferenceFactory() {
+    public ReferenceReader(@Nullable final Integer maxFilesToRead) {
+        super(maxFilesToRead);
     }
 
     @NotNull
-    public static List<Reference> readReferences(@NotNull String referenceDir) throws IOException {
-        LOGGER.info("Start reading reference dir");
+    @Override
+    protected Reference read(@NotNull final JsonObject object) {
+        JsonDatamodelChecker referenceChecker = ReferenceDataModelChecker.referenceObjectChecker();
+        referenceChecker.check(object);
 
-        List<Reference> references = Lists.newArrayList();
-        File[] filesReferences = new File(referenceDir).listFiles();
-
-        if (filesReferences != null) {
-            LOGGER.info("The total files in the reference dir is {}", filesReferences.length);
-
-            for (File reference : filesReferences) {
-                JsonParser parser = new JsonParser();
-                JsonReader reader = new JsonReader(new FileReader(reference));
-                reader.setLenient(true);
-
-                while (reader.peek() != JsonToken.END_DOCUMENT) {
-                    JsonObject referenceEntryObject = parser.parse(reader).getAsJsonObject();
-                    JsonDatamodelChecker referenceChecker = ReferenceDataModelChecker.referenceObjectChecker();
-                    referenceChecker.check(referenceEntryObject);
-
-                    references.add(ImmutableReference.builder()
-                            .id(JsonFunctions.integer(referenceEntryObject, "id"))
-                            .pubMedId(JsonFunctions.nullableString(referenceEntryObject, "pubMedId"))
-                            .title(JsonFunctions.nullableString(referenceEntryObject, "title"))
-                            .url(JsonFunctions.nullableString(referenceEntryObject, "url"))
-                            .authors(JsonFunctions.nullableString(referenceEntryObject, "authors"))
-                            .journal(JsonFunctions.nullableString(referenceEntryObject, "journal"))
-                            .volume(JsonFunctions.nullableString(referenceEntryObject, "volume"))
-                            .issue(JsonFunctions.nullableString(referenceEntryObject, "issue"))
-                            .date(JsonFunctions.nullableString(referenceEntryObject, "date"))
-                            .abstractText(JsonFunctions.nullableString(referenceEntryObject, "abstractText"))
-                            .year(JsonFunctions.nullableString(referenceEntryObject, "year"))
-                            .drug(extractDrug(referenceEntryObject.getAsJsonArray("drugs")))
-                            .gene(extractGene(referenceEntryObject.getAsJsonArray("genes")))
-                            .evidence(extractEvidence(referenceEntryObject.getAsJsonArray("evidence")))
-                            .therapy(extractTherapy(referenceEntryObject.getAsJsonArray("therapies")))
-                            .treatmentApproach(extractTreatmentApproach(referenceEntryObject.getAsJsonArray("treatmentApproaches")))
-                            .variant(extractVariant(referenceEntryObject.getAsJsonArray("variants")))
-                            .build());
-                }
-                reader.close();
-            }
-        }
-        LOGGER.info("Finished reading reference dir");
-
-        return references;
+        return ImmutableReference.builder()
+                .id(JsonFunctions.integer(object, "id"))
+                .pubMedId(JsonFunctions.nullableString(object, "pubMedId"))
+                .title(JsonFunctions.nullableString(object, "title"))
+                .url(JsonFunctions.nullableString(object, "url"))
+                .authors(JsonFunctions.nullableString(object, "authors"))
+                .journal(JsonFunctions.nullableString(object, "journal"))
+                .volume(JsonFunctions.nullableString(object, "volume"))
+                .issue(JsonFunctions.nullableString(object, "issue"))
+                .date(JsonFunctions.nullableString(object, "date"))
+                .abstractText(JsonFunctions.nullableString(object, "abstractText"))
+                .year(JsonFunctions.nullableString(object, "year"))
+                .drug(extractDrug(object.getAsJsonArray("drugs")))
+                .gene(extractGene(object.getAsJsonArray("genes")))
+                .evidence(extractEvidence(object.getAsJsonArray("evidence")))
+                .therapy(extractTherapy(object.getAsJsonArray("therapies")))
+                .treatmentApproach(extractTreatmentApproach(object.getAsJsonArray("treatmentApproaches")))
+                .variant(extractVariant(object.getAsJsonArray("variants")))
+                .build();
     }
 
     @NotNull

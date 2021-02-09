@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ckb.datamodel.reference;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.datamodel.CkbJsonObject;
 import com.hartwig.hmftools.ckb.datamodel.common.DrugInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.GeneInfo;
@@ -15,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Reference {
+public abstract class Reference implements CkbJsonObject {
 
     public abstract int id();
 

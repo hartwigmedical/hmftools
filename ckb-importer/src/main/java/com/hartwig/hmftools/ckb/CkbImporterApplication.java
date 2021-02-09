@@ -20,7 +20,7 @@ public class CkbImporterApplication {
     private static final Logger LOGGER = LogManager.getLogger(CkbImporterApplication.class);
     public static final String VERSION = CkbImporterApplication.class.getPackage().getImplementationVersion();
 
-    public static void main(String[] args) throws IOException, SQLException, java.text.ParseException {
+    public static void main(String[] args) throws IOException, SQLException {
         LOGGER.info("Running CKB importer v{}", VERSION);
 
         Options options = CkbImporterConfig.createOptions();

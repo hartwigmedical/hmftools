@@ -1,18 +1,11 @@
 package com.hartwig.hmftools.ckb.reader.therapy;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.datamodel.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.DrugInfo;
@@ -33,60 +26,38 @@ import com.hartwig.hmftools.ckb.datamodel.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.datamodel.therapy.ImmutableTherapy;
 import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
+import com.hartwig.hmftools.ckb.reader.CkbJsonDirectoryReader;
 import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public final class TherapyFactory {
+public class TherapyReader extends CkbJsonDirectoryReader<Therapy> {
 
-    private static final Logger LOGGER = LogManager.getLogger(TherapyFactory.class);
-
-    private TherapyFactory() {
+    public TherapyReader(@Nullable final Integer maxFilesToRead) {
+        super(maxFilesToRead);
     }
 
     @NotNull
-    public static List<Therapy> readTherapies(@NotNull String therapyDir) throws IOException, ParseException {
-        LOGGER.info("Start reading therapy dir");
+    @Override
+    protected Therapy read(@NotNull final JsonObject object) {
+        JsonDatamodelChecker therapyObjectChecker = TherapyDataModelChecker.therapyObjectChecker();
+        therapyObjectChecker.check(object);
 
-        List<Therapy> therapies = Lists.newArrayList();
-        File[] filesTherapies = new File(therapyDir).listFiles();
-
-        if (filesTherapies != null) {
-            LOGGER.info("The total files in the therapy dir is {}", filesTherapies.length);
-
-            for (File therapy : filesTherapies) {
-                JsonParser parser = new JsonParser();
-                JsonReader reader = new JsonReader(new FileReader(therapy));
-                reader.setLenient(true);
-
-                while (reader.peek() != JsonToken.END_DOCUMENT) {
-                    JsonObject therapyEntryObject = parser.parse(reader).getAsJsonObject();
-                    JsonDatamodelChecker therapyObjectChecker = TherapyDataModelChecker.therapyObjectChecker();
-                    therapyObjectChecker.check(therapyEntryObject);
-
-                    therapies.add(ImmutableTherapy.builder()
-                            .id(JsonFunctions.integer(therapyEntryObject, "id"))
-                            .therapyName(JsonFunctions.string(therapyEntryObject, "therapyName"))
-                            .synonyms(JsonFunctions.nullableString(therapyEntryObject, "synonyms"))
-                            .description(extractDescription(therapyEntryObject.getAsJsonArray("therapyDescriptions")))
-                            .createDate(DateConverter.toDate(JsonFunctions.string(therapyEntryObject, "createDate")))
-                            .updateDate(DateConverter.toDate(JsonFunctions.nullableString(therapyEntryObject, "updateDate")))
-                            .evidence(extractEvidence(therapyEntryObject.getAsJsonArray("evidence")))
-                            .clinicalTrial(extractClinicalTrial(therapyEntryObject.getAsJsonArray("clinicalTrials")))
-                            .drug(extractDrug(therapyEntryObject.getAsJsonArray("drugs")))
-                            .globalApprovalStatus(extractGlobalApprovalStatus(therapyEntryObject.getAsJsonArray("globalApprovalStatus")))
-                            .build());
-                }
-                reader.close();
-            }
-        }
-        LOGGER.info("Finished reading therapy dir");
-
-        return therapies;
+        return ImmutableTherapy.builder()
+                .id(JsonFunctions.integer(object, "id"))
+                .therapyName(JsonFunctions.string(object, "therapyName"))
+                .synonyms(JsonFunctions.nullableString(object, "synonyms"))
+                .description(extractDescription(object.getAsJsonArray("therapyDescriptions")))
+                .createDate(DateConverter.toDate(JsonFunctions.string(object, "createDate")))
+                .updateDate(DateConverter.toDate(JsonFunctions.nullableString(object, "updateDate")))
+                .evidence(extractEvidence(object.getAsJsonArray("evidence")))
+                .clinicalTrial(extractClinicalTrial(object.getAsJsonArray("clinicalTrials")))
+                .drug(extractDrug(object.getAsJsonArray("drugs")))
+                .globalApprovalStatus(extractGlobalApprovalStatus(object.getAsJsonArray("globalApprovalStatus")))
+                .build();
     }
 
     @NotNull

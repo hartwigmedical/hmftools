@@ -16,7 +16,15 @@ public final class DateConverter {
     }
 
     @Nullable
-    public static Date toDate(@Nullable String string) throws ParseException {
-        return string != null ? FORMAT.parse(string) : null;
+    public static Date toDate(@Nullable String string) {
+        if (string == null) {
+            return null;
+        }
+
+        try {
+            return FORMAT.parse(string);
+        } catch (ParseException e) {
+            throw new IllegalStateException("Cannot convert string to date: " + string);
+        }
     }
 }

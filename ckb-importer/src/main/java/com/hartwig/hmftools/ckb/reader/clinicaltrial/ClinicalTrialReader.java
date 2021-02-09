@@ -1,18 +1,11 @@
 package com.hartwig.hmftools.ckb.reader.clinicaltrial;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialContact;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialLocation;
@@ -27,65 +20,41 @@ import com.hartwig.hmftools.ckb.datamodel.common.ImmutableTherapyInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
+import com.hartwig.hmftools.ckb.reader.CkbJsonDirectoryReader;
 import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class ClinicalTrialFactory {
+public class ClinicalTrialReader extends CkbJsonDirectoryReader<ClinicalTrial> {
 
-    private static final Logger LOGGER = LogManager.getLogger(ClinicalTrialFactory.class);
-
-    private ClinicalTrialFactory() {
+    public ClinicalTrialReader(@Nullable final Integer maxFilesToRead) {
+        super(maxFilesToRead);
     }
 
     @NotNull
-    public static List<ClinicalTrial> readingClinicalTrial(@NotNull String clinicalTrialDir) throws IOException, ParseException {
-        LOGGER.info("Start reading clinical trials");
+    @Override
+    protected ClinicalTrial read(@NotNull final JsonObject object) {
+        JsonDatamodelChecker clinicalTrialChecker = ClinicalTrialDataModelChecker.clinicalTrialObjectChecker();
+        clinicalTrialChecker.check(object);
 
-        List<ClinicalTrial> clinicalTrials = Lists.newArrayList();
-        File[] filesClinicalTrials = new File(clinicalTrialDir).listFiles();
-
-        if (filesClinicalTrials != null) {
-            LOGGER.info("The total files in the clinical trial dir is {}", filesClinicalTrials.length);
-
-            for (File clinicalTrial : filesClinicalTrials) {
-                JsonParser parser = new JsonParser();
-                JsonReader reader = new JsonReader(new FileReader(clinicalTrial));
-                reader.setLenient(true);
-
-                while (reader.peek() != JsonToken.END_DOCUMENT) {
-                    JsonObject clinicalTrialsEntryObject = parser.parse(reader).getAsJsonObject();
-                    JsonDatamodelChecker clinicalTrailChecker = ClinicalTrialDataModelChecker.clinicalTrialObjectChecker();
-                    clinicalTrailChecker.check(clinicalTrialsEntryObject);
-
-                    clinicalTrials.add(ImmutableClinicalTrial.builder()
-                            .nctId(JsonFunctions.string(clinicalTrialsEntryObject, "nctId"))
-                            .title(JsonFunctions.string(clinicalTrialsEntryObject, "title"))
-                            .phase(JsonFunctions.string(clinicalTrialsEntryObject, "phase"))
-                            .recruitment(JsonFunctions.string(clinicalTrialsEntryObject, "recruitment"))
-                            .therapy(extractClinicalTrialsTherapies(clinicalTrialsEntryObject.getAsJsonArray("therapies")))
-                            .ageGroup(JsonFunctions.stringList(clinicalTrialsEntryObject, "ageGroups"))
-                            .gender(JsonFunctions.optionalNullableString(clinicalTrialsEntryObject, "gender"))
-                            .variantRequirement(JsonFunctions.string(clinicalTrialsEntryObject, "variantRequirements"))
-                            .sponsors(JsonFunctions.optionalNullableString(clinicalTrialsEntryObject, "sponsors"))
-                            .updateDate(DateConverter.toDate(JsonFunctions.string(clinicalTrialsEntryObject, "updateDate")))
-                            .indication(extractClinicalTrialsIndications(clinicalTrialsEntryObject.getAsJsonArray("indications")))
-                            .variantRequirementDetail(extractClinicalTrialsVariantRequirementDetails(clinicalTrialsEntryObject.getAsJsonArray(
-                                    "variantRequirementDetails")))
-                            .clinicalTrialLocation(extractClinicalTrialsLocations(clinicalTrialsEntryObject.getAsJsonArray(
-                                    "clinicalTrialLocations")))
-                            .build());
-                }
-                reader.close();
-            }
-        }
-        LOGGER.info("Finished reading clinical trials dir");
-
-        return clinicalTrials;
+        return ImmutableClinicalTrial.builder()
+                .nctId(JsonFunctions.string(object, "nctId"))
+                .title(JsonFunctions.string(object, "title"))
+                .phase(JsonFunctions.string(object, "phase"))
+                .recruitment(JsonFunctions.string(object, "recruitment"))
+                .therapy(extractClinicalTrialsTherapies(object.getAsJsonArray("therapies")))
+                .ageGroup(JsonFunctions.stringList(object, "ageGroups"))
+                .gender(JsonFunctions.optionalNullableString(object, "gender"))
+                .variantRequirement(JsonFunctions.string(object, "variantRequirements"))
+                .sponsors(JsonFunctions.optionalNullableString(object, "sponsors"))
+                .updateDate(DateConverter.toDate(JsonFunctions.string(object, "updateDate")))
+                .indication(extractClinicalTrialsIndications(object.getAsJsonArray("indications")))
+                .variantRequirementDetail(extractClinicalTrialsVariantRequirementDetails(object.getAsJsonArray("variantRequirementDetails")))
+                .clinicalTrialLocation(extractClinicalTrialsLocations(object.getAsJsonArray("clinicalTrialLocations")))
+                .build();
     }
 
     @NotNull
@@ -100,7 +69,8 @@ public class ClinicalTrialFactory {
             clinicalTrailVariantRequirementDetailChecker.check(variantRequirementDetailObject);
 
             variantRequirementDetails.add(ImmutableClinicalTrialVariantRequirementDetail.builder()
-                    .molecularProfile(extractClinicalTrialsMolecularProfile(variantRequirementDetailObject.getAsJsonObject("molecularProfile")))
+                    .molecularProfile(extractClinicalTrialsMolecularProfile(variantRequirementDetailObject.getAsJsonObject(
+                            "molecularProfile")))
                     .requirementType(JsonFunctions.string(variantRequirementDetailObject, "requirementType"))
                     .build());
         }

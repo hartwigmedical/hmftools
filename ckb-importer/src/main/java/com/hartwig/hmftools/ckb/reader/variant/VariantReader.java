@@ -1,18 +1,11 @@
 package com.hartwig.hmftools.ckb.reader.variant;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.datamodel.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.EffectInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.EvidenceInfo;
@@ -41,72 +34,49 @@ import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.ckb.datamodel.variant.VariantCategoryVariantPath;
 import com.hartwig.hmftools.ckb.datamodel.variant.VariantPartnerGene;
 import com.hartwig.hmftools.ckb.datamodel.variant.VariantTranscriptCoordinate;
+import com.hartwig.hmftools.ckb.reader.CkbJsonDirectoryReader;
 import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class VariantFactory {
+public class VariantReader extends CkbJsonDirectoryReader<Variant> {
 
-    private static final Logger LOGGER = LogManager.getLogger(VariantFactory.class);
-
-    private VariantFactory() {
+    public VariantReader(@Nullable final Integer maxFilesToRead) {
+        super(maxFilesToRead);
     }
 
     @NotNull
-    public static List<Variant> readingVariant(@NotNull String variantDir) throws IOException, ParseException {
-        LOGGER.info("Start reading variant dir");
+    @Override
+    protected Variant read(@NotNull final JsonObject object) {
+        JsonDatamodelChecker variantObjectChecker = VariantDataModelChecker.variantObjectChecker();
+        variantObjectChecker.check(object);
 
-        List<Variant> variants = Lists.newArrayList();
-        File[] filesVariant = new File(variantDir).listFiles();
-
-        if (filesVariant != null) {
-            LOGGER.info("The total files in the variant dir is {}", filesVariant.length);
-
-            for (File variant : filesVariant) {
-                JsonParser parser = new JsonParser();
-                JsonReader reader = new JsonReader(new FileReader(variant));
-                reader.setLenient(true);
-
-                while (reader.peek() != JsonToken.END_DOCUMENT) {
-                    JsonObject variantEntryObject = parser.parse(reader).getAsJsonObject();
-                    JsonDatamodelChecker variantObjectChecker = VariantDataModelChecker.variantObjectChecker();
-                    variantObjectChecker.check(variantEntryObject);
-
-                    variants.add(ImmutableVariant.builder()
-                            .id(JsonFunctions.integer(variantEntryObject, "id"))
-                            .fullName(JsonFunctions.string(variantEntryObject, "fullName"))
-                            .impact(JsonFunctions.nullableString(variantEntryObject, "impact"))
-                            .proteinEffect(JsonFunctions.nullableString(variantEntryObject, "proteinEffect"))
-                            .description(extractGeneDescription(variantEntryObject.getAsJsonArray("geneVariantDescriptions")))
-                            .type(JsonFunctions.nullableString(variantEntryObject, "type"))
-                            .gene(extractGene(variantEntryObject.getAsJsonObject("gene")))
-                            .variant(JsonFunctions.string(variantEntryObject, "variant"))
-                            .createDate(DateConverter.toDate(JsonFunctions.string(variantEntryObject, "createDate")))
-                            .updateDate(DateConverter.toDate(JsonFunctions.string(variantEntryObject, "updateDate")))
-                            .referenceTranscriptCoordinate(
-                                    variantEntryObject.has("referenceTranscriptCoordinates") && !variantEntryObject.get(
-                                            "referenceTranscriptCoordinates").isJsonNull() ? extractReferenceTranscriptCoordinate(
-                                            variantEntryObject.getAsJsonObject("referenceTranscriptCoordinates")) : null)
-                            .partnerGene(extractPartnerGene(variantEntryObject.getAsJsonArray("partnerGenes")))
-                            .categoryVariantPath(extractCategoryVariantPath(variantEntryObject.getAsJsonArray("categoryVariantPaths")))
-                            .evidence(extractEvidence(variantEntryObject.getAsJsonArray("evidence")))
-                            .extendedEvidence(extractExtendedEvidence(variantEntryObject.getAsJsonArray("extendedEvidence")))
-                            .molecularProfile(extractMolecularProfilesList(variantEntryObject.getAsJsonArray("molecularProfiles")))
-                            .allTranscriptCoordinate(extractAllTranscriptCoordinates(variantEntryObject.getAsJsonArray(
-                                    "allTranscriptCoordinates")))
-                            .memberVariant(extractMemberVariants(variantEntryObject.getAsJsonArray("memberVariants")))
-                            .build());
-                }
-                reader.close();
-            }
-        }
-        LOGGER.info("Finished reading variant dir");
-
-        return variants;
+        return ImmutableVariant.builder()
+                .id(JsonFunctions.integer(object, "id"))
+                .fullName(JsonFunctions.string(object, "fullName"))
+                .impact(JsonFunctions.nullableString(object, "impact"))
+                .proteinEffect(JsonFunctions.nullableString(object, "proteinEffect"))
+                .description(extractGeneDescription(object.getAsJsonArray("geneVariantDescriptions")))
+                .type(JsonFunctions.nullableString(object, "type"))
+                .gene(extractGene(object.getAsJsonObject("gene")))
+                .variant(JsonFunctions.string(object, "variant"))
+                .createDate(DateConverter.toDate(JsonFunctions.string(object, "createDate")))
+                .updateDate(DateConverter.toDate(JsonFunctions.string(object, "updateDate")))
+                .referenceTranscriptCoordinate(
+                        object.has("referenceTranscriptCoordinates") && !object.get("referenceTranscriptCoordinates").isJsonNull()
+                                ? extractReferenceTranscriptCoordinate(object.getAsJsonObject("referenceTranscriptCoordinates"))
+                                : null)
+                .partnerGene(extractPartnerGene(object.getAsJsonArray("partnerGenes")))
+                .categoryVariantPath(extractCategoryVariantPath(object.getAsJsonArray("categoryVariantPaths")))
+                .evidence(extractEvidence(object.getAsJsonArray("evidence")))
+                .extendedEvidence(extractExtendedEvidence(object.getAsJsonArray("extendedEvidence")))
+                .molecularProfile(extractMolecularProfilesList(object.getAsJsonArray("molecularProfiles")))
+                .allTranscriptCoordinate(extractAllTranscriptCoordinates(object.getAsJsonArray("allTranscriptCoordinates")))
+                .memberVariant(extractMemberVariants(object.getAsJsonArray("memberVariants")))
+                .build();
     }
 
     @NotNull

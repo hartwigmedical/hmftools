@@ -1,17 +1,11 @@
 package com.hartwig.hmftools.ckb.reader.indication;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.datamodel.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ImmutableClinicalTrialInfo;
@@ -26,59 +20,37 @@ import com.hartwig.hmftools.ckb.datamodel.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.datamodel.indication.ImmutableIndication;
 import com.hartwig.hmftools.ckb.datamodel.indication.Indication;
+import com.hartwig.hmftools.ckb.reader.CkbJsonDirectoryReader;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public final class IndicationFactory {
+public class IndicationReader extends CkbJsonDirectoryReader<Indication> {
 
-    private static final Logger LOGGER = LogManager.getLogger(IndicationFactory.class);
-
-    private IndicationFactory() {
+    public IndicationReader(@Nullable final Integer maxFilesToRead) {
+        super(maxFilesToRead);
     }
 
     @NotNull
-    public static List<Indication> readingIndication(@NotNull String indicationDir) throws IOException {
-        LOGGER.info("Start reading indication dir");
+    @Override
+    protected Indication read(@NotNull final JsonObject object) {
+        JsonDatamodelChecker indicationChecker = IndicationDataModelChecker.indicationObjectChecker();
+        indicationChecker.check(object);
 
-        List<Indication> indications = Lists.newArrayList();
-        File[] filesIndications = new File(indicationDir).listFiles();
-
-        if (filesIndications != null) {
-            LOGGER.info("The total files in the indication dir is {}", filesIndications.length);
-
-            for (File indication : filesIndications) {
-                JsonParser parser = new JsonParser();
-                JsonReader reader = new JsonReader(new FileReader(indication));
-                reader.setLenient(true);
-
-                while (reader.peek() != JsonToken.END_DOCUMENT) {
-                    JsonObject indicationEntryObject = parser.parse(reader).getAsJsonObject();
-                    JsonDatamodelChecker indicationChecker = IndicationDataModelChecker.indicationObjectChecker();
-                    indicationChecker.check(indicationEntryObject);
-
-                    indications.add(ImmutableIndication.builder()
-                            .id(JsonFunctions.integer(indicationEntryObject, "id"))
-                            .name(JsonFunctions.string(indicationEntryObject, "name"))
-                            .source(JsonFunctions.string(indicationEntryObject, "source"))
-                            .definition(JsonFunctions.nullableString(indicationEntryObject, "definition"))
-                            .currentPreferredTerm(JsonFunctions.nullableString(indicationEntryObject, "currentPreferredTerm"))
-                            .lastUpdateDateFromDO(JsonFunctions.nullableString(indicationEntryObject, "lastUpdateDateFromDO"))
-                            .altId(JsonFunctions.stringList(indicationEntryObject, "altIds"))
-                            .termId(JsonFunctions.string(indicationEntryObject, "termId"))
-                            .evidence(extractEvidence(indicationEntryObject.getAsJsonArray("evidence")))
-                            .clinicalTrial(extractClinicalTrials(indicationEntryObject.getAsJsonArray("clinicalTrials")))
-                            .build());
-                }
-                reader.close();
-            }
-        }
-        LOGGER.info("Finished reading indication dir");
-
-        return indications;
+        return ImmutableIndication.builder()
+                .id(JsonFunctions.integer(object, "id"))
+                .name(JsonFunctions.string(object, "name"))
+                .source(JsonFunctions.string(object, "source"))
+                .definition(JsonFunctions.nullableString(object, "definition"))
+                .currentPreferredTerm(JsonFunctions.nullableString(object, "currentPreferredTerm"))
+                .lastUpdateDateFromDO(JsonFunctions.nullableString(object, "lastUpdateDateFromDO"))
+                .altId(JsonFunctions.stringList(object, "altIds"))
+                .termId(JsonFunctions.string(object, "termId"))
+                .evidence(extractEvidence(object.getAsJsonArray("evidence")))
+                .clinicalTrial(extractClinicalTrials(object.getAsJsonArray("clinicalTrials")))
+                .build();
     }
 
     @NotNull

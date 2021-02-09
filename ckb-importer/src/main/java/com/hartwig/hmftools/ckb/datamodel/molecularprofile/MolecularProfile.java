@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.datamodel.molecularprofile;
 import java.util.Date;
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.datamodel.CkbJsonObject;
 import com.hartwig.hmftools.ckb.datamodel.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.VariantInfo;
@@ -13,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class MolecularProfile {
+public abstract class MolecularProfile implements CkbJsonObject {
 
     public abstract int id();
 

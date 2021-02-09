@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.datamodel.variant;
 import java.util.Date;
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.datamodel.CkbJsonObject;
 import com.hartwig.hmftools.ckb.datamodel.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.EffectInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.EvidenceInfo;
@@ -15,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Variant {
+public abstract class Variant implements CkbJsonObject {
 
     public abstract int id();
 

@@ -1,18 +1,11 @@
 package com.hartwig.hmftools.ckb.reader.molecularprofile;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.datamodel.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ImmutableClinicalTrialInfo;
@@ -33,65 +26,41 @@ import com.hartwig.hmftools.ckb.datamodel.molecularprofile.ImmutableMolecularPro
 import com.hartwig.hmftools.ckb.datamodel.molecularprofile.ImmutableMolecularProfileExtendedEvidence;
 import com.hartwig.hmftools.ckb.datamodel.molecularprofile.MolecularProfile;
 import com.hartwig.hmftools.ckb.datamodel.molecularprofile.MolecularProfileExtendedEvidence;
+import com.hartwig.hmftools.ckb.reader.CkbJsonDirectoryReader;
 import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class MolecularProfileFactory {
+public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProfile> {
 
-    private static final Logger LOGGER = LogManager.getLogger(MolecularProfileFactory.class);
-
-    private MolecularProfileFactory() {
+    public MolecularProfileReader(@Nullable final Integer maxFilesToRead) {
+        super(maxFilesToRead);
     }
 
     @NotNull
-    public static List<MolecularProfile> readMolecularProfiles(@NotNull String molecularProfileDir) throws IOException, ParseException {
-        LOGGER.info("Start reading molecular profile dir");
+    @Override
+    protected MolecularProfile read(@NotNull final JsonObject object) {
+        JsonDatamodelChecker molecularProfileChecker = MolecularProfileDataModelChecker.molecularProfileObjectChecker();
+        molecularProfileChecker.check(object);
 
-        List<MolecularProfile> molecularProfiles = Lists.newArrayList();
-        File[] filesMolecularProfiles = new File(molecularProfileDir).listFiles();
-
-        if (filesMolecularProfiles != null) {
-            LOGGER.info("The total files in the molecular profiles dir is {}", filesMolecularProfiles.length);
-
-            for (File molecularProfile : filesMolecularProfiles) {
-                JsonParser parser = new JsonParser();
-                JsonReader reader = new JsonReader(new FileReader(molecularProfile));
-                reader.setLenient(true);
-
-                while (reader.peek() != JsonToken.END_DOCUMENT) {
-                    JsonObject molecularProfileEntryObject = parser.parse(reader).getAsJsonObject();
-                    JsonDatamodelChecker molecularProfileChecker = MolecularProfileDataModelChecker.molecularProfileObjectChecker();
-                    molecularProfileChecker.check(molecularProfileEntryObject);
-
-                    molecularProfiles.add(ImmutableMolecularProfile.builder()
-                            .id(JsonFunctions.integer(molecularProfileEntryObject, "id"))
-                            .profileName(JsonFunctions.string(molecularProfileEntryObject, "profileName"))
-                            .geneVariant(extractGeneVariant(molecularProfileEntryObject.getAsJsonArray("geneVariants")))
-                            .treatmentApproach(extractProfileTreatmentApproach(molecularProfileEntryObject.getAsJsonArray(
-                                    "profileTreatmentApproaches")))
-                            .createDate(DateConverter.toDate(JsonFunctions.string(molecularProfileEntryObject, "createDate")))
-                            .updateDate(DateConverter.toDate(JsonFunctions.string(molecularProfileEntryObject, "updateDate")))
-                            .complexMolecularProfileEvidence(extractComplexMolecularProfileEvidence(molecularProfileEntryObject.getAsJsonObject(
-                                    "complexMolecularProfileEvidence")))
-                            .treatmentApproachEvidence(extractTreatmentApproachEvidence(molecularProfileEntryObject.getAsJsonObject(
-                                    "treatmentApproachEvidence")))
-                            .variantAssociatedClinicalTrial(extractVariantAssociatedClinicalTrials(molecularProfileEntryObject.getAsJsonArray(
-                                    "variantAssociatedClinicalTrials")))
-                            .variantLevelEvidence(extractVariantlevelEvidence(molecularProfileEntryObject.getAsJsonObject("variantLevelEvidence")))
-                            .extendedEvidence(extractExtendedEvidence(molecularProfileEntryObject.getAsJsonObject("extendedEvidence")))
-                            .build());
-                }
-                reader.close();
-            }
-        }
-        LOGGER.info("Finished reading molecular profiles dir");
-
-        return molecularProfiles;
+        return ImmutableMolecularProfile.builder()
+                .id(JsonFunctions.integer(object, "id"))
+                .profileName(JsonFunctions.string(object, "profileName"))
+                .geneVariant(extractGeneVariant(object.getAsJsonArray("geneVariants")))
+                .treatmentApproach(extractProfileTreatmentApproach(object.getAsJsonArray("profileTreatmentApproaches")))
+                .createDate(DateConverter.toDate(JsonFunctions.string(object, "createDate")))
+                .updateDate(DateConverter.toDate(JsonFunctions.string(object, "updateDate")))
+                .complexMolecularProfileEvidence(extractComplexMolecularProfileEvidence(object.getAsJsonObject(
+                        "complexMolecularProfileEvidence")))
+                .treatmentApproachEvidence(extractTreatmentApproachEvidence(object.getAsJsonObject("treatmentApproachEvidence")))
+                .variantAssociatedClinicalTrial(extractVariantAssociatedClinicalTrials(object.getAsJsonArray(
+                        "variantAssociatedClinicalTrials")))
+                .variantLevelEvidence(extractVariantlevelEvidence(object.getAsJsonObject("variantLevelEvidence")))
+                .extendedEvidence(extractExtendedEvidence(object.getAsJsonObject("extendedEvidence")))
+                .build();
     }
 
     @NotNull
@@ -140,14 +109,12 @@ public class MolecularProfileFactory {
 
         return ImmutableMolecularProfileExtendedEvidence.builder()
                 .totalCount(JsonFunctions.integer(jsonObject, "totalCount"))
-                .evidence(extractComplexMolecularProfileEvidenceList(jsonObject.getAsJsonArray(
-                        "complexMolecularProfileEvidence")))
+                .evidence(extractComplexMolecularProfileEvidenceList(jsonObject.getAsJsonArray("complexMolecularProfileEvidence")))
                 .build();
     }
 
     @NotNull
-    private static List<EvidenceInfo> extractComplexMolecularProfileEvidenceList(
-            @NotNull JsonArray jsonArray) {
+    private static List<EvidenceInfo> extractComplexMolecularProfileEvidenceList(@NotNull JsonArray jsonArray) {
         List<EvidenceInfo> complexMolecularProfileEvidenceList = Lists.newArrayList();
         JsonDatamodelChecker complexMolecularProfileEvidenceListChecker =
                 MolecularProfileDataModelChecker.molecularProfileComplexMolecularProfileEvidenceList();
@@ -290,8 +257,7 @@ public class MolecularProfileFactory {
     }
 
     @NotNull
-    private static List<ClinicalTrialInfo> extractVariantAssociatedClinicalTrials(
-            @NotNull JsonArray jsonArray) {
+    private static List<ClinicalTrialInfo> extractVariantAssociatedClinicalTrials(@NotNull JsonArray jsonArray) {
         List<ClinicalTrialInfo> variantAssociatedClinicalTrials = Lists.newArrayList();
         JsonDatamodelChecker variantAssociatedClinicalTrialChecker = MolecularProfileDataModelChecker.variantAssociatedClinicalTrial();
 
@@ -331,8 +297,7 @@ public class MolecularProfileFactory {
 
     @NotNull
     private static MolecularProfileExtendedEvidence extractVariantlevelEvidence(@NotNull JsonObject jsonObject) {
-        JsonDatamodelChecker variantLevelEvidenceChecker =
-                MolecularProfileDataModelChecker.molecularProfilevariantLevelEvidence();
+        JsonDatamodelChecker variantLevelEvidenceChecker = MolecularProfileDataModelChecker.molecularProfilevariantLevelEvidence();
         variantLevelEvidenceChecker.check(jsonObject);
 
         return ImmutableMolecularProfileExtendedEvidence.builder()
@@ -344,8 +309,7 @@ public class MolecularProfileFactory {
     @NotNull
     private static List<EvidenceInfo> extractVariantlevelEvidenceList(@NotNull JsonArray jsonArray) {
         List<EvidenceInfo> variantlevelEvidenceList = Lists.newArrayList();
-        JsonDatamodelChecker variantlevelEvidenceListChecker =
-                MolecularProfileDataModelChecker.molecularProfilevariantLevelEvidenceList();
+        JsonDatamodelChecker variantlevelEvidenceListChecker = MolecularProfileDataModelChecker.molecularProfilevariantLevelEvidenceList();
 
         for (JsonElement variantLevelEvidence : jsonArray) {
             JsonObject variantLevelEvidenceJsonObject = variantLevelEvidence.getAsJsonObject();
@@ -372,8 +336,7 @@ public class MolecularProfileFactory {
 
     @NotNull
     private static MolecularProfileExtendedEvidence extractExtendedEvidence(@NotNull JsonObject jsonObject) {
-        JsonDatamodelChecker extendedEvidenceChecker =
-                MolecularProfileDataModelChecker.extendedEvidenceEvidence();
+        JsonDatamodelChecker extendedEvidenceChecker = MolecularProfileDataModelChecker.extendedEvidenceEvidence();
         extendedEvidenceChecker.check(jsonObject);
 
         return ImmutableMolecularProfileExtendedEvidence.builder()
@@ -385,8 +348,7 @@ public class MolecularProfileFactory {
     @NotNull
     private static List<EvidenceInfo> extractExtendedEvidenceList(@NotNull JsonArray jsonArray) {
         List<EvidenceInfo> extendedEvidenceList = Lists.newArrayList();
-        JsonDatamodelChecker extendedEvidenceListChecker =
-                MolecularProfileDataModelChecker.extendedEvidenceList();
+        JsonDatamodelChecker extendedEvidenceListChecker = MolecularProfileDataModelChecker.extendedEvidenceList();
 
         for (JsonElement extendedEvidence : jsonArray) {
             JsonObject extendedEvidenceJsonObject = extendedEvidence.getAsJsonObject();

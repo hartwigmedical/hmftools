@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ckb.datamodel.drugclass;
 import java.util.Date;
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.datamodel.CkbJsonObject;
 import com.hartwig.hmftools.ckb.datamodel.common.DrugInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TreatmentApproachInfo;
 
@@ -12,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DrugClass {
+public abstract class DrugClass implements CkbJsonObject {
 
     public abstract int id();
 

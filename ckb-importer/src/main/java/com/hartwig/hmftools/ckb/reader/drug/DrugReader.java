@@ -1,18 +1,11 @@
 package com.hartwig.hmftools.ckb.reader.drug;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.datamodel.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.DrugClassInfo;
@@ -33,66 +26,43 @@ import com.hartwig.hmftools.ckb.datamodel.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
 import com.hartwig.hmftools.ckb.datamodel.drug.ImmutableDrug;
+import com.hartwig.hmftools.ckb.reader.CkbJsonDirectoryReader;
 import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class DrugFactory {
+public class DrugReader extends CkbJsonDirectoryReader<Drug> {
 
-    private static final Logger LOGGER = LogManager.getLogger(DrugFactory.class);
-
-    private DrugFactory() {
+    public DrugReader(@Nullable final Integer maxFilesToRead) {
+        super(maxFilesToRead);
     }
 
     @NotNull
-    public static List<Drug> readingDrug(@NotNull String drugsDir) throws IOException, ParseException {
-        LOGGER.info("Start reading drug dir");
+    @Override
+    protected Drug read(@NotNull final JsonObject object) {
+        JsonDatamodelChecker drugChecker = DrugDataModelChecker.drugObjectChecker();
+        drugChecker.check(object);
 
-        List<Drug> drugs = Lists.newArrayList();
-        File[] filesDrugs = new File(drugsDir).listFiles();
-
-        if (filesDrugs != null) {
-            LOGGER.info("The total files in the drug dir is {}", filesDrugs.length);
-
-            for (File drug : filesDrugs) {
-                JsonParser parser = new JsonParser();
-                JsonReader reader = new JsonReader(new FileReader(drug));
-                reader.setLenient(true);
-
-                while (reader.peek() != JsonToken.END_DOCUMENT) {
-                    JsonObject drugsEntryObject = parser.parse(reader).getAsJsonObject();
-                    JsonDatamodelChecker drugChecker = DrugDataModelChecker.drugObjectChecker();
-                    drugChecker.check(drugsEntryObject);
-
-                    drugs.add(ImmutableDrug.builder()
-                            .id(JsonFunctions.integer(drugsEntryObject, "id"))
-                            .drugName(JsonFunctions.string(drugsEntryObject, "drugName"))
-                            .term(JsonFunctions.stringList(drugsEntryObject, "terms"))
-                            .synonym(JsonFunctions.stringList(drugsEntryObject, "synonyms"))
-                            .tradeName(JsonFunctions.nullableString(drugsEntryObject, "tradeName"))
-                            .description(extractDrugDescriptions(drugsEntryObject.getAsJsonArray("drugDescriptions")))
-                            .drugClass(extractDrugsClasses(drugsEntryObject.getAsJsonArray("drugClasses")))
-                            .casRegistryNum(JsonFunctions.nullableString(drugsEntryObject, "casRegistryNum"))
-                            .nctId(JsonFunctions.nullableString(drugsEntryObject, "ncitId"))
-                            .createDate(DateConverter.toDate(JsonFunctions.string(drugsEntryObject, "createDate")))
-                            .clinicalTrial(extractCliniclaTrials(drugsEntryObject.getAsJsonArray("clinicalTrials")))
-                            .evidence(extractEvidence(drugsEntryObject.getAsJsonArray("evidence")))
-                            .therapy(extractTherapies(drugsEntryObject.getAsJsonArray("therapies")))
-                            .globalApprovalStatus(drugsEntryObject.has("globalApprovaStatus")
-                                    ? extractGlobalApprovaStatus(drugsEntryObject.getAsJsonArray("globalApprovaStatus"))
-                                    : null)
-                            .build());
-                }
-                reader.close();
-            }
-        }
-        LOGGER.info("Finished reading drug dir ");
-
-        return drugs;
+        return ImmutableDrug.builder()
+                .id(JsonFunctions.integer(object, "id"))
+                .drugName(JsonFunctions.string(object, "drugName"))
+                .term(JsonFunctions.stringList(object, "terms"))
+                .synonym(JsonFunctions.stringList(object, "synonyms"))
+                .tradeName(JsonFunctions.nullableString(object, "tradeName"))
+                .description(extractDrugDescriptions(object.getAsJsonArray("drugDescriptions")))
+                .drugClass(extractDrugsClasses(object.getAsJsonArray("drugClasses")))
+                .casRegistryNum(JsonFunctions.nullableString(object, "casRegistryNum"))
+                .nctId(JsonFunctions.nullableString(object, "ncitId"))
+                .createDate(DateConverter.toDate(JsonFunctions.string(object, "createDate")))
+                .clinicalTrial(extractCliniclaTrials(object.getAsJsonArray("clinicalTrials")))
+                .evidence(extractEvidence(object.getAsJsonArray("evidence")))
+                .therapy(extractTherapies(object.getAsJsonArray("therapies")))
+                .globalApprovalStatus(object.has("globalApprovaStatus") ? extractGlobalApprovaStatus(object.getAsJsonArray(
+                        "globalApprovaStatus")) : null)
+                .build();
     }
 
     @NotNull

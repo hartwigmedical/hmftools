@@ -1,74 +1,47 @@
 package com.hartwig.hmftools.ckb.reader.drugclass;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.datamodel.common.DrugInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ImmutableDrugInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ImmutableTreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.datamodel.drugclass.DrugClass;
 import com.hartwig.hmftools.ckb.datamodel.drugclass.ImmutableDrugClass;
+import com.hartwig.hmftools.ckb.reader.CkbJsonDirectoryReader;
 import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class DrugClassFactory {
+public class DrugClassReader extends CkbJsonDirectoryReader<DrugClass> {
 
-    private static final Logger LOGGER = LogManager.getLogger(DrugClassFactory.class);
-
-    private DrugClassFactory() {
+    public DrugClassReader(@Nullable final Integer maxFilesToRead) {
+        super(maxFilesToRead);
     }
 
     @NotNull
-    public static List<DrugClass> readingDrugClass(@NotNull String drugClassesDir) throws IOException, ParseException {
-        LOGGER.info("Start reading drug class dir");
+    @Override
+    protected DrugClass read(@NotNull final JsonObject object) {
+        JsonDatamodelChecker drugsClassChecker = DrugClassDataModelChecker.drugClassObjectChecker();
+        drugsClassChecker.check(object);
 
-        List<DrugClass> drugClasses = Lists.newArrayList();
-        File[] filesDrugClasses = new File(drugClassesDir).listFiles();
-
-        if (filesDrugClasses != null) {
-            LOGGER.info("The total files in the drug classes dir is {}", filesDrugClasses.length);
-
-            for (File drugClass : filesDrugClasses) {
-                JsonParser parser = new JsonParser();
-                JsonReader reader = new JsonReader(new FileReader(drugClass));
-                reader.setLenient(true);
-
-                while (reader.peek() != JsonToken.END_DOCUMENT) {
-                    JsonObject drugClassEntryObject = parser.parse(reader).getAsJsonObject();
-                    JsonDatamodelChecker drugsClassChecker = DrugClassDataModelChecker.drugClassObjectChecker();
-                    drugsClassChecker.check(drugClassEntryObject);
-
-                    drugClasses.add(ImmutableDrugClass.builder()
-                            .id(JsonFunctions.integer(drugClassEntryObject, "id"))
-                            .drugClass(JsonFunctions.string(drugClassEntryObject, "drugClass"))
-                            .createDate(DateConverter.toDate(JsonFunctions.string(drugClassEntryObject, "createDate")))
-                            .drug(extractDrugs(drugClassEntryObject.getAsJsonArray("drugs")))
-                            .treatmentApproach(extractTreatmentApproaches(drugClassEntryObject.getAsJsonArray("treatmentApproaches")))
-                            .build());
-                }
-                reader.close();
-            }
-        }
-        LOGGER.info("Finished reading drug class dir");
-        return drugClasses;
+        return ImmutableDrugClass.builder()
+                .id(JsonFunctions.integer(object, "id"))
+                .drugClass(JsonFunctions.string(object, "drugClass"))
+                .createDate(DateConverter.toDate(JsonFunctions.string(object, "createDate")))
+                .drug(extractDrugs(object.getAsJsonArray("drugs")))
+                .treatmentApproach(extractTreatmentApproaches(object.getAsJsonArray("treatmentApproaches")))
+                .build();
     }
 
+    @NotNull
     private static List<DrugInfo> extractDrugs(@NotNull JsonArray jsonArray) {
         List<DrugInfo> drugs = Lists.newArrayList();
         JsonDatamodelChecker drugsClassDrugChecker = DrugClassDataModelChecker.drugClassDrugsObjectChecker();
@@ -85,6 +58,7 @@ public class DrugClassFactory {
         return drugs;
     }
 
+    @NotNull
     private static List<TreatmentApproachInfo> extractTreatmentApproaches(@NotNull JsonArray jsonArray) {
         List<TreatmentApproachInfo> treatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker drugsClassTreatmentApprochChecker = DrugClassDataModelChecker.drugClassTreatmentApproachesObjectChecker();

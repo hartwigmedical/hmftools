@@ -17,21 +17,22 @@ import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
 import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
 import com.hartwig.hmftools.ckb.datamodel.treatmentapproach.TreatmentApproach;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
-import com.hartwig.hmftools.ckb.reader.clinicaltrial.ClinicalTrialFactory;
-import com.hartwig.hmftools.ckb.reader.drug.DrugFactory;
-import com.hartwig.hmftools.ckb.reader.drugclass.DrugClassFactory;
-import com.hartwig.hmftools.ckb.reader.gene.GeneFactory;
-import com.hartwig.hmftools.ckb.reader.globaltherapyapprovalstatus.GlobalTherapyApprovalStatusFactory;
-import com.hartwig.hmftools.ckb.reader.indication.IndicationFactory;
-import com.hartwig.hmftools.ckb.reader.molecularprofile.MolecularProfileFactory;
-import com.hartwig.hmftools.ckb.reader.reference.ReferenceFactory;
-import com.hartwig.hmftools.ckb.reader.therapy.TherapyFactory;
-import com.hartwig.hmftools.ckb.reader.treatmentapproch.TreatmentApproachFactory;
-import com.hartwig.hmftools.ckb.reader.variant.VariantFactory;
+import com.hartwig.hmftools.ckb.reader.clinicaltrial.ClinicalTrialReader;
+import com.hartwig.hmftools.ckb.reader.drug.DrugReader;
+import com.hartwig.hmftools.ckb.reader.drugclass.DrugClassReader;
+import com.hartwig.hmftools.ckb.reader.gene.GeneReader;
+import com.hartwig.hmftools.ckb.reader.globaltherapyapprovalstatus.GlobalTherapyApprovalStatusReader;
+import com.hartwig.hmftools.ckb.reader.indication.IndicationReader;
+import com.hartwig.hmftools.ckb.reader.molecularprofile.MolecularProfileReader;
+import com.hartwig.hmftools.ckb.reader.reference.ReferenceReader;
+import com.hartwig.hmftools.ckb.reader.therapy.TherapyReader;
+import com.hartwig.hmftools.ckb.reader.treatmentapproch.TreatmentApproachReader;
+import com.hartwig.hmftools.ckb.reader.variant.VariantReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class CkbJsonReader {
 
@@ -53,26 +54,30 @@ public final class CkbJsonReader {
     }
 
     @NotNull
-    public static CkbJsonDatabase read(@NotNull String ckbDir) throws IOException, java.text.ParseException {
-        LOGGER.info("Start with reading all CKB files from {}", ckbDir);
+    public static CkbJsonDatabase read(@NotNull String ckbDir) throws IOException {
+        return read(ckbDir, null);
+    }
 
-        List<ClinicalTrial> clinicalTrials = ClinicalTrialFactory.readingClinicalTrial(ckbDir + File.separator + CLINICAL_TRIALS);
-        List<Drug> drugs = DrugFactory.readingDrug(ckbDir + File.separator + DRUGS);
-        List<DrugClass> drugClasses = DrugClassFactory.readingDrugClass(ckbDir + File.separator + DRUG_CLASSES);
-        List<Gene> genes = GeneFactory.readingGene(ckbDir + File.separator + GENES);
-        List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses =
-                GlobalTherapyApprovalStatusFactory.readingGlobalTherapyApprovalStatus(
-                        ckbDir + File.separator + GLOBAL_THERAPY_APPROVAL_STATUSES);
-        List<Indication> indications = IndicationFactory.readingIndication(ckbDir + File.separator + INDICATIONS);
+    @NotNull
+    public static CkbJsonDatabase read(@NotNull String ckbDir, @Nullable Integer maxFilesToReadPerType) throws IOException {
+        LOGGER.info("Reading all CKB json files from '{}'", ckbDir);
+
+        List<ClinicalTrial> clinicalTrials = new ClinicalTrialReader(maxFilesToReadPerType).read(ckbDir + File.separator + CLINICAL_TRIALS);
+        List<Drug> drugs = new DrugReader(maxFilesToReadPerType).read(ckbDir + File.separator + DRUGS);
+        List<DrugClass> drugClasses = new DrugClassReader(maxFilesToReadPerType).read(ckbDir + File.separator + DRUG_CLASSES);
+        List<Gene> genes = new GeneReader(maxFilesToReadPerType).read(ckbDir + File.separator + GENES);
+        List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses = new GlobalTherapyApprovalStatusReader(maxFilesToReadPerType).read(
+                ckbDir + File.separator + GLOBAL_THERAPY_APPROVAL_STATUSES);
+        List<Indication> indications = new IndicationReader(maxFilesToReadPerType).read(ckbDir + File.separator + INDICATIONS);
         List<MolecularProfile> molecularProfiles =
-                MolecularProfileFactory.readMolecularProfiles(ckbDir + File.separator + MOLECULAR_PROFILES);
-        List<Reference> references = ReferenceFactory.readReferences(ckbDir + File.separator + REFERENCES);
-        List<Therapy> therapies = TherapyFactory.readTherapies(ckbDir + File.separator + THERAPIES);
+                new MolecularProfileReader(maxFilesToReadPerType).read(ckbDir + File.separator + MOLECULAR_PROFILES);
+        List<Reference> references = new ReferenceReader(maxFilesToReadPerType).read(ckbDir + File.separator + REFERENCES);
+        List<Therapy> therapies = new TherapyReader(maxFilesToReadPerType).read(ckbDir + File.separator + THERAPIES);
         List<TreatmentApproach> treatmentApproaches =
-                TreatmentApproachFactory.readTreatmentApproaches(ckbDir + File.separator + TREATMENT_APPROACHES);
-        List<Variant> variants = VariantFactory.readingVariant(ckbDir + File.separator + VARIANTS);
+                new TreatmentApproachReader(maxFilesToReadPerType).read(ckbDir + File.separator + TREATMENT_APPROACHES);
+        List<Variant> variants = new VariantReader(maxFilesToReadPerType).read(ckbDir + File.separator + VARIANTS);
 
-        LOGGER.info("All files have been read");
+        LOGGER.info(" Json file reading completed");
 
         return ImmutableCkbJsonDatabase.builder()
                 .clinicalTrial(clinicalTrials)

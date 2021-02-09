@@ -1,18 +1,11 @@
 package com.hartwig.hmftools.ckb.reader.gene;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.hartwig.hmftools.ckb.datamodel.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.EffectInfo;
@@ -35,68 +28,45 @@ import com.hartwig.hmftools.ckb.datamodel.common.TreatmentApproachInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.VariantInfo;
 import com.hartwig.hmftools.ckb.datamodel.gene.Gene;
 import com.hartwig.hmftools.ckb.datamodel.gene.ImmutableGene;
+import com.hartwig.hmftools.ckb.reader.CkbJsonDirectoryReader;
 import com.hartwig.hmftools.ckb.util.DateConverter;
 import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class GeneFactory {
+public class GeneReader extends CkbJsonDirectoryReader<Gene> {
 
-    private static final Logger LOGGER = LogManager.getLogger(GeneFactory.class);
-
-    private GeneFactory() {
-
+    public GeneReader(@Nullable final Integer maxFilesToRead) {
+        super(maxFilesToRead);
     }
 
     @NotNull
-    public static List<Gene> readingGene(@NotNull String geneDir) throws IOException, ParseException {
-        LOGGER.info("Start reading gene dir");
+    @Override
+    protected Gene read(@NotNull final JsonObject object) {
+        JsonDatamodelChecker geneChecker = GeneDataModelChecker.geneObjectChecker();
+        geneChecker.check(object);
 
-        List<Gene> genes = Lists.newArrayList();
-        File[] filesGenes = new File(geneDir).listFiles();
-
-        if (filesGenes != null) {
-            LOGGER.info("The total files in the genes dir is {}", filesGenes.length);
-
-            for (File gene : filesGenes) {
-                JsonParser parser = new JsonParser();
-                JsonReader reader = new JsonReader(new FileReader(gene));
-                reader.setLenient(true);
-
-                while (reader.peek() != JsonToken.END_DOCUMENT) {
-                    JsonObject geneEntryObject = parser.parse(reader).getAsJsonObject();
-                    JsonDatamodelChecker geneChecker = GeneDataModelChecker.geneObjectChecker();
-                    geneChecker.check(geneEntryObject);
-
-                    genes.add(ImmutableGene.builder()
-                            .id(JsonFunctions.integer(geneEntryObject, "id"))
-                            .geneSymbol(JsonFunctions.string(geneEntryObject, "geneSymbol"))
-                            .term(JsonFunctions.stringList(geneEntryObject, "terms"))
-                            .entrezId(JsonFunctions.nullableString(geneEntryObject, "entrezId"))
-                            .synonym(JsonFunctions.stringList(geneEntryObject, "synonyms"))
-                            .chromosome(JsonFunctions.nullableString(geneEntryObject, "chromosome"))
-                            .mapLocation(JsonFunctions.nullableString(geneEntryObject, "mapLocation"))
-                            .description(extractGeneDescriptions(geneEntryObject.getAsJsonArray("geneDescriptions")))
-                            .canonicalTranscript(JsonFunctions.nullableString(geneEntryObject, "canonicalTranscript"))
-                            .geneRole(JsonFunctions.string(geneEntryObject, "geneRole"))
-                            .createDate(DateConverter.toDate(JsonFunctions.string(geneEntryObject, "createDate")))
-                            .updateDate(DateConverter.toDate(JsonFunctions.nullableString(geneEntryObject, "updateDate")))
-                            .clinicalTrial(extractGeneClinicalTrial(geneEntryObject.getAsJsonArray("clinicalTrials")))
-                            .evidence(extractGeneEvidence(geneEntryObject.getAsJsonArray("evidence")))
-                            .variant(extractGeneVariant(geneEntryObject.getAsJsonArray("variants")))
-                            .molecularProfile(extarctMolecularProfile(geneEntryObject.getAsJsonArray("molecularProfiles")))
-                            .categoryVariant(extractCategoryVariant(geneEntryObject.getAsJsonArray("categoryVariants")))
-                            .build());
-                }
-                reader.close();
-            }
-        }
-        LOGGER.info("Finished reading gene dir");
-
-        return genes;
+        return ImmutableGene.builder()
+                .id(JsonFunctions.integer(object, "id"))
+                .geneSymbol(JsonFunctions.string(object, "geneSymbol"))
+                .term(JsonFunctions.stringList(object, "terms"))
+                .entrezId(JsonFunctions.nullableString(object, "entrezId"))
+                .synonym(JsonFunctions.stringList(object, "synonyms"))
+                .chromosome(JsonFunctions.nullableString(object, "chromosome"))
+                .mapLocation(JsonFunctions.nullableString(object, "mapLocation"))
+                .description(extractGeneDescriptions(object.getAsJsonArray("geneDescriptions")))
+                .canonicalTranscript(JsonFunctions.nullableString(object, "canonicalTranscript"))
+                .geneRole(JsonFunctions.string(object, "geneRole"))
+                .createDate(DateConverter.toDate(JsonFunctions.string(object, "createDate")))
+                .updateDate(DateConverter.toDate(JsonFunctions.nullableString(object, "updateDate")))
+                .clinicalTrial(extractGeneClinicalTrial(object.getAsJsonArray("clinicalTrials")))
+                .evidence(extractGeneEvidence(object.getAsJsonArray("evidence")))
+                .variant(extractGeneVariant(object.getAsJsonArray("variants")))
+                .molecularProfile(extarctMolecularProfile(object.getAsJsonArray("molecularProfiles")))
+                .categoryVariant(extractCategoryVariant(object.getAsJsonArray("categoryVariants")))
+                .build();
     }
 
     @NotNull
