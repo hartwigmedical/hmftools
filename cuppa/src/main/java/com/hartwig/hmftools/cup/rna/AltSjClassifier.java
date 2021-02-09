@@ -5,6 +5,11 @@ import static java.lang.Math.log;
 import static java.lang.Math.max;
 import static java.lang.Math.pow;
 
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_FRAG_COUNT;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.DEFAULT_MATRIX_DELIM;
@@ -38,6 +43,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
@@ -342,9 +348,9 @@ public class AltSjClassifier implements CuppaClassifier
             String header = fileReader.readLine();
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
 
-            int chrIndex = fieldsIndexMap.get("Chromosome");
-            int posStartIndex = fieldsIndexMap.get("PosStart");
-            int posEndIndex = fieldsIndexMap.get("PosEnd");
+            int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
+            int posStartIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
+            int posEndIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
 
             String line = fileReader.readLine();
             int altSjIndex = 0;
@@ -353,7 +359,7 @@ public class AltSjClassifier implements CuppaClassifier
             {
                 final String[] items = line.split(DATA_DELIM, -1);
 
-                final String asjKey = formAltSjKey(
+                final String asjKey = AltSpliceJunctionFile.formKey(
                         items[chrIndex], Integer.parseInt(items[posStartIndex]), Integer.parseInt(items[posEndIndex]));
 
                 mRefAsjIndexMap.put(asjKey, altSjIndex++);
@@ -454,7 +460,7 @@ public class AltSjClassifier implements CuppaClassifier
 
     private boolean loadSampleAltSJsToArray(final String sampleId)
     {
-        final String filename = mConfig.SampleDataDir + sampleId + ALT_SJ_FILE_ID;
+        final String filename = AltSpliceJunctionFile.generateFilename(mConfig.SampleDataDir, sampleId);
 
         mSampleFragCounts.initialise(0);
         final double[][] sampleFragCounts = mSampleFragCounts.getData();
@@ -469,11 +475,10 @@ public class AltSjClassifier implements CuppaClassifier
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DATA_DELIM);
             lines.remove(0);
 
-            int chrIndex = fieldsIndexMap.get("Chromosome");
-            int geneIdIndex = fieldsIndexMap.get("GeneId");
-            int posStartIndex = fieldsIndexMap.get("SjStart");
-            int posEndIndex = fieldsIndexMap.get("SjEnd");
-            int fragCountIndex = fieldsIndexMap.get("FragCount");
+            int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
+            int posStartIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
+            int posEndIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
+            int fragCountIndex = fieldsIndexMap.get(FLD_ALT_SJ_FRAG_COUNT);
 
             boolean hasRefAltSJs = false;
 
@@ -482,7 +487,6 @@ public class AltSjClassifier implements CuppaClassifier
                 final String items[] = data.split(DATA_DELIM, -1);
 
                 String chromosome = items[chrIndex];
-                String geneId = items[geneIdIndex];
                 int posStart = Integer.parseInt(items[posStartIndex]);
                 int posEnd = Integer.parseInt(items[posEndIndex]);
 
