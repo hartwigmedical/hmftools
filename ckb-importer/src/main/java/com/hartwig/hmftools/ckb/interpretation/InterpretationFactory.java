@@ -17,7 +17,6 @@ import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.json.indication.Indication;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
 import com.hartwig.hmftools.ckb.json.therapy.Therapy;
-import com.hartwig.hmftools.ckb.util.DateConverter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,16 +61,16 @@ public class InterpretationFactory {
 
                         for (IndicationInfo indicationInfo : clinicalTrial.indications()) {
                             for (Indication indication : ckbEntry.indication()) {
-                                // TODO Use string comparison
-                                if (Integer.parseInt(indicationInfo.id()) == indication.id()) {
+                                if (indicationInfo.id().equals(indication.id())) {
                                     outputBuilderClinicalInterpretation.addIndications(ImmutableIndication.builder()
-                                            .id(indication.id())
+                                            // TODO Switch to String for ID
+                                            .id(Integer.parseInt(indication.id()))
                                             .name(indication.name())
                                             .source(indication.source())
                                             .definition(indication.definition())
                                             .currentPreferredTerm(indication.currentPreferredTerm())
-                                            .lastUpdateDateFromDO(DateConverter.toDate(indication.lastUpdateDateFromDO()))
-                                            .altIds(indication.altId())
+                                            .lastUpdateDateFromDO(indication.lastUpdateDateFromDO())
+                                            .altIds(indication.altIds())
                                             .termId(indication.termId())
                                             .build());
                                 }
