@@ -6,9 +6,11 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.CkbEntryInterpretation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.ImmutableCkbEntryInterpretation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTrialLocation;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTrialVariantRequirementDetail;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrial;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialContact;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialLocation;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialVariantRequirementDetail;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ImmutableReferenceExtend;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ReferenceExtend;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.ImmutableIndication;
@@ -48,7 +50,6 @@ public class InterpretationFactory {
             ++ckbId;
             ImmutableCkbEntryInterpretation.Builder outputBuilder = ImmutableCkbEntryInterpretation.builder();
             outputBuilder.id(ckbId);
-            LOGGER.info("molecular profile {}", molecularProfile.id());
 
             //extract clinical trial information
             for (ClinicalTrialInfo clinicalTrialInfo : molecularProfile.variantAssociatedClinicalTrials()) {
@@ -57,7 +58,6 @@ public class InterpretationFactory {
 
                 for (ClinicalTrial clinicalTrial : ckbEntry.clinicalTrials()) {
                     if (clinicalTrialInfo.nctId().equals(clinicalTrial.nctId())) {
-                        LOGGER.info("clinicalTrial {}", clinicalTrial.nctId());
                         outputBuilderClinicalInterpretation.clinicalTrials(ImmutableClinicalTrial.builder()
                                 .nctId(clinicalTrial.nctId())
                                 .title(clinicalTrial.title())
@@ -68,7 +68,7 @@ public class InterpretationFactory {
                                 .variantRequirement(clinicalTrial.variantRequirements())
                                 .sponsor(clinicalTrial.sponsors())
                                 .updateDate(clinicalTrial.updateDate())
-                                .clinicalTrialVariantRequirementDetails(Lists.newArrayList())
+                                .clinicalTrialVariantRequirementDetails(extractProfileName(clinicalTrial.variantRequirementDetails()))
                                 .locations(extractClinicalTrialLocation(clinicalTrial.clinicalTrialLocations()))
                                 .build());
 
@@ -193,6 +193,20 @@ public class InterpretationFactory {
             }
         }
         return references;
+    }
+
+    @NotNull
+    private static List<ClinicalTrialVariantRequirementDetail> extractProfileName(
+            @NotNull List<com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail> molecularProfiles) {
+        List<ClinicalTrialVariantRequirementDetail> molecularProfileClinicalTrials = Lists.newArrayList();
+        for (com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail molecularProfile : molecularProfiles) {
+            molecularProfileClinicalTrials.add(ImmutableClinicalTrialVariantRequirementDetail.builder()
+                    .id(molecularProfile.molecularProfile().id())
+                    .profileName(molecularProfile.molecularProfile().profileName())
+                    .requirementType(molecularProfile.requirementType())
+                    .build());
+        }
+        return molecularProfileClinicalTrials;
     }
 
 }
