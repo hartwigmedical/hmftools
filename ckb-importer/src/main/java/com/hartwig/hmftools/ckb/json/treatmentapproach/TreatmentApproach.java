@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.json.treatmentapproch;
+package com.hartwig.hmftools.ckb.json.treatmentapproach;
 
 import java.util.Date;
 import java.util.List;

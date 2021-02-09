@@ -22,8 +22,8 @@ import com.hartwig.hmftools.ckb.json.reference.Reference;
 import com.hartwig.hmftools.ckb.json.reference.ReferenceReader;
 import com.hartwig.hmftools.ckb.json.therapy.Therapy;
 import com.hartwig.hmftools.ckb.json.therapy.TherapyReader;
-import com.hartwig.hmftools.ckb.json.treatmentapproch.TreatmentApproach;
-import com.hartwig.hmftools.ckb.json.treatmentapproch.TreatmentApproachReader;
+import com.hartwig.hmftools.ckb.json.treatmentapproach.TreatmentApproach;
+import com.hartwig.hmftools.ckb.json.treatmentapproach.TreatmentApproachReader;
 import com.hartwig.hmftools.ckb.json.variant.Variant;
 import com.hartwig.hmftools.ckb.json.variant.VariantReader;
 

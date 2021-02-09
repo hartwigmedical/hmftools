@@ -11,7 +11,7 @@ import com.hartwig.hmftools.ckb.json.indication.Indication;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
 import com.hartwig.hmftools.ckb.json.reference.Reference;
 import com.hartwig.hmftools.ckb.json.therapy.Therapy;
-import com.hartwig.hmftools.ckb.json.treatmentapproch.TreatmentApproach;
+import com.hartwig.hmftools.ckb.json.treatmentapproach.TreatmentApproach;
 import com.hartwig.hmftools.ckb.json.variant.Variant;
 
 import org.immutables.value.Value;
