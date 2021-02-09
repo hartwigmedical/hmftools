@@ -19,36 +19,36 @@ public abstract class Gene {
     @NotNull
     public abstract List<String> terms();
 
-    @NotNull
+    @Nullable
     public abstract String entrezId();
 
     @NotNull
     public abstract List<String> synonyms();
 
-    @NotNull
+    @Nullable
     public abstract String chromosome();
 
-    @NotNull
+    @Nullable
     public abstract String mapLocation();
 
-    @NotNull
-    public abstract List<GeneDescription> geneDescriptions();
-
-    @NotNull
-    public abstract String canonicalTranscript();
-
-    @NotNull
-    public abstract String geneRole();
-
-    @NotNull
-    public abstract Date createDate();
-
-    @NotNull
-    public abstract Date updateDate();
-
-    @NotNull
-    public abstract List<GeneClinicalTrial> geneClinicalTrials();
-
-    @NotNull
-    public abstract List<GeneEvidence> geneEvidences();
+//    @NotNull
+//    public abstract List<GeneDescription> geneDescriptions();
+//
+//    @NotNull
+//    public abstract String canonicalTranscript();
+//
+//    @NotNull
+//    public abstract String geneRole();
+//
+//    @NotNull
+//    public abstract Date createDate();
+//
+//    @NotNull
+//    public abstract Date updateDate();
+//
+//    @NotNull
+//    public abstract List<GeneClinicalTrial> geneClinicalTrials();
+//
+//    @NotNull
+//    public abstract List<GeneEvidence> geneEvidences();
 }

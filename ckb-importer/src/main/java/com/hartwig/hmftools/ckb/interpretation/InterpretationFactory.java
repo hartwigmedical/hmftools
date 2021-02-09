@@ -13,23 +13,30 @@ import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableC
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialVariantRequirementDetail;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ImmutableReferenceExtend;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ReferenceExtend;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.gene.ImmutableGene;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.ImmutableIndication;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapy;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapyDescription;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.TherapyDescription;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.ImmutableVariant;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialContact;
 import com.hartwig.hmftools.ckb.json.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
+import com.hartwig.hmftools.ckb.json.common.GeneInfo;
 import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
+import com.hartwig.hmftools.ckb.json.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.json.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
+import com.hartwig.hmftools.ckb.json.common.VariantInfo;
+import com.hartwig.hmftools.ckb.json.gene.Gene;
 import com.hartwig.hmftools.ckb.json.indication.Indication;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
 import com.hartwig.hmftools.ckb.json.reference.Reference;
 import com.hartwig.hmftools.ckb.json.therapy.Therapy;
+import com.hartwig.hmftools.ckb.json.variant.Variant;
 import com.hartwig.hmftools.ckb.util.DateConverter;
 
 import org.apache.logging.log4j.LogManager;
@@ -68,7 +75,9 @@ public class InterpretationFactory {
                                 .variantRequirement(clinicalTrial.variantRequirements())
                                 .sponsor(clinicalTrial.sponsors())
                                 .updateDate(clinicalTrial.updateDate())
-                                .clinicalTrialVariantRequirementDetails(extractProfileName(clinicalTrial.variantRequirementDetails()))
+                                .clinicalTrialVariantRequirementDetails(extractProfileName(clinicalTrial.variantRequirementDetails(),
+                                        molecularProfile,
+                                        ckbEntry))
                                 .locations(extractClinicalTrialLocation(clinicalTrial.clinicalTrialLocations()))
                                 .build());
 
@@ -197,13 +206,46 @@ public class InterpretationFactory {
 
     @NotNull
     private static List<ClinicalTrialVariantRequirementDetail> extractProfileName(
-            @NotNull List<com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail> molecularProfiles) {
+            @NotNull List<com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail> molecularProfiles,
+            @NotNull MolecularProfile molecularProfileDir, @NotNull CkbJsonDatabase ckbEntry) {
+        ImmutableVariant.Builder outputBuilderVariant = ImmutableVariant.builder();
+        ImmutableGene.Builder outputBuilderGene = ImmutableGene.builder();
+
         List<ClinicalTrialVariantRequirementDetail> molecularProfileClinicalTrials = Lists.newArrayList();
         for (com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail molecularProfile : molecularProfiles) {
+            if (molecularProfileDir.id() == molecularProfile.molecularProfile().id()) {
+                for (VariantInfo variantInfo : molecularProfileDir.geneVariants()) {
+                    for (Variant variant : ckbEntry.variants()) {
+                        if (variantInfo.id() == variant.id()) {
+                            outputBuilderVariant.id(variant.id())
+                                    .fullName(variant.fullName())
+                                    .impact(variant.impact())
+                                    .proteinEffect(variant.proteinEffect());
+
+                            for (Gene gene : ckbEntry.genes()) {
+                                if (variant.gene().id() == gene.id()) {
+                                    outputBuilderGene.id(gene.id())
+                                            .geneSymbol(gene.geneSymbol())
+                                            .terms(gene.terms())
+                                            .entrezId(gene.entrezId())
+                                            .synonyms(gene.synonyms())
+                                            .chromosome(gene.chromosome())
+                                            .mapLocation(gene.mapLocation());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             molecularProfileClinicalTrials.add(ImmutableClinicalTrialVariantRequirementDetail.builder()
                     .id(molecularProfile.molecularProfile().id())
                     .profileName(molecularProfile.molecularProfile().profileName())
                     .requirementType(molecularProfile.requirementType())
+                    .variantInterpretation(ImmutableVariantInterpretation.builder()
+                            .variant(outputBuilderVariant.build())
+                            .gene(outputBuilderGene.build())
+                            .build())
                     .build());
         }
         return molecularProfileClinicalTrials;
