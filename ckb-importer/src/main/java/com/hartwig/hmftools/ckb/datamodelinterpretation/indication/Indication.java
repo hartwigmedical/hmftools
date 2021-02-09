@@ -33,5 +33,4 @@ public abstract class Indication {
 
     @NotNull
     public abstract String termId();
-
 }

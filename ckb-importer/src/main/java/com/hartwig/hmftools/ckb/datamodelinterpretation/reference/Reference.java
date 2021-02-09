@@ -41,5 +41,4 @@ public abstract class Reference {
 
     @NotNull
     public abstract String year();
-
 }

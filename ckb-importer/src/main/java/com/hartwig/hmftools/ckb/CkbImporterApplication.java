@@ -2,12 +2,9 @@ package com.hartwig.hmftools.ckb;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
 
 import com.hartwig.hmftools.ckb.dao.CkbDAO;
 import com.hartwig.hmftools.ckb.datamodel.CkbJsonDatabase;
-import com.hartwig.hmftools.ckb.interpretation.CkbEntryInterpretation;
-import com.hartwig.hmftools.ckb.interpretation.InterpretationFactory;
 import com.hartwig.hmftools.ckb.reader.CkbJsonReader;
 
 import org.apache.commons.cli.DefaultParser;
@@ -38,9 +35,7 @@ public class CkbImporterApplication {
         }
 
         CkbJsonDatabase ckbDatabase = CkbJsonReader.read(config.cbkDir());
-        List<CkbEntryInterpretation> ckbEntryInterpretation = InterpretationFactory.interpretationCkbDataModel(ckbDatabase);
-        LOGGER.info(ckbEntryInterpretation.get(1).molecularProfile());
-        LOGGER.info(ckbEntryInterpretation.get(1).variantTreeInterpretations());
+     //   List<CkbEntryInterpretation> ckbEntryInterpretation = InterpretationFactory.interpretationCkbDataModel(ckbDatabase);
 
         if (config.skipDatabaseWriting()) {
             LOGGER.info("Skipping DB writing.");

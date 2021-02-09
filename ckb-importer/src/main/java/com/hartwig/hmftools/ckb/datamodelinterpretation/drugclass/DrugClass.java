@@ -17,5 +17,4 @@ public abstract class DrugClass {
 
     @NotNull
     public abstract Date createDate();
-
 }
