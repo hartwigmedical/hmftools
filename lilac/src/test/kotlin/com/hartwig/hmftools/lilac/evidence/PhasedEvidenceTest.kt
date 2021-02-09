@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.evidence
 
 import com.hartwig.hmftools.lilac.seq.HlaSequence
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -10,10 +11,10 @@ class PhasedEvidenceTest {
     @Test
     fun testInconsistentEvidence() {
         val victim = PhasedEvidence(listOf(0,1,3).toIntArray(), mapOf(Pair("CAT", 4), Pair("ATC", 5)))
-        val catCandidate = HlaSequence("A*01:01", "CART")
-        val atcCandidate = HlaSequence("A*01:02", "ATRC")
-        val wildAtcCandidate = HlaSequence("A*01:03", "*TRC")
-        val wildCandidate = HlaSequence("A*01:04", "****")
+        val catCandidate = create(HlaSequence("A*01:01", "CART"))
+        val atcCandidate = create(HlaSequence("A*01:02", "ATRC"))
+        val wildAtcCandidate = create(HlaSequence("A*01:03", "*TRC"))
+        val wildCandidate = create(HlaSequence("A*01:04", "****"))
 
         val noMissing = victim.inconsistentEvidence(listOf(catCandidate, atcCandidate))
         assertEquals(0, noMissing.totalEvidence())
@@ -28,6 +29,10 @@ class PhasedEvidenceTest {
 
         val wildMatch = victim.inconsistentEvidence(listOf(wildCandidate))
         assertEquals(0, wildMatch.totalEvidence())
+    }
+
+    fun create(sequences: HlaSequence): HlaSequenceLoci {
+        return HlaSequenceLoci.create(sequences.allele, sequences.rawSequence, sequences.rawSequence)
     }
 
 }

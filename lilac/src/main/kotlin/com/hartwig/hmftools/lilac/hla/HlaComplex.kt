@@ -20,22 +20,22 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
             }
 
             if (confirmedProteins.size == 1) {
-                val confirmedProteinGroups = confirmedProteins.map { it.alleleGroup() }
+                val confirmedProteinGroups = confirmedProteins.map { it.asAlleleGroup() }
                 val remainingGroups = confirmedGroups.filter { it !in confirmedProteinGroups }
                 val first = confirmedProteins
-                val second = if (remainingGroups.isEmpty()) candidates.filter { it != confirmedProteins[0] } else candidates.filter { it.alleleGroup() in remainingGroups }
+                val second = if (remainingGroups.isEmpty()) candidates.filter { it != confirmedProteins[0] } else candidates.filter { it.asAlleleGroup() in remainingGroups }
 
                 return if (remainingGroups.isEmpty())  combineAlleles(first, second) + HlaComplex(first) else  combineAlleles(first, second)
             }
 
             if (confirmedGroups.size == 2) {
-                val first = candidates.filter { it.alleleGroup() == confirmedGroups[0] }
-                val second = candidates.filter { it.alleleGroup() == confirmedGroups[1] }
+                val first = candidates.filter { it.asAlleleGroup() == confirmedGroups[0] }
+                val second = candidates.filter { it.asAlleleGroup() == confirmedGroups[1] }
                 return combineAlleles(first, second)
             }
 
             if (confirmedGroups.size == 1) {
-                val first = candidates.filter { it.alleleGroup() == confirmedGroups[0] }
+                val first = candidates.filter { it.asAlleleGroup() == confirmedGroups[0] }
                 val second = candidates
                 return first.map { HlaComplex(listOf(it)) } + combineAlleles(first, second)
             }

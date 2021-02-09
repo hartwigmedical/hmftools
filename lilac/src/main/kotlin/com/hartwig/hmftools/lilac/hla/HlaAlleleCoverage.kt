@@ -13,7 +13,7 @@ data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val
         }
 
         fun groupCoverage(fragmentSequences: List<FragmentAlleles>): List<HlaAlleleCoverage> {
-            return create(fragmentSequences) { it.alleleGroup() }
+            return create(fragmentSequences) { it.asAlleleGroup() }
         }
 
         fun create(fragmentSequences: List<FragmentAlleles>, type: (HlaAllele) -> HlaAllele): List<HlaAlleleCoverage> {
@@ -29,7 +29,7 @@ data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val
                 val partialAlleles = fragment.partial.map(type).toSet()
                 val wildAlleles = fragment.wild.map(type).toSet()
 
-                if (fullAlleles.size == 1 && partialAlleles.isEmpty() && wildAlleles.isEmpty())  {
+                if (fullAlleles.size == 1 && partialAlleles.isEmpty())  {
                     uniqueCoverageMap.compute(fullAlleles.first()) {_, oldValue ->  (oldValue ?: 0) + 1}
 //                    if (fullAlleles.first() == HlaAllele("C*07:57")) {
 //                        println(fragment.aminoAcidFragment.id)

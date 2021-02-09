@@ -8,6 +8,67 @@ data class HlaSequence(val contig: String, val rawSequence: String) {
     val sequence = rawSequence.aligned()
     val length = sequence.length
 
+    fun deletes(reference: String): List<HlaSequenceIndel> {
+        val result = mutableListOf<HlaSequenceIndel>()
+
+        var i = 0
+        var delLoci = 0
+        var delLength = 0
+        fun inDelete(): Boolean = delLength != 0
+        fun isBaseDeleted(loci: Int) = rawSequence[loci] == '.' && reference[loci] != '.'
+
+        while (i < rawSequence.length) {
+            val baseDeleted = isBaseDeleted(i)
+
+            if (inDelete()) {
+                if (baseDeleted) {
+                    delLength++
+                } else {
+                    result.add(HlaSequenceIndel.HlaSequenceDelete(delLoci, delLength))
+                    delLoci = 0
+                    delLength = 0
+                }
+            } else if (baseDeleted){
+                delLoci = i
+                delLength = 1
+            }
+
+            i++
+        }
+
+        return result
+    }
+
+    fun inserts(reference: String): List<HlaSequenceIndel> {
+        val result = mutableListOf<HlaSequenceIndel>()
+
+        var i = 0
+        var insertLoci = 0
+        var insLength = 0
+        fun inInsert(): Boolean = insLength != 0
+        fun isBaseInserted(loci: Int) = rawSequence[loci] != '.' && (loci >= reference.length || reference[loci] == '.')
+
+        while (i < rawSequence.length) {
+            val baseInserted = isBaseInserted(i)
+
+            if (inInsert()) {
+                if (baseInserted) {
+                    insLength++
+                } else {
+                    result.add(HlaSequenceIndel.HlaSequenceInsert(insertLoci, insLength))
+                    insertLoci = 0
+                    insLength = 0
+                }
+            } else if (baseInserted){
+                insertLoci = i
+                insLength = 1
+            }
+
+            i++
+        }
+
+        return result
+    }
 
     fun consistentWith(evidence: PhasedEvidence): Boolean {
         return evidence.evidence.keys.any { this.consistentWith(evidence.aminoAcidIndices, it.toCharArray()) }

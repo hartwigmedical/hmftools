@@ -8,7 +8,7 @@ public final class Codons {
     }
 
     @NotNull
-    public static String codon(@NotNull String aminoAcids) {
+    public static String codons(@NotNull String aminoAcids) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < aminoAcids.length(); i++) {
             builder.append(codon(aminoAcids.charAt(i)));

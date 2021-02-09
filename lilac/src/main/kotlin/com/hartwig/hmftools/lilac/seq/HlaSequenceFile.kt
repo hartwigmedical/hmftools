@@ -30,7 +30,7 @@ object HlaSequenceFile {
 
     fun List<HlaSequence>.inflate(): List<HlaSequence> {
         val template = this[0].rawSequence
-        return this.map {it.inflate(template) }
+        return this.map { it.inflate(template) }
     }
 
     fun List<HlaSequence>.deflate(template: HlaSequence): List<HlaSequence> {
@@ -40,11 +40,19 @@ object HlaSequenceFile {
         return listOf(template) + this.filter { it.allele != template.allele }.map { it.deflate(template.sequence) }
     }
 
-    fun List<HlaSequence>.specificProteins(): List<HlaSequence> {
+    fun List<HlaSequence>.reduceToFourDigit(): List<HlaSequence> {
+        return reduce { it.asFourDigit() }
+    }
+
+    fun List<HlaSequence>.reduceToSixDigit(): List<HlaSequence> {
+        return reduce { it.asSixDigit() }
+    }
+
+    private fun List<HlaSequence>.reduce(transform: (HlaAllele) -> HlaAllele): List<HlaSequence> {
         val resultMap = LinkedHashMap<HlaAllele, HlaSequence>()
 
         for (sequence in this) {
-            val fourDigitName = sequence.allele.specificProtein()
+            val fourDigitName = transform(sequence.allele)
             if (!resultMap.containsKey(fourDigitName)) {
                 resultMap[fourDigitName] = sequence
             }
@@ -79,7 +87,7 @@ object HlaSequenceFile {
     fun writeBoundary(boundaries: Collection<Int>, outputFileName: String) {
         val outputFile = File(outputFileName)
         outputFile.appendText("Boundary".padEnd(20, ' ') + "\t")
-        for (i in 0.. boundaries.max()!!) {
+        for (i in 0..boundaries.max()!!) {
             if (i in boundaries) {
                 outputFile.appendText("|")
             } else {

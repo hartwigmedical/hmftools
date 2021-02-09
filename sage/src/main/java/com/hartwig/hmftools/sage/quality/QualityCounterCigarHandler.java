@@ -11,10 +11,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.samtools.CigarHandler;
+import com.hartwig.hmftools.common.samtools.CigarTraversal;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.ref.RefSequence;
-import com.hartwig.hmftools.sage.sam.CigarHandler;
-import com.hartwig.hmftools.sage.sam.CigarTraversal;
 
 import org.jetbrains.annotations.NotNull;
 

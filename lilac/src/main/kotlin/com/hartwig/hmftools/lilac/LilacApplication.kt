@@ -11,12 +11,16 @@ import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceValidation
 import com.hartwig.hmftools.lilac.hla.*
 import com.hartwig.hmftools.lilac.hla.HlaComplexCoverage.Companion.writeToFile
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
+import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory
 import com.hartwig.hmftools.lilac.nuc.NucleotideGeneEnrichment
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
 import com.hartwig.hmftools.lilac.seq.HlaSequence
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.inflate
-import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.specificProteins
+import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToFourDigit
+import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToSixDigit
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLociFile
 import org.apache.commons.cli.*
 import org.apache.logging.log4j.LogManager
 import java.io.IOException
@@ -79,6 +83,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         logger.info("               minEvidence = $minEvidence")
         logger.info("         minUniqueCoverage = $minConfirmedUniqueCoverage")
 
+
         val aProteinExonBoundaries = setOf(24, 114, 206, 298, 337, 348, 364, 365)
         val bProteinExonBoundaries = setOf(24, 114, 206, 298, 337, 348, 362)
         val cProteinExonBoundaries = setOf(24, 114, 206, 298, 338, 349, 365, 366)
@@ -91,20 +96,30 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val hlaBContext = hlaContextFactory.hlaB()
         val hlaCContext = hlaContextFactory.hlaC()
 
+        logger.info("Reading nucleotide files")
+        val aNucleotideSequences = nucleotideLoci("${resourcesDir}/A_nuc.txt")
+        val bNucleotideSequences = nucleotideLoci("${resourcesDir}/B_nuc.txt")
+        val cNucleotideSequences = nucleotideLoci("${resourcesDir}/C_nuc.txt")
+        val nucleotideSequences = aNucleotideSequences + bNucleotideSequences + cNucleotideSequences
+
+        logger.info("Reading protein files")
+        val aAminoAcidSequences = aminoAcidLoci("${resourcesDir}/A_prot.txt")
+        val bAminoAcidSequences = aminoAcidLoci("${resourcesDir}/B_prot.txt")
+        val cAminoAcidSequences = aminoAcidLoci("${resourcesDir}/C_prot.txt")
+        val aminoAcidSequences = aAminoAcidSequences + bAminoAcidSequences + cAminoAcidSequences
+        val aminoAcidSequencesWithInserts = aminoAcidSequences.filter { it.containsInserts() }
+        val aminoAcidSequencesWithDeletes = aminoAcidSequences.filter { it.containsDeletes() }
+
         logger.info("Querying records from $bamFile")
+        val nucleotideFragmentFactory = NucleotideFragmentFactory(config.minBaseQual, aminoAcidSequencesWithInserts, aminoAcidSequencesWithDeletes)
         val nucleotideGeneEnrichment = NucleotideGeneEnrichment(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
-        val rawNucleotideFragments = readFromBam(bamFile)
+        val rawNucleotideFragments = readFromBam(bamFile, nucleotideFragmentFactory)
         val geneEnrichedNucleotideFragments = nucleotideGeneEnrichment.enrich(rawNucleotideFragments)
         val aminoAcidPipeline = AminoAcidFragmentPipeline(minBaseQual, minEvidence, geneEnrichedNucleotideFragments)
         val aFragments = aminoAcidPipeline.type(hlaAContext)
         val bFragments = aminoAcidPipeline.type(hlaBContext)
         val cFragments = aminoAcidPipeline.type(hlaCContext)
 
-        logger.info("Reading nucleotide files")
-        val nucleotideSequences = readNucleotideFiles(resourcesDir)
-
-        logger.info("Reading protein files")
-        val aminoAcidSequences = readProteinFiles(resourcesDir)
 
         // Phasing
         logger.info("Phasing bam records")
@@ -137,10 +152,10 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
 
         val candidateAlleles = candidates.map { it.allele }
-        val candidateAlleleSpecificProteins = candidateAlleles.map { it.specificProtein() }
+        val candidateAlleleSpecificProteins = candidateAlleles.map { it.asFourDigit() }
 
         val aminoAcidCandidates = aminoAcidSequences.filter { it.allele in candidateAlleles }
-        val nucleotideCandidates = nucleotideSequences.filter { it.allele.specificProtein() in candidateAlleleSpecificProteins }
+        val nucleotideCandidates = nucleotideSequences.filter { it.allele.asFourDigit() in candidateAlleleSpecificProteins }
 
         val coverageFactory = HlaComplexCoverageFactory(
                 executorService,
@@ -168,12 +183,9 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             logger.info("... discarded ${discardedProtein.size} uniquely identifiable proteins: " + discardedProtein.joinToString(", "))
         }
 
-        val boundariesList = listOf(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
-
         val template = aminoAcidSequences.filter { it.allele == HlaAllele("A*01:01:01:01") }.first()
         val writtenCandidates = (candidates + expectedSequences + template).distinct().sortedBy { it.allele }
-        HlaSequenceFile.writeFile("$outputDir/$sample.candidates.inflate.txt", writtenCandidates)
-        HlaSequenceFile.writeDeflatedFile("$outputDir/$sample.candidates.deflate.txt", boundariesList, template, writtenCandidates)
+        HlaSequenceLociFile.write("$outputDir/$sample.candidates.deflate.txt", writtenCandidates)
 
         val complexes = HlaComplex.complexes(
                 confirmedGroups.take(6).map { it.allele },
@@ -210,16 +222,15 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         }
     }
 
-    private fun readFromBam(bamFile: String): List<NucleotideFragment> {
+    private fun readFromBam(bamFile: String, nucleotideFragmentFactory: NucleotideFragmentFactory): List<NucleotideFragment> {
         val transcripts = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
-        val reader = SAMRecordReader(1000, config.refGenome, transcripts)
-        val reads = reader.readFromBam(bamFile)
-        return NucleotideFragment.fromReads(minBaseQual, reads).filter { it.isNotEmpty() }
+        val reader = SAMRecordReader(1000, config.refGenome, transcripts, nucleotideFragmentFactory)
+        return reader.readFromBam(bamFile)
     }
 
     fun unwrapFile(fileName: String) {
         val input = HlaSequenceFile.readFile(fileName)
-        val output = input.specificProteins()
+        val output = input.reduceToFourDigit()
         val inflated = output.map { it.inflate(input[0].rawSequence) }
         val deflated = inflated.map { it.deflate(inflated[0].rawSequence) }
         HlaSequenceFile.writeFile(fileName.replace(".txt", ".unwrapped.txt"), output)
@@ -231,7 +242,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
     }
 
     private fun readProteinFiles(resourcesDir: String): List<HlaSequence> {
-        return readSequenceFiles({ x -> "${resourcesDir}/${x}_prot.txt" }, { x -> x.specificProteins() })
+        return readSequenceFiles({ x -> "${resourcesDir}/${x}_prot.txt" }, { x -> x.reduceToFourDigit() })
     }
 
     private fun readSequenceFiles(filenameSupplier: (Char) -> String, transform: (List<HlaSequence>) -> List<HlaSequence>): List<HlaSequence> {
@@ -255,6 +266,35 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
                 .filter { it.sequence.isNotEmpty() }
                 .map { it.pad(maxLength) }
     }
+
+
+    private fun nucleotideLoci(inputFilename: String): List<HlaSequenceLoci> {
+        val sequences = HlaSequenceFile.readFile(inputFilename)
+//                .filter { it.allele.gene in setOf("A", "B") ||  it.allele in listOf(HlaAllele("C*01:02:01:01"), HlaAllele("C*17:01:01:02")) }
+                .reduceToSixDigit()
+        return HlaSequenceLoci.create(sequences)
+                .filter { it.sequences.isNotEmpty() }
+    }
+
+    private fun aminoAcidLoci(inputFilename: String): List<HlaSequenceLoci> {
+        val sequences = HlaSequenceFile.readFile(inputFilename)
+                .reduceToFourDigit()
+
+        return HlaSequenceLoci.create(sequences)
+                .filter { it.sequences.isNotEmpty() }
+    }
+
+//    private fun doStuff(inputFilename: String, outputFilename: String): List<HlaSequenceLoci> {
+//        val allowed = listOf(HlaAllele("A*01:01:01:01"), HlaAllele("A*29:126Q"), HlaAllele("A*02:01:01:01"))
+//
+//        val sequences = HlaSequenceFile.readFile(inputFilename).specificProteins();
+//        val sequenceLoci = HlaSequenceLoci.create(sequences)//.filter { it.allele in allowed }
+//        val inserts = sequenceLoci.filter { it.containsInserts() }
+//        val deletes = sequenceLoci.filter { it.containsDeletes() }
+//        val both = sequenceLoci.filter { it.containsDeletes() && it.containsInserts() }
+//
+//        HlaSequenceLociFile.write(outputFilename, sequenceLoci)
+//    }
 
 
     override fun close() {
@@ -298,7 +338,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val c = confirmedGroups.filter { it.gene == "C" }
         val map = mapOf(Pair("A", a), Pair("B", b), Pair("C", c))
 
-        return this.filter { map[it.gene]!!.size < 2 || map[it.gene]!!.contains(it.alleleGroup()) }
+        return this.filter { map[it.gene]!!.size < 2 || map[it.gene]!!.contains(it.asAlleleGroup()) }
 
     }
 

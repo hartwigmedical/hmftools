@@ -2,7 +2,7 @@ package com.hartwig.hmftools.lilac.hla
 
 import org.apache.logging.log4j.util.Strings
 
-data class HlaAllele(val gene: String, val alleleGroup: String, val protein: String, val remainder: String) : Comparable<HlaAllele> {
+data class HlaAllele(val gene: String, val alleleGroup: String, val protein: String, val synonymous: String, val synonymousNonCoding: String) : Comparable<HlaAllele> {
 
     companion object {
         operator fun invoke(contig: String): HlaAllele {
@@ -11,30 +11,39 @@ data class HlaAllele(val gene: String, val alleleGroup: String, val protein: Str
             val contigRemainder = contig.substring(starIndex + 1)
             val contigSplit = contigRemainder.split(":")
             val alleleGroup = contigSplit[0]
-            val protein = if (contigSplit.size == 1) Strings.EMPTY else contigSplit[1]
-            val finalRemainder = if (contigSplit.size == 1) Strings.EMPTY else  contigRemainder.substring(alleleGroup.length + protein.length + 1)
-            return HlaAllele(gene, alleleGroup, protein, finalRemainder)
+            val protein = if (contigSplit.size < 2) Strings.EMPTY else contigSplit[1]
+            val synonymousCoding = if (contigSplit.size < 3) Strings.EMPTY else contigSplit[2]
+            val synonymousNonCoding = if (contigSplit.size < 4) Strings.EMPTY else contigSplit[3]
+            return HlaAllele(gene, alleleGroup, protein, synonymousCoding, synonymousNonCoding)
         }
     }
 
     override fun toString(): String {
-        return "${fourDigitName()}$remainder"
+        if (protein.isEmpty()) {
+            return "$gene*$alleleGroup"
+        }
+
+        if (synonymous.isEmpty()) {
+            return "$gene*$alleleGroup:$protein"
+        }
+
+        if (synonymousNonCoding.isEmpty()) {
+            return "$gene*$alleleGroup:$protein:$synonymous"
+        }
+
+        return "$gene*$alleleGroup:$protein:$synonymous:$synonymousNonCoding"
     }
 
-    fun alleleGroupName(): String {
-        return "$gene*$alleleGroup"
+    fun asSixDigit(): HlaAllele {
+        return HlaAllele(gene, alleleGroup, protein, synonymous, Strings.EMPTY)
     }
 
-    fun fourDigitName(): String {
-        return if (protein.isEmpty()) alleleGroupName() else "$gene*$alleleGroup:$protein"
+    fun asFourDigit(): HlaAllele {
+        return HlaAllele(gene, alleleGroup, protein, Strings.EMPTY, Strings.EMPTY)
     }
 
-    fun specificProtein(): HlaAllele {
-        return HlaAllele(gene, alleleGroup, protein, Strings.EMPTY)
-    }
-
-    fun alleleGroup(): HlaAllele {
-        return HlaAllele(gene, alleleGroup, Strings.EMPTY, Strings.EMPTY)
+    fun asAlleleGroup(): HlaAllele {
+        return HlaAllele(gene, alleleGroup, Strings.EMPTY, Strings.EMPTY, Strings.EMPTY)
     }
 
     override fun compareTo(other: HlaAllele): Int {
@@ -53,6 +62,11 @@ data class HlaAllele(val gene: String, val alleleGroup: String, val protein: Str
             return proteinCompare
         }
 
-        return remainder.compareTo(other.remainder)
+        val synonymousCodingCompare = synonymous.compareTo(other.synonymous)
+        if (synonymousCodingCompare != 0) {
+            return synonymousCodingCompare
+        }
+
+        return synonymousNonCoding.compareTo(other.synonymousNonCoding)
     }
 }

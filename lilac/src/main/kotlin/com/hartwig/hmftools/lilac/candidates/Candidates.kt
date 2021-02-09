@@ -6,19 +6,19 @@ import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.hla.HlaContext
-import com.hartwig.hmftools.lilac.nuc.NucleotideFiltering
 import com.hartwig.hmftools.lilac.seq.HlaSequence
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 import org.apache.logging.log4j.LogManager
 
 class Candidates(private val config: LilacConfig,
-                 private val nucleotideSequences: List<HlaSequence>,
-                 private val aminoAcidSequences: List<HlaSequence>) {
+                 private val nucleotideSequences: List<HlaSequenceLoci>,
+                 private val aminoAcidSequences: List<HlaSequenceLoci>) {
 
     companion object {
         val logger = LogManager.getLogger(this::class.java)
     }
 
-    fun candidates(context: HlaContext, fragments: List<AminoAcidFragment>, phasedEvidence: List<PhasedEvidence>): List<HlaSequence> {
+    fun candidates(context: HlaContext, fragments: List<AminoAcidFragment>, phasedEvidence: List<PhasedEvidence>): List<HlaSequenceLoci> {
         val gene = context.gene
         val aminoAcidBoundary = context.aminoAcidBoundaries
         val expectedAlleles = context.expectedAlleles
@@ -33,21 +33,21 @@ class Candidates(private val config: LilacConfig,
         logger.info(" ... ${geneCandidates.size} candidates before filtering")
 
         // Amino acid filtering
-        val aminoAcidCandidates = aminoAcidCandidates(aminoAcidBoundary, aminoAcidCounts, geneCandidates)
+        val aminoAcidFilter = AminoAcidFiltering(aminoAcidBoundary)
+        val aminoAcidCandidates = aminoAcidFilter.aminoAcidCandidates(geneCandidates, aminoAcidCounts)
         val aminoAcidCandidateAlleles = aminoAcidCandidates.map { it.allele }.toSet()
-        val aminoAcidSpecificAllelesCandidate = aminoAcidCandidateAlleles.map { it.specificProtein() }.toSet()
-
+        val aminoAcidSpecificAllelesCandidate = aminoAcidCandidateAlleles.map { it.asFourDigit() }.toSet()
         logger.info(" ... ${aminoAcidCandidates.size} candidates after amino acid filtering")
 
         // Nucleotide filtering
         val nucleotideFiltering = NucleotideFiltering(config.minEvidence, aminoAcidBoundary)
         val nucleotideCandidatesAfterAminoAcidFiltering = nucleotideSequences
-                .filter { it.allele.specificProtein() in aminoAcidSpecificAllelesCandidate }
+                .filter { it.allele.asFourDigit() in aminoAcidSpecificAllelesCandidate }
         val nucleotideSpecificAllelesCandidate = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(nucleotideCandidatesAfterAminoAcidFiltering, fragments)
-                .map { it.allele.specificProtein() }
+                .map { it.allele.asFourDigit() }
                 .toSet()
 
-        val nucleotideCandidates = aminoAcidCandidates.filter { it.allele.specificProtein() in nucleotideSpecificAllelesCandidate }
+        val nucleotideCandidates = aminoAcidCandidates.filter { it.allele.asFourDigit() in nucleotideSpecificAllelesCandidate }
         logger.info(" ... ${nucleotideCandidates.size} candidates after exon boundary filtering")
 
         val phasedCandidates = filterCandidates(nucleotideCandidates, phasedEvidence)
@@ -55,6 +55,16 @@ class Candidates(private val config: LilacConfig,
 
         return phasedCandidates
 
+    }
+
+    private fun filterCandidates(initialCandidates: List<HlaSequenceLoci>, evidence: List<PhasedEvidence>): List<HlaSequenceLoci> {
+        var candidates = initialCandidates
+        for (i in evidence.indices) {
+            val newEvidence = evidence[i]
+            candidates = candidates.filter { it.consistentWithAny(newEvidence.evidence.keys, *newEvidence.aminoAcidIndices) }
+        }
+
+        return candidates
     }
 
     private fun checkCandidates(candidates: Collection<HlaSequence>): Int {
@@ -110,33 +120,7 @@ class Candidates(private val config: LilacConfig,
     }
 
 
-    private fun aminoAcidCandidates(boundaries: Set<Int>, aminoAcidCount: SequenceCount, candidates: List<HlaSequence>): List<HlaSequence> {
-        var result = candidates
-//        val locations = (0 until aminoAcidCount.length).filter { aminoAcidCount.depth(it) >= 12 }
-        val locations = (0 until aminoAcidCount.length).toSet() subtract boundaries
-        for (location in locations) {
-            result = filterCandidates(location, aminoAcidCount.sequenceAt(location), result)
-        }
-        return result
-    }
 
-    private fun filterCandidates(index: Int, expectedCharacters: Collection<Char>, candidates: Collection<HlaSequence>): List<HlaSequence> {
-        return candidates.filter { it.length <= index || it.sequence[index] == '*' || it.sequence[index] in expectedCharacters }
-    }
-
-    private fun filterCandidates(initialCandidates: List<HlaSequence>, evidence: List<PhasedEvidence>): List<HlaSequence> {
-        var candidates = initialCandidates
-        for (i in evidence.indices) {
-            val newEvidence = evidence[i]
-            candidates = matchingCandidates(newEvidence, candidates)
-        }
-
-        return candidates
-    }
-
-    private fun matchingCandidates(evidence: PhasedEvidence, candidates: Collection<HlaSequence>): List<HlaSequence> {
-        return candidates.filter { it.consistentWith(evidence) }
-    }
 
 
 }

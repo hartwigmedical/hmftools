@@ -7,13 +7,13 @@ import java.util.function.Function;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.samtools.CigarHandler;
+import com.hartwig.hmftools.common.samtools.CigarTraversal;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextFactory;
 import com.hartwig.hmftools.sage.ref.RefSequence;
-import com.hartwig.hmftools.sage.sam.CigarHandler;
-import com.hartwig.hmftools.sage.sam.CigarTraversal;
 import com.hartwig.hmftools.sage.samtools.NumberEvents;
 
 import org.apache.commons.compress.utils.Lists;

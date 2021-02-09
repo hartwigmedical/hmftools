@@ -4,9 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
-import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
-import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
+import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,7 +17,8 @@ import org.jooq.conf.RenderMapping;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 
-public class CkbDAO {
+public final class CkbDAO {
+
     private static final Logger LOGGER = LogManager.getLogger(CkbDAO.class);
 
     private static final String DEV_CATALOG = "ckb_test";
@@ -28,10 +27,9 @@ public class CkbDAO {
     private final DSLContext context;
 
     @NotNull
-    public static CkbDAO connectToCkbDAO(@NotNull final String userName, @NotNull final String password, @NotNull final String url)
-            throws SQLException {
-        final Connection conn = DriverManager.getConnection(url, userName, password);
-        final String catalog = conn.getCatalog();
+    public static CkbDAO connectToCkbDAO(@NotNull String userName, @NotNull String password, @NotNull String url) throws SQLException {
+        Connection conn = DriverManager.getConnection(url, userName, password);
+        String catalog = conn.getCatalog();
         LOGGER.info("Connecting to database CKB {}", catalog);
 
         return new CkbDAO(DSL.using(conn, SQLDialect.MYSQL, settings(catalog)));
@@ -55,7 +53,7 @@ public class CkbDAO {
 
     }
 
-    public void writeCkb(@NotNull CkbEntry ckbEntry) {
+    public void writeCkb(@NotNull CkbJsonDatabase ckbEntry) {
 
     }
 

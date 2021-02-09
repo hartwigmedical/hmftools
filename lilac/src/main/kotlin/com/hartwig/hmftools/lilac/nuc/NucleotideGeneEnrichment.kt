@@ -13,7 +13,15 @@ class NucleotideGeneEnrichment(aBoundaries: Set<Int>, bBoundaries: Set<Int>, cBo
         return fragments.map { it.enrichGenes() }
     }
 
-    private fun NucleotideFragment.enrichGenes(): NucleotideFragment {
+    fun enrich(fragment: NucleotideFragment): NucleotideFragment {
+        return fragment.enrichGenes()
+    }
+
+    fun NucleotideFragment.enrichGenes(): NucleotideFragment {
+        if (this.containsIndel()) {
+            return this
+        }
+
         val genes = mutableSetOf<String>()
         if (this.matchToA()) {
             genes.add("HLA-A")

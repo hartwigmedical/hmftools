@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -14,7 +14,7 @@ public class DateConverterTest {
     public void canConvertString() throws ParseException {
         String date = "10/02/2020";
         SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
-        assertEquals(date, format.format(DateConverter.convertDate(date)));
+        assertEquals(date, format.format(DateConverter.toDate(date)));
     }
 
 }

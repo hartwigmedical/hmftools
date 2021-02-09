@@ -29,7 +29,7 @@ public class CodonsTest {
     @Test
     public void testAminoAcidToCodon() {
         assertEquals("TAT", Codons.codon('Y'));
-        assertEquals("TAT", Codons.codon("Y"));
-        assertEquals("TATTGA", Codons.codon("YX"));
+        assertEquals("TAT", Codons.codons("Y"));
+        assertEquals("TATTGA", Codons.codons("YX"));
     }
 }

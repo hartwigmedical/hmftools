@@ -2,8 +2,8 @@ package com.hartwig.hmftools.lilac.amino
 
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 
-class AminoAcidFragment(id: String, genes: Set<String>, nucleotideLoci: List<Int>, nucleotideQuality: List<Int>, nucleotides: List<Char>,
-                        private val aminoAcidLoci: List<Int>, private val aminoAcids: List<Char>) : NucleotideFragment(id, genes, nucleotideLoci, nucleotideQuality, nucleotides) {
+class AminoAcidFragment(id: String, genes: Set<String>, nucleotideLoci: List<Int>, nucleotideQuality: List<Int>, nucleotides: List<String>,
+                        private val aminoAcidLoci: List<Int>, private val aminoAcids: List<String>) : NucleotideFragment(id, genes, nucleotideLoci, nucleotideQuality, nucleotides) {
 
     fun containsAny(indices: Collection<Int>): Boolean {
         return indices.any { this.containsAminoAcid(it)}
@@ -17,8 +17,12 @@ class AminoAcidFragment(id: String, genes: Set<String>, nucleotideLoci: List<Int
         return aminoAcidLoci.contains(index)
     }
 
-    fun aminoAcid(loci: Int): Char {
+    fun aminoAcid(loci: Int): String {
         return aminoAcids[aminoAcidLoci.indexOf(loci)]
+    }
+
+    fun aminoAcids(vararg indices: Int): String {
+        return indices.joinToString("") { aminoAcid(it) }
     }
 
     fun aminoAcidIndices(): List<Int> = aminoAcidLoci

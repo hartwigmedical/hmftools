@@ -17,7 +17,7 @@ class NucleotideQualEnrichment(private val minBaseQuality: Int, private val minE
     private fun enrich(fragment: NucleotideFragment, count: SequenceCount): NucleotideFragment {
         val nucleotideLoci = mutableListOf<Int>()
         val nucleotideQuality = mutableListOf<Int>()
-        val nucleotides = mutableListOf<Char>()
+        val nucleotides = mutableListOf<String>()
 
         for (i in fragment.nucleotideLoci().indices) {
             val loci = fragment.nucleotideLoci()[i]

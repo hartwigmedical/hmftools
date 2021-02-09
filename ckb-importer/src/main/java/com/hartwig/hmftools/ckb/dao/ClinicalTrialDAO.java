@@ -1,27 +1,5 @@
 package com.hartwig.hmftools.ckb.dao;
 
-import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
-import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialContact;
-import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialLocation;
-import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialVariantRequirementDetail;
-import com.hartwig.hmftools.ckb.datamodel.common.IndicationInfo;
-import com.hartwig.hmftools.ckb.datamodel.common.MolecularProfileInfo;
-import com.hartwig.hmftools.ckb.datamodel.common.TherapyInfo;
-
-import static com.hartwig.hmftools.ckb.database.Tables.CLINICALTRIAL;
-import static com.hartwig.hmftools.ckb.database.Tables.CLINICALTRIALAGEGROUP;
-import static com.hartwig.hmftools.ckb.database.Tables.CLINICALTRIALCONTACT;
-import static com.hartwig.hmftools.ckb.database.Tables.CLINICALTRIALINDICATION;
-import static com.hartwig.hmftools.ckb.database.Tables.CLINICALTRIALLOCATION;
-import static com.hartwig.hmftools.ckb.database.Tables.CLINICALTRIALTHERAPY;
-import static com.hartwig.hmftools.ckb.database.Tables.CLINICALTRIALVARIANTREQUIREMENTDETAIL;
-import static com.hartwig.hmftools.ckb.database.Tables.CLINICALTRIALVARIANTREQUIREMENTDETAILMOLECULARPROFILE;
-
-import java.util.List;
-
-import org.jetbrains.annotations.NotNull;
-import org.jooq.DSLContext;
-
 public class ClinicalTrialDAO {
 
     private ClinicalTrialDAO() {

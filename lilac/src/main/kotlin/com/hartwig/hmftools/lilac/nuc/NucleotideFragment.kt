@@ -9,9 +9,23 @@ open class NucleotideFragment(
         val genes: Set<String>,
         protected val nucleotideLoci: List<Int>,
         protected val nucleotideQuality: List<Int>,
-        protected val nucleotides: List<Char>) {
+        protected val nucleotides: List<String>) {
 
     companion object {
+
+        fun merge(o1: NucleotideFragment, o2: NucleotideFragment): NucleotideFragment {
+            require(o1.id == o2.id)
+            val jonjon = o1.nucleotideLoci intersect o2.nucleotideLoci
+//            if (jonjon.isNotEmpty()) {
+//                println("S")
+//            }
+
+//            require(().isEmpty())
+
+            val genes = o1.genes union o2.genes
+            return NucleotideFragment(o1.id, genes, o1.nucleotideLoci + o2.nucleotideLoci, o1.nucleotideQuality + o2.nucleotideQuality, o1.nucleotides + o2.nucleotides)
+        }
+
 
         fun fromReads(minBaseQual: Int, reads: List<SAMRecordRead>): List<NucleotideFragment> {
             return reads.groupBy { it.samRecord.readName }.map { fromReadPairs(minBaseQual, it.value) }
@@ -51,9 +65,10 @@ open class NucleotideFragment(
                 genes.add(reads[1].gene)
             }
 
-            return NucleotideFragment(id, genes, nucleotideIndices, nucleotideQuality, nucleotides)
+            return NucleotideFragment(id, genes, nucleotideIndices, nucleotideQuality, nucleotides.map { it.toString() })
         }
     }
+
 
     fun isEmpty(): Boolean {
         return nucleotideLoci.isEmpty()
@@ -61,6 +76,10 @@ open class NucleotideFragment(
 
     fun isNotEmpty(): Boolean {
         return !isEmpty()
+    }
+
+    fun containsIndel(): Boolean {
+        return nucleotides.any { it == "." || it.length > 1 }
     }
 
     fun containsNucleotide(index: Int): Boolean {
@@ -72,14 +91,14 @@ open class NucleotideFragment(
     }
 
     fun nucleotides(vararg indices: Int): String {
-        return indices.map { nucleotide(it) }.joinToString("")
+        return indices.joinToString("") { nucleotide(it) }
     }
 
-    fun nucleotide(loci: Int): Char {
+    fun nucleotide(loci: Int): String {
         return nucleotides[nucleotideLoci.indexOf(loci)]
     }
 
-    fun nucleotides(): List<Char> = nucleotides
+    fun nucleotides(): List<String> = nucleotides
 
     fun nucleotideLoci(): List<Int> = nucleotideLoci
 
@@ -99,11 +118,11 @@ open class NucleotideFragment(
     }
 
     fun toAminoAcidFragment(): AminoAcidFragment {
-        fun aminoAcid(index: Int): Char {
+        fun aminoAcid(index: Int): String {
             val first = nucleotide(index * 3)
             val second = nucleotide(index * 3 + 1)
             val third = nucleotide(index * 3 + 2)
-            return Codons.aminoAcid(first.toString() + second + third)
+            return Codons.aminoAcids(first + second + third)
         }
 
         val aminoAcidIndices = nucleotideLoci
@@ -111,12 +130,12 @@ open class NucleotideFragment(
                 .filter { nucleotideLoci.contains(it + 1) && nucleotideLoci.contains(it + 2) }
                 .map { it / 3 }
 
-        val aminoAcids = aminoAcidIndices.map { aminoAcid(it) }
+        val aminoAcids = aminoAcidIndices.map { aminoAcid(it) }.map { it }
 
         return AminoAcidFragment(id, genes, nucleotideLoci, nucleotideQuality, nucleotides, aminoAcidIndices, aminoAcids)
     }
 
-    fun enrich(loci: Int, nucleotide: Char, quality: Int): NucleotideFragment {
+    fun enrich(loci: Int, nucleotide: String, quality: Int): NucleotideFragment {
         assert(!containsNucleotide(loci))
         return NucleotideFragment(id, genes, nucleotideLoci + loci, nucleotideQuality + quality, nucleotides + nucleotide)
     }
