@@ -33,12 +33,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class IndicationFactory {
+public final class IndicationFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(IndicationFactory.class);
 
     private IndicationFactory() {
-
     }
 
     @NotNull

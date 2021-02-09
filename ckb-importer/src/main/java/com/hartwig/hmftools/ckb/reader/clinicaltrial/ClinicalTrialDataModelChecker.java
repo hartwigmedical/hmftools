@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class ClinicalTrialDataModelChecker {
+final class ClinicalTrialDataModelChecker {
 
     private ClinicalTrialDataModelChecker() {
     }

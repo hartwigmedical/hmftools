@@ -29,12 +29,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class GlobalTherapyApprovalStatusFactory {
+public final class GlobalTherapyApprovalStatusFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(GlobalTherapyApprovalStatusFactory.class);
 
     private GlobalTherapyApprovalStatusFactory() {
-
     }
 
     @NotNull
@@ -127,7 +126,7 @@ public class GlobalTherapyApprovalStatusFactory {
     private static MolecularProfileInfo extractGlobalTherapyApprovalStatusMolecularProfile(
             @NotNull JsonObject jsonObject) {
         JsonDatamodelChecker globalTherapyApprovalStatusMolecularProfileChecker =
-                GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusMolecularprofileObjectChecker();
+                GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusMolecularProfileObjectChecker();
         globalTherapyApprovalStatusMolecularProfileChecker.check(jsonObject);
 
         return ImmutableMolecularProfileInfo.builder()

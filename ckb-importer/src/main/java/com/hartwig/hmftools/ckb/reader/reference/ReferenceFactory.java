@@ -39,7 +39,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class ReferenceFactory {
+public final class ReferenceFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(ReferenceFactory.class);
 
@@ -47,7 +47,7 @@ public class ReferenceFactory {
     }
 
     @NotNull
-    public static List<Reference> readingReference(@NotNull String referenceDir) throws IOException {
+    public static List<Reference> readReferences(@NotNull String referenceDir) throws IOException {
         LOGGER.info("Start reading reference dir");
 
         List<Reference> references = Lists.newArrayList();
@@ -268,5 +268,4 @@ public class ReferenceFactory {
         }
         return referenceVariants;
     }
-
 }

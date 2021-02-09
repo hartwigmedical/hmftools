@@ -78,7 +78,7 @@ public class DrugFactory {
                             .drugClass(extractDrugsClasses(drugsEntryObject.getAsJsonArray("drugClasses")))
                             .casRegistryNum(JsonFunctions.nullableString(drugsEntryObject, "casRegistryNum"))
                             .nctId(JsonFunctions.nullableString(drugsEntryObject, "ncitId"))
-                            .createDate(DateConverter.convertDate(JsonFunctions.string(drugsEntryObject, "createDate")))
+                            .createDate(DateConverter.toDate(JsonFunctions.string(drugsEntryObject, "createDate")))
                             .clinicalTrial(extractCliniclaTrials(drugsEntryObject.getAsJsonArray("clinicalTrials")))
                             .evidence(extractEvidence(drugsEntryObject.getAsJsonArray("evidence")))
                             .therapy(extractTherapies(drugsEntryObject.getAsJsonArray("therapies")))

@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class DrugDataModelChecker {
+final class DrugDataModelChecker {
 
     private DrugDataModelChecker() {
     }
@@ -58,7 +58,6 @@ public final class DrugDataModelChecker {
         map.put("year", true);
 
         return new JsonDatamodelChecker("DrugReferenceObject", map);
-
     }
 
     @NotNull
@@ -201,5 +200,4 @@ public final class DrugDataModelChecker {
 
         return new JsonDatamodelChecker("DrugGlobalApprovalStatusMolecularProfileObject", map);
     }
-
 }

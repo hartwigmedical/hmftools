@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CkbEntry {
+public abstract class CkbJsonDatabase {
 
     @NotNull
     public abstract List<ClinicalTrial> clinicalTrial();

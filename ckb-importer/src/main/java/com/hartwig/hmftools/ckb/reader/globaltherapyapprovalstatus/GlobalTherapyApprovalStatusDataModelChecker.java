@@ -7,10 +7,9 @@ import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
 
 import org.jetbrains.annotations.NotNull;
 
-public class GlobalTherapyApprovalStatusDataModelChecker {
+final class GlobalTherapyApprovalStatusDataModelChecker {
 
     private GlobalTherapyApprovalStatusDataModelChecker() {
-
     }
 
     @NotNull
@@ -56,13 +55,12 @@ public class GlobalTherapyApprovalStatusDataModelChecker {
     }
 
     @NotNull
-    public static JsonDatamodelChecker globalTherapyApprovalStatusMolecularprofileObjectChecker() {
+    public static JsonDatamodelChecker globalTherapyApprovalStatusMolecularProfileObjectChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("id", true);
         map.put("profileName", true);
-        map.put("profileTreatmentApproache", false); //check if needed
+        map.put("profileTreatmentApproach", false); //check if needed
 
         return new JsonDatamodelChecker("GlobalTherapyApprovalStatusMolecularProfileObject", map);
     }
-
 }

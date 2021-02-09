@@ -41,20 +41,19 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class MolecularprofileFactory {
+public class MolecularProfileFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(MolecularprofileFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(MolecularProfileFactory.class);
 
-    private MolecularprofileFactory() {
-
+    private MolecularProfileFactory() {
     }
 
     @NotNull
-    public static List<MolecularProfile> readingMolecularprofile(@NotNull String molecularprofileDir) throws IOException, ParseException {
+    public static List<MolecularProfile> readMolecularProfiles(@NotNull String molecularProfileDir) throws IOException, ParseException {
         LOGGER.info("Start reading molecular profile dir");
 
         List<MolecularProfile> molecularProfiles = Lists.newArrayList();
-        File[] filesMolecularProfiles = new File(molecularprofileDir).listFiles();
+        File[] filesMolecularProfiles = new File(molecularProfileDir).listFiles();
 
         if (filesMolecularProfiles != null) {
             LOGGER.info("The total files in the molecular profiles dir is {}", filesMolecularProfiles.length);
@@ -75,8 +74,8 @@ public class MolecularprofileFactory {
                             .geneVariant(extractGeneVariant(molecularProfileEntryObject.getAsJsonArray("geneVariants")))
                             .treatmentApproach(extractProfileTreatmentApproach(molecularProfileEntryObject.getAsJsonArray(
                                     "profileTreatmentApproaches")))
-                            .createDate(DateConverter.convertDate(JsonFunctions.string(molecularProfileEntryObject, "createDate")))
-                            .updateDate(DateConverter.convertDate(JsonFunctions.string(molecularProfileEntryObject, "updateDate")))
+                            .createDate(DateConverter.toDate(JsonFunctions.string(molecularProfileEntryObject, "createDate")))
+                            .updateDate(DateConverter.toDate(JsonFunctions.string(molecularProfileEntryObject, "updateDate")))
                             .complexMolecularProfileEvidence(extractComplexMolecularProfileEvidence(molecularProfileEntryObject.getAsJsonObject(
                                     "complexMolecularProfileEvidence")))
                             .treatmentApproachEvidence(extractTreatmentApproachEvidence(molecularProfileEntryObject.getAsJsonObject(

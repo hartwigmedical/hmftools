@@ -54,7 +54,6 @@ public class VariantFactory {
     private static final Logger LOGGER = LogManager.getLogger(VariantFactory.class);
 
     private VariantFactory() {
-
     }
 
     @NotNull
@@ -86,8 +85,8 @@ public class VariantFactory {
                             .type(JsonFunctions.nullableString(variantEntryObject, "type"))
                             .gene(extractGene(variantEntryObject.getAsJsonObject("gene")))
                             .variant(JsonFunctions.string(variantEntryObject, "variant"))
-                            .createDate(DateConverter.convertDate(JsonFunctions.string(variantEntryObject, "createDate")))
-                            .updateDate(DateConverter.convertDate(JsonFunctions.string(variantEntryObject, "updateDate")))
+                            .createDate(DateConverter.toDate(JsonFunctions.string(variantEntryObject, "createDate")))
+                            .updateDate(DateConverter.toDate(JsonFunctions.string(variantEntryObject, "updateDate")))
                             .referenceTranscriptCoordinate(
                                     variantEntryObject.has("referenceTranscriptCoordinates") && !variantEntryObject.get(
                                             "referenceTranscriptCoordinates").isJsonNull() ? extractReferenceTranscriptCoordinate(

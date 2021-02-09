@@ -41,16 +41,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class TherapyFactory {
+public final class TherapyFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(TherapyFactory.class);
 
     private TherapyFactory() {
-
     }
 
     @NotNull
-    public static List<Therapy> readingTherapy(@NotNull String therapyDir) throws IOException, ParseException {
+    public static List<Therapy> readTherapies(@NotNull String therapyDir) throws IOException, ParseException {
         LOGGER.info("Start reading therapy dir");
 
         List<Therapy> therapies = Lists.newArrayList();
@@ -74,8 +73,8 @@ public class TherapyFactory {
                             .therapyName(JsonFunctions.string(therapyEntryObject, "therapyName"))
                             .synonyms(JsonFunctions.nullableString(therapyEntryObject, "synonyms"))
                             .description(extractDescription(therapyEntryObject.getAsJsonArray("therapyDescriptions")))
-                            .createDate(DateConverter.convertDate(JsonFunctions.string(therapyEntryObject, "createDate")))
-                            .updateDate(DateConverter.convertDate(JsonFunctions.nullableString(therapyEntryObject, "updateDate")))
+                            .createDate(DateConverter.toDate(JsonFunctions.string(therapyEntryObject, "createDate")))
+                            .updateDate(DateConverter.toDate(JsonFunctions.nullableString(therapyEntryObject, "updateDate")))
                             .evidence(extractEvidence(therapyEntryObject.getAsJsonArray("evidence")))
                             .clinicalTrial(extractClinicalTrial(therapyEntryObject.getAsJsonArray("clinicalTrials")))
                             .drug(extractDrug(therapyEntryObject.getAsJsonArray("drugs")))

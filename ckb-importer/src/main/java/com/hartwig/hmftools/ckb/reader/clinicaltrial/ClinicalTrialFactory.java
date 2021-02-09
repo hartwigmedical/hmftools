@@ -13,7 +13,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialContact;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialLocation;
@@ -73,7 +72,7 @@ public class ClinicalTrialFactory {
                             .gender(JsonFunctions.optionalNullableString(clinicalTrialsEntryObject, "gender"))
                             .variantRequirement(JsonFunctions.string(clinicalTrialsEntryObject, "variantRequirements"))
                             .sponsors(JsonFunctions.optionalNullableString(clinicalTrialsEntryObject, "sponsors"))
-                            .updateDate(DateConverter.convertDate(JsonFunctions.string(clinicalTrialsEntryObject, "updateDate")))
+                            .updateDate(DateConverter.toDate(JsonFunctions.string(clinicalTrialsEntryObject, "updateDate")))
                             .indication(extractClinicalTrialsIndications(clinicalTrialsEntryObject.getAsJsonArray("indications")))
                             .variantRequirementDetail(extractClinicalTrialsVariantRequirementDetails(clinicalTrialsEntryObject.getAsJsonArray(
                                     "variantRequirementDetails")))

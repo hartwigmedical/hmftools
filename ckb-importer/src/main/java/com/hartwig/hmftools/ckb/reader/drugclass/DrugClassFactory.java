@@ -57,7 +57,7 @@ public class DrugClassFactory {
                     drugClasses.add(ImmutableDrugClass.builder()
                             .id(JsonFunctions.integer(drugClassEntryObject, "id"))
                             .drugClass(JsonFunctions.string(drugClassEntryObject, "drugClass"))
-                            .createDate(DateConverter.convertDate(JsonFunctions.string(drugClassEntryObject, "createDate")))
+                            .createDate(DateConverter.toDate(JsonFunctions.string(drugClassEntryObject, "createDate")))
                             .drug(extractDrugs(drugClassEntryObject.getAsJsonArray("drugs")))
                             .treatmentApproach(extractTreatmentApproaches(drugClassEntryObject.getAsJsonArray("treatmentApproaches")))
                             .build());

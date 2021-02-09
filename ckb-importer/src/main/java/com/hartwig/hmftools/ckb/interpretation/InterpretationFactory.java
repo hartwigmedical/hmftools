@@ -3,7 +3,7 @@ package com.hartwig.hmftools.ckb.interpretation;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
+import com.hartwig.hmftools.ckb.datamodel.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.datamodel.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.datamodel.common.VariantInfo;
@@ -30,7 +30,7 @@ public class InterpretationFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(InterpretationFactory.class);
 
-    public static List<CkbEntryInterpretation> interpretationCkbDataModel(@NotNull CkbEntry ckbEntry) {
+    public static List<CkbEntryInterpretation> interpretationCkbDataModel(@NotNull CkbJsonDatabase ckbEntry) {
         List<CkbEntryInterpretation> CkbEntryInterpretation = Lists.newArrayList();
         for (MolecularProfile molecularProfile : ckbEntry.molecularProfile()) {
             ImmutableCkbEntryInterpretation.Builder outputBuilder = ImmutableCkbEntryInterpretation.builder();
@@ -60,7 +60,7 @@ public class InterpretationFactory {
     }
 
     @NotNull
-    public static VariantInterpretation extractVariantTree(@NotNull Variant variant, @NotNull CkbEntry ckbEntry) {
+    public static VariantInterpretation extractVariantTree(@NotNull Variant variant, @NotNull CkbJsonDatabase ckbEntry) {
         ImmutableVariantInterpretation.Builder outputBuilder = ImmutableVariantInterpretation.builder();
         outputBuilder.variant(variant);
         for (DescriptionInfo descriptionInfo : variant.description()) {
@@ -76,7 +76,7 @@ public class InterpretationFactory {
     }
 
     @NotNull
-    public static GeneInterpretation extractGeneTree(@NotNull Gene gene, @NotNull CkbEntry ckbEntry) {
+    public static GeneInterpretation extractGeneTree(@NotNull Gene gene, @NotNull CkbJsonDatabase ckbEntry) {
         ImmutableGeneInterpretation.Builder outputBuilder = ImmutableGeneInterpretation.builder();
         outputBuilder.gene(gene);
         for (DescriptionInfo descriptionInfo : gene.description()) {
@@ -92,7 +92,7 @@ public class InterpretationFactory {
     }
 
     @NotNull
-    private static List<VariantTreeInterpretation> matchVariantTreeInterpretation(@NotNull CkbEntry ckbEntry, int variantId,
+    private static List<VariantTreeInterpretation> matchVariantTreeInterpretation(@NotNull CkbJsonDatabase ckbEntry, int variantId,
             @NotNull List<VariantTreeInterpretation> variantInterpretationList) {
         ImmutableVariantTreeInterpretation.Builder outputBuilder = ImmutableVariantTreeInterpretation.builder();
         for (Variant variant : ckbEntry.variant()) {
