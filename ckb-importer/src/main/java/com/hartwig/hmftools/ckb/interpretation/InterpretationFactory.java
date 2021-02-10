@@ -208,29 +208,29 @@ public class InterpretationFactory {
     private static List<ClinicalTrialVariantRequirementDetail> extractProfileName(
             @NotNull List<com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail> molecularProfiles,
             @NotNull MolecularProfile molecularProfileDir, @NotNull CkbJsonDatabase ckbEntry) {
-        ImmutableVariant.Builder outputBuilderVariant = ImmutableVariant.builder();
-        ImmutableGene.Builder outputBuilderGene = ImmutableGene.builder();
+
 
         List<ClinicalTrialVariantRequirementDetail> molecularProfileClinicalTrials = Lists.newArrayList();
         for (com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail molecularProfile : molecularProfiles) {
+            ImmutableVariantInterpretation.Builder outputBuilderVariantInterpretation = ImmutableVariantInterpretation.builder();
             if (molecularProfileDir.id() == molecularProfile.molecularProfile().id()) {
                 for (VariantInfo variantInfo : molecularProfileDir.geneVariants()) {
                     for (Variant variant : ckbEntry.variants()) {
                         if (variantInfo.id() == variant.id()) {
-                            outputBuilderVariant.id(variant.id())
+                            outputBuilderVariantInterpretation.variant(ImmutableVariant.builder().id(variant.id())
                                     .fullName(variant.fullName())
                                     .impact(variant.impact())
-                                    .proteinEffect(variant.proteinEffect());
+                                    .proteinEffect(variant.proteinEffect()).build());
 
                             for (Gene gene : ckbEntry.genes()) {
                                 if (variant.gene().id() == gene.id()) {
-                                    outputBuilderGene.id(gene.id())
+                                    outputBuilderVariantInterpretation.gene(ImmutableGene.builder().id(gene.id())
                                             .geneSymbol(gene.geneSymbol())
                                             .terms(gene.terms())
                                             .entrezId(gene.entrezId())
                                             .synonyms(gene.synonyms())
                                             .chromosome(gene.chromosome())
-                                            .mapLocation(gene.mapLocation());
+                                            .mapLocation(gene.mapLocation()).build());
                                 }
                             }
                         }
@@ -242,10 +242,7 @@ public class InterpretationFactory {
                     .id(molecularProfile.molecularProfile().id())
                     .profileName(molecularProfile.molecularProfile().profileName())
                     .requirementType(molecularProfile.requirementType())
-                    .variantInterpretation(ImmutableVariantInterpretation.builder()
-                            .variant(outputBuilderVariant.build())
-                            .gene(outputBuilderGene.build())
-                            .build())
+                    .variantInterpretation(outputBuilderVariantInterpretation.build())
                     .build());
         }
         return molecularProfileClinicalTrials;
