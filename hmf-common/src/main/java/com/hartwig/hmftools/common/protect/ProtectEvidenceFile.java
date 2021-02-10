@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -32,6 +34,17 @@ public final class ProtectEvidenceFile {
         lines.add(header());
         lines.addAll(evidence.stream().map(ProtectEvidenceFile::toLine).collect(Collectors.toList()));
         Files.write(new File(file).toPath(), lines);
+    }
+
+    @NotNull
+    public static List<ProtectEvidence> read(@NotNull String file) throws IOException {
+        List<ProtectEvidence> evidence = Lists.newArrayList();
+        List<String> lines = Files.readAllLines(new File(file).toPath());
+        // Skip header
+        for (String line : lines.subList(1, lines.size())) {
+            evidence.add(fromLine(line));
+        }
+        return evidence;
     }
 
     @NotNull
@@ -70,5 +83,21 @@ public final class ProtectEvidenceFile {
                 .add(sourceJoiner.toString())
                 .add(urlJoiner.toString())
                 .toString();
+    }
+
+    @NotNull
+    private static ProtectEvidence fromLine(@NotNull String line) {
+        String[] values = line.split(FIELD_DELIMITER);
+
+        return ImmutableProtectEvidence.builder().genomicEvent(values[0])
+                .germline(Boolean.parseBoolean(values[1]))
+                .reported(Boolean.parseBoolean(values[2]))
+                .treatment(values[3])
+                .onLabel(Boolean.parseBoolean(values[4]))
+                .level(EvidenceLevel.valueOf(values[5]))
+                .direction(EvidenceDirection.valueOf(values[6]))
+                .sources(Knowledgebase.fromCommaSeparatedSourceString(values[7]))
+                .urls(Lists.newArrayList(values[8].split(SUBFIELD_DELIMITER)))
+                .build();
     }
 }

@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class LoadMetricsData {
 
-    private static final Logger LOGGER = LogManager.getLogger(LoadCanonicalTranscripts.class);
+    private static final Logger LOGGER = LogManager.getLogger(LoadMetricsData.class);
 
     private static final String SAMPLE = "sample";
 
