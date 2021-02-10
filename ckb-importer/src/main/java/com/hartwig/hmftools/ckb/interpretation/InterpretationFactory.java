@@ -14,7 +14,9 @@ import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableC
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialVariantRequirementDetail;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ImmutableReferenceExtend;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ReferenceExtend;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.gene.GeneDescription;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.gene.ImmutableGene;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.gene.ImmutableGeneDescription;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.ImmutableIndication;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapy;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapyDescription;
@@ -255,6 +257,11 @@ public class InterpretationFactory {
                                             .synonyms(gene.synonyms())
                                             .chromosome(gene.chromosome())
                                             .mapLocation(gene.mapLocation())
+                                            .geneDescriptions(extractGeneDescriptions(gene.descriptions(), ckbEntry))
+                                            .canonicalTranscript(gene.canonicalTranscript())
+                                            .geneRole(gene.geneRole())
+                                            .createDate(gene.createDate())
+                                            .updateDate(gene.updateDate())
                                             .build());
                                 }
                             }
@@ -271,6 +278,20 @@ public class InterpretationFactory {
                     .build());
         }
         return molecularProfileClinicalTrials;
+    }
+
+    @NotNull
+    private static List<GeneDescription> extractGeneDescriptions(@NotNull List<DescriptionInfo> descriptionInfos,
+            @NotNull CkbJsonDatabase ckbEntry) {
+        List<GeneDescription> geneDescriptions = Lists.newArrayList();
+
+        for (DescriptionInfo descriptionInfo : descriptionInfos) {
+            geneDescriptions.add(ImmutableGeneDescription.builder()
+                    .description(descriptionInfo.description())
+                    .references(extractReferences(descriptionInfo.references(), ckbEntry))
+                    .build());
+        }
+        return geneDescriptions;
     }
 
     @NotNull

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ckb.datamodelinterpretation.gene;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ReferenceExtend;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ReferenceInfo;
 
 import org.immutables.value.Value;
@@ -16,5 +17,5 @@ public abstract class GeneDescription {
     public abstract String description();
 
     @NotNull
-    public abstract List<ReferenceInfo> references();
+    public abstract List<ReferenceExtend> references();
 }

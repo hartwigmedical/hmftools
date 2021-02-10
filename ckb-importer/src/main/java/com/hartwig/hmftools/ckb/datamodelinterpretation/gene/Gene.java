@@ -31,24 +31,19 @@ public abstract class Gene {
     @Nullable
     public abstract String mapLocation();
 
-//    @NotNull
-//    public abstract List<GeneDescription> geneDescriptions();
-//
-//    @NotNull
-//    public abstract String canonicalTranscript();
-//
-//    @NotNull
-//    public abstract String geneRole();
-//
-//    @NotNull
-//    public abstract Date createDate();
-//
-//    @NotNull
-//    public abstract Date updateDate();
-//
-//    @NotNull
-//    public abstract List<GeneClinicalTrial> geneClinicalTrials();
-//
-//    @NotNull
-//    public abstract List<GeneEvidence> geneEvidences();
+    @NotNull
+    public abstract List<GeneDescription> geneDescriptions();
+
+    @Nullable
+    public abstract String canonicalTranscript();
+
+    @NotNull
+    public abstract String geneRole();
+
+    @Nullable
+    public abstract Date createDate();
+
+    @Nullable
+    public abstract Date updateDate();
+
 }
