@@ -21,6 +21,7 @@ import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.VariantDescripti
 import com.hartwig.hmftools.ckb.interpretation.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
+import com.hartwig.hmftools.ckb.json.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.json.common.VariantInfo;
 import com.hartwig.hmftools.ckb.json.gene.Gene;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
@@ -33,7 +34,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class VariantInterpretationFactory {
 
-    private VariantInterpretationFactory(){
+    private VariantInterpretationFactory() {
 
     }
 
@@ -44,49 +45,8 @@ public class VariantInterpretationFactory {
 
         List<ClinicalTrialVariantRequirementDetail> molecularProfileClinicalTrials = Lists.newArrayList();
         for (com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail molecularProfile : molecularProfiles) {
-            ImmutableVariantInterpretation.Builder outputBuilderVariantInterpretation = ImmutableVariantInterpretation.builder();
-            if (molecularProfileDir.id() == molecularProfile.molecularProfile().id()) {
-                for (VariantInfo variantInfo : molecularProfileDir.geneVariants()) {
-                    for (Variant variant : ckbEntry.variants()) {
-                        if (variantInfo.id() == variant.id()) {
-                            outputBuilderVariantInterpretation.variant(ImmutableVariant.builder()
-                                    .id(variant.id())
-                                    .fullName(variant.fullName())
-                                    .impact(variant.impact())
-                                    .proteinEffect(variant.proteinEffect())
-                                    .variantDescriptions(extractVariantDescriptions(variant.descriptions(), ckbEntry))
-                                    .type(variant.type())
-                                    .variant(variant.variant())
-                                    .createDate(variant.createDate())
-                                    .updateDate(variant.updateDate())
-                                    .referenceTranscriptCoordinate(extractReferenceTranscriptCoordinates(variant.referenceTranscriptCoordinate()))
-                                    .categoryVariantPaths(extractCategoryVariantPaths(variant.categoryVariantPaths()))
-                                    .allTranscriptCoordinated(extractAllTranscriptCoordinates(variant.allTranscriptCoordinates()))
-                                    .memberVariants(extractMemberVariants(variant.memberVariants(), ckbEntry))
-                                    .build());
-
-                            for (Gene gene : ckbEntry.genes()) {
-                                if (variant.gene().id() == gene.id()) {
-                                    outputBuilderVariantInterpretation.gene(ImmutableGene.builder()
-                                            .id(gene.id())
-                                            .geneSymbol(gene.geneSymbol())
-                                            .terms(gene.terms())
-                                            .entrezId(gene.entrezId())
-                                            .synonyms(gene.synonyms())
-                                            .chromosome(gene.chromosome())
-                                            .mapLocation(gene.mapLocation())
-                                            .geneDescriptions(extractGeneDescriptions(gene.descriptions(), ckbEntry))
-                                            .canonicalTranscript(gene.canonicalTranscript())
-                                            .geneRole(gene.geneRole())
-                                            .createDate(gene.createDate())
-                                            .updateDate(gene.updateDate())
-                                            .build());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            ImmutableVariantInterpretation.Builder outputBuilderVariantInterpretation =
+                    extractVariantGeneInfo(ckbEntry, molecularProfileDir, molecularProfile);
             molecularProfileClinicalTrials.add(ImmutableClinicalTrialVariantRequirementDetail.builder()
                     .id(molecularProfile.molecularProfile().id())
                     .profileName(molecularProfile.molecularProfile().profileName())
@@ -96,6 +56,106 @@ public class VariantInterpretationFactory {
 
         }
         return molecularProfileClinicalTrials;
+    }
+
+    @NotNull
+    public static ImmutableVariantInterpretation.Builder extractVariantGeneInfo(@NotNull CkbJsonDatabase ckbEntry,
+            @NotNull MolecularProfile molecularProfileDir,
+            @NotNull com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail molecularProfile) {
+        ImmutableVariantInterpretation.Builder outputBuilderVariantInterpretation = ImmutableVariantInterpretation.builder();
+        if (molecularProfileDir.id() == molecularProfile.molecularProfile().id()) {
+            for (VariantInfo variantInfo : molecularProfileDir.geneVariants()) {
+                for (Variant variant : ckbEntry.variants()) {
+                    if (variantInfo.id() == variant.id()) {
+                        outputBuilderVariantInterpretation.variant(ImmutableVariant.builder()
+                                .id(variant.id())
+                                .fullName(variant.fullName())
+                                .impact(variant.impact())
+                                .proteinEffect(variant.proteinEffect())
+                                .variantDescriptions(extractVariantDescriptions(variant.descriptions(), ckbEntry))
+                                .type(variant.type())
+                                .variant(variant.variant())
+                                .createDate(variant.createDate())
+                                .updateDate(variant.updateDate())
+                                .referenceTranscriptCoordinate(extractReferenceTranscriptCoordinates(variant.referenceTranscriptCoordinate()))
+                                .categoryVariantPaths(extractCategoryVariantPaths(variant.categoryVariantPaths()))
+                                .allTranscriptCoordinated(extractAllTranscriptCoordinates(variant.allTranscriptCoordinates()))
+                                .memberVariants(extractMemberVariants(variant.memberVariants(), ckbEntry))
+                                .build());
+
+                        for (Gene gene : ckbEntry.genes()) {
+                            if (variant.gene().id() == gene.id()) {
+                                outputBuilderVariantInterpretation.gene(ImmutableGene.builder()
+                                        .id(gene.id())
+                                        .geneSymbol(gene.geneSymbol())
+                                        .terms(gene.terms())
+                                        .entrezId(gene.entrezId())
+                                        .synonyms(gene.synonyms())
+                                        .chromosome(gene.chromosome())
+                                        .mapLocation(gene.mapLocation())
+                                        .geneDescriptions(extractGeneDescriptions(gene.descriptions(), ckbEntry))
+                                        .canonicalTranscript(gene.canonicalTranscript())
+                                        .geneRole(gene.geneRole())
+                                        .createDate(gene.createDate())
+                                        .updateDate(gene.updateDate())
+                                        .build());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return outputBuilderVariantInterpretation;
+    }
+
+    @NotNull
+    public static ImmutableVariantInterpretation.Builder extractVariantGeneInfo(@NotNull CkbJsonDatabase ckbEntry,
+            @NotNull MolecularProfile molecularProfileDir,
+            @NotNull MolecularProfileInfo molecularProfile) {
+        ImmutableVariantInterpretation.Builder outputBuilderVariantInterpretation = ImmutableVariantInterpretation.builder();
+        if (molecularProfileDir.id() == molecularProfile.id()) {
+            for (VariantInfo variantInfo : molecularProfileDir.geneVariants()) {
+                for (Variant variant : ckbEntry.variants()) {
+                    if (variantInfo.id() == variant.id()) {
+                        outputBuilderVariantInterpretation.variant(ImmutableVariant.builder()
+                                .id(variant.id())
+                                .fullName(variant.fullName())
+                                .impact(variant.impact())
+                                .proteinEffect(variant.proteinEffect())
+                                .variantDescriptions(extractVariantDescriptions(variant.descriptions(), ckbEntry))
+                                .type(variant.type())
+                                .variant(variant.variant())
+                                .createDate(variant.createDate())
+                                .updateDate(variant.updateDate())
+                                .referenceTranscriptCoordinate(extractReferenceTranscriptCoordinates(variant.referenceTranscriptCoordinate()))
+                                .categoryVariantPaths(extractCategoryVariantPaths(variant.categoryVariantPaths()))
+                                .allTranscriptCoordinated(extractAllTranscriptCoordinates(variant.allTranscriptCoordinates()))
+                                .memberVariants(extractMemberVariants(variant.memberVariants(), ckbEntry))
+                                .build());
+
+                        for (Gene gene : ckbEntry.genes()) {
+                            if (variant.gene().id() == gene.id()) {
+                                outputBuilderVariantInterpretation.gene(ImmutableGene.builder()
+                                        .id(gene.id())
+                                        .geneSymbol(gene.geneSymbol())
+                                        .terms(gene.terms())
+                                        .entrezId(gene.entrezId())
+                                        .synonyms(gene.synonyms())
+                                        .chromosome(gene.chromosome())
+                                        .mapLocation(gene.mapLocation())
+                                        .geneDescriptions(extractGeneDescriptions(gene.descriptions(), ckbEntry))
+                                        .canonicalTranscript(gene.canonicalTranscript())
+                                        .geneRole(gene.geneRole())
+                                        .createDate(gene.createDate())
+                                        .updateDate(gene.updateDate())
+                                        .build());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return outputBuilderVariantInterpretation;
     }
 
     @NotNull
