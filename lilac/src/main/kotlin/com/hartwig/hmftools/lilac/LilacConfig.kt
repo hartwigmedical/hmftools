@@ -90,7 +90,7 @@ data class LilacConfig(
                     3,
                     6,
                     40,
-                    5,
+                    10,
                     1,
                     listOf())
         }
