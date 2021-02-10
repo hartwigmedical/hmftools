@@ -236,6 +236,8 @@ public class InterpretationFactory {
                         }
                     }
                 }
+            } else {
+                LOGGER.warn("Molecular profile ID of clinical trial is not matching with molecular profile file!");
             }
 
             molecularProfileClinicalTrials.add(ImmutableClinicalTrialVariantRequirementDetail.builder()
