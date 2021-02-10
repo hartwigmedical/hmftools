@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.ckb.interpretation.common;
-
-import java.util.List;
+package com.hartwig.hmftools.ckb.interpretation.common.variantinterpretation;
 
 import com.hartwig.hmftools.ckb.datamodelinterpretation.gene.Gene;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.Variant;

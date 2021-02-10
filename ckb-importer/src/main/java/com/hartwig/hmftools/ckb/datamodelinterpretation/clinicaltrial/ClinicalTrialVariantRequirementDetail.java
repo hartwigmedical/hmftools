@@ -2,7 +2,7 @@ package com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial;
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.interpretation.common.VariantInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.common.variantinterpretation.VariantInterpretation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
