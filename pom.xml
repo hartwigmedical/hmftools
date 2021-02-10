@@ -56,7 +56,7 @@
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
 
-        <patient-db.version>3.56</patient-db.version>
+        <patient-db.version>3.57</patient-db.version>
         <id-generator.version>2.6</id-generator.version>
         <sage.version>2.6</sage.version>
         <amber.version>3.5</amber.version>
@@ -79,7 +79,7 @@
         <iclusion-importer.version>1.3</iclusion-importer.version>
         <ckb-importer.version>0.1</ckb-importer.version>
         <serve.version>1.0</serve.version>
-        <protect.version>1.0</protect.version>
+        <protect.version>1.1</protect.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
         <immutables.version>2.4.4</immutables.version>

@@ -20,10 +20,6 @@
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
-            <artifactId>patient-db</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.hartwig</groupId>
             <artifactId>serve</artifactId>
         </dependency>
         <dependency>

@@ -12,8 +12,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class DrugDescription {
 
-    @NotNull
-    public abstract String desription();
+    @Nullable
+    public abstract String description();
 
     @NotNull
     public abstract List<ReferenceExtend> references();

@@ -22,19 +22,19 @@ public abstract class Drug {
     @NotNull
     public abstract List<String> synonyms();
 
-    @NotNull
+    @Nullable
     public abstract String tradeName();
 
     @NotNull
     public abstract List<DrugDescription> drugDescriptions();
 
-    @NotNull
+    @Nullable
     public abstract String casRegistryNum();
 
-    @NotNull
+    @Nullable
     public abstract String ncitId();
 
-    @NotNull
+    @Nullable
     public abstract Date createDate();
 
 }

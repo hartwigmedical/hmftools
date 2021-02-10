@@ -15,10 +15,10 @@ public abstract class MemberVariant {
     @NotNull
     public abstract String fullName();
 
-    @NotNull
+    @Nullable
     public abstract String impact();
 
-    @NotNull
+    @Nullable
     public abstract String proteinEffect();
 
     @NotNull

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.protect;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
@@ -10,7 +9,6 @@ import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
 import com.hartwig.hmftools.serve.util.RefGenomeVersion;
@@ -24,7 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class ProtectApplication implements AutoCloseable {
+public class ProtectApplication  {
 
     private static final Logger LOGGER = LogManager.getLogger(ProtectApplication.class);
     private static final String VERSION = ProtectApplication.class.getPackage().getImplementationVersion();
@@ -35,40 +33,32 @@ public class ProtectApplication implements AutoCloseable {
         LOGGER.info("Running PROTECT v{}", VERSION);
 
         Options options = ProtectConfig.createOptions();
-        DatabaseAccess.addDatabaseCmdLineArgs(options);
 
-        try (ProtectApplication application = new ProtectApplication(options, args)) {
-            application.run();
+        try {
+            new ProtectApplication(options, args).run();
         } catch (ParseException exception) {
             LOGGER.warn(exception);
             new HelpFormatter().printHelp("PROTECT", options);
             System.exit(1);
-        } catch (SQLException exception) {
-            LOGGER.warn(exception);
-            System.exit(1);
         }
+
+        LOGGER.info("Complete");
     }
 
     @NotNull
-    private final DatabaseAccess dbAccess;
-    @NotNull
     private final ProtectConfig protectConfig;
 
-    public ProtectApplication(final Options options, final String... args) throws ParseException, SQLException, IOException {
+    public ProtectApplication(final Options options, final String... args) throws ParseException, IOException {
         CommandLine cmd = new DefaultParser().parse(options, args);
-        this.dbAccess = DatabaseAccess.databaseAccess(cmd);
         this.protectConfig = ProtectConfig.createConfig(cmd);
     }
 
     public void run() throws IOException {
-        List<ProtectEvidence> evidence = protectEvidence(protectConfig);
-
-        LOGGER.info("Writing {} evidence items to database", evidence.size());
-        dbAccess.writeProtectEvidence(protectConfig.tumorSampleId(), evidence);
+        List<ProtectEvidence> evidences = protectEvidence(protectConfig);
 
         String filename = ProtectEvidenceFile.generateFilename(protectConfig.outputDir(), protectConfig.tumorSampleId());
-        LOGGER.info("Writing {} evidence items to file: {}", evidence.size(), filename);
-        ProtectEvidenceFile.write(filename, evidence);
+        LOGGER.info("Writing {} evidence items to file: {}", evidences.size(), filename);
+        ProtectEvidenceFile.write(filename, evidences);
     }
 
     @NotNull
@@ -102,12 +92,5 @@ public class ProtectApplication implements AutoCloseable {
 
         LOGGER.info(" Doids which are considered on-label for patient: '{}'", result);
         return result;
-    }
-
-    @Override
-    public void close() {
-        dbAccess.close();
-
-        LOGGER.info("Complete");
     }
 }
