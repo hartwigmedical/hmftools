@@ -2,8 +2,8 @@ package com.hartwig.hmftools.ckb.datamodelinterpretation;
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.interpretation.ClinicalTrialInterpretation;
-import com.hartwig.hmftools.ckb.interpretation.EvidenceInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.clinicaltrial.ClinicalTrialInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.evidence.EvidenceInterpretation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

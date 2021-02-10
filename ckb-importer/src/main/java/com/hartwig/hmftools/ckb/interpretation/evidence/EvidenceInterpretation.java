@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.interpretation;
+package com.hartwig.hmftools.ckb.interpretation.evidence;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

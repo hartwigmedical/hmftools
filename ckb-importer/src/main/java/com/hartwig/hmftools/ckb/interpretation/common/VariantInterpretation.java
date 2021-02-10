@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.interpretation;
+package com.hartwig.hmftools.ckb.interpretation.common;
 
 import java.util.List;
 

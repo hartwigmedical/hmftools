@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.ckb.interpretation;
 
-import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -37,6 +36,12 @@ import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.ImmutableVariant
 import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.MemberVariant;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.ReferenceTranscriptCoordinate;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.VariantDescription;
+import com.hartwig.hmftools.ckb.interpretation.clinicaltrial.ImmutableClinicalTrialInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.common.DrugsInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.common.ImmutableDrugsInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.common.ImmutableTherapyInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.common.ImmutableVariantInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.common.TherapyInterpretation;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialContact;
@@ -129,7 +134,6 @@ public class InterpretationFactory {
 
                                     outputBuilderClinicalInterpretation.addTherapyInterpretations(extractTherapyInterpretation(therapy,
                                             ckbEntry));
-                                    //                                    outputBuilderClinicalInterpretation.addTherapies();
                                 }
                             }
                         }

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.interpretation;
+package com.hartwig.hmftools.ckb.interpretation.common;
 
 import com.hartwig.hmftools.ckb.datamodelinterpretation.drug.Drug;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.drugclass.DrugClass;
