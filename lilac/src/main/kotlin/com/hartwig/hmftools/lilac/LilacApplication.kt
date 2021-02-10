@@ -176,8 +176,8 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         val candidatesAfterConfirmedGroups = candidateAlleles.filterWithConfirmedGroups(confirmedGroups.map { it.allele })
         val proteinCoverage = coverageFactory.proteinCoverage(candidatesAfterConfirmedGroups)
-        val confirmedProtein = proteinCoverage.alleles.filter { it.uniqueCoverage >= minConfirmedUniqueCoverage }.sortedDescending()
-        val discardedProtein = proteinCoverage.alleles.filter { it.uniqueCoverage in 1 until minConfirmedUniqueCoverage }.sortedDescending()
+        val confirmedProtein = proteinCoverage.confirmUnique()
+        val discardedProtein = proteinCoverage.alleles.filter { it.uniqueCoverage > 0 && it !in confirmedGroups }.sortedDescending()
         logger.info("... found ${confirmedProtein.size} uniquely identifiable proteins: " + confirmedProtein.joinToString(", "))
         if (discardedProtein.isNotEmpty()) {
             logger.info("... discarded ${discardedProtein.size} uniquely identifiable proteins: " + discardedProtein.joinToString(", "))
@@ -188,8 +188,8 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         HlaSequenceLociFile.write("$outputDir/$sample.candidates.deflate.txt", aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries, writtenCandidates)
 
         val complexes = HlaComplex.complexes(
-                confirmedGroups.take(6).map { it.allele },
-                confirmedProtein.take(6).map { it.allele },
+                confirmedGroups.map { it.allele },
+                confirmedProtein.map { it.allele },
                 candidates.map { it.allele })
 
         logger.info("Calculating coverage of ${complexes.size} complexes")
