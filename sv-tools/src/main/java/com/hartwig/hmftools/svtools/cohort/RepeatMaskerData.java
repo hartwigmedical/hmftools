@@ -9,15 +9,29 @@ public class RepeatMaskerData
     public final int RmId;
     public final BaseRegion Region;
     public final byte Strand;
+    public final String ClassFamily;
+    public final String Repeat;
 
     public RepeatMaskerData(final int rmId, final BaseRegion region, final byte strand)
     {
         RmId = rmId;
         Region = region;
         Strand = strand;
+        ClassFamily = "";
+        Repeat = "";
     }
 
-    public String toString() { return String.format("%d: region(%s) strand(%d)", RmId, Region, Strand); }
+    public RepeatMaskerData(final int rmId, final BaseRegion region, final byte strand, final String classFamily, final String repeat)
+    {
+        RmId = rmId;
+        Region = region;
+        Strand = strand;
+        ClassFamily = classFamily;
+        Repeat = repeat;
+    }
+
+    public String toString() { return String.format("%d: region(%s) strand(%d) repeat(%s)",
+            RmId, Region, Strand, Repeat); }
 
     public boolean isProximateElement(final RepeatMaskerData other, final int maxDistance)
     {
@@ -29,5 +43,7 @@ public class RepeatMaskerData
 
         return false;
     }
+
+    public String subRepeat(int length) { return Repeat.length() < length ? Repeat : Repeat.substring(0, length); }
 
 }

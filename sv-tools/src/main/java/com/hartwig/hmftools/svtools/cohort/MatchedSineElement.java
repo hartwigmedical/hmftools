@@ -2,6 +2,8 @@ package com.hartwig.hmftools.svtools.cohort;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -9,34 +11,22 @@ import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 public class MatchedSineElement
 {
-    public final String RmId;
-    public final BaseRegion StartRegion;
-    public final BaseRegion EndRegion;
+    public final RepeatMaskerData RmStart;
+    public final RepeatMaskerData RmEnd;
 
     public final List<SvBreakendData> Breakends;
 
-    public MatchedSineElement(final String rmId, final BaseRegion startRegion, final BaseRegion endRegion)
+    public MatchedSineElement(final RepeatMaskerData rmStart, final RepeatMaskerData rmEnd)
     {
-        RmId = rmId;
-        StartRegion = startRegion;
-        EndRegion = endRegion;
+        RmStart = rmStart;
+        RmEnd = rmEnd;
         Breakends = Lists.newArrayList();
     }
 
-    public boolean isProximatePosition(final int position, final int maxDistance)
+    public String combinedRmId() { return String.format("%s_%s", RmStart.RmId, RmEnd.RmId); }
+
+    public boolean isPositionWithin(final int position)
     {
-        if(abs(StartRegion.start() - position) <= maxDistance)
-            return true;
-
-        if(abs(StartRegion.end() - position) <= maxDistance)
-            return true;
-
-        if(abs(EndRegion.start() - position) <= maxDistance)
-            return true;
-
-        if(abs(EndRegion.end() - position) <= maxDistance)
-            return true;
-
-        return false;
+        return positionWithin(position, RmStart.Region.start(), RmEnd.Region.end());
     }
 }

@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -57,7 +60,7 @@ public class SineBreakendFinder
     private static final String RM_TYPES = "rm_types";
 
     private static final int SINE_ELEMENT_DISTANCE = 1000;
-    private static final int SV_BREAKEND_DISTANCE = 10000;
+    private static final int REPEAT_SUB_LENGTH = 4;
 
     private final String mOutputDir;
 
@@ -65,20 +68,27 @@ public class SineBreakendFinder
     {
         mSampleIds = Lists.newArrayList();
 
-        try
+        if(cmd.hasOption(SAMPLE_ID_FILE))
         {
-            mSampleIds.addAll(Files.readAllLines(new File(cmd.getOptionValue(SAMPLE_ID_FILE)).toPath()).stream()
-                    .filter(x -> !x.equals("SampleId")).collect(Collectors.toList()));
+            try
+            {
+                mSampleIds.addAll(Files.readAllLines(new File(cmd.getOptionValue(SAMPLE_ID_FILE)).toPath()).stream()
+                        .filter(x -> !x.equals("SampleId")).collect(Collectors.toList()));
 
-            LOGGER.info("loaded {} samples from file()", mSampleIds.size(), cmd.getOptionValue(SAMPLE_ID_FILE));
-        }
-        catch (Exception e)
-        {
-            LOGGER.error("failed to load ref genome: {}", e.toString());
+                LOGGER.info("loaded {} samples from file()", mSampleIds.size(), cmd.getOptionValue(SAMPLE_ID_FILE));
+            }
+            catch (Exception e)
+            {
+                LOGGER.error("failed to load ref genome: {}", e.toString());
+            }
         }
 
         mRmTypes = Lists.newArrayList();
-        mRmTypes.addAll(Arrays.stream(cmd.getOptionValue(RM_TYPES).split(";", -1)).map(x -> x).collect(Collectors.toList()));
+
+        if(cmd.hasOption(RM_TYPES))
+        {
+            mRmTypes.addAll(Arrays.stream(cmd.getOptionValue(RM_TYPES).split(";", -1)).map(x -> x).collect(Collectors.toList()));
+        }
 
         LOGGER.info("loaded {} repeat masker types", mRmTypes.size());
 
@@ -132,6 +142,9 @@ public class SineBreakendFinder
 
     private void checkVariant(final String sampleId, final StructuralVariantData svData)
     {
+        if(!(svData.filter().isEmpty() || svData.filter().equals(PASS) || svData.filter().equals(INFERRED)))
+            return;
+
         for(int se = SE_START; se <= SE_END; ++se)
         {
             if(se == SE_END && (svData.type() == SGL || svData.type() == INF))
@@ -148,7 +161,7 @@ public class SineBreakendFinder
 
             for(MatchedSineElement rmElement : rmElements)
             {
-                if(rmElement.isProximatePosition(position, SV_BREAKEND_DISTANCE))
+                if(rmElement.isPositionWithin(position))
                 {
                     rmElement.Breakends.add(new SvBreakendData(sampleId, svData.id(), position, se == SE_START, orient, svData.type()));
                 }
@@ -175,8 +188,9 @@ public class SineBreakendFinder
             int posEndIndex = fieldsIndexMap.get("PosEnd");
             int strandIndex = fieldsIndexMap.get("Strand");
             int repeatIndex = fieldsIndexMap.get("MatchingRepeat");
+            int classIndex = fieldsIndexMap.get("ClassFamily");
 
-            RepeatMaskerData lastRmData = null;
+            Map<String,List<RepeatMaskerData>> rmDataSubTypeMap = Maps.newHashMap();
 
             for(final String line : fileContents)
             {
@@ -184,28 +198,51 @@ public class SineBreakendFinder
 
                 final String matchingRepeat = items[repeatIndex];
 
-                if(!mRmTypes.contains(matchingRepeat))
+                if(!mRmTypes.isEmpty() && !mRmTypes.contains(matchingRepeat))
                     continue;
 
                 int rmId = Integer.parseInt(items[rmIdIndex]);
 
                 final String chromosome = items[chrIndex].replace("chr", "");
 
+                if(!HumanChromosome.contains(chromosome))
+                    continue;
+
                 final int[] positions =
                         new int[] { Integer.parseInt(items[posStartIndex]), Integer.parseInt(items[posEndIndex]) };
 
                 byte strand = items[strandIndex].equals("+") ? POS_ORIENT : NEG_ORIENT;
 
-                RepeatMaskerData rmData = new RepeatMaskerData(rmId, new BaseRegion(chromosome, positions), strand);
+                RepeatMaskerData rmData = new RepeatMaskerData(
+                        rmId, new BaseRegion(chromosome, positions), strand, items[classIndex], matchingRepeat);
 
-                if(lastRmData != null)
+                final String subRepeat = rmData.subRepeat(REPEAT_SUB_LENGTH);
+
+                List<RepeatMaskerData> rmDataList = rmDataSubTypeMap.get(subRepeat);
+
+                if(rmDataList == null)
                 {
-                    if(rmData.isProximateElement(lastRmData, SINE_ELEMENT_DISTANCE) && rmData.Strand != lastRmData.Strand)
-                    {
-                        String combinedId = String.format("%s_%s", lastRmData.RmId, rmData.RmId);
-                        MatchedSineElement matchedRepeat = new MatchedSineElement(combinedId, lastRmData.Region, rmData.Region);
+                    rmDataSubTypeMap.put(subRepeat, Lists.newArrayList(rmData));
+                }
+                else
+                {
+                    rmDataList.add(rmData);
+                }
+            }
 
-                        LOGGER.info("matching RM elements: first({}) second({})", lastRmData, rmData);
+            for(List<RepeatMaskerData> rmDataList : rmDataSubTypeMap.values())
+            {
+                RepeatMaskerData lastRmData = null;
+
+                for(RepeatMaskerData rmData : rmDataList)
+                {
+                    if(lastRmData != null && areMatchingPair(lastRmData, rmData))
+                    {
+                        MatchedSineElement matchedRepeat = new MatchedSineElement(lastRmData, rmData);
+
+                        LOGGER.debug("matching RM elements: first({}) second({})", lastRmData, rmData);
+
+                        final String chromosome = rmData.Region.Chromosome;
 
                         List<MatchedSineElement> matchedElements = mMatchedSineElements.get(chromosome);
 
@@ -219,9 +256,9 @@ public class SineBreakendFinder
                             matchedElements.add(matchedRepeat);
                         }
                     }
-                }
 
-                lastRmData = rmData;
+                    lastRmData = rmData;
+                }
             }
 
             LNX_LOGGER.info("loaded {} repeat-masker items, pairs({}) items from file: {}",
@@ -233,6 +270,23 @@ public class SineBreakendFinder
         }
     }
 
+    private boolean areMatchingPair(final RepeatMaskerData first, final RepeatMaskerData second)
+    {
+        if(!first.Region.Chromosome.equals(second.Region.Chromosome))
+            return false;
+
+        if(first.Strand == second.Strand)
+            return false;
+
+        if(first.Region.end() >= second.Region.start())
+            return false;
+
+        if(!first.isProximateElement(second, SINE_ELEMENT_DISTANCE))
+            return false;
+
+        return true;
+    }
+
     private void writeResults()
     {
         try
@@ -241,7 +295,8 @@ public class SineBreakendFinder
 
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write("SampleId,Chromosome,RmIds,FirstPosStart,FirstPosEnd,SecondPosStart,SecondPosEnd");
+            writer.write("SampleId,Chromosome,RmIds");
+            writer.write(",FirstRepeat,FirstOrient,FirstPosStart,FirstPosEnd,SecondRepeat,SecondOrient,SecondPosStart,SecondPosEnd");
             writer.write(",SvId,Type,IsStart,Position,Orientation");
 
             writer.newLine();
@@ -254,10 +309,11 @@ public class SineBreakendFinder
                 {
                     for(SvBreakendData breakend : rmElement.Breakends)
                     {
-                        writer.write(String.format("%s,%s,%s,%d,%d,%d,%d",
-                                breakend.SampleId, chromosome, rmElement.RmId,
-                                rmElement.StartRegion.start(), rmElement.StartRegion.end(),
-                                rmElement.EndRegion.start(), rmElement.EndRegion.end()));
+                        writer.write(String.format("%s,%s,%s", breakend.SampleId, chromosome, rmElement.combinedRmId()));
+
+                        writer.write(String.format(",%s,%d,%d,%d,%s,%d,%d,%d",
+                                rmElement.RmStart.Repeat, rmElement.RmStart.Strand, rmElement.RmStart.Region.start(), rmElement.RmStart.Region.end(),
+                                rmElement.RmEnd.Repeat, rmElement.RmEnd.Strand, rmElement.RmEnd.Region.start(), rmElement.RmEnd.Region.end()));
 
                         writer.write(String.format(",%d,%s,%s,%d,%d",
                                 breakend.SvId, breakend.Type, breakend.IsStart, breakend.Position, breakend.Orientation));
