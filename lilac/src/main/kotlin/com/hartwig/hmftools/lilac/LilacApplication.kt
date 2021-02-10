@@ -5,11 +5,8 @@ import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier
 import com.hartwig.hmftools.lilac.LilacApplication.Companion.logger
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragmentPipeline
 import com.hartwig.hmftools.lilac.candidates.Candidates
-import com.hartwig.hmftools.lilac.coverage.HlaComplex
-import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage
+import com.hartwig.hmftools.lilac.coverage.*
 import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage.Companion.writeToFile
-import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverageFactory
-import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverageRanking
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceValidation
 import com.hartwig.hmftools.lilac.hla.HlaAllele
@@ -170,8 +167,8 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         logger.info("Calculating overall allele[total,unique,shared,wide] coverage")
         val groupCoverage = coverageFactory.groupCoverage(candidateAlleles)
-        val confirmedGroups = groupCoverage.alleles.filter { it.uniqueCoverage >= minConfirmedUniqueCoverage }.sortedDescending()
-        val discardedGroups = groupCoverage.alleles.filter { it.uniqueCoverage in 1 until minConfirmedUniqueCoverage }.sortedDescending()
+        val confirmedGroups = groupCoverage.confirmUnique()
+        val discardedGroups = groupCoverage.alleles.filter { it.uniqueCoverage > 0 && it !in confirmedGroups }.sortedDescending()
         logger.info("... found ${confirmedGroups.size} uniquely identifiable groups: " + confirmedGroups.joinToString(", "))
         if (discardedGroups.isNotEmpty()) {
             logger.info("... discarded ${discardedGroups.size} uniquely identifiable groups: " + discardedGroups.joinToString(", "))
@@ -263,7 +260,15 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val map = mapOf(Pair("A", a), Pair("B", b), Pair("C", c))
 
         return this.filter { map[it.gene]!!.size < 2 || map[it.gene]!!.contains(it.asAlleleGroup()) }
+    }
 
+    private fun HlaComplexCoverage.confirmUnique(): List<HlaAlleleCoverage> {
+        val unique = this. alleles.filter { it.uniqueCoverage >= config.minConfirmedUniqueCoverage }.sortedDescending()
+        val a = unique.filter { it.allele.gene == "A" }.take(2)
+        val b = unique.filter { it.allele.gene == "B" }.take(2)
+        val c = unique.filter { it.allele.gene == "C" }.take(2)
+
+        return (a + b + c).sortedDescending()
     }
 
 }
