@@ -67,6 +67,10 @@ class SequenceCount(private val minCount: Int, val length: Int) {
     }
 
     fun sequenceAt(index: Int): Collection<String> {
+        if (index >= count.size) {
+            return Collections.emptySet()
+        }
+
         val result = mutableSetOf<String>()
         val indexMap = count[index]
         for ((aa, count) in indexMap) {
