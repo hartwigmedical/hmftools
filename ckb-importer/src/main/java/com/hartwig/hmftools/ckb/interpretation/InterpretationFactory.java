@@ -14,9 +14,15 @@ import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableC
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialVariantRequirementDetail;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ImmutableReferenceExtend;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ReferenceExtend;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.drug.DrugDescription;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.drug.ImmutableDrug;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.drug.ImmutableDrugDescription;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.drugclass.ImmutableDrugClass;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.gene.GeneDescription;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.gene.ImmutableGene;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.gene.ImmutableGeneDescription;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.globaltherapyapprovalstatus.GlobalTherapyApprovalStatus;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.globaltherapyapprovalstatus.ImmutableGlobalTherapyApprovalStatus;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.ImmutableIndication;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapy;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapyDescription;
@@ -36,13 +42,16 @@ import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialContact;
 import com.hartwig.hmftools.ckb.json.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
+import com.hartwig.hmftools.ckb.json.common.DrugClassInfo;
+import com.hartwig.hmftools.ckb.json.common.DrugInfo;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
-import com.hartwig.hmftools.ckb.json.common.GeneInfo;
+import com.hartwig.hmftools.ckb.json.common.GlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
-import com.hartwig.hmftools.ckb.json.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.json.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.json.common.VariantInfo;
+import com.hartwig.hmftools.ckb.json.drug.Drug;
+import com.hartwig.hmftools.ckb.json.drugclass.DrugClass;
 import com.hartwig.hmftools.ckb.json.gene.Gene;
 import com.hartwig.hmftools.ckb.json.indication.Indication;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
@@ -51,7 +60,6 @@ import com.hartwig.hmftools.ckb.json.therapy.Therapy;
 import com.hartwig.hmftools.ckb.json.variant.Variant;
 import com.hartwig.hmftools.ckb.json.variant.VariantCategoryVariantPath;
 import com.hartwig.hmftools.ckb.json.variant.VariantTranscriptCoordinate;
-import com.hartwig.hmftools.ckb.util.DateConverter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -69,6 +77,7 @@ public class InterpretationFactory {
         List<CkbEntryInterpretation> CkbEntryInterpretation = Lists.newArrayList();
         int ckbId = 0;
         for (MolecularProfile molecularProfile : ckbEntry.molecularProfiles()) {
+            LOGGER.info(molecularProfile.id());
             ++ckbId;
             ImmutableCkbEntryInterpretation.Builder outputBuilder = ImmutableCkbEntryInterpretation.builder();
             outputBuilder.id(ckbId);
@@ -117,14 +126,10 @@ public class InterpretationFactory {
                         for (TherapyInfo therapyInfo : clinicalTrial.therapies()) {
                             for (Therapy therapy : ckbEntry.therapies()) {
                                 if (therapyInfo.id() == therapy.id()) {
-                                    outputBuilderClinicalInterpretation.addTherapies(ImmutableTherapy.builder()
-                                            .id(therapy.id())
-                                            .therapyName(therapy.therapyName())
-                                            .synonyms(therapy.synonyms())
-                                            .descriptions(extractTherapyDescriptions(therapy.descriptions(), ckbEntry))
-                                            .createDate(therapy.createDate())
-                                            .updateDate(therapy.updateDate())
-                                            .build());
+
+                                    outputBuilderClinicalInterpretation.addTherapyInterpretations(extractTherapyInterpretation(therapy,
+                                            ckbEntry));
+                                    //                                    outputBuilderClinicalInterpretation.addTherapies();
                                 }
                             }
                         }
@@ -137,9 +142,102 @@ public class InterpretationFactory {
             for (EvidenceInfo evidenceInfo : molecularProfile.variantLevelEvidence().evidence()) {
                 outputBuilder.addEvidenceInterpretation();
             }
+            LOGGER.info(outputBuilder.build());
             CkbEntryInterpretation.add(outputBuilder.build());
         }
         return CkbEntryInterpretation;
+    }
+
+    @NotNull
+    private static TherapyInterpretation extractTherapyInterpretation(@NotNull Therapy therapy, @NotNull CkbJsonDatabase ckbEntry) {
+        return ImmutableTherapyInterpretation.builder()
+                .therapy(extractTherapy(therapy, ckbEntry))
+                .addDrugs(extractDrugsInterpretation(therapy.drugs(), ckbEntry))
+                .globalTherapyApprovalStatuses(extractGlobalApprovalStatus(therapy.globalApprovalStatuses()))
+                .build();
+
+    }
+
+    @NotNull
+    private static List<GlobalTherapyApprovalStatus> extractGlobalApprovalStatus(
+            @NotNull List<GlobalApprovalStatusInfo> globalTherapyApprovalStatuses) {
+        List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatusesInterpretation = Lists.newArrayList();
+        for (GlobalApprovalStatusInfo globalTherapyApprovalStatusInfo : globalTherapyApprovalStatuses) {
+            globalTherapyApprovalStatusesInterpretation.add(ImmutableGlobalTherapyApprovalStatus.builder()
+                    .id(globalTherapyApprovalStatusInfo.id())
+                    .approvalStatus(globalTherapyApprovalStatusInfo.approvalStatus())
+                    .approvalAuthority(globalTherapyApprovalStatusInfo.approvalAuthority())
+                    .build());
+
+        } return globalTherapyApprovalStatusesInterpretation;
+    }
+
+    @NotNull
+    private static com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.Therapy extractTherapy(@NotNull Therapy therapy,
+            @NotNull CkbJsonDatabase ckbEntry) {
+        return ImmutableTherapy.builder()
+                .id(therapy.id())
+                .therapyName(therapy.therapyName())
+                .synonyms(therapy.synonyms())
+                .descriptions(extractTherapyDescriptions(therapy.descriptions(), ckbEntry))
+                .createDate(therapy.createDate())
+                .updateDate(therapy.updateDate())
+                .build();
+
+    }
+
+    @NotNull
+    private static DrugsInterpretation extractDrugsInterpretation(@NotNull List<DrugInfo> drugs, @NotNull CkbJsonDatabase ckbEntry) {
+        ImmutableDrugsInterpretation.Builder outputBuilderDrugInterpretation = ImmutableDrugsInterpretation.builder();
+
+        for (DrugInfo drugInfo : drugs) {
+            for (Drug drug : ckbEntry.drugs()) {
+                if (drugInfo.id() == drug.id()) {
+                    outputBuilderDrugInterpretation.drug(ImmutableDrug.builder()
+                            .id(drug.id())
+                            .drugName(drug.drugName())
+                            .terms(drug.terms())
+                            .synonyms(drug.synonyms())
+                            .tradeName(drug.tradeName())
+                            .drugDescriptions(createDrugDescriptions(drug.descriptions(), ckbEntry))
+                            .casRegistryNum(drug.casRegistryNum())
+                            .ncitId(drug.ncitId())
+                            .createDate(drug.createDate())
+                            .build());
+
+                    for (DrugClassInfo drugClassInfo : drug.drugClasses()) {
+                        for (DrugClass drugClass : ckbEntry.drugClasses()) {
+                            if (drugClassInfo.id() == drugClass.id()) {
+                                outputBuilderDrugInterpretation.drugClass(ImmutableDrugClass.builder()
+                                        .id(drugClass.id())
+                                        .drugClass(drugClass.drugClass())
+                                        .createDate(drugClass.createDate())
+                                        .build());
+
+                            }
+                        }
+
+                    }
+
+                }
+            }
+
+        }
+        return outputBuilderDrugInterpretation.build();
+    }
+
+    @NotNull
+    private static List<DrugDescription> createDrugDescriptions(@NotNull List<DescriptionInfo> descriptionInfos,
+            @NotNull CkbJsonDatabase ckbEntry) {
+        List<DrugDescription> drugDescriptions = Lists.newArrayList();
+
+        for (DescriptionInfo descriptionInfo : descriptionInfos) {
+            drugDescriptions.add(ImmutableDrugDescription.builder()
+                    .description(descriptionInfo.description())
+                    .references(extractReferences(descriptionInfo.references(), ckbEntry))
+                    .build());
+        }
+        return drugDescriptions;
     }
 
     @NotNull
@@ -269,13 +367,13 @@ public class InterpretationFactory {
                     }
                 }
             }
-
             molecularProfileClinicalTrials.add(ImmutableClinicalTrialVariantRequirementDetail.builder()
                     .id(molecularProfile.molecularProfile().id())
                     .profileName(molecularProfile.molecularProfile().profileName())
                     .requirementType(molecularProfile.requirementType())
-                    .variantInterpretation(outputBuilderVariantInterpretation.build())
+                    .addVariantInterpretation(outputBuilderVariantInterpretation.build())
                     .build());
+
         }
         return molecularProfileClinicalTrials;
     }

@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.Indication;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.Therapy;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +20,7 @@ public abstract class ClinicalTrialInterpretation {
     public abstract List<Indication> indications();
 
     @NotNull
-    public abstract List<Therapy> therapies();
+    public abstract List<TherapyInterpretation> therapyInterpretations();
 
 
 }

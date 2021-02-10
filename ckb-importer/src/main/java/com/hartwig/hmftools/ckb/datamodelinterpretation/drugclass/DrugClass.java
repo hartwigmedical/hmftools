@@ -15,6 +15,6 @@ public abstract class DrugClass {
     @NotNull
     public abstract String drugClass();
 
-    @NotNull
+    @Nullable
     public abstract Date createDate();
 }
