@@ -38,6 +38,9 @@ class SequenceCount(private val minCount: Int, val length: Int) {
         }
     }
 
+    operator fun get(locus: Int): Map<String, Int>  {
+        return count[locus]
+    }
 
     private fun increment(index: Int, aminoAcid: String) {
         try {
