@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ckb.interpretation;
 
+import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -18,7 +19,16 @@ import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.ImmutableIndi
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapy;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapyDescription;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.TherapyDescription;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.CategoryVariantPath;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.ImmutableCategoryVariantPath;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.ImmutableMemberVariant;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.ImmutableReferenceTranscriptCoordinate;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.ImmutableVariant;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.ImmutableVariantDescription;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.ImmutableVariantInfo;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.MemberVariant;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.ReferenceTranscriptCoordinate;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.VariantDescription;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialContact;
@@ -37,11 +47,14 @@ import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
 import com.hartwig.hmftools.ckb.json.reference.Reference;
 import com.hartwig.hmftools.ckb.json.therapy.Therapy;
 import com.hartwig.hmftools.ckb.json.variant.Variant;
+import com.hartwig.hmftools.ckb.json.variant.VariantCategoryVariantPath;
+import com.hartwig.hmftools.ckb.json.variant.VariantTranscriptCoordinate;
 import com.hartwig.hmftools.ckb.util.DateConverter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class InterpretationFactory {
 
@@ -209,7 +222,6 @@ public class InterpretationFactory {
             @NotNull List<com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail> molecularProfiles,
             @NotNull MolecularProfile molecularProfileDir, @NotNull CkbJsonDatabase ckbEntry) {
 
-
         List<ClinicalTrialVariantRequirementDetail> molecularProfileClinicalTrials = Lists.newArrayList();
         for (com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail molecularProfile : molecularProfiles) {
             ImmutableVariantInterpretation.Builder outputBuilderVariantInterpretation = ImmutableVariantInterpretation.builder();
@@ -217,27 +229,38 @@ public class InterpretationFactory {
                 for (VariantInfo variantInfo : molecularProfileDir.geneVariants()) {
                     for (Variant variant : ckbEntry.variants()) {
                         if (variantInfo.id() == variant.id()) {
-                            outputBuilderVariantInterpretation.variant(ImmutableVariant.builder().id(variant.id())
+                            outputBuilderVariantInterpretation.variant(ImmutableVariant.builder()
+                                    .id(variant.id())
                                     .fullName(variant.fullName())
                                     .impact(variant.impact())
-                                    .proteinEffect(variant.proteinEffect()).build());
+                                    .proteinEffect(variant.proteinEffect())
+                                    .variantDescriptions(extractVariantDescriptions(variant.descriptions(), ckbEntry))
+                                    .type(variant.type())
+                                    .variant(variant.variant())
+                                    .createDate(variant.createDate())
+                                    .updateDate(variant.updateDate())
+                                    .referenceTranscriptCoordinate(extractReferenceTranscriptCoordinates(variant.referenceTranscriptCoordinate()))
+                                    .categoryVariantPaths(extractCategoryVariantPaths(variant.categoryVariantPaths()))
+                                    .allTranscriptCoordinated(extractAllTranscriptCoordinates(variant.allTranscriptCoordinates()))
+                                    .memberVariants(extractMemberVariants(variant.memberVariants(), ckbEntry))
+                                    .build());
 
                             for (Gene gene : ckbEntry.genes()) {
                                 if (variant.gene().id() == gene.id()) {
-                                    outputBuilderVariantInterpretation.gene(ImmutableGene.builder().id(gene.id())
+                                    outputBuilderVariantInterpretation.gene(ImmutableGene.builder()
+                                            .id(gene.id())
                                             .geneSymbol(gene.geneSymbol())
                                             .terms(gene.terms())
                                             .entrezId(gene.entrezId())
                                             .synonyms(gene.synonyms())
                                             .chromosome(gene.chromosome())
-                                            .mapLocation(gene.mapLocation()).build());
+                                            .mapLocation(gene.mapLocation())
+                                            .build());
                                 }
                             }
                         }
                     }
                 }
-            } else {
-                LOGGER.warn("Molecular profile ID of clinical trial is not matching with molecular profile file!");
             }
 
             molecularProfileClinicalTrials.add(ImmutableClinicalTrialVariantRequirementDetail.builder()
@@ -248,6 +271,105 @@ public class InterpretationFactory {
                     .build());
         }
         return molecularProfileClinicalTrials;
+    }
+
+    @NotNull
+    private static List<CategoryVariantPath> extractCategoryVariantPaths(
+            @NotNull List<VariantCategoryVariantPath> variantCategoryVariantPaths) {
+        List<CategoryVariantPath> categoryVariantPaths = Lists.newArrayList();
+
+        for (VariantCategoryVariantPath categoryVariantPath : variantCategoryVariantPaths) {
+            categoryVariantPaths.add(ImmutableCategoryVariantPath.builder()
+                    .variantPath(categoryVariantPath.variantPath())
+                    .variantInfo(extractVariantInfo(categoryVariantPath.variants()))
+                    .build());
+        }
+        return categoryVariantPaths;
+    }
+
+    @NotNull
+    private static List<com.hartwig.hmftools.ckb.datamodelinterpretation.variant.VariantInfo> extractVariantInfo(
+            @NotNull List<VariantInfo> variants) {
+        List<com.hartwig.hmftools.ckb.datamodelinterpretation.variant.VariantInfo> variantInfos = Lists.newArrayList();
+
+        for (VariantInfo variant : variants) {
+            variantInfos.add(ImmutableVariantInfo.builder()
+                    .id(variant.id())
+                    .fullName(variant.fullName())
+                    .impact(variant.impact())
+                    .proteinEffect(variant.proteinEffect())
+                    .build());
+        }
+        return variantInfos;
+    }
+
+    @NotNull
+    private static List<MemberVariant> extractMemberVariants(@NotNull List<VariantInfo> variantsMembers,
+            @NotNull CkbJsonDatabase ckbEntry) {
+        List<MemberVariant> memberVariants = Lists.newArrayList();
+
+        for (VariantInfo memberVariant : variantsMembers) {
+            memberVariants.add(ImmutableMemberVariant.builder()
+                    .id(memberVariant.id())
+                    .fullName(memberVariant.fullName())
+                    .impact(memberVariant.impact())
+                    .proteinEffect(memberVariant.proteinEffect())
+                    .variantDescriptions(extractVariantDescriptions(memberVariant.descriptions(), ckbEntry))
+                    .build());
+        }
+
+        return memberVariants;
+
+    }
+
+    @NotNull
+    private static List<VariantDescription> extractVariantDescriptions(@NotNull List<DescriptionInfo> descriptionInfos,
+            @NotNull CkbJsonDatabase ckbEntry) {
+        List<VariantDescription> variantDescriptions = Lists.newArrayList();
+
+        for (DescriptionInfo descriptionInfo : descriptionInfos) {
+            variantDescriptions.add(ImmutableVariantDescription.builder()
+                    .description(descriptionInfo.description())
+                    .references(extractReferences(descriptionInfo.references(), ckbEntry))
+                    .build());
+        }
+        return variantDescriptions;
+    }
+
+    @Nullable
+    private static ReferenceTranscriptCoordinate extractReferenceTranscriptCoordinates(@Nullable VariantTranscriptCoordinate coordinate) {
+        if (coordinate != null) {
+            return ImmutableReferenceTranscriptCoordinate.builder()
+                    .id(coordinate.id())
+                    .transcript(coordinate.transcript())
+                    .gDna(coordinate.gDNA())
+                    .cDna(coordinate.cDNA())
+                    .protein(coordinate.protein())
+                    .sourceDb(coordinate.sourceDB())
+                    .refGenomeBuild(coordinate.refGenomeBuild())
+                    .build();
+        }
+        return null;
+    }
+
+    @NotNull
+    private static List<ReferenceTranscriptCoordinate> extractAllTranscriptCoordinates(
+            @NotNull List<VariantTranscriptCoordinate> coordinates) {
+        List<ReferenceTranscriptCoordinate> allTranscriptCoordinates = Lists.newArrayList();
+        for (VariantTranscriptCoordinate coordinate : coordinates) {
+            allTranscriptCoordinates.add(ImmutableReferenceTranscriptCoordinate.builder()
+                    .id(coordinate.id())
+                    .transcript(coordinate.transcript())
+                    .gDna(coordinate.gDNA())
+                    .cDna(coordinate.cDNA())
+                    .protein(coordinate.protein())
+                    .sourceDb(coordinate.sourceDB())
+                    .refGenomeBuild(coordinate.refGenomeBuild())
+                    .build());
+
+        }
+        return allTranscriptCoordinates;
+
     }
 
 }

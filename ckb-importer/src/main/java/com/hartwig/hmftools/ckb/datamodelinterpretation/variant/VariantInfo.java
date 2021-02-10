@@ -13,9 +13,9 @@ public abstract class VariantInfo {
     @NotNull
     public abstract String fullName();
 
-    @NotNull
+    @Nullable
     public abstract String impact();
 
-    @NotNull
+    @Nullable
     public abstract String proteinEffect();
 }
