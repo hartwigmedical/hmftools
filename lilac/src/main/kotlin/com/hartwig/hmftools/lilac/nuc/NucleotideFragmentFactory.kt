@@ -49,29 +49,30 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
 
             val sequence = codingRegionRead.joinToString("")
             val aminoAcids = Codons.aminoAcids(sequence.substring(nucleotideStartLoci - samCodingStartLoci))
-
-            val matchRangeAllowed = (aminoAcidIndices.first - samCoding.softClippedStart / 3 - samCoding.maxIndelSize())..(aminoAcidIndices.first + samCoding.maxIndelSize())
-            val matchingInserts = insertSuffixTrees
-                    .map { Pair(it.key, it.value.indices(aminoAcids)) }
-                    .map { Pair(it.first, it.second.filter { i -> matchRangeAllowed.contains(i) }) }
-                    .filter { it.second.isNotEmpty() }
-            if (matchingInserts.isNotEmpty()) {
-                val best = matchingInserts[0]
-                val result = createNucleotideSequence(samCoding.id, codingRegion, best.second[0], aminoAcids, best.first)
-                if (result.containsIndel()) {
-                    return result
+            if (aminoAcids.isNotEmpty()) {
+                val matchRangeAllowed = (aminoAcidIndices.first - samCoding.softClippedStart / 3 - samCoding.maxIndelSize())..(aminoAcidIndices.first + samCoding.maxIndelSize())
+                val matchingInserts = insertSuffixTrees
+                        .map { Pair(it.key, it.value.indices(aminoAcids)) }
+                        .map { Pair(it.first, it.second.filter { i -> matchRangeAllowed.contains(i) }) }
+                        .filter { it.second.isNotEmpty() }
+                if (matchingInserts.isNotEmpty()) {
+                    val best = matchingInserts[0]
+                    val result = createNucleotideSequence(samCoding.id, codingRegion, best.second[0], aminoAcids, best.first)
+                    if (result.containsIndel()) {
+                        return result
+                    }
                 }
-            }
 
-            val matchingDeletes = deleteSuffixTrees
-                    .map { Pair(it.key, it.value.indices(aminoAcids)) }
-                    .map { Pair(it.first, it.second.filter { i -> matchRangeAllowed.contains(i) }) }
-                    .filter { it.second.isNotEmpty() }
-            if (matchingDeletes.isNotEmpty()) {
-                val best = matchingDeletes[0]
-                val result = createNucleotideSequence(samCoding.id, codingRegion, best.second[0], aminoAcids, best.first)
-                if (result.containsIndel()) {
-                    return result
+                val matchingDeletes = deleteSuffixTrees
+                        .map { Pair(it.key, it.value.indices(aminoAcids)) }
+                        .map { Pair(it.first, it.second.filter { i -> matchRangeAllowed.contains(i) }) }
+                        .filter { it.second.isNotEmpty() }
+                if (matchingDeletes.isNotEmpty()) {
+                    val best = matchingDeletes[0]
+                    val result = createNucleotideSequence(samCoding.id, codingRegion, best.second[0], aminoAcids, best.first)
+                    if (result.containsIndel()) {
+                        return result
+                    }
                 }
             }
 
