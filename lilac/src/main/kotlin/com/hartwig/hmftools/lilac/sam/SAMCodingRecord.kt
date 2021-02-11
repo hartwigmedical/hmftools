@@ -27,7 +27,7 @@ data class SAMCodingRecord(
     }
 
     fun containsIndel(): Boolean {
-        return indels.isNotEmpty()
+        return indels.map { it.length }.sum() != 0
     }
 
     fun codingRegionRead(reverseCompliment: Boolean): CharArray {

@@ -7,6 +7,4 @@ data class Indel(val contig: String, val position: Int, val ref: String, val alt
     override fun toString(): String {
         return "$contig:$position $ref>$alt"
     }
-
-
 }
