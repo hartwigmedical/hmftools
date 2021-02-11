@@ -28,6 +28,7 @@ public class InterpretationFactory {
             ++ckbId;
             ImmutableCkbEntryInterpretation.Builder outputBuilder = ImmutableCkbEntryInterpretation.builder();
             outputBuilder.id(ckbId);
+            outputBuilder.molecularProfileId(molecularProfile.id());
 
             ClinicalTrialFactory.interpretClinicalTrials(molecularProfile, ckbEntry, outputBuilder);
 

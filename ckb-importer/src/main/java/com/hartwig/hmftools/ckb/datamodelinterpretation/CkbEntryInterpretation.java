@@ -15,6 +15,8 @@ public abstract class CkbEntryInterpretation {
 
     public abstract int id();
 
+    public abstract int molecularProfileId();
+
     @NotNull
     public abstract List<ClinicalTrialInterpretation> clinicalTrialInterpretation();
 
