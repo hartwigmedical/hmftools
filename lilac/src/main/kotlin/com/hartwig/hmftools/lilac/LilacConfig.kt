@@ -104,7 +104,7 @@ data class LilacConfig(
             val options = Options()
             options.addOption(requiredOption(SAMPLE, "Name of sample"))
             options.addOption(requiredOption(REFERENCE_BAM_OPTION, "Path to reference/normal bam"))
-            options.addOption(requiredOption(TUMOR_BAM_OPTION, "Path to tumor bam"))
+            options.addOption(optional(TUMOR_BAM_OPTION, "Path to tumor bam"))
             options.addOption(requiredOption(RESOURCE_DIR_OPTION, "Path to resource files"))
             options.addOption(requiredOption(OUTPUT_DIR_OPTION, "Path to output"))
             options.addOption(optional(REF_GENOME_OPTION, "Optional path to reference genome fasta file"))
