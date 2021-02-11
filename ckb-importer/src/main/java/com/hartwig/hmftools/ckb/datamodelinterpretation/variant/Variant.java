@@ -3,6 +3,8 @@ package com.hartwig.hmftools.ckb.datamodelinterpretation.variant;
 import java.util.Date;
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.datamodelinterpretation.gene.Gene;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,4 +51,6 @@ public abstract class Variant {
     @NotNull
     public abstract List<MemberVariant> memberVariants();
 
+    @Nullable
+    public abstract Gene gene();
 }
