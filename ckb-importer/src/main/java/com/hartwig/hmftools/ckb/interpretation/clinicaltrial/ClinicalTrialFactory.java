@@ -3,7 +3,6 @@ package com.hartwig.hmftools.ckb.interpretation.clinicaltrial;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.CkbEntryInterpretation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.ImmutableCkbEntryInterpretation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTrialLocation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrial;
@@ -78,7 +77,8 @@ public class ClinicalTrialFactory {
 
                                 outputBuilderClinicalInterpretation.addTherapyInterpretations(TherapyInterpretationFactory.extractTherapyInterpretation(
                                         therapy,
-                                        ckbEntry));
+                                        ckbEntry,
+                                        molecularProfile));
                             }
                         }
                     }

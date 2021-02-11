@@ -40,7 +40,7 @@ public class EvidenceFactory {
                     .variantInterpretation(VariantInterpretationFactory.extractVariantGeneInfo(ckbEntry,
                             molecularProfile,
                             evidenceInfo.molecularProfile()).build())
-                    .therapyInterpretation(extractTherapyEvidence(ckbEntry, evidenceInfo.therapy()))
+                    .therapyInterpretation(extractTherapyEvidence(ckbEntry, evidenceInfo.therapy(), molecularProfile))
                     .indications(extractIndication(ckbEntry, evidenceInfo.indication()))
                     .responseType(evidenceInfo.responseType())
                     .references(CommonInterpretationFactory.extractReferences(evidenceInfo.references(), ckbEntry))
@@ -52,18 +52,19 @@ public class EvidenceFactory {
     }
 
     @Nullable
-    private static TherapyInterpretation extractTherapyEvidence(@NotNull CkbJsonDatabase ckbEntry, @NotNull TherapyInfo therapyInfo) {
+    private static TherapyInterpretation extractTherapyEvidence(@NotNull CkbJsonDatabase ckbEntry, @NotNull TherapyInfo therapyInfo,
+            @NotNull MolecularProfile molecularProfile) {
         TherapyInterpretation therapyInterpretation = null;
         for (Therapy therapy : ckbEntry.therapies()) {
             if (therapyInfo.id() == therapy.id()) {
-                therapyInterpretation = TherapyInterpretationFactory.extractTherapyInterpretation(therapy, ckbEntry);
+                therapyInterpretation = TherapyInterpretationFactory.extractTherapyInterpretation(therapy, ckbEntry, molecularProfile);
             }
         }
         return therapyInterpretation;
     }
 
     @NotNull
-    private static com.hartwig.hmftools.ckb.datamodelinterpretation.indication.Indication extractIndication(
+    public static com.hartwig.hmftools.ckb.datamodelinterpretation.indication.Indication extractIndication(
             @NotNull CkbJsonDatabase ckbEntry, @Nullable IndicationInfo indicationInfo) {
         ImmutableIndication.Builder outputBuilder = ImmutableIndication.builder();
         for (Indication indication : ckbEntry.indications()) {
@@ -82,5 +83,4 @@ public class EvidenceFactory {
         }
         return outputBuilder.build();
     }
-
 }
