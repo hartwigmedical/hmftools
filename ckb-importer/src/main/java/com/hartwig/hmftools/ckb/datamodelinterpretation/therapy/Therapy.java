@@ -3,6 +3,9 @@ package com.hartwig.hmftools.ckb.datamodelinterpretation.therapy;
 import java.util.Date;
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.datamodelinterpretation.globaltherapyapprovalstatus.GlobalTherapyApprovalStatus;
+import com.hartwig.hmftools.ckb.interpretation.common.druginterpretation.DrugsInterpretation;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,4 +31,9 @@ public abstract class Therapy {
     @Nullable
     public abstract Date updateDate();
 
+    @NotNull
+    public abstract DrugsInterpretation drugs();
+
+    @NotNull
+    public abstract List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses();
 }

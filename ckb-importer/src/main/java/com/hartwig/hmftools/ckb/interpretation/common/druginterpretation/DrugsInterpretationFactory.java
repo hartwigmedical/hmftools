@@ -29,7 +29,7 @@ public class DrugsInterpretationFactory {
         for (DrugInfo drugInfo : drugs) {
             for (Drug drug : ckbEntry.drugs()) {
                 if (drugInfo.id() == drug.id()) {
-                    outputBuilderDrugInterpretation.drug(ImmutableDrug.builder()
+                    outputBuilderDrugInterpretation.addDrug(ImmutableDrug.builder()
                             .id(drug.id())
                             .drugName(drug.drugName())
                             .terms(drug.terms())
@@ -39,23 +39,28 @@ public class DrugsInterpretationFactory {
                             .casRegistryNum(drug.casRegistryNum())
                             .ncitId(drug.ncitId())
                             .createDate(drug.createDate())
+                            .drugClasses(extractDrugClass(drug, ckbEntry))
                             .build());
-
-                    for (DrugClassInfo drugClassInfo : drug.drugClasses()) {
-                        for (DrugClass drugClass : ckbEntry.drugClasses()) {
-                            if (drugClassInfo.id() == drugClass.id()) {
-                                outputBuilderDrugInterpretation.drugClass(ImmutableDrugClass.builder()
-                                        .id(drugClass.id())
-                                        .drugClass(drugClass.drugClass())
-                                        .createDate(drugClass.createDate())
-                                        .build());
-                            }
-                        }
-                    }
                 }
             }
         }
         return outputBuilderDrugInterpretation.build();
+    }
+
+    @NotNull
+    private static List<com.hartwig.hmftools.ckb.datamodelinterpretation.drugclass.DrugClass> extractDrugClass(@NotNull Drug drug, @NotNull CkbJsonDatabase ckbEntry) {
+        List<com.hartwig.hmftools.ckb.datamodelinterpretation.drugclass.DrugClass> drugClasses = Lists.newArrayList();
+        for (DrugClassInfo drugClassInfo : drug.drugClasses()) {
+            for (DrugClass drugClass : ckbEntry.drugClasses()) {
+                if (drugClassInfo.id() == drugClass.id()) {
+                    drugClasses.add(ImmutableDrugClass.builder()
+                            .id(drugClass.id())
+                            .drugClass(drugClass.drugClass())
+                            .createDate(drugClass.createDate()).build());
+                }
+            }
+        }
+        return drugClasses;
     }
 
     @NotNull

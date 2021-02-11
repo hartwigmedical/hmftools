@@ -1,10 +1,6 @@
 package com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation;
 
-import java.util.List;
-
-import com.hartwig.hmftools.ckb.datamodelinterpretation.globaltherapyapprovalstatus.GlobalTherapyApprovalStatus;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.Therapy;
-import com.hartwig.hmftools.ckb.interpretation.common.druginterpretation.DrugsInterpretation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -16,10 +12,4 @@ public abstract class TherapyInterpretation {
 
     @NotNull
     public abstract Therapy therapy();
-
-    @NotNull
-    public abstract List<DrugsInterpretation> drugs();
-
-    @NotNull
-    public abstract List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses();
 }

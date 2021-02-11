@@ -27,8 +27,6 @@ public class TherapyInterpretationFactory {
     public static TherapyInterpretation extractTherapyInterpretation(@NotNull Therapy therapy, @NotNull CkbJsonDatabase ckbEntry) {
         return ImmutableTherapyInterpretation.builder()
                 .therapy(extractTherapy(therapy, ckbEntry))
-                .addDrugs(DrugsInterpretationFactory.extractDrugsInterpretation(therapy.drugs(), ckbEntry))
-                .globalTherapyApprovalStatuses(extractGlobalApprovalStatus(therapy.globalApprovalStatuses()))
                 .build();
     }
 
@@ -42,8 +40,9 @@ public class TherapyInterpretationFactory {
                 .descriptions(extractTherapyDescriptions(therapy.descriptions(), ckbEntry))
                 .createDate(therapy.createDate())
                 .updateDate(therapy.updateDate())
+                .drugs(DrugsInterpretationFactory.extractDrugsInterpretation(therapy.drugs(), ckbEntry))
+                .globalTherapyApprovalStatuses(extractGlobalApprovalStatus(therapy.globalApprovalStatuses()))
                 .build();
-
     }
 
     @NotNull

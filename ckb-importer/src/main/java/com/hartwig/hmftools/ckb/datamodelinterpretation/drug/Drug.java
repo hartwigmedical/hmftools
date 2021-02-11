@@ -3,6 +3,8 @@ package com.hartwig.hmftools.ckb.datamodelinterpretation.drug;
 import java.util.Date;
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.datamodelinterpretation.drugclass.DrugClass;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,4 +39,6 @@ public abstract class Drug {
     @Nullable
     public abstract Date createDate();
 
+    @NotNull
+    public abstract List<DrugClass> drugClasses(); //some drugs has none drugsclass eg. drugs 9758
 }
