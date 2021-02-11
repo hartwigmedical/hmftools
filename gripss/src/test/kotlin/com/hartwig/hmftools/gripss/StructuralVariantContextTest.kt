@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.gripss
 
 import com.hartwig.hmftools.extensions.hasViralSequenceAlignment
+import com.hartwig.hmftools.gripss.StructuralVariantContext.Companion.unambiguousNucleotides
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.addGenotypeAttribute
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.fragmentSupport
 import com.hartwig.hmftools.gripss.VariantContextTestFactory.setAttribute
@@ -18,6 +19,13 @@ class StructuralVariantContextTest {
 
     private val defaultContigs = (1..22).map { it.toString() } + "X" + "Y" + "MT" + "M"
     private val contigComparator = ContigComparator(defaultContigs)
+
+    @Test
+    fun testUnambiguousNucleotides() {
+        val ambiguous = "MGCTABA"
+        val fixed = ambiguous.unambiguousNucleotides
+        assertEquals("NGCTANA", fixed)
+    }
 
     @Test
     fun testHasViralSequenceAlignment() {
@@ -120,7 +128,7 @@ class StructuralVariantContextTest {
     @Test
     fun testHardMaxNormalRequiresSoftRelativeAsWell() {
         val config = GripssFilterConfig.default()
-        val normalSupport =  config.hardMaxNormalAbsoluteSupport + 1
+        val normalSupport = config.hardMaxNormalAbsoluteSupport + 1
         val tumorSupport = ceil(normalSupport / config.softMaxNormalRelativeSupport).toInt() + 1
         val sgl = sgl().qual(config.hardMinTumorQual).fragmentSupport(normalSupport, tumorSupport).toSv()
         assertFalse(sgl.tumorQualFilter(config.hardMinTumorQual))
@@ -136,7 +144,7 @@ class StructuralVariantContextTest {
     @Test
     fun testHardMaxRelativeAbsoluteSupportIsRecoveredByHotspot() {
         val config = GripssFilterConfig.default()
-        val normalSupport =  config.hardMaxNormalAbsoluteSupport - 1
+        val normalSupport = config.hardMaxNormalAbsoluteSupport - 1
         val tumorSupport = floor(normalSupport / config.hardMaxNormalRelativeSupport).toInt()
         val sgl = sgl().qual(config.hardMinTumorQual).fragmentSupport(normalSupport, tumorSupport).toSv()
         assertFalse(sgl.tumorQualFilter(config.hardMinTumorQual))
