@@ -21,5 +21,5 @@ public abstract class ClinicalTrialVariantRequirementDetail {
     public abstract String requirementType();
 
     @Nullable
-    public abstract List<VariantInterpretation> variantInterpretation();
+    public abstract VariantInterpretation variantInterpretation();
 }

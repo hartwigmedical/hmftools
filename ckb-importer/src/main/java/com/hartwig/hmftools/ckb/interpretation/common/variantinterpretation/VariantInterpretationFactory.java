@@ -45,13 +45,12 @@ public class VariantInterpretationFactory {
 
         List<ClinicalTrialVariantRequirementDetail> molecularProfileClinicalTrials = Lists.newArrayList();
         for (com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail molecularProfile : molecularProfiles) {
-            ImmutableVariantInterpretation.Builder outputBuilderVariantInterpretation =
-                    extractVariantGeneInfo(ckbEntry, molecularProfileDir, molecularProfile);
+
             molecularProfileClinicalTrials.add(ImmutableClinicalTrialVariantRequirementDetail.builder()
                     .id(molecularProfile.molecularProfile().id())
                     .profileName(molecularProfile.molecularProfile().profileName())
                     .requirementType(molecularProfile.requirementType())
-                    .addVariantInterpretation(outputBuilderVariantInterpretation.build())
+                    .variantInterpretation(extractVariantGeneInfo(ckbEntry, molecularProfileDir, molecularProfile).build())
                     .build());
 
         }

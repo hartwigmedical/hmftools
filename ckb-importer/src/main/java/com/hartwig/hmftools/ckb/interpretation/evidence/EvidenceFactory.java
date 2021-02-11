@@ -14,14 +14,10 @@ import com.hartwig.hmftools.ckb.json.indication.Indication;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
 import com.hartwig.hmftools.ckb.json.therapy.Therapy;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class EvidenceFactory {
-
-    private static final Logger LOGGER = LogManager.getLogger(EvidenceFactory.class);
 
     private EvidenceFactory() {
 
@@ -29,9 +25,7 @@ public class EvidenceFactory {
 
     public static void interpretEvidence(@NotNull MolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
             @NotNull ImmutableCkbEntryInterpretation.Builder outputBuilder) {
-        LOGGER.info(molecularProfile.id());
         for (EvidenceInfo evidenceInfo : molecularProfile.variantLevelEvidence().evidence()) {
-            LOGGER.info(evidenceInfo.id());
             outputBuilder.addEvidenceInterpretation(ImmutableEvidenceInterpretation.builder()
                     .id(evidenceInfo.id())
                     .approvalStatus(evidenceInfo.approvalStatus())
