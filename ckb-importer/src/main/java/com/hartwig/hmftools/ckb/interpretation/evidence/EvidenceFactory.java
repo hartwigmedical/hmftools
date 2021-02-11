@@ -64,8 +64,7 @@ public class EvidenceFactory {
         for (Indication indication : ckbEntry.indications()) {
             if (indicationInfo.id().equals(indication.id())) {
                 outputBuilder
-                        // TODO Switch to String for ID
-                        .id(Integer.parseInt(indication.id()))
+                        .id(indication.id())
                         .name(indication.name())
                         .source(indication.source())
                         .definition(indication.definition())
