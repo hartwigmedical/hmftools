@@ -13,10 +13,7 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.hla.HlaContextFactory
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory
 import com.hartwig.hmftools.lilac.nuc.NucleotideGeneEnrichment
-import com.hartwig.hmftools.lilac.qc.AminoAcidQC
-import com.hartwig.hmftools.lilac.qc.BamQC
-import com.hartwig.hmftools.lilac.qc.CoverageQC
-import com.hartwig.hmftools.lilac.qc.HaplotypeQC
+import com.hartwig.hmftools.lilac.qc.*
 import com.hartwig.hmftools.lilac.read.FragmentAlleles
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile
@@ -124,9 +121,9 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val nucleotideGeneEnrichment = NucleotideGeneEnrichment(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
         val geneEnrichedNucleotideFragments = nucleotideGeneEnrichment.enrich(rawNucleotideFragments)
         val aminoAcidPipeline = AminoAcidFragmentPipeline(minBaseQual, minEvidence, geneEnrichedNucleotideFragments)
-        val aFragments = aminoAcidPipeline.type(hlaAContext)
-        val bFragments = aminoAcidPipeline.type(hlaBContext)
-        val cFragments = aminoAcidPipeline.type(hlaCContext)
+        val aFragments = aminoAcidPipeline.phasingFragments(hlaAContext)
+        val bFragments = aminoAcidPipeline.phasingFragments(hlaBContext)
+        val cFragments = aminoAcidPipeline.phasingFragments(hlaCContext)
 
         // Phasing
         logger.info("Phasing bam records")
@@ -149,10 +146,10 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val candidates = aCandidates + bCandidates + cCandidates
 
         // Coverage
-        val aminoAcidFragments = aminoAcidPipeline.combined(allProteinExonBoundaries)
-        val aminoAcidCounts = SequenceCount.aminoAcids(minEvidence, aminoAcidFragments)
+        val highQualityAminoAcidFragments = aminoAcidPipeline.coverageFragments(allProteinExonBoundaries)
+        val aminoAcidCounts = SequenceCount.aminoAcids(minEvidence, highQualityAminoAcidFragments)
         val aminoAcidHeterozygousLoci = aminoAcidCounts.heterozygousLoci()
-        val nucleotideCounts = SequenceCount.nucleotides(minEvidence, aminoAcidFragments)
+        val nucleotideCounts = SequenceCount.nucleotides(minEvidence, highQualityAminoAcidFragments)
         val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousLoci() intersect allNucleotideExonBoundaries
 
         val candidateAlleles = candidates.map { it.allele }
@@ -162,7 +159,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val nucleotideCandidates = nucleotideSequences.filter { it.allele.asFourDigit() in candidateAlleleSpecificProteins }
 
         val fragmentAlleles = FragmentAlleles.create(
-                aminoAcidFragments,
+                highQualityAminoAcidFragments,
                 aminoAcidHeterozygousLoci,
                 aminoAcidCandidates,
                 nucleotideHeterozygousLoci,
@@ -218,13 +215,13 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             val haplotypeQC = HaplotypeQC.create(3, winningSequences, aPhasedEvidence + bPhasedEvidence + cPhasedEvidence)
             val bamQC = BamQC.create(bamReader)
             val coverageQC = CoverageQC.create(fragmentAlleles.size, winningComplex)
+            val lilacQC = LilacQC(aminoAcidQC, bamQC, coverageQC, haplotypeQC)
 
-            logger.info("QC Info:")
-            logger.info("... $aminoAcidQC")
-            logger.info("... $haplotypeQC")
-            logger.info("... $bamQC")
-            logger.info("... $coverageQC")
+            logger.info("QC Stats:")
+            logger.info("   ${lilacQC.header().joinToString(",")}")
+            logger.info("   ${lilacQC.body().joinToString(",")}")
 
+            lilacQC.writefile("$outputDir/$sample.qc.txt")
         }
 
         logger.info("Writing output to $outputDir")

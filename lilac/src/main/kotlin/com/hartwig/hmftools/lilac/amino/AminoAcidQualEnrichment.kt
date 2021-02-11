@@ -4,13 +4,12 @@ import com.hartwig.hmftools.lilac.SequenceCount
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 
 /**
- * Only permit high quality amino acids, ie, amino acids that have at least [minEvidence] instances with quality > [minBaseQuality] in aggregate
+ * Only permit high quality amino acids, ie, amino acids that have at least [minEvidence]
  */
-class AminoAcidQualEnrichment(private val minBaseQuality: Int, private val minEvidence: Int) {
+class AminoAcidQualEnrichment(private val minEvidence: Int) {
 
     fun enrich(nucleotideFragments: List<NucleotideFragment>): List<AminoAcidFragment> {
-        val qualityFilteredNucleotideFragments = nucleotideFragments.map { it.qualityFilter(minBaseQuality) }.filter { it.isNotEmpty() }
-        val qualityFilteredAminoAcidFragments = qualityFilteredNucleotideFragments.map { it.toAminoAcidFragment() }
+        val qualityFilteredAminoAcidFragments = nucleotideFragments.map { it.toAminoAcidFragment() }
         val highQualityAminoAcidCounts = SequenceCount.aminoAcids(minEvidence, qualityFilteredAminoAcidFragments)
 
         val unfilteredAminoAcidFragments = nucleotideFragments
