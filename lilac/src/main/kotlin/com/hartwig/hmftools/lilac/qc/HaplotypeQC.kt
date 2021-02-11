@@ -6,6 +6,15 @@ import org.apache.logging.log4j.LogManager
 import kotlin.math.max
 
 data class HaplotypeQC(val unusedHaplotypes: Int, val unusedHaplotypeMaxSupport: Int, val unusedHaplotypeMaxLength: Int) {
+
+    fun header(): List<String> {
+        return listOf("unusedHaplotypes", "unusedHaplotypeMaxSupport", "unusedHaplotypeMaxLength")
+    }
+
+    fun body(): List<String> {
+        return listOf(unusedHaplotypes.toString(), unusedHaplotypeMaxSupport.toString(), unusedHaplotypeMaxLength.toString())
+    }
+
     companion object {
         val logger = LogManager.getLogger(this::class.java)
 

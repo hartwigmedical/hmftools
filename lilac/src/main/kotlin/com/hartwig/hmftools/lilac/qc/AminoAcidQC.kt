@@ -7,6 +7,14 @@ import kotlin.math.max
 
 data class AminoAcidQC(val unusedAminoAcids: Int, val unusedAminoAcidMaxSupport: Int) {
 
+    fun header(): List<String> {
+        return listOf("unusedAminoAcids", "unusedAminoAcidMaxSupport")
+    }
+
+    fun body(): List<String> {
+        return listOf(unusedAminoAcids.toString(), unusedAminoAcidMaxSupport.toString())
+    }
+
     companion object {
         val logger = LogManager.getLogger(this::class.java)
 
@@ -22,7 +30,7 @@ data class AminoAcidQC(val unusedAminoAcids: Int, val unusedAminoAcidMaxSupport:
                     if (sequence !in actual) {
                         unused++
                         largest = max(largest, count)
-                        logger.warn("UNMATCHED_AMINO_ACID - amino acid '$sequence' at locus $locus not in winning solution")
+                        logger.warn("UNMATCHED_AMINO_ACID - amino acid '$sequence' with $count support at locus $locus not in winning solution")
                     }
                 }
             }

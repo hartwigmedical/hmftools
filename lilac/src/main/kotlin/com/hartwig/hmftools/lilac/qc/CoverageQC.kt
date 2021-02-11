@@ -20,13 +20,23 @@ data class CoverageQC(val aTypes: Int, val bTypes: Int, val cTypes: Int, val tot
 
             return CoverageQC(aTypes, bTypes, cTypes, totalFragments, winner.uniqueCoverage, winner.sharedCoverage, winner.wildCoverage)
         }
+
+        private val percentFormatter = DecimalFormat("00.0%")
+        private fun Double.percent(): String {
+            return percentFormatter.format(this)
+        }
+    }
+
+    fun header(): List<String> {
+        return listOf("aTypes", "bTypes", "cTypes", "unusedFragments", "fittedFragments", "percentUnique", "percentShared", "percentWildcard")
+    }
+
+    fun body(): List<String> {
+        return listOf(aTypes.toString(), bTypes.toString(), cTypes.toString(), unusedFragments.toString(), fittedFragments.toString(), percentUnique.percent(), percentShared.percent(), percentWildcard.percent())
     }
 
     override fun toString(): String {
-        val percentFormatter = DecimalFormat("00.0%")
-        fun Double.percent(): String {
-            return percentFormatter.format(this)
-        }
+
 
         return "CoverageQC(aTypes=$aTypes, bTypes=$bTypes, cTypes=$cTypes, unusedFragments=$unusedFragments, uniqueFragments=$uniqueFragments, sharedFragments=$sharedFragments, wildcardFragments=$wildcardFragments, fittedFragments=$fittedFragments, percentUnique=${percentUnique.percent()}, percentShared=${percentShared.percent()}, percentWildcard=${percentWildcard.percent()})"
     }

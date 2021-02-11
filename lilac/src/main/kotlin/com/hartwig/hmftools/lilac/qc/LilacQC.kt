@@ -1,38 +1,25 @@
 package com.hartwig.hmftools.lilac.qc
 
-import org.apache.logging.log4j.LogManager
+import java.io.File
 
 
-data class LilacQC(val aTypes: Int, val bTypes: Int, val cTypes: Int,
-                   val unmatchedFragments: Int, val uniqueFragments: Int, val sharedFragments: Int, val wildcardFragments: Int,
-                   val discardedIndelFragments: Int, val discardedIndelMaxCount: Int,
-                   val unmatchedAminoAcidSequences: Int, val unmatchedAminoAcidMaxCount: Int) {
-    val fittedFragments = uniqueFragments + sharedFragments + wildcardFragments;
-    val percentUnmatchedFragments = 1.0 * unmatchedFragments / fittedFragments
+data class LilacQC(val aminoAcidQC: AminoAcidQC, val bamQC: BamQC, val coverageQC: CoverageQC, val haplotypeQC: HaplotypeQC) {
 
-    companion object {
-        val logger = LogManager.getLogger(this::class.java)
+    fun header(): List<String> {
+        return aminoAcidQC.header() + bamQC.header() + coverageQC.header() + haplotypeQC.header()
     }
 
+    fun body(): List<String> {
+        return aminoAcidQC.body() + bamQC.body() + coverageQC.body() + haplotypeQC.body()
+    }
+
+    fun writefile(fileName: String) {
+        val header = header().joinToString(separator = "\t")
+        val body = body().joinToString(separator = "\t")
+
+        val file = File(fileName)
+        file.writeText(header + "\n")
+        file.appendText(body + "\n")
+    }
 }
 
-
-// Was looking at the warnings again and was thinking we could write a QC file with the following rows:
-//
-//A type found (T/F)
-//B type found (T/F)
-//C type found (T/F)
-//Total fragments
-//% of unmatched fragments
-//% fitted fragments
-//% wildcard fragments
-//% shared fragments
-//% unique fragments
-//Total discarded INDEL fragments
-//Max discarded INDEL fragments
-//Count unmatched Amino Acid
-//Max unmatched Amino Acid count
-//Count unmatched Haplotypes (>2)
-//Max unmatched haplotype support
-//# of dropped alleles with unique support
-//Max support for dropped allele
