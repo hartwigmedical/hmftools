@@ -14,6 +14,6 @@ public abstract class DrugsInterpretation {
     @NotNull
     public abstract Drug drug();
 
-    @NotNull
-    public abstract DrugClass drugClass();
+    @Nullable
+    public abstract DrugClass drugClass(); //dome drugs has none drugsclass eg. drugs 9758
 }

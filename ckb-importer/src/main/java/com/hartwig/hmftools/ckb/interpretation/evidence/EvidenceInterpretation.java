@@ -29,7 +29,7 @@ public abstract class EvidenceInterpretation {
     @NotNull
     public abstract VariantInterpretation variantInterpretation();
 
-    @NotNull
+    @Nullable
     public abstract TherapyInterpretation therapyInterpretation();
 
     @NotNull
