@@ -29,6 +29,8 @@ import com.hartwig.hmftools.ckb.json.variant.Variant;
 import com.hartwig.hmftools.ckb.json.variant.VariantCategoryVariantPath;
 import com.hartwig.hmftools.ckb.json.variant.VariantTranscriptCoordinate;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,6 +40,8 @@ public class VariantInterpretationFactory {
 
     }
 
+    private static final Logger LOGGER = LogManager.getLogger(VariantInterpretationFactory.class);
+
     @NotNull
     public static List<ClinicalTrialVariantRequirementDetail> extractProfileName(
             @NotNull List<com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail> molecularProfiles,
@@ -45,13 +49,38 @@ public class VariantInterpretationFactory {
 
         List<ClinicalTrialVariantRequirementDetail> molecularProfileClinicalTrials = Lists.newArrayList();
         for (com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail molecularProfile : molecularProfiles) {
+            ImmutableVariantInterpretation.Builder output = ImmutableVariantInterpretation.builder();
+            if (molecularProfile.requirementType().equals("excluded")) { // variant is excluded from enrollment
+                molecularProfileClinicalTrials.add(ImmutableClinicalTrialVariantRequirementDetail.builder()
+                        .id(molecularProfile.molecularProfile().id())
+                        .profileName(molecularProfile.molecularProfile().profileName())
+                        .requirementType(molecularProfile.requirementType())
+                        .variantInterpretation(extractVariantGeneInfo(ckbEntry, molecularProfileDir, molecularProfile).build())
+                        .build());
+            }
+            if (molecularProfile.requirementType().equals("required")) { // variant is requirement for enrollment
+                molecularProfileClinicalTrials.add(ImmutableClinicalTrialVariantRequirementDetail.builder()
+                        .id(molecularProfile.molecularProfile().id())
+                        .profileName(molecularProfile.molecularProfile().profileName())
+                        .requirementType(molecularProfile.requirementType())
+                        .variantInterpretation(extractVariantGeneInfo(ckbEntry, molecularProfileDir, molecularProfile).build())
+                        .build());
+            }
 
-            molecularProfileClinicalTrials.add(ImmutableClinicalTrialVariantRequirementDetail.builder()
-                    .id(molecularProfile.molecularProfile().id())
-                    .profileName(molecularProfile.molecularProfile().profileName())
-                    .requirementType(molecularProfile.requirementType())
-                    .variantInterpretation(extractVariantGeneInfo(ckbEntry, molecularProfileDir, molecularProfile).build())
-                    .build());
+            if (molecularProfile.requirementType()
+                    .equals("partial - required")) { // variant is required or excluded for a subset of the enrollment population
+                if (molecularProfile.molecularProfile().id() == molecularProfileDir.id()) {
+                    molecularProfileClinicalTrials.add(ImmutableClinicalTrialVariantRequirementDetail.builder()
+                            .id(molecularProfile.molecularProfile().id())
+                            .profileName(molecularProfile.molecularProfile().profileName())
+                            .requirementType(molecularProfile.requirementType())
+                            .variantInterpretation(extractVariantGeneInfo(ckbEntry, molecularProfileDir, molecularProfile).build())
+                            .build());
+                }
+            }
+            if (!molecularProfile.requirementType().contains("required") && !molecularProfile.requirementType().contains("excluded")) {
+                LOGGER.warn("Unused requirement type {} of inclusion criteria of clinical trial", molecularProfile.requirementType());
+            }
 
         }
         return molecularProfileClinicalTrials;
@@ -62,30 +91,29 @@ public class VariantInterpretationFactory {
             @NotNull MolecularProfile molecularProfileDir,
             @NotNull com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail molecularProfile) {
         ImmutableVariantInterpretation.Builder outputBuilderVariantInterpretation = ImmutableVariantInterpretation.builder();
-        if (molecularProfileDir.id() == molecularProfile.molecularProfile().id()) {
-            for (VariantInfo variantInfo : molecularProfileDir.geneVariants()) {
-                for (Variant variant : ckbEntry.variants()) {
-                    if (variantInfo.id() == variant.id()) {
-                        outputBuilderVariantInterpretation.addVariant(ImmutableVariant.builder()
-                                .id(variant.id())
-                                .fullName(variant.fullName())
-                                .impact(variant.impact())
-                                .proteinEffect(variant.proteinEffect())
-                                .variantDescriptions(extractVariantDescriptions(variant.descriptions(), ckbEntry))
-                                .type(variant.type())
-                                .variant(variant.variant())
-                                .createDate(variant.createDate())
-                                .updateDate(variant.updateDate())
-                                .referenceTranscriptCoordinate(extractReferenceTranscriptCoordinates(variant.referenceTranscriptCoordinate()))
-                                .categoryVariantPaths(extractCategoryVariantPaths(variant.categoryVariantPaths()))
-                                .allTranscriptCoordinated(extractAllTranscriptCoordinates(variant.allTranscriptCoordinates()))
-                                .memberVariants(extractMemberVariants(variant.memberVariants(), ckbEntry))
-                                .gene(extractGene(ckbEntry, variant))
-                                .build());
-                    }
+        for (VariantInfo variantInfo : molecularProfileDir.geneVariants()) {
+            for (Variant variant : ckbEntry.variants()) {
+                if (variantInfo.id() == variant.id()) {
+                    outputBuilderVariantInterpretation.addVariant(ImmutableVariant.builder()
+                            .id(variant.id())
+                            .fullName(variant.fullName())
+                            .impact(variant.impact())
+                            .proteinEffect(variant.proteinEffect())
+                            .variantDescriptions(extractVariantDescriptions(variant.descriptions(), ckbEntry))
+                            .type(variant.type())
+                            .variant(variant.variant())
+                            .createDate(variant.createDate())
+                            .updateDate(variant.updateDate())
+                            .referenceTranscriptCoordinate(extractReferenceTranscriptCoordinates(variant.referenceTranscriptCoordinate()))
+                            .categoryVariantPaths(extractCategoryVariantPaths(variant.categoryVariantPaths()))
+                            .allTranscriptCoordinated(extractAllTranscriptCoordinates(variant.allTranscriptCoordinates()))
+                            .memberVariants(extractMemberVariants(variant.memberVariants(), ckbEntry))
+                            .gene(extractGene(ckbEntry, variant))
+                            .build());
                 }
             }
         }
+
         return outputBuilderVariantInterpretation;
     }
 
@@ -94,8 +122,7 @@ public class VariantInterpretationFactory {
         ImmutableGene.Builder outputBuilder = ImmutableGene.builder();
         for (Gene gene : ckbEntry.genes()) {
             if (variant.gene().id() == gene.id()) {
-                outputBuilder
-                        .id(gene.id())
+                outputBuilder.id(gene.id())
                         .geneSymbol(gene.geneSymbol())
                         .terms(gene.terms())
                         .entrezId(gene.entrezId())
@@ -114,8 +141,7 @@ public class VariantInterpretationFactory {
 
     @NotNull
     public static ImmutableVariantInterpretation.Builder extractVariantGeneInfo(@NotNull CkbJsonDatabase ckbEntry,
-            @NotNull MolecularProfile molecularProfileDir,
-            @NotNull MolecularProfileInfo molecularProfile) {
+            @NotNull MolecularProfile molecularProfileDir, @NotNull MolecularProfileInfo molecularProfile) {
         ImmutableVariantInterpretation.Builder outputBuilderVariantInterpretation = ImmutableVariantInterpretation.builder();
         if (molecularProfileDir.id() == molecularProfile.id()) {
             for (VariantInfo variantInfo : molecularProfileDir.geneVariants()) {
