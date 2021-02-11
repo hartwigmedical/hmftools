@@ -59,6 +59,8 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         const val HLA_A = "HLA-A"
         const val HLA_B = "HLA-B"
         const val HLA_C = "HLA-C"
+
+        val EXCLUDED_ALLELES = setOf(HlaAllele("A*01:81"))
     }
 
     private val startTime = System.currentTimeMillis()
@@ -237,6 +239,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
     private fun nucleotideLoci(inputFilename: String): List<HlaSequenceLoci> {
         val sequences = HlaSequenceFile.readFile(inputFilename)
+                .filter { it.allele !in EXCLUDED_ALLELES }
 //                .filter { it.allele.gene in setOf("A", "B") ||  it.allele in listOf(HlaAllele("C*01:02:01:01"), HlaAllele("C*17:01:01:02")) }
                 .reduceToSixDigit()
         return HlaSequenceLoci.create(sequences)
@@ -245,6 +248,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
     private fun aminoAcidLoci(inputFilename: String): List<HlaSequenceLoci> {
         val sequences = HlaSequenceFile.readFile(inputFilename)
+                .filter { it.allele !in EXCLUDED_ALLELES }
                 .reduceToFourDigit()
                 .map { if (it.rawSequence.endsWith("X")) it else it.copyWithAdditionalSequence("X") }
 
