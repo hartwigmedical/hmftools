@@ -71,7 +71,6 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
     private val minConfirmedUniqueCoverage = config.minConfirmedUniqueCoverage
     private val resourcesDir = config.resourceDir
     private val outputDir = config.outputDir
-    private val bamFile = config.inputBam
 
     private val namedThreadFactory = ThreadFactoryBuilder().setNameFormat("LILAC-%d").build()
     private val executorService = Executors.newFixedThreadPool(config.threads, namedThreadFactory)
@@ -111,15 +110,22 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val aminoAcidSequencesWithInserts = aminoAcidSequences.filter { it.containsInserts() }
         val aminoAcidSequencesWithDeletes = aminoAcidSequences.filter { it.containsDeletes() }
 
-        logger.info("Querying records from $bamFile")
+        logger.info("Querying records from reference bam ${config.referenceBam}")
         val nucleotideFragmentFactory = NucleotideFragmentFactory(config.minBaseQual, aminoAcidSequencesWithInserts, aminoAcidSequencesWithDeletes)
         val transcripts = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
         val bamReader = SAMRecordReader(1000, config.refGenome, transcripts, nucleotideFragmentFactory)
-        val rawNucleotideFragments = bamReader.readFromBam(bamFile)
+        val rawReferenceNucleotideFragments = bamReader.readFromBam(config.referenceBam)
 
-        logger.info("Enriching bam records")
+        val rawTumorNucleotideFragments = if (config.tumorBam.isNotEmpty()) {
+            logger.info("Querying records from tumor bam ${config.tumorBam}")
+            bamReader.readFromBam(config.tumorBam)
+        } else {
+            listOf()
+        }
+
+        logger.info("Enriching reference bam records")
         val nucleotideGeneEnrichment = NucleotideGeneEnrichment(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
-        val geneEnrichedNucleotideFragments = nucleotideGeneEnrichment.enrich(rawNucleotideFragments)
+        val geneEnrichedNucleotideFragments = nucleotideGeneEnrichment.enrich(rawReferenceNucleotideFragments)
         val aminoAcidPipeline = AminoAcidFragmentPipeline(minBaseQual, minEvidence, geneEnrichedNucleotideFragments)
         val aFragments = aminoAcidPipeline.phasingFragments(hlaAContext)
         val bFragments = aminoAcidPipeline.phasingFragments(hlaBContext)
