@@ -49,7 +49,6 @@ public class VariantInterpretationFactory {
 
         List<ClinicalTrialVariantRequirementDetail> molecularProfileClinicalTrials = Lists.newArrayList();
         for (com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail molecularProfile : molecularProfiles) {
-            ImmutableVariantInterpretation.Builder output = ImmutableVariantInterpretation.builder();
             if (molecularProfile.requirementType().equals("excluded")) { // variant is excluded from enrollment
                 molecularProfileClinicalTrials.add(ImmutableClinicalTrialVariantRequirementDetail.builder()
                         .id(molecularProfile.molecularProfile().id())
