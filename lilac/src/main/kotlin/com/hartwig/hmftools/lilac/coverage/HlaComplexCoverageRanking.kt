@@ -31,9 +31,9 @@ class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int = 2) {
             return -homozygousCompare
         }
 
-        for (i in 0 until min(o1.alleles.size, o2.alleles.size)) {
-            val o1Allele = o1.alleles[i].allele
-            val o2Allele = o2.alleles[i].allele
+        for (i in 0 until min(o1.alleleCoverage.size, o2.alleleCoverage.size)) {
+            val o1Allele = o1.alleleCoverage[i].allele
+            val o2Allele = o2.alleleCoverage[i].allele
             val alleleCompare = o1Allele.compareTo(o2Allele)
             if (alleleCompare != 0) {
                 return alleleCompare

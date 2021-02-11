@@ -3,7 +3,7 @@ package com.hartwig.hmftools.lilac.coverage
 import java.io.File
 import kotlin.math.roundToInt
 
-data class HlaComplexCoverage(val uniqueCoverage: Int, val sharedCoverage: Int, val wildCoverage: Int, val alleles: List<HlaAlleleCoverage>) : Comparable<HlaComplexCoverage> {
+data class HlaComplexCoverage(val uniqueCoverage: Int, val sharedCoverage: Int, val wildCoverage: Int, val alleleCoverage: List<HlaAlleleCoverage>) : Comparable<HlaComplexCoverage> {
     val totalCoverage = uniqueCoverage + sharedCoverage + wildCoverage
 
     companion object {
@@ -60,8 +60,8 @@ data class HlaComplexCoverage(val uniqueCoverage: Int, val sharedCoverage: Int, 
     }
 
     fun homozygousAlleles(): Int {
-        val size = alleles.size
-        val distinct = alleles.distinct().size
+        val size = alleleCoverage.size
+        val distinct = alleleCoverage.distinct().size
         return size - distinct
     }
 
@@ -86,8 +86,8 @@ data class HlaComplexCoverage(val uniqueCoverage: Int, val sharedCoverage: Int, 
 
 
     override fun toString(): String {
-        val types = alleles.map { it.allele }.toSet()
-        return "${totalCoverage}\t$uniqueCoverage\t${sharedCoverage}\t${wildCoverage}\t${types.size}\t${alleles.joinToString("\t")}"
+        val types = alleleCoverage.map { it.allele }.toSet()
+        return "${totalCoverage}\t$uniqueCoverage\t${sharedCoverage}\t${wildCoverage}\t${types.size}\t${alleleCoverage.joinToString("\t")}"
     }
 
 

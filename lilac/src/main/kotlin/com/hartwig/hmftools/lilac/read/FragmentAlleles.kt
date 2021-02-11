@@ -15,13 +15,16 @@ class FragmentAlleles(val fragment: AminoAcidFragment, val full: Collection<HlaA
             return FragmentAlleles(this.fragment, this.full.filter { it in alleles }, this.partial.filter { it in alleles }, this.wild.filter { it in alleles })
         }
 
-        fun create(fragmentAlleles: List<FragmentAlleles>, alleles: Collection<HlaAllele>): List<FragmentAlleles> {
-            return fragmentAlleles.map { it.filter(alleles) }.filter { it.full.isNotEmpty() || it.partial.isNotEmpty()}
+        fun List<FragmentAlleles>.filter(alleles: Collection<HlaAllele>): List<FragmentAlleles> {
+            return this
+                    .map { it.filter(alleles) }
+                    .filter { it.full.isNotEmpty() || it.partial.isNotEmpty()}
         }
 
-
         fun create(aminoAcidFragments: List<AminoAcidFragment>, hetLoci: Collection<Int>, sequences: Collection<HlaSequenceLoci>, nucleotideLoci: Collection<Int>, nucleotideSequences: Collection<HlaSequenceLoci>): List<FragmentAlleles> {
-            return aminoAcidFragments.map { create(it, hetLoci, sequences, nucleotideLoci, nucleotideSequences) }.filter { it.full.isNotEmpty() || it.partial.isNotEmpty() }
+            return aminoAcidFragments
+                    .map { create(it, hetLoci, sequences, nucleotideLoci, nucleotideSequences) }
+                    .filter { it.full.isNotEmpty() || it.partial.isNotEmpty() }
         }
 
         private fun create(

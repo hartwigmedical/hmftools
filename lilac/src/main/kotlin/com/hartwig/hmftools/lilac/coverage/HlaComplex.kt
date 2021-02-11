@@ -14,7 +14,6 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
             return combineComplexes(combineComplexes(a, b), c)
         }
 
-
         fun gene(confirmedGroups: List<HlaAllele>, confirmedProteins: List<HlaAllele>, candidates: List<HlaAllele>): List<HlaComplex> {
 
             if (confirmedProteins.size == 2) {

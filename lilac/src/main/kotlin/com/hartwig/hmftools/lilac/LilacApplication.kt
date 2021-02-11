@@ -13,6 +13,11 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.hla.HlaContextFactory
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory
 import com.hartwig.hmftools.lilac.nuc.NucleotideGeneEnrichment
+import com.hartwig.hmftools.lilac.qc.AminoAcidQC
+import com.hartwig.hmftools.lilac.qc.BamQC
+import com.hartwig.hmftools.lilac.qc.CoverageQC
+import com.hartwig.hmftools.lilac.qc.HaplotypeQC
+import com.hartwig.hmftools.lilac.read.FragmentAlleles
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToFourDigit
@@ -113,13 +118,13 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val bamReader = SAMRecordReader(1000, config.refGenome, transcripts, nucleotideFragmentFactory)
         val rawNucleotideFragments = bamReader.readFromBam(bamFile)
 
+        logger.info("Enriching bam records")
         val nucleotideGeneEnrichment = NucleotideGeneEnrichment(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
         val geneEnrichedNucleotideFragments = nucleotideGeneEnrichment.enrich(rawNucleotideFragments)
         val aminoAcidPipeline = AminoAcidFragmentPipeline(minBaseQual, minEvidence, geneEnrichedNucleotideFragments)
         val aFragments = aminoAcidPipeline.type(hlaAContext)
         val bFragments = aminoAcidPipeline.type(hlaBContext)
         val cFragments = aminoAcidPipeline.type(hlaCContext)
-
 
         // Phasing
         logger.info("Phasing bam records")
@@ -143,13 +148,10 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         // Coverage
         val aminoAcidFragments = aminoAcidPipeline.combined(allProteinExonBoundaries)
-        val nucleotideCounts = SequenceCount.nucleotides(minEvidence, aminoAcidFragments)
         val aminoAcidCounts = SequenceCount.aminoAcids(minEvidence, aminoAcidFragments)
-
+        val aminoAcidHeterozygousLoci = aminoAcidCounts.heterozygousLoci()
+        val nucleotideCounts = SequenceCount.nucleotides(minEvidence, aminoAcidFragments)
         val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousLoci() intersect allNucleotideExonBoundaries
-        aminoAcidCounts.writeVertically("$outputDir/$sample.aminoacids.count.txt")
-        nucleotideCounts.writeVertically("$outputDir/$sample.nucleotides.count.txt")
-
 
         val candidateAlleles = candidates.map { it.allele }
         val candidateAlleleSpecificProteins = candidateAlleles.map { it.asFourDigit() }
@@ -157,75 +159,78 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val aminoAcidCandidates = aminoAcidSequences.filter { it.allele in candidateAlleles }
         val nucleotideCandidates = nucleotideSequences.filter { it.allele.asFourDigit() in candidateAlleleSpecificProteins }
 
-        val coverageFactory = HlaComplexCoverageFactory(
-                executorService,
+        val fragmentAlleles = FragmentAlleles.create(
                 aminoAcidFragments,
-                aminoAcidCounts.heterozygousLoci(),
+                aminoAcidHeterozygousLoci,
                 aminoAcidCandidates,
                 nucleotideHeterozygousLoci,
                 nucleotideCandidates)
+        val coverageFactory = HlaComplexCoverageFactory(executorService, fragmentAlleles)
 
-        logger.info("Calculating overall allele[total,unique,shared,wide] coverage")
+
+        logger.info("Identifying uniquely identifiable groups and proteins [total,unique,shared,wide]")
         val groupCoverage = coverageFactory.groupCoverage(candidateAlleles)
         val confirmedGroups = groupCoverage.confirmUnique()
-        val discardedGroups = groupCoverage.alleles.filter { it.uniqueCoverage > 0 && it !in confirmedGroups }.sortedDescending()
-        logger.info("... found ${confirmedGroups.size} uniquely identifiable groups: " + confirmedGroups.joinToString(", "))
+        val discardedGroups = groupCoverage.alleleCoverage.filter { it.uniqueCoverage > 0 && it !in confirmedGroups }.sortedDescending()
+        logger.info("... confirmed ${confirmedGroups.size} unique groups: " + confirmedGroups.joinToString(", "))
         if (discardedGroups.isNotEmpty()) {
-            logger.info("... discarded ${discardedGroups.size} uniquely identifiable groups: " + discardedGroups.joinToString(", "))
+            logger.info("... found ${discardedGroups.size} insufficiently unique groups: " + discardedGroups.joinToString(", "))
         }
 
         val candidatesAfterConfirmedGroups = candidateAlleles.filterWithConfirmedGroups(confirmedGroups.map { it.allele })
         val proteinCoverage = coverageFactory.proteinCoverage(candidatesAfterConfirmedGroups)
         val confirmedProtein = proteinCoverage.confirmUnique()
-        val discardedProtein = proteinCoverage.alleles.filter { it.uniqueCoverage > 0 && it !in confirmedGroups }.sortedDescending()
-        logger.info("... found ${confirmedProtein.size} uniquely identifiable proteins: " + confirmedProtein.joinToString(", "))
+        val discardedProtein = proteinCoverage.alleleCoverage.filter { it.uniqueCoverage > 0 && it !in confirmedGroups }.sortedDescending()
+        logger.info("... confirmed ${confirmedProtein.size} unique proteins: " + confirmedProtein.joinToString(", "))
         if (discardedProtein.isNotEmpty()) {
-            logger.info("... discarded ${discardedProtein.size} uniquely identifiable proteins: " + discardedProtein.joinToString(", "))
+            logger.info("... found ${discardedProtein.size} insufficiently unique proteins: " + discardedProtein.joinToString(", "))
         }
 
-        val template = aminoAcidSequences.filter { it.allele == HlaAllele("A*01:01:01:01") }.first()
-        val writtenCandidates = (candidates + expectedSequences + template).distinct().sortedBy { it.allele }
-        HlaSequenceLociFile.write("$outputDir/$sample.candidates.deflate.txt", aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries, writtenCandidates)
-
-        val complexes = HlaComplex.complexes(
-                confirmedGroups.map { it.allele },
-                confirmedProtein.map { it.allele },
-                candidates.map { it.allele })
-
+        val complexes = HlaComplex.complexes(confirmedGroups.alleles(), confirmedProtein.alleles(), candidates.map { it.allele })
         logger.info("Calculating coverage of ${complexes.size} complexes")
+
+        val complexCoverage = coverageFactory.complexCoverage(complexes)
 
         if (expectedSequences.isNotEmpty()) {
             val expectedCoverage = coverageFactory.proteinCoverage(expectedSequences.map { it.allele })
             logger.info("Expected coverage: $expectedCoverage")
         }
 
-        val complexCoverage = coverageFactory.complexCoverage(complexes)
         if (complexCoverage.isNotEmpty()) {
-            val winnerFactory = HlaComplexCoverageRanking()
-            val winningCandidates = winnerFactory.candidateRanking(complexCoverage)
-            val winner = winningCandidates[0]
+            val rankedComplexes = HlaComplexCoverageRanking().candidateRanking(complexCoverage)
+            val winningComplex = rankedComplexes[0]
+            val winningAlleles = winningComplex.alleleCoverage.alleles()
+            val winningSequences = candidates.filter { candidate -> candidate.allele in winningAlleles }
 
-            winningCandidates.writeToFile("$outputDir/$sample.coverage.txt")
+
+            rankedComplexes.writeToFile("$outputDir/$sample.coverage.txt")
 
             logger.info(HlaComplexCoverage.header())
-            for (winningCandidate in winningCandidates) {
+            for (winningCandidate in rankedComplexes) {
                 logger.info(winningCandidate)
             }
 
-            logger.info("${config.sample} - ${winningCandidates.size} CANDIDATES, WINNING ALLELES: ${winner.alleles.map { it.allele }}")
+            logger.info("${config.sample} - ${rankedComplexes.size} CANDIDATES, WINNING ALLELES: ${winningComplex.alleleCoverage.map { it.allele }}")
 
-            val winningAlleles = winner.alleles.map { it.allele }
-            val winningSequences = candidates.filter { candidate -> candidate.allele in winningAlleles }
-            PhasedEvidenceValidation.validateAgainstFinalCandidates("A", aPhasedEvidence, winningSequences)
-            PhasedEvidenceValidation.validateAgainstFinalCandidates("B", bPhasedEvidence, winningSequences)
-            PhasedEvidenceValidation.validateAgainstFinalCandidates("C", cPhasedEvidence, winningSequences)
+            val aminoAcidQC = AminoAcidQC.create(winningSequences, aminoAcidCounts)
+            val haplotypeQC = HaplotypeQC.create(3, winningSequences, aPhasedEvidence + bPhasedEvidence + cPhasedEvidence)
+            val bamQC = BamQC.create(bamReader)
+            val coverageQC = CoverageQC.create(fragmentAlleles.size, winningComplex)
+
+            logger.info("QC Info:")
+            logger.info("... $aminoAcidQC")
+            logger.info("... $haplotypeQC")
+            logger.info("... $bamQC")
+            logger.info("... $coverageQC")
+
         }
 
-        // WARNINGS
-        val fragmentsWithUnmatchedIndel = bamReader.unmatchedIndels(2)
-        for ((indel, count) in fragmentsWithUnmatchedIndel) {
-            logger.warn("UNMATCHED_INDEL - $count fragments excluded with unmatched indel $indel")
-        }
+        logger.info("Writing output to $outputDir")
+        val deflatedSequenceTemplate = aminoAcidSequences.first { it.allele == HlaAllele("A*01:01:01:01") }
+        val candidateToWrite = (candidates + expectedSequences + deflatedSequenceTemplate).distinct().sortedBy { it.allele }
+        HlaSequenceLociFile.write("$outputDir/$sample.candidates.deflate.txt", aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries, candidateToWrite)
+        aminoAcidCounts.writeVertically("$outputDir/$sample.aminoacids.count.txt")
+        nucleotideCounts.writeVertically("$outputDir/$sample.nucleotides.count.txt")
 
     }
 
@@ -263,12 +268,17 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
     }
 
     private fun HlaComplexCoverage.confirmUnique(): List<HlaAlleleCoverage> {
-        val unique = this. alleles.filter { it.uniqueCoverage >= config.minConfirmedUniqueCoverage }.sortedDescending()
+        val unique = this.alleleCoverage.filter { it.uniqueCoverage >= config.minConfirmedUniqueCoverage }.sortedDescending()
         val a = unique.filter { it.allele.gene == "A" }.take(2)
         val b = unique.filter { it.allele.gene == "B" }.take(2)
         val c = unique.filter { it.allele.gene == "C" }.take(2)
 
         return (a + b + c).sortedDescending()
+    }
+
+
+    private fun List<HlaAlleleCoverage>.alleles(): List<HlaAllele> {
+        return this.map { it.allele }
     }
 
 }
