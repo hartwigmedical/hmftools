@@ -138,38 +138,6 @@ public class MolecularProfileInterpretationFactory {
     }
 
     @NotNull
-    public static ImmutableMolecularProfileInterpretation.Builder extractVariantGeneInfo(@NotNull CkbJsonDatabase ckbEntry,
-            @NotNull MolecularProfile molecularProfileDir, @NotNull MolecularProfileInfo molecularProfile) {
-        ImmutableMolecularProfileInterpretation.Builder outputBuilderVariantInterpretation =
-                ImmutableMolecularProfileInterpretation.builder();
-        if (molecularProfileDir.id() == molecularProfile.id()) {
-            for (VariantInfo variantInfo : molecularProfileDir.geneVariants()) {
-                for (Variant variant : ckbEntry.variants()) {
-                    if (variantInfo.id() == variant.id()) {
-                        outputBuilderVariantInterpretation.addVariants(ImmutableVariant.builder()
-                                .id(variant.id())
-                                .fullName(variant.fullName())
-                                .impact(variant.impact())
-                                .proteinEffect(variant.proteinEffect())
-                                .variantDescriptions(extractVariantDescriptions(variant.descriptions(), ckbEntry))
-                                .type(variant.type())
-                                .variant(variant.variant())
-                                .createDate(variant.createDate())
-                                .updateDate(variant.updateDate())
-                                .referenceTranscriptCoordinate(extractReferenceTranscriptCoordinate(variant.referenceTranscriptCoordinate()))
-                                .categoryVariantPaths(extractCategoryVariantPaths(variant.categoryVariantPaths()))
-                                .allTranscriptCoordinates(extractAllTranscriptCoordinates(variant.allTranscriptCoordinates()))
-                                .memberVariants(extractMemberVariants(variant.memberVariants(), ckbEntry))
-                                .gene(extractGene(ckbEntry, variant))
-                                .build());
-                    }
-                }
-            }
-        }
-        return outputBuilderVariantInterpretation;
-    }
-
-    @NotNull
     private static List<VariantDescription> extractVariantDescriptions(@NotNull List<DescriptionInfo> descriptionInfos,
             @NotNull CkbJsonDatabase ckbEntry) {
         List<VariantDescription> variantDescriptions = Lists.newArrayList();

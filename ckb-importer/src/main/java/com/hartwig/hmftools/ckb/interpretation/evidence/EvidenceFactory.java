@@ -23,21 +23,22 @@ public class EvidenceFactory {
     public static void interpretVariantEvidence(@NotNull MolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
             @NotNull ImmutableCkbEntryInterpretation.Builder outputBuilder) {
         for (EvidenceInfo evidenceInfo : molecularProfile.variantLevelEvidence().evidence()) {
-            outputBuilder.addEvidenceInterpretations(ImmutableEvidenceInterpretation.builder()
-                    .id(evidenceInfo.id())
-                    .approvalStatus(evidenceInfo.approvalStatus())
-                    .evidenceType(evidenceInfo.evidenceType())
-                    .efficacyEvidence(evidenceInfo.efficacyEvidence())
-                    .variantInterpretation(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbEntry,
-                            molecularProfile,
-                            evidenceInfo.molecularProfile()).build())
-                    .therapyInterpretation(extractTherapyEvidence(ckbEntry, evidenceInfo.therapy(), molecularProfile))
-                    .indication(CommonInterpretationFactory.extractIndication(ckbEntry, evidenceInfo.indication()))
-                    .responseType(evidenceInfo.responseType())
-                    .references(CommonInterpretationFactory.extractReferences(evidenceInfo.references(), ckbEntry))
-                    .ampCapAscoEvidenceLevel(evidenceInfo.ampCapAscoEvidenceLevel())
-                    .ampCapAscoInferredTier(evidenceInfo.ampCapAscoInferredTier())
-                    .build());
+            if (molecularProfile.id() == evidenceInfo.molecularProfile().id()) {
+                outputBuilder.addEvidenceInterpretations(ImmutableEvidenceInterpretation.builder()
+                        .id(evidenceInfo.id())
+                        .approvalStatus(evidenceInfo.approvalStatus())
+                        .evidenceType(evidenceInfo.evidenceType())
+                        .efficacyEvidence(evidenceInfo.efficacyEvidence())
+                        .variantInterpretation(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbEntry,
+                                molecularProfile).build())
+                        .therapyInterpretation(extractTherapyEvidence(ckbEntry, evidenceInfo.therapy(), molecularProfile))
+                        .indication(CommonInterpretationFactory.extractIndication(ckbEntry, evidenceInfo.indication()))
+                        .responseType(evidenceInfo.responseType())
+                        .references(CommonInterpretationFactory.extractReferences(evidenceInfo.references(), ckbEntry))
+                        .ampCapAscoEvidenceLevel(evidenceInfo.ampCapAscoEvidenceLevel())
+                        .ampCapAscoInferredTier(evidenceInfo.ampCapAscoInferredTier())
+                        .build());
+            }
         }
     }
 
