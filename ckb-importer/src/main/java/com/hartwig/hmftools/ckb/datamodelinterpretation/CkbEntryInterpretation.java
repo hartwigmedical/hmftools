@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.ckb.interpretation.clinicaltrial.ClinicalTrialInterpretation;
 import com.hartwig.hmftools.ckb.interpretation.evidence.EvidenceInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.knownaberration.KnownAberation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -22,4 +23,7 @@ public abstract class CkbEntryInterpretation {
 
     @NotNull
     public abstract List<EvidenceInterpretation> evidenceInterpretation();
+
+    @NotNull
+    public abstract KnownAberation knownAberations();
 }

@@ -7,6 +7,7 @@ import com.hartwig.hmftools.ckb.datamodelinterpretation.CkbEntryInterpretation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.ImmutableCkbEntryInterpretation;
 import com.hartwig.hmftools.ckb.interpretation.clinicaltrial.ClinicalTrialFactory;
 import com.hartwig.hmftools.ckb.interpretation.evidence.EvidenceFactory;
+import com.hartwig.hmftools.ckb.interpretation.knownaberration.KnownAberationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
 
@@ -33,6 +34,8 @@ public class InterpretationFactory {
             ClinicalTrialFactory.interpretClinicalTrials(molecularProfile, ckbEntry, outputBuilder);
 
             EvidenceFactory.interpretEvidence(molecularProfile, ckbEntry, outputBuilder);
+
+            KnownAberationFactory.extractKnownGenomicAberations(molecularProfile, ckbEntry, outputBuilder);
 
             LOGGER.info(outputBuilder.build());
             CkbEntryInterpretation.add(outputBuilder.build());
