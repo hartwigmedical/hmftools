@@ -69,7 +69,8 @@ public class TherapyInterpretationFactory {
             @NotNull MolecularProfile molecularProfile, int therapyId) {
         List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatusesInterpretation = Lists.newArrayList();
         for (GlobalApprovalStatusInfo globalTherapyApprovalStatusInfo : globalTherapyApprovalStatuses) {
-            if (therapyId == globalTherapyApprovalStatusInfo.therapy().id()) {
+            if (therapyId == globalTherapyApprovalStatusInfo.therapy().id()
+                    && molecularProfile.id() == globalTherapyApprovalStatusInfo.molecularProfile().id()) {
                 globalTherapyApprovalStatusesInterpretation.add(ImmutableGlobalTherapyApprovalStatus.builder()
                         .id(globalTherapyApprovalStatusInfo.id())
                         .indication(CommonInterpretationFactory.extractIndication(ckbEntry, globalTherapyApprovalStatusInfo.indication()))
