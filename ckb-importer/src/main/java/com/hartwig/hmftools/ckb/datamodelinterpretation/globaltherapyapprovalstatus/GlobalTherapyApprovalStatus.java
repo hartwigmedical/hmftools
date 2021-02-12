@@ -14,7 +14,7 @@ public abstract class GlobalTherapyApprovalStatus {
     public abstract int id();
 
     @NotNull
-    public abstract MolecularProfileInterpretation molecularprofileInterpretation();
+    public abstract MolecularProfileInterpretation molecularProfileInterpretation();
 
     @NotNull
     public abstract Indication indication();

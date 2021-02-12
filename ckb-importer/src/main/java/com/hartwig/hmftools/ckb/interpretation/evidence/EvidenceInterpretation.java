@@ -2,8 +2,8 @@ package com.hartwig.hmftools.ckb.interpretation.evidence;
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ReferenceExtend;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.Indication;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.reference.Reference;
 import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretation;
 import com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation.TherapyInterpretation;
 
@@ -39,7 +39,7 @@ public abstract class EvidenceInterpretation {
     public abstract String responseType();
 
     @NotNull
-    public abstract List<ReferenceExtend> references();
+    public abstract List<Reference> references();
 
     @NotNull
     public abstract String ampCapAscoEvidenceLevel();

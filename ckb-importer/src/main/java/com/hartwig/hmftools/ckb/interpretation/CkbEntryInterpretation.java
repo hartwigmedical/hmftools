@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ckb.interpretation;
 
+import java.util.Date;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.interpretation.clinicaltrial.ClinicalTrialInterpretation;
@@ -17,6 +18,15 @@ public abstract class CkbEntryInterpretation {
     public abstract int id();
 
     public abstract int molecularProfileId();
+
+    @NotNull
+    public abstract String profileName();
+
+    @Nullable
+    public abstract Date createDate();
+
+    @Nullable
+    public abstract Date updateDate();
 
     @NotNull
     public abstract List<ClinicalTrialInterpretation> clinicalTrialInterpretations();
