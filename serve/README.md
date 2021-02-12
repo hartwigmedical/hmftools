@@ -225,7 +225,8 @@ Finally, similar to VICC, cancer types for which no DOIDs have been specified ge
  
 ## Overview of the SERVE algorithm
 
-SERVE starts with reading the various knowledgebases and after filtering and curation, knowledge is extracted.
+Every knowledgebase can be enabled or disabled through configuration.
+SERVE starts with reading the various knowledgebases which are enabled. Knowledge is extracted after applying filtering and curation.
 A knowledgebase can contribute to known and/or actionable events. Current configuration as follows:
       
 Knowledgebase  | Contributes to known events? | Contributes to actionable events?
