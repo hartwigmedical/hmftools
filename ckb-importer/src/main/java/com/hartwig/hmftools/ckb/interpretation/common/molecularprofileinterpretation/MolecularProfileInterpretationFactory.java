@@ -21,7 +21,6 @@ import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.VariantDescripti
 import com.hartwig.hmftools.ckb.interpretation.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
-import com.hartwig.hmftools.ckb.json.common.MolecularProfileInfo;
 import com.hartwig.hmftools.ckb.json.common.VariantInfo;
 import com.hartwig.hmftools.ckb.json.gene.Gene;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;

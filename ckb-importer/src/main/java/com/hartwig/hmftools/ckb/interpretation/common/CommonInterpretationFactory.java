@@ -21,7 +21,8 @@ public class CommonInterpretationFactory {
     }
 
     @NotNull
-    public static List<com.hartwig.hmftools.ckb.datamodelinterpretation.reference.Reference> extractReferences(@NotNull List<ReferenceInfo> referenceInfos, @NotNull CkbJsonDatabase ckbEntry) {
+    public static List<com.hartwig.hmftools.ckb.datamodelinterpretation.reference.Reference> extractReferences(
+            @NotNull List<ReferenceInfo> referenceInfos, @NotNull CkbJsonDatabase ckbEntry) {
         List<com.hartwig.hmftools.ckb.datamodelinterpretation.reference.Reference> references = Lists.newArrayList();
         for (ReferenceInfo referenceInfo : referenceInfos) {
             for (Reference reference : ckbEntry.references()) {
@@ -51,8 +52,7 @@ public class CommonInterpretationFactory {
         ImmutableIndication.Builder outputBuilder = ImmutableIndication.builder();
         for (Indication indication : ckbEntry.indications()) {
             if (indicationInfo.id().equals(indication.id())) {
-                outputBuilder
-                        .id(indication.id())
+                outputBuilder.id(indication.id())
                         .name(indication.name())
                         .source(indication.source())
                         .definition(indication.definition())
