@@ -7,8 +7,8 @@ import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTr
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrial;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialContact;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialLocation;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.ImmutableIndication;
 import com.hartwig.hmftools.ckb.interpretation.ImmutableCkbEntryInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation.TherapyInterpretationFactory;
 import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
@@ -54,20 +54,7 @@ public class ClinicalTrialFactory {
                             .build());
 
                     for (IndicationInfo indicationInfo : clinicalTrial.indications()) {
-                        for (Indication indication : ckbEntry.indications()) {
-                            if (indicationInfo.id().equals(indication.id())) {
-                                outputBuilderClinicalInterpretation.addIndications(ImmutableIndication.builder()
-                                        .id(indication.id())
-                                        .name(indication.name())
-                                        .source(indication.source())
-                                        .definition(indication.definition())
-                                        .currentPreferredTerm(indication.currentPreferredTerm())
-                                        .lastUpdateDateFromDO(indication.lastUpdateDateFromDO())
-                                        .altIds(indication.altIds())
-                                        .termId(indication.termId())
-                                        .build());
-                            }
-                        }
+                        outputBuilderClinicalInterpretation.addIndications(CommonInterpretationFactory.extractIndication(ckbEntry, indicationInfo));
                     }
 
                     for (TherapyInfo therapyInfo : clinicalTrial.therapies()) {

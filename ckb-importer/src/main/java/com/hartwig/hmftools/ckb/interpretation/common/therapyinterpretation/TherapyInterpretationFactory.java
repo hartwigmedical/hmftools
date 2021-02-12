@@ -73,7 +73,7 @@ public class TherapyInterpretationFactory {
             if (therapyId == globalTherapyApprovalStatusInfo.therapy().id()) {
                 globalTherapyApprovalStatusesInterpretation.add(ImmutableGlobalTherapyApprovalStatus.builder()
                         .id(globalTherapyApprovalStatusInfo.id())
-                        .indications(EvidenceFactory.extractIndication(ckbEntry, globalTherapyApprovalStatusInfo.indication()))
+                        .indications(CommonInterpretationFactory.extractIndication(ckbEntry, globalTherapyApprovalStatusInfo.indication()))
                         .variantInterpretation(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbEntry,
                                 molecularProfile,
                                 globalTherapyApprovalStatusInfo.molecularProfile()).build())

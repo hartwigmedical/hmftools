@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.ckb.interpretation.evidence;
 
-import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.ImmutableIndication;
 import com.hartwig.hmftools.ckb.interpretation.ImmutableCkbEntryInterpretation;
 import com.hartwig.hmftools.ckb.interpretation.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation.TherapyInterpretation;
@@ -8,9 +7,7 @@ import com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation.Ther
 import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
-import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
-import com.hartwig.hmftools.ckb.json.indication.Indication;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
 import com.hartwig.hmftools.ckb.json.therapy.Therapy;
 
@@ -23,7 +20,7 @@ public class EvidenceFactory {
 
     }
 
-    public static void interpretEvidence(@NotNull MolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
+    public static void interpretVariantEvidence(@NotNull MolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
             @NotNull ImmutableCkbEntryInterpretation.Builder outputBuilder) {
         for (EvidenceInfo evidenceInfo : molecularProfile.variantLevelEvidence().evidence()) {
             outputBuilder.addEvidenceInterpretations(ImmutableEvidenceInterpretation.builder()
@@ -35,13 +32,12 @@ public class EvidenceFactory {
                             molecularProfile,
                             evidenceInfo.molecularProfile()).build())
                     .therapyInterpretation(extractTherapyEvidence(ckbEntry, evidenceInfo.therapy(), molecularProfile))
-                    .indications(extractIndication(ckbEntry, evidenceInfo.indication()))
+                    .indication(CommonInterpretationFactory.extractIndication(ckbEntry, evidenceInfo.indication()))
                     .responseType(evidenceInfo.responseType())
                     .references(CommonInterpretationFactory.extractReferences(evidenceInfo.references(), ckbEntry))
                     .ampCapAscoEvidenceLevel(evidenceInfo.ampCapAscoEvidenceLevel())
                     .ampCapAscoInferredTier(evidenceInfo.ampCapAscoInferredTier())
                     .build());
-
         }
     }
 
@@ -55,25 +51,5 @@ public class EvidenceFactory {
             }
         }
         return therapyInterpretation;
-    }
-
-    @NotNull
-    public static com.hartwig.hmftools.ckb.datamodelinterpretation.indication.Indication extractIndication(
-            @NotNull CkbJsonDatabase ckbEntry, @Nullable IndicationInfo indicationInfo) {
-        ImmutableIndication.Builder outputBuilder = ImmutableIndication.builder();
-        for (Indication indication : ckbEntry.indications()) {
-            if (indicationInfo.id().equals(indication.id())) {
-                outputBuilder
-                        .id(indication.id())
-                        .name(indication.name())
-                        .source(indication.source())
-                        .definition(indication.definition())
-                        .currentPreferredTerm(indication.currentPreferredTerm())
-                        .lastUpdateDateFromDO(indication.lastUpdateDateFromDO())
-                        .altIds(indication.altIds())
-                        .termId(indication.termId());
-            }
-        }
-        return outputBuilder.build();
     }
 }

@@ -33,7 +33,7 @@ public abstract class EvidenceInterpretation {
     public abstract TherapyInterpretation therapyInterpretation();
 
     @NotNull
-    public abstract Indication indications();
+    public abstract Indication indication();
 
     @NotNull
     public abstract String responseType();

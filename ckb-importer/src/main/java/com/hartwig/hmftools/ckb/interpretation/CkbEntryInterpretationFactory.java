@@ -29,7 +29,7 @@ public class CkbEntryInterpretationFactory {
             outputBuilder.molecularProfileId(molecularProfile.id());
 
             ClinicalTrialFactory.interpretClinicalTrials(molecularProfile, ckbEntry, outputBuilder);
-            EvidenceFactory.interpretEvidence(molecularProfile, ckbEntry, outputBuilder);
+            EvidenceFactory.interpretVariantEvidence(molecularProfile, ckbEntry, outputBuilder);
             KnownGenomicAlterationFactory.extractKnownGenomicAlteration(molecularProfile, ckbEntry, outputBuilder);
 
             LOGGER.info(outputBuilder.build());  //TODO removed when model is finished
