@@ -23,17 +23,8 @@ public abstract class MolecularProfile {
     public abstract Date updateDate();
 
     @NotNull
-    public abstract List<MolecularProfileEvidence> complexMolecularProfileEvidences();
-
-    @NotNull
-    public abstract List<MolecularProfileEvidence> treatmentApproachEvidence();
-
-    @NotNull
     public abstract List<MolecularProfileClinicalTrial> variantAssociatedClinicalTrials();
 
     @NotNull
-    public abstract List<MolecularProfileEvidence> variantLevelEvidence();
-
-    @NotNull
-    public abstract List<MolecularProfileEvidence> extendedEvidence();
+    public abstract List<MolecularProfileEvidence> variantLevelEvidences();
 }

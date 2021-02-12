@@ -13,5 +13,5 @@ import org.jetbrains.annotations.Nullable;
 public abstract class MolecularProfileInterpretation {
 
     @Nullable
-    public abstract List<Variant> variant();
+    public abstract List<Variant> variants();
 }

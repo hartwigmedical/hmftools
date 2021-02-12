@@ -78,7 +78,7 @@ public class MolecularProfileInterpretationFactory {
                 .id(molecularProfile.molecularProfile().id())
                 .profileName(molecularProfile.molecularProfile().profileName())
                 .requirementType(molecularProfile.requirementType())
-                .variantInterpretation(extractVariantGeneInfo(ckbEntry, molecularProfileDir).build());
+                .molecularProfileInterpretation(extractVariantGeneInfo(ckbEntry, molecularProfileDir).build());
     }
 
     @NotNull
@@ -89,7 +89,7 @@ public class MolecularProfileInterpretationFactory {
         for (VariantInfo variantInfo : molecularProfileDir.geneVariants()) {
             for (Variant variant : ckbEntry.variants()) {
                 if (variantInfo.id() == variant.id()) {
-                    outputBuilderVariantInterpretation.addVariant(ImmutableVariant.builder()
+                    outputBuilderVariantInterpretation.addVariants(ImmutableVariant.builder()
                             .id(variant.id())
                             .fullName(variant.fullName())
                             .impact(variant.impact())
@@ -143,7 +143,7 @@ public class MolecularProfileInterpretationFactory {
             for (VariantInfo variantInfo : molecularProfileDir.geneVariants()) {
                 for (Variant variant : ckbEntry.variants()) {
                     if (variantInfo.id() == variant.id()) {
-                        outputBuilderVariantInterpretation.addVariant(ImmutableVariant.builder()
+                        outputBuilderVariantInterpretation.addVariants(ImmutableVariant.builder()
                                 .id(variant.id())
                                 .fullName(variant.fullName())
                                 .impact(variant.impact())
@@ -204,7 +204,7 @@ public class MolecularProfileInterpretationFactory {
         for (VariantCategoryVariantPath categoryVariantPath : variantCategoryVariantPaths) {
             categoryVariantPaths.add(ImmutableCategoryVariantPath.builder()
                     .variantPath(categoryVariantPath.variantPath())
-                    .variantInfo(extractVariantInfo(categoryVariantPath.variants()))
+                    .variantInfos(extractVariantInfo(categoryVariantPath.variants()))
                     .build());
         }
         return categoryVariantPaths;

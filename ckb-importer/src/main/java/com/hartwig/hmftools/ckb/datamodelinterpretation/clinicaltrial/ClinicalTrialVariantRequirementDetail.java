@@ -19,5 +19,5 @@ public abstract class ClinicalTrialVariantRequirementDetail {
     public abstract String requirementType();
 
     @Nullable
-    public abstract MolecularProfileInterpretation variantInterpretation();
+    public abstract MolecularProfileInterpretation molecularProfileInterpretation();
 }
