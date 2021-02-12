@@ -10,10 +10,10 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ClinicalTrialVariantRequirementDetail {
 
-    public abstract int id();
+    public abstract int id();  // TODO: could this removed, because is this present in MolecularProfileInterpretation object?
 
     @NotNull
-    public abstract String profileName();
+    public abstract String profileName(); // TODO: could this removed, because is this present in MolecularProfileInterpretation object?
 
     @NotNull
     public abstract String requirementType();
