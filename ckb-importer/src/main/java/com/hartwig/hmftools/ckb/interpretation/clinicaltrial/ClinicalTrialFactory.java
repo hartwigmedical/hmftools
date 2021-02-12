@@ -17,7 +17,6 @@ import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialContact;
 import com.hartwig.hmftools.ckb.json.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
-import com.hartwig.hmftools.ckb.json.indication.Indication;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
 import com.hartwig.hmftools.ckb.json.therapy.Therapy;
 
@@ -37,7 +36,7 @@ public class ClinicalTrialFactory {
 
             for (ClinicalTrial clinicalTrial : ckbEntry.clinicalTrials()) {
                 if (clinicalTrialInfo.nctId().equals(clinicalTrial.nctId())) {
-                    outputBuilderClinicalInterpretation.clinicalTrials(ImmutableClinicalTrial.builder()
+                    outputBuilderClinicalInterpretation.clinicalTrial(ImmutableClinicalTrial.builder()
                             .nctId(clinicalTrial.nctId())
                             .title(clinicalTrial.title())
                             .phase(clinicalTrial.phase())
@@ -50,11 +49,12 @@ public class ClinicalTrialFactory {
                             .clinicalTrialVariantRequirementDetails(MolecularProfileInterpretationFactory.extractProfileName(clinicalTrial.variantRequirementDetails(),
                                     molecularProfile,
                                     ckbEntry))
-                            .locations(extractClinicalTrialLocation(clinicalTrial.clinicalTrialLocations()))
+                            .locations(extractClinicalTrialLocations(clinicalTrial.clinicalTrialLocations()))
                             .build());
 
                     for (IndicationInfo indicationInfo : clinicalTrial.indications()) {
-                        outputBuilderClinicalInterpretation.addIndications(CommonInterpretationFactory.extractIndication(ckbEntry, indicationInfo));
+                        outputBuilderClinicalInterpretation.addIndications(CommonInterpretationFactory.extractIndication(ckbEntry,
+                                indicationInfo));
                     }
 
                     for (TherapyInfo therapyInfo : clinicalTrial.therapies()) {
@@ -75,7 +75,7 @@ public class ClinicalTrialFactory {
     }
 
     @NotNull
-    private static List<ClinicalTrialLocation> extractClinicalTrialLocation(
+    private static List<ClinicalTrialLocation> extractClinicalTrialLocations(
             @NotNull List<com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialLocation> clinicalTrialLocations) {
         List<ClinicalTrialLocation> clinicalTrialLocationsInterpretation = Lists.newArrayList();
 

@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ClinicalTrialInterpretation {
 
     @NotNull
-    public abstract ClinicalTrial clinicalTrials();
+    public abstract ClinicalTrial clinicalTrial();
 
     @NotNull
     public abstract List<Indication> indications();
