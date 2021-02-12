@@ -11,5 +11,5 @@ import org.jetbrains.annotations.Nullable;
 public abstract class KnownGenomicAlteration {
 
     @NotNull
-    public abstract MolecularProfileInterpretation knownAberations();
+    public abstract MolecularProfileInterpretation knownGenomicAlterationInterpretation();
 }

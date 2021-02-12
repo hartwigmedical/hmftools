@@ -22,23 +22,20 @@ public class CkbEntryInterpretationFactory {
 
     public static List<CkbEntryInterpretation> interpretationCkbDataModel(@NotNull CkbJsonDatabase ckbEntry) {
         List<CkbEntryInterpretation> CkbEntryInterpretation = Lists.newArrayList();
-        int ckbId = 0;
+        int ckbId = 1;
         for (MolecularProfile molecularProfile : ckbEntry.molecularProfiles()) {
-            ++ckbId;
             ImmutableCkbEntryInterpretation.Builder outputBuilder = ImmutableCkbEntryInterpretation.builder();
             outputBuilder.id(ckbId);
             outputBuilder.molecularProfileId(molecularProfile.id());
 
             ClinicalTrialFactory.interpretClinicalTrials(molecularProfile, ckbEntry, outputBuilder);
-
             EvidenceFactory.interpretEvidence(molecularProfile, ckbEntry, outputBuilder);
+            KnownGenomicAlterationFactory.extractKnownGenomicAlteration(molecularProfile, ckbEntry, outputBuilder);
 
-            KnownGenomicAlterationFactory.extractKnownGenomicAberations(molecularProfile, ckbEntry, outputBuilder);
-
-            LOGGER.info(outputBuilder.build());
+            LOGGER.info(outputBuilder.build());  //TODO removed when model is finished
             CkbEntryInterpretation.add(outputBuilder.build());
+            ++ckbId;
         }
         return CkbEntryInterpretation;
     }
-
 }

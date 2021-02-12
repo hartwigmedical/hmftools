@@ -12,11 +12,12 @@ public class KnownGenomicAlterationFactory {
     private KnownGenomicAlterationFactory() {
     }
 
-    public static void extractKnownGenomicAberations(@NotNull MolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
+    public static void extractKnownGenomicAlteration(@NotNull MolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
             @NotNull ImmutableCkbEntryInterpretation.Builder outputBuilder) {
 
-        outputBuilder.knownAberation(ImmutableKnownGenomicAlteration.builder()
-                .knownAberations(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbEntry, molecularProfile).build())
+        outputBuilder.knownGenomicAlteration(ImmutableKnownGenomicAlteration.builder()
+                .knownGenomicAlterationInterpretation(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbEntry,
+                        molecularProfile).build())
                 .build());
     }
 }

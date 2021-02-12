@@ -25,5 +25,5 @@ public abstract class CkbEntryInterpretation {
     public abstract List<EvidenceInterpretation> evidenceInterpretations();
 
     @NotNull
-    public abstract KnownGenomicAlteration knownAberation();
+    public abstract KnownGenomicAlteration knownGenomicAlteration();
 }
