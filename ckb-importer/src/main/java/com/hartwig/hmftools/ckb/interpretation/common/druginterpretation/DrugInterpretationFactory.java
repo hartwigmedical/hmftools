@@ -24,12 +24,12 @@ public class DrugInterpretationFactory {
     }
 
     @NotNull
-    public static DrugInterpretation extractDrugsInterpretation(@NotNull List<DrugInfo> drugs, @NotNull CkbJsonDatabase ckbEntry) {
+    public static DrugInterpretation extractDrugInterpretations(@NotNull List<DrugInfo> drugs, @NotNull CkbJsonDatabase ckbEntry) {
         ImmutableDrugInterpretation.Builder outputBuilderDrugInterpretation = ImmutableDrugInterpretation.builder();
         for (DrugInfo drugInfo : drugs) {
             for (Drug drug : ckbEntry.drugs()) {
                 if (drugInfo.id() == drug.id()) {
-                    outputBuilderDrugInterpretation.addDrug(ImmutableDrug.builder()
+                    outputBuilderDrugInterpretation.addDrugs(ImmutableDrug.builder()
                             .id(drug.id())
                             .drugName(drug.drugName())
                             .terms(drug.terms())
@@ -39,7 +39,7 @@ public class DrugInterpretationFactory {
                             .casRegistryNum(drug.casRegistryNum())
                             .ncitId(drug.ncitId())
                             .createDate(drug.createDate())
-                            .drugClasses(extractDrugClass(drug, ckbEntry))
+                            .drugClasses(extractDrugClasses(drug, ckbEntry))
                             .build());
                 }
             }
@@ -48,7 +48,8 @@ public class DrugInterpretationFactory {
     }
 
     @NotNull
-    private static List<com.hartwig.hmftools.ckb.datamodelinterpretation.drugclass.DrugClass> extractDrugClass(@NotNull Drug drug, @NotNull CkbJsonDatabase ckbEntry) {
+    private static List<com.hartwig.hmftools.ckb.datamodelinterpretation.drugclass.DrugClass> extractDrugClasses(@NotNull Drug drug,
+            @NotNull CkbJsonDatabase ckbEntry) {
         List<com.hartwig.hmftools.ckb.datamodelinterpretation.drugclass.DrugClass> drugClasses = Lists.newArrayList();
         for (DrugClassInfo drugClassInfo : drug.drugClasses()) {
             for (DrugClass drugClass : ckbEntry.drugClasses()) {
@@ -56,7 +57,8 @@ public class DrugInterpretationFactory {
                     drugClasses.add(ImmutableDrugClass.builder()
                             .id(drugClass.id())
                             .drugClass(drugClass.drugClass())
-                            .createDate(drugClass.createDate()).build());
+                            .createDate(drugClass.createDate())
+                            .build());
                 }
             }
         }

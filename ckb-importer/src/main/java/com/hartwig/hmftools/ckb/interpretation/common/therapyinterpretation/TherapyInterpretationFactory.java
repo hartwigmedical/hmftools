@@ -11,7 +11,6 @@ import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.TherapyDescripti
 import com.hartwig.hmftools.ckb.interpretation.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.interpretation.common.druginterpretation.DrugInterpretationFactory;
 import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
-import com.hartwig.hmftools.ckb.interpretation.evidence.EvidenceFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.GlobalApprovalStatusInfo;
@@ -42,7 +41,7 @@ public class TherapyInterpretationFactory {
                 .descriptions(extractTherapyDescriptions(therapy.descriptions(), ckbEntry))
                 .createDate(therapy.createDate())
                 .updateDate(therapy.updateDate())
-                .drugs(DrugInterpretationFactory.extractDrugsInterpretation(therapy.drugs(), ckbEntry))
+                .drugs(DrugInterpretationFactory.extractDrugInterpretations(therapy.drugs(), ckbEntry))
                 .globalTherapyApprovalStatuses(extractGlobalApprovalStatus(therapy.globalApprovalStatuses(),
                         ckbEntry,
                         molecularProfile,

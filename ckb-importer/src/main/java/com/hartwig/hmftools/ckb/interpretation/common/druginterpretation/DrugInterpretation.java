@@ -13,5 +13,5 @@ import org.jetbrains.annotations.Nullable;
 public abstract class DrugInterpretation {
 
     @NotNull
-    public abstract List<Drug> drug();
+    public abstract List<Drug> drugs();
 }
