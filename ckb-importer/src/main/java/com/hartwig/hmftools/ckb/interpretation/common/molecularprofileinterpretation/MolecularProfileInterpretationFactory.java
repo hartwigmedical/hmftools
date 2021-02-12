@@ -43,9 +43,9 @@ public class MolecularProfileInterpretationFactory {
             @NotNull List<com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail> molecularProfiles,
             @NotNull MolecularProfile molecularProfileDir, @NotNull CkbJsonDatabase ckbEntry) {
 
+        int countPartialRequirementTypes = 0;
         List<ClinicalTrialVariantRequirementDetail> molecularProfileClinicalTrials = Lists.newArrayList();
         for (com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail molecularProfile : molecularProfiles) {
-            int countPartialRequirementTypes = 0;
             if (molecularProfile.requirementType().equals("excluded")) { // variant is excluded from enrollment
                 molecularProfileClinicalTrials.add(extractClinicalTrialVariantRequirementDetails(ckbEntry,
                         molecularProfile,
