@@ -18,6 +18,8 @@ public abstract class ClinicalTrialVariantRequirementDetail {
     @NotNull
     public abstract String requirementType();
 
+    public abstract int countPartialRequirementTypes();
+
     @Nullable
     public abstract MolecularProfileInterpretation molecularProfileInterpretation();
 }
