@@ -5,8 +5,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.dao.CkbDAO;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.CkbEntryInterpretation;
-import com.hartwig.hmftools.ckb.interpretation.InterpretationFactory;
+import com.hartwig.hmftools.ckb.interpretation.CkbEntryInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.CkbEntryInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.CkbJsonReader;
 
@@ -38,7 +38,7 @@ public class CkbImporterApplication {
         }
 
         CkbJsonDatabase ckbDatabase = CkbJsonReader.read(config.cbkDir());
-        List<CkbEntryInterpretation> ckbEntryInterpretations = InterpretationFactory.interpretationCkbDataModel(ckbDatabase);
+        List<CkbEntryInterpretation> ckbEntryInterpretations = CkbEntryInterpretationFactory.interpretationCkbDataModel(ckbDatabase);
       //  LOGGER.info(ckbEntryInterpretations.get(42195));
 
         if (config.skipDatabaseWriting()) {

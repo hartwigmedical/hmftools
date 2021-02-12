@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.ckb.interpretation.evidence;
 
-import com.hartwig.hmftools.ckb.datamodelinterpretation.ImmutableCkbEntryInterpretation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.ImmutableIndication;
+import com.hartwig.hmftools.ckb.interpretation.ImmutableCkbEntryInterpretation;
 import com.hartwig.hmftools.ckb.interpretation.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation.TherapyInterpretation;
 import com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation.TherapyInterpretationFactory;
-import com.hartwig.hmftools.ckb.interpretation.common.variantinterpretation.VariantInterpretationFactory;
+import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
@@ -31,7 +31,7 @@ public class EvidenceFactory {
                     .approvalStatus(evidenceInfo.approvalStatus())
                     .evidenceType(evidenceInfo.evidenceType())
                     .efficacyEvidence(evidenceInfo.efficacyEvidence())
-                    .variantInterpretation(VariantInterpretationFactory.extractVariantGeneInfo(ckbEntry,
+                    .variantInterpretation(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbEntry,
                             molecularProfile,
                             evidenceInfo.molecularProfile()).build())
                     .therapyInterpretation(extractTherapyEvidence(ckbEntry, evidenceInfo.therapy(), molecularProfile))

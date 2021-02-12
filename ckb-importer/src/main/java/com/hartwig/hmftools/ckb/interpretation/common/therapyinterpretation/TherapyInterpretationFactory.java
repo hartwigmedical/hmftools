@@ -9,8 +9,8 @@ import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapy
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapyDescription;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.TherapyDescription;
 import com.hartwig.hmftools.ckb.interpretation.common.CommonInterpretationFactory;
-import com.hartwig.hmftools.ckb.interpretation.common.druginterpretation.DrugsInterpretationFactory;
-import com.hartwig.hmftools.ckb.interpretation.common.variantinterpretation.VariantInterpretationFactory;
+import com.hartwig.hmftools.ckb.interpretation.common.druginterpretation.DrugInterpretationFactory;
+import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.interpretation.evidence.EvidenceFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
@@ -42,7 +42,7 @@ public class TherapyInterpretationFactory {
                 .descriptions(extractTherapyDescriptions(therapy.descriptions(), ckbEntry))
                 .createDate(therapy.createDate())
                 .updateDate(therapy.updateDate())
-                .drugs(DrugsInterpretationFactory.extractDrugsInterpretation(therapy.drugs(), ckbEntry))
+                .drugs(DrugInterpretationFactory.extractDrugsInterpretation(therapy.drugs(), ckbEntry))
                 .globalTherapyApprovalStatuses(extractGlobalApprovalStatus(therapy.globalApprovalStatuses(),
                         ckbEntry,
                         molecularProfile,
@@ -74,7 +74,7 @@ public class TherapyInterpretationFactory {
                 globalTherapyApprovalStatusesInterpretation.add(ImmutableGlobalTherapyApprovalStatus.builder()
                         .id(globalTherapyApprovalStatusInfo.id())
                         .indications(EvidenceFactory.extractIndication(ckbEntry, globalTherapyApprovalStatusInfo.indication()))
-                        .variantInterpretation(VariantInterpretationFactory.extractVariantGeneInfo(ckbEntry,
+                        .variantInterpretation(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbEntry,
                                 molecularProfile,
                                 globalTherapyApprovalStatusInfo.molecularProfile()).build())
                         .approvalStatus(globalTherapyApprovalStatusInfo.approvalStatus())

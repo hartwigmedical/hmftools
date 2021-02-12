@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DrugsInterpretation {
+public abstract class DrugInterpretation {
 
     @NotNull
     public abstract List<Drug> drug();

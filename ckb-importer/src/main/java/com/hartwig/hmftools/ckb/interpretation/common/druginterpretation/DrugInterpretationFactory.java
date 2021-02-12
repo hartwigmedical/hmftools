@@ -17,15 +17,15 @@ import com.hartwig.hmftools.ckb.json.drugclass.DrugClass;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DrugsInterpretationFactory {
+public class DrugInterpretationFactory {
 
-    private DrugsInterpretationFactory() {
+    private DrugInterpretationFactory() {
 
     }
 
     @NotNull
-    public static DrugsInterpretation extractDrugsInterpretation(@NotNull List<DrugInfo> drugs, @NotNull CkbJsonDatabase ckbEntry) {
-        ImmutableDrugsInterpretation.Builder outputBuilderDrugInterpretation = ImmutableDrugsInterpretation.builder();
+    public static DrugInterpretation extractDrugsInterpretation(@NotNull List<DrugInfo> drugs, @NotNull CkbJsonDatabase ckbEntry) {
+        ImmutableDrugInterpretation.Builder outputBuilderDrugInterpretation = ImmutableDrugInterpretation.builder();
         for (DrugInfo drugInfo : drugs) {
             for (Drug drug : ckbEntry.drugs()) {
                 if (drugInfo.id() == drug.id()) {

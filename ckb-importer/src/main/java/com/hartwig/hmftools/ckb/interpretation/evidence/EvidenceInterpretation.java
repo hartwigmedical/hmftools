@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ReferenceExtend;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.Indication;
+import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretation;
 import com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation.TherapyInterpretation;
-import com.hartwig.hmftools.ckb.interpretation.common.variantinterpretation.VariantInterpretation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +27,7 @@ public abstract class EvidenceInterpretation {
     public abstract String efficacyEvidence();
 
     @NotNull
-    public abstract VariantInterpretation variantInterpretation();
+    public abstract MolecularProfileInterpretation variantInterpretation();
 
     @Nullable
     public abstract TherapyInterpretation therapyInterpretation();

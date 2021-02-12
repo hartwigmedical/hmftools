@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.interpretation.common.variantinterpretation;
+package com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation;
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class VariantInterpretation {
+public abstract class MolecularProfileInterpretation {
 
     @Nullable
     public abstract List<Variant> variant();

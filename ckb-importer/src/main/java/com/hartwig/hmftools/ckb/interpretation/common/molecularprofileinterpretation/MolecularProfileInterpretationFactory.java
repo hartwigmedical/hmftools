@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.interpretation.common.variantinterpretation;
+package com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation;
 
 import java.util.List;
 
@@ -34,13 +34,13 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class VariantInterpretationFactory {
+public class MolecularProfileInterpretationFactory {
 
-    private VariantInterpretationFactory() {
+    private MolecularProfileInterpretationFactory() {
 
     }
 
-    private static final Logger LOGGER = LogManager.getLogger(VariantInterpretationFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(MolecularProfileInterpretationFactory.class);
 
     @NotNull
     public static List<ClinicalTrialVariantRequirementDetail> extractProfileName(
@@ -86,9 +86,9 @@ public class VariantInterpretationFactory {
     }
 
     @NotNull
-    public static ImmutableVariantInterpretation.Builder extractVariantGeneInfo(@NotNull CkbJsonDatabase ckbEntry,
+    public static ImmutableMolecularProfileInterpretation.Builder extractVariantGeneInfo(@NotNull CkbJsonDatabase ckbEntry,
             @NotNull MolecularProfile molecularProfileDir) {
-        ImmutableVariantInterpretation.Builder outputBuilderVariantInterpretation = ImmutableVariantInterpretation.builder();
+        ImmutableMolecularProfileInterpretation.Builder outputBuilderVariantInterpretation = ImmutableMolecularProfileInterpretation.builder();
         for (VariantInfo variantInfo : molecularProfileDir.geneVariants()) {
             for (Variant variant : ckbEntry.variants()) {
                 if (variantInfo.id() == variant.id()) {
@@ -138,9 +138,9 @@ public class VariantInterpretationFactory {
     }
 
     @NotNull
-    public static ImmutableVariantInterpretation.Builder extractVariantGeneInfo(@NotNull CkbJsonDatabase ckbEntry,
+    public static ImmutableMolecularProfileInterpretation.Builder extractVariantGeneInfo(@NotNull CkbJsonDatabase ckbEntry,
             @NotNull MolecularProfile molecularProfileDir, @NotNull MolecularProfileInfo molecularProfile) {
-        ImmutableVariantInterpretation.Builder outputBuilderVariantInterpretation = ImmutableVariantInterpretation.builder();
+        ImmutableMolecularProfileInterpretation.Builder outputBuilderVariantInterpretation = ImmutableMolecularProfileInterpretation.builder();
         if (molecularProfileDir.id() == molecularProfile.id()) {
             for (VariantInfo variantInfo : molecularProfileDir.geneVariants()) {
                 for (Variant variant : ckbEntry.variants()) {

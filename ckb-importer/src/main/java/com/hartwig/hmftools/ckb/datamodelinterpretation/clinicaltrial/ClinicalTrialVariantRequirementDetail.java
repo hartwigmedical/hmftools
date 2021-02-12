@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial;
 
-import java.util.List;
-
-import com.hartwig.hmftools.ckb.interpretation.common.variantinterpretation.VariantInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -21,5 +19,5 @@ public abstract class ClinicalTrialVariantRequirementDetail {
     public abstract String requirementType();
 
     @Nullable
-    public abstract VariantInterpretation variantInterpretation();
+    public abstract MolecularProfileInterpretation variantInterpretation();
 }

@@ -3,11 +3,9 @@ package com.hartwig.hmftools.ckb.interpretation;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.CkbEntryInterpretation;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.ImmutableCkbEntryInterpretation;
 import com.hartwig.hmftools.ckb.interpretation.clinicaltrial.ClinicalTrialFactory;
 import com.hartwig.hmftools.ckb.interpretation.evidence.EvidenceFactory;
-import com.hartwig.hmftools.ckb.interpretation.knownaberration.KnownAberationFactory;
+import com.hartwig.hmftools.ckb.interpretation.knowngenomicalteration.KnownGenomicAlterationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
 
@@ -15,11 +13,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class InterpretationFactory {
+public class CkbEntryInterpretationFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(InterpretationFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(CkbEntryInterpretationFactory.class);
 
-    private InterpretationFactory() {
+    private CkbEntryInterpretationFactory() {
     }
 
     public static List<CkbEntryInterpretation> interpretationCkbDataModel(@NotNull CkbJsonDatabase ckbEntry) {
@@ -35,7 +33,7 @@ public class InterpretationFactory {
 
             EvidenceFactory.interpretEvidence(molecularProfile, ckbEntry, outputBuilder);
 
-            KnownAberationFactory.extractKnownGenomicAberations(molecularProfile, ckbEntry, outputBuilder);
+            KnownGenomicAlterationFactory.extractKnownGenomicAberations(molecularProfile, ckbEntry, outputBuilder);
 
             LOGGER.info(outputBuilder.build());
             CkbEntryInterpretation.add(outputBuilder.build());

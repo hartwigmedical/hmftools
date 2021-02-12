@@ -3,14 +3,14 @@ package com.hartwig.hmftools.ckb.interpretation.clinicaltrial;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.ImmutableCkbEntryInterpretation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTrialLocation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrial;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialContact;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialLocation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.ImmutableIndication;
+import com.hartwig.hmftools.ckb.interpretation.ImmutableCkbEntryInterpretation;
 import com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation.TherapyInterpretationFactory;
-import com.hartwig.hmftools.ckb.interpretation.common.variantinterpretation.VariantInterpretationFactory;
+import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialContact;
@@ -47,7 +47,7 @@ public class ClinicalTrialFactory {
                             .variantRequirement(clinicalTrial.variantRequirements())
                             .sponsor(clinicalTrial.sponsors())
                             .updateDate(clinicalTrial.updateDate())
-                            .clinicalTrialVariantRequirementDetails(VariantInterpretationFactory.extractProfileName(clinicalTrial.variantRequirementDetails(),
+                            .clinicalTrialVariantRequirementDetails(MolecularProfileInterpretationFactory.extractProfileName(clinicalTrial.variantRequirementDetails(),
                                     molecularProfile,
                                     ckbEntry))
                             .locations(extractClinicalTrialLocation(clinicalTrial.clinicalTrialLocations()))
