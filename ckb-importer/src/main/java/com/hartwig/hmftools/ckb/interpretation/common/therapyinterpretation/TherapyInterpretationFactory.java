@@ -41,8 +41,8 @@ public class TherapyInterpretationFactory {
                 .descriptions(extractTherapyDescriptions(therapy.descriptions(), ckbEntry))
                 .createDate(therapy.createDate())
                 .updateDate(therapy.updateDate())
-                .drugs(DrugInterpretationFactory.extractDrugInterpretations(therapy.drugs(), ckbEntry))
-                .globalTherapyApprovalStatuses(extractGlobalApprovalStatus(therapy.globalApprovalStatuses(),
+                .drugInterpretation(DrugInterpretationFactory.extractDrugInterpretation(therapy.drugs(), ckbEntry))
+                .globalTherapyApprovalStatuses(extractGlobalApprovalStatuses(therapy.globalApprovalStatuses(),
                         ckbEntry,
                         molecularProfile,
                         therapy.id()))
@@ -64,7 +64,7 @@ public class TherapyInterpretationFactory {
     }
 
     @NotNull
-    private static List<GlobalTherapyApprovalStatus> extractGlobalApprovalStatus(
+    private static List<GlobalTherapyApprovalStatus> extractGlobalApprovalStatuses(
             @NotNull List<GlobalApprovalStatusInfo> globalTherapyApprovalStatuses, @NotNull CkbJsonDatabase ckbEntry,
             @NotNull MolecularProfile molecularProfile, int therapyId) {
         List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatusesInterpretation = Lists.newArrayList();

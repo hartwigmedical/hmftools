@@ -32,7 +32,7 @@ public abstract class Therapy {
     public abstract Date updateDate();
 
     @NotNull
-    public abstract DrugInterpretation drugs();
+    public abstract DrugInterpretation drugInterpretation();
 
     @NotNull
     public abstract List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses();

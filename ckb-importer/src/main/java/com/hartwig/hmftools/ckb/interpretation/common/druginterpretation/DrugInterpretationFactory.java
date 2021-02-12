@@ -24,7 +24,7 @@ public class DrugInterpretationFactory {
     }
 
     @NotNull
-    public static DrugInterpretation extractDrugInterpretations(@NotNull List<DrugInfo> drugs, @NotNull CkbJsonDatabase ckbEntry) {
+    public static DrugInterpretation extractDrugInterpretation(@NotNull List<DrugInfo> drugs, @NotNull CkbJsonDatabase ckbEntry) {
         ImmutableDrugInterpretation.Builder outputBuilderDrugInterpretation = ImmutableDrugInterpretation.builder();
         for (DrugInfo drugInfo : drugs) {
             for (Drug drug : ckbEntry.drugs()) {
