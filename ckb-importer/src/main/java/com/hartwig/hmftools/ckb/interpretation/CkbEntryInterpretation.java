@@ -19,11 +19,11 @@ public abstract class CkbEntryInterpretation {
     public abstract int molecularProfileId();
 
     @NotNull
-    public abstract List<ClinicalTrialInterpretation> clinicalTrialInterpretation();
+    public abstract List<ClinicalTrialInterpretation> clinicalTrialInterpretations();
 
     @NotNull
-    public abstract List<EvidenceInterpretation> evidenceInterpretation();
+    public abstract List<EvidenceInterpretation> evidenceInterpretations();
 
     @NotNull
-    public abstract KnownGenomicAlteration knownAberations();
+    public abstract KnownGenomicAlteration knownAberation();
 }

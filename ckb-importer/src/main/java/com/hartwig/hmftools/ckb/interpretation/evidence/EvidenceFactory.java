@@ -26,7 +26,7 @@ public class EvidenceFactory {
     public static void interpretEvidence(@NotNull MolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
             @NotNull ImmutableCkbEntryInterpretation.Builder outputBuilder) {
         for (EvidenceInfo evidenceInfo : molecularProfile.variantLevelEvidence().evidence()) {
-            outputBuilder.addEvidenceInterpretation(ImmutableEvidenceInterpretation.builder()
+            outputBuilder.addEvidenceInterpretations(ImmutableEvidenceInterpretation.builder()
                     .id(evidenceInfo.id())
                     .approvalStatus(evidenceInfo.approvalStatus())
                     .evidenceType(evidenceInfo.evidenceType())

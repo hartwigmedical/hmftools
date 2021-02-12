@@ -83,7 +83,7 @@ public class ClinicalTrialFactory {
                     }
                 }
             }
-            outputBuilder.addClinicalTrialInterpretation(outputBuilderClinicalInterpretation.build());
+            outputBuilder.addClinicalTrialInterpretations(outputBuilderClinicalInterpretation.build());
         }
     }
 
