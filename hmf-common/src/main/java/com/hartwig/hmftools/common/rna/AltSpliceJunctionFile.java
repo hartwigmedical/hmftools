@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.rna;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.ISOFOX_ID;
+import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
@@ -55,7 +55,7 @@ public class AltSpliceJunctionFile
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
     {
-        return basePath + File.separator + sample + ISOFOX_ID + ALT_SJ_FILE_ID;
+        return basePath + File.separator + sample + ISF_FILE_ID + ALT_SJ_FILE_ID;
     }
 
     public static String csvHeader()

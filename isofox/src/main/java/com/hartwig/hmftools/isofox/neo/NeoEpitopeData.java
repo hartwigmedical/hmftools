@@ -162,14 +162,6 @@ public class NeoEpitopeData
     {
         StringJoiner sj = new StringJoiner(DELIMITER);
 
-        /*
-        int codingPosUp = Orientations[FS_UP] == POS_ORIENT ?
-                Source.CodingBasePositions[FS_UP][SE_END] : Source.CodingBasePositions[FS_UP][SE_START];
-
-        int codingPosDown = Orientations[FS_DOWN] == POS_ORIENT ?
-                Source.CodingBasePositions[FS_DOWN][SE_END] : Source.CodingBasePositions[FS_DOWN][SE_START];
-        */
-
         sj.add(NeoEpitopeFile.toString(Source));
         sj.add(String.format("%d", mFragmentSupport.NovelFragments[EXACT_MATCH]));
         sj.add(String.format("%d", mFragmentSupport.RefBaseDepth[FS_UP]));
@@ -177,5 +169,4 @@ public class NeoEpitopeData
 
         return sj.toString();
     }
-
 }

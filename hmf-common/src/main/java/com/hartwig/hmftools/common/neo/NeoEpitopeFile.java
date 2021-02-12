@@ -91,7 +91,7 @@ public class NeoEpitopeFile
         WildtypeNovelAAMatch = wildtypeNovelAAMatch;
     }
 
-    private static final String FILE_EXTENSION = ".imu.neo_epitope.tsv";
+    private static final String FILE_EXTENSION = ".imu.neo_epitopes.csv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)

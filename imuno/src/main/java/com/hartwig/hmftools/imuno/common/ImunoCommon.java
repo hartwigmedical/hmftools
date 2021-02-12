@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.imuno.common;
 
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,6 +18,7 @@ public class ImunoCommon
 {
     public static final int DOWNSTREAM_PRE_GENE_DISTANCE = 100000; // in concordance with Linx
 
+    public static final String IM_FILE_ID = ".imu.";
     public static final String LOG_DEBUG = "log_debug";
 
     public static final Logger IM_LOGGER = LogManager.getLogger(ImunoCommon.class);
@@ -71,7 +74,18 @@ public class ImunoCommon
             if (fileContents.get(0).contains("SampleId"))
                 fileContents.remove(0);
 
-            sampleIds.addAll(fileContents);
+            for(String sampleData : fileContents)
+            {
+                if(sampleData.contains(DELIMITER))
+                {
+                    String[] items = sampleData.split(DELIMITER, -1);
+                    sampleIds.add(items[0]);
+                }
+                else
+                {
+                    sampleIds.add(sampleData);
+                }
+            }
         }
         catch (IOException e)
         {

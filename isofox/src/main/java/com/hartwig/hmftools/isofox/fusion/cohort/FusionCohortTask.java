@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion.cohort;
 
+import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
@@ -12,7 +13,6 @@ import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilterType.PASS;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilters.hasSufficientKnownFusionFragments;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilters.isShortLocalFusion;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.ISOFOX_ID;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -230,7 +230,7 @@ public class FusionCohortTask implements Callable
 
     private void writeFusions(final String sampleId, final List<FusionData> fusions, final String fileId)
     {
-        String outputFile = mConfig.OutputDir + sampleId + ISOFOX_ID + fileId;
+        String outputFile = mConfig.OutputDir + sampleId + ISF_FILE_ID + fileId;
 
         try
         {

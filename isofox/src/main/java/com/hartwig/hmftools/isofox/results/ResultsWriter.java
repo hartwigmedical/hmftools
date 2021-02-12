@@ -64,7 +64,6 @@ public class ResultsWriter
     private BufferedWriter mRetainedIntronWriter;
     private BufferedWriter mSpliceSiteWriter;
 
-    public static final String ISOFOX_ID = ".isf.";
     public static final String DELIMITER = ",";
     public static final String ITEM_DELIM = ";";
     public static final String SUB_ITEM_DELIM = ":";

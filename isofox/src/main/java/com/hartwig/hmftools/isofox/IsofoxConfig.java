@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.CHR_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_19;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
@@ -21,7 +22,6 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_LENGTH;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.ISOFOX_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUB_ITEM_DELIM;
 
@@ -453,9 +453,9 @@ public class IsofoxConfig
     public String formOutputFile(final String fileId)
     {
         if(OutputIdentifier != null)
-            return OutputDir + SampleId + ISOFOX_ID + OutputIdentifier + "." + fileId;
+            return OutputDir + SampleId + ISF_FILE_ID + OutputIdentifier + "." + fileId;
         else
-            return OutputDir + SampleId + ISOFOX_ID + fileId;
+            return OutputDir + SampleId + ISF_FILE_ID + fileId;
     }
 
     private RefGenomeVersion checkRefGenomeVersion()

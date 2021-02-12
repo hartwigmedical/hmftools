@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox.cohort;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.EXCLUDED_GENE_ID_FILE;
@@ -21,7 +22,6 @@ import static com.hartwig.hmftools.isofox.cohort.AnalysisType.SAMPLE_GENE_PERCEN
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_DISTRIBUTION;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.getIsofoxFileId;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.ISOFOX_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
@@ -182,7 +182,7 @@ public class CohortConfig
         if(config.UseSampleDirectories)
             filename += File.separator + sampleId + File.separator;
 
-        filename += sampleId + ISOFOX_ID;
+        filename += sampleId + ISF_FILE_ID;
         filename += getIsofoxFileId(dataType);
         return filename;
     }
