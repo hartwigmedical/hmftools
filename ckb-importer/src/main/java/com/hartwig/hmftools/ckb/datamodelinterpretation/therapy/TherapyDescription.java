@@ -2,7 +2,7 @@ package com.hartwig.hmftools.ckb.datamodelinterpretation.therapy;
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.datamodelinterpretation.common.ReferenceExtend;
+import com.hartwig.hmftools.ckb.datamodelinterpretation.reference.Reference;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -16,5 +16,5 @@ public abstract class TherapyDescription {
     public abstract String description();
 
     @NotNull
-    public abstract List<ReferenceExtend> references();
+    public abstract List<Reference> references();
 }

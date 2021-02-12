@@ -12,33 +12,33 @@ public abstract class Reference {
 
     public abstract int id();
 
-    @NotNull
-    public abstract String pudMedId();
+    @Nullable
+    public abstract String pubMedId();
 
-    @NotNull
+    @Nullable
     public abstract String title();
 
-    @NotNull
+    @Nullable
     public abstract String url();
 
-    @NotNull
+    @Nullable
     public abstract String authors();
 
-    @NotNull
+    @Nullable
     public abstract String journal();
 
-    @NotNull
+    @Nullable
     public abstract String volume();
 
-    @NotNull
+    @Nullable
     public abstract String issue();
 
-    @NotNull
-    public abstract Date date();
+    @Nullable
+    public abstract String date();
 
-    @NotNull
+    @Nullable
     public abstract String abstractText();
 
-    @NotNull
+    @Nullable
     public abstract String year();
 }

@@ -14,5 +14,5 @@ public abstract class CategoryVariantPath {
     public abstract String variantPath();
 
     @NotNull
-    public abstract List<VariantInfo> variantInfo();
+    public abstract List<VariantInfo> variantInfos();
 }

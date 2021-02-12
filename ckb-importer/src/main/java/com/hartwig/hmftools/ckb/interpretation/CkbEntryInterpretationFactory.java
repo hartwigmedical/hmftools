@@ -27,6 +27,9 @@ public class CkbEntryInterpretationFactory {
             ImmutableCkbEntryInterpretation.Builder outputBuilder = ImmutableCkbEntryInterpretation.builder();
             outputBuilder.id(ckbId);
             outputBuilder.molecularProfileId(molecularProfile.id());
+            outputBuilder.profileName(molecularProfile.profileName());
+            outputBuilder.createDate(molecularProfile.createDate());
+            outputBuilder.updateDate(molecularProfile.updateDate());
 
             ClinicalTrialFactory.interpretClinicalTrials(molecularProfile, ckbEntry, outputBuilder);
             EvidenceFactory.interpretVariantEvidence(molecularProfile, ckbEntry, outputBuilder);

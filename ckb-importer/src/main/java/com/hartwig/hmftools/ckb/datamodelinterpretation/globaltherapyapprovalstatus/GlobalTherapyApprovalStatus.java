@@ -14,10 +14,10 @@ public abstract class GlobalTherapyApprovalStatus {
     public abstract int id();
 
     @NotNull
-    public abstract MolecularProfileInterpretation variantInterpretation();
+    public abstract MolecularProfileInterpretation molecularProfileInterpretation();
 
     @NotNull
-    public abstract Indication indications();
+    public abstract Indication indication();
 
     @NotNull
     public abstract String approvalAuthority();
