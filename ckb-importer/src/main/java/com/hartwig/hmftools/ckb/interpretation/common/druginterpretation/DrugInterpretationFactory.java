@@ -35,7 +35,7 @@ public class DrugInterpretationFactory {
                             .terms(drug.terms())
                             .synonyms(drug.synonyms())
                             .tradeName(drug.tradeName())
-                            .drugDescriptions(createDrugDescriptions(drug.descriptions(), ckbEntry))
+                            .drugDescriptions(extractDrugDescriptions(drug.descriptions(), ckbEntry))
                             .casRegistryNum(drug.casRegistryNum())
                             .ncitId(drug.ncitId())
                             .createDate(drug.createDate())
@@ -66,7 +66,7 @@ public class DrugInterpretationFactory {
     }
 
     @NotNull
-    private static List<DrugDescription> createDrugDescriptions(@NotNull List<DescriptionInfo> descriptionInfos,
+    private static List<DrugDescription> extractDrugDescriptions(@NotNull List<DescriptionInfo> descriptionInfos,
             @NotNull CkbJsonDatabase ckbEntry) {
         List<DrugDescription> drugDescriptions = Lists.newArrayList();
 

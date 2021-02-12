@@ -46,7 +46,7 @@ public class ClinicalTrialFactory {
                             .variantRequirement(clinicalTrial.variantRequirements())
                             .sponsor(clinicalTrial.sponsors())
                             .updateDate(clinicalTrial.updateDate())
-                            .clinicalTrialVariantRequirementDetails(MolecularProfileInterpretationFactory.extractProfileName(clinicalTrial.variantRequirementDetails(),
+                            .clinicalTrialVariantRequirementDetails(MolecularProfileInterpretationFactory.extractProfileNameClinicalTrial(clinicalTrial.variantRequirementDetails(),
                                     molecularProfile,
                                     ckbEntry))
                             .locations(extractClinicalTrialLocations(clinicalTrial.clinicalTrialLocations()))

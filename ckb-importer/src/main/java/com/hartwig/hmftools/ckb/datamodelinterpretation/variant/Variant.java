@@ -46,7 +46,7 @@ public abstract class Variant {
     public abstract List<CategoryVariantPath> categoryVariantPaths();
 
     @NotNull
-    public abstract List<ReferenceTranscriptCoordinate> allTranscriptCoordinated();
+    public abstract List<ReferenceTranscriptCoordinate> allTranscriptCoordinates();
 
     @NotNull
     public abstract List<MemberVariant> memberVariants();
