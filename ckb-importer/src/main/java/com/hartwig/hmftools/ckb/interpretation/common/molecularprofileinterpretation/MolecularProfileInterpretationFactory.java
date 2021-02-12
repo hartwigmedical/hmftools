@@ -45,24 +45,26 @@ public class MolecularProfileInterpretationFactory {
 
         List<ClinicalTrialVariantRequirementDetail> molecularProfileClinicalTrials = Lists.newArrayList();
         for (com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail molecularProfile : molecularProfiles) {
+            int countPartialRequirementTypes = 0;
             if (molecularProfile.requirementType().equals("excluded")) { // variant is excluded from enrollment
                 molecularProfileClinicalTrials.add(extractClinicalTrialVariantRequirementDetails(ckbEntry,
                         molecularProfile,
-                        molecularProfileDir).build());
+                        molecularProfileDir, countPartialRequirementTypes).build());
             }
 
             if (molecularProfile.requirementType().equals("required")) { // variant is requirement for enrollment
                 molecularProfileClinicalTrials.add(extractClinicalTrialVariantRequirementDetails(ckbEntry,
                         molecularProfile,
-                        molecularProfileDir).build());
+                        molecularProfileDir, countPartialRequirementTypes).build());
             }
 
             if (molecularProfile.requirementType()
                     .equals("partial - required")) { // variant is required or excluded for a subset of the enrollment population
+                ++countPartialRequirementTypes;
                 if (molecularProfile.molecularProfile().id() == molecularProfileDir.id()) {
                     molecularProfileClinicalTrials.add(extractClinicalTrialVariantRequirementDetails(ckbEntry,
                             molecularProfile,
-                            molecularProfileDir).build());
+                            molecularProfileDir, countPartialRequirementTypes).build());
                 }
             }
         }
@@ -73,11 +75,12 @@ public class MolecularProfileInterpretationFactory {
     private static ImmutableClinicalTrialVariantRequirementDetail.Builder extractClinicalTrialVariantRequirementDetails(
             @NotNull CkbJsonDatabase ckbEntry,
             @NotNull com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail molecularProfile,
-            @NotNull MolecularProfile molecularProfileDir) {
+            @NotNull MolecularProfile molecularProfileDir, int countPartialRequirementTypes) {
         return ImmutableClinicalTrialVariantRequirementDetail.builder()
                 .id(molecularProfile.molecularProfile().id())
                 .profileName(molecularProfile.molecularProfile().profileName())
                 .requirementType(molecularProfile.requirementType())
+                .countPartialRequirementTypes(countPartialRequirementTypes)
                 .molecularProfileInterpretation(extractVariantGeneInfo(ckbEntry, molecularProfileDir).build());
     }
 
