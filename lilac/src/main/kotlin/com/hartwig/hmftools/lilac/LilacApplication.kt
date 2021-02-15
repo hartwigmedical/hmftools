@@ -188,7 +188,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val candidatesAfterConfirmedGroups = candidateAlleles.filterWithConfirmedGroups(confirmedGroups.map { it.allele })
         val proteinCoverage = coverageFactory.proteinCoverage(candidatesAfterConfirmedGroups)
         val confirmedProtein = proteinCoverage.confirmUnique()
-        val discardedProtein = proteinCoverage.alleleCoverage.filter { it.uniqueCoverage > 0 && it !in confirmedGroups }.sortedDescending()
+        val discardedProtein = proteinCoverage.alleleCoverage.filter { it.uniqueCoverage > 0 && it !in confirmedProtein }.sortedDescending()
         logger.info("... confirmed ${confirmedProtein.size} unique proteins: " + confirmedProtein.joinToString(", "))
         if (discardedProtein.isNotEmpty()) {
             logger.info("... found ${discardedProtein.size} insufficiently unique proteins: " + discardedProtein.joinToString(", "))
