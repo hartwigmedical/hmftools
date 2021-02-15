@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial;
+package com.hartwig.hmftools.ckb.datamodel.clinicaltrial;
 
 import com.hartwig.hmftools.ckb.datamodel.common.molecularprofileinterpretation.MolecularProfileInterpretation;
 

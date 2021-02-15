@@ -2,7 +2,7 @@ package com.hartwig.hmftools.ckb.datamodel.common.molecularprofileinterpretation
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.Variant;
+import com.hartwig.hmftools.ckb.datamodel.common.variant.Variant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

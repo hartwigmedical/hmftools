@@ -3,8 +3,6 @@ package com.hartwig.hmftools.ckb.datamodel.common;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.ImmutableIndication;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.reference.ImmutableReference;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.json.common.ReferenceInfo;
@@ -20,9 +18,9 @@ public final class CommonInterpretationFactory {
     }
 
     @NotNull
-    public static List<com.hartwig.hmftools.ckb.datamodelinterpretation.reference.Reference> extractReferences(
+    public static List<com.hartwig.hmftools.ckb.datamodel.common.Reference> extractReferences(
             @NotNull List<ReferenceInfo> referenceInfos, @NotNull CkbJsonDatabase ckbEntry) {
-        List<com.hartwig.hmftools.ckb.datamodelinterpretation.reference.Reference> references = Lists.newArrayList();
+        List<com.hartwig.hmftools.ckb.datamodel.common.Reference> references = Lists.newArrayList();
         for (ReferenceInfo referenceInfo : referenceInfos) {
             for (Reference reference : ckbEntry.references()) {
                 if (referenceInfo.id() == reference.id()) {
@@ -46,7 +44,7 @@ public final class CommonInterpretationFactory {
     }
 
     @NotNull
-    public static com.hartwig.hmftools.ckb.datamodelinterpretation.indication.Indication extractIndication(
+    public static com.hartwig.hmftools.ckb.datamodel.common.Indication extractIndication(
             @NotNull CkbJsonDatabase ckbEntry, @Nullable IndicationInfo indicationInfo) {
         ImmutableIndication.Builder outputBuilder = ImmutableIndication.builder();
         for (Indication indication : ckbEntry.indications()) {

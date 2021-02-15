@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.ckb.datamodelinterpretation.variant;
+package com.hartwig.hmftools.ckb.datamodel.common.variant;
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.datamodelinterpretation.reference.Reference;
+import com.hartwig.hmftools.ckb.datamodel.common.Reference;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

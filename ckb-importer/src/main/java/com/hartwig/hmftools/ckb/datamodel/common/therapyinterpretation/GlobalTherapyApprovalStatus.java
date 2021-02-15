@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.ckb.datamodelinterpretation.globaltherapyapprovalstatus;
+package com.hartwig.hmftools.ckb.datamodel.common.therapyinterpretation;
 
+import com.hartwig.hmftools.ckb.datamodel.common.Indication;
 import com.hartwig.hmftools.ckb.datamodel.common.molecularprofileinterpretation.MolecularProfileInterpretation;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.Indication;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

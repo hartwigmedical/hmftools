@@ -4,10 +4,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.drug.DrugDescription;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.drug.ImmutableDrug;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.drug.ImmutableDrugDescription;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.drugclass.ImmutableDrugClass;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.DrugClassInfo;
@@ -47,9 +43,9 @@ public final class DrugInterpretationFactory {
     }
 
     @NotNull
-    private static List<com.hartwig.hmftools.ckb.datamodelinterpretation.drugclass.DrugClass> extractDrugClasses(@NotNull Drug drug,
+    private static List<com.hartwig.hmftools.ckb.datamodel.common.druginterpretation.DrugClass> extractDrugClasses(@NotNull Drug drug,
             @NotNull CkbJsonDatabase ckbEntry) {
-        List<com.hartwig.hmftools.ckb.datamodelinterpretation.drugclass.DrugClass> drugClasses = Lists.newArrayList();
+        List<com.hartwig.hmftools.ckb.datamodel.common.druginterpretation.DrugClass> drugClasses = Lists.newArrayList();
         for (DrugClassInfo drugClassInfo : drug.drugClasses()) {
             for (DrugClass drugClass : ckbEntry.drugClasses()) {
                 if (drugClassInfo.id() == drugClass.id()) {

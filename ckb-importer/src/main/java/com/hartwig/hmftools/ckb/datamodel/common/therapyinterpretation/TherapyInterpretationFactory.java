@@ -6,11 +6,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodel.common.druginterpretation.DrugInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodel.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.globaltherapyapprovalstatus.GlobalTherapyApprovalStatus;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.globaltherapyapprovalstatus.ImmutableGlobalTherapyApprovalStatus;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapy;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapyDescription;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.TherapyDescription;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.GlobalApprovalStatusInfo;
@@ -19,10 +14,9 @@ import com.hartwig.hmftools.ckb.json.therapy.Therapy;
 
 import org.jetbrains.annotations.NotNull;
 
-public class TherapyInterpretationFactory {
+public final class TherapyInterpretationFactory {
 
     private TherapyInterpretationFactory() {
-
     }
 
     @NotNull
@@ -32,7 +26,7 @@ public class TherapyInterpretationFactory {
     }
 
     @NotNull
-    private static com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.Therapy extractTherapy(@NotNull Therapy therapy,
+    private static com.hartwig.hmftools.ckb.datamodel.common.therapyinterpretation.Therapy extractTherapy(@NotNull Therapy therapy,
             @NotNull CkbJsonDatabase ckbEntry, @NotNull MolecularProfile molecularProfile) {
         return ImmutableTherapy.builder()
                 .id(therapy.id())

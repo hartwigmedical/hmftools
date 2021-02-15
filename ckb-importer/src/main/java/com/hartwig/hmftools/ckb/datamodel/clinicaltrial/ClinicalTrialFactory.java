@@ -7,10 +7,6 @@ import com.hartwig.hmftools.ckb.datamodel.ImmutableCkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodel.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodel.common.therapyinterpretation.TherapyInterpretationFactory;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTrialLocation;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrial;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialContact;
-import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialLocation;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialContact;
@@ -95,9 +91,9 @@ public final class ClinicalTrialFactory {
     }
 
     @NotNull
-    private static List<com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTrialContact> extractClinicalTrialContacts(
+    private static List<com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialContact> extractClinicalTrialContacts(
             @NotNull List<ClinicalTrialContact> contacts) {
-        List<com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTrialContact> clinicalTrialContacts =
+        List<com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialContact> clinicalTrialContacts =
                 Lists.newArrayList();
 
         for (ClinicalTrialContact contact : contacts) {

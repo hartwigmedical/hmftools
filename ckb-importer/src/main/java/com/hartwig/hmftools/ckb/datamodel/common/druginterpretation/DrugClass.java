@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodelinterpretation.drugclass;
+package com.hartwig.hmftools.ckb.datamodel.common.druginterpretation;
 
 import java.util.Date;
 

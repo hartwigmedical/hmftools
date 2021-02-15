@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.ckb.datamodelinterpretation.therapy;
+package com.hartwig.hmftools.ckb.datamodel.common.druginterpretation;
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.datamodelinterpretation.reference.Reference;
+import com.hartwig.hmftools.ckb.datamodel.common.Reference;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class TherapyDescription {
+public abstract class DrugDescription {
 
     @Nullable
     public abstract String description();

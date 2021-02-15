@@ -1,9 +1,7 @@
-package com.hartwig.hmftools.ckb.datamodelinterpretation.drug;
+package com.hartwig.hmftools.ckb.datamodel.common.druginterpretation;
 
 import java.util.Date;
 import java.util.List;
-
-import com.hartwig.hmftools.ckb.datamodelinterpretation.drugclass.DrugClass;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

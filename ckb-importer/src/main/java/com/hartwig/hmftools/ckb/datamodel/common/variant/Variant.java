@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.ckb.datamodelinterpretation.variant;
+package com.hartwig.hmftools.ckb.datamodel.common.variant;
 
 import java.util.Date;
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.datamodelinterpretation.gene.Gene;
+import com.hartwig.hmftools.ckb.datamodel.common.Gene;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

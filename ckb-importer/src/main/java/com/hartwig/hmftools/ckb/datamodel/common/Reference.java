@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodelinterpretation.reference;
-
-import java.util.Date;
+package com.hartwig.hmftools.ckb.datamodel.common;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

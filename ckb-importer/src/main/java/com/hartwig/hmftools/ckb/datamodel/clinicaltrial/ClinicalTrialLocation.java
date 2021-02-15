@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial;
+package com.hartwig.hmftools.ckb.datamodel.clinicaltrial;
 
 import java.util.List;
 
