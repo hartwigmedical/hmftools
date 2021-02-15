@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.ckb.datamodel.clinicaltrial;
 
-import com.hartwig.hmftools.ckb.datamodel.common.molecularprofile.MolecularProfileInterpretation;
+import java.util.List;
+
+import com.hartwig.hmftools.ckb.datamodel.common.variant.Variant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -21,5 +23,5 @@ public abstract class ClinicalTrialVariantRequirementDetail {
     public abstract int countPartialRequirementTypes();
 
     @Nullable
-    public abstract MolecularProfileInterpretation molecularProfileInterpretation();
+    public abstract List<Variant> variants();
 }

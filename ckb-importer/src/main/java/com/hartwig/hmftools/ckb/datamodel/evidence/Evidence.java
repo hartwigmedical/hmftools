@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.common.Indication;
 import com.hartwig.hmftools.ckb.datamodel.common.Reference;
-import com.hartwig.hmftools.ckb.datamodel.common.molecularprofile.MolecularProfileInterpretation;
-import com.hartwig.hmftools.ckb.datamodel.common.therapy.TherapyInterpretation;
+import com.hartwig.hmftools.ckb.datamodel.common.therapy.Therapy;
+import com.hartwig.hmftools.ckb.datamodel.common.variant.Variant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class EvidenceInterpretation {
+public abstract class Evidence {
 
     public abstract int id();
 
@@ -27,10 +27,10 @@ public abstract class EvidenceInterpretation {
     public abstract String efficacyEvidence();
 
     @NotNull
-    public abstract MolecularProfileInterpretation variantInterpretation();
+    public abstract List<Variant> variants();
 
     @Nullable
-    public abstract TherapyInterpretation therapyInterpretation();
+    public abstract Therapy therapy();
 
     @NotNull
     public abstract Indication indication();

@@ -10,7 +10,6 @@ import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.GlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
-import com.hartwig.hmftools.ckb.json.therapy.Therapy;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -20,14 +19,8 @@ public final class TherapyInterpretationFactory {
     }
 
     @NotNull
-    public static TherapyInterpretation extractTherapyInterpretation(@NotNull Therapy therapy, @NotNull CkbJsonDatabase ckbEntry,
+    public static Therapy extractTherapy(@NotNull com.hartwig.hmftools.ckb.json.therapy.Therapy therapy, @NotNull CkbJsonDatabase ckbEntry,
             @NotNull MolecularProfile molecularProfile) {
-        return ImmutableTherapyInterpretation.builder().therapy(extractTherapy(therapy, ckbEntry, molecularProfile)).build();
-    }
-
-    @NotNull
-    private static com.hartwig.hmftools.ckb.datamodel.common.therapy.Therapy extractTherapy(@NotNull Therapy therapy,
-            @NotNull CkbJsonDatabase ckbEntry, @NotNull MolecularProfile molecularProfile) {
         return ImmutableTherapy.builder()
                 .id(therapy.id())
                 .therapyName(therapy.therapyName())
@@ -35,7 +28,7 @@ public final class TherapyInterpretationFactory {
                 .descriptions(extractTherapyDescriptions(therapy.descriptions(), ckbEntry))
                 .createDate(therapy.createDate())
                 .updateDate(therapy.updateDate())
-                .drugInterpretation(DrugInterpretationFactory.extractDrugInterpretation(therapy.drugs(), ckbEntry))
+                .drugs(DrugInterpretationFactory.extractDrugs(therapy.drugs(), ckbEntry))
                 .globalTherapyApprovalStatuses(extractGlobalApprovalStatuses(therapy.globalApprovalStatuses(),
                         ckbEntry,
                         molecularProfile,
@@ -68,8 +61,7 @@ public final class TherapyInterpretationFactory {
                 globalTherapyApprovalStatusesInterpretation.add(ImmutableGlobalTherapyApprovalStatus.builder()
                         .id(globalTherapyApprovalStatusInfo.id())
                         .indication(CommonInterpretationFactory.extractIndication(ckbEntry, globalTherapyApprovalStatusInfo.indication()))
-                        .molecularProfileInterpretation(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbEntry,
-                                molecularProfile).build())
+                        .variants(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbEntry, molecularProfile))
                         .approvalStatus(globalTherapyApprovalStatusInfo.approvalStatus())
                         .approvalAuthority(globalTherapyApprovalStatusInfo.approvalAuthority())
                         .build());

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.ckb.datamodel.common.therapy;
 import java.util.Date;
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.datamodel.common.drug.DrugInterpretation;
+import com.hartwig.hmftools.ckb.datamodel.common.drug.Drug;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -15,15 +15,6 @@ public abstract class Therapy {
 
     public abstract int id();
 
-    @NotNull
-    public abstract String therapyName();
-
-    @NotNull
-    public abstract List<String> synonyms();
-
-    @NotNull
-    public abstract List<TherapyDescription> descriptions();
-
     @Nullable
     public abstract Date createDate();
 
@@ -31,7 +22,16 @@ public abstract class Therapy {
     public abstract Date updateDate();
 
     @NotNull
-    public abstract DrugInterpretation drugInterpretation();
+    public abstract String therapyName();
+
+    @NotNull
+    public abstract List<Drug> drugs();
+
+    @NotNull
+    public abstract List<String> synonyms();
+
+    @NotNull
+    public abstract List<TherapyDescription> descriptions();
 
     @NotNull
     public abstract List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses();

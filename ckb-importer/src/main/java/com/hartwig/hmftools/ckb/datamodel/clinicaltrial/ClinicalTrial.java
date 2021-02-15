@@ -3,6 +3,9 @@ package com.hartwig.hmftools.ckb.datamodel.clinicaltrial;
 import java.util.Date;
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.datamodel.common.Indication;
+import com.hartwig.hmftools.ckb.datamodel.common.therapy.Therapy;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,4 +46,10 @@ public abstract class ClinicalTrial {
 
     @NotNull
     public abstract List<ClinicalTrialLocation> locations();
+
+    @NotNull
+    public abstract List<Indication> indications();
+
+    @NotNull
+    public abstract List<Therapy> therapies();
 }

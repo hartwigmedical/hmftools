@@ -14,7 +14,6 @@ import com.hartwig.hmftools.ckb.json.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
-import com.hartwig.hmftools.ckb.json.therapy.Therapy;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -26,13 +25,11 @@ public final class ClinicalTrialFactory {
     public static void interpretClinicalTrials(@NotNull MolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
             @NotNull ImmutableCkbEntry.Builder outputBuilder) {
         for (ClinicalTrialInfo clinicalTrialInfo : molecularProfile.variantAssociatedClinicalTrials()) {
-            ImmutableClinicalTrialInterpretation.Builder outputBuilderClinicalInterpretation =
-                    ImmutableClinicalTrialInterpretation.builder();
+            ImmutableClinicalTrial.Builder outputBuilderClinical = ImmutableClinicalTrial.builder();
 
             for (ClinicalTrial clinicalTrial : ckbEntry.clinicalTrials()) {
                 if (clinicalTrialInfo.nctId().equals(clinicalTrial.nctId())) {
-                    outputBuilderClinicalInterpretation.clinicalTrial(ImmutableClinicalTrial.builder()
-                            .nctId(clinicalTrial.nctId())
+                    outputBuilderClinical.nctId(clinicalTrial.nctId())
                             .title(clinicalTrial.title())
                             .phase(clinicalTrial.phase())
                             .recruitment(clinicalTrial.recruitment())
@@ -45,20 +42,16 @@ public final class ClinicalTrialFactory {
                                     clinicalTrial.variantRequirementDetails(),
                                     molecularProfile,
                                     ckbEntry))
-                            .locations(extractClinicalTrialLocations(clinicalTrial.clinicalTrialLocations()))
-                            .build());
+                            .locations(extractClinicalTrialLocations(clinicalTrial.clinicalTrialLocations()));
 
                     for (IndicationInfo indicationInfo : clinicalTrial.indications()) {
-                        outputBuilderClinicalInterpretation.addIndications(CommonInterpretationFactory.extractIndication(ckbEntry,
-                                indicationInfo));
+                        outputBuilderClinical.addIndications(CommonInterpretationFactory.extractIndication(ckbEntry, indicationInfo));
                     }
 
                     for (TherapyInfo therapyInfo : clinicalTrial.therapies()) {
-                        for (Therapy therapy : ckbEntry.therapies()) {
+                        for (com.hartwig.hmftools.ckb.json.therapy.Therapy therapy : ckbEntry.therapies()) {
                             if (therapyInfo.id() == therapy.id()) {
-
-                                outputBuilderClinicalInterpretation.addTherapyInterpretations(TherapyInterpretationFactory.extractTherapyInterpretation(
-                                        therapy,
+                                outputBuilderClinical.addTherapies(TherapyInterpretationFactory.extractTherapy(therapy,
                                         ckbEntry,
                                         molecularProfile));
                             }
@@ -66,7 +59,7 @@ public final class ClinicalTrialFactory {
                     }
                 }
             }
-            outputBuilder.addClinicalTrialInterpretations(outputBuilderClinicalInterpretation.build());
+            outputBuilder.addClinicalTrials(outputBuilderClinical.build());
         }
     }
 
@@ -93,8 +86,7 @@ public final class ClinicalTrialFactory {
     @NotNull
     private static List<com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialContact> extractClinicalTrialContacts(
             @NotNull List<ClinicalTrialContact> contacts) {
-        List<com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialContact> clinicalTrialContacts =
-                Lists.newArrayList();
+        List<com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialContact> clinicalTrialContacts = Lists.newArrayList();
 
         for (ClinicalTrialContact contact : contacts) {
             clinicalTrialContacts.add(ImmutableClinicalTrialContact.builder()

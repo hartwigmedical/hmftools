@@ -3,9 +3,9 @@ package com.hartwig.hmftools.ckb.datamodel;
 import java.util.Date;
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialInterpretation;
-import com.hartwig.hmftools.ckb.datamodel.evidence.EvidenceInterpretation;
-import com.hartwig.hmftools.ckb.datamodel.knowngenomicalteration.KnownGenomicAlteration;
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
+import com.hartwig.hmftools.ckb.datamodel.common.variant.Variant;
+import com.hartwig.hmftools.ckb.datamodel.evidence.Evidence;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -27,11 +27,11 @@ public abstract class CkbEntry {
     public abstract Date updateDate();
 
     @NotNull
-    public abstract List<ClinicalTrialInterpretation> clinicalTrialInterpretations();
+    public abstract List<Variant> variants();
 
     @NotNull
-    public abstract List<EvidenceInterpretation> evidenceInterpretations();
+    public abstract List<Evidence> evidences();
 
     @NotNull
-    public abstract KnownGenomicAlteration knownGenomicAlteration();
+    public abstract List<ClinicalTrial> clinicalTrials();
 }

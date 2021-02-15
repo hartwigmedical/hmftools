@@ -14,9 +14,6 @@ public final class KnownGenomicAlterationFactory {
 
     public static void extractKnownGenomicAlteration(@NotNull MolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
             @NotNull ImmutableCkbEntry.Builder outputBuilder) {
-        outputBuilder.knownGenomicAlteration(ImmutableKnownGenomicAlteration.builder()
-                .knownGenomicAlterationInterpretation(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbEntry,
-                        molecularProfile).build())
-                .build());
+        outputBuilder.variants(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbEntry, molecularProfile));
     }
 }
