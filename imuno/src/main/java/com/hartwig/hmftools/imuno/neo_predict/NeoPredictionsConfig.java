@@ -28,7 +28,7 @@ public class NeoPredictionsConfig
     public static final String SAMPLE_DATA_DIR = "sample_data_dir";
     public static final String WRITE_COHORT_FILE = "write_cohort_file";
 
-    public static final String PREDICTIONS_FILE_ID = "_predictions.csv";
+    public static final String PREDICTIONS_FILE_ID = ".mcf.predictions.csv";
 
     public NeoPredictionsConfig(final CommandLine cmd)
     {

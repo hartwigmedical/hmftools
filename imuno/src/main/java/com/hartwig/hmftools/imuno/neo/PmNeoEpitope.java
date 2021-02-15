@@ -20,7 +20,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getAminoAcids;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBaseExcerpt;
@@ -102,7 +101,7 @@ public class PmNeoEpitope extends NeoEpitope
     public NeoEpitopeType variantType()
     {
         // missense, inframe insertion, inframe deletion, frameshift,
-        if(mPointMutation.Effect == MISSENSE || isBaseChange())
+        if(isBaseChange())
             return NeoEpitopeType.MISSENSE;
 
         if((mIndelBaseDiff % 3) == 0)
