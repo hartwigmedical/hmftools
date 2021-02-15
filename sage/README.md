@@ -16,6 +16,10 @@ Key features include:
   - Additional reference sample support - a 'reference' sample in SAGE is a sample in which we don't look for candidate variants, but in which we still determine variant support and read depth at each candidate location.  One potential case is to have a paired RNA sample as an additional reference to measure RNA support for candidate variants
   - Mitochondrial calling
   - An internal [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) method
+  
+## Germline mode
+
+Sage can be run in a germline mode.  See details [here](https://github.com/hartwigmedical/hmftools/blob/master/sage/Germline.md).
 
 ## BAM Requirements
 BAM records that are flagged as unmapped, duplicateRead or secondary/supplementary are ignored. 
