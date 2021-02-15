@@ -8,6 +8,9 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceMatch
 
 class FragmentAlleles(val fragment: AminoAcidFragment, val full: Collection<HlaAllele>, val partial: Collection<HlaAllele>, val wild: Collection<HlaAllele>) {
 
+    fun contains(allele: HlaAllele): Boolean {
+        return full.contains(allele) || partial.contains(allele) || wild.contains(allele)
+    }
 
     companion object {
 
@@ -27,8 +30,7 @@ class FragmentAlleles(val fragment: AminoAcidFragment, val full: Collection<HlaA
                     .filter { it.full.isNotEmpty() || it.partial.isNotEmpty() }
         }
 
-        private fun create(
-                aminoAcidFragment: AminoAcidFragment,
+        private fun create(aminoAcidFragment: AminoAcidFragment,
                 aminoAcidLoci: Collection<Int>, aminoAcidSequences: Collection<HlaSequenceLoci>,
                 nucleotideLoci: Collection<Int>, nucleotideSequences: Collection<HlaSequenceLoci>): FragmentAlleles {
 
