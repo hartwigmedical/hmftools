@@ -13,16 +13,16 @@ public enum AnalysisType
     SUMMARY,
     GENE_DISTRIBUTION, // creates gene expression percentiles by cancer type and pan-cancer
     TRANSCRIPT_DISTRIBUTION, // as above but for transcripts
-    EXPRESSION_COHORT_MEDIANS, // as above but for transcripts
+    EXPRESSION_COHORT_MEDIANS, // produce pan-cancer and per-cancer median expression values
     SAMPLE_GENE_PERCENTILES, // reports where on a percentile a specific sample's gene expression lies
     ALT_SPLICE_JUNCTION, // combine and analyse alternate splice junctions for a cohort
     ALT_SPLICE_JUNCTION_MATRIX, // generates a for a cohort's alt-SJs
     SPLICE_VARIANT_MATCHING, // match alternate splice junctions with (candidate-splicing) somatic variants
-    RECURRENT_SPLICE_VARIANTS,
+    RECURRENT_SPLICE_VARIANTS, // find recurrent splice variants, input is a somatic table file
     FUSION, // process fusions for a cohort - filter passing fusions, form a cohort file, compare with external fusions
-    PASSING_FUSION,
-    RETAINED_INTRON,
-    SPLICE_SITE_PERCENTILES,
+    PASSING_FUSION, // produce per-sample filtered fusions
+    RETAINED_INTRON, // produce cohort file for retained introns
+    SPLICE_SITE_PERCENTILES, // produce cohort percentage-spiced-in data from per-sample splice data files
     EXTERNAL_EXPRESSION_COMPARE, // combine expression data from Isofox and another source
     GENE_EXPRESSION_COMPARE, // compare gene expression across 2 cohorts of samples
     GENE_EXPRESSION_MATRIX, // generates a matrix for gene expression data
