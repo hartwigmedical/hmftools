@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.MolecularProfileInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.variant.VariantFactory;
 import com.hartwig.hmftools.ckb.datamodel.evidence.EvidenceFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.molecularprofile.JsonMolecularProfile;
@@ -32,7 +32,7 @@ public final class JsonDatabaseToCkbEntryConverter {
 
             outputBuilder.clinicalTrials(ClinicalTrialFactory.interpretClinicalTrials(ckbJsonDatabase, molecularProfile));
             outputBuilder.evidences(EvidenceFactory.interpretVariantEvidence(ckbJsonDatabase, molecularProfile));
-            outputBuilder.variants(MolecularProfileInterpretationFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()));
+            outputBuilder.variants(VariantFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()));
 
             LOGGER.info(outputBuilder.build());  //TODO removed when model is finished
             ckbEntries.add(outputBuilder.build());

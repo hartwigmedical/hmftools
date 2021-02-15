@@ -5,7 +5,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodel.common.drug.DrugFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.MolecularProfileInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.variant.VariantFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.GlobalApprovalStatusInfo;
@@ -63,7 +63,7 @@ public final class TherapyFactory {
                         .id(globalTherapyApprovalStatusInfo.id())
                         .indication(CommonInterpretationFactory.extractIndication(ckbJsonDatabase,
                                 globalTherapyApprovalStatusInfo.indication()))
-                        .variants(MolecularProfileInterpretationFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()))
+                        .variants(VariantFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()))
                         .approvalStatus(globalTherapyApprovalStatusInfo.approvalStatus())
                         .approvalAuthority(globalTherapyApprovalStatusInfo.approvalAuthority())
                         .build());

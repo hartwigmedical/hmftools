@@ -5,7 +5,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodel.common.therapy.TherapyFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.MolecularProfileInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.variant.VariantFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrial;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrialContact;
@@ -149,6 +149,6 @@ public final class ClinicalTrialFactory {
                 .profileName(jsonRequirementDetail.molecularProfile().profileName())
                 .requirementType(jsonRequirementDetail.requirementType())
                 .countPartialRequirementTypes(countPartialRequirementTypes)
-                .variants(MolecularProfileInterpretationFactory.extractVariants(ckbJsonDatabase, molecularProfileDir.geneVariants()));
+                .variants(VariantFactory.extractVariants(ckbJsonDatabase, molecularProfileDir.geneVariants()));
     }
 }

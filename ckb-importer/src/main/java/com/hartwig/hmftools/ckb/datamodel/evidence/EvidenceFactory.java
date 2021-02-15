@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodel.common.therapy.Therapy;
 import com.hartwig.hmftools.ckb.datamodel.common.therapy.TherapyFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.MolecularProfileInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.variant.VariantFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
@@ -32,7 +32,7 @@ public final class EvidenceFactory {
                         .approvalStatus(evidenceInfo.approvalStatus())
                         .evidenceType(evidenceInfo.evidenceType())
                         .efficacyEvidence(evidenceInfo.efficacyEvidence())
-                        .variants(MolecularProfileInterpretationFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()))
+                        .variants(VariantFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()))
                         .therapy(extractTherapyEvidence(ckbJsonDatabase, evidenceInfo.therapy(), molecularProfile))
                         .indication(CommonInterpretationFactory.extractIndication(ckbJsonDatabase, evidenceInfo.indication()))
                         .responseType(evidenceInfo.responseType())

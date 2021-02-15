@@ -15,9 +15,9 @@ import com.hartwig.hmftools.ckb.json.variant.JsonVariantTranscriptCoordinate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class MolecularProfileInterpretationFactory {
+public final class VariantFactory {
 
-    private MolecularProfileInterpretationFactory() {
+    private VariantFactory() {
     }
 
     @NotNull
