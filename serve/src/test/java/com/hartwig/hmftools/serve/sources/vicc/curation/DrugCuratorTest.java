@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class DrugCuratorTest {
@@ -30,7 +31,7 @@ public class DrugCuratorTest {
         curator.reportUnusedCurationKeys();
     }
 
-    @Test
+    @Ignore
     public void canBlacklistDrugs() {
         DrugCurator curator = new DrugCurator();
 
