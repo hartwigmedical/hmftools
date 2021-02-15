@@ -9,7 +9,7 @@ Key features include:
   - Modified [quality score](#modified-tumor-quality-score) incorporates different sources of error (MAPQ, BASEQ, edge distance, improper pair, distance from ref genome, repeat sequencing errors) without hard cutoffs
   - Explicit modelling of ‘jitter’ sequencing errors in microsatellite allows improved sensitivity in microsatellites while ignoring common sequencing errors
   - No cutoff for homopolymer repeat length for improved INDEL handling 
-  - [Phasing](#6-phasing) of somatic + somatic and somatic + germline up to 25 bases
+  - [Phasing](#6-phasing) of somatic + somatic and somatic + germline up to ~75 bases
   - Native MNV handling 
   - Tumor sample only support
   - Multiple tumor sample support - a 'tumor' in SAGE is any sample in which we search for candidate variants and determine variant support.
