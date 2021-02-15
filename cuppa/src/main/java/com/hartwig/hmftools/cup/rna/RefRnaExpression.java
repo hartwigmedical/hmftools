@@ -44,9 +44,6 @@ public class RefRnaExpression implements RefClassifier
     private final List<String> mGeneNames;
     private final List<String> mSampleIds;
     private final List<String> mCancerTypes;
-    private final double mTpmLogCutoff;
-
-    public static final String TPM_LOG_CUTOFF = "rna_tpm_log_cutoff";
 
     public RefRnaExpression(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
@@ -60,13 +57,11 @@ public class RefRnaExpression implements RefClassifier
         mGeneNames = Lists.newArrayList();
         mSampleIds = Lists.newArrayList();
         mCancerTypes = Lists.newArrayList();
-
-        mTpmLogCutoff = Double.parseDouble(cmd.getOptionValue(TPM_LOG_CUTOFF, "0"));
     }
 
     public static void addCmdLineArgs(@NotNull Options options)
     {
-        options.addOption(TPM_LOG_CUTOFF, true, "RNA TPM cut-off in log scale (default=0, not applied)");
+        // options.addOption(TPM_LOG_CUTOFF, true, "RNA TPM cut-off in log scale (default=0, not applied)");
     }
 
     public CategoryType categoryType() { return GENE_EXP; }
