@@ -3,7 +3,7 @@ package com.hartwig.hmftools.ckb.datamodel.clinicaltrial;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.datamodel.CommonInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.indication.IndicationFactory;
 import com.hartwig.hmftools.ckb.datamodel.therapy.TherapyFactory;
 import com.hartwig.hmftools.ckb.datamodel.variant.VariantFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
@@ -48,8 +48,7 @@ public final class ClinicalTrialFactory {
                             .locations(extractClinicalTrialLocations(clinicalTrial.clinicalTrialLocations()));
 
                     for (IndicationInfo indicationInfo : clinicalTrial.indications()) {
-                        outputBuilderClinical.addIndications(CommonInterpretationFactory.extractIndication(ckbJsonDatabase,
-                                indicationInfo));
+                        outputBuilderClinical.addIndications(IndicationFactory.extractIndication(ckbJsonDatabase, indicationInfo));
                     }
 
                     for (TherapyInfo therapyInfo : clinicalTrial.therapies()) {

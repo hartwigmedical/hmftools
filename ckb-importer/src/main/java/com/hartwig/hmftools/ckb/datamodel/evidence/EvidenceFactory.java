@@ -3,7 +3,8 @@ package com.hartwig.hmftools.ckb.datamodel.evidence;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.datamodel.CommonInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.indication.IndicationFactory;
+import com.hartwig.hmftools.ckb.datamodel.reference.ReferenceFactory;
 import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
 import com.hartwig.hmftools.ckb.datamodel.therapy.TherapyFactory;
 import com.hartwig.hmftools.ckb.datamodel.variant.VariantFactory;
@@ -34,9 +35,9 @@ public final class EvidenceFactory {
                         .efficacyEvidence(evidenceInfo.efficacyEvidence())
                         .variants(VariantFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()))
                         .therapy(extractTherapyEvidence(ckbJsonDatabase, evidenceInfo.therapy(), molecularProfile))
-                        .indication(CommonInterpretationFactory.extractIndication(ckbJsonDatabase, evidenceInfo.indication()))
+                        .indication(IndicationFactory.extractIndication(ckbJsonDatabase, evidenceInfo.indication()))
                         .responseType(evidenceInfo.responseType())
-                        .references(CommonInterpretationFactory.extractReferences(ckbJsonDatabase, evidenceInfo.references()))
+                        .references(ReferenceFactory.extractReferences(ckbJsonDatabase, evidenceInfo.references()))
                         .ampCapAscoEvidenceLevel(evidenceInfo.ampCapAscoEvidenceLevel())
                         .ampCapAscoInferredTier(evidenceInfo.ampCapAscoInferredTier())
                         .build());

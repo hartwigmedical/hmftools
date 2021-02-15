@@ -3,7 +3,7 @@ package com.hartwig.hmftools.ckb.datamodel.clinicaltrial;
 import java.util.Date;
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.datamodel.Indication;
+import com.hartwig.hmftools.ckb.datamodel.indication.Indication;
 import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
 
 import org.immutables.value.Value;

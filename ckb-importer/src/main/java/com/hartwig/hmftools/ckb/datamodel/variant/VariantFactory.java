@@ -3,7 +3,7 @@ package com.hartwig.hmftools.ckb.datamodel.variant;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.datamodel.CommonInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.reference.ReferenceFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.VariantInfo;
@@ -79,7 +79,7 @@ public final class VariantFactory {
         for (DescriptionInfo descriptionInfo : descriptionInfos) {
             variantDescriptions.add(ImmutableVariantDescription.builder()
                     .description(descriptionInfo.description())
-                    .references(CommonInterpretationFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
+                    .references(ReferenceFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
                     .build());
         }
         return variantDescriptions;
@@ -177,7 +177,7 @@ public final class VariantFactory {
         for (DescriptionInfo descriptionInfo : descriptionInfos) {
             geneDescriptions.add(ImmutableGeneDescription.builder()
                     .description(descriptionInfo.description())
-                    .references(CommonInterpretationFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
+                    .references(ReferenceFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
                     .build());
         }
         return geneDescriptions;

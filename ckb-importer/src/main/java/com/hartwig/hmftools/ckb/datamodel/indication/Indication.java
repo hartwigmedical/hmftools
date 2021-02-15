@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel;
+package com.hartwig.hmftools.ckb.datamodel.indication;
 
 import java.util.Date;
 import java.util.List;

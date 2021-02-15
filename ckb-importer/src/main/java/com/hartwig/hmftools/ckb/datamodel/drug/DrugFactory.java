@@ -3,7 +3,7 @@ package com.hartwig.hmftools.ckb.datamodel.drug;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.datamodel.CommonInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.reference.ReferenceFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.DrugClassInfo;
@@ -67,7 +67,7 @@ public final class DrugFactory {
         for (DescriptionInfo descriptionInfo : descriptionInfos) {
             drugDescriptions.add(ImmutableDrugDescription.builder()
                     .description(descriptionInfo.description())
-                    .references(CommonInterpretationFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
+                    .references(ReferenceFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
                     .build());
         }
         return drugDescriptions;

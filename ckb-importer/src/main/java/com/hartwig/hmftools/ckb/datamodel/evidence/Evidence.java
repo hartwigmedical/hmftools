@@ -2,8 +2,8 @@ package com.hartwig.hmftools.ckb.datamodel.evidence;
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.datamodel.Indication;
-import com.hartwig.hmftools.ckb.datamodel.Reference;
+import com.hartwig.hmftools.ckb.datamodel.indication.Indication;
+import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
 import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 

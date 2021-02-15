@@ -3,8 +3,9 @@ package com.hartwig.hmftools.ckb.datamodel.therapy;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.datamodel.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodel.drug.DrugFactory;
+import com.hartwig.hmftools.ckb.datamodel.indication.IndicationFactory;
+import com.hartwig.hmftools.ckb.datamodel.reference.ReferenceFactory;
 import com.hartwig.hmftools.ckb.datamodel.variant.VariantFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
@@ -45,7 +46,7 @@ public final class TherapyFactory {
         for (DescriptionInfo descriptionInfo : descriptionInfos) {
             therapyDescriptions.add(ImmutableTherapyDescription.builder()
                     .description(descriptionInfo.description())
-                    .references(CommonInterpretationFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
+                    .references(ReferenceFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
                     .build());
         }
         return therapyDescriptions;
@@ -61,8 +62,7 @@ public final class TherapyFactory {
                     && molecularProfile.id() == globalTherapyApprovalStatusInfo.molecularProfile().id()) {
                 globalTherapyApprovalStatusesInterpretation.add(ImmutableGlobalTherapyApprovalStatus.builder()
                         .id(globalTherapyApprovalStatusInfo.id())
-                        .indication(CommonInterpretationFactory.extractIndication(ckbJsonDatabase,
-                                globalTherapyApprovalStatusInfo.indication()))
+                        .indication(IndicationFactory.extractIndication(ckbJsonDatabase, globalTherapyApprovalStatusInfo.indication()))
                         .variants(VariantFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()))
                         .approvalStatus(globalTherapyApprovalStatusInfo.approvalStatus())
                         .approvalAuthority(globalTherapyApprovalStatusInfo.approvalAuthority())
