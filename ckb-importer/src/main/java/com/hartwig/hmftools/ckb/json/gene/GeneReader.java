@@ -32,7 +32,7 @@ import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class GeneReader extends CkbJsonDirectoryReader<Gene> {
+public class GeneReader extends CkbJsonDirectoryReader<JsonGene> {
 
     public GeneReader(@Nullable final Integer maxFilesToRead) {
         super(maxFilesToRead);
@@ -40,11 +40,11 @@ public class GeneReader extends CkbJsonDirectoryReader<Gene> {
 
     @NotNull
     @Override
-    protected Gene read(@NotNull final JsonObject object) {
+    protected JsonGene read(@NotNull final JsonObject object) {
         JsonDatamodelChecker geneChecker = GeneDataModelChecker.geneObjectChecker();
         geneChecker.check(object);
 
-        return ImmutableGene.builder()
+        return ImmutableJsonGene.builder()
                 .id(JsonFunctions.integer(object, "id"))
                 .geneSymbol(JsonFunctions.string(object, "geneSymbol"))
                 .terms(JsonFunctions.stringList(object, "terms"))

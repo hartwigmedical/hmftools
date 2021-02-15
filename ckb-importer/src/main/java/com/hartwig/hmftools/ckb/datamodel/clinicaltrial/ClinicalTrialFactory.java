@@ -8,12 +8,14 @@ import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodel.common.molecularprofile.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodel.common.therapy.TherapyInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
-import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrial;
-import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialContact;
+import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrial;
+import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrialContact;
+import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrialLocation;
 import com.hartwig.hmftools.ckb.json.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
-import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
+import com.hartwig.hmftools.ckb.json.molecularprofile.JsonMolecularProfile;
+import com.hartwig.hmftools.ckb.json.therapy.JsonTherapy;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,12 +24,12 @@ public final class ClinicalTrialFactory {
     private ClinicalTrialFactory() {
     }
 
-    public static void interpretClinicalTrials(@NotNull MolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
+    public static void interpretClinicalTrials(@NotNull JsonMolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
             @NotNull ImmutableCkbEntry.Builder outputBuilder) {
         for (ClinicalTrialInfo clinicalTrialInfo : molecularProfile.variantAssociatedClinicalTrials()) {
             ImmutableClinicalTrial.Builder outputBuilderClinical = ImmutableClinicalTrial.builder();
 
-            for (ClinicalTrial clinicalTrial : ckbEntry.clinicalTrials()) {
+            for (JsonClinicalTrial clinicalTrial : ckbEntry.clinicalTrials()) {
                 if (clinicalTrialInfo.nctId().equals(clinicalTrial.nctId())) {
                     outputBuilderClinical.nctId(clinicalTrial.nctId())
                             .title(clinicalTrial.title())
@@ -49,7 +51,7 @@ public final class ClinicalTrialFactory {
                     }
 
                     for (TherapyInfo therapyInfo : clinicalTrial.therapies()) {
-                        for (com.hartwig.hmftools.ckb.json.therapy.Therapy therapy : ckbEntry.therapies()) {
+                        for (JsonTherapy therapy : ckbEntry.therapies()) {
                             if (therapyInfo.id() == therapy.id()) {
                                 outputBuilderClinical.addTherapies(TherapyInterpretationFactory.extractTherapy(therapy,
                                         ckbEntry,
@@ -65,10 +67,10 @@ public final class ClinicalTrialFactory {
 
     @NotNull
     private static List<ClinicalTrialLocation> extractClinicalTrialLocations(
-            @NotNull List<com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialLocation> clinicalTrialLocations) {
+            @NotNull List<JsonClinicalTrialLocation> clinicalTrialLocations) {
         List<ClinicalTrialLocation> clinicalTrialLocationsInterpretation = Lists.newArrayList();
 
-        for (com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialLocation location : clinicalTrialLocations) {
+        for (JsonClinicalTrialLocation location : clinicalTrialLocations) {
             clinicalTrialLocationsInterpretation.add(ImmutableClinicalTrialLocation.builder()
                     .nctId(location.nctId())
                     .facility(location.facility())
@@ -85,10 +87,10 @@ public final class ClinicalTrialFactory {
 
     @NotNull
     private static List<com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialContact> extractClinicalTrialContacts(
-            @NotNull List<ClinicalTrialContact> contacts) {
+            @NotNull List<JsonClinicalTrialContact> contacts) {
         List<com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialContact> clinicalTrialContacts = Lists.newArrayList();
 
-        for (ClinicalTrialContact contact : contacts) {
+        for (JsonClinicalTrialContact contact : contacts) {
             clinicalTrialContacts.add(ImmutableClinicalTrialContact.builder()
                     .name(contact.name())
                     .email(contact.email())

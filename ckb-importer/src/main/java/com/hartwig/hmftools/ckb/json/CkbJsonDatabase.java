@@ -2,17 +2,17 @@ package com.hartwig.hmftools.ckb.json;
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrial;
-import com.hartwig.hmftools.ckb.json.drug.Drug;
-import com.hartwig.hmftools.ckb.json.drugclass.DrugClass;
-import com.hartwig.hmftools.ckb.json.gene.Gene;
-import com.hartwig.hmftools.ckb.json.globaltherapyapprovalstatus.GlobalTherapyApprovalStatus;
-import com.hartwig.hmftools.ckb.json.indication.Indication;
-import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
-import com.hartwig.hmftools.ckb.json.reference.Reference;
-import com.hartwig.hmftools.ckb.json.therapy.Therapy;
-import com.hartwig.hmftools.ckb.json.treatmentapproach.TreatmentApproach;
-import com.hartwig.hmftools.ckb.json.variant.Variant;
+import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrial;
+import com.hartwig.hmftools.ckb.json.drug.JsonDrug;
+import com.hartwig.hmftools.ckb.json.drugclass.JsonDrugClass;
+import com.hartwig.hmftools.ckb.json.gene.JsonGene;
+import com.hartwig.hmftools.ckb.json.globaltherapyapprovalstatus.JsonGlobalTherapyApprovalStatus;
+import com.hartwig.hmftools.ckb.json.indication.JsonIndication;
+import com.hartwig.hmftools.ckb.json.molecularprofile.JsonMolecularProfile;
+import com.hartwig.hmftools.ckb.json.reference.JsonReference;
+import com.hartwig.hmftools.ckb.json.therapy.JsonTherapy;
+import com.hartwig.hmftools.ckb.json.treatmentapproach.JsonTreatmentApproach;
+import com.hartwig.hmftools.ckb.json.variant.JsonVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -23,35 +23,35 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CkbJsonDatabase {
 
     @NotNull
-    public abstract List<MolecularProfile> molecularProfiles();
+    public abstract List<JsonMolecularProfile> molecularProfiles();
 
     @NotNull
-    public abstract List<Variant> variants();
+    public abstract List<JsonVariant> variants();
 
     @NotNull
-    public abstract List<Gene> genes();
+    public abstract List<JsonGene> genes();
 
     @NotNull
-    public abstract List<Indication> indications();
+    public abstract List<JsonIndication> indications();
 
     @NotNull
-    public abstract List<TreatmentApproach> treatmentApproaches();
+    public abstract List<JsonTreatmentApproach> treatmentApproaches();
 
     @NotNull
-    public abstract List<Therapy> therapies();
+    public abstract List<JsonTherapy> therapies();
 
     @NotNull
-    public abstract List<Drug> drugs();
+    public abstract List<JsonDrug> drugs();
 
     @NotNull
-    public abstract List<DrugClass> drugClasses();
+    public abstract List<JsonDrugClass> drugClasses();
 
     @NotNull
-    public abstract List<ClinicalTrial> clinicalTrials();
+    public abstract List<JsonClinicalTrial> clinicalTrials();
 
     @NotNull
-    public abstract List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses();
+    public abstract List<JsonGlobalTherapyApprovalStatus> globalTherapyApprovalStatuses();
 
     @NotNull
-    public abstract List<Reference> references();
+    public abstract List<JsonReference> references();
 }

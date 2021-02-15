@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class GlobalTherapyApprovalStatus implements CkbJsonObject {
+public abstract class JsonGlobalTherapyApprovalStatus implements CkbJsonObject {
 
     public abstract int totalCount();
 

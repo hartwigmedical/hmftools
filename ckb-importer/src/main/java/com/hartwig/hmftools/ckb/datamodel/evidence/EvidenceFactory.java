@@ -8,7 +8,8 @@ import com.hartwig.hmftools.ckb.datamodel.common.therapy.TherapyInterpretationFa
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
-import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
+import com.hartwig.hmftools.ckb.json.molecularprofile.JsonMolecularProfile;
+import com.hartwig.hmftools.ckb.json.therapy.JsonTherapy;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,9 +19,9 @@ public final class EvidenceFactory {
     private EvidenceFactory() {
     }
 
-    public static void interpretVariantEvidence(@NotNull MolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
+    public static void interpretVariantEvidence(@NotNull JsonMolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
             @NotNull ImmutableCkbEntry.Builder outputBuilder) {
-        for (EvidenceInfo evidenceInfo : molecularProfile.variantLevelEvidence().evidence()) {
+        for (EvidenceInfo evidenceInfo : molecularProfile.variantLevelEvidence().evidences()) {
             if (molecularProfile.id() == evidenceInfo.molecularProfile().id()) {
                 outputBuilder.addEvidences(ImmutableEvidence.builder()
                         .id(evidenceInfo.id())
@@ -42,9 +43,9 @@ public final class EvidenceFactory {
 
     @Nullable
     private static Therapy extractTherapyEvidence(@NotNull CkbJsonDatabase ckbEntry, @NotNull TherapyInfo therapyInfo,
-            @NotNull MolecularProfile molecularProfile) {
+            @NotNull JsonMolecularProfile molecularProfile) {
         Therapy therapyInterpretation = null;
-        for (com.hartwig.hmftools.ckb.json.therapy.Therapy therapy : ckbEntry.therapies()) {
+        for (JsonTherapy therapy : ckbEntry.therapies()) {
             if (therapyInfo.id() == therapy.id()) {
                 therapyInterpretation = TherapyInterpretationFactory.extractTherapy(therapy, ckbEntry, molecularProfile);
             }

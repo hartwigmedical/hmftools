@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class VariantCategoryVariantPath {
+public abstract class JsonVariantCategoryVariantPath {
 
     @NotNull
     public abstract String variantPath();

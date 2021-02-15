@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class DrugClassReader extends CkbJsonDirectoryReader<DrugClass> {
+public class DrugClassReader extends CkbJsonDirectoryReader<JsonDrugClass> {
 
     public DrugClassReader(@Nullable final Integer maxFilesToRead) {
         super(maxFilesToRead);
@@ -26,11 +26,11 @@ public class DrugClassReader extends CkbJsonDirectoryReader<DrugClass> {
 
     @NotNull
     @Override
-    protected DrugClass read(@NotNull final JsonObject object) {
+    protected JsonDrugClass read(@NotNull final JsonObject object) {
         JsonDatamodelChecker drugsClassChecker = DrugClassDataModelChecker.drugClassObjectChecker();
         drugsClassChecker.check(object);
 
-        return ImmutableDrugClass.builder()
+        return ImmutableJsonDrugClass.builder()
                 .id(JsonFunctions.integer(object, "id"))
                 .drugClass(JsonFunctions.string(object, "drugClass"))
                 .createDate(DateConverter.toDate(JsonFunctions.string(object, "createDate")))

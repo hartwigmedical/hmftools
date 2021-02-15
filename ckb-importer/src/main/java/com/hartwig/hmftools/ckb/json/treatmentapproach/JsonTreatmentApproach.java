@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class TreatmentApproach implements CkbJsonObject {
+public abstract class JsonTreatmentApproach implements CkbJsonObject {
 
     public abstract int id();
 

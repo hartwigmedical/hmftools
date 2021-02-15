@@ -10,10 +10,10 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class MolecularProfileExtendedEvidence {
+public abstract class JsonMolecularProfileExtendedEvidence {
 
     public abstract int totalCount();
 
     @NotNull
-    public abstract List<EvidenceInfo> evidence();
+    public abstract List<EvidenceInfo> evidences();
 }

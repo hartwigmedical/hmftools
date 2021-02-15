@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Variant implements CkbJsonObject {
+public abstract class JsonVariant implements CkbJsonObject {
 
     public abstract int id();
 
@@ -48,13 +48,13 @@ public abstract class Variant implements CkbJsonObject {
     public abstract Date updateDate();
 
     @Nullable
-    public abstract VariantTranscriptCoordinate referenceTranscriptCoordinate();
+    public abstract JsonVariantTranscriptCoordinate referenceTranscriptCoordinate();
 
     @NotNull
-    public abstract List<VariantPartnerGene> partnerGenes();
+    public abstract List<JsonVariantPartnerGene> partnerGenes();
 
     @NotNull
-    public abstract List<VariantCategoryVariantPath> categoryVariantPaths();
+    public abstract List<JsonVariantCategoryVariantPath> categoryVariantPaths();
 
     @NotNull
     public abstract List<EvidenceInfo> evidence();
@@ -66,7 +66,7 @@ public abstract class Variant implements CkbJsonObject {
     public abstract List<MolecularProfileInfo> molecularProfiles();
 
     @NotNull
-    public abstract List<VariantTranscriptCoordinate> allTranscriptCoordinates();
+    public abstract List<JsonVariantTranscriptCoordinate> allTranscriptCoordinates();
 
     @NotNull
     public abstract List<VariantInfo> memberVariants();

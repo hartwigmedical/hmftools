@@ -8,6 +8,8 @@ import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.DrugClassInfo;
 import com.hartwig.hmftools.ckb.json.common.DrugInfo;
+import com.hartwig.hmftools.ckb.json.drug.JsonDrug;
+import com.hartwig.hmftools.ckb.json.drugclass.JsonDrugClass;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -20,7 +22,7 @@ public final class DrugInterpretationFactory {
     public static List<Drug> extractDrugs(@NotNull List<DrugInfo> drugInfos, @NotNull CkbJsonDatabase ckbEntry) {
         List<Drug> drugs = Lists.newArrayList();
         for (DrugInfo drugInfo : drugInfos) {
-            for (com.hartwig.hmftools.ckb.json.drug.Drug drug : ckbEntry.drugs()) {
+            for (JsonDrug drug : ckbEntry.drugs()) {
                 if (drugInfo.id() == drug.id()) {
                     drugs.add(ImmutableDrug.builder()
                             .id(drug.id())
@@ -41,11 +43,11 @@ public final class DrugInterpretationFactory {
     }
 
     @NotNull
-    private static List<DrugClass> extractDrugClasses(@NotNull com.hartwig.hmftools.ckb.json.drug.Drug drug,
+    private static List<DrugClass> extractDrugClasses(@NotNull JsonDrug drug,
             @NotNull CkbJsonDatabase ckbEntry) {
         List<com.hartwig.hmftools.ckb.datamodel.common.drug.DrugClass> drugClasses = Lists.newArrayList();
         for (DrugClassInfo drugClassInfo : drug.drugClasses()) {
-            for (com.hartwig.hmftools.ckb.json.drugclass.DrugClass drugClass : ckbEntry.drugClasses()) {
+            for (JsonDrugClass drugClass : ckbEntry.drugClasses()) {
                 if (drugClassInfo.id() == drugClass.id()) {
                     drugClasses.add(ImmutableDrugClass.builder()
                             .id(drugClass.id())

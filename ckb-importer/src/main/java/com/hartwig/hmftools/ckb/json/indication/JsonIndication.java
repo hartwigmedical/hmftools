@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Indication implements CkbJsonObject {
+public abstract class JsonIndication implements CkbJsonObject {
 
     // IDs for indications come from DOID and can have leading zeros, so need to be a String.
     @NotNull

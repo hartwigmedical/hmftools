@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class MolecularProfile implements CkbJsonObject {
+public abstract class JsonMolecularProfile implements CkbJsonObject {
 
     public abstract int id();
 
@@ -34,17 +34,17 @@ public abstract class MolecularProfile implements CkbJsonObject {
     public abstract Date updateDate();
 
     @NotNull
-    public abstract MolecularProfileExtendedEvidence complexMolecularProfileEvidence();
+    public abstract JsonMolecularProfileExtendedEvidence complexMolecularProfileEvidence();
 
     @NotNull
-    public abstract MolecularProfileExtendedEvidence treatmentApproachEvidence();
+    public abstract JsonMolecularProfileExtendedEvidence treatmentApproachEvidence();
 
     @NotNull
     public abstract List<ClinicalTrialInfo> variantAssociatedClinicalTrials();
 
     @NotNull
-    public abstract MolecularProfileExtendedEvidence variantLevelEvidence();
+    public abstract JsonMolecularProfileExtendedEvidence variantLevelEvidence();
 
     @NotNull
-    public abstract MolecularProfileExtendedEvidence extendedEvidence();
+    public abstract JsonMolecularProfileExtendedEvidence extendedEvidence();
 }

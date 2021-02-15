@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.json.gene;
+package com.hartwig.hmftools.ckb.json.drug;
 
 import java.util.Date;
 import java.util.List;
@@ -6,9 +6,10 @@ import java.util.List;
 import com.hartwig.hmftools.ckb.json.CkbJsonObject;
 import com.hartwig.hmftools.ckb.json.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
+import com.hartwig.hmftools.ckb.json.common.DrugClassInfo;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
-import com.hartwig.hmftools.ckb.json.common.MolecularProfileInfo;
-import com.hartwig.hmftools.ckb.json.common.VariantInfo;
+import com.hartwig.hmftools.ckb.json.common.GlobalApprovalStatusInfo;
+import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -16,42 +17,36 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Gene implements CkbJsonObject {
+public abstract class JsonDrug implements CkbJsonObject {
 
     public abstract int id();
 
     @NotNull
-    public abstract String geneSymbol();
+    public abstract String drugName();
 
     @NotNull
     public abstract List<String> terms();
-
-    @Nullable
-    public abstract String entrezId();
 
     @NotNull
     public abstract List<String> synonyms();
 
     @Nullable
-    public abstract String chromosome();
-
-    @Nullable
-    public abstract String mapLocation();
+    public abstract String tradeName();
 
     @NotNull
     public abstract List<DescriptionInfo> descriptions();
 
-    @Nullable
-    public abstract String canonicalTranscript();
-
     @NotNull
-    public abstract String geneRole();
+    public abstract List<DrugClassInfo> drugClasses();
+
+    @Nullable
+    public abstract String casRegistryNum();
+
+    @Nullable
+    public abstract String ncitId();
 
     @Nullable
     public abstract Date createDate();
-
-    @Nullable
-    public abstract Date updateDate();
 
     @NotNull
     public abstract List<ClinicalTrialInfo> clinicalTrials();
@@ -60,11 +55,8 @@ public abstract class Gene implements CkbJsonObject {
     public abstract List<EvidenceInfo> evidence();
 
     @NotNull
-    public abstract List<VariantInfo> variants();
+    public abstract List<TherapyInfo> therapies();
 
-    @NotNull
-    public abstract List<MolecularProfileInfo> molecularProfiles();
-
-    @NotNull
-    public abstract List<VariantInfo> categoryVariants();
+    @Nullable
+    public abstract List<GlobalApprovalStatusInfo> globalApprovalStatus();
 }

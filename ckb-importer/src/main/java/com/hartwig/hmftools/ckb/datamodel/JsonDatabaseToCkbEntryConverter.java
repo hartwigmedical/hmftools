@@ -7,7 +7,7 @@ import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialFactory;
 import com.hartwig.hmftools.ckb.datamodel.evidence.EvidenceFactory;
 import com.hartwig.hmftools.ckb.datamodel.knowngenomicalteration.KnownGenomicAlterationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
-import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
+import com.hartwig.hmftools.ckb.json.molecularprofile.JsonMolecularProfile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,7 +23,7 @@ public final class JsonDatabaseToCkbEntryConverter {
     @NotNull
     public static List<CkbEntry> convert(@NotNull CkbJsonDatabase ckbJsonDatabase) {
         List<CkbEntry> ckbEntries = Lists.newArrayList();
-        for (MolecularProfile molecularProfile : ckbJsonDatabase.molecularProfiles()) {
+        for (JsonMolecularProfile molecularProfile : ckbJsonDatabase.molecularProfiles()) {
             ImmutableCkbEntry.Builder outputBuilder = ImmutableCkbEntry.builder();
             outputBuilder.profileId(molecularProfile.id());
             outputBuilder.profileName(molecularProfile.profileName());

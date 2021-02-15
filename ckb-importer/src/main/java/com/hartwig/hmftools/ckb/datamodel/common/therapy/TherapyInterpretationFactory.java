@@ -9,7 +9,8 @@ import com.hartwig.hmftools.ckb.datamodel.common.molecularprofile.MolecularProfi
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.GlobalApprovalStatusInfo;
-import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
+import com.hartwig.hmftools.ckb.json.molecularprofile.JsonMolecularProfile;
+import com.hartwig.hmftools.ckb.json.therapy.JsonTherapy;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -19,8 +20,8 @@ public final class TherapyInterpretationFactory {
     }
 
     @NotNull
-    public static Therapy extractTherapy(@NotNull com.hartwig.hmftools.ckb.json.therapy.Therapy therapy, @NotNull CkbJsonDatabase ckbEntry,
-            @NotNull MolecularProfile molecularProfile) {
+    public static Therapy extractTherapy(@NotNull JsonTherapy therapy, @NotNull CkbJsonDatabase ckbEntry,
+            @NotNull JsonMolecularProfile molecularProfile) {
         return ImmutableTherapy.builder()
                 .id(therapy.id())
                 .therapyName(therapy.therapyName())
@@ -53,7 +54,7 @@ public final class TherapyInterpretationFactory {
     @NotNull
     private static List<GlobalTherapyApprovalStatus> extractGlobalApprovalStatuses(
             @NotNull List<GlobalApprovalStatusInfo> globalTherapyApprovalStatuses, @NotNull CkbJsonDatabase ckbEntry,
-            @NotNull MolecularProfile molecularProfile, int therapyId) {
+            @NotNull JsonMolecularProfile molecularProfile, int therapyId) {
         List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatusesInterpretation = Lists.newArrayList();
         for (GlobalApprovalStatusInfo globalTherapyApprovalStatusInfo : globalTherapyApprovalStatuses) {
             if (therapyId == globalTherapyApprovalStatusInfo.therapy().id()

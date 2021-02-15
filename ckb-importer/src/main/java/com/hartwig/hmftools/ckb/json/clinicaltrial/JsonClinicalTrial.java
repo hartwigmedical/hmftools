@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ClinicalTrial implements CkbJsonObject {
+public abstract class JsonClinicalTrial implements CkbJsonObject {
 
     @NotNull
     public abstract String nctId();
@@ -49,8 +49,8 @@ public abstract class ClinicalTrial implements CkbJsonObject {
     public abstract List<IndicationInfo> indications();
 
     @NotNull
-    public abstract List<ClinicalTrialVariantRequirementDetail> variantRequirementDetails();
+    public abstract List<JsonClinicalTrialVariantRequirementDetail> variantRequirementDetails();
 
     @NotNull
-    public abstract List<ClinicalTrialLocation> clinicalTrialLocations();
+    public abstract List<JsonClinicalTrialLocation> clinicalTrialLocations();
 }

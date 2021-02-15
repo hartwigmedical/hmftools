@@ -26,7 +26,7 @@ import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class IndicationReader extends CkbJsonDirectoryReader<Indication> {
+public class IndicationReader extends CkbJsonDirectoryReader<JsonIndication> {
 
     public IndicationReader(@Nullable final Integer maxFilesToRead) {
         super(maxFilesToRead);
@@ -34,11 +34,11 @@ public class IndicationReader extends CkbJsonDirectoryReader<Indication> {
 
     @NotNull
     @Override
-    protected Indication read(@NotNull final JsonObject object) {
+    protected JsonIndication read(@NotNull final JsonObject object) {
         JsonDatamodelChecker indicationChecker = IndicationDataModelChecker.indicationObjectChecker();
         indicationChecker.check(object);
 
-        return ImmutableIndication.builder()
+        return ImmutableJsonIndication.builder()
                 .id(JsonFunctions.string(object, "id"))
                 .name(JsonFunctions.string(object, "name"))
                 .source(JsonFunctions.string(object, "source"))

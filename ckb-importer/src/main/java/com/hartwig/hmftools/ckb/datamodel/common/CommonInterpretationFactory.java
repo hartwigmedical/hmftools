@@ -6,8 +6,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.json.common.ReferenceInfo;
-import com.hartwig.hmftools.ckb.json.indication.Indication;
-import com.hartwig.hmftools.ckb.json.reference.Reference;
+import com.hartwig.hmftools.ckb.json.indication.JsonIndication;
+import com.hartwig.hmftools.ckb.json.reference.JsonReference;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,7 +22,7 @@ public final class CommonInterpretationFactory {
             @NotNull List<ReferenceInfo> referenceInfos, @NotNull CkbJsonDatabase ckbEntry) {
         List<com.hartwig.hmftools.ckb.datamodel.common.Reference> references = Lists.newArrayList();
         for (ReferenceInfo referenceInfo : referenceInfos) {
-            for (Reference reference : ckbEntry.references()) {
+            for (JsonReference reference : ckbEntry.references()) {
                 if (referenceInfo.id() == reference.id()) {
                     references.add(ImmutableReference.builder()
                             .id(reference.id())
@@ -47,7 +47,7 @@ public final class CommonInterpretationFactory {
     public static com.hartwig.hmftools.ckb.datamodel.common.Indication extractIndication(
             @NotNull CkbJsonDatabase ckbEntry, @Nullable IndicationInfo indicationInfo) {
         ImmutableIndication.Builder outputBuilder = ImmutableIndication.builder();
-        for (Indication indication : ckbEntry.indications()) {
+        for (JsonIndication indication : ckbEntry.indications()) {
             if (indicationInfo.id().equals(indication.id())) {
                 outputBuilder.id(indication.id())
                         .name(indication.name())

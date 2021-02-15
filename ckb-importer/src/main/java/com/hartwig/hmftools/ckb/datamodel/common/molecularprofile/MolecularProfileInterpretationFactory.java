@@ -22,11 +22,14 @@ import com.hartwig.hmftools.ckb.datamodel.common.variant.ReferenceTranscriptCoor
 import com.hartwig.hmftools.ckb.datamodel.common.variant.Variant;
 import com.hartwig.hmftools.ckb.datamodel.common.variant.VariantDescription;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
+import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrialVariantRequirementDetail;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.VariantInfo;
-import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
-import com.hartwig.hmftools.ckb.json.variant.VariantCategoryVariantPath;
-import com.hartwig.hmftools.ckb.json.variant.VariantTranscriptCoordinate;
+import com.hartwig.hmftools.ckb.json.gene.JsonGene;
+import com.hartwig.hmftools.ckb.json.molecularprofile.JsonMolecularProfile;
+import com.hartwig.hmftools.ckb.json.variant.JsonVariant;
+import com.hartwig.hmftools.ckb.json.variant.JsonVariantCategoryVariantPath;
+import com.hartwig.hmftools.ckb.json.variant.JsonVariantTranscriptCoordinate;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,11 +41,11 @@ public final class MolecularProfileInterpretationFactory {
 
     @NotNull
     public static List<ClinicalTrialVariantRequirementDetail> extractProfileNameClinicalTrial(
-            @NotNull List<com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail> molecularProfiles,
-            @NotNull MolecularProfile molecularProfileDir, @NotNull CkbJsonDatabase ckbEntry) {
+            @NotNull List<JsonClinicalTrialVariantRequirementDetail> molecularProfiles,
+            @NotNull JsonMolecularProfile molecularProfileDir, @NotNull CkbJsonDatabase ckbEntry) {
         int countPartialRequirementTypes = 0;
         List<ClinicalTrialVariantRequirementDetail> molecularProfileClinicalTrials = Lists.newArrayList();
-        for (com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail molecularProfile : molecularProfiles) {
+        for (JsonClinicalTrialVariantRequirementDetail molecularProfile : molecularProfiles) {
             if (molecularProfile.requirementType().equals("excluded")) { // variant is excluded from enrollment
                 molecularProfileClinicalTrials.add(extractClinicalTrialVariantRequirementDetails(ckbEntry,
                         molecularProfile,
@@ -74,8 +77,8 @@ public final class MolecularProfileInterpretationFactory {
     @NotNull
     private static ImmutableClinicalTrialVariantRequirementDetail.Builder extractClinicalTrialVariantRequirementDetails(
             @NotNull CkbJsonDatabase ckbEntry,
-            @NotNull com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail molecularProfile,
-            @NotNull MolecularProfile molecularProfileDir, int countPartialRequirementTypes) {
+            @NotNull JsonClinicalTrialVariantRequirementDetail molecularProfile,
+            @NotNull JsonMolecularProfile molecularProfileDir, int countPartialRequirementTypes) {
         return ImmutableClinicalTrialVariantRequirementDetail.builder()
                 .id(molecularProfile.molecularProfile().id())
                 .profileName(molecularProfile.molecularProfile().profileName())
@@ -85,10 +88,10 @@ public final class MolecularProfileInterpretationFactory {
     }
 
     @NotNull
-    public static List<Variant> extractVariantGeneInfo(@NotNull CkbJsonDatabase ckbEntry, @NotNull MolecularProfile molecularProfileDir) {
+    public static List<Variant> extractVariantGeneInfo(@NotNull CkbJsonDatabase ckbEntry, @NotNull JsonMolecularProfile molecularProfileDir) {
         List<Variant> variants = Lists.newArrayList();
         for (VariantInfo variantInfo : molecularProfileDir.geneVariants()) {
-            for (com.hartwig.hmftools.ckb.json.variant.Variant variant : ckbEntry.variants()) {
+            for (JsonVariant variant : ckbEntry.variants()) {
                 if (variantInfo.id() == variant.id()) {
                     variants.add(ImmutableVariant.builder()
                             .id(variant.id())
@@ -114,9 +117,9 @@ public final class MolecularProfileInterpretationFactory {
     }
 
     @NotNull
-    private static Gene extractGene(@NotNull CkbJsonDatabase ckbEntry, @NotNull com.hartwig.hmftools.ckb.json.variant.Variant variant) {
+    private static Gene extractGene(@NotNull CkbJsonDatabase ckbEntry, @NotNull JsonVariant variant) {
         ImmutableGene.Builder outputBuilderGene = ImmutableGene.builder();
-        for (com.hartwig.hmftools.ckb.json.gene.Gene gene : ckbEntry.genes()) {
+        for (JsonGene gene : ckbEntry.genes()) {
             if (variant.gene().id() == gene.id()) {
                 outputBuilderGene.id(gene.id())
                         .geneSymbol(gene.geneSymbol())
@@ -150,7 +153,7 @@ public final class MolecularProfileInterpretationFactory {
     }
 
     @Nullable
-    private static ReferenceTranscriptCoordinate extractReferenceTranscriptCoordinate(@Nullable VariantTranscriptCoordinate coordinate) {
+    private static ReferenceTranscriptCoordinate extractReferenceTranscriptCoordinate(@Nullable JsonVariantTranscriptCoordinate coordinate) {
         if (coordinate != null) {
             return ImmutableReferenceTranscriptCoordinate.builder()
                     .id(coordinate.id())
@@ -167,10 +170,10 @@ public final class MolecularProfileInterpretationFactory {
 
     @NotNull
     private static List<CategoryVariantPath> extractCategoryVariantPaths(
-            @NotNull List<VariantCategoryVariantPath> variantCategoryVariantPaths) {
+            @NotNull List<JsonVariantCategoryVariantPath> variantCategoryVariantPaths) {
         List<CategoryVariantPath> categoryVariantPaths = Lists.newArrayList();
 
-        for (VariantCategoryVariantPath categoryVariantPath : variantCategoryVariantPaths) {
+        for (JsonVariantCategoryVariantPath categoryVariantPath : variantCategoryVariantPaths) {
             categoryVariantPaths.add(ImmutableCategoryVariantPath.builder()
                     .variantPath(categoryVariantPath.variantPath())
                     .variantInfos(extractVariantInfo(categoryVariantPath.variants()))
@@ -197,9 +200,9 @@ public final class MolecularProfileInterpretationFactory {
 
     @NotNull
     private static List<ReferenceTranscriptCoordinate> extractAllTranscriptCoordinates(
-            @NotNull List<VariantTranscriptCoordinate> coordinates) {
+            @NotNull List<JsonVariantTranscriptCoordinate> coordinates) {
         List<ReferenceTranscriptCoordinate> allTranscriptCoordinates = Lists.newArrayList();
-        for (VariantTranscriptCoordinate coordinate : coordinates) {
+        for (JsonVariantTranscriptCoordinate coordinate : coordinates) {
             allTranscriptCoordinates.add(ImmutableReferenceTranscriptCoordinate.builder()
                     .id(coordinate.id())
                     .transcript(coordinate.transcript())
