@@ -38,7 +38,7 @@ public class EvidenceLevelCurator {
         EvidenceLevel curated = level;
         if (EvidenceLevelCurationFactory.EVIDENCE_LEVEL_MAPPINGS.containsKey(key)) {
             curated = EvidenceLevelCurationFactory.EVIDENCE_LEVEL_MAPPINGS.get(key);
-            LOGGER.debug("Mapping VICC evidence level from '{}' to '{}'", level, curated);
+            LOGGER.debug("Mapping VICC evidence level from '{}' to '{}' for {}", level, curated, key);
         }
 
         return curated;

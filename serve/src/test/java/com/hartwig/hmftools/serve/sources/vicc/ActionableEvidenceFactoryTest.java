@@ -76,6 +76,8 @@ public class ActionableEvidenceFactoryTest {
     @Test
     public void canReformatDrugs() {
         assertEquals("Imatinib,Imatinib", ActionableEvidenceFactory.reformatDrugLabels("IMATINIB,IMATINIB"));
+        assertEquals("Fluorouracil,Irinotecan,Bevacizumab,Lysergide",
+                ActionableEvidenceFactory.reformatDrugLabels("FLUOROURACIL,Irinotecan,BEVACIZUMAB,Lysergide"));
 
         assertNull(ActionableEvidenceFactory.reformatDrugLabels(null));
     }

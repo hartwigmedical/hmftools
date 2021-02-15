@@ -260,13 +260,13 @@ class ActionableEvidenceFactory {
 
     @Nullable
     @VisibleForTesting
-    static String reformatField(@Nullable String direction) {
-        if (direction == null) {
+    static String reformatField(@Nullable String field) {
+        if (field == null) {
             return null;
-        } else if (direction.length() < 2) {
-            return direction.toUpperCase();
+        } else if (field.length() < 2) {
+            return field.toUpperCase();
         } else {
-            return direction.substring(0, 1).toUpperCase() + direction.substring(1).toLowerCase();
+            return field.substring(0, 1).toUpperCase() + field.substring(1).toLowerCase();
         }
     }
 

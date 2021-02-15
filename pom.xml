@@ -78,7 +78,7 @@
         <vicc-importer.version>1.1</vicc-importer.version>
         <iclusion-importer.version>1.3</iclusion-importer.version>
         <ckb-importer.version>0.1</ckb-importer.version>
-        <serve.version>1.0</serve.version>
+        <serve.version>1.1</serve.version>
         <protect.version>1.1</protect.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
