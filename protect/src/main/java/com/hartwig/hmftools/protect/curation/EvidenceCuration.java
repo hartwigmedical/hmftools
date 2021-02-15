@@ -22,7 +22,7 @@ public final class EvidenceCuration {
     static final Set<CurationKey> BLACKLIST_KEYS = Sets.newHashSet();
 
     static {
-        // TODO These curations should move into SERVE (see DEV-1710).
+        // TODO These curations can be removed once SERVE v1.1 is in production (See DEV-1780)
 
         // This evidence is plain wrong
         BLACKLIST_KEYS.add(ImmutableCurationKey.builder()

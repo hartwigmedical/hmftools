@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.serve.sources.vicc.curation.ViccFeatureCurator;
+import com.hartwig.hmftools.serve.sources.vicc.curation.FeatureCurator;
 import com.hartwig.hmftools.serve.sources.vicc.filter.ViccFilter;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -39,7 +39,7 @@ public final class ViccReader {
 
     @NotNull
     private static List<ViccEntry> curate(@NotNull List<ViccEntry> entries) {
-        ViccFeatureCurator curator = new ViccFeatureCurator();
+        FeatureCurator curator = new FeatureCurator();
 
         LOGGER.info("Curating {} VICC entries", entries.size());
         List<ViccEntry> curatedEntries = curator.run(entries);

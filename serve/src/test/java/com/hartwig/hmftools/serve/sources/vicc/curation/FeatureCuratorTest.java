@@ -12,7 +12,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ViccFeatureCuratorTest {
+public class FeatureCuratorTest {
 
     @Test
     public void canCurateFeatures() {
@@ -23,7 +23,7 @@ public class ViccFeatureCuratorTest {
 
         Feature feature = ViccTestFactory.testFeatureWithGeneAndName(firstOncoKbKey.gene(), firstOncoKbKey.featureName());
 
-        assertEquals(firstMappedFeature, new ViccFeatureCurator().curate(entry, feature).name());
+        assertEquals(firstMappedFeature, new FeatureCurator().curate(entry, feature).name());
     }
 
     @Test
@@ -32,12 +32,12 @@ public class ViccFeatureCuratorTest {
         ViccEntry entry = ViccTestFactory.testEntryWithSourceAndTranscript(ViccSource.ONCOKB, firstOncoKbKey.transcript());
 
         Feature feature = ViccTestFactory.testFeatureWithGeneAndName(firstOncoKbKey.gene(), firstOncoKbKey.featureName());
-        assertNull(new ViccFeatureCurator().curate(entry, feature));
+        assertNull(new FeatureCurator().curate(entry, feature));
     }
 
     @Test
     public void canKeepTrackOfFeatures() {
-        ViccFeatureCurator curator = new ViccFeatureCurator();
+        FeatureCurator curator = new FeatureCurator();
 
         ViccEntry entry = ViccTestFactory.testEntryWithSourceAndTranscript(ViccSource.ONCOKB, "any");
         Feature feature = ViccTestFactory.testFeatureWithGeneAndName("any", "any");

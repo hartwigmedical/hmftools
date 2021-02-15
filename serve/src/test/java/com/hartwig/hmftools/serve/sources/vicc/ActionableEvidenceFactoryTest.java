@@ -12,7 +12,8 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
-import com.hartwig.hmftools.serve.sources.vicc.curation.ViccDrugCurator;
+import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
+import com.hartwig.hmftools.serve.sources.vicc.curation.EvidenceLevelCurator;
 import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -29,7 +30,8 @@ public class ActionableEvidenceFactoryTest {
         Map<String, Set<String>> doidLookupMap = Maps.newHashMap();
         doidLookupMap.put(cancerTypeA, Sets.newHashSet("1"));
         doidLookupMap.put(cancerTypeB, Sets.newHashSet("2"));
-        ActionableEvidenceFactory factory = new ActionableEvidenceFactory(DoidLookupTestFactory.test(doidLookupMap), new ViccDrugCurator());
+        ActionableEvidenceFactory factory =
+                new ActionableEvidenceFactory(DoidLookupTestFactory.test(doidLookupMap), new DrugCurator(), new EvidenceLevelCurator());
 
         Association actionable = ViccTestFactory.testActionableAssociation("Treatment",
                 cancerTypeA + ";" + cancerTypeB,

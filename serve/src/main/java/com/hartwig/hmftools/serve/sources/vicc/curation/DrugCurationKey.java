@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.sources.vicc.curation;
 
 import java.util.Objects;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
@@ -20,6 +21,24 @@ class DrugCurationKey {
         this.source = source;
         this.level = level;
         this.treatment = treatment;
+    }
+
+    @VisibleForTesting
+    @NotNull
+    ViccSource source() {
+        return source;
+    }
+
+    @VisibleForTesting
+    @NotNull
+    EvidenceLevel level() {
+        return level;
+    }
+
+    @VisibleForTesting
+    @NotNull
+    String treatment() {
+        return treatment;
     }
 
     @Override

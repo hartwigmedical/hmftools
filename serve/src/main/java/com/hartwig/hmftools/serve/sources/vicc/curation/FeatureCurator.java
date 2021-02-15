@@ -16,14 +16,14 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ViccFeatureCurator {
+public class FeatureCurator {
 
-    private static final Logger LOGGER = LogManager.getLogger(ViccFeatureCurator.class);
+    private static final Logger LOGGER = LogManager.getLogger(FeatureCurator.class);
 
     @NotNull
     private final Set<FeatureCurationKey> evaluatedFeatureCurationKeys = Sets.newHashSet();
 
-    public ViccFeatureCurator() {
+    public FeatureCurator() {
     }
 
     @NotNull

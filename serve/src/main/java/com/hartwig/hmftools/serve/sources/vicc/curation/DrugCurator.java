@@ -12,14 +12,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class ViccDrugCurator {
+public class DrugCurator {
 
-    private static final Logger LOGGER = LogManager.getLogger(ViccDrugCurator.class);
+    private static final Logger LOGGER = LogManager.getLogger(DrugCurator.class);
 
     @NotNull
     private final Set<DrugCurationKey> evaluatedDrugCurationKeys = Sets.newHashSet();
 
-    public ViccDrugCurator() {
+    public DrugCurator() {
     }
 
     @NotNull
