@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.ckb.datamodel.common.variant;
+package com.hartwig.hmftools.ckb.datamodel.variant;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.VariantInfo;
@@ -117,9 +117,9 @@ public final class VariantFactory {
     }
 
     @NotNull
-    private static List<com.hartwig.hmftools.ckb.datamodel.common.variant.VariantInfo> extractVariantInfo(
+    private static List<com.hartwig.hmftools.ckb.datamodel.variant.VariantInfo> extractVariantInfo(
             @NotNull List<VariantInfo> variants) {
-        List<com.hartwig.hmftools.ckb.datamodel.common.variant.VariantInfo> variantInfos = Lists.newArrayList();
+        List<com.hartwig.hmftools.ckb.datamodel.variant.VariantInfo> variantInfos = Lists.newArrayList();
 
         for (VariantInfo variant : variants) {
             variantInfos.add(ImmutableVariantInfo.builder()

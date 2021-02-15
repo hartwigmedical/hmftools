@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.ckb.datamodel.common.therapy;
+package com.hartwig.hmftools.ckb.datamodel.therapy;
 
 import java.util.Date;
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.datamodel.common.drug.Drug;
+import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

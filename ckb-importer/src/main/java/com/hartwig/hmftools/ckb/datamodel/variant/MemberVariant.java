@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.ckb.datamodel.common.variant;
+package com.hartwig.hmftools.ckb.datamodel.variant;
+
+import java.util.List;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -6,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class VariantInfo {
+public abstract class MemberVariant {
 
     public abstract int id();
 
@@ -18,4 +20,7 @@ public abstract class VariantInfo {
 
     @Nullable
     public abstract String proteinEffect();
+
+    @NotNull
+    public abstract List<VariantDescription> variantDescriptions();
 }

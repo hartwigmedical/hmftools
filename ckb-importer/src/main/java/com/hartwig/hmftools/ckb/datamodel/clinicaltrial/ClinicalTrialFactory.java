@@ -3,9 +3,9 @@ package com.hartwig.hmftools.ckb.datamodel.clinicaltrial;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.therapy.TherapyFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.VariantFactory;
+import com.hartwig.hmftools.ckb.datamodel.CommonInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.therapy.TherapyFactory;
+import com.hartwig.hmftools.ckb.datamodel.variant.VariantFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrial;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrialContact;

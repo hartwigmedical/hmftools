@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.common;
+package com.hartwig.hmftools.ckb.datamodel;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

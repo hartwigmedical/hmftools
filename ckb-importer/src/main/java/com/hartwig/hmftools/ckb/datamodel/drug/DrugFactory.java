@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.ckb.datamodel.common.drug;
+package com.hartwig.hmftools.ckb.datamodel.drug;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.DrugClassInfo;

@@ -4,8 +4,8 @@ import java.util.Date;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.Variant;
 import com.hartwig.hmftools.ckb.datamodel.evidence.Evidence;
+import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

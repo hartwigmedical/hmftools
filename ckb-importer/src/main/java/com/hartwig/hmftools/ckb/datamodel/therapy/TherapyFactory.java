@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.ckb.datamodel.common.therapy;
+package com.hartwig.hmftools.ckb.datamodel.therapy;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.drug.DrugFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.VariantFactory;
+import com.hartwig.hmftools.ckb.datamodel.CommonInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.drug.DrugFactory;
+import com.hartwig.hmftools.ckb.datamodel.variant.VariantFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.GlobalApprovalStatusInfo;
