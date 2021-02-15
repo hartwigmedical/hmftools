@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.molecularprofile.MolecularProfileInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.variant.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodel.evidence.EvidenceFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.molecularprofile.JsonMolecularProfile;

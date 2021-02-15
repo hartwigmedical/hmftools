@@ -5,7 +5,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodel.common.drug.DrugFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.molecularprofile.MolecularProfileInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.variant.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.GlobalApprovalStatusInfo;

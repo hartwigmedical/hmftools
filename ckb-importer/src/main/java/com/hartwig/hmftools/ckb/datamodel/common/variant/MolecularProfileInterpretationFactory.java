@@ -1,24 +1,9 @@
-package com.hartwig.hmftools.ckb.datamodel.common.molecularprofile;
+package com.hartwig.hmftools.ckb.datamodel.common.variant;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.CategoryVariantPath;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.Gene;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.GeneDescription;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.ImmutableCategoryVariantPath;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.ImmutableGene;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.ImmutableGeneDescription;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.ImmutableMemberVariant;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.ImmutableReferenceTranscriptCoordinate;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.ImmutableVariant;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.ImmutableVariantDescription;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.ImmutableVariantInfo;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.MemberVariant;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.ReferenceTranscriptCoordinate;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.Variant;
-import com.hartwig.hmftools.ckb.datamodel.common.variant.VariantDescription;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.VariantInfo;
