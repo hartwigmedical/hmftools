@@ -18,11 +18,10 @@ public final class CommonInterpretationFactory {
     }
 
     @NotNull
-    public static List<com.hartwig.hmftools.ckb.datamodel.common.Reference> extractReferences(
-            @NotNull List<ReferenceInfo> referenceInfos, @NotNull CkbJsonDatabase ckbEntry) {
-        List<com.hartwig.hmftools.ckb.datamodel.common.Reference> references = Lists.newArrayList();
+    public static List<Reference> extractReferences(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull List<ReferenceInfo> referenceInfos) {
+        List<Reference> references = Lists.newArrayList();
         for (ReferenceInfo referenceInfo : referenceInfos) {
-            for (JsonReference reference : ckbEntry.references()) {
+            for (JsonReference reference : ckbJsonDatabase.references()) {
                 if (referenceInfo.id() == reference.id()) {
                     references.add(ImmutableReference.builder()
                             .id(reference.id())
@@ -44,10 +43,9 @@ public final class CommonInterpretationFactory {
     }
 
     @NotNull
-    public static com.hartwig.hmftools.ckb.datamodel.common.Indication extractIndication(
-            @NotNull CkbJsonDatabase ckbEntry, @Nullable IndicationInfo indicationInfo) {
+    public static Indication extractIndication(@NotNull CkbJsonDatabase ckbJsonDatabase, @Nullable IndicationInfo indicationInfo) {
         ImmutableIndication.Builder outputBuilder = ImmutableIndication.builder();
-        for (JsonIndication indication : ckbEntry.indications()) {
+        for (JsonIndication indication : ckbJsonDatabase.indications()) {
             if (indicationInfo.id().equals(indication.id())) {
                 outputBuilder.id(indication.id())
                         .name(indication.name())

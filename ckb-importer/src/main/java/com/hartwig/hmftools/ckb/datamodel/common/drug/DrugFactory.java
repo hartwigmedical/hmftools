@@ -13,16 +13,16 @@ import com.hartwig.hmftools.ckb.json.drugclass.JsonDrugClass;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class DrugInterpretationFactory {
+public final class DrugFactory {
 
-    private DrugInterpretationFactory() {
+    private DrugFactory() {
     }
 
     @NotNull
-    public static List<Drug> extractDrugs(@NotNull List<DrugInfo> drugInfos, @NotNull CkbJsonDatabase ckbEntry) {
+    public static List<Drug> extractDrugs(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull List<DrugInfo> drugInfos) {
         List<Drug> drugs = Lists.newArrayList();
         for (DrugInfo drugInfo : drugInfos) {
-            for (JsonDrug drug : ckbEntry.drugs()) {
+            for (JsonDrug drug : ckbJsonDatabase.drugs()) {
                 if (drugInfo.id() == drug.id()) {
                     drugs.add(ImmutableDrug.builder()
                             .id(drug.id())
@@ -30,11 +30,11 @@ public final class DrugInterpretationFactory {
                             .terms(drug.terms())
                             .synonyms(drug.synonyms())
                             .tradeName(drug.tradeName())
-                            .drugDescriptions(extractDrugDescriptions(drug.descriptions(), ckbEntry))
+                            .drugDescriptions(extractDrugDescriptions(ckbJsonDatabase, drug.descriptions()))
                             .casRegistryNum(drug.casRegistryNum())
                             .ncitId(drug.ncitId())
                             .createDate(drug.createDate())
-                            .drugClasses(extractDrugClasses(drug, ckbEntry))
+                            .drugClasses(extractDrugClasses(ckbJsonDatabase, drug))
                             .build());
                 }
             }
@@ -43,11 +43,10 @@ public final class DrugInterpretationFactory {
     }
 
     @NotNull
-    private static List<DrugClass> extractDrugClasses(@NotNull JsonDrug drug,
-            @NotNull CkbJsonDatabase ckbEntry) {
-        List<com.hartwig.hmftools.ckb.datamodel.common.drug.DrugClass> drugClasses = Lists.newArrayList();
+    private static List<DrugClass> extractDrugClasses(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull JsonDrug drug) {
+        List<DrugClass> drugClasses = Lists.newArrayList();
         for (DrugClassInfo drugClassInfo : drug.drugClasses()) {
-            for (JsonDrugClass drugClass : ckbEntry.drugClasses()) {
+            for (JsonDrugClass drugClass : ckbJsonDatabase.drugClasses()) {
                 if (drugClassInfo.id() == drugClass.id()) {
                     drugClasses.add(ImmutableDrugClass.builder()
                             .id(drugClass.id())
@@ -61,14 +60,14 @@ public final class DrugInterpretationFactory {
     }
 
     @NotNull
-    private static List<DrugDescription> extractDrugDescriptions(@NotNull List<DescriptionInfo> descriptionInfos,
-            @NotNull CkbJsonDatabase ckbEntry) {
+    private static List<DrugDescription> extractDrugDescriptions(@NotNull CkbJsonDatabase ckbJsonDatabase,
+            @NotNull List<DescriptionInfo> descriptionInfos) {
         List<DrugDescription> drugDescriptions = Lists.newArrayList();
 
         for (DescriptionInfo descriptionInfo : descriptionInfos) {
             drugDescriptions.add(ImmutableDrugDescription.builder()
                     .description(descriptionInfo.description())
-                    .references(CommonInterpretationFactory.extractReferences(descriptionInfo.references(), ckbEntry))
+                    .references(CommonInterpretationFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
                     .build());
         }
         return drugDescriptions;

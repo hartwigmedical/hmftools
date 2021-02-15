@@ -39,7 +39,6 @@ public class CkbImporterApplication {
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(config.cbkDir());
         List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-      //  LOGGER.info(ckbEntryInterpretations.get(42195));
 
         if (config.skipDatabaseWriting()) {
             LOGGER.info("Skipping DB writing.");

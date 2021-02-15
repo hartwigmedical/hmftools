@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.drug.DrugInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.drug.DrugFactory;
 import com.hartwig.hmftools.ckb.datamodel.common.molecularprofile.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
@@ -14,55 +14,56 @@ import com.hartwig.hmftools.ckb.json.therapy.JsonTherapy;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class TherapyInterpretationFactory {
+public final class TherapyFactory {
 
-    private TherapyInterpretationFactory() {
+    private TherapyFactory() {
     }
 
     @NotNull
-    public static Therapy extractTherapy(@NotNull JsonTherapy therapy, @NotNull CkbJsonDatabase ckbEntry,
+    public static Therapy extractTherapy(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull JsonTherapy therapy,
             @NotNull JsonMolecularProfile molecularProfile) {
         return ImmutableTherapy.builder()
                 .id(therapy.id())
                 .therapyName(therapy.therapyName())
                 .synonyms(therapy.synonyms())
-                .descriptions(extractTherapyDescriptions(therapy.descriptions(), ckbEntry))
+                .descriptions(extractTherapyDescriptions(ckbJsonDatabase, therapy.descriptions()))
                 .createDate(therapy.createDate())
                 .updateDate(therapy.updateDate())
-                .drugs(DrugInterpretationFactory.extractDrugs(therapy.drugs(), ckbEntry))
-                .globalTherapyApprovalStatuses(extractGlobalApprovalStatuses(therapy.globalApprovalStatuses(),
-                        ckbEntry,
+                .drugs(DrugFactory.extractDrugs(ckbJsonDatabase, therapy.drugs()))
+                .globalTherapyApprovalStatuses(extractGlobalApprovalStatuses(ckbJsonDatabase,
+                        therapy.globalApprovalStatuses(),
                         molecularProfile,
                         therapy.id()))
                 .build();
     }
 
     @NotNull
-    private static List<TherapyDescription> extractTherapyDescriptions(@NotNull List<DescriptionInfo> descriptionInfos,
-            @NotNull CkbJsonDatabase ckbEntry) {
+    private static List<TherapyDescription> extractTherapyDescriptions(@NotNull CkbJsonDatabase ckbJsonDatabase,
+            @NotNull List<DescriptionInfo> descriptionInfos) {
         List<TherapyDescription> therapyDescriptions = Lists.newArrayList();
 
         for (DescriptionInfo descriptionInfo : descriptionInfos) {
             therapyDescriptions.add(ImmutableTherapyDescription.builder()
                     .description(descriptionInfo.description())
-                    .references(CommonInterpretationFactory.extractReferences(descriptionInfo.references(), ckbEntry))
+                    .references(CommonInterpretationFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
                     .build());
         }
         return therapyDescriptions;
     }
 
     @NotNull
-    private static List<GlobalTherapyApprovalStatus> extractGlobalApprovalStatuses(
-            @NotNull List<GlobalApprovalStatusInfo> globalTherapyApprovalStatuses, @NotNull CkbJsonDatabase ckbEntry,
-            @NotNull JsonMolecularProfile molecularProfile, int therapyId) {
+    private static List<GlobalTherapyApprovalStatus> extractGlobalApprovalStatuses(@NotNull CkbJsonDatabase ckbJsonDatabase,
+            @NotNull List<GlobalApprovalStatusInfo> globalTherapyApprovalStatuses, @NotNull JsonMolecularProfile molecularProfile,
+            int therapyId) {
         List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatusesInterpretation = Lists.newArrayList();
         for (GlobalApprovalStatusInfo globalTherapyApprovalStatusInfo : globalTherapyApprovalStatuses) {
             if (therapyId == globalTherapyApprovalStatusInfo.therapy().id()
                     && molecularProfile.id() == globalTherapyApprovalStatusInfo.molecularProfile().id()) {
                 globalTherapyApprovalStatusesInterpretation.add(ImmutableGlobalTherapyApprovalStatus.builder()
                         .id(globalTherapyApprovalStatusInfo.id())
-                        .indication(CommonInterpretationFactory.extractIndication(ckbEntry, globalTherapyApprovalStatusInfo.indication()))
-                        .variants(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbEntry, molecularProfile))
+                        .indication(CommonInterpretationFactory.extractIndication(ckbJsonDatabase,
+                                globalTherapyApprovalStatusInfo.indication()))
+                        .variants(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbJsonDatabase, molecularProfile))
                         .approvalStatus(globalTherapyApprovalStatusInfo.approvalStatus())
                         .approvalAuthority(globalTherapyApprovalStatusInfo.approvalAuthority())
                         .build());

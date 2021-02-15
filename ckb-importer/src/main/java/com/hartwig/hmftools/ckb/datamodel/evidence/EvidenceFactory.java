@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.ckb.datamodel.evidence;
 
-import com.hartwig.hmftools.ckb.datamodel.ImmutableCkbEntry;
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodel.common.molecularprofile.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodel.common.therapy.Therapy;
-import com.hartwig.hmftools.ckb.datamodel.common.therapy.TherapyInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.therapy.TherapyFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
@@ -19,35 +21,37 @@ public final class EvidenceFactory {
     private EvidenceFactory() {
     }
 
-    public static void interpretVariantEvidence(@NotNull JsonMolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
-            @NotNull ImmutableCkbEntry.Builder outputBuilder) {
+    @NotNull
+    public static List<Evidence> interpretVariantEvidence(@NotNull CkbJsonDatabase ckbJsonDatabase,
+            @NotNull JsonMolecularProfile molecularProfile) {
+        List<Evidence> evidences = Lists.newArrayList();
         for (EvidenceInfo evidenceInfo : molecularProfile.variantLevelEvidence().evidences()) {
             if (molecularProfile.id() == evidenceInfo.molecularProfile().id()) {
-                outputBuilder.addEvidences(ImmutableEvidence.builder()
+                evidences.add(ImmutableEvidence.builder()
                         .id(evidenceInfo.id())
                         .approvalStatus(evidenceInfo.approvalStatus())
                         .evidenceType(evidenceInfo.evidenceType())
                         .efficacyEvidence(evidenceInfo.efficacyEvidence())
-                        .variants(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbEntry,
-                                molecularProfile))
-                        .therapy(extractTherapyEvidence(ckbEntry, evidenceInfo.therapy(), molecularProfile))
-                        .indication(CommonInterpretationFactory.extractIndication(ckbEntry, evidenceInfo.indication()))
+                        .variants(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbJsonDatabase, molecularProfile))
+                        .therapy(extractTherapyEvidence(ckbJsonDatabase, evidenceInfo.therapy(), molecularProfile))
+                        .indication(CommonInterpretationFactory.extractIndication(ckbJsonDatabase, evidenceInfo.indication()))
                         .responseType(evidenceInfo.responseType())
-                        .references(CommonInterpretationFactory.extractReferences(evidenceInfo.references(), ckbEntry))
+                        .references(CommonInterpretationFactory.extractReferences(ckbJsonDatabase, evidenceInfo.references()))
                         .ampCapAscoEvidenceLevel(evidenceInfo.ampCapAscoEvidenceLevel())
                         .ampCapAscoInferredTier(evidenceInfo.ampCapAscoInferredTier())
                         .build());
             }
         }
+        return evidences;
     }
 
     @Nullable
-    private static Therapy extractTherapyEvidence(@NotNull CkbJsonDatabase ckbEntry, @NotNull TherapyInfo therapyInfo,
+    private static Therapy extractTherapyEvidence(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull TherapyInfo therapyInfo,
             @NotNull JsonMolecularProfile molecularProfile) {
         Therapy therapyInterpretation = null;
-        for (JsonTherapy therapy : ckbEntry.therapies()) {
+        for (JsonTherapy therapy : ckbJsonDatabase.therapies()) {
             if (therapyInfo.id() == therapy.id()) {
-                therapyInterpretation = TherapyInterpretationFactory.extractTherapy(therapy, ckbEntry, molecularProfile);
+                therapyInterpretation = TherapyFactory.extractTherapy(ckbJsonDatabase, therapy, molecularProfile);
             }
         }
         return therapyInterpretation;

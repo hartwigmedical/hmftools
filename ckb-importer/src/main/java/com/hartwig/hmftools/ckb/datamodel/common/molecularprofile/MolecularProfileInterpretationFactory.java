@@ -40,21 +40,20 @@ public final class MolecularProfileInterpretationFactory {
     }
 
     @NotNull
-    public static List<ClinicalTrialVariantRequirementDetail> extractProfileNameClinicalTrial(
-            @NotNull List<JsonClinicalTrialVariantRequirementDetail> molecularProfiles,
-            @NotNull JsonMolecularProfile molecularProfileDir, @NotNull CkbJsonDatabase ckbEntry) {
+    public static List<ClinicalTrialVariantRequirementDetail> extractProfileNameClinicalTrial(@NotNull CkbJsonDatabase ckbJsonDatabase,
+            @NotNull List<JsonClinicalTrialVariantRequirementDetail> molecularProfiles, @NotNull JsonMolecularProfile molecularProfileDir) {
         int countPartialRequirementTypes = 0;
         List<ClinicalTrialVariantRequirementDetail> molecularProfileClinicalTrials = Lists.newArrayList();
         for (JsonClinicalTrialVariantRequirementDetail molecularProfile : molecularProfiles) {
             if (molecularProfile.requirementType().equals("excluded")) { // variant is excluded from enrollment
-                molecularProfileClinicalTrials.add(extractClinicalTrialVariantRequirementDetails(ckbEntry,
+                molecularProfileClinicalTrials.add(extractClinicalTrialVariantRequirementDetails(ckbJsonDatabase,
                         molecularProfile,
                         molecularProfileDir,
                         countPartialRequirementTypes).build());
             }
 
             if (molecularProfile.requirementType().equals("required")) { // variant is requirement for enrollment
-                molecularProfileClinicalTrials.add(extractClinicalTrialVariantRequirementDetails(ckbEntry,
+                molecularProfileClinicalTrials.add(extractClinicalTrialVariantRequirementDetails(ckbJsonDatabase,
                         molecularProfile,
                         molecularProfileDir,
                         countPartialRequirementTypes).build());
@@ -64,7 +63,7 @@ public final class MolecularProfileInterpretationFactory {
                     .equals("partial - required")) { // variant is required or excluded for a subset of the enrollment population
                 ++countPartialRequirementTypes;
                 if (molecularProfile.molecularProfile().id() == molecularProfileDir.id()) {
-                    molecularProfileClinicalTrials.add(extractClinicalTrialVariantRequirementDetails(ckbEntry,
+                    molecularProfileClinicalTrials.add(extractClinicalTrialVariantRequirementDetails(ckbJsonDatabase,
                             molecularProfile,
                             molecularProfileDir,
                             countPartialRequirementTypes).build());
@@ -76,29 +75,29 @@ public final class MolecularProfileInterpretationFactory {
 
     @NotNull
     private static ImmutableClinicalTrialVariantRequirementDetail.Builder extractClinicalTrialVariantRequirementDetails(
-            @NotNull CkbJsonDatabase ckbEntry,
-            @NotNull JsonClinicalTrialVariantRequirementDetail molecularProfile,
+            @NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull JsonClinicalTrialVariantRequirementDetail molecularProfile,
             @NotNull JsonMolecularProfile molecularProfileDir, int countPartialRequirementTypes) {
         return ImmutableClinicalTrialVariantRequirementDetail.builder()
                 .id(molecularProfile.molecularProfile().id())
                 .profileName(molecularProfile.molecularProfile().profileName())
                 .requirementType(molecularProfile.requirementType())
                 .countPartialRequirementTypes(countPartialRequirementTypes)
-                .variants(extractVariantGeneInfo(ckbEntry, molecularProfileDir));
+                .variants(extractVariantGeneInfo(ckbJsonDatabase, molecularProfileDir));
     }
 
     @NotNull
-    public static List<Variant> extractVariantGeneInfo(@NotNull CkbJsonDatabase ckbEntry, @NotNull JsonMolecularProfile molecularProfileDir) {
+    public static List<Variant> extractVariantGeneInfo(@NotNull CkbJsonDatabase ckbJsonDatabase,
+            @NotNull JsonMolecularProfile molecularProfileDir) {
         List<Variant> variants = Lists.newArrayList();
         for (VariantInfo variantInfo : molecularProfileDir.geneVariants()) {
-            for (JsonVariant variant : ckbEntry.variants()) {
+            for (JsonVariant variant : ckbJsonDatabase.variants()) {
                 if (variantInfo.id() == variant.id()) {
                     variants.add(ImmutableVariant.builder()
                             .id(variant.id())
                             .fullName(variant.fullName())
                             .impact(variant.impact())
                             .proteinEffect(variant.proteinEffect())
-                            .variantDescriptions(extractVariantDescriptions(variant.descriptions(), ckbEntry))
+                            .variantDescriptions(extractVariantDescriptions(ckbJsonDatabase, variant.descriptions()))
                             .type(variant.type())
                             .variant(variant.variant())
                             .createDate(variant.createDate())
@@ -106,8 +105,8 @@ public final class MolecularProfileInterpretationFactory {
                             .referenceTranscriptCoordinate(extractReferenceTranscriptCoordinate(variant.referenceTranscriptCoordinate()))
                             .categoryVariantPaths(extractCategoryVariantPaths(variant.categoryVariantPaths()))
                             .allTranscriptCoordinates(extractAllTranscriptCoordinates(variant.allTranscriptCoordinates()))
-                            .memberVariants(extractMemberVariants(variant.memberVariants(), ckbEntry))
-                            .gene(extractGene(ckbEntry, variant))
+                            .memberVariants(extractMemberVariants(ckbJsonDatabase, variant.memberVariants()))
+                            .gene(extractGene(ckbJsonDatabase, variant))
                             .build());
                 }
             }
@@ -117,9 +116,9 @@ public final class MolecularProfileInterpretationFactory {
     }
 
     @NotNull
-    private static Gene extractGene(@NotNull CkbJsonDatabase ckbEntry, @NotNull JsonVariant variant) {
+    private static Gene extractGene(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull JsonVariant variant) {
         ImmutableGene.Builder outputBuilderGene = ImmutableGene.builder();
-        for (JsonGene gene : ckbEntry.genes()) {
+        for (JsonGene gene : ckbJsonDatabase.genes()) {
             if (variant.gene().id() == gene.id()) {
                 outputBuilderGene.id(gene.id())
                         .geneSymbol(gene.geneSymbol())
@@ -128,7 +127,7 @@ public final class MolecularProfileInterpretationFactory {
                         .synonyms(gene.synonyms())
                         .chromosome(gene.chromosome())
                         .mapLocation(gene.mapLocation())
-                        .geneDescriptions(extractGeneDescriptions(gene.descriptions(), ckbEntry))
+                        .geneDescriptions(extractGeneDescriptions(ckbJsonDatabase, gene.descriptions()))
                         .canonicalTranscript(gene.canonicalTranscript())
                         .geneRole(gene.geneRole())
                         .createDate(gene.createDate())
@@ -139,21 +138,22 @@ public final class MolecularProfileInterpretationFactory {
     }
 
     @NotNull
-    private static List<VariantDescription> extractVariantDescriptions(@NotNull List<DescriptionInfo> descriptionInfos,
-            @NotNull CkbJsonDatabase ckbEntry) {
+    private static List<VariantDescription> extractVariantDescriptions(@NotNull CkbJsonDatabase ckbJsonDatabase,
+            @NotNull List<DescriptionInfo> descriptionInfos) {
         List<VariantDescription> variantDescriptions = Lists.newArrayList();
 
         for (DescriptionInfo descriptionInfo : descriptionInfos) {
             variantDescriptions.add(ImmutableVariantDescription.builder()
                     .description(descriptionInfo.description())
-                    .references(CommonInterpretationFactory.extractReferences(descriptionInfo.references(), ckbEntry))
+                    .references(CommonInterpretationFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
                     .build());
         }
         return variantDescriptions;
     }
 
     @Nullable
-    private static ReferenceTranscriptCoordinate extractReferenceTranscriptCoordinate(@Nullable JsonVariantTranscriptCoordinate coordinate) {
+    private static ReferenceTranscriptCoordinate extractReferenceTranscriptCoordinate(
+            @Nullable JsonVariantTranscriptCoordinate coordinate) {
         if (coordinate != null) {
             return ImmutableReferenceTranscriptCoordinate.builder()
                     .id(coordinate.id())
@@ -218,8 +218,8 @@ public final class MolecularProfileInterpretationFactory {
     }
 
     @NotNull
-    private static List<MemberVariant> extractMemberVariants(@NotNull List<VariantInfo> variantsMembers,
-            @NotNull CkbJsonDatabase ckbEntry) {
+    private static List<MemberVariant> extractMemberVariants(@NotNull CkbJsonDatabase ckbJsonDatabase,
+            @NotNull List<VariantInfo> variantsMembers) {
         List<MemberVariant> memberVariants = Lists.newArrayList();
 
         for (VariantInfo memberVariant : variantsMembers) {
@@ -228,7 +228,7 @@ public final class MolecularProfileInterpretationFactory {
                     .fullName(memberVariant.fullName())
                     .impact(memberVariant.impact())
                     .proteinEffect(memberVariant.proteinEffect())
-                    .variantDescriptions(extractVariantDescriptions(memberVariant.descriptions(), ckbEntry))
+                    .variantDescriptions(extractVariantDescriptions(ckbJsonDatabase, memberVariant.descriptions()))
                     .build());
         }
 
@@ -236,14 +236,14 @@ public final class MolecularProfileInterpretationFactory {
     }
 
     @NotNull
-    private static List<GeneDescription> extractGeneDescriptions(@NotNull List<DescriptionInfo> descriptionInfos,
-            @NotNull CkbJsonDatabase ckbEntry) {
+    private static List<GeneDescription> extractGeneDescriptions(@NotNull CkbJsonDatabase ckbJsonDatabase,
+            @NotNull List<DescriptionInfo> descriptionInfos) {
         List<GeneDescription> geneDescriptions = Lists.newArrayList();
 
         for (DescriptionInfo descriptionInfo : descriptionInfos) {
             geneDescriptions.add(ImmutableGeneDescription.builder()
                     .description(descriptionInfo.description())
-                    .references(CommonInterpretationFactory.extractReferences(descriptionInfo.references(), ckbEntry))
+                    .references(CommonInterpretationFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
                     .build());
         }
         return geneDescriptions;

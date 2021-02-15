@@ -53,7 +53,7 @@ public final class CkbDAO {
 
     }
 
-    public void writeCkb(@NotNull CkbJsonDatabase ckbEntry) {
+    public void writeCkb(@NotNull CkbJsonDatabase ckbJsonDatabase) {
 
     }
 
