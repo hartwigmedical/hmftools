@@ -1,8 +1,9 @@
-package com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation;
+package com.hartwig.hmftools.ckb.datamodel.common.molecularprofileinterpretation;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTrialVariantRequirementDetail;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialVariantRequirementDetail;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.gene.GeneDescription;
@@ -18,7 +19,6 @@ import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.ImmutableVariant
 import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.MemberVariant;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.ReferenceTranscriptCoordinate;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.variant.VariantDescription;
-import com.hartwig.hmftools.ckb.interpretation.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.VariantInfo;
@@ -31,17 +31,15 @@ import com.hartwig.hmftools.ckb.json.variant.VariantTranscriptCoordinate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class MolecularProfileInterpretationFactory {
+public final class MolecularProfileInterpretationFactory {
 
     private MolecularProfileInterpretationFactory() {
-
     }
 
     @NotNull
     public static List<ClinicalTrialVariantRequirementDetail> extractProfileNameClinicalTrial(
             @NotNull List<com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail> molecularProfiles,
             @NotNull MolecularProfile molecularProfileDir, @NotNull CkbJsonDatabase ckbEntry) {
-
         int countPartialRequirementTypes = 0;
         List<ClinicalTrialVariantRequirementDetail> molecularProfileClinicalTrials = Lists.newArrayList();
         for (com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialVariantRequirementDetail molecularProfile : molecularProfiles) {
@@ -232,7 +230,6 @@ public class MolecularProfileInterpretationFactory {
         }
 
         return memberVariants;
-
     }
 
     @NotNull

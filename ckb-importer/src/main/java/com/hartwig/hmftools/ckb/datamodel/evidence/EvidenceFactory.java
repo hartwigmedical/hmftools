@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.ckb.interpretation.evidence;
+package com.hartwig.hmftools.ckb.datamodel.evidence;
 
-import com.hartwig.hmftools.ckb.interpretation.ImmutableCkbEntry;
-import com.hartwig.hmftools.ckb.interpretation.common.CommonInterpretationFactory;
-import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
-import com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation.TherapyInterpretation;
-import com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation.TherapyInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.ImmutableCkbEntry;
+import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.therapyinterpretation.TherapyInterpretation;
+import com.hartwig.hmftools.ckb.datamodel.common.therapyinterpretation.TherapyInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
@@ -14,7 +14,7 @@ import com.hartwig.hmftools.ckb.json.therapy.Therapy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class EvidenceFactory {
+public final class EvidenceFactory {
 
     private EvidenceFactory() {
 

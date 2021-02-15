@@ -1,13 +1,13 @@
-package com.hartwig.hmftools.ckb.interpretation.common.druginterpretation;
+package com.hartwig.hmftools.ckb.datamodel.common.druginterpretation;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.drug.DrugDescription;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.drug.ImmutableDrug;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.drug.ImmutableDrugDescription;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.drugclass.ImmutableDrugClass;
-import com.hartwig.hmftools.ckb.interpretation.common.CommonInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.DrugClassInfo;
@@ -17,10 +17,9 @@ import com.hartwig.hmftools.ckb.json.drugclass.DrugClass;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DrugInterpretationFactory {
+public final class DrugInterpretationFactory {
 
     private DrugInterpretationFactory() {
-
     }
 
     @NotNull

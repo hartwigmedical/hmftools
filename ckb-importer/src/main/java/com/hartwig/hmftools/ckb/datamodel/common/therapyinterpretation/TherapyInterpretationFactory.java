@@ -1,16 +1,16 @@
-package com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation;
+package com.hartwig.hmftools.ckb.datamodel.common.therapyinterpretation;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.druginterpretation.DrugInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.globaltherapyapprovalstatus.GlobalTherapyApprovalStatus;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.globaltherapyapprovalstatus.ImmutableGlobalTherapyApprovalStatus;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapy;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.ImmutableTherapyDescription;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.TherapyDescription;
-import com.hartwig.hmftools.ckb.interpretation.common.CommonInterpretationFactory;
-import com.hartwig.hmftools.ckb.interpretation.common.druginterpretation.DrugInterpretationFactory;
-import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.GlobalApprovalStatusInfo;

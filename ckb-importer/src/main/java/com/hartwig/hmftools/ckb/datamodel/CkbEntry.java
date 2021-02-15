@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.ckb.interpretation;
+package com.hartwig.hmftools.ckb.datamodel;
 
 import java.util.Date;
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.interpretation.clinicaltrial.ClinicalTrialInterpretation;
-import com.hartwig.hmftools.ckb.interpretation.evidence.EvidenceInterpretation;
-import com.hartwig.hmftools.ckb.interpretation.knowngenomicalteration.KnownGenomicAlteration;
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialInterpretation;
+import com.hartwig.hmftools.ckb.datamodel.evidence.EvidenceInterpretation;
+import com.hartwig.hmftools.ckb.datamodel.knowngenomicalteration.KnownGenomicAlteration;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

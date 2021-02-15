@@ -3,8 +3,8 @@ package com.hartwig.hmftools.ckb.datamodelinterpretation.therapy;
 import java.util.Date;
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.datamodel.common.druginterpretation.DrugInterpretation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.globaltherapyapprovalstatus.GlobalTherapyApprovalStatus;
-import com.hartwig.hmftools.ckb.interpretation.common.druginterpretation.DrugInterpretation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

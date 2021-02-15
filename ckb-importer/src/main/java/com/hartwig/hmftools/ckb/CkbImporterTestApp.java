@@ -3,7 +3,6 @@ package com.hartwig.hmftools.ckb;
 import java.io.IOException;
 import java.net.InetAddress;
 
-import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.CkbJsonReader;
 
 import org.apache.logging.log4j.Level;
@@ -30,7 +29,7 @@ public class CkbImporterTestApp {
             ckbDir = System.getProperty("user.home") + "/hmf/projects/serve/ckb";
         }
 
-        CkbJsonDatabase ckbDatabase = CkbJsonReader.read(ckbDir, maxFilesToReadPerType);
+        CkbJsonReader.read(ckbDir, maxFilesToReadPerType);
 
         LOGGER.info("Complete!");
     }

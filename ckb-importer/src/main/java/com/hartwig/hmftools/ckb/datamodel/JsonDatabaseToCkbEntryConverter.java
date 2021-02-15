@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.ckb.interpretation;
+package com.hartwig.hmftools.ckb.datamodel;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.interpretation.clinicaltrial.ClinicalTrialFactory;
-import com.hartwig.hmftools.ckb.interpretation.evidence.EvidenceFactory;
-import com.hartwig.hmftools.ckb.interpretation.knowngenomicalteration.KnownGenomicAlterationFactory;
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialFactory;
+import com.hartwig.hmftools.ckb.datamodel.evidence.EvidenceFactory;
+import com.hartwig.hmftools.ckb.datamodel.knowngenomicalteration.KnownGenomicAlterationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
 

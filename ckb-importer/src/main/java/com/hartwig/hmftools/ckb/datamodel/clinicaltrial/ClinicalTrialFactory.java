@@ -1,16 +1,16 @@
-package com.hartwig.hmftools.ckb.interpretation.clinicaltrial;
+package com.hartwig.hmftools.ckb.datamodel.clinicaltrial;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.ckb.datamodel.ImmutableCkbEntry;
+import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.therapyinterpretation.TherapyInterpretationFactory;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTrialLocation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrial;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialContact;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialLocation;
-import com.hartwig.hmftools.ckb.interpretation.ImmutableCkbEntry;
-import com.hartwig.hmftools.ckb.interpretation.common.CommonInterpretationFactory;
-import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
-import com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation.TherapyInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialContact;
@@ -22,10 +22,9 @@ import com.hartwig.hmftools.ckb.json.therapy.Therapy;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ClinicalTrialFactory {
+public final class ClinicalTrialFactory {
 
     private ClinicalTrialFactory() {
-
     }
 
     public static void interpretClinicalTrials(@NotNull MolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,

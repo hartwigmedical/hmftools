@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.ckb.interpretation.evidence;
+package com.hartwig.hmftools.ckb.datamodel.evidence;
 
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.datamodel.common.molecularprofileinterpretation.MolecularProfileInterpretation;
+import com.hartwig.hmftools.ckb.datamodel.common.therapyinterpretation.TherapyInterpretation;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.indication.Indication;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.reference.Reference;
-import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretation;
-import com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation.TherapyInterpretation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -5,8 +5,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.dao.CkbDAO;
-import com.hartwig.hmftools.ckb.interpretation.CkbEntry;
-import com.hartwig.hmftools.ckb.interpretation.JsonDatabaseToCkbEntryConverter;
+import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
+import com.hartwig.hmftools.ckb.datamodel.JsonDatabaseToCkbEntryConverter;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.CkbJsonReader;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation;
+package com.hartwig.hmftools.ckb.datamodel.common.molecularprofileinterpretation;
 
 import java.util.List;
 

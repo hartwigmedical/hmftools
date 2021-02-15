@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation;
+package com.hartwig.hmftools.ckb.datamodel.common.therapyinterpretation;
 
 import com.hartwig.hmftools.ckb.datamodelinterpretation.therapy.Therapy;
 

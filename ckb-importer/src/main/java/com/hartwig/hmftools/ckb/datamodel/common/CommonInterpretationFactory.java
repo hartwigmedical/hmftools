@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.interpretation.common;
+package com.hartwig.hmftools.ckb.datamodel.common;
 
 import java.util.List;
 
@@ -14,10 +14,9 @@ import com.hartwig.hmftools.ckb.json.reference.Reference;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class CommonInterpretationFactory {
+public final class CommonInterpretationFactory {
 
     private CommonInterpretationFactory() {
-
     }
 
     @NotNull

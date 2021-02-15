@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.interpretation.common.druginterpretation;
+package com.hartwig.hmftools.ckb.datamodel.common.druginterpretation;
 
 import java.util.List;
 
