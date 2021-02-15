@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.hla
 
+import com.hartwig.hmftools.lilac.coverage.HlaComplex
 import junit.framework.Assert.assertEquals
 import org.junit.Test
 import java.util.*

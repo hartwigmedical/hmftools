@@ -26,6 +26,7 @@ import org.apache.commons.cli.*
 import org.apache.logging.log4j.LogManager
 import java.io.File
 import java.io.IOException
+import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
 
@@ -42,10 +43,12 @@ fun main(args: Array<String>) {
         GripssApplication(config).use { x -> x.run() }
     } catch (e: IOException) {
         logger.warn(e)
+        exitProcess(1)
     } catch (e: ParseException) {
         logger.warn(e)
         val formatter = HelpFormatter()
         formatter.printHelp("gripss", options)
+        exitProcess(1)
     }
 }
 

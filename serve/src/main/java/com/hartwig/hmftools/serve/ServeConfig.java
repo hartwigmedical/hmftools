@@ -22,12 +22,19 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface ServeConfig {
 
+    String NOT_APPLICABLE = "N/A";
+
     // Input sources to SERVE
+    String USE_VICC = "use_vicc";
     String VICC_JSON = "vicc_json";
     String VICC_SOURCES = "vicc_sources";
+    String USE_ICLUSION = "use_iclusion";
     String ICLUSION_TRIAL_TSV = "iclusion_trial_tsv";
+    String USE_DOCM = "use_docm";
     String DOCM_TSV = "docm_tsv";
+    String USE_HARTWIG_COHORT = "use_hartwig_cohort";
     String HARTWIG_COHORT_TSV = "hartwig_cohort_tsv";
+    String USE_HARTWIG_CURATED = "use_hartwig_curated";
     String HARTWIG_CURATED_TSV = "hartwig_curated_tsv";
 
     // Config for curation of evidence
@@ -50,11 +57,16 @@ public interface ServeConfig {
     static Options createOptions() {
         Options options = new Options();
 
+        options.addOption(USE_VICC, false, "If provided, VICC will be used as a source in SERVE");
         options.addOption(VICC_JSON, true, "Path to the VICC JSON knowledgebase");
         options.addOption(VICC_SOURCES, true, "Comma-separated list of (lowercase) VICC sources to include");
+        options.addOption(USE_ICLUSION, false, "If provided, iClusion will be used as a source in SERVE");
         options.addOption(ICLUSION_TRIAL_TSV, true, "Path to the iClusion input trial TSV");
+        options.addOption(USE_DOCM, false, "If provided, DoCM will be used as a source in SERVE");
         options.addOption(DOCM_TSV, true, "Path to the DoCM knowledgebase input TSV");
+        options.addOption(USE_HARTWIG_COHORT, false, "If provided, Hartwig Cohort will be used as a source in SERVE");
         options.addOption(HARTWIG_COHORT_TSV, true, "Path to the Hartwig Cohort input TSV");
+        options.addOption(USE_HARTWIG_CURATED, false, "If provided, Hartwig Curated will be used as a source in SERVE");
         options.addOption(HARTWIG_CURATED_TSV, true, "Path to the Hartwig Curated input TSV");
 
         options.addOption(MISSING_DOIDS_MAPPING_TSV, true, "Path to the mapping TSV containing entries for missing DOIDs");
@@ -72,20 +84,30 @@ public interface ServeConfig {
         return options;
     }
 
+    boolean useVicc();
+
     @NotNull
     String viccJson();
 
     @NotNull
     Set<ViccSource> viccSources();
 
+    boolean useIclusion();
+
     @NotNull
     String iClusionTrialTsv();
+
+    boolean useDocm();
 
     @NotNull
     String docmTsv();
 
+    boolean useHartwigCohort();
+
     @NotNull
     String hartwigCohortTsv();
+
+    boolean useHartwigCurated();
 
     @NotNull
     String hartwigCuratedTsv();
@@ -116,13 +138,24 @@ public interface ServeConfig {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
+        boolean useVicc = cmd.hasOption(USE_VICC);
+        boolean useIclusion = cmd.hasOption(USE_ICLUSION);
+        boolean useDocm = cmd.hasOption(USE_DOCM);
+        boolean useHartwigCohort = cmd.hasOption(USE_HARTWIG_COHORT);
+        boolean useHartwigCurated = cmd.hasOption(USE_HARTWIG_CURATED);
+
         return ImmutableServeConfig.builder()
-                .viccJson(nonOptionalFile(cmd, VICC_JSON))
-                .viccSources(readViccSources(cmd))
-                .iClusionTrialTsv(nonOptionalFile(cmd, ICLUSION_TRIAL_TSV))
-                .docmTsv(nonOptionalFile(cmd, DOCM_TSV))
-                .hartwigCohortTsv(nonOptionalFile(cmd, HARTWIG_COHORT_TSV))
-                .hartwigCuratedTsv(nonOptionalFile(cmd, HARTWIG_CURATED_TSV))
+                .useVicc(useVicc)
+                .viccJson(useVicc ? nonOptionalFile(cmd, VICC_JSON) : NOT_APPLICABLE)
+                .viccSources(useVicc ? readViccSources(cmd) : Sets.newHashSet())
+                .useIclusion(useIclusion)
+                .iClusionTrialTsv(useIclusion ? nonOptionalFile(cmd, ICLUSION_TRIAL_TSV) : NOT_APPLICABLE)
+                .useDocm(useDocm)
+                .docmTsv(useDocm ? nonOptionalFile(cmd, DOCM_TSV) : NOT_APPLICABLE)
+                .useHartwigCohort(useHartwigCohort)
+                .hartwigCohortTsv(useHartwigCohort ? nonOptionalFile(cmd, HARTWIG_COHORT_TSV) : NOT_APPLICABLE)
+                .useHartwigCurated(useHartwigCurated)
+                .hartwigCuratedTsv(useHartwigCurated ? nonOptionalFile(cmd, HARTWIG_CURATED_TSV) : NOT_APPLICABLE)
                 .missingDoidsMappingTsv(nonOptionalFile(cmd, MISSING_DOIDS_MAPPING_TSV))
                 .refGenomeVersion(RefGenomeVersion.fromIdentifier(nonOptionalValue(cmd, REF_GENOME_VERSION)))
                 .refGenomeFastaFile(nonOptionalFile(cmd, REF_GENOME_FASTA_FILE))

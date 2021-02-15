@@ -6,18 +6,20 @@ import com.hartwig.hmftools.common.samtools.CigarTraversal
 import htsjdk.samtools.CigarElement
 import htsjdk.samtools.CigarOperator
 import htsjdk.samtools.SAMRecord
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
 data class SAMCodingRecord(
+        val id: String,
         val softClippedStart: Int, val softClippedEnd: Int,
-        val deleted: Int, val inserted: Int,
+        val indels: List<Indel>,
         val positionStart: Int, val positionEnd: Int,
         val readStart: Int, val readEnd: Int,
         val record: SAMRecord) {
 
     fun maxIndelSize(): Int {
-        return max(deleted, inserted)
+        return indels.map { abs(it.length) }.max() ?: 0
     }
 
     fun containsSoftClip(): Boolean {
@@ -25,7 +27,7 @@ data class SAMCodingRecord(
     }
 
     fun containsIndel(): Boolean {
-        return deleted > 0 || inserted > 0
+        return indels.map { it.length }.sum() != 0
     }
 
     fun codingRegionRead(reverseCompliment: Boolean): CharArray {
@@ -85,32 +87,35 @@ data class SAMCodingRecord(
 
             val softClippedStart = max(alignmentStart - positionStart, 0)
             val softClippedEnd = max(0, positionEnd - alignmentEnd)
-            val (insertCount, deleteCount) = indels(positionStart, positionEnd, record)
+            val indels = indels(positionStart, positionEnd, record)
 
-            return SAMCodingRecord(softClippedStart, softClippedEnd, deleteCount, insertCount, positionStart, positionEnd, readIndexStart, readIndexEnd, record)
+            return SAMCodingRecord(record.readName, softClippedStart, softClippedEnd, indels, positionStart, positionEnd, readIndexStart, readIndexEnd, record)
         }
 
-        private fun indels(startPosition: Int, endPosition: Int, record: SAMRecord): Pair<Int, Int> {
-            var insertCount = 0
-            var deleteCount = 0
+        private fun indels(startPosition: Int, endPosition: Int, record: SAMRecord): List<Indel> {
+            val indels = mutableListOf<Indel>()
 
             val handler = object : CigarHandler {
 
                 override fun handleInsert(record: SAMRecord, element: CigarElement, readIndex: Int, refPosition: Int) {
                     if (refPosition in startPosition..endPosition) {
-                        insertCount += element.length
+                        val base = record.readBases[readIndex].toChar()
+                        val insert = Indel(record.contig, refPosition, base.toString(), record.readString.substring(readIndex, readIndex + element.length + 1))
+                        indels.add(insert)
                     }
                 }
 
                 override fun handleDelete(record: SAMRecord, element: CigarElement, readIndex: Int, refPosition: Int) {
                     if (refPosition in startPosition..endPosition) {
-                        deleteCount += element.length
+                        val base = record.readBases[readIndex].toChar()
+                        val delete = Indel(record.contig, refPosition, base + "N".repeat(element.length), base.toString())
+                        indels.add(delete)
                     }
                 }
             }
 
             CigarTraversal.traverseCigar(record, handler)
-            return Pair(insertCount, deleteCount)
+            return indels
         }
 
         private fun SAMRecord.softClipStart(): Int {
@@ -119,14 +124,6 @@ data class SAMCodingRecord(
 
         private fun SAMRecord.softClipEnd(): Int {
             return if (this.cigar.lastCigarElement.operator == CigarOperator.S) this.cigar.lastCigarElement.length else 0
-        }
-
-        private fun SAMRecord.deletes(): Int {
-            return this.cigar.cigarElements.filter { it.operator == CigarOperator.D }.map { it.length }.sum()
-        }
-
-        private fun SAMRecord.inserts(): Int {
-            return this.cigar.cigarElements.filter { it.operator == CigarOperator.I }.map { it.length }.sum()
         }
 
         fun Char.reverseCompliment(): Char {

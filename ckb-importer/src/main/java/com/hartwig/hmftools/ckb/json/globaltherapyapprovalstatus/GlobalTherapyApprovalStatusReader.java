@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class GlobalTherapyApprovalStatusReader extends CkbJsonDirectoryReader<GlobalTherapyApprovalStatus> {
+public class GlobalTherapyApprovalStatusReader extends CkbJsonDirectoryReader<JsonGlobalTherapyApprovalStatus> {
 
     public GlobalTherapyApprovalStatusReader(@Nullable final Integer maxFilesToRead) {
         super(maxFilesToRead);
@@ -29,11 +29,11 @@ public class GlobalTherapyApprovalStatusReader extends CkbJsonDirectoryReader<Gl
 
     @NotNull
     @Override
-    protected GlobalTherapyApprovalStatus read(@NotNull final JsonObject object) {
+    protected JsonGlobalTherapyApprovalStatus read(@NotNull final JsonObject object) {
         JsonDatamodelChecker statusChecker = GlobalTherapyApprovalStatusDataModelChecker.globalTherapyApprovalStatusObjectChecker();
         statusChecker.check(object);
 
-        return ImmutableGlobalTherapyApprovalStatus.builder()
+        return ImmutableJsonGlobalTherapyApprovalStatus.builder()
                 .totalCount(JsonFunctions.integer(object, "totalCount"))
                 .globalApprovalStatuses(extractStatuses(object.getAsJsonArray("globalTherapyApprovalStatuses")))
                 .build();

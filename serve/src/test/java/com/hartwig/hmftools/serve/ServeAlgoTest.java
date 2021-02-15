@@ -34,19 +34,22 @@ public class ServeAlgoTest {
                 ProteinResolverFactory.dummy(),
                 DoidLookupTestFactory.dummy());
 
-        ServeConfig config = algoBuilder()
+        ServeConfig config = algoBuilder().useVicc(true)
                 .viccJson(VICC_JSON)
                 .addViccSources(ViccSource.CIVIC, ViccSource.CGI)
+                .useIclusion(true)
                 .iClusionTrialTsv(ICLUSION_TRIAL_TSV)
+                .useDocm(true)
                 .docmTsv(DOCM_TSV)
-                .hartwigCuratedTsv(HARTWIG_CURATED_TSV)
+                .useHartwigCohort(true)
                 .hartwigCohortTsv(HARTWIG_COHORT_TSV)
+                .useHartwigCurated(true)
+                .hartwigCuratedTsv(HARTWIG_CURATED_TSV)
                 .refGenomeVersion(RefGenomeVersion.V37)
                 .refGenomeFastaFile(REF_GENOME_FASTA_FILE)
                 .build();
 
         assertNotNull(algo.run(config));
-
     }
 
     @NotNull

@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ClinicalTrialReader extends CkbJsonDirectoryReader<ClinicalTrial> {
+public class ClinicalTrialReader extends CkbJsonDirectoryReader<JsonClinicalTrial> {
 
     public ClinicalTrialReader(@Nullable final Integer maxFilesToRead) {
         super(maxFilesToRead);
@@ -28,11 +28,11 @@ public class ClinicalTrialReader extends CkbJsonDirectoryReader<ClinicalTrial> {
 
     @NotNull
     @Override
-    protected ClinicalTrial read(@NotNull final JsonObject object) {
+    protected JsonClinicalTrial read(@NotNull final JsonObject object) {
         JsonDatamodelChecker clinicalTrialChecker = ClinicalTrialDataModelChecker.clinicalTrialObjectChecker();
         clinicalTrialChecker.check(object);
 
-        return ImmutableClinicalTrial.builder()
+        return ImmutableJsonClinicalTrial.builder()
                 .nctId(JsonFunctions.string(object, "nctId"))
                 .title(JsonFunctions.string(object, "title"))
                 .phase(JsonFunctions.string(object, "phase"))
@@ -97,8 +97,8 @@ public class ClinicalTrialReader extends CkbJsonDirectoryReader<ClinicalTrial> {
     }
 
     @NotNull
-    private static List<ClinicalTrialVariantRequirementDetail> extractVariantRequirementDetails(@NotNull JsonArray jsonArray) {
-        List<ClinicalTrialVariantRequirementDetail> variantRequirementDetails = Lists.newArrayList();
+    private static List<JsonClinicalTrialVariantRequirementDetail> extractVariantRequirementDetails(@NotNull JsonArray jsonArray) {
+        List<JsonClinicalTrialVariantRequirementDetail> variantRequirementDetails = Lists.newArrayList();
         JsonDatamodelChecker variantRequirementDetailChecker =
                 ClinicalTrialDataModelChecker.variantRequirementDetailObjectChecker();
 
@@ -106,7 +106,7 @@ public class ClinicalTrialReader extends CkbJsonDirectoryReader<ClinicalTrial> {
             JsonObject variantRequirementDetailObject = variantRequirementDetail.getAsJsonObject();
             variantRequirementDetailChecker.check(variantRequirementDetailObject);
 
-            variantRequirementDetails.add(ImmutableClinicalTrialVariantRequirementDetail.builder()
+            variantRequirementDetails.add(ImmutableJsonClinicalTrialVariantRequirementDetail.builder()
                     .molecularProfile(extractMolecularProfile(variantRequirementDetailObject.getAsJsonObject("molecularProfile")))
                     .requirementType(JsonFunctions.string(variantRequirementDetailObject, "requirementType"))
                     .build());
@@ -115,15 +115,15 @@ public class ClinicalTrialReader extends CkbJsonDirectoryReader<ClinicalTrial> {
     }
 
     @NotNull
-    private static List<ClinicalTrialLocation> extractClinicalTrialsLocations(@NotNull JsonArray jsonArray) {
-        List<ClinicalTrialLocation> locations = Lists.newArrayList();
+    private static List<JsonClinicalTrialLocation> extractClinicalTrialsLocations(@NotNull JsonArray jsonArray) {
+        List<JsonClinicalTrialLocation> locations = Lists.newArrayList();
         JsonDatamodelChecker locationChecker = ClinicalTrialDataModelChecker.locationObjectChecker();
 
         for (JsonElement location : jsonArray) {
             JsonObject locationObject = location.getAsJsonObject();
             locationChecker.check(locationObject);
 
-            locations.add(ImmutableClinicalTrialLocation.builder()
+            locations.add(ImmutableJsonClinicalTrialLocation.builder()
                     .nctId(JsonFunctions.string(locationObject, "nctId"))
                     .facility(JsonFunctions.optionalNullableString(locationObject, "facility"))
                     .city(JsonFunctions.string(locationObject, "city"))
@@ -138,15 +138,15 @@ public class ClinicalTrialReader extends CkbJsonDirectoryReader<ClinicalTrial> {
     }
 
     @NotNull
-    private static List<ClinicalTrialContact> extractContacts(@NotNull JsonArray jsonArray) {
-        List<ClinicalTrialContact> contacts = Lists.newArrayList();
+    private static List<JsonClinicalTrialContact> extractContacts(@NotNull JsonArray jsonArray) {
+        List<JsonClinicalTrialContact> contacts = Lists.newArrayList();
         JsonDatamodelChecker contactChecker = ClinicalTrialDataModelChecker.contactObjectChecker();
 
         for (JsonElement contact : jsonArray) {
             JsonObject contactObject = contact.getAsJsonObject();
 
             contactChecker.check(contactObject);
-            contacts.add(ImmutableClinicalTrialContact.builder()
+            contacts.add(ImmutableJsonClinicalTrialContact.builder()
                     .name(JsonFunctions.optionalNullableString(contactObject, "name"))
                     .email(JsonFunctions.optionalNullableString(contactObject, "email"))
                     .phone(JsonFunctions.optionalNullableString(contactObject, "phone"))

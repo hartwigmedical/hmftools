@@ -132,6 +132,7 @@ Note that for DSB and hotspot rescue, neither the rescued variant nor the rescui
 ## Version History and Download Links
 - Upcoming
  - Fix hotspot matching
+ - Replace other ambiguous bases in bam with N
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.10)
   - Removed viral insertion exception from normal relative support filter
   - Add EventType flag [DEL, INS, DUP, INV, SGL, BND]

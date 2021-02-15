@@ -6,7 +6,6 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele
 data class HlaSequenceLoci(val allele: HlaAllele, val sequences: List<String>) {
     val length = sequences.size
 
-
     fun containsInserts(): Boolean {
         return sequences.any { it.length > 1 }
     }
@@ -18,7 +17,6 @@ data class HlaSequenceLoci(val allele: HlaAllele, val sequences: List<String>) {
     fun containsIndels(): Boolean {
         return sequences.any { it == "." || it.length > 1 }
     }
-
 
     fun sequence(locus: Int): String {
         return sequences[locus]
@@ -32,7 +30,6 @@ data class HlaSequenceLoci(val allele: HlaAllele, val sequences: List<String>) {
         return sequences
                 .filterIndexed { index, _ -> index in startLocus..endLocus }
                 .joinToString("")
-//                .replace(".", "")
     }
 
     private fun sequence(vararg indices: Int): String {
@@ -83,36 +80,6 @@ data class HlaSequenceLoci(val allele: HlaAllele, val sequences: List<String>) {
         return HlaSequenceMatch.FULL
 
     }
-
-//    fun consistentWith(targetIndices: IntArray, targetSequences: List<String>): Boolean {
-//        return match(targetIndices, targetSequences) != HlaSequenceMatch.NONE
-//    }
-//
-//    fun match(targetIndices: IntArray, targetSequences: List<String>): HlaSequenceMatch {
-//        if (targetIndices.isEmpty()) {
-//            return HlaSequenceMatch.NONE
-//        }
-//
-//        var wildCardCount = 0
-//        for (i in targetIndices.indices) {
-//            val index = targetIndices[i]
-//            val target = targetSequences[i]
-//
-//            if (this.length > index && this.sequences[index] != "*" && this.sequences[index] != target) {
-//                return HlaSequenceMatch.NONE
-//            }
-//
-//            if (this.length > index && this.sequences[index] == "*") {
-//                wildCardCount++
-//            }
-//        }
-//
-//        if (wildCardCount > 0) {
-//            return if (wildCardCount == targetIndices.size) return HlaSequenceMatch.WILD else HlaSequenceMatch.PARTIAL
-//        }
-//
-//        return HlaSequenceMatch.FULL
-//    }
 
     companion object {
 

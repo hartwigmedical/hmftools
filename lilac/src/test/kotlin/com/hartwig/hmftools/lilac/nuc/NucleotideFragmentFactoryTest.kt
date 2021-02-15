@@ -3,6 +3,7 @@ package com.hartwig.hmftools.lilac.nuc
 import com.hartwig.hmftools.lilac.seq.HlaSequence
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 import htsjdk.samtools.SAMRecord
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class NucleotideFragmentFactoryTest {
@@ -20,6 +21,14 @@ class NucleotideFragmentFactoryTest {
 
 
     }
+
+    @Test
+    fun testCreateNucleotidesFromAminoAcid() {
+        assertEquals(listOf("T", "G", "A"), NucleotideFragmentFactory.createNucleotidesFromAminoAcid("X"))
+        assertEquals(listOf(".", ".", "."), NucleotideFragmentFactory.createNucleotidesFromAminoAcid("."))
+        assertEquals(listOf("A", "G", "TTGA"), NucleotideFragmentFactory.createNucleotidesFromAminoAcid("SX"))
+    }
+
 
     fun createSAMRecord(position: Int) {
 

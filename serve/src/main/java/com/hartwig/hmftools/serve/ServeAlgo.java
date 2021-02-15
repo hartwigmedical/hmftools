@@ -66,11 +66,25 @@ public class ServeAlgo {
     public ExtractionResult run(@NotNull ServeConfig config)
             throws IOException {
         List<ExtractionResult> extractions = Lists.newArrayList();
-        extractions.add(extractViccKnowledge(config.viccJson(), config.viccSources()));
-        extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv()));
-        extractions.add(extractDocmKnowledge(config.docmTsv()));
-        extractions.add(extractHartwigCohortKnowledge(config.hartwigCohortTsv(), !config.skipHotspotResolving()));
-        extractions.add(extractHartwigCuratedKnowledge(config.hartwigCuratedTsv(), !config.skipHotspotResolving()));
+        if (config.useVicc()) {
+            extractions.add(extractViccKnowledge(config.viccJson(), config.viccSources()));
+        }
+
+        if (config.useIclusion()) {
+            extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv()));
+        }
+
+        if (config.useDocm()) {
+            extractions.add(extractDocmKnowledge(config.docmTsv()));
+        }
+
+        if (config.useHartwigCohort()) {
+            extractions.add(extractHartwigCohortKnowledge(config.hartwigCohortTsv(), !config.skipHotspotResolving()));
+        }
+
+        if (config.useHartwigCurated()) {
+            extractions.add(extractHartwigCuratedKnowledge(config.hartwigCuratedTsv(), !config.skipHotspotResolving()));
+        }
 
         evaluateProteinResolver(proteinResolver);
         missingDoidLookup.reportUnusedMappings();

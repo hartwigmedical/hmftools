@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TreatmentApproachReader extends CkbJsonDirectoryReader<TreatmentApproach> {
+public class TreatmentApproachReader extends CkbJsonDirectoryReader<JsonTreatmentApproach> {
 
     public TreatmentApproachReader(@Nullable final Integer maxFilesToRead) {
         super(maxFilesToRead);
@@ -28,11 +28,11 @@ public class TreatmentApproachReader extends CkbJsonDirectoryReader<TreatmentApp
 
     @NotNull
     @Override
-    protected TreatmentApproach read(@NotNull final JsonObject object) {
+    protected JsonTreatmentApproach read(@NotNull final JsonObject object) {
         JsonDatamodelChecker treatmentApproachObjectChecker = TreatmentApproachDataModelChecker.treatmentApproachObjectChecker();
         treatmentApproachObjectChecker.check(object);
 
-        return ImmutableTreatmentApproach.builder()
+        return ImmutableJsonTreatmentApproach.builder()
                 .id(JsonFunctions.integer(object, "id"))
                 .name(JsonFunctions.string(object, "name"))
                 .profileName(JsonFunctions.string(object, "profileName"))

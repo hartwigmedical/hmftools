@@ -10,7 +10,8 @@ import java.io.File
 import java.io.IOException
 
 const val SAMPLE = "sample"
-const val INPUT_BAM_OPTION = "sample_bam"
+const val REFERENCE_BAM_OPTION = "reference_bam"
+const val TUMOR_BAM_OPTION = "tumor_bam"
 const val RESOURCE_DIR_OPTION = "resource_dir"
 const val OUTPUT_DIR_OPTION = "output_dir"
 const val REF_GENOME_OPTION = "ref_genome"
@@ -24,7 +25,8 @@ const val EXPECTED_ALLELES = "expected_alleles"
 
 data class LilacConfig(
         val sample: String,
-        val inputBam: String,
+        val referenceBam: String,
+        val tumorBam: String,
         val resourceDir: String,
         val outputDir: String,
         val refGenome: String,
@@ -44,7 +46,8 @@ data class LilacConfig(
         @Throws(ParseException::class, IOException::class)
         fun createConfig(cmd: CommandLine): LilacConfig {
             val sample = cmd.getOptionValue(SAMPLE)
-            val inputBam = cmd.requiredFile(INPUT_BAM_OPTION)
+            val referenceBam = cmd.requiredFile(REFERENCE_BAM_OPTION)
+            val tumorBam = cmd.optionalFile(TUMOR_BAM_OPTION, "")
             val resourceDir = cmd.requiredDir(RESOURCE_DIR_OPTION)
             val outputDir = cmd.requiredDir(OUTPUT_DIR_OPTION)
             val defaultConfig = default()
@@ -66,7 +69,8 @@ data class LilacConfig(
 
             return LilacConfig(
                     sample,
-                    inputBam,
+                    referenceBam,
+                    tumorBam,
                     resourceDir,
                     outputDir,
                     refGenome,
@@ -86,11 +90,12 @@ data class LilacConfig(
                     "",
                     "",
                     "",
+                    "",
                     30,
                     3,
                     6,
                     40,
-                    5,
+                    10,
                     1,
                     listOf())
         }
@@ -98,17 +103,18 @@ data class LilacConfig(
         fun createOptions(): Options {
             val options = Options()
             options.addOption(requiredOption(SAMPLE, "Name of sample"))
-            options.addOption(requiredOption(INPUT_BAM_OPTION, "Path to input bam"))
+            options.addOption(requiredOption(REFERENCE_BAM_OPTION, "Path to reference/normal bam"))
+            options.addOption(optional(TUMOR_BAM_OPTION, "Path to tumor bam"))
             options.addOption(requiredOption(RESOURCE_DIR_OPTION, "Path to resource files"))
             options.addOption(requiredOption(OUTPUT_DIR_OPTION, "Path to output"))
-            options.addOption(optional(REF_GENOME_OPTION, "REF_GENOME_OPTION"))
+            options.addOption(optional(REF_GENOME_OPTION, "Optional path to reference genome fasta file"))
             options.addOption(optional(MIN_BASE_QUAL, "MIN_BASE_QUAL"))
             options.addOption(optional(MIN_EVIDENCE, "MIN_EVIDENCE"))
             options.addOption(optional(MIN_FRAGMENTS_PER_ALLELE, "MIN_FRAGMENTS_PER_ALLELE"))
             options.addOption(optional(MIN_FRAGMENTS_TO_REMOVE_SINGLE, "MIN_FRAGMENTS_TO_REMOVE_SINGLE"))
             options.addOption(optional(MIN_CONFIRMED_UNIQUE_COVERAGE, "MIN_CONFIRMED_UNIQUE_COVERAGE"))
             options.addOption(optional(THREADS, "Number of threads"))
-            options.addOption(optional(EXPECTED_ALLELES, "Common separated expected alleles"))
+            options.addOption(optional(EXPECTED_ALLELES, "Comma separated expected alleles"))
             return options
         }
 

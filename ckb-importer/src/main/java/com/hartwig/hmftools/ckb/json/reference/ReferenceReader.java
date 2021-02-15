@@ -31,7 +31,7 @@ import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ReferenceReader extends CkbJsonDirectoryReader<Reference> {
+public class ReferenceReader extends CkbJsonDirectoryReader<JsonReference> {
 
     public ReferenceReader(@Nullable final Integer maxFilesToRead) {
         super(maxFilesToRead);
@@ -39,11 +39,11 @@ public class ReferenceReader extends CkbJsonDirectoryReader<Reference> {
 
     @NotNull
     @Override
-    protected Reference read(@NotNull final JsonObject object) {
+    protected JsonReference read(@NotNull final JsonObject object) {
         JsonDatamodelChecker referenceChecker = ReferenceDataModelChecker.referenceObjectChecker();
         referenceChecker.check(object);
 
-        return ImmutableReference.builder()
+        return ImmutableJsonReference.builder()
                 .id(JsonFunctions.integer(object, "id"))
                 .pubMedId(JsonFunctions.nullableString(object, "pubMedId"))
                 .title(JsonFunctions.nullableString(object, "title"))

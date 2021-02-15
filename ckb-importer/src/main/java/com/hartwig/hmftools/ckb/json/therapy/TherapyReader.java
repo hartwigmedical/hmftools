@@ -32,7 +32,7 @@ import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TherapyReader extends CkbJsonDirectoryReader<Therapy> {
+public class TherapyReader extends CkbJsonDirectoryReader<JsonTherapy> {
 
     public TherapyReader(@Nullable final Integer maxFilesToRead) {
         super(maxFilesToRead);
@@ -40,11 +40,11 @@ public class TherapyReader extends CkbJsonDirectoryReader<Therapy> {
 
     @NotNull
     @Override
-    protected Therapy read(@NotNull final JsonObject object) {
+    protected JsonTherapy read(@NotNull final JsonObject object) {
         JsonDatamodelChecker therapyObjectChecker = TherapyDataModelChecker.therapyObjectChecker();
         therapyObjectChecker.check(object);
 
-        return ImmutableTherapy.builder()
+        return ImmutableJsonTherapy.builder()
                 .id(JsonFunctions.integer(object, "id"))
                 .therapyName(JsonFunctions.string(object, "therapyName"))
                 .synonyms(JsonFunctions.optionalStringList(object, "synonyms"))

@@ -27,9 +27,8 @@ class NucleotideQualEnrichment(private val minBaseQuality: Int, private val minE
             val countNucleotides = count.sequenceAt(loci)
 
             if (fragmentNucleotide in countNucleotides) {
-                val updatedQuality = currentQuality.coerceAtLeast(minBaseQuality)
                 nucleotideLoci.add(loci)
-                nucleotideQuality.add(updatedQuality)
+                nucleotideQuality.add(currentQuality)
                 nucleotides.add(fragmentNucleotide)
             }
         }

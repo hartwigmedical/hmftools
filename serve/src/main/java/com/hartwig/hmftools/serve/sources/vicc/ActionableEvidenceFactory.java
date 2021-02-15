@@ -15,7 +15,8 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
-import com.hartwig.hmftools.serve.sources.vicc.curation.ViccDrugCurator;
+import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
+import com.hartwig.hmftools.serve.sources.vicc.curation.EvidenceLevelCurator;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
@@ -71,11 +72,15 @@ class ActionableEvidenceFactory {
     @NotNull
     private final DoidLookup missingDoidLookup;
     @NotNull
-    private final ViccDrugCurator drugCurator;
+    private final DrugCurator drugCurator;
+    @NotNull
+    private final EvidenceLevelCurator evidenceLevelCurator;
 
-    public ActionableEvidenceFactory(@NotNull final DoidLookup missingDoidLookup, @NotNull final ViccDrugCurator drugCurator) {
+    public ActionableEvidenceFactory(@NotNull final DoidLookup missingDoidLookup, @NotNull final DrugCurator drugCurator,
+            @NotNull final EvidenceLevelCurator evidenceLevelCurator) {
         this.missingDoidLookup = missingDoidLookup;
         this.drugCurator = drugCurator;
+        this.evidenceLevelCurator = evidenceLevelCurator;
     }
 
     @NotNull
@@ -92,6 +97,7 @@ class ActionableEvidenceFactory {
             Map<String, Set<String>> cancerTypeToDoidsMap = buildCancerTypeToDoidsMap(resolveCancerType(entry.association().phenotype()),
                     resolveDoid(entry.association().phenotype()));
 
+            level = evidenceLevelCurator.curate(entry.source(), entry.genes(), treatment, level, direction);
             List<List<String>> drugLists = drugCurator.curate(entry.source(), level, treatment);
 
             ImmutableActionableEvidence.Builder builder = ImmutableActionableEvidence.builder()
@@ -115,6 +121,7 @@ class ActionableEvidenceFactory {
 
     public void evaluateCuration() {
         drugCurator.reportUnusedCurationKeys();
+        evidenceLevelCurator.reportUnusedCurationKeys();
     }
 
     @NotNull
@@ -253,13 +260,13 @@ class ActionableEvidenceFactory {
 
     @Nullable
     @VisibleForTesting
-    static String reformatField(@Nullable String direction) {
-        if (direction == null) {
+    static String reformatField(@Nullable String field) {
+        if (field == null) {
             return null;
-        } else if (direction.length() < 2) {
-            return direction.toUpperCase();
+        } else if (field.length() < 2) {
+            return field.toUpperCase();
         } else {
-            return direction.substring(0, 1).toUpperCase() + direction.substring(1).toLowerCase();
+            return field.substring(0, 1).toUpperCase() + field.substring(1).toLowerCase();
         }
     }
 

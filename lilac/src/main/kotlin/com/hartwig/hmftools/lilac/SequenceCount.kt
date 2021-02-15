@@ -38,6 +38,9 @@ class SequenceCount(private val minCount: Int, val length: Int) {
         }
     }
 
+    operator fun get(locus: Int): Map<String, Int>  {
+        return count[locus]
+    }
 
     private fun increment(index: Int, aminoAcid: String) {
         try {
@@ -67,6 +70,10 @@ class SequenceCount(private val minCount: Int, val length: Int) {
     }
 
     fun sequenceAt(index: Int): Collection<String> {
+        if (index >= count.size) {
+            return Collections.emptySet()
+        }
+
         val result = mutableSetOf<String>()
         val indexMap = count[index]
         for ((aa, count) in indexMap) {

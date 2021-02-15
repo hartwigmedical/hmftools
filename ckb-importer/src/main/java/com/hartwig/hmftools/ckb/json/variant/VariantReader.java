@@ -32,7 +32,7 @@ import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class VariantReader extends CkbJsonDirectoryReader<Variant> {
+public class VariantReader extends CkbJsonDirectoryReader<JsonVariant> {
 
     public VariantReader(@Nullable final Integer maxFilesToRead) {
         super(maxFilesToRead);
@@ -40,11 +40,11 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
 
     @NotNull
     @Override
-    protected Variant read(@NotNull final JsonObject object) {
+    protected JsonVariant read(@NotNull final JsonObject object) {
         JsonDatamodelChecker variantObjectChecker = VariantDataModelChecker.variantObjectChecker();
         variantObjectChecker.check(object);
 
-        return ImmutableVariant.builder()
+        return ImmutableJsonVariant.builder()
                 .id(JsonFunctions.integer(object, "id"))
                 .fullName(JsonFunctions.string(object, "fullName"))
                 .impact(JsonFunctions.nullableString(object, "impact"))
@@ -116,7 +116,7 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
     }
 
     @Nullable
-    private static VariantTranscriptCoordinate extractReferenceTranscriptCoordinate(@Nullable JsonObject jsonObject) {
+    private static JsonVariantTranscriptCoordinate extractReferenceTranscriptCoordinate(@Nullable JsonObject jsonObject) {
         if (jsonObject == null) {
             return null;
         }
@@ -125,7 +125,7 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
                 VariantDataModelChecker.referenceTranscriptCoordinateObjectChecker();
         referenceTranscriptCoordinateObjectChecker.check(jsonObject);
 
-        return ImmutableVariantTranscriptCoordinate.builder()
+        return ImmutableJsonVariantTranscriptCoordinate.builder()
                 .id(JsonFunctions.integer(jsonObject, "id"))
                 .transcript(JsonFunctions.string(jsonObject, "transcript"))
                 .gDNA(JsonFunctions.string(jsonObject, "gDna"))
@@ -137,15 +137,15 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
     }
 
     @NotNull
-    private static List<VariantPartnerGene> extractPartnerGenes(@NotNull JsonArray jsonArray) {
-        List<VariantPartnerGene> partnerGenes = Lists.newArrayList();
+    private static List<JsonVariantPartnerGene> extractPartnerGenes(@NotNull JsonArray jsonArray) {
+        List<JsonVariantPartnerGene> partnerGenes = Lists.newArrayList();
         JsonDatamodelChecker partnerGeneObjectChecker = VariantDataModelChecker.partnerGeneObjectChecker();
 
         for (JsonElement partnerGene : jsonArray) {
             JsonObject partnerGenePathJsonObject = partnerGene.getAsJsonObject();
             partnerGeneObjectChecker.check(partnerGenePathJsonObject);
 
-            partnerGenes.add(ImmutableVariantPartnerGene.builder()
+            partnerGenes.add(ImmutableJsonVariantPartnerGene.builder()
                     .gene(extractGene(partnerGenePathJsonObject.getAsJsonObject("gene")))
                     .build());
         }
@@ -154,15 +154,15 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
     }
 
     @NotNull
-    private static List<VariantCategoryVariantPath> extractCategoryVariantPaths(@NotNull JsonArray jsonArray) {
-        List<VariantCategoryVariantPath> categoryVariantPaths = Lists.newArrayList();
+    private static List<JsonVariantCategoryVariantPath> extractCategoryVariantPaths(@NotNull JsonArray jsonArray) {
+        List<JsonVariantCategoryVariantPath> categoryVariantPaths = Lists.newArrayList();
         JsonDatamodelChecker categoryVariantPathObjectChecker = VariantDataModelChecker.categoryVariantPathObjectChecker();
 
         for (JsonElement categoryVariantPath : jsonArray) {
             JsonObject categoryVariantPathJsonObject = categoryVariantPath.getAsJsonObject();
             categoryVariantPathObjectChecker.check(categoryVariantPathJsonObject);
 
-            categoryVariantPaths.add(ImmutableVariantCategoryVariantPath.builder()
+            categoryVariantPaths.add(ImmutableJsonVariantCategoryVariantPath.builder()
                     .variantPath(JsonFunctions.string(categoryVariantPathJsonObject, "variantPath"))
                     .variants(extractVariants(categoryVariantPathJsonObject.getAsJsonArray("variants")))
                     .build());
@@ -316,15 +316,15 @@ public class VariantReader extends CkbJsonDirectoryReader<Variant> {
     }
 
     @NotNull
-    private static List<VariantTranscriptCoordinate> extractAllTranscriptCoordinates(@NotNull JsonArray jsonArray) {
-        List<VariantTranscriptCoordinate> allTranscriptCoordinates = Lists.newArrayList();
+    private static List<JsonVariantTranscriptCoordinate> extractAllTranscriptCoordinates(@NotNull JsonArray jsonArray) {
+        List<JsonVariantTranscriptCoordinate> allTranscriptCoordinates = Lists.newArrayList();
         JsonDatamodelChecker allTranscriptCoordinateChecker = VariantDataModelChecker.allTranscriptCoordinateObjectChecker();
 
         for (JsonElement allTranscriptCoordinate : jsonArray) {
             JsonObject allTranscriptCoordinatesJsonObject = allTranscriptCoordinate.getAsJsonObject();
             allTranscriptCoordinateChecker.check(allTranscriptCoordinatesJsonObject);
 
-            allTranscriptCoordinates.add(ImmutableVariantTranscriptCoordinate.builder()
+            allTranscriptCoordinates.add(ImmutableJsonVariantTranscriptCoordinate.builder()
                     .id(JsonFunctions.integer(allTranscriptCoordinatesJsonObject, "id"))
                     .transcript(JsonFunctions.string(allTranscriptCoordinatesJsonObject, "transcript"))
                     .gDNA(JsonFunctions.string(allTranscriptCoordinatesJsonObject, "gDna"))

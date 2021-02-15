@@ -30,7 +30,7 @@ import com.hartwig.hmftools.common.utils.json.JsonFunctions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProfile> {
+public class MolecularProfileReader extends CkbJsonDirectoryReader<JsonMolecularProfile> {
 
     public MolecularProfileReader(@Nullable final Integer maxFilesToRead) {
         super(maxFilesToRead);
@@ -38,11 +38,11 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
 
     @NotNull
     @Override
-    protected MolecularProfile read(@NotNull final JsonObject object) {
+    protected JsonMolecularProfile read(@NotNull final JsonObject object) {
         JsonDatamodelChecker molecularProfileChecker = MolecularProfileDataModelChecker.molecularProfileObjectChecker();
         molecularProfileChecker.check(object);
 
-        return ImmutableMolecularProfile.builder()
+        return ImmutableJsonMolecularProfile.builder()
                 .id(JsonFunctions.integer(object, "id"))
                 .profileName(JsonFunctions.string(object, "profileName"))
                 .geneVariants(extractGeneVariants(object.getAsJsonArray("geneVariants")))
@@ -97,14 +97,14 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
     }
 
     @NotNull
-    private static MolecularProfileExtendedEvidence extractComplexMolecularProfileEvidence(@NotNull JsonObject jsonObject) {
+    private static JsonMolecularProfileExtendedEvidence extractComplexMolecularProfileEvidence(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker complexMolecularProfileEvidenceChecker =
                 MolecularProfileDataModelChecker.complexMolecularProfileEvidenceChecker();
         complexMolecularProfileEvidenceChecker.check(jsonObject);
 
-        return ImmutableMolecularProfileExtendedEvidence.builder()
+        return ImmutableJsonMolecularProfileExtendedEvidence.builder()
                 .totalCount(JsonFunctions.integer(jsonObject, "totalCount"))
-                .evidence(extractComplexMolecularProfileEvidenceList(jsonObject.getAsJsonArray("complexMolecularProfileEvidence")))
+                .evidences(extractComplexMolecularProfileEvidenceList(jsonObject.getAsJsonArray("complexMolecularProfileEvidence")))
                 .build();
     }
 
@@ -210,13 +210,13 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
     }
 
     @NotNull
-    private static MolecularProfileExtendedEvidence extractTreatmentApproachEvidence(@NotNull JsonObject jsonObject) {
+    private static JsonMolecularProfileExtendedEvidence extractTreatmentApproachEvidence(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker treatmentApproachEvidenceChecker = MolecularProfileDataModelChecker.treatmentApproachEvidenceChecker();
         treatmentApproachEvidenceChecker.check(jsonObject);
 
-        return ImmutableMolecularProfileExtendedEvidence.builder()
+        return ImmutableJsonMolecularProfileExtendedEvidence.builder()
                 .totalCount(JsonFunctions.integer(jsonObject, "totalCount"))
-                .evidence(extractTreatmentApproachEvidenceList(jsonObject.getAsJsonArray("treatmentApproachEvidence")))
+                .evidences(extractTreatmentApproachEvidenceList(jsonObject.getAsJsonArray("treatmentApproachEvidence")))
                 .build();
     }
 
@@ -288,13 +288,13 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
     }
 
     @NotNull
-    private static MolecularProfileExtendedEvidence extractVariantLevelEvidence(@NotNull JsonObject jsonObject) {
+    private static JsonMolecularProfileExtendedEvidence extractVariantLevelEvidence(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker variantLevelEvidenceChecker = MolecularProfileDataModelChecker.variantLevelEvidenceChecker();
         variantLevelEvidenceChecker.check(jsonObject);
 
-        return ImmutableMolecularProfileExtendedEvidence.builder()
+        return ImmutableJsonMolecularProfileExtendedEvidence.builder()
                 .totalCount(JsonFunctions.integer(jsonObject, "totalCount"))
-                .evidence(extractVariantLevelEvidenceList(jsonObject.getAsJsonArray("variantLevelEvidences")))
+                .evidences(extractVariantLevelEvidenceList(jsonObject.getAsJsonArray("variantLevelEvidences")))
                 .build();
     }
 
@@ -327,13 +327,13 @@ public class MolecularProfileReader extends CkbJsonDirectoryReader<MolecularProf
     }
 
     @NotNull
-    private static MolecularProfileExtendedEvidence extractExtendedEvidence(@NotNull JsonObject jsonObject) {
+    private static JsonMolecularProfileExtendedEvidence extractExtendedEvidence(@NotNull JsonObject jsonObject) {
         JsonDatamodelChecker extendedEvidenceChecker = MolecularProfileDataModelChecker.extendedEvidenceChecker();
         extendedEvidenceChecker.check(jsonObject);
 
-        return ImmutableMolecularProfileExtendedEvidence.builder()
+        return ImmutableJsonMolecularProfileExtendedEvidence.builder()
                 .totalCount(JsonFunctions.integer(jsonObject, "totalCount"))
-                .evidence(extractExtendedEvidenceList(jsonObject.getAsJsonArray("extendedEvidence")))
+                .evidences(extractExtendedEvidenceList(jsonObject.getAsJsonArray("extendedEvidence")))
                 .build();
     }
 

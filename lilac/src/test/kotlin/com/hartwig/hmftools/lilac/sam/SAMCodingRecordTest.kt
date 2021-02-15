@@ -2,7 +2,7 @@ package com.hartwig.hmftools.lilac.sam
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import htsjdk.samtools.SAMRecord
-import org.junit.Assert.assertEquals
+import org.junit.Assert.*
 import org.junit.Test
 
 class SAMCodingRecordTest {
@@ -77,7 +77,24 @@ class SAMCodingRecordTest {
     fun testDelete() {
         val samRecord = buildSamRecord(1100, "50M3D50M", 100)
         val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
-        assertIntersect(victim, 0, 0, 3, 0, 1100, 1202, 0, 99)
+        assertIntersect(victim, 0, 0, -3, 0, 1100, 1202, 0, 99)
+        assertTrue(victim.containsIndel())
+    }
+
+    @Test
+    fun testMultipleIndelsCancellingOut() {
+        val samRecord = buildSamRecord(1100, "50M3D1M3I50M", 100)
+        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        assertEquals(2, victim.indels.size)
+        assertFalse(victim.containsIndel())
+    }
+
+    @Test
+    fun testMultipleIndels() {
+        val samRecord = buildSamRecord(1100, "50M3D1M4I50M", 100)
+        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        assertEquals(2, victim.indels.size)
+        assertTrue(victim.containsIndel())
     }
 
     @Test
@@ -97,9 +114,9 @@ class SAMCodingRecordTest {
 
     fun assertIntersect(victim: SAMCodingRecord, softClippedStart: Int, softClippedEnd: Int, dels: Int, ins: Int, positionStart: Int, positionEnd: Int, readIndexStart: Int, readIndexEnd: Int) {
         assertEquals(softClippedStart, victim.softClippedStart)
-        assertEquals(softClippedStart, victim.softClippedStart)
-        assertEquals(dels, victim.deleted)
-        assertEquals(ins, victim.inserted)
+        assertEquals(softClippedEnd, victim.softClippedEnd)
+        assertEquals(dels, victim.indels.filter { it.isDelete }.map { it.length }.sum())
+        assertEquals(ins, victim.indels.filter { it.isInsert }.map { it.length }.sum())
         assertEquals(positionStart, victim.positionStart)
         assertEquals(positionEnd, victim.positionEnd)
         assertEquals(readIndexStart, victim.readStart)
@@ -114,6 +131,7 @@ class SAMCodingRecordTest {
 
     fun buildSamRecord(alignmentStart: Int, cigar: String, readString: String, qualities: String): SAMRecord {
         val record = SAMRecord(null)
+        record.readName = "READNAME"
         record.alignmentStart = alignmentStart
         record.cigarString = cigar
         record.readString = readString

@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.gripss.GripssFilters.MIN_QUAL
 import com.hartwig.hmftools.common.gripss.GripssFilters.MIN_TUMOR_AF
 import com.hartwig.hmftools.extensions.*
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
+import htsjdk.samtools.reference.ReferenceSequence
 import htsjdk.samtools.util.Interval
 import htsjdk.samtools.util.Locatable
 import htsjdk.variant.variantcontext.Allele
@@ -18,12 +19,19 @@ const val SHORT_RESCUE_SIZE = 10000
 typealias Cipos = Pair<Int, Int>
 
 class StructuralVariantContext(val context: VariantContext, private val normalOrdinal: Int = 0, private val tumorOrdinal: Int = 1) {
-    private companion object {
+    companion object {
         private val polyGInsert = "G".repeat(16)
         private val polyCInsert = "C".repeat(16)
 
         private val polyAHomology = "A".repeat(7)
         private val polyTHomology = "T".repeat(7)
+
+        internal val ReferenceSequence.unambiguousNucleotides: String
+            get() = this.baseString.unambiguousNucleotides
+
+        internal val String.unambiguousNucleotides: String
+            get() = this.splitToSequence('R', 'Y', 'K', 'M', 'S', 'W', 'B', 'D', 'H', 'V', ignoreCase = true, limit = 0).joinToString(separator = "N")
+
     }
 
     private val remoteConfidenceInterval = context.remoteConfidenceInterval()
@@ -129,7 +137,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         }
 
         val newStart = updatedPosition(start, confidenceInterval, newCipos)
-        val newRef = refGenome.getSubsequenceAt(contig, newStart.toLong(), newStart.toLong()).baseString
+        val newRef = refGenome.getSubsequenceAt(contig, newStart.toLong(), newStart.toLong()).unambiguousNucleotides
 
         val mate = variantType as Paired
         val alleles = listOf(Allele.create(newRef, true), Allele.create(mate.altString(mate.otherPosition, newRef)))
@@ -148,7 +156,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     private fun sideAlignSingle(refGenome: IndexedFastaSequenceFile): StructuralVariantContext {
         val newCipos = sideAlignConfidenceInterval(orientation, confidenceInterval)
         val newStart = updatedPosition(start, confidenceInterval, newCipos)
-        val newRef = refGenome.getSubsequenceAt(contig, newStart.toLong(), newStart.toLong()).baseString
+        val newRef = refGenome.getSubsequenceAt(contig, newStart.toLong(), newStart.toLong()).unambiguousNucleotides
 
         val mate = variantType as Single
         val alleles = listOf(Allele.create(newRef, true), Allele.create(mate.altString(newRef)))
@@ -426,4 +434,6 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     private fun Cipos.invert(): Cipos {
         return Pair(-this.second, -this.first)
     }
+
+
 }
