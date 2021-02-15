@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.common.molecularprofileinterpretation;
+package com.hartwig.hmftools.ckb.datamodel.common.molecularprofile;
 
 import java.util.List;
 
@@ -6,11 +6,11 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialVariantRequirementDetail;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ImmutableClinicalTrialVariantRequirementDetail;
 import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.GeneDescription;
-import com.hartwig.hmftools.ckb.datamodel.common.ImmutableGene;
-import com.hartwig.hmftools.ckb.datamodel.common.ImmutableGeneDescription;
 import com.hartwig.hmftools.ckb.datamodel.common.variant.CategoryVariantPath;
+import com.hartwig.hmftools.ckb.datamodel.common.variant.GeneDescription;
 import com.hartwig.hmftools.ckb.datamodel.common.variant.ImmutableCategoryVariantPath;
+import com.hartwig.hmftools.ckb.datamodel.common.variant.ImmutableGene;
+import com.hartwig.hmftools.ckb.datamodel.common.variant.ImmutableGeneDescription;
 import com.hartwig.hmftools.ckb.datamodel.common.variant.ImmutableMemberVariant;
 import com.hartwig.hmftools.ckb.datamodel.common.variant.ImmutableReferenceTranscriptCoordinate;
 import com.hartwig.hmftools.ckb.datamodel.common.variant.ImmutableVariant;

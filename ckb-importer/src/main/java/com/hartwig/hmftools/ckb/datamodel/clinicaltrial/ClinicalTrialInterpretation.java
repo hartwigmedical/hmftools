@@ -3,7 +3,7 @@ package com.hartwig.hmftools.ckb.datamodel.clinicaltrial;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.common.Indication;
-import com.hartwig.hmftools.ckb.datamodel.common.therapyinterpretation.TherapyInterpretation;
+import com.hartwig.hmftools.ckb.datamodel.common.therapy.TherapyInterpretation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

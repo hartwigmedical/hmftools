@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.common.druginterpretation;
+package com.hartwig.hmftools.ckb.datamodel.common.drug;
 
 import java.util.List;
 
@@ -43,9 +43,9 @@ public final class DrugInterpretationFactory {
     }
 
     @NotNull
-    private static List<com.hartwig.hmftools.ckb.datamodel.common.druginterpretation.DrugClass> extractDrugClasses(@NotNull Drug drug,
+    private static List<com.hartwig.hmftools.ckb.datamodel.common.drug.DrugClass> extractDrugClasses(@NotNull Drug drug,
             @NotNull CkbJsonDatabase ckbEntry) {
-        List<com.hartwig.hmftools.ckb.datamodel.common.druginterpretation.DrugClass> drugClasses = Lists.newArrayList();
+        List<com.hartwig.hmftools.ckb.datamodel.common.drug.DrugClass> drugClasses = Lists.newArrayList();
         for (DrugClassInfo drugClassInfo : drug.drugClasses()) {
             for (DrugClass drugClass : ckbEntry.drugClasses()) {
                 if (drugClassInfo.id() == drugClass.id()) {

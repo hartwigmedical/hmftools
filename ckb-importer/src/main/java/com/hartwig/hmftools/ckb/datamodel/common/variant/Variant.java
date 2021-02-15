@@ -3,8 +3,6 @@ package com.hartwig.hmftools.ckb.datamodel.common.variant;
 import java.util.Date;
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.datamodel.common.Gene;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

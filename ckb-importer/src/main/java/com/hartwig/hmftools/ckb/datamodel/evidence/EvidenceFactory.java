@@ -2,9 +2,9 @@ package com.hartwig.hmftools.ckb.datamodel.evidence;
 
 import com.hartwig.hmftools.ckb.datamodel.ImmutableCkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.therapyinterpretation.TherapyInterpretation;
-import com.hartwig.hmftools.ckb.datamodel.common.therapyinterpretation.TherapyInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.molecularprofile.MolecularProfileInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.therapy.TherapyInterpretation;
+import com.hartwig.hmftools.ckb.datamodel.common.therapy.TherapyInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;

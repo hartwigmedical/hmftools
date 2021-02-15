@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.ckb.datamodel.knowngenomicalteration;
 
 import com.hartwig.hmftools.ckb.datamodel.ImmutableCkbEntry;
-import com.hartwig.hmftools.ckb.datamodel.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.molecularprofile.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.common.druginterpretation;
+package com.hartwig.hmftools.ckb.datamodel.common.variant;
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DrugDescription {
+public abstract class GeneDescription {
 
     @Nullable
     public abstract String description();

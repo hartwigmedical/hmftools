@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.ckb.datamodel.common.therapyinterpretation;
+package com.hartwig.hmftools.ckb.datamodel.common.therapy;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.common.CommonInterpretationFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.druginterpretation.DrugInterpretationFactory;
-import com.hartwig.hmftools.ckb.datamodel.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.drug.DrugInterpretationFactory;
+import com.hartwig.hmftools.ckb.datamodel.common.molecularprofile.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.GlobalApprovalStatusInfo;
@@ -26,7 +26,7 @@ public final class TherapyInterpretationFactory {
     }
 
     @NotNull
-    private static com.hartwig.hmftools.ckb.datamodel.common.therapyinterpretation.Therapy extractTherapy(@NotNull Therapy therapy,
+    private static com.hartwig.hmftools.ckb.datamodel.common.therapy.Therapy extractTherapy(@NotNull Therapy therapy,
             @NotNull CkbJsonDatabase ckbEntry, @NotNull MolecularProfile molecularProfile) {
         return ImmutableTherapy.builder()
                 .id(therapy.id())

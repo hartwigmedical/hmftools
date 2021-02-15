@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.knowngenomicalteration;
 
-import com.hartwig.hmftools.ckb.datamodel.common.molecularprofileinterpretation.MolecularProfileInterpretation;
+import com.hartwig.hmftools.ckb.datamodel.common.molecularprofile.MolecularProfileInterpretation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
