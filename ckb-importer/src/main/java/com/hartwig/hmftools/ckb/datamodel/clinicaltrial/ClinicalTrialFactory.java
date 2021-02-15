@@ -10,6 +10,7 @@ import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrial;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrialContact;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrialLocation;
+import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrialVariantRequirementDetail;
 import com.hartwig.hmftools.ckb.json.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
@@ -41,8 +42,7 @@ public final class ClinicalTrialFactory {
                             .variantRequirement(clinicalTrial.variantRequirements())
                             .sponsor(clinicalTrial.sponsors())
                             .updateDate(clinicalTrial.updateDate())
-                            .clinicalTrialVariantRequirementDetails(MolecularProfileInterpretationFactory.extractProfileNameClinicalTrial(
-                                    ckbJsonDatabase,
+                            .clinicalTrialVariantRequirementDetails(extractRequirementDetails(ckbJsonDatabase,
                                     clinicalTrial.variantRequirementDetails(),
                                     molecularProfile))
                             .locations(extractClinicalTrialLocations(clinicalTrial.clinicalTrialLocations()));
@@ -103,5 +103,52 @@ public final class ClinicalTrialFactory {
                     .build());
         }
         return clinicalTrialContacts;
+    }
+
+    @NotNull
+    public static List<ClinicalTrialVariantRequirementDetail> extractRequirementDetails(@NotNull CkbJsonDatabase ckbJsonDatabase,
+            @NotNull List<JsonClinicalTrialVariantRequirementDetail> jsonRequirementDetails,
+            @NotNull JsonMolecularProfile molecularProfileDir) {
+        int countPartialRequirementTypes = 0;
+        List<ClinicalTrialVariantRequirementDetail> requirementDetails = Lists.newArrayList();
+        for (JsonClinicalTrialVariantRequirementDetail requirementDetail : jsonRequirementDetails) {
+            if (requirementDetail.requirementType().equals("excluded")) { // variant is excluded from enrollment
+                requirementDetails.add(extractClinicalTrialVariantRequirementDetails(ckbJsonDatabase,
+                        requirementDetail,
+                        molecularProfileDir,
+                        countPartialRequirementTypes).build());
+            }
+
+            if (requirementDetail.requirementType().equals("required")) { // variant is requirement for enrollment
+                requirementDetails.add(extractClinicalTrialVariantRequirementDetails(ckbJsonDatabase,
+                        requirementDetail,
+                        molecularProfileDir,
+                        countPartialRequirementTypes).build());
+            }
+
+            // variant is required or excluded for a subset of the enrollment population
+            if (requirementDetail.requirementType().equals("partial - required")) {
+                ++countPartialRequirementTypes;
+                if (requirementDetail.molecularProfile().id() == molecularProfileDir.id()) {
+                    requirementDetails.add(extractClinicalTrialVariantRequirementDetails(ckbJsonDatabase,
+                            requirementDetail,
+                            molecularProfileDir,
+                            countPartialRequirementTypes).build());
+                }
+            }
+        }
+        return requirementDetails;
+    }
+
+    @NotNull
+    private static ImmutableClinicalTrialVariantRequirementDetail.Builder extractClinicalTrialVariantRequirementDetails(
+            @NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull JsonClinicalTrialVariantRequirementDetail jsonRequirementDetail,
+            @NotNull JsonMolecularProfile molecularProfileDir, int countPartialRequirementTypes) {
+        return ImmutableClinicalTrialVariantRequirementDetail.builder()
+                .id(jsonRequirementDetail.molecularProfile().id())
+                .profileName(jsonRequirementDetail.molecularProfile().profileName())
+                .requirementType(jsonRequirementDetail.requirementType())
+                .countPartialRequirementTypes(countPartialRequirementTypes)
+                .variants(MolecularProfileInterpretationFactory.extractVariants(ckbJsonDatabase, molecularProfileDir.geneVariants()));
     }
 }

@@ -32,7 +32,7 @@ public final class JsonDatabaseToCkbEntryConverter {
 
             outputBuilder.clinicalTrials(ClinicalTrialFactory.interpretClinicalTrials(ckbJsonDatabase, molecularProfile));
             outputBuilder.evidences(EvidenceFactory.interpretVariantEvidence(ckbJsonDatabase, molecularProfile));
-            outputBuilder.variants(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbJsonDatabase, molecularProfile));
+            outputBuilder.variants(MolecularProfileInterpretationFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()));
 
             LOGGER.info(outputBuilder.build());  //TODO removed when model is finished
             ckbEntries.add(outputBuilder.build());

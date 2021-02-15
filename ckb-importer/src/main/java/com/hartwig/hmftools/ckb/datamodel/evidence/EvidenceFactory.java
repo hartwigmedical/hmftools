@@ -32,7 +32,7 @@ public final class EvidenceFactory {
                         .approvalStatus(evidenceInfo.approvalStatus())
                         .evidenceType(evidenceInfo.evidenceType())
                         .efficacyEvidence(evidenceInfo.efficacyEvidence())
-                        .variants(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbJsonDatabase, molecularProfile))
+                        .variants(MolecularProfileInterpretationFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()))
                         .therapy(extractTherapyEvidence(ckbJsonDatabase, evidenceInfo.therapy(), molecularProfile))
                         .indication(CommonInterpretationFactory.extractIndication(ckbJsonDatabase, evidenceInfo.indication()))
                         .responseType(evidenceInfo.responseType())
