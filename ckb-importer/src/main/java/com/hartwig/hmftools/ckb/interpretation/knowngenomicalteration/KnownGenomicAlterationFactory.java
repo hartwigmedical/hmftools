@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.interpretation.knowngenomicalteration;
 
-import com.hartwig.hmftools.ckb.interpretation.ImmutableCkbEntryInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.ImmutableCkbEntry;
 import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.molecularprofile.MolecularProfile;
@@ -13,7 +13,7 @@ public class KnownGenomicAlterationFactory {
     }
 
     public static void extractKnownGenomicAlteration(@NotNull MolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
-            @NotNull ImmutableCkbEntryInterpretation.Builder outputBuilder) {
+            @NotNull ImmutableCkbEntry.Builder outputBuilder) {
 
         outputBuilder.knownGenomicAlteration(ImmutableKnownGenomicAlteration.builder()
                 .knownGenomicAlterationInterpretation(MolecularProfileInterpretationFactory.extractVariantGeneInfo(ckbEntry,

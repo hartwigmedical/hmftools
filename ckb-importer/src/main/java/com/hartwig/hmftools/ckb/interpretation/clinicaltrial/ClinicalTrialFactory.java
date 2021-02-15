@@ -7,10 +7,10 @@ import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ClinicalTr
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrial;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialContact;
 import com.hartwig.hmftools.ckb.datamodelinterpretation.clinicaltrial.ImmutableClinicalTrialLocation;
-import com.hartwig.hmftools.ckb.interpretation.ImmutableCkbEntryInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.ImmutableCkbEntry;
 import com.hartwig.hmftools.ckb.interpretation.common.CommonInterpretationFactory;
-import com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation.TherapyInterpretationFactory;
 import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
+import com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation.TherapyInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.ClinicalTrialContact;
@@ -29,7 +29,7 @@ public class ClinicalTrialFactory {
     }
 
     public static void interpretClinicalTrials(@NotNull MolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
-            @NotNull ImmutableCkbEntryInterpretation.Builder outputBuilder) {
+            @NotNull ImmutableCkbEntry.Builder outputBuilder) {
         for (ClinicalTrialInfo clinicalTrialInfo : molecularProfile.variantAssociatedClinicalTrials()) {
             ImmutableClinicalTrialInterpretation.Builder outputBuilderClinicalInterpretation =
                     ImmutableClinicalTrialInterpretation.builder();
@@ -46,7 +46,8 @@ public class ClinicalTrialFactory {
                             .variantRequirement(clinicalTrial.variantRequirements())
                             .sponsor(clinicalTrial.sponsors())
                             .updateDate(clinicalTrial.updateDate())
-                            .clinicalTrialVariantRequirementDetails(MolecularProfileInterpretationFactory.extractProfileNameClinicalTrial(clinicalTrial.variantRequirementDetails(),
+                            .clinicalTrialVariantRequirementDetails(MolecularProfileInterpretationFactory.extractProfileNameClinicalTrial(
+                                    clinicalTrial.variantRequirementDetails(),
                                     molecularProfile,
                                     ckbEntry))
                             .locations(extractClinicalTrialLocations(clinicalTrial.clinicalTrialLocations()))

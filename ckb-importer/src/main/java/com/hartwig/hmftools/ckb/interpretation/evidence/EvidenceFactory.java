@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.ckb.interpretation.evidence;
 
-import com.hartwig.hmftools.ckb.interpretation.ImmutableCkbEntryInterpretation;
+import com.hartwig.hmftools.ckb.interpretation.ImmutableCkbEntry;
 import com.hartwig.hmftools.ckb.interpretation.common.CommonInterpretationFactory;
+import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation.TherapyInterpretation;
 import com.hartwig.hmftools.ckb.interpretation.common.therapyinterpretation.TherapyInterpretationFactory;
-import com.hartwig.hmftools.ckb.interpretation.common.molecularprofileinterpretation.MolecularProfileInterpretationFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
@@ -21,7 +21,7 @@ public class EvidenceFactory {
     }
 
     public static void interpretVariantEvidence(@NotNull MolecularProfile molecularProfile, @NotNull CkbJsonDatabase ckbEntry,
-            @NotNull ImmutableCkbEntryInterpretation.Builder outputBuilder) {
+            @NotNull ImmutableCkbEntry.Builder outputBuilder) {
         for (EvidenceInfo evidenceInfo : molecularProfile.variantLevelEvidence().evidence()) {
             if (molecularProfile.id() == evidenceInfo.molecularProfile().id()) {
                 outputBuilder.addEvidenceInterpretations(ImmutableEvidenceInterpretation.builder()

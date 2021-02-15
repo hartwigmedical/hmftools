@@ -13,11 +13,9 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CkbEntryInterpretation {
+public abstract class CkbEntry {
 
-    public abstract int id();
-
-    public abstract int molecularProfileId();
+    public abstract int profileId();
 
     @NotNull
     public abstract String profileName();

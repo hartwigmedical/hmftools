@@ -5,8 +5,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.dao.CkbDAO;
-import com.hartwig.hmftools.ckb.interpretation.CkbEntryInterpretation;
-import com.hartwig.hmftools.ckb.interpretation.CkbEntryInterpretationFactory;
+import com.hartwig.hmftools.ckb.interpretation.CkbEntry;
+import com.hartwig.hmftools.ckb.interpretation.JsonDatabaseToCkbEntryConverter;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.CkbJsonReader;
 
@@ -37,8 +37,8 @@ public class CkbImporterApplication {
             System.exit(1);
         }
 
-        CkbJsonDatabase ckbDatabase = CkbJsonReader.read(config.cbkDir());
-        List<CkbEntryInterpretation> ckbEntryInterpretations = CkbEntryInterpretationFactory.interpretationCkbDataModel(ckbDatabase);
+        CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(config.cbkDir());
+        List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
       //  LOGGER.info(ckbEntryInterpretations.get(42195));
 
         if (config.skipDatabaseWriting()) {
@@ -48,7 +48,7 @@ public class CkbImporterApplication {
             LOGGER.info("Deleting all data from CKB db");
             ckbDAO.deleteAll();
             LOGGER.info("Starting insertion of CKB interpretation data model");
-            ckbDAO.writeCkb(ckbDatabase);
+            ckbDAO.writeCkb(ckbJsonDatabase);
         }
 
         LOGGER.info("Complete!");
