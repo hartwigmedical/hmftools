@@ -66,6 +66,8 @@ public final class PrimaryTumorDataWriter {
                     if (reportedBarcodes.contains(sample.sampleBarcode())) {
                         if (allowExceptionsForPatient(patientId)) {
                             patientTumorCurationStatusMap.put(patientId, PatientTumorCurationStatus.ALREADY_REPORTED);
+                        } else {
+                            patientsWithSamplesToBeReported.add(patientId);
                         }
                     } else {
                         patientsWithSamplesToBeReported.add(patientId);
