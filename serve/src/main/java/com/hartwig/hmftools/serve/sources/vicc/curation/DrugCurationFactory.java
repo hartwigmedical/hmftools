@@ -38,14 +38,11 @@ final class DrugCurationFactory {
     }
 
     private static void populateRenames() {
-        DRUG_MAPPINGS.put(cgiA("2-fluoropyrimidine"), rename("Fluorouracil"));
         DRUG_MAPPINGS.put(cgiA("Cetuximab,Mab"), rename("Cetuximab"));
         DRUG_MAPPINGS.put(cgiA("Egfr"), rename("EGFR inhibitor"));
-        DRUG_MAPPINGS.put(cgiA("Mercaptopurine anhydrous,Purine"), rename("Mercaptopurine anhydrous"));
         DRUG_MAPPINGS.put(cgiA("Panitumumab,Mab"), rename("Panitumumab"));
         DRUG_MAPPINGS.put(cgiA("Pertuzumab,Mab"), rename("Pertuzumab"));
         DRUG_MAPPINGS.put(cgiA("Trastuzumab,Mab"), rename("Trastuzumab"));
-        DRUG_MAPPINGS.put(cgiA("Thioguanine,Guanine"), rename("Thioguanine"));
 
         DRUG_MAPPINGS.put(cgiB("1st"), rename("EGFR inhibitor (1st gen)"));
         DRUG_MAPPINGS.put(cgiB("2'-deoxyinosine"), rename("EGFR inhibitor (2nd gen)"));
@@ -113,8 +110,6 @@ final class DrugCurationFactory {
         DRUG_MAPPINGS.put(civicB("Erlotinib,Gemcitabine"), and("Erlotinib", "Gemcitabine"));
         DRUG_MAPPINGS.put(civicB("Erlotinib,Selumetinib"), and("Erlotinib", "Selumetinib"));
         DRUG_MAPPINGS.put(civicB("Fluorouracil,Cetuximab,Platinum"), and("Fluorouracil", "Cetuximab", "Platinum"));
-        DRUG_MAPPINGS.put(civicB("Fluorouracil,Irinotecan,Bevacizumab,Lysergide"),
-                and("Fluorouracil", "Irinotecan", "Bevacizumab", "Lysergide"));
         DRUG_MAPPINGS.put(civicB("Fluorouracil,Oxaliplatin"), and("Fluorouracil", "Oxaliplatin"));
         DRUG_MAPPINGS.put(civicB("Lapatinib,Capecitabine"), and("Lapatinib", "Capecitabine"));
         DRUG_MAPPINGS.put(civicB("Lapatinib,Trastuzumab"), and("Lapatinib", "Trastuzumab"));
