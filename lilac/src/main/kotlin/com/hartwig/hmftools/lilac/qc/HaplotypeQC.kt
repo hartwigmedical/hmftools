@@ -23,7 +23,7 @@ data class HaplotypeQC(val unusedHaplotypes: Int, val unusedHaplotypeMaxSupport:
             val unused = evidence
                     .flatMap { it.unmatchedHaplotype(minEvidence, winners, aminoAcidCount) }
                     .distinct()
-                    .sortedBy { it.startLoci}
+                    .sortedBy { it.startLocus}
 
             var unusedCount = 0
             var maxSupport = 0
@@ -59,7 +59,7 @@ data class HaplotypeQC(val unusedHaplotypes: Int, val unusedHaplotypeMaxSupport:
 }
 
 
-data class UnmatchedHaplotype(val startLoci: Int, val endLoci: Int, val supportingFragments: Int, val haplotype: String) {
+data class UnmatchedHaplotype(val startLocus: Int, val endLocus: Int, val supportingFragments: Int, val haplotype: String) {
     companion object {
         fun create(aminoAcidIndices: IntArray, evidence: Pair<String, Int>, aminoAcidCount: SequenceCount): UnmatchedHaplotype {
             require(aminoAcidIndices.isNotEmpty())
@@ -72,7 +72,7 @@ data class UnmatchedHaplotype(val startLoci: Int, val endLoci: Int, val supporti
     }
 
     override fun toString(): String {
-        return "startLoci=$startLoci, endLoci=$endLoci, supportingFragments=$supportingFragments, haplotype='$haplotype'"
+        return "startLocus=$startLocus, endLocus=$endLocus, supportingFragments=$supportingFragments, haplotype=$haplotype"
     }
 
 
