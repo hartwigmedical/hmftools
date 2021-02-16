@@ -11,6 +11,8 @@ import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
@@ -49,7 +51,7 @@ public class GenomicAnalyzer {
             @NotNull String purplePurityTsv, @NotNull String purpleQCFile, @NotNull String purpleDriverCatalogTsv,
             @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv, @NotNull String linxFusionTsv,
             @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv,
-            @NotNull String chordPredictionTxt) throws IOException {
+            @NotNull String chordPredictionTxt, @NotNull String protectEvidenceTsv) throws IOException {
         PurpleData purpleData =
                 PurpleDataLoader.load(tumorSampleId, purpleQCFile, purplePurityTsv, purpleDriverCatalogTsv, purpleSomaticVariantVcf);
         List<EvidenceItem> purpleEvidence = determinePurpleEvidence(purpleData, actionabilityAnalyzer, patientPrimaryTumor);
@@ -67,22 +69,28 @@ public class GenomicAnalyzer {
 
         ChordAnalysis chordAnalysis = ChordDataLoader.load(chordPredictionTxt);
 
-        List<EvidenceItem> allEvidenceItems = Lists.newArrayList();
-        allEvidenceItems.addAll(reportableVariantAnalysis.evidenceItems());
-        allEvidenceItems.addAll(purpleEvidence);
-        allEvidenceItems.addAll(linxEvidence);
+        List<ProtectEvidence> allEvidenceItems = Lists.newArrayList();
 
-        List<EvidenceItem> allEvidenceItemsFiltered = ReportableEvidenceItemFactory.filterBlacklistedEvidence(allEvidenceItems);
-        List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItemsFiltered);
+        List<ProtectEvidence> evidences = ProtectEvidenceFile.read(protectEvidenceTsv);
+        for (ProtectEvidence evidence: evidences) {
+            if (evidence.reported()) {
+                allEvidenceItems.add(evidence);
+            }
+        }
+
+
+
+      //  List<EvidenceItem> allEvidenceItemsFiltered = ReportableEvidenceItemFactory.filterBlacklistedEvidence(allEvidenceItems);
+        List<ProtectEvidence> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
 
         return ImmutableGenomicAnalysis.builder()
                 .impliedPurity(purpleData.purity())
                 .hasReliablePurity(purpleData.hasReliablePurity())
                 .hasReliableQuality(purpleData.hasReliableQuality())
                 .averageTumorPloidy(purpleData.ploidy())
-                .tumorSpecificEvidence(nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()))
-                .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItemsFiltered))
-                .offLabelEvidence(nonTrials.stream().filter(item -> !item.isOnLabel()).collect(Collectors.toList()))
+                .tumorSpecificEvidence(nonTrials.stream().filter(ProtectEvidence::onLabel).collect(Collectors.toList()))
+                .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItems))
+                .offLabelEvidence(nonTrials.stream().filter(item -> !item.onLabel()).collect(Collectors.toList()))
                 .reportableVariants(reportableVariantAnalysis.variantsToReport())
                 .microsatelliteIndelsPerMb(purpleData.microsatelliteIndelsPerMb())
                 .microsatelliteStatus(purpleData.microsatelliteStatus())

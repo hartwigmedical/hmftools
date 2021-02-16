@@ -9,6 +9,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,8 +32,8 @@ public final class ReportableEvidenceItemFactory {
     }
 
     @NotNull
-    public static List<EvidenceItem> extractNonTrials(@NotNull List<EvidenceItem> evidenceItems) {
-        return evidenceItems.stream().filter(evidenceItem -> !evidenceItem.source().isTrialSource()).collect(Collectors.toList());
+    public static List<ProtectEvidence> extractNonTrials(@NotNull List<ProtectEvidence> evidenceItems) {
+        return evidenceItems.stream().filter(evidenceItem -> !evidenceItem.sources().contains(Knowledgebase.ICLUSION)).collect(Collectors.toList());
     }
 
     @NotNull

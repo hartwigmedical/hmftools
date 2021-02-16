@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -17,12 +18,12 @@ public final class ClinicalTrials {
     }
 
     @NotNull
-    public static List<ClinicalTrial> sort(@NotNull List<ClinicalTrial> trials) {
+    public static List<ProtectEvidence> sort(@NotNull List<ProtectEvidence> trials) {
         return trials.stream().sorted((item1, item2) -> {
-            if (item1.event().equals(item2.event())) {
-                return item1.acronym().compareTo(item2.acronym());
+            if (item1.genomicEvent().equals(item2.genomicEvent())) {
+                return item1.treatment().compareTo(item2.treatment());
             } else {
-                return item1.event().compareTo(item2.event());
+                return item1.genomicEvent().compareTo(item2.genomicEvent());
             }
         }).collect(Collectors.toList());
     }
@@ -53,18 +54,18 @@ public final class ClinicalTrials {
         return ext.substring(3).trim();
     }
 
-    public static int uniqueEventCount(@NotNull List<ClinicalTrial> trials) {
+    public static int uniqueEventCount(@NotNull List<ProtectEvidence> trials) {
         Set<String> events = Sets.newHashSet();
-        for (ClinicalTrial trial : trials) {
-            events.add(trial.event());
+        for (ProtectEvidence trial : trials) {
+            events.add(trial.genomicEvent());
         }
         return events.size();
     }
 
-    public static int uniqueTrialCount(@NotNull List<ClinicalTrial> trials) {
+    public static int uniqueTrialCount(@NotNull List<ProtectEvidence> trials) {
         Set<String> acronyms = Sets.newHashSet();
-        for (ClinicalTrial trial : trials) {
-            acronyms.add(trial.acronym());
+        for (ProtectEvidence trial : trials) {
+            acronyms.add(trial.treatment());
         }
         return acronyms.size();
     }

@@ -54,6 +54,7 @@ public interface PatientReporterConfig {
     String LINX_DRIVERS_TSV = "linx_drivers_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     String CIRCOS_FILE = "circos_file";
+    String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
 
     String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
@@ -101,6 +102,7 @@ public interface PatientReporterConfig {
         options.addOption(LINX_DRIVERS_TSV, true, "Path towards the LINX driver catalog TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
         options.addOption(CIRCOS_FILE, true, "Path towards the circos file.");
+        options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
 
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the directory holding knowledgebase output files.");
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
@@ -189,6 +191,9 @@ public interface PatientReporterConfig {
     String circosFile();
 
     @NotNull
+    String protectEvidenceTsv();
+
+    @NotNull
     String knowledgebaseDir();
 
     @NotNull
@@ -231,6 +236,7 @@ public interface PatientReporterConfig {
         String linxDriversTsv = Strings.EMPTY;
         String chordPredictionTxt = Strings.EMPTY;
         String circosFile = Strings.EMPTY;
+        String protectEvidenceFile = Strings.EMPTY;
         String knowledgebaseDirectory = Strings.EMPTY;
         String germlineReportingTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
@@ -250,6 +256,7 @@ public interface PatientReporterConfig {
             linxDriversTsv = nonOptionalFile(cmd, LINX_DRIVERS_TSV);
             chordPredictionTxt = nonOptionalFile(cmd, CHORD_PREDICTION_TXT);
             circosFile = nonOptionalFile(cmd, CIRCOS_FILE);
+            protectEvidenceFile = nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV);
             knowledgebaseDirectory = nonOptionalDir(cmd, KNOWLEDGEBASE_DIRECTORY);
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
@@ -281,6 +288,7 @@ public interface PatientReporterConfig {
                 .linxDriversTsv(linxDriversTsv)
                 .chordPredictionTxt(chordPredictionTxt)
                 .circosFile(circosFile)
+                .protectEvidenceTsv(protectEvidenceFile)
                 .knowledgebaseDir(knowledgebaseDirectory)
                 .germlineReportingTsv(germlineReportingTsv)
                 .sampleSummaryTsv(sampleSummaryTsv)

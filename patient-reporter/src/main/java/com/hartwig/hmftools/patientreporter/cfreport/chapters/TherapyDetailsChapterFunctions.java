@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Icon;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
@@ -21,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
 final class TherapyDetailsChapterFunctions {
 
     private static final float COL_WIDTH_VARIANT = 110;
-    private static final float COL_WIDTH_MATCH = 60;
     private static final float COL_WIDTH_DRUG_ICONS = 25;
     private static final float COL_WIDTH_DRUG_LIST = 180;
     private static final float COL_WIDTH_LEVEL = 42;
@@ -34,28 +34,26 @@ final class TherapyDetailsChapterFunctions {
     }
 
     @NotNull
-    static Table createEvidenceTable(@NotNull String title, @NotNull List<EvidenceItem> evidence) {
+    static Table createEvidenceTable(@NotNull String title, @NotNull List<ProtectEvidence> evidence) {
         if (evidence.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { COL_WIDTH_VARIANT, COL_WIDTH_MATCH, COL_WIDTH_DRUG_ICONS,
+        Table contentTable = TableUtil.createReportContentTable(new float[] { COL_WIDTH_VARIANT, COL_WIDTH_DRUG_ICONS,
                         COL_WIDTH_DRUG_LIST, COL_WIDTH_LEVEL, COL_WIDTH_RESPONSE, COL_WIDTH_SOURCE },
-                new Cell[] { TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Match"),
+                new Cell[] { TableUtil.createHeaderCell("Variant"),
                         TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level of evidence"),
                         TableUtil.createHeaderCell("Response"), TableUtil.createHeaderCell("Source") });
 
-        for (EvidenceItem item : EvidenceItems.sort(evidence)) {
-            contentTable.addCell(TableUtil.createContentCell(item.event()));
-            contentTable.addCell(TableUtil.createContentCell(createTreatmentMatchParagraph(item.scope() == EvidenceScope.SPECIFIC)));
-            contentTable.addCell(TableUtil.createContentCell(createTreatmentIcons(item.drug()).setVerticalAlignment(VerticalAlignment.TOP)));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(item.drug()).addStyle(ReportResources.tableContentStyle())
+        for (ProtectEvidence item : EvidenceItems.sort(evidence)) {
+            contentTable.addCell(TableUtil.createContentCell(item.genomicEvent()));
+            contentTable.addCell(TableUtil.createContentCell(createTreatmentIcons(item.treatment()).setVerticalAlignment(VerticalAlignment.TOP)));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(item.treatment()).addStyle(ReportResources.tableContentStyle())
                     .setVerticalAlignment(VerticalAlignment.TOP)));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(item.level().readableString()))));
-            contentTable.addCell(TableUtil.createContentCell(item.response()));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(item.source()
-                    .sourceName()).addStyle(ReportResources.dataHighlightLinksStyle()))
-                    .setAction(PdfAction.createURI(EvidenceItems.sourceUrl(item))));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(item.level().name()))));
+            contentTable.addCell(TableUtil.createContentCell(item.direction().name()));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(item.sources().toString()).addStyle(ReportResources.dataHighlightLinksStyle()))
+                    .setAction(PdfAction.createURI(item.sources().toString())));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);

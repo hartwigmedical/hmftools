@@ -6,6 +6,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.ImmutableClinicalTrial;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -15,11 +17,11 @@ public final class ClinicalTrialFactory {
     }
 
     @NotNull
-    public static List<ClinicalTrial> extractOnLabelTrials(@NotNull List<EvidenceItem> evidenceItems) {
-        List<ClinicalTrial> trials = Lists.newArrayList();
-        for (EvidenceItem evidence : evidenceItems) {
-            if (evidence.source().isTrialSource() && evidence.isOnLabel()) {
-                trials.add(toClinicalTrial(evidence));
+    public static List<ProtectEvidence> extractOnLabelTrials(@NotNull List<ProtectEvidence> evidenceItems) {
+        List<ProtectEvidence> trials = Lists.newArrayList();
+        for (ProtectEvidence evidence : evidenceItems) {
+            if (evidence.sources().contains(Knowledgebase.ICLUSION) && evidence.onLabel()) {
+                trials.add(evidence);
             }
         }
 

@@ -26,6 +26,7 @@ public class GenomicAnalyzerTest {
     private static final String LINX_VIRAL_INSERTION_TSV = BASE_DIRECTORY + "/linx/sample.linx.viral_inserts.tsv";
     private static final String LINX_DRIVERS_TSV = BASE_DIRECTORY + "/linx/sample.drivers.catalog.tsv";
     private static final String CHORD_PREDICTION_TXT = BASE_DIRECTORY + "/chord/sample_chord_prediction.txt";
+    private static final String PROTECT_EVIDENCE_TSV = BASE_DIRECTORY + "/protect/sample.protect.tsv";
 
     @Test
     public void canRunOnTestRun() throws IOException {
@@ -45,7 +46,7 @@ public class GenomicAnalyzerTest {
                 LINX_BREAKEND_TSV,
                 LINX_VIRAL_INSERTION_TSV,
                 LINX_DRIVERS_TSV,
-                CHORD_PREDICTION_TXT));
+                CHORD_PREDICTION_TXT, PROTECT_EVIDENCE_TSV));
     }
 
     @NotNull

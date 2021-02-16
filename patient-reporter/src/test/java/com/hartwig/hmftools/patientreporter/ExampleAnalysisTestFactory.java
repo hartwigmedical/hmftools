@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
@@ -84,9 +85,9 @@ public final class ExampleAnalysisTestFactory {
 
         ReportData reportData = PatientReporterTestFactory.loadTestReportData();
 
-        List<EvidenceItem> tumorSpecificEvidence = createCOLO829TumorSpecificEvidence();
-        List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
-        List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
+        List<ProtectEvidence> tumorSpecificEvidence = createCOLO829TumorSpecificEvidence();
+        List<ProtectEvidence> clinicalTrials = createCOLO829ClinicalTrials();
+        List<ProtectEvidence> offLabelEvidence = createCOLO829OffLabelEvidence();
         List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(reportGermline);
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<LinxFusion> fusions = Lists.newArrayList();
@@ -177,9 +178,9 @@ public final class ExampleAnalysisTestFactory {
 
         ReportData reportData = PatientReporterTestFactory.loadTestReportData();
 
-        List<EvidenceItem> tumorSpecificEvidence = createCOLO829TumorSpecificEvidence();
-        List<ClinicalTrial> clinicalTrials = createCOLO829ClinicalTrials();
-        List<EvidenceItem> offLabelEvidence = createCOLO829OffLabelEvidence();
+        List<ProtectEvidence> tumorSpecificEvidence = createCOLO829TumorSpecificEvidence();
+        List<ProtectEvidence> clinicalTrials = createCOLO829ClinicalTrials();
+        List<ProtectEvidence> offLabelEvidence = createCOLO829OffLabelEvidence();
         List<ReportableVariant> reportableVariants = createAllSomaticVariants();
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<LinxFusion> fusions = createTestFusions();
@@ -295,239 +296,26 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<EvidenceItem> createCOLO829TumorSpecificEvidence() {
-        List<EvidenceItem> evidenceItems = Lists.newArrayList();
+    private static List<ProtectEvidence> createCOLO829TumorSpecificEvidence() {
+        List<ProtectEvidence> evidenceItems = Lists.newArrayList();
 
         ImmutableEvidenceItem.Builder onLabelBuilder = evidenceBuilder().isOnLabel(true);
 
-        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Binimetinib + Encorafenib")
-                .level(EvidenceLevel.LEVEL_A)
-                .response("Responsive")
-                .reference("V600E")
-                .source(ActionabilitySource.ONCOKB)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Cobimetinib + Vemurafenib")
-                .level(EvidenceLevel.LEVEL_A)
-                .response("Responsive")
-                .reference("V600E")
-                .source(ActionabilitySource.ONCOKB)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Dabrafenib")
-                .level(EvidenceLevel.LEVEL_A)
-                .response("Responsive")
-                .reference("V600E")
-                .source(ActionabilitySource.ONCOKB)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Dabrafenib + Trametinib")
-                .level(EvidenceLevel.LEVEL_A)
-                .response("Responsive")
-                .reference("V600E")
-                .source(ActionabilitySource.ONCOKB)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Trametinib")
-                .level(EvidenceLevel.LEVEL_A)
-                .response("Responsive")
-                .reference("V600E")
-                .source(ActionabilitySource.ONCOKB)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Vemurafenib")
-                .level(EvidenceLevel.LEVEL_A)
-                .response("Responsive")
-                .reference("V600E")
-                .source(ActionabilitySource.ONCOKB)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(onLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("RO4987655")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Responsive")
-                .reference("variant:208")
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.GENE_LEVEL)
-                .build());
 
         return evidenceItems;
     }
 
     @NotNull
-    private static List<ClinicalTrial> createCOLO829ClinicalTrials() {
-        List<ClinicalTrial> trials = Lists.newArrayList();
-        ImmutableClinicalTrial.Builder iclusionBuilder =
-                ImmutableClinicalTrial.builder().cancerType(Strings.EMPTY).isOnLabel(true).source(ActionabilitySource.ICLUSION);
-
-        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.GENE_LEVEL)
-                .acronym("CLXH254X2101")
-                .reference("EXT10453 (NL55506.078.15)")
-                .build());
-        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.SPECIFIC)
-                .acronym("COWBOY")
-                .reference("EXT12301 (NL71732.091.19)")
-                .build());
-        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.GENE_LEVEL)
-                .acronym("DRUP")
-                .reference("EXT10299 (NL54757.031.16)")
-                .build());
-        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.GENE_LEVEL)
-                .acronym("EBIN (EORTC-1612-MG)")
-                .reference("EXT11284 (NL67202.031.18)")
-                .build());
-        trials.add(iclusionBuilder.event("BRAF p.Val600Glu")
-                .scope(EvidenceScope.GENE_LEVEL)
-                .acronym("POLARIS")
-                .reference("EXT11388 (NL69569.028.19)")
-                .build());
-        trials.add(iclusionBuilder.event("CDKN2A p.Ala68fs")
-                .scope(EvidenceScope.GENE_LEVEL)
-                .acronym("DRUP")
-                .reference("EXT10299 (NL54757.031.16)")
-                .build());
+    private static List<ProtectEvidence> createCOLO829ClinicalTrials() {
+        List<ProtectEvidence> trials = Lists.newArrayList();
 
         return trials;
     }
 
     @NotNull
-    private static List<EvidenceItem> createCOLO829OffLabelEvidence() {
-        List<EvidenceItem> evidenceItems = Lists.newArrayList();
+    private static List<ProtectEvidence> createCOLO829OffLabelEvidence() {
+        List<ProtectEvidence> evidenceItems = Lists.newArrayList();
 
-        ImmutableEvidenceItem.Builder offLabelBuilder = evidenceBuilder().isOnLabel(false);
-
-        evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Alpelisib + Cetuximab + Encorafenib")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Responsive")
-                .reference("variant:17")
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.GENE_LEVEL)
-                .build());
-
-        evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Bevacizumab")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Resistant")
-                .reference("variant:12")
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("CI-1040")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Responsive")
-                .reference("variant:12")
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Cetuximab")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Resistant")
-                .reference("BRAF:V600E")
-                .source(ActionabilitySource.CGI)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Cetuximab + Encorafenib")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Responsive")
-                .reference("variant:17")
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.GENE_LEVEL)
-                .build());
-
-        evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Cetuximab + Irinotecan + Vemurafenib")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Responsive")
-                .reference("variant:12")
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Dabrafenib + Panitumumab + Trametinib")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Responsive")
-                .reference("variant:12")
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Irinotecan")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Resistant")
-                .reference("variant:12")
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Oxaliplatin")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Resistant")
-                .reference("variant:12")
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Panitumumab")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Resistant")
-                .reference("BRAF:V600E")
-                .source(ActionabilitySource.CGI)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(offLabelBuilder.event("BRAF p.Val600Glu")
-                .drug("Vemurafenib")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Resistant")
-                .reference("variant:17")
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.GENE_LEVEL)
-                .build());
-
-        evidenceItems.add(offLabelBuilder.event("PTEN Deletion")
-                .drug("EGFR mAB inhibitor")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Resistant")
-                .reference("PTEN:del")
-                .source(ActionabilitySource.CGI)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(offLabelBuilder.event("PTEN Deletion")
-                .drug("Everolimus")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Responsive")
-                .reference("variant:213")
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
 
         return evidenceItems;
     }

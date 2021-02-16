@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.actionability.variant.VariantEvidenceAnalyzer
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
@@ -48,17 +49,17 @@ public class AnalysedPatientReporter {
     public AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleDriverCatalogTsv, @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv,
             @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
-            @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile, @Nullable String comments,
-            boolean correctedReport) throws IOException {
+            @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile,
+            @NotNull String protectEvidenceTsv, @Nullable String comments, boolean correctedReport) throws IOException {
         String patientId = sampleMetadata.patientId().startsWith("COLO829") ? "COLO829" : sampleMetadata.patientId();
         PatientPrimaryTumor patientPrimaryTumor =
-                PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(),
-                        patientId);
+                PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(), patientId);
 
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
         GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.actionabilityAnalyzer(), reportData.germlineReportingModel());
-        GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(), patientPrimaryTumor,
+        GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
+                patientPrimaryTumor,
                 purplePurityTsv,
                 purpleQCFile,
                 purpleDriverCatalogTsv,
@@ -68,7 +69,7 @@ public class AnalysedPatientReporter {
                 linxBreakendTsv,
                 linxViralInsertionTsv,
                 linxDriversTsv,
-                chordPredictionTxt);
+                chordPredictionTxt, protectEvidenceTsv);
 
         GenomicAnalysis filteredAnalysis =
                 filterForConsent(genomicAnalysis, sampleReport.germlineReportingLevel(), sampleReport.reportViralInsertions());
@@ -101,15 +102,15 @@ public class AnalysedPatientReporter {
 
         List<ViralInsertion> filteredViralInsertions = reportViralInsertions ? genomicAnalysis.viralInsertions() : Lists.newArrayList();
 
-        List<EvidenceItem> filteredTumorSpecificEvidence = filterEvidenceForGermlineConsent(genomicAnalysis.tumorSpecificEvidence(),
+        List<ProtectEvidence> filteredTumorSpecificEvidence = filterEvidenceForGermlineConsent(genomicAnalysis.tumorSpecificEvidence(),
                 genomicAnalysis.reportableVariants(),
                 germlineReportingLevel);
 
-        List<ClinicalTrial> filteredClinicalTrials = filterEvidenceForGermlineConsent(genomicAnalysis.clinicalTrials(),
+        List<ProtectEvidence> filteredClinicalTrials = filterEvidenceForGermlineConsent(genomicAnalysis.clinicalTrials(),
                 genomicAnalysis.reportableVariants(),
                 germlineReportingLevel);
 
-        List<EvidenceItem> filteredOffLabelEvidence = filterEvidenceForGermlineConsent(genomicAnalysis.offLabelEvidence(),
+        List<ProtectEvidence> filteredOffLabelEvidence = filterEvidenceForGermlineConsent(genomicAnalysis.offLabelEvidence(),
                 genomicAnalysis.reportableVariants(),
                 germlineReportingLevel);
 
@@ -138,7 +139,7 @@ public class AnalysedPatientReporter {
 
     @NotNull
     @VisibleForTesting
-    static <X extends WithEvent> List<X> filterEvidenceForGermlineConsent(@NotNull List<X> evidences,
+    static <X extends WithEvent> List<ProtectEvidence> filterEvidenceForGermlineConsent(@NotNull List<ProtectEvidence> evidences,
             @NotNull List<ReportableVariant> variants, @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
         Set<String> germlineEvents = Sets.newHashSet();
         for (ReportableVariant variant : variants) {
@@ -147,9 +148,9 @@ public class AnalysedPatientReporter {
             }
         }
 
-        List<X> filtered = Lists.newArrayList();
-        for (X evidence : evidences) {
-            if (germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING || !germlineEvents.contains(evidence.event())) {
+        List<ProtectEvidence> filtered = Lists.newArrayList();
+        for (ProtectEvidence evidence : evidences) {
+            if (germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING || !germlineEvents.contains(evidence.genomicEvent())) {
                 filtered.add(evidence);
             }
         }

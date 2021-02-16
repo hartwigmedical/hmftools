@@ -107,6 +107,7 @@ public class PatientReporterApplication {
                 config.linxDriversTsv(),
                 config.chordPredictionTxt(),
                 config.circosFile(),
+                config.protectEvidenceTsv(),
                 config.comments(),
                 config.correctedReport());
 
