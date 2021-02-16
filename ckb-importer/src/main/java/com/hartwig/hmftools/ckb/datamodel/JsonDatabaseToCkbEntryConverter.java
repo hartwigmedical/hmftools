@@ -23,6 +23,12 @@ public final class JsonDatabaseToCkbEntryConverter {
     @NotNull
     public static List<CkbEntry> convert(@NotNull CkbJsonDatabase ckbJsonDatabase) {
         List<CkbEntry> ckbEntries = Lists.newArrayList();
+
+        int profileCount = ckbJsonDatabase.molecularProfiles().size();
+        LOGGER.info("Converting {} CKB molecular profiles to interpreted CKB entries", profileCount);
+
+        int current = 0;
+        int report = (int) Math.round(profileCount / 10D);
         for (JsonMolecularProfile molecularProfile : ckbJsonDatabase.molecularProfiles()) {
             ckbEntries.add(ImmutableCkbEntry.builder()
                     .profileId(molecularProfile.id())
@@ -36,6 +42,11 @@ public final class JsonDatabaseToCkbEntryConverter {
                     .clinicalTrials(ClinicalTrialFactory.extractClinicalTrials(ckbJsonDatabase,
                             molecularProfile.variantAssociatedClinicalTrials()))
                     .build());
+            current++;
+
+            if (current % report == 0) {
+                LOGGER.debug(" Processed {} of {} molecular profiles", current, profileCount);
+            }
         }
 
         return ckbEntries;
