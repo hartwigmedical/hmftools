@@ -63,7 +63,12 @@ public final class HotspotFunctions {
 
         String bestTranscript;
         String bestProteinAnnotation;
-        if (annotation1.transcript() == null) {
+        boolean favorAnnotation1 = annotation1.proteinAnnotation().compareTo(annotation2.proteinAnnotation()) > 0;
+        if (annotation1.transcript() == null && annotation2.transcript() == null) {
+            bestTranscript = null;
+            // If both annotations have a transcript annotation it does not matter which one we pick.
+            bestProteinAnnotation = favorAnnotation1 ? annotation1.proteinAnnotation() : annotation2.proteinAnnotation();
+        } else if (annotation1.transcript() == null) {
             bestTranscript = annotation2.transcript();
             bestProteinAnnotation = annotation2.proteinAnnotation();
         } else if (annotation2.transcript() == null) {
@@ -71,9 +76,8 @@ public final class HotspotFunctions {
             bestProteinAnnotation = annotation1.proteinAnnotation();
         } else {
             // If both annotations have a transcript annotation it does not matter which one we pick.
-            boolean useAnnotation1 = annotation1.transcript().compareTo(annotation2.transcript()) > 0;
-            bestTranscript = useAnnotation1 ? annotation1.transcript() : annotation2.transcript();
-            bestProteinAnnotation = useAnnotation1 ? annotation1.proteinAnnotation() : annotation2.proteinAnnotation();
+            bestTranscript = favorAnnotation1 ? annotation1.transcript() : annotation2.transcript();
+            bestProteinAnnotation = favorAnnotation1 ? annotation1.proteinAnnotation() : annotation2.proteinAnnotation();
         }
 
         Set<Knowledgebase> mergedSources = Sets.newHashSet();
