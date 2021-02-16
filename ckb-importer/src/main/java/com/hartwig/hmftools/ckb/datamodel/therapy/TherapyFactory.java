@@ -59,6 +59,9 @@ public final class TherapyFactory {
         for (GlobalApprovalStatusInfo globalTherapyApprovalStatusInfo : globalTherapyApprovalStatuses) {
             globalTherapyApprovalStatusesInterpretation.add(ImmutableGlobalTherapyApprovalStatus.builder()
                     .id(globalTherapyApprovalStatusInfo.id())
+                    .profileId(globalTherapyApprovalStatusInfo.molecularProfile().id())
+                    .therapyId(globalTherapyApprovalStatusInfo.therapy().id())
+                    .indicationId(globalTherapyApprovalStatusInfo.indication().id())
                     .approvalStatus(globalTherapyApprovalStatusInfo.approvalStatus())
                     .approvalAuthority(globalTherapyApprovalStatusInfo.approvalAuthority())
                     .build());
