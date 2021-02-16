@@ -6,49 +6,46 @@ import java.io.File
 import java.util.*
 import kotlin.math.min
 
-class SequenceCount(private val minCount: Int, val length: Int) {
-
-    private val count = Array(length) { mutableMapOf<String, Int>() }
+class SequenceCount(private val minCount: Int, private val count: Array<Map<String, Int>>) {
+    val length: Int = count.size
 
     companion object {
+
         fun nucleotides(minCount: Int, fragments: List<NucleotideFragment>): SequenceCount {
             val length = fragments.map { it.nucleotideLoci().max() ?: -1 }.max()!! + 1
-            val result = SequenceCount(minCount, length)
+            val count = Array(length) { mutableMapOf<String, Int>() }
 
             for (fragment in fragments) {
                 for (index in fragment.nucleotideLoci()) {
                     val nucleotide = fragment.nucleotide(index)
-                    result.increment(index, nucleotide)
+                    count.increment(index, nucleotide)
                 }
             }
-            return result
+            return SequenceCount(minCount, Array(length) { count[it] })
         }
 
-        fun aminoAcids(minCount: Int, aminoAcidFragments: List<AminoAcidFragment>): SequenceCount {
-            val length = aminoAcidFragments.map { it.aminoAcidIndices().max() ?: -1 }.max()!! + 1
-            val result = SequenceCount(minCount, length)
+        fun aminoAcids(minCount: Int, fragments: List<AminoAcidFragment>): SequenceCount {
+            val length = fragments.map { it.nucleotideLoci().max() ?: -1 }.max()!! + 1
+            val count = Array(length) { mutableMapOf<String, Int>() }
 
-            for (fragment in aminoAcidFragments) {
+            for (fragment in fragments) {
                 for (index in fragment.aminoAcidIndices()) {
                     val aminoAcid = fragment.aminoAcid(index)
-                        result.increment(index, aminoAcid)
+                    count.increment(index, aminoAcid)
                 }
             }
-            return result
+            return SequenceCount(minCount, Array(length) { count[it] })
+        }
+
+        private fun Array<MutableMap<String, Int>>.increment(index: Int, aminoAcid: String) {
+            this[index].compute(aminoAcid) { _, u -> (u ?: 0) + 1 }
         }
     }
 
-    operator fun get(locus: Int): Map<String, Int>  {
+    operator fun get(locus: Int): Map<String, Int> {
         return count[locus]
     }
 
-    private fun increment(index: Int, aminoAcid: String) {
-        try {
-            count[index].compute(aminoAcid) { _, u -> (u ?: 0) + 1 }
-        } catch (e: Exception) {
-            throw e
-        }
-    }
 
     fun heterozygousLoci(): List<Int> {
         return count.indices.filter { isHeterozygous(it) }

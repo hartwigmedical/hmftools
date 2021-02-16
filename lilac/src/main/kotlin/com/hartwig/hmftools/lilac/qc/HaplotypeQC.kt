@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.qc
 
+import com.hartwig.hmftools.lilac.SequenceCount
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 import org.apache.logging.log4j.LogManager
@@ -18,22 +19,19 @@ data class HaplotypeQC(val unusedHaplotypes: Int, val unusedHaplotypeMaxSupport:
     companion object {
         val logger = LogManager.getLogger(this::class.java)
 
-        fun create(minEvidence: Int, winners: List<HlaSequenceLoci>, evidence: List<PhasedEvidence>): HaplotypeQC {
+        fun create(minEvidence: Int, winners: List<HlaSequenceLoci>, evidence: List<PhasedEvidence>, aminoAcidCount: SequenceCount): HaplotypeQC {
             val unused = evidence
-                    .map { it.unmatchedHaplotype(minEvidence, winners) }
-                    .filter { it.haplotypes.isNotEmpty() }
+                    .flatMap { it.unmatchedHaplotype(minEvidence, winners, aminoAcidCount) }
                     .distinct()
-                    .sortedBy { it.loci.min() }
+                    .sortedBy { it.startLoci}
 
             var unusedCount = 0
             var maxSupport = 0
             var maxLength = 0
             for (unusedEvidence in unused) {
-                for ((haplotype, count) in unusedEvidence.haplotypes) {
-                    maxSupport = max(maxSupport, count)
-                    maxLength = max(maxLength, haplotype.length)
-                    unusedCount++
-                }
+                maxSupport = max(maxSupport, unusedEvidence.supportingFragments)
+                maxLength = max(maxLength, unusedEvidence.haplotype.length)
+                unusedCount++
 
                 logger.warn("UNMATCHED_HAPLTOYPE - $unusedEvidence")
 
@@ -42,7 +40,7 @@ data class HaplotypeQC(val unusedHaplotypes: Int, val unusedHaplotypeMaxSupport:
             return HaplotypeQC(unusedCount, maxSupport, maxLength)
         }
 
-        fun PhasedEvidence.unmatchedHaplotype(minEvidence: Int, winners: Collection<HlaSequenceLoci>): UnmatchedHaplotype {
+        fun PhasedEvidence.unmatchedHaplotype(minEvidence: Int, winners: Collection<HlaSequenceLoci>, aminoAcidCount: SequenceCount): List<UnmatchedHaplotype> {
             fun consistentWithAny(sequence: String): Boolean {
                 return winners.any { it.consistentWith(sequence, *aminoAcidIndices) }
             }
@@ -51,35 +49,31 @@ data class HaplotypeQC(val unusedHaplotypes: Int, val unusedHaplotypeMaxSupport:
                     .filter { !consistentWithAny(it.key) }
                     .filter { it.value >= minEvidence }
 
-            return UnmatchedHaplotype(aminoAcidIndices, unmatched)
+            if (unmatched.isEmpty()) {
+                return listOf()
+            }
+
+            return unmatched.map { Pair(it.key, it.value) }.map { UnmatchedHaplotype.create(this.aminoAcidIndices, it, aminoAcidCount) }
         }
     }
 }
 
 
-data class UnmatchedHaplotype(val loci: IntArray, val haplotypes: Map<String, Int>) {
-
-    fun totalEvidence(): Int {
-        return haplotypes.values.sum()
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is UnmatchedHaplotype) return false
-
-        if (!loci.contentEquals(other.loci)) return false
-        if (haplotypes != other.haplotypes) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = loci.contentHashCode()
-        result = 31 * result + haplotypes.hashCode()
-        return result
+data class UnmatchedHaplotype(val startLoci: Int, val endLoci: Int, val supportingFragments: Int, val haplotype: String) {
+    companion object {
+        fun create(aminoAcidIndices: IntArray, evidence: Pair<String, Int>, aminoAcidCount: SequenceCount): UnmatchedHaplotype {
+            require(aminoAcidIndices.isNotEmpty())
+            val startLoci = aminoAcidIndices.min()!!
+            val endLoci = aminoAcidIndices.max()!!
+            val sparseHaplotype = evidence.first
+            val completeHaplotype = (startLoci..endLoci).joinToString("") { if (aminoAcidIndices.contains(it)) sparseHaplotype[aminoAcidIndices.indexOf(it)].toString() else aminoAcidCount.sequenceAt(it).first() }
+            return UnmatchedHaplotype(startLoci, endLoci, evidence.second, completeHaplotype)
+        }
     }
 
     override fun toString(): String {
-        return "loci=${loci.contentToString()}, haplotypes=$haplotypes)"
+        return "startLoci=$startLoci, endLoci=$endLoci, supportingFragments=$supportingFragments, haplotype='$haplotype'"
     }
+
+
 }

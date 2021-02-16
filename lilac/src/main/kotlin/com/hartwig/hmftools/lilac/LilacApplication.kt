@@ -234,7 +234,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             }
 
             val aminoAcidQC = AminoAcidQC.create(winningSequences, aminoAcidCounts)
-            val haplotypeQC = HaplotypeQC.create(3, winningSequences, aPhasedEvidence + bPhasedEvidence + cPhasedEvidence)
+            val haplotypeQC = HaplotypeQC.create(3, winningSequences, aPhasedEvidence + bPhasedEvidence + cPhasedEvidence, aminoAcidCounts)
             val bamQC = BamQC.create(bamReader)
             val coverageQC = CoverageQC.create(referenceFragmentAlleles.size, winningComplex)
             val lilacQC = LilacQC(aminoAcidQC, bamQC, coverageQC, haplotypeQC)
