@@ -63,10 +63,11 @@ public final class HotspotFunctions {
 
         String bestTranscript;
         String bestProteinAnnotation;
+
+        // If both annotations either have or have no transcript annotation it does not matter which one we pick.
         boolean favorAnnotation1 = annotation1.proteinAnnotation().compareTo(annotation2.proteinAnnotation()) > 0;
         if (annotation1.transcript() == null && annotation2.transcript() == null) {
             bestTranscript = null;
-            // If both annotations have a transcript annotation it does not matter which one we pick.
             bestProteinAnnotation = favorAnnotation1 ? annotation1.proteinAnnotation() : annotation2.proteinAnnotation();
         } else if (annotation1.transcript() == null) {
             bestTranscript = annotation2.transcript();
@@ -75,7 +76,6 @@ public final class HotspotFunctions {
             bestTranscript = annotation1.transcript();
             bestProteinAnnotation = annotation1.proteinAnnotation();
         } else {
-            // If both annotations have a transcript annotation it does not matter which one we pick.
             bestTranscript = favorAnnotation1 ? annotation1.transcript() : annotation2.transcript();
             bestProteinAnnotation = favorAnnotation1 ? annotation1.proteinAnnotation() : annotation2.proteinAnnotation();
         }
