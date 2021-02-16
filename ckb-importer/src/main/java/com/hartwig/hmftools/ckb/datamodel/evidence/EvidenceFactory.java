@@ -5,32 +5,31 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.indication.IndicationFactory;
 import com.hartwig.hmftools.ckb.datamodel.reference.ReferenceFactory;
-import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
 import com.hartwig.hmftools.ckb.datamodel.therapy.TherapyFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
-import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
-import com.hartwig.hmftools.ckb.json.molecularprofile.JsonMolecularProfile;
-import com.hartwig.hmftools.ckb.json.therapy.JsonTherapy;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class EvidenceFactory {
+
+    private static final Logger LOGGER = LogManager.getLogger(EvidenceFactory.class);
 
     private EvidenceFactory() {
     }
 
     @NotNull
-    public static List<Evidence> interpretVariantEvidence(@NotNull CkbJsonDatabase ckbJsonDatabase,
-            @NotNull JsonMolecularProfile molecularProfile) {
+    public static List<Evidence> extractEvidences(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull List<EvidenceInfo> evidenceInfos,
+            int molecularProfileId) {
         List<Evidence> evidences = Lists.newArrayList();
-        for (EvidenceInfo evidenceInfo : molecularProfile.variantLevelEvidence().evidences()) {
-            if (molecularProfile.id() == evidenceInfo.molecularProfile().id()) {
+        for (EvidenceInfo evidenceInfo : evidenceInfos) {
+            if (evidenceInfo.molecularProfile().id() == molecularProfileId) {
                 evidences.add(ImmutableEvidence.builder()
                         .id(evidenceInfo.id())
-                        .therapy(extractTherapyEvidence(ckbJsonDatabase, evidenceInfo.therapy(), molecularProfile))
-                        .indication(IndicationFactory.extractIndication(ckbJsonDatabase, evidenceInfo.indication()))
+                        .therapy(TherapyFactory.resolveTherapy(ckbJsonDatabase, evidenceInfo.therapy()))
+                        .indication(IndicationFactory.resolveIndication(ckbJsonDatabase, evidenceInfo.indication()))
                         .responseType(evidenceInfo.responseType())
                         .evidenceType(evidenceInfo.evidenceType())
                         .efficacyEvidence(evidenceInfo.efficacyEvidence())
@@ -39,20 +38,12 @@ public final class EvidenceFactory {
                         .ampCapAscoInferredTier(evidenceInfo.ampCapAscoInferredTier())
                         .references(ReferenceFactory.extractReferences(ckbJsonDatabase, evidenceInfo.references()))
                         .build());
+            } else {
+                LOGGER.warn("Variant level evidence on profile {} for different profile: {}",
+                        molecularProfileId,
+                        evidenceInfo.molecularProfile().id());
             }
         }
         return evidences;
-    }
-
-    @Nullable
-    private static Therapy extractTherapyEvidence(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull TherapyInfo therapyInfo,
-            @NotNull JsonMolecularProfile molecularProfile) {
-        Therapy therapyInterpretation = null;
-        for (JsonTherapy therapy : ckbJsonDatabase.therapies()) {
-            if (therapyInfo.id() == therapy.id()) {
-                therapyInterpretation = TherapyFactory.extractTherapy(ckbJsonDatabase, therapy, molecularProfile);
-            }
-        }
-        return therapyInterpretation;
     }
 }

@@ -13,8 +13,6 @@ import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrialVariantRequi
 import com.hartwig.hmftools.ckb.json.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
-import com.hartwig.hmftools.ckb.json.molecularprofile.JsonMolecularProfile;
-import com.hartwig.hmftools.ckb.json.therapy.JsonTherapy;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,45 +22,47 @@ public final class ClinicalTrialFactory {
     }
 
     @NotNull
-    public static List<ClinicalTrial> interpretClinicalTrials(@NotNull CkbJsonDatabase ckbJsonDatabase,
-            @NotNull JsonMolecularProfile molecularProfile) {
+    public static List<ClinicalTrial> extractClinicalTrials(@NotNull CkbJsonDatabase ckbJsonDatabase,
+            @NotNull List<ClinicalTrialInfo> clinicalTrialInfos) {
         List<ClinicalTrial> clinicalTrials = Lists.newArrayList();
-        for (ClinicalTrialInfo clinicalTrialInfo : molecularProfile.variantAssociatedClinicalTrials()) {
-            ImmutableClinicalTrial.Builder outputBuilderClinical = ImmutableClinicalTrial.builder();
-
-            for (JsonClinicalTrial clinicalTrial : ckbJsonDatabase.clinicalTrials()) {
-                if (clinicalTrialInfo.nctId().equals(clinicalTrial.nctId())) {
-                    outputBuilderClinical.nctId(clinicalTrial.nctId())
-                            .updateDate(clinicalTrial.updateDate())
-                            .title(clinicalTrial.title())
-                            .phase(clinicalTrial.phase())
-                            .recruitment(clinicalTrial.recruitment())
-                            .ageGroups(clinicalTrial.ageGroups())
-                            .gender(clinicalTrial.gender())
-                            .variantRequirement(clinicalTrial.variantRequirements())
-                            .sponsor(clinicalTrial.sponsors())
-                            .variantRequirementDetails(convertRequirementDetails(clinicalTrial.variantRequirementDetails()))
-                            .locations(convertLocations(clinicalTrial.clinicalTrialLocations()));
-
-                    for (IndicationInfo indicationInfo : clinicalTrial.indications()) {
-                        outputBuilderClinical.addIndications(IndicationFactory.extractIndication(ckbJsonDatabase, indicationInfo));
-                    }
-
-                    for (TherapyInfo therapyInfo : clinicalTrial.therapies()) {
-                        for (JsonTherapy therapy : ckbJsonDatabase.therapies()) {
-                            if (therapyInfo.id() == therapy.id()) {
-                                outputBuilderClinical.addTherapies(TherapyFactory.extractTherapy(ckbJsonDatabase,
-                                        therapy,
-                                        molecularProfile));
-                            }
-                        }
-                    }
-                }
-            }
-            clinicalTrials.add(outputBuilderClinical.build());
+        for (ClinicalTrialInfo clinicalTrialInfo : clinicalTrialInfos) {
+            clinicalTrials.add(resolveClinicalTrial(ckbJsonDatabase, clinicalTrialInfo));
         }
 
         return clinicalTrials;
+    }
+
+    @NotNull
+    private static ClinicalTrial resolveClinicalTrial(@NotNull CkbJsonDatabase ckbJsonDatabase,
+            @NotNull ClinicalTrialInfo clinicalTrialInfo) {
+        for (JsonClinicalTrial clinicalTrial : ckbJsonDatabase.clinicalTrials()) {
+            if (clinicalTrialInfo.nctId().equals(clinicalTrial.nctId())) {
+                ImmutableClinicalTrial.Builder clinicalTrialBuilder = ImmutableClinicalTrial.builder();
+
+                for (TherapyInfo therapyInfo : clinicalTrial.therapies()) {
+                    clinicalTrialBuilder.addTherapies(TherapyFactory.resolveTherapy(ckbJsonDatabase, therapyInfo));
+                }
+
+                for (IndicationInfo indicationInfo : clinicalTrial.indications()) {
+                    clinicalTrialBuilder.addIndications(IndicationFactory.resolveIndication(ckbJsonDatabase, indicationInfo));
+                }
+
+                return clinicalTrialBuilder.nctId(clinicalTrial.nctId())
+                        .updateDate(clinicalTrial.updateDate())
+                        .title(clinicalTrial.title())
+                        .phase(clinicalTrial.phase())
+                        .recruitment(clinicalTrial.recruitment())
+                        .ageGroups(clinicalTrial.ageGroups())
+                        .gender(clinicalTrial.gender())
+                        .variantRequirement(clinicalTrial.variantRequirements())
+                        .sponsor(clinicalTrial.sponsors())
+                        .variantRequirementDetails(convertRequirementDetails(clinicalTrial.variantRequirementDetails()))
+                        .locations(convertLocations(clinicalTrial.clinicalTrialLocations()))
+                        .build();
+            }
+        }
+
+        throw new IllegalStateException("Could not resolve CKB clinical trial with id '" + clinicalTrialInfo.nctId() + "'");
     }
 
     @NotNull

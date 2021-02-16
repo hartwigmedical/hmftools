@@ -24,18 +24,18 @@ public final class JsonDatabaseToCkbEntryConverter {
     public static List<CkbEntry> convert(@NotNull CkbJsonDatabase ckbJsonDatabase) {
         List<CkbEntry> ckbEntries = Lists.newArrayList();
         for (JsonMolecularProfile molecularProfile : ckbJsonDatabase.molecularProfiles()) {
-            ImmutableCkbEntry.Builder outputBuilder = ImmutableCkbEntry.builder();
-            outputBuilder.profileId(molecularProfile.id());
-            outputBuilder.profileName(molecularProfile.profileName());
-            outputBuilder.createDate(molecularProfile.createDate());
-            outputBuilder.updateDate(molecularProfile.updateDate());
-
-            outputBuilder.clinicalTrials(ClinicalTrialFactory.interpretClinicalTrials(ckbJsonDatabase, molecularProfile));
-            outputBuilder.evidences(EvidenceFactory.interpretVariantEvidence(ckbJsonDatabase, molecularProfile));
-            outputBuilder.variants(VariantFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()));
-
-            LOGGER.info(outputBuilder.build());  //TODO remove when model is finished
-            ckbEntries.add(outputBuilder.build());
+            ckbEntries.add(ImmutableCkbEntry.builder()
+                    .profileId(molecularProfile.id())
+                    .profileName(molecularProfile.profileName())
+                    .createDate(molecularProfile.createDate())
+                    .updateDate(molecularProfile.updateDate())
+                    .variants(VariantFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()))
+                    .evidences(EvidenceFactory.extractEvidences(ckbJsonDatabase,
+                            molecularProfile.variantLevelEvidence().evidences(),
+                            molecularProfile.id()))
+                    .clinicalTrials(ClinicalTrialFactory.extractClinicalTrials(ckbJsonDatabase,
+                            molecularProfile.variantAssociatedClinicalTrials()))
+                    .build());
         }
 
         return ckbEntries;

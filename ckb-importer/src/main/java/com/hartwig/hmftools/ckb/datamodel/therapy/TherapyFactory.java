@@ -8,7 +8,7 @@ import com.hartwig.hmftools.ckb.datamodel.reference.ReferenceFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.GlobalApprovalStatusInfo;
-import com.hartwig.hmftools.ckb.json.molecularprofile.JsonMolecularProfile;
+import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.json.therapy.JsonTherapy;
 
 import org.jetbrains.annotations.NotNull;
@@ -19,20 +19,23 @@ public final class TherapyFactory {
     }
 
     @NotNull
-    public static Therapy extractTherapy(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull JsonTherapy therapy,
-            @NotNull JsonMolecularProfile molecularProfile) {
-        return ImmutableTherapy.builder()
-                .id(therapy.id())
-                .createDate(therapy.createDate())
-                .updateDate(therapy.updateDate())
-                .therapyName(therapy.therapyName())
-                .drugs(DrugFactory.extractDrugs(ckbJsonDatabase, therapy.drugs()))
-                .synonyms(therapy.synonyms())
-                .descriptions(extractTherapyDescriptions(ckbJsonDatabase, therapy.descriptions()))
-                .globalTherapyApprovalStatuses(extractGlobalApprovalStatuses(therapy.globalApprovalStatuses(),
-                        molecularProfile,
-                        therapy.id()))
-                .build();
+    public static Therapy resolveTherapy(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull TherapyInfo therapyInfo) {
+        for (JsonTherapy therapy : ckbJsonDatabase.therapies()) {
+            if (therapy.id() == therapyInfo.id()) {
+                return ImmutableTherapy.builder()
+                        .id(therapy.id())
+                        .createDate(therapy.createDate())
+                        .updateDate(therapy.updateDate())
+                        .therapyName(therapy.therapyName())
+                        .drugs(DrugFactory.extractDrugs(ckbJsonDatabase, therapy.drugs()))
+                        .synonyms(therapy.synonyms())
+                        .descriptions(extractTherapyDescriptions(ckbJsonDatabase, therapy.descriptions()))
+                        .globalTherapyApprovalStatuses(convertGlobalApprovalStatuses(therapy.globalApprovalStatuses()))
+                        .build();
+            }
+        }
+
+        throw new IllegalStateException("Could not resolve CKB therapy with id '" + therapyInfo.id() + "'");
     }
 
     @NotNull
@@ -50,19 +53,15 @@ public final class TherapyFactory {
     }
 
     @NotNull
-    private static List<GlobalTherapyApprovalStatus> extractGlobalApprovalStatuses(
-            @NotNull List<GlobalApprovalStatusInfo> globalTherapyApprovalStatuses, @NotNull JsonMolecularProfile molecularProfile,
-            int therapyId) {
+    private static List<GlobalTherapyApprovalStatus> convertGlobalApprovalStatuses(
+            @NotNull List<GlobalApprovalStatusInfo> globalTherapyApprovalStatuses) {
         List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatusesInterpretation = Lists.newArrayList();
         for (GlobalApprovalStatusInfo globalTherapyApprovalStatusInfo : globalTherapyApprovalStatuses) {
-            if (therapyId == globalTherapyApprovalStatusInfo.therapy().id()
-                    && molecularProfile.id() == globalTherapyApprovalStatusInfo.molecularProfile().id()) {
-                globalTherapyApprovalStatusesInterpretation.add(ImmutableGlobalTherapyApprovalStatus.builder()
-                        .id(globalTherapyApprovalStatusInfo.id())
-                        .approvalStatus(globalTherapyApprovalStatusInfo.approvalStatus())
-                        .approvalAuthority(globalTherapyApprovalStatusInfo.approvalAuthority())
-                        .build());
-            }
+            globalTherapyApprovalStatusesInterpretation.add(ImmutableGlobalTherapyApprovalStatus.builder()
+                    .id(globalTherapyApprovalStatusInfo.id())
+                    .approvalStatus(globalTherapyApprovalStatusInfo.approvalStatus())
+                    .approvalAuthority(globalTherapyApprovalStatusInfo.approvalAuthority())
+                    .build());
         }
         return globalTherapyApprovalStatusesInterpretation;
     }
