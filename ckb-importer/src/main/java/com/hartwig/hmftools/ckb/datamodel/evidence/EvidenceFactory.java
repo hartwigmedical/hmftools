@@ -7,7 +7,6 @@ import com.hartwig.hmftools.ckb.datamodel.indication.IndicationFactory;
 import com.hartwig.hmftools.ckb.datamodel.reference.ReferenceFactory;
 import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
 import com.hartwig.hmftools.ckb.datamodel.therapy.TherapyFactory;
-import com.hartwig.hmftools.ckb.datamodel.variant.VariantFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.EvidenceInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
@@ -30,16 +29,15 @@ public final class EvidenceFactory {
             if (molecularProfile.id() == evidenceInfo.molecularProfile().id()) {
                 evidences.add(ImmutableEvidence.builder()
                         .id(evidenceInfo.id())
-                        .approvalStatus(evidenceInfo.approvalStatus())
-                        .evidenceType(evidenceInfo.evidenceType())
-                        .efficacyEvidence(evidenceInfo.efficacyEvidence())
-                        .variants(VariantFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()))
                         .therapy(extractTherapyEvidence(ckbJsonDatabase, evidenceInfo.therapy(), molecularProfile))
                         .indication(IndicationFactory.extractIndication(ckbJsonDatabase, evidenceInfo.indication()))
                         .responseType(evidenceInfo.responseType())
-                        .references(ReferenceFactory.extractReferences(ckbJsonDatabase, evidenceInfo.references()))
+                        .evidenceType(evidenceInfo.evidenceType())
+                        .efficacyEvidence(evidenceInfo.efficacyEvidence())
+                        .approvalStatus(evidenceInfo.approvalStatus())
                         .ampCapAscoEvidenceLevel(evidenceInfo.ampCapAscoEvidenceLevel())
                         .ampCapAscoInferredTier(evidenceInfo.ampCapAscoInferredTier())
+                        .references(ReferenceFactory.extractReferences(ckbJsonDatabase, evidenceInfo.references()))
                         .build());
             }
         }

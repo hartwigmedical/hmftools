@@ -12,9 +12,9 @@ public abstract class DrugClass {
 
     public abstract int id();
 
-    @NotNull
-    public abstract String drugClass();
-
     @Nullable
     public abstract Date createDate();
+
+    @NotNull
+    public abstract String drugClass();
 }

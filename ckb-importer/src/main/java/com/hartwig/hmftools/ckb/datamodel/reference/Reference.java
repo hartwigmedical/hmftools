@@ -17,6 +17,9 @@ public abstract class Reference {
     public abstract String title();
 
     @Nullable
+    public abstract String abstractText();
+
+    @Nullable
     public abstract String url();
 
     @Nullable
@@ -33,9 +36,6 @@ public abstract class Reference {
 
     @Nullable
     public abstract String date();
-
-    @Nullable
-    public abstract String abstractText();
 
     @Nullable
     public abstract String year();

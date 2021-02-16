@@ -26,15 +26,15 @@ public final class DrugFactory {
                 if (drugInfo.id() == drug.id()) {
                     drugs.add(ImmutableDrug.builder()
                             .id(drug.id())
+                            .createDate(drug.createDate())
                             .drugName(drug.drugName())
+                            .drugClasses(extractDrugClasses(ckbJsonDatabase, drug))
                             .terms(drug.terms())
                             .synonyms(drug.synonyms())
                             .tradeName(drug.tradeName())
                             .drugDescriptions(extractDrugDescriptions(ckbJsonDatabase, drug.descriptions()))
                             .casRegistryNum(drug.casRegistryNum())
                             .ncitId(drug.ncitId())
-                            .createDate(drug.createDate())
-                            .drugClasses(extractDrugClasses(ckbJsonDatabase, drug))
                             .build());
                 }
             }
@@ -50,8 +50,8 @@ public final class DrugFactory {
                 if (drugClassInfo.id() == drugClass.id()) {
                     drugClasses.add(ImmutableDrugClass.builder()
                             .id(drugClass.id())
-                            .drugClass(drugClass.drugClass())
                             .createDate(drugClass.createDate())
+                            .drugClass(drugClass.drugClass())
                             .build());
                 }
             }

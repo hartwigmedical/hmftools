@@ -24,13 +24,13 @@ public final class ReferenceFactory {
                             .id(reference.id())
                             .pubMedId(reference.pubMedId())
                             .title(reference.title())
+                            .abstractText(reference.abstractText())
                             .url(reference.url())
                             .authors(reference.authors())
                             .journal(reference.journal())
                             .volume(reference.volume())
                             .issue(reference.issue())
                             .date(reference.date())
-                            .abstractText(reference.abstractText())
                             .year(reference.year())
                             .build());
                 }

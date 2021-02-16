@@ -4,9 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.drug.DrugFactory;
-import com.hartwig.hmftools.ckb.datamodel.indication.IndicationFactory;
 import com.hartwig.hmftools.ckb.datamodel.reference.ReferenceFactory;
-import com.hartwig.hmftools.ckb.datamodel.variant.VariantFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.GlobalApprovalStatusInfo;
@@ -25,14 +23,13 @@ public final class TherapyFactory {
             @NotNull JsonMolecularProfile molecularProfile) {
         return ImmutableTherapy.builder()
                 .id(therapy.id())
-                .therapyName(therapy.therapyName())
-                .synonyms(therapy.synonyms())
-                .descriptions(extractTherapyDescriptions(ckbJsonDatabase, therapy.descriptions()))
                 .createDate(therapy.createDate())
                 .updateDate(therapy.updateDate())
+                .therapyName(therapy.therapyName())
                 .drugs(DrugFactory.extractDrugs(ckbJsonDatabase, therapy.drugs()))
-                .globalTherapyApprovalStatuses(extractGlobalApprovalStatuses(ckbJsonDatabase,
-                        therapy.globalApprovalStatuses(),
+                .synonyms(therapy.synonyms())
+                .descriptions(extractTherapyDescriptions(ckbJsonDatabase, therapy.descriptions()))
+                .globalTherapyApprovalStatuses(extractGlobalApprovalStatuses(therapy.globalApprovalStatuses(),
                         molecularProfile,
                         therapy.id()))
                 .build();
@@ -53,7 +50,7 @@ public final class TherapyFactory {
     }
 
     @NotNull
-    private static List<GlobalTherapyApprovalStatus> extractGlobalApprovalStatuses(@NotNull CkbJsonDatabase ckbJsonDatabase,
+    private static List<GlobalTherapyApprovalStatus> extractGlobalApprovalStatuses(
             @NotNull List<GlobalApprovalStatusInfo> globalTherapyApprovalStatuses, @NotNull JsonMolecularProfile molecularProfile,
             int therapyId) {
         List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatusesInterpretation = Lists.newArrayList();
@@ -62,8 +59,6 @@ public final class TherapyFactory {
                     && molecularProfile.id() == globalTherapyApprovalStatusInfo.molecularProfile().id()) {
                 globalTherapyApprovalStatusesInterpretation.add(ImmutableGlobalTherapyApprovalStatus.builder()
                         .id(globalTherapyApprovalStatusInfo.id())
-                        .indication(IndicationFactory.extractIndication(ckbJsonDatabase, globalTherapyApprovalStatusInfo.indication()))
-                        .variants(VariantFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()))
                         .approvalStatus(globalTherapyApprovalStatusInfo.approvalStatus())
                         .approvalAuthority(globalTherapyApprovalStatusInfo.approvalAuthority())
                         .build());
