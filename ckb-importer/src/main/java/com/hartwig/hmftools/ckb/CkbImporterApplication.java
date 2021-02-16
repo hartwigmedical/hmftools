@@ -46,8 +46,8 @@ public class CkbImporterApplication {
             CkbDAO ckbDAO = connect(config);
             LOGGER.info("Deleting all data from CKB db");
             ckbDAO.deleteAll();
-            LOGGER.info("Starting insertion of CKB interpretation data model");
-            ckbDAO.writeCkb(ckbJsonDatabase);
+            LOGGER.info("Starting insertion of {} CKB entries", ckbEntries.size());
+            ckbDAO.writeCkbEntries(ckbEntries);
         }
 
         LOGGER.info("Complete!");
