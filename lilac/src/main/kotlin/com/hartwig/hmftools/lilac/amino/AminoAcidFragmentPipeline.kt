@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.lilac.amino
 
+import com.hartwig.hmftools.lilac.LilacConfig
 import com.hartwig.hmftools.lilac.hla.HlaContext
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.nuc.NucleotideQualEnrichment
 import com.hartwig.hmftools.lilac.nuc.NucleotideSpliceEnrichment
 
-class AminoAcidFragmentPipeline(private val minBaseQuality: Int, private val minBaseCount: Int, private val geneEnriched: List<NucleotideFragment>) {
+class AminoAcidFragmentPipeline(config: LilacConfig, private val geneEnriched: List<NucleotideFragment>) {
+    private val minBaseQuality= config.minBaseQual
+    private val minBaseCount = config.minEvidence
     private val aminoAcidEnricher = AminoAcidQualEnrichment(minBaseCount)
     private val nucleotideQualEnrichment = NucleotideQualEnrichment(minBaseQuality, minBaseCount)
 
@@ -16,12 +19,11 @@ class AminoAcidFragmentPipeline(private val minBaseQuality: Int, private val min
         return process(context.aminoAcidBoundaries, geneSpecific)
     }
 
-    fun coverageFragments(combinedBoundaries: Set<Int>): List<AminoAcidFragment> {
-        return process(combinedBoundaries, geneEnriched)
-                .map { it.qualityFilterNucleotides(minBaseQuality) }
+    fun coverageFragments(): List<AminoAcidFragment> {
+        return qualFiltered(geneEnriched)
     }
 
-    fun process(boundaries: Set<Int>, fragments: List<NucleotideFragment>): List<AminoAcidFragment> {
+    private fun process(boundaries: Set<Int>, fragments: List<NucleotideFragment>): List<AminoAcidFragment> {
         val spliceEnricher = NucleotideSpliceEnrichment(minBaseQuality, minBaseCount, boundaries)
 
         val qualEnriched = nucleotideQualEnrichment.enrich(fragments)
@@ -29,6 +31,11 @@ class AminoAcidFragmentPipeline(private val minBaseQuality: Int, private val min
         val result = aminoAcidEnricher.enrich(spliceEnriched)
 
         return result
+    }
+
+    private fun qualFiltered(fragments: List<NucleotideFragment>): List<AminoAcidFragment> {
+        val qualityFilteredFragments = fragments.map { it.qualityFilter(minBaseQuality) }.filter { it.isNotEmpty() }
+        return qualityFilteredFragments.map { it.toAminoAcidFragment() }
     }
 
 }

@@ -11,6 +11,7 @@ import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceValidation
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.hla.HlaContextFactory
+import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory
 import com.hartwig.hmftools.lilac.nuc.NucleotideGeneEnrichment
 import com.hartwig.hmftools.lilac.qc.*
@@ -61,6 +62,13 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         const val HLA_C = "HLA-C"
 
         val EXCLUDED_ALLELES = setOf(HlaAllele("A*01:81"))
+
+        val A_EXON_BOUNDARIES = setOf(24, 114, 206, 298, 337, 348, 364)
+        val B_EXON_BOUNDARIES = setOf(24, 114, 206, 298, 337, 348)
+        val C_EXON_BOUNDARIES = setOf(24, 114, 206, 298, 338, 349, 365)
+
+        val ALL_PROTEIN_EXON_BOUNDARIES = (A_EXON_BOUNDARIES + B_EXON_BOUNDARIES + C_EXON_BOUNDARIES)
+        val ALL_NUCLEOTIDE_EXON_BOUNDARIES = ALL_PROTEIN_EXON_BOUNDARIES.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
     }
 
     private val startTime = System.currentTimeMillis()
@@ -77,6 +85,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
     private val namedThreadFactory = ThreadFactoryBuilder().setNameFormat("LILAC-%d").build()
     private val executorService = Executors.newFixedThreadPool(config.threads, namedThreadFactory)
+    private val nucleotideGeneEnrichment = NucleotideGeneEnrichment(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES)
 
     override fun run() {
         logger.info("Starting LILAC with parameters:")
@@ -86,15 +95,8 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         logger.info("               minEvidence = $minEvidence")
         logger.info("         minUniqueCoverage = $minConfirmedUniqueCoverage")
 
-
-        val aProteinExonBoundaries = setOf(24, 114, 206, 298, 337, 348, 364)
-        val bProteinExonBoundaries = setOf(24, 114, 206, 298, 337, 348)
-        val cProteinExonBoundaries = setOf(24, 114, 206, 298, 338, 349, 365)
-        val allProteinExonBoundaries = (aProteinExonBoundaries + bProteinExonBoundaries + cProteinExonBoundaries)
-        val allNucleotideExonBoundaries = allProteinExonBoundaries.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
-
         // Context
-        val hlaContextFactory = HlaContextFactory(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
+        val hlaContextFactory = HlaContextFactory(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES)
         val hlaAContext = hlaContextFactory.hlaA()
         val hlaBContext = hlaContextFactory.hlaB()
         val hlaCContext = hlaContextFactory.hlaC()
@@ -117,19 +119,19 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val nucleotideFragmentFactory = NucleotideFragmentFactory(config.minBaseQual, aminoAcidSequencesWithInserts, aminoAcidSequencesWithDeletes)
         val transcripts = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
         val bamReader = SAMRecordReader(1000, config.refGenome, transcripts, nucleotideFragmentFactory)
-        val rawReferenceNucleotideFragments = bamReader.readFromBam(config.referenceBam)
+        val referenceNucleotideFragments = bamReader.readFromBam(config.referenceBam).enrichGenes()
 
-        val rawTumorNucleotideFragments = if (config.tumorBam.isNotEmpty()) {
+        val tumorNucleotideFragments = if (config.tumorBam.isNotEmpty()) {
             logger.info("Querying records from tumor bam ${config.tumorBam}")
-            bamReader.readFromBam(config.tumorBam)
+            bamReader.readFromBam(config.tumorBam).enrichGenes()
         } else {
             listOf()
         }
 
+//        val tumorNucleotideFragments = listOf<NucleotideFragment>()
+
         logger.info("Enriching reference bam records")
-        val nucleotideGeneEnrichment = NucleotideGeneEnrichment(aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries)
-        val geneEnrichedNucleotideFragments = nucleotideGeneEnrichment.enrich(rawReferenceNucleotideFragments)
-        val aminoAcidPipeline = AminoAcidFragmentPipeline(minBaseQual, minEvidence, geneEnrichedNucleotideFragments)
+        val aminoAcidPipeline = AminoAcidFragmentPipeline(config, referenceNucleotideFragments)
         val aFragments = aminoAcidPipeline.phasingFragments(hlaAContext)
         val bFragments = aminoAcidPipeline.phasingFragments(hlaBContext)
         val cFragments = aminoAcidPipeline.phasingFragments(hlaCContext)
@@ -155,11 +157,11 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val candidates = aCandidates + bCandidates + cCandidates
 
         // Coverage
-        val highQualityAminoAcidFragments = aminoAcidPipeline.coverageFragments(allProteinExonBoundaries)
+        val highQualityAminoAcidFragments = aminoAcidPipeline.coverageFragments()
         val aminoAcidCounts = SequenceCount.aminoAcids(minEvidence, highQualityAminoAcidFragments)
         val aminoAcidHeterozygousLoci = aminoAcidCounts.heterozygousLoci()
         val nucleotideCounts = SequenceCount.nucleotides(minEvidence, highQualityAminoAcidFragments)
-        val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousLoci() intersect allNucleotideExonBoundaries
+        val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousLoci() intersect ALL_NUCLEOTIDE_EXON_BOUNDARIES
 
         val candidateAlleles = candidates.map { it.allele }
         val candidateAlleleSpecificProteins = candidateAlleles.map { it.asFourDigit() }
@@ -188,7 +190,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val candidatesAfterConfirmedGroups = candidateAlleles.filterWithConfirmedGroups(confirmedGroups.map { it.allele })
         val proteinCoverage = coverageFactory.proteinCoverage(candidatesAfterConfirmedGroups)
         val confirmedProtein = proteinCoverage.confirmUnique()
-        val discardedProtein = proteinCoverage.alleleCoverage.filter { it.uniqueCoverage > 0 && it !in confirmedProtein }.sortedDescending()
+        val discardedProtein = proteinCoverage.alleleCoverage.filter { it.uniqueCoverage > 0 && it !in confirmedGroups }.sortedDescending()
         logger.info("... confirmed ${confirmedProtein.size} unique proteins: " + confirmedProtein.joinToString(", "))
         if (discardedProtein.isNotEmpty()) {
             logger.info("... found ${discardedProtein.size} insufficiently unique proteins: " + discardedProtein.joinToString(", "))
@@ -236,7 +238,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         logger.info("Writing output to $outputDir")
         val deflatedSequenceTemplate = aminoAcidSequences.first { it.allele == HlaAllele("A*01:01:01:01") }
         val candidateToWrite = (candidates + expectedSequences + deflatedSequenceTemplate).distinct().sortedBy { it.allele }
-        HlaSequenceLociFile.write("$outputDir/$sample.candidates.deflate.txt", aProteinExonBoundaries, bProteinExonBoundaries, cProteinExonBoundaries, candidateToWrite)
+        HlaSequenceLociFile.write("$outputDir/$sample.candidates.deflate.txt", A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES, candidateToWrite)
         aminoAcidCounts.writeVertically("$outputDir/$sample.aminoacids.count.txt")
         nucleotideCounts.writeVertically("$outputDir/$sample.nucleotides.count.txt")
 
@@ -289,6 +291,10 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
     private fun List<HlaAlleleCoverage>.alleles(): List<HlaAllele> {
         return this.map { it.allele }
+    }
+
+    private fun List<NucleotideFragment>.enrichGenes(): List<NucleotideFragment> {
+        return nucleotideGeneEnrichment.enrich(this)
     }
 
 }
