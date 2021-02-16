@@ -134,22 +134,18 @@ public class AnalysedPatientReporterTest {
 
         assertEquals(1,
                 AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(evidence),
-                        Lists.newArrayList(somaticVariant, germlineVariant),
                         LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION).size());
 
-        assertEquals(1,
+        assertEquals(0,
                 AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(evidence),
-                        Lists.newArrayList(somaticVariant, germlineVariant),
                         LimsGermlineReportingLevel.NO_REPORTING).size());
 
-        assertEquals(1,
+        assertEquals(0,
                 AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(evidence),
-                        Lists.newArrayList(somaticVariant, germlineVariant),
                         LimsGermlineReportingLevel.NO_REPORTING).size());
 
-        assertEquals(1,
+        assertEquals(0,
                 AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(evidence),
-                        Lists.newArrayList(somaticVariant),
                         LimsGermlineReportingLevel.NO_REPORTING).size());
     }
 

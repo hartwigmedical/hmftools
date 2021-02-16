@@ -57,9 +57,8 @@ public class AnalysedPatientReporter {
 
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
-        GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.actionabilityAnalyzer(), reportData.germlineReportingModel());
+        GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.germlineReportingModel());
         GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
-                patientPrimaryTumor,
                 purplePurityTsv,
                 purpleQCFile,
                 purpleDriverCatalogTsv,
@@ -69,7 +68,8 @@ public class AnalysedPatientReporter {
                 linxBreakendTsv,
                 linxViralInsertionTsv,
                 linxDriversTsv,
-                chordPredictionTxt, protectEvidenceTsv);
+                chordPredictionTxt,
+                protectEvidenceTsv);
 
         GenomicAnalysis filteredAnalysis =
                 filterForConsent(genomicAnalysis, sampleReport.germlineReportingLevel(), sampleReport.reportViralInsertions());
@@ -103,15 +103,12 @@ public class AnalysedPatientReporter {
         List<ViralInsertion> filteredViralInsertions = reportViralInsertions ? genomicAnalysis.viralInsertions() : Lists.newArrayList();
 
         List<ProtectEvidence> filteredTumorSpecificEvidence = filterEvidenceForGermlineConsent(genomicAnalysis.tumorSpecificEvidence(),
-                genomicAnalysis.reportableVariants(),
                 germlineReportingLevel);
 
         List<ProtectEvidence> filteredClinicalTrials = filterEvidenceForGermlineConsent(genomicAnalysis.clinicalTrials(),
-                genomicAnalysis.reportableVariants(),
                 germlineReportingLevel);
 
         List<ProtectEvidence> filteredOffLabelEvidence = filterEvidenceForGermlineConsent(genomicAnalysis.offLabelEvidence(),
-                genomicAnalysis.reportableVariants(),
                 germlineReportingLevel);
 
         return ImmutableGenomicAnalysis.builder()
@@ -140,17 +137,11 @@ public class AnalysedPatientReporter {
     @NotNull
     @VisibleForTesting
     static <X extends WithEvent> List<ProtectEvidence> filterEvidenceForGermlineConsent(@NotNull List<ProtectEvidence> evidences,
-            @NotNull List<ReportableVariant> variants, @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
-        Set<String> germlineEvents = Sets.newHashSet();
-        for (ReportableVariant variant : variants) {
-            if (variant.source() == ReportableVariantSource.GERMLINE) {
-                germlineEvents.add(VariantEvidenceAnalyzer.eventString(variant));
-            }
-        }
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
 
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING || !germlineEvents.contains(evidence.genomicEvent())) {
+            if (germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING && !evidence.germline()) {
                 filtered.add(evidence);
             }
         }

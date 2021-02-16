@@ -15,9 +15,6 @@ import org.jetbrains.annotations.Nullable;
 public abstract class AnalysedReportData implements ReportData {
 
     @NotNull
-    public abstract ActionabilityAnalyzer actionabilityAnalyzer();
-
-    @NotNull
     public abstract GermlineReportingModel germlineReportingModel();
 
     @NotNull

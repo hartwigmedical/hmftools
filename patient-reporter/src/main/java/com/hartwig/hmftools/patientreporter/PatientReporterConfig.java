@@ -56,7 +56,6 @@ public interface PatientReporterConfig {
     String CIRCOS_FILE = "circos_file";
     String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
 
-    String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
     String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
 
@@ -104,7 +103,6 @@ public interface PatientReporterConfig {
         options.addOption(CIRCOS_FILE, true, "Path towards the circos file.");
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
 
-        options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the directory holding knowledgebase output files.");
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
 
@@ -194,9 +192,6 @@ public interface PatientReporterConfig {
     String protectEvidenceTsv();
 
     @NotNull
-    String knowledgebaseDir();
-
-    @NotNull
     String germlineReportingTsv();
 
     @NotNull
@@ -237,7 +232,6 @@ public interface PatientReporterConfig {
         String chordPredictionTxt = Strings.EMPTY;
         String circosFile = Strings.EMPTY;
         String protectEvidenceFile = Strings.EMPTY;
-        String knowledgebaseDirectory = Strings.EMPTY;
         String germlineReportingTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
 
@@ -257,7 +251,6 @@ public interface PatientReporterConfig {
             chordPredictionTxt = nonOptionalFile(cmd, CHORD_PREDICTION_TXT);
             circosFile = nonOptionalFile(cmd, CIRCOS_FILE);
             protectEvidenceFile = nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV);
-            knowledgebaseDirectory = nonOptionalDir(cmd, KNOWLEDGEBASE_DIRECTORY);
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
         }
@@ -289,7 +282,6 @@ public interface PatientReporterConfig {
                 .chordPredictionTxt(chordPredictionTxt)
                 .circosFile(circosFile)
                 .protectEvidenceTsv(protectEvidenceFile)
-                .knowledgebaseDir(knowledgebaseDirectory)
                 .germlineReportingTsv(germlineReportingTsv)
                 .sampleSummaryTsv(sampleSummaryTsv)
                 .comments(cmd.getOptionValue(COMMENTS))

@@ -31,12 +31,9 @@ public class GenomicAnalyzerTest {
     @Test
     public void canRunOnTestRun() throws IOException {
         GenomicAnalyzer analyzer =
-                new GenomicAnalyzer(PatientReporterTestFactory.loadTestActionabilityAnalyzer(), createEmptyGermlineReportingModel());
-
-        PatientPrimaryTumor patientPrimaryTumor = null;
+                new GenomicAnalyzer(createEmptyGermlineReportingModel());
 
         assertNotNull(analyzer.run("sample",
-                patientPrimaryTumor,
                 PURPLE_PURITY_TSV,
                 PURPLE_QC_FILE,
                 PURPLE_DRIVER_CATALOG_TSV,

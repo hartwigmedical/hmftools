@@ -36,52 +36,32 @@ import org.jetbrains.annotations.Nullable;
 public class GenomicAnalyzer {
 
     @NotNull
-    private final ActionabilityAnalyzer actionabilityAnalyzer;
-    @NotNull
     private final GermlineReportingModel germlineReportingModel;
 
-    public GenomicAnalyzer(@NotNull final ActionabilityAnalyzer actionabilityAnalyzer,
-            @NotNull final GermlineReportingModel germlineReportingModel) {
-        this.actionabilityAnalyzer = actionabilityAnalyzer;
+    public GenomicAnalyzer(@NotNull final GermlineReportingModel germlineReportingModel) {
         this.germlineReportingModel = germlineReportingModel;
     }
 
     @NotNull
-    public GenomicAnalysis run(@NotNull String tumorSampleId, @Nullable PatientPrimaryTumor patientPrimaryTumor,
-            @NotNull String purplePurityTsv, @NotNull String purpleQCFile, @NotNull String purpleDriverCatalogTsv,
-            @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv, @NotNull String linxFusionTsv,
-            @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv,
-            @NotNull String chordPredictionTxt, @NotNull String protectEvidenceTsv) throws IOException {
+    public GenomicAnalysis run(@NotNull String tumorSampleId, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
+            @NotNull String purpleDriverCatalogTsv, @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv,
+            @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
+            @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String protectEvidenceTsv) throws IOException {
         PurpleData purpleData =
                 PurpleDataLoader.load(tumorSampleId, purpleQCFile, purplePurityTsv, purpleDriverCatalogTsv, purpleSomaticVariantVcf);
-        List<EvidenceItem> purpleEvidence = determinePurpleEvidence(purpleData, actionabilityAnalyzer, patientPrimaryTumor);
 
         LinxData linxData = LinxDataLoader.load(linxFusionTsv, linxBreakendTsv, linxViralInsertionTsv, linxDriversTsv);
-        List<EvidenceItem> linxEvidence = determineLinxEvidence(linxData, actionabilityAnalyzer, patientPrimaryTumor);
 
         BachelorData bachelorData = BachelorDataLoader.load(bachelorTsv, purpleData, linxData, germlineReportingModel);
 
-        ReportableVariantAnalysis reportableVariantAnalysis = mergeSomaticAndGermlineVariants(
-                purpleData.somaticVariants(),
-                bachelorData.germlineVariants(),
-                actionabilityAnalyzer,
-                patientPrimaryTumor);
+        ReportableVariantAnalysis reportableVariantAnalysis =
+                mergeSomaticAndGermlineVariants(purpleData.somaticVariants(), bachelorData.germlineVariants());
 
         ChordAnalysis chordAnalysis = ChordDataLoader.load(chordPredictionTxt);
 
-        List<ProtectEvidence> allEvidenceItems = Lists.newArrayList();
+        List<ProtectEvidence> reportableEvidenceItems = extractReportableEvidenceItems(protectEvidenceTsv);
 
-        List<ProtectEvidence> evidences = ProtectEvidenceFile.read(protectEvidenceTsv);
-        for (ProtectEvidence evidence: evidences) {
-            if (evidence.reported()) {
-                allEvidenceItems.add(evidence);
-            }
-        }
-
-
-
-      //  List<EvidenceItem> allEvidenceItemsFiltered = ReportableEvidenceItemFactory.filterBlacklistedEvidence(allEvidenceItems);
-        List<ProtectEvidence> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(allEvidenceItems);
+        List<ProtectEvidence> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(reportableEvidenceItems);
 
         return ImmutableGenomicAnalysis.builder()
                 .impliedPurity(purpleData.purity())
@@ -89,7 +69,7 @@ public class GenomicAnalyzer {
                 .hasReliableQuality(purpleData.hasReliableQuality())
                 .averageTumorPloidy(purpleData.ploidy())
                 .tumorSpecificEvidence(nonTrials.stream().filter(ProtectEvidence::onLabel).collect(Collectors.toList()))
-                .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItems))
+                .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(reportableEvidenceItems))
                 .offLabelEvidence(nonTrials.stream().filter(item -> !item.onLabel()).collect(Collectors.toList()))
                 .reportableVariants(reportableVariantAnalysis.variantsToReport())
                 .microsatelliteIndelsPerMb(purpleData.microsatelliteIndelsPerMb())
@@ -108,53 +88,24 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    private static List<EvidenceItem> determinePurpleEvidence(@NotNull PurpleData purpleData,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientPrimaryTumor patientPrimaryTumor) {
-        String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.location() : null;
-        Map<ReportableGainLoss, List<EvidenceItem>> evidencePerGeneCopyNumber =
-                actionabilityAnalyzer.evidenceForCopyNumbers(purpleData.copyNumberAlterations(), primaryTumorLocation);
-
-        return ReportableEvidenceItemFactory.toReportableFlatList(evidencePerGeneCopyNumber);
-    }
-
-    @NotNull
-    private static List<EvidenceItem> determineLinxEvidence(@NotNull LinxData linxData, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
-            @Nullable PatientPrimaryTumor patientPrimaryTumor) {
-        String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.location() : null;
-        Map<LinxFusion, List<EvidenceItem>> evidencePerFusion =
-                actionabilityAnalyzer.evidenceForFusions(linxData.fusions(), primaryTumorLocation);
-
-        return ReportableEvidenceItemFactory.toReportableFlatList(evidencePerFusion);
-    }
-
-    @NotNull
     private static ReportableVariantAnalysis mergeSomaticAndGermlineVariants(@NotNull List<ReportableVariant> reportableSomaticVariants,
-            @NotNull List<ReportableVariant> reportableGermlineVariants, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
-            @Nullable PatientPrimaryTumor patientPrimaryTumor) {
+            @NotNull List<ReportableVariant> reportableGermlineVariants) {
         List<ReportableVariant> allReportableVariants =
                 ReportableVariantFactory.mergeVariantLists(reportableGermlineVariants, reportableSomaticVariants);
 
-        String primaryTumorLocation = patientPrimaryTumor != null ? patientPrimaryTumor.location() : null;
-        // Extract somatic evidence for high drivers variants only (See DEV-824)
-        Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant =
-                filterHighDriverLikelihood(actionabilityAnalyzer.evidenceForAllVariants(allReportableVariants, primaryTumorLocation));
-
-        return ImmutableReportableVariantAnalysis.builder()
-                .variantsToReport(allReportableVariants)
-                .evidenceItems(ReportableEvidenceItemFactory.toReportableFlatList(evidencePerVariant))
-                .build();
+        return ImmutableReportableVariantAnalysis.builder().variantsToReport(allReportableVariants).build();
     }
 
     @NotNull
-    private static Map<ReportableVariant, List<EvidenceItem>> filterHighDriverLikelihood(
-            @NotNull Map<? extends Variant, List<EvidenceItem>> evidenceForAllVariants) {
-        Map<ReportableVariant, List<EvidenceItem>> evidencePerHighDriverVariant = Maps.newHashMap();
-        for (Map.Entry<? extends Variant, List<EvidenceItem>> entry : evidenceForAllVariants.entrySet()) {
-            ReportableVariant variant = (ReportableVariant) entry.getKey();
-            if (DriverInterpretation.interpret(variant.driverLikelihood()) == DriverInterpretation.HIGH) {
-                evidencePerHighDriverVariant.put(variant, entry.getValue());
+    private static List<ProtectEvidence> extractReportableEvidenceItems(@NotNull String protectEvidenceTsv) throws IOException {
+        List<ProtectEvidence> evidences = ProtectEvidenceFile.read(protectEvidenceTsv);
+
+        List<ProtectEvidence> reportableEvidenceItems = Lists.newArrayList();
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.reported()) {
+                reportableEvidenceItems.add(evidence);
             }
         }
-        return evidencePerHighDriverVariant;
+        return reportableEvidenceItems;
     }
 }

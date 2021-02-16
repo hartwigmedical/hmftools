@@ -39,21 +39,6 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
-    public static ImmutableEvidenceItem.Builder createTestEvidenceBuilder() {
-        return ImmutableEvidenceItem.builder()
-                .event(Strings.EMPTY)
-                .source(ActionabilitySource.CIVIC)
-                .reference(Strings.EMPTY)
-                .drug(Strings.EMPTY)
-                .drugsType(Strings.EMPTY)
-                .level(EvidenceLevel.LEVEL_A)
-                .response(Strings.EMPTY)
-                .isOnLabel(false)
-                .cancerType(Strings.EMPTY)
-                .scope(EvidenceScope.SPECIFIC);
-    }
-
-    @NotNull
     public static LimsCohortConfig createCohortConfig(@NotNull String cohortId, boolean sampleContainsHospitalCenterId,
             boolean reportGermline, boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean requireHospitalId,
             boolean requireHospitalPAId, boolean requireHospitalPersonsStudy, boolean requireHospitalPersonsRequester,
@@ -97,7 +82,6 @@ public final class PatientReporterTestFactory {
 
             return ImmutableAnalysedReportData.builder()
                     .from(loadTestReportData())
-                    .actionabilityAnalyzer(loadTestActionabilityAnalyzer())
                     .germlineReportingModel(new GermlineReportingModel(Lists.newArrayList()))
                     .summaryModel(summaryModel)
                     .build();
