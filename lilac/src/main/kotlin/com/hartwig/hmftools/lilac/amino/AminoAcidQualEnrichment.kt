@@ -21,7 +21,7 @@ class AminoAcidQualEnrichment(private val minEvidence: Int) {
     }
 
     private fun enrich(fragment: AminoAcidFragment, count: SequenceCount): AminoAcidFragment {
-        val initialIntersect = fragment.aminoAcidIndices()
+        val initialIntersect = fragment.aminoAcidLoci()
         val filteredIntersect = initialIntersect.filter { loci ->
             val allowed = count.sequenceAt(loci)
             val actual = fragment.aminoAcid(loci)

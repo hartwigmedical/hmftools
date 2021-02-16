@@ -25,11 +25,11 @@ class SequenceCount(private val minCount: Int, private val count: Array<Map<Stri
         }
 
         fun aminoAcids(minCount: Int, fragments: List<AminoAcidFragment>): SequenceCount {
-            val length = fragments.map { it.nucleotideLoci().max() ?: -1 }.max()!! + 1
+            val length = fragments.map { it.aminoAcidLoci().max() ?: -1 }.max()!! + 1
             val count = Array(length) { mutableMapOf<String, Int>() }
 
             for (fragment in fragments) {
-                for (index in fragment.aminoAcidIndices()) {
+                for (index in fragment.aminoAcidLoci()) {
                     val aminoAcid = fragment.aminoAcid(index)
                     count.increment(index, aminoAcid)
                 }
