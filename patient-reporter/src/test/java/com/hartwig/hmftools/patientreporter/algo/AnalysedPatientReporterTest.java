@@ -6,9 +6,15 @@ import static org.junit.Assert.assertNotNull;
 import java.io.IOException;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.WithEvent;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -43,6 +49,7 @@ public class AnalysedPatientReporterTest {
     private static final String LINX_DRIVERS_TSV = BASE_DIRECTORY + "/linx/sample.drivers.catalog.tsv";
     private static final String CHORD_PREDICTION_TXT = BASE_DIRECTORY + "/chord/sample_chord_prediction.txt";
     private static final String CIRCOS_FILE = BASE_DIRECTORY + "/purple/plot/sample.circos.png";
+    private static final String PROTECT_EVIDENCE_TSV = BASE_DIRECTORY + "/protect/sample.protect.tsv";
 
     @Test
     public void canRunOnRunDirectory() throws IOException {
@@ -68,6 +75,7 @@ public class AnalysedPatientReporterTest {
                 LINX_DRIVERS_TSV,
                 CHORD_PREDICTION_TXT,
                 CIRCOS_FILE,
+                PROTECT_EVIDENCE_TSV,
                 null,
                 false));
     }
@@ -77,7 +85,8 @@ public class AnalysedPatientReporterTest {
         double purityCorrect = 0.40;
         boolean hasReliablePurityCorrect = true;
 
-        Assert.assertEquals(QsFormNumber.FOR_080.display(), AnalysedPatientReporter.determineForNumber(hasReliablePurityCorrect, purityCorrect));
+        Assert.assertEquals(QsFormNumber.FOR_080.display(),
+                AnalysedPatientReporter.determineForNumber(hasReliablePurityCorrect, purityCorrect));
 
         double purityNotCorrect = 0.10;
         boolean hasReliablePurityNotCorrect = false;
@@ -107,29 +116,36 @@ public class AnalysedPatientReporterTest {
 
         ReportableVariant somaticVariant = variant(ReportableVariantSource.SOMATIC, somaticEventString);
         ReportableVariant germlineVariant = variant(ReportableVariantSource.GERMLINE, germlineEventString);
+        ProtectEvidence evidence = ImmutableProtectEvidence.builder()
+                .genomicEvent("HR deficiency signature")
+                .germline(false)
+                .reported(true)
+                .treatment("DRUP")
+                .onLabel(true)
+                .level(EvidenceLevel.B)
+                .direction(EvidenceDirection.RESPONSIVE)
+                .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
+                .urls(Sets.newHashSet("iclusion"))
+                .build();
 
         // Extra space is added because of protein impact which is missing in this test.
         WithEvent somaticEvent = new AnalysedPatientReporterTest.DummyEvent(somaticEventString + " ");
         WithEvent germlineEvent = new AnalysedPatientReporterTest.DummyEvent(germlineEventString + " ");
 
-        assertEquals(2,
-                AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(somaticEvent, germlineEvent),
-                        Lists.newArrayList(somaticVariant, germlineVariant),
+        assertEquals(1,
+                AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(evidence),
                         LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION).size());
 
-        assertEquals(1,
-                AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(somaticEvent, germlineEvent),
-                        Lists.newArrayList(somaticVariant, germlineVariant),
+        assertEquals(0,
+                AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(evidence),
                         LimsGermlineReportingLevel.NO_REPORTING).size());
 
-        assertEquals(2,
-                AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(somaticEvent, somaticEvent),
-                        Lists.newArrayList(somaticVariant, germlineVariant),
+        assertEquals(0,
+                AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(evidence),
                         LimsGermlineReportingLevel.NO_REPORTING).size());
 
-        assertEquals(2,
-                AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(somaticEvent, germlineEvent),
-                        Lists.newArrayList(somaticVariant),
+        assertEquals(0,
+                AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(evidence),
                         LimsGermlineReportingLevel.NO_REPORTING).size());
     }
 

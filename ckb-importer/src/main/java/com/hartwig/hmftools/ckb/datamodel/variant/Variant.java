@@ -13,6 +13,9 @@ public abstract class Variant {
 
     public abstract int id();
 
+    @Nullable
+    public abstract Gene gene();
+
     @NotNull
     public abstract String fullName();
 
@@ -48,7 +51,4 @@ public abstract class Variant {
 
     @NotNull
     public abstract List<MemberVariant> memberVariants();
-
-    @Nullable
-    public abstract Gene gene();
 }

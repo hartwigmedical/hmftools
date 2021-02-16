@@ -23,19 +23,28 @@ public final class JsonDatabaseToCkbEntryConverter {
     @NotNull
     public static List<CkbEntry> convert(@NotNull CkbJsonDatabase ckbJsonDatabase) {
         List<CkbEntry> ckbEntries = Lists.newArrayList();
+
+        int profileCount = ckbJsonDatabase.molecularProfiles().size();
+        LOGGER.info("Converting {} CKB molecular profiles to interpreted CKB entries", profileCount);
+
+        int current = 0;
+        int report = (int) Math.round(profileCount / 10D);
         for (JsonMolecularProfile molecularProfile : ckbJsonDatabase.molecularProfiles()) {
-            ImmutableCkbEntry.Builder outputBuilder = ImmutableCkbEntry.builder();
-            outputBuilder.profileId(molecularProfile.id());
-            outputBuilder.profileName(molecularProfile.profileName());
-            outputBuilder.createDate(molecularProfile.createDate());
-            outputBuilder.updateDate(molecularProfile.updateDate());
+            ckbEntries.add(ImmutableCkbEntry.builder()
+                    .profileId(molecularProfile.id())
+                    .profileName(molecularProfile.profileName())
+                    .createDate(molecularProfile.createDate())
+                    .updateDate(molecularProfile.updateDate())
+                    .variants(VariantFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()))
+                    .evidences(EvidenceFactory.extractEvidences(ckbJsonDatabase, molecularProfile.variantLevelEvidence().evidences()))
+                    .clinicalTrials(ClinicalTrialFactory.extractClinicalTrials(ckbJsonDatabase,
+                            molecularProfile.variantAssociatedClinicalTrials()))
+                    .build());
+            current++;
 
-            outputBuilder.clinicalTrials(ClinicalTrialFactory.interpretClinicalTrials(ckbJsonDatabase, molecularProfile));
-            outputBuilder.evidences(EvidenceFactory.interpretVariantEvidence(ckbJsonDatabase, molecularProfile));
-            outputBuilder.variants(VariantFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()));
-
-            LOGGER.info(outputBuilder.build());  //TODO remove when model is finished
-            ckbEntries.add(outputBuilder.build());
+            if (current % report == 0) {
+                LOGGER.debug(" Processed {} of {} molecular profiles", current, profileCount);
+            }
         }
 
         return ckbEntries;

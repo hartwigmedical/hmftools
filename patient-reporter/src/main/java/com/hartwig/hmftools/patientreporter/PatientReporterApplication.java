@@ -107,6 +107,7 @@ public class PatientReporterApplication {
                 config.linxDriversTsv(),
                 config.chordPredictionTxt(),
                 config.circosFile(),
+                config.protectEvidenceTsv(),
                 config.comments(),
                 config.correctedReport());
 
@@ -183,7 +184,6 @@ public class PatientReporterApplication {
     @NotNull
     private static AnalysedReportData buildAnalysedReportData(@NotNull PatientReporterConfig config) throws IOException {
         return AnalysedReportDataLoader.buildFromFiles(buildBaseReportData(config),
-                config.knowledgebaseDir(),
                 config.germlineReportingTsv(),
                 config.sampleSummaryTsv());
     }

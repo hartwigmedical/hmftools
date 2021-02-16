@@ -17,16 +17,14 @@ public final class AnalysedReportDataLoader {
     }
 
     @NotNull
-    public static AnalysedReportData buildFromFiles(@NotNull ReportData reportData, @NotNull String knowledgebaseDir,
+    public static AnalysedReportData buildFromFiles(@NotNull ReportData reportData,
             @NotNull String germlineReportingTsv, @NotNull String sampleSummaryTsv) throws IOException {
-        ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDir);
 
         GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(germlineReportingTsv);
         SummaryModel summaryModel = SummaryFile.buildFromTsv(sampleSummaryTsv);
 
         return ImmutableAnalysedReportData.builder()
                 .from(reportData)
-                .actionabilityAnalyzer(actionabilityAnalyzer)
                 .germlineReportingModel(germlineReportingModel)
                 .summaryModel(summaryModel)
                 .build();

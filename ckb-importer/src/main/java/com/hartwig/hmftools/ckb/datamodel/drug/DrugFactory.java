@@ -22,41 +22,56 @@ public final class DrugFactory {
     public static List<Drug> extractDrugs(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull List<DrugInfo> drugInfos) {
         List<Drug> drugs = Lists.newArrayList();
         for (DrugInfo drugInfo : drugInfos) {
-            for (JsonDrug drug : ckbJsonDatabase.drugs()) {
-                if (drugInfo.id() == drug.id()) {
-                    drugs.add(ImmutableDrug.builder()
-                            .id(drug.id())
-                            .drugName(drug.drugName())
-                            .terms(drug.terms())
-                            .synonyms(drug.synonyms())
-                            .tradeName(drug.tradeName())
-                            .drugDescriptions(extractDrugDescriptions(ckbJsonDatabase, drug.descriptions()))
-                            .casRegistryNum(drug.casRegistryNum())
-                            .ncitId(drug.ncitId())
-                            .createDate(drug.createDate())
-                            .drugClasses(extractDrugClasses(ckbJsonDatabase, drug))
-                            .build());
-                }
-            }
+            drugs.add(resolveDrug(ckbJsonDatabase, drugInfo));
         }
         return drugs;
     }
 
     @NotNull
-    private static List<DrugClass> extractDrugClasses(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull JsonDrug drug) {
-        List<DrugClass> drugClasses = Lists.newArrayList();
-        for (DrugClassInfo drugClassInfo : drug.drugClasses()) {
-            for (JsonDrugClass drugClass : ckbJsonDatabase.drugClasses()) {
-                if (drugClassInfo.id() == drugClass.id()) {
-                    drugClasses.add(ImmutableDrugClass.builder()
-                            .id(drugClass.id())
-                            .drugClass(drugClass.drugClass())
-                            .createDate(drugClass.createDate())
-                            .build());
-                }
+    private static Drug resolveDrug(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull DrugInfo drugInfo) {
+        for (JsonDrug drug : ckbJsonDatabase.drugs()) {
+            if (drug.id() == drugInfo.id()) {
+                return ImmutableDrug.builder()
+                        .id(drug.id())
+                        .createDate(drug.createDate())
+                        .drugName(drug.drugName())
+                        .drugClasses(extractDrugClasses(ckbJsonDatabase, drug.drugClasses()))
+                        .terms(drug.terms())
+                        .synonyms(drug.synonyms())
+                        .tradeName(drug.tradeName())
+                        .drugDescriptions(extractDrugDescriptions(ckbJsonDatabase, drug.descriptions()))
+                        .casRegistryNum(drug.casRegistryNum())
+                        .ncitId(drug.ncitId())
+                        .build();
             }
         }
+
+        throw new IllegalStateException("Could not resolve CKB drug with id '" + drugInfo.id() + "'");
+    }
+
+    @NotNull
+    private static List<DrugClass> extractDrugClasses(@NotNull CkbJsonDatabase ckbJsonDatabase,
+            @NotNull List<DrugClassInfo> drugClassInfos) {
+        List<DrugClass> drugClasses = Lists.newArrayList();
+        for (DrugClassInfo drugClassInfo : drugClassInfos) {
+            drugClasses.add(resolveDrugClass(ckbJsonDatabase, drugClassInfo));
+        }
         return drugClasses;
+    }
+
+    @NotNull
+    private static DrugClass resolveDrugClass(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull DrugClassInfo drugClassInfo) {
+        for (JsonDrugClass drugClass : ckbJsonDatabase.drugClasses()) {
+            if (drugClassInfo.id() == drugClass.id()) {
+                return ImmutableDrugClass.builder()
+                        .id(drugClass.id())
+                        .createDate(drugClass.createDate())
+                        .drugClass(drugClass.drugClass())
+                        .build();
+            }
+        }
+
+        throw new IllegalStateException("Could not resolve CKB drug class with id '" + drugClassInfo.id() + "'");
     }
 
     @NotNull

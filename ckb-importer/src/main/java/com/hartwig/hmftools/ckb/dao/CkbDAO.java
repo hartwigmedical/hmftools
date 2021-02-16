@@ -3,8 +3,9 @@ package com.hartwig.hmftools.ckb.dao;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.List;
 
-import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
+import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -53,7 +54,7 @@ public final class CkbDAO {
 
     }
 
-    public void writeCkb(@NotNull CkbJsonDatabase ckbJsonDatabase) {
+    public void writeCkbEntries(@NotNull List<CkbEntry> ckbEntries) {
 
     }
 

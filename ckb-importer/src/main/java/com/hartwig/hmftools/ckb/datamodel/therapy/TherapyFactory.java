@@ -4,13 +4,11 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.drug.DrugFactory;
-import com.hartwig.hmftools.ckb.datamodel.indication.IndicationFactory;
 import com.hartwig.hmftools.ckb.datamodel.reference.ReferenceFactory;
-import com.hartwig.hmftools.ckb.datamodel.variant.VariantFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.GlobalApprovalStatusInfo;
-import com.hartwig.hmftools.ckb.json.molecularprofile.JsonMolecularProfile;
+import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.json.therapy.JsonTherapy;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,21 +19,23 @@ public final class TherapyFactory {
     }
 
     @NotNull
-    public static Therapy extractTherapy(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull JsonTherapy therapy,
-            @NotNull JsonMolecularProfile molecularProfile) {
-        return ImmutableTherapy.builder()
-                .id(therapy.id())
-                .therapyName(therapy.therapyName())
-                .synonyms(therapy.synonyms())
-                .descriptions(extractTherapyDescriptions(ckbJsonDatabase, therapy.descriptions()))
-                .createDate(therapy.createDate())
-                .updateDate(therapy.updateDate())
-                .drugs(DrugFactory.extractDrugs(ckbJsonDatabase, therapy.drugs()))
-                .globalTherapyApprovalStatuses(extractGlobalApprovalStatuses(ckbJsonDatabase,
-                        therapy.globalApprovalStatuses(),
-                        molecularProfile,
-                        therapy.id()))
-                .build();
+    public static Therapy resolveTherapy(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull TherapyInfo therapyInfo) {
+        for (JsonTherapy therapy : ckbJsonDatabase.therapies()) {
+            if (therapy.id() == therapyInfo.id()) {
+                return ImmutableTherapy.builder()
+                        .id(therapy.id())
+                        .createDate(therapy.createDate())
+                        .updateDate(therapy.updateDate())
+                        .therapyName(therapy.therapyName())
+                        .drugs(DrugFactory.extractDrugs(ckbJsonDatabase, therapy.drugs()))
+                        .synonyms(therapy.synonyms())
+                        .descriptions(extractTherapyDescriptions(ckbJsonDatabase, therapy.descriptions()))
+                        .globalTherapyApprovalStatuses(convertGlobalApprovalStatuses(therapy.globalApprovalStatuses()))
+                        .build();
+            }
+        }
+
+        throw new IllegalStateException("Could not resolve CKB therapy with id '" + therapyInfo.id() + "'");
     }
 
     @NotNull
@@ -53,21 +53,18 @@ public final class TherapyFactory {
     }
 
     @NotNull
-    private static List<GlobalTherapyApprovalStatus> extractGlobalApprovalStatuses(@NotNull CkbJsonDatabase ckbJsonDatabase,
-            @NotNull List<GlobalApprovalStatusInfo> globalTherapyApprovalStatuses, @NotNull JsonMolecularProfile molecularProfile,
-            int therapyId) {
+    private static List<GlobalTherapyApprovalStatus> convertGlobalApprovalStatuses(
+            @NotNull List<GlobalApprovalStatusInfo> globalTherapyApprovalStatuses) {
         List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatusesInterpretation = Lists.newArrayList();
         for (GlobalApprovalStatusInfo globalTherapyApprovalStatusInfo : globalTherapyApprovalStatuses) {
-            if (therapyId == globalTherapyApprovalStatusInfo.therapy().id()
-                    && molecularProfile.id() == globalTherapyApprovalStatusInfo.molecularProfile().id()) {
-                globalTherapyApprovalStatusesInterpretation.add(ImmutableGlobalTherapyApprovalStatus.builder()
-                        .id(globalTherapyApprovalStatusInfo.id())
-                        .indication(IndicationFactory.extractIndication(ckbJsonDatabase, globalTherapyApprovalStatusInfo.indication()))
-                        .variants(VariantFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()))
-                        .approvalStatus(globalTherapyApprovalStatusInfo.approvalStatus())
-                        .approvalAuthority(globalTherapyApprovalStatusInfo.approvalAuthority())
-                        .build());
-            }
+            globalTherapyApprovalStatusesInterpretation.add(ImmutableGlobalTherapyApprovalStatus.builder()
+                    .id(globalTherapyApprovalStatusInfo.id())
+                    .profileId(globalTherapyApprovalStatusInfo.molecularProfile().id())
+                    .therapyId(globalTherapyApprovalStatusInfo.therapy().id())
+                    .indicationId(globalTherapyApprovalStatusInfo.indication().id())
+                    .approvalStatus(globalTherapyApprovalStatusInfo.approvalStatus())
+                    .approvalAuthority(globalTherapyApprovalStatusInfo.approvalAuthority())
+                    .build());
         }
         return globalTherapyApprovalStatusesInterpretation;
     }

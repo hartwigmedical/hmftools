@@ -17,6 +17,4 @@ public abstract class ReportableVariantAnalysis {
     @NotNull
     public abstract List<ReportableVariant> variantsToReport();
 
-    @NotNull
-    public abstract List<EvidenceItem> evidenceItems();
 }

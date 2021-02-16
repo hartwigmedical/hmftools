@@ -1,17 +1,10 @@
-# Pathogenic Germline
+## Running SAGE in Germline Mode
 
-Previously we used GATK Haplotype caller for germline variant calling and bachelor to search for variants which match a configured set of genes and coding effects or which are found to be pathogenic and annotates them with both their tumor VAF and copy number.
+SAGE can be configured to detect germline variants by switching the tumor and germline samples, and adjusting filtering parameters, panel definition and hotspot inputs.  
 
-This setup has a few drawbacks:
-- Our germline filters are sub-optimal in general (our soft filters filter a significant number of real variants)
-- We have to reimplement logic in bachelor to search for variant calls made by GATK haplotype caller in the tumor sample. 
-Some variants such as indels in repeats may not be called particularly accurately by bachelor in the tumor.
-- If variant calls fail hard filtering criteria in GATK in the reference sample they will be missed altogether, even if they are a known hotspot or may have stronger support in the tumor sample.
-- We don’t know how confident we are that a gene is truly wildtype, since we don’t record any information about coverage.
+A '-panel_coverage' option has also been added which when set, provides coverage statistics per gene in the PANEL file.   This can be used to estimate the likelihood of missing a genuine germline variant.
 
-SAGE is the natural component to do this analysis, since it has comprehensive logic for calls both SNV and small indel, supports analysing normal and tumor at the same time.
-
-The following describes how SAGE can be configured to detect pathogenic germline variants. 
+The following sections describe how SAGE can be configured to detect pathogenic germline variants. 
 
 ## Panel
 The panel is constructed from the supplied DriverGenePanel.hgxx.tsv file using the [DriverGenePanelConversion](../hmf-common/src/main/java/com/hartwig/hmftools/common/drivercatalog/panel/DriverGenePanelConversion.java) function. 

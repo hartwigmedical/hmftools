@@ -5,6 +5,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
@@ -32,13 +33,13 @@ public abstract class GenomicAnalysis {
     public abstract double averageTumorPloidy();
 
     @NotNull
-    public abstract List<EvidenceItem> tumorSpecificEvidence();
+    public abstract List<ProtectEvidence> tumorSpecificEvidence();
 
     @NotNull
-    public abstract List<ClinicalTrial> clinicalTrials();
+    public abstract List<ProtectEvidence> clinicalTrials();
 
     @NotNull
-    public abstract List<EvidenceItem> offLabelEvidence();
+    public abstract List<ProtectEvidence> offLabelEvidence();
 
     @NotNull
     public abstract List<ReportableVariant> reportableVariants();

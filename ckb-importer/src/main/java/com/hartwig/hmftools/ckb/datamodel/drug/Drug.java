@@ -13,8 +13,14 @@ public abstract class Drug {
 
     public abstract int id();
 
+    @Nullable
+    public abstract Date createDate();
+
     @NotNull
     public abstract String drugName();
+
+    @NotNull
+    public abstract List<DrugClass> drugClasses(); //some drugs has none drug class eg. drugs 9758
 
     @NotNull
     public abstract List<String> terms();
@@ -33,10 +39,4 @@ public abstract class Drug {
 
     @Nullable
     public abstract String ncitId();
-
-    @Nullable
-    public abstract Date createDate();
-
-    @NotNull
-    public abstract List<DrugClass> drugClasses(); //some drugs has none drugsclass eg. drugs 9758
 }

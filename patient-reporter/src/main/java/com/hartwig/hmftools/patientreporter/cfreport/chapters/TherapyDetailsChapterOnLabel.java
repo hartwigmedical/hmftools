@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
@@ -21,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
 public class TherapyDetailsChapterOnLabel implements ReportChapter {
 
     private static final float COL_WIDTH_EVENT = 110;
-    private static final float COL_WIDTH_MATCH = 60;
     private static final float COL_WIDTH_TREATMENT_ICONS = 25;
     private static final float COL_WIDTH_TRIAL_NAME = 222;
     private static final float COL_WIDTH_CCMO = 75;
@@ -59,30 +59,27 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
     }
 
     @NotNull
-    private static Table createClinicalTrialsTable(@NotNull List<ClinicalTrial> trials) {
+    private static Table createClinicalTrialsTable(@NotNull List<ProtectEvidence> trials) {
         String title = "Tumor type specific clinical trials (NL)";
 
         if (trials.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { COL_WIDTH_EVENT, COL_WIDTH_MATCH, COL_WIDTH_TREATMENT_ICONS,
+        Table contentTable = TableUtil.createReportContentTable(new float[] { COL_WIDTH_EVENT, COL_WIDTH_TREATMENT_ICONS,
                         COL_WIDTH_TRIAL_NAME, COL_WIDTH_CCMO, COL_WIDTH_SOURCE },
-                new Cell[] { TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Match"),
+                new Cell[] { TableUtil.createHeaderCell("Variant"),
                         TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("CCMO"), TableUtil.createHeaderCell("Source") });
 
-        for (ClinicalTrial trial : ClinicalTrials.sort(trials)) {
-            String trialName = trial.acronym();
-            contentTable.addCell(TableUtil.createContentCell(trial.event()));
-            contentTable.addCell(TableUtil.createContentCell(TherapyDetailsChapterFunctions.createTreatmentMatchParagraph(
-                    trial.scope() == EvidenceScope.SPECIFIC)));
+        for (ProtectEvidence trial : ClinicalTrials.sort(trials)) {
+            String trialName = trial.treatment();
+            contentTable.addCell(TableUtil.createContentCell(trial.genomicEvent()));
             contentTable.addCell(TableUtil.createContentCell(TherapyDetailsChapterFunctions.createTreatmentIcons(trialName))
                     .setVerticalAlignment(VerticalAlignment.TOP));
             contentTable.addCell(TableUtil.createContentCell(trialName).setVerticalAlignment(VerticalAlignment.TOP));
-            contentTable.addCell(TableUtil.createContentCell(ClinicalTrials.CCMOId(trial.reference())));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(trial.source()
-                    .sourceName()).addStyle(ReportResources.dataHighlightLinksStyle()))
-                    .setAction(PdfAction.createURI(ClinicalTrials.sourceUrl(trial))));
+            contentTable.addCell(TableUtil.createContentCell(trial.sources().toString()));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(trial.sources().toString()).addStyle(ReportResources.dataHighlightLinksStyle()))
+                    .setAction(PdfAction.createURI(trial.urls().toString())));
         }
 
         contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
