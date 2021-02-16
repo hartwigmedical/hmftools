@@ -58,7 +58,7 @@ public final class CkbJsonReader {
 
     @NotNull
     public static CkbJsonDatabase read(@NotNull String ckbDir, @Nullable Integer maxFilesToReadPerType) throws IOException {
-        LOGGER.info("Reading all CKB json files from '{}'", ckbDir);
+        LOGGER.info("Reading all CKB json files from {}", ckbDir);
 
         List<JsonMolecularProfile> molecularProfiles =
                 new MolecularProfileReader(maxFilesToReadPerType).read(ckbDir + File.separator + MOLECULAR_PROFILES_DIR);
