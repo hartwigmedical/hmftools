@@ -36,9 +36,7 @@ public final class JsonDatabaseToCkbEntryConverter {
                     .createDate(molecularProfile.createDate())
                     .updateDate(molecularProfile.updateDate())
                     .variants(VariantFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()))
-                    .evidences(EvidenceFactory.extractEvidences(ckbJsonDatabase,
-                            molecularProfile.variantLevelEvidence().evidences(),
-                            molecularProfile.id()))
+                    .evidences(EvidenceFactory.extractEvidences(ckbJsonDatabase, molecularProfile.variantLevelEvidence().evidences()))
                     .clinicalTrials(ClinicalTrialFactory.extractClinicalTrials(ckbJsonDatabase,
                             molecularProfile.variantAssociatedClinicalTrials()))
                     .build());
