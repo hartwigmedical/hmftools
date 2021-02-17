@@ -24,6 +24,9 @@ public class SampleData
     private String mCancerType; // can be overridden if matches a reference sample
     private boolean mIsRefSample;
     private Gender mGenderType;
+    private int mRnaReadLength;
+
+    public static final int RNA_READ_LENGTH_NONE = 0;
 
     public SampleData(final String id, final String cancerType, final String cancerSubtype)
     {
@@ -44,6 +47,7 @@ public class SampleData
 
         mGenderType = null;
         mIsRefSample = false;
+        mRnaReadLength = RNA_READ_LENGTH_NONE;
     }
 
     public String cancerType() { return mCancerType; }
@@ -51,6 +55,9 @@ public class SampleData
 
     public Gender gender() { return mGenderType; }
     public void setGender(final Gender gender) { mGenderType = gender; }
+
+    public void setRnaReadLength(int readLength) { mRnaReadLength = readLength; }
+    public int rnaReadLength() { return mRnaReadLength; }
 
     public boolean isRefSample() { return mIsRefSample; }
     public void setRefSample() { mIsRefSample = true; }
@@ -74,7 +81,14 @@ public class SampleData
         String primaryType = extractOptionalField(fieldsIndexMap, items, "PrimaryTumorType", "");
         String primarySubtype = extractOptionalField(fieldsIndexMap, items, "PrimaryTumorSubType", "");
 
-        return new SampleData(sampleId, cancerType, cancerSubtype, primaryLocation, primarySubLocation, primaryType, primarySubtype);
+        SampleData sample = new SampleData(sampleId, cancerType, cancerSubtype, primaryLocation, primarySubLocation, primaryType, primarySubtype);
+
+        if(fieldsIndexMap.containsKey("ReadLength"))
+        {
+            sample.setRnaReadLength(Integer.parseInt(items[fieldsIndexMap.get("ReadLength")]));
+        }
+
+        return sample;
     }
 
     private static String extractOptionalField(

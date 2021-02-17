@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_UNKNOWN;
+import static com.hartwig.hmftools.cup.common.SampleData.RNA_READ_LENGTH_NONE;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,6 +27,7 @@ public class SampleDataCache
     public final Map<String,List<SampleData>> RefCancerSampleData; // map of known cancer types to their ref samples
     public final Map<String,String> RefSampleCancerTypeMap; // map of ref sample to cancer type
     public final List<SampleData> RefSampleDataList; // includes type 'Other' if in ref data
+    public final Map<String,Integer> RefSampleRnaReadLength;
 
     private boolean mIsValid;
 
@@ -36,6 +38,7 @@ public class SampleDataCache
 
         RefCancerSampleData = Maps.newHashMap();
         RefSampleCancerTypeMap = Maps.newHashMap();
+        RefSampleRnaReadLength = Maps.newHashMap();
         RefSampleDataList = Lists.newArrayList();
 
         SpecificSample = null;
@@ -80,6 +83,12 @@ public class SampleDataCache
         return SampleDataList.stream().filter(x -> x.Id.equals(sampleId)).findFirst().orElse(null);
     }
 
+    public int getRefSampleRnaReadLength(final String sampleId)
+    {
+        Integer readLength = RefSampleRnaReadLength.get(sampleId);
+        return readLength != null ? readLength : RNA_READ_LENGTH_NONE;
+    }
+
     public void addRefSample(final SampleData sample)
     {
         if(sample.isKnownCancerType())
@@ -94,6 +103,9 @@ public class SampleDataCache
 
         RefSampleCancerTypeMap.put(sample.Id, sample.cancerType());
         RefSampleDataList.add(sample);
+
+        if(sample.rnaReadLength() > 0)
+            RefSampleRnaReadLength.put(sample.Id, sample.rnaReadLength());
     }
 
     public SampleData addTestSample(final SampleData sample)
