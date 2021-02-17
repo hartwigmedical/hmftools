@@ -121,7 +121,7 @@ DROP TABLE IF EXISTS referenceTranscriptCoordinate;
 CREATE TABLE referenceTranscriptCoordinate
 (   id int NOT NULL AUTO_INCREMENT,
     variantId int NOT NULL,
-    isReferenceTranscriptCoordinate BOOLEAN NOT NULL,
+    isMainReferenceTranscriptCoordinate BOOLEAN NOT NULL,
     transcript varchar(50) NOT NULL,
     gDna varchar(50) NOT NULL,
     cDna varchar(50) NOT NULL,

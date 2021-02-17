@@ -32,7 +32,7 @@ public abstract class Gene {
     public abstract String mapLocation();
 
     @NotNull
-    public abstract List<GeneDescription> geneDescriptions();
+    public abstract List<GeneDescription> descriptions();
 
     @Nullable
     public abstract String canonicalTranscript();

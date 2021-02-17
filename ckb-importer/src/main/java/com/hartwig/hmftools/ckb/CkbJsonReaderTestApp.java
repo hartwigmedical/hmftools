@@ -10,15 +10,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 
-public class CkbImporterTestApp {
+public class CkbJsonReaderTestApp {
 
-    private static final Logger LOGGER = LogManager.getLogger(CkbImporterTestApp.class);
+    private static final Logger LOGGER = LogManager.getLogger(CkbJsonReaderTestApp.class);
 
     public static void main(String[] args) throws IOException {
         Configurator.setRootLevel(Level.DEBUG);
 
         String hostname = InetAddress.getLocalHost().getHostName();
-        LOGGER.debug("Running CKB Importer on '{}'", hostname);
+        LOGGER.debug("Running CKB Json Reader Test Application on '{}'", hostname);
 
         String ckbDir;
         Integer maxFilesToReadPerType = 10;

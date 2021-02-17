@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class DateConverter {
 
-    private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.ENGLISH);
+    static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.ENGLISH);
 
     private DateConverter() {
     }

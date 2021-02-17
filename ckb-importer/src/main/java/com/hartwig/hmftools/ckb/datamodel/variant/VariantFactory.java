@@ -41,7 +41,7 @@ public final class VariantFactory {
                         .fullName(variant.fullName())
                         .impact(variant.impact())
                         .proteinEffect(variant.proteinEffect())
-                        .variantDescriptions(extractVariantDescriptions(ckbJsonDatabase, variant.descriptions()))
+                        .descriptions(extractVariantDescriptions(ckbJsonDatabase, variant.descriptions()))
                         .type(variant.type())
                         .variant(variant.variant())
                         .createDate(variant.createDate())
@@ -69,7 +69,7 @@ public final class VariantFactory {
                         .synonyms(gene.synonyms())
                         .chromosome(gene.chromosome())
                         .mapLocation(gene.mapLocation())
-                        .geneDescriptions(extractGeneDescriptions(ckbJsonDatabase, gene.descriptions()))
+                        .descriptions(extractGeneDescriptions(ckbJsonDatabase, gene.descriptions()))
                         .canonicalTranscript(gene.canonicalTranscript())
                         .geneRole(gene.geneRole())
                         .createDate(gene.createDate())
@@ -161,7 +161,7 @@ public final class VariantFactory {
                     .fullName(memberVariant.fullName())
                     .impact(memberVariant.impact())
                     .proteinEffect(memberVariant.proteinEffect())
-                    .variantDescriptions(extractVariantDescriptions(ckbJsonDatabase, memberVariant.descriptions()))
+                    .descriptions(extractVariantDescriptions(ckbJsonDatabase, memberVariant.descriptions()))
                     .build());
         }
 

@@ -1,8 +1,10 @@
-package com.hartwig.hmftools.ckb.datamodel;
+package com.hartwig.hmftools.ckb;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
+import com.hartwig.hmftools.ckb.datamodel.ImmutableCkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrialFactory;
 import com.hartwig.hmftools.ckb.datamodel.evidence.EvidenceFactory;
 import com.hartwig.hmftools.ckb.datamodel.variant.VariantFactory;

@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.ckb.dao.CkbDAO;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
-import com.hartwig.hmftools.ckb.datamodel.JsonDatabaseToCkbEntryConverter;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.CkbJsonReader;
 
@@ -40,23 +39,31 @@ public class CkbImporterApplication {
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(config.cbkDir());
         List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
 
-        if (config.skipDatabaseWriting()) {
-            LOGGER.info("Skipping DB writing.");
-        } else {
-            CkbDAO ckbDAO = connect(config);
-            LOGGER.info("Deleting all data from CKB db");
-            ckbDAO.deleteAll();
-            LOGGER.info("Starting insertion of {} CKB entries", ckbEntries.size());
-            for (CkbEntry entry : ckbEntries) {
-                ckbDAO.write(entry);
-            }
-        }
+        updateCkbSqlDatabase(config, ckbEntries);
 
         LOGGER.info("Complete!");
     }
 
-    @NotNull
-    private static CkbDAO connect(@NotNull CkbImporterConfig config) throws SQLException {
-        return CkbDAO.connectToCkbDAO(config.dbUser(), config.dbPass(), "jdbc:" + config.dbUrl());
+    private static void updateCkbSqlDatabase(@NotNull CkbImporterConfig config, @NotNull List<CkbEntry> ckbEntries) throws SQLException {
+        if (config.skipDatabaseWriting()) {
+            LOGGER.info("Skipping DB writing.");
+        } else {
+            LOGGER.info("Connecting to CKB database at {}", config.dbUrl());
+            CkbDAO ckbDAO = CkbDAO.connectToCkbDAO(config.dbUser(), config.dbPass(), "jdbc:" + config.dbUrl());
+
+            LOGGER.info("Deleting all data from CKB database");
+            ckbDAO.deleteAll();
+
+            LOGGER.info("Inserting {} CKB entries", ckbEntries.size());
+            int current = 0;
+            int report = (int) Math.round(ckbEntries.size() / 10D);
+            for (CkbEntry entry : ckbEntries) {
+                ckbDAO.write(entry);
+                current++;
+                if (current % report == 0) {
+                    LOGGER.debug(" Inserted {} of {} CKB entries", current, ckbEntries.size());
+                }
+            }
+        }
     }
 }
