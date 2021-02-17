@@ -2,8 +2,6 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.actionability.ClinicalTrial;
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;

@@ -5,11 +5,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.actionability.ActionabilitySource;
-import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ClinicalTrials {
@@ -36,15 +33,15 @@ public final class ClinicalTrials {
         return splitExtAndCCMO[1];
     }
 
-    @NotNull
-    public static String sourceUrl(@NotNull ClinicalTrial trial) {
-        if (trial.source() == ActionabilitySource.ICLUSION) {
-            String ext = EXTId(trial.reference());
-            return "https://iclusion.org/hmf/" + ext;
-        }
-
-        return Strings.EMPTY;
-    }
+//    @NotNull
+//    public static String sourceUrl(@NotNull ClinicalTrial trial) {
+//        if (trial.source() == ActionabilitySource.ICLUSION) {
+//            String ext = EXTId(trial.reference());
+//            return "https://iclusion.org/hmf/" + ext;
+//        }
+//
+//        return Strings.EMPTY;
+//    }
 
     @NotNull
     private static String EXTId(@NotNull String reference) {

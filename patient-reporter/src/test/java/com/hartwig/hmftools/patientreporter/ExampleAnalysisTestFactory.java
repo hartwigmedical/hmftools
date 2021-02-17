@@ -8,13 +8,6 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.actionability.ActionabilitySource;
-import com.hartwig.hmftools.common.actionability.ClinicalTrial;
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.actionability.EvidenceLevel;
-import com.hartwig.hmftools.common.actionability.EvidenceScope;
-import com.hartwig.hmftools.common.actionability.ImmutableClinicalTrial;
-import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -299,9 +292,6 @@ public final class ExampleAnalysisTestFactory {
     private static List<ProtectEvidence> createCOLO829TumorSpecificEvidence() {
         List<ProtectEvidence> evidenceItems = Lists.newArrayList();
 
-        ImmutableEvidenceItem.Builder onLabelBuilder = evidenceBuilder().isOnLabel(true);
-
-
         return evidenceItems;
     }
 
@@ -315,7 +305,6 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static List<ProtectEvidence> createCOLO829OffLabelEvidence() {
         List<ProtectEvidence> evidenceItems = Lists.newArrayList();
-
 
         return evidenceItems;
     }
@@ -575,11 +564,6 @@ public final class ExampleAnalysisTestFactory {
         List<ViralInsertion> viralInsertions =
                 Lists.newArrayList(ImmutableViralInsertion.builder().virus("Human papillomavirus type 16").viralInsertionCount(2).build());
         return Lists.newArrayList(viralInsertions);
-    }
-
-    @NotNull
-    private static ImmutableEvidenceItem.Builder evidenceBuilder() {
-        return ImmutableEvidenceItem.builder().drugsType(Strings.EMPTY).cancerType(Strings.EMPTY);
     }
 
     @NotNull

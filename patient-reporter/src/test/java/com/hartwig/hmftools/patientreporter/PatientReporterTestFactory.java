@@ -5,11 +5,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
-import com.hartwig.hmftools.common.actionability.ActionabilitySource;
-import com.hartwig.hmftools.common.actionability.EvidenceLevel;
-import com.hartwig.hmftools.common.actionability.EvidenceScope;
-import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
+
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
@@ -22,7 +18,6 @@ import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class PatientReporterTestFactory {
@@ -30,8 +25,6 @@ public final class PatientReporterTestFactory {
     private static final String SIGNATURE_PATH = Resources.getResource("signature/signature_test.png").getPath();
     private static final String RVA_LOGO_PATH = Resources.getResource("rva_logo/rva_logo_test.jpg").getPath();
     private static final String COMPANY_LOGO_PATH = Resources.getResource("company_logo/hartwig_logo_test.jpg").getPath();
-
-    private static final String KNOWLEDGEBASE_DIRECTORY = Resources.getResource("actionability").getPath();
 
     private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
 
@@ -56,15 +49,6 @@ public final class PatientReporterTestFactory {
                 .requireHospitalPersonsRequester(requireHospitalPersonsRequester)
                 .requireAdditionalInformationForSidePanel(requireAdditionalInformationForSidePanel)
                 .build();
-    }
-
-    @NotNull
-    public static ActionabilityAnalyzer loadTestActionabilityAnalyzer() {
-        try {
-            return ActionabilityAnalyzer.fromKnowledgebase(KNOWLEDGEBASE_DIRECTORY);
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not load test actionability analyzer: " + exception.getMessage());
-        }
     }
 
     @NotNull
