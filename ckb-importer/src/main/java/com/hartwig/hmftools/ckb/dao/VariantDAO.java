@@ -26,6 +26,7 @@ import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.ckb.datamodel.variant.VariantDescription;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 
 class VariantDAO {
@@ -217,26 +218,28 @@ class VariantDAO {
         }
     }
 
-    private void writeTranscriptCoordinate(@NotNull TranscriptCoordinate transcriptCoordinate, int variantId,
+    private void writeTranscriptCoordinate(@Nullable TranscriptCoordinate transcriptCoordinate, int variantId,
             boolean isReferenceTranscriptCoordinate) {
-        context.insertInto(TRANSCRIPTCOORDINATE,
-                TRANSCRIPTCOORDINATE.VARIANTID,
-                TRANSCRIPTCOORDINATE.ISREFERENCETRANSCRIPTCOORDINATE,
-                TRANSCRIPTCOORDINATE.TRANSCRIPT,
-                TRANSCRIPTCOORDINATE.GDNA,
-                TRANSCRIPTCOORDINATE.CDNA,
-                TRANSCRIPTCOORDINATE.PROTEIN,
-                TRANSCRIPTCOORDINATE.SOURCEDB,
-                TRANSCRIPTCOORDINATE.REFGENOMEBUILD)
-                .values(variantId,
-                        Util.toByte(isReferenceTranscriptCoordinate),
-                        transcriptCoordinate.transcript(),
-                        transcriptCoordinate.gDna(),
-                        transcriptCoordinate.cDna(),
-                        transcriptCoordinate.protein(),
-                        transcriptCoordinate.sourceDb(),
-                        transcriptCoordinate.refGenomeBuild())
-                .execute();
+        if (transcriptCoordinate != null) {
+            context.insertInto(TRANSCRIPTCOORDINATE,
+                    TRANSCRIPTCOORDINATE.VARIANTID,
+                    TRANSCRIPTCOORDINATE.ISREFERENCETRANSCRIPTCOORDINATE,
+                    TRANSCRIPTCOORDINATE.TRANSCRIPT,
+                    TRANSCRIPTCOORDINATE.GDNA,
+                    TRANSCRIPTCOORDINATE.CDNA,
+                    TRANSCRIPTCOORDINATE.PROTEIN,
+                    TRANSCRIPTCOORDINATE.SOURCEDB,
+                    TRANSCRIPTCOORDINATE.REFGENOMEBUILD)
+                    .values(variantId,
+                            Util.toByte(isReferenceTranscriptCoordinate),
+                            transcriptCoordinate.transcript(),
+                            transcriptCoordinate.gDna(),
+                            transcriptCoordinate.cDna(),
+                            transcriptCoordinate.protein(),
+                            transcriptCoordinate.sourceDb(),
+                            transcriptCoordinate.refGenomeBuild())
+                    .execute();
+        }
     }
 
     private void writeCategoryVariantPath(@NotNull CategoryVariantPath categoryVariantPath, int variantId) {
