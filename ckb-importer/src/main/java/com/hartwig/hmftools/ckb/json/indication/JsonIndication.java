@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.json.indication;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.json.CkbJsonObject;
@@ -32,7 +32,7 @@ public abstract class JsonIndication implements CkbJsonObject {
     public abstract String currentPreferredTerm();
 
     @Nullable
-    public abstract Date lastUpdateDateFromDO();
+    public abstract LocalDate lastUpdateDateFromDO();
 
     @NotNull
     public abstract List<String> altIds();

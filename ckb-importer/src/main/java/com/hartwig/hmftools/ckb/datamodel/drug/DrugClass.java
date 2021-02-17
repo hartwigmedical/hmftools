@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.drug;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +13,7 @@ public abstract class DrugClass {
     public abstract int id();
 
     @Nullable
-    public abstract Date createDate();
+    public abstract LocalDate createDate();
 
     @NotNull
     public abstract String drugClass();

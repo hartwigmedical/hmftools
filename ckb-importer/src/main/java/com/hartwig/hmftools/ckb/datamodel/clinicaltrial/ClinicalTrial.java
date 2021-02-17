@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.clinicaltrial;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.indication.Indication;
@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ClinicalTrial {
 
     @Nullable
-    public abstract Date updateDate();
+    public abstract LocalDate updateDate();
 
     @NotNull
     public abstract String nctId();

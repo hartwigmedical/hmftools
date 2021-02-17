@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.ckb.dao;
 
+import static com.hartwig.hmftools.ckb.database.tables.Ckbentry.CKBENTRY;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.List;
+import java.time.LocalDate;
 
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 
@@ -50,22 +52,26 @@ public final class CkbDAO {
         this.context = context;
     }
 
+    public void write(@NotNull CkbEntry ckbEntry) {
+        int id = context.insertInto(CKBENTRY, CKBENTRY.CKBPROFILEID,
+                CKBENTRY.PROFILENAME,
+                CKBENTRY.CREATEDATE,
+                CKBENTRY.UPDATEDATE)
+                .values(ckbEntry.profileId(),
+                        ckbEntry.profileName(),
+                        sqlDate(ckbEntry.createDate()),
+                        sqlDate(ckbEntry.updateDate()))
+                .returning(CKBENTRY.ID)
+                .fetchOne()
+                .getValue(CKBENTRY.ID);
+    }
+
     public void deleteAll() {
 
     }
 
-    public void writeCkbEntries(@NotNull List<CkbEntry> ckbEntries) {
-
-    }
-
-    private int counting(int count, @NotNull String specificObject, int totalEntriesOfObject) {
-        count++;
-        if (count % 1000 == 0) {
-            LOGGER.info(" Completed inserting {} of {} CKB entries into CKB db of the {} entries",
-                    count,
-                    specificObject,
-                    totalEntriesOfObject);
-        }
-        return count;
+    @Nullable
+    private static java.sql.Date sqlDate(@Nullable LocalDate date) {
+        return date != null ? java.sql.Date.valueOf(date) : null;
     }
 }

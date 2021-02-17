@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.json.clinicaltrial;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.json.CkbJsonObject;
@@ -43,7 +43,7 @@ public abstract class JsonClinicalTrial implements CkbJsonObject {
     public abstract String sponsors();
 
     @Nullable
-    public abstract Date updateDate();
+    public abstract LocalDate updateDate();
 
     @NotNull
     public abstract List<IndicationInfo> indications();

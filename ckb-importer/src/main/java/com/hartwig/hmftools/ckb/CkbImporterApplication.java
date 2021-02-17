@@ -47,7 +47,9 @@ public class CkbImporterApplication {
             LOGGER.info("Deleting all data from CKB db");
             ckbDAO.deleteAll();
             LOGGER.info("Starting insertion of {} CKB entries", ckbEntries.size());
-            ckbDAO.writeCkbEntries(ckbEntries);
+            for (CkbEntry entry : ckbEntries) {
+                ckbDAO.write(entry);
+            }
         }
 
         LOGGER.info("Complete!");

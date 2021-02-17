@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.therapy;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
@@ -16,10 +16,10 @@ public abstract class Therapy {
     public abstract int id();
 
     @Nullable
-    public abstract Date createDate();
+    public abstract LocalDate createDate();
 
     @Nullable
-    public abstract Date updateDate();
+    public abstract LocalDate updateDate();
 
     @NotNull
     public abstract String therapyName();

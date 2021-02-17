@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.json.gene;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.json.CkbJsonObject;
@@ -48,10 +48,10 @@ public abstract class JsonGene implements CkbJsonObject {
     public abstract String geneRole();
 
     @Nullable
-    public abstract Date createDate();
+    public abstract LocalDate createDate();
 
     @Nullable
-    public abstract Date updateDate();
+    public abstract LocalDate updateDate();
 
     @NotNull
     public abstract List<ClinicalTrialInfo> clinicalTrials();

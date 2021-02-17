@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.variant;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.immutables.value.Value;
@@ -35,10 +35,10 @@ public abstract class Variant {
     public abstract String variant();
 
     @Nullable
-    public abstract Date createDate();
+    public abstract LocalDate createDate();
 
     @Nullable
-    public abstract Date updateDate();
+    public abstract LocalDate updateDate();
 
     @Nullable
     public abstract ReferenceTranscriptCoordinate referenceTranscriptCoordinate();
