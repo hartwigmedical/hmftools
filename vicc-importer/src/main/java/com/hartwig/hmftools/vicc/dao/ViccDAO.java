@@ -78,10 +78,10 @@ public class ViccDAO {
     @NotNull
     private final DSLContext context;
 
-    public static ViccDAO connectToViccDAO(@NotNull final String userName, @NotNull final String password, @NotNull final String url)
-            throws SQLException {
-        final Connection conn = DriverManager.getConnection(url, userName, password);
-        final String catalog = conn.getCatalog();
+    @NotNull
+    public static ViccDAO connectToViccDAO(@NotNull String userName, @NotNull String password, @NotNull String url) throws SQLException {
+        Connection conn = DriverManager.getConnection(url, userName, password);
+        String catalog = conn.getCatalog();
         LOGGER.info("Connecting to database {}", catalog);
 
         return new ViccDAO(DSL.using(conn, SQLDialect.MYSQL, settings(catalog)));
