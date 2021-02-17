@@ -284,10 +284,11 @@ CREATE TABLE therapyDescriptionReference
 );
 
 DROP TABLE IF EXISTS globalTherapyApprovalStatus;
-CREATE TABLE globalTherapyApprovalStatus
+DROP TABLE IF EXISTS globalApprovalStatus;
+CREATE TABLE globalApprovalStatus
 (   id int NOT NULL AUTO_INCREMENT,
     therapyId int NOT NULL,
-    ckbGlobalTherapyApprovalStatusId int NOT NULL,
+    ckbGlobalApprovalStatusId int NOT NULL,
     ckbProfileId int NOT NULL,
     ckbTherapyId int NOT NULL,
     ckbIndicationId varchar(50) NOT NULL,

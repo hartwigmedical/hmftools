@@ -7,9 +7,9 @@ import com.hartwig.hmftools.ckb.datamodel.indication.IndicationFactory;
 import com.hartwig.hmftools.ckb.datamodel.therapy.TherapyFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrial;
-import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrialContact;
-import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrialLocation;
-import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonClinicalTrialVariantRequirementDetail;
+import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonContact;
+import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonLocation;
+import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonVariantRequirementDetail;
 import com.hartwig.hmftools.ckb.json.common.ClinicalTrialInfo;
 import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
@@ -28,7 +28,6 @@ public final class ClinicalTrialFactory {
         for (ClinicalTrialInfo clinicalTrialInfo : clinicalTrialInfos) {
             clinicalTrials.add(resolveClinicalTrial(ckbJsonDatabase, clinicalTrialInfo));
         }
-
         return clinicalTrials;
     }
 
@@ -57,7 +56,7 @@ public final class ClinicalTrialFactory {
                         .variantRequirement(clinicalTrial.variantRequirements())
                         .sponsor(clinicalTrial.sponsors())
                         .variantRequirementDetails(convertRequirementDetails(clinicalTrial.variantRequirementDetails()))
-                        .locations(convertLocations(clinicalTrial.clinicalTrialLocations()))
+                        .locations(convertLocations(clinicalTrial.locations()))
                         .build();
             }
         }
@@ -66,11 +65,10 @@ public final class ClinicalTrialFactory {
     }
 
     @NotNull
-    private static List<ClinicalTrialLocation> convertLocations(@NotNull List<JsonClinicalTrialLocation> jsonLocations) {
-        List<ClinicalTrialLocation> locations = Lists.newArrayList();
-
-        for (JsonClinicalTrialLocation location : jsonLocations) {
-            locations.add(ImmutableClinicalTrialLocation.builder()
+    private static List<Location> convertLocations(@NotNull List<JsonLocation> jsonLocations) {
+        List<Location> locations = Lists.newArrayList();
+        for (JsonLocation location : jsonLocations) {
+            locations.add(ImmutableLocation.builder()
                     .nctId(location.nctId())
                     .facility(location.facility())
                     .city(location.city())
@@ -78,18 +76,17 @@ public final class ClinicalTrialFactory {
                     .status(location.status())
                     .state(location.state())
                     .zip(location.zip())
-                    .contacts(convertContacts(location.clinicalTrialContacts()))
+                    .contacts(convertContacts(location.contacts()))
                     .build());
         }
         return locations;
     }
 
     @NotNull
-    private static List<ClinicalTrialContact> convertContacts(@NotNull List<JsonClinicalTrialContact> jsonContacts) {
-        List<ClinicalTrialContact> contacts = Lists.newArrayList();
-
-        for (JsonClinicalTrialContact contact : jsonContacts) {
-            contacts.add(ImmutableClinicalTrialContact.builder()
+    private static List<Contact> convertContacts(@NotNull List<JsonContact> jsonContacts) {
+        List<Contact> contacts = Lists.newArrayList();
+        for (JsonContact contact : jsonContacts) {
+            contacts.add(ImmutableContact.builder()
                     .name(contact.name())
                     .email(contact.email())
                     .phone(contact.phone())
@@ -101,11 +98,11 @@ public final class ClinicalTrialFactory {
     }
 
     @NotNull
-    public static List<ClinicalTrialVariantRequirementDetail> convertRequirementDetails(
-            @NotNull List<JsonClinicalTrialVariantRequirementDetail> jsonRequirementDetails) {
-        List<ClinicalTrialVariantRequirementDetail> requirementDetails = Lists.newArrayList();
-        for (JsonClinicalTrialVariantRequirementDetail requirementDetail : jsonRequirementDetails) {
-            requirementDetails.add(ImmutableClinicalTrialVariantRequirementDetail.builder()
+    private static List<VariantRequirementDetail> convertRequirementDetails(
+            @NotNull List<JsonVariantRequirementDetail> jsonRequirementDetails) {
+        List<VariantRequirementDetail> requirementDetails = Lists.newArrayList();
+        for (JsonVariantRequirementDetail requirementDetail : jsonRequirementDetails) {
+            requirementDetails.add(ImmutableVariantRequirementDetail.builder()
                     .profileId(requirementDetail.molecularProfile().id())
                     .requirementType(requirementDetail.requirementType())
                     .build());

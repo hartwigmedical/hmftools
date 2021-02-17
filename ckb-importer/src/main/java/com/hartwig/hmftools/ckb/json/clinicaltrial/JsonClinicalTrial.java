@@ -49,8 +49,8 @@ public abstract class JsonClinicalTrial implements CkbJsonObject {
     public abstract List<IndicationInfo> indications();
 
     @NotNull
-    public abstract List<JsonClinicalTrialVariantRequirementDetail> variantRequirementDetails();
+    public abstract List<JsonVariantRequirementDetail> variantRequirementDetails();
 
     @NotNull
-    public abstract List<JsonClinicalTrialLocation> clinicalTrialLocations();
+    public abstract List<JsonLocation> locations();
 }

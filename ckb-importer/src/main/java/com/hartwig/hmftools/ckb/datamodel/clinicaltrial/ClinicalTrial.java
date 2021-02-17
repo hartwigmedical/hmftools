@@ -48,8 +48,8 @@ public abstract class ClinicalTrial {
     public abstract String variantRequirement();
 
     @NotNull
-    public abstract List<ClinicalTrialVariantRequirementDetail> variantRequirementDetails();
+    public abstract List<VariantRequirementDetail> variantRequirementDetails();
 
     @NotNull
-    public abstract List<ClinicalTrialLocation> locations();
+    public abstract List<Location> locations();
 }

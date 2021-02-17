@@ -78,7 +78,6 @@ public final class DrugFactory {
     private static List<DrugDescription> extractDrugDescriptions(@NotNull CkbJsonDatabase ckbJsonDatabase,
             @NotNull List<DescriptionInfo> descriptionInfos) {
         List<DrugDescription> drugDescriptions = Lists.newArrayList();
-
         for (DescriptionInfo descriptionInfo : descriptionInfos) {
             drugDescriptions.add(ImmutableDrugDescription.builder()
                     .description(descriptionInfo.description())

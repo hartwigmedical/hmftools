@@ -34,5 +34,5 @@ public abstract class Therapy {
     public abstract List<TherapyDescription> descriptions();
 
     @NotNull
-    public abstract List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatuses();
+    public abstract List<GlobalApprovalStatus> globalApprovalStatuses();
 }
