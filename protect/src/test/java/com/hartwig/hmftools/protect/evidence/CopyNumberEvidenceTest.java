@@ -36,9 +36,9 @@ public class CopyNumberEvidenceTest {
         CopyNumberEvidence copyNumberEvidence =
                 new CopyNumberEvidence(createTestEvidenceFactory(), Lists.newArrayList(amp, inactivation, fusion));
 
-        ReportableGainLoss reportableAmp = create(gene, CopyNumberInterpretation.GAIN);
+        ReportableGainLoss reportableAmp = create(gene, CopyNumberInterpretation.FULL_GAIN);
         ReportableGainLoss reportableDel = create(gene, CopyNumberInterpretation.FULL_LOSS);
-        ReportableGainLoss ampOnOtherGene = create("other gene", CopyNumberInterpretation.GAIN);
+        ReportableGainLoss ampOnOtherGene = create("other gene", CopyNumberInterpretation.PARTIAL_GAIN);
 
         List<ProtectEvidence> evidenceItems = copyNumberEvidence.evidence(Lists.newArrayList(reportableAmp, reportableDel, ampOnOtherGene));
 

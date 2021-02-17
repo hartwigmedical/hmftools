@@ -50,13 +50,13 @@ public final class BachelorDataLoader {
         purpleData.somaticVariants().stream().map(ReportableVariant::gene).forEach(genesWithInactivationEvent::add);
         purpleData.copyNumberAlterations()
                 .stream()
-                .filter(x -> !x.interpretation().equals(CopyNumberInterpretation.GAIN))
+                .filter(x -> !x.interpretation().equals(CopyNumberInterpretation.FULL_GAIN) || !x.interpretation()
+                        .equals(CopyNumberInterpretation.PARTIAL_GAIN))
                 .map(ReportableGainLoss::gene)
                 .forEach(genesWithInactivationEvent::add);
 
-        List<ReportableVariant> reportableVariants = GermlineVariantFunctions.reportableGermlineVariants(germlineVariants,
-                genesWithInactivationEvent,
-                germlineReportingModel);
+        List<ReportableVariant> reportableVariants =
+                GermlineVariantFunctions.reportableGermlineVariants(germlineVariants, genesWithInactivationEvent, germlineReportingModel);
 
         LOGGER.info(" Loaded {} reportable germline variants from {}", reportableVariants.size(), bachelorTsv);
         return ImmutableBachelorData.builder().addAllGermlineVariants(reportableVariants).build();
