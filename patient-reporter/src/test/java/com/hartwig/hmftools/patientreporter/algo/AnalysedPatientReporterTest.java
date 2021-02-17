@@ -113,7 +113,7 @@ public class AnalysedPatientReporterTest {
 
         ProtectEvidence evidence = ImmutableProtectEvidence.builder()
                 .genomicEvent("HR deficiency signature")
-                .germline(false)
+                .germline(true)
                 .reported(true)
                 .treatment("DRUP")
                 .onLabel(true)

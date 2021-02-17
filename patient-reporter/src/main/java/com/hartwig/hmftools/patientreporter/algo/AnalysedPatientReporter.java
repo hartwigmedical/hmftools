@@ -135,7 +135,7 @@ public class AnalysedPatientReporter {
 
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING && !evidence.germline()) {
+            if (germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING && evidence.germline()) {
                 filtered.add(evidence);
             }
         }
