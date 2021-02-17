@@ -19,6 +19,15 @@ public final class TherapyFactory {
     }
 
     @NotNull
+    public static List<Therapy> extractTherapies(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull List<TherapyInfo> therapyInfos) {
+        List<Therapy> therapies = Lists.newArrayList();
+        for (TherapyInfo therapyInfo : therapyInfos) {
+            therapies.add(TherapyFactory.resolveTherapy(ckbJsonDatabase, therapyInfo));
+        }
+        return therapies;
+    }
+
+    @NotNull
     public static Therapy resolveTherapy(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull TherapyInfo therapyInfo) {
         for (JsonTherapy therapy : ckbJsonDatabase.therapies()) {
             if (therapy.id() == therapyInfo.id()) {

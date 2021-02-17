@@ -18,15 +18,15 @@ public final class ReferenceFactory {
     public static List<Reference> extractReferences(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull List<ReferenceInfo> referenceInfos) {
         List<Reference> references = Lists.newArrayList();
         for (ReferenceInfo referenceInfo : referenceInfos) {
-            references.add(resolveReference(ckbJsonDatabase, referenceInfo.id()));
+            references.add(resolveReference(ckbJsonDatabase, referenceInfo));
         }
         return references;
     }
 
     @NotNull
-    private static Reference resolveReference(@NotNull CkbJsonDatabase ckbJsonDatabase, int referenceId) {
+    private static Reference resolveReference(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull ReferenceInfo referenceInfo) {
         for (JsonReference reference : ckbJsonDatabase.references()) {
-            if (reference.id() == referenceId) {
+            if (reference.id() == referenceInfo.id()) {
                 return ImmutableReference.builder()
                         .id(reference.id())
                         .pubMedId(reference.pubMedId())
@@ -43,6 +43,6 @@ public final class ReferenceFactory {
             }
         }
 
-        throw new IllegalStateException("Could not resolve CKB reference with id '" + referenceId + "'");
+        throw new IllegalStateException("Could not resolve CKB reference with id '" + referenceInfo.id() + "'");
     }
 }

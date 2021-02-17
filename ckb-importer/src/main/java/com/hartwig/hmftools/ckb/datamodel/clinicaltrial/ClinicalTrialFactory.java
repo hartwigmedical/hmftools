@@ -11,8 +11,6 @@ import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonContact;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonLocation;
 import com.hartwig.hmftools.ckb.json.clinicaltrial.JsonVariantRequirementDetail;
 import com.hartwig.hmftools.ckb.json.common.ClinicalTrialInfo;
-import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
-import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -36,19 +34,12 @@ public final class ClinicalTrialFactory {
             @NotNull ClinicalTrialInfo clinicalTrialInfo) {
         for (JsonClinicalTrial clinicalTrial : ckbJsonDatabase.clinicalTrials()) {
             if (clinicalTrialInfo.nctId().equals(clinicalTrial.nctId())) {
-                ImmutableClinicalTrial.Builder clinicalTrialBuilder = ImmutableClinicalTrial.builder();
-
-                for (TherapyInfo therapyInfo : clinicalTrial.therapies()) {
-                    clinicalTrialBuilder.addTherapies(TherapyFactory.resolveTherapy(ckbJsonDatabase, therapyInfo));
-                }
-
-                for (IndicationInfo indicationInfo : clinicalTrial.indications()) {
-                    clinicalTrialBuilder.addIndications(IndicationFactory.resolveIndication(ckbJsonDatabase, indicationInfo));
-                }
-
-                return clinicalTrialBuilder.nctId(clinicalTrial.nctId())
+                return ImmutableClinicalTrial.builder()
                         .updateDate(clinicalTrial.updateDate())
+                        .nctId(clinicalTrial.nctId())
                         .title(clinicalTrial.title())
+                        .therapies(TherapyFactory.extractTherapies(ckbJsonDatabase, clinicalTrial.therapies()))
+                        .indications(IndicationFactory.extractIndications(ckbJsonDatabase, clinicalTrial.indications()))
                         .phase(clinicalTrial.phase())
                         .recruitment(clinicalTrial.recruitment())
                         .ageGroups(clinicalTrial.ageGroups())
@@ -61,7 +52,34 @@ public final class ClinicalTrialFactory {
             }
         }
 
-        throw new IllegalStateException("Could not resolve CKB clinical trial with id '" + clinicalTrialInfo.nctId() + "'");
+        throw new IllegalStateException("Could not resolve CKB clinical trial with nct '" + clinicalTrialInfo.nctId() + "'");
+    }
+
+    @NotNull
+    private static List<VariantRequirementDetail> convertRequirementDetails(
+            @NotNull List<JsonVariantRequirementDetail> jsonRequirementDetails) {
+        List<VariantRequirementDetail> requirementDetails = Lists.newArrayList();
+        for (JsonVariantRequirementDetail requirementDetail : jsonRequirementDetails) {
+            requirementDetails.add(ImmutableVariantRequirementDetail.builder()
+                    .profileId(requirementDetail.molecularProfile().id())
+                    .requirementType(requirementDetail.requirementType())
+                    .build());
+            //            if (requirementDetail.requirementType().equals("excluded")) { // variant is excluded from enrollment
+            //                requirementDetails.add(extractClinicalTrialVariantRequirementDetails(requirementDetail).build());
+            //            }
+            //
+            //            if (requirementDetail.requirementType().equals("required")) { // variant is requirement for enrollment
+            //                requirementDetails.add(extractClinicalTrialVariantRequirementDetails(requirementDetail).build());
+            //            }
+            //
+            //            // variant is required or excluded for a subset of the enrollment population
+            //            if (requirementDetail.requirementType().equals("partial - required")) {
+            //                if (requirementDetail.molecularProfile().id() == molecularProfileDir.id()) {
+            //                    requirementDetails.add(extractClinicalTrialVariantRequirementDetails(requirementDetail).build());
+            //                }
+            //            }
+        }
+        return requirementDetails;
     }
 
     @NotNull
@@ -95,32 +113,5 @@ public final class ClinicalTrialFactory {
                     .build());
         }
         return contacts;
-    }
-
-    @NotNull
-    private static List<VariantRequirementDetail> convertRequirementDetails(
-            @NotNull List<JsonVariantRequirementDetail> jsonRequirementDetails) {
-        List<VariantRequirementDetail> requirementDetails = Lists.newArrayList();
-        for (JsonVariantRequirementDetail requirementDetail : jsonRequirementDetails) {
-            requirementDetails.add(ImmutableVariantRequirementDetail.builder()
-                    .profileId(requirementDetail.molecularProfile().id())
-                    .requirementType(requirementDetail.requirementType())
-                    .build());
-            //            if (requirementDetail.requirementType().equals("excluded")) { // variant is excluded from enrollment
-            //                requirementDetails.add(extractClinicalTrialVariantRequirementDetails(requirementDetail).build());
-            //            }
-            //
-            //            if (requirementDetail.requirementType().equals("required")) { // variant is requirement for enrollment
-            //                requirementDetails.add(extractClinicalTrialVariantRequirementDetails(requirementDetail).build());
-            //            }
-            //
-            //            // variant is required or excluded for a subset of the enrollment population
-            //            if (requirementDetail.requirementType().equals("partial - required")) {
-            //                if (requirementDetail.molecularProfile().id() == molecularProfileDir.id()) {
-            //                    requirementDetails.add(extractClinicalTrialVariantRequirementDetails(requirementDetail).build());
-            //                }
-            //            }
-        }
-        return requirementDetails;
     }
 }
