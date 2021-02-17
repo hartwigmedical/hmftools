@@ -22,7 +22,6 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
     private static final float COL_WIDTH_EVENT = 110;
     private static final float COL_WIDTH_TREATMENT_ICONS = 25;
     private static final float COL_WIDTH_TRIAL_NAME = 222;
-    private static final float COL_WIDTH_CCMO = 75;
     private static final float COL_WIDTH_SOURCE = 40;
 
     @NotNull
@@ -65,9 +64,9 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
         }
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { COL_WIDTH_EVENT, COL_WIDTH_TREATMENT_ICONS,
-                        COL_WIDTH_TRIAL_NAME, COL_WIDTH_CCMO, COL_WIDTH_SOURCE },
+                        COL_WIDTH_TRIAL_NAME, COL_WIDTH_SOURCE },
                 new Cell[] { TableUtil.createHeaderCell("Variant"),
-                        TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("CCMO"), TableUtil.createHeaderCell("Source") });
+                        TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Source") });
 
         for (ProtectEvidence trial : ClinicalTrials.sort(trials)) {
             String trialName = trial.treatment();
@@ -75,7 +74,6 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(TherapyDetailsChapterFunctions.createTreatmentIcons(trialName))
                     .setVerticalAlignment(VerticalAlignment.TOP));
             contentTable.addCell(TableUtil.createContentCell(trialName).setVerticalAlignment(VerticalAlignment.TOP));
-            contentTable.addCell(TableUtil.createContentCell(trial.sources().toString()));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(trial.sources().toString()).addStyle(ReportResources.dataHighlightLinksStyle()))
                     .setAction(PdfAction.createURI(trial.urls().toString())));
         }
