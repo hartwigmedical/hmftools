@@ -6,10 +6,13 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class EvidenceItems {
+
 
     private EvidenceItems() {
     }
@@ -29,25 +32,30 @@ public final class EvidenceItems {
         }).collect(Collectors.toList());
     }
 
-//    @NotNull
-//    public static String sourceUrl(@NotNull Set<Knowledgebase> item) {
-//        String source = item.source().sourceName();
-//        String reference = item.reference();
-//        String gene = item.event();
-//        switch (source.toLowerCase()) {
-//            case "oncokb":
-//                String[] geneId = gene.split(" ");
-//                String referenceFormatting = reference.replace(" ", "%20");
-//                return "http://oncokb.org/#/gene/" + geneId[0] + "/alteration/" + referenceFormatting;
-//            case "cgi":
-//                return "https://www.cancergenomeinterpreter.org/biomarkers";
-//            case "civic":
-//                String[] variantId = reference.split(":");
-//                return "https://civic.genome.wustl.edu/links/variants/" + variantId[1];
-//            default:
-//                return Strings.EMPTY;
-//        }
-//    }
+    @NotNull
+    public static String source(@NotNull ProtectEvidence evidence) {
+        String sources = Strings.EMPTY;
+        for (Knowledgebase source: evidence.sources()) {
+
+            if (!source.display().equals(Knowledgebase.ICLUSION.display())) {
+
+                return sources.concat(source.display());
+
+            }
+        }
+        return Strings.EMPTY;
+    }
+
+    @NotNull
+    public static String sourceUrl(@NotNull ProtectEvidence evidence) {
+        for (Knowledgebase source : evidence.sources()) {
+            if (!source.display().equals(Knowledgebase.ICLUSION.display())) {
+                return evidence.urls().iterator().next();
+
+            }
+        }
+        return Strings.EMPTY;
+    }
 
     public static int uniqueEventCount(@NotNull List<ProtectEvidence> evidenceItems) {
         Set<String> events = Sets.newHashSet();

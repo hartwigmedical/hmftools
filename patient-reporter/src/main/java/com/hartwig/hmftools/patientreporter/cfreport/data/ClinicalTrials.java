@@ -6,7 +6,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ClinicalTrials {
@@ -26,29 +28,26 @@ public final class ClinicalTrials {
     }
 
     @NotNull
-    public static String CCMOId(@NotNull String reference) {
-        // Expected format "EXT1 (CCMO)"
-        String referenceWithoutParenthesis = reference.replace(")", "");
-        String[] splitExtAndCCMO = referenceWithoutParenthesis.split("\\(");
-        return splitExtAndCCMO[1];
+    public static String source(@NotNull ProtectEvidence evidence) {
+        String sources = Strings.EMPTY;
+        for (Knowledgebase source: evidence.sources()) {
+            if (source.display().equals(Knowledgebase.ICLUSION.display())) {
+                return sources.concat(source.display());
+
+            }
+        }
+        return Strings.EMPTY;
     }
 
-//    @NotNull
-//    public static String sourceUrl(@NotNull ClinicalTrial trial) {
-//        if (trial.source() == ActionabilitySource.ICLUSION) {
-//            String ext = EXTId(trial.reference());
-//            return "https://iclusion.org/hmf/" + ext;
-//        }
-//
-//        return Strings.EMPTY;
-//    }
-
     @NotNull
-    private static String EXTId(@NotNull String reference) {
-        // Expected format "EXT1 (CCMO)"
-        String[] splitExtAndCCMO = reference.split("\\(");
-        String ext = splitExtAndCCMO[0];
-        return ext.substring(3).trim();
+    public static String sourceUrl(@NotNull ProtectEvidence evidence) {
+        for (Knowledgebase source : evidence.sources()) {
+            if (source.display().equals(Knowledgebase.ICLUSION.display())) {
+                return evidence.urls().iterator().next();
+
+            }
+        }
+        return Strings.EMPTY;
     }
 
     public static int uniqueEventCount(@NotNull List<ProtectEvidence> trials) {

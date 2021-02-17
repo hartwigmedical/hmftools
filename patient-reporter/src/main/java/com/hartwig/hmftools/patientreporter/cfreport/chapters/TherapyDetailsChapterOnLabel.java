@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class TherapyDetailsChapterOnLabel implements ReportChapter {
 
-    private static final float COL_WIDTH_EVENT = 110;
+    private static final float COL_WIDTH_GENOMIC_EVENT = 110;
     private static final float COL_WIDTH_TREATMENT_ICONS = 25;
     private static final float COL_WIDTH_TRIAL_NAME = 222;
     private static final float COL_WIDTH_SOURCE = 40;
@@ -63,9 +63,9 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { COL_WIDTH_EVENT, COL_WIDTH_TREATMENT_ICONS,
+        Table contentTable = TableUtil.createReportContentTable(new float[] { COL_WIDTH_GENOMIC_EVENT, COL_WIDTH_TREATMENT_ICONS,
                         COL_WIDTH_TRIAL_NAME, COL_WIDTH_SOURCE },
-                new Cell[] { TableUtil.createHeaderCell("Variant"),
+                new Cell[] { TableUtil.createHeaderCell("Genomic event"),
                         TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Source") });
 
         for (ProtectEvidence trial : ClinicalTrials.sort(trials)) {
@@ -74,8 +74,8 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(TherapyDetailsChapterFunctions.createTreatmentIcons(trialName))
                     .setVerticalAlignment(VerticalAlignment.TOP));
             contentTable.addCell(TableUtil.createContentCell(trialName).setVerticalAlignment(VerticalAlignment.TOP));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(trial.sources().toString()).addStyle(ReportResources.dataHighlightLinksStyle()))
-                    .setAction(PdfAction.createURI(trial.urls().toString())));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(ClinicalTrials.source(trial)).addStyle(ReportResources.dataHighlightLinksStyle()))
+                    .setAction(PdfAction.createURI(ClinicalTrials.sourceUrl(trial))));
         }
 
         contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
