@@ -41,13 +41,13 @@ public abstract class Variant {
     public abstract LocalDate updateDate();
 
     @Nullable
-    public abstract ReferenceTranscriptCoordinate referenceTranscriptCoordinate();
+    public abstract TranscriptCoordinate referenceTranscriptCoordinate();
 
     @NotNull
     public abstract List<CategoryVariantPath> categoryVariantPaths();
 
     @NotNull
-    public abstract List<ReferenceTranscriptCoordinate> allTranscriptCoordinates();
+    public abstract List<TranscriptCoordinate> allTranscriptCoordinates();
 
     @NotNull
     public abstract List<MemberVariant> memberVariants();

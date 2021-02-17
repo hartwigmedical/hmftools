@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.ckb.database.tables.Geneterm.GENETERM;
 import static com.hartwig.hmftools.ckb.database.tables.Membervariant.MEMBERVARIANT;
 import static com.hartwig.hmftools.ckb.database.tables.Membervariantdescription.MEMBERVARIANTDESCRIPTION;
 import static com.hartwig.hmftools.ckb.database.tables.Membervariantdescriptionreference.MEMBERVARIANTDESCRIPTIONREFERENCE;
-import static com.hartwig.hmftools.ckb.database.tables.Referencetranscriptcoordinate.REFERENCETRANSCRIPTCOORDINATE;
+import static com.hartwig.hmftools.ckb.database.tables.Transcriptcoordinate.TRANSCRIPTCOORDINATE;
 import static com.hartwig.hmftools.ckb.database.tables.Variant.VARIANT;
 import static com.hartwig.hmftools.ckb.database.tables.Variantdescription.VARIANTDESCRIPTION;
 import static com.hartwig.hmftools.ckb.database.tables.Variantdescriptionreference.VARIANTDESCRIPTIONREFERENCE;
@@ -21,7 +21,7 @@ import com.hartwig.hmftools.ckb.datamodel.variant.CategoryVariantPath;
 import com.hartwig.hmftools.ckb.datamodel.variant.Gene;
 import com.hartwig.hmftools.ckb.datamodel.variant.GeneDescription;
 import com.hartwig.hmftools.ckb.datamodel.variant.MemberVariant;
-import com.hartwig.hmftools.ckb.datamodel.variant.ReferenceTranscriptCoordinate;
+import com.hartwig.hmftools.ckb.datamodel.variant.TranscriptCoordinate;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.ckb.datamodel.variant.VariantDescription;
 
@@ -45,7 +45,8 @@ class VariantDAO {
 
         context.deleteFrom(CATEGORYVARIANT).execute();
         context.deleteFrom(CATEGORYVARIANTPATH).execute();
-        context.deleteFrom(REFERENCETRANSCRIPTCOORDINATE).execute();
+
+        context.deleteFrom(TRANSCRIPTCOORDINATE).execute();
 
         context.deleteFrom(VARIANTDESCRIPTIONREFERENCE).execute();
         context.deleteFrom(VARIANTDESCRIPTION).execute();
@@ -89,10 +90,9 @@ class VariantDAO {
             writeVariantDescription(variantDescription, id);
         }
 
-        writeReferenceTranscriptCoordinate(variant.referenceTranscriptCoordinate(), id, true);
-
-        for (ReferenceTranscriptCoordinate referenceTranscriptCoordinate : variant.allTranscriptCoordinates()) {
-            writeReferenceTranscriptCoordinate(referenceTranscriptCoordinate, id, false);
+        writeTranscriptCoordinate(variant.referenceTranscriptCoordinate(), id, true);
+        for (TranscriptCoordinate transcriptCoordinate : variant.allTranscriptCoordinates()) {
+            writeTranscriptCoordinate(transcriptCoordinate, id, false);
         }
 
         for (CategoryVariantPath categoryVariantPath : variant.categoryVariantPaths()) {
@@ -217,25 +217,25 @@ class VariantDAO {
         }
     }
 
-    private void writeReferenceTranscriptCoordinate(@NotNull ReferenceTranscriptCoordinate referenceTranscriptCoordinate, int variantId,
-            boolean isMainReferenceTranscriptCoordinate) {
-        context.insertInto(REFERENCETRANSCRIPTCOORDINATE,
-                REFERENCETRANSCRIPTCOORDINATE.VARIANTID,
-                REFERENCETRANSCRIPTCOORDINATE.ISMAINREFERENCETRANSCRIPTCOORDINATE,
-                REFERENCETRANSCRIPTCOORDINATE.TRANSCRIPT,
-                REFERENCETRANSCRIPTCOORDINATE.GDNA,
-                REFERENCETRANSCRIPTCOORDINATE.CDNA,
-                REFERENCETRANSCRIPTCOORDINATE.PROTEIN,
-                REFERENCETRANSCRIPTCOORDINATE.SOURCEDB,
-                REFERENCETRANSCRIPTCOORDINATE.REFGENOMEBUILD)
+    private void writeTranscriptCoordinate(@NotNull TranscriptCoordinate transcriptCoordinate, int variantId,
+            boolean isReferenceTranscriptCoordinate) {
+        context.insertInto(TRANSCRIPTCOORDINATE,
+                TRANSCRIPTCOORDINATE.VARIANTID,
+                TRANSCRIPTCOORDINATE.ISREFERENCETRANSCRIPTCOORDINATE,
+                TRANSCRIPTCOORDINATE.TRANSCRIPT,
+                TRANSCRIPTCOORDINATE.GDNA,
+                TRANSCRIPTCOORDINATE.CDNA,
+                TRANSCRIPTCOORDINATE.PROTEIN,
+                TRANSCRIPTCOORDINATE.SOURCEDB,
+                TRANSCRIPTCOORDINATE.REFGENOMEBUILD)
                 .values(variantId,
-                        Util.toByte(isMainReferenceTranscriptCoordinate),
-                        referenceTranscriptCoordinate.transcript(),
-                        referenceTranscriptCoordinate.gDna(),
-                        referenceTranscriptCoordinate.cDna(),
-                        referenceTranscriptCoordinate.protein(),
-                        referenceTranscriptCoordinate.sourceDb(),
-                        referenceTranscriptCoordinate.refGenomeBuild())
+                        Util.toByte(isReferenceTranscriptCoordinate),
+                        transcriptCoordinate.transcript(),
+                        transcriptCoordinate.gDna(),
+                        transcriptCoordinate.cDna(),
+                        transcriptCoordinate.protein(),
+                        transcriptCoordinate.sourceDb(),
+                        transcriptCoordinate.refGenomeBuild())
                 .execute();
     }
 

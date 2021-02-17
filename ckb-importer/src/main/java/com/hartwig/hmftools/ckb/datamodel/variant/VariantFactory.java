@@ -82,13 +82,12 @@ public final class VariantFactory {
     }
 
     @Nullable
-    private static ReferenceTranscriptCoordinate convertReferenceTranscriptCoordinate(
-            @Nullable JsonVariantTranscriptCoordinate coordinate) {
+    private static TranscriptCoordinate convertReferenceTranscriptCoordinate(@Nullable JsonVariantTranscriptCoordinate coordinate) {
         if (coordinate == null) {
             return null;
         }
 
-        return ImmutableReferenceTranscriptCoordinate.builder()
+        return ImmutableTranscriptCoordinate.builder()
                 .id(coordinate.id())
                 .transcript(coordinate.transcript())
                 .gDna(coordinate.gDNA())
@@ -131,12 +130,11 @@ public final class VariantFactory {
     }
 
     @NotNull
-    private static List<ReferenceTranscriptCoordinate> convertAllTranscriptCoordinates(
-            @NotNull List<JsonVariantTranscriptCoordinate> coordinates) {
-        List<ReferenceTranscriptCoordinate> allTranscriptCoordinates = Lists.newArrayList();
+    private static List<TranscriptCoordinate> convertAllTranscriptCoordinates(@NotNull List<JsonVariantTranscriptCoordinate> coordinates) {
+        List<TranscriptCoordinate> allTranscriptCoordinates = Lists.newArrayList();
 
         for (JsonVariantTranscriptCoordinate coordinate : coordinates) {
-            allTranscriptCoordinates.add(ImmutableReferenceTranscriptCoordinate.builder()
+            allTranscriptCoordinates.add(ImmutableTranscriptCoordinate.builder()
                     .id(coordinate.id())
                     .transcript(coordinate.transcript())
                     .gDna(coordinate.gDNA())

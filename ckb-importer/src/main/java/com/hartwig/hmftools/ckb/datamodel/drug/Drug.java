@@ -32,7 +32,7 @@ public abstract class Drug {
     public abstract String tradeName();
 
     @NotNull
-    public abstract List<DrugDescription> drugDescriptions();
+    public abstract List<DrugDescription> descriptions();
 
     @Nullable
     public abstract String casRegistryNum();

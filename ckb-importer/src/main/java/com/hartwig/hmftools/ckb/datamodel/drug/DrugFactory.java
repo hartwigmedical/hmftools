@@ -39,7 +39,7 @@ public final class DrugFactory {
                         .terms(drug.terms())
                         .synonyms(drug.synonyms())
                         .tradeName(drug.tradeName())
-                        .drugDescriptions(extractDrugDescriptions(ckbJsonDatabase, drug.descriptions()))
+                        .descriptions(extractDrugDescriptions(ckbJsonDatabase, drug.descriptions()))
                         .casRegistryNum(drug.casRegistryNum())
                         .ncitId(drug.ncitId())
                         .build();
