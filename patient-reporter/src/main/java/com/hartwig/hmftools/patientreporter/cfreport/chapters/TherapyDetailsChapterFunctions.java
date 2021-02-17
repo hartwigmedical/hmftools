@@ -3,8 +3,6 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Icon;

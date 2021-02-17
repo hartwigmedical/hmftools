@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.patientreporter.ReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
