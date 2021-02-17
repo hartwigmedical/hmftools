@@ -65,7 +65,7 @@ DROP TABLE IF EXISTS geneDescription;
 CREATE TABLE geneDescription
 (   id int NOT NULL AUTO_INCREMENT,
     geneId int NOT NULL,
-    description varchar(50) NOT NULL,
+    description varchar(2500) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (geneId) REFERENCES gene(id)
 );
@@ -93,7 +93,7 @@ DROP TABLE IF EXISTS variantDescription;
 CREATE TABLE variantDescription
 (   id int NOT NULL AUTO_INCREMENT,
     variantId int NOT NULL,
-    description varchar(50) NOT NULL,
+    description varchar(2500) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (variantId) REFERENCES variant(id)
 );
@@ -169,7 +169,7 @@ DROP TABLE IF EXISTS memberVariantDescription;
 CREATE TABLE memberVariantDescription
 (   id int NOT NULL AUTO_INCREMENT,
     memberVariantId int NOT NULL,
-    description varchar(50) NOT NULL,
+    description varchar(2500) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (memberVariantId) REFERENCES memberVariant(id)
 );
@@ -259,7 +259,7 @@ DROP TABLE IF EXISTS therapyDescription;
 CREATE TABLE therapyDescription
 (   id int NOT NULL AUTO_INCREMENT,
     therapyId int NOT NULL,
-    description varchar(50) NOT NULL,
+    description varchar(2500) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (therapyId) REFERENCES therapy(id)
 );
@@ -344,7 +344,7 @@ DROP TABLE IF EXISTS drugDescription;
 CREATE TABLE drugDescription
 (   id int NOT NULL AUTO_INCREMENT,
     drugId int NOT NULL,
-    description varchar(50) NOT NULL,
+    description varchar(2500) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (drugId) REFERENCES drug(id)
 );
