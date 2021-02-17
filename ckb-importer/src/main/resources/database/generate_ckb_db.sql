@@ -283,7 +283,6 @@ CREATE TABLE therapyDescriptionReference
     FOREIGN KEY (therapyDescriptionId) REFERENCES therapyDescription(id)
 );
 
-DROP TABLE IF EXISTS globalTherapyApprovalStatus;
 DROP TABLE IF EXISTS globalApprovalStatus;
 CREATE TABLE globalApprovalStatus
 (   id int NOT NULL AUTO_INCREMENT,
@@ -434,8 +433,8 @@ CREATE TABLE indicationClinicalTrial
     FOREIGN KEY (indicationId) REFERENCES indication(id)
 );
 
-DROP TABLE IF EXISTS clinicalTrialAgeGroup;
-CREATE TABLE clinicalTrialAgeGroup
+DROP TABLE IF EXISTS ageGroup;
+CREATE TABLE ageGroup
 (   id int NOT NULL AUTO_INCREMENT,
     clinicalTrialId int NOT NULL,
     ageGroup varchar(50) NOT NULL,
@@ -443,8 +442,8 @@ CREATE TABLE clinicalTrialAgeGroup
     FOREIGN KEY (clinicalTrialId) REFERENCES clinicalTrial(id)
 );
 
-DROP TABLE IF EXISTS clinicalTrialVariantRequirementDetail;
-CREATE TABLE clinicalTrialVariantRequirementDetail
+DROP TABLE IF EXISTS variantRequirementDetail;
+CREATE TABLE variantRequirementDetail
 (   id int NOT NULL AUTO_INCREMENT,
     clinicalTrialId int NOT NULL,
     ckbProfileId int NOT NULL,
@@ -453,8 +452,8 @@ CREATE TABLE clinicalTrialVariantRequirementDetail
     FOREIGN KEY (clinicalTrialId) REFERENCES clinicalTrial(id)
 );
 
-DROP TABLE IF EXISTS clinicalTrialLocation;
-CREATE TABLE clinicalTrialLocation
+DROP TABLE IF EXISTS location;
+CREATE TABLE location
 (   id int NOT NULL AUTO_INCREMENT,
     clinicalTrialId int NOT NULL,
     nctId varchar(50) NOT NULL,
@@ -468,17 +467,17 @@ CREATE TABLE clinicalTrialLocation
     FOREIGN KEY (clinicalTrialId) REFERENCES clinicalTrial(id)
 );
 
-DROP TABLE IF EXISTS clinicalTrialContact;
-CREATE TABLE clinicalTrialContact
+DROP TABLE IF EXISTS contact;
+CREATE TABLE contact
 (   id int NOT NULL AUTO_INCREMENT,
-    clinicalTrialLocationId int NOT NULL,
+    locationId int NOT NULL,
     name varchar(50),
     email varchar(50),
     phone varchar(50),
     phoneExt varchar(50),
     role varchar(50) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (clinicalTrialLocationId) REFERENCES clinicalTrialLocation(id)
+    FOREIGN KEY (locationId) REFERENCES location(id)
 );
 
 SET FOREIGN_KEY_CHECKS = 1;
