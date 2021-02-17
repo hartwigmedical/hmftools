@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.ckb.util;
 
 import static org.junit.Assert.assertEquals;
-
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
@@ -11,8 +9,9 @@ public class DateConverterTest {
 
     @Test
     public void canConvertString() {
-        String date = "10/02/2020";
-        DateTimeFormatter format = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.ENGLISH);
-        assertEquals(date, format.format(DateConverter.toDate(date)));
+        String date = "03/29/2017";
+        assertEquals(date, DateConverter.FORMAT.format(DateConverter.toDate(date)));
+
+        assertNull(DateConverter.toDate(null));
     }
 }

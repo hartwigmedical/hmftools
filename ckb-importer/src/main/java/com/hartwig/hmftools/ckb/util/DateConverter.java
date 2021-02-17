@@ -3,13 +3,12 @@ package com.hartwig.hmftools.ckb.util;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Locale;
 
 import org.jetbrains.annotations.Nullable;
 
 public final class DateConverter {
 
-    static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.ENGLISH);
+    static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 
     private DateConverter() {
     }
