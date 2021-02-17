@@ -110,6 +110,7 @@ public final class VariantFactory {
                     .variants(convertCategoryVariants(categoryVariantPath.variants()))
                     .build());
         }
+
         return categoryVariantPaths;
     }
 
@@ -125,6 +126,7 @@ public final class VariantFactory {
                     .proteinEffect(variant.proteinEffect())
                     .build());
         }
+
         return categoryVariants;
     }
 
@@ -132,6 +134,7 @@ public final class VariantFactory {
     private static List<ReferenceTranscriptCoordinate> convertAllTranscriptCoordinates(
             @NotNull List<JsonVariantTranscriptCoordinate> coordinates) {
         List<ReferenceTranscriptCoordinate> allTranscriptCoordinates = Lists.newArrayList();
+
         for (JsonVariantTranscriptCoordinate coordinate : coordinates) {
             allTranscriptCoordinates.add(ImmutableReferenceTranscriptCoordinate.builder()
                     .id(coordinate.id())
@@ -142,8 +145,8 @@ public final class VariantFactory {
                     .sourceDb(coordinate.sourceDB())
                     .refGenomeBuild(coordinate.refGenomeBuild())
                     .build());
-
         }
+
         return allTranscriptCoordinates;
     }
 
@@ -176,6 +179,7 @@ public final class VariantFactory {
                     .references(ReferenceFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
                     .build());
         }
+
         return variantDescriptions;
     }
 
@@ -190,6 +194,7 @@ public final class VariantFactory {
                     .references(ReferenceFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
                     .build());
         }
+
         return geneDescriptions;
     }
 }
