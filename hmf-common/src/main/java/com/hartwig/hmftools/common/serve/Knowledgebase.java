@@ -52,7 +52,7 @@ public enum Knowledgebase {
     }
 
     @Nullable
-    private static Knowledgebase lookupKnowledgebase(@NotNull String display) {
+    public static Knowledgebase lookupKnowledgebase(@NotNull String display) {
         for (Knowledgebase knowledgebase : Knowledgebase.values()) {
             if (knowledgebase.display().equals(display)) {
                 return knowledgebase;

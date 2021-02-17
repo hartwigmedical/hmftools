@@ -12,14 +12,13 @@ import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.jetbrains.annotations.NotNull;
 
 final class TherapyDetailsChapterFunctions {
 
-    private static final float COL_WIDTH_VARIANT = 110;
+    private static final float COL_WIDTH_GENOMIC_EVENT = 110;
     private static final float COL_WIDTH_DRUG_ICONS = 25;
     private static final float COL_WIDTH_DRUG_LIST = 180;
     private static final float COL_WIDTH_LEVEL = 42;
@@ -37,11 +36,12 @@ final class TherapyDetailsChapterFunctions {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { COL_WIDTH_VARIANT, COL_WIDTH_DRUG_ICONS,
-                        COL_WIDTH_DRUG_LIST, COL_WIDTH_LEVEL, COL_WIDTH_RESPONSE, COL_WIDTH_SOURCE },
-                new Cell[] { TableUtil.createHeaderCell("Variant"),
-                        TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level of evidence"),
-                        TableUtil.createHeaderCell("Response"), TableUtil.createHeaderCell("Source") });
+        Table contentTable =
+                TableUtil.createReportContentTable(new float[] { COL_WIDTH_GENOMIC_EVENT, COL_WIDTH_DRUG_ICONS, COL_WIDTH_DRUG_LIST,
+                                COL_WIDTH_LEVEL, COL_WIDTH_RESPONSE, COL_WIDTH_SOURCE },
+                        new Cell[] { TableUtil.createHeaderCell("Genomic event"), TableUtil.createHeaderCell("Treatment", 2),
+                                TableUtil.createHeaderCell("Level of evidence"), TableUtil.createHeaderCell("Response"),
+                                TableUtil.createHeaderCell("Source") });
 
         for (ProtectEvidence item : EvidenceItems.sort(evidence)) {
             contentTable.addCell(TableUtil.createContentCell(item.genomicEvent()));
@@ -50,17 +50,11 @@ final class TherapyDetailsChapterFunctions {
                     .setVerticalAlignment(VerticalAlignment.TOP)));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(item.level().name()))));
             contentTable.addCell(TableUtil.createContentCell(item.direction().name()));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(item.sources().toString()).addStyle(ReportResources.dataHighlightLinksStyle()))
-                    .setAction(PdfAction.createURI(item.sources().toString())));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(EvidenceItems.source(item)).addStyle(ReportResources.dataHighlightLinksStyle()))
+                    .setAction(PdfAction.createURI(EvidenceItems.sourceUrl(item))));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);
-    }
-
-    @NotNull
-    static Paragraph createTreatmentMatchParagraph(boolean matchIsSpecific) {
-        return new Paragraph().add(Icon.createIcon(matchIsSpecific ? Icon.IconType.MATCH_SPECIFIC : Icon.IconType.MATCH_BROAD))
-                .add(new Text(" " + (matchIsSpecific ? "Specific" : "Gene-level")).addStyle(ReportResources.tableContentStyle()));
     }
 
     @NotNull
