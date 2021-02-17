@@ -4,6 +4,7 @@ import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.Math.max;
 import static java.lang.Math.pow;
+import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
@@ -21,12 +22,16 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
+import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_PAIRWISE;
 import static com.hartwig.hmftools.cup.common.CupCalcs.adjustLowProbabilities;
+import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
+import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_ALT_SJ_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_GENE_EXP_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
+import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -86,6 +91,9 @@ public class AltSjClassifier implements CuppaClassifier
     private static final String COHORT_SAMPLE_DATA_FILE = "alt_sj_cohort_sample_data";
     private static final String LOG_CSS_VALUES = "alt_sj_log_css";
 
+    private static final String FLD_POS_START = "PosStart";
+    private static final String FLD_POS_END = "PosEnd";
+
     public AltSjClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
@@ -115,7 +123,7 @@ public class AltSjClassifier implements CuppaClassifier
         if(config.RefAltSjPrevFile.isEmpty())
             return;
 
-        final List<String> ignoreFields = Lists.newArrayList("GeneId", "Chromosome", "PosStart", "PosEnd");
+        final List<String> ignoreFields = Lists.newArrayList(FLD_GENE_ID, FLD_CHROMOSOME, FLD_POS_START, FLD_POS_END);
         loadRefFragCounts(ignoreFields);
 
         // load a cohort sample frag counts matrix if available
@@ -174,7 +182,19 @@ public class AltSjClassifier implements CuppaClassifier
                 return;
         }
 
-        addCancerCssResults(sample, results);
+        Integer sampleIndex = mSampleFragCounts.Rows > 1 ? mSampleIndexMap.get(sample.Id) : 0;
+
+        if(sampleIndex == null)
+        {
+            CUP_LOGGER.warn("sample({}) alt-SJ frag counts from matrix not found", sample.Id);
+            return;
+        }
+
+        final double[] sampleFragCounts = mSampleFragCounts.getRow(sampleIndex);
+
+
+        addCancerCssResults(sample, sampleFragCounts, results);
+        addSampleCssResults(sample, sampleFragCounts, results, similarities);
 
         /*
         final List<AltSjPrevData> sampleAltSJs = loadSampleAltSJs(sample.Id);
@@ -187,7 +207,7 @@ public class AltSjClassifier implements CuppaClassifier
     }
 
     // CSS METHOD
-    private void addCancerCssResults(final SampleData sample, final List<SampleResult> results)
+    private void addCancerCssResults(final SampleData sample, final double[] sampleFragCounts, final List<SampleResult> results)
     {
         int refCancerCount = mRefCancerTypeMatrix.Cols;
 
@@ -201,7 +221,6 @@ public class AltSjClassifier implements CuppaClassifier
             return;
         }
 
-        final double[] sampleFragCounts = mSampleFragCounts.getRow(sampleIndex);
         int totalFrags = (int)sumVector(sampleFragCounts);
         int altSjSites = (int)Arrays.stream(sampleFragCounts).filter(x -> x > 0).count();
 
@@ -267,6 +286,73 @@ public class AltSjClassifier implements CuppaClassifier
 
         results.add(new SampleResult(
                 sample.Id, CLASSIFIER, LIKELIHOOD, ALT_SJ.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+    }
+
+    private void addSampleCssResults(
+            final SampleData sample, final double[] sampleFragCounts, final List<SampleResult> results, final List<SampleSimilarity> similarities)
+    {
+        final Map<String,Double> cancerCssTotals = Maps.newHashMap();
+
+        final List<SampleSimilarity> topMatches = Lists.newArrayList();
+
+        for(Map.Entry<String,Integer> entry : mSampleIndexMap.entrySet())
+        {
+            final String refSampleId = entry.getKey();
+
+            if(refSampleId.equals(sample.Id))
+                continue;
+
+            final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
+
+            if(refCancerType == null)
+                continue;
+
+            if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
+                continue;
+
+            int refSampleCountsIndex = entry.getValue();
+            final double[] refFragCount = mSampleFragCounts.getRow(refSampleCountsIndex);
+
+            double css = calcCosineSim(sampleFragCounts, refFragCount);
+
+            if(css < RNA_GENE_EXP_CSS_THRESHOLD)
+                continue;
+
+            if(mConfig.WriteSimilarities)
+            {
+                recordCssSimilarity(
+                        topMatches, sample.Id, refSampleId, css, ALT_SJ_PAIRWISE.toString(),
+                        CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
+            }
+
+            if(!isKnownCancerType(refCancerType))
+                continue;
+
+            double cssWeight = pow(RNA_ALT_SJ_DIFF_EXPONENT, -100 * (1 - css));
+
+            int cancerSampleCount = mSampleDataCache.getCancerSampleCount(refCancerType);
+            double weightedCss = css * cssWeight / sqrt(cancerSampleCount);
+
+            Double total = cancerCssTotals.get(refCancerType);
+
+            if(total == null)
+                cancerCssTotals.put(refCancerType, weightedCss);
+            else
+                cancerCssTotals.put(refCancerType, total + weightedCss);
+        }
+
+        double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum();
+
+        for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
+        {
+            double prob = totalCss > 0 ? entry.getValue() / totalCss : 0;
+            cancerCssTotals.put(entry.getKey(), prob);
+        }
+
+        results.add(new SampleResult(
+                sample.Id, CLASSIFIER, LIKELIHOOD, ALT_SJ_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
+
+        similarities.addAll(topMatches);
     }
 
     private double[] adjustRefCounts(final double[] refCounts, final double[] sampleCounts, int cancerSampleCount)
@@ -349,8 +435,8 @@ public class AltSjClassifier implements CuppaClassifier
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
 
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
-            int posStartIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
-            int posEndIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
+            int posStartIndex = fieldsIndexMap.get(FLD_POS_START);
+            int posEndIndex = fieldsIndexMap.get(FLD_POS_END);
 
             String line = fileReader.readLine();
             int altSjIndex = 0;
@@ -624,7 +710,7 @@ public class AltSjClassifier implements CuppaClassifier
             final String altSjStr = String.format("ALT-SJs=%d", matchedAltSJs);
 
             SampleResult result = new SampleResult(
-                    sample.Id, ALT_SJ, LIKELIHOOD, ClassifierType.ALT_SJ.toString(), altSjStr, cancerProbTotals);
+                    sample.Id, ALT_SJ, LIKELIHOOD, ClassifierType.ALT_SJ_COHORT.toString(), altSjStr, cancerProbTotals);
 
             results.add(result);
         }

@@ -42,6 +42,7 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.cup.somatics.SomaticDataLoader;
@@ -106,10 +107,10 @@ public class FeatureDataLoader
             final List<LinxFusion> fusions = Files.exists(Paths.get(fusionsFilename)) ?
                     LinxFusion.read(fusionsFilename) : Lists.newArrayList();
 
-            final String driverCatalogFilename = DriverCatalogFile.generateSomaticFilenameForReading(sampleDataDir, sampleId);
+            final String purpleDriverCatalogFilename = DriverCatalogFile.generateSomaticFilenameForReading(sampleDataDir, sampleId);
 
-            final List<DriverCatalog> drivers = Files.exists(Paths.get(driverCatalogFilename)) ?
-                    DriverCatalogFile.read(driverCatalogFilename) : Lists.newArrayList();
+            final List<DriverCatalog> drivers = Files.exists(Paths.get(purpleDriverCatalogFilename)) ?
+                    DriverCatalogFile.read(purpleDriverCatalogFilename) : Lists.newArrayList();
 
             final List<String> indelGenes = checkIndels(sampleId, sampleDataDir, null) ?
                     loadSpecificIndels(sampleId, sampleVcfFile) : null;

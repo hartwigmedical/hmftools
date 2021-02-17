@@ -108,8 +108,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
         if(mRunPairwiseCss && !mConfig.RefGeneExpSampleFile.isEmpty())
         {
-            mRefSampleGeneExpression =
-                    loadMatrixDataFile(mConfig.RefGeneExpSampleFile, mRefSampleGeneExpIndexMap, ignoreFields);
+            mRefSampleGeneExpression = loadMatrixDataFile(mConfig.RefGeneExpSampleFile, mRefSampleGeneExpIndexMap, ignoreFields);
 
             if(mRefSampleGeneExpression ==  null)
             {
