@@ -74,6 +74,7 @@ DROP TABLE IF EXISTS geneDescriptionReference;
 CREATE TABLE geneDescriptionReference
 (   id int NOT NULL AUTO_INCREMENT,
     geneDescriptionId int NOT NULL,
+    ckbReferenceId int NOT NULL,
     pubMedId varchar(50),
     title varchar(50),
     abstractText varchar(50),
@@ -101,6 +102,7 @@ DROP TABLE IF EXISTS variantDescriptionReference;
 CREATE TABLE variantDescriptionReference
 (   id int NOT NULL AUTO_INCREMENT,
     variantDescriptionId int NOT NULL,
+    ckbReferenceId int NOT NULL,
     pubMedId varchar(50),
     title varchar(50),
     abstractText varchar(50),
@@ -176,6 +178,7 @@ DROP TABLE IF EXISTS memberVariantDescriptionReference;
 CREATE TABLE memberVariantDescriptionReference
 (   id int NOT NULL AUTO_INCREMENT,
     memberVariantDescriptionId int NOT NULL,
+    ckbReferenceId int NOT NULL,
     pubMedId varchar(50),
     title varchar(50),
     abstractText varchar(50),
@@ -209,6 +212,7 @@ DROP TABLE IF EXISTS evidenceReference;
 CREATE TABLE evidenceReference
 (   id int NOT NULL AUTO_INCREMENT,
     evidenceId int NOT NULL,
+    ckbReferenceId int NOT NULL,
     pubMedId varchar(50),
     title varchar(50),
     abstractText varchar(50),
@@ -264,6 +268,7 @@ DROP TABLE IF EXISTS therapyDescriptionReference;
 CREATE TABLE therapyDescriptionReference
 (   id int NOT NULL AUTO_INCREMENT,
     therapyDescriptionId int NOT NULL,
+    ckbReferenceId int NOT NULL,
     pubMedId varchar(50),
     title varchar(50),
     abstractText varchar(50),
@@ -348,6 +353,7 @@ DROP TABLE IF EXISTS drugDescriptionReference;
 CREATE TABLE drugDescriptionReference
 (   id int NOT NULL AUTO_INCREMENT,
     drugDescriptionId int NOT NULL,
+    ckbReferenceId int NOT NULL,
     pubMedId varchar(50),
     title varchar(50),
     abstractText varchar(50),
