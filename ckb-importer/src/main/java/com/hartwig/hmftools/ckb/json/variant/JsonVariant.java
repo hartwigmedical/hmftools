@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.json.variant;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.json.CkbJsonObject;
@@ -42,10 +42,10 @@ public abstract class JsonVariant implements CkbJsonObject {
     public abstract String variant();
 
     @Nullable
-    public abstract Date createDate();
+    public abstract LocalDate createDate();
 
     @Nullable
-    public abstract Date updateDate();
+    public abstract LocalDate updateDate();
 
     @Nullable
     public abstract JsonVariantTranscriptCoordinate referenceTranscriptCoordinate();

@@ -5,15 +5,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.actionability.ClinicalTrial;
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.actionability.WithEvent;
-import com.hartwig.hmftools.common.actionability.variant.VariantEvidenceAnalyzer;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
@@ -136,12 +130,12 @@ public class AnalysedPatientReporter {
 
     @NotNull
     @VisibleForTesting
-    static <X extends WithEvent> List<ProtectEvidence> filterEvidenceForGermlineConsent(@NotNull List<ProtectEvidence> evidences,
+    static List<ProtectEvidence> filterEvidenceForGermlineConsent(@NotNull List<ProtectEvidence> evidences,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
 
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING && !evidence.germline()) {
+            if (germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING && evidence.germline()) {
                 filtered.add(evidence);
             }
         }

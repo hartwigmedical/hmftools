@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.variant;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.immutables.value.Value;
@@ -32,7 +32,7 @@ public abstract class Gene {
     public abstract String mapLocation();
 
     @NotNull
-    public abstract List<GeneDescription> geneDescriptions();
+    public abstract List<GeneDescription> descriptions();
 
     @Nullable
     public abstract String canonicalTranscript();
@@ -41,9 +41,9 @@ public abstract class Gene {
     public abstract String geneRole();
 
     @Nullable
-    public abstract Date createDate();
+    public abstract LocalDate createDate();
 
     @Nullable
-    public abstract Date updateDate();
+    public abstract LocalDate updateDate();
 
 }

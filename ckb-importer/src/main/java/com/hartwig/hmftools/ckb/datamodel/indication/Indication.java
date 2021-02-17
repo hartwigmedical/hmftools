@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.indication;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.immutables.value.Value;
@@ -27,7 +27,7 @@ public abstract class Indication {
     public abstract String currentPreferredTerm();
 
     @Nullable
-    public abstract Date lastUpdateDateFromDO();
+    public abstract LocalDate lastUpdateDateFromDO();
 
     @NotNull
     public abstract List<String> altIds();

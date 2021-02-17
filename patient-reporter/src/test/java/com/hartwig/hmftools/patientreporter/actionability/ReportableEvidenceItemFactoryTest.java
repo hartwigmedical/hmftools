@@ -6,16 +6,11 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.actionability.ActionabilitySource;
-import com.hartwig.hmftools.common.actionability.EvidenceLevel;
-import com.hartwig.hmftools.common.actionability.EvidenceScope;
-import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -48,20 +43,6 @@ public class ReportableEvidenceItemFactoryTest {
         assertTrue(nonTrials.contains(item1));
         assertTrue(nonTrials.contains(item2));
         assertTrue(nonTrials.contains(item4));
-    }
-
-
-    @NotNull
-    private static ImmutableEvidenceItem.Builder testEvidenceBuilder() {
-        return ImmutableEvidenceItem.builder()
-                .isOnLabel(true)
-                .drugsType(Strings.EMPTY)
-                .cancerType(Strings.EMPTY)
-                .response(Strings.EMPTY)
-                .level(EvidenceLevel.LEVEL_A)
-                .reference(Strings.EMPTY)
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.SPECIFIC);
     }
 
     @NotNull

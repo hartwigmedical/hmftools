@@ -57,7 +57,7 @@ public final class PurpleDataLoader {
         LOGGER.info(" Loaded {} driver catalog entries from {}", driverCatalog.size(), driverCatalogTsv);
 
         List<ReportableGainLoss> copyNumberAlterations = driverCatalog.stream()
-                .filter(x -> x.driver() == DriverType.AMP || x.driver() == DriverType.DEL)
+                .filter(x -> x.driver() == DriverType.AMP || x.driver() == DriverType.PARTIAL_AMP || x.driver() == DriverType.DEL)
                 .map(PurpleDataLoader::copyNumberAlteration)
                 .collect(Collectors.toList());
         LOGGER.info("  Extracted {} reportable copy number alterations from driver catalog", copyNumberAlterations.size());

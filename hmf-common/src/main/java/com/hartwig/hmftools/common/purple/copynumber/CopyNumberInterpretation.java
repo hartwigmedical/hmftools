@@ -7,7 +7,8 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import org.jetbrains.annotations.NotNull;
 
 public enum CopyNumberInterpretation {
-    GAIN("gain"),
+    FULL_GAIN("full gain"),
+    PARTIAL_GAIN("partial gain"),
     FULL_LOSS("full loss"),
     PARTIAL_LOSS("partial loss");
 
@@ -26,7 +27,11 @@ public enum CopyNumberInterpretation {
     @NotNull
     public static CopyNumberInterpretation fromCNADriver(@NotNull DriverCatalog cnaDriver) {
         if (cnaDriver.driver() == DriverType.AMP) {
-            return GAIN;
+            return FULL_GAIN;
+        }
+
+        if (cnaDriver.driver() == DriverType.PARTIAL_AMP) {
+            return PARTIAL_GAIN;
         }
 
         if (cnaDriver.driver() == DriverType.DEL) {

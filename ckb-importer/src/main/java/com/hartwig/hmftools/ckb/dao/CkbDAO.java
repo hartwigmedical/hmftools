@@ -1,11 +1,15 @@
 package com.hartwig.hmftools.ckb.dao;
 
+import static com.hartwig.hmftools.ckb.database.tables.Ckbentry.CKBENTRY;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
+import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
+import com.hartwig.hmftools.ckb.datamodel.evidence.Evidence;
+import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,6 +30,8 @@ public final class CkbDAO {
 
     @NotNull
     private final DSLContext context;
+    @NotNull
+    private final VariantDAO variantDAO;
 
     @NotNull
     public static CkbDAO connectToCkbDAO(@NotNull String userName, @NotNull String password, @NotNull String url) throws SQLException {
@@ -48,24 +54,44 @@ public final class CkbDAO {
 
     private CkbDAO(@NotNull final DSLContext context) {
         this.context = context;
+        this.variantDAO = new VariantDAO(context);
     }
 
     public void deleteAll() {
+        // Note that deletions should go from branch to root
+        variantDAO.deleteAll();
 
+        context.deleteFrom(CKBENTRY).execute();
     }
 
-    public void writeCkbEntries(@NotNull List<CkbEntry> ckbEntries) {
+    public void write(@NotNull CkbEntry ckbEntry) {
+        int id = context.insertInto(CKBENTRY, CKBENTRY.CKBPROFILEID, CKBENTRY.PROFILENAME, CKBENTRY.CREATEDATE, CKBENTRY.UPDATEDATE)
+                .values(ckbEntry.profileId(),
+                        ckbEntry.profileName(),
+                        Util.sqlDate(ckbEntry.createDate()),
+                        Util.sqlDate(ckbEntry.updateDate()))
+                .returning(CKBENTRY.ID)
+                .fetchOne()
+                .getValue(CKBENTRY.ID);
 
-    }
-
-    private int counting(int count, @NotNull String specificObject, int totalEntriesOfObject) {
-        count++;
-        if (count % 1000 == 0) {
-            LOGGER.info(" Completed inserting {} of {} CKB entries into CKB db of the {} entries",
-                    count,
-                    specificObject,
-                    totalEntriesOfObject);
+        for (Variant variant : ckbEntry.variants()) {
+            variantDAO.write(variant, id);
         }
-        return count;
+
+        for (Evidence evidence : ckbEntry.evidences()) {
+            writeEvidence(evidence, id);
+        }
+
+        for (ClinicalTrial clinicalTrial : ckbEntry.clinicalTrials()) {
+            writeClinicalTrial(clinicalTrial, id);
+        }
+    }
+
+    private void writeEvidence(@NotNull Evidence evidence, int ckbEntryId) {
+
+    }
+
+    private void writeClinicalTrial(@NotNull ClinicalTrial clinicalTrial, int ckbEntryId) {
+
     }
 }

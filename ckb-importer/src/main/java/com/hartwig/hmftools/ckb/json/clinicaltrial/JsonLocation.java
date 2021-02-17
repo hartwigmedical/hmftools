@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ckb.datamodel.clinicaltrial;
+package com.hartwig.hmftools.ckb.json.clinicaltrial;
 
 import java.util.List;
 
@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ClinicalTrialLocation {
+public abstract class JsonLocation {
 
     @NotNull
     public abstract String nctId();
@@ -32,5 +32,5 @@ public abstract class ClinicalTrialLocation {
     public abstract String zip();
 
     @NotNull
-    public abstract List<ClinicalTrialContact> contacts();
+    public abstract List<JsonContact> contacts();
 }

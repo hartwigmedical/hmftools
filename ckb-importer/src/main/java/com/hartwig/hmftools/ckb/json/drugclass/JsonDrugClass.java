@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.json.drugclass;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.json.CkbJsonObject;
@@ -21,7 +21,7 @@ public abstract class JsonDrugClass implements CkbJsonObject {
     public abstract String drugClass();
 
     @Nullable
-    public abstract Date createDate();
+    public abstract LocalDate createDate();
 
     @NotNull
     public abstract List<DrugInfo> drugs();

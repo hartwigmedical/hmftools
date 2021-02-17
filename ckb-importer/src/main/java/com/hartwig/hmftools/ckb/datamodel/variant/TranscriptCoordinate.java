@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ReferenceTranscriptCoordinate {
+public abstract class TranscriptCoordinate {
 
     public abstract int id();
 

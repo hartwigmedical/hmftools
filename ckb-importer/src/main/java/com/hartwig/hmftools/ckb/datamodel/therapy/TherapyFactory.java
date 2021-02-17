@@ -19,6 +19,15 @@ public final class TherapyFactory {
     }
 
     @NotNull
+    public static List<Therapy> extractTherapies(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull List<TherapyInfo> therapyInfos) {
+        List<Therapy> therapies = Lists.newArrayList();
+        for (TherapyInfo therapyInfo : therapyInfos) {
+            therapies.add(TherapyFactory.resolveTherapy(ckbJsonDatabase, therapyInfo));
+        }
+        return therapies;
+    }
+
+    @NotNull
     public static Therapy resolveTherapy(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull TherapyInfo therapyInfo) {
         for (JsonTherapy therapy : ckbJsonDatabase.therapies()) {
             if (therapy.id() == therapyInfo.id()) {
@@ -30,7 +39,7 @@ public final class TherapyFactory {
                         .drugs(DrugFactory.extractDrugs(ckbJsonDatabase, therapy.drugs()))
                         .synonyms(therapy.synonyms())
                         .descriptions(extractTherapyDescriptions(ckbJsonDatabase, therapy.descriptions()))
-                        .globalTherapyApprovalStatuses(convertGlobalApprovalStatuses(therapy.globalApprovalStatuses()))
+                        .globalApprovalStatuses(convertGlobalApprovalStatuses(therapy.globalApprovalStatuses()))
                         .build();
             }
         }
@@ -42,7 +51,6 @@ public final class TherapyFactory {
     private static List<TherapyDescription> extractTherapyDescriptions(@NotNull CkbJsonDatabase ckbJsonDatabase,
             @NotNull List<DescriptionInfo> descriptionInfos) {
         List<TherapyDescription> therapyDescriptions = Lists.newArrayList();
-
         for (DescriptionInfo descriptionInfo : descriptionInfos) {
             therapyDescriptions.add(ImmutableTherapyDescription.builder()
                     .description(descriptionInfo.description())
@@ -53,19 +61,19 @@ public final class TherapyFactory {
     }
 
     @NotNull
-    private static List<GlobalTherapyApprovalStatus> convertGlobalApprovalStatuses(
-            @NotNull List<GlobalApprovalStatusInfo> globalTherapyApprovalStatuses) {
-        List<GlobalTherapyApprovalStatus> globalTherapyApprovalStatusesInterpretation = Lists.newArrayList();
-        for (GlobalApprovalStatusInfo globalTherapyApprovalStatusInfo : globalTherapyApprovalStatuses) {
-            globalTherapyApprovalStatusesInterpretation.add(ImmutableGlobalTherapyApprovalStatus.builder()
-                    .id(globalTherapyApprovalStatusInfo.id())
-                    .profileId(globalTherapyApprovalStatusInfo.molecularProfile().id())
-                    .therapyId(globalTherapyApprovalStatusInfo.therapy().id())
-                    .indicationId(globalTherapyApprovalStatusInfo.indication().id())
-                    .approvalStatus(globalTherapyApprovalStatusInfo.approvalStatus())
-                    .approvalAuthority(globalTherapyApprovalStatusInfo.approvalAuthority())
+    private static List<GlobalApprovalStatus> convertGlobalApprovalStatuses(
+            @NotNull List<GlobalApprovalStatusInfo> globalApprovalStatusesInfos) {
+        List<GlobalApprovalStatus> globalApprovalStatuses = Lists.newArrayList();
+        for (GlobalApprovalStatusInfo globalApprovalStatusInfo : globalApprovalStatusesInfos) {
+            globalApprovalStatuses.add(ImmutableGlobalApprovalStatus.builder()
+                    .id(globalApprovalStatusInfo.id())
+                    .profileId(globalApprovalStatusInfo.molecularProfile().id())
+                    .therapyId(globalApprovalStatusInfo.therapy().id())
+                    .indicationId(globalApprovalStatusInfo.indication().id())
+                    .approvalStatus(globalApprovalStatusInfo.approvalStatus())
+                    .approvalAuthority(globalApprovalStatusInfo.approvalAuthority())
                     .build());
         }
-        return globalTherapyApprovalStatusesInterpretation;
+        return globalApprovalStatuses;
     }
 }

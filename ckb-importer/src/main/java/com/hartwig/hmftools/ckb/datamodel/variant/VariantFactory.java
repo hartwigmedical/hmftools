@@ -41,7 +41,7 @@ public final class VariantFactory {
                         .fullName(variant.fullName())
                         .impact(variant.impact())
                         .proteinEffect(variant.proteinEffect())
-                        .variantDescriptions(extractVariantDescriptions(ckbJsonDatabase, variant.descriptions()))
+                        .descriptions(extractVariantDescriptions(ckbJsonDatabase, variant.descriptions()))
                         .type(variant.type())
                         .variant(variant.variant())
                         .createDate(variant.createDate())
@@ -69,7 +69,7 @@ public final class VariantFactory {
                         .synonyms(gene.synonyms())
                         .chromosome(gene.chromosome())
                         .mapLocation(gene.mapLocation())
-                        .geneDescriptions(extractGeneDescriptions(ckbJsonDatabase, gene.descriptions()))
+                        .descriptions(extractGeneDescriptions(ckbJsonDatabase, gene.descriptions()))
                         .canonicalTranscript(gene.canonicalTranscript())
                         .geneRole(gene.geneRole())
                         .createDate(gene.createDate())
@@ -82,13 +82,12 @@ public final class VariantFactory {
     }
 
     @Nullable
-    private static ReferenceTranscriptCoordinate convertReferenceTranscriptCoordinate(
-            @Nullable JsonVariantTranscriptCoordinate coordinate) {
+    private static TranscriptCoordinate convertReferenceTranscriptCoordinate(@Nullable JsonVariantTranscriptCoordinate coordinate) {
         if (coordinate == null) {
             return null;
         }
 
-        return ImmutableReferenceTranscriptCoordinate.builder()
+        return ImmutableTranscriptCoordinate.builder()
                 .id(coordinate.id())
                 .transcript(coordinate.transcript())
                 .gDna(coordinate.gDNA())
@@ -110,6 +109,7 @@ public final class VariantFactory {
                     .variants(convertCategoryVariants(categoryVariantPath.variants()))
                     .build());
         }
+
         return categoryVariantPaths;
     }
 
@@ -125,15 +125,16 @@ public final class VariantFactory {
                     .proteinEffect(variant.proteinEffect())
                     .build());
         }
+
         return categoryVariants;
     }
 
     @NotNull
-    private static List<ReferenceTranscriptCoordinate> convertAllTranscriptCoordinates(
-            @NotNull List<JsonVariantTranscriptCoordinate> coordinates) {
-        List<ReferenceTranscriptCoordinate> allTranscriptCoordinates = Lists.newArrayList();
+    private static List<TranscriptCoordinate> convertAllTranscriptCoordinates(@NotNull List<JsonVariantTranscriptCoordinate> coordinates) {
+        List<TranscriptCoordinate> allTranscriptCoordinates = Lists.newArrayList();
+
         for (JsonVariantTranscriptCoordinate coordinate : coordinates) {
-            allTranscriptCoordinates.add(ImmutableReferenceTranscriptCoordinate.builder()
+            allTranscriptCoordinates.add(ImmutableTranscriptCoordinate.builder()
                     .id(coordinate.id())
                     .transcript(coordinate.transcript())
                     .gDna(coordinate.gDNA())
@@ -142,8 +143,8 @@ public final class VariantFactory {
                     .sourceDb(coordinate.sourceDB())
                     .refGenomeBuild(coordinate.refGenomeBuild())
                     .build());
-
         }
+
         return allTranscriptCoordinates;
     }
 
@@ -158,7 +159,7 @@ public final class VariantFactory {
                     .fullName(memberVariant.fullName())
                     .impact(memberVariant.impact())
                     .proteinEffect(memberVariant.proteinEffect())
-                    .variantDescriptions(extractVariantDescriptions(ckbJsonDatabase, memberVariant.descriptions()))
+                    .descriptions(extractVariantDescriptions(ckbJsonDatabase, memberVariant.descriptions()))
                     .build());
         }
 
@@ -176,6 +177,7 @@ public final class VariantFactory {
                     .references(ReferenceFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
                     .build());
         }
+
         return variantDescriptions;
     }
 
@@ -190,6 +192,7 @@ public final class VariantFactory {
                     .references(ReferenceFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
                     .build());
         }
+
         return geneDescriptions;
     }
 }

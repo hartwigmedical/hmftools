@@ -39,7 +39,7 @@ public final class DrugFactory {
                         .terms(drug.terms())
                         .synonyms(drug.synonyms())
                         .tradeName(drug.tradeName())
-                        .drugDescriptions(extractDrugDescriptions(ckbJsonDatabase, drug.descriptions()))
+                        .descriptions(extractDrugDescriptions(ckbJsonDatabase, drug.descriptions()))
                         .casRegistryNum(drug.casRegistryNum())
                         .ncitId(drug.ncitId())
                         .build();
@@ -78,7 +78,6 @@ public final class DrugFactory {
     private static List<DrugDescription> extractDrugDescriptions(@NotNull CkbJsonDatabase ckbJsonDatabase,
             @NotNull List<DescriptionInfo> descriptionInfos) {
         List<DrugDescription> drugDescriptions = Lists.newArrayList();
-
         for (DescriptionInfo descriptionInfo : descriptionInfos) {
             drugDescriptions.add(ImmutableDrugDescription.builder()
                     .description(descriptionInfo.description())

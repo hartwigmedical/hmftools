@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.drug;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.immutables.value.Value;
@@ -14,7 +14,7 @@ public abstract class Drug {
     public abstract int id();
 
     @Nullable
-    public abstract Date createDate();
+    public abstract LocalDate createDate();
 
     @NotNull
     public abstract String drugName();
@@ -32,7 +32,7 @@ public abstract class Drug {
     public abstract String tradeName();
 
     @NotNull
-    public abstract List<DrugDescription> drugDescriptions();
+    public abstract List<DrugDescription> descriptions();
 
     @Nullable
     public abstract String casRegistryNum();

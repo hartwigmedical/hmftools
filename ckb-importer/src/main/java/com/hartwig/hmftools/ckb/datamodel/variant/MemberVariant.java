@@ -22,5 +22,5 @@ public abstract class MemberVariant {
     public abstract String proteinEffect();
 
     @NotNull
-    public abstract List<VariantDescription> variantDescriptions();
+    public abstract List<VariantDescription> descriptions();
 }

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel.variant;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.immutables.value.Value;
@@ -26,7 +26,7 @@ public abstract class Variant {
     public abstract String proteinEffect();
 
     @NotNull
-    public abstract List<VariantDescription> variantDescriptions();
+    public abstract List<VariantDescription> descriptions();
 
     @Nullable
     public abstract String type();
@@ -35,19 +35,19 @@ public abstract class Variant {
     public abstract String variant();
 
     @Nullable
-    public abstract Date createDate();
+    public abstract LocalDate createDate();
 
     @Nullable
-    public abstract Date updateDate();
+    public abstract LocalDate updateDate();
 
     @Nullable
-    public abstract ReferenceTranscriptCoordinate referenceTranscriptCoordinate();
+    public abstract TranscriptCoordinate referenceTranscriptCoordinate();
 
     @NotNull
     public abstract List<CategoryVariantPath> categoryVariantPaths();
 
     @NotNull
-    public abstract List<ReferenceTranscriptCoordinate> allTranscriptCoordinates();
+    public abstract List<TranscriptCoordinate> allTranscriptCoordinates();
 
     @NotNull
     public abstract List<MemberVariant> memberVariants();

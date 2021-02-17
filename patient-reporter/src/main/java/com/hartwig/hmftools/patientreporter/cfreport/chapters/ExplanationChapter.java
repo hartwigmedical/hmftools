@@ -77,7 +77,10 @@ public class ExplanationChapter implements ReportChapter {
                         "Any gene with less than 0.5 copies along the entire canonical transcript is reported as a full loss.",
                         "Any gene where only a part along the canonical transcript has less than 0.5 copies is reported "
                                 + "as a partial loss.",
-                        "Any relevant gene with more copies than 3 times the average tumor ploidy is reported as a gain." })));
+                        "Any relevant gene with more copies than 3 times the average tumor ploidy of part of the gene is reported as a "
+                                + "partial gain.",
+                        "Any relevant gene with more copies than 3 times the average tumor ploidy of the whole gene is reported as a "
+                                + "full gain."})));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] { "The canonical, or otherwise longest transcript validly fused is reported.",

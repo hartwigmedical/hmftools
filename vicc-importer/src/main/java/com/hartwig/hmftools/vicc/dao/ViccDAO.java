@@ -31,7 +31,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.hartwig.hmftools.vicc.ViccJsonSQLImporter;
 import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
@@ -71,17 +70,17 @@ import org.jooq.impl.DSL;
 
 public class ViccDAO {
 
-    private static final Logger LOGGER = LogManager.getLogger(ViccJsonSQLImporter.class);
+    private static final Logger LOGGER = LogManager.getLogger(ViccDAO.class);
 
     private static final String DEV_CATALOG = "vicc_test";
 
     @NotNull
     private final DSLContext context;
 
-    public static ViccDAO connectToViccDAO(@NotNull final String userName, @NotNull final String password, @NotNull final String url)
-            throws SQLException {
-        final Connection conn = DriverManager.getConnection(url, userName, password);
-        final String catalog = conn.getCatalog();
+    @NotNull
+    public static ViccDAO connectToViccDAO(@NotNull String userName, @NotNull String password, @NotNull String url) throws SQLException {
+        Connection conn = DriverManager.getConnection(url, userName, password);
+        String catalog = conn.getCatalog();
         LOGGER.info("Connecting to database {}", catalog);
 
         return new ViccDAO(DSL.using(conn, SQLDialect.MYSQL, settings(catalog)));

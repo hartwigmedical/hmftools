@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ckb.datamodel;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
@@ -21,10 +21,10 @@ public abstract class CkbEntry {
     public abstract String profileName();
 
     @Nullable
-    public abstract Date createDate();
+    public abstract LocalDate createDate();
 
     @Nullable
-    public abstract Date updateDate();
+    public abstract LocalDate updateDate();
 
     @NotNull
     public abstract List<Variant> variants();

@@ -8,7 +8,6 @@ import java.io.IOException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.actionability.WithEvent;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -111,14 +110,10 @@ public class AnalysedPatientReporterTest {
 
     @Test
     public void canFilterEvidenceForGermlineConsent() {
-        String somaticEventString = "somatic";
-        String germlineEventString = "germline";
 
-        ReportableVariant somaticVariant = variant(ReportableVariantSource.SOMATIC, somaticEventString);
-        ReportableVariant germlineVariant = variant(ReportableVariantSource.GERMLINE, germlineEventString);
         ProtectEvidence evidence = ImmutableProtectEvidence.builder()
                 .genomicEvent("HR deficiency signature")
-                .germline(false)
+                .germline(true)
                 .reported(true)
                 .treatment("DRUP")
                 .onLabel(true)
@@ -127,10 +122,6 @@ public class AnalysedPatientReporterTest {
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
                 .urls(Sets.newHashSet("iclusion"))
                 .build();
-
-        // Extra space is added because of protein impact which is missing in this test.
-        WithEvent somaticEvent = new AnalysedPatientReporterTest.DummyEvent(somaticEventString + " ");
-        WithEvent germlineEvent = new AnalysedPatientReporterTest.DummyEvent(germlineEventString + " ");
 
         assertEquals(1,
                 AnalysedPatientReporter.filterEvidenceForGermlineConsent(Lists.newArrayList(evidence),
@@ -177,19 +168,4 @@ public class AnalysedPatientReporterTest {
                 .biallelic(false);
     }
 
-    private static class DummyEvent implements WithEvent {
-
-        @NotNull
-        private final String event;
-
-        public DummyEvent(@NotNull final String event) {
-            this.event = event;
-        }
-
-        @NotNull
-        @Override
-        public String event() {
-            return event;
-        }
-    }
 }
