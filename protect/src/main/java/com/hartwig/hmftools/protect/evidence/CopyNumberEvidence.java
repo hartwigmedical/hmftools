@@ -55,7 +55,8 @@ public class CopyNumberEvidence {
     private static boolean isTypeMatch(@NotNull ActionableGene actionable, @NotNull ReportableGainLoss reportable) {
         switch (actionable.event()) {
             case AMPLIFICATION:
-                return reportable.interpretation() == CopyNumberInterpretation.GAIN;
+                return reportable.interpretation() == CopyNumberInterpretation.FULL_GAIN
+                        || reportable.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN;
             case INACTIVATION:
             case DELETION:
                 return reportable.interpretation() == CopyNumberInterpretation.FULL_LOSS
