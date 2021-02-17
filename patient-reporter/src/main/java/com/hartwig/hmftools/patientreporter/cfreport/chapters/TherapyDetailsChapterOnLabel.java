@@ -83,8 +83,7 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
         contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
                 .setPaddingTop(10)
                 .add(new Paragraph("Potential eligibility for DRUP is dependent on tumor type details therefore certain tumor types "
-                        + "may not be eligible for the DRUP. Mutational signatures (e.g. MSI, TMB) are not yet automatically matched "
-                        + "witch clinical studies. If applicable however, matches are reported in the conclusion of the report.").addStyle(
+                        + "may not be eligible for the DRUP.").addStyle(
                         ReportResources.subTextStyle())));
         return TableUtil.createWrappingReportTable(title, contentTable);
     }
