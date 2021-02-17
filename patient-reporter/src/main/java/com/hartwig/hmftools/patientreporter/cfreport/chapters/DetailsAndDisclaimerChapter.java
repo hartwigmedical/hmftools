@@ -64,6 +64,8 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
         div.add(generateHMFAndPathologySampleIDParagraph(patientReport.sampleReport()));
 
+        div.add(generateGermlineChoicePatientParagraph(patientReport.sampleReport()));
+
         String earliestArrivalDate = sampleReport.earliestArrivalDate();
         div.add(createContentParagraphTwice("The results in this report have been obtained between ",
                 DataUtil.formatNullableString(earliestArrivalDate),
@@ -141,6 +143,11 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         } else {
             return createContentParagraph("The HMF sample ID is: ", sampleReport.tumorSampleId());
         }
+    }
+
+    @NotNull
+    private static Paragraph generateGermlineChoicePatientParagraph(@NotNull SampleReport sampleReport) {
+        return createContentParagraph("The germline choice of this patient is: ", sampleReport.germlineReportingLevel().display());
     }
 
     @NotNull
