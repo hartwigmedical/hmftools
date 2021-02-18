@@ -160,7 +160,7 @@ CREATE TABLE evidence
     ckbEvidenceId int NOT NULL,
     responseType varchar(50) NOT NULL,
     evidenceType varchar(50) NOT NULL,
-    efficacyEvidence varchar(50) NOT NULL,
+    efficacyEvidence varchar(500) NOT NULL,
     approvalStatus varchar(50) NOT NULL,
     ampCapAscoEvidenceLevel varchar(50) NOT NULL,
     ampCapAscoInferredTier varchar(50) NOT NULL,
@@ -193,7 +193,7 @@ CREATE TABLE therapy
     ckbTherapyId int NOT NULL,
     createDate DATE NOT NULL,
     updateDate DATE,
-    therapyName varchar(50) NOT NULL,
+    therapyName varchar(500) NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -210,7 +210,7 @@ DROP TABLE IF EXISTS therapySynonym;
 CREATE TABLE therapySynonym
 (   id int NOT NULL AUTO_INCREMENT,
     therapyId int NOT NULL,
-    synonym varchar(50) NOT NULL,
+    synonym varchar(500) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (therapyId) REFERENCES therapy(id)
 );
@@ -334,7 +334,7 @@ CREATE TABLE indication
     ckbIndicationId varchar(50) NOT NULL,
     name varchar(50) NOT NULL,
     source varchar(50) NOT NULL,
-    definition varchar(50),
+    definition varchar(500),
     currentPreferredTerm varchar(50),
     lastUpdateDateFromDO DATE,
     termId varchar(50) NOT NULL,

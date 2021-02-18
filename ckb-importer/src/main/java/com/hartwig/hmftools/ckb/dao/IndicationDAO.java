@@ -23,7 +23,7 @@ class IndicationDAO {
         context.deleteFrom(INDICATION).execute();
     }
 
-    public int writeIndication(@NotNull Indication indication) {
+    public int write(@NotNull Indication indication) {
         int id = context.insertInto(INDICATION,
                 INDICATION.CKBINDICATIONID,
                 INDICATION.NAME,

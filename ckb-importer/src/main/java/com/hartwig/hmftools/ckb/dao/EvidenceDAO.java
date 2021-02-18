@@ -38,6 +38,7 @@ class EvidenceDAO {
 
     public void write(@NotNull Evidence evidence, int ckbEntryId) {
         int id = context.insertInto(EVIDENCE,
+                EVIDENCE.CKBENTRYID,
                 EVIDENCE.CKBEVIDENCEID,
                 EVIDENCE.RESPONSETYPE,
                 EVIDENCE.EVIDENCETYPE,
@@ -46,6 +47,7 @@ class EvidenceDAO {
                 EVIDENCE.AMPCAPASCOEVIDENCELEVEL,
                 EVIDENCE.AMPCAPASCOINFERREDTIER)
                 .values(ckbEntryId,
+                        evidence.id(),
                         evidence.responseType(),
                         evidence.evidenceType(),
                         evidence.efficacyEvidence(),
@@ -56,10 +58,10 @@ class EvidenceDAO {
                 .fetchOne()
                 .getValue(EVIDENCE.ID);
 
-        int therapyId = therapyDAO.writeTherapy(evidence.therapy());
+        int therapyId = therapyDAO.write(evidence.therapy());
         context.insertInto(THERAPYEVIDENCE, THERAPYEVIDENCE.EVIDENCEID, THERAPYEVIDENCE.THERAPYID).values(id, therapyId).execute();
 
-        int indicationId = indicationDAO.writeIndication(evidence.indication());
+        int indicationId = indicationDAO.write(evidence.indication());
         context.insertInto(INDICATIONEVIDENCE, INDICATIONEVIDENCE.EVIDENCEID, INDICATIONEVIDENCE.INDICATIONID)
                 .values(id, indicationId)
                 .execute();

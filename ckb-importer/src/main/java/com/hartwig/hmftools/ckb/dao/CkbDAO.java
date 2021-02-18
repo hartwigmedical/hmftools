@@ -43,9 +43,9 @@ public final class CkbDAO {
 
     @NotNull
     public static CkbDAO connectToCkbDAO(@NotNull String userName, @NotNull String password, @NotNull String url) throws SQLException {
+        LOGGER.info("Connecting to database CKB at {}", url);
         Connection conn = DriverManager.getConnection(url, userName, password);
         String catalog = conn.getCatalog();
-        LOGGER.info("Connecting to database CKB {}", catalog);
 
         return new CkbDAO(DSL.using(conn, SQLDialect.MYSQL, settings(catalog)));
     }

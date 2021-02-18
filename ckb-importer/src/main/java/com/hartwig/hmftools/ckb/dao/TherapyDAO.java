@@ -50,7 +50,7 @@ class TherapyDAO {
         context.deleteFrom(THERAPY).execute();
     }
 
-    public int writeTherapy(@NotNull Therapy therapy) {
+    public int write(@NotNull Therapy therapy) {
         int id = context.insertInto(THERAPY, THERAPY.CKBTHERAPYID, THERAPY.CREATEDATE, THERAPY.UPDATEDATE, THERAPY.THERAPYNAME)
                 .values(therapy.id(), Util.sqlDate(therapy.createDate()), Util.sqlDate(therapy.updateDate()), therapy.therapyName())
                 .returning(THERAPY.ID)
