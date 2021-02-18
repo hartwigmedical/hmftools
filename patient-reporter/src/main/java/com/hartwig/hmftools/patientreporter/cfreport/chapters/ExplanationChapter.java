@@ -86,7 +86,10 @@ public class ExplanationChapter implements ReportChapter {
                 .add(createContentDiv(new String[] { "The canonical, or otherwise longest transcript validly fused is reported.",
                         "Fusions are restricted to those in the HMF known fusion list and can be found on "
                                 + "https://resources.hartwigmedicalfoundation.nl in directory Patient-Reporting",
-                        "We additionally select fusions where one partner is promiscuous in either 5' or 3' position." })));
+                        "We additionally select fusions where one partner is promiscuous in either 5' or 3' position.",
+                "The 'Driver' field is based on the classification of the fusion. A fusion has a High driver likelihood with the "
+                        + "classifications KNOWN_PAIR, KNOWN_IG_PAIR, EXON_DEL_DUP or  PROMISCUOUS with highly promiscuous exon. A fusion "
+                        + "has a Low driver likelihoods in all other PROMISCUOUS fusions. "})));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] {
