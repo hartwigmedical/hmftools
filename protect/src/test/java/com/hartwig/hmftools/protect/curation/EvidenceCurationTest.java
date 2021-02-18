@@ -48,24 +48,6 @@ public class EvidenceCurationTest {
         assertFalse(blacklisted.reported());
     }
 
-    @Test
-    public void canFilterBlacklistKeys() {
-        CurationKey firstKey = EvidenceCuration.BLACKLIST_KEYS.iterator().next();
-        ProtectEvidence evidence1 = createTestBuilder().treatment(firstKey.treatment())
-                .addSources(firstKey.source())
-                .genomicEvent(firstKey.eventKeyword() + " event")
-                .level(firstKey.level())
-                .direction(firstKey.direction())
-                .reported(true)
-                .build();
-
-        List<ProtectEvidence> evidence = EvidenceCuration.applyReportingBlacklist(Lists.newArrayList(evidence1));
-        assertEquals(1, evidence.size());
-
-        ProtectEvidence blacklisted = findByTreatment(evidence, firstKey.treatment());
-        assertFalse(blacklisted.reported());
-    }
-
     @NotNull
     private static ProtectEvidence findByTreatment(@NotNull Iterable<ProtectEvidence> evidences, @NotNull String treatment) {
         for (ProtectEvidence evidence : evidences) {
