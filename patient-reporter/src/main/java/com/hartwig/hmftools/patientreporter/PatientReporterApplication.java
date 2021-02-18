@@ -87,7 +87,9 @@ public class PatientReporterApplication {
                     report.sampleReport().tumorSampleBarcode(),
                     report);
 
-            ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
+            if (report.sampleReport().cohort().cohortId().equals("COLO")) {
+                ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
+            }
         }
     }
 
@@ -125,7 +127,9 @@ public class PatientReporterApplication {
                     report.sampleReport().sampleMetadata().tumorSampleBarcode(),
                     report);
 
-            ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
+            if (report.sampleReport().cohort().cohortId().equals("COLO")) {
+                ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
+            }
         }
     }
 
