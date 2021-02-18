@@ -84,11 +84,11 @@ public final class CkbDAO {
     }
 
     public void write(@NotNull CkbEntry ckbEntry) {
-        int id = context.insertInto(CKBENTRY, CKBENTRY.CKBPROFILEID, CKBENTRY.PROFILENAME, CKBENTRY.CREATEDATE, CKBENTRY.UPDATEDATE)
+        int id = context.insertInto(CKBENTRY, CKBENTRY.CKBPROFILEID, CKBENTRY.CREATEDATE, CKBENTRY.UPDATEDATE, CKBENTRY.PROFILENAME)
                 .values(ckbEntry.profileId(),
-                        ckbEntry.profileName(),
                         Util.sqlDate(ckbEntry.createDate()),
-                        Util.sqlDate(ckbEntry.updateDate()))
+                        Util.sqlDate(ckbEntry.updateDate()),
+                        ckbEntry.profileName())
                 .returning(CKBENTRY.ID)
                 .fetchOne()
                 .getValue(CKBENTRY.ID);

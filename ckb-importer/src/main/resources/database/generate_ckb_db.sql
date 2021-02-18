@@ -4,9 +4,9 @@ DROP TABLE IF EXISTS ckbEntry;
 CREATE TABLE ckbEntry
 (   id int NOT NULL AUTO_INCREMENT,
     ckbProfileId int NOT NULL UNIQUE,
-    profileName varchar(250) NOT NULL,
     createDate DATE NOT NULL,
     updateDate DATE NOT NULL,
+    profileName varchar(250) NOT NULL,
     PRIMARY KEY (id)
 );
 

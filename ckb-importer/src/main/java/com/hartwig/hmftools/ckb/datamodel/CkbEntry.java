@@ -18,13 +18,13 @@ public abstract class CkbEntry {
     public abstract int profileId();
 
     @NotNull
-    public abstract String profileName();
-
-    @NotNull
     public abstract LocalDate createDate();
 
     @NotNull
     public abstract LocalDate updateDate();
+
+    @NotNull
+    public abstract String profileName();
 
     @NotNull
     public abstract List<Variant> variants();
