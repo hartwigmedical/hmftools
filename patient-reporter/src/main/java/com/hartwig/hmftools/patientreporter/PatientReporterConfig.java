@@ -241,6 +241,7 @@ public interface PatientReporterConfig {
         String protectEvidenceFile = Strings.EMPTY;
         String germlineReportingTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
+        String pipelineVersion = Strings.EMPTY;
 
         if (qcFailReason.isDeepWGSDataAvailable()) {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
@@ -260,6 +261,7 @@ public interface PatientReporterConfig {
             protectEvidenceFile = nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV);
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
+            pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
         }
 
         return ImmutablePatientReporterConfig.builder()
@@ -271,7 +273,7 @@ public interface PatientReporterConfig {
                 .outputDirData(nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA_REPORT))
                 .reportingDbTsv(nonOptionalFile(cmd, REPORTING_DB_TSV))
                 .primaryTumorTsv(nonOptionalFile(cmd, PRIMARY_TUMOR_TSV))
-                .pipelineVersionFile(nonOptionalFile(cmd, PIPELINE_VERSION_FILE))
+                .pipelineVersionFile(pipelineVersion)
                 .limsDir(nonOptionalDir(cmd, LIMS_DIRECTORY))
                 .rvaLogo(nonOptionalFile(cmd, RVA_LOGO))
                 .companyLogo(nonOptionalFile(cmd, COMPANY_LOGO))
