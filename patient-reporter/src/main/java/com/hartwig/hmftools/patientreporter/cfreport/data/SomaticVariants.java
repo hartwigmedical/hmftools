@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.purple.DriverInterpretation;
@@ -63,25 +64,6 @@ public final class SomaticVariants {
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
         return variant.source() == ReportableVariantSource.GERMLINE && germlineReportingModel.notifyAboutGene(variant.gene(),
                 germlineReportingLevel);
-    }
-
-    @NotNull
-    public static String copyNumberString(double copyNumber, boolean hasReliablePurity) {
-        if (!hasReliablePurity) {
-            return DataUtil.NA_STRING;
-        }
-
-        return String.valueOf(Math.round(Math.max(0, copyNumber)));
-    }
-
-    @NotNull
-    public static String vafString(@NotNull ReportableVariant variant, boolean hasReliablePurity) {
-        if (!hasReliablePurity) {
-            return DataUtil.NA_STRING;
-        }
-        double vaf = variant.alleleCopyNumber() / variant.totalCopyNumber();
-
-        return DataUtil.formatPercentage(100 * Math.max(0, Math.min(1, vaf)));
     }
 
     @VisibleForTesting

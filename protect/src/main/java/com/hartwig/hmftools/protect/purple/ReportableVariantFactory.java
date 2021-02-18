@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +19,7 @@ public final class ReportableVariantFactory {
 
     @NotNull
     public static List<ReportableVariant> reportableSomaticVariants(@NotNull List<SomaticVariant> variants,
-            @NotNull List<DriverCatalog> driverCatalog) {
+            @NotNull List<DriverCatalog> driverCatalog, boolean hasReliablePurity) {
         Map<String, DriverCatalog> mutationDriverMap = Maps.newHashMap();
 
         for (DriverCatalog entry : driverCatalog) {
@@ -33,7 +34,8 @@ public final class ReportableVariantFactory {
                 DriverCatalog geneDriver = mutationDriverMap.get(variant.gene());
                 assert geneDriver != null;
 
-                ReportableVariant reportable = fromSomaticVariant(variant).driverLikelihood(geneDriver.driverLikelihood()).build();
+                ReportableVariant reportable =
+                        fromSomaticVariant(variant, hasReliablePurity).driverLikelihood(geneDriver.driverLikelihood()).build();
                 result.add(reportable);
             }
         }
@@ -67,7 +69,7 @@ public final class ReportableVariantFactory {
     }
 
     @NotNull
-    private static ImmutableReportableVariant.Builder fromSomaticVariant(@NotNull SomaticVariant variant) {
+    private static ImmutableReportableVariant.Builder fromSomaticVariant(@NotNull SomaticVariant variant, boolean hasReliablePurity) {
         return ImmutableReportableVariant.builder()
                 .type(variant.type())
                 .source(ReportableVariantSource.SOMATIC)
@@ -82,6 +84,10 @@ public final class ReportableVariantFactory {
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
                 .totalCopyNumber(variant.adjustedCopyNumber())
+                .copyNumber(copyNumberString(variant.adjustedCopyNumber(), hasReliablePurity))
+                .tVafString(vafString(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVAF()),
+                        variant.adjustedCopyNumber(),
+                        hasReliablePurity))
                 .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVAF()))
                 .hotspot(variant.hotspot())
                 .clonalLikelihood(variant.clonalLikelihood())
@@ -90,5 +96,24 @@ public final class ReportableVariantFactory {
 
     private static double calcAlleleCopyNumber(double adjustedCopyNumber, double adjustedVAF) {
         return adjustedCopyNumber * Math.max(0, Math.min(1, adjustedVAF));
+    }
+
+    @NotNull
+    public static String copyNumberString(double copyNumber, boolean hasReliablePurity) {
+        if (!hasReliablePurity) {
+            return DataUtil.NA_STRING;
+        }
+
+        return String.valueOf(Math.round(Math.max(0, copyNumber)));
+    }
+
+    @NotNull
+    public static String vafString(double alleleCopyNumber, double totalCopyNumber, boolean hasReliablePurity) {
+        if (!hasReliablePurity) {
+            return DataUtil.NA_STRING;
+        }
+        double vaf = alleleCopyNumber / totalCopyNumber;
+
+        return DataUtil.formatPercentage(100 * Math.max(0, Math.min(1, vaf)));
     }
 }

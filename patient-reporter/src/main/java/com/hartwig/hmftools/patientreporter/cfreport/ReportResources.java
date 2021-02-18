@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.util.Locale;
 
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
-import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.itextpdf.io.font.FontProgram;
 import com.itextpdf.io.font.FontProgramFactory;
 import com.itextpdf.io.font.PdfEncodings;

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 
 import org.apache.logging.log4j.util.Strings;
