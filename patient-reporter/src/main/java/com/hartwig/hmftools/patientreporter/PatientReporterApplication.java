@@ -11,12 +11,12 @@ import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.common.runcontext.MetaDataResolver;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReporter;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportData;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportDataLoader;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
+import com.hartwig.hmftools.patientreporter.jsonoutput.ReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReportData;
@@ -112,7 +112,8 @@ public class PatientReporterApplication {
                 config.circosFile(),
                 config.protectEvidenceTsv(),
                 config.comments(),
-                config.correctedReport(), config.pipelineVersionFile());
+                config.correctedReport(),
+                config.pipelineVersionFile());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(reportData.germlineReportingModel());
 
@@ -122,10 +123,12 @@ public class PatientReporterApplication {
         if (!config.onlyCreatePDF()) {
             LOGGER.debug("Updating additional files and databases");
 
+            AnalysedPatientReport reportOverrule = ReportData.overrulePatientReportData(report);
+
             writeReportDataToJson(config.outputDirData(),
                     report.sampleReport().sampleMetadata().tumorSampleId(),
                     report.sampleReport().sampleMetadata().tumorSampleBarcode(),
-                    report);
+                    reportOverrule);
 
             if (report.sampleReport().cohort().cohortId().equals("COLO")) {
                 ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
