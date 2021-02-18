@@ -62,7 +62,7 @@ class TherapyDAO {
         }
 
         for (String synonym : therapy.synonyms()) {
-            context.insertInto(THERAPYSYNONYM, THERAPYSYNONYM.ID, THERAPYSYNONYM.SYNONYM).values(id, synonym).execute();
+            context.insertInto(THERAPYSYNONYM, THERAPYSYNONYM.THERAPYID, THERAPYSYNONYM.SYNONYM).values(id, synonym).execute();
         }
 
         for (TherapyDescription therapyDescription : therapy.descriptions()) {

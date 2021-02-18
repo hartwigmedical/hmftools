@@ -57,7 +57,7 @@ class ClinicalTrialDAO {
                 CLINICALTRIAL.PHASE,
                 CLINICALTRIAL.RECRUITMENT,
                 CLINICALTRIAL.GENDER,
-                CLINICALTRIAL.SPONSOR,
+                CLINICALTRIAL.SPONSORS,
                 CLINICALTRIAL.VARIANTREQUIREMENT)
                 .values(ckbEntryId,
                         Util.sqlDate(clinicalTrial.updateDate()),
@@ -66,7 +66,7 @@ class ClinicalTrialDAO {
                         clinicalTrial.phase(),
                         clinicalTrial.recruitment(),
                         clinicalTrial.gender(),
-                        clinicalTrial.sponsor(),
+                        clinicalTrial.sponsors(),
                         clinicalTrial.variantRequirement())
                 .returning(CLINICALTRIAL.ID)
                 .fetchOne()
@@ -109,20 +109,20 @@ class ClinicalTrialDAO {
         int id = context.insertInto(LOCATION,
                 LOCATION.CLINICALTRIALID,
                 LOCATION.NCTID,
+                LOCATION.STATUS,
                 LOCATION.FACILITY,
                 LOCATION.CITY,
-                LOCATION.COUNTRY,
-                LOCATION.STATUS,
                 LOCATION.STATE,
-                LOCATION.ZIP)
+                LOCATION.ZIP,
+                LOCATION.COUNTRY)
                 .values(clinicalTrialId,
                         location.nctId(),
+                        location.status(),
                         location.facility(),
                         location.city(),
-                        location.country(),
-                        location.status(),
                         location.state(),
-                        location.zip())
+                        location.zip(),
+                        location.country())
                 .returning(LOCATION.ID)
                 .fetchOne()
                 .getValue(LOCATION.ID);

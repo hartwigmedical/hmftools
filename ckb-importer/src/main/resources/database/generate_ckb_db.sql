@@ -77,7 +77,7 @@ CREATE TABLE geneDescriptionReference
     ckbReferenceId int NOT NULL,
     pubMedId varchar(50),
     title varchar(500),
-    abstractText varchar(5000),
+    abstractText varchar(10000),
     url varchar(250),
     journal varchar(500),
     authors varchar(5000),
@@ -105,7 +105,7 @@ CREATE TABLE variantDescriptionReference
     ckbReferenceId int NOT NULL,
     pubMedId varchar(50),
     title varchar(500),
-    abstractText varchar(5000),
+    abstractText varchar(10000),
     url varchar(250),
     journal varchar(500),
     authors varchar(5000),
@@ -160,7 +160,7 @@ CREATE TABLE evidence
     ckbEvidenceId int NOT NULL,
     responseType varchar(50) NOT NULL,
     evidenceType varchar(50) NOT NULL,
-    efficacyEvidence varchar(500) NOT NULL,
+    efficacyEvidence varchar(5000) NOT NULL,
     approvalStatus varchar(50) NOT NULL,
     ampCapAscoEvidenceLevel varchar(50) NOT NULL,
     ampCapAscoInferredTier varchar(50) NOT NULL,
@@ -175,7 +175,7 @@ CREATE TABLE evidenceReference
     ckbReferenceId int NOT NULL,
     pubMedId varchar(50),
     title varchar(500),
-    abstractText varchar(5000),
+    abstractText varchar(10000),
     url varchar(250),
     journal varchar(500),
     authors varchar(5000),
@@ -231,7 +231,7 @@ CREATE TABLE therapyDescriptionReference
     ckbReferenceId int NOT NULL,
     pubMedId varchar(50),
     title varchar(500),
-    abstractText varchar(5000),
+    abstractText varchar(10000),
     url varchar(250),
     journal varchar(500),
     authors varchar(5000),
@@ -252,7 +252,7 @@ CREATE TABLE globalApprovalStatus
     ckbTherapyId int NOT NULL,
     ckbIndicationId varchar(50) NOT NULL,
     approvalStatus varchar(50) NOT NULL,
-    approvalAuthority varchar(50) NOT NULL,
+    approvalAuthority varchar(250) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (therapyId) REFERENCES therapy(id)
 );
@@ -286,7 +286,7 @@ DROP TABLE IF EXISTS drugTerm;
 CREATE TABLE drugTerm
 (   id int NOT NULL AUTO_INCREMENT,
     drugId int NOT NULL,
-    term varchar(50) NOT NULL,
+    term varchar(250) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (drugId) REFERENCES drug(id)
 );
@@ -295,7 +295,7 @@ DROP TABLE IF EXISTS drugSynonym;
 CREATE TABLE drugSynonym
 (   id int NOT NULL AUTO_INCREMENT,
     drugId int NOT NULL,
-    synonym varchar(50) NOT NULL,
+    synonym varchar(250) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (drugId) REFERENCES drug(id)
 );
@@ -316,7 +316,7 @@ CREATE TABLE drugDescriptionReference
     ckbReferenceId int NOT NULL,
     pubMedId varchar(50),
     title varchar(500),
-    abstractText varchar(5000),
+    abstractText varchar(10000),
     url varchar(250),
     journal varchar(500),
     authors varchar(5000),
@@ -334,7 +334,7 @@ CREATE TABLE indication
     ckbIndicationId varchar(50) NOT NULL,
     name varchar(50) NOT NULL,
     source varchar(50) NOT NULL,
-    definition varchar(500),
+    definition varchar(5000),
     currentPreferredTerm varchar(50),
     lastUpdateDateFromDO DATE,
     termId varchar(50) NOT NULL,
@@ -369,7 +369,7 @@ CREATE TABLE clinicalTrial
     phase varchar(50) NOT NULL,
     recruitment varchar(50) NOT NULL,
     gender varchar(50),
-    sponsor varchar(50),
+    sponsors varchar(250),
     variantRequirement varchar(50) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (ckbEntryId) REFERENCES ckbEntry(id)
@@ -417,12 +417,12 @@ CREATE TABLE location
 (   id int NOT NULL AUTO_INCREMENT,
     clinicalTrialId int NOT NULL,
     nctId varchar(50) NOT NULL,
-    facility varchar(50),
-    city varchar(50) NOT NULL,
-    country varchar(50) NOT NULL,
     status varchar(50),
+    facility varchar(500),
+    city varchar(50) NOT NULL,
     state varchar(50),
     zip varchar(50),
+    country varchar(50) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (clinicalTrialId) REFERENCES clinicalTrial(id)
 );
@@ -431,8 +431,8 @@ DROP TABLE IF EXISTS contact;
 CREATE TABLE contact
 (   id int NOT NULL AUTO_INCREMENT,
     locationId int NOT NULL,
-    name varchar(50),
-    email varchar(50),
+    name varchar(250),
+    email varchar(250),
     phone varchar(50),
     phoneExt varchar(50),
     role varchar(50) NOT NULL,
