@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.cfreport.data;
+package com.hartwig.hmftools.common.utils;
 
 import java.text.DecimalFormat;
 import java.time.LocalDate;

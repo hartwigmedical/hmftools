@@ -6,6 +6,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
@@ -15,6 +16,8 @@ import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.protect.ProtectConfig;
@@ -53,6 +56,8 @@ public final class PurpleDataLoader {
         LOGGER.info("  Microsatellite status: {}", purityContext.microsatelliteStatus().display());
         LOGGER.info("  Tumor mutational load status: {}", purityContext.tumorMutationalLoadStatus().display());
 
+        boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
+
         List<DriverCatalog> driverCatalog = DriverCatalogFile.read(driverCatalogTsv);
         LOGGER.info(" Loaded {} driver catalog entries from {}", driverCatalog.size(), driverCatalogTsv);
 
@@ -63,12 +68,44 @@ public final class PurpleDataLoader {
         LOGGER.info("  Extracted {} reportable copy number alterations from driver catalog", copyNumberAlterations.size());
 
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVcf);
-        List<ReportableVariant> reportableVariants = ReportableVariantFactory.reportableSomaticVariants(variants, driverCatalog);
+        List<ReportableVariant> reportableVariants = ReportableVariantFactory.reportableSomaticVariants(variants, driverCatalog, hasReliablePurity);
         LOGGER.info(" Loaded {} reportable somatic variants from {}", reportableVariants.size(), somaticVcf);
+
+        // Set copies + tVAF to N/A when those are unreliable
+        List<ReportableVariant> reportableVariantsInterpret = Lists.newArrayList();
+        for (ReportableVariant variant : reportableVariants) {
+
+            // amplification
+            if (purityContext.qc().status().contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE)) {
+                for (ReportableGainLoss gain : copyNumberAlterations) {
+                    if (variant.gene().equals(gain.gene()) && gain.interpretation() == CopyNumberInterpretation.FULL_GAIN ||
+                    gain.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN) {
+                        reportableVariantsInterpret.add(variant);
+                    } else {
+                        reportableVariantsInterpret.add(interpretReportableVariant(variant).build());
+
+                    }
+                }
+            }
+
+            //deletions
+            if (purityContext.qc().status().contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE) || purityContext.qc()
+                    .status()
+                    .contains(PurpleQCStatus.WARN_DELETED_GENES)) {
+                for (ReportableGainLoss loss : copyNumberAlterations) {
+                    if (variant.gene().equals(loss.gene()) && loss.interpretation() == CopyNumberInterpretation.FULL_LOSS ||
+                            loss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS) {
+                        reportableVariantsInterpret.add(variant);
+                    } else {
+                        reportableVariantsInterpret.add(interpretReportableVariant(variant).build());
+                    }
+                }
+            }
+        }
 
         return ImmutablePurpleData.builder()
                 .purity(purityContext.bestFit().purity())
-                .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
+                .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(purityContext.qc().pass())
                 .ploidy(purityContext.bestFit().ploidy())
                 .microsatelliteIndelsPerMb(purityContext.microsatelliteIndelsPerMb())
@@ -76,7 +113,7 @@ public final class PurpleDataLoader {
                 .tumorMutationalBurdenPerMb(purityContext.tumorMutationalBurdenPerMb())
                 .tumorMutationalLoad(purityContext.tumorMutationalLoad())
                 .tumorMutationalLoadStatus(purityContext.tumorMutationalLoadStatus())
-                .somaticVariants(reportableVariants)
+                .somaticVariants(reportableVariantsInterpret)
                 .copyNumberAlterations(copyNumberAlterations)
                 .build();
     }
@@ -91,4 +128,29 @@ public final class PurpleDataLoader {
                 .copies(Math.round(Math.max(0, driver.minCopyNumber())))
                 .build();
     }
+
+    @NotNull
+    private static ImmutableReportableVariant.Builder interpretReportableVariant(@NotNull ReportableVariant variant) {
+        return ImmutableReportableVariant.builder()
+                .type(variant.type())
+                .source(variant.source())
+                .gene(variant.gene())
+                .chromosome(variant.chromosome())
+                .position(variant.position())
+                .ref(variant.ref())
+                .alt(variant.alt())
+                .canonicalCodingEffect(variant.canonicalCodingEffect())
+                .canonicalHgvsCodingImpact(variant.canonicalHgvsCodingImpact())
+                .canonicalHgvsProteinImpact(variant.canonicalHgvsProteinImpact())
+                .totalReadCount(variant.totalReadCount())
+                .alleleReadCount(variant.alleleReadCount())
+                .copyNumber(DataUtil.NA_STRING)
+                .tVafString(DataUtil.NA_STRING)
+                .alleleCopyNumber(variant.alleleCopyNumber())
+                .hotspot(variant.hotspot())
+                .clonalLikelihood(variant.clonalLikelihood())
+                .biallelic(variant.biallelic());
+    }
+
+
 }

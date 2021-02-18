@@ -6,7 +6,7 @@ import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
-import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.itextpdf.io.IOException;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Div;

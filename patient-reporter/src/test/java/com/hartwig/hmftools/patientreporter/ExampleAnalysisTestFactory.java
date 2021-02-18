@@ -332,6 +332,8 @@ public final class ExampleAnalysisTestFactory {
                 .driverLikelihood(1D)
                 .clonalLikelihood(1D)
                 .biallelic(false)
+                .tVafString("12%")
+                .copyNumber("1")
                 .build();
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
@@ -353,6 +355,8 @@ public final class ExampleAnalysisTestFactory {
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.9)
                 .biallelic(true)
+                .tVafString("12%")
+                .copyNumber("1")
                 .build();
 
         ReportableVariant variant3 = ImmutableReportableVariant.builder()
@@ -374,6 +378,8 @@ public final class ExampleAnalysisTestFactory {
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.85)
                 .biallelic(true)
+                .tVafString("12%")
+                .copyNumber("1")
                 .build();
 
         ReportableVariant variant4 = ImmutableReportableVariant.builder()
@@ -395,6 +401,8 @@ public final class ExampleAnalysisTestFactory {
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.15)
                 .biallelic(false)
+                .tVafString("12%")
+                .copyNumber("1")
                 .build();
 
         ReportableVariant variant5 = ImmutableReportableVariant.builder()
@@ -416,6 +424,8 @@ public final class ExampleAnalysisTestFactory {
                 .clonalLikelihood(1D)
                 .driverLikelihood(0.1)
                 .biallelic(false)
+                .tVafString("12%")
+                .copyNumber("1")
                 .build();
 
         return Lists.newArrayList(variant1, variant2, variant3, variant4, variant5);
@@ -442,6 +452,8 @@ public final class ExampleAnalysisTestFactory {
                 .clonalLikelihood(0.47)
                 .driverLikelihood(0.1)
                 .biallelic(false)
+                .tVafString("12%")
+                .copyNumber("1")
                 .build();
 
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
@@ -463,6 +475,8 @@ public final class ExampleAnalysisTestFactory {
                 .clonalLikelihood(0.68)
                 .driverLikelihood(0.1)
                 .biallelic(true)
+                .tVafString("12%")
+                .copyNumber("1")
                 .build();
 
         return Lists.newArrayList(variant1, variant2);

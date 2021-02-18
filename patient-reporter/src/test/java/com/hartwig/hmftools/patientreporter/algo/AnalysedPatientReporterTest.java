@@ -166,6 +166,8 @@ public class AnalysedPatientReporterTest {
                 .hotspot(Hotspot.HOTSPOT)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0D)
+                .tVafString("12%")
+                .copyNumber("1")
                 .biallelic(false);
     }
 

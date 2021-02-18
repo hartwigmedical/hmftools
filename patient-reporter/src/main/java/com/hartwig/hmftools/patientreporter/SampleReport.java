@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
-import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
+import com.hartwig.hmftools.common.utils.DataUtil;
 
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
