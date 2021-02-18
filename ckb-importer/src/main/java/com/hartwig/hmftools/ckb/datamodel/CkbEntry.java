@@ -20,10 +20,10 @@ public abstract class CkbEntry {
     @NotNull
     public abstract String profileName();
 
-    @Nullable
+    @NotNull
     public abstract LocalDate createDate();
 
-    @Nullable
+    @NotNull
     public abstract LocalDate updateDate();
 
     @NotNull

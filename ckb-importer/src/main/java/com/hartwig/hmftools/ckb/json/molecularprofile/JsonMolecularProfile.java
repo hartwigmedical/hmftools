@@ -27,10 +27,10 @@ public abstract class JsonMolecularProfile implements CkbJsonObject {
     @NotNull
     public abstract List<TreatmentApproachInfo> treatmentApproaches();
 
-    @Nullable
+    @NotNull
     public abstract LocalDate createDate();
 
-    @Nullable
+    @NotNull
     public abstract LocalDate updateDate();
 
     @NotNull

@@ -47,10 +47,10 @@ public abstract class JsonGene implements CkbJsonObject {
     @NotNull
     public abstract String geneRole();
 
-    @Nullable
+    @NotNull
     public abstract LocalDate createDate();
 
-    @Nullable
+    @NotNull
     public abstract LocalDate updateDate();
 
     @NotNull

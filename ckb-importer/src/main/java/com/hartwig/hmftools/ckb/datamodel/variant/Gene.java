@@ -14,16 +14,19 @@ public abstract class Gene {
     public abstract int id();
 
     @NotNull
+    public abstract LocalDate createDate();
+
+    @NotNull
+    public abstract LocalDate updateDate();
+
+    @NotNull
     public abstract String geneSymbol();
 
     @NotNull
-    public abstract List<String> terms();
+    public abstract String geneRole();
 
     @Nullable
     public abstract String entrezId();
-
-    @NotNull
-    public abstract List<String> synonyms();
 
     @Nullable
     public abstract String chromosome();
@@ -31,19 +34,16 @@ public abstract class Gene {
     @Nullable
     public abstract String mapLocation();
 
-    @NotNull
-    public abstract List<GeneDescription> descriptions();
-
     @Nullable
     public abstract String canonicalTranscript();
 
     @NotNull
-    public abstract String geneRole();
+    public abstract List<String> terms();
 
-    @Nullable
-    public abstract LocalDate createDate();
+    @NotNull
+    public abstract List<String> synonyms();
 
-    @Nullable
-    public abstract LocalDate updateDate();
+    @NotNull
+    public abstract List<GeneDescription> descriptions();
 
 }

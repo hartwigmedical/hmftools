@@ -5,8 +5,8 @@ CREATE TABLE ckbEntry
 (   id int NOT NULL AUTO_INCREMENT,
     ckbProfileId int NOT NULL UNIQUE,
     profileName varchar(250) NOT NULL,
-    createDate DATE,
-    updateDate DATE,
+    createDate DATE NOT NULL,
+    updateDate DATE NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -15,13 +15,13 @@ CREATE TABLE variant
 (   id int NOT NULL AUTO_INCREMENT,
     ckbEntryId int NOT NULL,
     ckbVariantId int NOT NULL,
+    createDate DATE NOT NULL,
+    updateDate DATE NOT NULL,
     fullName varchar(50) NOT NULL,
+    variant varchar(50) NOT NULL,
     impact varchar(50),
     proteinEffect varchar(50),
     type varchar(50),
-    variant varchar(50) NOT NULL,
-    createDate DATE,
-    updateDate DATE,
     PRIMARY KEY (id),
     FOREIGN KEY (ckbEntryId) REFERENCES ckbEntry(id)
 );
@@ -31,14 +31,14 @@ CREATE TABLE gene
 (   id int NOT NULL AUTO_INCREMENT,
     variantId int NOT NULL,
     ckbGeneId int NOT NULL,
+    createDate DATE NOT NULL,
+    updateDate DATE NOT NULL,
     geneSymbol varchar(50) NOT NULL,
+    geneRole varchar(250) NOT NULL,
     entrezId varchar(50),
     chromosome varchar(50),
     mapLocation varchar(50),
     canonicalTranscript varchar(50),
-    geneRole varchar(250) NOT NULL,
-    createDate DATE,
-    updateDate DATE,
     PRIMARY KEY (id),
     FOREIGN KEY (variantId) REFERENCES variant(id)
 );
@@ -79,8 +79,8 @@ CREATE TABLE geneDescriptionReference
     title varchar(500),
     abstractText varchar(5000),
     url varchar(250),
-    authors varchar(5000),
     journal varchar(500),
+    authors varchar(5000),
     volume varchar(50),
     issue varchar(50),
     date varchar(50),
@@ -107,8 +107,8 @@ CREATE TABLE variantDescriptionReference
     title varchar(500),
     abstractText varchar(5000),
     url varchar(250),
-    authors varchar(5000),
     journal varchar(500),
+    authors varchar(5000),
     volume varchar(50),
     issue varchar(50),
     date varchar(50),
@@ -141,18 +141,6 @@ CREATE TABLE categoryVariantPath
     FOREIGN KEY (variantId) REFERENCES variant(id)
 );
 
-DROP TABLE IF EXISTS categoryVariant;
-CREATE TABLE categoryVariant
-(   id int NOT NULL AUTO_INCREMENT,
-    categoryVariantPathId int NOT NULL,
-    ckbVariantId int NOT NULL,
-    fullName varchar(50) NOT NULL,
-    impact varchar(50),
-    proteinEffect varchar(50),
-    PRIMARY KEY (id),
-    FOREIGN KEY (categoryVariantPathId) REFERENCES categoryVariantPath(id)
-);
-
 DROP TABLE IF EXISTS memberVariant;
 CREATE TABLE memberVariant
 (   id int NOT NULL AUTO_INCREMENT,
@@ -163,34 +151,6 @@ CREATE TABLE memberVariant
     proteinEffect varchar(50),
     PRIMARY KEY (id),
     FOREIGN KEY (variantId) REFERENCES variant(id)
-);
-
-DROP TABLE IF EXISTS memberVariantDescription;
-CREATE TABLE memberVariantDescription
-(   id int NOT NULL AUTO_INCREMENT,
-    memberVariantId int NOT NULL,
-    description varchar(2500) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (memberVariantId) REFERENCES memberVariant(id)
-);
-
-DROP TABLE IF EXISTS memberVariantDescriptionReference;
-CREATE TABLE memberVariantDescriptionReference
-(   id int NOT NULL AUTO_INCREMENT,
-    memberVariantDescriptionId int NOT NULL,
-    ckbReferenceId int NOT NULL,
-    pubMedId varchar(50),
-    title varchar(500),
-    abstractText varchar(5000),
-    url varchar(250),
-    authors varchar(5000),
-    journal varchar(500),
-    volume varchar(50),
-    issue varchar(50),
-    date varchar(50),
-    year varchar(50),
-    PRIMARY KEY (id),
-    FOREIGN KEY (memberVariantDescriptionId) REFERENCES memberVariantDescription(id)
 );
 
 DROP TABLE IF EXISTS evidence;
@@ -217,8 +177,8 @@ CREATE TABLE evidenceReference
     title varchar(500),
     abstractText varchar(5000),
     url varchar(250),
-    authors varchar(5000),
     journal varchar(500),
+    authors varchar(5000),
     volume varchar(50),
     issue varchar(50),
     date varchar(50),
@@ -273,8 +233,8 @@ CREATE TABLE therapyDescriptionReference
     title varchar(500),
     abstractText varchar(5000),
     url varchar(250),
-    authors varchar(5000),
     journal varchar(500),
+    authors varchar(5000),
     volume varchar(50),
     issue varchar(50),
     date varchar(50),
@@ -358,8 +318,8 @@ CREATE TABLE drugDescriptionReference
     title varchar(500),
     abstractText varchar(5000),
     url varchar(250),
-    authors varchar(5000),
     journal varchar(500),
+    authors varchar(5000),
     volume varchar(50),
     issue varchar(50),
     date varchar(50),

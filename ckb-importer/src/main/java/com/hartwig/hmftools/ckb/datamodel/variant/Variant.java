@@ -13,11 +13,17 @@ public abstract class Variant {
 
     public abstract int id();
 
-    @Nullable
-    public abstract Gene gene();
+    @NotNull
+    public abstract LocalDate createDate();
+
+    @NotNull
+    public abstract LocalDate updateDate();
 
     @NotNull
     public abstract String fullName();
+
+    @NotNull
+    public abstract String variant();
 
     @Nullable
     public abstract String impact();
@@ -25,30 +31,24 @@ public abstract class Variant {
     @Nullable
     public abstract String proteinEffect();
 
-    @NotNull
-    public abstract List<VariantDescription> descriptions();
-
     @Nullable
     public abstract String type();
 
-    @NotNull
-    public abstract String variant();
-
     @Nullable
-    public abstract LocalDate createDate();
-
-    @Nullable
-    public abstract LocalDate updateDate();
+    public abstract Gene gene();
 
     @Nullable
     public abstract TranscriptCoordinate referenceTranscriptCoordinate();
 
     @NotNull
-    public abstract List<CategoryVariantPath> categoryVariantPaths();
-
-    @NotNull
     public abstract List<TranscriptCoordinate> allTranscriptCoordinates();
 
     @NotNull
+    public abstract List<String> categoryVariantPaths();
+
+    @NotNull
     public abstract List<MemberVariant> memberVariants();
+
+    @NotNull
+    public abstract List<VariantDescription> descriptions();
 }
