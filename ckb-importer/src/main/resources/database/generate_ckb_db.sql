@@ -332,7 +332,7 @@ DROP TABLE IF EXISTS indication;
 CREATE TABLE indication
 (   id int NOT NULL AUTO_INCREMENT,
     ckbIndicationId varchar(50) NOT NULL,
-    name varchar(50) NOT NULL,
+    name varchar(250) NOT NULL,
     source varchar(50) NOT NULL,
     definition varchar(5000),
     currentPreferredTerm varchar(50),
