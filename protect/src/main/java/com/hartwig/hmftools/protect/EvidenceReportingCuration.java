@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.curation;
+package com.hartwig.hmftools.protect;
 
 import java.util.List;
 import java.util.Set;
@@ -10,12 +10,12 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class EvidenceCuration {
+public final class EvidenceReportingCuration {
 
     private static final Set<String> EVENT_REPORTING_BLACKLIST_KEYWORDS = Sets.newHashSet("TP53");
     private static final Set<String> TREATMENT_REPORTING_BLACKLIST = Sets.newHashSet("Chemotherapy", "Aspirin", "Steroids");
 
-    private EvidenceCuration() {
+    private EvidenceReportingCuration() {
     }
 
     @NotNull
