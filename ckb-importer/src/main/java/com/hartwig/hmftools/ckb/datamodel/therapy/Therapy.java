@@ -15,7 +15,7 @@ public abstract class Therapy {
 
     public abstract int id();
 
-    @Nullable
+    @NotNull
     public abstract LocalDate createDate();
 
     @Nullable

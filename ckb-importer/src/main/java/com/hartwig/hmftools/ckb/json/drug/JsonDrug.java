@@ -45,7 +45,7 @@ public abstract class JsonDrug implements CkbJsonObject {
     @Nullable
     public abstract String ncitId();
 
-    @Nullable
+    @NotNull
     public abstract LocalDate createDate();
 
     @NotNull

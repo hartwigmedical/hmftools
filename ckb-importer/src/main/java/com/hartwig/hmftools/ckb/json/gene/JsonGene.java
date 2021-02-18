@@ -50,7 +50,7 @@ public abstract class JsonGene implements CkbJsonObject {
     @NotNull
     public abstract LocalDate createDate();
 
-    @NotNull
+    @Nullable
     public abstract LocalDate updateDate();
 
     @NotNull

@@ -33,9 +33,9 @@ public abstract class JsonTreatmentApproach implements CkbJsonObject {
     @NotNull
     public abstract List<ReferenceInfo> references();
 
-    @Nullable
+    @NotNull
     public abstract LocalDate createDate();
 
-    @Nullable
+    @NotNull
     public abstract LocalDate updateDate();
 }

@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ClinicalTrial {
 
-    @Nullable
+    @NotNull
     public abstract LocalDate updateDate();
 
     @NotNull

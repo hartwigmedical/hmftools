@@ -20,7 +20,7 @@ public abstract class JsonDrugClass implements CkbJsonObject {
     @NotNull
     public abstract String drugClass();
 
-    @Nullable
+    @NotNull
     public abstract LocalDate createDate();
 
     @NotNull

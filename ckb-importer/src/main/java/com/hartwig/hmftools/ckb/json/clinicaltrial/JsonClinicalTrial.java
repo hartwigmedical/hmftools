@@ -42,7 +42,7 @@ public abstract class JsonClinicalTrial implements CkbJsonObject {
     @Nullable
     public abstract String sponsors();
 
-    @Nullable
+    @NotNull
     public abstract LocalDate updateDate();
 
     @NotNull

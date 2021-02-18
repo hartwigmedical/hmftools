@@ -16,7 +16,7 @@ public abstract class Gene {
     @NotNull
     public abstract LocalDate createDate();
 
-    @NotNull
+    @Nullable
     public abstract LocalDate updateDate();
 
     @NotNull

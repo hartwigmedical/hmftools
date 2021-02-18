@@ -32,7 +32,7 @@ CREATE TABLE gene
     variantId int NOT NULL,
     ckbGeneId int NOT NULL,
     createDate DATE NOT NULL,
-    updateDate DATE NOT NULL,
+    updateDate DATE,
     geneSymbol varchar(50) NOT NULL,
     geneRole varchar(250) NOT NULL,
     entrezId varchar(50),
@@ -191,7 +191,7 @@ DROP TABLE IF EXISTS therapy;
 CREATE TABLE therapy
 (   id int NOT NULL AUTO_INCREMENT,
     ckbTherapyId int NOT NULL,
-    createDate DATE,
+    createDate DATE NOT NULL,
     updateDate DATE,
     therapyName varchar(50) NOT NULL,
     PRIMARY KEY (id)
@@ -262,7 +262,7 @@ CREATE TABLE drug
 (   id int NOT NULL AUTO_INCREMENT,
     therapyId int NOT NULL,
     ckbDrugId int NOT NULL,
-    createDate DATE,
+    createDate DATE NOT NULL,
     drugName varchar(50) NOT NULL,
     tradeName varchar(50),
     casRegistryNum varchar(50),
@@ -276,7 +276,7 @@ CREATE TABLE drugClass
 (   id int NOT NULL AUTO_INCREMENT,
     drugId int NOT NULL,
     ckbDrugClassId int NOT NULL,
-    createDate DATE,
+    createDate DATE NOT NULL,
     drugClass varchar(50) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (drugId) REFERENCES drug(id)
