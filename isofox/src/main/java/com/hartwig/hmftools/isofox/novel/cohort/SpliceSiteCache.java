@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox.novel.cohort;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
+import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.calcPercentileValues;
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -10,7 +11,6 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.SPLICE_SITE_PERCENTILES;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution.DISTRIBUTION_SIZE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedReader;
@@ -269,7 +269,7 @@ public class SpliceSiteCache
 
     private void writePercentiles()
     {
-        final double[] percentileValues = new double[DISTRIBUTION_SIZE];
+        final double[] percentileValues = new double[PERCENTILE_COUNT];
 
         try
         {
@@ -278,7 +278,7 @@ public class SpliceSiteCache
 
             writer.write("Chromosome,SplicePosition,FragTotal,SupportTotal");
 
-            for(int i = 0; i < DISTRIBUTION_SIZE; ++i)
+            for(int i = 0; i < PERCENTILE_COUNT; ++i)
             {
                 writer.write(String.format(",Pct_%d", i));
             }
@@ -302,7 +302,7 @@ public class SpliceSiteCache
                     writer.write(String.format("%s,%d,%d,%d",
                             chromosome, splicePosition, totalSupport, spliceSiteTotals[SS_SUPPORT]));
 
-                    for(int i = 0; i < DISTRIBUTION_SIZE; ++i)
+                    for(int i = 0; i < PERCENTILE_COUNT; ++i)
                     {
                         writer.write(String.format(",%.3f", percentileValues[i]));
                     }
@@ -350,7 +350,7 @@ public class SpliceSiteCache
             Map<Integer,double[]> percentilesMap = null;
             Map<Integer,int[]> totalsMap = null;
 
-            int expectedColCount = 4 + DISTRIBUTION_SIZE;
+            int expectedColCount = 4 + PERCENTILE_COUNT;
             int splicePosCount = 0;
 
             while ((line = fileReader.readLine()) != null)
@@ -374,7 +374,7 @@ public class SpliceSiteCache
                 totals[SS_TRAVERSED] = totalFrags - supportFrags;
                 totals[SS_SUPPORT] = supportFrags;
 
-                double[] percentileData = new double[DISTRIBUTION_SIZE];
+                double[] percentileData = new double[PERCENTILE_COUNT];
 
                 int startIndex = 4;
                 for(int i = startIndex; i < items.length; ++i)

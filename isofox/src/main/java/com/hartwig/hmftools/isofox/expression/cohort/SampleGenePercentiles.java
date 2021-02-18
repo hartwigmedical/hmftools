@@ -1,21 +1,22 @@
 package com.hartwig.hmftools.isofox.expression.cohort;
 
+import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
+import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.SAMPLE_GENE_PERCENTILES;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution.DISTRIBUTION_SIZE;
-import static com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution.getTpmMedian;
-import static com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution.getTpmPercentile;
-import static com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution.loadCohortDistribution;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,6 +52,66 @@ public class SampleGenePercentiles
         mWriter = null;
     }
 
+    public static void loadCohortDistribution(
+            final String inputFile, final Map<String,double[]> percentilesMap,
+            final String fileType, int expectedColCount, final List<String> restrictions)
+    {
+        if(!Files.exists(Paths.get(inputFile)))
+        {
+            ISF_LOGGER.error("invalid cohort {} distribution file", fileType);
+            return;
+        }
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(inputFile));
+
+            // skip field names
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                ISF_LOGGER.error("empty {} distribution file({})", fileType, inputFile);
+                return;
+            }
+
+            while ((line = fileReader.readLine()) != null)
+            {
+                String[] items = line.split(DELIMITER, -1);
+
+                if (items.length != expectedColCount)
+                {
+                    ISF_LOGGER.error("invalid {} distribution data length({}) vs expected({}): {}",
+                            fileType, items.length, expectedColCount, line);
+                    return;
+                }
+
+                final String itemName = items[0];
+
+                if(!restrictions.isEmpty() && !restrictions.contains(itemName))
+                    continue;
+
+                double[] percentileData = new double[PERCENTILE_COUNT];
+
+                int startIndex = fileType.equals("gene") ? 2 : 1;
+
+                for(int i = startIndex; i < items.length; ++i)
+                {
+                    double tpm = Double.parseDouble(items[i]);
+                    percentileData[i - startIndex] = tpm;
+                }
+
+                percentilesMap.put(itemName, percentileData);
+            }
+
+            ISF_LOGGER.info("loaded {} distribution from file({})", fileType, inputFile);
+        }
+        catch (IOException e)
+        {
+            ISF_LOGGER.warn("failed to load {} distribution file({}): {}", fileType, inputFile, e.toString());
+        }
+    }
+
     private void loadCancerPercentileData()
     {
         if(mConfig.Expression.CancerGeneFiles == null)
@@ -66,7 +127,7 @@ public class SampleGenePercentiles
             ISF_LOGGER.debug("cancerType({}) loading gene records", cancerType);
 
             final Map<String, double[]> geneDistributionMap = Maps.newHashMap();
-            loadCohortDistribution(filename, geneDistributionMap, "gene", DISTRIBUTION_SIZE + 2, mConfig.RestrictedGeneIds);
+            loadCohortDistribution(filename, geneDistributionMap, "gene", PERCENTILE_COUNT + 2, mConfig.RestrictedGeneIds);
 
             ISF_LOGGER.info("cancerType({}) loaded {} gene records", cancerType, geneDistributionMap.size());
 
@@ -78,7 +139,7 @@ public class SampleGenePercentiles
     {
         final List<Path> filenames = Lists.newArrayList();
 
-        if(!formSampleFilenames(mConfig, AnalysisType.GENE_DISTRIBUTION, filenames))
+        if(!formSampleFilenames(mConfig, SAMPLE_GENE_PERCENTILES, filenames))
             return;
 
         initialiseWriter();
@@ -165,6 +226,26 @@ public class SampleGenePercentiles
             ISF_LOGGER.error("failed to load gene data file({}): {}", filename.toString(), e.toString());
             return;
         }
+    }
+
+    public static double getTpmMedian(final Map<String,double[]> transPercentilesMap, final String transName)
+    {
+        final double[] transPercentiles = transPercentilesMap.get(transName);
+
+        if(transPercentiles == null)
+            return -1;
+
+        return (transPercentiles[49] + transPercentiles[50]) / 2;
+    }
+
+    public static double getTpmPercentile(final Map<String,double[]> transPercentilesMap, final String transName, double tpm)
+    {
+        final double[] transPercentiles = transPercentilesMap.get(transName);
+
+        if(transPercentiles == null)
+            return -1;
+
+        return getPercentile(transPercentiles, tpm);
     }
 
     private Map<String,double[]> getCancerTypePercentilesMap(final String cancerType)

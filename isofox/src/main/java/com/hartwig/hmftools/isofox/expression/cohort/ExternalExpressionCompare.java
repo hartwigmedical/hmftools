@@ -4,8 +4,8 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_DISTRIBUTION;
-import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_DISTRIBUTION;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_MATRIX;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig.EXT_SOURCE_RSEM;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig.EXT_SOURCE_SALMON;
@@ -101,7 +101,7 @@ public class ExternalExpressionCompare
     {
         final List<Path> filenames = Lists.newArrayList();
 
-        if(!formSampleFilenames(mConfig, mTransScope ? TRANSCRIPT_DISTRIBUTION : GENE_DISTRIBUTION, filenames))
+        if(!formSampleFilenames(mConfig, mTransScope ? TRANSCRIPT_EXPRESSION_MATRIX : GENE_EXPRESSION_MATRIX, filenames))
             return;
 
         initialiseWriter();

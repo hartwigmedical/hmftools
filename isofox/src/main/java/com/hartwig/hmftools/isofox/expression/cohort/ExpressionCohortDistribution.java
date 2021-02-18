@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.isofox.expression.cohort;
 
+import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
+import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
+import static com.hartwig.hmftools.common.stats.Percentiles.calcPercentileValues;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
@@ -22,9 +25,12 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
-public class ExpressionCohortMedians
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+
+public class ExpressionCohortDistribution
 {
-    // for re-writing expression matrix as cohort and cancer-type median values
+    // for re-writing expression matrix as pan-cancer and per-cancer median values and percentiles
     private final CohortConfig mConfig;
     private BufferedWriter mWriter;
 
@@ -32,9 +38,16 @@ public class ExpressionCohortMedians
     private final Map<String,Integer> mSampleIndexMap;
     private final List<String> mGeneTransIds;
     private final Map<String,String> mIdNameMap;
-    private boolean mTranscriptScope;
 
-    public ExpressionCohortMedians(final CohortConfig config)
+    private boolean mTranscriptScope;
+    private boolean mWritePerCancer;
+    private boolean mWritePercentiles;
+
+    private static final String DIST_BY_CANCER_TYPE = "exp_by_cancer";
+    private static final String TRANSCRIPT_SCOPE = "exp_by_transcript";
+    private static final String WRITE_PERCENTILES = "exp_percentiles";
+
+    public ExpressionCohortDistribution(final CohortConfig config, final CommandLine cmd)
     {
         mConfig = config;
 
@@ -42,9 +55,19 @@ public class ExpressionCohortMedians
         mSampleIndexMap = Maps.newHashMap();
         mGeneTransIds = Lists.newArrayList();
         mIdNameMap = Maps.newHashMap();
-        mTranscriptScope = false;
+
+        mTranscriptScope = cmd.hasOption(TRANSCRIPT_SCOPE);
+        mWritePercentiles = cmd.hasOption(WRITE_PERCENTILES);
+        mWritePerCancer = !mWritePercentiles || cmd.hasOption(DIST_BY_CANCER_TYPE);
 
         mWriter = null;
+    }
+
+    public static void addCmdLineOptions(final Options options)
+    {
+        options.addOption(DIST_BY_CANCER_TYPE, false, "Produce per-cancer expression distributions");
+        options.addOption(TRANSCRIPT_SCOPE, false, "Produce per-cancer expression distributions");
+        options.addOption(WRITE_PERCENTILES, false, "Write expression percentiles");
     }
 
     public void produceCohortData()
@@ -63,7 +86,7 @@ public class ExpressionCohortMedians
             if(i >= nextLog)
             {
                 nextLog += 1000;
-                ISF_LOGGER.info("processing %d transcripts", i);
+                ISF_LOGGER.info("processed {} {}", i, mTranscriptScope ? "transcripts" : "genes");
             }
         }
 
@@ -77,45 +100,65 @@ public class ExpressionCohortMedians
 
         final double[] tpmValues = mExpressionMatrix.getRow(index);
 
-        final List<Double> allValues = Lists.newArrayListWithExpectedSize(mExpressionMatrix.Cols);
-
-        for(int s = 0; s < tpmValues.length; ++s)
-        {
-            addSortedTpm(allValues, tpmValues[s]);
-        }
-
-        double allMedian = calculatedMedian(allValues);
-
         try
         {
-            if(mTranscriptScope)
-                mWriter.write(String.format("%s,%s", geneTransName, geneTransId));
-            else
-                mWriter.write(String.format("%s,%s", geneTransId, geneTransName));
+            // first write out pan-cancer medians and optionally percentiles
+            final List<Double> allValues = Lists.newArrayListWithExpectedSize(mExpressionMatrix.Cols);
 
-            mWriter.write(String.format(",%6.3e", allMedian));
-
-            for(Map.Entry<String,List<String>> entry : mConfig.SampleData.CancerTypeSamples.entrySet())
+            for(int s = 0; s < tpmValues.length; ++s)
             {
-                final List<String> samples = entry.getValue();
-
-                final List<Double> cancerValues = Lists.newArrayListWithExpectedSize(samples.size());
-
-                for(final String sampleId : samples)
-                {
-                    Integer sampleIndex = mSampleIndexMap.get(sampleId);
-
-                    if(sampleIndex == null)
-                        continue;
-
-                    addSortedTpm(cancerValues, tpmValues[sampleIndex]);
-                }
-
-                double cancerMedian = calculatedMedian(cancerValues);
-                mWriter.write(String.format(",%6.3e", cancerMedian));
+                addSortedTpm(allValues, tpmValues[s]);
             }
 
-            mWriter.newLine();
+            if(mWritePercentiles)
+            {
+                writeCancerValues(geneTransId, geneTransName, "ALL", allValues);
+            }
+            else
+            {
+                double allMedian = calculatedMedian(allValues);
+
+                if(mTranscriptScope)
+                    mWriter.write(String.format("%s,%s", geneTransName, geneTransId));
+                else
+                    mWriter.write(String.format("%s,%s", geneTransId, geneTransName));
+
+                mWriter.write(String.format(",%6.3e", allMedian));
+            }
+
+            if(mWritePerCancer)
+            {
+                for(Map.Entry<String, List<String>> entry : mConfig.SampleData.CancerTypeSamples.entrySet())
+                {
+                    final String cancerType = entry.getKey();
+                    final List<String> samples = entry.getValue();
+
+                    final List<Double> cancerValues = Lists.newArrayListWithExpectedSize(samples.size());
+
+                    for(final String sampleId : samples)
+                    {
+                        Integer sampleIndex = mSampleIndexMap.get(sampleId);
+
+                        if(sampleIndex == null)
+                            continue;
+
+                        addSortedTpm(cancerValues, tpmValues[sampleIndex]);
+                    }
+
+                    if(mWritePercentiles)
+                    {
+                        writeCancerValues(geneTransId, geneTransName, cancerType, cancerValues);
+                    }
+                    else
+                    {
+                        double cancerMedian = calculatedMedian(cancerValues);
+                        mWriter.write(String.format(",%6.3e", cancerMedian));
+                    }
+                }
+            }
+
+            if(!mWritePercentiles)
+                mWriter.newLine();
         }
         catch(IOException e)
         {
@@ -157,7 +200,7 @@ public class ExpressionCohortMedians
         try
         {
             final String outputFileName = mTranscriptScope ?
-                    mConfig.formCohortFilename("transcript_medians.csv") : mConfig.formCohortFilename("gene_medians.csv");
+                    mConfig.formCohortFilename("transcript_distribution.csv") : mConfig.formCohortFilename("gene_distribution.csv");
 
             mWriter = createBufferedWriter(outputFileName, false);
 
@@ -166,11 +209,61 @@ public class ExpressionCohortMedians
             if(mTranscriptScope)
                 mWriter.write(",TransName");
 
-            mWriter.write(",All");
-
-            for(String cancerType : mConfig.SampleData.CancerTypeSamples.keySet())
+            if(mWritePercentiles)
             {
+                if(mWritePerCancer)
+                    mWriter.write(",CancerType");
+
+                mWriter.write(",Median");
+
+                for(int i = 0; i < PERCENTILE_COUNT; ++i)
+                {
+                    mWriter.write(String.format(",Pct_%d", i));
+                }
+            }
+            else
+            {
+                //  cancer types for the remaining columns
+                mWriter.write(",All");
+
+                for(String cancerType : mConfig.SampleData.CancerTypeSamples.keySet())
+                {
+                    mWriter.write(String.format(",%s", cancerType));
+                }
+            }
+
+            mWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write transcript data file: {}", e.toString());
+        }
+    }
+
+    private void writeCancerValues(final String geneTransId, final String geneTransName, final String cancerType, final List<Double> tpmList)
+    {
+        try
+        {
+            if(mTranscriptScope)
+                mWriter.write(String.format("%s,%s", geneTransName, geneTransId));
+            else
+                mWriter.write(String.format("%s,%s", geneTransId, geneTransName));
+
+            if(mWritePerCancer)
                 mWriter.write(String.format(",%s", cancerType));
+
+            final double[] tmpArray = convertList(tpmList);
+
+            final double[] percentileValues = new double[PERCENTILE_COUNT];
+            calcPercentileValues(tmpArray, percentileValues);
+
+            double medianValue = calculatedMedian(tpmList);
+
+            mWriter.write(String.format(",%6.3e", medianValue));
+
+            for (int i = 0; i < PERCENTILE_COUNT; ++i)
+            {
+                mWriter.write(String.format(",%6.3e", percentileValues[i]));
             }
 
             mWriter.newLine();

@@ -11,9 +11,7 @@ import static com.hartwig.hmftools.isofox.results.ResultsWriter.TRANSCRIPT_RESUL
 public enum AnalysisType
 {
     SUMMARY,
-    GENE_DISTRIBUTION, // creates gene expression percentiles by cancer type and pan-cancer
-    TRANSCRIPT_DISTRIBUTION, // as above but for transcripts
-    EXPRESSION_COHORT_MEDIANS, // produce pan-cancer and per-cancer median expression values
+    EXPRESSION_DISTRIBUTION, // produce pan-cancer and per-cancer median and percentile expression data
     SAMPLE_GENE_PERCENTILES, // reports where on a percentile a specific sample's gene expression lies
     ALT_SPLICE_JUNCTION, // combine and analyse alternate splice junctions for a cohort
     ALT_SPLICE_JUNCTION_MATRIX, // generates a for a cohort's alt-SJs
@@ -32,13 +30,9 @@ public enum AnalysisType
     {
         switch(type)
         {
-            case GENE_DISTRIBUTION:
             case SAMPLE_GENE_PERCENTILES:
             case GENE_EXPRESSION_COMPARE:
                 return GENE_RESULTS_FILE;
-
-            case TRANSCRIPT_DISTRIBUTION:
-                return TRANSCRIPT_RESULTS_FILE;
 
             case SUMMARY:
                 return SUMMARY_FILE;

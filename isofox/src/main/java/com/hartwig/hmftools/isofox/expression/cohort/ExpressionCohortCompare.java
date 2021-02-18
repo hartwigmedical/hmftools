@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -52,7 +54,7 @@ public class ExpressionCohortCompare
 
     private void loadGeneExpression()
     {
-        final List<String> ignoreFields = Lists.newArrayList("GeneId", "GeneName");
+        final List<String> ignoreFields = Lists.newArrayList(FLD_GENE_ID, FLD_GENE_NAME);
         mGeneExpressionMatrix = loadMatrixDataFile(mConfig.Expression.GeneExpMatrixFile, mSampleIndexMap, ignoreFields);
         mGeneExpressionMatrix.cacheTranspose();
 
@@ -65,8 +67,8 @@ public class ExpressionCohortCompare
 
             final Map<String,Integer> fieldsMapIndex = createFieldsIndexMap(header, DELIMITER);
 
-            int geneIdIndex = fieldsMapIndex.get("GeneId");
-            int geneNameIndex = fieldsMapIndex.get("GeneName");
+            int geneIdIndex = fieldsMapIndex.get(FLD_GENE_ID);
+            int geneNameIndex = fieldsMapIndex.get(FLD_GENE_NAME);
 
             String line = fileReader.readLine();
 

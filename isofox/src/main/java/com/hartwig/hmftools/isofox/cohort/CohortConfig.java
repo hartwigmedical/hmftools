@@ -12,14 +12,12 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.REF_GENOME;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.loadGeneIdsFile;
-import static com.hartwig.hmftools.isofox.cohort.AnalysisType.EXPRESSION_COHORT_MEDIANS;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.EXPRESSION_DISTRIBUTION;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.EXTERNAL_EXPRESSION_COMPARE;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.FUSION;
-import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_DISTRIBUTION;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_COMPARE;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.SAMPLE_GENE_PERCENTILES;
-import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_DISTRIBUTION;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.getIsofoxFileId;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
@@ -37,6 +35,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig;
+import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortDistribution;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohortConfig;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortMatrix;
@@ -150,10 +149,9 @@ public class CohortConfig
 
     private static boolean requiresExpressionConfig(final List<AnalysisType> analysisTypes)
     {
-        return analysisTypes.contains(GENE_DISTRIBUTION) || analysisTypes.contains(TRANSCRIPT_DISTRIBUTION)
-                || analysisTypes.contains(SAMPLE_GENE_PERCENTILES) || analysisTypes.contains(GENE_EXPRESSION_COMPARE)
+        return analysisTypes.contains(SAMPLE_GENE_PERCENTILES) || analysisTypes.contains(GENE_EXPRESSION_COMPARE)
                 || analysisTypes.contains(EXTERNAL_EXPRESSION_COMPARE) || analysisTypes.contains(GENE_EXPRESSION_MATRIX)
-                || analysisTypes.contains(TRANSCRIPT_EXPRESSION_MATRIX) || analysisTypes.contains(EXPRESSION_COHORT_MEDIANS);
+                || analysisTypes.contains(TRANSCRIPT_EXPRESSION_MATRIX) || analysisTypes.contains(EXPRESSION_DISTRIBUTION);
     }
 
     public static boolean isValid(final CommandLine cmd)
@@ -243,6 +241,7 @@ public class CohortConfig
         SpliceVariantMatcher.addCmdLineOptions(options);
         FusionCohortConfig.addCmdLineOptions(options);
         ExpressionCohortConfig.addCmdLineOptions(options);
+        ExpressionCohortDistribution.addCmdLineOptions(options);
         SpliceSiteCache.addCmdLineOptions(options);
         AltSjCohortMatrix.addCmdLineOptions(options);
         RecurrentVariantFinder.addCmdLineOptions(options);

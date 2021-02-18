@@ -18,12 +18,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortCompare;
-import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortMedians;
+import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortDistribution;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionMatrix;
 import com.hartwig.hmftools.isofox.expression.cohort.ExternalExpressionCompare;
-import com.hartwig.hmftools.isofox.expression.cohort.GeneExpressionDistribution;
 import com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles;
-import com.hartwig.hmftools.isofox.expression.cohort.TransExpressionDistribution;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortMatrix;
@@ -93,24 +91,10 @@ public class CohortAnalyser
                     break;
                 }
 
-                case TRANSCRIPT_DISTRIBUTION:
+                case EXPRESSION_DISTRIBUTION:
                 {
-                    TransExpressionDistribution transExpDist = new TransExpressionDistribution(mConfig);
-                    transExpDist.processSampleTranscriptFiles();
-                    break;
-                }
-
-                case EXPRESSION_COHORT_MEDIANS:
-                {
-                    ExpressionCohortMedians transExpDist = new ExpressionCohortMedians(mConfig);
+                    ExpressionCohortDistribution transExpDist = new ExpressionCohortDistribution(mConfig, mCmdLineArgs);
                     transExpDist.produceCohortData();
-                    break;
-                }
-
-                case GENE_DISTRIBUTION:
-                {
-                    GeneExpressionDistribution geneExpDistribution = new GeneExpressionDistribution(mConfig);
-                    geneExpDistribution.processGenes();
                     break;
                 }
 

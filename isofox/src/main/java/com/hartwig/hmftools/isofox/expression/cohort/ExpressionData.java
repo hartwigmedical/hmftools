@@ -44,7 +44,6 @@ public class ExpressionData
         mRawFragmentCount = rawFrags;
         mReadCount = readCount;
         mTPM = tpm;
-
     }
 
     public void addCounts(double tpm, double fittedFrags, double rawFrags, int reads)
