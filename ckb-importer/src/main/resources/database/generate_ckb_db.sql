@@ -331,7 +331,7 @@ CREATE TABLE drugDescriptionReference
 DROP TABLE IF EXISTS indication;
 CREATE TABLE indication
 (   id int NOT NULL AUTO_INCREMENT,
-    ckbIndicationId int NOT NULL,
+    ckbIndicationId varchar(50) NOT NULL,
     name varchar(50) NOT NULL,
     source varchar(50) NOT NULL,
     definition varchar(50),

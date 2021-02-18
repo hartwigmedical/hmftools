@@ -31,7 +31,15 @@ public final class CkbDAO {
     @NotNull
     private final DSLContext context;
     @NotNull
+    private final TherapyDAO therapyDAO;
+    @NotNull
+    private final IndicationDAO indicationDAO;
+    @NotNull
     private final VariantDAO variantDAO;
+    @NotNull
+    private final EvidenceDAO evidenceDAO;
+    @NotNull
+    private final ClinicalTrialDAO clinicalTrialDAO;
 
     @NotNull
     public static CkbDAO connectToCkbDAO(@NotNull String userName, @NotNull String password, @NotNull String url) throws SQLException {
@@ -54,12 +62,23 @@ public final class CkbDAO {
 
     private CkbDAO(@NotNull final DSLContext context) {
         this.context = context;
+        this.therapyDAO = new TherapyDAO(context);
+        this.indicationDAO = new IndicationDAO(context);
         this.variantDAO = new VariantDAO(context);
+        this.evidenceDAO = new EvidenceDAO(context, therapyDAO, indicationDAO);
+        this.clinicalTrialDAO = new ClinicalTrialDAO(context, therapyDAO, indicationDAO);
     }
 
     public void deleteAll() {
         // Note that deletions should go from branch to root
         variantDAO.deleteAll();
+
+        // The evidence and trial DAOs need to emptied first before therapy and indication, to avoid key violations.
+        evidenceDAO.deleteAll();
+        clinicalTrialDAO.deleteAll();
+
+        therapyDAO.deleteAll();
+        indicationDAO.deleteAll();
 
         context.deleteFrom(CKBENTRY).execute();
     }
@@ -79,19 +98,11 @@ public final class CkbDAO {
         }
 
         for (Evidence evidence : ckbEntry.evidences()) {
-            writeEvidence(evidence, id);
+            evidenceDAO.write(evidence, id);
         }
 
         for (ClinicalTrial clinicalTrial : ckbEntry.clinicalTrials()) {
-            writeClinicalTrial(clinicalTrial, id);
+            clinicalTrialDAO.write(clinicalTrial, id);
         }
-    }
-
-    private void writeEvidence(@NotNull Evidence evidence, int ckbEntryId) {
-
-    }
-
-    private void writeClinicalTrial(@NotNull ClinicalTrial clinicalTrial, int ckbEntryId) {
-
     }
 }

@@ -20,7 +20,7 @@ public abstract class Drug {
     public abstract String drugName();
 
     @NotNull
-    public abstract List<DrugClass> drugClasses(); //some drugs has none drug class eg. drugs 9758
+    public abstract List<DrugClass> drugClasses();
 
     @NotNull
     public abstract List<String> terms();
