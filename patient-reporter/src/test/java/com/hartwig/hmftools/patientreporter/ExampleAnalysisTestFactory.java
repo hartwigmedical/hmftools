@@ -150,6 +150,7 @@ public final class ExampleAnalysisTestFactory {
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
+                .pipelineVersion("5.19")
                 .build();
     }
 
@@ -218,6 +219,7 @@ public final class ExampleAnalysisTestFactory {
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
+                .pipelineVersion("5.19")
                 .build();
     }
 

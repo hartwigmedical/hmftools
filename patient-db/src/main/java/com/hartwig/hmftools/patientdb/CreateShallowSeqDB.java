@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
-import com.hartwig.hmftools.patientdb.clinical.context.RunContext;
+import com.hartwig.hmftools.common.runcontext.RunContext;
 import com.hartwig.hmftools.patientdb.clinical.readers.RunsFolderReader;
 
 import org.apache.commons.cli.CommandLine;

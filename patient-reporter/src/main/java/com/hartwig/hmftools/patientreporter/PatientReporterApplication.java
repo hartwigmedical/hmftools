@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.common.runcontext.MetaDataResolver;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReporter;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportData;
@@ -109,7 +110,7 @@ public class PatientReporterApplication {
                 config.circosFile(),
                 config.protectEvidenceTsv(),
                 config.comments(),
-                config.correctedReport());
+                config.correctedReport(), config.pipelineVersionFile());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(reportData.germlineReportingModel());
 
