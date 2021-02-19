@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cup.svs;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
@@ -55,7 +56,7 @@ public class SvClassifier implements CuppaClassifier
             return;
 
         mIsValid &= loadRefPercentileData(mConfig.RefSvPercFile, mRefSvTypePercentiles);
-        mIsValid &= loadSampleSvData();
+        mIsValid &= loadCohortSvData();
     }
 
     private static boolean isReportableType(final SvDataType type)
@@ -73,11 +74,18 @@ public class SvClassifier implements CuppaClassifier
             return;
 
         boolean loadDbData = false;
-        if(mSampleSvData.isEmpty() && mConfig.DbAccess != null)
+        if(mSampleSvData.isEmpty())
         {
-            loadDbData = true;
-            if(!loadSvDataFromDatabase(mConfig.DbAccess, Lists.newArrayList(sample.Id), mSampleSvData))
-                return;
+            if(!loadSampleSvData(sample.Id))
+            {
+                if(mConfig.DbAccess == null)
+                    return;
+
+                if(!loadSvDataFromDatabase(mConfig.DbAccess, Lists.newArrayList(sample.Id), mSampleSvData))
+                    return;
+
+                loadDbData = true;
+            }
         }
 
         final SvData svData = mSampleSvData.get(sample.Id);
@@ -138,28 +146,26 @@ public class SvClassifier implements CuppaClassifier
         return new SampleResult(sample.Id, SV, LIKELIHOOD, dataType, svValue, cancerPrevs);
     }
 
-    private boolean loadSampleSvData()
+    private boolean loadCohortSvData()
     {
-        if(!mConfig.SampleSvFile.isEmpty())
+        if(!mConfig.SampleSvFile.isEmpty() && !mConfig.SampleSvFile.contains(".vcf"))
         {
-            if(mSampleDataCache.isSingleSample())
-            {
-                final String sampleId = mSampleDataCache.SampleIds.get(0);
-
-                if(mConfig.SampleSvFile.contains(sampleId))
-                {
-                    final String clusterFile = LinxCluster.generateFilename(mConfig.SampleDataDir, sampleId);
-                    loadSvDataFromFile(sampleId, mConfig.SampleSvFile, clusterFile, mSampleSvData);
-                    return true;
-                }
-            }
-
-            CUP_LOGGER.info("loading sample SV data from file({})", mConfig.SampleSvFile);
+            CUP_LOGGER.info("loading cohort SV data from file({})", mConfig.SampleSvFile);
             return loadSvDataFromCohortFile(mConfig.SampleSvFile, mSampleSvData);
         }
 
         return true;
+    }
 
-        // will load DB data for each sample on the fly
+    private boolean loadSampleSvData(final String sampleId)
+    {
+        if(mConfig.SampleDataDir.isEmpty() || mConfig.SampleSvFile.isEmpty() || !mConfig.SampleSvFile.contains(".vcf"))
+            return false;
+
+        final String svVcfFile = formSamplePath(mConfig.SampleSvFile, sampleId);
+        final String sampleDataDir = formSamplePath(mConfig.SampleDataDir, sampleId);
+
+        final String clusterFile = LinxCluster.generateFilename(sampleDataDir, sampleId);
+        return loadSvDataFromFile(sampleId, svVcfFile, clusterFile, mSampleSvData);
     }
 }

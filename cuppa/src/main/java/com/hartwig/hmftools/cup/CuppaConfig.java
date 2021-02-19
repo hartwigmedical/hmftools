@@ -216,6 +216,14 @@ public class CuppaConfig
         return outputFile + "." + fileId + ".csv";
     }
 
+    public static String formSamplePath(final String samplePath, final String sampleId)
+    {
+        if(!samplePath.contains("*"))
+            return samplePath;
+
+        return samplePath.replaceAll("\\*", sampleId);
+    }
+
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(

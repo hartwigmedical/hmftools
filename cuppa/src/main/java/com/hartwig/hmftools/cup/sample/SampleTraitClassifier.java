@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cup.sample;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
@@ -62,6 +63,7 @@ public class SampleTraitClassifier implements CuppaClassifier
             mIsValid = false;
             return;
         }
+
         if(!loadRefRateData(mConfig.RefTraitRateFile, mRefTraitRates))
         {
             CUP_LOGGER.error("invalid ref sample trait rate data");
@@ -95,19 +97,23 @@ public class SampleTraitClassifier implements CuppaClassifier
         }
         else
         {
-            final String sampleId = mSampleDataCache.SampleIds.get(0);
+            for(SampleData sample : mSampleDataCache.SampleDataList)
+            {
+                final String sampleDataDir = formSamplePath(mConfig.SampleDataDir, sample.Id);
 
-            try
-            {
-                final PurityContext purityContext = PurityContextFile.read(mConfig.SampleDataDir, sampleId);
-                SampleTraitsData traitsData = SampleTraitsData.from(sampleId, purityContext, 0);
-                mSampleTraitsData.put(traitsData.SampleId, traitsData);
-            }
-            catch(Exception e)
-            {
-                CUP_LOGGER.error("sample({}) failed to load purity file( from dir{}): {}",
-                        sampleId, mConfig.SampleDataDir, e.toString());
-                return false;
+                try
+                {
+                    final PurityContext purityContext = PurityContextFile.read(sampleDataDir, sample.Id);
+                    SampleTraitsData traitsData = SampleTraitsData.from(sample.Id, purityContext, 0);
+                    mSampleTraitsData.put(traitsData.SampleId, traitsData);
+                }
+                catch(Exception e)
+                {
+                    CUP_LOGGER.error("sample({}) sample traits - failed to load purity file from dir{}): {}",
+                            sample.Id, sampleDataDir, e.toString());
+                    mIsValid = false;
+                    break;
+                }
             }
         }
 

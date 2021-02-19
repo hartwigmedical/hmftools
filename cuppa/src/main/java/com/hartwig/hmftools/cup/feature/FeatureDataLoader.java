@@ -142,7 +142,7 @@ public class FeatureDataLoader
             }
             catch (Exception e)
             {
-                CUP_LOGGER.error("sample({}) failed to load purity file( from dir{}): {}",
+                CUP_LOGGER.error("sample({}) check indels - failed to load purity file( from dir{}): {}",
                         sampleId, sampleDataDir, e.toString());
                 return false;
             }

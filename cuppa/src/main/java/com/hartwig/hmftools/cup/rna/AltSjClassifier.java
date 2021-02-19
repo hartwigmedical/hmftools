@@ -79,6 +79,7 @@ public class AltSjClassifier implements CuppaClassifier
     private Matrix mSampleFragCounts;
     private final Map<String,Integer> mSampleIndexMap; // map from sampleId into the sample counts matrix
     private final double mWeightExponent;
+    private final boolean mRunPairwise;
     private final Map<String,RnaCohortData> mCancerDataMap; // number of samples with specific read length in each cancer type
 
     private BufferedWriter mCssWriter;
@@ -87,6 +88,7 @@ public class AltSjClassifier implements CuppaClassifier
     private static final String FRAG_COUNT_LOG_VALUE = "alt_sj_log_value";
     private static final String LOG_CSS_VALUES = "alt_sj_log_css";
     private static final String WEIGHT_EXPONENT = "alt_sj_weight_exp";
+    private static final String RUN_PAIRWISE = "alt_sj_pairwise";
 
     private static final String FLD_POS_START = "PosStart";
     private static final String FLD_POS_END = "PosEnd";
@@ -119,6 +121,8 @@ public class AltSjClassifier implements CuppaClassifier
         {
             mFragCountLogValue = 0; // not applied
         }
+
+        mRunPairwise = cmd.hasOption(RUN_PAIRWISE);
 
         if(config.RefAltSjPrevFile.isEmpty())
             return;
@@ -159,6 +163,7 @@ public class AltSjClassifier implements CuppaClassifier
         options.addOption(SAMPLE_ALT_SJ_FILE, true, "Cohort sample RNA alt-SJ frag counts matrix file");
         options.addOption(FRAG_COUNT_LOG_VALUE, true, "Use log of frag counts plus this value");
         options.addOption(WEIGHT_EXPONENT, true, "Exponent for weighting pair-wise calcs");
+        options.addOption(RUN_PAIRWISE, false, "Run pair-wise classifier");
         options.addOption(LOG_CSS_VALUES, false, "Log CSS values");
     }
 
@@ -192,7 +197,9 @@ public class AltSjClassifier implements CuppaClassifier
 
 
         addCancerCssResults(sample, sampleFragCounts, results);
-        addSampleCssResults(sample, sampleFragCounts, results, similarities);
+
+        if(mRunPairwise)
+            addSampleCssResults(sample, sampleFragCounts, results, similarities);
     }
 
     private void addCancerCssResults(final SampleData sample, final double[] sampleFragCounts, final List<SampleResult> results)
@@ -268,7 +275,7 @@ public class AltSjClassifier implements CuppaClassifier
                         sampleSites, refSites, matchedSites);
             }
 
-            double cssWeight = pow(RNA_ALT_SJ_DIFF_EXPONENT, -100 * (1 - css));
+            double cssWeight = pow(mWeightExponent, -100 * (1 - css));
 
             double weightedCss = css * cssWeight;
             cancerCssTotals.put(cohortData.CancerType, weightedCss);

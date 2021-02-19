@@ -5,6 +5,7 @@ import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_PAN;
 import static com.hartwig.hmftools.cup.common.CupConstants.DRIVER_ZERO_PREVALENCE_ALLOCATION;
@@ -229,8 +230,16 @@ public class FeatureClassifier implements CuppaClassifier
             return loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleFeatures, false);
         }
 
-        final String sampleId = mSampleDataCache.SampleIds.get(0);
-        return loadFeaturesFromFile(sampleId, mConfig.SampleDataDir, mConfig.SampleSomaticVcf, mSampleFeatures);
+        for(SampleData sample : mSampleDataCache.SampleDataList)
+        {
+            final String sampleDataDir = formSamplePath(mConfig.SampleDataDir, sample.Id);
+            final String somaticVcf = formSamplePath(mConfig.SampleSomaticVcf, sample.Id);
+
+            if(!loadFeaturesFromFile(sample.Id, sampleDataDir, somaticVcf, mSampleFeatures))
+                break;
+        }
+
+        return true;
     }
 
     private void formFeaturePrevalenceTotals()

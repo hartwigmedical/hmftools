@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cup;
 
+import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CupCalcs.adjustRefCounts;
@@ -9,6 +10,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_UNKNOWN;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -77,6 +79,16 @@ public class CuppaUtilsTest
         assertEquals(18, adjustedCounts[1], 0.01);
         assertEquals(27, adjustedCounts[2], 0.01);
         assertEquals(36, adjustedCounts[3], 0.01);
+    }
+
+    @Test
+    public void testConfig()
+    {
+        String sampleWildcardPath = "/data/samples/*/";
+        String sampleId = "TEST001";
+        String samplePath = formSamplePath(sampleWildcardPath, sampleId);
+        assertTrue(samplePath.equals("/data/samples/TEST001/"));
+        assertTrue(sampleWildcardPath.equals("/data/samples/*/"));
     }
 
     @Test

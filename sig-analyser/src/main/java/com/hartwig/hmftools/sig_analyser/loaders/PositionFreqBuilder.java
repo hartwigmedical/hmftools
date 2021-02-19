@@ -221,8 +221,6 @@ public class PositionFreqBuilder
                 final String[] items = line.split(",", -1);
                 String sampleId = items[fieldsIndexMap.get("SampleId")];
 
-                String cancerType = fieldsIndexMap.containsKey("CancerType") ? items[fieldsIndexMap.get("CancerType")] : "";
-
                 mSampleList.add(sampleId);
             }
 

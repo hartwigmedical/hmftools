@@ -87,6 +87,8 @@ public class CupAnalyser
         if(mConfig.runClassifier(ALT_SJ))
             mClassifiers.add(new AltSjClassifier(mConfig, mSampleDataCache, cmd));
 
+        CUP_LOGGER.debug("{} classifiers loaded", mClassifiers.size());
+
         mSampleDataWriter = null;
         mSampleSimilarityWriter = null;
     }
@@ -95,6 +97,12 @@ public class CupAnalyser
     {
         mSampleDataCache.loadReferenceSampleData(mConfig.RefSampleDataFile);
         mSampleDataCache.loadSampleData(cmd.getOptionValue(SPECIFIC_SAMPLE_DATA), mConfig.SampleDataFile);
+
+        if(mSampleDataCache.isMultiSample())
+        {
+            CUP_LOGGER.info("loaded {} samples, {} ref samples and {} ref cancer types",
+                    mSampleDataCache.SampleIds.size(), mSampleDataCache.RefSampleCancerTypeMap.size(), mSampleDataCache.RefCancerSampleData.size());
+        }
     }
 
     public void run()
@@ -113,12 +121,6 @@ public class CupAnalyser
 
         if(!allClassifiersValid())
             return;
-
-        if(mSampleDataCache.isMultiSample())
-        {
-            CUP_LOGGER.info("loaded {} samples, {} ref samples and {} ref cancer types",
-                    mSampleDataCache.SampleIds.size(), mSampleDataCache.RefSampleCancerTypeMap.size(), mSampleDataCache.RefCancerSampleData.size());
-        }
 
         initialiseOutputFiles();
 
