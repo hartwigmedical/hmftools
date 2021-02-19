@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.runcontext.MetaDataResolver;
+import com.hartwig.hmftools.common.runcontext.RunContext;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;

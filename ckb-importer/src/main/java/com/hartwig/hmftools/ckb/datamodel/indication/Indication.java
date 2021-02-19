@@ -30,8 +30,8 @@ public abstract class Indication {
     public abstract LocalDate lastUpdateDateFromDO();
 
     @NotNull
-    public abstract List<String> altIds();
+    public abstract String termId();
 
     @NotNull
-    public abstract String termId();
+    public abstract List<String> altIds();
 }

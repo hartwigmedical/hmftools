@@ -23,10 +23,10 @@ public abstract class Reference {
     public abstract String url();
 
     @Nullable
-    public abstract String authors();
+    public abstract String journal();
 
     @Nullable
-    public abstract String journal();
+    public abstract String authors();
 
     @Nullable
     public abstract String volume();

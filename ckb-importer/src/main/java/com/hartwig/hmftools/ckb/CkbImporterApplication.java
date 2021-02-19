@@ -48,7 +48,6 @@ public class CkbImporterApplication {
         if (config.skipDatabaseWriting()) {
             LOGGER.info("Skipping DB writing.");
         } else {
-            LOGGER.info("Connecting to CKB database at {}", config.dbUrl());
             CkbDAO ckbDAO = CkbDAO.connectToCkbDAO(config.dbUser(), config.dbPass(), "jdbc:" + config.dbUrl());
 
             LOGGER.info("Deleting all data from CKB database");

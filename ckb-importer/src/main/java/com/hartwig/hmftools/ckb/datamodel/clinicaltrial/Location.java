@@ -14,16 +14,16 @@ public abstract class Location {
     public abstract String nctId();
 
     @Nullable
+    public abstract String status();
+
+    @Nullable
     public abstract String facility();
 
     @NotNull
-    public abstract String city();
+    public abstract List<Contact> contacts();
 
     @NotNull
-    public abstract String country();
-
-    @Nullable
-    public abstract String status();
+    public abstract String city();
 
     @Nullable
     public abstract String state();
@@ -32,5 +32,5 @@ public abstract class Location {
     public abstract String zip();
 
     @NotNull
-    public abstract List<Contact> contacts();
+    public abstract String country();
 }

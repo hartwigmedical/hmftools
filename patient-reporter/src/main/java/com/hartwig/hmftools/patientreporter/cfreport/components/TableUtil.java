@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.Cell;

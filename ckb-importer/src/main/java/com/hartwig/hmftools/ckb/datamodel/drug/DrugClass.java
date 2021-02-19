@@ -12,7 +12,7 @@ public abstract class DrugClass {
 
     public abstract int id();
 
-    @Nullable
+    @NotNull
     public abstract LocalDate createDate();
 
     @NotNull

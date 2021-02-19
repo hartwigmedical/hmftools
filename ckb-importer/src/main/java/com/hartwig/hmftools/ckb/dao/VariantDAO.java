@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.ckb.dao;
 
-import static com.hartwig.hmftools.ckb.database.tables.Categoryvariant.CATEGORYVARIANT;
 import static com.hartwig.hmftools.ckb.database.tables.Categoryvariantpath.CATEGORYVARIANTPATH;
 import static com.hartwig.hmftools.ckb.database.tables.Gene.GENE;
 import static com.hartwig.hmftools.ckb.database.tables.Genedescription.GENEDESCRIPTION;
@@ -8,16 +7,12 @@ import static com.hartwig.hmftools.ckb.database.tables.Genedescriptionreference.
 import static com.hartwig.hmftools.ckb.database.tables.Genesynonym.GENESYNONYM;
 import static com.hartwig.hmftools.ckb.database.tables.Geneterm.GENETERM;
 import static com.hartwig.hmftools.ckb.database.tables.Membervariant.MEMBERVARIANT;
-import static com.hartwig.hmftools.ckb.database.tables.Membervariantdescription.MEMBERVARIANTDESCRIPTION;
-import static com.hartwig.hmftools.ckb.database.tables.Membervariantdescriptionreference.MEMBERVARIANTDESCRIPTIONREFERENCE;
 import static com.hartwig.hmftools.ckb.database.tables.Transcriptcoordinate.TRANSCRIPTCOORDINATE;
 import static com.hartwig.hmftools.ckb.database.tables.Variant.VARIANT;
 import static com.hartwig.hmftools.ckb.database.tables.Variantdescription.VARIANTDESCRIPTION;
 import static com.hartwig.hmftools.ckb.database.tables.Variantdescriptionreference.VARIANTDESCRIPTIONREFERENCE;
 
 import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
-import com.hartwig.hmftools.ckb.datamodel.variant.CategoryVariant;
-import com.hartwig.hmftools.ckb.datamodel.variant.CategoryVariantPath;
 import com.hartwig.hmftools.ckb.datamodel.variant.Gene;
 import com.hartwig.hmftools.ckb.datamodel.variant.GeneDescription;
 import com.hartwig.hmftools.ckb.datamodel.variant.MemberVariant;
@@ -40,13 +35,8 @@ class VariantDAO {
 
     public void deleteAll() {
         // Note that deletions should go from branch to root
-        context.deleteFrom(MEMBERVARIANTDESCRIPTIONREFERENCE).execute();
-        context.deleteFrom(MEMBERVARIANTDESCRIPTION).execute();
         context.deleteFrom(MEMBERVARIANT).execute();
-
-        context.deleteFrom(CATEGORYVARIANT).execute();
         context.deleteFrom(CATEGORYVARIANTPATH).execute();
-
         context.deleteFrom(TRANSCRIPTCOORDINATE).execute();
 
         context.deleteFrom(VARIANTDESCRIPTIONREFERENCE).execute();
@@ -65,43 +55,45 @@ class VariantDAO {
         int id = context.insertInto(VARIANT,
                 VARIANT.CKBENTRYID,
                 VARIANT.CKBVARIANTID,
+                VARIANT.CREATEDATE,
+                VARIANT.UPDATEDATE,
                 VARIANT.FULLNAME,
+                VARIANT.VARIANT_,
                 VARIANT.IMPACT,
                 VARIANT.PROTEINEFFECT,
-                VARIANT.TYPE,
-                VARIANT.VARIANT_,
-                VARIANT.CREATEDATE,
-                VARIANT.UPDATEDATE)
+                VARIANT.TYPE)
                 .values(ckbEntryId,
                         variant.id(),
+                        Util.sqlDate(variant.createDate()),
+                        Util.sqlDate(variant.updateDate()),
                         variant.fullName(),
+                        variant.variant(),
                         variant.impact(),
                         variant.proteinEffect(),
-                        variant.type(),
-                        variant.variant(),
-                        Util.sqlDate(variant.createDate()),
-                        Util.sqlDate(variant.updateDate()))
+                        variant.type())
                 .returning(VARIANT.ID)
                 .fetchOne()
                 .getValue(VARIANT.ID);
 
         writeGene(variant.gene(), id);
 
-        for (VariantDescription variantDescription : variant.descriptions()) {
-            writeVariantDescription(variantDescription, id);
-        }
-
         writeTranscriptCoordinate(variant.referenceTranscriptCoordinate(), id, true);
         for (TranscriptCoordinate transcriptCoordinate : variant.allTranscriptCoordinates()) {
             writeTranscriptCoordinate(transcriptCoordinate, id, false);
         }
 
-        for (CategoryVariantPath categoryVariantPath : variant.categoryVariantPaths()) {
-            writeCategoryVariantPath(categoryVariantPath, id);
+        for (String categoryVariantPath : variant.categoryVariantPaths()) {
+            context.insertInto(CATEGORYVARIANTPATH, CATEGORYVARIANTPATH.VARIANTID, CATEGORYVARIANTPATH.VARIANTPATH)
+                    .values(id, categoryVariantPath)
+                    .execute();
         }
 
         for (MemberVariant memberVariant : variant.memberVariants()) {
             writeMemberVariant(memberVariant, id);
+        }
+
+        for (VariantDescription variantDescription : variant.descriptions()) {
+            writeVariantDescription(variantDescription, id);
         }
     }
 
@@ -109,24 +101,24 @@ class VariantDAO {
         int id = context.insertInto(GENE,
                 GENE.VARIANTID,
                 GENE.CKBGENEID,
+                GENE.CREATEDATE,
+                GENE.UPDATEDATE,
                 GENE.GENESYMBOL,
+                GENE.GENEROLE,
                 GENE.ENTREZID,
                 GENE.CHROMOSOME,
                 GENE.MAPLOCATION,
-                GENE.CANONICALTRANSCRIPT,
-                GENE.GENEROLE,
-                GENE.CREATEDATE,
-                GENE.UPDATEDATE)
+                GENE.CANONICALTRANSCRIPT)
                 .values(variantId,
                         gene.id(),
+                        Util.sqlDate(gene.createDate()),
+                        Util.sqlDate(gene.updateDate()),
                         gene.geneSymbol(),
+                        gene.geneRole(),
                         gene.entrezId(),
                         gene.chromosome(),
                         gene.mapLocation(),
-                        gene.canonicalTranscript(),
-                        gene.geneRole(),
-                        Util.sqlDate(gene.createDate()),
-                        Util.sqlDate(gene.updateDate()))
+                        gene.canonicalTranscript())
                 .returning(GENE.ID)
                 .fetchOne()
                 .getValue(GENE.ID);
@@ -159,8 +151,8 @@ class VariantDAO {
                     GENEDESCRIPTIONREFERENCE.TITLE,
                     GENEDESCRIPTIONREFERENCE.ABSTRACTTEXT,
                     GENEDESCRIPTIONREFERENCE.URL,
-                    GENEDESCRIPTIONREFERENCE.AUTHORS,
                     GENEDESCRIPTIONREFERENCE.JOURNAL,
+                    GENEDESCRIPTIONREFERENCE.AUTHORS,
                     GENEDESCRIPTIONREFERENCE.VOLUME,
                     GENEDESCRIPTIONREFERENCE.ISSUE,
                     GENEDESCRIPTIONREFERENCE.DATE,
@@ -171,8 +163,8 @@ class VariantDAO {
                             reference.title(),
                             reference.abstractText(),
                             reference.url(),
-                            reference.authors(),
                             reference.journal(),
+                            reference.authors(),
                             reference.volume(),
                             reference.issue(),
                             reference.date(),
@@ -196,8 +188,8 @@ class VariantDAO {
                     VARIANTDESCRIPTIONREFERENCE.TITLE,
                     VARIANTDESCRIPTIONREFERENCE.ABSTRACTTEXT,
                     VARIANTDESCRIPTIONREFERENCE.URL,
-                    VARIANTDESCRIPTIONREFERENCE.AUTHORS,
                     VARIANTDESCRIPTIONREFERENCE.JOURNAL,
+                    VARIANTDESCRIPTIONREFERENCE.AUTHORS,
                     VARIANTDESCRIPTIONREFERENCE.VOLUME,
                     VARIANTDESCRIPTIONREFERENCE.ISSUE,
                     VARIANTDESCRIPTIONREFERENCE.DATE,
@@ -208,8 +200,8 @@ class VariantDAO {
                             reference.title(),
                             reference.abstractText(),
                             reference.url(),
-                            reference.authors(),
                             reference.journal(),
+                            reference.authors(),
                             reference.volume(),
                             reference.issue(),
                             reference.date(),
@@ -242,78 +234,14 @@ class VariantDAO {
         }
     }
 
-    private void writeCategoryVariantPath(@NotNull CategoryVariantPath categoryVariantPath, int variantId) {
-        int id = context.insertInto(CATEGORYVARIANTPATH, CATEGORYVARIANTPATH.VARIANTID, CATEGORYVARIANTPATH.VARIANTPATH)
-                .values(variantId, categoryVariantPath.variantPath())
-                .returning(CATEGORYVARIANTPATH.ID)
-                .fetchOne()
-                .getValue(CATEGORYVARIANTPATH.ID);
-
-        for (CategoryVariant categoryVariant : categoryVariantPath.variants()) {
-            context.insertInto(CATEGORYVARIANT,
-                    CATEGORYVARIANT.CATEGORYVARIANTPATHID,
-                    CATEGORYVARIANT.CKBVARIANTID,
-                    CATEGORYVARIANT.FULLNAME,
-                    CATEGORYVARIANT.IMPACT,
-                    CATEGORYVARIANT.PROTEINEFFECT)
-                    .values(id, categoryVariant.id(), categoryVariant.fullName(), categoryVariant.impact(), categoryVariant.proteinEffect())
-                    .execute();
-        }
-    }
-
     private void writeMemberVariant(@NotNull MemberVariant memberVariant, int variantId) {
-        int id = context.insertInto(MEMBERVARIANT,
+        context.insertInto(MEMBERVARIANT,
                 MEMBERVARIANT.VARIANTID,
                 MEMBERVARIANT.CKBVARIANTID,
                 MEMBERVARIANT.FULLNAME,
                 MEMBERVARIANT.IMPACT,
                 MEMBERVARIANT.PROTEINEFFECT)
                 .values(variantId, memberVariant.id(), memberVariant.fullName(), memberVariant.impact(), memberVariant.proteinEffect())
-                .returning(MEMBERVARIANT.ID)
-                .fetchOne()
-                .getValue(MEMBERVARIANT.ID);
-
-        for (VariantDescription memberVariantDescription : memberVariant.descriptions()) {
-            writeMemberVariantDescription(memberVariantDescription, id);
-        }
-
-    }
-
-    private void writeMemberVariantDescription(@NotNull VariantDescription memberVariantDescription, int memberVariantId) {
-        int id =
-                context.insertInto(MEMBERVARIANTDESCRIPTION, MEMBERVARIANTDESCRIPTION.MEMBERVARIANTID, MEMBERVARIANTDESCRIPTION.DESCRIPTION)
-                        .values(memberVariantId, memberVariantDescription.description())
-                        .returning(MEMBERVARIANTDESCRIPTION.ID)
-                        .fetchOne()
-                        .getValue(MEMBERVARIANTDESCRIPTION.ID);
-
-        for (Reference reference : memberVariantDescription.references()) {
-            context.insertInto(MEMBERVARIANTDESCRIPTIONREFERENCE,
-                    MEMBERVARIANTDESCRIPTIONREFERENCE.MEMBERVARIANTDESCRIPTIONID,
-                    MEMBERVARIANTDESCRIPTIONREFERENCE.CKBREFERENCEID,
-                    MEMBERVARIANTDESCRIPTIONREFERENCE.PUBMEDID,
-                    MEMBERVARIANTDESCRIPTIONREFERENCE.TITLE,
-                    MEMBERVARIANTDESCRIPTIONREFERENCE.ABSTRACTTEXT,
-                    MEMBERVARIANTDESCRIPTIONREFERENCE.URL,
-                    MEMBERVARIANTDESCRIPTIONREFERENCE.AUTHORS,
-                    MEMBERVARIANTDESCRIPTIONREFERENCE.JOURNAL,
-                    MEMBERVARIANTDESCRIPTIONREFERENCE.VOLUME,
-                    MEMBERVARIANTDESCRIPTIONREFERENCE.ISSUE,
-                    MEMBERVARIANTDESCRIPTIONREFERENCE.DATE,
-                    MEMBERVARIANTDESCRIPTIONREFERENCE.YEAR)
-                    .values(id,
-                            reference.id(),
-                            reference.pubMedId(),
-                            reference.title(),
-                            reference.abstractText(),
-                            reference.url(),
-                            reference.authors(),
-                            reference.journal(),
-                            reference.volume(),
-                            reference.issue(),
-                            reference.date(),
-                            reference.year())
-                    .execute();
-        }
+                .execute();
     }
 }

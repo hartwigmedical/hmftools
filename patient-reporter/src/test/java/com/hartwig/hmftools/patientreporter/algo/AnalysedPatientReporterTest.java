@@ -49,6 +49,7 @@ public class AnalysedPatientReporterTest {
     private static final String CHORD_PREDICTION_TXT = BASE_DIRECTORY + "/chord/sample_chord_prediction.txt";
     private static final String CIRCOS_FILE = BASE_DIRECTORY + "/purple/plot/sample.circos.png";
     private static final String PROTECT_EVIDENCE_TSV = BASE_DIRECTORY + "/protect/sample.protect.tsv";
+    private static final String PIPELINE_VERSION = BASE_DIRECTORY + "/pipeline.version";
 
     @Test
     public void canRunOnRunDirectory() throws IOException {
@@ -76,7 +77,7 @@ public class AnalysedPatientReporterTest {
                 CIRCOS_FILE,
                 PROTECT_EVIDENCE_TSV,
                 null,
-                false));
+                false, PIPELINE_VERSION));
     }
 
     @Test
@@ -165,6 +166,8 @@ public class AnalysedPatientReporterTest {
                 .hotspot(Hotspot.HOTSPOT)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0D)
+                .tVafString("12%")
+                .copyNumber("1")
                 .biallelic(false);
     }
 

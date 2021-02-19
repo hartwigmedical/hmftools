@@ -34,9 +34,9 @@ public final class JsonDatabaseToCkbEntryConverter {
         for (JsonMolecularProfile molecularProfile : ckbJsonDatabase.molecularProfiles()) {
             ckbEntries.add(ImmutableCkbEntry.builder()
                     .profileId(molecularProfile.id())
-                    .profileName(molecularProfile.profileName())
                     .createDate(molecularProfile.createDate())
                     .updateDate(molecularProfile.updateDate())
+                    .profileName(molecularProfile.profileName())
                     .variants(VariantFactory.extractVariants(ckbJsonDatabase, molecularProfile.geneVariants()))
                     .evidences(EvidenceFactory.extractEvidences(ckbJsonDatabase, molecularProfile.variantLevelEvidence().evidences()))
                     .clinicalTrials(ClinicalTrialFactory.extractClinicalTrials(ckbJsonDatabase,

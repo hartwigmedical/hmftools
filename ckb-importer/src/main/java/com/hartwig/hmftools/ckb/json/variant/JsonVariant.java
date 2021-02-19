@@ -41,10 +41,10 @@ public abstract class JsonVariant implements CkbJsonObject {
     @NotNull
     public abstract String variant();
 
-    @Nullable
+    @NotNull
     public abstract LocalDate createDate();
 
-    @Nullable
+    @NotNull
     public abstract LocalDate updateDate();
 
     @Nullable

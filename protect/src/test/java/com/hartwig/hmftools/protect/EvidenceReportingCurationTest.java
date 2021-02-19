@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.curation;
+package com.hartwig.hmftools.protect;
 
 import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestBuilder;
 
@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class EvidenceCurationTest {
+public class EvidenceReportingCurationTest {
 
     @Test
     public void canApplyEventBlacklist() {
@@ -24,7 +24,7 @@ public class EvidenceCurationTest {
         ProtectEvidence evidence1 = createTestBuilder().genomicEvent(event1).reported(true).build();
         ProtectEvidence evidence2 = createTestBuilder().genomicEvent(event2).reported(true).build();
 
-        List<ProtectEvidence> evidence = EvidenceCuration.applyReportingBlacklist(Lists.newArrayList(evidence1, evidence2));
+        List<ProtectEvidence> evidence = EvidenceReportingCuration.applyReportingBlacklist(Lists.newArrayList(evidence1, evidence2));
         assertEquals(2, evidence.size());
         assertTrue(evidence.contains(evidence1));
 
@@ -40,29 +40,11 @@ public class EvidenceCurationTest {
         ProtectEvidence evidence1 = createTestBuilder().treatment(treatment1).reported(true).build();
         ProtectEvidence evidence2 = createTestBuilder().treatment(treatment2).reported(true).build();
 
-        List<ProtectEvidence> evidence = EvidenceCuration.applyReportingBlacklist(Lists.newArrayList(evidence1, evidence2));
+        List<ProtectEvidence> evidence = EvidenceReportingCuration.applyReportingBlacklist(Lists.newArrayList(evidence1, evidence2));
         assertEquals(2, evidence.size());
         assertTrue(evidence.contains(evidence2));
 
         ProtectEvidence blacklisted = findByTreatment(evidence, treatment1);
-        assertFalse(blacklisted.reported());
-    }
-
-    @Test
-    public void canFilterBlacklistKeys() {
-        CurationKey firstKey = EvidenceCuration.BLACKLIST_KEYS.iterator().next();
-        ProtectEvidence evidence1 = createTestBuilder().treatment(firstKey.treatment())
-                .addSources(firstKey.source())
-                .genomicEvent(firstKey.eventKeyword() + " event")
-                .level(firstKey.level())
-                .direction(firstKey.direction())
-                .reported(true)
-                .build();
-
-        List<ProtectEvidence> evidence = EvidenceCuration.applyReportingBlacklist(Lists.newArrayList(evidence1));
-        assertEquals(1, evidence.size());
-
-        ProtectEvidence blacklisted = findByTreatment(evidence, firstKey.treatment());
         assertFalse(blacklisted.reported());
     }
 

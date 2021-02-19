@@ -16,6 +16,7 @@ import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReporter;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportData;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportDataLoader;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
+import com.hartwig.hmftools.patientreporter.jsonoutput.ReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReportData;
@@ -86,7 +87,9 @@ public class PatientReporterApplication {
                     report.sampleReport().tumorSampleBarcode(),
                     report);
 
-            ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
+            if (report.sampleReport().cohort().cohortId().equals("COLO")) {
+                ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
+            }
         }
     }
 
@@ -109,7 +112,8 @@ public class PatientReporterApplication {
                 config.circosFile(),
                 config.protectEvidenceTsv(),
                 config.comments(),
-                config.correctedReport());
+                config.correctedReport(),
+                config.pipelineVersionFile());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(reportData.germlineReportingModel());
 
@@ -119,12 +123,16 @@ public class PatientReporterApplication {
         if (!config.onlyCreatePDF()) {
             LOGGER.debug("Updating additional files and databases");
 
+            AnalysedPatientReport reportOverrule = ReportData.overrulePatientReportData(report);
+
             writeReportDataToJson(config.outputDirData(),
                     report.sampleReport().sampleMetadata().tumorSampleId(),
                     report.sampleReport().sampleMetadata().tumorSampleBarcode(),
-                    report);
+                    reportOverrule);
 
-            ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
+            if (report.sampleReport().cohort().cohortId().equals("COLO")) {
+                ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
+            }
         }
     }
 

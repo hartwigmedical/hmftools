@@ -11,6 +11,7 @@ import com.hartwig.hmftools.protect.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
+import com.hartwig.hmftools.protect.purple.ReportableVariantFactory;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +23,7 @@ public final class GermlineVariantFunctions {
 
     @NotNull
     public static List<ReportableVariant> reportableGermlineVariants(@NotNull List<ReportableGermlineVariant> variants,
-            @NotNull Set<String> genesWithSomaticInactivationEvent, @NotNull GermlineReportingModel germlineReportingModel) {
+            @NotNull Set<String> genesWithSomaticInactivationEvent, @NotNull GermlineReportingModel germlineReportingModel, boolean hasReliablePurity) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
 
         for (ReportableGermlineVariant variant : variants) {
@@ -50,7 +51,7 @@ public final class GermlineVariantFunctions {
                 }
 
                 if (includeVariant) {
-                    reportableVariants.add(fromGermlineVariant(variant).driverLikelihood(1D).build());
+                    reportableVariants.add(fromGermlineVariant(variant, hasReliablePurity).driverLikelihood(1D).build());
                 }
             }
         }
@@ -59,7 +60,7 @@ public final class GermlineVariantFunctions {
     }
 
     @NotNull
-    private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull ReportableGermlineVariant variant) {
+    private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull ReportableGermlineVariant variant, boolean hasReliablePurity) {
         return ImmutableReportableVariant.builder()
                 .type(VariantType.type(variant.ref(), variant.alt()))
                 .source(ReportableVariantSource.GERMLINE)
@@ -77,6 +78,11 @@ public final class GermlineVariantFunctions {
                 .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVaf()))
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
+                .copyNumber(ReportableVariantFactory.copyNumberString(variant.adjustedCopyNumber(),
+                        hasReliablePurity))
+                .tVafString(ReportableVariantFactory.vafString(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVaf()),
+                        variant.adjustedCopyNumber(),
+                        hasReliablePurity))
                 .biallelic(variant.biallelic());
     }
 

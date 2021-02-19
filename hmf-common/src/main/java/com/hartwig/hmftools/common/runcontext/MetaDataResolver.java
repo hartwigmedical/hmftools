@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.clinical.context;
+package com.hartwig.hmftools.common.runcontext;
 
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.nullableString;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalNullableString;
@@ -22,7 +22,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-final class MetaDataResolver {
+public final class MetaDataResolver {
 
     private static final Logger LOGGER = LogManager.getLogger(MetaDataResolver.class);
 
@@ -47,7 +47,7 @@ final class MetaDataResolver {
     }
 
     @Nullable
-    static RunContext fromMetaDataFile(@NotNull String runDirectory, @NotNull String pipelineVersionFile) throws IOException {
+    public static RunContext fromMetaDataFile(@NotNull String runDirectory, @NotNull String pipelineVersionFile) throws IOException {
         File metaDataFileP4 = new File(runDirectory + File.separator + METADATA_FILE_P4);
         File metaDataFileP5 = new File(runDirectory + File.separator + METADATA_FILE_P5);
 
@@ -169,7 +169,7 @@ final class MetaDataResolver {
     }
 
     @NotNull
-    private static String readPipelineVersion(@NotNull File pipelineVersionFile) throws IOException {
+    public static String readPipelineVersion(@NotNull File pipelineVersionFile) throws IOException {
         List<String> lines = Files.readAllLines(pipelineVersionFile.toPath());
         if (lines.isEmpty()) {
             throw new IOException("Pipeline version file seems empty on " + pipelineVersionFile.getPath());
@@ -184,6 +184,10 @@ final class MetaDataResolver {
     }
 
     private static boolean isPostP5dot15(@NotNull String pipelineVersion) {
-        return pipelineVersion.substring(2, 4).matches("[0-9]+") && Integer.parseInt(pipelineVersion.substring(2, 4)) >= 15;
+        return extractPipelineVersion(pipelineVersion).matches("[0-9]+") && Integer.parseInt(pipelineVersion.substring(2, 4)) >= 15;
+    }
+
+    public static String extractPipelineVersion(@NotNull String pipelineVersion) {
+        return pipelineVersion.substring(2, 4);
     }
 }

@@ -61,6 +61,12 @@ public abstract class ReportableVariant implements Variant {
     public abstract int alleleReadCount();
 
     @NotNull
+    public abstract String copyNumber();
+
+    @NotNull
+    public abstract String tVafString();
+
+    @NotNull
     @Value.Derived
     public String gDNA() {
         return chromosome() + ":" + position();

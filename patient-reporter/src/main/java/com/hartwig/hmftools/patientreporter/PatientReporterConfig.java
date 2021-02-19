@@ -30,6 +30,8 @@ public interface PatientReporterConfig {
     String PRIMARY_TUMOR_TSV = "primary_tumor_tsv";
     String LIMS_DIRECTORY = "lims_dir";
 
+    String PIPELINE_VERSION_FILE = "pipeline_version_file";
+
     String RVA_LOGO = "rva_logo";
     String COMPANY_LOGO = "company_logo";
     String SIGNATURE = "signature";
@@ -77,6 +79,8 @@ public interface PatientReporterConfig {
         options.addOption(REPORTING_DB_TSV, true, "Path towards output file for the reporting db TSV.");
         options.addOption(PRIMARY_TUMOR_TSV, true, "Path towards the (curated) primary tumor TSV.");
         options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
+
+        options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version");
 
         options.addOption(RVA_LOGO, true, "Path towards an image file containing the RVA logo.");
         options.addOption(COMPANY_LOGO, true, "Path towards an image file containing the company logo.");
@@ -140,6 +144,9 @@ public interface PatientReporterConfig {
 
     @NotNull
     String limsDir();
+
+    @NotNull
+    String pipelineVersionFile();
 
     @NotNull
     String rvaLogo();
@@ -234,6 +241,7 @@ public interface PatientReporterConfig {
         String protectEvidenceFile = Strings.EMPTY;
         String germlineReportingTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
+        String pipelineVersion = Strings.EMPTY;
 
         if (qcFailReason.isDeepWGSDataAvailable()) {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
@@ -253,6 +261,7 @@ public interface PatientReporterConfig {
             protectEvidenceFile = nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV);
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
+            pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
         }
 
         return ImmutablePatientReporterConfig.builder()
@@ -264,6 +273,7 @@ public interface PatientReporterConfig {
                 .outputDirData(nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA_REPORT))
                 .reportingDbTsv(nonOptionalFile(cmd, REPORTING_DB_TSV))
                 .primaryTumorTsv(nonOptionalFile(cmd, PRIMARY_TUMOR_TSV))
+                .pipelineVersionFile(pipelineVersion)
                 .limsDir(nonOptionalDir(cmd, LIMS_DIRECTORY))
                 .rvaLogo(nonOptionalFile(cmd, RVA_LOGO))
                 .companyLogo(nonOptionalFile(cmd, COMPANY_LOGO))

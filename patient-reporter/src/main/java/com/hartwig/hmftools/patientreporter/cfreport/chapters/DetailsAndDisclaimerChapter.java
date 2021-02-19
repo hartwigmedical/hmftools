@@ -6,7 +6,7 @@ import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
-import com.hartwig.hmftools.patientreporter.cfreport.data.DataUtil;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.itextpdf.io.IOException;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Div;
@@ -117,6 +117,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 ReportResources.VERSION_REPORT,
                 " based on ",
                 patientReport.qsFormNumber()));
+        div.add(createContentParagraph("This reported is based on pipeline version ", patientReport.pipelineVersion()));
         div.add(createContentParagraph("The ‘primary tumor location’ and ‘primary tumor type’ have influence on the "
                 + "clinical evidence/study matching. No check is performed to verify the received information."));
         div.add(createContentParagraph("The conclusion of this report is based solely on the results of the DNA sequencing of the tumor"

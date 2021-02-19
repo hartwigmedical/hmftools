@@ -44,8 +44,8 @@ public final class ClinicalTrialFactory {
                         .recruitment(clinicalTrial.recruitment())
                         .ageGroups(clinicalTrial.ageGroups())
                         .gender(clinicalTrial.gender())
+                        .sponsors(clinicalTrial.sponsors())
                         .variantRequirement(clinicalTrial.variantRequirements())
-                        .sponsor(clinicalTrial.sponsors())
                         .variantRequirementDetails(convertRequirementDetails(clinicalTrial.variantRequirementDetails()))
                         .locations(convertLocations(clinicalTrial.locations()))
                         .build();
@@ -88,13 +88,13 @@ public final class ClinicalTrialFactory {
         for (JsonLocation location : jsonLocations) {
             locations.add(ImmutableLocation.builder()
                     .nctId(location.nctId())
-                    .facility(location.facility())
-                    .city(location.city())
-                    .country(location.country())
                     .status(location.status())
+                    .facility(location.facility())
+                    .contacts(convertContacts(location.contacts()))
+                    .city(location.city())
                     .state(location.state())
                     .zip(location.zip())
-                    .contacts(convertContacts(location.contacts()))
+                    .country(location.country())
                     .build());
         }
         return locations;

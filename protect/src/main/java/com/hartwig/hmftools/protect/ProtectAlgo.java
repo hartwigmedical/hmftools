@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.protect.bachelor.BachelorData;
 import com.hartwig.hmftools.protect.bachelor.BachelorDataLoader;
 import com.hartwig.hmftools.protect.chord.ChordDataLoader;
-import com.hartwig.hmftools.protect.curation.EvidenceCuration;
 import com.hartwig.hmftools.protect.evidence.ChordEvidence;
 import com.hartwig.hmftools.protect.evidence.CopyNumberEvidence;
 import com.hartwig.hmftools.protect.evidence.DisruptionEvidence;
@@ -121,7 +120,7 @@ public class ProtectAlgo {
         List<ProtectEvidence> consolidated = EvidenceConsolidation.consolidate(result);
         LOGGER.debug("Consolidated {} evidence items to {} unique evidence items", result.size(), consolidated.size());
 
-        List<ProtectEvidence> updatedForBlacklist = EvidenceCuration.applyReportingBlacklist(consolidated);
+        List<ProtectEvidence> updatedForBlacklist = EvidenceReportingCuration.applyReportingBlacklist(consolidated);
         LOGGER.debug("Reduced reported evidence from {} items to {} items by blacklisting specific evidence for reporting",
                 reportedCount(consolidated),
                 reportedCount(updatedForBlacklist));

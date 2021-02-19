@@ -37,19 +37,19 @@ public final class VariantFactory {
             if (variant.id() == variantInfo.id()) {
                 return ImmutableVariant.builder()
                         .id(variant.id())
-                        .gene(resolveGene(ckbJsonDatabase, variant.gene()))
-                        .fullName(variant.fullName())
-                        .impact(variant.impact())
-                        .proteinEffect(variant.proteinEffect())
-                        .descriptions(extractVariantDescriptions(ckbJsonDatabase, variant.descriptions()))
-                        .type(variant.type())
-                        .variant(variant.variant())
                         .createDate(variant.createDate())
                         .updateDate(variant.updateDate())
+                        .fullName(variant.fullName())
+                        .variant(variant.variant())
+                        .impact(variant.impact())
+                        .proteinEffect(variant.proteinEffect())
+                        .type(variant.type())
+                        .gene(resolveGene(ckbJsonDatabase, variant.gene()))
                         .referenceTranscriptCoordinate(convertReferenceTranscriptCoordinate(variant.referenceTranscriptCoordinate()))
-                        .categoryVariantPaths(convertCategoryVariantPaths(variant.categoryVariantPaths()))
                         .allTranscriptCoordinates(convertAllTranscriptCoordinates(variant.allTranscriptCoordinates()))
-                        .memberVariants(extractMemberVariants(ckbJsonDatabase, variant.memberVariants()))
+                        .categoryVariantPaths(convertCategoryVariantPaths(variant.categoryVariantPaths()))
+                        .memberVariants(convertMemberVariants(variant.memberVariants()))
+                        .descriptions(extractVariantDescriptions(ckbJsonDatabase, variant.descriptions()))
                         .build();
             }
         }
@@ -63,22 +63,37 @@ public final class VariantFactory {
             if (gene.id() == geneInfo.id()) {
                 return ImmutableGene.builder()
                         .id(gene.id())
-                        .geneSymbol(gene.geneSymbol())
-                        .terms(gene.terms())
-                        .entrezId(gene.entrezId())
-                        .synonyms(gene.synonyms())
-                        .chromosome(gene.chromosome())
-                        .mapLocation(gene.mapLocation())
-                        .descriptions(extractGeneDescriptions(ckbJsonDatabase, gene.descriptions()))
-                        .canonicalTranscript(gene.canonicalTranscript())
-                        .geneRole(gene.geneRole())
                         .createDate(gene.createDate())
                         .updateDate(gene.updateDate())
+                        .geneSymbol(gene.geneSymbol())
+                        .geneRole(gene.geneRole())
+                        .entrezId(gene.entrezId())
+                        .chromosome(gene.chromosome())
+                        .mapLocation(gene.mapLocation())
+                        .canonicalTranscript(gene.canonicalTranscript())
+                        .terms(gene.terms())
+                        .synonyms(gene.synonyms())
+                        .descriptions(extractGeneDescriptions(ckbJsonDatabase, gene.descriptions()))
                         .build();
             }
         }
 
         throw new IllegalStateException("Could not resolve CKB gene with id '" + geneInfo.id() + "'");
+    }
+
+    @NotNull
+    private static List<GeneDescription> extractGeneDescriptions(@NotNull CkbJsonDatabase ckbJsonDatabase,
+            @NotNull List<DescriptionInfo> descriptionInfos) {
+        List<GeneDescription> geneDescriptions = Lists.newArrayList();
+
+        for (DescriptionInfo descriptionInfo : descriptionInfos) {
+            geneDescriptions.add(ImmutableGeneDescription.builder()
+                    .description(descriptionInfo.description())
+                    .references(ReferenceFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
+                    .build());
+        }
+
+        return geneDescriptions;
     }
 
     @Nullable
@@ -96,37 +111,6 @@ public final class VariantFactory {
                 .sourceDb(coordinate.sourceDB())
                 .refGenomeBuild(coordinate.refGenomeBuild())
                 .build();
-    }
-
-    @NotNull
-    private static List<CategoryVariantPath> convertCategoryVariantPaths(
-            @NotNull List<JsonVariantCategoryVariantPath> variantCategoryVariantPaths) {
-        List<CategoryVariantPath> categoryVariantPaths = Lists.newArrayList();
-
-        for (JsonVariantCategoryVariantPath categoryVariantPath : variantCategoryVariantPaths) {
-            categoryVariantPaths.add(ImmutableCategoryVariantPath.builder()
-                    .variantPath(categoryVariantPath.variantPath())
-                    .variants(convertCategoryVariants(categoryVariantPath.variants()))
-                    .build());
-        }
-
-        return categoryVariantPaths;
-    }
-
-    @NotNull
-    private static List<CategoryVariant> convertCategoryVariants(@NotNull List<VariantInfo> variants) {
-        List<CategoryVariant> categoryVariants = Lists.newArrayList();
-
-        for (VariantInfo variant : variants) {
-            categoryVariants.add(ImmutableCategoryVariant.builder()
-                    .id(variant.id())
-                    .fullName(variant.fullName())
-                    .impact(variant.impact())
-                    .proteinEffect(variant.proteinEffect())
-                    .build());
-        }
-
-        return categoryVariants;
     }
 
     @NotNull
@@ -149,8 +133,18 @@ public final class VariantFactory {
     }
 
     @NotNull
-    private static List<MemberVariant> extractMemberVariants(@NotNull CkbJsonDatabase ckbJsonDatabase,
-            @NotNull List<VariantInfo> variantsMembers) {
+    private static List<String> convertCategoryVariantPaths(@NotNull List<JsonVariantCategoryVariantPath> variantCategoryVariantPaths) {
+        List<String> categoryVariantPaths = Lists.newArrayList();
+
+        for (JsonVariantCategoryVariantPath categoryVariantPath : variantCategoryVariantPaths) {
+            categoryVariantPaths.add(categoryVariantPath.variantPath());
+        }
+
+        return categoryVariantPaths;
+    }
+
+    @NotNull
+    private static List<MemberVariant> convertMemberVariants(@NotNull List<VariantInfo> variantsMembers) {
         List<MemberVariant> memberVariants = Lists.newArrayList();
 
         for (VariantInfo memberVariant : variantsMembers) {
@@ -159,7 +153,6 @@ public final class VariantFactory {
                     .fullName(memberVariant.fullName())
                     .impact(memberVariant.impact())
                     .proteinEffect(memberVariant.proteinEffect())
-                    .descriptions(extractVariantDescriptions(ckbJsonDatabase, memberVariant.descriptions()))
                     .build());
         }
 
@@ -179,20 +172,5 @@ public final class VariantFactory {
         }
 
         return variantDescriptions;
-    }
-
-    @NotNull
-    private static List<GeneDescription> extractGeneDescriptions(@NotNull CkbJsonDatabase ckbJsonDatabase,
-            @NotNull List<DescriptionInfo> descriptionInfos) {
-        List<GeneDescription> geneDescriptions = Lists.newArrayList();
-
-        for (DescriptionInfo descriptionInfo : descriptionInfos) {
-            geneDescriptions.add(ImmutableGeneDescription.builder()
-                    .description(descriptionInfo.description())
-                    .references(ReferenceFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
-                    .build());
-        }
-
-        return geneDescriptions;
     }
 }

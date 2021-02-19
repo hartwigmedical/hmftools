@@ -29,7 +29,7 @@ public abstract class JsonTherapy implements CkbJsonObject {
     @NotNull
     public abstract List<DescriptionInfo> descriptions();
 
-    @Nullable
+    @NotNull
     public abstract LocalDate createDate();
 
     @Nullable

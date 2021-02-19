@@ -3,11 +3,8 @@ package com.hartwig.hmftools.ckb.datamodel.indication;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
-import com.hartwig.hmftools.ckb.datamodel.therapy.TherapyFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.common.IndicationInfo;
-import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.json.indication.JsonIndication;
 
 import org.jetbrains.annotations.NotNull;
@@ -38,8 +35,8 @@ public final class IndicationFactory {
                         .definition(indication.definition())
                         .currentPreferredTerm(indication.currentPreferredTerm())
                         .lastUpdateDateFromDO(indication.lastUpdateDateFromDO())
-                        .altIds(indication.altIds())
                         .termId(indication.termId())
+                        .altIds(indication.altIds())
                         .build();
             }
         }
