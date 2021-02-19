@@ -390,6 +390,14 @@ public class DatabaseAccess implements AutoCloseable {
         driverCatalogDAO.write(sample, driverCatalog);
     }
 
+    public void writePurpleDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog, @NotNull List<DriverCatalog> germlineCatalog) {
+        driverCatalogDAO.writePurple(sample, somaticCatalog, germlineCatalog);
+    }
+
+    public void writeGermlineDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog) {
+        driverCatalogDAO.writeGermline(sample, driverCatalog);
+    }
+
     public void writeMetrics(@NotNull String sample, @NotNull WGSMetricWithQC metrics) {
         metricDAO.writeMetrics(sample, metrics);
     }
