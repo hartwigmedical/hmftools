@@ -44,7 +44,7 @@ public final class PurpleDataLoader {
 
     @NotNull
     public static PurpleData load(@NotNull String sample, @NotNull String qcFile, @NotNull String purityTsv,
-            @NotNull String driverCatalogTsv, @NotNull String somaticVcf) throws IOException {
+            @NotNull String driverCatalogSomaticTsv, @NotNull String somaticVcf) throws IOException {
         LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
 
         PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
@@ -58,8 +58,8 @@ public final class PurpleDataLoader {
 
         boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
 
-        List<DriverCatalog> driverCatalog = DriverCatalogFile.read(driverCatalogTsv);
-        LOGGER.info(" Loaded {} driver catalog entries from {}", driverCatalog.size(), driverCatalogTsv);
+        List<DriverCatalog> driverCatalog = DriverCatalogFile.read(driverCatalogSomaticTsv);
+        LOGGER.info(" Loaded {} driver catalog entries from {}", driverCatalog.size(), driverCatalogSomaticTsv);
 
         List<ReportableGainLoss> copyNumberAlterations = driverCatalog.stream()
                 .filter(x -> x.driver() == DriverType.AMP || x.driver() == DriverType.PARTIAL_AMP || x.driver() == DriverType.DEL)

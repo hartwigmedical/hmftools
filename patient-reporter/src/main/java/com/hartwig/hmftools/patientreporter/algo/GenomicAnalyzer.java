@@ -36,11 +36,11 @@ public class GenomicAnalyzer {
 
     @NotNull
     public GenomicAnalysis run(@NotNull String tumorSampleId, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
-            @NotNull String purpleDriverCatalogTsv, @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv,
+            @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv,
             @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
             @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String protectEvidenceTsv) throws IOException {
         PurpleData purpleData =
-                PurpleDataLoader.load(tumorSampleId, purpleQCFile, purplePurityTsv, purpleDriverCatalogTsv, purpleSomaticVariantVcf);
+                PurpleDataLoader.load(tumorSampleId, purpleQCFile, purplePurityTsv, purpleDriverCatalogSomaticTsv, purpleSomaticVariantVcf);
 
         LinxData linxData = LinxDataLoader.load(linxFusionTsv, linxBreakendTsv, linxViralInsertionTsv, linxDriversTsv);
 

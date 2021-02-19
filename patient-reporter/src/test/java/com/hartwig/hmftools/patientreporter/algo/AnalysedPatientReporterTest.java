@@ -39,7 +39,7 @@ public class AnalysedPatientReporterTest {
     private static final String BASE_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String PURPLE_PURITY_TSV = BASE_DIRECTORY + "/purple/sample.purple.purity.tsv";
     private static final String PURPLE_QC_FILE = BASE_DIRECTORY + "/purple/sample.purple.qc";
-    private static final String PURPLE_DRIVER_CATALOG_TSV = BASE_DIRECTORY + "/purple/sample.driver.catalog.tsv";
+    private static final String PURPLE_DRIVER_CATALOG_SOMATIC_TSV = BASE_DIRECTORY + "/purple/sample.driver.catalog.tsv";
     private static final String PURPLE_SOMATIC_VARIANT_VCF = BASE_DIRECTORY + "/purple/sample.purple.somatic.vcf";
     private static final String BACHELOR_TSV = BASE_DIRECTORY + "/bachelor/sample.reportable_germline_variants.tsv";
     private static final String LINX_FUSIONS_TSV = BASE_DIRECTORY + "/linx/sample.linx.fusion.tsv";
@@ -65,8 +65,7 @@ public class AnalysedPatientReporterTest {
 
         assertNotNull(reporter.run(sampleMetadata,
                 PURPLE_PURITY_TSV,
-                PURPLE_QC_FILE,
-                PURPLE_DRIVER_CATALOG_TSV,
+                PURPLE_QC_FILE, PURPLE_DRIVER_CATALOG_SOMATIC_TSV,
                 PURPLE_SOMATIC_VARIANT_VCF,
                 BACHELOR_TSV,
                 LINX_FUSIONS_TSV,

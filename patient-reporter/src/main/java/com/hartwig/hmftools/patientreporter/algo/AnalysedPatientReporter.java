@@ -43,7 +43,7 @@ public class AnalysedPatientReporter {
 
     @NotNull
     public AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
-            @NotNull String purpleDriverCatalogTsv, @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv,
+            @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv,
             @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
             @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile,
             @NotNull String protectEvidenceTsv, @Nullable String comments, boolean correctedReport, @NotNull String pipelineVersionFile) throws IOException {
@@ -57,7 +57,7 @@ public class AnalysedPatientReporter {
         GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
                 purplePurityTsv,
                 purpleQCFile,
-                purpleDriverCatalogTsv,
+                purpleDriverCatalogSomaticTsv,
                 purpleSomaticVariantVcf,
                 bachelorTsv,
                 linxFusionTsv,
