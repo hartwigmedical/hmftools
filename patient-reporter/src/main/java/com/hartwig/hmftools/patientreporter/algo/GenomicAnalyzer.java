@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -8,6 +10,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
@@ -36,13 +40,19 @@ public class GenomicAnalyzer {
 
     @NotNull
     public GenomicAnalysis run(@NotNull String tumorSampleId, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
-            @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv,
-            @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
-            @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String protectEvidenceTsv) throws IOException {
-        PurpleData purpleData =
-                PurpleDataLoader.load(tumorSampleId, purpleQCFile, purplePurityTsv, purpleDriverCatalogSomaticTsv, purpleSomaticVariantVcf);
+            @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
+            @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv, @NotNull String linxFusionTsv,
+            @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv,
+            @NotNull String chordPredictionTxt, @NotNull String protectEvidenceTsv) throws IOException {
+        PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
+                purpleQCFile,
+                purplePurityTsv,
+                purpleDriverCatalogSomaticTsv,
+                purpleSomaticVariantVcf);
 
         LinxData linxData = LinxDataLoader.load(linxFusionTsv, linxBreakendTsv, linxViralInsertionTsv, linxDriversTsv);
+
+        List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(purpleDriverCatalogGermlineTsv);
 
         BachelorData bachelorData = BachelorDataLoader.load(bachelorTsv, purpleData, linxData, germlineReportingModel);
 

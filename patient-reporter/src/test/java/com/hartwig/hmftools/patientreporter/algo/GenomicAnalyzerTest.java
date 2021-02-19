@@ -6,8 +6,6 @@ import java.io.IOException;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
-import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +16,8 @@ public class GenomicAnalyzerTest {
     private static final String BASE_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String PURPLE_PURITY_TSV = BASE_DIRECTORY + "/purple/sample.purple.purity.tsv";
     private static final String PURPLE_QC_FILE = BASE_DIRECTORY + "/purple/sample.purple.qc";
-    private static final String PURPLE_DRIVER_CATALOG_TSV = BASE_DIRECTORY + "/purple/sample.driver.catalog.tsv";
+    private static final String PURPLE_DRIVER_CATALOG_SOMATIC_TSV = BASE_DIRECTORY + "/purple/sample.driver.catalog.somatic.tsv";
+    private static final String PURPLE_DRIVER_CATALOG_GERMLINE_TSV = BASE_DIRECTORY + "/purple/sample.driver.catalog.germline.tsv";
     private static final String PURPLE_SOMATIC_VARIANT_VCF = BASE_DIRECTORY + "/purple/sample.purple.somatic.vcf";
     private static final String BACHELOR_TSV = BASE_DIRECTORY + "/bachelor/sample.reportable_germline_variants.tsv";
     private static final String LINX_FUSIONS_TSV = BASE_DIRECTORY + "/linx/sample.linx.fusion.tsv";
@@ -30,20 +29,21 @@ public class GenomicAnalyzerTest {
 
     @Test
     public void canRunOnTestRun() throws IOException {
-        GenomicAnalyzer analyzer =
-                new GenomicAnalyzer(createEmptyGermlineReportingModel());
+        GenomicAnalyzer analyzer = new GenomicAnalyzer(createEmptyGermlineReportingModel());
 
         assertNotNull(analyzer.run("sample",
                 PURPLE_PURITY_TSV,
                 PURPLE_QC_FILE,
-                PURPLE_DRIVER_CATALOG_TSV,
+                PURPLE_DRIVER_CATALOG_SOMATIC_TSV,
+                PURPLE_DRIVER_CATALOG_GERMLINE_TSV,
                 PURPLE_SOMATIC_VARIANT_VCF,
                 BACHELOR_TSV,
                 LINX_FUSIONS_TSV,
                 LINX_BREAKEND_TSV,
                 LINX_VIRAL_INSERTION_TSV,
                 LINX_DRIVERS_TSV,
-                CHORD_PREDICTION_TXT, PROTECT_EVIDENCE_TSV));
+                CHORD_PREDICTION_TXT,
+                PROTECT_EVIDENCE_TSV));
     }
 
     @NotNull

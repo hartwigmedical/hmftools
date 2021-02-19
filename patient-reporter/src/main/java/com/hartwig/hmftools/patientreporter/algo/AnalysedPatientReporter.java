@@ -43,10 +43,11 @@ public class AnalysedPatientReporter {
 
     @NotNull
     public AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
-            @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv,
-            @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
-            @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile,
-            @NotNull String protectEvidenceTsv, @Nullable String comments, boolean correctedReport, @NotNull String pipelineVersionFile) throws IOException {
+            @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
+            @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv, @NotNull String linxFusionTsv,
+            @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv,
+            @NotNull String chordPredictionTxt, @NotNull String circosFile, @NotNull String protectEvidenceTsv, @Nullable String comments,
+            boolean correctedReport, @NotNull String pipelineVersionFile) throws IOException {
         String patientId = sampleMetadata.patientId().startsWith("COLO829") ? "COLO829" : sampleMetadata.patientId();
         PatientPrimaryTumor patientPrimaryTumor =
                 PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(), patientId);
@@ -58,6 +59,7 @@ public class AnalysedPatientReporter {
                 purplePurityTsv,
                 purpleQCFile,
                 purpleDriverCatalogSomaticTsv,
+                purpleDriverCatalogGermlineTsv,
                 purpleSomaticVariantVcf,
                 bachelorTsv,
                 linxFusionTsv,
@@ -72,7 +74,8 @@ public class AnalysedPatientReporter {
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
 
-        String pipelineVersion = MetaDataResolver.extractPipelineVersion(MetaDataResolver.readPipelineVersion(new File(pipelineVersionFile)));
+        String pipelineVersion =
+                MetaDataResolver.extractPipelineVersion(MetaDataResolver.readPipelineVersion(new File(pipelineVersionFile)));
 
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
@@ -101,14 +104,14 @@ public class AnalysedPatientReporter {
 
         List<ViralInsertion> filteredViralInsertions = reportViralInsertions ? genomicAnalysis.viralInsertions() : Lists.newArrayList();
 
-        List<ProtectEvidence> filteredTumorSpecificEvidence = filterEvidenceForGermlineConsent(genomicAnalysis.tumorSpecificEvidence(),
-                germlineReportingLevel);
+        List<ProtectEvidence> filteredTumorSpecificEvidence =
+                filterEvidenceForGermlineConsent(genomicAnalysis.tumorSpecificEvidence(), germlineReportingLevel);
 
-        List<ProtectEvidence> filteredClinicalTrials = filterEvidenceForGermlineConsent(genomicAnalysis.clinicalTrials(),
-                germlineReportingLevel);
+        List<ProtectEvidence> filteredClinicalTrials =
+                filterEvidenceForGermlineConsent(genomicAnalysis.clinicalTrials(), germlineReportingLevel);
 
-        List<ProtectEvidence> filteredOffLabelEvidence = filterEvidenceForGermlineConsent(genomicAnalysis.offLabelEvidence(),
-                germlineReportingLevel);
+        List<ProtectEvidence> filteredOffLabelEvidence =
+                filterEvidenceForGermlineConsent(genomicAnalysis.offLabelEvidence(), germlineReportingLevel);
 
         return ImmutableGenomicAnalysis.builder()
                 .from(genomicAnalysis)

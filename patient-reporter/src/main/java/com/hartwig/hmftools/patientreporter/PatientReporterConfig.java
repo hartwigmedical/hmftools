@@ -48,6 +48,7 @@ public interface PatientReporterConfig {
     String PURPLE_PURITY_TSV = "purple_purity_tsv"; // Also used for certain QC fail reports in case deep WGS is available.
     String PURPLE_QC_FILE = "purple_qc_file";
     String PURPLE_DRIVER_CATALOG_SOMATIC_TSV = "purple_driver_catalog_somatic_tsv";
+    String PURPLE_DRIVER_CATALOG_GERMLINE_TSV = "purple_driver_catalog_germline_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String BACHELOR_TSV = "bachelor_tsv";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
@@ -96,7 +97,8 @@ public interface PatientReporterConfig {
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
-        options.addOption(PURPLE_DRIVER_CATALOG_SOMATIC_TSV, true, "Path towards the purple driver catalog TSV.");
+        options.addOption(PURPLE_DRIVER_CATALOG_SOMATIC_TSV, true, "Path towards the purple somatic driver catalog TSV.");
+        options.addOption(PURPLE_DRIVER_CATALOG_GERMLINE_TSV, true, "Path towards the purple germline driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
@@ -172,6 +174,9 @@ public interface PatientReporterConfig {
     String purpleDriverCatalogSomaticTsv();
 
     @NotNull
+    String purpleDriverCatalogGermlineTsv();
+
+    @NotNull
     String purpleSomaticVariantVcf();
 
     @NotNull
@@ -230,6 +235,7 @@ public interface PatientReporterConfig {
         String purplePurityTsv = Strings.EMPTY;
         String purpleQCFile = Strings.EMPTY;
         String purpleDriverCatalogSomaticTsv = Strings.EMPTY;
+        String purpleDriverCatalogGermlineTsv = Strings.EMPTY;
         String purpleSomaticVariantVcf = Strings.EMPTY;
         String bachelorTsv = Strings.EMPTY;
         String linxFusionTsv = Strings.EMPTY;
@@ -250,6 +256,7 @@ public interface PatientReporterConfig {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
             purpleQCFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
             purpleDriverCatalogSomaticTsv = nonOptionalFile(cmd, PURPLE_DRIVER_CATALOG_SOMATIC_TSV);
+            purpleDriverCatalogGermlineTsv = nonOptionalFile(cmd, PURPLE_DRIVER_CATALOG_GERMLINE_TSV);
             purpleSomaticVariantVcf = nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF);
             bachelorTsv = nonOptionalFile(cmd, BACHELOR_TSV);
             linxFusionTsv = nonOptionalFile(cmd, LINX_FUSION_TSV);
@@ -283,6 +290,7 @@ public interface PatientReporterConfig {
                 .purplePurityTsv(purplePurityTsv)
                 .purpleQcFile(purpleQCFile)
                 .purpleDriverCatalogSomaticTsv(purpleDriverCatalogSomaticTsv)
+                .purpleDriverCatalogGermlineTsv(purpleDriverCatalogGermlineTsv)
                 .purpleSomaticVariantVcf(purpleSomaticVariantVcf)
                 .bachelorTsv(bachelorTsv)
                 .linxFusionTsv(linxFusionTsv)

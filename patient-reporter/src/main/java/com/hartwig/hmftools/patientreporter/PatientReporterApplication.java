@@ -103,6 +103,7 @@ public class PatientReporterApplication {
                 config.purpleQcFile(),
                 config.purpleDriverCatalogSomaticTsv(),
                 config.purpleSomaticVariantVcf(),
+                config.purpleDriverCatalogGermlineTsv(),
                 config.bachelorTsv(),
                 config.linxFusionTsv(),
                 config.linxBreakendTsv(),
