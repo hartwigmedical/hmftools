@@ -210,7 +210,7 @@ public class DriverGeneAnnotator
     {
         if(mConfig.UploadToDB && mDbAccess != null)
         {
-            mDbAccess.writeDriverCatalog(mSampleId, mDataCache.getDriverCatalog());
+            mDbAccess.writeLinxDriverCatalog(mSampleId, mDataCache.getDriverCatalog());
             mDbAccess.writeSvDrivers(mSampleId, mDriverOutputList);
         }
 

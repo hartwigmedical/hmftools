@@ -62,11 +62,6 @@ class DriverCatalogDAO {
         insert(sample, driverCatalog);
     }
 
-    void write(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog, @NotNull Collection<DriverType> types) {
-        deleteForSample(sample, types);
-        insert(sample, driverCatalog);
-    }
-
     private void insert(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         for (List<DriverCatalog> splitRegions : Iterables.partition(driverCatalog, DB_BATCH_INSERT_SIZE)) {

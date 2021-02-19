@@ -121,7 +121,7 @@ public class LinxDataLoader
             {
                 List<DriverCatalog> drivers = DriverCatalogFile.read(driverCatalogFilename);
                 LOGGER.info("sample({}) loading {} driver catalog records", sampleId, drivers.size());
-                dbAccess.writeDriverCatalog(sampleId, drivers);
+                dbAccess.writeLinxDriverCatalog(sampleId, drivers);
             }
 
             final String driversFilename = LinxDriver.generateFilename(svDataOutputDir, sampleId);

@@ -390,6 +390,10 @@ public class DatabaseAccess implements AutoCloseable {
         driverCatalogDAO.write(sample, driverCatalog);
     }
 
+    public void writeLinxDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog) {
+        driverCatalogDAO.writeLinx(sample, somaticCatalog);
+    }
+
     public void writePurpleDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog, @NotNull List<DriverCatalog> germlineCatalog) {
         driverCatalogDAO.writePurple(sample, somaticCatalog, germlineCatalog);
     }
