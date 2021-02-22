@@ -50,6 +50,7 @@ public interface PatientReporterConfig {
     String PURPLE_DRIVER_CATALOG_SOMATIC_TSV = "purple_driver_catalog_somatic_tsv";
     String PURPLE_DRIVER_CATALOG_GERMLINE_TSV = "purple_driver_catalog_germline_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
+    String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
     String BACHELOR_TSV = "bachelor_tsv";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
@@ -100,6 +101,7 @@ public interface PatientReporterConfig {
         options.addOption(PURPLE_DRIVER_CATALOG_SOMATIC_TSV, true, "Path towards the purple somatic driver catalog TSV.");
         options.addOption(PURPLE_DRIVER_CATALOG_GERMLINE_TSV, true, "Path towards the purple germline driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
+        options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
         options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the linx breakend TSV.");
@@ -180,6 +182,9 @@ public interface PatientReporterConfig {
     String purpleSomaticVariantVcf();
 
     @NotNull
+    String purpleGermlineVariantVcf();
+
+    @NotNull
     String bachelorTsv();
 
     @NotNull
@@ -237,6 +242,7 @@ public interface PatientReporterConfig {
         String purpleDriverCatalogSomaticTsv = Strings.EMPTY;
         String purpleDriverCatalogGermlineTsv = Strings.EMPTY;
         String purpleSomaticVariantVcf = Strings.EMPTY;
+        String purpleGermlineVariantVcf = Strings.EMPTY;
         String bachelorTsv = Strings.EMPTY;
         String linxFusionTsv = Strings.EMPTY;
         String linxBreakendTsv = Strings.EMPTY;
@@ -258,6 +264,7 @@ public interface PatientReporterConfig {
             purpleDriverCatalogSomaticTsv = nonOptionalFile(cmd, PURPLE_DRIVER_CATALOG_SOMATIC_TSV);
             purpleDriverCatalogGermlineTsv = nonOptionalFile(cmd, PURPLE_DRIVER_CATALOG_GERMLINE_TSV);
             purpleSomaticVariantVcf = nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF);
+            purpleGermlineVariantVcf = nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF);
             bachelorTsv = nonOptionalFile(cmd, BACHELOR_TSV);
             linxFusionTsv = nonOptionalFile(cmd, LINX_FUSION_TSV);
             linxBreakendTsv = nonOptionalFile(cmd, LINX_BREAKEND_TSV);
@@ -292,6 +299,7 @@ public interface PatientReporterConfig {
                 .purpleDriverCatalogSomaticTsv(purpleDriverCatalogSomaticTsv)
                 .purpleDriverCatalogGermlineTsv(purpleDriverCatalogGermlineTsv)
                 .purpleSomaticVariantVcf(purpleSomaticVariantVcf)
+                .purpleGermlineVariantVcf(purpleGermlineVariantVcf)
                 .bachelorTsv(bachelorTsv)
                 .linxFusionTsv(linxFusionTsv)
                 .linxBreakendTsv(linxBreakendTsv)

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.protect.purple;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -18,15 +19,24 @@ public final class ReportableVariantFactory {
     }
 
     @NotNull
+    public static List<ReportableVariant> reportableGermlineVariants(@NotNull List<SomaticVariant> variants,
+            @NotNull List<DriverCatalog> germlineDriverCatalog, boolean hasReliablePurity) {
+        return reportableVariants(variants, germlineDriverCatalog, hasReliablePurity, ReportableVariantSource.GERMLINE);
+    }
+
+    @NotNull
     public static List<ReportableVariant> reportableSomaticVariants(@NotNull List<SomaticVariant> variants,
             @NotNull List<DriverCatalog> driverCatalog, boolean hasReliablePurity) {
-        Map<String, DriverCatalog> mutationDriverMap = Maps.newHashMap();
+        List<DriverCatalog> mutationCatalog =
+                driverCatalog.stream().filter(x -> x.driver() == DriverType.MUTATION).collect(Collectors.toList());
+        return reportableVariants(variants, mutationCatalog, hasReliablePurity, ReportableVariantSource.SOMATIC);
 
-        for (DriverCatalog entry : driverCatalog) {
-            if (entry.driver() == DriverType.MUTATION) {
-                mutationDriverMap.put(entry.gene(), entry);
-            }
-        }
+    }
+
+    @NotNull
+    private static List<ReportableVariant> reportableVariants(@NotNull List<SomaticVariant> variants,
+            @NotNull List<DriverCatalog> driverCatalog, boolean hasReliablePurity, ReportableVariantSource source) {
+        Map<String, DriverCatalog> mutationDriverMap = driverCatalog.stream().collect(Collectors.toMap(DriverCatalog::gene, x -> x));
 
         List<ReportableVariant> result = Lists.newArrayList();
         for (SomaticVariant variant : variants) {
@@ -35,7 +45,7 @@ public final class ReportableVariantFactory {
                 assert geneDriver != null;
 
                 ReportableVariant reportable =
-                        fromSomaticVariant(variant, hasReliablePurity).driverLikelihood(geneDriver.driverLikelihood()).build();
+                        fromVariant(variant, hasReliablePurity, source).driverLikelihood(geneDriver.driverLikelihood()).build();
                 result.add(reportable);
             }
         }
@@ -69,10 +79,11 @@ public final class ReportableVariantFactory {
     }
 
     @NotNull
-    private static ImmutableReportableVariant.Builder fromSomaticVariant(@NotNull SomaticVariant variant, boolean hasReliablePurity) {
+    private static ImmutableReportableVariant.Builder fromVariant(@NotNull SomaticVariant variant, boolean hasReliablePurity,
+            ReportableVariantSource source) {
         return ImmutableReportableVariant.builder()
                 .type(variant.type())
-                .source(ReportableVariantSource.SOMATIC)
+                .source(source)
                 .gene(variant.gene())
                 .chromosome(variant.chromosome())
                 .position(variant.position())

@@ -38,5 +38,8 @@ public interface PurpleData {
     List<ReportableVariant> somaticVariants();
 
     @NotNull
+    List<ReportableVariant> germlineVariants();
+
+    @NotNull
     List<ReportableGainLoss> copyNumberAlterations();
 }

@@ -44,10 +44,11 @@ public class AnalysedPatientReporter {
     @NotNull
     public AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
-            @NotNull String purpleSomaticVariantVcf, @NotNull String bachelorTsv, @NotNull String linxFusionTsv,
-            @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv,
-            @NotNull String chordPredictionTxt, @NotNull String circosFile, @NotNull String protectEvidenceTsv, @Nullable String comments,
-            boolean correctedReport, @NotNull String pipelineVersionFile) throws IOException {
+            @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String bachelorTsv,
+            @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
+            @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile,
+            @NotNull String protectEvidenceTsv, @Nullable String comments, boolean correctedReport, @NotNull String pipelineVersionFile)
+            throws IOException {
         String patientId = sampleMetadata.patientId().startsWith("COLO829") ? "COLO829" : sampleMetadata.patientId();
         PatientPrimaryTumor patientPrimaryTumor =
                 PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(), patientId);
@@ -61,6 +62,7 @@ public class AnalysedPatientReporter {
                 purpleDriverCatalogSomaticTsv,
                 purpleDriverCatalogGermlineTsv,
                 purpleSomaticVariantVcf,
+                purpleGermlineVariantVcf,
                 bachelorTsv,
                 linxFusionTsv,
                 linxBreakendTsv,

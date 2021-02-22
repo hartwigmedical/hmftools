@@ -2,8 +2,8 @@ package com.hartwig.hmftools.protect.linx;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
@@ -31,17 +31,18 @@ public final class ReportableHomozygousDisruptionFactory {
 
     @NotNull
     private static List<ReportableHomozygousDisruption> extractHomozygousDisruptions(@NotNull List<DriverCatalog> linxDriversCatalog) {
-        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
-        for (DriverCatalog driverCatalog : linxDriversCatalog) {
-            if (driverCatalog.driver().equals(DriverType.HOM_DISRUPTION)) {
-                reportableHomozygousDisruptions.add(ImmutableReportableHomozygousDisruption.builder()
-                        .chromosome(driverCatalog.chromosome())
-                        .chromosomeBand(driverCatalog.chromosomeBand())
-                        .gene(driverCatalog.gene())
-                        .build());
-            }
-        }
+        return linxDriversCatalog.stream()
+                .filter(x -> x.driver().equals(DriverType.HOM_DISRUPTION))
+                .map(ReportableHomozygousDisruptionFactory::create)
+                .collect(Collectors.toList());
+    }
 
-        return reportableHomozygousDisruptions;
+    @NotNull
+    private static ReportableHomozygousDisruption create(@NotNull DriverCatalog driverCatalog) {
+        return ImmutableReportableHomozygousDisruption.builder()
+                .chromosome(driverCatalog.chromosome())
+                .chromosomeBand(driverCatalog.chromosomeBand())
+                .gene(driverCatalog.gene())
+                .build();
     }
 }
