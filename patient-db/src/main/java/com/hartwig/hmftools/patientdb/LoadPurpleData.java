@@ -61,10 +61,6 @@ public class LoadPurpleData {
                 ? DriverCatalogFile.read(germlineDriverCatalogFileName)
                 : Collections.emptyList();
 
-        List<DriverCatalog> driverCatalog = Lists.newArrayList();
-        driverCatalog.addAll(somaticDriverCatalog);
-        driverCatalog.addAll(germlineDriverCatalog);
-
         PurpleQC purpleQC = purityContext.qc();
         List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.readBestFitPerPurity(purplePath, tumorSample);
 
@@ -82,7 +78,8 @@ public class LoadPurpleData {
                 purityContext,
                 purpleQC,
                 geneCopyNumbers,
-                driverCatalog);
+                somaticDriverCatalog,
+                germlineDriverCatalog);
 
         LOGGER.info("Complete");
     }
@@ -99,12 +96,13 @@ public class LoadPurpleData {
     public static void persistToDatabase(@NotNull DatabaseAccess dbAccess, @NotNull String tumorSample,
             @NotNull List<FittedPurity> bestFitPerPurity, @NotNull List<PurpleCopyNumber> copyNumbers,
             @NotNull List<PurpleCopyNumber> germlineDeletions, @NotNull PurityContext purityContext, @NotNull PurpleQC qcChecks,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<DriverCatalog> driverCatalog) {
+            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<DriverCatalog> somaticDriverCatalog,
+            @NotNull List<DriverCatalog> germlineDriverCatalog) {
         dbAccess.writePurity(tumorSample, purityContext, qcChecks);
         dbAccess.writeBestFitPerPurity(tumorSample, bestFitPerPurity);
         dbAccess.writeCopynumbers(tumorSample, copyNumbers);
         dbAccess.writeGermlineCopynumbers(tumorSample, germlineDeletions);
         dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
-        dbAccess.writeDriverCatalog(tumorSample, driverCatalog);
+        dbAccess.writePurpleDriverCatalog(tumorSample, somaticDriverCatalog, germlineDriverCatalog);
     }
 }

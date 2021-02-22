@@ -57,7 +57,7 @@ class FragmentAlleles(val fragment: AminoAcidFragment, val full: Collection<HlaA
                     .map { it.first }
                     .toSet() subtract fullNucleotideMatch
 
-            val fragmentAminoAcidLoci = (aminoAcidFragment.aminoAcidIndices() intersect aminoAcidLoci).sorted().toIntArray()
+            val fragmentAminoAcidLoci = (aminoAcidFragment.aminoAcidLoci() intersect aminoAcidLoci).sorted().toIntArray()
             val fragmentAminoAcids = aminoAcidFragment.aminoAcids(*fragmentAminoAcidLoci)
             val matchingAminoAcidSequences = aminoAcidSequences
                     .map { Pair(it.allele, it.match(fragmentAminoAcids, *fragmentAminoAcidLoci)) }

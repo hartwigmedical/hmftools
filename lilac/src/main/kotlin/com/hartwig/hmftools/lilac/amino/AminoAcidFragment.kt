@@ -22,7 +22,7 @@ class AminoAcidFragment(id: String, genes: Set<String>, nucleotideLoci: List<Int
         return indices.joinToString("") { aminoAcid(it) }
     }
 
-    fun aminoAcidIndices(): List<Int> = aminoAcidLoci
+    fun aminoAcidLoci(): List<Int> = aminoAcidLoci
 
     fun intersectAminoAcidLoci(otherAminoAcidLoci: Collection<Int>): AminoAcidFragment {
         val filteredIndexes = aminoAcidLoci

@@ -386,8 +386,20 @@ public class DatabaseAccess implements AutoCloseable {
         geneCopyNumberDAO.writeCopyNumber(sample, geneCopyNumbers);
     }
 
-    public void writeDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog) {
-        driverCatalogDAO.write(sample, driverCatalog);
+    public void writeProtectDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog) {
+        driverCatalogDAO.writeAll(sample, driverCatalog);
+    }
+
+    public void writeLinxDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog) {
+        driverCatalogDAO.writeLinx(sample, somaticCatalog);
+    }
+
+    public void writePurpleDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog, @NotNull List<DriverCatalog> germlineCatalog) {
+        driverCatalogDAO.writePurple(sample, somaticCatalog, germlineCatalog);
+    }
+
+    public void writeGermlineDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog) {
+        driverCatalogDAO.writeGermline(sample, driverCatalog);
     }
 
     public void writeMetrics(@NotNull String sample, @NotNull WGSMetricWithQC metrics) {

@@ -35,8 +35,10 @@ public interface ProtectConfig {
     // Files containing the actual genomic results for this sample.
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
     String PURPLE_QC_FILE = "purple_qc_file";
-    String PURPLE_DRIVER_CATALOG_TSV = "purple_driver_catalog_tsv";
+    String PURPLE_SOMATIC_DRIVERS_TSV = "purple_driver_catalog_somatic_tsv";
+    String PURPLE_GERMLINE_DRIVERS_TSV = "purple_driver_catalog_germline_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
+    String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
     String BACHELOR_TSV = "bachelor_tsv";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
@@ -61,8 +63,10 @@ public interface ProtectConfig {
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
-        options.addOption(PURPLE_DRIVER_CATALOG_TSV, true, "Path towards the purple driver catalog TSV.");
+        options.addOption(PURPLE_GERMLINE_DRIVERS_TSV, true, "Path towards the purple germline driver catalog TSV.");
+        options.addOption(PURPLE_SOMATIC_DRIVERS_TSV, true, "Path towards the purple somatic driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
+        options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
         options.addOption(BACHELOR_TSV, true, "Path towards the bachelor germline TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the LINX fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the LINX breakend TSV.");
@@ -100,10 +104,16 @@ public interface ProtectConfig {
     String purpleQcFile();
 
     @NotNull
-    String purpleDriverCatalogTsv();
+    String purpleSomaticDriverCatalogTsv();
+
+    @NotNull
+    String purpleGermlineDriverCatalogTsv();
 
     @NotNull
     String purpleSomaticVariantVcf();
+
+    @NotNull
+    String purpleGermlineVariantVcf();
 
     @NotNull
     String bachelorTsv();
@@ -118,7 +128,7 @@ public interface ProtectConfig {
     String linxViralInsertionTsv();
 
     @NotNull
-    String linxDriversTsv();
+    String linxDriverCatalogTsv();
 
     @NotNull
     String chordPredictionTxt();
@@ -138,13 +148,15 @@ public interface ProtectConfig {
                 .germlineReportingTsv(nonOptionalFile(cmd, GERMLINE_REPORTING_TSV))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
-                .purpleDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_DRIVER_CATALOG_TSV))
+                .purpleSomaticDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVERS_TSV))
+                .purpleGermlineDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVERS_TSV))
                 .purpleSomaticVariantVcf(nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF))
+                .purpleGermlineVariantVcf(nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF))
                 .bachelorTsv(nonOptionalFile(cmd, BACHELOR_TSV))
                 .linxFusionTsv(nonOptionalFile(cmd, LINX_FUSION_TSV))
                 .linxBreakendTsv(nonOptionalFile(cmd, LINX_BREAKEND_TSV))
                 .linxViralInsertionTsv(nonOptionalFile(cmd, LINX_VIRAL_INSERTION_TSV))
-                .linxDriversTsv(nonOptionalFile(cmd, LINX_DRIVERS_TSV))
+                .linxDriverCatalogTsv(nonOptionalFile(cmd, LINX_DRIVERS_TSV))
                 .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
                 .build();
     }
