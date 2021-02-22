@@ -115,16 +115,17 @@ public class AltSjClassifier implements CuppaClassifier
 
         if(cmd.hasOption(FRAG_COUNT_LOG_VALUE))
         {
+            // zero will mean not applied, ie using averages as-is, otherwise value must be >= 1
             mFragCountLogValue = max(Double.parseDouble(cmd.getOptionValue(FRAG_COUNT_LOG_VALUE)), 1.0);
         }
         else
         {
-            mFragCountLogValue = 0; // not applied
+            mFragCountLogValue = 1;
         }
 
         mRunPairwise = cmd.hasOption(RUN_PAIRWISE);
 
-        if(config.RefAltSjPrevFile.isEmpty())
+        if(config.RefAltSjCancerFile.isEmpty())
             return;
 
         final List<String> ignoreFields = Lists.newArrayList(FLD_GENE_ID, FLD_CHROMOSOME, FLD_POS_START, FLD_POS_END);
@@ -195,7 +196,6 @@ public class AltSjClassifier implements CuppaClassifier
 
         final double[] sampleFragCounts = mSampleFragCounts.getRow(sampleIndex);
 
-
         addCancerCssResults(sample, sampleFragCounts, results);
 
         if(mRunPairwise)
@@ -236,7 +236,7 @@ public class AltSjClassifier implements CuppaClassifier
             if(!checkIsValidCancerType(sample, cohortData.CancerType, cancerCssTotals))
                 continue;
 
-            if(sample.rnaReadLength() != cohortData.ReadLength)
+            if(sample.rnaReadLength() != RNA_READ_LENGTH_NONE && sample.rnaReadLength() != cohortData.ReadLength)
                 continue;
 
             boolean matchesCancerType = sample.cancerType().equals(cohortData.CancerType);
@@ -407,8 +407,8 @@ public class AltSjClassifier implements CuppaClassifier
 
     private void loadRefFragCounts(final List<String> ignoreFields)
     {
-        loadRefAltSjIndices(mConfig.RefAltSjPrevFile);
-        mRefCancerTypeMatrix = loadMatrixDataFile(mConfig.RefAltSjPrevFile, mRefCancerTypes, ignoreFields);
+        loadRefAltSjIndices(mConfig.RefAltSjCancerFile);
+        mRefCancerTypeMatrix = loadMatrixDataFile(mConfig.RefAltSjCancerFile, mRefCancerTypes, ignoreFields);
 
         if(mRefCancerTypeMatrix ==  null)
         {

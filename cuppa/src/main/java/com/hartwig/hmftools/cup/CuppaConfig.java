@@ -3,7 +3,8 @@ package com.hartwig.hmftools.cup;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_PREV;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_CANCER;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_SAMPLE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_DRIVER_AVG;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_FEATURE_PREV;
@@ -17,7 +18,7 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALL_CATEGORIES;
-import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
+import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.DNA_CATEGORIES;
 import static com.hartwig.hmftools.cup.common.CategoryType.isDna;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -57,7 +58,8 @@ public class CuppaConfig
 
     public final String RefGeneExpCancerFile;
     public final String RefGeneExpSampleFile;
-    public final String RefAltSjPrevFile;
+    public final String RefAltSjCancerFile;
+    public final String RefAltSjSampleFile;
 
     // sample data, if not sourced from the database
     public final String SampleDataDir;
@@ -111,7 +113,8 @@ public class CuppaConfig
     private static final String REF_SV_PERC_FILE = "ref_sv_perc_file";
     private static final String REF_RNA_GENE_EXP_CANCER_FILE = "ref_gene_exp_cancer_file";
     public static final String REF_RNA_GENE_EXP_SAMPLE_FILE = "ref_gene_exp_sample_file";
-    private static final String REF_RNA_ALT_SJ_PREV_FILE = "ref_alt_sj_prev_file";
+    private static final String REF_RNA_ALT_SJ_CANCER_FILE = "ref_alt_sj_cancer_file";
+    private static final String REF_RNA_ALT_SJ_SAMPLE_FILE = "ref_alt_sj_sample_file";
 
     public static final String WRITE_SIMS = "write_similarities";
     public static final String WRITE_CLASSIFIERS_ONLY = "write_classifiers_only";
@@ -134,7 +137,7 @@ public class CuppaConfig
             if(cmd.getOptionValue(CATEGORIES).equals(ALL_CATEGORIES))
             {
                 Arrays.stream(CategoryType.values())
-                        .filter(x -> x != ALT_SJ)
+                        .filter(x -> x != CLASSIFIER)
                         .forEach(x -> IncludedCategories.add(x));
             }
             else if(cmd.getOptionValue(CATEGORIES).equals(DNA_CATEGORIES))
@@ -153,7 +156,7 @@ public class CuppaConfig
             Arrays.stream(CategoryType.values()).filter(x -> isDna(x)).forEach(x -> IncludedCategories.add(x));
         }
 
-        CUP_LOGGER.info("running classifiers: {}", IncludedCategories.isEmpty() ? "ALL" : IncludedCategories.toString());
+        CUP_LOGGER.info("running classifiers: {}", IncludedCategories.isEmpty() ? ALL_CATEGORIES : IncludedCategories.toString());
 
         SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR, ""));
 
@@ -182,7 +185,8 @@ public class CuppaConfig
 
         RefGeneExpCancerFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_CANCER_FILE, REF_FILE_GENE_EXP_CANCER);
         RefGeneExpSampleFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_SAMPLE_FILE, REF_FILE_GENE_EXP_SAMPLE);
-        RefAltSjPrevFile = getRefDataFile(cmd, REF_RNA_ALT_SJ_PREV_FILE, REF_FILE_ALT_SJ_PREV);
+        RefAltSjCancerFile = getRefDataFile(cmd, REF_RNA_ALT_SJ_CANCER_FILE, REF_FILE_ALT_SJ_CANCER);
+        RefAltSjSampleFile = getRefDataFile(cmd, REF_RNA_ALT_SJ_SAMPLE_FILE, REF_FILE_ALT_SJ_SAMPLE);
 
         OutputDir = parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "");
@@ -259,7 +263,8 @@ public class CuppaConfig
         options.addOption(REF_DRIVER_AVG_FILE, true, "Reference features per sample file, default: " + REF_FILE_DRIVER_AVG);
         options.addOption(REF_RNA_GENE_EXP_CANCER_FILE, true, "Reference RNA cancer gene expression file, default: " + REF_FILE_GENE_EXP_CANCER);
         options.addOption(REF_RNA_GENE_EXP_SAMPLE_FILE, true, "Reference RNA sample gene expression file, default: " + REF_FILE_GENE_EXP_SAMPLE);
-        options.addOption(REF_RNA_ALT_SJ_PREV_FILE, true, "Reference RNA alternative splice-junction file, default: " + REF_FILE_ALT_SJ_PREV);
+        options.addOption(REF_RNA_ALT_SJ_CANCER_FILE, true, "Reference RNA alternative splice-junction cancer file, default: " + REF_FILE_ALT_SJ_CANCER);
+        options.addOption(REF_RNA_ALT_SJ_SAMPLE_FILE, true, "Reference RNA alternative splice-junction sample file, default: " + REF_FILE_ALT_SJ_SAMPLE);
 
         options.addOption(WRITE_SIMS, false, "Write top-20 CSS similarities to file");
         options.addOption(WRITE_CLASSIFIERS_ONLY, false, "Cohort-only - only write classifier data");
@@ -290,7 +295,8 @@ public class CuppaConfig
 
         RefGeneExpCancerFile = "";
         RefGeneExpSampleFile = "";
-        RefAltSjPrevFile = "";
+        RefAltSjCancerFile = "";
+        RefAltSjSampleFile = "";
 
         // sample data, if not sourced from the database
         SampleDataDir = "";

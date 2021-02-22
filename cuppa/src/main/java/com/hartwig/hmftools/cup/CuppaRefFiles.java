@@ -21,6 +21,6 @@ public class CuppaRefFiles
     public static final String REF_FILE_SV_PERC = formatRefFilename("sv_percentiles");
     public static final String REF_FILE_GENE_EXP_CANCER = formatRefFilename("gene_exp_cancer");
     public static final String REF_FILE_GENE_EXP_SAMPLE = formatRefFilename("gene_exp_sample");
-    public static final String REF_FILE_GENE_EXP_PERC = formatRefFilename("gene_exp_percentiles");
-    public static final String REF_FILE_ALT_SJ_PREV = formatRefFilename("alt_sj_prev");
+    public static final String REF_FILE_ALT_SJ_CANCER = formatRefFilename("alt_sj_cancer");
+    public static final String REF_FILE_ALT_SJ_SAMPLE = formatRefFilename("alt_sj_sample");
 }

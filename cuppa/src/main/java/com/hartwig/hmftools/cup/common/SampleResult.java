@@ -34,4 +34,10 @@ public class SampleResult
         cancerDataMap.put(refCancerType, 0.0);
         return false;
     }
+
+    public String toString()
+    {
+        return String.format("sample(%s) cat(%s) resultType(%s) type(%s) value(%s)",
+                SampleId, Category, ResultType, DataType, Value.toString());
+    }
 }

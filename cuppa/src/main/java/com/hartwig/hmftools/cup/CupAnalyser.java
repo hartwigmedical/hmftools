@@ -191,7 +191,10 @@ public class CupAnalyser
         if(combinedFeatureResult != null)
             allResults.add(combinedFeatureResult);
 
-        if(mConfig.runClassifier(GENE_EXP) && (mConfig.IncludedCategories.isEmpty() || mConfig.IncludedCategories.size() > 1))
+        boolean hasDnaCategories = mConfig.IncludedCategories.stream().anyMatch(x -> CategoryType.isDna(x));
+        boolean hasRnaCategories = mConfig.IncludedCategories.stream().anyMatch(x -> CategoryType.isRna(x));
+
+        if(hasDnaCategories && hasRnaCategories)
         {
             final List<SampleResult> dnaResults = allResults.stream()
                     .filter(x -> x.Category == CLASSIFIER && isDna(ClassifierType.valueOf(x.DataType)))
