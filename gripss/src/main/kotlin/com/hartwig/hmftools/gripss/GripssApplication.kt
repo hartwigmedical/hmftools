@@ -47,7 +47,7 @@ fun main(args: Array<String>) {
     } catch (e: ParseException) {
         logger.warn(e)
         val formatter = HelpFormatter()
-        formatter.printHelp("gripss", options)
+        formatter.printHelp("gripss", GripssConfig.createHelpOptions())
         exitProcess(1)
     }
 }
