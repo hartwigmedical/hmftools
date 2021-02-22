@@ -386,8 +386,8 @@ public class DatabaseAccess implements AutoCloseable {
         geneCopyNumberDAO.writeCopyNumber(sample, geneCopyNumbers);
     }
 
-    public void writeDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog) {
-        driverCatalogDAO.write(sample, driverCatalog);
+    public void writeProtectDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog) {
+        driverCatalogDAO.writeAll(sample, driverCatalog);
     }
 
     public void writeLinxDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog) {

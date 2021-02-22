@@ -1,25 +1,27 @@
-package com.hartwig.hmftools.patientdb.dao;
+package com.hartwig.hmftools.common.drivercatalog;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverType;
-
 import org.junit.Test;
 
-public class DriverCatalogDAOTest {
+public class DriverTypeTest {
 
     @Test
     public void testDriverCatalogTypesAllSet() {
 
         for (DriverType value : DriverType.values()) {
             int count = 0;
-            if (DriverCatalogDAO.DRIVER_CATALOG_GERMLINE.contains(value)) {
+            if (DriverType.DRIVERS_COPY_NUMBER.contains(value)) {
                 count++;
             }
-            if (DriverCatalogDAO.DRIVER_CATALOG_LINX.contains(value)) {
+            if (DriverType.DRIVERS_GERMLINE.contains(value)) {
                 count++;
             }
-            if (DriverCatalogDAO.DRIVER_CATALOG_SOMATIC.contains(value)) {
+            if (DriverType.DRIVERS_LINX.contains(value)) {
+                count++;
+            }
+
+            if (DriverType.DRIVERS_MUTATION.contains(value)) {
                 count++;
             }
 
