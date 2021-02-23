@@ -13,6 +13,7 @@ import org.apache.logging.log4j.util.Strings
 import java.io.File
 import java.io.IOException
 
+const val PAIRED_NORMAL_TUMOR_ORDINALS = "paired_normal_tumor_ordinals"
 const val INPUT_VCF_OPTION = "input_vcf"
 const val OUTPUT_VCF_OPTION = "output_vcf"
 const val REF_GENOME_OPTION = "ref_genome"
@@ -31,9 +32,18 @@ data class GripssConfig(
         val refGenome: String,
         val reference: String,
         val tumor: String,
+        val pairedNormalTumorOrdinals: Boolean,
         val filterConfig: GripssFilterConfig) {
 
     fun sampleOrdinals(sampleNames: List<String>): Pair<Int, Int> {
+        if (pairedNormalTumorOrdinals) {
+            if (sampleNames.size < 2) {
+                throw ParseException("Must be at least two samples in supplied VCF when using option -$PAIRED_NORMAL_TUMOR_ORDINALS")
+            }
+
+            return Pair(0, 1)
+        }
+
         val tumorOrdinal = sampleOrdinal(tumor, sampleNames)
         val normalOrdinal = if (reference.isEmpty()) -1 else sampleOrdinal(reference, sampleNames)
 
@@ -54,6 +64,12 @@ data class GripssConfig(
 
     companion object {
         fun createOptions(): Options {
+            val options = createHelpOptions()
+            options.addOption(Option(PAIRED_NORMAL_TUMOR_ORDINALS, "Ignore VCF sample labels and use ordinals 0 and 1 for normal and tumor respectively"))
+            return options
+        }
+
+         fun createHelpOptions(): Options {
             val options = Options()
             options.addOption(requiredOption(INPUT_VCF_OPTION, "Path to GRIDSS VCF input"))
             options.addOption(requiredOption(OUTPUT_VCF_OPTION, "Path to output VCF"))
@@ -77,6 +93,7 @@ data class GripssConfig(
             val outputVcf = cmd.getOptionValue(OUTPUT_VCF_OPTION)
             val reference = cmd.getOptionValue(REFERENCE, Strings.EMPTY)
             val tumor = cmd.getOptionValue(TUMOR, Strings.EMPTY)
+            val hmfOrdinals = cmd.hasOption(PAIRED_NORMAL_TUMOR_ORDINALS)
 
             val outputDir = File(outputVcf).absoluteFile.parentFile
             if (!outputDir.exists() && !outputDir.mkdirs()) {
@@ -86,7 +103,7 @@ data class GripssConfig(
             val isGRCh38 = isGRCh38(refGenome)
             val filterConfig = GripssFilterConfig.createConfig(cmd, isGRCh38)
 
-            return GripssConfig(inputVcf, outputVcf, singlePon, pairedPon, pairedHotspot, refGenome, reference, tumor, filterConfig)
+            return GripssConfig(inputVcf, outputVcf, singlePon, pairedPon, pairedHotspot, refGenome, reference, tumor, hmfOrdinals, filterConfig)
         }
 
         private fun isGRCh38(refGenome: String): Boolean {
