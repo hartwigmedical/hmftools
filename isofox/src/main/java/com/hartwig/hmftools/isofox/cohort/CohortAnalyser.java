@@ -21,7 +21,6 @@ import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortCompare;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortDistribution;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionMatrix;
 import com.hartwig.hmftools.isofox.expression.cohort.ExternalExpressionCompare;
-import com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortMatrix;
@@ -95,13 +94,6 @@ public class CohortAnalyser
                 {
                     ExpressionCohortDistribution transExpDist = new ExpressionCohortDistribution(mConfig, mCmdLineArgs);
                     transExpDist.produceCohortData();
-                    break;
-                }
-
-                case SAMPLE_GENE_PERCENTILES:
-                {
-                    SampleGenePercentiles sampleGenePerc = new SampleGenePercentiles(mConfig);
-                    sampleGenePerc.processSampleFiles();
                     break;
                 }
 

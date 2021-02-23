@@ -1088,4 +1088,73 @@ CREATE TABLE driverGenePanel
     PRIMARY KEY (gene)
 );
 
+DROP TABLE IF EXISTS geneExpression;
+CREATE TABLE geneExpression
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    geneName VARCHAR(20) NOT NULL,
+    tpm DOUBLE PRECISION NOT NULL,
+    splicedFragments int NOT NULL,
+    unsplicedFragments int NOT NULL,
+    medianTpmCancer DOUBLE PRECISION NOT NULL,
+    percentileCancer DOUBLE PRECISION NOT NULL,
+    medianTpmCohort DOUBLE PRECISION NOT NULL,
+    percentileCohort DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId, geneName),
+    INDEX(geneName)
+);
+
+DROP TABLE IF EXISTS novelSpliceJunction;
+CREATE TABLE novelSpliceJunction
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    geneName VARCHAR(20) NOT NULL,
+    chromosome VARCHAR(4) NOT NULL,
+    junctionStart int NOT NULL,
+    junctionEnd int NOT NULL,
+    type VARCHAR(20) NOT NULL,
+    fragmentCount int NOT NULL,
+    depthStart int NOT NULL,
+    depthEnd int NOT NULL,
+    regionStart VARCHAR(20) NOT NULL,
+    regionEnd VARCHAR(20) NOT NULL,
+    basesStart VARCHAR(20) NOT NULL,
+    basesEnd VARCHAR(20) NOT NULL,
+    cohortFrequency int NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId, geneName),
+    INDEX(geneName)
+);
+
+DROP TABLE IF EXISTS rnaFusion;
+CREATE TABLE rnaFusion
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    chromosomeUp VARCHAR(4) NOT NULL,
+    chromosomeDown VARCHAR(4) NOT NULL,
+    positionUp int NOT NULL,
+    positionDown int NOT NULL,
+    orientationUp tinyint NOT NULL,
+    orientationDown tinyint NOT NULL,
+    junctionTypeUp VARCHAR(20) NOT NULL,
+    junctionTypeDown VARCHAR(20) NOT NULL,
+    svType VARCHAR(5) NOT NULL,
+    splitFragments int NOT NULL,
+    realignedFrags int NOT NULL,
+    discordantFrags int NOT NULL,
+    depthUp int NOT NULL,
+    depthDown int NOT NULL,
+    maxAnchorLengthUp int NOT NULL,
+    maxAnchorLengthDown int NOT NULL,
+    cohortFrequency int NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId, name),
+    INDEX(name)
+);
+
 SET FOREIGN_KEY_CHECKS = 1;

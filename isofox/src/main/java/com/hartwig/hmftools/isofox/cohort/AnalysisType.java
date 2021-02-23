@@ -12,7 +12,6 @@ public enum AnalysisType
 {
     SUMMARY,
     EXPRESSION_DISTRIBUTION, // produce pan-cancer and per-cancer median and percentile expression data
-    SAMPLE_GENE_PERCENTILES, // reports where on a percentile a specific sample's gene expression lies
     ALT_SPLICE_JUNCTION, // combine and analyse alternate splice junctions for a cohort
     ALT_SPLICE_JUNCTION_MATRIX, // generates a for a cohort's alt-SJs
     SPLICE_VARIANT_MATCHING, // match alternate splice junctions with (candidate-splicing) somatic variants
@@ -30,7 +29,6 @@ public enum AnalysisType
     {
         switch(type)
         {
-            case SAMPLE_GENE_PERCENTILES:
             case GENE_EXPRESSION_COMPARE:
                 return GENE_RESULTS_FILE;
 

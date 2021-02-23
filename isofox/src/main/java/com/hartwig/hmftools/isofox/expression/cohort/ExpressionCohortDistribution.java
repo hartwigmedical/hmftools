@@ -96,6 +96,7 @@ public class ExpressionCohortDistribution
     private void produceCohortData(int index)
     {
         final String geneTransId = mGeneTransIds.get(index);
+
         final String geneTransName = mIdNameMap.get(geneTransId);
 
         final double[] tpmValues = mExpressionMatrix.getRow(index);
@@ -296,8 +297,15 @@ public class ExpressionCohortDistribution
             {
                 final String[] items = line.split(DELIMITER, -1);
 
-                final String geneName = items[geneNameIndex];
                 final String geneId = items[geneIdIndex];
+
+                if(!mConfig.RestrictedGeneIds.isEmpty() && !mConfig.RestrictedGeneIds.contains(geneId))
+                {
+                    line = fileReader.readLine();
+                    continue;
+                }
+
+                final String geneName = items[geneNameIndex];
 
                 if(mTranscriptScope)
                 {

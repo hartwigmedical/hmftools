@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.isofox.cohort.AnalysisType.EXTERNAL_EXPRESSIO
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.FUSION;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_COMPARE;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_MATRIX;
-import static com.hartwig.hmftools.isofox.cohort.AnalysisType.SAMPLE_GENE_PERCENTILES;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.getIsofoxFileId;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
@@ -149,7 +148,7 @@ public class CohortConfig
 
     private static boolean requiresExpressionConfig(final List<AnalysisType> analysisTypes)
     {
-        return analysisTypes.contains(SAMPLE_GENE_PERCENTILES) || analysisTypes.contains(GENE_EXPRESSION_COMPARE)
+        return analysisTypes.contains(GENE_EXPRESSION_COMPARE)
                 || analysisTypes.contains(EXTERNAL_EXPRESSION_COMPARE) || analysisTypes.contains(GENE_EXPRESSION_MATRIX)
                 || analysisTypes.contains(TRANSCRIPT_EXPRESSION_MATRIX) || analysisTypes.contains(EXPRESSION_DISTRIBUTION);
     }
