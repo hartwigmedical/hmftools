@@ -9,6 +9,7 @@ import static java.lang.Math.sqrt;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
+import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.formKey;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
@@ -392,11 +393,6 @@ public class AltSjClassifier implements CuppaClassifier
         return adjustedCounts;
     }
 
-    private static String formAltSjKey(final String chromosome, int posStart, int posEnd)
-    {
-        return String.format("%s-%d-%d", chromosome, posStart, posEnd);
-    }
-
     private double convertFragCount(double fragCount)
     {
         if(mFragCountLogValue < 1)
@@ -474,7 +470,7 @@ public class AltSjClassifier implements CuppaClassifier
             {
                 final String[] items = line.split(DATA_DELIM, -1);
 
-                final String asjKey = AltSpliceJunctionFile.formKey(
+                final String asjKey = formKey(
                         items[chrIndex], Integer.parseInt(items[posStartIndex]), Integer.parseInt(items[posEndIndex]));
 
                 mRefAsjIndexMap.put(asjKey, altSjIndex++);
@@ -605,7 +601,7 @@ public class AltSjClassifier implements CuppaClassifier
                 int posStart = Integer.parseInt(items[posStartIndex]);
                 int posEnd = Integer.parseInt(items[posEndIndex]);
 
-                final String asjKey = formAltSjKey(chromosome, posStart, posEnd);
+                final String asjKey = formKey(chromosome, posStart, posEnd);
 
                 Integer matrixIndex = mRefAsjIndexMap.get(asjKey);
 

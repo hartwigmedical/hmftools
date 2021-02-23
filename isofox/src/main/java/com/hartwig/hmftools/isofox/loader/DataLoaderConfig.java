@@ -2,12 +2,10 @@ package com.hartwig.hmftools.isofox.loader;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.loadGeneIdsFile;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
@@ -26,14 +24,24 @@ import org.apache.commons.cli.Options;
 
 public class DataLoaderConfig
 {
-    public static final String SAMPLE_DATA_DIRECTORY = "sample_data_dir";
     public static final String SAMPLE = "sample";
-    public static final String SAMPLE_ID_FILE = "sample_data_file";
+    public static final String SAMPLE_ID_FILE = "sample_id_file";
+
+    public static final String SAMPLE_DATA_DIRECTORY = "sample_data_dir";
+    public static final String GENE_DATA_DIRECTORY = "gene_data_dir";
+    public static final String ALT_SJ_DATA_DIRECTORY = "alt_sj_data_dir";
+    public static final String FUSION_DATA_DIRECTORY = "fusion_data_dir";
+
     public static final String CANCER_TYPES_FILE = "cancer_types_file";
     public static final String GENE_DIST_FILE = "gene_distribution_file";
+    public static final String ALT_SJ_COHORT_FILE = "alt_sj_cohort_file";
 
     public final String SampleDataDir;
+    public final String GeneDataDir;
+    public final String AltSjDataDir;
+    public final String FusionDataDir;
     public final String GeneDistributionFile;
+    public final String AltSjCohortFile;
     public final List<String> RestrictedGeneIds;
     public final List<String> SampleIds;
     public final List<String> PrimaryCancerTypes;
@@ -43,9 +51,6 @@ public class DataLoaderConfig
 
     public DataLoaderConfig(final CommandLine cmd)
     {
-        SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIRECTORY));
-        GeneDistributionFile = cmd.getOptionValue(GENE_DIST_FILE);
-
         SampleIds = Lists.newArrayList();
         PrimaryCancerTypes = Lists.newArrayList();
         SampleCancerTypes = Maps.newHashMap();
@@ -59,7 +64,7 @@ public class DataLoaderConfig
             try
             {
                 final List<String> lines = Files.readAllLines(Paths.get(cmd.getOptionValue(SAMPLE_ID_FILE)));
-                lines.stream().filter(x -> !x.equals("SampleId")).forEach(x -> addSampleInfo(x));
+                lines.stream().filter(x -> !x.startsWith("SampleId")).forEach(x -> addSampleInfo(x));
             }
             catch(IOException e)
             {
@@ -73,12 +78,26 @@ public class DataLoaderConfig
             {
                 final List<String> lines = Files.readAllLines(Paths.get(cmd.getOptionValue(CANCER_TYPES_FILE)));
                 lines.stream().filter(x -> !x.equals("CancerType")).forEach(x -> PrimaryCancerTypes.add(x));
+                ISF_LOGGER.info("loaded {} known cancer types", PrimaryCancerTypes.size());
             }
             catch(IOException e)
             {
                 ISF_LOGGER.warn("invalid sampleId file: {}", e.toString());
             }
         }
+
+        SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIRECTORY));
+        GeneDistributionFile = cmd.getOptionValue(GENE_DIST_FILE);
+        AltSjCohortFile = cmd.getOptionValue(ALT_SJ_COHORT_FILE);
+
+        GeneDataDir = cmd.hasOption(GENE_DATA_DIRECTORY) ?
+                checkAddDirSeparator(cmd.getOptionValue(GENE_DATA_DIRECTORY)) : SampleDataDir;
+
+        AltSjDataDir = cmd.hasOption(ALT_SJ_DATA_DIRECTORY) ?
+                checkAddDirSeparator(cmd.getOptionValue(ALT_SJ_DATA_DIRECTORY)) : SampleDataDir;
+
+        FusionDataDir = cmd.hasOption(FUSION_DATA_DIRECTORY) ?
+                checkAddDirSeparator(cmd.getOptionValue(FUSION_DATA_DIRECTORY)) : SampleDataDir;
 
         RestrictedGeneIds = Lists.newArrayList();
 
@@ -117,9 +136,13 @@ public class DataLoaderConfig
         final Options options = new Options();
         options.addOption(SAMPLE, true, "Sample tumor ID");
         options.addOption(SAMPLE_ID_FILE, true, "File with list of samples and cancer types to load data for");
-        options.addOption(SAMPLE_DATA_DIRECTORY, true, "Root data directory for input files or sample directories");
+        options.addOption(SAMPLE_DATA_DIRECTORY, true, "Sample data directory");
+        options.addOption(GENE_DATA_DIRECTORY, true, "Gene data directory, will use sample data dir if not present");
+        options.addOption(ALT_SJ_DATA_DIRECTORY, true, "Alt-SJ data directory, will use sample data dir if not present");
+        options.addOption(FUSION_DATA_DIRECTORY, true, "Fusion data directory, will use sample data dir if not present");
         options.addOption(CANCER_TYPES_FILE, true, "Primary cancer types (otherwise will use 'Other' for sample");
         options.addOption(GENE_DIST_FILE, true, "Gene distribution for medians and percentile data");
+        options.addOption(ALT_SJ_COHORT_FILE, true, "Alternate splice junction cohort file");
         options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
         options.addOption(LOG_DEBUG, false, "Log verbose");
 

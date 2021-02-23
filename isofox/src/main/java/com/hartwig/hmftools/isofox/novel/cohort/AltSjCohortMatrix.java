@@ -164,7 +164,7 @@ public class AltSjCohortMatrix
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
 
             int geneIndex = fieldsIndexMap.get(FLD_GENE_ID);
-            int chrIndex = fieldsIndexMap.get("Chromosome");
+            int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
             int posStartIndex = fieldsIndexMap.get("PosStart");
             int posEndIndex = fieldsIndexMap.get("PosEnd");
 
