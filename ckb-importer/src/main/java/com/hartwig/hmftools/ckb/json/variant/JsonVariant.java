@@ -48,13 +48,13 @@ public abstract class JsonVariant implements CkbJsonObject {
     public abstract LocalDate updateDate();
 
     @Nullable
-    public abstract JsonVariantTranscriptCoordinate referenceTranscriptCoordinate();
+    public abstract JsonTranscriptCoordinate referenceTranscriptCoordinate();
 
     @NotNull
     public abstract List<JsonVariantPartnerGene> partnerGenes();
 
     @NotNull
-    public abstract List<JsonVariantCategoryVariantPath> categoryVariantPaths();
+    public abstract List<JsonCategoryVariantPath> categoryVariantPaths();
 
     @NotNull
     public abstract List<EvidenceInfo> evidence();
@@ -66,7 +66,7 @@ public abstract class JsonVariant implements CkbJsonObject {
     public abstract List<MolecularProfileInfo> molecularProfiles();
 
     @NotNull
-    public abstract List<JsonVariantTranscriptCoordinate> allTranscriptCoordinates();
+    public abstract List<JsonTranscriptCoordinate> allTranscriptCoordinates();
 
     @NotNull
     public abstract List<VariantInfo> memberVariants();

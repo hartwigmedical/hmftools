@@ -3,6 +3,8 @@ package com.hartwig.hmftools.ckb.datamodel.variant;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,6 +25,12 @@ public abstract class Gene {
     public abstract String geneSymbol();
 
     @NotNull
+    public abstract List<String> terms();
+
+    @NotNull
+    public abstract List<String> synonyms();
+
+    @NotNull
     public abstract String geneRole();
 
     @Nullable
@@ -37,13 +45,10 @@ public abstract class Gene {
     @Nullable
     public abstract String canonicalTranscript();
 
-    @NotNull
-    public abstract List<String> terms();
+    @Nullable
+    public abstract String description();
 
     @NotNull
-    public abstract List<String> synonyms();
-
-    @NotNull
-    public abstract List<GeneDescription> descriptions();
+    public abstract List<Reference> references();
 
 }

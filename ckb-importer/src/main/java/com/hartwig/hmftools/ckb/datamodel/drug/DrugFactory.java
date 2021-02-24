@@ -5,7 +5,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.reference.ReferenceFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
-import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.DrugClassInfo;
 import com.hartwig.hmftools.ckb.json.common.DrugInfo;
 import com.hartwig.hmftools.ckb.json.drug.JsonDrug;
@@ -39,9 +38,10 @@ public final class DrugFactory {
                         .terms(drug.terms())
                         .synonyms(drug.synonyms())
                         .tradeName(drug.tradeName())
-                        .descriptions(extractDrugDescriptions(ckbJsonDatabase, drug.descriptions()))
                         .casRegistryNum(drug.casRegistryNum())
                         .ncitId(drug.ncitId())
+                        .description(ReferenceFactory.extractDescription("drug", drug.id(), drug.descriptions()))
+                        .references(ReferenceFactory.extractDescriptionReferences(ckbJsonDatabase, drug.descriptions()))
                         .build();
             }
         }
@@ -72,18 +72,5 @@ public final class DrugFactory {
         }
 
         throw new IllegalStateException("Could not resolve CKB drug class with id '" + drugClassInfo.id() + "'");
-    }
-
-    @NotNull
-    private static List<DrugDescription> extractDrugDescriptions(@NotNull CkbJsonDatabase ckbJsonDatabase,
-            @NotNull List<DescriptionInfo> descriptionInfos) {
-        List<DrugDescription> drugDescriptions = Lists.newArrayList();
-        for (DescriptionInfo descriptionInfo : descriptionInfos) {
-            drugDescriptions.add(ImmutableDrugDescription.builder()
-                    .description(descriptionInfo.description())
-                    .references(ReferenceFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
-                    .build());
-        }
-        return drugDescriptions;
     }
 }

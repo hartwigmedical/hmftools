@@ -5,13 +5,12 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.reference.ReferenceFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
-import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.GeneInfo;
 import com.hartwig.hmftools.ckb.json.common.VariantInfo;
 import com.hartwig.hmftools.ckb.json.gene.JsonGene;
+import com.hartwig.hmftools.ckb.json.variant.JsonCategoryVariantPath;
+import com.hartwig.hmftools.ckb.json.variant.JsonTranscriptCoordinate;
 import com.hartwig.hmftools.ckb.json.variant.JsonVariant;
-import com.hartwig.hmftools.ckb.json.variant.JsonVariantCategoryVariantPath;
-import com.hartwig.hmftools.ckb.json.variant.JsonVariantTranscriptCoordinate;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,7 +48,8 @@ public final class VariantFactory {
                         .allTranscriptCoordinates(convertAllTranscriptCoordinates(variant.allTranscriptCoordinates()))
                         .categoryVariantPaths(convertCategoryVariantPaths(variant.categoryVariantPaths()))
                         .memberVariants(convertMemberVariants(variant.memberVariants()))
-                        .descriptions(extractVariantDescriptions(ckbJsonDatabase, variant.descriptions()))
+                        .description(ReferenceFactory.extractDescription("variant", variant.id(), variant.descriptions()))
+                        .references(ReferenceFactory.extractDescriptionReferences(ckbJsonDatabase, variant.descriptions()))
                         .build();
             }
         }
@@ -73,7 +73,8 @@ public final class VariantFactory {
                         .canonicalTranscript(gene.canonicalTranscript())
                         .terms(gene.terms())
                         .synonyms(gene.synonyms())
-                        .descriptions(extractGeneDescriptions(ckbJsonDatabase, gene.descriptions()))
+                        .description(ReferenceFactory.extractDescription("gene", gene.id(), gene.descriptions()))
+                        .references(ReferenceFactory.extractDescriptionReferences(ckbJsonDatabase, gene.descriptions()))
                         .build();
             }
         }
@@ -81,27 +82,28 @@ public final class VariantFactory {
         throw new IllegalStateException("Could not resolve CKB gene with id '" + geneInfo.id() + "'");
     }
 
-    @NotNull
-    private static List<GeneDescription> extractGeneDescriptions(@NotNull CkbJsonDatabase ckbJsonDatabase,
-            @NotNull List<DescriptionInfo> descriptionInfos) {
-        List<GeneDescription> geneDescriptions = Lists.newArrayList();
-
-        for (DescriptionInfo descriptionInfo : descriptionInfos) {
-            geneDescriptions.add(ImmutableGeneDescription.builder()
-                    .description(descriptionInfo.description())
-                    .references(ReferenceFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
-                    .build());
-        }
-
-        return geneDescriptions;
-    }
-
     @Nullable
-    private static TranscriptCoordinate convertReferenceTranscriptCoordinate(@Nullable JsonVariantTranscriptCoordinate coordinate) {
+    private static TranscriptCoordinate convertReferenceTranscriptCoordinate(@Nullable JsonTranscriptCoordinate coordinate) {
         if (coordinate == null) {
             return null;
         }
 
+        return convertTranscriptCoordinate(coordinate);
+    }
+
+    @NotNull
+    private static List<TranscriptCoordinate> convertAllTranscriptCoordinates(@NotNull List<JsonTranscriptCoordinate> coordinates) {
+        List<TranscriptCoordinate> allTranscriptCoordinates = Lists.newArrayList();
+
+        for (JsonTranscriptCoordinate coordinate : coordinates) {
+            allTranscriptCoordinates.add(convertTranscriptCoordinate(coordinate));
+        }
+
+        return allTranscriptCoordinates;
+    }
+
+    @NotNull
+    private static TranscriptCoordinate convertTranscriptCoordinate(@NotNull JsonTranscriptCoordinate coordinate) {
         return ImmutableTranscriptCoordinate.builder()
                 .id(coordinate.id())
                 .transcript(coordinate.transcript())
@@ -114,29 +116,10 @@ public final class VariantFactory {
     }
 
     @NotNull
-    private static List<TranscriptCoordinate> convertAllTranscriptCoordinates(@NotNull List<JsonVariantTranscriptCoordinate> coordinates) {
-        List<TranscriptCoordinate> allTranscriptCoordinates = Lists.newArrayList();
-
-        for (JsonVariantTranscriptCoordinate coordinate : coordinates) {
-            allTranscriptCoordinates.add(ImmutableTranscriptCoordinate.builder()
-                    .id(coordinate.id())
-                    .transcript(coordinate.transcript())
-                    .gDna(coordinate.gDNA())
-                    .cDna(coordinate.cDNA())
-                    .protein(coordinate.protein())
-                    .sourceDb(coordinate.sourceDB())
-                    .refGenomeBuild(coordinate.refGenomeBuild())
-                    .build());
-        }
-
-        return allTranscriptCoordinates;
-    }
-
-    @NotNull
-    private static List<String> convertCategoryVariantPaths(@NotNull List<JsonVariantCategoryVariantPath> variantCategoryVariantPaths) {
+    private static List<String> convertCategoryVariantPaths(@NotNull List<JsonCategoryVariantPath> jsonCategoryVariantPaths) {
         List<String> categoryVariantPaths = Lists.newArrayList();
 
-        for (JsonVariantCategoryVariantPath categoryVariantPath : variantCategoryVariantPaths) {
+        for (JsonCategoryVariantPath categoryVariantPath : jsonCategoryVariantPaths) {
             categoryVariantPaths.add(categoryVariantPath.variantPath());
         }
 
@@ -157,20 +140,5 @@ public final class VariantFactory {
         }
 
         return memberVariants;
-    }
-
-    @NotNull
-    private static List<VariantDescription> extractVariantDescriptions(@NotNull CkbJsonDatabase ckbJsonDatabase,
-            @NotNull List<DescriptionInfo> descriptionInfos) {
-        List<VariantDescription> variantDescriptions = Lists.newArrayList();
-
-        for (DescriptionInfo descriptionInfo : descriptionInfos) {
-            variantDescriptions.add(ImmutableVariantDescription.builder()
-                    .description(descriptionInfo.description())
-                    .references(ReferenceFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
-                    .build());
-        }
-
-        return variantDescriptions;
     }
 }

@@ -39,7 +39,7 @@ public class IndicationReader extends CkbJsonDirectoryReader<JsonIndication> {
         indicationChecker.check(object);
 
         return ImmutableJsonIndication.builder()
-                .id(JsonFunctions.string(object, "id"))
+                .id(JsonFunctions.integer(object, "id"))
                 .name(JsonFunctions.string(object, "name"))
                 .source(JsonFunctions.string(object, "source"))
                 .definition(JsonFunctions.nullableString(object, "definition"))
@@ -107,7 +107,7 @@ public class IndicationReader extends CkbJsonDirectoryReader<JsonIndication> {
         evidenceIndicationChecker.check(jsonObject);
 
         return ImmutableIndicationInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
                 .build();

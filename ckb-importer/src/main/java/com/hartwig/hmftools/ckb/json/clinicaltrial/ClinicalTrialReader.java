@@ -77,7 +77,7 @@ public class ClinicalTrialReader extends CkbJsonDirectoryReader<JsonClinicalTria
             indicationChecker.check(indicationObject);
 
             indications.add(ImmutableIndicationInfo.builder()
-                    .id(JsonFunctions.string(indicationObject, "id"))
+                    .id(JsonFunctions.integer(indicationObject, "id"))
                     .name(JsonFunctions.string(indicationObject, "name"))
                     .source(JsonFunctions.string(indicationObject, "source"))
                     .build());

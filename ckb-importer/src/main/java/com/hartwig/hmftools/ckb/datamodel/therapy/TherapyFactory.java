@@ -6,7 +6,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.drug.DrugFactory;
 import com.hartwig.hmftools.ckb.datamodel.reference.ReferenceFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
-import com.hartwig.hmftools.ckb.json.common.DescriptionInfo;
 import com.hartwig.hmftools.ckb.json.common.GlobalApprovalStatusInfo;
 import com.hartwig.hmftools.ckb.json.common.TherapyInfo;
 import com.hartwig.hmftools.ckb.json.therapy.JsonTherapy;
@@ -38,26 +37,14 @@ public final class TherapyFactory {
                         .therapyName(therapy.therapyName())
                         .drugs(DrugFactory.extractDrugs(ckbJsonDatabase, therapy.drugs()))
                         .synonyms(therapy.synonyms())
-                        .descriptions(extractTherapyDescriptions(ckbJsonDatabase, therapy.descriptions()))
+                        .description(ReferenceFactory.extractDescription("therapy", therapy.id(), therapy.descriptions()))
+                        .references(ReferenceFactory.extractDescriptionReferences(ckbJsonDatabase, therapy.descriptions()))
                         .globalApprovalStatuses(convertGlobalApprovalStatuses(therapy.globalApprovalStatuses()))
                         .build();
             }
         }
 
         throw new IllegalStateException("Could not resolve CKB therapy with id '" + therapyInfo.id() + "'");
-    }
-
-    @NotNull
-    private static List<TherapyDescription> extractTherapyDescriptions(@NotNull CkbJsonDatabase ckbJsonDatabase,
-            @NotNull List<DescriptionInfo> descriptionInfos) {
-        List<TherapyDescription> therapyDescriptions = Lists.newArrayList();
-        for (DescriptionInfo descriptionInfo : descriptionInfos) {
-            therapyDescriptions.add(ImmutableTherapyDescription.builder()
-                    .description(descriptionInfo.description())
-                    .references(ReferenceFactory.extractReferences(ckbJsonDatabase, descriptionInfo.references()))
-                    .build());
-        }
-        return therapyDescriptions;
     }
 
     @NotNull
@@ -68,7 +55,6 @@ public final class TherapyFactory {
             globalApprovalStatuses.add(ImmutableGlobalApprovalStatus.builder()
                     .id(globalApprovalStatusInfo.id())
                     .profileId(globalApprovalStatusInfo.molecularProfile().id())
-                    .therapyId(globalApprovalStatusInfo.therapy().id())
                     .indicationId(globalApprovalStatusInfo.indication().id())
                     .approvalStatus(globalApprovalStatusInfo.approvalStatus())
                     .approvalAuthority(globalApprovalStatusInfo.approvalAuthority())

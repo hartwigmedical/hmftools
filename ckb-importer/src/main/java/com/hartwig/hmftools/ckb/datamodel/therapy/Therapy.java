@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
+import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -31,8 +32,11 @@ public abstract class Therapy {
     public abstract List<String> synonyms();
 
     @NotNull
-    public abstract List<TherapyDescription> descriptions();
+    public abstract List<GlobalApprovalStatus> globalApprovalStatuses();
+
+    @Nullable
+    public abstract String description();
 
     @NotNull
-    public abstract List<GlobalApprovalStatus> globalApprovalStatuses();
+    public abstract List<Reference> references();
 }
