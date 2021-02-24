@@ -20,13 +20,16 @@ import org.jetbrains.annotations.NotNull;
 
 public class DriverGenePanelConversion {
 
+    private static final String OUTPUT_DIR = "/Users/jon/hmf/resources/";
+    private static final String INPUT_DIR = "/Users/jon/hmf/resources/";
+
     private static final Logger LOGGER = LogManager.getLogger(DriverGenePanelConversion.class);
 
 
     public static void main(String[] args) throws IOException {
         LOGGER.info("Starting driver gene panel generation");
 
-        String templateFile = "/Users/jon/hmf/resources/DriverGenePanel.template.txt";
+        String templateFile = OUTPUT_DIR + "DriverGenePanel.template.txt";
 
         DndsGeneNameMap geneNameMap = new DndsGeneNameMap();
         List<DriverGene> inputDriverGenes = DriverGeneFile.read(templateFile);
@@ -51,14 +54,13 @@ public class DriverGenePanelConversion {
 
     private static void process(@NotNull final DriverGenePanelAssembly assembly, @NotNull final List<DriverGene> driverGenes) throws IOException {
 
-        final String resourceDir = "/Users/jon/hmf/resources";
         final String extension = assembly.toString().toLowerCase();
-        final String driverGeneFile = String.format("%s/DriverGenePanel.%s.tsv", resourceDir, extension);
-        final String somaticCodingWithoutUtr = String.format("%s/ActionableCodingPanel.somatic.%s.bed", resourceDir, extension);
-        final String germlineCodingWithUtr = String.format("%s/ActionableCodingPanel.germline.%s.bed", resourceDir, extension);
-        final String germlineCodingWithoutUtr = String.format("%s/CoverageCodingPanel.germline.%s.bed", resourceDir, extension);
-        final String germlineHotspotFile = String.format("%s/KnownHotspots.germline.%s.vcf.gz", resourceDir, extension);
-        final String clinvarFile = String.format("%s/clinvar.%s.vcf.gz", resourceDir, extension);
+        final String driverGeneFile = String.format("%s/DriverGenePanel.%s.tsv", OUTPUT_DIR, extension);
+        final String somaticCodingWithoutUtr = String.format("%s/ActionableCodingPanel.somatic.%s.bed", OUTPUT_DIR, extension);
+        final String germlineCodingWithUtr = String.format("%s/ActionableCodingPanel.germline.%s.bed", OUTPUT_DIR, extension);
+        final String germlineCodingWithoutUtr = String.format("%s/CoverageCodingPanel.germline.%s.bed", OUTPUT_DIR, extension);
+        final String germlineHotspotFile = String.format("%s/KnownHotspots.germline.%s.vcf.gz", OUTPUT_DIR, extension);
+        final String clinvarFile = String.format("%s/clinvar.%s.vcf.gz", INPUT_DIR, extension);
 
         Collections.sort(driverGenes);
 
