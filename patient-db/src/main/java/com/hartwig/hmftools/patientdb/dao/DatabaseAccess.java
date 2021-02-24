@@ -220,6 +220,11 @@ public class DatabaseAccess implements AutoCloseable {
         return purityDAO.readPassingQC(minPurity);
     }
 
+    @NotNull
+    public List<SamplePurity> readSamplePurityPassingQC(double minPurity, @NotNull String primaryTumorLocation) {
+        return purityDAO.readPassingQC(minPurity, primaryTumorLocation);
+    }
+
     @Nullable
     public PurityContext readPurityContext(@NotNull String sampleId) {
         return purityDAO.readPurityContext(sampleId);
