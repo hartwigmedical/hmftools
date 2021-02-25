@@ -1,15 +1,5 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
--- TODO Can be removed per 1st of March 2021
-DROP TABLE IF EXISTS geneDescription;
-DROP TABLE IF EXISTS geneDescriptionReference;
-DROP TABLE IF EXISTS variantDescription;
-DROP TABLE IF EXISTS variantDescriptionReference;
-DROP TABLE IF EXISTS therapyDescription;
-DROP TABLE IF EXISTS therapyDescriptionReference;
-DROP TABLE IF EXISTS drugDescription;
-DROP TABLE IF EXISTS drugDescriptionReference;
-
 DROP TABLE IF EXISTS ckbEntry;
 CREATE TABLE ckbEntry
 (   id int NOT NULL AUTO_INCREMENT,
