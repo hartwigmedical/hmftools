@@ -35,7 +35,8 @@ public class ExpressionCohortDistribution
     private BufferedWriter mWriter;
 
     private Matrix mExpressionMatrix;
-    private final Map<String,Integer> mSampleIndexMap;
+    private final Map<String,Integer> mSampleIndexMap; // index of sample into matrix columns
+    private final Map<String,Integer> mGeneTransIdIndexMap;  // index of geneId into matrix rows
     private final List<String> mGeneTransIds;
     private final Map<String,String> mIdNameMap;
 
@@ -53,6 +54,7 @@ public class ExpressionCohortDistribution
 
         mExpressionMatrix = null;
         mSampleIndexMap = Maps.newHashMap();
+        mGeneTransIdIndexMap = Maps.newHashMap();
         mGeneTransIds = Lists.newArrayList();
         mIdNameMap = Maps.newHashMap();
 
@@ -98,8 +100,9 @@ public class ExpressionCohortDistribution
         final String geneTransId = mGeneTransIds.get(index);
 
         final String geneTransName = mIdNameMap.get(geneTransId);
+        int matrixIndex = mGeneTransIdIndexMap.get(geneTransId);
 
-        final double[] tpmValues = mExpressionMatrix.getRow(index);
+        final double[] tpmValues = mExpressionMatrix.getRow(matrixIndex);
 
         try
         {
@@ -292,6 +295,7 @@ public class ExpressionCohortDistribution
             mTranscriptScope = transNameIndex >= 0;
 
             String line = fileReader.readLine();
+            int geneRowIndex = 0;
 
             while(line != null)
             {
@@ -301,6 +305,7 @@ public class ExpressionCohortDistribution
 
                 if(!mConfig.RestrictedGeneIds.isEmpty() && !mConfig.RestrictedGeneIds.contains(geneId))
                 {
+                    geneRowIndex++;
                     line = fileReader.readLine();
                     continue;
                 }
@@ -311,14 +316,17 @@ public class ExpressionCohortDistribution
                 {
                     final String transName = items[transNameIndex];
                     mGeneTransIds.add(transName);
+                    mGeneTransIdIndexMap.put(transName, geneRowIndex);
                     mIdNameMap.put(transName, String.format("%s,%s", geneId, geneName));
                 }
                 else
                 {
                     mGeneTransIds.add(geneId);
+                    mGeneTransIdIndexMap.put(geneId, geneRowIndex);
                     mIdNameMap.put(geneId, geneName);
                 }
 
+                geneRowIndex++;
                 line = fileReader.readLine();
             }
         }
@@ -334,7 +342,6 @@ public class ExpressionCohortDistribution
             ignoreFields.add(FLD_TRANS_NAME);
 
         mExpressionMatrix = loadMatrixDataFile(mConfig.Expression.GeneExpMatrixFile, mSampleIndexMap, ignoreFields);
-        mExpressionMatrix.cacheTranspose();
 
         ISF_LOGGER.debug("loaded genes({}) and {} samples expression matrix data", mGeneTransIds.size(), mExpressionMatrix.Cols);
         return true;
