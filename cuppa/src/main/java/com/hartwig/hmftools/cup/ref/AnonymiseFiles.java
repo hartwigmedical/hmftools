@@ -6,19 +6,10 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsI
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
-import static com.hartwig.hmftools.cup.CuppaConfig.SPECIFIC_SAMPLE_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_SAMPLE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
-import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
-import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
-import static com.hartwig.hmftools.cup.common.ClassifierType.COMBINED;
-import static com.hartwig.hmftools.cup.common.ClassifierType.isDna;
-import static com.hartwig.hmftools.cup.common.ClassifierType.isRna;
-import static com.hartwig.hmftools.cup.common.CupCalcs.calcClassifierScoreResult;
-import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedFeatureResult;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -27,19 +18,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.RandomAccess;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.cup.CuppaConfig;
-import com.hartwig.hmftools.cup.common.ClassifierType;
-import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
-import com.hartwig.hmftools.cup.common.SampleResult;
-import com.hartwig.hmftools.cup.common.SampleSimilarity;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

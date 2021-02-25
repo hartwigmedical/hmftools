@@ -8,7 +8,8 @@ public enum CategoryType
     FEATURE,
     GENE_EXP,
     ALT_SJ,
-    CLASSIFIER;
+    CLASSIFIER,
+    COMBINED;
 
     public static final String ALL_CATEGORIES = "ALL";
     public static final String DNA_CATEGORIES = "DNA";

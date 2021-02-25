@@ -6,6 +6,7 @@ import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
+import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
 import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CORRELATION_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.common.CupConstants.MIN_CLASSIFIER_SCORE;
@@ -152,8 +153,9 @@ public class CupCalcs
             cancerProbabilities.put(entry.getKey(), adjustedProb);
         }
     }
-    public static SampleResult calcClassifierScoreResult(final SampleData sample, final List<SampleResult> results, final String dataType)
+    public static SampleResult calcCombinedClassifierScoreResult(final SampleData sample, final List<SampleResult> results, final String dataType)
     {
+        // combined a set of classifier into a single new combined result
         final List<SampleResult> classifierResults = results.stream()
                 .filter(x -> x.Category == CLASSIFIER)
                 .collect(Collectors.toList());
@@ -179,7 +181,7 @@ public class CupCalcs
         dampenProbabilities(cancerTypeValues);
         convertToPercentages(cancerTypeValues);
 
-        return new SampleResult(sample.Id, CLASSIFIER, LIKELIHOOD, dataType, "", cancerTypeValues);
+        return new SampleResult(sample.Id, COMBINED, LIKELIHOOD, dataType, "", cancerTypeValues);
     }
 
     public static double[] adjustRefCounts(final double[] refCounts, final double[] sampleCounts, final double sampleFactor)

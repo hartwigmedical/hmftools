@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.ClassifierType.COMBINED;
 import static com.hartwig.hmftools.cup.common.ClassifierType.isDna;
 import static com.hartwig.hmftools.cup.common.ClassifierType.isRna;
-import static com.hartwig.hmftools.cup.common.CupCalcs.calcClassifierScoreResult;
+import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedClassifierScoreResult;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedFeatureResult;
 
 import java.io.BufferedWriter;
@@ -200,22 +200,25 @@ public class CupAnalyser
                     .filter(x -> x.Category == CLASSIFIER && isDna(ClassifierType.valueOf(x.DataType)))
                     .collect(Collectors.toList());
 
-            SampleResult dnaScoreResult = calcClassifierScoreResult(sample, dnaResults, "DNA_COMBINED");
+            SampleResult dnaScoreResult = calcCombinedClassifierScoreResult(sample, dnaResults, "DNA_COMBINED");
+
+            if(dnaScoreResult != null)
+                allResults.add(dnaScoreResult);
 
             final List<SampleResult> rnaResults = allResults.stream()
                     .filter(x -> x.Category == CLASSIFIER && isRna(ClassifierType.valueOf(x.DataType)))
                     .collect(Collectors.toList());
 
-            SampleResult rnaScoreResult = calcClassifierScoreResult(sample, rnaResults, "RNA_COMBINED");
+            if(!rnaResults.isEmpty())
+            {
+                SampleResult rnaScoreResult = calcCombinedClassifierScoreResult(sample, rnaResults, "RNA_COMBINED");
 
-            if(dnaScoreResult != null)
-                allResults.add(dnaScoreResult);
-
-            if(rnaScoreResult != null)
-                allResults.add(rnaScoreResult);
+                if(rnaScoreResult != null)
+                    allResults.add(rnaScoreResult);
+            }
         }
 
-        SampleResult classifierScoreResult = calcClassifierScoreResult(sample, allResults, COMBINED.toString());
+        SampleResult classifierScoreResult = calcCombinedClassifierScoreResult(sample, allResults, COMBINED.toString());
 
         if(classifierScoreResult != null)
             allResults.add(classifierScoreResult);
@@ -266,7 +269,7 @@ public class CupAnalyser
         {
             for(SampleResult result : results)
             {
-                if(mConfig.WriteClassifiersOnly && result.Category != CLASSIFIER)
+                if(mConfig.WriteClassifiersOnly && !(result.Category == CLASSIFIER || result.Category == CategoryType.COMBINED))
                     continue;
 
                 final String sampleStr = String.format("%s,%s,%s,%s,%s",
