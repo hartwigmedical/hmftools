@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cup.feature;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSS;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
@@ -107,6 +108,7 @@ public class FeatureDataLoader
             final List<LinxFusion> fusions = Files.exists(Paths.get(fusionsFilename)) ?
                     LinxFusion.read(fusionsFilename) : Lists.newArrayList();
 
+            // load both purple and linx drivers if available
             final String purpleDriverCatalogFilename = DriverCatalogFile.generateSomaticFilenameForReading(sampleDataDir, sampleId);
 
             final List<DriverCatalog> drivers = Files.exists(Paths.get(purpleDriverCatalogFilename)) ?
@@ -331,6 +333,10 @@ public class FeatureDataLoader
             if(skipZeroDriverLikelihood && driverCatalog.driverLikelihood() <= 0)
                 continue;
 
+            // ignore germline drivers
+            if(driverCatalog.driver() == GERMLINE)
+                continue;
+
             final List<DriverCatalog> drivers = sampleDriverMap.get(sampleId);
             if(drivers == null)
                 sampleDriverMap.put(sampleId, Lists.newArrayList(driverCatalog));
@@ -364,6 +370,9 @@ public class FeatureDataLoader
         {
             for(final DriverCatalog driver : drivers)
             {
+                if(driver.driver() == GERMLINE)
+                    continue;
+
                 SampleFeatureData feature = new SampleFeatureData(sampleId, driver.gene(), DRIVER, driver.driverLikelihood());
 
                 if(driver.driver() == DriverType.AMP)

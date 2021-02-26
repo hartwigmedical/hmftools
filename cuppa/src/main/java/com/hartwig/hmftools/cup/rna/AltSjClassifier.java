@@ -25,6 +25,7 @@ import static com.hartwig.hmftools.cup.common.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_COHORT;
 import static com.hartwig.hmftools.cup.common.ClassifierType.ALT_SJ_PAIRWISE;
+import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_ALT_SJ_DIFF_EXPONENT;
@@ -69,9 +70,6 @@ public class AltSjClassifier implements CuppaClassifier
 
     private final double mFragCountLogValue;
 
-    // prevalence method
-    private final Map<String,List<AltSjPrevData>> mRefAltSjPrevalence; // ref alt-SJs by chromosome
-
     // matrix CSS method
     private Matrix mRefCancerTypeMatrix;
     private final Map<String,Integer> mRefAsjIndexMap; // map from Alt-SJ into matrix rows
@@ -100,8 +98,6 @@ public class AltSjClassifier implements CuppaClassifier
         mConfig = config;
         mSampleDataCache = sampleDataCache;
         mIsValid = true;
-
-        mRefAltSjPrevalence = Maps.newHashMap();
 
         mRefAsjIndexMap = Maps.newHashMap();
         mRefCancerTypes = Lists.newArrayList();
@@ -178,7 +174,7 @@ public class AltSjClassifier implements CuppaClassifier
 
     public void processSample(final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
-        if(!mIsValid || (mRefAltSjPrevalence.isEmpty() && mRefCancerTypeMatrix == null))
+        if(!mIsValid || mRefCancerTypeMatrix == null)
             return;
 
         if(mSampleIndexMap.isEmpty())
@@ -228,7 +224,7 @@ public class AltSjClassifier implements CuppaClassifier
             if(cohortData == null)
             {
                 CUP_LOGGER.error("failed to find RNA cohort data({})", refCancerId);
-                return;
+                continue;
             }
 
             if(!isKnownCancerType(cohortData.CancerType))
@@ -237,8 +233,11 @@ public class AltSjClassifier implements CuppaClassifier
             if(!checkIsValidCancerType(sample, cohortData.CancerType, cancerCssTotals))
                 continue;
 
-            if(sample.rnaReadLength() != RNA_READ_LENGTH_NONE && sample.rnaReadLength() != cohortData.ReadLength)
-                continue;
+            if(sample.rnaReadLength() != RNA_READ_LENGTH_NONE && cohortData.ReadLength != RNA_READ_LENGTH_NONE)
+            {
+                if(sample.rnaReadLength() != cohortData.ReadLength)
+                    continue;
+            }
 
             boolean matchesCancerType = sample.cancerType().equals(cohortData.CancerType);
 
@@ -421,21 +420,31 @@ public class AltSjClassifier implements CuppaClassifier
 
             if(cancerType.contains(READ_LENGTH_DELIM))
             {
+                // count up the samples matching the specified read length for this cancer cohort
                 final String[] cohortData = cancerType.split(READ_LENGTH_DELIM);
                 final String refCancerType = cohortData[0];
                 int cohortReadLength = Integer.parseInt(cohortData[1]);
 
                 for(SampleData sample : mSampleDataCache.RefCancerSampleData.get(refCancerType))
                 {
-                    if(sample.rnaReadLength() == cohortReadLength)
+                    if(sample.rnaReadLength() != RNA_READ_LENGTH_NONE && sample.rnaReadLength() == cohortReadLength)
                         ++cancerSampleCount;
                 }
 
+                CUP_LOGGER.debug("alt-SJ cancerType({}) readLength({}) samples({})", refCancerType, cohortReadLength, cancerSampleCount);
                 mCancerDataMap.put(cancerType, new RnaCohortData(refCancerType, cohortReadLength, cancerSampleCount));
             }
             else
             {
-                cancerSampleCount = mSampleDataCache.getCancerSampleCount(cancerType);
+                // only count those samples with RNA
+                final List<SampleData> samples = mSampleDataCache.RefCancerSampleData.get(cancerType);
+
+                if(samples != null)
+                {
+                    cancerSampleCount = (int)samples.stream().filter(x -> x.rnaReadLength() != RNA_READ_LENGTH_NONE).count();
+                }
+
+                CUP_LOGGER.debug("alt-SJ cancerType({}) no specific read length, samples({})", cancerType, cancerSampleCount);
                 mCancerDataMap.put(cancerType, new RnaCohortData(cancerType, RNA_READ_LENGTH_NONE, cancerSampleCount));
             }
 
