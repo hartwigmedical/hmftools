@@ -19,7 +19,7 @@ public class SampleReportFactoryTest {
 
         String correctIdT = "T20-72346";
         String correctIdC = "C18-00124";
-        String wrongId = "BGr-12111";
+        String wrongId = "BGr-121111";
 
         LimsCohortConfig cohortConfigWIDE =
                 PatientReporterTestFactory.createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, true);
