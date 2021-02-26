@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_VERBOSE;
-import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
+import static com.hartwig.hmftools.linx.LinxConfig.SAMPLE_DATA_DIR;
 import static com.hartwig.hmftools.linx.LinxDataLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.LinxDataLoader.loadSvDataFromGermlineVcf;
 import static com.hartwig.hmftools.linx.LinxDataLoader.loadSvDataFromSvFile;
@@ -83,7 +83,7 @@ public class LinxApplication
 
         final DatabaseAccess dbAccess = createDatabaseAccess(cmd);
 
-        boolean sampleDataFromFile = (!config.PurpleDataPath.isEmpty() && cmd.hasOption(VCF_FILE)) || config.IsGermline;
+        boolean sampleDataFromFile = (!config.PurpleDataPath.isEmpty() && config.SvVcfFile != null) || config.IsGermline;
 
         List<String> samplesList = config.getSampleIds();
 
@@ -301,32 +301,28 @@ public class LinxApplication
     public static List<StructuralVariantData> loadSampleSvDataFromFile(
             final LinxConfig config, final String sampleId, final CommandLine cmd)
     {
-        if(cmd.hasOption(VCF_FILE))
-        {
-            String vcfFile = cmd.getOptionValue(VCF_FILE);
+        String vcfFile = config.SvVcfFile;
 
-            if(config.hasMultipleSamples())
+        if(config.hasMultipleSamples())
+        {
+            if(vcfFile.contains("*"))
             {
-                if(vcfFile.contains("*"))
-                {
-                    vcfFile = vcfFile.replaceAll("\\*", sampleId);
-                }
-                else
-                {
-                    LNX_LOGGER.warn("single VCF({}) provided for multiple samples", vcfFile);
-                    return Lists.newArrayList();
-                }
+                vcfFile = vcfFile.replaceAll("\\*", sampleId);
             }
-
-            if(config.IsGermline)
-                return loadSvDataFromGermlineVcf(vcfFile);
             else
-                return loadSvDataFromVcf(vcfFile);
+            {
+                LNX_LOGGER.warn("single VCF({}) provided for multiple samples", vcfFile);
+                return Lists.newArrayList();
+            }
         }
+
+        if(config.IsGermline)
+            return loadSvDataFromGermlineVcf(vcfFile);
         else
-        {
-            return loadSvDataFromSvFile(sampleId, config.SvDataPath);
-        }
+            return loadSvDataFromVcf(vcfFile);
+
+        // no longer supported
+        // return loadSvDataFromSvFile(sampleId, config.SampleDataPath);
     }
 
     private static List<SvVarData> createSvData(final List<StructuralVariantData> svRecords, final LinxConfig config)

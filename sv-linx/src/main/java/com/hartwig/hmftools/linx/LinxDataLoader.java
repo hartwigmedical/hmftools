@@ -2,7 +2,6 @@ package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.linx.LinxConfig.SAMPLE;
-import static com.hartwig.hmftools.linx.LinxConfig.SV_DATA_DIR;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.valueNotNull;
@@ -48,6 +47,7 @@ public class LinxDataLoader
 {
     private static final Logger LOGGER = LogManager.getLogger(LinxDataLoader.class);
 
+    public static final String SV_DATA_DIR = "sv_data_dir";
     public static final String VCF_FILE = "sv_vcf";
 
     public static void main(@NotNull final String[] args) throws ParseException

@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_37;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.linx.LinxDataLoader.VCF_FILE;
@@ -34,9 +35,12 @@ import org.apache.logging.log4j.Logger;
 public class LinxConfig
 {
     public final int ProximityDistance;
+
+    public final String SampleDataPath; // if specified, then will be used for output and purple data directory
     public final String OutputDataPath;
     public final String PurpleDataPath;
-    public final String SvDataPath;
+    public final String SvVcfFile;
+
     public final boolean UploadToDB;
     public final String FragileSiteFile;
     public final String KataegisFile;
@@ -59,8 +63,8 @@ public class LinxConfig
     public final List<String> RestrictedGeneIds; // specific set of genes to process
 
     // config options
+    public static final String SAMPLE_DATA_DIR = "sample_data_dir";
     public static final String PURPLE_DATA_DIR = "purple_dir";
-    public static final String SV_DATA_DIR = "sv_data_dir";
     public static final String SAMPLE = "sample";
     public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String UPLOAD_TO_DB = "upload_to_db"; // true by default when in single-sample mode, false for batch
@@ -108,13 +112,32 @@ public class LinxConfig
             UploadToDB = mSampleIds.size() == 1;
         }
 
-        PurpleDataPath = cmd.getOptionValue(PURPLE_DATA_DIR, "");
+        String svVcfFile = cmd.getOptionValue(VCF_FILE, "");
+
+        if(cmd.hasOption(SAMPLE_DATA_DIR))
+        {
+            // /DO52664T.purple.sv.vcf.gz
+            SampleDataPath = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR));
+            PurpleDataPath = SampleDataPath;
+            OutputDataPath = SampleDataPath;
+
+            if(svVcfFile.isEmpty() && mSampleIds.size() == 1)
+            {
+                svVcfFile = SampleDataPath + mSampleIds.get(0) + ".purple.sv.vcf.gz";
+            }
+        }
+        else
+        {
+            SampleDataPath = "";
+            PurpleDataPath = cmd.getOptionValue(PURPLE_DATA_DIR, "");
+            OutputDataPath = parseOutputDir(cmd);
+        }
+
+        SvVcfFile = svVcfFile;
+
         IsGermline = cmd.hasOption(GERMLINE);
 
-        OutputDataPath = parseOutputDir(cmd);
         Output = new LinxOutput(cmd, isSingleSample());
-
-        SvDataPath = cmd.hasOption(SV_DATA_DIR) ? cmd.getOptionValue(SV_DATA_DIR) : OutputDataPath;
 
         if(cmd.hasOption(REF_GENOME_VERSION))
             RG_VERSION = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
@@ -243,9 +266,9 @@ public class LinxConfig
 
     public boolean hasValidSampleDataSource(final CommandLine cmd)
     {
-        if(!cmd.hasOption(VCF_FILE))
+        if(!cmd.hasOption(VCF_FILE) && !cmd.hasOption(SAMPLE_DATA_DIR))
         {
-            LNX_LOGGER.error("missing structural variant VCF file");
+            LNX_LOGGER.error("missing SV VCF file or sample data directory");
             return false;
         }
 
@@ -275,7 +298,8 @@ public class LinxConfig
         RG_VERSION = RG_37;
         PurpleDataPath = "";
         OutputDataPath = "";
-        SvDataPath = "";
+        SampleDataPath = "";
+        SvVcfFile = "";
         UploadToDB = false;
         IsGermline = false;
         FragileSiteFile = "";
@@ -296,7 +320,7 @@ public class LinxConfig
 
     public static boolean validConfig(final CommandLine cmd)
     {
-        return configPathValid(cmd, PURPLE_DATA_DIR) && configPathValid(cmd, SV_DATA_DIR)
+        return configPathValid(cmd, PURPLE_DATA_DIR) && configPathValid(cmd, SAMPLE_DATA_DIR)
             && configPathValid(cmd, FRAGILE_SITE_FILE) && configPathValid(cmd, KATAEGIS_FILE) && configPathValid(cmd, LINE_ELEMENT_FILE)
             && configPathValid(cmd, GENE_TRANSCRIPTS_DIR) && configPathValid(cmd, VCF_FILE) && configPathValid(cmd, DRIVER_GENE_PANEL_OPTION)
             && configPathValid(cmd, VIRAL_HOSTS_FILE) && configPathValid(cmd, REPLICATION_ORIGINS_FILE) && configPathValid(cmd, INDEL_FILE)
@@ -326,7 +350,7 @@ public class LinxConfig
     {
         options.addOption(PURPLE_DATA_DIR, true, "Sample purple data directory");
         options.addOption(OUTPUT_DIR, true, "Linx output directory");
-        options.addOption(SV_DATA_DIR, true, "Optional: directory for per-sample SV data, default is to use output_dir");
+        options.addOption(SAMPLE_DATA_DIR, true, "Optional: directory for per-sample SV data, default is to use output_dir");
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
         options.addOption(UPLOAD_TO_DB, true, "Upload all LINX data to DB (true/false), single-sample default=true, batch-mode default=false");
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts HG37 (default), HG19 or HG38");
