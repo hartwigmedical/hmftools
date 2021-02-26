@@ -27,7 +27,7 @@ public final class IndicationFactory {
     @NotNull
     public static Indication resolveIndication(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull IndicationInfo indicationInfo) {
         for (JsonIndication indication : ckbJsonDatabase.indications()) {
-            if (indicationInfo.id().equals(indication.id())) {
+            if (indicationInfo.id() == indication.id()) {
                 return ImmutableIndication.builder()
                         .id(indication.id())
                         .name(indication.name())

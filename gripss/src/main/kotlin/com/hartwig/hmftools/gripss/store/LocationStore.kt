@@ -7,7 +7,7 @@ import com.hartwig.hmftools.gripss.ContigComparator
 import com.hartwig.hmftools.gripss.StructuralVariantContext
 import java.io.Serializable
 
-class LocationStore private constructor(private val compare: ContigComparator, private val singlesMap: Map<String, LocationSeek<Breakend>>, private val pairedMap: Map<String, LocationSeek<Breakpoint>>) : Serializable {
+open class LocationStore(private val compare: ContigComparator, private val singlesMap: Map<String, LocationSeek<Breakend>>, private val pairedMap: Map<String, LocationSeek<Breakpoint>>) : Serializable {
 
     companion object {
         operator fun invoke(compare: ContigComparator, single: List<Breakend>, paired: List<Breakpoint>, additionalBuffer: Int = 0): LocationStore {

@@ -329,42 +329,14 @@ public class Lims {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         LimsCohortConfig cohort = cohortConfig(sampleBarcode);
 
-        if (sampleData != null && cohort != null) {
-            if (sampleData.reportGermlineVariants()) {
-                if (!cohort.reportGermline()) {
-                    LOGGER.warn("Consent of report germline variants is true, but must be false for sample '{}'", sampleId(sampleBarcode));
-                }
-                return true;
-            } else {
-                if (cohort.reportGermline()) {
-                    LOGGER.warn("Consent of report germline variants is false, but must be true for sample '{}'", sampleId(sampleBarcode));
-                }
-                return false;
-            }
-        } else {
-            return false;
-        }
+        return LimsChecker.checkGermlineVariants(sampleData, cohort, sampleId(sampleBarcode));
     }
 
     public boolean reportViralInsertions(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         LimsCohortConfig cohort = cohortConfig(sampleBarcode);
 
-        if (sampleData != null && cohort != null) {
-            if (sampleData.reportViralInsertions()) {
-                if (!cohort.reportViral()) {
-                    LOGGER.warn("Consent of viral insertions is true, but must be false for sample '{}'", sampleId(sampleBarcode));
-                }
-                return true;
-            } else {
-                if (cohort.reportViral()) {
-                    LOGGER.warn("Consent of viral insertions is false, but must be true for sample '{}'", sampleId(sampleBarcode));
-                }
-                return false;
-            }
-        } else {
-            return false;
-        }
+        return LimsChecker.checkViralInsertions(sampleData, cohort, sampleId(sampleBarcode));
     }
 
     @Nullable

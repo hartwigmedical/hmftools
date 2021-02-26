@@ -8,9 +8,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class IndicationInfo {
 
-    // IDs for indications come from DOID and can have leading zeros, so need to be a String.
-    @NotNull
-    public abstract String id();
+    public abstract int id();
 
     @NotNull
     public abstract String name();

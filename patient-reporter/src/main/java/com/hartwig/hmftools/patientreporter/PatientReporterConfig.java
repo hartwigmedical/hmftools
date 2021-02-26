@@ -275,7 +275,7 @@ public interface PatientReporterConfig {
             protectEvidenceFile = nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV);
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
-            pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
+            pipelineVersion = optionalFile(cmd, PIPELINE_VERSION_FILE);
         }
 
         return ImmutablePatientReporterConfig.builder()
@@ -332,6 +332,17 @@ public interface PatientReporterConfig {
 
         if (!pathExists(value) || !pathIsDirectory(value)) {
             throw new ParseException("Parameter '" + param + "' must be an existing directory: " + value);
+        }
+
+        return value;
+    }
+
+    @NotNull
+    static String optionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+        String value = nonOptionalValue(cmd, param);
+
+        if (!pathExists(value)) {
+            value = Strings.EMPTY;
         }
 
         return value;

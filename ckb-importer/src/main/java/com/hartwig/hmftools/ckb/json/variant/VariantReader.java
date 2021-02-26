@@ -116,7 +116,7 @@ public class VariantReader extends CkbJsonDirectoryReader<JsonVariant> {
     }
 
     @Nullable
-    private static JsonVariantTranscriptCoordinate extractReferenceTranscriptCoordinate(@Nullable JsonObject jsonObject) {
+    private static JsonTranscriptCoordinate extractReferenceTranscriptCoordinate(@Nullable JsonObject jsonObject) {
         if (jsonObject == null) {
             return null;
         }
@@ -125,7 +125,7 @@ public class VariantReader extends CkbJsonDirectoryReader<JsonVariant> {
                 VariantDataModelChecker.referenceTranscriptCoordinateObjectChecker();
         referenceTranscriptCoordinateObjectChecker.check(jsonObject);
 
-        return ImmutableJsonVariantTranscriptCoordinate.builder()
+        return ImmutableJsonTranscriptCoordinate.builder()
                 .id(JsonFunctions.integer(jsonObject, "id"))
                 .transcript(JsonFunctions.string(jsonObject, "transcript"))
                 .gDNA(JsonFunctions.string(jsonObject, "gDna"))
@@ -154,15 +154,15 @@ public class VariantReader extends CkbJsonDirectoryReader<JsonVariant> {
     }
 
     @NotNull
-    private static List<JsonVariantCategoryVariantPath> extractCategoryVariantPaths(@NotNull JsonArray jsonArray) {
-        List<JsonVariantCategoryVariantPath> categoryVariantPaths = Lists.newArrayList();
+    private static List<JsonCategoryVariantPath> extractCategoryVariantPaths(@NotNull JsonArray jsonArray) {
+        List<JsonCategoryVariantPath> categoryVariantPaths = Lists.newArrayList();
         JsonDatamodelChecker categoryVariantPathObjectChecker = VariantDataModelChecker.categoryVariantPathObjectChecker();
 
         for (JsonElement categoryVariantPath : jsonArray) {
             JsonObject categoryVariantPathJsonObject = categoryVariantPath.getAsJsonObject();
             categoryVariantPathObjectChecker.check(categoryVariantPathJsonObject);
 
-            categoryVariantPaths.add(ImmutableJsonVariantCategoryVariantPath.builder()
+            categoryVariantPaths.add(ImmutableJsonCategoryVariantPath.builder()
                     .variantPath(JsonFunctions.string(categoryVariantPathJsonObject, "variantPath"))
                     .variants(extractVariants(categoryVariantPathJsonObject.getAsJsonArray("variants")))
                     .build());
@@ -245,7 +245,7 @@ public class VariantReader extends CkbJsonDirectoryReader<JsonVariant> {
         indicationChecker.check(jsonObject);
 
         return ImmutableIndicationInfo.builder()
-                .id(JsonFunctions.string(jsonObject, "id"))
+                .id(JsonFunctions.integer(jsonObject, "id"))
                 .name(JsonFunctions.string(jsonObject, "name"))
                 .source(JsonFunctions.string(jsonObject, "source"))
                 .build();
@@ -316,15 +316,15 @@ public class VariantReader extends CkbJsonDirectoryReader<JsonVariant> {
     }
 
     @NotNull
-    private static List<JsonVariantTranscriptCoordinate> extractAllTranscriptCoordinates(@NotNull JsonArray jsonArray) {
-        List<JsonVariantTranscriptCoordinate> allTranscriptCoordinates = Lists.newArrayList();
+    private static List<JsonTranscriptCoordinate> extractAllTranscriptCoordinates(@NotNull JsonArray jsonArray) {
+        List<JsonTranscriptCoordinate> allTranscriptCoordinates = Lists.newArrayList();
         JsonDatamodelChecker allTranscriptCoordinateChecker = VariantDataModelChecker.allTranscriptCoordinateObjectChecker();
 
         for (JsonElement allTranscriptCoordinate : jsonArray) {
             JsonObject allTranscriptCoordinatesJsonObject = allTranscriptCoordinate.getAsJsonObject();
             allTranscriptCoordinateChecker.check(allTranscriptCoordinatesJsonObject);
 
-            allTranscriptCoordinates.add(ImmutableJsonVariantTranscriptCoordinate.builder()
+            allTranscriptCoordinates.add(ImmutableJsonTranscriptCoordinate.builder()
                     .id(JsonFunctions.integer(allTranscriptCoordinatesJsonObject, "id"))
                     .transcript(JsonFunctions.string(allTranscriptCoordinatesJsonObject, "transcript"))
                     .gDNA(JsonFunctions.string(allTranscriptCoordinatesJsonObject, "gDna"))

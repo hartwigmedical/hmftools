@@ -20,6 +20,7 @@ const val REF_GENOME_OPTION = "ref_genome"
 const val SINGLE_PON_OPTION = "breakend_pon"
 const val PAIRED_PON_OPTION = "breakpoint_pon"
 const val PAIRED_HOTSPOT_OPTION = "breakpoint_hotspot"
+const val PAIRED_PROMISCUOUS_HOTSPOT_OPTION = "promiscuous_breakpoint_hotspot"
 const val REFERENCE = "reference"
 const val TUMOR = "tumor"
 
@@ -29,6 +30,7 @@ data class GripssConfig(
         val singlePonFile: String,
         val pairedPonFile: String,
         val pairedHotspotFile: String,
+        val pairedPromiscuousHotspotFile: String,
         val refGenome: String,
         val reference: String,
         val tumor: String,
@@ -69,7 +71,7 @@ data class GripssConfig(
             return options
         }
 
-         fun createHelpOptions(): Options {
+        fun createHelpOptions(): Options {
             val options = Options()
             options.addOption(requiredOption(INPUT_VCF_OPTION, "Path to GRIDSS VCF input"))
             options.addOption(requiredOption(OUTPUT_VCF_OPTION, "Path to output VCF"))
@@ -77,6 +79,7 @@ data class GripssConfig(
             options.addOption(requiredOption(PAIRED_PON_OPTION, "Paired breakpoint pon bedpe file"))
             options.addOption(requiredOption(PAIRED_HOTSPOT_OPTION, "Paired breakpoint hotspot bedpe file"))
             options.addOption(requiredOption(REF_GENOME_OPTION, "Ref genome"))
+            options.addOption(Option(PAIRED_PROMISCUOUS_HOTSPOT_OPTION, true, "Optional paired breakpoint promiscuous hotspot bed file"))
             options.addOption(Option(REFERENCE, true, "Optional name of reference sample"))
             options.addOption(requiredOption(TUMOR, "Name of tumor sample"))
             GripssFilterConfig.createOptions().options.forEach { options.addOption(it) }
@@ -90,6 +93,7 @@ data class GripssConfig(
             val singlePon = requiredFile(cmd, SINGLE_PON_OPTION)
             val pairedPon = requiredFile(cmd, PAIRED_PON_OPTION)
             val pairedHotspot = requiredFile(cmd, PAIRED_HOTSPOT_OPTION)
+            val promiscuousHotspot = if (cmd.hasOption(PAIRED_PROMISCUOUS_HOTSPOT_OPTION)) requiredFile(cmd, PAIRED_PROMISCUOUS_HOTSPOT_OPTION) else ""
             val outputVcf = cmd.getOptionValue(OUTPUT_VCF_OPTION)
             val reference = cmd.getOptionValue(REFERENCE, Strings.EMPTY)
             val tumor = cmd.getOptionValue(TUMOR, Strings.EMPTY)
@@ -103,7 +107,7 @@ data class GripssConfig(
             val isGRCh38 = isGRCh38(refGenome)
             val filterConfig = GripssFilterConfig.createConfig(cmd, isGRCh38)
 
-            return GripssConfig(inputVcf, outputVcf, singlePon, pairedPon, pairedHotspot, refGenome, reference, tumor, hmfOrdinals, filterConfig)
+            return GripssConfig(inputVcf, outputVcf, singlePon, pairedPon, pairedHotspot, promiscuousHotspot, refGenome, reference, tumor, hmfOrdinals, filterConfig)
         }
 
         private fun isGRCh38(refGenome: String): Boolean {

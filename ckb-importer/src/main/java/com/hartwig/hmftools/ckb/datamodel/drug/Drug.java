@@ -3,6 +3,8 @@ package com.hartwig.hmftools.ckb.datamodel.drug;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,12 +33,15 @@ public abstract class Drug {
     @Nullable
     public abstract String tradeName();
 
-    @NotNull
-    public abstract List<DrugDescription> descriptions();
-
     @Nullable
     public abstract String casRegistryNum();
 
     @Nullable
     public abstract String ncitId();
+
+    @Nullable
+    public abstract String description();
+
+    @NotNull
+    public abstract List<Reference> references();
 }

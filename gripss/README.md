@@ -133,6 +133,7 @@ Note that for DSB and hotspot rescue, neither the rescued variant nor the rescui
 - Upcoming
  - Fix hotspot matching
  - Replace other ambiguous bases in bam with N
+ - Added optional support for promiscuous fusion hotspots (-promiscuous_breakpoint_hotspot)
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.10)
   - Removed viral insertion exception from normal relative support filter
   - Add EventType flag [DEL, INS, DUP, INV, SGL, BND]

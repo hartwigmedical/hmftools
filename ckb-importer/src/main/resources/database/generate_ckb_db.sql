@@ -22,8 +22,28 @@ CREATE TABLE variant
     impact varchar(50),
     proteinEffect varchar(50),
     type varchar(50),
+    description varchar(2500),
     PRIMARY KEY (id),
     FOREIGN KEY (ckbEntryId) REFERENCES ckbEntry(id)
+);
+
+DROP TABLE IF EXISTS variantReference;
+CREATE TABLE variantReference
+(   id int NOT NULL AUTO_INCREMENT,
+    variantId int NOT NULL,
+    ckbReferenceId int NOT NULL,
+    pubMedId varchar(50),
+    title varchar(500),
+    abstractText TEXT,
+    url varchar(250),
+    journal varchar(500),
+    authors varchar(5000),
+    volume varchar(50),
+    issue varchar(50),
+    date varchar(50),
+    year varchar(50),
+    PRIMARY KEY (id),
+    FOREIGN KEY (variantId) REFERENCES variant(id)
 );
 
 DROP TABLE IF EXISTS gene;
@@ -39,6 +59,7 @@ CREATE TABLE gene
     chromosome varchar(50),
     mapLocation varchar(50),
     canonicalTranscript varchar(50),
+    description varchar(2500),
     PRIMARY KEY (id),
     FOREIGN KEY (variantId) REFERENCES variant(id)
 );
@@ -61,60 +82,23 @@ CREATE TABLE geneSynonym
     FOREIGN KEY (geneId) REFERENCES gene(id)
 );
 
-DROP TABLE IF EXISTS geneDescription;
-CREATE TABLE geneDescription
+DROP TABLE IF EXISTS geneReference;
+CREATE TABLE geneReference
 (   id int NOT NULL AUTO_INCREMENT,
     geneId int NOT NULL,
-    description varchar(2500) NOT NULL,
+    ckbReferenceId int NOT NULL,
+    pubMedId varchar(50),
+    title varchar(500),
+    abstractText TEXT,
+    url varchar(250),
+    journal varchar(500),
+    authors varchar(5000),
+    volume varchar(50),
+    issue varchar(50),
+    date varchar(50),
+    year varchar(50),
     PRIMARY KEY (id),
     FOREIGN KEY (geneId) REFERENCES gene(id)
-);
-
-DROP TABLE IF EXISTS geneDescriptionReference;
-CREATE TABLE geneDescriptionReference
-(   id int NOT NULL AUTO_INCREMENT,
-    geneDescriptionId int NOT NULL,
-    ckbReferenceId int NOT NULL,
-    pubMedId varchar(50),
-    title varchar(500),
-    abstractText TEXT,
-    url varchar(250),
-    journal varchar(500),
-    authors varchar(5000),
-    volume varchar(50),
-    issue varchar(50),
-    date varchar(50),
-    year varchar(50),
-    PRIMARY KEY (id),
-    FOREIGN KEY (geneDescriptionId) REFERENCES geneDescription(id)
-);
-
-DROP TABLE IF EXISTS variantDescription;
-CREATE TABLE variantDescription
-(   id int NOT NULL AUTO_INCREMENT,
-    variantId int NOT NULL,
-    description varchar(2500) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (variantId) REFERENCES variant(id)
-);
-
-DROP TABLE IF EXISTS variantDescriptionReference;
-CREATE TABLE variantDescriptionReference
-(   id int NOT NULL AUTO_INCREMENT,
-    variantDescriptionId int NOT NULL,
-    ckbReferenceId int NOT NULL,
-    pubMedId varchar(50),
-    title varchar(500),
-    abstractText TEXT,
-    url varchar(250),
-    journal varchar(500),
-    authors varchar(5000),
-    volume varchar(50),
-    issue varchar(50),
-    date varchar(50),
-    year varchar(50),
-    PRIMARY KEY (id),
-    FOREIGN KEY (variantDescriptionId) REFERENCES variantDescription(id)
 );
 
 DROP TABLE IF EXISTS transcriptCoordinate;
@@ -194,6 +178,7 @@ CREATE TABLE therapy
     createDate DATE NOT NULL,
     updateDate DATE,
     therapyName varchar(500) NOT NULL,
+    description varchar(2500),
     PRIMARY KEY (id)
 );
 
@@ -215,19 +200,10 @@ CREATE TABLE therapySynonym
     FOREIGN KEY (therapyId) REFERENCES therapy(id)
 );
 
-DROP TABLE IF EXISTS therapyDescription;
-CREATE TABLE therapyDescription
+DROP TABLE IF EXISTS therapyReference;
+CREATE TABLE therapyReference
 (   id int NOT NULL AUTO_INCREMENT,
     therapyId int NOT NULL,
-    description varchar(2500) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (therapyId) REFERENCES therapy(id)
-);
-
-DROP TABLE IF EXISTS therapyDescriptionReference;
-CREATE TABLE therapyDescriptionReference
-(   id int NOT NULL AUTO_INCREMENT,
-    therapyDescriptionId int NOT NULL,
     ckbReferenceId int NOT NULL,
     pubMedId varchar(50),
     title varchar(500),
@@ -240,7 +216,7 @@ CREATE TABLE therapyDescriptionReference
     date varchar(50),
     year varchar(50),
     PRIMARY KEY (id),
-    FOREIGN KEY (therapyDescriptionId) REFERENCES therapyDescription(id)
+    FOREIGN KEY (therapyId) REFERENCES therapy(id)
 );
 
 DROP TABLE IF EXISTS globalApprovalStatus;
@@ -249,8 +225,7 @@ CREATE TABLE globalApprovalStatus
     therapyId int NOT NULL,
     ckbGlobalApprovalStatusId int NOT NULL,
     ckbProfileId int NOT NULL,
-    ckbTherapyId int NOT NULL,
-    ckbIndicationId varchar(50) NOT NULL,
+    ckbIndicationId int NOT NULL,
     approvalStatus varchar(50) NOT NULL,
     approvalAuthority varchar(250) NOT NULL,
     PRIMARY KEY (id),
@@ -267,6 +242,7 @@ CREATE TABLE drug
     tradeName varchar(50),
     casRegistryNum varchar(50),
     ncitId varchar(50),
+    description varchar(2500),
     PRIMARY KEY (id),
     FOREIGN KEY (therapyId) REFERENCES therapy(id)
 );
@@ -300,19 +276,10 @@ CREATE TABLE drugSynonym
     FOREIGN KEY (drugId) REFERENCES drug(id)
 );
 
-DROP TABLE IF EXISTS drugDescription;
-CREATE TABLE drugDescription
+DROP TABLE IF EXISTS drugReference;
+CREATE TABLE drugReference
 (   id int NOT NULL AUTO_INCREMENT,
     drugId int NOT NULL,
-    description varchar(2500) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (drugId) REFERENCES drug(id)
-);
-
-DROP TABLE IF EXISTS drugDescriptionReference;
-CREATE TABLE drugDescriptionReference
-(   id int NOT NULL AUTO_INCREMENT,
-    drugDescriptionId int NOT NULL,
     ckbReferenceId int NOT NULL,
     pubMedId varchar(50),
     title varchar(500),
@@ -325,13 +292,13 @@ CREATE TABLE drugDescriptionReference
     date varchar(50),
     year varchar(50),
     PRIMARY KEY (id),
-    FOREIGN KEY (drugDescriptionId) REFERENCES drugDescription(id)
+    FOREIGN KEY (drugId) REFERENCES drug(id)
 );
 
 DROP TABLE IF EXISTS indication;
 CREATE TABLE indication
 (   id int NOT NULL AUTO_INCREMENT,
-    ckbIndicationId varchar(50) NOT NULL,
+    ckbIndicationId int NOT NULL,
     name varchar(250) NOT NULL,
     source varchar(50) NOT NULL,
     definition varchar(5000),

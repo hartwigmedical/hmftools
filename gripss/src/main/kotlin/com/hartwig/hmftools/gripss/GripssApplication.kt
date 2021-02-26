@@ -14,10 +14,7 @@ import com.hartwig.hmftools.gripss.link.AlternatePath
 import com.hartwig.hmftools.gripss.link.AssemblyLink
 import com.hartwig.hmftools.gripss.link.DsbLink
 import com.hartwig.hmftools.gripss.link.LinkRescue
-import com.hartwig.hmftools.gripss.store.LinkStore
-import com.hartwig.hmftools.gripss.store.LocationStore
-import com.hartwig.hmftools.gripss.store.SoftFilterStore
-import com.hartwig.hmftools.gripss.store.VariantStore
+import com.hartwig.hmftools.gripss.store.*
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.variant.variantcontext.VariantContextComparator
 import htsjdk.variant.vcf.VCFFileReader
@@ -90,12 +87,20 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         outputSampleNames.add(tumorSample)
 
         logger.info("Reading hotspot file: ${config.pairedHotspotFile}")
-        val hotspotStore = LocationStore(contigComparator, listOf(), Breakpoint.fromBedpeFile(config.pairedHotspotFile, contigComparator))
-        val hotspotFilter = hotspotFilter(hotspotStore)
+        val pairedHotspots = Breakpoint.fromBedpeFile(config.pairedHotspotFile, contigComparator)
+        val promiscuousHotspots = if (config.pairedPromiscuousHotspotFile.isNotEmpty()) {
+            logger.info("Reading promiscuous hotspot file: ${config.pairedPromiscuousHotspotFile}")
+            Breakend.fromBedFile(config.pairedPromiscuousHotspotFile)
+        } else {
+            listOf()
+        }
+
+        val hotspotStore = HotspotStore(contigComparator, promiscuousHotspots, pairedHotspots)
+        val hotspotRescue = hotspotRescue(hotspotStore)
 
         logger.info("Reading VCF file: ${config.inputVcf}")
-        val variantStore = VariantStore(hardFilterAndRealign(fileReader, inputSampleOrdinals, hotspotFilter, contigComparator))
-        val hotspots = variantStore.selectAll().filter(hotspotFilter).map { x -> x.vcfId }.toSet()
+        val variantStore = VariantStore(hardFilterAndRealign(fileReader, inputSampleOrdinals, hotspotRescue, contigComparator))
+        val hotspots = variantStore.selectAll().filter(hotspotRescue).map { x -> x.vcfId }.toSet()
 
         logger.info("Reading PON files: ${config.singlePonFile} ${config.pairedPonFile}")
         val ponFiltered = ponFiltered(contigComparator, variantStore.selectAll())
@@ -146,7 +151,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         }
     }
 
-    private fun hotspotFilter(hotspotStore: LocationStore): (StructuralVariantContext) -> Boolean {
+    private fun hotspotRescue(hotspotStore: HotspotStore): (StructuralVariantContext) -> Boolean {
         val appropriateSoftFilters = { x: StructuralVariantContext -> !x.polyATHomologyFilter() }
         val minDistanceFilter = { x: StructuralVariantContext -> !x.isTooShortToRescue }
         return { variant -> minDistanceFilter(variant) && appropriateSoftFilters(variant) && hotspotStore.contains(variant) }

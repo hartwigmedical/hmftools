@@ -1,4 +1,4 @@
-# CKB-Importer (under development!)
+# CKB-Importer
 
 [CKB](https://ckb.jax.org) - **C**linical **K**nowledge**b**ase - is a cancer knowledgebase provided by Jackson Lab. 
  
