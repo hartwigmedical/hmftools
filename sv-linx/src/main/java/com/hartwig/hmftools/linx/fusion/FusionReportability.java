@@ -81,8 +81,7 @@ public class FusionReportability
         }
 
         // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
-        int maxUpstreamDistance = fusion.knownType() == KNOWN_PAIR || fusion.isHighImpactPromiscuous() ?
-                MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_OTHER;
+        int maxUpstreamDistance = getMaxUpstreamDistance(fusion);
 
         if(upTrans.getDistanceUpstream() > maxUpstreamDistance || downTrans.getDistanceUpstream() > maxUpstreamDistance)
             return PRE_GENE_DISTANCE;
@@ -109,6 +108,14 @@ public class FusionReportability
             return CHAIN_LINKS;
 
         return OK;
+    }
+
+    private static int getMaxUpstreamDistance(final GeneFusion fusion)
+    {
+        if(fusion.knownType() == KNOWN_PAIR || fusion.knownType() == IG_KNOWN_PAIR || fusion.isHighImpactPromiscuous())
+            return MAX_UPSTREAM_DISTANCE_KNOWN;
+
+        return MAX_UPSTREAM_DISTANCE_OTHER;
     }
 
     public static boolean allowSuspectChains(final KnownFusionType type)
@@ -144,17 +151,24 @@ public class FusionReportability
         final BreakendTransData downTrans = fusion.downstreamTrans();
 
             /* prioritisation rules:
-            0. Known pair or DEL-DUP
-            1. inframe
-            2. chain not terminated for known fusions
-            3. 3’ partner biotype is protein_coding
-            4. No exons skipped
-            5. Best 3' partner by canonical, not NMD then coding bases (or exon count if not coding)
-            6. Best 5' partner by canonical, protein-coding then coding bases
+                - Reportable
+                - Known pair or DEL-DUP
+                - inframe
+                - chain not terminated for known fusions
+                - 3’ partner biotype is protein_coding
+                - No exons skipped
+                - Best 3' partner by canonical, not NMD then coding bases (or exon count if not coding)
+                - Best 5' partner by canonical, protein-coding then coding bases
             */
 
         double fusionPriorityScore = 0;
         double factor = 1000000;
+
+        // Reportable
+        if(fusion.reportable())
+            fusionPriorityScore += factor;
+
+        factor /= 10;
 
         // 0. Known pair
         if(fusion.knownType() == KNOWN_PAIR || fusion.knownType() == EXON_DEL_DUP)

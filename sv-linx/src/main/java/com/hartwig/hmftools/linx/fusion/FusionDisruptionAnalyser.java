@@ -392,9 +392,16 @@ public class FusionDisruptionAnalyser
             if (var.isSglBreakend() && var.getSglMappings().isEmpty())
                 continue;
 
-            // skip SVs which have been chained
+            // skip SVs which have been chained unless they are in an IG region
             if(var.getCluster().getSvCount() > 1 && var.getCluster().findChain(var) != null)
-                continue;
+            {
+                boolean igCandidate = !var.isSglBreakend()
+                        && (mFusionFinder.getKnownFusionCache().withinIgRegion(var.chromosome(true), var.position(true))
+                        != mFusionFinder.getKnownFusionCache().withinIgRegion(var.chromosome(false), var.position(false)));
+
+                if(!igCandidate)
+                    continue;
+            }
 
             final List<BreakendGeneData> genesListStart = getBreakendGeneList(var, true);
             final List<BreakendGeneData> genesListEnd =  getBreakendGeneList(var, false);
