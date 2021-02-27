@@ -108,11 +108,16 @@ public class FeatureDataLoader
             final List<LinxFusion> fusions = Files.exists(Paths.get(fusionsFilename)) ?
                     LinxFusion.read(fusionsFilename) : Lists.newArrayList();
 
-            // load both purple and linx drivers if available
+            // load linx drivers if available, otherwise the purple somatic drivers
+            final List<DriverCatalog> drivers = Lists.newArrayList();
+
+            final String linxDriverCatalogFilename = LinxDriver.generateCatalogFilenameForReading(sampleDataDir, sampleId);
             final String purpleDriverCatalogFilename = DriverCatalogFile.generateSomaticFilenameForReading(sampleDataDir, sampleId);
 
-            final List<DriverCatalog> drivers = Files.exists(Paths.get(purpleDriverCatalogFilename)) ?
-                    DriverCatalogFile.read(purpleDriverCatalogFilename) : Lists.newArrayList();
+            if(Files.exists(Paths.get(linxDriverCatalogFilename)))
+                drivers.addAll(DriverCatalogFile.read(linxDriverCatalogFilename));
+            else if(Files.exists(Paths.get(purpleDriverCatalogFilename)))
+                drivers.addAll(DriverCatalogFile.read(purpleDriverCatalogFilename));
 
             final List<String> indelGenes = checkIndels(sampleId, sampleDataDir, null) ?
                     loadSpecificIndels(sampleId, sampleVcfFile) : null;

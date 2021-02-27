@@ -23,11 +23,30 @@ public abstract class LinxDriver
     public abstract String eventType();
 
     private static final String FILE_EXTENSION = ".linx.drivers.tsv";
+    private static final String CATALOG_EXTENSION = ".linx.driver.catalog.tsv";
+    private static final String OLD_CATALOG_EXTENSION = ".driver.catalog.tsv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
     {
         return basePath + File.separator + sample + FILE_EXTENSION;
+    }
+
+    @NotNull
+    public static String generateCatalogFilename(@NotNull final String basePath, @NotNull final String sample)
+    {
+        return basePath + File.separator + sample + CATALOG_EXTENSION;
+    }
+
+    @NotNull
+    public static String generateCatalogFilenameForReading(@NotNull final String basePath, @NotNull final String sample)
+    {
+        String filename = generateCatalogFilename(basePath, sample);
+
+        if(new File(filename).exists())
+            return filename;
+
+        return basePath + File.separator + sample + OLD_CATALOG_EXTENSION;
     }
 
     @NotNull

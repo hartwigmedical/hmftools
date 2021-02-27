@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.drivers;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.PARTIAL_AMP;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
@@ -191,6 +192,9 @@ public class DriverGeneAnnotator
 
     private boolean driverTypeHandled(final DriverCatalog driverGene)
     {
+        if(driverGene.driver() == GERMLINE)
+            return false;
+
         if(driverGene.category() == TSG && driverGene.driver() == DriverType.DEL)
             return true;
 
@@ -220,7 +224,7 @@ public class DriverGeneAnnotator
         // generate an empty Linx driver file even if no annotations were found
         try
         {
-            final String driverCatalogFile = DriverCatalogFile.generateSomaticFilenameForReading(mOutputDir, mSampleId);
+            final String driverCatalogFile = mOutputDir + mSampleId + ".linx.driver.catalog.tsv";
             DriverCatalogFile.write(driverCatalogFile, mDataCache.getDriverCatalog());
 
             final String driversFile = LinxDriver.generateFilename(mOutputDir, mSampleId);
