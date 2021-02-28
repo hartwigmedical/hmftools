@@ -27,6 +27,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.isofox.BamFragmentAllocator;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
@@ -164,7 +165,7 @@ public class ResultsWriter
     public BufferedWriter getFragmentLengthWriter() { return mGeneFragLengthWriter; }
     public BufferedWriter getReadGcRatioWriter() { return mReadGcRatioWriter; }
 
-    public void writeSummaryStats(final SummaryStats summaryStats)
+    public void writeSummaryStats(final RnaStatistics summaryStats)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -174,7 +175,7 @@ public class ResultsWriter
             final String outputFileName = mConfig.formOutputFile(SUMMARY_FILE);
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write(SummaryStats.csvHeader());
+            writer.write(RnaStatistics.csvHeader());
             writer.newLine();
 
             writer.write(summaryStats.toCsv(mConfig.SampleId));

@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.DB_BATCH_INSERT_SI
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GENEEXPRESSION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.NOVELSPLICEJUNCTION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.RNAFUSION;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.RNASTATISTICS;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -13,10 +14,12 @@ import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
+import com.hartwig.hmftools.common.rna.RnaStatistics;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep10;
+import org.jooq.InsertValuesStep14;
 import org.jooq.InsertValuesStep15;
 import org.jooq.InsertValuesStep20;
 
@@ -29,11 +32,52 @@ public class IsofoxDAO
         this.context = context;
     }
 
-    void deleteSampleData(@NotNull String sampleId) 
+    void deleteSampleData(@NotNull String sampleId)
     {
+        context.delete(RNASTATISTICS).where(RNASTATISTICS.SAMPLEID.eq(sampleId)).execute();
         context.delete(GENEEXPRESSION).where(GENEEXPRESSION.SAMPLEID.eq(sampleId)).execute();
         context.delete(NOVELSPLICEJUNCTION).where(NOVELSPLICEJUNCTION.SAMPLEID.eq(sampleId)).execute();
         context.delete(RNAFUSION).where(RNAFUSION.SAMPLEID.eq(sampleId)).execute();
+    }
+
+    public void writeRnaStatistics(@NotNull String sampleId, @NotNull RnaStatistics statistics)
+    {
+        context.delete(RNASTATISTICS).where(RNASTATISTICS.SAMPLEID.eq(sampleId)).execute();
+
+        Timestamp timestamp = new Timestamp(new Date().getTime());
+
+        InsertValuesStep14 inserter = context.insertInto(RNASTATISTICS,
+                RNASTATISTICS.MODIFIED,
+                RNASTATISTICS.SAMPLEID,
+                RNASTATISTICS.READLENGTH,
+                RNASTATISTICS.TOTALFRAGMENTS,
+                RNASTATISTICS.DUPLICATES,
+                RNASTATISTICS.SPLICEDPERCENT,
+                RNASTATISTICS.UNSPLICEDPERCENT,
+                RNASTATISTICS.ALTERNATESPLICEPERCENT,
+                RNASTATISTICS.CHIMERICPERCENT,
+                RNASTATISTICS.FRAGMENTLENGTHPCT05,
+                RNASTATISTICS.FRAGMENTLENGTHPCT50,
+                RNASTATISTICS.FRAGMENTLENGTHPCT95,
+                RNASTATISTICS.ENRICHEDGENEPERCENT,
+                RNASTATISTICS.MEDIANGCRATIO);
+
+        inserter.values(
+                timestamp,
+                sampleId,
+                statistics.readLength(),
+                statistics.totalFragments(),
+                statistics.duplicateFragments(),
+                DatabaseUtil.decimal(statistics.splicedFragmentPerc()),
+                DatabaseUtil.decimal(statistics.unsplicedFragmentPerc()),
+                DatabaseUtil.decimal(statistics.altFragmentPerc()),
+                DatabaseUtil.decimal(statistics.chimericFragmentPerc()),
+                DatabaseUtil.decimal(statistics.fragmentLength5thPercent()),
+                DatabaseUtil.decimal(statistics.fragmentLength50thPercent()),
+                DatabaseUtil.decimal(statistics.fragmentLength95thPercent()),
+                DatabaseUtil.decimal(statistics.enrichedGenePercent()),
+                DatabaseUtil.decimal(statistics.medianGCRatio()));
+        inserter.execute();
     }
 
     public void writeGeneExpressions(@NotNull String sampleId, @NotNull List<GeneExpression> geneExpressions)
@@ -47,7 +91,7 @@ public class IsofoxDAO
             InsertValuesStep10 inserter = context.insertInto(GENEEXPRESSION,
                     GENEEXPRESSION.MODIFIED,
                     GENEEXPRESSION.SAMPLEID,
-                    GENEEXPRESSION.GENENAME,
+                    GENEEXPRESSION.GENE,
                     GENEEXPRESSION.TPM,
                     GENEEXPRESSION.SPLICEDFRAGMENTS,
                     GENEEXPRESSION.UNSPLICEDFRAGMENTS,
@@ -88,7 +132,7 @@ public class IsofoxDAO
             InsertValuesStep15 inserter = context.insertInto(NOVELSPLICEJUNCTION,
                     NOVELSPLICEJUNCTION.MODIFIED,
                     NOVELSPLICEJUNCTION.SAMPLEID,
-                    NOVELSPLICEJUNCTION.GENENAME,
+                    NOVELSPLICEJUNCTION.GENE,
                     NOVELSPLICEJUNCTION.CHROMOSOME,
                     NOVELSPLICEJUNCTION.JUNCTIONSTART,
                     NOVELSPLICEJUNCTION.JUNCTIONEND,

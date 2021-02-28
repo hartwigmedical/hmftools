@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortCompare;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortDistribution;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionMatrix;
@@ -151,7 +152,7 @@ public class CohortAnalyser
         try
         {
             // for now write out a single consolidated file
-            final List<SummaryStats> summaryStats = filenames.stream().map(x -> loadFile(x))
+            final List<RnaStatistics> summaryStats = filenames.stream().map(x -> loadFile(x))
                     .filter(x -> x != null)
                     .collect(Collectors.toList());
 
@@ -161,12 +162,12 @@ public class CohortAnalyser
             final String outputFileName = mConfig.formCohortFilename(SUMMARY_FILE);
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write(SummaryStats.csvHeader());
+            writer.write(RnaStatistics.csvHeader());
             writer.newLine();
 
             for(int i = 0; i < summaryStats.size(); ++i)
             {
-                final SummaryStats stats = summaryStats.get(i);
+                final RnaStatistics stats = summaryStats.get(i);
                 writer.write(stats.toCsv(mConfig.SampleData.SampleIds.get(i)));
                 writer.newLine();
             }

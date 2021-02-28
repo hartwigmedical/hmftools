@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.GENE_RESULTS_FILE;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
 import java.io.BufferedReader;
@@ -42,6 +43,7 @@ import com.hartwig.hmftools.common.rna.ImmutableNovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
+import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjLocation;
@@ -95,6 +97,7 @@ public class IsofoxDataLoader
 
             ISF_LOGGER.info("sample({}) cancerType({}) loading Isofox RNA data", sampleId, cancerType);
 
+            loadStatistics(sampleId, rnaDAO);
             loadGeneExpression(sampleId, cancerType, rnaDAO);
             loadNovelJunctions(sampleId, rnaDAO);
             loadFusions(sampleId, rnaDAO);
@@ -133,8 +136,44 @@ public class IsofoxDataLoader
         return CANCER_TYPE_OTHER;
     }
 
+    private void loadStatistics(final String sampleId, final IsofoxDAO rnaDAO)
+    {
+        if(!mConfig.loadDataType(DataLoadType.STATISTICS))
+            return;
+
+        final String sampleDataDir = mConfig.StatisticsDataDir.contains("*") ?
+                mConfig.StatisticsDataDir.replaceAll("\\*", sampleId) : mConfig.StatisticsDataDir;
+
+        final String filename = sampleDataDir + sampleId + ISF_FILE_ID + SUMMARY_FILE;
+
+        try
+        {
+            final List<String> lines = Files.readAllLines(Paths.get(filename));
+
+            if(lines.size() != 2)
+            {
+                ISF_LOGGER.error("sample({}) invalid summary file", sampleId);
+                return;
+            }
+
+            final RnaStatistics statistics = RnaStatistics.fromCsv(lines.get(1));
+
+            ISF_LOGGER.debug("sample({}) writing summary statistics to DB", sampleId);
+            rnaDAO.writeRnaStatistics(sampleId, statistics);
+
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to load summary statistics data file({}): {}", filename, e.toString());
+            return;
+        }
+    }
+
     private void loadGeneExpression(final String sampleId, final String cancerType, final IsofoxDAO rnaDAO)
     {
+        if(!mConfig.loadDataType(DataLoadType.GENE_EXPRESSION))
+            return;
+
         final List<GeneExpression> geneExpressions = Lists.newArrayList();
 
         final String sampleDataDir = mConfig.GeneDataDir.contains("*") ?
@@ -179,7 +218,7 @@ public class IsofoxDataLoader
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to load gene data file({}): {}", filename.toString(), e.toString());
+            ISF_LOGGER.error("failed to load gene data file({}): {}", filename, e.toString());
             return;
         }
 
@@ -189,6 +228,9 @@ public class IsofoxDataLoader
 
     private void loadNovelJunctions(final String sampleId, final IsofoxDAO rnaDAO)
     {
+        if(!mConfig.loadDataType(DataLoadType.NOVEL_JUNCTION))
+            return;
+
         final List<NovelSpliceJunction> novelJunctions = Lists.newArrayList();
 
         final String sampleDataDir = mConfig.AltSjDataDir.contains("*") ?
@@ -253,7 +295,7 @@ public class IsofoxDataLoader
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to load alt-SJ file({}): {}", filename.toString(), e.toString());
+            ISF_LOGGER.error("failed to load alt-SJ file({}): {}", filename, e.toString());
             return;
         }
 
@@ -263,6 +305,9 @@ public class IsofoxDataLoader
 
     private void loadFusions(final String sampleId, final IsofoxDAO rnaDAO)
     {
+        if(!mConfig.loadDataType(DataLoadType.FUSION))
+            return;
+
         final List<RnaFusion> fusions = Lists.newArrayList();
 
         final String sampleDataDir = mConfig.FusionDataDir.contains("*") ?
@@ -304,7 +349,7 @@ public class IsofoxDataLoader
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to load fusions file({}): {}", filename.toString(), e.toString());
+            ISF_LOGGER.error("failed to load fusions file({}): {}", filename, e.toString());
             return;
         }
 

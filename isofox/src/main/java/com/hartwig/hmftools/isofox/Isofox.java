@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -239,7 +240,7 @@ public class Isofox
             applyGcAdjustments(chrTasks, callableList, nonEnrichedGcRatioCounts);
         }
 
-        final SummaryStats summaryStats = createSummaryStats(
+        final RnaStatistics summaryStats = createSummaryStats(
                 totalCounts, enrichedGeneFragCount,
                 medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength);
 

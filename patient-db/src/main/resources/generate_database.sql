@@ -1088,12 +1088,33 @@ CREATE TABLE driverGenePanel
     PRIMARY KEY (gene)
 );
 
+DROP TABLE IF EXISTS rnaStatistics;
+CREATE TABLE rnaStatistics
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    readLength int NOT NULL,
+    totalFragments int NOT NULL,
+    duplicates int NOT NULL,
+    splicedPercent DOUBLE PRECISION NOT NULL,
+    unsplicedPercent DOUBLE PRECISION NOT NULL,
+    alternateSplicePercent DOUBLE PRECISION NOT NULL,
+    chimericPercent DOUBLE PRECISION NOT NULL,
+    fragmentLengthPct05 DOUBLE PRECISION NOT NULL,
+    fragmentLengthPct50 DOUBLE PRECISION NOT NULL,
+    fragmentLengthPct95 DOUBLE PRECISION NOT NULL,
+    enrichedGenePercent DOUBLE PRECISION NOT NULL,
+    medianGCRatio DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
 DROP TABLE IF EXISTS geneExpression;
 CREATE TABLE geneExpression
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
-    geneName VARCHAR(20) NOT NULL,
+    gene VARCHAR(20) NOT NULL,
     tpm DOUBLE PRECISION NOT NULL,
     splicedFragments int NOT NULL,
     unsplicedFragments int NOT NULL,
@@ -1102,8 +1123,8 @@ CREATE TABLE geneExpression
     medianTpmCohort DOUBLE PRECISION NOT NULL,
     percentileCohort DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (id),
-    INDEX(sampleId, geneName),
-    INDEX(geneName)
+    INDEX(sampleId, gene),
+    INDEX(gene)
 );
 
 DROP TABLE IF EXISTS novelSpliceJunction;
@@ -1111,7 +1132,7 @@ CREATE TABLE novelSpliceJunction
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
-    geneName VARCHAR(20) NOT NULL,
+    gene VARCHAR(20) NOT NULL,
     chromosome VARCHAR(10) NOT NULL,
     junctionStart int NOT NULL,
     junctionEnd int NOT NULL,
@@ -1125,8 +1146,8 @@ CREATE TABLE novelSpliceJunction
     basesEnd VARCHAR(20) NOT NULL,
     cohortFrequency int NOT NULL,
     PRIMARY KEY (id),
-    INDEX(sampleId, geneName),
-    INDEX(geneName)
+    INDEX(sampleId, gene),
+    INDEX(gene)
 );
 
 DROP TABLE IF EXISTS rnaFusion;
