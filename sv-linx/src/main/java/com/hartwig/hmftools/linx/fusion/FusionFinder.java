@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.ENHANCER;
+import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -451,13 +452,13 @@ public class FusionFinder
 
     private void checkIgFusion(final BreakendGeneData startGene, final BreakendGeneData endGene, final List<GeneFusion> potentialFusions)
     {
-        /* Criteria:
-            - These are allowed to fuse with 5’UTR splice donors from 10kb upstream. Phasing is assumed to be -1.
-            - In the case of IGH-BCL2 specifically, allow fusions in the 3’UTR region and up to 40k bases downstream of BCL2 ((common in Folicular Lymphomas[PP1] )
-        */
+        // These are allowed to fuse with 5’UTR splice donors from 100kb upstream. Phasing is assumed to be -1
+        // In some specific cases, allow fusions in the 3’UTR region or even downstream of the gene (eg BCL2 (common in Folicular Lymphomas[PP1])
+        // in which case the 3' gene's orientation must be facing back upstream into the coding region
 
-        boolean startIsIgGene = mKnownFusionCache.matchesIgGene(startGene.chromosome(), startGene.position(), startGene.orientation());
-        boolean endIsIgGene = !startIsIgGene && mKnownFusionCache.matchesIgGene(endGene.chromosome(), endGene.position(), endGene.orientation());
+        // orientation in the IG region is no longer checked
+        boolean startIsIgGene = mKnownFusionCache.withinIgRegion(startGene.chromosome(), startGene.position()); // matchesIgGene startGene.orientation()
+        boolean endIsIgGene = !startIsIgGene && mKnownFusionCache.withinIgRegion(endGene.chromosome(), endGene.position()); // endGene.orientation()
 
         if(!startIsIgGene && !endIsIgGene)
             return;
@@ -468,7 +469,8 @@ public class FusionFinder
         KnownFusionType knownType = NONE;
 
         final List<BreakendTransData> candidateTranscripts = downGene.transcripts().stream()
-                .filter(x -> x.codingType().equals(UTR_5P)).collect(Collectors.toList());
+                .filter(x -> x.codingType().equals(UTR_5P) && !x.isUpstream())
+                .collect(Collectors.toList());
 
         KnownFusionData kfData = mKnownFusionCache.getDataByType(IG_KNOWN_PAIR).stream()
                 .filter(x -> x.ThreeGene.equals(downGene.GeneName))
@@ -480,7 +482,10 @@ public class FusionFinder
             // a known IG-partner gene
             if(kfData.downstreamDistance(FS_DOWN) > 0)
             {
-                candidateTranscripts.addAll(downGene.transcripts().stream().filter(x -> x.postCoding()).collect(Collectors.toList()));
+                // must face back to the coding region if 3' UTR or downstream of the gene
+                candidateTranscripts.addAll(downGene.transcripts().stream()
+                        .filter(x -> x.codingType().equals(UTR_3P) && x.isUpstream())
+                        .collect(Collectors.toList()));
             }
 
             knownType = IG_KNOWN_PAIR;
