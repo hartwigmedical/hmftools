@@ -977,6 +977,10 @@ public class FusionDisruptionAnalyser
         {
             for (int be = SE_START; be <= SE_END; ++be)
             {
+                // by default don't include SGL alt-mappings - they'll be added if in a fusion
+                if(var.isSglBreakend() && be == SE_END)
+                    continue;
+
                 for (BreakendGeneData geneAnnotation : var.getGenesList(isStart(be)))
                 {
                     transcripts.addAll(geneAnnotation.transcripts().stream()
