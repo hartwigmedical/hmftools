@@ -812,6 +812,7 @@ A section of @IGH gene stretching from the diversity region to the end of the co
 Fusions are predicted in LINX by looking for consecutive and novel splice donor-acceptor pairings that are joined together in derivative chromosomes by either a single structural variant or a continuous chain of structural variants. 
 
 For each single SV and for every facing pair of SVs in the same chain identify all viable splice acceptor and splice donor fusion combinations which satisfy the following conditions:
+- Fusion is reportable (see criteria below)
 - 3’ gene partner must have coding bases
 - 5’ gene partner transcript must have one of the following ensembl biotypes: ‘protein_coding’, ’retained_intron’, ’processed_transcript’, ’nonsense_mediated_decay’, ’lincRNA’
 - The upstream breakend must fall within the 5’ partner transcript and be disruptive to the transcript. 
@@ -828,17 +829,18 @@ Notes:
 (4) 5’ partner 5’UTR or non-coding to coding region of 3’ partner can technically make a fusion, but would need to find 1st alternative start codon also in-frame. These are called as out of frame and only reported for known fusions
 (5) Coding Intronic to non-coding allowed only when transcript starts on 1st base of the next downstream exon - in this case we fuse to the first base of the gene which is allowed.
 
-##### Special rules for single breakends which align to a site which forms a pathogenic fusion
-The post processing steps of GRIDSS annotate the best alignments for the insert sequence of single breakends which cannot be uniquely mapped. If any single breakend has an alignment which would create fusion matching a known fusion in our knowledge base then that fusion is called as if the single breakend was a translocation to that alignment. 
-
 ##### Special rules for IG rearrangements
 In the special case of IG enhancer rearrangements, the rearrangement normally occurs either between the ‘D’ and ‘J’ region (due to RAG mediation D-J recombination failure – common in IGH-BCL2 fusions) or in the switch region just upstream of the constant regions (due to failure of isoform switching mechanisms – common in IGH-MYC rearrangements). In the former case, the Eµ enhancer is the likely driver of elevated expression whereas in the latter the driver is likely the alpha 1,2 & 3 regulatory region enhancer [ref: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6199666/]. To predict a relevant rearrangement, LINX requires that the breakend in IG is oriented downstream towards the enhancer regions and is connected to the 5’ UTR of the 3’ gene partner. 
+
+##### Special rules for single breakends which align to a site which forms a pathogenic fusion
+The post processing steps of GRIDSS annotate the best alignments for the insert sequence of single breakends which cannot be uniquely mapped. If any single breakend has an alignment which would create fusion matching a known fusion or a known IG rearrangement in our knowledge base then that fusion is called as if the single breakend was a translocation to that alignment. 
+
 
 ##### Special gene specific cases
 LINX also has special rules to support unusual biology for a handful of known pathogenic fusions:
 - For CIC_DUX4 and IGH_DUX4, the DUX4 end may map to a number of different chromosomal regions, including the telomeric ends of both chromosomes 10q and 4q and the hg19 alt contig GL000228.1.
 - For RP11-356O9.1_ETV1 fusion (pathogenic in Prostate cancer) the breakend on the 5’ side breakend is permitted to be up to 20kb downstream of RP11-356O9.1.
-- In the case of IGH-BCL2, LINX also looks for fusions in the 3’UTR region and up to 40k bases downstream of BCL2 facing in the upstream orientation towards BCL2 (common in Folicular Lymphomas) [ref: http://atlasgeneticsoncology.org/Genes/BCL2ID49.html ].
+- In the case of IGH-BCL2 (common in Folicular Lymphomas) & IGH-MYC, LINX also looks for fusions in the 3’UTR region and up to 50k bases downstream of BCL2 (and 500k bases downstream of MYC) facing in the upstream orientation towards the gene  [ref: http://atlasgeneticsoncology.org/Genes/BCL2ID49.html ].
 
 ##### Prioritise genes and transcripts
 Each candidate chained splice acceptor and splice donor fusion pair may have multiple gene fusion transcripts on both the 5’ gene and 3’ gene that meet the above criteria. Occasionally genes may also share a splice acceptor or splice donor in which case the transcripts of that groups of genes are considered together. LINX prioritizes the potential transcript candidates and choose a single pair of 5’ and 3’ transcripts via the following criteria in order of priority:
@@ -863,7 +865,7 @@ Criteria | KNOWN PAIR | IG KNOWN PAIR | EXON DEL DUP | HIGH IMPACT PROMISCUOUS |
 Knowledge-base match | GENE PAIR | GENE PAIR | Breakends within EXON RANGE | INTERGENIC ONLY | INTERGENIC ONLY
 ‘Nonsense Mediated Decay’ biotype allowed for 3’ partner | FALSE | FALSE | FALSE | FALSE | FALSE
 Maximum chain links | 4 | 4 | 4 | 4 | 4
-Maximum upstream distance for 3’ partner | 100kb | 10kb | NA | 100kb | 10kb
+Maximum upstream distance for 3’ partner | 100kb | 100kb | NA | 100kb | 10kb
 Phasing | INFRAME or SKIPPED EXONS* | NA  | INFRAME or SKIPPED EXONS**,# | INFRAME or SKIPPED EXONS | INFRAME##
 Allow early chain termination or disruption by intermediate splice acceptor or donor | TRUE | TRUE | TRUE | FALSE | FALSE
 
