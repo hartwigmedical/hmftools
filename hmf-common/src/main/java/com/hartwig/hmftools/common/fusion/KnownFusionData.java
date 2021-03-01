@@ -119,7 +119,7 @@ public class KnownFusionData
         }
         catch(Exception e)
         {
-            KF_LOGGER.error("failed to parse specific data for known fusion: {}", kfData);
+            KF_LOGGER.error("failed to parse specific data for known fusion({}): error({})", kfData, e.toString());
         }
 
         return kfData;

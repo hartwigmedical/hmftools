@@ -119,11 +119,16 @@ public class LinxConfig
             // /DO52664T.purple.sv.vcf.gz
             SampleDataPath = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR));
             PurpleDataPath = SampleDataPath;
-            OutputDataPath = SampleDataPath;
+
+            OutputDataPath = isSingleSample() ? SampleDataPath : parseOutputDir(cmd);
 
             if(svVcfFile.isEmpty() && mSampleIds.size() == 1)
             {
                 svVcfFile = SampleDataPath + mSampleIds.get(0) + ".purple.sv.vcf.gz";
+            }
+            else
+            {
+                svVcfFile = SampleDataPath + "*.purple.sv.vcf.gz";
             }
         }
         else

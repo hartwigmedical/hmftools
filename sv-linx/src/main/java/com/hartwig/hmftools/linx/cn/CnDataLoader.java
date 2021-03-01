@@ -122,8 +122,9 @@ public class CnDataLoader
         {
             try
             {
-                mCnRecords.addAll(PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(mPurpleDataPath, sampleId)));
-                mPurityContext = PurityContextFile.read(mPurpleDataPath, sampleId);
+                String samplePurpleDir = mPurpleDataPath.contains("*") ? mPurpleDataPath.replaceAll("\\*", sampleId) : mPurpleDataPath;
+                mCnRecords.addAll(PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(samplePurpleDir, sampleId)));
+                mPurityContext = PurityContextFile.read(samplePurpleDir, sampleId);
             }
             catch(IOException e)
             {

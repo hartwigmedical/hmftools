@@ -104,7 +104,10 @@ public class DriverGeneAnnotator
 
         if(!mConfig.PurpleDataPath.isEmpty())
         {
-            mDataCache.loadDataFromFile(mConfig.PurpleDataPath);
+            String samplePurpleDir = mConfig.PurpleDataPath.contains("*") ?
+                    mConfig.PurpleDataPath.replaceAll("\\*", sampleId) : mConfig.PurpleDataPath;
+
+            mDataCache.loadDataFromFile(samplePurpleDir);
         }
         else if(mDbAccess != null)
         {

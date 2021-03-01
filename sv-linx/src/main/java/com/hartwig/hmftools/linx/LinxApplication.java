@@ -301,20 +301,7 @@ public class LinxApplication
     public static List<StructuralVariantData> loadSampleSvDataFromFile(
             final LinxConfig config, final String sampleId, final CommandLine cmd)
     {
-        String vcfFile = config.SvVcfFile;
-
-        if(config.hasMultipleSamples())
-        {
-            if(vcfFile.contains("*"))
-            {
-                vcfFile = vcfFile.replaceAll("\\*", sampleId);
-            }
-            else
-            {
-                LNX_LOGGER.warn("single VCF({}) provided for multiple samples", vcfFile);
-                return Lists.newArrayList();
-            }
-        }
+        String vcfFile = config.SvVcfFile.contains("*") ? config.SvVcfFile.replaceAll("\\*", sampleId) : config.SvVcfFile;
 
         if(config.IsGermline)
             return loadSvDataFromGermlineVcf(vcfFile);
