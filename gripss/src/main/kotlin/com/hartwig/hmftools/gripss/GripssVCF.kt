@@ -64,7 +64,7 @@ class GripssVCF(outputVCF: String, dictionary: SAMSequenceDictionary) : AutoClos
         metaData.add(VCFFilterHeaderLine(SHORT_DEL_INS_ARTIFACT, "Filter any short DEL where the insert sequence length + 1 = deletion length. This is a known GRIDSS artifact."))
 
         metaData.add(VCFInfoHeaderLine(EVENTTYPE, 1, VCFHeaderLineType.String, "Event type [${EventType.values().joinToString { it.toString()} }]"))
-        metaData.add(VCFInfoHeaderLine(TAF, 1, VCFHeaderLineType.Float, "Description"))
+        metaData.add(VCFInfoHeaderLine(TAF, 1, VCFHeaderLineType.Float, "Tumor allelic frequency (fragment support / total support)"))
         metaData.add(VCFInfoHeaderLine(ALT_PATH, 1, VCFHeaderLineType.String, "Alternate path"))
         metaData.add(VCFInfoHeaderLine(LOCAL_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Breakend linking information"))
         metaData.add(VCFInfoHeaderLine(REMOTE_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Partner breakend linking information"))
