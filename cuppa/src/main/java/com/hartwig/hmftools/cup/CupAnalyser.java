@@ -17,6 +17,9 @@ import static com.hartwig.hmftools.cup.common.ClassifierType.isDna;
 import static com.hartwig.hmftools.cup.common.ClassifierType.isRna;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedClassifierScoreResult;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedFeatureResult;
+import static com.hartwig.hmftools.cup.common.CupConstants.COMBINED_DAMPEN_FACTOR;
+import static com.hartwig.hmftools.cup.common.CupConstants.DNA_DAMPEN_FACTOR;
+import static com.hartwig.hmftools.cup.common.CupConstants.RNA_DAMPEN_FACTOR;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -200,7 +203,7 @@ public class CupAnalyser
                     .filter(x -> x.Category == CLASSIFIER && isDna(ClassifierType.valueOf(x.DataType)))
                     .collect(Collectors.toList());
 
-            SampleResult dnaScoreResult = calcCombinedClassifierScoreResult(sample, dnaResults, "DNA_COMBINED");
+            SampleResult dnaScoreResult = calcCombinedClassifierScoreResult(sample, dnaResults, "DNA_COMBINED", DNA_DAMPEN_FACTOR);
 
             if(dnaScoreResult != null)
                 allResults.add(dnaScoreResult);
@@ -211,14 +214,14 @@ public class CupAnalyser
 
             if(!rnaResults.isEmpty())
             {
-                SampleResult rnaScoreResult = calcCombinedClassifierScoreResult(sample, rnaResults, "RNA_COMBINED");
+                SampleResult rnaScoreResult = calcCombinedClassifierScoreResult(sample, rnaResults, "RNA_COMBINED", RNA_DAMPEN_FACTOR);
 
                 if(rnaScoreResult != null)
                     allResults.add(rnaScoreResult);
             }
         }
 
-        SampleResult classifierScoreResult = calcCombinedClassifierScoreResult(sample, allResults, COMBINED.toString());
+        SampleResult classifierScoreResult = calcCombinedClassifierScoreResult(sample, allResults, COMBINED.toString(), COMBINED_DAMPEN_FACTOR);
 
         if(classifierScoreResult != null)
             allResults.add(classifierScoreResult);

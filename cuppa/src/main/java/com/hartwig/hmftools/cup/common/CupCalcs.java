@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
 import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE;
-import static com.hartwig.hmftools.cup.common.CupConstants.CORRELATION_DAMPEN_FACTOR;
+import static com.hartwig.hmftools.cup.common.CupConstants.FEATURE_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.common.CupConstants.MIN_CLASSIFIER_SCORE;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
@@ -109,7 +109,7 @@ public class CupCalcs
             }
         }
 
-        dampenProbabilities(cancerPrevalenceValues);
+        dampenProbabilities(cancerPrevalenceValues, FEATURE_DAMPEN_FACTOR);
         convertToPercentages(cancerPrevalenceValues);
 
         // remove the contributing prevalence likelihood results
@@ -145,15 +145,16 @@ public class CupCalcs
             convertToPercentages(probabilityMap);
     }
 
-    public static void dampenProbabilities(final Map<String,Double> cancerProbabilities)
+    public static void dampenProbabilities(final Map<String,Double> cancerProbabilities, double dampenFactor)
     {
         for(Map.Entry<String,Double> entry : cancerProbabilities.entrySet())
         {
-            double adjustedProb = pow(entry.getValue(), CORRELATION_DAMPEN_FACTOR);
+            double adjustedProb = pow(entry.getValue(), dampenFactor);
             cancerProbabilities.put(entry.getKey(), adjustedProb);
         }
     }
-    public static SampleResult calcCombinedClassifierScoreResult(final SampleData sample, final List<SampleResult> results, final String dataType)
+    public static SampleResult calcCombinedClassifierScoreResult(
+            final SampleData sample, final List<SampleResult> results, final String dataType, double dampenFactor)
     {
         // combined a set of classifier into a single new combined result
         final List<SampleResult> classifierResults = results.stream()
@@ -178,7 +179,7 @@ public class CupCalcs
             }
         }
 
-        dampenProbabilities(cancerTypeValues);
+        dampenProbabilities(cancerTypeValues, dampenFactor);
         convertToPercentages(cancerTypeValues);
 
         return new SampleResult(sample.Id, COMBINED, LIKELIHOOD, dataType, "", cancerTypeValues);

@@ -19,7 +19,11 @@ public class CupConstants
     public static final int POS_FREQ_MAX_SAMPLE_COUNT = 20000;
 
     public static final double MIN_CLASSIFIER_SCORE = 0.01;
-    public static final double CORRELATION_DAMPEN_FACTOR = 0.8;
+
+    public static final double FEATURE_DAMPEN_FACTOR = 0.8;
+    public static final double COMBINED_DAMPEN_FACTOR = 0.4;
+    public static final double DNA_DAMPEN_FACTOR = 0.65;
+    public static final double RNA_DAMPEN_FACTOR = 0.7;
 
     public static final String CANCER_TYPE_UNKNOWN = "Unknown";
     public static final String CANCER_TYPE_OTHER = "Other";
