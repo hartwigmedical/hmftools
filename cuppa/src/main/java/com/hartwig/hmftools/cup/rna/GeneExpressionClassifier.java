@@ -90,8 +90,8 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
         final String rnaMethods = cmd.getOptionValue(RNA_METHODS, RNA_METHOD_PAIRWISE_CSS + ";" + RNA_METHOD_CANCER_CSS);
 
-        mRunPairwiseCss = rnaMethods != null && rnaMethods.contains(RNA_METHOD_PAIRWISE_CSS);
-        mRunCancerCss = rnaMethods == null || rnaMethods.contains(RNA_METHOD_CANCER_CSS);
+        mRunPairwiseCss = rnaMethods == null || rnaMethods.contains(RNA_METHOD_PAIRWISE_CSS);
+        mRunCancerCss = rnaMethods != null && rnaMethods.contains(RNA_METHOD_CANCER_CSS);
 
         mIsValid = true;
 
