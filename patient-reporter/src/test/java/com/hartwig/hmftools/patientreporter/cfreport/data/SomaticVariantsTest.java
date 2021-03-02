@@ -52,6 +52,7 @@ public class SomaticVariantsTest {
                 .ref(Strings.EMPTY)
                 .alt(Strings.EMPTY)
                 .type(VariantType.SNP)
+                .canonicalTranscript("123")
                 .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
