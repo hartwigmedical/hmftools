@@ -57,6 +57,7 @@ public class DoubleMinuteFinder
     private BufferedWriter mFileWriter;
     private boolean mLogCandidates;
     private boolean mShowCandidates;
+    private boolean mSingleSample;
 
     protected static final double JCN_UPPER_THRESHOLD = 8;
     private static final double JCN_THRESHOLD = 5;
@@ -75,6 +76,7 @@ public class DoubleMinuteFinder
         mDoubleMinutes = Maps.newHashMap();
         mLogCandidates = false;
         mShowCandidates = false;
+        mSingleSample = false;
 
         mFileWriter = null;
     }
@@ -84,10 +86,16 @@ public class DoubleMinuteFinder
 
     public void initialiseOutput(final LinxConfig config)
     {
-        if((config.hasMultipleSamples() || config.Output.WriteCohortFiles) && !config.IsGermline)
-            initialiseWriter(config.OutputDataPath);
+        boolean dmAnnotations = runAnnotation(config.RequiredAnnotations, DOUBLE_MINUTES);
 
-        mLogCandidates = runAnnotation(config.RequiredAnnotations, DOUBLE_MINUTES);
+        if(dmAnnotations && !config.IsGermline)
+        {
+            String sampleId = config.isSingleSample() ? config.getSampleIds().get(0) : "";
+            mSingleSample = config.isSingleSample();
+            initialiseWriter(config.OutputDataPath, sampleId);
+        }
+
+        mLogCandidates = dmAnnotations;
         mShowCandidates = runAnnotation(config.RequiredAnnotations, "SHOW_DM");
     }
 
@@ -358,17 +366,22 @@ public class DoubleMinuteFinder
         return (int)chains.stream().filter(x -> x.couldCloseChain()).count();
     }
 
-    private void initialiseWriter(final String outputDir)
+    private void initialiseWriter(final String outputDir, final String sampleId)
     {
         if(outputDir == null || outputDir.isEmpty())
             return;
 
         try
         {
-            String outputFileName = outputDir + "LNX_DOUBLE_MINUTES.csv";
+            String outputFileName = !sampleId.isEmpty() ?
+                    outputDir + sampleId + ".linx.double_minutes.csv" : outputDir + "LNX_DOUBLE_MINUTES.csv";
+
             mFileWriter = createBufferedWriter(outputFileName, false);
 
-            mFileWriter.write("SampleId,ClusterId,ClusterDesc,ResolvedType,ClusterCount");
+            if(sampleId.isEmpty())
+                mFileWriter.write("SampleId,");
+
+            mFileWriter.write("ClusterId,ClusterDesc,ResolvedType,ClusterCount");
             mFileWriter.write(",SamplePurity,SamplePloidy,IsDM,DMSvCount,DMSvTypes,SvIds,Chromosomes");
             mFileWriter.write(",Chains,FullyChained,ClosedChains,ClosedSegLength,ChainedSVs,Replication");
             mFileWriter.write(",ClosedBreakends,ClosedJcnTotal,OpenBreakends,OpenJcnTotal,OpenJcnMax");
@@ -451,8 +464,13 @@ public class DoubleMinuteFinder
 
         try
         {
-            mFileWriter.write(String.format("%s,%d,%s,%s,%d",
-                    sampleId, cluster.id(), cluster.getDesc(), cluster.getResolvedType(), cluster.getSvCount()));
+            if(!mSingleSample)
+            {
+                mFileWriter.write(String.format("%s,", sampleId));
+            }
+
+            mFileWriter.write(String.format("%d,%s,%s,%d",
+                    cluster.id(), cluster.getDesc(), cluster.getResolvedType(), cluster.getSvCount()));
 
             mFileWriter.write(String.format(",%.1f,%.1f,%s,%d,%s,%s,%s",
                     samplePurity, samplePloidy, dmData.isDoubleMinute(), dmData.ValidSVs.size(), dmTypesStr, svIds, chromosomeStr));
