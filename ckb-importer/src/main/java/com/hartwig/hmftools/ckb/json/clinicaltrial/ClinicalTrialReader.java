@@ -46,6 +46,7 @@ public class ClinicalTrialReader extends CkbJsonDirectoryReader<JsonClinicalTria
                 .indications(extractIndications(object.getAsJsonArray("indications")))
                 .variantRequirementDetails(extractVariantRequirementDetails(object.getAsJsonArray("variantRequirementDetails")))
                 .locations(extractLocations(object.getAsJsonArray("clinicalTrialLocations")))
+                .coveredCountries(JsonFunctions.stringList(object, "coveredCountries"))
                 .build();
     }
 

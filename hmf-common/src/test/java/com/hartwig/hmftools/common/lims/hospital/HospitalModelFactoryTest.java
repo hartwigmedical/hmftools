@@ -19,31 +19,6 @@ public class HospitalModelFactoryTest {
     private static final String LIMS_DIRECTORY = Resources.getResource("lims").getPath();
 
     @Test
-    public void canCreateFromLimsDirectoryWithoutWarnings() throws IOException {
-        HospitalModel hospitalModel = HospitalModelFactory.fromLimsDirectory(LIMS_DIRECTORY);
-        assertNotNull(hospitalModel);
-
-        assertTrue(HospitalModelFactory.validateModelIntegrity(hospitalModel));
-    }
-
-    @Test
-    public void canValidateIntegrityCorrectly() {
-        HospitalModel emptyModel = ImmutableHospitalModel.builder().build();
-        assertTrue(HospitalModelFactory.validateModelIntegrity(emptyModel));
-
-        HospitalModel noAddressModel = ImmutableHospitalModel.builder()
-                .putHospitalPersonsCPCT("HOSP",
-                        ImmutableHospitalPersons.builder()
-                                .hospitalPI("Test")
-                                .requesterName("Test")
-                                .requesterEmail("Test")
-                                .build())
-                .build();
-
-        assertFalse(HospitalModelFactory.validateModelIntegrity(noAddressModel));
-    }
-
-    @Test
     public void canReadHospitalAddressTsv() throws IOException {
         Map<String, HospitalAddress> hospitalAddress =
                 HospitalModelFactory.readFromHospitalAddress(LIMS_DIRECTORY + File.separator + "hospital_address.tsv");

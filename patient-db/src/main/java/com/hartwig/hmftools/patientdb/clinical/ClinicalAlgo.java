@@ -6,6 +6,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.common.lims.cohort.Cohorts;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.TreatmentCurator;
@@ -112,7 +113,7 @@ public class ClinicalAlgo {
         WidePatientReader widePatientReader = new WidePatientReader(ecrfModels.wideModel(), primaryTumorCurator, treatmentCurator);
         for (Map.Entry<String, List<SampleData>> entry : samplesPerPatient.entrySet()) {
             List<SampleData> tumorSamples = tumorSamplesOnly(entry.getValue());
-            if (!tumorSamples.isEmpty() && tumorSamples.get(0).cohortId().equals("WIDE")) {
+            if (!tumorSamples.isEmpty() && tumorSamples.get(0).cohortId().equals(Cohorts.WIDE.display())) {
                 String patientId = entry.getKey();
                 // We assume every sample for a single patient has the same primary tumor.
                 String primaryTumor = tumorSamples.get(0).limsPrimaryTumor();
@@ -129,7 +130,7 @@ public class ClinicalAlgo {
 
         for (Map.Entry<String, List<SampleData>> entry : samplesPerPatient.entrySet()) {
             List<SampleData> tumorSamples = tumorSamplesOnly(entry.getValue());
-            if (!tumorSamples.isEmpty() && tumorSamples.get(0).cohortId().contains("CORE")) {
+            if (!tumorSamples.isEmpty() && tumorSamples.get(0).cohortId().contains(Cohorts.CORE.display())) {
                 String patientId = entry.getKey();
                 // We assume every sample for a single patient has the same primary tumor.
                 String primaryTumor = tumorSamples.get(0).limsPrimaryTumor();

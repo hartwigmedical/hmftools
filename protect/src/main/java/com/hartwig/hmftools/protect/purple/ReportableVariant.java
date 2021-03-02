@@ -43,6 +43,9 @@ public abstract class ReportableVariant implements Variant {
     public abstract String alt();
 
     @NotNull
+    public abstract String canonicalTranscript();
+
+    @NotNull
     @Override
     public abstract CodingEffect canonicalCodingEffect();
 

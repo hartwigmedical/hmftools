@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.protect.bachelor;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.germline.ReportableGermlineVariant;
@@ -14,7 +17,9 @@ import com.hartwig.hmftools.protect.purple.ReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariantFactory;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class GermlineVariantFunctions {
 
@@ -23,8 +28,10 @@ public final class GermlineVariantFunctions {
 
     @NotNull
     public static List<ReportableVariant> reportableGermlineVariants(@NotNull List<ReportableGermlineVariant> variants,
-            @NotNull Set<String> genesWithSomaticInactivationEvent, @NotNull GermlineReportingModel germlineReportingModel, boolean hasReliablePurity) {
+            @NotNull Set<String> genesWithSomaticInactivationEvent, @NotNull GermlineReportingModel germlineReportingModel,
+            boolean hasReliablePurity) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
+        Map<String, HmfTranscriptRegion> genePanel = HmfGenePanelSupplier.allGenesMap37();
 
         for (ReportableGermlineVariant variant : variants) {
             GermlineReportingEntry reportingEntry = germlineReportingModel.entryForGene(variant.gene());
@@ -51,7 +58,9 @@ public final class GermlineVariantFunctions {
                 }
 
                 if (includeVariant) {
-                    reportableVariants.add(fromGermlineVariant(variant, hasReliablePurity).driverLikelihood(1D).build());
+                    HmfTranscriptRegion canonicalTranscript = genePanel.get(variant.gene());
+                    reportableVariants.add(fromGermlineVariant(variant, hasReliablePurity, canonicalTranscript).driverLikelihood(1D)
+                            .build());
                 }
             }
         }
@@ -60,7 +69,8 @@ public final class GermlineVariantFunctions {
     }
 
     @NotNull
-    private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull ReportableGermlineVariant variant, boolean hasReliablePurity) {
+    private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull ReportableGermlineVariant variant,
+            boolean hasReliablePurity, @Nullable HmfTranscriptRegion canonicalTranscript) {
         return ImmutableReportableVariant.builder()
                 .type(VariantType.type(variant.ref(), variant.alt()))
                 .source(ReportableVariantSource.GERMLINE)
@@ -69,6 +79,7 @@ public final class GermlineVariantFunctions {
                 .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())
+                .canonicalTranscript(canonicalTranscript == null ? Strings.EMPTY : canonicalTranscript.geneID())
                 .canonicalCodingEffect(variant.codingEffect())
                 .canonicalHgvsCodingImpact(variant.hgvsCoding())
                 .canonicalHgvsProteinImpact(variant.hgvsProtein())
@@ -78,8 +89,7 @@ public final class GermlineVariantFunctions {
                 .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVaf()))
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
-                .copyNumber(ReportableVariantFactory.copyNumberString(variant.adjustedCopyNumber(),
-                        hasReliablePurity))
+                .copyNumber(ReportableVariantFactory.copyNumberString(variant.adjustedCopyNumber(), hasReliablePurity))
                 .tVafString(ReportableVariantFactory.vafString(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVaf()),
                         variant.adjustedCopyNumber(),
                         hasReliablePurity))

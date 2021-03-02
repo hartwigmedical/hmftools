@@ -159,6 +159,7 @@ public class AnalysedPatientReporterTest {
                 .position(0)
                 .ref(Strings.EMPTY)
                 .alt(Strings.EMPTY)
+                .canonicalTranscript(Strings.EMPTY)
                 .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
