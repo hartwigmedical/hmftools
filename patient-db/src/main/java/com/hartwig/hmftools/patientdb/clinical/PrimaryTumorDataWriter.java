@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
 import com.hartwig.hmftools.common.clinical.PatientTumorCurationStatus;
 import com.hartwig.hmftools.common.clinical.PatientTumorCurationStatusFile;
 import com.hartwig.hmftools.common.doid.DoidNode;
+import com.hartwig.hmftools.common.lims.cohort.Cohorts;
 import com.hartwig.hmftools.common.reportingdb.ReportingDatabase;
 import com.hartwig.hmftools.common.reportingdb.ReportingEntry;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
@@ -116,7 +117,7 @@ public final class PrimaryTumorDataWriter {
     }
 
     private static boolean allowExceptionsForPatient(@NotNull String patientId) {
-        return !patientId.startsWith("CORE") && !patientId.startsWith("WIDE");
+        return !patientId.startsWith(Cohorts.CORE.display()) && !patientId.startsWith(Cohorts.WIDE.display());
     }
 
     private static void writePatientTumorCurationStatesToTSV(@NotNull String outputTsv,
