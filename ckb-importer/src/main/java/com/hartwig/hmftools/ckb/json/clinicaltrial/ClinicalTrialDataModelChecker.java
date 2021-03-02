@@ -28,6 +28,7 @@ final class ClinicalTrialDataModelChecker {
         map.put("indications", true);
         map.put("variantRequirementDetails", true);
         map.put("clinicalTrialLocations", true);
+        map.put("coveredCountries", true);
 
         return new JsonDatamodelChecker("ClinicalTrialObject", map);
     }
