@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SIG_DATA;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SV_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SIG_PERC;
@@ -43,6 +45,7 @@ import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
+import com.hartwig.hmftools.cup.sample.SampleTraitsData;
 
 public class RefSomatics implements RefClassifier
 {
@@ -124,7 +127,7 @@ public class RefSomatics implements RefClassifier
         Matrix refMatrix = null;
 
         final List<String> existingRefSampleIds = Lists.newArrayList();
-        final Matrix existingRefSampleCounts = loadRefSampleCounts(refFilename, existingRefSampleIds);
+        final Matrix existingRefSampleCounts = loadRefSampleCounts(refFilename, existingRefSampleIds, Lists.newArrayList("BucketName"));
 
         final List<String> refSampleIds = mSampleDataCache.refSampleIds(false);
         boolean hasMissingSamples = refSampleIds.stream().anyMatch(x -> !existingRefSampleIds.contains(x));
@@ -299,6 +302,8 @@ public class RefSomatics implements RefClassifier
         {
             SomaticDataLoader.loadSigContribsFromDatabase(
                     mConfig.DbAccess, mSampleDataCache.refSampleIds(true), sampleSigContributions);
+
+            writeCohortData(sampleSigContributions);
         }
 
         for(Map.Entry<String,Map<String,Double>> entry : sampleSigContributions.entrySet())
@@ -605,6 +610,46 @@ public class RefSomatics implements RefClassifier
         catch(IOException e)
         {
             CUP_LOGGER.error("failed to write sample pos data output: {}", e.toString());
+        }
+    }
+
+    private void writeCohortData(final Map<String,Map<String,Double>> sampleSigContributions)
+    {
+        if(!mConfig.WriteCohortFiles)
+            return;
+
+        CUP_LOGGER.info("writing cohort signature allocation reference data");
+
+        try
+        {
+            final String filename = mConfig.OutputDir + COHORT_REF_FILE_SIG_DATA;
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write(SampleTraitsData.header());
+            writer.newLine();
+
+            for(Map.Entry<String,Map<String,Double>> entry : sampleSigContributions.entrySet())
+            {
+                final String sampleId = entry.getKey();
+                final Map<String,Double> sigAllocs = entry.getValue();
+
+                for(Map.Entry<String,Double> sigEntry : sigAllocs.entrySet())
+                {
+                    final String sigName = sigEntry.getKey();
+
+                    if(REPORTABLE_SIGS.keySet().contains(sigName))
+                    {
+                        writer.write(String.format("%s,%s,%s", sampleId, sigName, sigEntry.getValue()));
+                        writer.newLine();
+                    }
+                }
+            }
+
+            closeBufferedWriter(writer);
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write signature allocation cohort data output: {}", e.toString());
         }
     }
 

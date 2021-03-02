@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SV_DATA;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_TRAITS_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
@@ -30,6 +32,7 @@ import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
+import com.hartwig.hmftools.cup.svs.SvData;
 
 public class RefSampleTraits implements RefClassifier
 {
@@ -67,6 +70,7 @@ public class RefSampleTraits implements RefClassifier
             loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(true), sampleTraitsData);
 
             sampleTraitsData. values().forEach(x -> assignSampleTraitsData(x));
+            writeCohortData(sampleTraitsData);
         }
         else
         {
@@ -202,6 +206,37 @@ public class RefSampleTraits implements RefClassifier
         }
     }
 
+    private void writeCohortData(final Map<String,SampleTraitsData> sampleTraitsData)
+    {
+        if(!mConfig.WriteCohortFiles)
+            return;
+
+        CUP_LOGGER.info("writing cohort sample traits reference data");
+
+        try
+        {
+            final String filename = mConfig.OutputDir + COHORT_REF_FILE_TRAITS_DATA;
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write(SampleTraitsData.header());
+            writer.newLine();
+
+            for(Map.Entry<String,SampleTraitsData> entry : sampleTraitsData.entrySet())
+            {
+                final String sampleId = entry.getKey();
+                final SampleTraitsData traitsData = entry.getValue();
+                writer.write(String.format("%s,%s", sampleId, traitsData.toCsv()));
+                writer.newLine();
+            }
+
+            closeBufferedWriter(writer);
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write sample traits cohort data output: {}", e.toString());
+        }
+    }
+
     private void loadRefPurityData(final String filename)
     {
         try
@@ -224,6 +259,4 @@ public class RefSampleTraits implements RefClassifier
             CUP_LOGGER.error("failed to read ref sample traits data file({}): {}", filename, e.toString());
         }
     }
-
-
 }

@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.cup.feature;
 
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaConfig.SAMPLE_ID;
 import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
 
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Maps;
 
@@ -28,6 +30,35 @@ public class SampleFeatureData
         Type = type;
         Likelihood = likelihood;
         ExtraInfo = Maps.newHashMap();
+    }
+
+    public static String header()
+    {
+        StringJoiner sj = new StringJoiner(DATA_DELIM);
+        sj.add(SAMPLE_ID);
+        sj.add("Name");
+        sj.add("Type");
+        sj.add("Likelihood");
+        sj.add("ExtraInfo");
+        return sj.toString();
+    }
+
+    public String toCsv()
+    {
+        StringJoiner sj = new StringJoiner(DATA_DELIM);
+        sj.add(Name);
+        sj.add(Type.toString());
+        sj.add(String.valueOf(Likelihood));
+
+        StringJoiner sjEI = new StringJoiner(SUBSET_DELIM);
+
+        for(Map.Entry<String,String> entry : ExtraInfo.entrySet())
+        {
+            sjEI.add(String.format("%s=%s", entry.getKey(), entry.getValue()));
+        }
+
+        sj.add(sjEI.toString());
+        return sj.toString();
     }
 
     public static SampleFeatureData from(final String data)

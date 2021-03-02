@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SV_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
@@ -63,10 +64,12 @@ public class RefSvData implements RefClassifier
             final Map<String,SvData> sampleSvData = Maps.newHashMap();
             loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(true), sampleSvData);
             sampleSvData.values().forEach(x -> assignSampleData(x));
+
+            writeCohortData(sampleSvData);
         }
         else
         {
-            loadRefSvData(mConfig.RefSampleSvDataFile);
+            loadCohortSvData(mConfig.RefSampleSvDataFile);
         }
 
         try
@@ -151,7 +154,38 @@ public class RefSvData implements RefClassifier
         }
     }
 
-    private void loadRefSvData(final String filename)
+    private void writeCohortData(final Map<String,SvData> sampleSvData)
+    {
+        if(!mConfig.WriteCohortFiles)
+            return;
+
+        CUP_LOGGER.info("writing cohort SV reference data");
+
+        try
+        {
+            final String filename = mConfig.OutputDir + COHORT_REF_FILE_SV_DATA;
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write(SvData.header());
+            writer.newLine();
+
+            for(Map.Entry<String,SvData> entry : sampleSvData.entrySet())
+            {
+                final String sampleId = entry.getKey();
+                final SvData svData = entry.getValue();
+                writer.write(String.format("%s,%s", sampleId, svData.toCsv()));
+                writer.newLine();
+            }
+
+            closeBufferedWriter(writer);
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write SV cohort data output: {}", e.toString());
+        }
+    }
+
+    private void loadCohortSvData(final String filename)
     {
         try
         {

@@ -54,7 +54,7 @@ import org.jooq.Result;
 
 public class FeatureDataLoader
 {
-    public static boolean loadDriversFromCohortFile(final String filename, final Map<String,List<SampleFeatureData>> sampleDrivers)
+    public static boolean loadFromCohortFile(final String filename, final Map<String,List<SampleFeatureData>> sampleDrivers)
     {
         if(filename == null)
             return true;

@@ -124,6 +124,7 @@ public class CuppaConfig
 
     public static final Logger CUP_LOGGER = LogManager.getLogger(CuppaConfig.class);
 
+    public static final String SAMPLE_ID = "SampleId";
     public static final String CANCER_SUBTYPE_OTHER = "Other";
     public static final String DATA_DELIM = ",";
     public static final String SUBSET_DELIM = ";";

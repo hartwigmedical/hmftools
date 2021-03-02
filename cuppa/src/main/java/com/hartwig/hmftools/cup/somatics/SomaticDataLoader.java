@@ -130,12 +130,12 @@ public class SomaticDataLoader
         return populateRefPercentileData(filename, refCancerSigContribs, refCancerSnvCounts);
     }
 
-    public static Matrix loadRefSampleCounts(final String filename, final List<String> refSampleNames)
+    public static Matrix loadRefSampleCounts(final String filename, final List<String> refSampleNames, final List<String> ignoreCols)
     {
         if(filename.isEmpty())
             return null;
 
-        Matrix refSampleCounts = loadMatrixDataFile(filename, refSampleNames);
+        Matrix refSampleCounts = loadMatrixDataFile(filename, refSampleNames, ignoreCols);
         refSampleCounts.cacheTranspose();
         return refSampleCounts;
     }

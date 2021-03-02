@@ -26,15 +26,20 @@ public class RefDataConfig
     public final String RefSigContribsFile;
     public final String RefSnvPositionDataFile;
     public final String RefSnvCountsFile;
+    public final String RefFeaturesFile;
     public final String RefRnaGeneExpFile;
 
     public final DatabaseAccess DbAccess;
+
+    public final boolean WriteCohortFiles; // re-write data sourced from database or flat files into single cohort files
 
     // config strings
     public static final String REF_SAMPLE_TRAITS_FILE = "ref_sample_traits_file";
     public static final String REF_SIG_CONTRIBS_FILE = "ref_sig_contribs_file";
     public static final String REF_SV_DATA_FILE = "ref_sv_data_file";
+    public static final String REF_FEATURES_FILE = "ref_features_file";
     public static final String REF_RNA_GENE_EXP_DATA_FILE = "ref_rna_gene_exp_file";
+    public static final String WRITE_COHORT_FILES = "write_cohort_files";
 
     public RefDataConfig(final CommandLine cmd)
     {
@@ -44,7 +49,9 @@ public class RefDataConfig
         RefSampleSvDataFile = cmd.getOptionValue(REF_SV_DATA_FILE, "");
         RefSnvPositionDataFile = cmd.getOptionValue(REF_SNV_SAMPLE_POS_FREQ_FILE, "");
         RefSnvCountsFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
+        RefFeaturesFile = cmd.getOptionValue(REF_FEATURES_FILE, "");
         RefRnaGeneExpFile = cmd.getOptionValue(REF_RNA_GENE_EXP_DATA_FILE, "");
+        WriteCohortFiles = cmd.hasOption(WRITE_COHORT_FILES);
 
         DbAccess = createDatabaseAccess(cmd);
 
@@ -59,7 +66,9 @@ public class RefDataConfig
         options.addOption(REF_SV_DATA_FILE, true, "Ref sample SV data file");
         options.addOption(REF_SNV_SAMPLE_POS_FREQ_FILE, true, "Ref SNV position frequency matrix data file");
         options.addOption(REF_SNV_COUNTS_FILE, true, "Ref SNV trinucleotide matrix data file");
+        options.addOption(REF_FEATURES_FILE, true, "Ref sample features data file");
         options.addOption(REF_RNA_GENE_EXP_DATA_FILE, true, "Ref sample RNA gene expression cohort data file");
+        options.addOption(WRITE_COHORT_FILES, false, "Re-write ref data as cohort files");
 
         addDatabaseCmdLineArgs(options);
 

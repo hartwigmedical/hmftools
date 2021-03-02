@@ -5,9 +5,11 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_FEATURE_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_DRIVER_AVG;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_FEATURE_PREV;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
+import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 
@@ -38,17 +40,24 @@ public class RefFeatures implements RefClassifier
 
     public CategoryType categoryType() { return FEATURE; }
 
-    public static boolean requiresBuild(final RefDataConfig config) { return config.DbAccess != null; }
+    public static boolean requiresBuild(final RefDataConfig config) { return config.DbAccess != null || !config.RefFeaturesFile.isEmpty(); }
 
     public void buildRefDataSets()
     {
-        if(mConfig.DbAccess == null)
-            return;
-
         CUP_LOGGER.info("building feature reference data");
 
         final Map<String,List<SampleFeatureData>> sampleFeaturesMap = Maps.newHashMap();
-        loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(true), sampleFeaturesMap, true);
+
+        if(!mConfig.RefFeaturesFile.isEmpty())
+        {
+            loadFromCohortFile(mConfig.RefFeaturesFile, sampleFeaturesMap);
+        }
+        else
+        {
+            loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(true), sampleFeaturesMap, true);
+        }
+
+        writeCohortData(sampleFeaturesMap);
 
         final Map<String,Map<String,Double>> cancerFeatureCounts = Maps.newHashMap();
         final Map<String,FeatureType> featureTypes = Maps.newHashMap();
@@ -187,4 +196,39 @@ public class RefFeatures implements RefClassifier
             CUP_LOGGER.error("failed to write ref driver averages file: {}", e.toString());
         }
     }
+
+    private void writeCohortData(final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
+    {
+        if(!mConfig.WriteCohortFiles)
+            return;
+
+        CUP_LOGGER.info("writing cohort feature reference data");
+
+        try
+        {
+            final String filename = mConfig.OutputDir + COHORT_REF_FILE_FEATURE_DATA;
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write(SampleFeatureData.header());
+            writer.newLine();
+
+            for(Map.Entry<String,List<SampleFeatureData>> entry : sampleFeaturesMap.entrySet())
+            {
+                final String sampleId = entry.getKey();
+
+                for(SampleFeatureData feature : entry.getValue())
+                {
+                    writer.write(String.format("%s,%s", sampleId, feature.toCsv()));
+                    writer.newLine();
+                }
+            }
+
+            closeBufferedWriter(writer);
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write feature cohort data output: {}", e.toString());
+        }
+    }
+
 }
