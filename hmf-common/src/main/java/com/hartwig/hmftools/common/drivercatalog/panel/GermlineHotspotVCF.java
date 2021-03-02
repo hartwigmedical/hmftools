@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.pathogenic.Pathogenic;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 
@@ -32,7 +34,7 @@ class GermlineHotspotVCF {
         this.germlineGenes = genes;
     }
 
-    public void process(final String inputFile, final String outputFile) {
+    public List<GenomeRegion> process(final String inputFile, final String outputFile) {
 
         // READ
         final VCFFileReader reader = new VCFFileReader(new File(inputFile), false);
@@ -62,8 +64,7 @@ class GermlineHotspotVCF {
                         contigPrefix + context.getContig(),
                         context.getStart(),
                         context.getEnd(),
-                        context.getAlleles())
-                        .attribute("GENEINFO", geneinfo)
+                        context.getAlleles()).attribute("GENEINFO", geneinfo)
                         .attribute(PathogenicSummaryFactory.CLNSIG, PathogenicSummaryFactory.clnSig(context));
 
                 if (!clinsigConf.isEmpty()) {
@@ -98,6 +99,7 @@ class GermlineHotspotVCF {
         variants.forEach(writer::add);
         writer.close();
 
+        return variants.stream().map(x -> GenomeRegions.create(x.getContig(), x.getStart(), x.getEnd())).collect(Collectors.toList());
     }
 
     private boolean isPathogenicOrLikelyPathogenic(Pathogenic pathogenic) {
