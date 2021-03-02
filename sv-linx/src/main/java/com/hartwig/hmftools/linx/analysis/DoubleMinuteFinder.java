@@ -84,7 +84,7 @@ public class DoubleMinuteFinder
 
     public void initialiseOutput(final LinxConfig config)
     {
-        if(config.hasMultipleSamples() && !config.IsGermline)
+        if((config.hasMultipleSamples() || config.Output.WriteCohortFiles) && !config.IsGermline)
             initialiseWriter(config.OutputDataPath);
 
         mLogCandidates = runAnnotation(config.RequiredAnnotations, DOUBLE_MINUTES);
