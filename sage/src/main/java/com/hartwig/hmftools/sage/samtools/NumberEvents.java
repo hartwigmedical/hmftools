@@ -1,17 +1,17 @@
 package com.hartwig.hmftools.sage.samtools;
 
+import com.hartwig.hmftools.sage.ref.RefSequence;
+
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.util.SequenceUtil;
 
 public class NumberEvents {
 
-    public static int numberOfEvents(@NotNull final SAMRecord record) {
-        Object nm = record.getAttribute("NM");
-        if (!(nm instanceof Integer)) {
-            return 0;
-        }
+    public static int numberOfEvents(@NotNull final SAMRecord record, @NotNull final RefSequence refGenome) {
+        int nm = rawNM(record, refGenome);
 
         int additionalIndels = 0;
         int softClips = 0;
@@ -27,7 +27,17 @@ public class NumberEvents {
             }
         }
 
-        return (Integer) nm - additionalIndels + softClips;
+        return nm - additionalIndels + softClips;
+    }
+
+    public static int rawNM(@NotNull final SAMRecord record, @NotNull final RefSequence refGenome) {
+        Object nm = record.getAttribute("NM");
+        if (nm instanceof Integer) {
+            return (int) nm;
+        }
+
+        int offset = refGenome.alignment().position() - refGenome.alignment().index() - 1;
+        return SequenceUtil.calculateSamNmTag(record, refGenome.alignment().bases(), offset);
     }
 
     public static int numberOfEventsWithMNV(int rawNumberEvents, @NotNull final String ref, @NotNull final String alt) {

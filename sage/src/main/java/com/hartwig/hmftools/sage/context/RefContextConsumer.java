@@ -51,7 +51,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final List<AltRead> altReads = Lists.newArrayList();
             final IndexedBases refBases = refGenome.alignment();
 
-            int numberOfEvents = NumberEvents.numberOfEvents(record);
+            int numberOfEvents = NumberEvents.numberOfEvents(record, refGenome);
 
             final CigarHandler handler = new CigarHandler() {
                 @Override

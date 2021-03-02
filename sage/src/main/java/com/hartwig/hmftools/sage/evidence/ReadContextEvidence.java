@@ -13,6 +13,7 @@ import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.read.ReadContextCounterFactory;
+import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.samtools.NumberEvents;
 import com.hartwig.hmftools.sage.select.SamRecordSelector;
@@ -53,18 +54,18 @@ public class ReadContextEvidence {
         final GenomeRegion bounds = GenomeRegions.create(firstCandidate.chromosome(),
                 Math.max(firstCandidate.position() - typicalReadLength, 1),
                 lastCandidate.position() + typicalReadLength);
-
         final SamSlicer slicer = new SamSlicer(0, bounds);
 
         final SamRecordSelector<ReadContextCounter> consumerSelector = new SamRecordSelector<>(counters);
 
+        final RefSequence refSequence = new RefSequence(bounds, refGenome);
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
                 .validationStringency(sageConfig.validationStringency())
                 .referenceSource(new ReferenceSource(refGenome))
                 .open(new File(bam))) {
             slicer.slice(tumorReader, samRecord -> {
 
-                int numberOfEvents = NumberEvents.numberOfEvents(samRecord);
+                int numberOfEvents = NumberEvents.numberOfEvents(samRecord, refSequence);
                 consumerSelector.select(samRecord, x -> x.accept(samRecord, sageConfig, numberOfEvents));
 
             });
