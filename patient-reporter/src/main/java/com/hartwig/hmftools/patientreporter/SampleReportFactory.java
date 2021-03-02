@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsChecker;
 import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfig;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
@@ -59,7 +60,7 @@ public final class SampleReportFactory {
 
         LOGGER.info("Cohort ID of this sample is: {}", cohortConfig.cohortId());
 
-        String hospitalPatientId = checkHospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode), tumorSampleId, cohortConfig);
+        String hospitalPatientId = LimsChecker.checkHospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode), tumorSampleId, cohortConfig);
 
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
@@ -75,56 +76,8 @@ public final class SampleReportFactory {
                 .submissionId(lims.submissionId(tumorSampleBarcode))
                 .hospitalContactData(lims.hospitalContactData(tumorSampleBarcode))
                 .hospitalPatientId(hospitalPatientId)
-                .hospitalPathologySampleId(toHospitalPathologySampleIdForReport(hospitalPathologySampleId, tumorSampleId, cohortConfig))
+                .hospitalPathologySampleId(LimsChecker.toHospitalPathologySampleIdForReport(hospitalPathologySampleId, tumorSampleId, cohortConfig))
                 .build();
-    }
-
-    @VisibleForTesting
-    static String checkHospitalPatientId(@NotNull String hospitalPatientId, @NotNull String sampleId,
-            @NotNull LimsCohortConfig cohortConfig) {
-        if (cohortConfig.requireHospitalId()) {
-            if (hospitalPatientId.equals(Lims.NOT_AVAILABLE_STRING) || hospitalPatientId.equals(Strings.EMPTY)) {
-                LOGGER.warn("Missing hospital patient sample ID for sample '{}': {}. Please fix!", sampleId, hospitalPatientId);
-            }
-        }
-        return hospitalPatientId;
-    }
-
-    @VisibleForTesting
-    @Nullable
-    static String toHospitalPathologySampleIdForReport(@NotNull String hospitalPathologySampleId, @NotNull String tumorSampleId,
-            @NotNull LimsCohortConfig cohortConfig) {
-        if (cohortConfig.requireHospitalPAId()) {
-            if (!hospitalPathologySampleId.equals(Lims.NOT_AVAILABLE_STRING) && !hospitalPathologySampleId.isEmpty()
-                    && isValidHospitalPathologySampleId(hospitalPathologySampleId)) {
-                return hospitalPathologySampleId;
-            } else {
-
-                LOGGER.warn("Missing or invalid hospital pathology sample ID for sample '{}': {}. Please fix!",
-                        tumorSampleId,
-                        hospitalPathologySampleId);
-
-                return null;
-            }
-        } else {
-            if (!hospitalPathologySampleId.isEmpty() && !hospitalPathologySampleId.equals(Lims.NOT_AVAILABLE_STRING)) {
-                LOGGER.info("Skipping hospital pathology sample ID for sample '{}': {}", hospitalPathologySampleId, tumorSampleId);
-            }
-
-            return null;
-        }
-    }
-
-    private static boolean isValidHospitalPathologySampleId(@NotNull String hospitalPathologySampleId) {
-        boolean tMatch = hospitalPathologySampleId.startsWith("T") && hospitalPathologySampleId.substring(1, 3).matches("[0-9]+")
-                && hospitalPathologySampleId.substring(3, 4).equals("-") && hospitalPathologySampleId.substring(4, 9).matches("[0-9]+")
-                && hospitalPathologySampleId.length() == 10 || hospitalPathologySampleId.length() == 9;
-
-        boolean cMatch = hospitalPathologySampleId.startsWith("C") && hospitalPathologySampleId.substring(1, 3).matches("[0-9]+")
-                && hospitalPathologySampleId.substring(3, 4).equals("-") && hospitalPathologySampleId.substring(4, 9).matches("[0-9]+")
-                && hospitalPathologySampleId.length() == 10 || hospitalPathologySampleId.length() == 9;
-
-        return tMatch || cMatch;
     }
 
     @NotNull
