@@ -197,7 +197,7 @@ public class CupAnalyser
         boolean hasDnaCategories = mConfig.IncludedCategories.stream().anyMatch(x -> CategoryType.isDna(x));
         boolean hasRnaCategories = mConfig.IncludedCategories.stream().anyMatch(x -> CategoryType.isRna(x));
 
-        if(hasDnaCategories && hasRnaCategories)
+        if(hasDnaCategories)
         {
             final List<SampleResult> dnaResults = allResults.stream()
                     .filter(x -> x.Category == CLASSIFIER && isDna(ClassifierType.valueOf(x.DataType)))
@@ -207,7 +207,10 @@ public class CupAnalyser
 
             if(dnaScoreResult != null)
                 allResults.add(dnaScoreResult);
+        }
 
+        if(hasRnaCategories)
+        {
             final List<SampleResult> rnaResults = allResults.stream()
                     .filter(x -> x.Category == CLASSIFIER && isRna(ClassifierType.valueOf(x.DataType)))
                     .collect(Collectors.toList());
@@ -221,10 +224,14 @@ public class CupAnalyser
             }
         }
 
-        SampleResult classifierScoreResult = calcCombinedClassifierScoreResult(sample, allResults, COMBINED.toString(), COMBINED_DAMPEN_FACTOR);
+        if(hasDnaCategories && hasRnaCategories)
+        {
+            SampleResult classifierScoreResult =
+                    calcCombinedClassifierScoreResult(sample, allResults, COMBINED.toString(), COMBINED_DAMPEN_FACTOR);
 
-        if(classifierScoreResult != null)
-            allResults.add(classifierScoreResult);
+            if(classifierScoreResult != null)
+                allResults.add(classifierScoreResult);
+        }
 
         writeSampleData(sample, allResults);
         writeSampleSimilarities(sample, similarities);
