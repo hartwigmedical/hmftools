@@ -374,7 +374,7 @@ public class DoubleMinuteFinder
         try
         {
             String outputFileName = !sampleId.isEmpty() ?
-                    outputDir + sampleId + ".linx.double_minutes.csv" : outputDir + "LNX_DOUBLE_MINUTES.csv";
+                    outputDir + sampleId + ".linx.ecdna.csv" : outputDir + "LNX_ECDNA.csv";
 
             mFileWriter = createBufferedWriter(outputFileName, false);
 
