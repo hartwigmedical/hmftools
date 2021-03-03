@@ -77,19 +77,20 @@ public class ExplanationChapter implements ReportChapter {
                         "Any gene with less than 0.5 copies along the entire canonical transcript is reported as a full loss.",
                         "Any gene where only a part along the canonical transcript has less than 0.5 copies is reported "
                                 + "as a partial loss.",
-                        "Any relevant gene with more copies than 3 times the average tumor ploidy of part of the gene is reported as a "
-                                + "partial gain.",
-                        "Any relevant gene with more copies than 3 times the average tumor ploidy of the whole gene is reported as a "
-                                + "full gain."})));
+                        "Any gene with more copies than 3 times the average tumor ploidy along the entire canonical transcript is reported "
+                                + "as a full gain.",
+                        "Any gene where only a part of the canonical transcript has more copies than 3 times the average tumor ploidy "
+                                + "is reported as a partial gain",
+                })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] { "The canonical, or otherwise longest transcript validly fused is reported.",
                         "Fusions are restricted to those in the HMF known fusion list and can be found on "
                                 + "https://resources.hartwigmedicalfoundation.nl in directory Patient-Reporting",
                         "We additionally select fusions where one partner is promiscuous in either 5' or 3' position.",
-                "The 'Driver' field is based on the classification of the fusion. A fusion has a High driver likelihood with the "
-                        + "classifications KNOWN_PAIR, KNOWN_IG_PAIR, EXON_DEL_DUP or  PROMISCUOUS with highly promiscuous exon. A fusion "
-                        + "has a Low driver likelihoods in all other PROMISCUOUS fusions. "})));
+                "The 'Driver' field is set to HIGH in case the fusion is a known pathogenic fusion, or otherwise a fusion where "
+                        + "the promiscuous partner is fused in an exon range that is typically observed in literature. \n"
+                        + "All other fusions get assigned a LOW driver likelihood."})));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] {
