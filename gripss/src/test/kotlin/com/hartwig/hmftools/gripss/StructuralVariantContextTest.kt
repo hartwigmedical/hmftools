@@ -145,7 +145,7 @@ class StructuralVariantContextTest {
     fun testHardMaxRelativeAbsoluteSupportIsRecoveredByHotspot() {
         val config = GripssFilterConfig.default()
         val normalSupport = config.hardMaxNormalAbsoluteSupport - 1
-        val tumorSupport = floor(normalSupport / config.hardMaxNormalRelativeSupport).toInt()
+        val tumorSupport = floor(normalSupport / config.hardMaxNormalRelativeSupport).toInt() - 1
         val sgl = sgl().qual(config.hardMinTumorQual).fragmentSupport(normalSupport, tumorSupport).toSv()
         assertFalse(sgl.tumorQualFilter(config.hardMinTumorQual))
         assertFalse(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
