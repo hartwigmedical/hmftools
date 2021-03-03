@@ -77,19 +77,13 @@ public final class PurpleDataLoader {
         List<SomaticVariant> germlineVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, germlineVcf);
         List<ReportableVariant> reportableGermlineVariants =
                 ReportableVariantFactory.reportableGermlineVariants(germlineVariants, germlineDriverCatalog, hasReliablePurity);
-        LOGGER.info(" Loaded {} reportable germline variants from {}", germlineVariants.size(), germlineVcf);
+        LOGGER.info(" Loaded {} reportable germline variants from {}", reportableGermlineVariants.size(), germlineVcf);
 
         List<SomaticVariant> somaticVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVcf);
         List<ReportableVariant> reportableSomaticVariants =
                 ReportableVariantFactory.reportableSomaticVariants(somaticVariants, somaticDriverCatalog, hasReliablePurity);
         LOGGER.info(" Loaded {} reportable somatic variants from {}", reportableSomaticVariants.size(), somaticVcf);
 
-        // Set copies + tVAF to N/A when those are unreliable
-        List<ReportableVariant> reportableVariantsInterpretSomatic =
-                qcAdjustedSomaticVariants(purityContext.qc().status(), reportableSomaticVariants, copyNumberAlterations);
-
-        List<ReportableVariant> reportableVariantsInterpretGermline =
-                qcAdjustedSomaticVariants(purityContext.qc().status(), reportableGermlineVariants, copyNumberAlterations);
 
         return ImmutablePurpleData.builder()
                 .purity(purityContext.bestFit().purity())
@@ -101,46 +95,10 @@ public final class PurpleDataLoader {
                 .tumorMutationalBurdenPerMb(purityContext.tumorMutationalBurdenPerMb())
                 .tumorMutationalLoad(purityContext.tumorMutationalLoad())
                 .tumorMutationalLoadStatus(purityContext.tumorMutationalLoadStatus())
-                .somaticVariants(reportableVariantsInterpretSomatic)
-                .germlineVariants(reportableVariantsInterpretGermline)
+                .somaticVariants(reportableSomaticVariants)
+                .germlineVariants(reportableGermlineVariants)
                 .copyNumberAlterations(copyNumberAlterations)
                 .build();
-    }
-
-    @NotNull
-    private static List<ReportableVariant> qcAdjustedSomaticVariants(Set<PurpleQCStatus> qcStatus,
-            List<ReportableVariant> reportableVariants, List<ReportableGainLoss> copyNumberAlterations) {
-        // Set copies + tVAF to N/A when those are unreliable
-        List<ReportableVariant> reportableVariantsInterpret = Lists.newArrayList();
-        for (ReportableVariant variant : reportableVariants) {
-
-            // amplification
-            if (qcStatus.contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE)) {
-                for (ReportableGainLoss gain : copyNumberAlterations) {
-                    if (variant.gene().equals(gain.gene()) && gain.interpretation() == CopyNumberInterpretation.FULL_GAIN
-                            || gain.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN) {
-                        reportableVariantsInterpret.add(variant);
-                    } else {
-                        reportableVariantsInterpret.add(interpretReportableVariant(variant).build());
-
-                    }
-                }
-            }
-
-            //deletions
-            if (qcStatus.contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE) || qcStatus.contains(PurpleQCStatus.WARN_DELETED_GENES)) {
-                for (ReportableGainLoss loss : copyNumberAlterations) {
-                    if (variant.gene().equals(loss.gene()) && loss.interpretation() == CopyNumberInterpretation.FULL_LOSS
-                            || loss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS) {
-                        reportableVariantsInterpret.add(variant);
-                    } else {
-                        reportableVariantsInterpret.add(interpretReportableVariant(variant).build());
-                    }
-                }
-            }
-        }
-
-        return reportableVariantsInterpret;
     }
 
     @NotNull
