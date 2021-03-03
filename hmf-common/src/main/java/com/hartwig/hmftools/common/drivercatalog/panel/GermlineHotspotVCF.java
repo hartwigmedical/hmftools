@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog.panel;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,7 +35,7 @@ class GermlineHotspotVCF {
         this.germlineGenes = genes;
     }
 
-    public List<GenomeRegion> process(final String inputFile, final String outputFile) {
+    public List<GenomeRegion> process(final String inputFile, final String outputFile) throws IOException {
 
         // READ
         final VCFFileReader reader = new VCFFileReader(new File(inputFile), false);
@@ -77,7 +78,7 @@ class GermlineHotspotVCF {
         reader.close();
 
         // ADD WHITE LIST (OUT OF ORDER)
-        variants.addAll(assembly.equals("GRCh37") ? GermlineWhitelist.grch37Whitelist() : GermlineWhitelist.grch38Whitelist());
+        variants.addAll(assembly.equals("GRCh37") ? GermlineResources.grch37Whitelist() : GermlineResources.grch38Whitelist());
 
         // Get sorted contigs
         final List<String> contigs = variants.stream().map(VariantContext::getContig).distinct().collect(Collectors.toList());

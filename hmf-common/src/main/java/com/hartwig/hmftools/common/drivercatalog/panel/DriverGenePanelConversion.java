@@ -21,6 +21,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.variant.variantcontext.VariantContext;
+
 public class DriverGenePanelConversion {
 
     private static final String OUTPUT_DIR = "/Users/jon/hmf/resources/";
@@ -68,6 +70,7 @@ public class DriverGenePanelConversion {
         final String germlineHotspotFile = String.format("%s/KnownHotspots.germline.%s.vcf.gz", OUTPUT_DIR, extension);
         final String germlineSliceFile = String.format("%s/SlicePanel.germline.%s.bed", OUTPUT_DIR, extension);
         final String clinvarFile = String.format("%s/clinvar.%s.vcf.gz", INPUT_DIR, extension);
+        final String germlineBlacklistFile = String.format("%s/KnownBlacklist.germline.%s.vcf.gz", OUTPUT_DIR, extension);
 
         Collections.sort(driverGenes);
 
@@ -104,6 +107,12 @@ public class DriverGenePanelConversion {
 
         // Write out germline slice file.
         createSliceFile(germlineSliceFile, germlinePanel, germlineHotspots, qualityRecalibrationRegions);
+
+        // Write out germline blacklist file.
+        final List<VariantContext> germlineBlackList = assembly == DriverGenePanelAssembly.HG19
+                ? GermlineResources.grch37Blacklist()
+                : GermlineResources.grch38Blacklist();
+        GermlineBlacklistVCF.process(germlineBlacklistFile, germlineBlackList );
 
     }
 
