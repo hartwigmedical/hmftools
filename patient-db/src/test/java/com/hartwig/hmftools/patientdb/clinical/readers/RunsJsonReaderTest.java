@@ -27,11 +27,6 @@ public class RunsJsonReaderTest {
     }
 
     @Test
-    public void throwsIllegalArgumentOnUnparseableFile() {
-        RunsJsonReader.extractRunContexts(testJson("missing_fields.json"));
-    }
-
-    @Test
     public void readsRunContextsFromJsonFile() {
         List<RunContext> runContexts = RunsJsonReader.extractRunContexts(testJson("two_somatic.json"));
         assertEquals(2, runContexts.size());

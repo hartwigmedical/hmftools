@@ -55,21 +55,18 @@ public class SampleLoader {
     @NotNull
     private List<RunContext> extractRunContextsFromDirectoryOrJson(final @NotNull ClinicalAlgoConfig config, final String runsDirectory,
             final String runsJson) throws IOException {
-        List<RunContext> runContexts;
-        if (runsDirectory != null) {
+        if (runsDirectory != null && runsJson == null) {
             String pipelineVersionFile = config.pipelineVersionFile();
             if (pipelineVersionFile != null) {
                 LOGGER.info("   Loading sequence runs from {}", runsDirectory);
-                runContexts = loadRunContextsFromDirectory(runsDirectory, pipelineVersionFile);
+                return loadRunContextsFromDirectory(runsDirectory, pipelineVersionFile);
             } else {
                 throw new IllegalArgumentException("Cannot load from a runs directory if no pipeline version file given");
             }
-        } else if (runsJson != null) {
-            runContexts = loadRunContextsFromJson(runsJson);
-        } else {
-            throw new IllegalStateException("Either a runs directory or runs json must be specified");
+        } else if (runsJson != null && runsDirectory == null) {
+            return loadRunContextsFromJson(runsJson);
         }
-        return runContexts;
+        throw new IllegalStateException("Either a runs directory or runs json must be specified, and not both");
     }
 
     @NotNull
