@@ -13,7 +13,7 @@ import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ReportData {
+public class FilterReportData {
 
     @NotNull
     public static AnalysedPatientReport overrulePatientReportData(@NotNull AnalysedPatientReport report) {
