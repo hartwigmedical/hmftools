@@ -10,7 +10,7 @@ import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.feature.RefFeatures;
 import com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions;
 import com.hartwig.hmftools.cup.rna.RefGeneExpression;
-import com.hartwig.hmftools.cup.sample.RefSampleTraits;
+import com.hartwig.hmftools.cup.traits.RefSampleTraits;
 import com.hartwig.hmftools.cup.somatics.RefSomatics;
 import com.hartwig.hmftools.cup.svs.RefSvData;
 

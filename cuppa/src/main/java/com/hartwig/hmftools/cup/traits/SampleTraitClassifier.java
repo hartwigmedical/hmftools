@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cup.sample;
+package com.hartwig.hmftools.cup.traits;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
@@ -9,13 +9,13 @@ import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
-import static com.hartwig.hmftools.cup.sample.SampleTraitType.GENDER;
-import static com.hartwig.hmftools.cup.sample.SampleTraitType.MS_INDELS_TMB;
-import static com.hartwig.hmftools.cup.sample.SampleTraitType.WGD;
-import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromCohortFile;
-import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromDatabase;
-import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadRefPercentileData;
-import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadRefRateData;
+import static com.hartwig.hmftools.cup.traits.SampleTraitType.GENDER;
+import static com.hartwig.hmftools.cup.traits.SampleTraitType.MS_INDELS_TMB;
+import static com.hartwig.hmftools.cup.traits.SampleTraitType.WGD;
+import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.loadTraitsFromCohortFile;
+import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.loadTraitsFromDatabase;
+import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.loadRefPercentileData;
+import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.loadRefRateData;
 
 import java.util.List;
 import java.util.Map;
@@ -87,6 +87,8 @@ public class SampleTraitClassifier implements CuppaClassifier
     {
         if(!mConfig.SampleTraitsFile.isEmpty())
         {
+            CUP_LOGGER.info("loading cohort sample traits from file({})", mConfig.SampleTraitsFile);
+
             if(!loadTraitsFromCohortFile(mConfig.SampleTraitsFile, mSampleTraitsData))
                 return false;
         }

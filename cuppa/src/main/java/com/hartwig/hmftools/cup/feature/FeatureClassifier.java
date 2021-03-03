@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.NON_DRIVER_ZERO_PREVA
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
-import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFromCohortFile;
+import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefCancerFeatureAvg;
@@ -222,7 +222,7 @@ public class FeatureClassifier implements CuppaClassifier
         if(!mConfig.SampleFeatureFile.isEmpty())
         {
             CUP_LOGGER.info("loading sample features from file({})", mConfig.SampleFeatureFile);
-            return loadFromCohortFile(mConfig.SampleFeatureFile, mSampleFeatures);
+            return loadFeaturesFromCohortFile(mConfig.SampleFeatureFile, mSampleFeatures);
         }
         else if(mConfig.DbAccess != null)
         {

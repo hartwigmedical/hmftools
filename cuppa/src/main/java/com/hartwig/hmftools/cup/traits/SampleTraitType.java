@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cup.sample;
+package com.hartwig.hmftools.cup.traits;
 
 public enum SampleTraitType
 {

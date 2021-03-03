@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SIG_DATA;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SV_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SIG_PERC;
@@ -24,7 +23,7 @@ import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.extractPositionFrequencyCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.extractTrinucleotideCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
-import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSigContributions;
+import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
 
 import java.io.BufferedWriter;
@@ -45,7 +44,7 @@ import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
-import com.hartwig.hmftools.cup.sample.SampleTraitsData;
+import com.hartwig.hmftools.cup.traits.SampleTraitsData;
 
 public class RefSomatics implements RefClassifier
 {
@@ -296,7 +295,7 @@ public class RefSomatics implements RefClassifier
 
         if(!mConfig.RefSigContribsFile.isEmpty())
         {
-            loadRefSigContributions(mConfig.RefSigContribsFile, sampleSigContributions);
+            loadSigContribsFromCohortFile(mConfig.RefSigContribsFile, sampleSigContributions);
         }
         else if(mConfig.DbAccess != null)
         {

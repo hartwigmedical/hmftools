@@ -53,7 +53,7 @@ public class SvDataLoader
         }
         catch (IOException e)
         {
-            CUP_LOGGER.error("failed to read SV data file({}): {}", filename, e.toString());
+            CUP_LOGGER.error("failed to read SV cohort data file({}): {}", filename, e.toString());
             return false;
         }
 

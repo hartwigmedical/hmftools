@@ -84,43 +84,6 @@ public class SomaticDataLoader
         return true;
     }
 
-    public static boolean loadSigContribsFromCohortFile(final String filename, final Map<String,Map<String,Double>> sampleSigContributions)
-    {
-        try
-        {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
-
-            final String header = fileData.get(0);
-            fileData.remove(0);
-
-            for(final String line : fileData)
-            {
-                // SampleId,SigName,SigContrib,SigPercent
-                final String[] items = line.split(DATA_DELIM, -1);
-                String sampleId = items[0];
-                String sigName = convertSignatureName(items[1]);
-                double sigContrib = Double.parseDouble(items[2]);
-
-                Map<String,Double> sigContribs = sampleSigContributions.get(sampleId);
-
-                if(sigContribs == null)
-                {
-                    sigContribs = Maps.newHashMap();
-                    sampleSigContributions.put(sampleId, sigContribs);
-                }
-
-                sigContribs.put(sigName, sigContrib);
-            }
-        }
-        catch (IOException e)
-        {
-            CUP_LOGGER.error("failed to read sig contribution data file({}): {}", filename, e.toString());
-            return false;
-        }
-
-        return true;
-    }
-
     public static boolean loadRefSignaturePercentileData(
             final String filename, final Map<String,Map<String,double[]>> refCancerSigContribs, final Map<String,double[]> refCancerSnvCounts)
     {
@@ -237,11 +200,8 @@ public class SomaticDataLoader
         }
     }
 
-    public static void loadRefSigContributions(final String filename, final Map<String,Map<String,Double>> sampleSigAllocations)
+    public static boolean loadSigContribsFromCohortFile(final String filename, final Map<String,Map<String,Double>> sampleSigContributions)
     {
-        if(filename.isEmpty())
-            return;
-
         try
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());
@@ -254,26 +214,27 @@ public class SomaticDataLoader
                 // SampleId,SigName,SigContrib,SigPercent
                 final String[] items = line.split(DATA_DELIM, -1);
                 String sampleId = items[0];
-
-                String sigName = items[1];
+                String sigName = convertSignatureName(items[1]);
                 double sigContrib = Double.parseDouble(items[2]);
 
-                Map<String,Double> sigAllocations = sampleSigAllocations.get(sampleId);
+                Map<String,Double> sigContribs = sampleSigContributions.get(sampleId);
 
-
-                if(sigAllocations == null)
+                if(sigContribs == null)
                 {
-                    sigAllocations = Maps.newHashMap();
-                    sampleSigAllocations.put(sampleId, sigAllocations);
+                    sigContribs = Maps.newHashMap();
+                    sampleSigContributions.put(sampleId, sigContribs);
                 }
 
-                sigAllocations.put(sigName, sigContrib);
+                sigContribs.put(sigName, sigContrib);
             }
         }
         catch (IOException e)
         {
             CUP_LOGGER.error("failed to read sig contribution data file({}): {}", filename, e.toString());
+            return false;
         }
+
+        return true;
     }
 
     /*

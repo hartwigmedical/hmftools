@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SV_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
+import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromCohortFile;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromDatabase;
 
 import java.io.BufferedWriter;
@@ -187,25 +188,11 @@ public class RefSvData implements RefClassifier
 
     private void loadCohortSvData(final String filename)
     {
-        try
-        {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+        final Map<String,SvData> sampleSvDataMap = Maps.newHashMap();
 
-            final String header = fileData.get(0);
-            fileData.remove(0);
+        loadSvDataFromCohortFile(filename, sampleSvDataMap);
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
-
-            for(final String line : fileData)
-            {
-                SvData svData = SvData.from(fieldsIndexMap, line);
-                assignSampleData(svData);
-            }
-        }
-        catch (IOException e)
-        {
-            CUP_LOGGER.error("failed to read ref SV data file({}): {}", filename, e.toString());
-        }
+        sampleSvDataMap.values().forEach(x -> assignSampleData(x));
     }
 
 

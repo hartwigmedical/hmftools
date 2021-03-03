@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerTyp
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
@@ -130,6 +131,17 @@ public class CupCalcs
         {
             double percentage = entry.getValue() / valueTotal;
             dataMap.put(entry.getKey(), percentage);
+        }
+    }
+
+    public static void fillMissingCancerTypeValues(final Map<String,Double> dataMap, final Set<String> cancerTypes)
+    {
+        for(String cancerType : cancerTypes)
+        {
+            if(!dataMap.containsKey(cancerType))
+            {
+                dataMap.put(cancerType, 0.0);
+            }
         }
     }
 

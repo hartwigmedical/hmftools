@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SI
 import static com.hartwig.hmftools.cup.common.CupCalcs.adjustRefCounts;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
+import static com.hartwig.hmftools.cup.common.CupCalcs.fillMissingCancerTypeValues;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_DIFF_EXPONENT;
@@ -373,7 +374,7 @@ public class SomaticClassifier implements CuppaClassifier
 
         convertToPercentages(cancerCssTotals);
 
-        if(mMaxCssAdjustFactor > 0)
+        if(mMaxCssAdjustFactor > 0 && totalCss > 0)
         {
             double adjustedFactor = mMaxCssAdjustFactor > 0 ? pow(maxCssScore, mMaxCssAdjustFactor) : 0;
 

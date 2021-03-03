@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cup.sample;
+package com.hartwig.hmftools.cup.traits;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
@@ -9,13 +9,13 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SV_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_TRAITS_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
-import static com.hartwig.hmftools.cup.sample.SampleTraitsDataLoader.loadTraitsFromDatabase;
+import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.loadTraitsFromCohortFile;
+import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.loadTraitsFromDatabase;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -32,7 +32,6 @@ import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
-import com.hartwig.hmftools.cup.svs.SvData;
 
 public class RefSampleTraits implements RefClassifier
 {
@@ -64,17 +63,17 @@ public class RefSampleTraits implements RefClassifier
 
         CUP_LOGGER.info("building sample traits reference data");
 
-        if(mConfig.RefSampleTraitsFile.isEmpty())
+        if(!mConfig.RefSampleTraitsFile.isEmpty())
+        {
+            loadRefPurityData(mConfig.RefSampleTraitsFile);
+        }
+        else
         {
             final Map<String,SampleTraitsData> sampleTraitsData = Maps.newHashMap();
             loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(true), sampleTraitsData);
 
             sampleTraitsData. values().forEach(x -> assignSampleTraitsData(x));
             writeCohortData(sampleTraitsData);
-        }
-        else
-        {
-            loadRefPurityData(mConfig.RefSampleTraitsFile);
         }
 
         initialiseRefDataWriters();
@@ -239,24 +238,9 @@ public class RefSampleTraits implements RefClassifier
 
     private void loadRefPurityData(final String filename)
     {
-        try
-        {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+        final Map<String,SampleTraitsData> sampleTraitsDataMap = Maps.newHashMap();
 
-            final String header = fileData.get(0);
-            fileData.remove(0);
-
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
-
-            for(final String line : fileData)
-            {
-                SampleTraitsData traitsData = SampleTraitsData.from(fieldsIndexMap, line);
-                assignSampleTraitsData(traitsData);
-            }
-        }
-        catch (IOException e)
-        {
-            CUP_LOGGER.error("failed to read ref sample traits data file({}): {}", filename, e.toString());
-        }
+        loadTraitsFromCohortFile(filename, sampleTraitsDataMap);
+        sampleTraitsDataMap.values().forEach(x -> assignSampleTraitsData(x));
     }
 }

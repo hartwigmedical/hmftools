@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.cup.sample;
+package com.hartwig.hmftools.cup.traits;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.sample.SampleTraitType.GENDER;
-import static com.hartwig.hmftools.cup.sample.SampleTraitType.WGD;
+import static com.hartwig.hmftools.cup.traits.SampleTraitType.GENDER;
+import static com.hartwig.hmftools.cup.traits.SampleTraitType.WGD;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,16 +31,17 @@ public class SampleTraitsDataLoader
             final String header = fileData.get(0);
             fileData.remove(0);
 
-            final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
 
             for(final String line : fileData)
             {
                 SampleTraitsData traitsData = SampleTraitsData.from(fieldsIndexMap, line);
                 sampleTraitsData.put(traitsData.SampleId, traitsData);
             }
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
-            CUP_LOGGER.error("failed to read sample traits data file({}): {}", filename, e.toString());
+            CUP_LOGGER.error("failed to read sample traits cohort data file({}): {}", filename, e.toString());
             return false;
         }
 

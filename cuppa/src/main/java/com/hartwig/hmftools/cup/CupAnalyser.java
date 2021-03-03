@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.cup.common.ClassifierType.isDna;
 import static com.hartwig.hmftools.cup.common.ClassifierType.isRna;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedClassifierScoreResult;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedFeatureResult;
+import static com.hartwig.hmftools.cup.common.CupCalcs.fillMissingCancerTypeValues;
 import static com.hartwig.hmftools.cup.common.CupConstants.COMBINED_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.common.CupConstants.DNA_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_DAMPEN_FACTOR;
@@ -24,6 +25,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -37,7 +39,7 @@ import com.hartwig.hmftools.cup.common.SampleSimilarity;
 import com.hartwig.hmftools.cup.feature.FeatureClassifier;
 import com.hartwig.hmftools.cup.rna.AltSjClassifier;
 import com.hartwig.hmftools.cup.rna.GeneExpressionClassifier;
-import com.hartwig.hmftools.cup.sample.SampleTraitClassifier;
+import com.hartwig.hmftools.cup.traits.SampleTraitClassifier;
 import com.hartwig.hmftools.cup.somatics.SomaticClassifier;
 import com.hartwig.hmftools.cup.svs.SvClassifier;
 
@@ -195,6 +197,13 @@ public class CupAnalyser
 
         boolean hasDnaCategories = mConfig.IncludedCategories.stream().anyMatch(x -> CategoryType.isDna(x));
         boolean hasRnaCategories = mConfig.IncludedCategories.stream().anyMatch(x -> CategoryType.isRna(x));
+
+        // ensure each cancer type has a probability for the classifiers to ensure an even application of the min-probability
+        final Set<String> refCancerTypes = mSampleDataCache.RefCancerSampleData.keySet();
+
+        allResults.stream()
+                .filter(x -> x.Category == CLASSIFIER)
+                .forEach(x -> fillMissingCancerTypeValues(x.CancerTypeValues, refCancerTypes));
 
         if(hasDnaCategories)
         {

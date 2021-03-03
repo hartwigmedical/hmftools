@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_FEATURE_DAT
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_DRIVER_AVG;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_FEATURE_PREV;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
-import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFromCohortFile;
+import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 
@@ -50,7 +50,7 @@ public class RefFeatures implements RefClassifier
 
         if(!mConfig.RefFeaturesFile.isEmpty())
         {
-            loadFromCohortFile(mConfig.RefFeaturesFile, sampleFeaturesMap);
+            loadFeaturesFromCohortFile(mConfig.RefFeaturesFile, sampleFeaturesMap);
         }
         else
         {
