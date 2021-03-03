@@ -8,7 +8,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.feature.RefFeatures;
-import com.hartwig.hmftools.cup.rna.RefRnaExpression;
+import com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions;
+import com.hartwig.hmftools.cup.rna.RefGeneExpression;
 import com.hartwig.hmftools.cup.sample.RefSampleTraits;
 import com.hartwig.hmftools.cup.somatics.RefSomatics;
 import com.hartwig.hmftools.cup.svs.RefSvData;
@@ -53,8 +54,11 @@ public class RefDataBuilder
         if(RefFeatures.requiresBuild(mConfig))
             mClassifiers.add(new RefFeatures(mConfig, mSampleDataCache));
 
-        if(RefRnaExpression.requiresBuild(mConfig))
-            mClassifiers.add(new RefRnaExpression(mConfig, mSampleDataCache, cmd));
+        if(RefGeneExpression.requiresBuild(mConfig))
+            mClassifiers.add(new RefGeneExpression(mConfig, mSampleDataCache, cmd));
+
+        if(RefAltSpliceJunctions.requiresBuild(mConfig))
+            mClassifiers.add(new RefAltSpliceJunctions(mConfig, mSampleDataCache));
     }
 
     private void loadSampleData(final CommandLine cmd)

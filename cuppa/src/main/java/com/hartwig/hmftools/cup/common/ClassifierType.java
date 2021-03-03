@@ -8,8 +8,7 @@ public enum ClassifierType
     EXPRESSION_COHORT,
     FEATURE,
     ALT_SJ_COHORT,
-    ALT_SJ_PAIRWISE,
-    COMBINED;
+    ALT_SJ_PAIRWISE;
 
     public static boolean isDna(final ClassifierType type)
     {

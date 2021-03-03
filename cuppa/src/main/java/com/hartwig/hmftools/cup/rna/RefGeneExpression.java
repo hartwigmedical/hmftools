@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cup.rna;
 
-import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
@@ -32,7 +31,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
 
-public class RefRnaExpression implements RefClassifier
+public class RefGeneExpression implements RefClassifier
 {
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
@@ -42,10 +41,9 @@ public class RefRnaExpression implements RefClassifier
     private final Map<String,Integer> mSampleTpmIndex;
     private final List<String> mGeneIds;
     private final List<String> mGeneNames;
-    private final List<String> mSampleIds;
     private final List<String> mCancerTypes;
 
-    public RefRnaExpression(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public RefGeneExpression(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -55,7 +53,6 @@ public class RefRnaExpression implements RefClassifier
         mSampleTpmIndex = Maps.newHashMap();
         mGeneIds = Lists.newArrayList();
         mGeneNames = Lists.newArrayList();
-        mSampleIds = Lists.newArrayList();
         mCancerTypes = Lists.newArrayList();
     }
 
@@ -66,13 +63,13 @@ public class RefRnaExpression implements RefClassifier
 
     public CategoryType categoryType() { return GENE_EXP; }
 
-    public static boolean requiresBuild(final RefDataConfig config) { return !config.RefRnaGeneExpFile.isEmpty(); }
+    public static boolean requiresBuild(final RefDataConfig config) { return !config.RefGeneExpFile.isEmpty(); }
 
     public void buildRefDataSets()
     {
         CUP_LOGGER.debug("loading RNA gene expression data");
 
-        loadRefRnaGeneExpression(mConfig.RefRnaGeneExpFile);
+        loadRefRnaGeneExpression(mConfig.RefGeneExpFile);
 
         if(mGeneSampleExpressionData == null)
         {

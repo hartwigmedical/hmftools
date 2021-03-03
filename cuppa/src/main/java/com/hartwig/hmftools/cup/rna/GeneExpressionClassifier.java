@@ -23,7 +23,7 @@ import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
-import static com.hartwig.hmftools.cup.rna.RefRnaExpression.loadGeneIdIndices;
+import static com.hartwig.hmftools.cup.rna.RefGeneExpression.loadGeneIdIndices;
 
 import java.io.File;
 import java.io.IOException;
@@ -88,7 +88,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
         mSampleRnaExpression = null;
         mSampleIndexMap = Maps.newHashMap();
 
-        final String rnaMethods = cmd.getOptionValue(RNA_METHODS, RNA_METHOD_PAIRWISE_CSS + ";" + RNA_METHOD_CANCER_CSS);
+        final String rnaMethods = cmd.getOptionValue(RNA_METHODS);
 
         mRunPairwiseCss = rnaMethods == null || rnaMethods.contains(RNA_METHOD_PAIRWISE_CSS);
         mRunCancerCss = rnaMethods != null && rnaMethods.contains(RNA_METHOD_CANCER_CSS);
@@ -106,8 +106,9 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
         final List<String> ignoreFields = Lists.newArrayList("GeneId", "GeneName");
 
-        if(mRunPairwiseCss && !mConfig.RefGeneExpSampleFile.isEmpty())
+        if(mRunPairwiseCss)
         {
+            loadGeneIdIndices(mConfig.RefGeneExpSampleFile, mGeneIdIndexMap);
             mRefSampleGeneExpression = loadMatrixDataFile(mConfig.RefGeneExpSampleFile, mRefSampleGeneExpIndexMap, ignoreFields);
 
             if(mRefSampleGeneExpression ==  null)
@@ -119,9 +120,11 @@ public class GeneExpressionClassifier implements CuppaClassifier
             mRefSampleGeneExpression.cacheTranspose();
         }
 
-        if(mRunCancerCss && !mConfig.RefGeneExpCancerFile.isEmpty())
+        if(mRunCancerCss)
         {
-            loadGeneIdIndices(mConfig.RefGeneExpCancerFile, mGeneIdIndexMap);
+            if(mGeneIdIndexMap.isEmpty())
+                loadGeneIdIndices(mConfig.RefGeneExpCancerFile, mGeneIdIndexMap);
+
             mRefCancerTypeGeneExpression = loadMatrixDataFile(mConfig.RefGeneExpCancerFile, mRefCancerTypes, ignoreFields);
 
             if(mRefCancerTypeGeneExpression ==  null)
@@ -150,7 +153,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
             {
                 mSampleRnaExpression = loadMatrixDataFile(mConfig.SampleGeneExpFile, mSampleIndexMap, ignoreFields);
 
-                if(mSampleRnaExpression == null || mRefCancerTypeGeneExpression == null)
+                if(mSampleRnaExpression == null)
                 {
                     mIsValid = false;
                     return;

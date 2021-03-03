@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
-import static com.hartwig.hmftools.cup.common.ClassifierType.COMBINED;
 import static com.hartwig.hmftools.cup.common.ClassifierType.isDna;
 import static com.hartwig.hmftools.cup.common.ClassifierType.isRna;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedClassifierScoreResult;
@@ -227,7 +226,7 @@ public class CupAnalyser
         if(hasDnaCategories && hasRnaCategories)
         {
             SampleResult classifierScoreResult =
-                    calcCombinedClassifierScoreResult(sample, allResults, COMBINED.toString(), COMBINED_DAMPEN_FACTOR);
+                    calcCombinedClassifierScoreResult(sample, allResults, "COMBINED", COMBINED_DAMPEN_FACTOR);
 
             if(classifierScoreResult != null)
                 allResults.add(classifierScoreResult);

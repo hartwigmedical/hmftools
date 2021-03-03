@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_SAMPLE_POS_FREQ_FILE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
-import com.hartwig.hmftools.cup.rna.RefRnaExpression;
+import com.hartwig.hmftools.cup.rna.RefGeneExpression;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -27,7 +27,8 @@ public class RefDataConfig
     public final String RefSnvPositionDataFile;
     public final String RefSnvCountsFile;
     public final String RefFeaturesFile;
-    public final String RefRnaGeneExpFile;
+    public final String RefGeneExpFile;
+    public final String RefAltSjFile;
 
     public final DatabaseAccess DbAccess;
 
@@ -38,7 +39,8 @@ public class RefDataConfig
     public static final String REF_SIG_CONTRIBS_FILE = "ref_sig_contribs_file";
     public static final String REF_SV_DATA_FILE = "ref_sv_data_file";
     public static final String REF_FEATURES_FILE = "ref_features_file";
-    public static final String REF_RNA_GENE_EXP_DATA_FILE = "ref_rna_gene_exp_file";
+    public static final String REF_GENE_EXP_DATA_FILE = "ref_gene_exp_file";
+    public static final String REF_ALT_SJ_DATA_FILE = "ref_alt_sj_file";
     public static final String WRITE_COHORT_FILES = "write_cohort_files";
 
     public RefDataConfig(final CommandLine cmd)
@@ -50,7 +52,8 @@ public class RefDataConfig
         RefSnvPositionDataFile = cmd.getOptionValue(REF_SNV_SAMPLE_POS_FREQ_FILE, "");
         RefSnvCountsFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
         RefFeaturesFile = cmd.getOptionValue(REF_FEATURES_FILE, "");
-        RefRnaGeneExpFile = cmd.getOptionValue(REF_RNA_GENE_EXP_DATA_FILE, "");
+        RefGeneExpFile = cmd.getOptionValue(REF_GENE_EXP_DATA_FILE, "");
+        RefAltSjFile = cmd.getOptionValue(REF_ALT_SJ_DATA_FILE, "");
         WriteCohortFiles = cmd.hasOption(WRITE_COHORT_FILES);
 
         DbAccess = createDatabaseAccess(cmd);
@@ -67,7 +70,8 @@ public class RefDataConfig
         options.addOption(REF_SNV_SAMPLE_POS_FREQ_FILE, true, "Ref SNV position frequency matrix data file");
         options.addOption(REF_SNV_COUNTS_FILE, true, "Ref SNV trinucleotide matrix data file");
         options.addOption(REF_FEATURES_FILE, true, "Ref sample features data file");
-        options.addOption(REF_RNA_GENE_EXP_DATA_FILE, true, "Ref sample RNA gene expression cohort data file");
+        options.addOption(REF_GENE_EXP_DATA_FILE, true, "Ref sample RNA gene expression cohort data file");
+        options.addOption(REF_ALT_SJ_DATA_FILE, true, "Ref sample RNA alternate splice junction cohort data file");
         options.addOption(WRITE_COHORT_FILES, false, "Re-write ref data as cohort files");
 
         addDatabaseCmdLineArgs(options);
@@ -75,7 +79,7 @@ public class RefDataConfig
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
 
-        RefRnaExpression.addCmdLineArgs(options);
+        RefGeneExpression.addCmdLineArgs(options);
     }
 
 }

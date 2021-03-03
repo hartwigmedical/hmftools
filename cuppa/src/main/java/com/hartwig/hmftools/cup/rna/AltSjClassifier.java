@@ -35,6 +35,9 @@ import static com.hartwig.hmftools.cup.common.SampleData.RNA_READ_LENGTH_NONE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
+import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_END;
+import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_START;
+import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.loadSampleAltSjMatrixData;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -89,8 +92,6 @@ public class AltSjClassifier implements CuppaClassifier
     private static final String WEIGHT_EXPONENT = "alt_sj_weight_exp";
     private static final String RUN_PAIRWISE = "alt_sj_pairwise";
 
-    private static final String FLD_POS_START = "PosStart";
-    private static final String FLD_POS_END = "PosEnd";
     private static final String READ_LENGTH_DELIM = "_";
 
     public AltSjClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
@@ -128,10 +129,10 @@ public class AltSjClassifier implements CuppaClassifier
         final List<String> ignoreFields = Lists.newArrayList(FLD_GENE_ID, FLD_CHROMOSOME, FLD_POS_START, FLD_POS_END);
         loadRefFragCounts(ignoreFields);
 
-        // load a cohort sample frag counts matrix if available
         if(cmd.hasOption(SAMPLE_ALT_SJ_FILE))
         {
-            loadSampleMatrixData(cmd.getOptionValue(SAMPLE_ALT_SJ_FILE), ignoreFields);
+            List<String> asjLocations = Lists.newArrayList();
+            mSampleFragCounts = loadSampleAltSjMatrixData(cmd.getOptionValue(SAMPLE_ALT_SJ_FILE), mSampleIndexMap, asjLocations);
 
             if(mSampleFragCounts ==  null)
             {
@@ -145,6 +146,19 @@ public class AltSjClassifier implements CuppaClassifier
                         mRefCancerTypeMatrix.Rows, mSampleFragCounts.Rows);
 
                 mIsValid = false;
+            }
+
+            // convert counts to log
+            if(mFragCountLogValue > 0)
+            {
+                final double[][] sampleData = mSampleFragCounts.getData();
+                for(int r = 0; r < mSampleFragCounts.Rows; ++r)
+                {
+                    for(int c = 0; c < mSampleFragCounts.Rows; ++c)
+                    {
+                        sampleData[r][c] = convertFragCount(sampleData[r][c]);
+                    }
+                }
             }
         }
         else
