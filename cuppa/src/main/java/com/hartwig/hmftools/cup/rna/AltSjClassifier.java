@@ -154,7 +154,7 @@ public class AltSjClassifier implements CuppaClassifier
                 final double[][] sampleData = mSampleFragCounts.getData();
                 for(int r = 0; r < mSampleFragCounts.Rows; ++r)
                 {
-                    for(int c = 0; c < mSampleFragCounts.Rows; ++c)
+                    for(int c = 0; c < mSampleFragCounts.Cols; ++c)
                     {
                         sampleData[r][c] = convertFragCount(sampleData[r][c]);
                     }
@@ -508,88 +508,6 @@ public class AltSjClassifier implements CuppaClassifier
         }
 
         return true;
-    }
-
-    private void loadSampleMatrixData(final String filename, final List<String> ignoreFields)
-    {
-        // load the sample frag counts but transpose the data and apply the log conversion if applicable
-        try
-        {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
-
-            // read field names
-            if(fileData.size() <= 1)
-            {
-                CUP_LOGGER.error("empty data CSV file({})", filename);
-                return;
-            }
-
-            final String header = fileData.get(0);
-            final List<String> sampleIds = Lists.newArrayList();
-            sampleIds.addAll(Lists.newArrayList(header.split(DEFAULT_MATRIX_DELIM, -1)));
-            fileData.remove(0);
-
-            List<Integer> ignoreCols = Lists.newArrayList();
-
-            if(ignoreFields != null)
-            {
-                for(int i = 0; i < sampleIds.size(); ++i)
-                {
-                    if(ignoreFields.contains(sampleIds.get(i)))
-                    {
-                        ignoreCols.add(i);
-
-                        if(ignoreCols.size() == ignoreFields.size())
-                            break;
-                    }
-                }
-
-                ignoreFields.forEach(x -> sampleIds.remove(x));
-            }
-
-            for(int i = 0; i < sampleIds.size(); ++i)
-            {
-                mSampleIndexMap.put(sampleIds.get(i), i);
-            }
-
-            int sampleCount = sampleIds.size();
-            int altSjCount = fileData.size();
-            int invalidRowCount = 0;
-
-            mSampleFragCounts = new Matrix(sampleCount, altSjCount);
-            final double[][] matrixData = mSampleFragCounts.getData();
-
-            for(int r = 0; r < altSjCount; ++r)
-            {
-                final String line = fileData.get(r);
-                final String[] items = line.split(DEFAULT_MATRIX_DELIM, -1);
-
-                if(items.length != sampleCount + ignoreCols.size())
-                {
-                    ++invalidRowCount;
-                    continue;
-                }
-
-                int c = 0;
-                for(int i = 0; i < items.length; ++i)
-                {
-                    if(ignoreCols.contains(i))
-                        continue;
-
-                    // data transposed and converted
-                    matrixData[c][r] = convertFragCount(Double.parseDouble(items[i]));
-                    ++c;
-                }
-            }
-
-            CUP_LOGGER.info("loaded matrix(rows={} cols={}) from file({}) {}",
-                    altSjCount, sampleCount, filename, invalidRowCount > 0 ? String.format(", invalidRowCount(%d)", invalidRowCount) : "");
-        }
-        catch (IOException exception)
-        {
-            CUP_LOGGER.error("failed to read matrix data file({}): {}", filename, exception.toString());
-            return;
-        }
     }
 
     private boolean loadSampleAltSJsToArray(final String sampleId)
