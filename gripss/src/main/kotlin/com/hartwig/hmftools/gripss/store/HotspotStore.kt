@@ -7,6 +7,11 @@ import com.hartwig.hmftools.gripss.StructuralVariantContext
 
 class HotspotStore(private val store: LocationStore) {
     companion object {
+        operator fun invoke(compare: ContigComparator, pairedHotspots: List<Breakpoint>): HotspotStore {
+            val locationStore = LocationStore.invoke(compare, listOf(), pairedHotspots, 0)
+            return HotspotStore(locationStore)
+        }
+
         operator fun invoke(compare: ContigComparator, promiscuousHotspots: List<Breakend>, pairedHotspots: List<Breakpoint>): HotspotStore {
             val locationStore = LocationStore.invoke(compare, promiscuousHotspots, pairedHotspots, 0)
             return HotspotStore(locationStore)
