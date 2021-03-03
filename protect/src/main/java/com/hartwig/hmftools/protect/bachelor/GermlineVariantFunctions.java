@@ -79,7 +79,7 @@ public final class GermlineVariantFunctions {
                 .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())
-                .canonicalTranscript(canonicalTranscript == null ? Strings.EMPTY : canonicalTranscript.geneID())
+                .canonicalTranscript(canonicalTranscript == null ? Strings.EMPTY : canonicalTranscript.transcriptID())
                 .canonicalCodingEffect(variant.codingEffect())
                 .canonicalHgvsCodingImpact(variant.hgvsCoding())
                 .canonicalHgvsProteinImpact(variant.hgvsProtein())

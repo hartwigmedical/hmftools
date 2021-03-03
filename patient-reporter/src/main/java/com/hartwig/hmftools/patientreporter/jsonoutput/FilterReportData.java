@@ -21,6 +21,8 @@ public class FilterReportData {
         for (ReportableVariant variant : report.genomicAnalysis().reportableVariants()) {
             if (report.sampleReport().germlineReportingLevel() == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION) {
                 filteredVariantsOverruleVariantSource.add(overruleVariant(variant).build());
+            } else {
+                filteredVariantsOverruleVariantSource.add(variant);
             }
         }
 
@@ -62,6 +64,7 @@ public class FilterReportData {
                 .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())
+                .canonicalTranscript(variant.canonicalTranscript())
                 .canonicalCodingEffect(variant.canonicalCodingEffect())
                 .canonicalHgvsCodingImpact(variant.canonicalHgvsCodingImpact())
                 .canonicalHgvsProteinImpact(variant.canonicalHgvsProteinImpact())
