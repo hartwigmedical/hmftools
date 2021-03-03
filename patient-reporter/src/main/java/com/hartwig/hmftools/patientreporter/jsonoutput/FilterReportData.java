@@ -13,7 +13,7 @@ import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ReportData {
+public class FilterReportData {
 
     @NotNull
     public static AnalysedPatientReport overrulePatientReportData(@NotNull AnalysedPatientReport report) {
@@ -21,6 +21,8 @@ public class ReportData {
         for (ReportableVariant variant : report.genomicAnalysis().reportableVariants()) {
             if (report.sampleReport().germlineReportingLevel() == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION) {
                 filteredVariantsOverruleVariantSource.add(overruleVariant(variant).build());
+            } else {
+                filteredVariantsOverruleVariantSource.add(variant);
             }
         }
 
@@ -62,6 +64,7 @@ public class ReportData {
                 .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())
+                .canonicalTranscript(variant.canonicalTranscript())
                 .canonicalCodingEffect(variant.canonicalCodingEffect())
                 .canonicalHgvsCodingImpact(variant.canonicalHgvsCodingImpact())
                 .canonicalHgvsProteinImpact(variant.canonicalHgvsProteinImpact())

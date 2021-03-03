@@ -96,7 +96,7 @@ public final class ReportableVariantFactory {
                 .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())
-                .canonicalTranscript(canonicalTranscript == null ? Strings.EMPTY : canonicalTranscript.geneID())
+                .canonicalTranscript(canonicalTranscript == null ? Strings.EMPTY : canonicalTranscript.transcriptID())
                 .canonicalCodingEffect(variant.canonicalCodingEffect())
                 .canonicalHgvsCodingImpact(variant.canonicalHgvsCodingImpact())
                 .canonicalHgvsProteinImpact(variant.canonicalHgvsProteinImpact())

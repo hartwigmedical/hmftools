@@ -16,7 +16,7 @@ import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReporter;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportData;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportDataLoader;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
-import com.hartwig.hmftools.patientreporter.jsonoutput.ReportData;
+import com.hartwig.hmftools.patientreporter.jsonoutput.FilterReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReportData;
@@ -125,7 +125,7 @@ public class PatientReporterApplication {
         if (!config.onlyCreatePDF()) {
             LOGGER.debug("Updating additional files and databases");
 
-            AnalysedPatientReport reportOverrule = ReportData.overrulePatientReportData(report);
+            AnalysedPatientReport reportOverrule = FilterReportData.overrulePatientReportData(report);
 
             writeReportDataToJson(config.outputDirData(),
                     report.sampleReport().sampleMetadata().tumorSampleId(),

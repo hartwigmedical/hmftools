@@ -48,7 +48,7 @@ There are 5 steps in GRIPSS described in detail below:
 Three hard filters are applied upfront before other processing occurs:
 * NO_MATE - Any non single breakend with no mate is filtered
 * MINIMUM_TUMOR_QUAL - Any variant with QUAL < 100 is filtered
-* MAX_NORMAL_SUPPORT - Any variant with normalSupport > 3 reads OR normalSupport > 6% * tumorSupport is filtered as likely germline or artefact unless it links a pair of genes in the known pathogenic fusion list via translocation or local break junction of length more than 10kb. Ideally we would not allow any support for the variant in the normal, but contamination of the blood with tumor DNA is not uncommon.
+* MAX_NORMAL_SUPPORT - Any variant with normalSupport > 3 reads OR normalSupport > 8% * tumorSupport is filtered as likely germline or artefact unless it links a pair of genes in the known pathogenic fusion list via translocation or local break junction of length more than 10kb. Ideally we would not allow any support for the variant in the normal, but contamination of the blood with tumor DNA is not uncommon.
 
 ## 2. Realignment
 
@@ -133,7 +133,9 @@ Note that for DSB and hotspot rescue, neither the rescued variant nor the rescui
 - Upcoming
  - Fix hotspot matching
  - Replace other ambiguous bases in bam with N
- - Added optional support for promiscuous fusion hotspots (-promiscuous_breakpoint_hotspot)
+ - Fixed description of TAF: Tumor allelic frequency (fragment support / total support)
+ - Do not attempt transitive linking if there is 500,000+ variants
+ - Changed default value of hardMaxNormalRelativeSupport from 0.06 to 0.08 
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.10)
   - Removed viral insertion exception from normal relative support filter
   - Add EventType flag [DEL, INS, DUP, INV, SGL, BND]

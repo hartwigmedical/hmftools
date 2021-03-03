@@ -3,18 +3,26 @@ package com.hartwig.hmftools.common.drivercatalog.panel;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.junit.Test;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class GermlineBlacklistTest {
+public class GermlineResourcesTest {
 
     @Test
-    public void testConsistency() {
-        List<VariantContext> hg19list = GermlineBlacklist.grch37Blacklist();
-        List<VariantContext> hg38list = GermlineBlacklist.grch38Blacklist();
+    public void testBlacklistConsistency() throws IOException {
+        testConsistency(GermlineResources.grch37Blacklist(), GermlineResources.grch38Blacklist());
+    }
+
+    @Test
+    public void testWhiteConsistency() throws IOException {
+        testConsistency(GermlineResources.grch37Whitelist(), GermlineResources.grch38Whitelist());
+    }
+
+    public void testConsistency(List<VariantContext> hg19list, List<VariantContext> hg38list )  {
 
         assertEquals(hg19list.size(), hg38list.size());
 
@@ -29,5 +37,6 @@ public class GermlineBlacklistTest {
         }
 
     }
+
 
 }

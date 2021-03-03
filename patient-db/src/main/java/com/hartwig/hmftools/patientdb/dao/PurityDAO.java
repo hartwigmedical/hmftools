@@ -63,6 +63,29 @@ class PurityDAO {
         return sampleIds;
     }
 
+    @NotNull
+    List<SamplePurity> readPassingQC(double minPurity, @NotNull String primaryTumorLocation) {
+        List<SamplePurity> sampleIds = Lists.newArrayList();
+
+        Result<Record> result = context.select()
+                .from(PURITY)
+                .join("clinical").on("purity.sampleId = clinical.sampleId")
+                .where(PURITY.PURITY_.ge(minPurity))
+                .and(PURITY.FITMETHOD.ne(NO_TUMOR.toString()))
+                .and(PURITY.QCSTATUS.eq(PASS.toString()))
+                .and("clinical.primaryTumorLocation = '" + primaryTumorLocation + "'")
+                .fetch();
+
+        for (Record record : result) {
+            sampleIds.add(ImmutableSamplePurity.builder()
+                    .sampleId(record.getValue(PURITY.SAMPLEID))
+                    .purity(record.getValue(PURITY.PURITY_))
+                    .build());
+        }
+
+        return sampleIds;
+    }
+
     @Nullable
     PurityContext readPurityContext(@NotNull String sample) {
         Record result = context.select().from(PURITY).where(PURITY.SAMPLEID.eq(sample)).fetchOne();

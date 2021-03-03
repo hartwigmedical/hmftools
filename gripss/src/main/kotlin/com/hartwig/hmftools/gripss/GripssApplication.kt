@@ -88,14 +88,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
 
         logger.info("Reading hotspot file: ${config.pairedHotspotFile}")
         val pairedHotspots = Breakpoint.fromBedpeFile(config.pairedHotspotFile, contigComparator)
-        val promiscuousHotspots = if (config.pairedPromiscuousHotspotFile.isNotEmpty()) {
-            logger.info("Reading promiscuous hotspot file: ${config.pairedPromiscuousHotspotFile}")
-            Breakend.fromBedFile(config.pairedPromiscuousHotspotFile)
-        } else {
-            listOf()
-        }
-
-        val hotspotStore = HotspotStore(contigComparator, promiscuousHotspots, pairedHotspots)
+        val hotspotStore = HotspotStore(contigComparator, pairedHotspots)
         val hotspotRescue = hotspotRescue(hotspotStore)
 
         logger.info("Reading VCF file: ${config.inputVcf}")

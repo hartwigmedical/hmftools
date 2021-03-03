@@ -38,7 +38,7 @@ public class LimsCheckerTest {
         String coreSampleId = "CORE020000001T";
 
         String correctIdT = "T20-72346";
-        String correctIdC = "C18-00124";
+        String correctIdC = "C18-124";
         String wrongId = "BGr-121111";
 
         LimsCohortConfig cohortConfigWIDE = createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, true);

@@ -10,14 +10,12 @@ import java.util.concurrent.ExecutorService;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.sage.config.SageConfig;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class QualityRecalibration {
@@ -26,8 +24,7 @@ public class QualityRecalibration {
     private final IndexedFastaSequenceFile refGenome;
     private final SageConfig config;
 
-    public QualityRecalibration(final SageConfig config, final ExecutorService executorService,
-            final IndexedFastaSequenceFile refGenome) {
+    public QualityRecalibration(final SageConfig config, final ExecutorService executorService, final IndexedFastaSequenceFile refGenome) {
         this.executorService = executorService;
         this.refGenome = refGenome;
         this.config = config;
@@ -37,22 +34,17 @@ public class QualityRecalibration {
     public CompletableFuture<List<QualityRecalibrationRecord>> qualityRecalibrationRecords(@NotNull final String bamFile) {
         final Map<QualityCounterKey, QualityCounter> map = new ConcurrentHashMap<>(Maps.newHashMap());
         final List<CompletableFuture<Void>> doneList = Lists.newArrayList();
-
-        for (final SAMSequenceRecord sequenceRecord : refGenome.getSequenceDictionary().getSequences()) {
-            final String contig = sequenceRecord.getSequenceName();
-
-            if (HumanChromosome.contains(contig) && HumanChromosome.fromString(contig).isAutosome()) {
-                int start = sequenceRecord.getSequenceLength() - 1_000_000 - config.baseQualityRecalibrationConfig().sampleSize();
-                int end = sequenceRecord.getSequenceLength() - 1_000_001;
-                for (CompletableFuture<Collection<QualityCounter>> region : submitAllRegions(bamFile, contig, start, end)) {
-                    final CompletableFuture<Void> done = region.thenAccept(counts -> {
-                        for (QualityCounter count : counts) {
-                            final QualityCounterKey key = withoutPosition(count);
-                            map.computeIfAbsent(key, QualityCounter::new).increment(count.count());
-                        }
-                    });
-                    doneList.add(done);
-                }
+        final List<GenomeRegion> regions =
+                new QualityRecalibrationRegions(refGenome).regions(config.baseQualityRecalibrationConfig().sampleSize());
+        for (GenomeRegion region : regions) {
+            for (CompletableFuture<Collection<QualityCounter>> slice : submitAllRegions(bamFile, region)) {
+                final CompletableFuture<Void> done = slice.thenAccept(counts -> {
+                    for (QualityCounter count : counts) {
+                        final QualityCounterKey key = withoutPosition(count);
+                        map.computeIfAbsent(key, QualityCounter::new).increment(count.count());
+                    }
+                });
+                doneList.add(done);
             }
         }
 
@@ -65,8 +57,12 @@ public class QualityRecalibration {
 
     public CompletableFuture<Collection<QualityCounter>> addRegion(String bam, String contig, int start, int end) {
         final GenomeRegion bounds = GenomeRegions.create(contig, start, end);
-        return CompletableFuture.supplyAsync(() -> new QualityCounterFactory(config, bam, refGenome).regionCount(bounds),
-                executorService);
+        return CompletableFuture.supplyAsync(() -> new QualityCounterFactory(config, bam, refGenome).regionCount(bounds), executorService);
+    }
+
+    public List<CompletableFuture<Collection<QualityCounter>>> submitAllRegions(@NotNull final String bam,
+            @NotNull final GenomeRegion region) {
+        return submitAllRegions(bam, region.chromosome(), (int) region.start(), (int) region.end());
     }
 
     public List<CompletableFuture<Collection<QualityCounter>>> submitAllRegions(@NotNull final String bam, @NotNull final String contig,

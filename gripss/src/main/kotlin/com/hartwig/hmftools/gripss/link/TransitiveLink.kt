@@ -11,6 +11,7 @@ private typealias SvFilter = (StructuralVariantContext) -> Boolean
 class TransitiveLink(private val assemblyLinkStore: LinkStore, private val variantStore: VariantStore) {
 
     companion object {
+        private const val MAX_VARIANTS = 500_000
         private const val MAX_ALTERNATIVES = 25
         private const val MAX_ALTERNATIVES_SEEK_DISTANCE = 1000
         private const val MAX_ALTERNATIVES_ADDITIONAL_DISTANCE = MAX_ALTERNATIVES_SEEK_DISTANCE // This needs to be high to account for insert sequences
@@ -22,12 +23,16 @@ class TransitiveLink(private val assemblyLinkStore: LinkStore, private val varia
     }
 
     fun transitiveLink(variant: StructuralVariantContext, maxAssemblyJumps: Int = MAX_ASSEMBLY_JUMPS, maxTransitiveJumps: Int = MAX_TRANSITIVE_JUMPS): List<Link> {
+        if (variantStore.size() > MAX_VARIANTS) {
+            return Collections.emptyList()
+        }
+
         if (!variant.isSingle) {
             val target = variantStore.select(variant.mateId!!)
             val alternativeStarts = variantStore.selectAlternatives(variant)
             // Note: we really shouldn't expect to see that many variants within the CIPOS. If we do it is likely that it is a large
             // poly-G region or something equally messy.
-             if (alternativeStarts.size in 1..MAX_ALTERNATIVES) {
+            if (alternativeStarts.size in 1..MAX_ALTERNATIVES) {
                 logger.debug("Examining ${alternativeStarts.size} alternative(s) to variant $target")
                 val transLinkPrefix = "trs_${variant.vcfId}_"
                 val assemblyNodes = ArrayDeque<Node>()

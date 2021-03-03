@@ -24,8 +24,11 @@ Sage can be run in a germline mode.  See details [here](https://github.com/hartw
 ## BAM Requirements
 BAM records that are flagged as unmapped, duplicateRead or secondary/supplementary are ignored. 
 
-Optional NM tag (edit distance to the reference) is used in the quality calculation. 
+Optional NM tag (edit distance to the reference) is used in the quality calculation where available otherwise it is calculated on the fly.
 More information about the tag available [here](https://samtools.github.io/hts-specs/SAMtags.pdf).
+
+While SAGE does support CRAM files, we strongly recommend converting them to BAM first as SAGE makes multiple passes over the supplied alignment files. 
+Converting them first up front saves significant CPU time overall. 
 
 ## Installation
 
@@ -631,6 +634,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 32 | 45 | 943 | 15
 
 # Version History and Download Links
+- Upcoming
+  - Calculate NM field if not present in alignment file
 - [2.6](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.6)
   - Coverage is now calculated on supplied bed file rather than on panel bed file
   - Added validation_stringency parameter

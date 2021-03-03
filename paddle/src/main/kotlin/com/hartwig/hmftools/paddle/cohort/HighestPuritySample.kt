@@ -13,6 +13,10 @@ data class HighestPuritySample(val sampleId: String, val purity: Double) {
         return "$sampleId\t$purity"
     }
 
+    fun toBatchJson(): String {
+        return "{\"biopsy\":\"$sampleId\"},"
+    }
+
     companion object {
 
         fun highestPurityCohort(minPurity: Double, dbAccess: DatabaseAccess): Collection<HighestPuritySample> {

@@ -26,7 +26,7 @@ public class RefSequence {
     }
 
     @VisibleForTesting
-    RefSequence(final ReferenceSequence sequence) {
+    public RefSequence(final ReferenceSequence sequence) {
         this.sequence = sequence;
         this.start = sequence.getContigIndex() + 1;
         this.end = start + sequence.getBases().length - 1;
