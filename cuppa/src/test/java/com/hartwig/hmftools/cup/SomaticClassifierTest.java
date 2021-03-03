@@ -35,7 +35,7 @@ public class SomaticClassifierTest
 
         CuppaConfig config = new CuppaConfig();
 
-        SomaticClassifier classifier = new SomaticClassifier(config, dataCache);
+        SomaticClassifier classifier = new SomaticClassifier(config, dataCache, null);
 
         CuppaUtilsTest.addRefSample(dataCache, TEST_SAMPLE_001, TEST_CT_001);
         CuppaUtilsTest.addRefSample(dataCache, TEST_SAMPLE_002, TEST_CT_002);

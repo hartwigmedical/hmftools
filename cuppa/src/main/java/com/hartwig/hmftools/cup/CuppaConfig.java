@@ -30,6 +30,7 @@ import java.util.List;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.rna.AltSjClassifier;
 import com.hartwig.hmftools.cup.rna.GeneExpressionClassifier;
+import com.hartwig.hmftools.cup.somatics.SomaticClassifier;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -273,6 +274,7 @@ public class CuppaConfig
         addDatabaseCmdLineArgs(options);
         GeneExpressionClassifier.addCmdLineArgs(options);
         AltSjClassifier.addCmdLineArgs(options);
+        SomaticClassifier.addCmdLineArgs(options);
 
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(OUTPUT_FILE_ID, true, "Output file ID");

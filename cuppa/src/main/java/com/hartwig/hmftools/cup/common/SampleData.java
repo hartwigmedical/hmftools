@@ -97,22 +97,5 @@ public class SampleData
         return fieldsIndexMap.containsKey(fieldName) ?items[fieldsIndexMap.get(fieldName)] : defaultValue;
     }
 
-    public boolean isCandidateCancerType(final String cancerType)
-    {
-        if(mGenderType == null)
-            return true;
-
-        if(cancerType.contains(CANCER_TYPE_UTERUS) || cancerType.contains(CANCER_TYPE_OVARY))
-        {
-            if(mGenderType != Gender.FEMALE)
-                return false;
-        }
-        if(cancerType.contains(CANCER_TYPE_PROSTATE))
-        {
-            if(mGenderType == Gender.FEMALE)
-                return false;
-        }
-
-        return true;
-    }
+    public boolean isCandidateCancerType(final String cancerType) { return CupConstants.isCandidateCancerType(mGenderType, cancerType); }
 }

@@ -121,14 +121,14 @@ public class CupCalcs
 
     public static void convertToPercentages(final Map<String,Double> dataMap)
     {
-        double totalPrevalence = dataMap.values().stream().mapToDouble(x -> x).sum();
+        double valueTotal = dataMap.values().stream().mapToDouble(x -> x).sum();
 
-        if(totalPrevalence == 0)
+        if(valueTotal == 0)
             return;
 
         for(Map.Entry<String,Double> entry : dataMap.entrySet())
         {
-            double percentage = entry.getValue() / totalPrevalence;
+            double percentage = entry.getValue() / valueTotal;
             dataMap.put(entry.getKey(), percentage);
         }
     }

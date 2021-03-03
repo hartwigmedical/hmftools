@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cup.common;
 
+import com.hartwig.hmftools.common.purple.gender.Gender;
+
 public class CupConstants
 {
     public static final double SNV_CSS_THRESHOLD = 0.01;
@@ -27,14 +29,35 @@ public class CupConstants
 
     public static final String CANCER_TYPE_UNKNOWN = "Unknown";
     public static final String CANCER_TYPE_OTHER = "Other";
-
-    // cancer types with gender-exclusions
-    public static final String CANCER_TYPE_PROSTATE = "Prostate";
-    public static final String CANCER_TYPE_OVARY = "Ovary";
-    public static final String CANCER_TYPE_UTERUS = "Uterus";
     public static final String CANCER_TYPE_PAN = "ALL";
 
     public static final double DRIVER_ZERO_PREVALENCE_ALLOCATION = 0.10;
     public static final double NON_DRIVER_ZERO_PREVALENCE_ALLOCATION = 0.02;
 
+
+    // cancer types with gender-exclusions
+    public static final String CANCER_TYPE_PROSTATE = "Prostate";
+    public static final String CANCER_TYPE_OVARY = "Ovary";
+    public static final String CANCER_TYPE_UTERUS = "Uterus";
+    public static final String CANCER_TYPE_TESTIS = "Testis";
+
+    public static boolean isCandidateCancerType(final Gender gender, final String cancerType)
+    {
+        if(gender == null)
+            return true;
+
+        if(cancerType.contains(CANCER_TYPE_UTERUS) || cancerType.contains(CANCER_TYPE_OVARY))
+        {
+            if(gender != Gender.FEMALE)
+                return false;
+        }
+
+        if(cancerType.contains(CANCER_TYPE_PROSTATE) || cancerType.contains(CANCER_TYPE_TESTIS))
+        {
+            if(gender == Gender.FEMALE)
+                return false;
+        }
+
+        return true;
+    }
 }

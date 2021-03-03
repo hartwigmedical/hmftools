@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.cup.common.ClassifierType.SNV_96_PAIRWISE_SIM
 import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SIMILARITY;
 import static com.hartwig.hmftools.cup.common.CupCalcs.adjustRefCounts;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
+import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_DIFF_EXPONENT;
@@ -54,6 +55,9 @@ import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+
 public class SomaticClassifier implements CuppaClassifier
 {
     private final CuppaConfig mConfig;
@@ -80,9 +84,13 @@ public class SomaticClassifier implements CuppaClassifier
 
     private boolean mIsValid;
 
+    private final double mMaxCssAdjustFactor;
     private static final int SNV_POS_FREQ_SNV_TOTAL_THRESHOLD = 20000;
 
-    public SomaticClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache)
+    //private static final double MAX_CSS_ADJUST_FACTOR = 4;
+    public static final String MAX_CSS_ADJUST_FACTOR = "css_max_factor";
+
+    public SomaticClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -100,6 +108,8 @@ public class SomaticClassifier implements CuppaClassifier
         mRefCancerSnvCountPercentiles = Maps.newHashMap();
         mRefSnvPosFreqCancerTypes = Lists.newArrayList();
         mRefSamplePosFreqIndex = Maps.newHashMap();
+
+        mMaxCssAdjustFactor = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR, "0")) : 0;
 
         mIsValid = true;
 
@@ -121,6 +131,11 @@ public class SomaticClassifier implements CuppaClassifier
         mIsValid &= loadSigContributions();
     }
 
+    public static void addCmdLineArgs(Options options)
+    {
+        options.addOption(MAX_CSS_ADJUST_FACTOR, true, "Max CSS adustment factor");
+    }
+
     public CategoryType categoryType() { return SNV; }
     public boolean isValid() { return mIsValid; }
     public void close() {}
@@ -129,7 +144,19 @@ public class SomaticClassifier implements CuppaClassifier
     {
         if(!mConfig.SampleSnvCountsFile.isEmpty() && !mConfig.SampleSnvPosFreqFile.isEmpty())
         {
-            mSampleCounts = loadSampleCountsFromFile(mConfig.SampleSnvCountsFile, mSampleCountsIndex);
+            if(mConfig.SampleSnvCountsFile.equals(mConfig.RefSnvCountsFile))
+            {
+                mSampleCounts = mRefSampleCounts;
+
+                for(int i = 0; i < mRefSampleNames.size(); ++i)
+                {
+                    mSampleCountsIndex.put(mRefSampleNames.get(i), i);
+                }
+            }
+            else
+            {
+                mSampleCounts = loadSampleCountsFromFile(mConfig.SampleSnvCountsFile, mSampleCountsIndex);
+            }
 
             if(mConfig.SampleSnvPosFreqFile.equals(mConfig.RefSnvSamplePosFreqFile))
             {
@@ -248,7 +275,6 @@ public class SomaticClassifier implements CuppaClassifier
         addSigContributionResults(sample, results);
 
         // add a percentile result
-
         final Map<String, Double> cancerTypeValues = Maps.newHashMap();
 
         for(Map.Entry<String, double[]> cancerPercentiles : mRefCancerSnvCountPercentiles.entrySet())
@@ -291,6 +317,8 @@ public class SomaticClassifier implements CuppaClassifier
 
         final Map<String,Double> cancerCssTotals = Maps.newHashMap();
 
+        double maxCssScore = 0;
+
         for(int s = 0; s < refSampleCount; ++s)
         {
             final String refSampleId = mRefSampleNames.get(s);
@@ -323,6 +351,8 @@ public class SomaticClassifier implements CuppaClassifier
             if(!isKnownCancerType(refCancerType))
                 continue;
 
+            maxCssScore = max(css, maxCssScore);
+
             double cssWeight = pow(SNV_CSS_DIFF_EXPONENT, -100 * (1 - css));
 
             double otherSnvTotal = sumVector(otherSampleCounts);
@@ -339,12 +369,21 @@ public class SomaticClassifier implements CuppaClassifier
                 cancerCssTotals.put(refCancerType, total + weightedCss);
         }
 
-        double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum();
+        double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum(); // prior to any conversion
 
-        for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
+        convertToPercentages(cancerCssTotals);
+
+        if(mMaxCssAdjustFactor > 0)
         {
-            double prob = totalCss > 0 ? entry.getValue() / totalCss : 0;
-            cancerCssTotals.put(entry.getKey(), prob);
+            double adjustedFactor = mMaxCssAdjustFactor > 0 ? pow(maxCssScore, mMaxCssAdjustFactor) : 0;
+
+            for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
+            {
+                double adjCancerScore = pow(entry.getValue(), adjustedFactor);
+                cancerCssTotals.put(entry.getKey(), adjCancerScore);
+            }
+
+            convertToPercentages(cancerCssTotals);
         }
 
         results.add(new SampleResult(
@@ -431,10 +470,7 @@ public class SomaticClassifier implements CuppaClassifier
 
         double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum();
 
-        for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
-        {
-            cancerCssTotals.put(entry.getKey(), entry.getValue() / totalCss);
-        }
+        convertToPercentages(cancerCssTotals);
 
         results.add(new SampleResult(
                 sample.Id, CLASSIFIER, LIKELIHOOD, GENOMIC_POSITION_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
