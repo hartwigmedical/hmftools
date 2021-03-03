@@ -224,7 +224,7 @@ data class GripssFilterConfig(
             return GripssFilterConfig(
                     100,
                     3,
-                    0.06,
+                    0.08,
                     0.03,
                     8,
                     0.005,
