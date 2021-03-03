@@ -315,6 +315,13 @@ public class Lims {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
             String germlineReportingLevelString = sampleData.germlineReportingLevel();
+
+            if (cohortConfig(sampleBarcode) != null) {
+                if (cohortConfig(sampleBarcode).reportGermline() && germlineReportingLevelString == null) {
+                    LOGGER.warn("Germline choice is unknown but is expected");
+                }
+            }
+
             return germlineReportingLevelString != null ? LimsGermlineReportingLevel.fromLimsInputs(reportGermlineVariants(sampleBarcode),
                     germlineReportingLevelString,
                     sampleId(sampleBarcode),
