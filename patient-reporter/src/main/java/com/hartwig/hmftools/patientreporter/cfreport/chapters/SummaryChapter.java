@@ -23,6 +23,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 import com.itextpdf.layout.Document;
@@ -232,11 +233,10 @@ public class SummaryChapter implements ReportChapter {
                 .add(new Paragraph("Genes with copy-loss").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortGenes(copyLossGenes)));
 
-        // TODO First do DEV-1013 - disable in final report.
-        //        Set<String> disruptedGenes = HomozygousDisruptions.disruptedGenes(patientReport.reportableHomozygousDisruptions());
-        //        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-        //                .add(new Paragraph("Disrupted genes").addStyle(ReportResources.bodyTextStyle())));
-        //        table.addCell(createGeneListCell(sortGenes(disruptedGenes)));
+        Set<String> disruptedGenes = HomozygousDisruptions.disruptedGenes(analysis().homozygousDisruptions());
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
+                .add(new Paragraph("Disrupted genes").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createGeneListCell(sortGenes(disruptedGenes)));
 
         Set<String> fusionGenes = GeneFusions.uniqueGeneFusions(analysis().geneFusions());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
