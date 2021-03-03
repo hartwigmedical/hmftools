@@ -19,6 +19,10 @@ class VariantStore(private val variants: List<StructuralVariantContext>, private
         }
     }
 
+    fun size(): Int {
+        return variants.size
+    }
+
     fun selectAll(): List<StructuralVariantContext> {
         return variants
     }
