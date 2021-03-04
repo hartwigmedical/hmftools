@@ -24,19 +24,19 @@ public class GermlineGenotypeEnrichment implements VariantContextEnrichment {
 
     enum GermlineGenotypeStatus {
         HET,
-        HOM,
+        HOM_ALT,
         LOW_VAF
     }
 
     @NotNull
     static GermlineGenotypeStatus status(@NotNull AllelicDepth depth) {
         if (depth.alleleReadCount() == depth.totalReadCount()) {
-            return GermlineGenotypeStatus.HOM;
+            return GermlineGenotypeStatus.HOM_ALT;
         }
 
         boolean isHighVaf = Doubles.greaterThan(depth.alleleReadCount(), 0.75 * depth.totalReadCount());
         if (isHighVaf) {
-            return Doubles.lessThan(homPoisson(depth), 0.005) ? GermlineGenotypeStatus.HOM : GermlineGenotypeStatus.HET;
+            return Doubles.lessThan(homPoisson(depth), 0.005) ? GermlineGenotypeStatus.HOM_ALT : GermlineGenotypeStatus.HET;
         }
 
         boolean isLowVaf = Doubles.lessThan(depth.alleleReadCount(), 0.3 * depth.totalReadCount());
@@ -50,46 +50,61 @@ public class GermlineGenotypeEnrichment implements VariantContextEnrichment {
     @NotNull
     private final String germlineSample;
     @NotNull
+    private final String tumorSample;
+    @NotNull
     private final Consumer<VariantContext> consumer;
 
-    public GermlineGenotypeEnrichment(@NotNull final String germlineSample, @NotNull final Consumer<VariantContext> consumer) {
+    public GermlineGenotypeEnrichment(@NotNull final String germlineSample, @NotNull final String tumorSample,
+            @NotNull final Consumer<VariantContext> consumer) {
         this.germlineSample = germlineSample;
+        this.tumorSample = tumorSample;
         this.consumer = consumer;
     }
 
     @Override
     public void accept(@NotNull final VariantContext context) {
-        Genotype genotype = context.getGenotype(germlineSample);
-        AllelicDepth depth = AllelicDepth.fromGenotype(genotype);
+        Genotype germlineGenotype = context.getGenotype(germlineSample);
+        Genotype tumorGenotype = context.getGenotype(tumorSample);
+        AllelicDepth germlineDepth = AllelicDepth.fromGenotype(germlineGenotype);
+        AllelicDepth tumorDepth = AllelicDepth.fromGenotype(tumorGenotype);
 
-        GermlineGenotypeStatus status = status(depth);
-        if (status.equals(GermlineGenotypeStatus.LOW_VAF)) {
-            VariantContext variantContext = new VariantContextBuilder(context).filter(LOW_VAF_FILTER).make();
-            consumer.accept(variantContext);
-        } else {
-            Allele refAllele = context.getReference();
-            Allele altAllele = context.getAlternateAllele(0);
-            List<Allele> genotypeAlleles = Lists.newArrayList();
-            if (status.equals(GermlineGenotypeStatus.HET)) {
-                genotypeAlleles.add(refAllele);
-            } else {
-                genotypeAlleles.add(altAllele);
-            }
+        GermlineGenotypeStatus germlineStatus = status(germlineDepth);
+        GermlineGenotypeStatus tumorStatus = status(tumorDepth);
+        GermlineGenotypeStatus status = combined(germlineStatus, tumorStatus);
+
+        Allele refAllele = context.getReference();
+        Allele altAllele = context.getAlternateAllele(0);
+        List<Allele> genotypeAlleles = Lists.newArrayList();
+        if (status.equals(GermlineGenotypeStatus.HOM_ALT)) {
             genotypeAlleles.add(altAllele);
-
-            final Genotype updatedGenotype = new GenotypeBuilder(genotype).alleles(genotypeAlleles).make();
-            final List<Genotype> updatedGenotypes = Lists.newArrayList();
-            context.getGenotypes().stream().filter(x -> !x.getSampleName().equals(germlineSample)).forEach(updatedGenotypes::add);
-            updatedGenotypes.add(updatedGenotype);
-
-            VariantContext variantContext = new VariantContextBuilder(context).genotypes(updatedGenotypes).make();
-            consumer.accept(variantContext);
+        } else {
+            genotypeAlleles.add(refAllele);
         }
+        genotypeAlleles.add(altAllele);
+
+        final Genotype updatedGenotype = new GenotypeBuilder(germlineGenotype).alleles(genotypeAlleles).make();
+        final List<Genotype> updatedGenotypes = Lists.newArrayList();
+        context.getGenotypes().stream().filter(x -> !x.getSampleName().equals(germlineSample)).forEach(updatedGenotypes::add);
+        updatedGenotypes.add(updatedGenotype);
+
+        VariantContextBuilder builder = new VariantContextBuilder(context).genotypes(updatedGenotypes);
+        if (status.equals(GermlineGenotypeStatus.LOW_VAF)) {
+            builder.filter(LOW_VAF_FILTER);
+        }
+        consumer.accept(builder.make());
     }
 
     @Override
     public void flush() {
 
+    }
+
+    static GermlineGenotypeStatus combined(GermlineGenotypeStatus germline, GermlineGenotypeStatus tumor) {
+        if (germline == GermlineGenotypeStatus.HOM_ALT) {
+            return tumor == GermlineGenotypeStatus.HOM_ALT ? GermlineGenotypeStatus.HOM_ALT : GermlineGenotypeStatus.HET;
+        }
+
+        return germline;
     }
 
     @NotNull

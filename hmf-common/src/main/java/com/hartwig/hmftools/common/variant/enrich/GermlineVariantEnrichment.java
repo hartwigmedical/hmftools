@@ -58,7 +58,7 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
                 lowTumorVCNEnrichment);
 
         this.hotspotEnrichment = new VariantHotspotEnrichment(germlineHotspots, purityEnrichment);
-        this.genotypeEnrichment = new GermlineGenotypeEnrichment(referenceSample, hotspotEnrichment);
+        this.genotypeEnrichment = new GermlineGenotypeEnrichment(referenceSample, tumorSample, hotspotEnrichment);
     }
 
     @Override
