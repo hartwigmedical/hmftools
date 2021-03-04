@@ -13,6 +13,8 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SV_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
+import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromCohortFile;
+import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromCohortFile;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromDatabase;
 
@@ -20,6 +22,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -60,18 +63,20 @@ public class RefSvData implements RefClassifier
 
         CUP_LOGGER.info("building SV reference data");
 
+        final Map<String,SvData> sampleSvData = Maps.newHashMap();
+
         if(mConfig.RefSampleSvDataFile.isEmpty())
         {
-            final Map<String,SvData> sampleSvData = Maps.newHashMap();
             loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(true), sampleSvData);
             sampleSvData.values().forEach(x -> assignSampleData(x));
-
-            writeCohortData(sampleSvData);
         }
         else
         {
-            loadCohortSvData(mConfig.RefSampleSvDataFile);
+            final List<String> files = parseFileSet(mConfig.RefSampleSvDataFile);
+            files.forEach(x -> loadCohortSvData(x, sampleSvData));
         }
+
+        writeCohortData(sampleSvData);
 
         try
         {
@@ -160,11 +165,18 @@ public class RefSvData implements RefClassifier
         if(!mConfig.WriteCohortFiles)
             return;
 
+        final String filename = mConfig.OutputDir + COHORT_REF_FILE_SV_DATA;
+
+        if(Files.exists(Paths.get(filename)))
+        {
+            CUP_LOGGER.warn("not over-writing cohort SV reference file({})", filename);
+            return;
+        }
+
         CUP_LOGGER.info("writing cohort SV reference data");
 
         try
         {
-            final String filename = mConfig.OutputDir + COHORT_REF_FILE_SV_DATA;
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write(SvData.header());
@@ -186,14 +198,21 @@ public class RefSvData implements RefClassifier
         }
     }
 
-    private void loadCohortSvData(final String filename)
+    private void loadCohortSvData(final String filename, final Map<String,SvData> sampleSvDataMap)
     {
-        final Map<String,SvData> sampleSvDataMap = Maps.newHashMap();
+        final Map<String,SvData> svDataMap = Maps.newHashMap();
 
-        loadSvDataFromCohortFile(filename, sampleSvDataMap);
+        loadSvDataFromCohortFile(filename, svDataMap);
 
-        sampleSvDataMap.values().forEach(x -> assignSampleData(x));
+        // restrict to the loaded ref samples
+        for(SvData svData : svDataMap.values())
+        {
+            if(mSampleDataCache.hasRefSample(svData.SampleId))
+            {
+                sampleSvDataMap.put(svData.SampleId, svData);
+                assignSampleData(svData);
+            }
+        }
     }
-
 
 }

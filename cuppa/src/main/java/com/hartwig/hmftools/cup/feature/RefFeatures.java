@@ -12,9 +12,13 @@ import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
+import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
+import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,6 +27,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
@@ -50,7 +55,21 @@ public class RefFeatures implements RefClassifier
 
         if(!mConfig.RefFeaturesFile.isEmpty())
         {
-            loadFeaturesFromCohortFile(mConfig.RefFeaturesFile, sampleFeaturesMap);
+            final Map<String,List<SampleFeatureData>> allSampleFeatures = Maps.newHashMap();
+
+            final List<String> files = parseFileSet(mConfig.RefFeaturesFile);
+            files.forEach(x -> loadFeaturesFromCohortFile(x, allSampleFeatures));
+
+            // extract only reference sample data
+            for(Map.Entry<String,List<SampleFeatureData>> entry : allSampleFeatures.entrySet())
+            {
+                String sampleId = entry.getKey();
+
+                if(mSampleDataCache.hasRefSample(sampleId))
+                {
+                    sampleFeaturesMap.put(sampleId, entry.getValue());
+                }
+            }
         }
         else
         {
@@ -202,11 +221,17 @@ public class RefFeatures implements RefClassifier
         if(!mConfig.WriteCohortFiles)
             return;
 
+        final String filename = mConfig.OutputDir + COHORT_REF_FILE_FEATURE_DATA;
+        if(Files.exists(Paths.get(filename)))
+        {
+            CUP_LOGGER.warn("not over-writing cohort feature reference file({})", filename);
+            return;
+        }
+
         CUP_LOGGER.info("writing cohort feature reference data");
 
         try
         {
-            final String filename = mConfig.OutputDir + COHORT_REF_FILE_FEATURE_DATA;
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write(SampleFeatureData.header());

@@ -9,6 +9,10 @@ import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_SAMPLE_POS_FREQ_FILE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.hartwig.hmftools.cup.rna.RefGeneExpression;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -43,6 +47,8 @@ public class RefDataConfig
     public static final String REF_ALT_SJ_DATA_FILE = "ref_alt_sj_file";
     public static final String WRITE_COHORT_FILES = "write_cohort_files";
 
+    public static final String FILE_DELIM = ",";
+
     public RefDataConfig(final CommandLine cmd)
     {
         RefSampleDataFile = cmd.getOptionValue(REF_SAMPLE_DATA_FILE, "");
@@ -54,11 +60,17 @@ public class RefDataConfig
         RefFeaturesFile = cmd.getOptionValue(REF_FEATURES_FILE, "");
         RefGeneExpFile = cmd.getOptionValue(REF_GENE_EXP_DATA_FILE, "");
         RefAltSjFile = cmd.getOptionValue(REF_ALT_SJ_DATA_FILE, "");
-        WriteCohortFiles = cmd.hasOption(WRITE_COHORT_FILES);
 
         DbAccess = createDatabaseAccess(cmd);
 
         OutputDir = parseOutputDir(cmd);
+
+        WriteCohortFiles = cmd.hasOption(WRITE_COHORT_FILES);
+    }
+
+    public static final List<String> parseFileSet(final String filenames)
+    {
+        return Arrays.stream(filenames.split(FILE_DELIM, -1)).collect(Collectors.toList());
     }
 
     public static void addCmdLineArgs(Options options)

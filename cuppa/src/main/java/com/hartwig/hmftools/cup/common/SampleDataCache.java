@@ -196,7 +196,7 @@ public class SampleDataCache
         }
         catch (IOException e)
         {
-            CUP_LOGGER.error("failed to read sample data file({}): {}", refSampleDataFile, e.toString());
+            CUP_LOGGER.error("failed to read reference sample data file({}): {}", refSampleDataFile, e.toString());
             mIsValid = false;
         }
     }
