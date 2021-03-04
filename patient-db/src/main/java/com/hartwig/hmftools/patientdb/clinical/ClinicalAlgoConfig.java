@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 public interface ClinicalAlgoConfig {
 
     String RUNS_DIRECTORY = "runs_dir";
+    String RUNS_JSON = "runs_json";
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
 
     String CPCT_ECRF_FILE = "cpct_ecrf";
@@ -50,6 +51,7 @@ public interface ClinicalAlgoConfig {
         options.addOption(RUNS_DIRECTORY,
                 true,
                 "Path towards the folder containing patient runs that are considered part of HMF database.");
+        options.addOption(RUNS_JSON, true, "Path towards a JSON file containing patient runs that are considered part of HMF database.");
         options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version");
 
         options.addOption(CPCT_ECRF_FILE, true, "Path towards the CPCT ecrf file.");
@@ -83,10 +85,13 @@ public interface ClinicalAlgoConfig {
         return options;
     }
 
-    @NotNull
+    @Nullable
     String runsDirectory();
 
-    @NotNull
+    @Nullable
+    String runsJson();
+
+    @Nullable
     String pipelineVersionFile();
 
     @NotNull
