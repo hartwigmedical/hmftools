@@ -50,6 +50,10 @@ public class GermlinePurityEnrichment implements VariantContextEnrichment {
 
     @Override
     public void accept(@NotNull final VariantContext variant) {
+        if (variant.getStart() == 7577581) {
+            System.out.println("sdf");
+        }
+
         final Genotype tumorGenotype = variant.getGenotype(tumorSample);
         final Genotype normalGenotype = variant.getGenotype(referenceSample);
         if (tumorGenotype != null && normalGenotype != null && tumorGenotype.hasAD() && HumanChromosome.contains(variant.getContig())) {
@@ -77,7 +81,7 @@ public class GermlinePurityEnrichment implements VariantContextEnrichment {
     }
 
     private double vaf(final GenotypeStatus germlineGenotype, PurpleCopyNumber purpleCopyNumber, AllelicDepth tumorDepth) {
-        if (tumorDepth.totalReadCount() == 0) {
+        if (tumorDepth.totalReadCount() == 0 || tumorDepth.alleleReadCount() == 0) {
             return 0;
         }
 
