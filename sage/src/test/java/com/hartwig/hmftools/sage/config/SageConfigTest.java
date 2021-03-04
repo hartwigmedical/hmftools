@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.config;
 import static com.hartwig.hmftools.sage.config.BaseQualityRecalibrationConfig.DEFAULT_BQR_MAX_ALT_COUNT;
 import static com.hartwig.hmftools.sage.config.BaseQualityRecalibrationConfig.DEFAULT_BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.sage.config.BaseQualityRecalibrationConfig.DEFAULT_BQR_SAMPLE_SIZE;
+import static com.hartwig.hmftools.sage.config.FilterConfig.DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.config.FilterConfig.DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.config.FilterConfig.DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.config.FilterConfig.DEFAULT_HARD_MIN_TUMOR_QUAL;
@@ -102,6 +103,7 @@ public class SageConfigTest {
                 .softPanelFilter(DEFAULT_PANEL_FILTER)
                 .softHighConfidenceFilter(DEFAULT_HIGH_CONFIDENCE_FILTER)
                 .softLowConfidenceFilter(DEFAULT_LOW_CONFIDENCE_FILTER)
+                .filteredMaxNormalAltSupport(DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT)
                 .build();
     }
 

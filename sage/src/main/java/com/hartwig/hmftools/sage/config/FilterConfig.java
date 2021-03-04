@@ -27,6 +27,7 @@ public interface FilterConfig {
     String HARD_MIN_TUMOR_QUAL = "hard_min_tumor_qual";
     String HARD_MIN_TUMOR_RAW_ALT_SUPPORT = "hard_min_tumor_raw_alt_support";
     String HARD_MIN_TUMOR_RAW_BASE_QUALITY = "hard_min_tumor_raw_base_quality";
+    String FILTERED_MAX_NORMAL_ALT_SUPPORT = "filtered_max_normal_alt_support";
 
     boolean DEFAULT_SOFT_FILTER_ENABLED = true;
     boolean DEFAULT_HARD_FILTER_ENABLED = false;
@@ -94,9 +95,7 @@ public interface FilterConfig {
 
     int hardMinTumorRawBaseQuality();
 
-    default int filteredMaxNormalAltSupport() {
-        return DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT;
-    }
+    int filteredMaxNormalAltSupport();
 
     default double hotspotMinTumorVafToSkipQualCheck() {
         return 0.08;
@@ -143,6 +142,7 @@ public interface FilterConfig {
                 .softFilter(defaultBooleanValue(cmd, SOFT_FILTER, DEFAULT_SOFT_FILTER_ENABLED))
                 .hardFilter(defaultBooleanValue(cmd, HARD_FILTER, DEFAULT_HARD_FILTER_ENABLED))
                 .mnvFilter(defaultBooleanValue(cmd, MNV_FILTER, DEFAULT_MNV_FILTER_ENABLED))
+                .filteredMaxNormalAltSupport(defaultIntValue(cmd, FILTERED_MAX_NORMAL_ALT_SUPPORT, DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT))
                 .hardMinTumorQual(defaultIntValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL))
                 .hardMinTumorRawAltSupport(defaultIntValue(cmd, HARD_MIN_TUMOR_RAW_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))
                 .hardMinTumorRawBaseQuality(defaultIntValue(cmd, HARD_MIN_TUMOR_RAW_BASE_QUALITY, DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY))
