@@ -85,11 +85,18 @@ public class SomaticClassifier implements CuppaClassifier
 
     private boolean mIsValid;
 
-    private final double mMaxCssAdjustFactor;
+    private final double mMaxCssAdjustFactorSnv;
+    private final double mMaxCssAdjustFactorGenPos;
+    private final double mCssExponentSnv;
+    private final double mCssExponentGenPos;
     private static final int SNV_POS_FREQ_SNV_TOTAL_THRESHOLD = 20000;
 
     //private static final double MAX_CSS_ADJUST_FACTOR = 4;
-    public static final String MAX_CSS_ADJUST_FACTOR = "css_max_factor";
+    public static final String MAX_CSS_ADJUST_FACTOR_SNV = "css_max_factor_snv";
+    public static final String MAX_CSS_ADJUST_FACTOR_GEN_POS = "css_max_factor_gen_pos";
+
+    public static final String CSS_EXPONENT_SNV = "css_exponent_snv";
+    public static final String CSS_EXPONENT_GEN_POS = "css_exponent_gen_pos";
 
     public SomaticClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
@@ -110,7 +117,10 @@ public class SomaticClassifier implements CuppaClassifier
         mRefSnvPosFreqCancerTypes = Lists.newArrayList();
         mRefSamplePosFreqIndex = Maps.newHashMap();
 
-        mMaxCssAdjustFactor = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR, "0")) : 0;
+        mCssExponentSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_SNV, "8")) : SNV_CSS_DIFF_EXPONENT;
+        mCssExponentGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS, "10")) : SNV_POS_FREQ_DIFF_EXPONENT;
+        mMaxCssAdjustFactorSnv = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_SNV, "0")) : 0;
+        mMaxCssAdjustFactorGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_GEN_POS, "0")) : 0;
 
         mIsValid = true;
 
@@ -134,7 +144,10 @@ public class SomaticClassifier implements CuppaClassifier
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(MAX_CSS_ADJUST_FACTOR, true, "Max CSS adustment factor");
+        options.addOption(MAX_CSS_ADJUST_FACTOR_SNV, true, "Max CSS adustment factor for SNV 96");
+        options.addOption(MAX_CSS_ADJUST_FACTOR_GEN_POS, true, "Max CSS adustment factor for genomic pos frequency");
+        options.addOption(CSS_EXPONENT_SNV, true, "Max CSS adustment factor for SNV 96");
+        options.addOption(CSS_EXPONENT_GEN_POS, true, "Max CSS adustment factor for SNV 96");
     }
 
     public CategoryType categoryType() { return SNV; }
@@ -354,7 +367,7 @@ public class SomaticClassifier implements CuppaClassifier
 
             maxCssScore = max(css, maxCssScore);
 
-            double cssWeight = pow(SNV_CSS_DIFF_EXPONENT, -100 * (1 - css));
+            double cssWeight = pow(mCssExponentSnv, -100 * (1 - css));
 
             double otherSnvTotal = sumVector(otherSampleCounts);
             double mutLoadWeight = min(otherSnvTotal, snvTotal) / max(otherSnvTotal, snvTotal);
@@ -374,18 +387,8 @@ public class SomaticClassifier implements CuppaClassifier
 
         convertToPercentages(cancerCssTotals);
 
-        if(mMaxCssAdjustFactor > 0 && totalCss > 0)
-        {
-            double adjustedFactor = mMaxCssAdjustFactor > 0 ? pow(maxCssScore, mMaxCssAdjustFactor) : 0;
-
-            for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
-            {
-                double adjCancerScore = pow(entry.getValue(), adjustedFactor);
-                cancerCssTotals.put(entry.getKey(), adjCancerScore);
-            }
-
-            convertToPercentages(cancerCssTotals);
-        }
+        if(totalCss > 0)
+            applyMaxCssAdjustment(maxCssScore, cancerCssTotals, mMaxCssAdjustFactorSnv);
 
         results.add(new SampleResult(
                 sample.Id, CLASSIFIER, LIKELIHOOD, SNV_96_PAIRWISE_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
@@ -416,6 +419,22 @@ public class SomaticClassifier implements CuppaClassifier
         similarities.addAll(topMatches);
     }
 
+    private void applyMaxCssAdjustment(double maxCssScore, final Map<String,Double> cancerCssTotals, double adjustFactor)
+    {
+        if(adjustFactor == 0)
+            return;
+
+        double adjustedFactor = pow(maxCssScore, adjustFactor);
+
+        for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
+        {
+            double adjCancerScore = pow(entry.getValue(), adjustedFactor);
+            cancerCssTotals.put(entry.getKey(), adjCancerScore);
+        }
+
+        convertToPercentages(cancerCssTotals);
+    }
+
     private void addPosFreqCssResults(
             final SampleData sample, final List<SampleResult> results, final List<SampleSimilarity> similarities)
     {
@@ -432,6 +451,7 @@ public class SomaticClassifier implements CuppaClassifier
 
         // first run CSS against cancer cohorts
         int refCancerCount = mRefCancerSnvPosFrequencies.Cols;
+        double maxCssScore = 0;
 
         final Map<String,Double> cancerCssTotals = Maps.newHashMap();
 
@@ -454,10 +474,12 @@ public class SomaticClassifier implements CuppaClassifier
 
             double css = calcCosineSim(sampleCounts, refPosFreqs);
 
+            maxCssScore = max(css, maxCssScore);
+
             if(css < SNV_POS_FREQ_CSS_THRESHOLD)
                 continue;
 
-            double cssWeight = pow(SNV_POS_FREQ_DIFF_EXPONENT, -100 * (1 - css));
+            double cssWeight = pow(mCssExponentGenPos, -100 * (1 - css));
 
             double weightedCss = css * cssWeight;
 
@@ -472,6 +494,9 @@ public class SomaticClassifier implements CuppaClassifier
         double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum();
 
         convertToPercentages(cancerCssTotals);
+
+        if(totalCss > 0)
+            applyMaxCssAdjustment(maxCssScore, cancerCssTotals, mMaxCssAdjustFactorGenPos);
 
         results.add(new SampleResult(
                 sample.Id, CLASSIFIER, LIKELIHOOD, GENOMIC_POSITION_SIMILARITY.toString(), String.format("%.4g", totalCss), cancerCssTotals));
