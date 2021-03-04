@@ -20,6 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class SampleLoader {
 
@@ -53,8 +54,8 @@ public class SampleLoader {
     }
 
     @NotNull
-    private List<RunContext> extractRunContextsFromDirectoryOrJson(final @NotNull ClinicalAlgoConfig config, final String runsDirectory,
-            final String runsJson) throws IOException {
+    private List<RunContext> extractRunContextsFromDirectoryOrJson(@NotNull ClinicalAlgoConfig config, @Nullable String runsDirectory,
+            @Nullable String runsJson) throws IOException {
         if (runsDirectory != null && runsJson == null) {
             String pipelineVersionFile = config.pipelineVersionFile();
             if (pipelineVersionFile != null) {

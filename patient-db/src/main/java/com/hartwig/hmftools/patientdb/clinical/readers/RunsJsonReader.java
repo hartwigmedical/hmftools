@@ -14,6 +14,7 @@ import com.google.gson.GsonBuilder;
 import com.hartwig.hmftools.common.runcontext.RunContext;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class RunsJsonReader {
 
@@ -34,30 +35,35 @@ public class RunsJsonReader {
     }
 
     @SuppressWarnings("UnstableApiUsage")
+    @NotNull
     private static Type listOfRunContext() {
         return new TypeToken<ArrayList<JsonRunContext>>() {
         }.getType();
     }
 
     static class JsonRunContext implements RunContext {
+        @Nullable
         private String setName;
+        @Nullable
         private String refSample;
+        @Nullable
         private String tumorSample;
+        @Nullable
         private String tumorBarcodeSample;
 
-        public void setSetName(final String setName) {
+        public void setSetName(@NotNull String setName) {
             this.setName = setName;
         }
 
-        public void setRefSample(final String refSample) {
+        public void setRefSample(@NotNull String refSample) {
             this.refSample = refSample;
         }
 
-        public void setTumorSample(final String tumorSample) {
+        public void setTumorSample(@NotNull String tumorSample) {
             this.tumorSample = tumorSample;
         }
 
-        public void setTumorBarcodeSample(final String tumorBarcodeSample) {
+        public void setTumorBarcodeSample(@NotNull String tumorBarcodeSample) {
             this.tumorBarcodeSample = tumorBarcodeSample;
         }
 
@@ -70,25 +76,33 @@ public class RunsJsonReader {
         @NotNull
         @Override
         public String setName() {
-            return setName;
+            return throwWhenNull(setName, "setName");
         }
 
         @NotNull
         @Override
         public String refSample() {
-            return refSample;
+            return throwWhenNull(refSample, "refSample");
         }
 
         @NotNull
         @Override
         public String tumorSample() {
-            return tumorSample;
+            return throwWhenNull(tumorSample, "tumorSample");
         }
 
         @NotNull
         @Override
         public String tumorBarcodeSample() {
-            return tumorBarcodeSample;
+            return throwWhenNull(tumorBarcodeSample, "tumorBarcodeSample");
+        }
+
+        @NotNull
+        static String throwWhenNull(@Nullable String nullable, @NotNull String field) {
+            if (nullable == null) {
+                throw new IllegalStateException(String.format("Field [%s] was null in the input JSON", field));
+            }
+            return nullable;
         }
     }
 }
