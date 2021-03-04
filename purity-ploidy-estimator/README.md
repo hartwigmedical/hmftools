@@ -1074,6 +1074,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- Upcoming
+  - Added LOW_TUMOR_VCN filter to germline variants
 - [2.52](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.52) 
   - Support for COBALT tumor only mode
   - Indels over splice regions should be marked as such
