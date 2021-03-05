@@ -130,12 +130,12 @@ To improve detection of mobile element insertions, we also rescue pairs of break
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Version History and Download Links
-- Upcoming
- - Fix hotspot matching
- - Replace other ambiguous bases in bam with N
- - Fixed description of TAF: Tumor allelic frequency (fragment support / total support)
- - Do not attempt transitive linking if there is 500,000+ variants
- - Changed default value of hardMaxNormalRelativeSupport from 0.06 to 0.08 
+- [1.11](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.11)
+  - Fix hotspot matching
+  - Replace other ambiguous bases in bam with N
+  - Fixed description of TAF: Tumor allelic frequency (fragment support / total support)
+  - Do not attempt transitive linking if there is 500,000+ variants
+  - Changed default value of hardMaxNormalRelativeSupport from 0.06 to 0.08 
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.10)
   - Removed viral insertion exception from normal relative support filter
   - Add EventType flag [DEL, INS, DUP, INV, SGL, BND]
