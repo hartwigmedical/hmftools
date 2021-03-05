@@ -222,7 +222,11 @@ public class FeatureClassifier implements CuppaClassifier
         if(!mConfig.SampleFeatureFile.isEmpty())
         {
             CUP_LOGGER.info("loading sample features from file({})", mConfig.SampleFeatureFile);
-            return loadFeaturesFromCohortFile(mConfig.SampleFeatureFile, mSampleFeatures);
+
+            if(!loadFeaturesFromCohortFile(mConfig.SampleFeatureFile, mSampleFeatures))
+                return false;
+
+            CUP_LOGGER.info("loaded features for {} samples", mSampleFeatures.size());
         }
         else if(mConfig.DbAccess != null)
         {

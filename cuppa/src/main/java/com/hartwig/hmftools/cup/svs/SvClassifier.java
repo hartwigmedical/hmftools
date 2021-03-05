@@ -151,7 +151,11 @@ public class SvClassifier implements CuppaClassifier
         if(!mConfig.SampleSvFile.isEmpty() && !mConfig.SampleSvFile.contains(".vcf"))
         {
             CUP_LOGGER.info("loading cohort SV data from file({})", mConfig.SampleSvFile);
-            return loadSvDataFromCohortFile(mConfig.SampleSvFile, mSampleSvData);
+
+            if(!loadSvDataFromCohortFile(mConfig.SampleSvFile, mSampleSvData))
+                return false;
+
+            CUP_LOGGER.info("loaded SV data for {} samples", mSampleSvData.size());
         }
 
         return true;

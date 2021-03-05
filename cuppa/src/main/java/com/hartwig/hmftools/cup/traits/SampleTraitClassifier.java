@@ -91,6 +91,8 @@ public class SampleTraitClassifier implements CuppaClassifier
 
             if(!loadTraitsFromCohortFile(mConfig.SampleTraitsFile, mSampleTraitsData))
                 return false;
+
+            CUP_LOGGER.info("loaded traits for {} samples", mSampleTraitsData.size());
         }
         else if(mConfig.DbAccess != null)
         {
