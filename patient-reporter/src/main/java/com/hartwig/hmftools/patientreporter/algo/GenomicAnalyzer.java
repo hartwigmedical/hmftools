@@ -69,9 +69,9 @@ public class GenomicAnalyzer {
         List<ProtectEvidence> nonTrialsOnLabel = ReportableEvidenceItemFactory.extractNonTrialsOnLabel(reportableEvidenceItems);
         LOGGER.info(" Loaded {} reportable on label items", nonTrialsOnLabel.size());
         List<ProtectEvidence> clinicalTrialsOnLabel = ClinicalTrialFactory.extractOnLabelTrials(reportableEvidenceItems);
-        LOGGER.info(" Loaded {} reportable on label clinical trials", nonTrialsOnLabel.size());
+        LOGGER.info(" Loaded {} reportable on label clinical trials", clinicalTrialsOnLabel.size());
         List<ProtectEvidence> nonTrialsOffLabel = ReportableEvidenceItemFactory.extractNonTrialsOffLable(reportableEvidenceItems);
-        LOGGER.info(" Loaded {} reportable off label items", nonTrialsOnLabel.size());
+        LOGGER.info(" Loaded {} reportable off label items", nonTrialsOffLabel.size());
 
         return ImmutableGenomicAnalysis.builder()
                 .impliedPurity(purpleData.purity())
