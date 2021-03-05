@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
@@ -34,16 +35,17 @@ public final class EvidenceItems {
 
     @NotNull
     public static String source(@NotNull ProtectEvidence evidence) {
-        String sources = Strings.EMPTY;
+        List<String> sources = Lists.newArrayList();
         for (Knowledgebase source: evidence.sources()) {
 
             if (!source.display().equals(Knowledgebase.ICLUSION.display())) {
 
-                return sources.concat(source.display());
+                sources.add(source.display());
 
             }
         }
-        return Strings.EMPTY;
+
+        return sources.toString().replace("[", "").replace("]", "");
     }
 
     @NotNull
