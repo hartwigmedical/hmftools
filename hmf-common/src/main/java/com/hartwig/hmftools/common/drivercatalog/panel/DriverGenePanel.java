@@ -6,7 +6,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 
 import org.immutables.value.Value;
@@ -27,37 +26,17 @@ public abstract class DriverGenePanel {
     public abstract Map<String, DndsDriverGeneLikelihood> oncoLikelihood();
 
     @NotNull
-    public Set<String> amplificationTargets() {
+    public Set<DriverGene> amplificationTargets() {
         return targets(DriverGene::reportAmplification);
     }
 
     @NotNull
-    public Set<String> deletionTargets() {
+    public Set<DriverGene> deletionTargets() {
         return targets(DriverGene::reportDeletion);
     }
 
     @NotNull
-    public Set<String> oncoGenes() {
-        return oncoLikelihood().keySet();
-    }
-
-    @NotNull
-    public Set<String> tsGenes() {
-        return tsgLikelihood().keySet();
-    }
-
-    @Nullable
-    public DriverCategory category(@NotNull final String gene) {
-        if (oncoLikelihood().containsKey(gene)) {
-            return DriverCategory.ONCO;
-        } else if (tsgLikelihood().containsKey(gene)) {
-            return DriverCategory.TSG;
-        }
-        return null;
-    }
-
-    @NotNull
-    private Set<String> targets(Predicate<DriverGene> filter) {
-        return driverGenes().stream().filter(filter).map(DriverGene::gene).collect(Collectors.toSet());
+    private Set<DriverGene> targets(Predicate<DriverGene> filter) {
+        return driverGenes().stream().filter(filter).collect(Collectors.toSet());
     }
 }
