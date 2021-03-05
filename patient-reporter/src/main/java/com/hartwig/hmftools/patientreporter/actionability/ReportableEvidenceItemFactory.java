@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.actionability;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 
@@ -14,9 +15,24 @@ public final class ReportableEvidenceItemFactory {
     }
 
     @NotNull
-    public static List<ProtectEvidence> extractNonTrials(@NotNull List<ProtectEvidence> evidenceItems) {
-        return evidenceItems.stream()
-                .filter(evidenceItem -> !evidenceItem.sources().contains(Knowledgebase.ICLUSION))
-                .collect(Collectors.toList());
+    public static List<ProtectEvidence> extractNonTrialsOnLabel(@NotNull List<ProtectEvidence> evidenceItems) {
+        List<ProtectEvidence> nonTrials = Lists.newArrayList();
+        for (ProtectEvidence evidence: evidenceItems) {
+            if (!evidence.sources().contains(Knowledgebase.ICLUSION) && evidence.onLabel()){
+                nonTrials.add(evidence);
+            }
+        }
+        return nonTrials;
+    }
+
+    @NotNull
+    public static List<ProtectEvidence> extractNonTrialsOffLable(@NotNull List<ProtectEvidence> evidenceItems) {
+        List<ProtectEvidence> nonTrials = Lists.newArrayList();
+        for (ProtectEvidence evidence: evidenceItems) {
+            if (!evidence.sources().contains(Knowledgebase.ICLUSION) && !evidence.onLabel()){
+                nonTrials.add(evidence);
+            }
+        }
+        return nonTrials;
     }
 }

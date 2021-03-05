@@ -39,7 +39,7 @@ public class ReportableEvidenceItemFactoryTest {
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI))
                 .build();
 
-        List<ProtectEvidence> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(Lists.newArrayList(item1, item2, item3, item4));
+        List<ProtectEvidence> nonTrials = ReportableEvidenceItemFactory.extractNonTrialsOnLabel(Lists.newArrayList(item1, item2, item3, item4));
         assertTrue(nonTrials.contains(item1));
         assertTrue(nonTrials.contains(item2));
         assertTrue(nonTrials.contains(item4));
