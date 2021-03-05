@@ -14,11 +14,13 @@ import com.hartwig.hmftools.common.runcontext.RunContext;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 import com.hartwig.hmftools.patientdb.clinical.readers.LimsSampleReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.RunsFolderReader;
+import com.hartwig.hmftools.patientdb.clinical.readers.RunsJsonReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class SampleLoader {
 
@@ -33,8 +35,7 @@ public class SampleLoader {
 
     @NotNull
     public Map<String, List<SampleData>> loadSamplesPerPatient(@NotNull ClinicalAlgoConfig config) throws IOException {
-        LOGGER.info(" Loading sequence runs from {}", config.runsDirectory());
-        List<RunContext> runContexts = loadRunContexts(config.runsDirectory(), config.pipelineVersionFile());
+        List<RunContext> runContexts = extractRunContextsFromDirectoryOrJson(config, config.runsDirectory(), config.runsJson());
         Map<String, List<String>> sequencedSamplesPerPatient = extractSequencedSamplesFromRunContexts(runContexts);
         Map<String, String> sampleToSetNameMap = extractSampleToSetNameMap(runContexts);
 
@@ -53,7 +54,32 @@ public class SampleLoader {
     }
 
     @NotNull
-    private static List<RunContext> loadRunContexts(@NotNull String runsDirectory, @NotNull String pipelineVersionFile) throws IOException {
+    private List<RunContext> extractRunContextsFromDirectoryOrJson(@NotNull ClinicalAlgoConfig config, @Nullable String runsDirectory,
+            @Nullable String runsJson) throws IOException {
+        if (runsDirectory != null && runsJson == null) {
+            String pipelineVersionFile = config.pipelineVersionFile();
+            if (pipelineVersionFile != null) {
+                LOGGER.info("   Loading sequence runs from {}", runsDirectory);
+                return loadRunContextsFromDirectory(runsDirectory, pipelineVersionFile);
+            } else {
+                throw new IllegalArgumentException("Cannot load from a runs directory if no pipeline version file given");
+            }
+        } else if (runsJson != null && runsDirectory == null) {
+            return loadRunContextsFromJson(runsJson);
+        }
+        throw new IllegalStateException("Either a runs directory or runs json must be specified, and not both");
+    }
+
+    @NotNull
+    private static List<RunContext> loadRunContextsFromJson(final String runsJson) {
+        List<RunContext> runContexts = RunsJsonReader.extractRunContexts(new File(runsJson));
+        LOGGER.info("  Loaded run contexts from {} ({} sets)", runsJson, runContexts.size());
+        return runContexts;
+    }
+
+    @NotNull
+    private static List<RunContext> loadRunContextsFromDirectory(@NotNull String runsDirectory, @NotNull String pipelineVersionFile)
+            throws IOException {
         List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory), pipelineVersionFile);
         LOGGER.info("  Loaded run contexts from {} ({} sets)", runsDirectory, runContexts.size());
 
