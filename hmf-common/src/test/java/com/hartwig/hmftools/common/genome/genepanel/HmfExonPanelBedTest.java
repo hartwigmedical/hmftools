@@ -26,14 +26,11 @@ public class HmfExonPanelBedTest {
         List<? extends GenomeRegion> regions =
                 HmfExonPanelBed.createNamedCodingRegions(false, Sets.newHashSet("TP53"), Lists.newArrayList(transcript, transcript));
 
-        assertRegion(regions.get(0), transcript.codingStart(), firstExon.end() + 2);
-        assertRegion(regions.get(1), secondExon.start() - 5, secondExon.start() - 5);
-        assertRegion(regions.get(2), secondExon.start() - 2, secondExon.end() + 2);
-        assertRegion(regions.get(3), thirdExon.start() - 5, thirdExon.start() - 5);
+        assertRegion(regions.get(0), transcript.codingStart(), firstExon.end() + 10);
+        assertRegion(regions.get(1), secondExon.start() - 10, secondExon.end() + 10);
+        assertRegion(regions.get(2), thirdExon.start() - 10, thirdExon.end() + 10);
 
-        assertRegion(regions.get(13), 7579307, 7579307);
-        assertRegion(regions.get(18), finalCodingExon.start() - 2, transcript.codingEnd());
-        assertRegion(regions.get(19), finalCodingExon.end() + 1, finalCodingExon.end() + 2);
+        assertRegion(regions.get(9), finalCodingExon.start() - 10, transcript.codingEnd());
     }
 
     private void assertRegion(@NotNull final GenomeRegion victim, long expectedStart, long expectedEnd) {
