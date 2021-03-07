@@ -69,6 +69,8 @@ public class DatabaseAccess implements AutoCloseable {
     public static final String DB_PASS = "db_pass";
     public static final String DB_URL = "db_url";
 
+    public static final String DB_DEFAULT_ARGS = "?serverTimezone=UTC&useSSL=false";
+
     @NotNull
     private final DSLContext context;
     @NotNull
