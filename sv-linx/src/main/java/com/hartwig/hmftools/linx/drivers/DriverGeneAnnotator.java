@@ -198,7 +198,7 @@ public class DriverGeneAnnotator
         if(driverGene.driver() == GERMLINE)
             return false;
 
-        if(driverGene.category() == TSG && driverGene.driver() == DriverType.DEL)
+        if(driverGene.driver() == DriverType.DEL)
             return true;
 
         if(driverGene.category() == TSG && driverGene.biallelic())
@@ -207,7 +207,7 @@ public class DriverGeneAnnotator
             return true;
         }
 
-        if(driverGene.category() == ONCO && (driverGene.driver() == DriverType.AMP || driverGene.driver() == PARTIAL_AMP))
+        if(driverGene.driver() == DriverType.AMP || driverGene.driver() == PARTIAL_AMP)
             return true;
 
         return false;
