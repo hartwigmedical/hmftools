@@ -8,14 +8,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ReportableVariantFactory {
 
@@ -24,23 +20,22 @@ public final class ReportableVariantFactory {
 
     @NotNull
     public static List<ReportableVariant> reportableGermlineVariants(@NotNull List<SomaticVariant> variants,
-            @NotNull List<DriverCatalog> germlineDriverCatalog, boolean hasReliablePurity) {
-        return reportableVariants(variants, germlineDriverCatalog, hasReliablePurity, ReportableVariantSource.GERMLINE);
+            @NotNull List<DriverCatalog> germlineDriverCatalog) {
+        return reportableVariants(variants, germlineDriverCatalog, ReportableVariantSource.GERMLINE);
     }
 
     @NotNull
     public static List<ReportableVariant> reportableSomaticVariants(@NotNull List<SomaticVariant> variants,
-            @NotNull List<DriverCatalog> driverCatalog, boolean hasReliablePurity) {
+            @NotNull List<DriverCatalog> driverCatalog) {
         List<DriverCatalog> mutationCatalog =
                 driverCatalog.stream().filter(x -> x.driver() == DriverType.MUTATION).collect(Collectors.toList());
-        return reportableVariants(variants, mutationCatalog, hasReliablePurity, ReportableVariantSource.SOMATIC);
+        return reportableVariants(variants, mutationCatalog, ReportableVariantSource.SOMATIC);
     }
 
     @NotNull
     private static List<ReportableVariant> reportableVariants(@NotNull List<SomaticVariant> variants,
-            @NotNull List<DriverCatalog> driverCatalog, boolean hasReliablePurity, ReportableVariantSource source) {
+            @NotNull List<DriverCatalog> driverCatalog, @NotNull ReportableVariantSource source) {
         Map<String, DriverCatalog> mutationDriverMap = driverCatalog.stream().collect(Collectors.toMap(DriverCatalog::gene, x -> x));
-        Map<String, HmfTranscriptRegion> genePanel = HmfGenePanelSupplier.allGenesMap37();
 
         List<ReportableVariant> result = Lists.newArrayList();
         for (SomaticVariant variant : variants) {
@@ -48,11 +43,7 @@ public final class ReportableVariantFactory {
                 DriverCatalog geneDriver = mutationDriverMap.get(variant.gene());
                 assert geneDriver != null;
 
-                HmfTranscriptRegion canonicalTranscript = genePanel.get(variant.gene());
-
-                ReportableVariant reportable =
-                        fromVariant(variant, hasReliablePurity, source, canonicalTranscript).driverLikelihood(geneDriver.driverLikelihood())
-                                .build();
+                ReportableVariant reportable = fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood()).build();
                 result.add(reportable);
             }
         }
@@ -92,8 +83,8 @@ public final class ReportableVariantFactory {
     }
 
     @NotNull
-    private static ImmutableReportableVariant.Builder fromVariant(@NotNull SomaticVariant variant, boolean hasReliablePurity,
-            ReportableVariantSource source, @Nullable HmfTranscriptRegion canonicalTranscript) {
+    private static ImmutableReportableVariant.Builder fromVariant(@NotNull SomaticVariant variant,
+            @NotNull ReportableVariantSource source) {
         return ImmutableReportableVariant.builder()
                 .type(variant.type())
                 .source(source)
@@ -102,7 +93,7 @@ public final class ReportableVariantFactory {
                 .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())
-                .canonicalTranscript(canonicalTranscript == null ? Strings.EMPTY : canonicalTranscript.transcriptID())
+                .canonicalTranscript(variant.canonicalTranscript())
                 .canonicalCodingEffect(variant.canonicalCodingEffect())
                 .canonicalHgvsCodingImpact(variant.canonicalHgvsCodingImpact())
                 .canonicalHgvsProteinImpact(variant.canonicalHgvsProteinImpact())

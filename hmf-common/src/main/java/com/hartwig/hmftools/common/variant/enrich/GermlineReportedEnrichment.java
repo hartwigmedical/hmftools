@@ -28,17 +28,20 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 public class GermlineReportedEnrichment implements VariantContextEnrichment {
 
     private static final Set<CodingEffect> REPORTABLE_EFFECT = EnumSet.of(CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.SPLICE);
+
+    @NotNull
     private final Consumer<VariantContext> consumer;
+    @NotNull
     private final Set<String> reportableVariantGenes;
+    @NotNull
     private final Set<String> reportableHotspotGenes;
 
-    public GermlineReportedEnrichment(final List<DriverGene> driverGenes, final Consumer<VariantContext> consumer) {
+    public GermlineReportedEnrichment(@NotNull final List<DriverGene> driverGenes, @NotNull final Consumer<VariantContext> consumer) {
         this.consumer = consumer;
         this.reportableVariantGenes =
                 driverGenes.stream().filter(DriverGene::reportGermlineVariant).map(DriverGene::gene).collect(Collectors.toSet());
         this.reportableHotspotGenes =
                 driverGenes.stream().filter(DriverGene::reportGermlineHotspot).map(DriverGene::gene).collect(Collectors.toSet());
-
     }
 
     @Override

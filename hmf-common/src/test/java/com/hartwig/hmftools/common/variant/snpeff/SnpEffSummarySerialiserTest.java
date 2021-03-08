@@ -30,7 +30,7 @@ public class SnpEffSummarySerialiserTest {
     }
 
     @NotNull
-    static ImmutableSnpEffSummary.Builder createRandom(@NotNull Random random) {
+    private static ImmutableSnpEffSummary.Builder createRandom(@NotNull Random random) {
         return ImmutableSnpEffSummary.builder()
                 .genesAffected(random.nextInt())
                 .worstGene(Integer.toString(random.nextInt()))

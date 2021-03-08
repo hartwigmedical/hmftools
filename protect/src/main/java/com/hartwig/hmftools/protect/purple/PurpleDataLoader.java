@@ -56,8 +56,6 @@ public final class PurpleDataLoader {
         LOGGER.info("  Microsatellite status: {}", purityContext.microsatelliteStatus().display());
         LOGGER.info("  Tumor mutational load status: {}", purityContext.tumorMutationalLoadStatus().display());
 
-        boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
-
         List<DriverCatalog> somaticDriverCatalog = DriverCatalogFile.read(driverCatalogSomaticTsv);
         LOGGER.info(" Loaded {} somatic driver catalog entries from {}", somaticDriverCatalog.size(), driverCatalogSomaticTsv);
 
@@ -72,17 +70,17 @@ public final class PurpleDataLoader {
 
         List<SomaticVariant> germlineVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, germlineVcf);
         List<ReportableVariant> reportableGermlineVariants =
-                ReportableVariantFactory.reportableGermlineVariants(germlineVariants, germlineDriverCatalog, hasReliablePurity);
+                ReportableVariantFactory.reportableGermlineVariants(germlineVariants, germlineDriverCatalog);
         LOGGER.info(" Loaded {} reportable germline variants from {}", reportableGermlineVariants.size(), germlineVcf);
 
         List<SomaticVariant> somaticVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVcf);
         List<ReportableVariant> reportableSomaticVariants =
-                ReportableVariantFactory.reportableSomaticVariants(somaticVariants, somaticDriverCatalog, hasReliablePurity);
+                ReportableVariantFactory.reportableSomaticVariants(somaticVariants, somaticDriverCatalog);
         LOGGER.info(" Loaded {} reportable somatic variants from {}", reportableSomaticVariants.size(), somaticVcf);
 
         return ImmutablePurpleData.builder()
                 .purity(purityContext.bestFit().purity())
-                .hasReliablePurity(hasReliablePurity)
+                .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
                 .hasReliableQuality(purityContext.qc().pass())
                 .ploidy(purityContext.bestFit().ploidy())
                 .microsatelliteIndelsPerMb(purityContext.microsatelliteIndelsPerMb())

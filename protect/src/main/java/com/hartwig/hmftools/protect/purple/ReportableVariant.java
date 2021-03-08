@@ -43,6 +43,7 @@ public abstract class ReportableVariant implements Variant {
     public abstract String alt();
 
     @NotNull
+    @Override
     public abstract String canonicalTranscript();
 
     @NotNull

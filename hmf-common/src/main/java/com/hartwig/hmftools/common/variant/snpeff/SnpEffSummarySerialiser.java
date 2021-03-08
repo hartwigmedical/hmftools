@@ -10,6 +10,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class SnpEffSummarySerialiser {
 
+    private SnpEffSummarySerialiser() {
+    }
+
     @NotNull
     public static SnpEffSummary fromDetails(@NotNull final List<String> worst, @NotNull final List<String> canonical) {
         final ImmutableSnpEffSummary.Builder builder = createBuilder();
@@ -53,14 +56,17 @@ public final class SnpEffSummarySerialiser {
                 summary.canonicalHgvsProteinImpact());
     }
 
-    private static String writeEffect(String effect) {
+    @NotNull
+    private static String writeEffect(@NotNull String effect) {
         return effect.replace("; ", "&").replace(" ", "_");
     }
 
-    private static String readEffect(String effect) {
+    @NotNull
+    private static String readEffect(@NotNull String effect) {
         return effect.replace("&", "; ").replace("_", " ");
     }
 
+    @NotNull
     static ImmutableSnpEffSummary.Builder createBuilder() {
         return ImmutableSnpEffSummary.builder()
                 .genesAffected(0)
