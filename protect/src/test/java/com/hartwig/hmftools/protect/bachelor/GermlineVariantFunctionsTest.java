@@ -27,7 +27,7 @@ public class GermlineVariantFunctionsTest {
         GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineModel(GENE, true, null);
         List<ReportableGermlineVariant> variants = Lists.newArrayList(create(GENE, false));
 
-        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel, true);
+        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel);
         assertEquals(0, victims.size());
     }
 
@@ -36,7 +36,7 @@ public class GermlineVariantFunctionsTest {
         GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineModel(GENE, false, null);
         List<ReportableGermlineVariant> variants = Lists.newArrayList(create(GENE, false));
 
-        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel, true);
+        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel);
         assertEquals(1, victims.size());
         assertEquals(GENE, victims.get(0).gene());
     }
@@ -46,7 +46,7 @@ public class GermlineVariantFunctionsTest {
         GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineModel(GENE, true, null);
         List<ReportableGermlineVariant> variants = Lists.newArrayList(create(GENE, true));
 
-        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel, true);
+        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel);
         assertEquals(1, victims.size());
         assertEquals(GENE, victims.get(0).gene());
     }
@@ -56,7 +56,7 @@ public class GermlineVariantFunctionsTest {
         GermlineReportingModel germlineReportingModel = ProtectTestFactory.createEmptyGermlineReportingModel();
         List<ReportableGermlineVariant> variants = Lists.newArrayList(create(GENE, true));
 
-        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel, true);
+        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel);
         assertEquals(0, victims.size());
     }
 
@@ -65,7 +65,7 @@ public class GermlineVariantFunctionsTest {
         GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineModel(GENE, true, null);
         List<ReportableGermlineVariant> variants = Lists.newArrayList(create(GENE, 1, "protein", 0.1, true));
 
-        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel, true);
+        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel);
         assertEquals(0, victims.size());
     }
 
@@ -74,7 +74,7 @@ public class GermlineVariantFunctionsTest {
         GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineModel(GENE, true, null);
         List<ReportableGermlineVariant> variants = Lists.newArrayList(create(GENE, 1, false), create(GENE, 2, false));
 
-        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel, true);
+        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.emptySet(), germlineReportingModel);
         assertEquals(2, victims.size());
         assertEquals(GENE, victims.get(0).gene());
         assertEquals(GENE, victims.get(1).gene());
@@ -85,7 +85,7 @@ public class GermlineVariantFunctionsTest {
         GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineModel(GENE, true, null);
         List<ReportableGermlineVariant> variants = Lists.newArrayList(create(GENE, false));
 
-        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.singleton(GENE), germlineReportingModel, true);
+        List<ReportableVariant> victims = reportableGermlineVariants(variants, Collections.singleton(GENE), germlineReportingModel);
         assertEquals(1, victims.size());
         assertEquals(GENE, victims.get(0).gene());
     }
@@ -95,13 +95,13 @@ public class GermlineVariantFunctionsTest {
         GermlineReportingModel germlineReportingModel = ProtectTestFactory.createTestGermlineModel(GENE, true, "proteinMatch");
         List<ReportableGermlineVariant> variantMatch = Lists.newArrayList(create(GENE, 1, "proteinMatch", 0.4, false));
 
-        List<ReportableVariant> victimsMatch = reportableGermlineVariants(variantMatch, Collections.emptySet(), germlineReportingModel, true);
+        List<ReportableVariant> victimsMatch = reportableGermlineVariants(variantMatch, Collections.emptySet(), germlineReportingModel);
         assertEquals(1, victimsMatch.size());
         assertEquals(GENE, victimsMatch.get(0).gene());
 
         List<ReportableGermlineVariant> variantsNonMatch = Lists.newArrayList(create(GENE, 1, "weirdProtein", 0.4, false));
         List<ReportableVariant> victimsNonMatch =
-                reportableGermlineVariants(variantsNonMatch, Collections.emptySet(), germlineReportingModel, true);
+                reportableGermlineVariants(variantsNonMatch, Collections.emptySet(), germlineReportingModel);
         assertEquals(0, victimsNonMatch.size());
     }
 

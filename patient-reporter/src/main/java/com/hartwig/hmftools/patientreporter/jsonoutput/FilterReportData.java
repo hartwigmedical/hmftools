@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableGenomicAnalysis;
@@ -20,9 +21,11 @@ public class FilterReportData {
         List<ReportableVariant> filteredVariantsOverruleVariantSource = Lists.newArrayList();
         for (ReportableVariant variant : report.genomicAnalysis().reportableVariants()) {
             if (report.sampleReport().germlineReportingLevel() == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION) {
-                filteredVariantsOverruleVariantSource.add(overruleVariant(variant).build());
+                filteredVariantsOverruleVariantSource.add(overruleVariant(variant, report.genomicAnalysis().hasReliablePurity()).source(
+                        ReportableVariantSource.SOMATIC).build());
             } else {
-                filteredVariantsOverruleVariantSource.add(variant);
+                filteredVariantsOverruleVariantSource.add(overruleVariant(variant, report.genomicAnalysis().hasReliablePurity()).source(
+                        variant.source()).build());
             }
         }
 
@@ -55,10 +58,9 @@ public class FilterReportData {
     }
 
     @NotNull
-    private static ImmutableReportableVariant.Builder overruleVariant(@NotNull ReportableVariant variant) {
+    private static ImmutableReportableVariant.Builder overruleVariant(@NotNull ReportableVariant variant, boolean hasReliablePurity) {
         return ImmutableReportableVariant.builder()
                 .type(variant.type())
-                .source(ReportableVariantSource.SOMATIC)
                 .gene(variant.gene())
                 .chromosome(variant.chromosome())
                 .position(variant.position())
@@ -75,8 +77,26 @@ public class FilterReportData {
                 .hotspot(variant.hotspot())
                 .clonalLikelihood(variant.clonalLikelihood())
                 .driverLikelihood(variant.driverLikelihood())
-                .copyNumber(variant.copyNumber())
-                .tVafString(variant.tVafString())
+                .copyNumber(copyNumberString(variant.copyNumber(), hasReliablePurity))
+                .tVafString(vafString(variant.tVafString(), hasReliablePurity))
                 .biallelic(variant.biallelic());
+    }
+
+    @NotNull
+    public static String copyNumberString(@NotNull String copyNumber, boolean hasReliablePurity) {
+        if (!hasReliablePurity) {
+            return DataUtil.NA_STRING;
+        }
+
+        return String.valueOf(copyNumber);
+    }
+
+    @NotNull
+    public static String vafString(@NotNull String vafString, boolean hasReliablePurity) {
+        if (!hasReliablePurity) {
+            return DataUtil.NA_STRING;
+        }
+
+        return vafString;
     }
 }

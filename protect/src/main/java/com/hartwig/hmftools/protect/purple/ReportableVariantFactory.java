@@ -109,10 +109,9 @@ public final class ReportableVariantFactory {
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
                 .totalCopyNumber(variant.adjustedCopyNumber())
-                .copyNumber(copyNumberString(variant.adjustedCopyNumber(), hasReliablePurity))
+                .copyNumber(copyNumberString(variant.adjustedCopyNumber()))
                 .tVafString(vafString(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVAF()),
-                        variant.adjustedCopyNumber(),
-                        hasReliablePurity))
+                        variant.adjustedCopyNumber()))
                 .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVAF()))
                 .hotspot(variant.hotspot())
                 .clonalLikelihood(variant.clonalLikelihood())
@@ -124,21 +123,13 @@ public final class ReportableVariantFactory {
     }
 
     @NotNull
-    public static String copyNumberString(double copyNumber, boolean hasReliablePurity) {
-        if (!hasReliablePurity) {
-            return DataUtil.NA_STRING;
-        }
-
+    public static String copyNumberString(double copyNumber) {
         return String.valueOf(Math.round(Math.max(0, copyNumber)));
     }
 
     @NotNull
-    public static String vafString(double alleleCopyNumber, double totalCopyNumber, boolean hasReliablePurity) {
-        if (!hasReliablePurity) {
-            return DataUtil.NA_STRING;
-        }
+    public static String vafString(double alleleCopyNumber, double totalCopyNumber) {
         double vaf = alleleCopyNumber / totalCopyNumber;
-
         return DataUtil.formatPercentage(100 * Math.max(0, Math.min(1, vaf)));
     }
 }

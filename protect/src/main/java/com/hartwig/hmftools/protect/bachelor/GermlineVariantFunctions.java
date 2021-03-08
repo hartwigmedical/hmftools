@@ -28,8 +28,7 @@ public final class GermlineVariantFunctions {
 
     @NotNull
     public static List<ReportableVariant> reportableGermlineVariants(@NotNull List<ReportableGermlineVariant> variants,
-            @NotNull Set<String> genesWithSomaticInactivationEvent, @NotNull GermlineReportingModel germlineReportingModel,
-            boolean hasReliablePurity) {
+            @NotNull Set<String> genesWithSomaticInactivationEvent, @NotNull GermlineReportingModel germlineReportingModel) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
         Map<String, HmfTranscriptRegion> genePanel = HmfGenePanelSupplier.allGenesMap37();
 
@@ -59,7 +58,7 @@ public final class GermlineVariantFunctions {
 
                 if (includeVariant) {
                     HmfTranscriptRegion canonicalTranscript = genePanel.get(variant.gene());
-                    reportableVariants.add(fromGermlineVariant(variant, hasReliablePurity, canonicalTranscript).driverLikelihood(1D)
+                    reportableVariants.add(fromGermlineVariant(variant, canonicalTranscript).driverLikelihood(1D)
                             .build());
                 }
             }
@@ -70,7 +69,7 @@ public final class GermlineVariantFunctions {
 
     @NotNull
     private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull ReportableGermlineVariant variant,
-            boolean hasReliablePurity, @Nullable HmfTranscriptRegion canonicalTranscript) {
+            @Nullable HmfTranscriptRegion canonicalTranscript) {
         return ImmutableReportableVariant.builder()
                 .type(VariantType.type(variant.ref(), variant.alt()))
                 .source(ReportableVariantSource.GERMLINE)
@@ -89,10 +88,9 @@ public final class GermlineVariantFunctions {
                 .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVaf()))
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
-                .copyNumber(ReportableVariantFactory.copyNumberString(variant.adjustedCopyNumber(), hasReliablePurity))
+                .copyNumber(ReportableVariantFactory.copyNumberString(variant.adjustedCopyNumber()))
                 .tVafString(ReportableVariantFactory.vafString(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVaf()),
-                        variant.adjustedCopyNumber(),
-                        hasReliablePurity))
+                        variant.adjustedCopyNumber()))
                 .biallelic(variant.biallelic());
     }
 

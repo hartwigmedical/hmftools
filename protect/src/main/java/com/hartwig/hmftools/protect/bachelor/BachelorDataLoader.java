@@ -57,8 +57,7 @@ public final class BachelorDataLoader {
 
         List<ReportableVariant> reportableVariants = GermlineVariantFunctions.reportableGermlineVariants(germlineVariants,
                 genesWithInactivationEvent,
-                germlineReportingModel,
-                purpleData.hasReliablePurity());
+                germlineReportingModel);
 
         LOGGER.info(" Loaded {} reportable germline variants from {}", reportableVariants.size(), bachelorTsv);
         return ImmutableBachelorData.builder().addAllGermlineVariants(reportableVariants).build();
