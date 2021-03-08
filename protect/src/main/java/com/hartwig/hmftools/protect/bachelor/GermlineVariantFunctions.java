@@ -85,8 +85,8 @@ public final class GermlineVariantFunctions {
                 .canonicalHgvsProteinImpact(variant.hgvsProtein())
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
-                .totalCopyNumber(flooredCopyNumber)
-                .alleleCopyNumber(calcAlleleCopyNumber(flooredCopyNumber, variant.adjustedVaf()))
+                .totalCopyNumber(variant.adjustedCopyNumber())
+                .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVaf()))
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
                 .biallelic(variant.biallelic());
@@ -96,7 +96,7 @@ public final class GermlineVariantFunctions {
         return calcAlleleCopyNumber(germlineVariant.adjustedCopyNumber(), germlineVariant.adjustedVaf()) >= 0.5;
     }
 
-    private static double calcAlleleCopyNumber(double flooredCopyNumber, double adjustedVAF) {
-        return flooredCopyNumber * Math.max(0, Math.min(1, adjustedVAF));
+    private static double calcAlleleCopyNumber(double adjustedCopyNumber, double adjustedVAF) {
+        return adjustedCopyNumber * Math.max(0, Math.min(1, adjustedVAF));
     }
 }

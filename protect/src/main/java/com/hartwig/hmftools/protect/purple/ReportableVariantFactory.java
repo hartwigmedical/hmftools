@@ -84,8 +84,6 @@ public final class ReportableVariantFactory {
     @NotNull
     private static ImmutableReportableVariant.Builder fromVariant(@NotNull SomaticVariant variant,
             @NotNull ReportableVariantSource source) {
-        double flooredCopyNumber = Math.max(0, variant.adjustedCopyNumber());
-
         return ImmutableReportableVariant.builder()
                 .type(variant.type())
                 .source(source)
@@ -100,14 +98,14 @@ public final class ReportableVariantFactory {
                 .canonicalHgvsProteinImpact(variant.canonicalHgvsProteinImpact())
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
-                .totalCopyNumber(flooredCopyNumber)
-                .alleleCopyNumber(calcAlleleCopyNumber(flooredCopyNumber, variant.adjustedVAF()))
+                .totalCopyNumber(variant.adjustedCopyNumber())
+                .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVAF()))
                 .hotspot(variant.hotspot())
                 .clonalLikelihood(variant.clonalLikelihood())
                 .biallelic(variant.biallelic());
     }
 
-    private static double calcAlleleCopyNumber(double flooredCopyNumber, double adjustedVAF) {
-        return flooredCopyNumber * Math.max(0, Math.min(1, adjustedVAF));
+    private static double calcAlleleCopyNumber(double adjustedCopyNumber, double adjustedVAF) {
+        return adjustedCopyNumber * Math.max(0, Math.min(1, adjustedVAF));
     }
 }

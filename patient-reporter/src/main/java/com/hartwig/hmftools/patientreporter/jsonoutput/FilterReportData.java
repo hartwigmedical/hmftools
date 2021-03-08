@@ -61,6 +61,8 @@ public final class FilterReportData {
 
     @NotNull
     private static ImmutableReportableVariant.Builder overruleVariant(@NotNull ReportableVariant variant, boolean hasReliablePurity) {
+        double flooredCopyNumber = Math.max(0, variant.totalCopyNumber());
+
         return ImmutableReportableVariant.builder()
                 .type(variant.type())
                 .gene(variant.gene())
@@ -74,7 +76,7 @@ public final class FilterReportData {
                 .canonicalHgvsProteinImpact(variant.canonicalHgvsProteinImpact())
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
-                .totalCopyNumber(hasReliablePurity ? variant.totalCopyNumber() : Double.NaN)
+                .totalCopyNumber(hasReliablePurity ? flooredCopyNumber : Double.NaN)
                 .alleleCopyNumber(hasReliablePurity ? variant.alleleCopyNumber() : Double.NaN)
                 .hotspot(variant.hotspot())
                 .clonalLikelihood(variant.clonalLikelihood())
