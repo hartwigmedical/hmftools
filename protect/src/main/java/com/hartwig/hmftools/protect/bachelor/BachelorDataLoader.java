@@ -55,7 +55,7 @@ public final class BachelorDataLoader {
                 .map(ReportableGainLoss::gene)
                 .forEach(genesWithInactivationEvent::add);
 
-        List<ReportableVariant> reportableVariants = GermlineVariantFunctions.reportableGermlineVariants(germlineVariants,
+        List<ReportableVariant> reportableVariants = BachelorFunctions.reportableGermlineVariants(germlineVariants,
                 genesWithInactivationEvent,
                 germlineReportingModel);
 

@@ -20,9 +20,9 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class GermlineVariantFunctions {
+public final class BachelorFunctions {
 
-    private GermlineVariantFunctions() {
+    private BachelorFunctions() {
     }
 
     @NotNull
