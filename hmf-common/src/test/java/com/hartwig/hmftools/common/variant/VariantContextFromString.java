@@ -11,12 +11,14 @@ import htsjdk.variant.vcf.VCFHeaderVersion;
 
 public final class VariantContextFromString {
 
+    public static final String SAMPLE = "test_sample";
+
     private VariantContextFromString() {
     }
 
     @NotNull
     public static VariantContext decode(@NotNull String line) {
-        return decode("test_sample", line);
+        return decode(SAMPLE, line);
     }
 
     @NotNull

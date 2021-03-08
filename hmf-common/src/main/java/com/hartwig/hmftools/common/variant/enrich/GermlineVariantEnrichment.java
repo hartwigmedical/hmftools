@@ -30,6 +30,7 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
     private final VariantContextEnrichment hotspotEnrichment;
     private final VariantContextEnrichment genotypeEnrichment;
     private final VariantContextEnrichment lowTumorVCNEnrichment;
+    private final VariantContextEnrichment lowVafRescueEnrichment;
 
     public GermlineVariantEnrichment(@NotNull final String purpleVersion, @NotNull final String referenceSample,
             @NotNull final String tumorSample, @NotNull final IndexedFastaSequenceFile reference,
@@ -49,13 +50,17 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
         // Hotspot must be before lowTumorVCNEnrichment
         this.lowTumorVCNEnrichment = new GermlineLowTumorVCNEnrichment(snpEffEnrichment);
 
+        // Purity must go before lowVafRescue
+        // Genotype must go before lowVafRescue
+        this.lowVafRescueEnrichment = new GermlineRescueLowVAFEnrichment(referenceSample, lowTumorVCNEnrichment);
+
         // Genotype must go before purity enrichment
         this.purityEnrichment = new GermlinePurityEnrichment(purpleVersion,
                 tumorSample,
                 referenceSample,
                 purityAdjuster,
                 copyNumbers,
-                lowTumorVCNEnrichment);
+                lowVafRescueEnrichment);
 
         this.hotspotEnrichment = new VariantHotspotEnrichment(germlineHotspots, purityEnrichment);
         this.genotypeEnrichment = new GermlineGenotypeEnrichment(referenceSample, tumorSample, hotspotEnrichment);
@@ -71,6 +76,7 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
         genotypeEnrichment.flush();
         hotspotEnrichment.flush();
         purityEnrichment.flush();
+        lowVafRescueEnrichment.flush();
         lowTumorVCNEnrichment.flush();
         snpEffEnrichment.flush();
         refGenomeEnrichment.flush();
@@ -85,6 +91,7 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
         header = hotspotEnrichment.enrichHeader(header);
         header = refGenomeEnrichment.enrichHeader(header);
         header = snpEffEnrichment.enrichHeader(header);
+        header = lowVafRescueEnrichment.enrichHeader(header);
         header = reportableEnrichment.enrichHeader(header);
         header = genotypeEnrichment.enrichHeader(header);
         return pathogenicEnrichment.enrichHeader(header);
