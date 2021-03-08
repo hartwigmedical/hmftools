@@ -48,7 +48,7 @@ public class ProtectApplication  {
     @NotNull
     private final ProtectConfig protectConfig;
 
-    public ProtectApplication(final Options options, final String... args) throws ParseException, IOException {
+    private ProtectApplication(final Options options, final String... args) throws ParseException, IOException {
         CommandLine cmd = new DefaultParser().parse(options, args);
         this.protectConfig = ProtectConfig.createConfig(cmd);
     }
@@ -90,7 +90,7 @@ public class ProtectApplication  {
             result.addAll(doidParentModel.parents(initialDoid));
         }
 
-        LOGGER.info(" Doids which are considered on-label for patient: '{}'", result);
+        LOGGER.info(" {} doids which are considered on-label for patient: '{}'", result.size(), result);
         return result;
     }
 }
