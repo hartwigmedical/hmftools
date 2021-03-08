@@ -169,8 +169,6 @@ public class VariantEvidenceTest {
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0D)
-                .biallelic(false)
-                .tVafString("15%")
-                .copyNumber("1");
+                .biallelic(false);
     }
 }

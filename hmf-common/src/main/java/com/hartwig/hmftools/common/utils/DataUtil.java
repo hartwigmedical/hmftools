@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class DataUtil {
 
-    private static final String DATE_TIME_FORMAT = "dd-MMM-yyyy";
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
     private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("#'%'");
 
     public static final String NONE_STRING = "NONE";
@@ -25,8 +25,7 @@ public final class DataUtil {
 
     @NotNull
     public static String formatDate(@Nullable LocalDate date) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
-        return date != null ? formatter.format(date) : NA_STRING;
+        return date != null ? DATE_TIME_FORMATTER.format(date) : NA_STRING;
     }
 
     @NotNull

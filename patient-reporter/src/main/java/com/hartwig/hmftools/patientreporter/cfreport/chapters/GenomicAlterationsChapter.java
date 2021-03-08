@@ -4,12 +4,12 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
-import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
@@ -115,9 +115,10 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     variant.alleleReadCount() + " / ").setFont(ReportResources.fontBold())
                     .add(new Text(String.valueOf(variant.totalReadCount())).setFont(ReportResources.fontRegular()))
                     .setTextAlignment(TextAlignment.CENTER)));
-            contentTable.addCell(TableUtil.createContentCell(variant.copyNumber())
-                    .setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(variant.tVafString())
+            contentTable.addCell(TableUtil.createContentCell(hasReliablePurity
+                    ? String.valueOf(Math.round(variant.totalCopyNumber()))
+                    : DataUtil.NA_STRING).setTextAlignment(TextAlignment.CENTER));
+            contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? variant.tVAF() : DataUtil.NA_STRING)
                     .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.biallelicString(variant.biallelic(), hasReliablePurity))
                     .setTextAlignment(TextAlignment.CENTER));

@@ -14,7 +14,6 @@ import com.hartwig.hmftools.protect.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
-import com.hartwig.hmftools.protect.purple.ReportableVariantFactory;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.apache.logging.log4j.util.Strings;
@@ -70,6 +69,8 @@ public final class GermlineVariantFunctions {
     @NotNull
     private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull ReportableGermlineVariant variant,
             @Nullable HmfTranscriptRegion canonicalTranscript) {
+        double flooredCopyNumber = Math.max(0, variant.adjustedCopyNumber());
+
         return ImmutableReportableVariant.builder()
                 .type(VariantType.type(variant.ref(), variant.alt()))
                 .source(ReportableVariantSource.GERMLINE)
@@ -84,13 +85,10 @@ public final class GermlineVariantFunctions {
                 .canonicalHgvsProteinImpact(variant.hgvsProtein())
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
-                .totalCopyNumber(variant.adjustedCopyNumber())
-                .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVaf()))
+                .totalCopyNumber(flooredCopyNumber)
+                .alleleCopyNumber(calcAlleleCopyNumber(flooredCopyNumber, variant.adjustedVaf()))
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
-                .copyNumber(ReportableVariantFactory.copyNumberString(variant.adjustedCopyNumber()))
-                .tVafString(ReportableVariantFactory.vafString(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVaf()),
-                        variant.adjustedCopyNumber()))
                 .biallelic(variant.biallelic());
     }
 
@@ -98,7 +96,7 @@ public final class GermlineVariantFunctions {
         return calcAlleleCopyNumber(germlineVariant.adjustedCopyNumber(), germlineVariant.adjustedVaf()) >= 0.5;
     }
 
-    private static double calcAlleleCopyNumber(double adjustedCopyNumber, double adjustedVAF) {
-        return adjustedCopyNumber * Math.max(0, Math.min(1, adjustedVAF));
+    private static double calcAlleleCopyNumber(double flooredCopyNumber, double adjustedVAF) {
+        return flooredCopyNumber * Math.max(0, Math.min(1, adjustedVAF));
     }
 }

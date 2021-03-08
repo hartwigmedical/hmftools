@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
-import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableGenomicAnalysis;
@@ -14,7 +13,10 @@ import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FilterReportData {
+public final class FilterReportData {
+
+    private FilterReportData() {
+    }
 
     @NotNull
     public static AnalysedPatientReport overrulePatientReportData(@NotNull AnalysedPatientReport report) {
@@ -72,31 +74,11 @@ public class FilterReportData {
                 .canonicalHgvsProteinImpact(variant.canonicalHgvsProteinImpact())
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
-                .totalCopyNumber(variant.totalCopyNumber())
-                .alleleCopyNumber(variant.alleleCopyNumber())
+                .totalCopyNumber(hasReliablePurity ? variant.totalCopyNumber() : Double.NaN)
+                .alleleCopyNumber(hasReliablePurity ? variant.alleleCopyNumber() : Double.NaN)
                 .hotspot(variant.hotspot())
                 .clonalLikelihood(variant.clonalLikelihood())
                 .driverLikelihood(variant.driverLikelihood())
-                .copyNumber(copyNumberString(variant.copyNumber(), hasReliablePurity))
-                .tVafString(vafString(variant.tVafString(), hasReliablePurity))
                 .biallelic(variant.biallelic());
-    }
-
-    @NotNull
-    public static String copyNumberString(@NotNull String copyNumber, boolean hasReliablePurity) {
-        if (!hasReliablePurity) {
-            return DataUtil.NA_STRING;
-        }
-
-        return String.valueOf(copyNumber);
-    }
-
-    @NotNull
-    public static String vafString(@NotNull String vafString, boolean hasReliablePurity) {
-        if (!hasReliablePurity) {
-            return DataUtil.NA_STRING;
-        }
-
-        return vafString;
     }
 }
