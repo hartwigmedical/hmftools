@@ -47,7 +47,7 @@ public class FeatureClassifierTest
 
         CuppaConfig config = new CuppaConfig();
 
-        FeatureClassifier classifier = new FeatureClassifier(config, dataCache);
+        FeatureClassifier classifier = new FeatureClassifier(config, dataCache, null);
 
         final Map<String,List<SampleFeatureData>> sampleFeatureMap = Maps.newHashMap();
         final Map<String,List<FeaturePrevData>> cancerFeaturePrevalence = Maps.newHashMap();
@@ -124,7 +124,7 @@ public class FeatureClassifierTest
 
         CuppaConfig config = new CuppaConfig();
 
-        FeatureClassifier classifier = new FeatureClassifier(config, dataCache);
+        FeatureClassifier classifier = new FeatureClassifier(config, dataCache, null);
 
         final Map<String,List<SampleFeatureData>> sampleFeatureMap = Maps.newHashMap();
         final Map<String,List<FeaturePrevData>> cancerFeaturePrevalence = Maps.newHashMap();

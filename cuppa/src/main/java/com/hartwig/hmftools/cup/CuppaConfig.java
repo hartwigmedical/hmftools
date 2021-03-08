@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.feature.FeatureClassifier;
 import com.hartwig.hmftools.cup.rna.AltSjClassifier;
 import com.hartwig.hmftools.cup.rna.GeneExpressionClassifier;
 import com.hartwig.hmftools.cup.somatics.SomaticClassifier;
@@ -138,9 +139,7 @@ public class CuppaConfig
         {
             if(cmd.getOptionValue(CATEGORIES).equals(ALL_CATEGORIES))
             {
-                Arrays.stream(CategoryType.values())
-                        .filter(x -> x != CLASSIFIER)
-                        .forEach(x -> IncludedCategories.add(x));
+                Arrays.stream(CategoryType.values()).filter(x -> x != CLASSIFIER).forEach(x -> IncludedCategories.add(x));
             }
             else if(cmd.getOptionValue(CATEGORIES).equals(DNA_CATEGORIES))
             {
@@ -275,6 +274,7 @@ public class CuppaConfig
         GeneExpressionClassifier.addCmdLineArgs(options);
         AltSjClassifier.addCmdLineArgs(options);
         SomaticClassifier.addCmdLineArgs(options);
+        FeatureClassifier.addCmdLineArgs(options);
 
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(OUTPUT_FILE_ID, true, "Output file ID");

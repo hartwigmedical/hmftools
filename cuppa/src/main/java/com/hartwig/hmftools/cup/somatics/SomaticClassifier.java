@@ -9,6 +9,8 @@ import static java.lang.Math.sqrt;
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
@@ -39,6 +41,8 @@ import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSamplePosF
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromDatabase;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -84,6 +88,7 @@ public class SomaticClassifier implements CuppaClassifier
     private final Map<String,Integer> mSamplePosFreqIndex;
 
     private boolean mIsValid;
+    private BufferedWriter mCssWriter;
 
     private final double mMaxCssAdjustFactorSnv;
     private final double mMaxCssAdjustFactorGenPos;
@@ -97,6 +102,8 @@ public class SomaticClassifier implements CuppaClassifier
 
     public static final String CSS_EXPONENT_SNV = "css_exponent_snv";
     public static final String CSS_EXPONENT_GEN_POS = "css_exponent_gen_pos";
+
+    public static final String WRITE_GEN_POS_CSS = "write_gen_pos_css";
 
     public SomaticClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
@@ -123,6 +130,7 @@ public class SomaticClassifier implements CuppaClassifier
         mMaxCssAdjustFactorGenPos = cmd != null ? Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_GEN_POS, "0")) : 0;
 
         mIsValid = true;
+        mCssWriter = null;
 
         if(mConfig.RefSnvCountsFile.isEmpty() && mConfig.RefSigContributionFile.isEmpty() && mConfig.RefSnvCancerPosFreqFile.isEmpty())
             return;
@@ -140,6 +148,9 @@ public class SomaticClassifier implements CuppaClassifier
 
         mIsValid &= loadSampleCounts();
         mIsValid &= loadSigContributions();
+
+        if(cmd.hasOption(WRITE_GEN_POS_CSS))
+            initialiseOutputFiles();
     }
 
     public static void addCmdLineArgs(Options options)
@@ -148,11 +159,16 @@ public class SomaticClassifier implements CuppaClassifier
         options.addOption(MAX_CSS_ADJUST_FACTOR_GEN_POS, true, "Max CSS adustment factor for genomic pos frequency");
         options.addOption(CSS_EXPONENT_SNV, true, "Max CSS adustment factor for SNV 96");
         options.addOption(CSS_EXPONENT_GEN_POS, true, "Max CSS adustment factor for SNV 96");
+        options.addOption(WRITE_GEN_POS_CSS, false, "Write gen-pos CSS to file");
     }
 
     public CategoryType categoryType() { return SNV; }
     public boolean isValid() { return mIsValid; }
-    public void close() {}
+
+    public void close()
+    {
+        closeBufferedWriter(mCssWriter);
+    }
 
     private boolean loadSampleCounts()
     {
@@ -476,6 +492,8 @@ public class SomaticClassifier implements CuppaClassifier
 
             maxCssScore = max(css, maxCssScore);
 
+            writeGenPosCssValues(sample, refCancerType, css);
+
             if(css < SNV_POS_FREQ_CSS_THRESHOLD)
                 continue;
 
@@ -503,6 +521,38 @@ public class SomaticClassifier implements CuppaClassifier
 
         // then run pairwise analysis if similarities are being analysed
         // addSnvPosSimilarities(sample, sampleCounts, similarities);
+    }
+
+    private void initialiseOutputFiles()
+    {
+        try
+        {
+            final String filename = mConfig.OutputDir + "CUP_GEN_POS_CSS.csv";
+
+            mCssWriter = createBufferedWriter(filename, false);
+            mCssWriter.write("SampleId,CancerType,RefCancerType,Css");
+            mCssWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write gen-pos CSS output: {}", e.toString());
+        }
+    }
+
+    private void writeGenPosCssValues(final SampleData sample, final String refCancerType, double css)
+    {
+        if(mCssWriter == null)
+            return;
+
+        try
+        {
+            mCssWriter.write(String.format("%s,%s,%s,%.4f", sample.Id, sample.cancerType(), refCancerType, css));
+            mCssWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write sample similarity: {}", e.toString());
+        }
     }
 
     private void addSnvPosSimilarities(final SampleData sample, final double[] sampleCounts, final List<SampleSimilarity> similarities)

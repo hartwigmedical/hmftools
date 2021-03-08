@@ -38,6 +38,9 @@ import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+
 public class FeatureClassifier implements CuppaClassifier
 {
     private final CuppaConfig mConfig;
@@ -49,7 +52,11 @@ public class FeatureClassifier implements CuppaClassifier
     private final Map<String,FeaturePrevCounts> mFeaturePrevalenceTotals;
     private final Map<String,Double> mCancerFeatureAvg;
 
-    public FeatureClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache)
+    private final double mNonDriverZeroPrevAllocation;
+
+    public static final String NON_DRIVER_ZERO_PREV = "non_driver_zero_prev";
+
+    public FeatureClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
         mSampleFeatures = Maps.newHashMap();
@@ -59,6 +66,9 @@ public class FeatureClassifier implements CuppaClassifier
         mSampleDataCache = sampleDataCache;
         mIsValid = true;
 
+        mNonDriverZeroPrevAllocation = cmd != null && cmd.hasOption(NON_DRIVER_ZERO_PREV) ?
+                Double.parseDouble(cmd.getOptionValue(NON_DRIVER_ZERO_PREV)) : NON_DRIVER_ZERO_PREVALENCE_ALLOCATION;
+
         if(config.RefFeaturePrevFile.isEmpty() && config.RefDriverAvgFile.isEmpty())
             return;
 
@@ -66,6 +76,11 @@ public class FeatureClassifier implements CuppaClassifier
         mIsValid &= loadRefCancerFeatureAvg(config.RefDriverAvgFile, mCancerFeatureAvg);
         formFeaturePrevalenceTotals();
         mIsValid &= loadSampleFeatures();
+    }
+
+    public static void addCmdLineArgs(Options options)
+    {
+        options.addOption(NON_DRIVER_ZERO_PREV, true, "Non-driver zero prevalence allocation");
     }
 
     public CategoryType categoryType() { return FEATURE; }
@@ -227,6 +242,7 @@ public class FeatureClassifier implements CuppaClassifier
                 return false;
 
             CUP_LOGGER.info("loaded features for {} samples", mSampleFeatures.size());
+            return true;
         }
         else if(mConfig.DbAccess != null)
         {
@@ -251,7 +267,7 @@ public class FeatureClassifier implements CuppaClassifier
         // calculate
         int cancerTypeCount = mCancerFeaturePrevalence.size();
         double noDriverPrevalence = DRIVER_ZERO_PREVALENCE_ALLOCATION / cancerTypeCount;
-        double noNonDriverPrevalence = NON_DRIVER_ZERO_PREVALENCE_ALLOCATION / cancerTypeCount;
+        double noNonDriverPrevalence = mNonDriverZeroPrevAllocation / cancerTypeCount;
 
         for(Map.Entry<String,FeaturePrevCounts> geneEntry : mFeaturePrevalenceTotals.entrySet())
         {

@@ -77,7 +77,7 @@ public class CupAnalyser
             mClassifiers.add(new SomaticClassifier(mConfig, mSampleDataCache, cmd));
 
         if(mConfig.runClassifier(FEATURE))
-            mClassifiers.add(new FeatureClassifier(mConfig, mSampleDataCache));
+            mClassifiers.add(new FeatureClassifier(mConfig, mSampleDataCache, cmd));
 
         if(mConfig.runClassifier(SAMPLE_TRAIT))
             mClassifiers.add(new SampleTraitClassifier(mConfig, mSampleDataCache));
