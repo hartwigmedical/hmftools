@@ -190,4 +190,8 @@ public final class MetaDataResolver {
     public static String extractPipelineVersion(@NotNull String pipelineVersion) {
         return pipelineVersion.substring(2, 4);
     }
+
+    public static String extractPipelineVersionReport(@NotNull String pipelineVersion) {
+        return pipelineVersion.substring(0, 4);
+    }
 }
