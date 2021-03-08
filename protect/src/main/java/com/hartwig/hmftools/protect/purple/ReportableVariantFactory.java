@@ -34,7 +34,6 @@ public final class ReportableVariantFactory {
         List<DriverCatalog> mutationCatalog =
                 driverCatalog.stream().filter(x -> x.driver() == DriverType.MUTATION).collect(Collectors.toList());
         return reportableVariants(variants, mutationCatalog, hasReliablePurity, ReportableVariantSource.SOMATIC);
-
     }
 
     @NotNull
@@ -52,7 +51,8 @@ public final class ReportableVariantFactory {
                 HmfTranscriptRegion canonicalTranscript = genePanel.get(variant.gene());
 
                 ReportableVariant reportable =
-                        fromVariant(variant, hasReliablePurity, source, canonicalTranscript).driverLikelihood(geneDriver.driverLikelihood()).build();
+                        fromVariant(variant, hasReliablePurity, source, canonicalTranscript).driverLikelihood(geneDriver.driverLikelihood())
+                                .build();
                 result.add(reportable);
             }
         }
@@ -65,21 +65,27 @@ public final class ReportableVariantFactory {
             @NotNull List<ReportableVariant> list2) {
         List<ReportableVariant> result = Lists.newArrayList();
 
-        Map<String, Double> maxLikelihood = Maps.newHashMap();
+        Map<String, Double> maxLikelihoodPerGene = Maps.newHashMap();
         for (ReportableVariant variant : list1) {
-            maxLikelihood.merge(variant.gene(), variant.driverLikelihood(), Math::max);
+            maxLikelihoodPerGene.merge(variant.gene(), variant.driverLikelihood(), Math::max);
         }
 
         for (ReportableVariant variant : list2) {
-            maxLikelihood.merge(variant.gene(), variant.driverLikelihood(), Math::max);
+            maxLikelihoodPerGene.merge(variant.gene(), variant.driverLikelihood(), Math::max);
         }
 
         for (ReportableVariant variant : list1) {
-            result.add(ImmutableReportableVariant.builder().from(variant).driverLikelihood(maxLikelihood.get(variant.gene())).build());
+            result.add(ImmutableReportableVariant.builder()
+                    .from(variant)
+                    .driverLikelihood(maxLikelihoodPerGene.get(variant.gene()))
+                    .build());
         }
 
         for (ReportableVariant variant : list2) {
-            result.add(ImmutableReportableVariant.builder().from(variant).driverLikelihood(maxLikelihood.get(variant.gene())).build());
+            result.add(ImmutableReportableVariant.builder()
+                    .from(variant)
+                    .driverLikelihood(maxLikelihoodPerGene.get(variant.gene()))
+                    .build());
         }
 
         return result;
