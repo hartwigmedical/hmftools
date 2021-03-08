@@ -14,6 +14,70 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class HmfTranscriptRegion implements TranscriptRegion {
 
+    public boolean isDonorMinusOne(long position) {
+        return isDonor(-1, position);
+    }
+
+    public boolean isAcceptorPlusThree(long position) {
+        return isAcceptor(3, position);
+    }
+
+    public boolean isDonor(int offset, long position) {
+        if (codingStart() == 0) {
+            return false;
+        }
+
+        if (position < codingStart() || position > codingEnd()) {
+            return false;
+        }
+
+        if (strand() == Strand.FORWARD) {
+            for (int i = 0; i < exome().size() - 1; i++) {
+                long donorSite = exome().get(i).end() + 1;
+                if (position == donorSite + offset) {
+                    return true;
+                }
+            }
+        } else {
+            for (int i = 1; i < exome().size(); i++) {
+                long donorSite = exome().get(i).start() - 1;
+                if (position == donorSite - offset) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public boolean isAcceptor(int offset, long position) {
+        if (codingStart() == 0) {
+            return false;
+        }
+
+        if (position < codingStart() || position > codingEnd()) {
+            return false;
+        }
+
+        if (strand() == Strand.FORWARD) {
+            for (int i = 1; i < exome().size(); i++) {
+                long acceptorSide = exome().get(i).start() - 1;
+                if (position == acceptorSide - offset) {
+                    return true;
+                }
+            }
+        } else {
+            for (int i = 0; i < exome().size() - 1; i++) {
+                long donorSite = exome().get(i).end() + 1;
+                if (position == donorSite + offset) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     @NotNull
     public abstract String geneID();
 
