@@ -184,14 +184,7 @@ public final class MetaDataResolver {
     }
 
     private static boolean isPostP5dot15(@NotNull String pipelineVersion) {
-        return extractPipelineVersion(pipelineVersion).matches("[0-9]+") && Integer.parseInt(pipelineVersion.substring(2, 4)) >= 15;
-    }
-
-    public static String extractPipelineVersion(@NotNull String pipelineVersion) {
-        return pipelineVersion.substring(2, 4);
-    }
-
-    public static String extractPipelineVersionReport(@NotNull String pipelineVersion) {
-        return pipelineVersion.substring(0, 4);
+        String subVersion = pipelineVersion.substring(2, 4);
+        return subVersion.matches("[0-9]+") && Integer.parseInt(subVersion) >= 15;
     }
 }

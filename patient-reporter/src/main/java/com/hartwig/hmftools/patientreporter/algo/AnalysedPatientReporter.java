@@ -76,8 +76,9 @@ public class AnalysedPatientReporter {
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
 
-        String pipelineVersion = pipelineVersionFile.equals(Strings.EMPTY) ? "None pipeline version is known" :
-                MetaDataResolver.extractPipelineVersionReport(MetaDataResolver.readPipelineVersion(new File(pipelineVersionFile)));
+        String pipelineVersion = !pipelineVersionFile.isEmpty()
+                ? MetaDataResolver.readPipelineVersion(new File(pipelineVersionFile)).substring(0, 4)
+                : "No pipeline version is known";
 
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
