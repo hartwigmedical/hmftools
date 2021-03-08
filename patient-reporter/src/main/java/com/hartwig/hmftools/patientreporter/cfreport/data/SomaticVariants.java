@@ -84,6 +84,16 @@ public final class SomaticVariants {
     }
 
     @NotNull
+    public static String tVAFString(@NotNull String tVAF, boolean hasReliablePurity) {
+        return hasReliablePurity ? tVAF : DataUtil.NA_STRING;
+    }
+
+    @NotNull
+    public static String copyNumberString(double copyNumber, boolean hasReliablePurity) {
+        return hasReliablePurity ? String.valueOf(Math.round(copyNumber)) : DataUtil.NA_STRING;
+    }
+
+    @NotNull
     public static String hotspotString(@NotNull Hotspot hotspot) {
         switch (hotspot) {
             case HOTSPOT:

@@ -115,10 +115,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     variant.alleleReadCount() + " / ").setFont(ReportResources.fontBold())
                     .add(new Text(String.valueOf(variant.totalReadCount())).setFont(ReportResources.fontRegular()))
                     .setTextAlignment(TextAlignment.CENTER)));
-            contentTable.addCell(TableUtil.createContentCell(hasReliablePurity
-                    ? String.valueOf(Math.round(variant.totalCopyNumber()))
-                    : DataUtil.NA_STRING).setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? variant.tVAF() : DataUtil.NA_STRING)
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.copyNumberString(variant.totalCopyNumber(), hasReliablePurity))
+                    .setTextAlignment(TextAlignment.CENTER));
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.tVAFString(variant.tVAF(), hasReliablePurity))
                     .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.biallelicString(variant.biallelic(), hasReliablePurity))
                     .setTextAlignment(TextAlignment.CENTER));

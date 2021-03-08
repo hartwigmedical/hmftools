@@ -8,7 +8,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -110,16 +109,5 @@ public final class ReportableVariantFactory {
 
     private static double calcAlleleCopyNumber(double flooredCopyNumber, double adjustedVAF) {
         return flooredCopyNumber * Math.max(0, Math.min(1, adjustedVAF));
-    }
-
-    @NotNull
-    public static String copyNumberString(double copyNumber) {
-        return String.valueOf(Math.round(Math.max(0, copyNumber)));
-    }
-
-    @NotNull
-    public static String vafString(double alleleCopyNumber, double totalCopyNumber) {
-        double vaf = alleleCopyNumber / totalCopyNumber;
-        return DataUtil.formatPercentage(100 * Math.max(0, Math.min(1, vaf)));
     }
 }
