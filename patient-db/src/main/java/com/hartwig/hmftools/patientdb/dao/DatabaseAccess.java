@@ -32,6 +32,7 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
@@ -273,9 +274,10 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
-    public List<LinxCluster> readClusters(@NotNull String sample) {
-        return structuralVariantClusterDAO.readClusters(sample);
-    }
+    public List<LinxCluster> readClusters(@NotNull String sample) { return structuralVariantClusterDAO.readClusters(sample); }
+
+    @NotNull
+    public List<LinxSvAnnotation> readSvAnnotations(@NotNull String sample) { return structuralVariantClusterDAO.readAnnotations(sample); }
 
     @NotNull
     public List<DriverCatalog> readDriverCatalog(@NotNull String sample) {
@@ -288,9 +290,10 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
-    public List<LinxFusion> readFusions(@NotNull String sample) {
-        return structuralVariantFusionDAO.readFusions(sample);
-    }
+    public List<LinxFusion> readFusions(@NotNull String sample) { return structuralVariantFusionDAO.readFusions(sample); }
+
+    @NotNull
+    public List<LinxBreakend> readBreakends(@NotNull String sample) { return structuralVariantFusionDAO.readBreakends(sample); }
 
     @NotNull
     public List<LinxViralInsertion> readViralInsertions(@NotNull String sample) {

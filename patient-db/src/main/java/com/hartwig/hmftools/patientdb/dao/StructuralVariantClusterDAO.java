@@ -265,6 +265,7 @@ class StructuralVariantClusterDAO
         {
             LinxSvAnnotation svData = ImmutableLinxSvAnnotation.builder()
                     .svId(record.getValue(SVANNOTATION.SVID))
+                    .vcfId("")
                     .clusterId(record.getValue(SVANNOTATION.CLUSTERID))
                     .clusterReason(record.getValue(SVANNOTATION.CLUSTERREASON))
                     .fragileSiteStart(record.getValue(SVANNOTATION.FRAGILESITESTART) == 1)

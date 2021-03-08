@@ -5,7 +5,7 @@ public enum Category
     DRIVER,
     VIRUS,
     HOTSPOT,
-    LINX_ANNOTATION,
+    LINX_DATA,
     FUSION,
     DISRUPTION;
 

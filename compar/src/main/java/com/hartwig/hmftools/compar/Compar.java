@@ -2,16 +2,22 @@ package com.hartwig.hmftools.compar;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.compar.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.Category.DRIVER;
+import static com.hartwig.hmftools.compar.Category.FUSION;
+import static com.hartwig.hmftools.compar.Category.LINX_DATA;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.ComparConfig.LOG_DEBUG;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.compar.driver.DriverComparer;
+import com.hartwig.hmftools.compar.linx.DisruptionComparer;
+import com.hartwig.hmftools.compar.linx.FusionComparer;
+import com.hartwig.hmftools.compar.linx.LinxSvComparer;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -26,7 +32,7 @@ public class Compar
 {
     private final ComparConfig mConfig;
 
-    private final List<Comparator> mComparators;
+    private final List<ItemComparer> mComparators;
 
     private BufferedWriter mDiffWriter;
 
@@ -37,9 +43,18 @@ public class Compar
         mComparators = Lists.newArrayList();
 
         if(mConfig.Categories.contains(DRIVER))
-            mComparators.add(new DriverComparator(mConfig));
+            mComparators.add(new DriverComparer(mConfig));
 
-//        if(mConfig.runClassifier(SNV))
+        if(mConfig.Categories.contains(LINX_DATA))
+            mComparators.add(new LinxSvComparer(mConfig));
+
+        if(mConfig.Categories.contains(FUSION))
+            mComparators.add(new FusionComparer(mConfig));
+
+        if(mConfig.Categories.contains(DISRUPTION))
+            mComparators.add(new DisruptionComparer(mConfig));
+
+        //        if(mConfig.runClassifier(SNV))
 //            mClassifiers.add(new SomaticClassifier(mConfig, mSampleDataCache, cmd));
 //
 //        if(mConfig.runClassifier(FEATURE))
@@ -109,9 +124,9 @@ public class Compar
 
     private void processSample(final String sampleId)
     {
-        final List<DataMismatch> mismatches = Lists.newArrayList();
+        final List<Mismatch> mismatches = Lists.newArrayList();
 
-        for(Comparator comparator : mComparators)
+        for(ItemComparer comparator : mComparators)
         {
             comparator.processSample(sampleId, mismatches);
         }
@@ -128,7 +143,7 @@ public class Compar
 
             mDiffWriter = createBufferedWriter(diffFilename, false);
 
-            mDiffWriter.write(DataMismatch.header());
+            mDiffWriter.write(Mismatch.header());
 
             mDiffWriter.newLine();
         }
@@ -138,14 +153,14 @@ public class Compar
         }
     }
 
-    private void writeSampleMismatches(final String sampleId, final List<DataMismatch> mismatches)
+    private void writeSampleMismatches(final String sampleId, final List<Mismatch> mismatches)
     {
         if(mismatches.isEmpty() || mDiffWriter == null)
             return;
 
         try
         {
-            for(DataMismatch mismatch : mismatches)
+            for(Mismatch mismatch : mismatches)
             {
                 mDiffWriter.write(mismatch.toCsv());
                 mDiffWriter.newLine();

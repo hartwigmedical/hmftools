@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
+import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
@@ -213,6 +214,50 @@ public class StructuralVariantFusionDAO {
         }
 
         return fusionList;
+    }
+
+    @NotNull
+    List<LinxBreakend> readBreakends(@NotNull String sample)
+    {
+        List<LinxBreakend> breakendList = Lists.newArrayList();
+
+        Result<Record> result = context.select().from(SVBREAKEND).where(SVBREAKEND.SAMPLEID.eq(sample)).fetch();
+
+        for (Record record : result)
+        {
+            LinxBreakend breakend = ImmutableLinxBreakend.builder()
+                    .id(record.getValue(SVBREAKEND.ID).intValue())
+                    .svId(record.getValue(SVBREAKEND.SVID).intValue())
+                    .isStart(record.getValue(SVBREAKEND.STARTBREAKEND) == 1)
+                    .gene(record.getValue(SVBREAKEND.GENE))
+                    .transcriptId(record.getValue(SVBREAKEND.TRANSCRIPTID))
+                    .canonical(record.getValue(SVBREAKEND.CANONICALTRANSCRIPT) == 1)
+                    .geneOrientation(record.getValue(SVBREAKEND.GENEORIENTATION))
+                    .disruptive(record.getValue(SVBREAKEND.DISRUPTIVE) == 1)
+                    .reportedDisruption(record.getValue(SVBREAKEND.REPORTEDDISRUPTION) == 1)
+                    .undisruptedCopyNumber(record.getValue(SVBREAKEND.UNDISRUPTEDCOPYNUMBER))
+                    .regionType(record.getValue(SVBREAKEND.REGIONTYPE))
+                    .codingContext(record.getValue(SVBREAKEND.CODINGCONTEXT))
+                    .biotype(record.getValue(SVBREAKEND.BIOTYPE))
+                    .exonicBasePhase(record.getValue(SVBREAKEND.EXONICBASEPHASE))
+                    .nextSpliceExonRank(record.getValue(SVBREAKEND.NEXTSPLICEEXONRANK).intValue())
+                    .nextSpliceExonPhase(record.getValue(SVBREAKEND.NEXTSPLICEEXONPHASE))
+                    .nextSpliceDistance(record.getValue(SVBREAKEND.NEXTSPLICEDISTANCE))
+                    .totalExonCount(record.getValue(SVBREAKEND.TOTALEXONCOUNT))
+                    .type("")
+                    .chromosome("")
+                    .orientation(0)
+                    .strand(0)
+                    .chrBand("")
+                    .exonUp(-1)
+                    .exonDown(-1)
+                    .junctionCopyNumber(0)
+                    .build();
+
+            breakendList.add(breakend);
+        }
+
+        return breakendList;
     }
 
     @NotNull
