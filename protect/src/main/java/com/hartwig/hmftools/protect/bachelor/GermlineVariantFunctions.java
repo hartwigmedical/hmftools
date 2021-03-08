@@ -69,8 +69,6 @@ public final class GermlineVariantFunctions {
     @NotNull
     private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull ReportableGermlineVariant variant,
             @Nullable HmfTranscriptRegion canonicalTranscript) {
-        double flooredCopyNumber = Math.max(0, variant.adjustedCopyNumber());
-
         return ImmutableReportableVariant.builder()
                 .type(VariantType.type(variant.ref(), variant.alt()))
                 .source(ReportableVariantSource.GERMLINE)
