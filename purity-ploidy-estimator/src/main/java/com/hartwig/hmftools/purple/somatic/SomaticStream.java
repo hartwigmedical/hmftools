@@ -56,6 +56,7 @@ public class SomaticStream {
     private final RChartData rChartData;
     private final List<CanonicalTranscript> transcripts;
     private final DriverGenePanel genePanel;
+    private final List<PeakModel> peakModel = Lists.newArrayList();
 
     public SomaticStream(final ConfigSupplier configSupplier) {
         this.genePanel = configSupplier.driverCatalogConfig().genePanel();
@@ -108,9 +109,13 @@ public class SomaticStream {
         return drivers.build(geneCopyNumbers);
     }
 
+    @NotNull
+    public List<PeakModel> somaticPeakModel() {
+        return peakModel;
+    }
+
     public List<VariantContext> processAndWrite(@NotNull final PurityAdjuster purityAdjuster,
-            @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<FittedRegion> fittedRegions,
-            @NotNull final List<PeakModel> somaticPeaks) throws IOException {
+            @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<FittedRegion> fittedRegions) throws IOException {
         final List<VariantContext> result = Lists.newArrayList();
 
         final Consumer<VariantContext> driverConsumer =
@@ -144,7 +149,6 @@ public class SomaticStream {
                         genePanel,
                         copyNumbers,
                         fittedRegions,
-                        somaticPeaks,
                         driverCatalogConfig.somaticHotspots(),
                         transcripts,
                         consumer);
@@ -157,6 +161,8 @@ public class SomaticStream {
                 }
 
                 enricher.flush();
+                peakModel.addAll(enricher.somaticPeakModel());
+
                 rChartData.write();
             }
         }

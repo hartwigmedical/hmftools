@@ -26,7 +26,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.GermlineDrivers;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurityAdjusterAbnormalChromosome;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -51,15 +50,12 @@ import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactoryV2;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.SegmentFile;
-import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.common.variant.clonality.ModifiableWeightedPloidy;
 import com.hartwig.hmftools.common.variant.clonality.PeakModel;
-import com.hartwig.hmftools.common.variant.clonality.PeakModelFactory;
 import com.hartwig.hmftools.common.variant.clonality.PeakModelFile;
 import com.hartwig.hmftools.common.variant.enrich.VariantHotspotEnrichment;
 import com.hartwig.hmftools.common.variant.filter.SGTFilter;
@@ -219,11 +215,11 @@ public class PurityPloidyEstimateApplication {
             final List<PurityAdjustedSomaticVariant> enrichedSomatics =
                     new PurityAdjustedSomaticVariantFactory(tumorSample, purityAdjuster, copyNumbers, enrichedFittedRegions).create(
                             allSomatics);
-            final List<PeakModel> somaticPeaks = modelSomaticPeaks(configSupplier.somaticConfig(), enrichedSomatics);
 
             LOGGER.info("Enriching somatic variants");
             final SomaticStream somaticStream = new SomaticStream(configSupplier);
-            final List<VariantContext> somaticVariantContexts = somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions, somaticPeaks);
+            final List<VariantContext> somaticVariantContexts = somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions);
+            final List<PeakModel> somaticPeaks = somaticStream.somaticPeakModel();
 
             GermlineVariants germlineVariants = new GermlineVariants(configSupplier);
             if (configSupplier.germlineConfig().enabled()) {
@@ -300,7 +296,6 @@ public class PurityPloidyEstimateApplication {
             }
 
             LOGGER.info("Generating charts");
-
             new Charts(configSupplier, executorService).write(cobaltGender,
                     copyNumbers,
                     enrichedSomatics,
@@ -451,23 +446,4 @@ public class PurityPloidyEstimateApplication {
     private static DatabaseAccess databaseAccess(@NotNull final DBConfig dbConfig) throws SQLException {
         return new DatabaseAccess(dbConfig.user(), dbConfig.password(), dbConfig.url());
     }
-
-    @NotNull
-    private List<PeakModel> modelSomaticPeaks(@NotNull final SomaticFitConfig config,
-            @NotNull final List<PurityAdjustedSomaticVariant> enrichedSomatics) {
-        final List<ModifiableWeightedPloidy> weightedPloidies = Lists.newArrayList();
-        for (PurityAdjustedSomaticVariant enrichedSomatic : enrichedSomatics) {
-            if (Doubles.lessThan(enrichedSomatic.variantCopyNumber(), config.clonalityMaxPloidy()) && !enrichedSomatic.isFiltered()
-                    && HumanChromosome.contains(enrichedSomatic.chromosome()) && HumanChromosome.fromString(enrichedSomatic.chromosome())
-                    .isAutosome()) {
-                weightedPloidies.add(ModifiableWeightedPloidy.create()
-                        .from(enrichedSomatic)
-                        .setPloidy(enrichedSomatic.variantCopyNumber())
-                        .setWeight(1));
-            }
-        }
-
-        return new PeakModelFactory(config.clonalityMaxPloidy(), config.clonalityBinWidth()).model(weightedPloidies);
-    }
-
 }
