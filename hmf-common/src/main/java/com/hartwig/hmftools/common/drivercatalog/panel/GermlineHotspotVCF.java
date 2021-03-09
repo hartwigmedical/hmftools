@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
@@ -29,14 +30,15 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 class GermlineHotspotVCF {
 
     static final String WHITELIST_FLAG = "WHITELIST";
+
+    @NotNull
     private final Set<String> germlineGenes;
 
-    public GermlineHotspotVCF(final Set<String> genes) {
+    public GermlineHotspotVCF(@NotNull final Set<String> genes) {
         this.germlineGenes = genes;
     }
 
-    public List<GenomeRegion> process(final String inputFile, final String outputFile) throws IOException {
-
+    public List<GenomeRegion> process(@NotNull final String inputFile, @NotNull final String outputFile) throws IOException {
         // READ
         final VCFFileReader reader = new VCFFileReader(new File(inputFile), false);
         final VCFHeader readerHeader = reader.getFileHeader();
@@ -50,8 +52,8 @@ class GermlineHotspotVCF {
 
         for (VariantContext context : reader) {
             final Set<String> variantGenes = Sets.newHashSet();
-            final String geneinfo = context.getAttributeAsString("GENEINFO", "UNKNOWN:0000");
-            for (String singleGeneInfo : geneinfo.split("\\|")) {
+            final String geneInfo = context.getAttributeAsString("GENEINFO", "UNKNOWN:0000");
+            for (String singleGeneInfo : geneInfo.split("\\|")) {
                 variantGenes.add(singleGeneInfo.split(":")[0]);
             }
 
@@ -60,16 +62,16 @@ class GermlineHotspotVCF {
 
             Pathogenic pathogenic = PathogenicSummaryFactory.fromContext(context).pathogenicity();
             if (!variantGenes.isEmpty() && isPathogenicOrLikelyPathogenic(pathogenic) && context.getAlleles().size() == 2) {
-                final String clinsigConf = PathogenicSummaryFactory.clnSigConf(context);
+                final String clinSigConf = PathogenicSummaryFactory.clnSigConf(context);
                 VariantContextBuilder builder = new VariantContextBuilder("clinvar",
                         contigPrefix + context.getContig(),
                         context.getStart(),
                         context.getEnd(),
-                        context.getAlleles()).attribute("GENEINFO", geneinfo)
+                        context.getAlleles()).attribute("GENEINFO", geneInfo)
                         .attribute(PathogenicSummaryFactory.CLNSIG, PathogenicSummaryFactory.clnSig(context));
 
-                if (!clinsigConf.isEmpty()) {
-                    builder.attribute(PathogenicSummaryFactory.CLNSIGCONF, clinsigConf);
+                if (!clinSigConf.isEmpty()) {
+                    builder.attribute(PathogenicSummaryFactory.CLNSIGCONF, clinSigConf);
                 }
 
                 variants.add(builder.make());
@@ -89,12 +91,12 @@ class GermlineHotspotVCF {
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .build();
 
-        VCFHeader writerheader = new VCFHeader();
-        writerheader.addMetaDataLine(readerHeader.getInfoHeaderLine("GENEINFO"));
-        writerheader.addMetaDataLine(readerHeader.getInfoHeaderLine(PathogenicSummaryFactory.CLNSIG));
-        writerheader.addMetaDataLine(readerHeader.getInfoHeaderLine(PathogenicSummaryFactory.CLNSIGCONF));
-        writerheader.addMetaDataLine(new VCFInfoHeaderLine(WHITELIST_FLAG, 1, VCFHeaderLineType.Flag, "Whitelisted hotspot"));
-        writer.writeHeader(writerheader);
+        VCFHeader writerHeader = new VCFHeader();
+        writerHeader.addMetaDataLine(readerHeader.getInfoHeaderLine("GENEINFO"));
+        writerHeader.addMetaDataLine(readerHeader.getInfoHeaderLine(PathogenicSummaryFactory.CLNSIG));
+        writerHeader.addMetaDataLine(readerHeader.getInfoHeaderLine(PathogenicSummaryFactory.CLNSIGCONF));
+        writerHeader.addMetaDataLine(new VCFInfoHeaderLine(WHITELIST_FLAG, 1, VCFHeaderLineType.Flag, "Whitelisted hotspot"));
+        writer.writeHeader(writerHeader);
 
         variants.sort(new VariantContextComparator(contigs));
         variants.forEach(writer::add);
@@ -103,8 +105,7 @@ class GermlineHotspotVCF {
         return variants.stream().map(x -> GenomeRegions.create(x.getContig(), x.getStart(), x.getEnd())).collect(Collectors.toList());
     }
 
-    private boolean isPathogenicOrLikelyPathogenic(Pathogenic pathogenic) {
+    private static boolean isPathogenicOrLikelyPathogenic(@NotNull Pathogenic pathogenic) {
         return pathogenic.isPathogenic();
     }
-
 }

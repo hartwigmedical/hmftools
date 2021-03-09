@@ -63,8 +63,11 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
         buffer.add(new VariantContextDecorator(context));
     }
 
-    private DriverGeneGermlineReporting downgradeWildType(DriverGeneGermlineReporting reporting) {
-        return reporting.equals(WILDTYPE_LOST) ? VARIANT_NOT_LOST : reporting;
+    @NotNull
+    @Override
+    public VCFHeader enrichHeader(@NotNull final VCFHeader template) {
+        template.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
+        return template;
     }
 
     public void flush() {
@@ -93,7 +96,12 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
         buffer.clear();
     }
 
-    private boolean report(VariantContextDecorator variant, Set<String> wildtypeLost) {
+    @NotNull
+    private static DriverGeneGermlineReporting downgradeWildType(@NotNull DriverGeneGermlineReporting reporting) {
+        return reporting.equals(WILDTYPE_LOST) ? VARIANT_NOT_LOST : reporting;
+    }
+
+    private boolean report(@NotNull VariantContextDecorator variant, @NotNull Set<String> wildtypeLost) {
         if (variant.gene().isEmpty()) {
             return false;
         }
@@ -106,8 +114,8 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
         return report(variant, driverGene.reportGermlineHotspot(), driverGene.reportGermlineVariant(), wildtypeLost);
     }
 
-    private boolean report(VariantContextDecorator variant, DriverGeneGermlineReporting hotspotReporting,
-            DriverGeneGermlineReporting variantReporting, Set<String> wildtypeLost) {
+    private boolean report(@NotNull VariantContextDecorator variant, @NotNull DriverGeneGermlineReporting hotspotReporting,
+            @NotNull DriverGeneGermlineReporting variantReporting, @NotNull Set<String> wildtypeLost) {
         if (!variant.isPass()) {
             return false;
         }
@@ -154,12 +162,5 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
 
         return pathogenicSummary.pathogenicity().equals(Pathogenic.UNKNOWN)
                 && REPORTABLE_EFFECT.contains(snpEffSummary.canonicalCodingEffect());
-    }
-
-    @NotNull
-    @Override
-    public VCFHeader enrichHeader(@NotNull final VCFHeader template) {
-        template.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
-        return template;
     }
 }

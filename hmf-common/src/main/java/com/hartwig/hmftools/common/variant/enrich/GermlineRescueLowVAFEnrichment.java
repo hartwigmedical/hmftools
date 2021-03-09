@@ -34,7 +34,7 @@ public class GermlineRescueLowVAFEnrichment implements VariantContextEnrichment 
     }
 
     @NotNull
-    static VariantContext process(String germlineSample, @NotNull VariantContext context) {
+    static VariantContext process(@NotNull String germlineSample, @NotNull VariantContext context) {
         Set<String> filters = context.getFilters();
         if (filters.size() == 1 && filters.contains(GermlineGenotypeEnrichment.LOW_VAF_FILTER)) {
             Genotype germlineGenotype = context.getGenotype(germlineSample);
