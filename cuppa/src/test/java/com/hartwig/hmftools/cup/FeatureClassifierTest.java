@@ -94,7 +94,7 @@ public class FeatureClassifierTest
 
         SampleResult result = results.stream().filter(x -> x.DataType.equals(FEATURE.toString())).findFirst().orElse(null);
         assertTrue(result != null);
-        assertEquals(0.78, result.CancerTypeValues.get(TEST_CT_001), 0.01);
+        assertEquals(0.79, result.CancerTypeValues.get(TEST_CT_001), 0.01);
         assertEquals(0.21, result.CancerTypeValues.get(TEST_CT_002), 0.01);
         assertEquals(0.01, result.CancerTypeValues.get(TEST_CT_003), 0.01);
 

@@ -32,7 +32,7 @@ public class CupConstants
     public static final String CANCER_TYPE_PAN = "ALL";
 
     public static final double DRIVER_ZERO_PREVALENCE_ALLOCATION = 0.10;
-    public static final double NON_DRIVER_ZERO_PREVALENCE_ALLOCATION = 0.02;
+    public static final double NON_DRIVER_ZERO_PREVALENCE_ALLOCATION = 0.01;
 
     // cancer types with gender-exclusions
     public static final String CANCER_TYPE_PROSTATE = "Prostate";
