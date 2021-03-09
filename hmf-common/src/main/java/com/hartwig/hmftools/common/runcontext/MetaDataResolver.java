@@ -170,8 +170,8 @@ public final class MetaDataResolver {
 
     @NotNull
     public static String majorDotMinorVersion(@NotNull File pipelineVersionFile) throws IOException {
-        String version = readPipelineVersion(pipelineVersionFile);
-        return version.substring(0, 4);
+        String [] version = readPipelineVersion(pipelineVersionFile).split("\\.");
+        return version[0] + "." + version[1];
     }
 
     @NotNull
