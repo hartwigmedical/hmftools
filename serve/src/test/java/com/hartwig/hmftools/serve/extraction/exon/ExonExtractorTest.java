@@ -33,8 +33,8 @@ public class ExonExtractorTest {
         assertEquals(1, exons.size());
 
         assertEquals("4", exons.get(0).chromosome());
-        assertEquals(55593577, exons.get(0).start());
-        assertEquals(55593713, exons.get(0).end());
+        assertEquals(55593572, exons.get(0).start());
+        assertEquals(55593718, exons.get(0).end());
         assertEquals("KIT", exons.get(0).gene());
         assertEquals(MutationTypeFilter.MISSENSE, exons.get(0).mutationType());
     }
@@ -47,8 +47,8 @@ public class ExonExtractorTest {
         assertEquals(1, exons.size());
 
         assertEquals("7", exons.get(0).chromosome());
-        assertEquals(55242410, exons.get(0).start());
-        assertEquals(55242518, exons.get(0).end());
+        assertEquals(55242405, exons.get(0).start());
+        assertEquals(55242523, exons.get(0).end());
         assertEquals("EGFR", exons.get(0).gene());
         assertEquals(MutationTypeFilter.INFRAME_DELETION, exons.get(0).mutationType());
     }
@@ -61,8 +61,8 @@ public class ExonExtractorTest {
         assertEquals(1, exons.size());
 
         assertEquals("12", exons.get(0).chromosome());
-        assertEquals(25398203, exons.get(0).start());
-        assertEquals(25398334, exons.get(0).end());
+        assertEquals(25398198, exons.get(0).start());
+        assertEquals(25398339, exons.get(0).end());
         assertEquals("KRAS", exons.get(0).gene());
         assertEquals(MutationTypeFilter.INFRAME_DELETION, exons.get(0).mutationType());
     }

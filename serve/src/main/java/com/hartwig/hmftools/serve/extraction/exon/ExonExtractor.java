@@ -23,6 +23,8 @@ public class ExonExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(ExonExtractor.class);
 
+    private static final int SPLICE_SIZE = 10;
+
     private static final Set<EventType> EXON_EVENTS = Sets.newHashSet(EventType.EXON, EventType.FUSION_PAIR_AND_EXON);
 
     @NotNull
@@ -119,9 +121,9 @@ public class ExonExtractor {
     }
 
     @NotNull
-    private static List<Integer> extractContinuousRangeOfExonIndices(@NotNull String featureName) {
+    private static List<Integer> extractContinuousRangeOfExonIndices(@NotNull String event) {
         List<Integer> exonIndices = Lists.newArrayList();
-        String[] words = featureName.split(" ");
+        String[] words = event.split(" ");
         for (String word : words) {
             if (word.contains("-")) {
                 String[] splitEvents = word.split("-");
@@ -144,10 +146,10 @@ public class ExonExtractor {
             return null;
         }
 
-        // Extend exonic range by 5 to include SPLICE variants.
+        // Extend exonic range to include SPLICE variants.
         // First exon does not start with a splice region but we don't take this into account since it would not matter downstream anyways.
-        long start = hmfExonRegion.start() - 5;
-        long end = hmfExonRegion.end() + 5;
+        long start = hmfExonRegion.start() - SPLICE_SIZE;
+        long end = hmfExonRegion.end() + SPLICE_SIZE;
 
         return ImmutableExonAnnotation.builder()
                 .gene(gene)

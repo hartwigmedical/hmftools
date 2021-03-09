@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class NamedBedFactory {
+public final class NamedBedFactory {
 
     private static final int SPLICE_SIZE = 10;
 
@@ -37,5 +37,4 @@ public class NamedBedFactory {
         Collections.sort(result);
         return result;
     }
-
 }
