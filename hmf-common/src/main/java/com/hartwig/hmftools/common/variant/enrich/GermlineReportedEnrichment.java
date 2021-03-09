@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporti
 import com.hartwig.hmftools.common.pathogenic.Pathogenic;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
@@ -136,7 +137,7 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
             return true;
         }
 
-        if (variant.isVariantLost(MIN_VARIANT_COPY_NUMBER)) {
+        if (isVariantLost(variant, MIN_VARIANT_COPY_NUMBER)) {
             return false;
         }
 
@@ -149,6 +150,10 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
         }
 
         return false;
+    }
+
+    public boolean isVariantLost(VariantContextDecorator variant, double minVariantCopyNumber) {
+        return Doubles.lessThan(variant.variantCopyNumber(), minVariantCopyNumber);
     }
 
     private static boolean isPathogenic(boolean isHotspot, @NotNull PathogenicSummary pathogenicSummary,

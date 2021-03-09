@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
-import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummaryFactory;
@@ -133,10 +132,6 @@ public class VariantContextDecorator implements GenomePosition {
 
     public double variantCopyNumber() {
         return context.getAttributeAsDouble(PURPLE_VARIANT_CN_INFO, context.getAttributeAsDouble(PURPLE_VARIANT_PLOIDY_INFO, 0));
-    }
-
-    public boolean isVariantLost(double minVariantCopyNumber) {
-        return Doubles.greaterOrEqual(variantCopyNumber(), minVariantCopyNumber);
     }
 
     @NotNull
