@@ -28,7 +28,7 @@ import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Downsample;
-import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.purple.config.ChartConfig;
@@ -37,6 +37,8 @@ import com.hartwig.hmftools.purple.config.ConfigSupplier;
 import org.apache.logging.log4j.core.util.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import htsjdk.variant.variantcontext.VariantContext;
 
 class CircosCharts {
 
@@ -61,12 +63,18 @@ class CircosCharts {
     }
 
     void write(@NotNull final Gender gender, @NotNull final List<PurpleCopyNumber> copyNumber,
-            @NotNull final List<PurityAdjustedSomaticVariant> somaticVariants, @NotNull final List<StructuralVariant> structuralVariants,
+            @NotNull final List<VariantContext> somaticVariants, @NotNull final List<StructuralVariant> structuralVariants,
             @NotNull final List<FittedRegion> regions, @NotNull final List<AmberBAF> bafs) throws IOException {
+
+        final List<VariantContextDecorator> somatics = somaticVariants.stream()
+                .map(VariantContextDecorator::new)
+                .filter(VariantContextDecorator::isPass)
+                .filter(x -> HumanChromosome.contains(x.chromosome()))
+                .collect(Collectors.toList());
 
         writeConfig(gender);
         writeCopyNumbers(copyNumber);
-        writeEnrichedSomatics(somaticVariants.stream().filter(x -> HumanChromosome.contains(x.chromosome())).collect(Collectors.toList()));
+        writeEnrichedSomatics(somatics);
         writeStructuralVariants(structuralVariants);
         writeFittedRegions(Downsample.downsample(MAX_PLOT_POINTS, regions));
         writeBafs(Downsample.downsample(MAX_PLOT_POINTS, bafs));
@@ -123,7 +131,7 @@ class CircosCharts {
         CircosFileWriter.writeRegions(baseCircosTumorSample + ".baf.circos", copyNumbers, PurpleCopyNumber::averageActualBAF);
     }
 
-    private void writeEnrichedSomatics(@NotNull final List<PurityAdjustedSomaticVariant> somaticVariants) throws IOException {
+    private void writeEnrichedSomatics(@NotNull final List<VariantContextDecorator> somaticVariants) throws IOException {
         CircosSNPWriter.writePositions(baseCircosTumorSample + ".snp.circos", Downsample.downsample(MAX_PLOT_POINTS, snp(somaticVariants)));
         CircosINDELWriter.writePositions(baseCircosTumorSample + ".indel.circos",
                 Downsample.downsample(MAX_PLOT_POINTS, indel(somaticVariants)));
@@ -169,7 +177,7 @@ class CircosCharts {
     }
 
     @NotNull
-    private List<PurityAdjustedSomaticVariant> snp(@NotNull final List<PurityAdjustedSomaticVariant> somaticVariants) {
+    private List<VariantContextDecorator> snp(@NotNull final List<VariantContextDecorator> somaticVariants) {
         return somaticVariants.stream()
                 .filter(x -> x.type() == VariantType.SNP)
                 .filter(x -> HumanChromosome.fromString(x.chromosome()).intValue() <= 25)
@@ -177,7 +185,7 @@ class CircosCharts {
     }
 
     @NotNull
-    private List<PurityAdjustedSomaticVariant> indel(@NotNull final List<PurityAdjustedSomaticVariant> somaticVariants) {
+    private List<VariantContextDecorator> indel(@NotNull final List<VariantContextDecorator> somaticVariants) {
         return somaticVariants.stream()
                 .filter(x -> x.type() == VariantType.INDEL)
                 .filter(x -> HumanChromosome.fromString(x.chromosome()).intValue() <= 25)

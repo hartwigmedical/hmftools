@@ -51,8 +51,6 @@ import com.hartwig.hmftools.common.purple.region.FittedRegionFactoryV2;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.SegmentFile;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
-import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
-import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.clonality.PeakModel;
@@ -211,11 +209,6 @@ public class PurityPloidyEstimateApplication {
                     geneCopyNumbers,
                     cobaltChromosomes.germlineAberrations());
 
-            LOGGER.info("Modelling somatic peaks");
-            final List<PurityAdjustedSomaticVariant> enrichedSomatics =
-                    new PurityAdjustedSomaticVariantFactory(tumorSample, purityAdjuster, copyNumbers, enrichedFittedRegions).create(
-                            allSomatics);
-
             LOGGER.info("Enriching somatic variants");
             final SomaticStream somaticStream = new SomaticStream(configSupplier);
             final List<VariantContext> somaticVariantContexts = somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions);
@@ -298,7 +291,7 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Generating charts");
             new Charts(configSupplier, executorService).write(cobaltGender,
                     copyNumbers,
-                    enrichedSomatics,
+                    somaticVariantContexts,
                     structuralVariants.variants(),
                     fittedRegions,
                     Lists.newArrayList(bafs.values()));

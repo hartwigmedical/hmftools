@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.purple.config.ChartConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
@@ -19,6 +18,8 @@ import com.hartwig.hmftools.purple.config.ConfigSupplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+
+import htsjdk.variant.variantcontext.VariantContext;
 
 public class Charts {
 
@@ -39,7 +40,7 @@ public class Charts {
     }
 
     public void write(@NotNull final Gender gender, @NotNull final List<PurpleCopyNumber> copyNumbers,
-            @NotNull final List<PurityAdjustedSomaticVariant> somaticVariants, @NotNull final List<StructuralVariant> structuralVariants,
+            @NotNull final List<VariantContext> somaticVariants, @NotNull final List<StructuralVariant> structuralVariants,
             @NotNull final List<FittedRegion> regions, @NotNull final List<AmberBAF> bafs)
             throws InterruptedException, ExecutionException, IOException {
 

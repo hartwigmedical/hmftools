@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.variant;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -14,7 +13,6 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 
@@ -54,25 +52,6 @@ public class PurityAdjustedSomaticVariantFactory {
     }
 
     @NotNull
-    public List<PurityAdjustedSomaticVariant> create(@NotNull final List<SomaticVariant> variants) {
-        final List<PurityAdjustedSomaticVariant> result = Lists.newArrayList();
-
-        for (SomaticVariant variant : variants) {
-            final ImmutablePurityAdjustedSomaticVariantImpl.Builder builder = ImmutablePurityAdjustedSomaticVariantImpl.builder()
-                    .from(variant)
-                    .adjustedCopyNumber(0)
-                    .adjustedVAF(0)
-                    .minorAlleleCopyNumber(0)
-                    .germlineStatus(GermlineStatus.UNKNOWN);
-
-            enrich(variant, variant, builder);
-            result.add(builder.build());
-        }
-
-        return result;
-    }
-
-    @NotNull
     public VariantContext enrich(@NotNull final VariantContext variant) {
         final Genotype genotype = variant.getGenotype(sample);
         if (genotype != null && genotype.hasAD() && HumanChromosome.contains(variant.getContig())) {
@@ -85,10 +64,8 @@ public class PurityAdjustedSomaticVariantFactory {
 
     private void enrich(@NotNull final GenomePosition position, @NotNull final AllelicDepth depth,
             @NotNull final PurityAdjustedSomaticVariantBuilder builder) {
-        if (HumanChromosome.contains(position.chromosome())) {
-            copyNumberSelector.select(position).ifPresent(x -> applyPurityAdjustment(x, depth, builder));
-            fittedRegionSelector.select(position).ifPresent(x -> builder.germlineStatus(x.status()));
-        }
+        copyNumberSelector.select(position).ifPresent(x -> applyPurityAdjustment(x, depth, builder));
+        fittedRegionSelector.select(position).ifPresent(x -> builder.germlineStatus(x.status()));
     }
 
     private void applyPurityAdjustment(@NotNull final PurpleCopyNumber purpleCopyNumber, @NotNull final AllelicDepth depth,
