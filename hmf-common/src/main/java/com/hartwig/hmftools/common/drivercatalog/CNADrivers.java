@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -23,17 +25,13 @@ public class CNADrivers {
     private static final Set<SegmentSupport> MERE = Sets.newHashSet(SegmentSupport.CENTROMERE, SegmentSupport.TELOMERE);
 
     private final Set<PurpleQCStatus> qcStatus;
-    private final Set<String> oncoGenes;
-    private final Set<String> tsGenes;
-    private final Set<String> amplificationTargets;
-    private final Set<String> deletionTargets;
+    private final Map<String, DriverGene> amplificationTargets;
+    private final Map<String, DriverGene> deletionTargets;
 
     public CNADrivers(Set<PurpleQCStatus> qcStatus, DriverGenePanel panel) {
         this.qcStatus = qcStatus;
-        this.oncoGenes = panel.oncoGenes();
-        this.tsGenes = panel.tsGenes();
-        this.deletionTargets = panel.deletionTargets();
-        this.amplificationTargets = panel.amplificationTargets();
+        this.deletionTargets = panel.deletionTargets().stream().collect(Collectors.toMap(DriverGene::gene, x -> x));
+        this.amplificationTargets = panel.amplificationTargets().stream().collect(Collectors.toMap(DriverGene::gene, x -> x));
     }
 
     public static int deletedGenes(@NotNull final List<GeneCopyNumber> geneCopyNumbers) {
@@ -45,7 +43,7 @@ public class CNADrivers {
 
     @NotNull
     public List<DriverCatalog> amplifications(final double ploidy, @NotNull final List<GeneCopyNumber> geneCopyNumbers) {
-        Predicate<GeneCopyNumber> targetPredicate = x -> oncoGenes.contains(x.gene()) | amplificationTargets.contains(x.gene());
+        Predicate<GeneCopyNumber> targetPredicate = x -> amplificationTargets.containsKey(x.gene());
         Predicate<GeneCopyNumber> qcStatusPredicate =
                 qcStatus.contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE) ? CNADrivers::supportedByOneSV : x -> true;
 
@@ -74,7 +72,7 @@ public class CNADrivers {
 
         return geneCopyNumbers.stream()
                 .filter(x -> x.minCopyNumber() < MAX_COPY_NUMBER_DEL)
-                .filter(x -> tsGenes.contains(x.gene()) | deletionTargets.contains(x.gene()))
+                .filter(x -> deletionTargets.containsKey(x.gene()))
                 .filter(x -> x.germlineHet2HomRegions() == 0 && x.germlineHomRegions() == 0)
                 .filter(qcStatusPredicate)
                 .map(this::del)
@@ -109,22 +107,25 @@ public class CNADrivers {
 
     @NotNull
     private DriverCatalog amp(GeneCopyNumber x) {
-        return cnaDriver(DriverType.AMP, LikelihoodMethod.AMP, false, x);
+        DriverGene driverGene = amplificationTargets.get(x.gene());
+        return cnaDriver(driverGene.likelihoodType(), DriverType.AMP, LikelihoodMethod.AMP, false, x);
     }
 
     @NotNull
     private DriverCatalog partialAmp(GeneCopyNumber x) {
-        return cnaDriver(DriverType.PARTIAL_AMP, LikelihoodMethod.AMP, false, x);
+        DriverGene driverGene = amplificationTargets.get(x.gene());
+        return cnaDriver(driverGene.likelihoodType(), DriverType.PARTIAL_AMP, LikelihoodMethod.AMP, false, x);
     }
 
     @NotNull
     private DriverCatalog del(GeneCopyNumber x) {
-        return cnaDriver(DriverType.DEL, LikelihoodMethod.DEL, true, x);
+        DriverGene driverGene = deletionTargets.get(x.gene());
+        return cnaDriver(driverGene.likelihoodType(), DriverType.DEL, LikelihoodMethod.DEL, true, x);
     }
 
     @NotNull
-    private DriverCatalog cnaDriver(DriverType driver, LikelihoodMethod likelihoodMethod, boolean biallelic, GeneCopyNumber x) {
-        DriverCategory category = oncoGenes.contains(x.gene()) ? DriverCategory.ONCO : DriverCategory.TSG;
+    private DriverCatalog cnaDriver(DriverCategory category, DriverType driver, LikelihoodMethod likelihoodMethod, boolean biallelic,
+            GeneCopyNumber x) {
         return ImmutableDriverCatalog.builder()
                 .chromosome(x.chromosome())
                 .chromosomeBand(x.chromosomeBand())

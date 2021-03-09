@@ -73,7 +73,8 @@ public class SnpEffSummaryFactory {
         return builder.build();
     }
 
-    private CodingEffect codingEffect(boolean phasedInframeIndel, @NotNull final String gene,
+    @NotNull
+    private static CodingEffect codingEffect(boolean phasedInframeIndel, @NotNull final String gene,
             @NotNull final List<VariantConsequence> consequences) {
         CodingEffect effect = CodingEffect.effect(gene, consequences);
         return phasedInframeIndel && effect.equals(CodingEffect.NONSENSE_OR_FRAMESHIFT)

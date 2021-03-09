@@ -14,22 +14,20 @@ import com.hartwig.hmftools.protect.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
-import com.hartwig.hmftools.protect.purple.ReportableVariantFactory;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class GermlineVariantFunctions {
+final class BachelorFunctions {
 
-    private GermlineVariantFunctions() {
+    private BachelorFunctions() {
     }
 
     @NotNull
     public static List<ReportableVariant> reportableGermlineVariants(@NotNull List<ReportableGermlineVariant> variants,
-            @NotNull Set<String> genesWithSomaticInactivationEvent, @NotNull GermlineReportingModel germlineReportingModel,
-            boolean hasReliablePurity) {
+            @NotNull Set<String> genesWithSomaticInactivationEvent, @NotNull GermlineReportingModel germlineReportingModel) {
         List<ReportableVariant> reportableVariants = Lists.newArrayList();
         Map<String, HmfTranscriptRegion> genePanel = HmfGenePanelSupplier.allGenesMap37();
 
@@ -59,7 +57,7 @@ public final class GermlineVariantFunctions {
 
                 if (includeVariant) {
                     HmfTranscriptRegion canonicalTranscript = genePanel.get(variant.gene());
-                    reportableVariants.add(fromGermlineVariant(variant, hasReliablePurity, canonicalTranscript).driverLikelihood(1D)
+                    reportableVariants.add(fromGermlineVariant(variant, canonicalTranscript).driverLikelihood(1D)
                             .build());
                 }
             }
@@ -70,7 +68,7 @@ public final class GermlineVariantFunctions {
 
     @NotNull
     private static ImmutableReportableVariant.Builder fromGermlineVariant(@NotNull ReportableGermlineVariant variant,
-            boolean hasReliablePurity, @Nullable HmfTranscriptRegion canonicalTranscript) {
+            @Nullable HmfTranscriptRegion canonicalTranscript) {
         return ImmutableReportableVariant.builder()
                 .type(VariantType.type(variant.ref(), variant.alt()))
                 .source(ReportableVariantSource.GERMLINE)
@@ -89,10 +87,6 @@ public final class GermlineVariantFunctions {
                 .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVaf()))
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
-                .copyNumber(ReportableVariantFactory.copyNumberString(variant.adjustedCopyNumber(), hasReliablePurity))
-                .tVafString(ReportableVariantFactory.vafString(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVaf()),
-                        variant.adjustedCopyNumber(),
-                        hasReliablePurity))
                 .biallelic(variant.biallelic());
     }
 

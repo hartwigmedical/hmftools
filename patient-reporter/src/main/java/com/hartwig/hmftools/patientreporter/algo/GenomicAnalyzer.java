@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
@@ -23,9 +21,13 @@ import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariantFactory;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class GenomicAnalyzer {
+
+    private static final Logger LOGGER = LogManager.getLogger(GenomicAnalyzer.class);
 
     @NotNull
     private final GermlineReportingModel germlineReportingModel;
@@ -50,8 +52,6 @@ public class GenomicAnalyzer {
 
         LinxData linxData = LinxDataLoader.load(linxFusionTsv, linxBreakendTsv, linxViralInsertionTsv, linxDriversTsv);
 
-        List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(purpleDriverCatalogGermlineTsv);
-
         BachelorData bachelorData = BachelorDataLoader.load(bachelorTsv, purpleData, linxData, germlineReportingModel);
 
         ReportableVariantAnalysis reportableVariantAnalysis =
@@ -61,16 +61,18 @@ public class GenomicAnalyzer {
 
         List<ProtectEvidence> reportableEvidenceItems = extractReportableEvidenceItems(protectEvidenceTsv);
 
-        List<ProtectEvidence> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(reportableEvidenceItems);
+        List<ProtectEvidence> nonTrialsOnLabel = ReportableEvidenceItemFactory.extractNonTrialsOnLabel(reportableEvidenceItems);
+        List<ProtectEvidence> clinicalTrialsOnLabel = ClinicalTrialFactory.extractOnLabelTrials(reportableEvidenceItems);
+        List<ProtectEvidence> nonTrialsOffLabel = ReportableEvidenceItemFactory.extractNonTrialsOffLable(reportableEvidenceItems);
 
         return ImmutableGenomicAnalysis.builder()
                 .impliedPurity(purpleData.purity())
                 .hasReliablePurity(purpleData.hasReliablePurity())
                 .hasReliableQuality(purpleData.hasReliableQuality())
                 .averageTumorPloidy(purpleData.ploidy())
-                .tumorSpecificEvidence(nonTrials.stream().filter(ProtectEvidence::onLabel).collect(Collectors.toList()))
-                .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(reportableEvidenceItems))
-                .offLabelEvidence(nonTrials.stream().filter(item -> !item.onLabel()).collect(Collectors.toList()))
+                .tumorSpecificEvidence(nonTrialsOnLabel)
+                .clinicalTrials(clinicalTrialsOnLabel)
+                .offLabelEvidence( nonTrialsOffLabel)
                 .reportableVariants(reportableVariantAnalysis.variantsToReport())
                 .microsatelliteIndelsPerMb(purpleData.microsatelliteIndelsPerMb())
                 .microsatelliteStatus(purpleData.microsatelliteStatus())
@@ -98,6 +100,7 @@ public class GenomicAnalyzer {
 
     @NotNull
     private static List<ProtectEvidence> extractReportableEvidenceItems(@NotNull String protectEvidenceTsv) throws IOException {
+        LOGGER.info("Loading PROTECT data from {}", new File(protectEvidenceTsv).getParent());
         List<ProtectEvidence> evidences = ProtectEvidenceFile.read(protectEvidenceTsv);
 
         List<ProtectEvidence> reportableEvidenceItems = Lists.newArrayList();
@@ -106,6 +109,7 @@ public class GenomicAnalyzer {
                 reportableEvidenceItems.add(evidence);
             }
         }
+        LOGGER.info(" Loaded {} reportable evidence items from {}", reportableEvidenceItems.size(), protectEvidenceTsv);
         return reportableEvidenceItems;
     }
 }

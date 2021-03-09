@@ -19,6 +19,9 @@ public interface Variant extends GenomePosition, AllelicDepth {
     String alt();
 
     @NotNull
+    String canonicalTranscript();
+
+    @NotNull
     CodingEffect canonicalCodingEffect();
 
     @NotNull

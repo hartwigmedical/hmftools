@@ -13,16 +13,21 @@ import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FilterReportData {
+public final class FilterReportData {
+
+    private FilterReportData() {
+    }
 
     @NotNull
     public static AnalysedPatientReport overrulePatientReportData(@NotNull AnalysedPatientReport report) {
         List<ReportableVariant> filteredVariantsOverruleVariantSource = Lists.newArrayList();
         for (ReportableVariant variant : report.genomicAnalysis().reportableVariants()) {
             if (report.sampleReport().germlineReportingLevel() == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION) {
-                filteredVariantsOverruleVariantSource.add(overruleVariant(variant).build());
+                filteredVariantsOverruleVariantSource.add(overruleVariant(variant, report.genomicAnalysis().hasReliablePurity()).source(
+                        ReportableVariantSource.SOMATIC).build());
             } else {
-                filteredVariantsOverruleVariantSource.add(variant);
+                filteredVariantsOverruleVariantSource.add(overruleVariant(variant, report.genomicAnalysis().hasReliablePurity()).source(
+                        variant.source()).build());
             }
         }
 
@@ -55,10 +60,11 @@ public class FilterReportData {
     }
 
     @NotNull
-    private static ImmutableReportableVariant.Builder overruleVariant(@NotNull ReportableVariant variant) {
+    private static ImmutableReportableVariant.Builder overruleVariant(@NotNull ReportableVariant variant, boolean hasReliablePurity) {
+        double flooredCopyNumber = Math.max(0, variant.totalCopyNumber());
+
         return ImmutableReportableVariant.builder()
                 .type(variant.type())
-                .source(ReportableVariantSource.SOMATIC)
                 .gene(variant.gene())
                 .chromosome(variant.chromosome())
                 .position(variant.position())
@@ -70,13 +76,11 @@ public class FilterReportData {
                 .canonicalHgvsProteinImpact(variant.canonicalHgvsProteinImpact())
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
-                .totalCopyNumber(variant.totalCopyNumber())
-                .alleleCopyNumber(variant.alleleCopyNumber())
+                .totalCopyNumber(hasReliablePurity ? flooredCopyNumber : Double.NaN)
+                .alleleCopyNumber(hasReliablePurity ? variant.alleleCopyNumber() : Double.NaN)
                 .hotspot(variant.hotspot())
                 .clonalLikelihood(variant.clonalLikelihood())
                 .driverLikelihood(variant.driverLikelihood())
-                .copyNumber(variant.copyNumber())
-                .tVafString(variant.tVafString())
                 .biallelic(variant.biallelic());
     }
 }

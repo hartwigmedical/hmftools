@@ -169,6 +169,12 @@ public final class MetaDataResolver {
     }
 
     @NotNull
+    public static String majorDotMinorVersion(@NotNull File pipelineVersionFile) throws IOException {
+        String version = readPipelineVersion(pipelineVersionFile);
+        return version.substring(0, 4);
+    }
+
+    @NotNull
     public static String readPipelineVersion(@NotNull File pipelineVersionFile) throws IOException {
         List<String> lines = Files.readAllLines(pipelineVersionFile.toPath());
         if (lines.isEmpty()) {
@@ -184,10 +190,7 @@ public final class MetaDataResolver {
     }
 
     private static boolean isPostP5dot15(@NotNull String pipelineVersion) {
-        return extractPipelineVersion(pipelineVersion).matches("[0-9]+") && Integer.parseInt(pipelineVersion.substring(2, 4)) >= 15;
-    }
-
-    public static String extractPipelineVersion(@NotNull String pipelineVersion) {
-        return pipelineVersion.substring(2, 4);
+        String minorVersion = pipelineVersion.substring(2, 4);
+        return minorVersion.matches("[0-9]+") && Integer.parseInt(minorVersion) >= 15;
     }
 }

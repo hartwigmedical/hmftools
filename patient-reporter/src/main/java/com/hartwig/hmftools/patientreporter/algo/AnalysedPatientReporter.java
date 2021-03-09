@@ -76,8 +76,9 @@ public class AnalysedPatientReporter {
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
 
-        String pipelineVersion = pipelineVersionFile.equals(Strings.EMPTY) ? "None pipeline version is known" :
-                MetaDataResolver.extractPipelineVersion(MetaDataResolver.readPipelineVersion(new File(pipelineVersionFile)));
+        String pipelineVersion = !pipelineVersionFile.isEmpty()
+                ? MetaDataResolver.majorDotMinorVersion(new File(pipelineVersionFile))
+                : "No pipeline version is known";
 
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
@@ -145,7 +146,15 @@ public class AnalysedPatientReporter {
 
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING && evidence.germline()) {
+            if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION) {
+                filtered.add(evidence);
+            }
+
+            if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION) {
+                filtered.add(evidence);
+            }
+
+            if (!evidence.germline()) {
                 filtered.add(evidence);
             }
         }

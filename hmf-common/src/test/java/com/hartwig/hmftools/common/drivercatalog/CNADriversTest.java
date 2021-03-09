@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTest;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
@@ -24,11 +25,29 @@ public class CNADriversTest {
     private final DriverGenePanel genePanel = DriverGenePanelFactoryTest.testGenePanel();
 
     @Test
+    public void testOncoAmplificationWithoutDnds() {
+        DriverGene onco = genePanel.amplificationTargets()
+                .stream()
+                .filter(x -> !x.reportSomatic() && x.likelihoodType() == DriverCategory.ONCO)
+                .findFirst()
+                .get();
+
+
+        GeneCopyNumber oncoAmp = createTestCopyNumberBuilder(onco.gene()).minCopyNumber(7).maxCopyNumber(7).build();
+
+        List<DriverCatalog> drivers =
+                new CNADrivers(Sets.newHashSet(PurpleQCStatus.PASS), genePanel).amplifications(2, Lists.newArrayList(oncoAmp));
+        assertEquals(oncoAmp.gene(), drivers.get(0).gene());
+        assertEquals(DriverCategory.ONCO, drivers.get(0).category());
+    }
+
+    @Test
     public void testPartialAmp() {
-        List<String> driverGenes = Lists.newArrayList(genePanel.amplificationTargets());
-        GeneCopyNumber partialAmp = createTestCopyNumberBuilder(driverGenes.get(0)).minCopyNumber(0.1).maxCopyNumber(7).build();
-        GeneCopyNumber fullAmp = createTestCopyNumberBuilder(driverGenes.get(1)).minCopyNumber(7).maxCopyNumber(7).build();
-        List<DriverCatalog> drivers = new CNADrivers(Sets.newHashSet(PurpleQCStatus.PASS), genePanel).amplifications(2, Lists.newArrayList(partialAmp, fullAmp));
+        List<DriverGene> driverGenes = Lists.newArrayList(genePanel.amplificationTargets());
+        GeneCopyNumber partialAmp = createTestCopyNumberBuilder(driverGenes.get(0).gene()).minCopyNumber(0.1).maxCopyNumber(7).build();
+        GeneCopyNumber fullAmp = createTestCopyNumberBuilder(driverGenes.get(1).gene()).minCopyNumber(7).maxCopyNumber(7).build();
+        List<DriverCatalog> drivers =
+                new CNADrivers(Sets.newHashSet(PurpleQCStatus.PASS), genePanel).amplifications(2, Lists.newArrayList(partialAmp, fullAmp));
         assertEquals(2, drivers.size());
 
         assertEquals(partialAmp.gene(), drivers.get(0).gene());
@@ -40,10 +59,13 @@ public class CNADriversTest {
 
     @Test
     public void testDeletionsInGermlineAsStillReportable() {
-        List<String> driverGenes = Lists.newArrayList(genePanel.deletionTargets());
-        GeneCopyNumber somatic = createTestCopyNumberBuilder(driverGenes.get(0)).germlineHet2HomRegions(0).germlineHomRegions(0).build();
-        GeneCopyNumber germline1 = createTestCopyNumberBuilder(driverGenes.get(1)).germlineHet2HomRegions(1).germlineHomRegions(0).build();
-        GeneCopyNumber germline2 = createTestCopyNumberBuilder(driverGenes.get(2)).germlineHet2HomRegions(0).germlineHomRegions(1).build();
+        List<DriverGene> driverGenes = Lists.newArrayList(genePanel.deletionTargets());
+        GeneCopyNumber somatic =
+                createTestCopyNumberBuilder(driverGenes.get(0).gene()).germlineHet2HomRegions(0).germlineHomRegions(0).build();
+        GeneCopyNumber germline1 =
+                createTestCopyNumberBuilder(driverGenes.get(1).gene()).germlineHet2HomRegions(1).germlineHomRegions(0).build();
+        GeneCopyNumber germline2 =
+                createTestCopyNumberBuilder(driverGenes.get(2).gene()).germlineHet2HomRegions(0).germlineHomRegions(1).build();
 
         List<DriverCatalog> drivers = new CNADrivers(Sets.newHashSet(PurpleQCStatus.PASS), genePanel).deletions(Lists.newArrayList(somatic,
                 germline1,
@@ -54,7 +76,7 @@ public class CNADriversTest {
 
     @Test
     public void testAmpWithWarn() {
-        String gene = Lists.newArrayList(genePanel.amplificationTargets()).get(0);
+        String gene = Lists.newArrayList(genePanel.amplificationTargets()).get(0).gene();
         GeneCopyNumber ampNoSupport = createTestCopyNumberBuilder(gene).gene(gene)
                 .minCopyNumber(100)
                 .minRegionStartSupport(SegmentSupport.NONE)
@@ -82,7 +104,7 @@ public class CNADriversTest {
 
     @Test
     public void testDelWithWarn() {
-        String gene = Lists.newArrayList(genePanel.deletionTargets()).get(0);
+        String gene = Lists.newArrayList(genePanel.deletionTargets()).get(0).gene();
         GeneCopyNumber longDelNoSupport = createTestCopyNumberBuilder(gene).gene(gene)
                 .minRegionStart(1)
                 .minRegionEnd(100_000_000)
@@ -96,7 +118,7 @@ public class CNADriversTest {
                 .minRegionStartSupport(SegmentSupport.BND)
                 .minRegionEndSupport(SegmentSupport.TELOMERE)
                 .build();
-        GeneCopyNumber longDelEndSupport =ImmutableGeneCopyNumber.builder()
+        GeneCopyNumber longDelEndSupport = ImmutableGeneCopyNumber.builder()
                 .from(longDelNoSupport)
                 .minRegionStartSupport(SegmentSupport.CENTROMERE)
                 .minRegionStartSupport(SegmentSupport.BND)
@@ -110,7 +132,7 @@ public class CNADriversTest {
                 .minRegionEnd(100)
                 .build();
 
-        GeneCopyNumber shortDelEndSupport =ImmutableGeneCopyNumber.builder()
+        GeneCopyNumber shortDelEndSupport = ImmutableGeneCopyNumber.builder()
                 .from(longDelNoSupport)
                 .minRegionStartSupport(SegmentSupport.CENTROMERE)
                 .minRegionEndSupport(SegmentSupport.BND)

@@ -28,6 +28,7 @@ public final class SomaticVariantTestBuilderFactory {
                 .worstCodingEffect(CodingEffect.NONE)
                 .worstEffectTranscript(Strings.EMPTY)
                 .canonicalEffect(Strings.EMPTY)
+                .canonicalTranscript(Strings.EMPTY)
                 .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)

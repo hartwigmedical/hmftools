@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.protect.purple;
 
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.Variant;
@@ -35,6 +36,12 @@ public abstract class ReportableVariant implements Variant {
     public abstract long position();
 
     @NotNull
+    @Value.Derived
+    public String gDNA() {
+        return chromosome() + ":" + position();
+    }
+
+    @NotNull
     @Override
     public abstract String ref();
 
@@ -43,6 +50,7 @@ public abstract class ReportableVariant implements Variant {
     public abstract String alt();
 
     @NotNull
+    @Override
     public abstract String canonicalTranscript();
 
     @NotNull
@@ -63,21 +71,16 @@ public abstract class ReportableVariant implements Variant {
     @Override
     public abstract int alleleReadCount();
 
-    @NotNull
-    public abstract String copyNumber();
-
-    @NotNull
-    public abstract String tVafString();
-
-    @NotNull
-    @Value.Derived
-    public String gDNA() {
-        return chromosome() + ":" + position();
-    }
-
     public abstract double totalCopyNumber();
 
     public abstract double alleleCopyNumber();
+
+    @NotNull
+    @Value.Derived
+    public String tVAF() {
+        double vaf = alleleCopyNumber() / totalCopyNumber();
+        return DataUtil.formatPercentage(100 * Math.max(0, Math.min(1, vaf)));
+    }
 
     @NotNull
     public abstract Hotspot hotspot();

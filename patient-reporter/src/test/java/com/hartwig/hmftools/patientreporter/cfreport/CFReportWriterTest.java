@@ -249,7 +249,7 @@ public class CFReportWriterTest {
                 true,
                 false,
                 false);
-        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_NO_TUMOR",
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_NO_TUMOR_FOR-209",
                 FULL_TABLES_COMMENT_STRING,
                 false,
                 1D,
@@ -272,7 +272,7 @@ public class CFReportWriterTest {
                 true,
                 false,
                 false);
-        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_INSUFFICIENT_TUMOR",
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledIn("CPCT01_INSUFFICIENT_TUMOR-FOR-209",
                 FULL_TABLES_COMMENT_STRING,
                 true,
                 0.19,
@@ -295,7 +295,7 @@ public class CFReportWriterTest {
                 true,
                 false,
                 false);
-        generateQCFailCPCTReport("CPCT01",
+        generateQCFailCPCTReport("CPCT01_insufficient_dna-FOR-082",
                 Lims.NOT_PERFORMED_STRING,
                 null,
                 QCFailReason.INSUFFICIENT_DNA,
@@ -361,7 +361,7 @@ public class CFReportWriterTest {
                 true,
                 false,
                 false);
-        generateQCFailCPCTReport("CPCT02", "60%", null, QCFailReason.TECHNICAL_FAILURE, false, COMMENT_STRING_QC_FAIL, cohortConfig);
+        generateQCFailCPCTReport("CPCT02-technical_failure-FOR-102", "60%", null, QCFailReason.TECHNICAL_FAILURE, false, COMMENT_STRING_QC_FAIL, cohortConfig);
     }
 
     @Test
@@ -377,7 +377,7 @@ public class CFReportWriterTest {
                 true,
                 false,
                 false);
-        generateQCFailCPCTReport("CPCT03",
+        generateQCFailCPCTReport("CPCT03-sufficient_tcp_qc_failure-FOR-083",
                 "60%",
                 "70%",
                 QCFailReason.SUFFICIENT_TCP_QC_FAILURE,
@@ -399,7 +399,7 @@ public class CFReportWriterTest {
                 true,
                 false,
                 false);
-        generateQCFailCPCTReport("CPCT04",
+        generateQCFailCPCTReport("CPCT04-insufficient_tcp_deep_wgs-FOR-100",
                 "22%",
                 "18%",
                 QCFailReason.INSUFFICIENT_TCP_DEEP_WGS,
@@ -421,7 +421,7 @@ public class CFReportWriterTest {
                 true,
                 false,
                 false);
-        generateQCFailCPCTReport("CPCT05",
+        generateQCFailCPCTReport("CPCT05-insufficient_tcp_shallow_wgs-FOR-100",
                 "15%",
                 null,
                 QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,

@@ -169,6 +169,7 @@ public class SomaticVariantFactory implements VariantContextFilter {
                 .worstCodingEffect(snpEffSummary.worstCodingEffect())
                 .worstEffectTranscript(snpEffSummary.worstTranscript())
                 .canonicalEffect(snpEffSummary.canonicalEffect())
+                .canonicalTranscript(snpEffSummary.canonicalTranscript())
                 .canonicalCodingEffect(snpEffSummary.canonicalCodingEffect())
                 .canonicalHgvsCodingImpact(snpEffSummary.canonicalHgvsCodingImpact())
                 .canonicalHgvsProteinImpact(snpEffSummary.canonicalHgvsProteinImpact())

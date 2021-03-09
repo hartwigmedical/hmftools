@@ -120,12 +120,11 @@ public class PatientReporterApplication {
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(reportData.germlineReportingModel());
 
         String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
-        reportWriter.writeAnalysedPatientReport(report, outputFilePath);
+        AnalysedPatientReport reportOverrule = FilterReportData.overrulePatientReportData(report);
+        reportWriter.writeAnalysedPatientReport(reportOverrule, outputFilePath);
 
         if (!config.onlyCreatePDF()) {
             LOGGER.debug("Updating additional files and databases");
-
-            AnalysedPatientReport reportOverrule = FilterReportData.overrulePatientReportData(report);
 
             writeReportDataToJson(config.outputDirData(),
                     report.sampleReport().sampleMetadata().tumorSampleId(),

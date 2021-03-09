@@ -29,6 +29,8 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
     private final VariantContextEnrichment reportableEnrichment;
     private final VariantContextEnrichment hotspotEnrichment;
     private final VariantContextEnrichment genotypeEnrichment;
+    private final VariantContextEnrichment lowTumorVCNEnrichment;
+    private final VariantContextEnrichment lowVafRescueEnrichment;
 
     public GermlineVariantEnrichment(@NotNull final String purpleVersion, @NotNull final String referenceSample,
             @NotNull final String tumorSample, @NotNull final IndexedFastaSequenceFile reference,
@@ -43,12 +45,25 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
         this.refGenomeEnrichment = new SomaticRefContextEnrichment(reference, pathogenicEnrichment);
 
         this.snpEffEnrichment = new SnpEffEnrichment(germlineGenes, transcripts, refGenomeEnrichment);
-        this.hotspotEnrichment = new VariantHotspotEnrichment(germlineHotspots, snpEffEnrichment);
-        this.purityEnrichment = new GermlinePurityEnrichment(purpleVersion, tumorSample, referenceSample, purityAdjuster, copyNumbers,
-                hotspotEnrichment);
 
-        // Genotype must go first!
-        this.genotypeEnrichment = new GermlineGenotypeEnrichment(referenceSample, purityEnrichment);
+        // Purity must go before lowTumorVCNEnrichment
+        // Hotspot must be before lowTumorVCNEnrichment
+        this.lowTumorVCNEnrichment = new GermlineLowTumorVCNEnrichment(snpEffEnrichment);
+
+        // Purity must go before lowVafRescue
+        // Genotype must go before lowVafRescue
+        this.lowVafRescueEnrichment = new GermlineRescueLowVAFEnrichment(referenceSample, lowTumorVCNEnrichment);
+
+        // Genotype must go before purity enrichment
+        this.purityEnrichment = new GermlinePurityEnrichment(purpleVersion,
+                tumorSample,
+                referenceSample,
+                purityAdjuster,
+                copyNumbers,
+                lowVafRescueEnrichment);
+
+        this.hotspotEnrichment = new VariantHotspotEnrichment(germlineHotspots, purityEnrichment);
+        this.genotypeEnrichment = new GermlineGenotypeEnrichment(referenceSample, tumorSample, hotspotEnrichment);
     }
 
     @Override
@@ -59,8 +74,10 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
     @Override
     public void flush() {
         genotypeEnrichment.flush();
-        purityEnrichment.flush();
         hotspotEnrichment.flush();
+        purityEnrichment.flush();
+        lowVafRescueEnrichment.flush();
+        lowTumorVCNEnrichment.flush();
         snpEffEnrichment.flush();
         refGenomeEnrichment.flush();
         pathogenicEnrichment.flush();
@@ -74,6 +91,7 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
         header = hotspotEnrichment.enrichHeader(header);
         header = refGenomeEnrichment.enrichHeader(header);
         header = snpEffEnrichment.enrichHeader(header);
+        header = lowVafRescueEnrichment.enrichHeader(header);
         header = reportableEnrichment.enrichHeader(header);
         header = genotypeEnrichment.enrichHeader(header);
         return pathogenicEnrichment.enrichHeader(header);

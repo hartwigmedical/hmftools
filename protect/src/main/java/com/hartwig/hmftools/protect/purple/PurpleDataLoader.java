@@ -4,10 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
@@ -17,8 +15,6 @@ import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
-import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.protect.ProtectConfig;
@@ -60,8 +56,6 @@ public final class PurpleDataLoader {
         LOGGER.info("  Microsatellite status: {}", purityContext.microsatelliteStatus().display());
         LOGGER.info("  Tumor mutational load status: {}", purityContext.tumorMutationalLoadStatus().display());
 
-        boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
-
         List<DriverCatalog> somaticDriverCatalog = DriverCatalogFile.read(driverCatalogSomaticTsv);
         LOGGER.info(" Loaded {} somatic driver catalog entries from {}", somaticDriverCatalog.size(), driverCatalogSomaticTsv);
 
@@ -76,18 +70,17 @@ public final class PurpleDataLoader {
 
         List<SomaticVariant> germlineVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, germlineVcf);
         List<ReportableVariant> reportableGermlineVariants =
-                ReportableVariantFactory.reportableGermlineVariants(germlineVariants, germlineDriverCatalog, hasReliablePurity);
+                ReportableVariantFactory.reportableGermlineVariants(germlineVariants, germlineDriverCatalog);
         LOGGER.info(" Loaded {} reportable germline variants from {}", reportableGermlineVariants.size(), germlineVcf);
 
         List<SomaticVariant> somaticVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVcf);
         List<ReportableVariant> reportableSomaticVariants =
-                ReportableVariantFactory.reportableSomaticVariants(somaticVariants, somaticDriverCatalog, hasReliablePurity);
+                ReportableVariantFactory.reportableSomaticVariants(somaticVariants, somaticDriverCatalog);
         LOGGER.info(" Loaded {} reportable somatic variants from {}", reportableSomaticVariants.size(), somaticVcf);
-
 
         return ImmutablePurpleData.builder()
                 .purity(purityContext.bestFit().purity())
-                .hasReliablePurity(hasReliablePurity)
+                .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
                 .hasReliableQuality(purityContext.qc().pass())
                 .ploidy(purityContext.bestFit().ploidy())
                 .microsatelliteIndelsPerMb(purityContext.microsatelliteIndelsPerMb())
@@ -111,10 +104,4 @@ public final class PurpleDataLoader {
                 .copies(Math.round(Math.max(0, driver.minCopyNumber())))
                 .build();
     }
-
-    @NotNull
-    private static ImmutableReportableVariant.Builder interpretReportableVariant(@NotNull ReportableVariant variant) {
-        return ImmutableReportableVariant.builder().from(variant).copyNumber(DataUtil.NA_STRING).tVafString(DataUtil.NA_STRING);
-    }
-
 }

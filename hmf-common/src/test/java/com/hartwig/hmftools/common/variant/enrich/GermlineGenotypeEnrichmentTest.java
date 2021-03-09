@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.common.variant.enrich;
 
+import static com.hartwig.hmftools.common.variant.enrich.GermlineGenotypeEnrichment.GermlineGenotypeStatus.HET;
+import static com.hartwig.hmftools.common.variant.enrich.GermlineGenotypeEnrichment.GermlineGenotypeStatus.HOM_ALT;
+import static com.hartwig.hmftools.common.variant.enrich.GermlineGenotypeEnrichment.GermlineGenotypeStatus.LOW_VAF;
+
 import static junit.framework.TestCase.assertEquals;
 
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
+import com.hartwig.hmftools.common.variant.enrich.GermlineGenotypeEnrichment.GermlineGenotypeStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -11,18 +16,33 @@ import org.junit.Test;
 public class GermlineGenotypeEnrichmentTest {
 
     @Test
-    public void testStatus() {
-        assertStatus(GermlineGenotypeEnrichment.GermlineGenotypeStatus.LOW_VAF, 1, 17);
-        assertStatus(GermlineGenotypeEnrichment.GermlineGenotypeStatus.LOW_VAF, 2, 21);
+    public void testCombinedStatus() {
+        assertEquals(LOW_VAF, GermlineGenotypeEnrichment.combined(LOW_VAF, LOW_VAF));
+        assertEquals(LOW_VAF, GermlineGenotypeEnrichment.combined(LOW_VAF, HET));
+        assertEquals(LOW_VAF, GermlineGenotypeEnrichment.combined(LOW_VAF, HOM_ALT));
 
-        assertStatus(GermlineGenotypeEnrichment.GermlineGenotypeStatus.HET, 1, 16);
-        assertStatus(GermlineGenotypeEnrichment.GermlineGenotypeStatus.HET, 2, 20);
+        assertEquals(HET, GermlineGenotypeEnrichment.combined(HET, LOW_VAF));
+        assertEquals(HET, GermlineGenotypeEnrichment.combined(HET, HET));
+        assertEquals(HET, GermlineGenotypeEnrichment.combined(HET, HOM_ALT));
 
-        assertStatus(GermlineGenotypeEnrichment.GermlineGenotypeStatus.HET, 13, 14);
-        assertStatus(GermlineGenotypeEnrichment.GermlineGenotypeStatus.HOM, 14, 15);
+        assertEquals(HET, GermlineGenotypeEnrichment.combined(HOM_ALT, LOW_VAF));
+        assertEquals(HET, GermlineGenotypeEnrichment.combined(HOM_ALT, HET));
+        assertEquals(HOM_ALT, GermlineGenotypeEnrichment.combined(HOM_ALT, HOM_ALT));
     }
 
-    private static void assertStatus(@NotNull GermlineGenotypeEnrichment.GermlineGenotypeStatus expected, int alleleReadCount,
+    @Test
+    public void testStatus() {
+        assertStatus(LOW_VAF, 1, 17);
+        assertStatus(LOW_VAF, 2, 21);
+
+        assertStatus(HET, 1, 16);
+        assertStatus(HET, 2, 20);
+
+        assertStatus(HET, 13, 14);
+        assertStatus(HOM_ALT, 14, 15);
+    }
+
+    private static void assertStatus(@NotNull GermlineGenotypeStatus expected, int alleleReadCount,
             int totalReadCount) {
         AllelicDepth depth = ImmutableAllelicDepthImpl.builder().alleleReadCount(alleleReadCount).totalReadCount(totalReadCount).build();
         assertEquals(expected, GermlineGenotypeEnrichment.status(depth));
