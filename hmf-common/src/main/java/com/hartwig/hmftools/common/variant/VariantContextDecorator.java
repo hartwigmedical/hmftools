@@ -193,6 +193,7 @@ public class VariantContextDecorator implements GenomePosition {
         return context.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY);
     }
 
+    @NotNull
     private static String displayFilter(@NotNull final VariantContext context) {
         if (context.isFiltered()) {
             StringJoiner joiner = new StringJoiner(";");

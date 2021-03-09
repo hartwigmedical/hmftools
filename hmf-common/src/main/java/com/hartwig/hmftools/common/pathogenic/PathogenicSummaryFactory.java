@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class PathogenicSummaryFactory {
+public final class PathogenicSummaryFactory {
 
     public static final String CLNSIG = "CLNSIG";
     public static final String CLNSIGCONF = "CLNSIGCONF";
