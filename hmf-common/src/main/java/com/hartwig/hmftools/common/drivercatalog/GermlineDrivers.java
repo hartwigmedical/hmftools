@@ -71,7 +71,6 @@ public class GermlineDrivers {
                 .driver(DriverType.GERMLINE)
                 .category(category)
                 .driverLikelihood(1)
-                .dndsLikelihood(0)
                 .missense(missenseVariants)
                 .nonsense(nonsenseVariants)
                 .splice(spliceVariants)

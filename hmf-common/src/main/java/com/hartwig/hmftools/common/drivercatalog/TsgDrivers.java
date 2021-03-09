@@ -70,7 +70,6 @@ class TsgDrivers {
                 .driver(DriverType.MUTATION)
                 .category(DriverCategory.TSG)
                 .driverLikelihood(1)
-                .dndsLikelihood(0.0)
                 .missense(missenseVariants)
                 .nonsense(nonsenseVariants)
                 .splice(spliceVariants)

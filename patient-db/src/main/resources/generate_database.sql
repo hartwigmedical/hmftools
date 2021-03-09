@@ -851,7 +851,6 @@ CREATE TABLE driverCatalog
     category varchar(255) NOT NULL,
     driver varchar(255) NOT NULL,
     likelihoodMethod varchar(255) NOT NULL,
-    dndsLikelihood DOUBLE PRECISION NOT NULL,
     driverLikelihood DOUBLE PRECISION NOT NULL,
     missense int NOT NULL,
     nonsense int NOT NULL,

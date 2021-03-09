@@ -32,7 +32,6 @@ public class DriverCatalogFileTest {
         assertEquals(DriverType.HOM_DISRUPTION, catalog1.driver());
         assertEquals(LikelihoodMethod.DNDS, catalog1.likelihoodMethod());
         assertEquals(1.0000, catalog1.driverLikelihood(), EPSILON);
-        assertEquals(0.0000, catalog1.dndsLikelihood(), EPSILON);
         assertEquals(0, catalog1.missense(), EPSILON);
         assertEquals(0, catalog1.nonsense(), EPSILON);
         assertEquals(0, catalog1.splice(), EPSILON);
@@ -50,7 +49,6 @@ public class DriverCatalogFileTest {
         assertEquals(DriverType.MUTATION, catalog2.driver());
         assertEquals(LikelihoodMethod.BIALLELIC, catalog2.likelihoodMethod());
         assertEquals(1.0000, catalog2.driverLikelihood(), EPSILON);
-        assertEquals(0.0000, catalog2.dndsLikelihood(), EPSILON);
         assertEquals(0, catalog2.missense(), EPSILON);
         assertEquals(0, catalog2.nonsense(), EPSILON);
         assertEquals(0, catalog2.splice(), EPSILON);
@@ -68,7 +66,6 @@ public class DriverCatalogFileTest {
         assertEquals(DriverType.HOM_DISRUPTION, catalog3.driver());
         assertEquals(LikelihoodMethod.DEL, catalog3.likelihoodMethod());
         assertEquals(1.0000, catalog3.driverLikelihood(), EPSILON);
-        assertEquals(0.0000, catalog3.dndsLikelihood(), EPSILON);
         assertEquals(0, catalog3.missense(), EPSILON);
         assertEquals(0, catalog3.nonsense(), EPSILON);
         assertEquals(0, catalog3.splice(), EPSILON);
@@ -101,7 +98,6 @@ public class DriverCatalogFileTest {
                 .category(DriverCategory.values()[random.nextInt(DriverCategory.values().length)])
                 .likelihoodMethod(LikelihoodMethod.values()[random.nextInt(LikelihoodMethod.values().length)])
                 .driverLikelihood(nextDouble(random))
-                .dndsLikelihood(nextDouble(random))
                 .missense(random.nextLong())
                 .nonsense(random.nextLong())
                 .splice(random.nextLong())
