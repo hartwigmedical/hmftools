@@ -55,8 +55,8 @@ public class GermlineVariants {
         return reportableVariants;
     }
 
-    public void processAndWrite(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers)
-            throws IOException {
+    public void processAndWrite(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
+            @NotNull final List<VariantContext> somaticVariants) throws IOException {
 
         final Optional<File> optionalInputVCF = configSupplier.germlineConfig().file();
         if (optionalInputVCF.isPresent()) {
@@ -86,13 +86,14 @@ public class GermlineVariants {
                         genePanel,
                         transcripts,
                         configSupplier.driverCatalogConfig().germlineHotspots(),
+                        somaticVariants,
                         consumer);
 
                 writer.writeHeader(enrichment.enrichHeader(vcfReader.getFileHeader()));
-
                 for (VariantContext context : vcfReader) {
                     enrichment.accept(context);
                 }
+                enrichment.flush();
             }
         }
     }

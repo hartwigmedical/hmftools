@@ -36,11 +36,13 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
             @NotNull final String tumorSample, @NotNull final IndexedFastaSequenceFile reference,
             @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
             @NotNull final DriverGenePanel genePanel, @NotNull final List<CanonicalTranscript> transcripts,
-            @NotNull final Multimap<Chromosome, VariantHotspot> germlineHotspots, @NotNull final Consumer<VariantContext> consumer) {
+            @NotNull final Multimap<Chromosome, VariantHotspot> germlineHotspots, @NotNull final List<VariantContext> somaticVariants,
+            @NotNull final Consumer<VariantContext> consumer) {
         final Set<String> germlineGenes =
                 genePanel.driverGenes().stream().filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
 
-        this.reportableEnrichment = new GermlineReportedEnrichment(genePanel.driverGenes(), consumer);
+        // Hotspot must be before reportable
+        this.reportableEnrichment = new GermlineReportedEnrichment(genePanel.driverGenes(), somaticVariants, consumer);
         this.pathogenicEnrichment = new GermlinePathogenicEnrichment(reportableEnrichment);
         this.refGenomeEnrichment = new SomaticRefContextEnrichment(reference, pathogenicEnrichment);
 

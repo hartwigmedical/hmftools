@@ -15,6 +15,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
@@ -158,8 +159,8 @@ public class GeneTestUtils
                 .reportDisruption(true)
                 .reportAmplification(false)
                 .reportSomaticHotspot(false)
-                .reportGermlineVariant(false)
-                .reportGermlineHotspot(false)
+                .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
+                .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                 .likelihoodType(TSG)
                 .build();
     }

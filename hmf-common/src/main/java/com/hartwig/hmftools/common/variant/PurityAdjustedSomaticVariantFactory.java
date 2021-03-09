@@ -85,8 +85,10 @@ public class PurityAdjustedSomaticVariantFactory {
 
     private void enrich(@NotNull final GenomePosition position, @NotNull final AllelicDepth depth,
             @NotNull final PurityAdjustedSomaticVariantBuilder builder) {
-        copyNumberSelector.select(position).ifPresent(x -> applyPurityAdjustment(x, depth, builder));
-        fittedRegionSelector.select(position).ifPresent(x -> builder.germlineStatus(x.status()));
+        if (HumanChromosome.contains(position.chromosome())) {
+            copyNumberSelector.select(position).ifPresent(x -> applyPurityAdjustment(x, depth, builder));
+            fittedRegionSelector.select(position).ifPresent(x -> builder.germlineStatus(x.status()));
+        }
     }
 
     private void applyPurityAdjustment(@NotNull final PurpleCopyNumber purpleCopyNumber, @NotNull final AllelicDepth depth,

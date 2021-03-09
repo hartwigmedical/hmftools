@@ -27,9 +27,11 @@ public interface DriverGene extends Comparable<DriverGene> {
 
     boolean reportSomaticHotspot();
 
-    boolean reportGermlineVariant();
+    @NotNull
+    DriverGeneGermlineReporting reportGermlineVariant();
 
-    boolean reportGermlineHotspot();
+    @NotNull
+    DriverGeneGermlineReporting reportGermlineHotspot();
 
     @NotNull
     DriverCategory likelihoodType();
@@ -44,6 +46,6 @@ public interface DriverGene extends Comparable<DriverGene> {
     }
 
     default boolean reportGermline() {
-        return reportGermlineVariant() || reportGermlineHotspot();
+        return reportGermlineVariant() != DriverGeneGermlineReporting.NONE || reportGermlineHotspot() != DriverGeneGermlineReporting.NONE;
     }
 }

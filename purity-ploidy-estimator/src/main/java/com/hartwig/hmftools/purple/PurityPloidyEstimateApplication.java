@@ -223,11 +223,11 @@ public class PurityPloidyEstimateApplication {
 
             LOGGER.info("Enriching somatic variants");
             final SomaticStream somaticStream = new SomaticStream(configSupplier);
-            somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions, somaticPeaks);
+            final List<VariantContext> somaticVariantContexts = somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions, somaticPeaks);
 
             GermlineVariants germlineVariants = new GermlineVariants(configSupplier);
             if (configSupplier.germlineConfig().enabled()) {
-                germlineVariants.processAndWrite(purityAdjuster, copyNumbers);
+                germlineVariants.processAndWrite(purityAdjuster, copyNumbers, somaticVariantContexts);
             }
 
             final PurityContext purityContext = ImmutablePurityContext.builder()

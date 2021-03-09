@@ -66,7 +66,7 @@ class CircosCharts {
 
         writeConfig(gender);
         writeCopyNumbers(copyNumber);
-        writeEnrichedSomatics(somaticVariants);
+        writeEnrichedSomatics(somaticVariants.stream().filter(x -> HumanChromosome.contains(x.chromosome())).collect(Collectors.toList()));
         writeStructuralVariants(structuralVariants);
         writeFittedRegions(Downsample.downsample(MAX_PLOT_POINTS, regions));
         writeBafs(Downsample.downsample(MAX_PLOT_POINTS, bafs));
