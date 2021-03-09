@@ -17,12 +17,12 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-final class TsgDrivers {
+class TsgDrivers {
 
     private final ReportablePredicate reportablePredicate;
     private final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene;
 
-    public TsgDrivers(DriverGenePanel genePanel) {
+    public TsgDrivers(@NotNull DriverGenePanel genePanel) {
         likelihoodsByGene = genePanel.tsgLikelihood();
         reportablePredicate = new ReportablePredicate(DriverCategory.TSG, genePanel);
     }
@@ -157,5 +157,4 @@ final class TsgDrivers {
 
         return variant.type() == VariantType.INDEL ? map.getOrDefault(VariantType.INDEL, 0L) : map.getOrDefault(VariantType.SNP, 0L);
     }
-
 }

@@ -64,5 +64,4 @@ public class SomaticVariantDrivers {
 
         return result;
     }
-
 }
