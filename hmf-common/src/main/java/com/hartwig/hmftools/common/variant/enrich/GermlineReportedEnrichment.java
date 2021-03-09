@@ -82,12 +82,12 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
         final Set<String> multipleGermlineGeneHits =
                 germlineGeneHits.entrySet().stream().filter(x -> x.getValue() > 1).map(Map.Entry::getKey).collect(Collectors.toSet());
 
-        final Set<String> wildtypeLost = Sets.newHashSet();
-        wildtypeLost.addAll(multipleGermlineGeneHits);
-        wildtypeLost.addAll(somaticKnockouts);
+        final Set<String> genesWithMultipleHits = Sets.newHashSet();
+        genesWithMultipleHits.addAll(multipleGermlineGeneHits);
+        genesWithMultipleHits.addAll(somaticKnockouts);
 
         for (VariantContextDecorator variant : buffer) {
-            if (report(variant, wildtypeLost)) {
+            if (report(variant, genesWithMultipleHits)) {
                 variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
             }
             consumer.accept(variant.context());
@@ -98,10 +98,10 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
 
     @NotNull
     private static DriverGeneGermlineReporting downgradeWildType(@NotNull DriverGeneGermlineReporting reporting) {
-        return reporting.equals(WILDTYPE_LOST) ? VARIANT_NOT_LOST : reporting;
+        return reporting == WILDTYPE_LOST ? VARIANT_NOT_LOST : reporting;
     }
 
-    private boolean report(@NotNull VariantContextDecorator variant, @NotNull Set<String> wildtypeLost) {
+    private boolean report(@NotNull VariantContextDecorator variant, @NotNull Set<String> genesWithMultipleHits) {
         if (variant.gene().isEmpty()) {
             return false;
         }
@@ -111,16 +111,16 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
         }
 
         final DriverGene driverGene = driverGeneMap.get(variant.gene());
-        return report(variant, driverGene.reportGermlineHotspot(), driverGene.reportGermlineVariant(), wildtypeLost);
+        return report(variant, driverGene.reportGermlineHotspot(), driverGene.reportGermlineVariant(), genesWithMultipleHits);
     }
 
     private boolean report(@NotNull VariantContextDecorator variant, @NotNull DriverGeneGermlineReporting hotspotReporting,
-            @NotNull DriverGeneGermlineReporting variantReporting, @NotNull Set<String> wildtypeLost) {
+            @NotNull DriverGeneGermlineReporting variantReporting, @NotNull Set<String> genesWithMultipleHits) {
         if (!variant.isPass()) {
             return false;
         }
 
-        final boolean isHotspot = variant.hotspot().equals(Hotspot.HOTSPOT);
+        final boolean isHotspot = variant.hotspot() == Hotspot.HOTSPOT;
         final SnpEffSummary snpEffSummary = variant.snpEffSummary();
         final PathogenicSummary pathogenicSummary = PathogenicSummaryFactory.fromContext(variant.context());
         if (!isPathogenic(isHotspot, pathogenicSummary, snpEffSummary)) {
@@ -128,11 +128,11 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
         }
 
         final DriverGeneGermlineReporting reporting = isHotspot ? hotspotReporting : variantReporting;
-        if (reporting.equals(NONE)) {
+        if (reporting == NONE) {
             return false;
         }
 
-        if (reporting.equals(ANY)) {
+        if (reporting == ANY) {
             return true;
         }
 
@@ -140,19 +140,20 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
             return false;
         }
 
-        if (reporting.equals(VARIANT_NOT_LOST)) {
+        if (reporting == VARIANT_NOT_LOST) {
             return true;
         }
 
-        if (reporting.equals(WILDTYPE_LOST)) {
-            return variant.biallelic() || wildtypeLost.contains(variant.gene());
+        if (reporting == WILDTYPE_LOST) {
+            return variant.biallelic() || genesWithMultipleHits.contains(variant.gene());
         }
 
         return false;
     }
 
-    private boolean isPathogenic(boolean isHotspot, PathogenicSummary pathogenicSummary, SnpEffSummary snpEffSummary) {
-        if (pathogenicSummary.pathogenicity().equals(Pathogenic.BENIGN_BLACKLIST)) {
+    private static boolean isPathogenic(boolean isHotspot, @NotNull PathogenicSummary pathogenicSummary,
+            @NotNull SnpEffSummary snpEffSummary) {
+        if (pathogenicSummary.pathogenicity() == Pathogenic.BENIGN_BLACKLIST) {
             return false;
         }
 
@@ -160,7 +161,6 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
             return true;
         }
 
-        return pathogenicSummary.pathogenicity().equals(Pathogenic.UNKNOWN)
-                && REPORTABLE_EFFECT.contains(snpEffSummary.canonicalCodingEffect());
+        return pathogenicSummary.pathogenicity() == Pathogenic.UNKNOWN && REPORTABLE_EFFECT.contains(snpEffSummary.canonicalCodingEffect());
     }
 }

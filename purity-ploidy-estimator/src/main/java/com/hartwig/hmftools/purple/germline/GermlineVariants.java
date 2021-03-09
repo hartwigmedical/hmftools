@@ -29,6 +29,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 
 public class GermlineVariants {
+
     private static final Logger LOGGER = LogManager.getLogger(GermlineVariants.class);
 
     private final ConfigSupplier configSupplier;
@@ -39,7 +40,7 @@ public class GermlineVariants {
     private final DriverGenePanel genePanel;
     private final List<VariantContext> reportableVariants;
 
-    public GermlineVariants(final ConfigSupplier configSupplier) {
+    public GermlineVariants(@NotNull final ConfigSupplier configSupplier) {
         this.genePanel = configSupplier.driverCatalogConfig().genePanel();
         this.commonConfig = configSupplier.commonConfig();
         this.refGenomeData = configSupplier.refGenomeConfig();
@@ -57,10 +58,9 @@ public class GermlineVariants {
 
     public void processAndWrite(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
             @NotNull final List<VariantContext> somaticVariants) throws IOException {
-
         final Optional<File> optionalInputVCF = configSupplier.germlineConfig().file();
-        if (optionalInputVCF.isPresent()) {
 
+        if (optionalInputVCF.isPresent()) {
             LOGGER.info("Loading germline variants from {}", optionalInputVCF.get());
             LOGGER.info("Enriching germline variants");
 
