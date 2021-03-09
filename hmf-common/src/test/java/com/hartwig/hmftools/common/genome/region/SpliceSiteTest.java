@@ -1,10 +1,9 @@
-package com.hartwig.hmftools.serve.extraction.exon;
+package com.hartwig.hmftools.common.genome.region;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 
 import org.junit.Test;
 
