@@ -46,7 +46,7 @@ public class ExplanationChapter implements ReportChapter {
                                 + "clinical evidence, with a hyperlink to the specific evidence items. NOTE: If a certain "
                                 + "evidence item or drug-biomarker is missing from the knowledgebases it will also not be "
                                 + "included in this report.",
-                        "VICC (The Variant Interpretation for Cancer Consortium, https://cancervariants.org) software has been used "
+                        "VICC (Variant Interpretation for Cancer Consortium, https://cancervariants.org) software has been used "
                                 + "to harmonize and curate the knowledgebases",
                         "Clinical trials are matched against the iClusion database (https://iclusion.org) including a "
                                 + "link to the specific trial." })));
