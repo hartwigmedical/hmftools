@@ -5,7 +5,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -21,7 +21,7 @@ public class SnpEffSummaryFactory {
 
     private final CanonicalAnnotation canonicalAnnotationFactory;
 
-    public SnpEffSummaryFactory(@NotNull final Set<String> driverGenes, @NotNull final List<CanonicalTranscript> transcripts) {
+    public SnpEffSummaryFactory(@NotNull final Set<String> driverGenes, @NotNull final List<HmfTranscriptRegion> transcripts) {
         this.canonicalAnnotationFactory = new CanonicalAnnotation(driverGenes, transcripts);
     }
 
@@ -74,8 +74,7 @@ public class SnpEffSummaryFactory {
     }
 
     @NotNull
-    private static CodingEffect codingEffect(boolean phasedInframeIndel, @NotNull final String gene,
-            @NotNull final List<VariantConsequence> consequences) {
+    private static CodingEffect codingEffect(boolean phasedInframeIndel, @NotNull final String gene, @NotNull final List<VariantConsequence> consequences) {
         CodingEffect effect = CodingEffect.effect(gene, consequences);
         return phasedInframeIndel && effect.equals(CodingEffect.NONSENSE_OR_FRAMESHIFT)
                 ? CodingEffect.MISSENSE

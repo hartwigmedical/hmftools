@@ -54,7 +54,7 @@ public interface RefGenomeData {
     Map<Chromosome, GenomePosition> centromere();
 
     @NotNull
-    List<HmfTranscriptRegion> genePanel();
+    List<HmfTranscriptRegion> hmfTranscripts();
 
     @NotNull
     static RefGenomeData createRefGenomeConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
@@ -94,7 +94,7 @@ public interface RefGenomeData {
                 .centromere(toPosition(refGenome.centromeres(), contigMap))
                 .refGenome(refGenomePath)
                 .isHg38(refGenome.equals(RefGenomeCoordinates.COORDS_38))
-                .genePanel(genePanel)
+                .hmfTranscripts(genePanel)
                 .build();
     }
 

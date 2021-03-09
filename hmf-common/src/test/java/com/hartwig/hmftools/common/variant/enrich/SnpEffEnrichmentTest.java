@@ -10,8 +10,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTest;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummaryFactory;
@@ -28,7 +28,7 @@ import htsjdk.variant.vcf.VCFHeaderVersion;
 
 public class SnpEffEnrichmentTest {
 
-    private final List<CanonicalTranscript> transcripts = CanonicalTranscriptFactory.create37();
+    private final List<HmfTranscriptRegion> transcripts = HmfGenePanelSupplier.allGeneList37();
     private final DriverGenePanel genePanel = DriverGenePanelFactoryTest.testGenePanel();
     private final Set<String> driverGenes = genePanel.driverGenes().stream().map(DriverGene::gene).collect(Collectors.toSet());
     private VCFCodec codec;
