@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.Category.FUSION;
+import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.List;
 
@@ -9,6 +10,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.MatchLevel;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -22,6 +24,8 @@ public class DisruptionData implements ComparableItem
     }
 
     public Category category() { return DISRUPTION; }
+
+    public boolean reportable() { return Breakend.reportedDisruption(); }
 
     public boolean matches(final ComparableItem other)
     {
@@ -51,7 +55,7 @@ public class DisruptionData implements ComparableItem
         return true;
     }
 
-    public List<String> findDifferences(final ComparableItem other)
+    public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
     {
         final DisruptionData otherBreakend = (DisruptionData)other;
 
@@ -66,6 +70,9 @@ public class DisruptionData implements ComparableItem
         {
             diffs.add(String.format("disruptive(%s/%s)", Breakend.disruptive(), otherBreakend.Breakend.disruptive()));
         }
+
+        if(matchLevel == REPORTABLE)
+            return diffs;
 
         return diffs;
     }

@@ -42,37 +42,17 @@ public class Compar
 
         mComparators = Lists.newArrayList();
 
-        if(mConfig.Categories.contains(DRIVER))
+        if(mConfig.Categories.containsKey(DRIVER))
             mComparators.add(new DriverComparer(mConfig));
 
-        if(mConfig.Categories.contains(LINX_DATA))
+        if(mConfig.Categories.containsKey(LINX_DATA))
             mComparators.add(new LinxSvComparer(mConfig));
 
-        if(mConfig.Categories.contains(FUSION))
+        if(mConfig.Categories.containsKey(FUSION))
             mComparators.add(new FusionComparer(mConfig));
 
-        if(mConfig.Categories.contains(DISRUPTION))
+        if(mConfig.Categories.containsKey(DISRUPTION))
             mComparators.add(new DisruptionComparer(mConfig));
-
-        //        if(mConfig.runClassifier(SNV))
-//            mClassifiers.add(new SomaticClassifier(mConfig, mSampleDataCache, cmd));
-//
-//        if(mConfig.runClassifier(FEATURE))
-//            mClassifiers.add(new FeatureClassifier(mConfig, mSampleDataCache));
-//
-//        if(mConfig.runClassifier(SAMPLE_TRAIT))
-//            mClassifiers.add(new SampleTraitClassifier(mConfig, mSampleDataCache));
-//
-//        if(mConfig.runClassifier(SV))
-//            mClassifiers.add(new SvClassifier(mConfig, mSampleDataCache));
-//
-//        if(mConfig.runClassifier(GENE_EXP))
-//            mClassifiers.add(new GeneExpressionClassifier(mConfig, mSampleDataCache, cmd));
-//
-//        if(mConfig.runClassifier(ALT_SJ))
-//            mClassifiers.add(new AltSjClassifier(mConfig, mSampleDataCache, cmd));
-
-        // CMP_LOGGER.debug("{} classifiers loaded", mClassifiers.size());
 
         mDiffWriter = null;
     }
@@ -102,7 +82,6 @@ public class Compar
 
         initialiseOutputFiles();
 
-        int sampleCount = 0;
         for(int i = 0; i < mConfig.SampleIds.size(); ++i)
         {
             final String sampleId = mConfig.SampleIds.get(i);
@@ -113,7 +92,7 @@ public class Compar
 
             if(i > 0 && (i % 100) == 0)
             {
-                CMP_LOGGER.info("processed {} samples", sampleCount);
+                CMP_LOGGER.info("processed {} samples", i);
             }
         }
 

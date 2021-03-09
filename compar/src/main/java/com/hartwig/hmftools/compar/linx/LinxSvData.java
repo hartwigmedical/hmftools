@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar.linx;
 import static com.hartwig.hmftools.compar.Category.LINX_DATA;
 import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.CommonUtils.diffValue;
+import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,6 +15,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.MatchLevel;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -31,6 +33,8 @@ public class LinxSvData implements ComparableItem
     }
 
     public Category category() { return LINX_DATA; }
+
+    public boolean reportable() { return false; }
 
     public boolean matches(final ComparableItem other)
     {
@@ -51,7 +55,7 @@ public class LinxSvData implements ComparableItem
         return true;
     }
 
-    public List<String> findDifferences(final ComparableItem other)
+    public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
     {
         final LinxSvData otherSv = (LinxSvData)other;
 
@@ -61,6 +65,9 @@ public class LinxSvData implements ComparableItem
         {
             diffs.add(String.format("resolvedType(%s/%s)", Cluster.resolvedType(), otherSv.Cluster.resolvedType()));
         }
+
+        if(matchLevel == REPORTABLE)
+            return diffs;
 
         if(Cluster.clusterCount() != otherSv.Cluster.clusterCount())
         {

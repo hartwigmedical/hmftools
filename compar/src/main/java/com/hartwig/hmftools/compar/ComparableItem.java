@@ -8,7 +8,9 @@ public interface ComparableItem
 
     boolean matches(final ComparableItem other);
 
-    List<String> findDifferences(final ComparableItem other);
+    boolean reportable();
+
+    List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel);
 
     String description();
 

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.MismatchType.PRESENCE;
 import static com.hartwig.hmftools.compar.MismatchType.VALUE;
 
@@ -39,7 +40,7 @@ public class CommonUtils
     }
 
     public static void compareItems(
-            final String sampleId, final List<Mismatch> mismatches,
+            final String sampleId, final List<Mismatch> mismatches, final MatchLevel matchLevel,
             final String source1, final String source2, final List<ComparableItem> items1, final List<ComparableItem> items2)
     {
         int index1 = 0;
@@ -60,15 +61,19 @@ public class CommonUtils
                     items2.remove(index2);
                     matched = true;
 
-                    final List<String> diffs = item1.findDifferences(item2);
-
-                    if(!diffs.isEmpty())
+                    // skip checking for diffs if the items are not reportable
+                    if(matchLevel != REPORTABLE || item2.reportable() || item2.reportable())
                     {
-                        StringJoiner differencesStr = new StringJoiner(ITEM_DELIM);
-                        diffs.forEach(x -> differencesStr.add(x));
+                        final List<String> diffs = item1.findDifferences(item2, matchLevel);
 
-                        mismatches.add(new Mismatch(
-                                sampleId, item1.category(), VALUE, source1, source2, item1.description(), differencesStr.toString()));
+                        if(!diffs.isEmpty())
+                        {
+                            StringJoiner differencesStr = new StringJoiner(ITEM_DELIM);
+                            diffs.forEach(x -> differencesStr.add(x));
+
+                            mismatches.add(new Mismatch(
+                                    sampleId, item1.category(), VALUE, source1, source2, item1.description(), differencesStr.toString()));
+                        }
                     }
 
                     break;
@@ -83,8 +88,11 @@ public class CommonUtils
                 ++index1;
         }
 
-        items1.forEach(x -> mismatches.add(new Mismatch(sampleId, x.category(), PRESENCE, source1, source2, x.description(), "")));
-        items2.forEach(x -> mismatches.add(new Mismatch(sampleId, x.category(), PRESENCE, source2, source1, x.description(), "")));
+        items1.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
+                .forEach(x -> mismatches.add(new Mismatch(sampleId, x.category(), PRESENCE, source1, source2, x.description(), "")));
+
+        items2.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
+                .forEach(x -> mismatches.add(new Mismatch(sampleId, x.category(), PRESENCE, source2, source1, x.description(), "")));
     }
 
 }

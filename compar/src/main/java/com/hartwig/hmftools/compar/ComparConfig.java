@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.compar.Category.ALL_CATEGORIES;
 import static com.hartwig.hmftools.compar.CommonUtils.DATA_DELIM;
+import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_DEFAULT_ARGS;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 
@@ -28,7 +29,7 @@ public class ComparConfig
 {
     public final List<String> SampleIds;
 
-    public final List<Category> Categories;
+    public final Map<Category,MatchLevel> Categories;
 
     // database access
     public final Map<String,DatabaseAccess> DbConnections;
@@ -39,6 +40,7 @@ public class ComparConfig
 
     // config strings
     public static final String CATEGORIES = "categories";
+    public static final String MATCH_LEVEL = "match_level";
 
     public static final String DB_SOURCES = "db_sources";
 
@@ -55,16 +57,37 @@ public class ComparConfig
         SampleIds = Lists.newArrayList();
         loadSampleIds(cmd);
 
-        Categories = Lists.newArrayList();
+        Categories = Maps.newHashMap();
+
+        MatchLevel matchLevel = cmd.hasOption(MATCH_LEVEL) ? MatchLevel.valueOf(cmd.getOptionValue(MATCH_LEVEL)) : REPORTABLE;
 
         if(!cmd.hasOption(CATEGORIES) || cmd.getOptionValue(CATEGORIES).equals(ALL_CATEGORIES))
         {
-            Arrays.stream(Category.values()).forEach(x -> Categories.add(x));
+            Arrays.stream(Category.values()).forEach(x -> Categories.put(x, matchLevel));
         }
         else
         {
-            final String[] categories = cmd.getOptionValue(CATEGORIES).split(";");
-            Arrays.stream(categories).forEach(x -> Categories.add(Category.valueOf(x)));
+            final String[] catDataList = cmd.getOptionValue(CATEGORIES).split(";");
+
+            for(String catData : catDataList)
+            {
+                Category category;
+                MatchLevel specificMatchLevel;
+
+                if(catData.contains("="))
+                {
+                    String[] catItems = catData.split("=");
+                    category = Category.valueOf(catItems[0]);
+                    specificMatchLevel = MatchLevel.valueOf(catItems[1]);
+                }
+                else
+                {
+                    category = Category.valueOf(catData);
+                    specificMatchLevel = matchLevel;
+                }
+
+                Categories.put(category, specificMatchLevel);
+            }
         }
 
         CMP_LOGGER.info("comparing categories: {}", Categories.isEmpty() ? ALL_CATEGORIES : Categories.toString());
@@ -87,6 +110,8 @@ public class ComparConfig
 
                 if(sampleIds.get(0).equals("SampleId"))
                     sampleIds.remove(0);
+
+                SampleIds.addAll(sampleIds);
             }
             catch (IOException e)
             {
@@ -147,8 +172,9 @@ public class ComparConfig
     {
         options.addOption(
                 CATEGORIES, true,
-                "Categories to run analysis on, separated by ';' from: SNV, SV, SAMPLE_TRAIT, GENE_EXP and FEATURE");
+                "Categories to check separated by ';' from: DRIVER, LINX_DATA, FUSION, DISRUPTION");
 
+        options.addOption(MATCH_LEVEL, true, "Match level from REPORTABLE, MODERATE or DETAILED");
         options.addOption(SAMPLE, true, "Sample data file");
         options.addOption(SAMPLE_ID_FILE, true, "Sample data file");
 

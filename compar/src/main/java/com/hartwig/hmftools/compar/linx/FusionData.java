@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.compar.Category.FUSION;
 import static com.hartwig.hmftools.compar.Category.LINX_DATA;
 import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.CommonUtils.diffValue;
+import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.Arrays;
 import java.util.List;
@@ -15,6 +16,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.MatchLevel;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -29,6 +31,8 @@ public class FusionData implements ComparableItem
 
     public Category category() { return FUSION; }
 
+    public boolean reportable() { return Fusion.reported(); }
+
     public boolean matches(final ComparableItem other)
     {
         final FusionData otherFusion = (FusionData)other;
@@ -36,7 +40,7 @@ public class FusionData implements ComparableItem
         return otherFusion.Fusion.name().equals(Fusion.name());
     }
 
-    public List<String> findDifferences(final ComparableItem other)
+    public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
     {
         final FusionData otherFusion = (FusionData)other;
 
@@ -51,6 +55,9 @@ public class FusionData implements ComparableItem
         {
             diffs.add(String.format("reportedType(%s/%s)", Fusion.reportedType(), otherFusion.Fusion.reportedType()));
         }
+
+        if(matchLevel == REPORTABLE)
+            return diffs;
 
         if(Fusion.phased() != otherFusion.Fusion.phased())
         {

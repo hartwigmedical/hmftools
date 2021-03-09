@@ -2,12 +2,14 @@ package com.hartwig.hmftools.compar.driver;
 
 import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.CommonUtils.diffValue;
+import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.MatchLevel;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -21,6 +23,8 @@ public class DriverData implements ComparableItem
     }
 
     public Category category() { return DRIVER; }
+
+    public boolean reportable() { return true; }
 
     public boolean matches(final ComparableItem other)
     {
@@ -36,11 +40,14 @@ public class DriverData implements ComparableItem
 
     }
 
-    public List<String> findDifferences(final ComparableItem other)
+    public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
     {
         final DriverData otherDriver = (DriverData)other;
 
         final List<String> diffs = Lists.newArrayList();
+
+        if(matchLevel == REPORTABLE)
+            return diffs;
 
         if(diffValue(DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood()))
         {

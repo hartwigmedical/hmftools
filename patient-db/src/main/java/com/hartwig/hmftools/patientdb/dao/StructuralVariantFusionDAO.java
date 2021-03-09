@@ -225,6 +225,7 @@ public class StructuralVariantFusionDAO {
 
         for (Record record : result)
         {
+
             LinxBreakend breakend = ImmutableLinxBreakend.builder()
                     .id(record.getValue(SVBREAKEND.ID).intValue())
                     .svId(record.getValue(SVBREAKEND.SVID).intValue())
@@ -240,7 +241,8 @@ public class StructuralVariantFusionDAO {
                     .codingContext(record.getValue(SVBREAKEND.CODINGCONTEXT))
                     .biotype(record.getValue(SVBREAKEND.BIOTYPE))
                     .exonicBasePhase(record.getValue(SVBREAKEND.EXONICBASEPHASE))
-                    .nextSpliceExonRank(record.getValue(SVBREAKEND.NEXTSPLICEEXONRANK).intValue())
+                    .nextSpliceExonRank(record.getValue(SVBREAKEND.NEXTSPLICEEXONRANK) == null ?
+                            0 : record.getValue(SVBREAKEND.NEXTSPLICEEXONRANK).intValue())
                     .nextSpliceExonPhase(record.getValue(SVBREAKEND.NEXTSPLICEEXONPHASE))
                     .nextSpliceDistance(record.getValue(SVBREAKEND.NEXTSPLICEDISTANCE))
                     .totalExonCount(record.getValue(SVBREAKEND.TOTALEXONCOUNT))
