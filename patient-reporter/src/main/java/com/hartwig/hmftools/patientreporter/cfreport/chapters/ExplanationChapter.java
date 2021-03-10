@@ -42,10 +42,12 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] {
-                        "The CGI and CIViC of the VICC knowledgebase are used to annotate variants of all types with "
+                        "The CGI and CIViC knowledgebase are used to annotate variants of all types with "
                                 + "clinical evidence, with a hyperlink to the specific evidence items. NOTE: If a certain "
                                 + "evidence item or drug-biomarker is missing from the knowledgebases it will also not be "
                                 + "included in this report.",
+                        "VICC (Variant Interpretation for Cancer Consortium, https://cancervariants.org) software has been used "
+                                + "to harmonize and curate the knowledgebases",
                         "Clinical trials are matched against the iClusion database (https://iclusion.org) including a "
                                 + "link to the specific trial." })));
         table.addCell(TableUtil.createLayoutCell());

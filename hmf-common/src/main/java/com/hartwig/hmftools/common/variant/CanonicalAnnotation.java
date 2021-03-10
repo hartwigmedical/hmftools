@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
@@ -22,7 +22,7 @@ public class CanonicalAnnotation {
     @NotNull
     private final Map<String, String> canonicalTranscriptGeneMap;
 
-    public CanonicalAnnotation(@NotNull final Set<String> driverGenes, @NotNull final List<CanonicalTranscript> transcripts) {
+    public CanonicalAnnotation(@NotNull final Set<String> driverGenes, @NotNull final List<HmfTranscriptRegion> transcripts) {
         this.driverCatalogGenes = driverGenes;
 
         // The p14Arf transcript for CDKN2A is included in our canonical transcript map.

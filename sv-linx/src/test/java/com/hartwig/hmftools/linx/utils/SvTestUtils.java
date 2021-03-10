@@ -232,7 +232,6 @@ public class SvTestUtils
                 .chromosomeBand("")
                 .driver(type)
                 .driverLikelihood(1.0)
-                .dndsLikelihood(1.0)
                 .likelihoodMethod(method)
                 .minCopyNumber(minCopyNumber)
                 .maxCopyNumber(minCopyNumber)

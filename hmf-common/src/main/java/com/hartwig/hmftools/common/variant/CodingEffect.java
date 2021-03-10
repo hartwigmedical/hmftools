@@ -16,6 +16,7 @@ public enum CodingEffect {
     NONE,
     UNDEFINED;
 
+    @Deprecated
     @NotNull
     public static CodingEffect effect(@NotNull final String gene, @NotNull final List<VariantConsequence> consequences) {
         final List<CodingEffect> simplifiedEffects = consequences.stream().map(CodingEffect::effect).collect(Collectors.toList());
@@ -47,7 +48,7 @@ public enum CodingEffect {
     }
 
     @NotNull
-    private static CodingEffect effect(@NotNull final VariantConsequence consequence) {
+    public static CodingEffect effect(@NotNull final VariantConsequence consequence) {
         switch (consequence) {
             case FRAMESHIFT_VARIANT:
             case STOP_GAINED:

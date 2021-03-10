@@ -9,7 +9,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -35,7 +35,7 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment {
             @NotNull final String purpleVersion, @NotNull final String tumorSample, @NotNull final IndexedFastaSequenceFile reference,
             @NotNull final PurityAdjuster purityAdjuster, @NotNull final DriverGenePanel genePanel,
             @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<FittedRegion> fittedRegions,
-            @NotNull final Multimap<Chromosome, VariantHotspot> hotspots, @NotNull final List<CanonicalTranscript> transcripts,
+            @NotNull final Multimap<Chromosome, VariantHotspot> hotspots, @NotNull final List<HmfTranscriptRegion> transcripts,
             @NotNull final Consumer<VariantContext> consumer) {
         subclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(tumorSample, clonalityMaxPloidy, clonalityBinWidth, consumer);
         purityEnrichment = new SomaticPurityEnrichment(purpleVersion,

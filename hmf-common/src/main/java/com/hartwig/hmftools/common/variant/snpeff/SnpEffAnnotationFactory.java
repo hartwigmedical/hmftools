@@ -112,6 +112,7 @@ public final class SnpEffAnnotationFactory {
         }
 
         // Below is to support additional donor annotation for variants affecting +5 base. See also DEV-1650
+        // Note, no longer strictly necessary to do here as have also got this in CodingEffectFactory.java
         boolean indel = variant.isIndel();
         if (!indel) {
             return hgvsCoding.contains("+5") ? SPLICE_DONOR_VARIANT + CONSEQUENCE_SEPARATOR + effects : effects;

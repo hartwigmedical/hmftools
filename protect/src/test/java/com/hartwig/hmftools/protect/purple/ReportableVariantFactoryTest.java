@@ -49,7 +49,6 @@ public class ReportableVariantFactoryTest {
                 .category(DriverCategory.ONCO)
                 .likelihoodMethod(LikelihoodMethod.DNDS)
                 .driverLikelihood(likelihood)
-                .dndsLikelihood(0D)
                 .missense(0)
                 .nonsense(0)
                 .splice(0)

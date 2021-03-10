@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
@@ -18,8 +17,6 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.genome.region.ImmutableHmfExonRegion;
-import com.hartwig.hmftools.common.genome.region.ImmutableHmfTranscriptRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -57,7 +54,7 @@ public interface RefGenomeData {
     Map<Chromosome, GenomePosition> centromere();
 
     @NotNull
-    List<HmfTranscriptRegion> genePanel();
+    List<HmfTranscriptRegion> hmfTranscripts();
 
     @NotNull
     static RefGenomeData createRefGenomeConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
@@ -89,36 +86,15 @@ public interface RefGenomeData {
         final Map<Chromosome, String> contigMap =
                 lengthPositions.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, x -> x.getValue().chromosome()));
 
-        final List<HmfTranscriptRegion> rawGenePanel =
+        final List<HmfTranscriptRegion> genePanel =
                 refGenome == RefGenomeCoordinates.COORDS_38 ? HmfGenePanelSupplier.allGeneList38() : HmfGenePanelSupplier.allGeneList37();
-
-        final Function<String, String> chromosomeToContig = s -> contigMap.get(HumanChromosome.fromString(s));
-
-        final List<HmfTranscriptRegion> genePanel = rawGenePanel.stream()
-                .filter(x -> HumanChromosome.contains(x.chromosome()) && contigMap.containsKey(HumanChromosome.fromString(x.chromosome())))
-                .map(x -> updateContig(x, chromosomeToContig))
-                .collect(Collectors.toList());
 
         return ImmutableRefGenomeData.builder()
                 .length(toPosition(refGenome.lengths(), contigMap))
                 .centromere(toPosition(refGenome.centromeres(), contigMap))
                 .refGenome(refGenomePath)
                 .isHg38(refGenome.equals(RefGenomeCoordinates.COORDS_38))
-                .genePanel(genePanel)
-                .build();
-    }
-
-    @NotNull
-    static HmfTranscriptRegion updateContig(HmfTranscriptRegion region, Function<String, String> fixContigFunction) {
-        final String correctContig = fixContigFunction.apply(region.chromosome());
-
-        return ImmutableHmfTranscriptRegion.builder()
-                .from(region)
-                .chromosome(correctContig)
-                .exome(region.exome()
-                        .stream()
-                        .map(x -> ImmutableHmfExonRegion.builder().from(x).chromosome(correctContig).build())
-                        .collect(Collectors.toList()))
+                .hmfTranscripts(genePanel)
                 .build();
     }
 

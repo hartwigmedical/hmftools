@@ -166,7 +166,6 @@ public class DriverDataCache
                 .chromosomeBand(gene.karyotypeBand())
                 .likelihoodMethod(DEL)
                 .driverLikelihood(1.0)
-                .dndsLikelihood(0)
                 .missense(0)
                 .nonsense(0)
                 .splice(0)

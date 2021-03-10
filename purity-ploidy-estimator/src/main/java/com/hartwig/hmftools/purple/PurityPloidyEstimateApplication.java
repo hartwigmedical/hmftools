@@ -198,7 +198,7 @@ public class PurityPloidyEstimateApplication {
             final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
 
             final List<GeneCopyNumber> geneCopyNumbers =
-                    GeneCopyNumberFactory.geneCopyNumbers(configSupplier.refGenomeConfig().genePanel(), copyNumbers, germlineDeletions);
+                    GeneCopyNumberFactory.geneCopyNumbers(configSupplier.refGenomeConfig().hmfTranscripts(), copyNumbers, germlineDeletions);
 
             LOGGER.info("Generating QC Stats");
             final PurpleQC qcChecks = PurpleQCFactory.create(configSupplier.amberData().contamination(),

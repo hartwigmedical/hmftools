@@ -7,8 +7,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.VariantHeader;
@@ -36,7 +35,7 @@ public class GermlineVariants {
     private final CommonConfig commonConfig;
     private final RefGenomeData refGenomeData;
     private final String outputVCF;
-    private final List<CanonicalTranscript> transcripts;
+    private final List<HmfTranscriptRegion> transcripts;
     private final DriverGenePanel genePanel;
     private final List<VariantContext> reportableVariants;
 
@@ -46,8 +45,7 @@ public class GermlineVariants {
         this.refGenomeData = configSupplier.refGenomeConfig();
         this.configSupplier = configSupplier;
         this.outputVCF = commonConfig.outputDirectory() + File.separator + commonConfig.tumorSample() + ".purple.germline.vcf.gz";
-        this.transcripts =
-                configSupplier.refGenomeConfig().isHg38() ? CanonicalTranscriptFactory.create38() : CanonicalTranscriptFactory.create37();
+        this.transcripts = configSupplier.refGenomeConfig().hmfTranscripts();
         this.reportableVariants = Lists.newArrayList();
     }
 

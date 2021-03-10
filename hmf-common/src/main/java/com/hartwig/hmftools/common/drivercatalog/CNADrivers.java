@@ -135,7 +135,6 @@ public class CNADrivers {
                 .inframe(0)
                 .frameshift(0)
                 .splice(0)
-                .dndsLikelihood(0)
                 .driverLikelihood(1)
                 .driver(driver)
                 .likelihoodMethod(likelihoodMethod)

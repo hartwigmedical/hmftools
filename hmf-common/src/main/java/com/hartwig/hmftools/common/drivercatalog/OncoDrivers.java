@@ -82,7 +82,6 @@ class OncoDrivers {
                 .driver(DriverType.MUTATION)
                 .category(DriverCategory.ONCO)
                 .driverLikelihood(1)
-                .dndsLikelihood(0)
                 .missense(missenseVariants)
                 .nonsense(nonsenseVariants)
                 .splice(spliceVariants)

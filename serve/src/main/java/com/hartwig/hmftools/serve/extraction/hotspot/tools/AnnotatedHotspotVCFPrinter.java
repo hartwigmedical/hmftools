@@ -8,8 +8,8 @@ import java.util.Optional;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
@@ -35,7 +35,7 @@ public class AnnotatedHotspotVCFPrinter {
     }
 
     public void run(@NotNull String annotatedInputVcf) throws IOException {
-        List<CanonicalTranscript> canonicalTranscripts = CanonicalTranscriptFactory.create37();
+        List<HmfTranscriptRegion> canonicalTranscripts = HmfGenePanelSupplier.allGeneList37();
         CanonicalAnnotation factory = new CanonicalAnnotation(Sets.newHashSet(), canonicalTranscripts);
 
         LOGGER.info("Simplifying variants from '{}'", annotatedInputVcf);
