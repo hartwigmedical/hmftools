@@ -31,7 +31,7 @@
         <module>sig-analyser</module>
         <module>cuppa</module>
         <module>isofox</module>
-<!--        <module>stat-calcs</module>-->
+        <module>stat-calcs</module>
         <module>ckb-importer</module>
         <module>iclusion-importer</module>
         <module>vicc-importer</module>
