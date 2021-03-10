@@ -99,7 +99,7 @@ public class GenomicAnalyzer {
                 reportableEvidenceItems.add(evidence);
             }
         }
-        LOGGER.info(" Loaded {} reportable evidence items from {}", reportableEvidenceItems.size(), protectEvidenceTsv);
+        LOGGER.info(" Loaded {} reportable evidence items", reportableEvidenceItems.size());
         return reportableEvidenceItems;
     }
 }
