@@ -41,7 +41,7 @@ final class TherapyDetailsChapterFunctions {
                                 COL_WIDTH_LEVEL, COL_WIDTH_RESPONSE, COL_WIDTH_SOURCE },
                         new Cell[] { TableUtil.createHeaderCell("Genomic event"), TableUtil.createHeaderCell("Treatment", 2),
                                 TableUtil.createHeaderCell("Level"), TableUtil.createHeaderCell("Direction"),
-                                TableUtil.createHeaderCell("Source") });
+                                TableUtil.createHeaderCell("Sources") });
 
         for (ProtectEvidence item : EvidenceItems.sort(evidence)) {
             contentTable.addCell(TableUtil.createContentCell(item.genomicEvent()));
