@@ -50,8 +50,8 @@ final class TherapyDetailsChapterFunctions {
                     .setVerticalAlignment(VerticalAlignment.TOP)));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(item.level().name()))));
             contentTable.addCell(TableUtil.createContentCell(item.direction().name()));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(EvidenceItems.source(item)).addStyle(ReportResources.dataHighlightLinksStyle()))
-                    .setAction(PdfAction.createURI(EvidenceItems.sourceUrl(item))));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(EvidenceItems.sources(item)).addStyle(ReportResources.dataHighlightLinksStyle()))
+                    .setAction(PdfAction.createURI(EvidenceItems.evidenceUrl(item))));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);

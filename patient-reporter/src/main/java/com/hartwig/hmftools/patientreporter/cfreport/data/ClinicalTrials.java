@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
@@ -29,25 +30,24 @@ public final class ClinicalTrials {
 
     @NotNull
     public static String source(@NotNull ProtectEvidence evidence) {
-        String sources = Strings.EMPTY;
-        for (Knowledgebase source: evidence.sources()) {
-            if (source.display().equals(Knowledgebase.ICLUSION.display())) {
-                return sources.concat(source.display());
+        assert evidence.sources().contains(Knowledgebase.ICLUSION);
 
-            }
+        StringJoiner joiner = new StringJoiner(",");
+        for (Knowledgebase source : evidence.sources()) {
+            joiner.add(source.reportDisplay());
         }
-        return Strings.EMPTY;
+        return joiner.toString();
     }
 
     @NotNull
-    public static String sourceUrl(@NotNull ProtectEvidence evidence) {
-        for (Knowledgebase source : evidence.sources()) {
-            if (source.display().equals(Knowledgebase.ICLUSION.display())) {
-                return evidence.urls().iterator().next();
+    public static String trialUrl(@NotNull ProtectEvidence evidence) {
+        assert evidence.sources().contains(Knowledgebase.ICLUSION);
 
-            }
+        if (evidence.urls().isEmpty()) {
+            return Strings.EMPTY;
         }
-        return Strings.EMPTY;
+
+        return evidence.urls().iterator().next();
     }
 
     public static int uniqueEventCount(@NotNull List<ProtectEvidence> trials) {
