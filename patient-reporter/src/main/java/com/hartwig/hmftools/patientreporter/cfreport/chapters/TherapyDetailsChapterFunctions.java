@@ -40,7 +40,7 @@ final class TherapyDetailsChapterFunctions {
                 TableUtil.createReportContentTable(new float[] { COL_WIDTH_GENOMIC_EVENT, COL_WIDTH_DRUG_ICONS, COL_WIDTH_DRUG_LIST,
                                 COL_WIDTH_LEVEL, COL_WIDTH_RESPONSE, COL_WIDTH_SOURCE },
                         new Cell[] { TableUtil.createHeaderCell("Genomic event"), TableUtil.createHeaderCell("Treatment", 2),
-                                TableUtil.createHeaderCell("Level of evidence"), TableUtil.createHeaderCell("Response"),
+                                TableUtil.createHeaderCell("Level"), TableUtil.createHeaderCell("Direction"),
                                 TableUtil.createHeaderCell("Source") });
 
         for (ProtectEvidence item : EvidenceItems.sort(evidence)) {

@@ -33,7 +33,7 @@ public final class GainsAndLosses {
     public static Set<String> amplifiedGenes(@NotNull List<ReportableGainLoss> reportableGainLosses) {
         Set<String> genes = Sets.newHashSet();
         for (ReportableGainLoss gainLoss : reportableGainLosses) {
-            if (!gainLoss.gene().isEmpty() && gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN
+            if (gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN
                     || gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN) {
                 genes.add(gainLoss.gene());
             }
@@ -45,8 +45,8 @@ public final class GainsAndLosses {
     public static Set<String> lostGenes(@NotNull List<ReportableGainLoss> reportableGainLosses) {
         Set<String> genes = Sets.newHashSet();
         for (ReportableGainLoss gainLoss : reportableGainLosses) {
-            if (!gainLoss.gene().isEmpty() && (gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS
-                    || gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS)) {
+            if (gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS
+                    || gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS) {
                 genes.add(gainLoss.gene());
             }
         }

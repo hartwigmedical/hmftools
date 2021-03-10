@@ -9,10 +9,14 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ClinicalTrials {
+
+    private static final Logger LOGGER = LogManager.getLogger(ClinicalTrials.class);
 
     private ClinicalTrials() {
     }
@@ -44,6 +48,7 @@ public final class ClinicalTrials {
         assert evidence.sources().contains(Knowledgebase.ICLUSION);
 
         if (evidence.urls().isEmpty()) {
+            LOGGER.warn("No URL configured for trial evidence '{}'", evidence);
             return Strings.EMPTY;
         }
 

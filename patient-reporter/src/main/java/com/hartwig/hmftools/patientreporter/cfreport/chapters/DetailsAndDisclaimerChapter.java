@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
-import com.hartwig.hmftools.common.utils.DataUtil;
 import com.itextpdf.io.IOException;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Div;
@@ -117,18 +117,17 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 ReportResources.VERSION_REPORT,
                 " based on ",
                 patientReport.qsFormNumber()));
-        div.add(createContentParagraph("This reported is based on pipeline version ", patientReport.pipelineVersion()));
+        div.add(createContentParagraph("This report is based on pipeline version ", patientReport.pipelineVersion()));
         div.add(createContentParagraph("The ‘primary tumor location’ and ‘primary tumor type’ have influence on the "
                 + "clinical evidence/study matching. No check is performed to verify the received information."));
-        div.add(createContentParagraph("The conclusion of this report is based solely on the results of the DNA sequencing of the tumor"
-                + " and the received tumor type. Other patient/tumor characteristics that might influence the interpretation of "
-                + "these results, are not considered. Final interpretation of the clinical consequence of this report should therefore "
+        div.add(createContentParagraph("The conclusion of this report is based solely on the results of the DNA sequencing of the tumor "
+                + "and the received tumor type. Final interpretation of the clinical consequence of this report should therefore "
                 + "always be performed by the treating physician."));
         div.add(createContentParagraph("Based on a tumor purity of at least 30%, the test has a sensitivity of >95% for detection of "
                 + "somatic variants and >95% for detection of translocations and gene copy number changes. For samples with a purity "
                 + "above 20%, the test has a sensitivity of >90%"));
         div.add(createContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA));
-        div.add(createContentParagraph("For questions regarding the results described in this report, please contact ",
+        div.add(createContentParagraph("For questions about the contents of this report, please contact ",
                 ReportResources.CONTACT_EMAIL_GENERAL));
 
         return div;
