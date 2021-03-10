@@ -18,7 +18,6 @@ public final class AnalysedReportDataLoader {
     @NotNull
     public static AnalysedReportData buildFromFiles(@NotNull ReportData reportData,
             @NotNull String germlineReportingTsv, @NotNull String sampleSummaryTsv) throws IOException {
-
         GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(germlineReportingTsv);
         SummaryModel summaryModel = SummaryFile.buildFromTsv(sampleSummaryTsv);
 

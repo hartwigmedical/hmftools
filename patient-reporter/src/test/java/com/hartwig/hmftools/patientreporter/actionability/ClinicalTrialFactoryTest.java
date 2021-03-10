@@ -27,7 +27,6 @@ public class ClinicalTrialFactoryTest {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
-                .urls(Sets.newHashSet("iclusion"))
                 .build();
 
         List<ProtectEvidence> trial = ClinicalTrialFactory.extractOnLabelTrials(Lists.newArrayList(evidence));

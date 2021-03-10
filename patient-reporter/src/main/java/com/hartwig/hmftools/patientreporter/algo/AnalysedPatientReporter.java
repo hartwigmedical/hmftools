@@ -12,21 +12,18 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.runcontext.MetaDataResolver;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.protect.linx.ViralInsertion;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
-import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -49,6 +46,7 @@ public class AnalysedPatientReporter {
             @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile,
             @NotNull String protectEvidenceTsv, @Nullable String comments, boolean correctedReport, @NotNull String pipelineVersionFile)
             throws IOException {
+        // TODO Specific COLO handling doesn't belong in patient reporter!
         String patientId = sampleMetadata.patientId().startsWith("COLO829") ? "COLO829" : sampleMetadata.patientId();
         PatientPrimaryTumor patientPrimaryTumor =
                 PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(), patientId);
@@ -71,11 +69,13 @@ public class AnalysedPatientReporter {
                 chordPredictionTxt,
                 protectEvidenceTsv);
 
-        GenomicAnalysis filteredAnalysis =
-                filterForConsent(genomicAnalysis, sampleReport.germlineReportingLevel(), sampleReport.reportViralInsertions());
+        GenomicAnalysis filteredAnalysis = ConsentFilterFunctions.filterAndOverruleForConsent(genomicAnalysis,
+                sampleReport.germlineReportingLevel(),
+                sampleReport.reportViralInsertions());
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
 
+        // TODO Move format to PDF. Make pipeline version in report @Nullable.
         String pipelineVersion = !pipelineVersionFile.isEmpty()
                 ? MetaDataResolver.majorDotMinorVersion(new File(pipelineVersionFile))
                 : "No pipeline version is known";
@@ -97,69 +97,6 @@ public class AnalysedPatientReporter {
         printReportState(report);
 
         return report;
-    }
-
-    @NotNull
-    private static GenomicAnalysis filterForConsent(@NotNull GenomicAnalysis genomicAnalysis,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralInsertions) {
-        List<ReportableVariant> filteredVariants =
-                filterVariantsForGermlineConsent(genomicAnalysis.reportableVariants(), germlineReportingLevel);
-
-        List<ViralInsertion> filteredViralInsertions = reportViralInsertions ? genomicAnalysis.viralInsertions() : Lists.newArrayList();
-
-        List<ProtectEvidence> filteredTumorSpecificEvidence =
-                filterEvidenceForGermlineConsent(genomicAnalysis.tumorSpecificEvidence(), germlineReportingLevel);
-
-        List<ProtectEvidence> filteredClinicalTrials =
-                filterEvidenceForGermlineConsent(genomicAnalysis.clinicalTrials(), germlineReportingLevel);
-
-        List<ProtectEvidence> filteredOffLabelEvidence =
-                filterEvidenceForGermlineConsent(genomicAnalysis.offLabelEvidence(), germlineReportingLevel);
-
-        return ImmutableGenomicAnalysis.builder()
-                .from(genomicAnalysis)
-                .reportableVariants(filteredVariants)
-                .viralInsertions(filteredViralInsertions)
-                .tumorSpecificEvidence(filteredTumorSpecificEvidence)
-                .clinicalTrials(filteredClinicalTrials)
-                .offLabelEvidence(filteredOffLabelEvidence)
-                .build();
-    }
-
-    @NotNull
-    @$VisibleForTesting
-    static List<ReportableVariant> filterVariantsForGermlineConsent(@NotNull List<ReportableVariant> variants,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
-        List<ReportableVariant> filteredVariants = Lists.newArrayList();
-        for (ReportableVariant variant : variants) {
-            if (germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING || variant.source() == ReportableVariantSource.SOMATIC) {
-                filteredVariants.add(variant);
-            }
-        }
-        return filteredVariants;
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static List<ProtectEvidence> filterEvidenceForGermlineConsent(@NotNull List<ProtectEvidence> evidences,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
-
-        List<ProtectEvidence> filtered = Lists.newArrayList();
-        for (ProtectEvidence evidence : evidences) {
-            if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION) {
-                filtered.add(evidence);
-            }
-
-            if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION) {
-                filtered.add(evidence);
-            }
-
-            if (!evidence.germline()) {
-                filtered.add(evidence);
-            }
-        }
-
-        return filtered;
     }
 
     @NotNull
@@ -191,7 +128,7 @@ public class AnalysedPatientReporter {
         LOGGER.info("Printing genomic analysis results for {}:", report.sampleReport().tumorSampleId());
         LOGGER.info(" Somatic variants to report: {}", analysis.reportableVariants().size());
         if (report.sampleReport().germlineReportingLevel() != LimsGermlineReportingLevel.NO_REPORTING) {
-            LOGGER.info("  Number of variants also present in germline: {}", germlineOnly(analysis.reportableVariants()).size());
+            LOGGER.info("  Number of variants known to exist in germline: {}", germlineOnly(analysis.reportableVariants()).size());
         } else {
             LOGGER.info("  Germline variants and evidence have been removed since no consent has been given");
         }
