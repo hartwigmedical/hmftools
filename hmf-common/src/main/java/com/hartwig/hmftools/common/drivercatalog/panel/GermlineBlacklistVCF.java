@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.drivercatalog.panel;
 
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
+
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -10,25 +12,22 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-class GermlineBlacklistVCF {
+final class GermlineBlacklistVCF {
 
     static final String BLACKLIST_FLAG = "BLACKLIST";
 
-    public static void process(final String outputFile, List<VariantContext> variants) {
-
+    public static void process(@NotNull String outputFile, @NotNull List<VariantContext> variants) {
         // WRITE
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputFile)
                 .modifyOption(Options.INDEX_ON_THE_FLY, true)
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .build();
 
-        VCFHeader writerheader = new VCFHeader();
-        writerheader.addMetaDataLine(new VCFInfoHeaderLine(BLACKLIST_FLAG, 1, VCFHeaderLineType.Flag, "Blacklisted location"));
-        writer.writeHeader(writerheader);
+        VCFHeader header = new VCFHeader();
+        header.addMetaDataLine(new VCFInfoHeaderLine(BLACKLIST_FLAG, 1, VCFHeaderLineType.Flag, "Blacklisted location"));
+        writer.writeHeader(header);
 
         variants.forEach(writer::add);
         writer.close();
-
     }
-
 }

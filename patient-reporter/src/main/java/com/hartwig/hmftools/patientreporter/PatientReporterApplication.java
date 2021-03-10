@@ -16,7 +16,6 @@ import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReporter;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportData;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportDataLoader;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
-import com.hartwig.hmftools.patientreporter.jsonoutput.FilterReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReportData;
@@ -120,8 +119,7 @@ public class PatientReporterApplication {
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(reportData.germlineReportingModel());
 
         String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
-        AnalysedPatientReport reportOverrule = FilterReportData.overrulePatientReportData(report);
-        reportWriter.writeAnalysedPatientReport(reportOverrule, outputFilePath);
+        reportWriter.writeAnalysedPatientReport(report, outputFilePath);
 
         if (!config.onlyCreatePDF()) {
             LOGGER.debug("Updating additional files and databases");
@@ -129,9 +127,9 @@ public class PatientReporterApplication {
             writeReportDataToJson(config.outputDirData(),
                     report.sampleReport().sampleMetadata().tumorSampleId(),
                     report.sampleReport().sampleMetadata().tumorSampleBarcode(),
-                    reportOverrule);
+                    report);
 
-            if (report.sampleReport().cohort().cohortId().equals("COLO")) {
+            if (!report.sampleReport().cohort().cohortId().equals("COLO")) {
                 ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
             }
         }

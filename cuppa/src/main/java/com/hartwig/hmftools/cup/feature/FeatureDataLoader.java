@@ -324,7 +324,6 @@ public class FeatureDataLoader
                     .category(DriverCategory.valueOf(record.getValue(DRIVERCATALOG.CATEGORY)))
                     .likelihoodMethod(LikelihoodMethod.valueOf(record.getValue(DRIVERCATALOG.LIKELIHOODMETHOD)))
                     .driverLikelihood(record.getValue(DRIVERCATALOG.DRIVERLIKELIHOOD))
-                    .dndsLikelihood(record.getValue(DRIVERCATALOG.DNDSLIKELIHOOD))
                     .missense(record.getValue(DRIVERCATALOG.MISSENSE))
                     .nonsense(record.getValue(DRIVERCATALOG.NONSENSE))
                     .splice(record.getValue(DRIVERCATALOG.SPLICE))

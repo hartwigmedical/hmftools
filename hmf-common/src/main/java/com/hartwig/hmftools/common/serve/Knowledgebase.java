@@ -12,27 +12,35 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum Knowledgebase {
-    DOCM("docm"),
-    HARTWIG_COHORT("hartwig_cohort"),
-    HARTWIG_CURATED("hartwig_curated"),
-    ICLUSION("iclusion"),
-    VICC_CGI("vicc_cgi"),
-    VICC_CIVIC("vicc_civic"),
-    VICC_JAX("vicc_jax"),
-    VICC_ONCOKB("vicc_oncokb");
+    DOCM("docm", "DoCM"),
+    HARTWIG_COHORT("hartwig_cohort", "HMF Cohort"),
+    HARTWIG_CURATED("hartwig_curated", "HMF Curated"),
+    ICLUSION("iclusion", "iClusion"),
+    VICC_CGI("vicc_cgi", "CGI"),
+    VICC_CIVIC("vicc_civic", "CIViC"),
+    VICC_JAX("vicc_jax", "CKB"),
+    VICC_ONCOKB("vicc_oncokb", "OncoKB");
 
     @NotNull
-    private final String display;
+    private final String technicalDisplay;
+    @NotNull
+    private final String reportDisplay;
 
     private static final Logger LOGGER = LogManager.getLogger(Knowledgebase.class);
 
-    Knowledgebase(@NotNull final String display) {
-        this.display = display;
+    Knowledgebase(@NotNull final String technicalDisplay, @NotNull final String reportDisplay) {
+        this.technicalDisplay = technicalDisplay;
+        this.reportDisplay = reportDisplay;
     }
 
     @NotNull
-    public String display() {
-        return display;
+    public String technicalDisplay() {
+        return technicalDisplay;
+    }
+
+    @NotNull
+    public String reportDisplay() {
+        return reportDisplay;
     }
 
     @NotNull
@@ -52,9 +60,9 @@ public enum Knowledgebase {
     }
 
     @Nullable
-    private static Knowledgebase lookupKnowledgebase(@NotNull String display) {
+    private static Knowledgebase lookupKnowledgebase(@NotNull String technicalDisplay) {
         for (Knowledgebase knowledgebase : Knowledgebase.values()) {
-            if (knowledgebase.display().equals(display)) {
+            if (knowledgebase.technicalDisplay().equals(technicalDisplay)) {
                 return knowledgebase;
             }
         }
@@ -68,7 +76,7 @@ public enum Knowledgebase {
 
         StringJoiner joiner = new StringJoiner(",");
         for (Knowledgebase source : sorted) {
-            joiner.add(source.toString().toLowerCase());
+            joiner.add(source.technicalDisplay());
         }
         return joiner.toString();
     }

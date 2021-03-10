@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -76,12 +76,12 @@ public final class CircosFileWriter {
     }
 
     @NotNull
-    static String transformPosition(@NotNull PurityAdjustedSomaticVariant position,
-            @NotNull Function<PurityAdjustedSomaticVariant, String> colourFunction) {
+    static String transformPosition(@NotNull VariantContextDecorator position,
+            @NotNull Function<VariantContextDecorator, String> colourFunction) {
         return new StringJoiner("\t").add(circosContig(position.chromosome()))
                 .add(String.valueOf(position.position()))
                 .add(String.valueOf(position.position()))
-                .add(String.valueOf(position.adjustedVAF()))
+                .add(String.valueOf(position.adjustedVaf()))
                 .add("color=" + colourFunction.apply(position))
                 .toString();
     }

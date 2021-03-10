@@ -1,15 +1,14 @@
 package com.hartwig.hmftools.serve.extraction.codon;
 
+import static com.hartwig.hmftools.serve.drivercatalog.DriverGeneSupplier.createDriverGenes;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventType;
@@ -92,22 +91,5 @@ public class CodonExtractorTest {
         return new CodonExtractor(V37_GENE_CHECKER, new MutationTypeFilterAlgo(driverGenes), V37_GENE_MAP);
     }
 
-    @NotNull
-    private static List<DriverGene> createDriverGenes(@NotNull String geneTsg, @NotNull String geneOnco) {
-        ImmutableDriverGene.Builder driverGeneBuilder = ImmutableDriverGene.builder()
-                .reportMissenseAndInframe(false)
-                .reportNonsenseAndFrameshift(false)
-                .reportSplice(false)
-                .reportDeletion(false)
-                .reportDisruption(false)
-                .reportAmplification(false)
-                .reportSomaticHotspot(false)
-                .reportGermlineVariant(false)
-                .reportGermlineHotspot(false);
 
-        DriverGene driverGeneTsg = driverGeneBuilder.gene(geneTsg).likelihoodType(DriverCategory.TSG).build();
-        DriverGene driverGeneOnco = driverGeneBuilder.gene(geneOnco).likelihoodType(DriverCategory.ONCO).build();
-
-        return Lists.newArrayList(driverGeneTsg, driverGeneOnco);
-    }
 }

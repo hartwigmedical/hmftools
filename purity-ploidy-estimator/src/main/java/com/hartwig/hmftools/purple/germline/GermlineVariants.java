@@ -7,8 +7,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.VariantHeader;
@@ -29,24 +28,24 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 
 public class GermlineVariants {
+
     private static final Logger LOGGER = LogManager.getLogger(GermlineVariants.class);
 
     private final ConfigSupplier configSupplier;
     private final CommonConfig commonConfig;
     private final RefGenomeData refGenomeData;
     private final String outputVCF;
-    private final List<CanonicalTranscript> transcripts;
+    private final List<HmfTranscriptRegion> transcripts;
     private final DriverGenePanel genePanel;
     private final List<VariantContext> reportableVariants;
 
-    public GermlineVariants(final ConfigSupplier configSupplier) {
+    public GermlineVariants(@NotNull final ConfigSupplier configSupplier) {
         this.genePanel = configSupplier.driverCatalogConfig().genePanel();
         this.commonConfig = configSupplier.commonConfig();
         this.refGenomeData = configSupplier.refGenomeConfig();
         this.configSupplier = configSupplier;
         this.outputVCF = commonConfig.outputDirectory() + File.separator + commonConfig.tumorSample() + ".purple.germline.vcf.gz";
-        this.transcripts =
-                configSupplier.refGenomeConfig().isHg38() ? CanonicalTranscriptFactory.create38() : CanonicalTranscriptFactory.create37();
+        this.transcripts = configSupplier.refGenomeConfig().hmfTranscripts();
         this.reportableVariants = Lists.newArrayList();
     }
 
@@ -55,12 +54,11 @@ public class GermlineVariants {
         return reportableVariants;
     }
 
-    public void processAndWrite(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers)
-            throws IOException {
-
+    public void processAndWrite(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
+            @NotNull final List<VariantContext> somaticVariants) throws IOException {
         final Optional<File> optionalInputVCF = configSupplier.germlineConfig().file();
-        if (optionalInputVCF.isPresent()) {
 
+        if (optionalInputVCF.isPresent()) {
             LOGGER.info("Loading germline variants from {}", optionalInputVCF.get());
             LOGGER.info("Enriching germline variants");
 
@@ -86,13 +84,14 @@ public class GermlineVariants {
                         genePanel,
                         transcripts,
                         configSupplier.driverCatalogConfig().germlineHotspots(),
+                        somaticVariants,
                         consumer);
 
                 writer.writeHeader(enrichment.enrichHeader(vcfReader.getFileHeader()));
-
                 for (VariantContext context : vcfReader) {
                     enrichment.accept(context);
                 }
+                enrichment.flush();
             }
         }
     }

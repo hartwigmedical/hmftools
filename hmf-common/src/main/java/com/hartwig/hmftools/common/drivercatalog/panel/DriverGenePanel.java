@@ -36,7 +36,7 @@ public abstract class DriverGenePanel {
     }
 
     @NotNull
-    private Set<DriverGene> targets(Predicate<DriverGene> filter) {
+    private Set<DriverGene> targets(@NotNull Predicate<DriverGene> filter) {
         return driverGenes().stream().filter(filter).collect(Collectors.toSet());
     }
 }

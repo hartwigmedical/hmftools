@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.variant;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -14,7 +13,6 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 
@@ -51,25 +49,6 @@ public class PurityAdjustedSomaticVariantFactory {
         this.purityAdjuster = purityAdjuster;
         this.copyNumberSelector = GenomeRegionSelectorFactory.createImproved(copyNumbers);
         this.fittedRegionSelector = GenomeRegionSelectorFactory.createImproved(fittedRegions);
-    }
-
-    @NotNull
-    public List<PurityAdjustedSomaticVariant> create(@NotNull final List<SomaticVariant> variants) {
-        final List<PurityAdjustedSomaticVariant> result = Lists.newArrayList();
-
-        for (SomaticVariant variant : variants) {
-            final ImmutablePurityAdjustedSomaticVariantImpl.Builder builder = ImmutablePurityAdjustedSomaticVariantImpl.builder()
-                    .from(variant)
-                    .adjustedCopyNumber(0)
-                    .adjustedVAF(0)
-                    .minorAlleleCopyNumber(0)
-                    .germlineStatus(GermlineStatus.UNKNOWN);
-
-            enrich(variant, variant, builder);
-            result.add(builder.build());
-        }
-
-        return result;
     }
 
     @NotNull

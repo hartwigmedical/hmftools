@@ -9,7 +9,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -35,12 +35,14 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment {
     public GermlineVariantEnrichment(@NotNull final String purpleVersion, @NotNull final String referenceSample,
             @NotNull final String tumorSample, @NotNull final IndexedFastaSequenceFile reference,
             @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
-            @NotNull final DriverGenePanel genePanel, @NotNull final List<CanonicalTranscript> transcripts,
-            @NotNull final Multimap<Chromosome, VariantHotspot> germlineHotspots, @NotNull final Consumer<VariantContext> consumer) {
+            @NotNull final DriverGenePanel genePanel, @NotNull final List<HmfTranscriptRegion> transcripts,
+            @NotNull final Multimap<Chromosome, VariantHotspot> germlineHotspots, @NotNull final List<VariantContext> somaticVariants,
+            @NotNull final Consumer<VariantContext> consumer) {
         final Set<String> germlineGenes =
                 genePanel.driverGenes().stream().filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
 
-        this.reportableEnrichment = new GermlineReportedEnrichment(genePanel.driverGenes(), consumer);
+        // Hotspot must be before reportable
+        this.reportableEnrichment = new GermlineReportedEnrichment(genePanel.driverGenes(), somaticVariants, consumer);
         this.pathogenicEnrichment = new GermlinePathogenicEnrichment(reportableEnrichment);
         this.refGenomeEnrichment = new SomaticRefContextEnrichment(reference, pathogenicEnrichment);
 

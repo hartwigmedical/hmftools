@@ -1,8 +1,5 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
--- TODO Remove per 1st of Feb 2021
-DROP TABLE IF EXISTS clinicalEvidence;
-
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
 (   id int NOT NULL AUTO_INCREMENT,
@@ -851,7 +848,6 @@ CREATE TABLE driverCatalog
     category varchar(255) NOT NULL,
     driver varchar(255) NOT NULL,
     likelihoodMethod varchar(255) NOT NULL,
-    dndsLikelihood DOUBLE PRECISION NOT NULL,
     driverLikelihood DOUBLE PRECISION NOT NULL,
     missense int NOT NULL,
     nonsense int NOT NULL,

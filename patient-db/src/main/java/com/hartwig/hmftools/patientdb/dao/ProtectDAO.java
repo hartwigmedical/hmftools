@@ -56,7 +56,7 @@ class ProtectDAO {
 
         StringJoiner sourceJoiner = new StringJoiner(",");
         for (Knowledgebase source : evidence.sources()) {
-            sourceJoiner.add(source.display());
+            sourceJoiner.add(source.technicalDisplay());
         }
 
         inserter.values(sample,

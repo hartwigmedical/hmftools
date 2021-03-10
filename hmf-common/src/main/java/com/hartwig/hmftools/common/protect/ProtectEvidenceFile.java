@@ -70,7 +70,7 @@ public final class ProtectEvidenceFile {
 
         StringJoiner sourceJoiner = new StringJoiner(SUBFIELD_DELIMITER);
         for (Knowledgebase source : evidence.sources()) {
-            sourceJoiner.add(source.display());
+            sourceJoiner.add(source.technicalDisplay());
         }
 
         return new StringJoiner(FIELD_DELIMITER).add(evidence.genomicEvent())

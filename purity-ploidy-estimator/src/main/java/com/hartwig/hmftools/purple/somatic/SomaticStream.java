@@ -7,11 +7,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.SomaticVariantDrivers;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -53,8 +53,9 @@ public class SomaticStream {
     private final SomaticVariantDrivers drivers;
     private final SomaticVariantFactory somaticVariantFactory;
     private final RChartData rChartData;
-    private final List<CanonicalTranscript> transcripts;
+    private final List<HmfTranscriptRegion> transcripts;
     private final DriverGenePanel genePanel;
+    private final List<PeakModel> peakModel = Lists.newArrayList();
 
     public SomaticStream(final ConfigSupplier configSupplier) {
         this.genePanel = configSupplier.driverCatalogConfig().genePanel();
@@ -70,8 +71,7 @@ public class SomaticStream {
         this.drivers = new SomaticVariantDrivers(genePanel);
         this.somaticVariantFactory = SomaticVariantFactory.passOnlyInstance();
         this.rChartData = new RChartData(commonConfig.outputDirectory(), commonConfig.tumorSample());
-        this.transcripts =
-                configSupplier.refGenomeConfig().isHg38() ? CanonicalTranscriptFactory.create38() : CanonicalTranscriptFactory.create37();
+        this.transcripts = configSupplier.refGenomeConfig().hmfTranscripts();
 
     }
 
@@ -107,8 +107,15 @@ public class SomaticStream {
         return drivers.build(geneCopyNumbers);
     }
 
-    public void processAndWrite(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
-            @NotNull final List<FittedRegion> fittedRegions, @NotNull final List<PeakModel> somaticPeaks) throws IOException {
+    @NotNull
+    public List<PeakModel> somaticPeakModel() {
+        return peakModel;
+    }
+
+    public List<VariantContext> processAndWrite(@NotNull final PurityAdjuster purityAdjuster,
+            @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<FittedRegion> fittedRegions) throws IOException {
+        final List<VariantContext> result = Lists.newArrayList();
+
         final Consumer<VariantContext> driverConsumer =
                 x -> somaticVariantFactory.createVariant(commonConfig.tumorSample(), x).ifPresent(somatic -> {
                     boolean reported = drivers.add(somatic);
@@ -124,8 +131,11 @@ public class SomaticStream {
                             .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                             .build()) {
 
-                final Consumer<VariantContext> consumer =
-                        tumorMutationalLoad.andThen(microsatelliteIndels).andThen(driverConsumer).andThen(writer::add).andThen(rChartData);
+                final Consumer<VariantContext> consumer = tumorMutationalLoad.andThen(microsatelliteIndels)
+                        .andThen(driverConsumer)
+                        .andThen(writer::add)
+                        .andThen(result::add)
+                        .andThen(rChartData);
 
                 final SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(driverCatalogConfig.enabled(),
                         somaticFitConfig.clonalityMaxPloidy(),
@@ -137,7 +147,6 @@ public class SomaticStream {
                         genePanel,
                         copyNumbers,
                         fittedRegions,
-                        somaticPeaks,
                         driverCatalogConfig.somaticHotspots(),
                         transcripts,
                         consumer);
@@ -150,8 +159,12 @@ public class SomaticStream {
                 }
 
                 enricher.flush();
+                peakModel.addAll(enricher.somaticPeakModel());
+
                 rChartData.write();
             }
         }
+
+        return result;
     }
 }

@@ -55,6 +55,10 @@ public class VariantContextDecorator implements GenomePosition {
         this.impact = DriverImpact.select(type, snpEffSummary.canonicalCodingEffect());
     }
 
+    public boolean isPass() {
+        return filter.equals(SomaticVariantFactory.PASS_FILTER);
+    }
+
     @NotNull
     public VariantContext context() {
         return context;
@@ -184,6 +188,7 @@ public class VariantContextDecorator implements GenomePosition {
         return context.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY);
     }
 
+    @NotNull
     private static String displayFilter(@NotNull final VariantContext context) {
         if (context.isFiltered()) {
             StringJoiner joiner = new StringJoiner(";");

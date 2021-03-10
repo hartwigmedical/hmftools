@@ -1,0 +1,104 @@
+package com.hartwig.hmftools.patientreporter.algo;
+
+import java.util.List;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.protect.linx.ViralInsertion;
+import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
+import com.hartwig.hmftools.protect.purple.ReportableVariant;
+import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
+
+import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
+import org.jetbrains.annotations.NotNull;
+
+public final class ConsentFilterFunctions {
+
+    private ConsentFilterFunctions() {
+    }
+
+    // TODO Split up the filtering functions from the overruling functions.
+    // TODO Extend overruling functions to make json and pdf more consistent.
+    @NotNull
+    public static GenomicAnalysis filterAndOverruleForConsent(@NotNull GenomicAnalysis genomicAnalysis,
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralInsertions) {
+        List<ReportableVariant> filteredVariants = filterAndOverruleVariants(genomicAnalysis.reportableVariants(),
+                germlineReportingLevel,
+                genomicAnalysis.hasReliablePurity());
+
+        List<ViralInsertion> filteredViralInsertions = reportViralInsertions ? genomicAnalysis.viralInsertions() : Lists.newArrayList();
+
+        List<ProtectEvidence> filteredTumorSpecificEvidence =
+                filterEvidenceForGermlineConsent(genomicAnalysis.tumorSpecificEvidence(), germlineReportingLevel);
+
+        List<ProtectEvidence> filteredClinicalTrials =
+                filterEvidenceForGermlineConsent(genomicAnalysis.clinicalTrials(), germlineReportingLevel);
+
+        List<ProtectEvidence> filteredOffLabelEvidence =
+                filterEvidenceForGermlineConsent(genomicAnalysis.offLabelEvidence(), germlineReportingLevel);
+
+        return ImmutableGenomicAnalysis.builder()
+                .from(genomicAnalysis)
+                .reportableVariants(filteredVariants)
+                .viralInsertions(filteredViralInsertions)
+                .tumorSpecificEvidence(filteredTumorSpecificEvidence)
+                .clinicalTrials(filteredClinicalTrials)
+                .offLabelEvidence(filteredOffLabelEvidence)
+                .build();
+    }
+
+    @NotNull
+    @$VisibleForTesting
+    static List<ReportableVariant> filterAndOverruleVariants(@NotNull List<ReportableVariant> variants,
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean hasReliablePurity) {
+        List<ReportableVariant> filteredVariants = Lists.newArrayList();
+        for (ReportableVariant variant : variants) {
+            if (germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING || variant.source() == ReportableVariantSource.SOMATIC) {
+                filteredVariants.add(variant);
+            }
+        }
+
+        List<ReportableVariant> overruledVariants = Lists.newArrayList();
+        for (ReportableVariant variant : filteredVariants) {
+            if (germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION) {
+                overruledVariants.add(overruleVariant(variant, hasReliablePurity, ReportableVariantSource.SOMATIC));
+            } else {
+                overruledVariants.add(overruleVariant(variant, hasReliablePurity, variant.source()));
+            }
+        }
+        return overruledVariants;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<ProtectEvidence> filterEvidenceForGermlineConsent(@NotNull List<ProtectEvidence> evidences,
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
+        List<ProtectEvidence> filtered = Lists.newArrayList();
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.germline() && germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING) {
+                filtered.add(evidence);
+            }
+
+            if (!evidence.germline()) {
+                filtered.add(evidence);
+            }
+        }
+
+        return filtered;
+    }
+
+    @NotNull
+    private static ReportableVariant overruleVariant(@NotNull ReportableVariant variant, boolean hasReliablePurity,
+            @NotNull ReportableVariantSource source) {
+        double flooredCopyNumber = Math.max(0, variant.totalCopyNumber());
+
+        return ImmutableReportableVariant.builder()
+                .from(variant)
+                .source(source)
+                .totalCopyNumber(hasReliablePurity ? flooredCopyNumber : Double.NaN)
+                .alleleCopyNumber(hasReliablePurity ? variant.alleleCopyNumber() : Double.NaN)
+                .build();
+    }
+}

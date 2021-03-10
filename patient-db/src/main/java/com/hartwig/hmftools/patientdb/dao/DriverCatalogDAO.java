@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep18;
+import org.jooq.InsertValuesStep17;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -69,7 +69,7 @@ class DriverCatalogDAO {
     private void insert(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         for (List<DriverCatalog> splitRegions : Iterables.partition(driverCatalog, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep18 inserter = context.insertInto(DRIVERCATALOG,
+            InsertValuesStep17 inserter = context.insertInto(DRIVERCATALOG,
                     DRIVERCATALOG.SAMPLEID,
                     DRIVERCATALOG.CHROMOSOME,
                     DRIVERCATALOG.CHROMOSOMEBAND,
@@ -77,7 +77,6 @@ class DriverCatalogDAO {
                     DRIVERCATALOG.DRIVER,
                     DRIVERCATALOG.CATEGORY,
                     DRIVERCATALOG.LIKELIHOODMETHOD,
-                    DRIVERCATALOG.DNDSLIKELIHOOD,
                     DRIVERCATALOG.DRIVERLIKELIHOOD,
                     DRIVERCATALOG.MISSENSE,
                     DRIVERCATALOG.NONSENSE,
@@ -93,7 +92,7 @@ class DriverCatalogDAO {
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep18 inserter, @NotNull String sample,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep17 inserter, @NotNull String sample,
             @NotNull DriverCatalog entry) {
         inserter.values(sample,
                 entry.chromosome(),
@@ -102,7 +101,6 @@ class DriverCatalogDAO {
                 entry.driver(),
                 entry.category(),
                 entry.likelihoodMethod(),
-                DatabaseUtil.decimal(entry.dndsLikelihood()),
                 DatabaseUtil.decimal(entry.driverLikelihood()),
                 entry.missense(),
                 entry.nonsense(),
@@ -139,7 +137,6 @@ class DriverCatalogDAO {
                     .category(DriverCategory.valueOf(record.getValue(DRIVERCATALOG.CATEGORY)))
                     .likelihoodMethod(LikelihoodMethod.valueOf(record.getValue(DRIVERCATALOG.LIKELIHOODMETHOD)))
                     .driverLikelihood(record.getValue(DRIVERCATALOG.DRIVERLIKELIHOOD))
-                    .dndsLikelihood(record.getValue(DRIVERCATALOG.DNDSLIKELIHOOD))
                     .missense(record.getValue(DRIVERCATALOG.MISSENSE))
                     .nonsense(record.getValue(DRIVERCATALOG.NONSENSE))
                     .splice(record.getValue(DRIVERCATALOG.SPLICE))

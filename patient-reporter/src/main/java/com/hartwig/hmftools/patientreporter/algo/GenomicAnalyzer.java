@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -39,9 +38,9 @@ public class GenomicAnalyzer {
     @NotNull
     public GenomicAnalysis run(@NotNull String tumorSampleId, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
-            @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String bachelorTsv, @NotNull String linxFusionTsv,
-            @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv,
-            @NotNull String chordPredictionTxt, @NotNull String protectEvidenceTsv) throws IOException {
+            @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String bachelorTsv,
+            @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
+            @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String protectEvidenceTsv) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
                 purpleQCFile,
                 purplePurityTsv,
@@ -54,8 +53,8 @@ public class GenomicAnalyzer {
 
         BachelorData bachelorData = BachelorDataLoader.load(bachelorTsv, purpleData, linxData, germlineReportingModel);
 
-        ReportableVariantAnalysis reportableVariantAnalysis =
-                mergeSomaticAndGermlineVariants(purpleData.somaticVariants(), bachelorData.germlineVariants());
+        List<ReportableVariant> reportableVariants =
+                ReportableVariantFactory.mergeVariantLists(bachelorData.germlineVariants(), purpleData.somaticVariants());
 
         ChordAnalysis chordAnalysis = ChordDataLoader.load(chordPredictionTxt);
 
@@ -63,7 +62,7 @@ public class GenomicAnalyzer {
 
         List<ProtectEvidence> nonTrialsOnLabel = ReportableEvidenceItemFactory.extractNonTrialsOnLabel(reportableEvidenceItems);
         List<ProtectEvidence> clinicalTrialsOnLabel = ClinicalTrialFactory.extractOnLabelTrials(reportableEvidenceItems);
-        List<ProtectEvidence> nonTrialsOffLabel = ReportableEvidenceItemFactory.extractNonTrialsOffLable(reportableEvidenceItems);
+        List<ProtectEvidence> nonTrialsOffLabel = ReportableEvidenceItemFactory.extractNonTrialsOffLabel(reportableEvidenceItems);
 
         return ImmutableGenomicAnalysis.builder()
                 .impliedPurity(purpleData.purity())
@@ -72,8 +71,8 @@ public class GenomicAnalyzer {
                 .averageTumorPloidy(purpleData.ploidy())
                 .tumorSpecificEvidence(nonTrialsOnLabel)
                 .clinicalTrials(clinicalTrialsOnLabel)
-                .offLabelEvidence( nonTrialsOffLabel)
-                .reportableVariants(reportableVariantAnalysis.variantsToReport())
+                .offLabelEvidence(nonTrialsOffLabel)
+                .reportableVariants(reportableVariants)
                 .microsatelliteIndelsPerMb(purpleData.microsatelliteIndelsPerMb())
                 .microsatelliteStatus(purpleData.microsatelliteStatus())
                 .tumorMutationalLoad(purpleData.tumorMutationalLoad())
@@ -90,17 +89,8 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    private static ReportableVariantAnalysis mergeSomaticAndGermlineVariants(@NotNull List<ReportableVariant> reportableSomaticVariants,
-            @NotNull List<ReportableVariant> reportableGermlineVariants) {
-        List<ReportableVariant> allReportableVariants =
-                ReportableVariantFactory.mergeVariantLists(reportableGermlineVariants, reportableSomaticVariants);
-
-        return ImmutableReportableVariantAnalysis.builder().variantsToReport(allReportableVariants).build();
-    }
-
-    @NotNull
     private static List<ProtectEvidence> extractReportableEvidenceItems(@NotNull String protectEvidenceTsv) throws IOException {
-        LOGGER.info("Loading PROTECT data from {}", new File(protectEvidenceTsv).getParent());
+        LOGGER.info("Loading PROTECT data from {}", protectEvidenceTsv);
         List<ProtectEvidence> evidences = ProtectEvidenceFile.read(protectEvidenceTsv);
 
         List<ProtectEvidence> reportableEvidenceItems = Lists.newArrayList();
@@ -109,7 +99,7 @@ public class GenomicAnalyzer {
                 reportableEvidenceItems.add(evidence);
             }
         }
-        LOGGER.info(" Loaded {} reportable evidence items from {}", reportableEvidenceItems.size(), protectEvidenceTsv);
+        LOGGER.info(" Loaded {} reportable evidence items", reportableEvidenceItems.size());
         return reportableEvidenceItems;
     }
 }

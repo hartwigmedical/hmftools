@@ -1,17 +1,9 @@
 package com.hartwig.hmftools.serve.extraction.util;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
-import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
+import static com.hartwig.hmftools.serve.drivercatalog.DriverGeneSupplier.createDriverGenes;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
-
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class MutationTypeFilterAlgoTest {
@@ -39,22 +31,4 @@ public class MutationTypeFilterAlgoTest {
         assertEquals(MutationTypeFilter.ANY, algo.determine("NOT-A-GENE", "abcd"));
     }
 
-    @NotNull
-    private static List<DriverGene> createDriverGenes(@NotNull String geneTsg, @NotNull String geneOnco) {
-        ImmutableDriverGene.Builder driverGeneBuilder = ImmutableDriverGene.builder()
-                .reportMissenseAndInframe(false)
-                .reportNonsenseAndFrameshift(false)
-                .reportSplice(false)
-                .reportDeletion(false)
-                .reportDisruption(false)
-                .reportAmplification(false)
-                .reportSomaticHotspot(false)
-                .reportGermlineVariant(false)
-                .reportGermlineHotspot(false);
-
-        DriverGene driverGeneTsg = driverGeneBuilder.gene(geneTsg).likelihoodType(TSG).build();
-        DriverGene driverGeneOnco = driverGeneBuilder.gene(geneOnco).likelihoodType(ONCO).build();
-
-        return Lists.newArrayList(driverGeneTsg, driverGeneOnco);
-    }
 }

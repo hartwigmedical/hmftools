@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.serve.extraction.exon;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
-import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
+import static com.hartwig.hmftools.serve.drivercatalog.DriverGeneSupplier.createDriverGenes;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -11,7 +10,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventType;
@@ -35,8 +33,8 @@ public class ExonExtractorTest {
         assertEquals(1, exons.size());
 
         assertEquals("4", exons.get(0).chromosome());
-        assertEquals(55593577, exons.get(0).start());
-        assertEquals(55593713, exons.get(0).end());
+        assertEquals(55593572, exons.get(0).start());
+        assertEquals(55593718, exons.get(0).end());
         assertEquals("KIT", exons.get(0).gene());
         assertEquals(MutationTypeFilter.MISSENSE, exons.get(0).mutationType());
     }
@@ -49,8 +47,8 @@ public class ExonExtractorTest {
         assertEquals(1, exons.size());
 
         assertEquals("7", exons.get(0).chromosome());
-        assertEquals(55242410, exons.get(0).start());
-        assertEquals(55242518, exons.get(0).end());
+        assertEquals(55242405, exons.get(0).start());
+        assertEquals(55242523, exons.get(0).end());
         assertEquals("EGFR", exons.get(0).gene());
         assertEquals(MutationTypeFilter.INFRAME_DELETION, exons.get(0).mutationType());
     }
@@ -63,8 +61,8 @@ public class ExonExtractorTest {
         assertEquals(1, exons.size());
 
         assertEquals("12", exons.get(0).chromosome());
-        assertEquals(25398203, exons.get(0).start());
-        assertEquals(25398334, exons.get(0).end());
+        assertEquals(25398198, exons.get(0).start());
+        assertEquals(25398339, exons.get(0).end());
         assertEquals("KRAS", exons.get(0).gene());
         assertEquals(MutationTypeFilter.INFRAME_DELETION, exons.get(0).mutationType());
     }
@@ -104,22 +102,4 @@ public class ExonExtractorTest {
         return new ExonExtractor(V37_GENE_CHECKER, new MutationTypeFilterAlgo(driverGenes), V37_GENE_MAP);
     }
 
-    @NotNull
-    private static List<DriverGene> createDriverGenes(@NotNull String geneTsg, @NotNull String geneOnco) {
-        ImmutableDriverGene.Builder driverGeneBuilder = ImmutableDriverGene.builder()
-                .reportMissenseAndInframe(false)
-                .reportNonsenseAndFrameshift(false)
-                .reportSplice(false)
-                .reportDeletion(false)
-                .reportDisruption(false)
-                .reportAmplification(false)
-                .reportSomaticHotspot(false)
-                .reportGermlineVariant(false)
-                .reportGermlineHotspot(false);
-
-        DriverGene driverGeneTsg = driverGeneBuilder.gene(geneTsg).likelihoodType(TSG).build();
-        DriverGene driverGeneOnco = driverGeneBuilder.gene(geneOnco).likelihoodType(ONCO).build();
-
-        return Lists.newArrayList(driverGeneTsg, driverGeneOnco);
-    }
 }

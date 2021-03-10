@@ -82,11 +82,13 @@ public final class DndsVariantFile {
                 .toString();
     }
 
-    private static String toString(CodingEffect codingEffect) {
+    @NotNull
+    private static String toString(@NotNull CodingEffect codingEffect) {
         return codingEffect != CodingEffect.UNDEFINED ? codingEffect.toString() : Strings.EMPTY;
     }
 
-    private static CodingEffect toCodingEffect(String codingEffect) {
+    @NotNull
+    private static CodingEffect toCodingEffect(@NotNull String codingEffect) {
         return codingEffect.isEmpty() ? CodingEffect.UNDEFINED : CodingEffect.valueOf(codingEffect);
     }
 

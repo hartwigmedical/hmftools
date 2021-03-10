@@ -40,8 +40,8 @@ final class TherapyDetailsChapterFunctions {
                 TableUtil.createReportContentTable(new float[] { COL_WIDTH_GENOMIC_EVENT, COL_WIDTH_DRUG_ICONS, COL_WIDTH_DRUG_LIST,
                                 COL_WIDTH_LEVEL, COL_WIDTH_RESPONSE, COL_WIDTH_SOURCE },
                         new Cell[] { TableUtil.createHeaderCell("Genomic event"), TableUtil.createHeaderCell("Treatment", 2),
-                                TableUtil.createHeaderCell("Level of evidence"), TableUtil.createHeaderCell("Response"),
-                                TableUtil.createHeaderCell("Source") });
+                                TableUtil.createHeaderCell("Level"), TableUtil.createHeaderCell("Direction"),
+                                TableUtil.createHeaderCell("Sources") });
 
         for (ProtectEvidence item : EvidenceItems.sort(evidence)) {
             contentTable.addCell(TableUtil.createContentCell(item.genomicEvent()));
@@ -50,8 +50,8 @@ final class TherapyDetailsChapterFunctions {
                     .setVerticalAlignment(VerticalAlignment.TOP)));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(item.level().name()))));
             contentTable.addCell(TableUtil.createContentCell(item.direction().name()));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(EvidenceItems.source(item)).addStyle(ReportResources.dataHighlightLinksStyle()))
-                    .setAction(PdfAction.createURI(EvidenceItems.sourceUrl(item))));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(EvidenceItems.sources(item)).addStyle(ReportResources.dataHighlightLinksStyle()))
+                    .setAction(PdfAction.createURI(EvidenceItems.evidenceUrl(item))));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);
@@ -71,7 +71,7 @@ final class TherapyDetailsChapterFunctions {
     static Paragraph createChapterFootnote() {
         return new Paragraph().setKeepTogether(true)
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
-                .add("The Cancer Genome Interpreter (CGI) and CiViC in the VICC knowledge bases are used to "
+                .add("The Cancer Genome Interpreter (CGI) and CIViC knowledgebases are used to "
                         + "annotate variants of all types with clinical evidence. Only treatment associated evidence with a high "
                         + "level of evidence ( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_A))

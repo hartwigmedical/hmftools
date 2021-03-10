@@ -2,16 +2,21 @@ package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ClinicalTrials {
+
+    private static final Logger LOGGER = LogManager.getLogger(ClinicalTrials.class);
 
     private ClinicalTrials() {
     }
@@ -29,25 +34,25 @@ public final class ClinicalTrials {
 
     @NotNull
     public static String source(@NotNull ProtectEvidence evidence) {
-        String sources = Strings.EMPTY;
-        for (Knowledgebase source: evidence.sources()) {
-            if (source.display().equals(Knowledgebase.ICLUSION.display())) {
-                return sources.concat(source.display());
+        assert evidence.sources().contains(Knowledgebase.ICLUSION);
 
-            }
+        StringJoiner joiner = new StringJoiner(",");
+        for (Knowledgebase source : evidence.sources()) {
+            joiner.add(source.reportDisplay());
         }
-        return Strings.EMPTY;
+        return joiner.toString();
     }
 
     @NotNull
-    public static String sourceUrl(@NotNull ProtectEvidence evidence) {
-        for (Knowledgebase source : evidence.sources()) {
-            if (source.display().equals(Knowledgebase.ICLUSION.display())) {
-                return evidence.urls().iterator().next();
+    public static String trialUrl(@NotNull ProtectEvidence evidence) {
+        assert evidence.sources().contains(Knowledgebase.ICLUSION);
 
-            }
+        if (evidence.urls().isEmpty()) {
+            LOGGER.warn("No URL configured for trial evidence '{}'", evidence);
+            return Strings.EMPTY;
         }
-        return Strings.EMPTY;
+
+        return evidence.urls().iterator().next();
     }
 
     public static int uniqueEventCount(@NotNull List<ProtectEvidence> trials) {

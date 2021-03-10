@@ -63,10 +63,11 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { COL_WIDTH_GENOMIC_EVENT, COL_WIDTH_TREATMENT_ICONS,
-                        COL_WIDTH_TRIAL_NAME, COL_WIDTH_SOURCE },
-                new Cell[] { TableUtil.createHeaderCell("Genomic event"),
-                        TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Source") });
+        Table contentTable =
+                TableUtil.createReportContentTable(new float[] { COL_WIDTH_GENOMIC_EVENT, COL_WIDTH_TREATMENT_ICONS, COL_WIDTH_TRIAL_NAME,
+                                COL_WIDTH_SOURCE },
+                        new Cell[] { TableUtil.createHeaderCell("Genomic event"), TableUtil.createHeaderCell("Trial", 2),
+                                TableUtil.createHeaderCell("Source") });
 
         for (ProtectEvidence trial : ClinicalTrials.sort(trials)) {
             String trialName = trial.treatment();
@@ -75,14 +76,13 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
                     .setVerticalAlignment(VerticalAlignment.TOP));
             contentTable.addCell(TableUtil.createContentCell(trialName).setVerticalAlignment(VerticalAlignment.TOP));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(ClinicalTrials.source(trial)).addStyle(ReportResources.dataHighlightLinksStyle()))
-                    .setAction(PdfAction.createURI(ClinicalTrials.sourceUrl(trial))));
+                    .setAction(PdfAction.createURI(ClinicalTrials.trialUrl(trial))));
         }
 
         contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
                 .setPaddingTop(10)
                 .add(new Paragraph("Potential eligibility for DRUP is dependent on tumor type details therefore certain tumor types "
-                        + "may not be eligible for the DRUP.").addStyle(
-                        ReportResources.subTextStyle())));
+                        + "may not be eligible for the DRUP.").addStyle(ReportResources.subTextStyle())));
         return TableUtil.createWrappingReportTable(title, contentTable);
     }
 }

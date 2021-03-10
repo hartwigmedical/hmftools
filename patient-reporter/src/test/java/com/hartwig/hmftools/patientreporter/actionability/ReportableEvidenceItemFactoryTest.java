@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -20,26 +21,27 @@ public class ReportableEvidenceItemFactoryTest {
     public void reportableFactoryWorksForTrivialCase() {
         ProtectEvidence item1 = testProtectEvidenceBuilder().genomicEvent("A")
                 .treatment("A")
-                .level(com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.A)
+                .level(EvidenceLevel.A)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .build();
         ProtectEvidence item2 = testProtectEvidenceBuilder().genomicEvent("A")
                 .treatment("A")
-                .level(com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.A)
+                .level(EvidenceLevel.A)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI))
                 .build();
         ProtectEvidence item3 = testProtectEvidenceBuilder().genomicEvent("B")
                 .treatment("B")
-                .level(com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.A)
+                .level(EvidenceLevel.A)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
                 .build();
         ProtectEvidence item4 = testProtectEvidenceBuilder().genomicEvent("C")
                 .treatment("C")
-                .level(com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.C)
+                .level(EvidenceLevel.C)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI))
                 .build();
 
-        List<ProtectEvidence> nonTrials = ReportableEvidenceItemFactory.extractNonTrialsOnLabel(Lists.newArrayList(item1, item2, item3, item4));
+        List<ProtectEvidence> nonTrials =
+                ReportableEvidenceItemFactory.extractNonTrialsOnLabel(Lists.newArrayList(item1, item2, item3, item4));
         assertTrue(nonTrials.contains(item1));
         assertTrue(nonTrials.contains(item2));
         assertTrue(nonTrials.contains(item4));
@@ -51,7 +53,6 @@ public class ReportableEvidenceItemFactoryTest {
                 .germline(false)
                 .reported(true)
                 .onLabel(true)
-                .direction(EvidenceDirection.RESPONSIVE)
-                .urls(Sets.newHashSet("iclusion"));
+                .direction(EvidenceDirection.RESPONSIVE);
     }
 }

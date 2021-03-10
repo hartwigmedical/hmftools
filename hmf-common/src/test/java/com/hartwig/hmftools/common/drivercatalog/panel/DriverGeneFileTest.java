@@ -15,8 +15,8 @@ public class DriverGeneFileTest {
 
     @Test
     public void testFormats() {
-        List<DriverGene> newFormat = resourceFile("driver.gene.panel.with.germline.tsv");
-        List<DriverGene> oldFormat = resourceFile("driver.gene.panel.without.germline.tsv");
+        List<DriverGene> newFormat = resourceFile("/drivercatalog/driver.gene.panel.with.germline.tsv");
+        List<DriverGene> oldFormat = resourceFile("/drivercatalog/driver.gene.panel.without.germline.tsv");
 
         assertEquals(3, newFormat.size());
         assertEquals(3, oldFormat.size());
@@ -24,7 +24,7 @@ public class DriverGeneFileTest {
 
     @NotNull
     private static List<DriverGene> resourceFile(String resource) {
-        final InputStream inputStream = DriverGenePanelFactoryTest.class.getResourceAsStream("/drivercatalog/" + resource);
+        final InputStream inputStream = DriverGenePanelFactoryTest.class.getResourceAsStream(resource);
         return new BufferedReader(new InputStreamReader(inputStream)).lines()
                 .filter(x -> !x.startsWith("gene") && !x.startsWith("HG"))
                 .map(DriverGeneFile::fromString)

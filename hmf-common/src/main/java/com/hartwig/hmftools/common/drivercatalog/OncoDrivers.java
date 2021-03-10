@@ -20,21 +20,21 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-final class OncoDrivers {
+class OncoDrivers {
 
     static final int MAX_REPEAT_COUNT = 7;
 
     private final ReportablePredicate reportablePredicate;
     private final Map<String, DndsDriverGeneLikelihood> likelihoodsByGene;
 
-    public OncoDrivers(DriverGenePanel genePanel) {
+    public OncoDrivers(@NotNull DriverGenePanel genePanel) {
         likelihoodsByGene = genePanel.oncoLikelihood();
         reportablePredicate = new ReportablePredicate(DriverCategory.ONCO, genePanel);
     }
 
     @NotNull
     List<DriverCatalog> drivers(@NotNull final List<SomaticVariant> variants, @NotNull final List<GeneCopyNumber> geneCopyNumberList,
-            final Map<VariantType, Long> variantTypeCounts) {
+            @NotNull final Map<VariantType, Long> variantTypeCounts) {
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
         final Map<String, GeneCopyNumber> geneCopyNumbers =
@@ -82,7 +82,6 @@ final class OncoDrivers {
                 .driver(DriverType.MUTATION)
                 .category(DriverCategory.ONCO)
                 .driverLikelihood(1)
-                .dndsLikelihood(0)
                 .missense(missenseVariants)
                 .nonsense(nonsenseVariants)
                 .splice(spliceVariants)
@@ -117,5 +116,4 @@ final class OncoDrivers {
         return variant.type() == VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.MISSENSE
                 && variant.repeatCount() <= MAX_REPEAT_COUNT;
     }
-
 }

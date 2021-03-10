@@ -2,18 +2,21 @@ package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class EvidenceItems {
 
+    private static final Logger LOGGER = LogManager.getLogger(EvidenceItems.class);
 
     private EvidenceItems() {
     }
@@ -34,29 +37,30 @@ public final class EvidenceItems {
     }
 
     @NotNull
-    public static String source(@NotNull ProtectEvidence evidence) {
-        List<String> sources = Lists.newArrayList();
+    public static String sources(@NotNull ProtectEvidence evidence) {
+        StringJoiner sourceString = new StringJoiner(",");
         for (Knowledgebase source: evidence.sources()) {
-
-            if (!source.display().equals(Knowledgebase.ICLUSION.display())) {
-
-                sources.add(source.display());
-
-            }
+            sourceString.add(source.reportDisplay());
         }
 
-        return sources.toString().replace("[", "").replace("]", "");
+        return sourceString.toString();
     }
 
     @NotNull
-    public static String sourceUrl(@NotNull ProtectEvidence evidence) {
-        for (Knowledgebase source : evidence.sources()) {
-            if (!source.display().equals(Knowledgebase.ICLUSION.display())) {
-                return evidence.urls().iterator().next();
+    public static String evidenceUrl(@NotNull ProtectEvidence evidence) {
+        if (evidence.urls().isEmpty()) {
+            LOGGER.warn("No URL configured for evidence '{}'", evidence);
+            return Strings.EMPTY;
+        }
 
+        // We prefer pubmed URLs over all other URLs so if there is one pubmed then we use that.
+        for (String url : evidence.urls()) {
+            if (url.contains("pubmed")) {
+                return url;
             }
         }
-        return Strings.EMPTY;
+
+        return evidence.urls().iterator().next();
     }
 
     public static int uniqueEventCount(@NotNull List<ProtectEvidence> evidenceItems) {

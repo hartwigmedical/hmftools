@@ -9,7 +9,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -28,18 +28,22 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment {
     private final VariantContextEnrichment hotspotEnrichment;
     private final VariantContextEnrichment kataegisEnrichment;
     private final VariantContextEnrichment somaticRefContextEnrichment;
-    private final VariantContextEnrichment subclonalLikelihoodEnrichment;
+    private final SubclonalLikelihoodEnrichment subclonalLikelihoodEnrichment;
     private final VariantContextEnrichment snpEffEnrichment;
 
     public SomaticVariantEnrichment(boolean hotspotEnabled, double clonalityMaxPloidy, double clonalityBinWidth,
             @NotNull final String purpleVersion, @NotNull final String tumorSample, @NotNull final IndexedFastaSequenceFile reference,
             @NotNull final PurityAdjuster purityAdjuster, @NotNull final DriverGenePanel genePanel,
             @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<FittedRegion> fittedRegions,
-            @NotNull final List<PeakModel> peakModel, @NotNull final Multimap<Chromosome, VariantHotspot> hotspots,
-            @NotNull final List<CanonicalTranscript> transcripts, @NotNull final Consumer<VariantContext> consumer) {
-        subclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(clonalityMaxPloidy, clonalityBinWidth, peakModel, consumer);
-        purityEnrichment =
-                new SomaticPurityEnrichment(purpleVersion, tumorSample, purityAdjuster, copyNumbers, fittedRegions, subclonalLikelihoodEnrichment);
+            @NotNull final Multimap<Chromosome, VariantHotspot> hotspots, @NotNull final List<HmfTranscriptRegion> transcripts,
+            @NotNull final Consumer<VariantContext> consumer) {
+        subclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(tumorSample, clonalityMaxPloidy, clonalityBinWidth, consumer);
+        purityEnrichment = new SomaticPurityEnrichment(purpleVersion,
+                tumorSample,
+                purityAdjuster,
+                copyNumbers,
+                fittedRegions,
+                subclonalLikelihoodEnrichment);
         kataegisEnrichment = new KataegisEnrichment(purityEnrichment);
         somaticRefContextEnrichment = new SomaticRefContextEnrichment(reference, kataegisEnrichment);
         final Set<String> somaticGenes =
@@ -60,6 +64,11 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment {
         kataegisEnrichment.flush();
         purityEnrichment.flush();
         subclonalLikelihoodEnrichment.flush();
+    }
+
+    @NotNull
+    public List<PeakModel> somaticPeakModel() {
+        return subclonalLikelihoodEnrichment.somaticPeakModel();
     }
 
     @NotNull

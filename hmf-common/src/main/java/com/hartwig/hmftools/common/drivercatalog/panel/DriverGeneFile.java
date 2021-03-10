@@ -23,7 +23,7 @@ public final class DriverGeneFile {
     public static List<DriverGene> read(@NotNull final String filename) throws IOException {
         return Files.readAllLines(new File(filename).toPath())
                 .stream()
-                .filter(x -> !x.startsWith("gene") && !x.startsWith("HG") && !x.toLowerCase().startsWith("v37") )
+                .filter(x -> !x.startsWith("gene") && !x.startsWith("HG") && !x.toLowerCase().startsWith("v37"))
                 .map(DriverGeneFile::fromString)
                 .collect(Collectors.toList());
     }
@@ -74,12 +74,12 @@ public final class DriverGeneFile {
                 .reportAmplification(Boolean.parseBoolean(values[6].toLowerCase()))
                 .reportSomaticHotspot(Boolean.parseBoolean(values[7].toLowerCase()))
                 .likelihoodType(DriverCategory.valueOf(values[8]))
-                .reportGermlineVariant(false)
-                .reportGermlineHotspot(false);
+                .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
+                .reportGermlineHotspot(DriverGeneGermlineReporting.NONE);
 
         if (values.length == 11) {
-            builder.reportGermlineVariant(Boolean.parseBoolean(values[9].toLowerCase()))
-                    .reportGermlineHotspot(Boolean.parseBoolean(values[10].toLowerCase()));
+            builder.reportGermlineVariant(DriverGeneGermlineReporting.valueOf(values[9].toUpperCase()))
+                    .reportGermlineHotspot(DriverGeneGermlineReporting.valueOf(values[10].toUpperCase()));
         }
 
         return builder.build();

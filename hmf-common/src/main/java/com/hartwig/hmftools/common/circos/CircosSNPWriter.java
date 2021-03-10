@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.function.Function;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -23,7 +23,7 @@ public final class CircosSNPWriter {
     private CircosSNPWriter() {
     }
 
-    public static void writePositions(@NotNull final String filePath, @NotNull Collection<PurityAdjustedSomaticVariant> values)
+    public static void writePositions(@NotNull final String filePath, @NotNull Collection<VariantContextDecorator> values)
             throws IOException {
         writeCircosFile(filePath, values, CircosSNPWriter::transformPosition);
     }
@@ -42,12 +42,12 @@ public final class CircosSNPWriter {
     }
 
     @NotNull
-    private static String transformPosition(@NotNull final PurityAdjustedSomaticVariant position) {
+    private static String transformPosition(@NotNull final VariantContextDecorator position) {
         return CircosFileWriter.transformPosition(position, CircosSNPWriter::color);
     }
 
     @NotNull
-    private static String color(@NotNull final PurityAdjustedSomaticVariant variant) {
+    private static String color(@NotNull final VariantContextDecorator variant) {
         if (signature("C", "A", variant)) return BLUE;
         if (signature("C", "G", variant)) return BLACK;
         if (signature("C", "T", variant)) return RED;
@@ -59,7 +59,7 @@ public final class CircosSNPWriter {
     }
 
     private static boolean signature(@NotNull final String ref, @NotNull final String alt,
-            @NotNull final PurityAdjustedSomaticVariant variant) {
+            @NotNull final VariantContextDecorator variant) {
         return (variant.ref().equals(ref) && variant.alt().equals(alt)) || (variant.ref().equals(inverse(ref)) && variant.alt()
                 .equals(inverse(alt)));
     }

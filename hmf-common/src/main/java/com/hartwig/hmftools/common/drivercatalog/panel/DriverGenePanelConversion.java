@@ -25,7 +25,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class DriverGenePanelConversion {
 
-    private static final String OUTPUT_DIR = "/Users/jon/hmf/resources/";
+    private static final String OUTPUT_DIR = "/Users/jon/hmf/resources/newGenePanel/";
     private static final String INPUT_DIR = "/Users/jon/hmf/resources/";
     private static final Logger LOGGER = LogManager.getLogger(DriverGenePanelConversion.class);
 
@@ -170,7 +170,7 @@ public class DriverGenePanelConversion {
     static Set<String> germlineHotspotGenes(@NotNull final List<DriverGene> genePanel) {
         final Set<String> actionableGenes = Sets.newHashSet();
         for (DriverGene driverGene : genePanel) {
-            if (driverGene.reportGermlineHotspot()) {
+            if (driverGene.reportGermlineHotspot() != DriverGeneGermlineReporting.NONE) {
                 actionableGenes.add(driverGene.gene());
             }
 

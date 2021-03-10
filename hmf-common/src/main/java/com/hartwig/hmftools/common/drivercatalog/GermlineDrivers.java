@@ -25,9 +25,10 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class GermlineDrivers {
 
+    @NotNull
     private final Map<String, DriverCategory> driverCatalogMap;
 
-    public GermlineDrivers(final List<DriverGene> driverGenes) {
+    public GermlineDrivers(@NotNull final List<DriverGene> driverGenes) {
         driverCatalogMap =
                 driverGenes.stream().filter(DriverGene::reportGermline).collect(toMap(DriverGene::gene, DriverGene::likelihoodType));
     }
@@ -35,7 +36,6 @@ public class GermlineDrivers {
     @NotNull
     public List<DriverCatalog> drivers(@NotNull final List<VariantContext> variants,
             @NotNull final List<GeneCopyNumber> geneCopyNumberList) {
-
         final List<VariantContextDecorator> decoratedVariants = variants.stream().map(VariantContextDecorator::new).collect(toList());
         final Set<String> genes = decoratedVariants.stream().map(VariantContextDecorator::gene).collect(toSet());
         final Map<String, GeneCopyNumber> geneCopyNumbers = geneCopyNumberList.stream().collect(toMap(TranscriptRegion::gene, x -> x));
@@ -56,7 +56,6 @@ public class GermlineDrivers {
     @NotNull
     static DriverCatalog germlineDriver(DriverCategory category, @NotNull final String gene,
             @NotNull final List<VariantContextDecorator> geneVariants, @Nullable GeneCopyNumber geneCopyNumber) {
-
         final Map<DriverImpact, Long> variantCounts =
                 geneVariants.stream().collect(groupingBy(VariantContextDecorator::impact, counting()));
         long missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0L);
@@ -72,7 +71,6 @@ public class GermlineDrivers {
                 .driver(DriverType.GERMLINE)
                 .category(category)
                 .driverLikelihood(1)
-                .dndsLikelihood(0)
                 .missense(missenseVariants)
                 .nonsense(nonsenseVariants)
                 .splice(spliceVariants)
@@ -85,5 +83,4 @@ public class GermlineDrivers {
 
         return builder.build();
     }
-
 }

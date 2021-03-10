@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.serve.extraction.gene;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
-import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
+import static com.hartwig.hmftools.serve.drivercatalog.DriverGeneSupplier.createDriverGenes;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -9,10 +8,8 @@ import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
@@ -114,24 +111,5 @@ public class GeneLevelExtractorTest {
                 new KnownFusionCache(),
                 Sets.newHashSet("positive", "activating mutation", "act mut"),
                 Sets.newHashSet("negative", "LOSS-OF-FUNCTION", "inact mut"));
-    }
-
-    @NotNull
-    private static List<DriverGene> createDriverGenes(@NotNull String geneTsg, @NotNull String geneOnco) {
-        ImmutableDriverGene.Builder driverGeneBuilder = ImmutableDriverGene.builder()
-                .reportMissenseAndInframe(false)
-                .reportNonsenseAndFrameshift(false)
-                .reportSplice(false)
-                .reportDeletion(false)
-                .reportDisruption(false)
-                .reportAmplification(false)
-                .reportSomaticHotspot(false)
-                .reportGermlineVariant(false)
-                .reportGermlineHotspot(false);
-
-        DriverGene driverGeneTsg = driverGeneBuilder.gene(geneTsg).likelihoodType(TSG).build();
-        DriverGene driverGeneOnco = driverGeneBuilder.gene(geneOnco).likelihoodType(ONCO).build();
-
-        return Lists.newArrayList(driverGeneTsg, driverGeneOnco);
     }
 }
