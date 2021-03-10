@@ -15,8 +15,8 @@ import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReporter;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportData;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportDataLoader;
+import com.hartwig.hmftools.patientreporter.algo.ConsentFilterFunctions;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
-import com.hartwig.hmftools.patientreporter.jsonoutput.FilterReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReportData;
@@ -120,7 +120,7 @@ public class PatientReporterApplication {
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(reportData.germlineReportingModel());
 
         String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
-        AnalysedPatientReport reportOverrule = FilterReportData.overrulePatientReportData(report);
+        AnalysedPatientReport reportOverrule = ConsentFilterFunctions.filterForConsent(report);
         reportWriter.writeAnalysedPatientReport(reportOverrule, outputFilePath);
 
         if (!config.onlyCreatePDF()) {
