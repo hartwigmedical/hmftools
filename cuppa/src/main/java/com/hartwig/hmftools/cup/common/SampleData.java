@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.cup.common;
 
 import static com.hartwig.hmftools.cup.CuppaConfig.CANCER_SUBTYPE_OTHER;
+import static com.hartwig.hmftools.cup.CuppaConfig.FLD_CANCER_TYPE;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaConfig.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
-import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OVARY;
-import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_PROSTATE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_UNKNOWN;
-import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_UTERUS;
 
 import java.util.Map;
 
@@ -72,9 +71,9 @@ public class SampleData
     public static SampleData from(final Map<String,Integer> fieldsIndexMap, final String data)
     {
         final String[] items = data.split(DATA_DELIM, -1);
-        final String sampleId = items[fieldsIndexMap.get("SampleId")];
+        final String sampleId = items[fieldsIndexMap.get(FLD_SAMPLE_ID)];
 
-        String cancerType = extractOptionalField(fieldsIndexMap, items, "CancerType", CANCER_TYPE_UNKNOWN);
+        String cancerType = extractOptionalField(fieldsIndexMap, items, FLD_CANCER_TYPE, CANCER_TYPE_UNKNOWN);
         String cancerSubtype = extractOptionalField(fieldsIndexMap, items, "CancerSubtype", CANCER_TYPE_UNKNOWN);
         String primaryLocation = extractOptionalField(fieldsIndexMap, items, "PrimaryTumorLocation", CANCER_SUBTYPE_OTHER);
         String primarySubLocation = extractOptionalField(fieldsIndexMap, items, "PrimaryTumorSubLocation", "");

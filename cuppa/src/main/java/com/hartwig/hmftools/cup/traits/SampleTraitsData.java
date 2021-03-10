@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cup.traits;
 
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.CuppaConfig.SAMPLE_ID;
+import static com.hartwig.hmftools.cup.CuppaConfig.FLD_SAMPLE_ID;
 
 import java.util.Map;
 import java.util.StringJoiner;
@@ -68,7 +68,7 @@ public class SampleTraitsData
     public static String header()
     {
         StringJoiner sj = new StringJoiner(DATA_DELIM);
-        sj.add(SAMPLE_ID);
+        sj.add(FLD_SAMPLE_ID);
         sj.add("Gender");
         sj.add("WholeGenomeDuplication");
         sj.add("Purity");

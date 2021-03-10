@@ -6,21 +6,27 @@ import static com.hartwig.hmftools.common.stats.Percentiles.buildPercentiles;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.cup.CuppaConfig.FLD_CANCER_TYPE;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_TRAITS_DATA;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENDER_RATES;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
 import static com.hartwig.hmftools.cup.common.CategoryType.SNV;
+import static com.hartwig.hmftools.cup.common.CupConstants.isCandidateCancerType;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
+import static com.hartwig.hmftools.cup.ref.RefDataConfig.GENDER_RATES;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
-import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
+import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.FLD_GENDER_FEMALE;
+import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.FLD_GENDER_MALE;
+import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.GENDER_FEMALE_INDEX;
+import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.GENDER_MALE_INDEX;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.loadTraitsFromCohortFile;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.loadTraitsFromDatabase;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -35,7 +41,8 @@ import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
-import com.hartwig.hmftools.cup.svs.SvData;
+
+import org.apache.commons.cli.CommandLine;
 
 public class RefSampleTraits implements RefClassifier
 {
@@ -43,11 +50,12 @@ public class RefSampleTraits implements RefClassifier
     private final SampleDataCache mSampleDataCache;
 
     private final Map<String,List<SampleTraitsData>> mCancerTraitsData;
+    private final Map<String,double[]> mGenderRates;
 
     private BufferedWriter mPercentilesWriter;
     private BufferedWriter mRatesWriter;
 
-    public RefSampleTraits(final RefDataConfig config, final SampleDataCache sampleDataCache)
+    public RefSampleTraits(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -55,6 +63,38 @@ public class RefSampleTraits implements RefClassifier
         mCancerTraitsData = Maps.newHashMap();
         mPercentilesWriter = null;
         mRatesWriter = null;
+
+        mGenderRates = Maps.newHashMap();
+
+        if(cmd.hasOption(GENDER_RATES))
+        {
+            String[] genderEntries = cmd.getOptionValue(GENDER_RATES).split(DATA_DELIM);
+            for(String genderEntry : genderEntries)
+            {
+                String[] genderData = genderEntry.split(SUBSET_DELIM);
+
+                if(genderData.length == 3)
+                {
+                    double[] rates = new double[2];
+                    rates[GENDER_MALE_INDEX] = Double.parseDouble(genderData[1 + GENDER_MALE_INDEX]);
+                    rates[GENDER_FEMALE_INDEX] = Double.parseDouble(genderData[1 + GENDER_FEMALE_INDEX]);
+                    mGenderRates.put(genderData[0], rates);
+                }
+            }
+
+            // add in the default zero-prevalence ones
+            for(String cancerType : mSampleDataCache.RefCancerSampleData.keySet())
+            {
+                if(mGenderRates.containsKey(cancerType))
+                    continue;
+
+                double[] rates = new double[2];
+
+                rates[GENDER_FEMALE_INDEX] = isCandidateCancerType(Gender.FEMALE, cancerType) ? 1 : 0;
+                rates[GENDER_MALE_INDEX] = isCandidateCancerType(Gender.MALE, cancerType) ? 1 : 0;
+                mGenderRates.put(cancerType, rates);
+            }
+        }
     }
 
     public CategoryType categoryType() { return SNV; }
@@ -109,6 +149,9 @@ public class RefSampleTraits implements RefClassifier
 
             writeRatesData(cancerType, wgdCount/cancerSamples, femaleCount/cancerSamples);
         }
+
+        // create a gender rates file
+        writeGenderRates();
 
         closeBufferedWriter(mPercentilesWriter);
         closeBufferedWriter(mRatesWriter);
@@ -209,6 +252,38 @@ public class RefSampleTraits implements RefClassifier
         {
             traitsList.add(traitsData);
         }
+    }
+
+    private void writeGenderRates()
+    {
+        try
+        {
+            final String filename = mConfig.OutputDir + REF_FILE_GENDER_RATES;
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write(String.format("%s,%s,%s", FLD_CANCER_TYPE, FLD_GENDER_FEMALE, FLD_GENDER_MALE));
+            writer.newLine();
+
+            double maleRatesTotal = mGenderRates.values().stream().mapToDouble(x -> x[GENDER_MALE_INDEX]).sum();
+            double femaleRatesTotal = mGenderRates.values().stream().mapToDouble(x -> x[GENDER_FEMALE_INDEX]).sum();
+
+            for(Map.Entry<String,double[]> entry : mGenderRates.entrySet())
+            {
+                final String cancerType = entry.getKey();
+                final double[] rates = entry.getValue();
+
+                writer.write(String.format("%s,%.6f,%.6f",
+                        cancerType, rates[GENDER_FEMALE_INDEX] / femaleRatesTotal, rates[GENDER_MALE_INDEX] / maleRatesTotal));
+                writer.newLine();
+            }
+
+            closeBufferedWriter(writer);
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("failed to write sample traits cohort data output: {}", e.toString());
+        }
+
     }
 
     private void writeCohortData(final Map<String,SampleTraitsData> sampleTraitsData)

@@ -45,6 +45,7 @@ public class RefDataConfig
     public static final String REF_FEATURES_FILE = "ref_features_file";
     public static final String REF_GENE_EXP_DATA_FILE = "ref_gene_exp_file";
     public static final String REF_ALT_SJ_DATA_FILE = "ref_alt_sj_file";
+    public static final String GENDER_RATES = "gender_rates";
     public static final String WRITE_COHORT_FILES = "write_cohort_files";
 
     public static final String FILE_DELIM = ",";
@@ -84,6 +85,7 @@ public class RefDataConfig
         options.addOption(REF_FEATURES_FILE, true, "Ref sample features data file");
         options.addOption(REF_GENE_EXP_DATA_FILE, true, "Ref sample RNA gene expression cohort data file");
         options.addOption(REF_ALT_SJ_DATA_FILE, true, "Ref sample RNA alternate splice junction cohort data file");
+        options.addOption(GENDER_RATES, true, "Gender-rate overrides - format CancerType;MalePerc;FemalePerc, etc");
         options.addOption(WRITE_COHORT_FILES, false, "Re-write ref data as cohort files");
 
         addDatabaseCmdLineArgs(options);

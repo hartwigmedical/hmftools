@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.cup.svs;
 
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.CuppaConfig.SAMPLE_ID;
+import static com.hartwig.hmftools.cup.CuppaConfig.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.cup.svs.SvDataType.typeIndex;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.StringJoiner;
 
@@ -26,7 +25,7 @@ public class SvData
     {
         final String[] items = data.split(DATA_DELIM, -1);
 
-        SvData svData = new SvData(items[fieldsIndexMap.get(SAMPLE_ID)]);
+        SvData svData = new SvData(items[fieldsIndexMap.get(FLD_SAMPLE_ID)]);
 
         for(SvDataType type : SvDataType.values())
         {
@@ -39,7 +38,7 @@ public class SvData
     public static String header()
     {
         StringJoiner sj = new StringJoiner(DATA_DELIM);
-        sj.add(SAMPLE_ID);
+        sj.add(FLD_SAMPLE_ID);
 
         for(SvDataType type : SvDataType.values())
         {

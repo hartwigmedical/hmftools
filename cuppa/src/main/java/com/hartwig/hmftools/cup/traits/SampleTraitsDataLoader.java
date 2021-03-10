@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cup.traits;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.cup.CuppaConfig.FLD_CANCER_TYPE;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.GENDER;
@@ -19,6 +20,12 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class SampleTraitsDataLoader
 {
+    public static final int GENDER_MALE_INDEX = 1;
+    public static final int GENDER_FEMALE_INDEX = 0;
+
+    public static final String FLD_GENDER_FEMALE = "FemalePerc";
+    public static final String FLD_GENDER_MALE = "MalePerc";
+
     public static boolean loadTraitsFromCohortFile(final String filename, final Map<String,SampleTraitsData> sampleTraitsData)
     {
         if(filename == null)
@@ -157,6 +164,40 @@ public class SampleTraitsDataLoader
         catch (IOException e)
         {
             CUP_LOGGER.error("failed to read sample traits rate data file({}): {}", filename, e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean loadRefGenderRateData(final String filename, final Map<String,double[]> refGenderRates)
+    {
+        // CancerType,FemalePerc,MalePerc
+        try
+        {
+            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+
+            final String header = fileData.get(0);
+            fileData.remove(0);
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
+
+            for(final String line : fileData)
+            {
+                final String[] items = line.split(DATA_DELIM, -1);
+
+                final String cancerType = items[fieldsIndexMap.get(FLD_CANCER_TYPE)];
+
+                final double[] rates = new double[2];
+                rates[GENDER_MALE_INDEX] = Double.parseDouble(items[fieldsIndexMap.get(FLD_GENDER_MALE)]);
+                rates[GENDER_FEMALE_INDEX] = Double.parseDouble(items[fieldsIndexMap.get(FLD_GENDER_FEMALE)]);
+
+                refGenderRates.put(cancerType, rates);
+            }
+        }
+        catch (IOException e)
+        {
+            CUP_LOGGER.error("failed to read gender rates data file({}): {}", filename, e.toString());
             return false;
         }
 

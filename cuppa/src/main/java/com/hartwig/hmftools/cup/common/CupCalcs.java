@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
 import static com.hartwig.hmftools.cup.common.ClassifierType.FEATURE;
+import static com.hartwig.hmftools.cup.common.ClassifierType.applyMinScore;
 import static com.hartwig.hmftools.cup.common.CupConstants.FEATURE_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.common.CupConstants.MIN_CLASSIFIER_SCORE;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
@@ -177,10 +178,16 @@ public class CupCalcs
 
         for(final SampleResult result : classifierResults)
         {
+            boolean applyMinScore = applyMinScore(ClassifierType.valueOf(result.DataType));
+
             for(Map.Entry<String,Double> entry : result.CancerTypeValues.entrySet())
             {
                 final String cancerType = entry.getKey();
-                double probability = max(entry.getValue(), MIN_CLASSIFIER_SCORE);
+
+                double probability = entry.getValue();
+
+                if(applyMinScore && sample.isCandidateCancerType(cancerType))
+                    probability = max(probability, MIN_CLASSIFIER_SCORE);
 
                 Double probTotal = cancerTypeValues.get(cancerType);
 

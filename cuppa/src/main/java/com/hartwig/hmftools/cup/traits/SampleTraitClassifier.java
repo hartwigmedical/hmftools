@@ -3,8 +3,11 @@ package com.hartwig.hmftools.cup.traits;
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
+import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
+import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
+import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
@@ -12,11 +15,16 @@ import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.GENDER;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.MS_INDELS_TMB;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.WGD;
+import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.GENDER_FEMALE_INDEX;
+import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.GENDER_MALE_INDEX;
+import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.loadRefGenderRateData;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.loadTraitsFromCohortFile;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.loadTraitsFromDatabase;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.loadRefPercentileData;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.loadRefRateData;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +34,7 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.ClassifierType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
@@ -42,6 +51,8 @@ public class SampleTraitClassifier implements CuppaClassifier
     private final Map<SampleTraitType,Map<String,double[]>> mRefTraitPercentiles;
     private final Map<SampleTraitType,Map<String,Double>> mRefTraitRates;
 
+    private final Map<String,double[]> mRefGenderRates;
+
     private boolean mIsValid;
 
     public SampleTraitClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache)
@@ -52,6 +63,7 @@ public class SampleTraitClassifier implements CuppaClassifier
         mSampleTraitsData = Maps.newHashMap();
         mRefTraitPercentiles = Maps.newHashMap();
         mRefTraitRates = Maps.newHashMap();
+        mRefGenderRates = Maps.newHashMap();
         mIsValid = true;
 
         if(mConfig.RefTraitPercFile.isEmpty() && mConfig.RefTraitRateFile.isEmpty())
@@ -66,7 +78,14 @@ public class SampleTraitClassifier implements CuppaClassifier
 
         if(!loadRefRateData(mConfig.RefTraitRateFile, mRefTraitRates))
         {
-            CUP_LOGGER.error("invalid ref sample trait rate data");
+            CUP_LOGGER.error("invalid ref sample trait rates data");
+            mIsValid = false;
+            return;
+        }
+
+        if(Files.exists(Paths.get(mConfig.RefGenderRateFile)) && !loadRefGenderRateData(mConfig.RefGenderRateFile, mRefGenderRates))
+        {
+            CUP_LOGGER.error("invalid ref gender rates data");
             mIsValid = false;
             return;
         }
@@ -148,6 +167,31 @@ public class SampleTraitClassifier implements CuppaClassifier
 
         addTraitPrevalences(sample, sampleTraits, results);
         addTraitLikelihoods(sample, sampleTraits, results);
+        addGenderClassifier(sample, sampleTraits, results);
+    }
+
+    private void addGenderClassifier(final SampleData sample, final SampleTraitsData sampleTraits, final List<SampleResult> results)
+    {
+        if(mRefGenderRates.isEmpty())
+            return;
+
+        final Map<String, Double> cancerProbs = Maps.newHashMap();
+
+        for(Map.Entry<String,double[]> entry : mRefGenderRates.entrySet())
+        {
+            final String cancerType = entry.getKey();
+            final double[] genderRates = entry.getValue();
+
+            if(sampleTraits.GenderType == Gender.FEMALE)
+                cancerProbs.put(cancerType, genderRates[GENDER_FEMALE_INDEX]);
+            else
+                cancerProbs.put(cancerType, genderRates[GENDER_MALE_INDEX]);
+        }
+
+        SampleResult result = new SampleResult(
+                sample.Id, CLASSIFIER, LIKELIHOOD, ClassifierType.GENDER.toString(), sampleTraits.GenderType, cancerProbs);
+
+        results.add(result);
     }
 
     private void addTraitPrevalences(final SampleData sample, final SampleTraitsData sampleTraits, final List<SampleResult> results)

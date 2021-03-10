@@ -17,6 +17,7 @@ public class CuppaRefFiles
     public static final String REF_FILE_DRIVER_AVG = formatRefFilename("driver_avg");
     public static final String REF_FILE_TRAIT_PERC = formatRefFilename("sample_trait_percentiles");
     public static final String REF_FILE_TRAIT_RATES = formatRefFilename("sample_trait_rates");
+    public static final String REF_FILE_GENDER_RATES = formatRefFilename("gender_rates");
     public static final String REF_FILE_SIG_PERC = formatRefFilename("sig_percentiles");
     public static final String REF_FILE_SV_PERC = formatRefFilename("sv_percentiles");
     public static final String REF_FILE_GENE_EXP_CANCER = formatRefFilename("gene_exp_cancer");

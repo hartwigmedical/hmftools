@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_SAMPLE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_DRIVER_AVG;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_FEATURE_PREV;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENDER_RATES;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_CANCER;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_SAMPLE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_DATA;
@@ -54,6 +55,7 @@ public class CuppaConfig
     public final String RefFeaturePrevFile;
     public final String RefTraitPercFile;
     public final String RefTraitRateFile;
+    public final String RefGenderRateFile;
     public final String RefSnvCancerPosFreqFile;
     public final String RefSnvSamplePosFreqFile;
     public final String RefDriverAvgFile;
@@ -112,6 +114,7 @@ public class CuppaConfig
     private static final String REF_DRIVER_AVG_FILE = "ref_feature_avg_file";
     private static final String REF_TRAIT_PERC_FILE = "ref_trait_perc_file";
     private static final String REF_TRAIT_RATE_FILE = "ref_trait_rate_file";
+    private static final String REF_GENDER_RATE_FILE = "ref_gender_rate_file";
     private static final String REF_SV_PERC_FILE = "ref_sv_perc_file";
     private static final String REF_RNA_GENE_EXP_CANCER_FILE = "ref_gene_exp_cancer_file";
     public static final String REF_RNA_GENE_EXP_SAMPLE_FILE = "ref_gene_exp_sample_file";
@@ -126,7 +129,8 @@ public class CuppaConfig
 
     public static final Logger CUP_LOGGER = LogManager.getLogger(CuppaConfig.class);
 
-    public static final String SAMPLE_ID = "SampleId";
+    public static final String FLD_SAMPLE_ID = "SampleId";
+    public static final String FLD_CANCER_TYPE = "CancerType";
     public static final String CANCER_SUBTYPE_OTHER = "Other";
     public static final String DATA_DELIM = ",";
     public static final String SUBSET_DELIM = ";";
@@ -179,6 +183,7 @@ public class CuppaConfig
         RefFeaturePrevFile = getRefDataFile(cmd, REF_FEAT_PREV_FILE, REF_FILE_FEATURE_PREV);
         RefTraitPercFile = getRefDataFile(cmd, REF_TRAIT_PERC_FILE, REF_FILE_TRAIT_PERC);
         RefTraitRateFile = getRefDataFile(cmd, REF_TRAIT_RATE_FILE, REF_FILE_TRAIT_RATES);
+        RefGenderRateFile = getRefDataFile(cmd, REF_GENDER_RATE_FILE, REF_FILE_GENDER_RATES);
         RefSvPercFile = getRefDataFile(cmd, REF_SV_PERC_FILE, REF_FILE_SV_PERC);
         RefSnvCancerPosFreqFile = getRefDataFile(cmd, REF_SNV_CANCER_POS_FREQ_FILE, REF_FILE_CANCER_POS_FREQ_COUNTS);
         RefSnvSamplePosFreqFile = getRefDataFile(cmd, REF_SNV_SAMPLE_POS_FREQ_FILE, REF_FILE_SAMPLE_POS_FREQ_COUNTS);
@@ -292,6 +297,7 @@ public class CuppaConfig
         RefFeaturePrevFile = "";
         RefTraitPercFile = "";
         RefTraitRateFile = "";
+        RefGenderRateFile = "";
         RefSnvCancerPosFreqFile = "";
         RefSnvSamplePosFreqFile = "";
         RefDriverAvgFile = "";

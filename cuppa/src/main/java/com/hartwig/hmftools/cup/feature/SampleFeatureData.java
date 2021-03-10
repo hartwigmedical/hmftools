@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cup.feature;
 
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
-import static com.hartwig.hmftools.cup.CuppaConfig.SAMPLE_ID;
+import static com.hartwig.hmftools.cup.CuppaConfig.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
 
 import java.util.Map;
@@ -35,7 +35,7 @@ public class SampleFeatureData
     public static String header()
     {
         StringJoiner sj = new StringJoiner(DATA_DELIM);
-        sj.add(SAMPLE_ID);
+        sj.add(FLD_SAMPLE_ID);
         sj.add("Name");
         sj.add("Type");
         sj.add("Likelihood");
