@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
@@ -18,7 +19,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TumorLocationAndTypeTable;
 import com.hartwig.hmftools.patientreporter.cfreport.data.ClinicalTrials;
-import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
@@ -235,7 +235,7 @@ public class SummaryChapter implements ReportChapter {
 
         Set<String> disruptedGenes = HomozygousDisruptions.disruptedGenes(analysis().homozygousDisruptions());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                .add(new Paragraph("Disrupted genes").addStyle(ReportResources.bodyTextStyle())));
+                .add(new Paragraph("Homozygously disrupted genes").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortGenes(disruptedGenes)));
 
         Set<String> fusionGenes = GeneFusions.uniqueGeneFusions(analysis().geneFusions());
