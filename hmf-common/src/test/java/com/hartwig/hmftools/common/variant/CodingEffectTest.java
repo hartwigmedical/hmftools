@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
+@Deprecated
 public class CodingEffectTest {
 
     private static final String TEST_GENE = "TEST_GENE";

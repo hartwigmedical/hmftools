@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.VariantConsequence;
+import com.hartwig.hmftools.common.variant.CodingEffectFactory;
 import com.hartwig.hmftools.common.variant.enrich.SnpEffEnrichment;
 
 import org.apache.logging.log4j.util.Strings;
@@ -20,9 +20,11 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class SnpEffSummaryFactory {
 
     private final CanonicalAnnotation canonicalAnnotationFactory;
+    private final CodingEffectFactory codingEffectFactory;
 
     public SnpEffSummaryFactory(@NotNull final Set<String> driverGenes, @NotNull final List<HmfTranscriptRegion> transcripts) {
         this.canonicalAnnotationFactory = new CanonicalAnnotation(driverGenes, transcripts);
+        this.codingEffectFactory = new CodingEffectFactory(transcripts);
     }
 
     @NotNull
@@ -36,11 +38,12 @@ public class SnpEffSummaryFactory {
     public SnpEffSummary fromSnpEffAnnotations(@NotNull final VariantContext context) {
         final boolean phasedInframeIndel = context.isIndel() && context.getAttributeAsInt(SageMetaData.PHASED_INFRAME_INDEL, 0) > 0;
         final List<SnpEffAnnotation> allAnnotations = SnpEffAnnotationFactory.fromContext(context);
-        return fromSnpEffAnnotations(phasedInframeIndel, allAnnotations);
+        return fromSnpEffAnnotations(context, phasedInframeIndel, allAnnotations);
     }
 
     @NotNull
-    public SnpEffSummary fromSnpEffAnnotations(boolean phasedInframeIndel, @NotNull final List<SnpEffAnnotation> allAnnotations) {
+    private SnpEffSummary fromSnpEffAnnotations(@NotNull final VariantContext context, boolean phasedInframeIndel,
+            @NotNull final List<SnpEffAnnotation> allAnnotations) {
         final ImmutableSnpEffSummary.Builder builder = SnpEffSummarySerialiser.createBuilder();
 
         final List<SnpEffAnnotation> transcriptAnnotations =
@@ -49,7 +52,7 @@ public class SnpEffSummaryFactory {
             final SnpEffAnnotation worstAnnotation = transcriptAnnotations.get(0);
             builder.worstGene(worstAnnotation.gene());
             builder.worstEffect(worstAnnotation.consequenceString());
-            builder.worstCodingEffect(codingEffect(phasedInframeIndel, worstAnnotation.gene(), worstAnnotation.consequences()));
+            builder.worstCodingEffect(codingEffect(context, phasedInframeIndel, worstAnnotation));
             builder.worstTranscript(worstAnnotation.transcript());
         }
 
@@ -58,7 +61,7 @@ public class SnpEffSummaryFactory {
             final SnpEffAnnotation annotation = canonicalAnnotation.get();
             builder.canonicalGene(annotation.gene());
             builder.canonicalEffect(annotation.consequenceString());
-            builder.canonicalCodingEffect(codingEffect(phasedInframeIndel, annotation.gene(), annotation.consequences()));
+            builder.canonicalCodingEffect(codingEffect(context, phasedInframeIndel, annotation));
             builder.canonicalHgvsCodingImpact(annotation.hgvsCoding());
             builder.canonicalHgvsProteinImpact(annotation.hgvsProtein());
             builder.canonicalTranscript(annotation.transcript());
@@ -74,10 +77,9 @@ public class SnpEffSummaryFactory {
     }
 
     @NotNull
-    private static CodingEffect codingEffect(boolean phasedInframeIndel, @NotNull final String gene, @NotNull final List<VariantConsequence> consequences) {
-        CodingEffect effect = CodingEffect.effect(gene, consequences);
-        return phasedInframeIndel && effect.equals(CodingEffect.NONSENSE_OR_FRAMESHIFT)
-                ? CodingEffect.MISSENSE
-                : effect;
+    private CodingEffect codingEffect(@NotNull final VariantContext context, boolean phasedInframeIndel,
+            @NotNull final SnpEffAnnotation annotation) {
+        CodingEffect effect = codingEffectFactory.effect(context, annotation);
+        return phasedInframeIndel && effect.equals(CodingEffect.NONSENSE_OR_FRAMESHIFT) ? CodingEffect.MISSENSE : effect;
     }
 }

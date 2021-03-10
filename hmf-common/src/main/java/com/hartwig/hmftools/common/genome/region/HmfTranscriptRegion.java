@@ -15,14 +15,18 @@ import org.jetbrains.annotations.Nullable;
 public abstract class HmfTranscriptRegion implements TranscriptRegion {
 
     public boolean isDonorMinusOne(long position) {
-        return isDonor(-1, position);
+        return isDonorPlusOne(-1, position);
+    }
+
+    public boolean isDonorPlusFive(long position) {
+        return isDonorPlusOne(4, position);
     }
 
     public boolean isAcceptorPlusThree(long position) {
-        return isAcceptor(3, position);
+        return isAcceptorPlusOne(2, position);
     }
 
-    public boolean isDonor(int offset, long position) {
+    public boolean isDonorPlusOne(int offset, long position) {
         if (codingStart() == 0) {
             return false;
         }
@@ -50,7 +54,7 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
         return false;
     }
 
-    public boolean isAcceptor(int offset, long position) {
+    public boolean isAcceptorPlusOne(int offset, long position) {
         if (codingStart() == 0) {
             return false;
         }

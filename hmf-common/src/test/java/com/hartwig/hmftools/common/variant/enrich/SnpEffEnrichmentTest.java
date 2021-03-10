@@ -92,7 +92,7 @@ public class SnpEffEnrichmentTest {
         final SnpEffSummary summary = SnpEffSummaryFactory.fromSnpEffEnrichment(capture.get(0));
 
         assertEquals("SPATA19", summary.gene());
-        assertEquals(CodingEffect.SYNONYMOUS, summary.canonicalCodingEffect());
+        assertEquals(CodingEffect.SPLICE, summary.canonicalCodingEffect());
         assertEquals("c.78G>A", summary.canonicalHgvsCodingImpact());
         assertEquals("p.Ser26Ser", summary.canonicalHgvsProteinImpact());
     }
