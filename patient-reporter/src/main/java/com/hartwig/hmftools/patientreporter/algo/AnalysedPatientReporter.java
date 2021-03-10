@@ -84,6 +84,7 @@ public class AnalysedPatientReporter {
                 .sampleReport(sampleReport)
                 .qsFormNumber(determineForNumber(genomicAnalysis.hasReliablePurity(), genomicAnalysis.impliedPurity()))
                 .clinicalSummary(clinicalSummary)
+                .pipelineVersion(pipelineVersion)
                 .genomicAnalysis(filteredAnalysis)
                 .circosPath(circosFile)
                 .comments(Optional.ofNullable(comments))
@@ -91,7 +92,6 @@ public class AnalysedPatientReporter {
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
-                .pipelineVersion(pipelineVersion)
                 .build();
 
         printReportState(report);

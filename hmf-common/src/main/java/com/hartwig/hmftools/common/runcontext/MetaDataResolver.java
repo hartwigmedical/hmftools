@@ -71,6 +71,12 @@ public final class MetaDataResolver {
         }
     }
 
+    @NotNull
+    public static String majorDotMinorVersion(@NotNull File pipelineVersionFile) throws IOException {
+        String [] version = readPipelineVersion(pipelineVersionFile).split("\\.");
+        return version[0] + "." + version[1];
+    }
+
     @Nullable
     private static RunContext fromPv4MetaData(@NotNull String runDirectory, @NotNull File pv4MetadataFile) throws FileNotFoundException {
         JsonObject json = GSON.fromJson(new FileReader(pv4MetadataFile), JsonObject.class);
@@ -169,13 +175,7 @@ public final class MetaDataResolver {
     }
 
     @NotNull
-    public static String majorDotMinorVersion(@NotNull File pipelineVersionFile) throws IOException {
-        String [] version = readPipelineVersion(pipelineVersionFile).split("\\.");
-        return version[0] + "." + version[1];
-    }
-
-    @NotNull
-    public static String readPipelineVersion(@NotNull File pipelineVersionFile) throws IOException {
+    private static String readPipelineVersion(@NotNull File pipelineVersionFile) throws IOException {
         List<String> lines = Files.readAllLines(pipelineVersionFile.toPath());
         if (lines.isEmpty()) {
             throw new IOException("Pipeline version file seems empty on " + pipelineVersionFile.getPath());

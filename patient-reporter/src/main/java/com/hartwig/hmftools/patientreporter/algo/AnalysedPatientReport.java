@@ -26,6 +26,9 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract String clinicalSummary();
 
     @NotNull
+    public abstract String pipelineVersion();
+
+    @NotNull
     public abstract GenomicAnalysis genomicAnalysis();
 
     @NotNull
@@ -49,7 +52,4 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @Override
     @NotNull
     public abstract String logoCompanyPath();
-
-    @NotNull
-    public abstract String pipelineVersion();
 }

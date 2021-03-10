@@ -147,7 +147,8 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     @NotNull
     private static Paragraph generateGermlineChoicePatientParagraph(@NotNull SampleReport sampleReport) {
-        return createContentParagraph("The germline choice of this patient is: ", sampleReport.germlineReportingLevel().display());
+        return createContentParagraph("The germline reporting choice of this patient is: ",
+                sampleReport.germlineReportingLevel().display());
     }
 
     @NotNull
