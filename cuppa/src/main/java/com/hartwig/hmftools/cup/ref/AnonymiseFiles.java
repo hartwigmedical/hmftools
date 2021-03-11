@@ -1,15 +1,21 @@
 package com.hartwig.hmftools.cup.ref;
 
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_SAMPLE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_SAMPLE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
+import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_END;
+import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_START;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -73,9 +79,15 @@ public class AnonymiseFiles
         }
 
         rewriteCategoryFile(mConfig.RefSampleDataFile, REF_FILE_SAMPLE_DATA);
+
         rewriteMatrixFile(mConfig.RefSnvCountsFile, REF_FILE_SNV_COUNTS, Lists.newArrayList("BucketName"));
+
         rewriteMatrixFile(mConfig.RefSnvSamplePosFreqFile, REF_FILE_SAMPLE_POS_FREQ_COUNTS, Lists.newArrayList("BucketName"));
-        rewriteMatrixFile(mConfig.RefGeneExpSampleFile, REF_FILE_GENE_EXP_SAMPLE, Lists.newArrayList("GeneId", "GeneName"));
+
+        rewriteMatrixFile(mConfig.RefGeneExpSampleFile, REF_FILE_GENE_EXP_SAMPLE, Lists.newArrayList(FLD_GENE_ID, FLD_GENE_NAME));
+
+        rewriteMatrixFile(mConfig.RefAltSjSampleFile, REF_FILE_ALT_SJ_SAMPLE,
+                Lists.newArrayList(FLD_GENE_ID, FLD_CHROMOSOME, FLD_POS_START, FLD_POS_END));
 
         CUP_LOGGER.info("CUP sampleIds anonymised");
     }

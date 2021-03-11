@@ -5,10 +5,12 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkAddDirSe
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.cup.CuppaConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_DATA_DIR;
+import static com.hartwig.hmftools.cup.CuppaConfig.REF_RNA_ALT_SJ_SAMPLE_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_RNA_GENE_EXP_SAMPLE_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_COUNTS_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_SAMPLE_POS_FREQ_FILE;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_ALT_SJ_SAMPLE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_SAMPLE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
@@ -28,6 +30,7 @@ public class AnonymiseConfig
     public final String RefSnvSamplePosFreqFile;
     public final String RefSnvCountsFile;
     public final String RefGeneExpSampleFile;
+    public final String RefAltSjSampleFile;
 
     public AnonymiseConfig(final CommandLine cmd)
     {
@@ -37,6 +40,7 @@ public class AnonymiseConfig
         RefSnvCountsFile = getRefDataFile(cmd, REF_SNV_COUNTS_FILE, REF_FILE_SNV_COUNTS);
         RefSnvSamplePosFreqFile = getRefDataFile(cmd, REF_SNV_SAMPLE_POS_FREQ_FILE, REF_FILE_SAMPLE_POS_FREQ_COUNTS);
         RefGeneExpSampleFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_SAMPLE_FILE, REF_FILE_GENE_EXP_SAMPLE);
+        RefAltSjSampleFile = getRefDataFile(cmd, REF_RNA_ALT_SJ_SAMPLE_FILE, REF_FILE_ALT_SJ_SAMPLE);
 
         OutputDir = parseOutputDir(cmd);
     }
@@ -54,6 +58,7 @@ public class AnonymiseConfig
         options.addOption(REF_SNV_SAMPLE_POS_FREQ_FILE, true, "Ref SNV position frequency matrix data file");
         options.addOption(REF_SNV_COUNTS_FILE, true, "Ref SNV trinucleotide matrix data file");
         options.addOption(REF_RNA_GENE_EXP_SAMPLE_FILE, true, "Ref sample RNA gene expression cohort data file");
+        options.addOption(REF_RNA_ALT_SJ_SAMPLE_FILE, true, "Ref sample RNA alternative SJ cohort data file");
 
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");

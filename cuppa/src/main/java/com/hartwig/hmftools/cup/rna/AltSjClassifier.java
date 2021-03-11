@@ -191,6 +191,9 @@ public class AltSjClassifier implements CuppaClassifier
         if(!mIsValid || mRefCancerTypeMatrix == null)
             return;
 
+        if(!sample.hasRna())
+            return;
+
         if(mSampleIndexMap.isEmpty())
         {
             if(!loadSampleAltSJsToArray(sample.Id))
@@ -201,7 +204,7 @@ public class AltSjClassifier implements CuppaClassifier
 
         if(sampleIndex == null)
         {
-            CUP_LOGGER.warn("sample({}) alt-SJ frag counts from matrix not found", sample.Id);
+            CUP_LOGGER.warn("sample({}) alt-SJ frag counts matrix data not found", sample.Id);
             return;
         }
 

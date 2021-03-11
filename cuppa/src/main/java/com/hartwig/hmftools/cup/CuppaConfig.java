@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
 import static com.hartwig.hmftools.cup.common.CategoryType.ALL_CATEGORIES;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
+import static com.hartwig.hmftools.cup.common.CategoryType.COMBINED;
 import static com.hartwig.hmftools.cup.common.CategoryType.DNA_CATEGORIES;
 import static com.hartwig.hmftools.cup.common.CategoryType.isDna;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -119,7 +120,7 @@ public class CuppaConfig
     private static final String REF_RNA_GENE_EXP_CANCER_FILE = "ref_gene_exp_cancer_file";
     public static final String REF_RNA_GENE_EXP_SAMPLE_FILE = "ref_gene_exp_sample_file";
     private static final String REF_RNA_ALT_SJ_CANCER_FILE = "ref_alt_sj_cancer_file";
-    private static final String REF_RNA_ALT_SJ_SAMPLE_FILE = "ref_alt_sj_sample_file";
+    public static final String REF_RNA_ALT_SJ_SAMPLE_FILE = "ref_alt_sj_sample_file";
 
     public static final String WRITE_SIMS = "write_similarities";
     public static final String WRITE_CLASSIFIERS_ONLY = "write_classifiers_only";
@@ -129,8 +130,10 @@ public class CuppaConfig
 
     public static final Logger CUP_LOGGER = LogManager.getLogger(CuppaConfig.class);
 
+    // file fields
     public static final String FLD_SAMPLE_ID = "SampleId";
     public static final String FLD_CANCER_TYPE = "CancerType";
+    public static final String FLD_RNA_READ_LENGTH = "RnaReadLength";
     public static final String CANCER_SUBTYPE_OTHER = "Other";
     public static final String DATA_DELIM = ",";
     public static final String SUBSET_DELIM = ";";
@@ -143,7 +146,7 @@ public class CuppaConfig
         {
             if(cmd.getOptionValue(CATEGORIES).equals(ALL_CATEGORIES))
             {
-                Arrays.stream(CategoryType.values()).filter(x -> x != CLASSIFIER).forEach(x -> IncludedCategories.add(x));
+                Arrays.stream(CategoryType.values()).filter(x -> x != CLASSIFIER && x != COMBINED).forEach(x -> IncludedCategories.add(x));
             }
             else if(cmd.getOptionValue(CATEGORIES).equals(DNA_CATEGORIES))
             {

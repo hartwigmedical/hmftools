@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cup.common;
 import static com.hartwig.hmftools.cup.CuppaConfig.CANCER_SUBTYPE_OTHER;
 import static com.hartwig.hmftools.cup.CuppaConfig.FLD_CANCER_TYPE;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.CuppaConfig.FLD_RNA_READ_LENGTH;
 import static com.hartwig.hmftools.cup.CuppaConfig.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_UNKNOWN;
@@ -57,6 +58,7 @@ public class SampleData
 
     public void setRnaReadLength(int readLength) { mRnaReadLength = readLength; }
     public int rnaReadLength() { return mRnaReadLength; }
+    public boolean hasRna() { return mRnaReadLength != RNA_READ_LENGTH_NONE; }
 
     public boolean isRefSample() { return mIsRefSample; }
     public void setRefSample() { mIsRefSample = true; }
@@ -82,11 +84,14 @@ public class SampleData
 
         SampleData sample = new SampleData(sampleId, cancerType, cancerSubtype, primaryLocation, primarySubLocation, primaryType, primarySubtype);
 
-        if(fieldsIndexMap.containsKey("ReadLength"))
+        if(fieldsIndexMap.containsKey(FLD_RNA_READ_LENGTH))
+        {
+            sample.setRnaReadLength(Integer.parseInt(items[fieldsIndexMap.get(FLD_RNA_READ_LENGTH)]));
+        }
+        else if(fieldsIndexMap.containsKey("ReadLength")) // previous field name
         {
             sample.setRnaReadLength(Integer.parseInt(items[fieldsIndexMap.get("ReadLength")]));
         }
-
         return sample;
     }
 

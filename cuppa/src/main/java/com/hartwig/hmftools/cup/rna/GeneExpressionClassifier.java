@@ -210,10 +210,16 @@ public class GeneExpressionClassifier implements CuppaClassifier
         if(mSampleIndexMap.isEmpty())
             return;
 
+        if(!sample.hasRna())
+            return;
+
         Integer sampleCountsIndex = mSampleIndexMap.get(sample.Id);
 
         if(sampleCountsIndex == null)
+        {
+            CUP_LOGGER.warn("sample({}) gene expression matrix data not found", sample.Id);
             return;
+        }
 
         final double[] sampleGeneTPMs = mSampleRnaExpression.getCol(sampleCountsIndex);
 

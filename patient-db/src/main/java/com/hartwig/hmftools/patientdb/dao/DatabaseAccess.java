@@ -164,10 +164,18 @@ public class DatabaseAccess implements AutoCloseable {
 
     @NotNull
     public static DatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
+        return databaseAccess(cmd, false);
+    }
+    @NotNull
+    public static DatabaseAccess databaseAccess(@NotNull CommandLine cmd, boolean applyDefaultArgs) throws SQLException {
         String userName = cmd.getOptionValue(DB_USER);
         String password = cmd.getOptionValue(DB_PASS);
         String databaseUrl = cmd.getOptionValue(DB_URL);
         String jdbcUrl = "jdbc:" + databaseUrl;
+
+        if(applyDefaultArgs)
+            jdbcUrl += DB_DEFAULT_ARGS;
+
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
 

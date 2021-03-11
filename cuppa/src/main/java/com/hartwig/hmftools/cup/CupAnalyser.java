@@ -104,8 +104,16 @@ public class CupAnalyser
 
         if(mSampleDataCache.isMultiSample())
         {
-            CUP_LOGGER.info("loaded {} samples, {} ref samples and {} ref cancer types",
-                    mSampleDataCache.SampleIds.size(), mSampleDataCache.RefSampleCancerTypeMap.size(), mSampleDataCache.RefCancerSampleData.size());
+            CUP_LOGGER.info("loaded samples ref({}) test({}) ref cancer types({})",
+                    mSampleDataCache.RefSampleCancerTypeMap.size(), mSampleDataCache.SampleIds.size(),
+                    mSampleDataCache.RefCancerSampleData.size());
+
+            if(mConfig.IncludedCategories.stream().anyMatch(x -> CategoryType.isRna(x)))
+            {
+                CUP_LOGGER.info("RNA samples: ref({}) test({})",
+                        mSampleDataCache.RefSampleDataList.stream().filter(x -> x.hasRna()).count(),
+                        mSampleDataCache.SampleDataList.stream().filter(x -> x.hasRna()).count());
+            }
         }
     }
 
@@ -196,7 +204,7 @@ public class CupAnalyser
             allResults.add(combinedFeatureResult);
 
         boolean hasDnaCategories = mConfig.IncludedCategories.stream().anyMatch(x -> CategoryType.isDna(x));
-        boolean hasRnaCategories = mConfig.IncludedCategories.stream().anyMatch(x -> CategoryType.isRna(x));
+        boolean hasRnaCategories = mConfig.IncludedCategories.stream().anyMatch(x -> CategoryType.isRna(x)) && sample.hasRna();
 
         // ensure each cancer type has a probability for the classifiers to ensure an even application of the min-probability
         final Set<String> refCancerTypes = mSampleDataCache.RefCancerSampleData.keySet();
