@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.rna;
 
+import static com.hartwig.hmftools.common.rna.RnaCommon.DELIMITER;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
@@ -33,7 +34,6 @@ public class AltSpliceJunctionFile
     public static final String FLD_ALT_SJ_FRAG_COUNT = "FragCount";
 
     public static final String ALT_SJ_FILE_ID = "alt_splice_junc.csv";
-    private static final String DELIMITER = ",";
 
     public AltSpliceJunctionFile(
             final String geneId, final String geneName, final String chromosome, final int[] spliceJunction,

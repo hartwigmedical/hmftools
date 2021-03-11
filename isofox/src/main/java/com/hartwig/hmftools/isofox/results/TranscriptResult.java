@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.isofox.results;
 
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_ID;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.UNIQUE_TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_ID;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_NAME;
 
 import java.util.List;
 import java.util.StringJoiner;

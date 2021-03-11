@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.isofox.results;
 
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_SET_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_SET_ID;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
 import java.util.StringJoiner;
@@ -12,8 +12,6 @@ import java.util.StringJoiner;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
-
-import org.immutables.value.Value;
 
 public class GeneResult
 {

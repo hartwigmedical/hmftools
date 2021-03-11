@@ -2,13 +2,12 @@ package com.hartwig.hmftools.isofox.novel.cohort;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.ACCEPTOR;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
 
 import java.util.List;
 import java.util.Map;

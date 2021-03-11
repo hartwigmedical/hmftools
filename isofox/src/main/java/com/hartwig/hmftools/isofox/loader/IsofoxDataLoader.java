@@ -6,23 +6,22 @@ import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_P
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_TYPE;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.formKey;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_DATA_FILE_ID;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.isofox.cohort.CohortConfig.isValid;
 import static com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles.PAN_CANCER;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.PASS_FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_SPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.GENE_RESULTS_FILE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
@@ -179,7 +178,7 @@ public class IsofoxDataLoader
         final String sampleDataDir = mConfig.GeneDataDir.contains("*") ?
                 mConfig.GeneDataDir.replaceAll("\\*", sampleId) : mConfig.GeneDataDir;
 
-        final String filename = sampleDataDir + sampleId + ISF_FILE_ID + GENE_RESULTS_FILE;
+        final String filename = sampleDataDir + sampleId + ISF_FILE_ID + GENE_DATA_FILE_ID;
 
         try
         {

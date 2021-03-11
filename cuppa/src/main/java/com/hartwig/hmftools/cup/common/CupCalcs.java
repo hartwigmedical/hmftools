@@ -95,6 +95,9 @@ public class CupCalcs
                 .filter(x -> x.Category != CLASSIFIER)
                 .collect(Collectors.toList());
 
+        if(prevalenceResults.isEmpty())
+            return null;
+
         for(final SampleResult result : prevalenceResults)
         {
             for(Map.Entry<String,Double> entry : result.CancerTypeValues.entrySet())
@@ -173,6 +176,9 @@ public class CupCalcs
         final List<SampleResult> classifierResults = results.stream()
                 .filter(x -> x.Category == CLASSIFIER)
                 .collect(Collectors.toList());
+
+        if(classifierResults.size() == 1)
+            return null;
 
         final Map<String,Double> cancerTypeValues = Maps.newHashMap();
 

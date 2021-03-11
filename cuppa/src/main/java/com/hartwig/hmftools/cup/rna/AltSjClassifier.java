@@ -163,7 +163,7 @@ public class AltSjClassifier implements CuppaClassifier
         }
         else
         {
-            mSampleFragCounts = new Matrix(mRefCancerTypeMatrix.Rows, 1);
+            mSampleFragCounts = new Matrix(1, mRefCancerTypeMatrix.Rows);
         }
 
         if(cmd.hasOption(LOG_CSS_VALUES))
@@ -191,7 +191,7 @@ public class AltSjClassifier implements CuppaClassifier
         if(!mIsValid || mRefCancerTypeMatrix == null)
             return;
 
-        if(!sample.hasRna())
+        if(mSampleDataCache.isMultiSample() && !sample.hasRna())
             return;
 
         if(mSampleIndexMap.isEmpty())
@@ -535,7 +535,7 @@ public class AltSjClassifier implements CuppaClassifier
             int posEndIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
             int fragCountIndex = fieldsIndexMap.get(FLD_ALT_SJ_FRAG_COUNT);
 
-            boolean hasRefAltSJs = false;
+            int matchedRefAltSJs = 0;
 
             for(String data : lines)
             {
@@ -553,12 +553,14 @@ public class AltSjClassifier implements CuppaClassifier
                     continue;
 
                 int fragCount = Integer.parseInt(items[fragCountIndex]);
-                hasRefAltSJs = true;
+                ++matchedRefAltSJs;
 
                 sampleFragCounts[0][matrixIndex] = convertFragCount(fragCount);
             }
 
-            return hasRefAltSJs;
+            CUP_LOGGER.info("loaded {} matching alt-SJs from file({})", matchedRefAltSJs, filename);
+
+            return matchedRefAltSJs > 0;
         }
         catch(IOException e)
         {

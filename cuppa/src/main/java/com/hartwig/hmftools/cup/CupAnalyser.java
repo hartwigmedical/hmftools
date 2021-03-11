@@ -204,7 +204,7 @@ public class CupAnalyser
             allResults.add(combinedFeatureResult);
 
         boolean hasDnaCategories = mConfig.IncludedCategories.stream().anyMatch(x -> CategoryType.isDna(x));
-        boolean hasRnaCategories = mConfig.IncludedCategories.stream().anyMatch(x -> CategoryType.isRna(x)) && sample.hasRna();
+        boolean hasRnaCategories = mConfig.IncludedCategories.stream().anyMatch(x -> CategoryType.isRna(x));
 
         // ensure each cancer type has a probability for the classifiers to ensure an even application of the min-probability
         final Set<String> refCancerTypes = mSampleDataCache.RefCancerSampleData.keySet();
@@ -219,10 +219,17 @@ public class CupAnalyser
                     .filter(x -> x.Category == CLASSIFIER && isDna(ClassifierType.valueOf(x.DataType)))
                     .collect(Collectors.toList());
 
-            SampleResult dnaScoreResult = calcCombinedClassifierScoreResult(sample, dnaResults, "DNA_COMBINED", DNA_DAMPEN_FACTOR);
+            if(dnaResults.isEmpty())
+            {
+                hasDnaCategories = false;
+            }
+            else
+            {
+                SampleResult dnaScoreResult = calcCombinedClassifierScoreResult(sample, dnaResults, "DNA_COMBINED", DNA_DAMPEN_FACTOR);
 
-            if(dnaScoreResult != null)
-                allResults.add(dnaScoreResult);
+                if(dnaScoreResult != null)
+                    allResults.add(dnaScoreResult);
+            }
         }
 
         if(hasRnaCategories)
@@ -231,7 +238,11 @@ public class CupAnalyser
                     .filter(x -> x.Category == CLASSIFIER && isRna(ClassifierType.valueOf(x.DataType)))
                     .collect(Collectors.toList());
 
-            if(!rnaResults.isEmpty())
+            if(rnaResults.isEmpty())
+            {
+                hasRnaCategories = false;
+            }
+            else
             {
                 SampleResult rnaScoreResult = calcCombinedClassifierScoreResult(sample, rnaResults, "RNA_COMBINED", RNA_DAMPEN_FACTOR);
 

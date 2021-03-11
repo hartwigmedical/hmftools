@@ -28,11 +28,15 @@ import static com.hartwig.hmftools.cup.rna.RefGeneExpression.loadGeneIdIndices;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
+import com.hartwig.hmftools.common.rna.GeneExpression;
+import com.hartwig.hmftools.common.rna.GeneExpressionFile;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
@@ -95,7 +99,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
         mIsValid = true;
 
-        if(mConfig.SampleGeneExpFile.isEmpty())
+        if(mSampleDataCache.isMultiSample() && mConfig.SampleGeneExpFile.isEmpty())
             return;
 
         if(mRunPairwiseCss && mConfig.RefGeneExpSampleFile.isEmpty())
@@ -145,9 +149,9 @@ public class GeneExpressionClassifier implements CuppaClassifier
         }
         else
         {
-            if(mConfig.SampleGeneExpFile.endsWith("isf.gene_data.csv") && mSampleDataCache.isSingleSample())
+            if(mSampleDataCache.isSingleSample())
             {
-                loadSampleGeneExpressionData(mConfig.SampleGeneExpFile);
+                loadSampleGeneExpressionData(mSampleDataCache.SampleIds.get(0));
             }
             else
             {
@@ -210,7 +214,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
         if(mSampleIndexMap.isEmpty())
             return;
 
-        if(!sample.hasRna())
+        if(mSampleDataCache.isMultiSample() && !sample.hasRna())
             return;
 
         Integer sampleCountsIndex = mSampleIndexMap.get(sample.Id);
@@ -340,8 +344,13 @@ public class GeneExpressionClassifier implements CuppaClassifier
         similarities.addAll(topMatches);
     }
 
-    private void loadSampleGeneExpressionData(final String filename)
+    private void loadSampleGeneExpressionData(final String sampleId)
     {
+        final String filename = GeneExpressionFile.generateFilename(mConfig.SampleDataDir, sampleId);
+
+        if(!Files.exists(Paths.get(filename)))
+            return;
+
         try
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());

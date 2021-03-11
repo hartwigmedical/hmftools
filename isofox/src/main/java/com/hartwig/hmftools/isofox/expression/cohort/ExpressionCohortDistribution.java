@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.isofox.expression.cohort;
 
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.calcPercentileValues;
@@ -9,9 +12,6 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_NAME;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

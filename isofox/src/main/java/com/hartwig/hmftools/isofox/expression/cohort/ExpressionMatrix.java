@@ -2,6 +2,9 @@ package com.hartwig.hmftools.isofox.expression.cohort;
 
 import static java.lang.Math.log;
 
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
@@ -10,9 +13,6 @@ import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_MA
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
 import java.io.BufferedWriter;
