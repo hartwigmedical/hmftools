@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.fusion;
 public class CodingBaseData
 {
     public int TotalCodingBases;
-    public int CodingBases; // for a given breakeand
+    public int CodingBases; // for a given breakend
     public int Phase;
 
     public static final int PHASE_NONE = -1;

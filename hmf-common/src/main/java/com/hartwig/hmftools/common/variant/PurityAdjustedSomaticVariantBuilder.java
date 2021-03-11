@@ -28,7 +28,7 @@ public interface PurityAdjustedSomaticVariantBuilder {
     PurityAdjustedSomaticVariantBuilder biallelic(boolean biallelic);
 
     @NotNull
-    static PurityAdjustedSomaticVariantBuilder fromVariantContex(@NotNull final VariantContext builder) {
+    static PurityAdjustedSomaticVariantBuilder fromVariantContext(@NotNull final VariantContext builder) {
         return new PurityAdjustedSomaticVariantBuilder() {
             @Override
             public PurityAdjustedSomaticVariantBuilder variantCopyNumber(final double ploidy) {

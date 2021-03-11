@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.time.LocalDate;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsChecker;
@@ -11,7 +10,6 @@ import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -60,7 +58,8 @@ public final class SampleReportFactory {
 
         LOGGER.info("Cohort ID of this sample is: {}", cohortConfig.cohortId());
 
-        String hospitalPatientId = LimsChecker.checkHospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode), tumorSampleId, cohortConfig);
+        String hospitalPatientId = lims.hospitalPatientId(tumorSampleBarcode);
+        LimsChecker.checkHospitalPatientId(hospitalPatientId, tumorSampleId, cohortConfig);
 
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)

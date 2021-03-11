@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.lims;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfig;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
@@ -68,12 +69,11 @@ public class LimsCheckerTest {
         String hospitalId = "1234";
 
         LimsCohortConfig cohortConfigCORE = createCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true);
-        assertEquals(hospitalIdNA, LimsChecker.checkHospitalPatientId(hospitalIdNA, coreSampleId, cohortConfigCORE));
-        assertEquals(hospitalIDEmpty, LimsChecker.checkHospitalPatientId(hospitalIDEmpty, coreSampleId, cohortConfigCORE));
-        assertEquals(hospitalId, LimsChecker.checkHospitalPatientId(hospitalId, coreSampleId, cohortConfigCORE));
+        LimsChecker.checkHospitalPatientId(hospitalIdNA, coreSampleId, cohortConfigCORE);
+        LimsChecker.checkHospitalPatientId(hospitalIDEmpty, coreSampleId, cohortConfigCORE);
+        LimsChecker.checkHospitalPatientId(hospitalId, coreSampleId, cohortConfigCORE);
 
         LimsCohortConfig cohortConfigWIDE = createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, true);
-        assertEquals(hospitalIdNA, LimsChecker.checkHospitalPatientId(hospitalIdNA, wideSampleId, cohortConfigWIDE));
+        LimsChecker.checkHospitalPatientId(hospitalIdNA, wideSampleId, cohortConfigWIDE);
     }
-
 }
