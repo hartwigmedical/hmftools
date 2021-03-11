@@ -6,5 +6,5 @@ public enum AltSpliceJunctionContext
     EXONIC,
     INTRONIC,
     MIXED,
-    UNKNOWN;
+    UNKNOWN
 }

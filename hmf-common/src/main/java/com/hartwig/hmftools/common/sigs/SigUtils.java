@@ -4,14 +4,6 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.List;
-import java.util.Map;
-
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.apache.logging.log4j.LogManager;

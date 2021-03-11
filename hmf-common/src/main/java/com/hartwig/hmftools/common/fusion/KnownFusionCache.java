@@ -193,11 +193,6 @@ public class KnownFusionCache
         return mIgRegionData.stream().anyMatch(x -> x.withinIgRegion(chromosome, position));
     }
 
-    public boolean matchesIgGene(final String chromosome, int position, byte orientation)
-    {
-        return mIgRegionData.stream().anyMatch(x -> x.matchesIgGene(chromosome, position, orientation));
-    }
-
     public boolean loadFromFile(@NotNull final CommandLine cmd)
     {
         if(!cmd.hasOption(KNOWN_FUSIONS_FILE))

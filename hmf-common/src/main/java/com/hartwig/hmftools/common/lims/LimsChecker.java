@@ -1,17 +1,18 @@
 package com.hartwig.hmftools.common.lims;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class LimsChecker {
+public final class LimsChecker {
 
     private static final Logger LOGGER = LogManager.getLogger(LimsChecker.class);
+
+    private LimsChecker() {
+    }
 
     public static boolean checkViralInsertions(@Nullable LimsJsonSampleData sampleData, @Nullable LimsCohortConfig cohort,
             @NotNull String sampleId) {
@@ -51,7 +52,6 @@ public class LimsChecker {
         }
     }
 
-    @VisibleForTesting
     @Nullable
     public static String toHospitalPathologySampleIdForReport(@NotNull String hospitalPathologySampleId, @NotNull String tumorSampleId,
             @NotNull LimsCohortConfig cohortConfig) {
@@ -76,6 +76,15 @@ public class LimsChecker {
         }
     }
 
+    public static void checkHospitalPatientId(@NotNull String hospitalPatientId, @NotNull String sampleId,
+            @NotNull LimsCohortConfig cohortConfig) {
+        if (cohortConfig.requireHospitalId()) {
+            if (hospitalPatientId.equals(Lims.NOT_AVAILABLE_STRING) || hospitalPatientId.isEmpty()) {
+                LOGGER.warn("Missing hospital patient sample ID for sample '{}': {}. Please fix!", sampleId, hospitalPatientId);
+            }
+        }
+    }
+
     private static boolean isValidHospitalPathologySampleId(@NotNull String hospitalPathologySampleId) {
         boolean tMatch;
         boolean cMatch;
@@ -95,7 +104,6 @@ public class LimsChecker {
 
         if (hospitalPathologySampleId.split("-")[1].length() == 1 && hospitalPathologySampleId.startsWith("C") && !hospitalPathologySampleId
                 .startsWith("T")) {
-
             cMatch = hospitalPathologySampleId.substring(1, 3).matches("[0-9]+") && hospitalPathologySampleId.substring(3, 4).equals("-")
                     && hospitalPathologySampleId.substring(4).matches("[0-9]+");
         } else if (hospitalPathologySampleId.split("-")[1].length() <= 6 && hospitalPathologySampleId.startsWith("C")
@@ -108,16 +116,4 @@ public class LimsChecker {
         }
         return tMatch || cMatch;
     }
-
-    @VisibleForTesting
-    public static String checkHospitalPatientId(@NotNull String hospitalPatientId, @NotNull String sampleId,
-            @NotNull LimsCohortConfig cohortConfig) {
-        if (cohortConfig.requireHospitalId()) {
-            if (hospitalPatientId.equals(Lims.NOT_AVAILABLE_STRING) || hospitalPatientId.equals(Strings.EMPTY)) {
-                LOGGER.warn("Missing hospital patient sample ID for sample '{}': {}. Please fix!", sampleId, hospitalPatientId);
-            }
-        }
-        return hospitalPatientId;
-    }
-
 }

@@ -57,7 +57,7 @@ public class PurityAdjustedSomaticVariantFactory {
         if (genotype != null && genotype.hasAD() && HumanChromosome.contains(variant.getContig())) {
             final GenomePosition position = GenomePositions.create(variant.getContig(), variant.getStart());
             final AllelicDepth depth = AllelicDepth.fromGenotype(genotype);
-            enrich(position, depth, PurityAdjustedSomaticVariantBuilder.fromVariantContex(variant));
+            enrich(position, depth, PurityAdjustedSomaticVariantBuilder.fromVariantContext(variant));
         }
         return variant;
     }

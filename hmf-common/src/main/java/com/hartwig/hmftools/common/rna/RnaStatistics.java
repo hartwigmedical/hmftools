@@ -2,10 +2,6 @@ package com.hartwig.hmftools.common.rna;
 
 import static com.hartwig.hmftools.common.rna.RnaCommon.DELIMITER;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
 import java.util.StringJoiner;
 
 import org.immutables.value.Value;
@@ -62,7 +58,7 @@ public abstract class RnaStatistics
 
     public static RnaStatistics fromCsv(final String input)
     {
-        final String items[] = input.split(DELIMITER);
+        final String[] items = input.split(DELIMITER);
         int index = 1;
 
         return ImmutableRnaStatistics.builder()

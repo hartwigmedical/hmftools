@@ -14,6 +14,26 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class HmfTranscriptRegion implements TranscriptRegion {
 
+    @NotNull
+    public abstract String geneID();
+
+    public abstract long geneStart();
+
+    public abstract long geneEnd();
+
+    public abstract long codingStart();
+
+    public abstract long codingEnd();
+
+    @NotNull
+    public abstract Strand strand();
+
+    @NotNull
+    public abstract List<Integer> entrezId();
+
+    @NotNull
+    public abstract List<HmfExonRegion> exome();
+
     public boolean isDonorMinusOne(long position) {
         return isDonorPlusOne(-1, position);
     }
@@ -82,27 +102,6 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
         return false;
     }
 
-    @NotNull
-    public abstract String geneID();
-
-    public abstract long geneStart();
-
-    public abstract long geneEnd();
-
-    public abstract long codingStart();
-
-    public abstract long codingEnd();
-
-    @NotNull
-    public abstract Strand strand();
-
-    @NotNull
-    public abstract List<Integer> entrezId();
-
-    @NotNull
-    public abstract List<HmfExonRegion> exome();
-
-    @Value.Derived
     @Nullable
     public HmfExonRegion exonByIndex(int index) {
         int effectiveIndex = index - 1;
@@ -115,7 +114,6 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
         return null;
     }
 
-    @Value.Derived
     @Nullable
     public List<GenomeRegion> codingRangeByGenomicCoordinates(int genomicStartPosition, int genomicEndPosition) {
         if (genomicStartPosition < 1 || genomicEndPosition < 1) {
@@ -145,7 +143,6 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
         return !codingRegions.isEmpty() ? codingRegions : null;
     }
 
-    @Value.Derived
     @Nullable
     public List<GenomeRegion> codonByIndex(int index) {
         return codonRangeByIndex(index, index);
@@ -158,7 +155,7 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
             return codonRegions;
         }
 
-        int basesConvered = 0;
+        int basesCovered = 0;
         for (int i = 0; i < exome().size(); i++) {
             final HmfExonRegion exon = exome().get(i);
             long exonCodingStart = Math.max(exon.start(), codingStart());
@@ -171,7 +168,7 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
             }
 
             if (position >= exonCodingStart && position <= exonCodingEnd) {
-                long lookBack = (basesConvered + position - exonCodingStart) % 3;
+                long lookBack = (basesCovered + position - exonCodingStart) % 3;
                 long lookForward = 2 - lookBack;
 
                 // Do we need previous exon?
@@ -204,14 +201,12 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
                 return codonRegions;
             }
 
-            basesConvered += exonBaseLength;
+            basesCovered += exonBaseLength;
         }
 
         return codonRegions;
-
     }
 
-    @Value.Derived
     @Nullable
     public List<GenomeRegion> codonRangeByIndex(int startCodon, int endCodon) {
         if (startCodon < 1 || endCodon < 1) {

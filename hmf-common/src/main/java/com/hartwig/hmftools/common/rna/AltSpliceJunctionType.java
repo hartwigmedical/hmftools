@@ -11,5 +11,5 @@ public enum AltSpliceJunctionType
     INTRONIC,
     EXON_INTRON,
     CIRCULAR,
-    UNKNOWN;
+    UNKNOWN
 }
