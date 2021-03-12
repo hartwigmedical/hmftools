@@ -43,8 +43,11 @@ public class VariantContextDecorator implements GenomePosition {
     private final String ref;
     private final String alt;
     private final VariantTier tier;
-    private final SnpEffSummary snpEffSummary;
-    private final DriverImpact impact;
+
+    @Nullable
+    private SnpEffSummary snpEffSummary;
+    @Nullable
+    private DriverImpact impact;
 
     public VariantContextDecorator(final VariantContext context) {
         this.context = context;
@@ -53,8 +56,8 @@ public class VariantContextDecorator implements GenomePosition {
         this.ref = context.getReference().getBaseString();
         this.alt = context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
         this.tier = VariantTier.fromContext(context);
-        this.snpEffSummary = SnpEffSummaryFactory.fromSnpEffEnrichment(context);
-        this.impact = DriverImpact.select(type, snpEffSummary.canonicalCodingEffect());
+        this.snpEffSummary = null;
+        this.impact = null;
     }
 
     public boolean isPass() {
@@ -99,16 +102,24 @@ public class VariantContextDecorator implements GenomePosition {
 
     @NotNull
     public SnpEffSummary snpEffSummary() {
+        if (snpEffSummary == null) {
+            this.snpEffSummary = SnpEffSummaryFactory.fromSnpEffEnrichment(context);
+        }
+
         return snpEffSummary;
     }
 
     @NotNull
     public String gene() {
-        return snpEffSummary.gene();
+        return snpEffSummary().gene();
     }
 
     @NotNull
     public DriverImpact impact() {
+        if (impact == null) {
+            this.impact = DriverImpact.select(type, snpEffSummary().canonicalCodingEffect());
+        }
+
         return impact;
     }
 
