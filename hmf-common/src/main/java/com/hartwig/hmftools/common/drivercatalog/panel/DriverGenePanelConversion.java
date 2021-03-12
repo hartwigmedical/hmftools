@@ -106,7 +106,7 @@ public class DriverGenePanelConversion {
                 new GermlineHotspotVCF(germlineHotspotGenes(driverGenes)).process(clinvarFile, germlineHotspotFile);
 
         // Write out germline slice file.
-        createSliceFile(germlineSliceFile, germlinePanel, germlineHotspots, qualityRecalibrationRegions);
+         createSliceFile(germlineSliceFile, germlinePanel, germlineHotspots, qualityRecalibrationRegions);
 
         // Write out germline blacklist file.
         final List<VariantContext> germlineBlackList = assembly == DriverGenePanelAssembly.HG19
