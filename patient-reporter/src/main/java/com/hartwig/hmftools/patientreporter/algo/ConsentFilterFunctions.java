@@ -78,7 +78,6 @@ public final class ConsentFilterFunctions {
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-
             if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION) {
                 filtered.add(ImmutableProtectEvidence.builder().from(evidence).germline(false).build());
             } else if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION) {
