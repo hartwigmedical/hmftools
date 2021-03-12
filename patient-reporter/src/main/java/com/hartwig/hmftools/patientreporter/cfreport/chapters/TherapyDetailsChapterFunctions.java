@@ -14,6 +14,7 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.VerticalAlignment;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 final class TherapyDetailsChapterFunctions {
@@ -50,7 +51,9 @@ final class TherapyDetailsChapterFunctions {
                     .setVerticalAlignment(VerticalAlignment.TOP)));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(item.level().name()))));
             contentTable.addCell(TableUtil.createContentCell(item.direction().name()));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(EvidenceItems.sources(item)).addStyle(ReportResources.dataHighlightLinksStyle()))
+            contentTable.addCell(TableUtil.createContentCell(EvidenceItems.evidenceUrl(item).equals(Strings.EMPTY)
+                    ? new Paragraph(EvidenceItems.sources(item))
+                    : new Paragraph(EvidenceItems.sources(item)).addStyle(ReportResources.dataHighlightLinksStyle()))
                     .setAction(PdfAction.createURI(EvidenceItems.evidenceUrl(item))));
         }
 

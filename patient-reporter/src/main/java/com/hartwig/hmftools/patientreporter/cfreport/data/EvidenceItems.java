@@ -60,6 +60,10 @@ public final class EvidenceItems {
             }
         }
 
+        if (evidence.urls().size() == 1 && evidence.urls().iterator().next().contains("google")) {
+            return Strings.EMPTY;
+        }
+
         return evidence.urls().iterator().next();
     }
 
