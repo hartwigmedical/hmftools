@@ -140,14 +140,14 @@ public class PatientReporterApplication {
             @NotNull PatientReport report) throws IOException {
         String outputFileData = outputDirData + File.separator + tumorSampleId + "_" + tumorBarcode + ".json";
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
-        writer.write(convertToJoin(report));
+        writer.write(convertToJson(report));
         writer.close();
         LOGGER.info("Created json file at {} ", outputFileData);
     }
 
     @VisibleForTesting
     @NotNull
-    static String convertToJoin(@NotNull PatientReport report) {
+    static String convertToJson(@NotNull PatientReport report) {
         return new GsonBuilder().serializeSpecialFloatingPointValues().create().toJson(report);
     }
 

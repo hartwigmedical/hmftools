@@ -31,7 +31,7 @@ public class PatientReporterApplicationTest {
                         .build())
                 .build();
 
-        assertNotNull(PatientReporterApplication.convertToJoin(nanReport));
+        assertNotNull(PatientReporterApplication.convertToJson(nanReport));
     }
 
     @NotNull
