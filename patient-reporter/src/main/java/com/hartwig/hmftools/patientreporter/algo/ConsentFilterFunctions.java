@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.protect.linx.ViralInsertion;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
@@ -77,7 +78,22 @@ public final class ConsentFilterFunctions {
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (evidence.germline() && germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING) {
+
+            if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION) {
+                filtered.add(ImmutableProtectEvidence.builder()
+                        .genomicEvent(evidence.genomicEvent())
+                        .germline(false)
+                        .reported(evidence.reported())
+                        .treatment(evidence.treatment())
+                        .onLabel(evidence.onLabel())
+                        .level(evidence.level())
+                        .direction(evidence.direction())
+                        .sources(evidence.sources())
+                        .urls(evidence.urls())
+                        .build());
+            }
+
+            if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION) {
                 filtered.add(evidence);
             }
 
