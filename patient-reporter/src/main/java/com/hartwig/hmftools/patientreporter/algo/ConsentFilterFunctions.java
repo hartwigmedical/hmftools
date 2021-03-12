@@ -81,13 +81,9 @@ public final class ConsentFilterFunctions {
 
             if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION) {
                 filtered.add(ImmutableProtectEvidence.builder().from(evidence).germline(false).build());
-            }
-
-            if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION) {
+            } else if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION) {
                 filtered.add(evidence);
-            }
-
-            if (!evidence.germline()) {
+            } else if (!evidence.germline()) {
                 filtered.add(evidence);
             }
         }
