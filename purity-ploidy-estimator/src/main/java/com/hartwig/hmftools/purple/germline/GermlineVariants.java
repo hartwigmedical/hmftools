@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
@@ -55,7 +56,7 @@ public class GermlineVariants {
     }
 
     public void processAndWrite(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
-            @NotNull final List<VariantContext> somaticVariants) throws IOException {
+            @NotNull final Set<String> somaticReportedGenes) throws IOException {
         final Optional<File> optionalInputVCF = configSupplier.germlineConfig().file();
 
         if (optionalInputVCF.isPresent()) {
@@ -84,7 +85,7 @@ public class GermlineVariants {
                         genePanel,
                         transcripts,
                         configSupplier.driverCatalogConfig().germlineHotspots(),
-                        somaticVariants,
+                        somaticReportedGenes,
                         consumer);
 
                 writer.writeHeader(enrichment.enrichHeader(vcfReader.getFileHeader()));

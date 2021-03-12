@@ -47,16 +47,12 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
     private final Set<String> somaticKnockouts;
     private final List<VariantContextDecorator> buffer = Lists.newArrayList();
 
-    public GermlineReportedEnrichment(@NotNull final List<DriverGene> driverGenes, @NotNull final List<VariantContext> somaticVariants,
+    public GermlineReportedEnrichment(@NotNull final List<DriverGene> driverGenes, @NotNull final Set<String> somaticReportedGenes,
             @NotNull final Consumer<VariantContext> consumer) {
         this.consumer = consumer;
 
         this.driverGeneMap = driverGenes.stream().filter(DriverGene::reportGermline).collect(Collectors.toMap(DriverGene::gene, x -> x));
-        this.somaticKnockouts = somaticVariants.stream()
-                .map(VariantContextDecorator::new)
-                .filter(VariantContextDecorator::reported)
-                .map(VariantContextDecorator::gene)
-                .collect(Collectors.toSet());
+        this.somaticKnockouts = somaticReportedGenes;
     }
 
     @Override

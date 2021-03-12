@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -70,6 +71,7 @@ import com.hartwig.hmftools.purple.config.SomaticFitConfig;
 import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.germline.GermlineVariants;
 import com.hartwig.hmftools.purple.plot.Charts;
+import com.hartwig.hmftools.purple.somatic.SomaticPeakStream;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
 
 import org.apache.commons.cli.CommandLine;
@@ -209,14 +211,18 @@ public class PurityPloidyEstimateApplication {
                     geneCopyNumbers,
                     cobaltChromosomes.germlineAberrations());
 
+            LOGGER.info("Modelling somatic peaks");
+            final SomaticPeakStream somaticPeakStream = new SomaticPeakStream(configSupplier);
+            final List<PeakModel> somaticPeaks = somaticPeakStream.somaticPeakModel(purityAdjuster, copyNumbers, enrichedFittedRegions);
+
             LOGGER.info("Enriching somatic variants");
-            final SomaticStream somaticStream = new SomaticStream(configSupplier);
-            final List<VariantContext> somaticVariantContexts = somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions);
-            final List<PeakModel> somaticPeaks = somaticStream.somaticPeakModel();
+            final SomaticStream somaticStream = new SomaticStream(configSupplier, somaticPeakStream.snpCount(), somaticPeakStream.indelCount(), somaticPeaks);
+            somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions);
+            final Set<String> reportedGenes = somaticStream.reportedGenes();
 
             GermlineVariants germlineVariants = new GermlineVariants(configSupplier);
             if (configSupplier.germlineConfig().enabled()) {
-                germlineVariants.processAndWrite(purityAdjuster, copyNumbers, somaticVariantContexts);
+                germlineVariants.processAndWrite(purityAdjuster, copyNumbers, reportedGenes);
             }
 
             final PurityContext purityContext = ImmutablePurityContext.builder()
@@ -291,7 +297,7 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Generating charts");
             new Charts(configSupplier, executorService).write(cobaltGender,
                     copyNumbers,
-                    somaticVariantContexts,
+                    somaticStream.downsampledVariants(),
                     structuralVariants.variants(),
                     fittedRegions,
                     Lists.newArrayList(bafs.values()));
