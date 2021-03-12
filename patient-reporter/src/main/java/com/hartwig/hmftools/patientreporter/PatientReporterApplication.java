@@ -86,7 +86,7 @@ public class PatientReporterApplication {
                     report.sampleReport().tumorSampleBarcode(),
                     report);
 
-            if (report.sampleReport().cohort().cohortId().equals("COLO")) {
+            if (!report.sampleReport().cohort().cohortId().equals("COLO")) {
                 ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
             }
         }
