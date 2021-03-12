@@ -80,17 +80,7 @@ public final class ConsentFilterFunctions {
         for (ProtectEvidence evidence : evidences) {
 
             if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION) {
-                filtered.add(ImmutableProtectEvidence.builder()
-                        .genomicEvent(evidence.genomicEvent())
-                        .germline(false)
-                        .reported(evidence.reported())
-                        .treatment(evidence.treatment())
-                        .onLabel(evidence.onLabel())
-                        .level(evidence.level())
-                        .direction(evidence.direction())
-                        .sources(evidence.sources())
-                        .urls(evidence.urls())
-                        .build());
+                filtered.add(ImmutableProtectEvidence.builder().from(evidence).germline(false).build());
             }
 
             if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION) {
