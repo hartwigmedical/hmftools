@@ -106,7 +106,7 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String biallelicString(boolean biallelic, boolean hasReliablePurity) {
+    public static String biallelicString(Boolean biallelic, boolean hasReliablePurity) {
         if (hasReliablePurity) {
             return biallelic ? "Yes" : "No";
         } else {
