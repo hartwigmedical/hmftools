@@ -63,9 +63,21 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
+    public static AnalysedPatientReport buildTestReport() {
+        return buildWithCOLO829Data("TestSample",
+                false,
+                null,
+                QsFormNumber.FOR_080.display(),
+                true,
+                1D,
+                true,
+                false,
+                PatientReporterTestFactory.createTestCohortConfig());
+    }
+
+    @NotNull
     public static AnalysedPatientReport buildCOLO829(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
             @NotNull LimsCohortConfig limsCohortConfig) {
-
         return buildWithCOLO829Data(sampleId,
                 correctionReport,
                 comments,
