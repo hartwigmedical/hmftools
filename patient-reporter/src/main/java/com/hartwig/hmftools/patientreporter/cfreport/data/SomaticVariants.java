@@ -16,6 +16,7 @@ import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class SomaticVariants {
 
@@ -106,8 +107,9 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String biallelicString(Boolean biallelic, boolean hasReliablePurity) {
+    public static String biallelicString(@Nullable Boolean biallelic, boolean hasReliablePurity) {
         if (hasReliablePurity) {
+            assert biallelic != null;
             return biallelic ? "Yes" : "No";
         } else {
             return DataUtil.NA_STRING;
