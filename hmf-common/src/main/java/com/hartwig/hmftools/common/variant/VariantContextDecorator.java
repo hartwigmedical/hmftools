@@ -22,12 +22,14 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
+import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummaryFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
@@ -41,8 +43,11 @@ public class VariantContextDecorator implements GenomePosition {
     private final String ref;
     private final String alt;
     private final VariantTier tier;
-    private final SnpEffSummary snpEffSummary;
-    private final DriverImpact impact;
+
+    @Nullable
+    private SnpEffSummary snpEffSummary;
+    @Nullable
+    private DriverImpact impact;
 
     public VariantContextDecorator(final VariantContext context) {
         this.context = context;
@@ -51,8 +56,8 @@ public class VariantContextDecorator implements GenomePosition {
         this.ref = context.getReference().getBaseString();
         this.alt = context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
         this.tier = VariantTier.fromContext(context);
-        this.snpEffSummary = SnpEffSummaryFactory.fromSnpEffEnrichment(context);
-        this.impact = DriverImpact.select(type, snpEffSummary.canonicalCodingEffect());
+        this.snpEffSummary = null;
+        this.impact = null;
     }
 
     public boolean isPass() {
@@ -97,16 +102,24 @@ public class VariantContextDecorator implements GenomePosition {
 
     @NotNull
     public SnpEffSummary snpEffSummary() {
+        if (snpEffSummary == null) {
+            this.snpEffSummary = SnpEffSummaryFactory.fromSnpEffEnrichment(context);
+        }
+
         return snpEffSummary;
     }
 
     @NotNull
     public String gene() {
-        return snpEffSummary.gene();
+        return snpEffSummary().gene();
     }
 
     @NotNull
     public DriverImpact impact() {
+        if (impact == null) {
+            this.impact = DriverImpact.select(type, snpEffSummary().canonicalCodingEffect());
+        }
+
         return impact;
     }
 
@@ -132,6 +145,11 @@ public class VariantContextDecorator implements GenomePosition {
 
     public double variantCopyNumber() {
         return context.getAttributeAsDouble(PURPLE_VARIANT_CN_INFO, context.getAttributeAsDouble(PURPLE_VARIANT_PLOIDY_INFO, 0));
+    }
+
+    @Nullable
+    public Integer localPhaseSet() {
+        return context.hasAttribute(SageMetaData.LOCAL_PHASE_SET) ? context.getAttributeAsInt(SageMetaData.LOCAL_PHASE_SET, 0) : null;
     }
 
     @NotNull

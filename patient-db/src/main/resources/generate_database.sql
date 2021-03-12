@@ -786,6 +786,7 @@ CREATE TABLE germlineVariant2
     rnaTotalReadCount int,
     tumorAlleleReadCount int NOT NULL,
     tumorTotalReadCount int NOT NULL,
+    localPhaseSet int,
 
     ### PURPLE ENRICHMENT
     adjustedVaf DOUBLE PRECISION NOT NULL,
@@ -820,12 +821,10 @@ CREATE TABLE germlineVariant2
     mappability DOUBLE PRECISION NOT NULL,
     reported BOOLEAN NOT NULL,
 
-
     ### NOT USED
     #recovered BOOLEAN NOT NULL,
     #germlineStatus varchar(255) NOT NULL,
     #kataegis varchar(20) NOT NULL,
-    #localPhaseSet int,
     #localRealignmentSet int,
     #phasedInframeIndel int,
     #subclonalLikelihood DOUBLE PRECISION NOT NULL,

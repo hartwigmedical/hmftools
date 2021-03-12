@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
@@ -33,7 +34,7 @@ public class GermlineReportedEnrichmentTest {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.NONE, DriverGeneGermlineReporting.ANY);
         GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptyList(), consumer::add);
+                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
         victim.accept(createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5));
         victim.flush();
 
@@ -46,7 +47,7 @@ public class GermlineReportedEnrichmentTest {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.NONE, DriverGeneGermlineReporting.ANY);
         GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptyList(), consumer::add);
+                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
         victim.accept(createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5));
         victim.accept(createGermline("FILTERED", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5));
         victim.flush();
@@ -61,7 +62,7 @@ public class GermlineReportedEnrichmentTest {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.NONE, DriverGeneGermlineReporting.NONE);
         GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptyList(), consumer::add);
+                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
         victim.accept(createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5));
         victim.flush();
 
@@ -75,7 +76,7 @@ public class GermlineReportedEnrichmentTest {
         DriverGene driverGene =
                 createDriverGene("KD53", DriverGeneGermlineReporting.WILDTYPE_LOST, DriverGeneGermlineReporting.WILDTYPE_LOST);
         GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptyList(), consumer::add);
+                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
         victim.accept(createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5));
         victim.accept(createGermline("FILTERED", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5));
         victim.flush();
@@ -90,7 +91,7 @@ public class GermlineReportedEnrichmentTest {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.NONE, DriverGeneGermlineReporting.WILDTYPE_LOST);
         GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptyList(), consumer::add);
+                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
         victim.accept(createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5));
         victim.accept(createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5));
         victim.flush();
@@ -106,7 +107,7 @@ public class GermlineReportedEnrichmentTest {
         DriverGene driverGene =
                 createDriverGene("KD53", DriverGeneGermlineReporting.WILDTYPE_LOST, DriverGeneGermlineReporting.WILDTYPE_LOST);
         GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptyList(), consumer::add);
+                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
         victim.accept(createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5));
         victim.accept(createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5));
         victim.flush();
@@ -121,7 +122,7 @@ public class GermlineReportedEnrichmentTest {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.ANY, DriverGeneGermlineReporting.NONE);
         GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptyList(), consumer::add);
+                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
         victim.accept(createGermline("PASS", "KD53", false, false, "UNKNOWN", CodingEffect.NONSENSE_OR_FRAMESHIFT, 0.5));
         victim.flush();
 
@@ -134,7 +135,7 @@ public class GermlineReportedEnrichmentTest {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.ANY, DriverGeneGermlineReporting.NONE);
         GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptyList(), consumer::add);
+                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
         victim.accept(createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5));
         victim.flush();
 
@@ -147,7 +148,7 @@ public class GermlineReportedEnrichmentTest {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.ANY, DriverGeneGermlineReporting.WILDTYPE_LOST);
         GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptyList(), consumer::add);
+                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
         victim.accept(createGermline("PASS", "KD53", true, false, "Pathogenic", CodingEffect.NONE, 0.5));
         victim.flush();
 
@@ -160,7 +161,7 @@ public class GermlineReportedEnrichmentTest {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.WILDTYPE_LOST, DriverGeneGermlineReporting.NONE);
         GermlineReportedEnrichment victim =
-                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptyList(), consumer::add);
+                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet(), consumer::add);
         victim.accept(createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5));
         victim.flush();
 
@@ -172,9 +173,8 @@ public class GermlineReportedEnrichmentTest {
     public void testSomaticCountTowardsMultipleHits() {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.WILDTYPE_LOST, DriverGeneGermlineReporting.NONE);
-        GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene),
-                Lists.newArrayList(createReportedSomaticVariant("KD53")),
-                consumer::add);
+        GermlineReportedEnrichment victim =
+                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Sets.newHashSet("KD53"), consumer::add);
         victim.accept(createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5));
         victim.flush();
 
@@ -186,9 +186,8 @@ public class GermlineReportedEnrichmentTest {
     public void testVariantNotLost() {
         List<VariantContext> consumer = Lists.newArrayList();
         DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.VARIANT_NOT_LOST, DriverGeneGermlineReporting.NONE);
-        GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene),
-                Lists.newArrayList(createReportedSomaticVariant("KD53")),
-                consumer::add);
+        GermlineReportedEnrichment victim =
+                new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Sets.newHashSet("KD53"), consumer::add);
         victim.accept(createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.4));
         victim.accept(createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.6));
         victim.flush();
@@ -204,15 +203,8 @@ public class GermlineReportedEnrichmentTest {
         final String hotspotFlag = isHotspot ? HOTSPOT_FLAG : NEAR_HOTSPOT_FLAG;
         final String line =
                 "11\t1000\tCOSM123;COSM456\tG\tA\t100\t" + filter + "\t" + PURPLE_BIALLELIC_FLAG + "=" + biallelic + ";" + hotspotFlag
-                        + ";SEC=" + gene + ",ENST00000393562,UTR_variant," + codingEffect.toString() + ",c.-275T>G,;CLNSIG=" + clinSig
-                        + ";" + PURPLE_VARIANT_CN_INFO + "=" + variantCopyNumber + ";\"\tGT:AD:DP\t0/1:73,17:91";
-        return VariantContextFromString.decode(line);
-    }
-
-    @NotNull
-    private static VariantContext createReportedSomaticVariant(@NotNull String gene) {
-        final String line = "11\t1000\tCOSM123;COSM456\tG\tA\t100\tPASS\tREPORTED;SEW=" + gene
-                + ",ENST00000393562,UTR_variant,NONE,1;||\tGT:AD:DP\t0/1:73,17:91";
+                        + ";SEC=" + gene + ",ENST00000393562,UTR_variant," + codingEffect.toString() + ",c.-275T>G,;CLNSIG=" + clinSig + ";"
+                        + PURPLE_VARIANT_CN_INFO + "=" + variantCopyNumber + ";\"\tGT:AD:DP\t0/1:73,17:91";
         return VariantContextFromString.decode(line);
     }
 

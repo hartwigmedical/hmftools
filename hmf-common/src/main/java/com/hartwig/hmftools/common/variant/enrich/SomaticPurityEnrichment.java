@@ -20,7 +20,7 @@ public class SomaticPurityEnrichment implements VariantContextEnrichment {
     private final PurityAdjustedSomaticVariantFactory factory;
     private final Consumer<VariantContext> consumer;
 
-    SomaticPurityEnrichment(@NotNull final String purpleVersion, @NotNull final String sample,
+    public SomaticPurityEnrichment(@NotNull final String purpleVersion, @NotNull final String sample,
             @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
             @NotNull final List<FittedRegion> fittedRegions, @NotNull final Consumer<VariantContext> consumer) {
         this.purpleVersion = purpleVersion;

@@ -13,8 +13,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.ExcludeCNVFilter;
+import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -81,7 +81,7 @@ public class StructuralVariantFactory {
 
     public StructuralVariantFactory(final @NotNull VariantContextFilter filter) {
         this.filter = new CompoundFilter(true);
-        this.filter.add(new ChromosomeFilter());
+        this.filter.add(new HumanChromosomeFilter());
         this.filter.add(new ExcludeCNVFilter());
         this.filter.add(filter);
     }

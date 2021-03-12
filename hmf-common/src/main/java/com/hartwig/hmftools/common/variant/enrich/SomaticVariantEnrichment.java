@@ -31,13 +31,13 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment {
     private final SubclonalLikelihoodEnrichment subclonalLikelihoodEnrichment;
     private final VariantContextEnrichment snpEffEnrichment;
 
-    public SomaticVariantEnrichment(boolean hotspotEnabled, double clonalityMaxPloidy, double clonalityBinWidth,
-            @NotNull final String purpleVersion, @NotNull final String tumorSample, @NotNull final IndexedFastaSequenceFile reference,
+    public SomaticVariantEnrichment(boolean hotspotEnabled, double clonalityBinWidth, @NotNull final String purpleVersion,
+            @NotNull final String tumorSample, @NotNull final IndexedFastaSequenceFile reference,
             @NotNull final PurityAdjuster purityAdjuster, @NotNull final DriverGenePanel genePanel,
             @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<FittedRegion> fittedRegions,
             @NotNull final Multimap<Chromosome, VariantHotspot> hotspots, @NotNull final List<HmfTranscriptRegion> transcripts,
-            @NotNull final Consumer<VariantContext> consumer) {
-        subclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(tumorSample, clonalityMaxPloidy, clonalityBinWidth, consumer);
+            @NotNull final List<PeakModel> peakModel, @NotNull final Consumer<VariantContext> consumer) {
+        subclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(clonalityBinWidth, peakModel, consumer);
         purityEnrichment = new SomaticPurityEnrichment(purpleVersion,
                 tumorSample,
                 purityAdjuster,
@@ -64,11 +64,6 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment {
         kataegisEnrichment.flush();
         purityEnrichment.flush();
         subclonalLikelihoodEnrichment.flush();
-    }
-
-    @NotNull
-    public List<PeakModel> somaticPeakModel() {
-        return subclonalLikelihoodEnrichment.somaticPeakModel();
     }
 
     @NotNull
