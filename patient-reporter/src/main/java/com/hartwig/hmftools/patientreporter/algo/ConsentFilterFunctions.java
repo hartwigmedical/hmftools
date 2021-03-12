@@ -99,6 +99,7 @@ public final class ConsentFilterFunctions {
                 .source(source)
                 .totalCopyNumber(hasReliablePurity ? flooredCopyNumber : Double.NaN)
                 .alleleCopyNumber(hasReliablePurity ? variant.alleleCopyNumber() : Double.NaN)
+                .biallelic(hasReliablePurity ? variant.biallelic() : null)
                 .build();
     }
 }
