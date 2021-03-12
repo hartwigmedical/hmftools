@@ -397,7 +397,7 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/25672916\""))
+                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/25672916"))
                 .build());
 
         return evidenceItemsOnLabel;
