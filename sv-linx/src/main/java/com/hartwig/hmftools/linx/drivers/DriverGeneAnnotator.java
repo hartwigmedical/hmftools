@@ -163,18 +163,15 @@ public class DriverGeneAnnotator
             DriverGeneData dgData = new DriverGeneData(driverGene, geneData, canonicalTrans, geneMinCopyNumber);
             mDataCache.getDriverGeneDataList().add(dgData);
 
-            if(dgData.DriverData.category() == TSG)
+            if(dgData.DriverData.driver() == DriverType.DEL)
             {
-                if(dgData.DriverData.driver() == DriverType.DEL)
-                {
-                    mDelDrivers.annotateDeleteEvent(dgData);
-                }
-                else
-                {
-                    mDelDrivers.annotateBiallelicEvent(dgData);
-                }
+                mDelDrivers.annotateDeleteEvent(dgData);
             }
-            else if (dgData.DriverData.category() == ONCO)
+            else if(driverGene.category() == TSG && driverGene.biallelic())
+            {
+                mDelDrivers.annotateBiallelicEvent(dgData);
+            }
+            else if (driverGene.driver() == DriverType.AMP || driverGene.driver() == PARTIAL_AMP)
             {
                 final List<SvBreakend> breakendList = mChrBreakendMap.get(dgData.GeneData.Chromosome);
                 mAmpDrivers.annotateAmplification(dgData, breakendList);
