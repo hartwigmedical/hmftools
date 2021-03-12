@@ -12,10 +12,13 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
+import static com.hartwig.hmftools.common.neo.AminoAcidConverter.STOP_SYMBOL;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.pointMutationInfo;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.FRAMESHIFT;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_INSERTION;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeType.MISSENSE;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeType.STOP_LOST;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
@@ -47,7 +50,7 @@ public class PmNeoEpitope extends NeoEpitope
 {
     private final PointMutationData mPointMutation;
     private final int mIndelBaseDiff;
-    private String mWildtypeBases;
+    private NeoEpitopeType mType;
     private String mWildtypeAcids;
 
     public PmNeoEpitope(final PointMutationData pointMutation)
@@ -55,7 +58,23 @@ public class PmNeoEpitope extends NeoEpitope
         super();
         mPointMutation = pointMutation;
         mIndelBaseDiff = mPointMutation.Alt.length() - mPointMutation.Ref.length();
-        mWildtypeBases = "";
+
+        if(isBaseChange())
+        {
+            mType = NeoEpitopeType.MISSENSE;
+        }
+        else if((mIndelBaseDiff % 3) == 0)
+        {
+            if(isInsert())
+                mType = INFRAME_INSERTION;
+            else
+                mType = INFRAME_DELETION;
+        }
+        else
+        {
+            mType = FRAMESHIFT;
+        }
+
         mWildtypeAcids = "";
     }
 
@@ -98,22 +117,7 @@ public class PmNeoEpitope extends NeoEpitope
 
     public String geneName(int stream) { return mPointMutation.Gene; }
 
-    public NeoEpitopeType variantType()
-    {
-        // missense, inframe insertion, inframe deletion, frameshift,
-        if(isBaseChange())
-            return NeoEpitopeType.MISSENSE;
-
-        if((mIndelBaseDiff % 3) == 0)
-        {
-            if(isInsert())
-                return INFRAME_INSERTION;
-            else
-                return INFRAME_DELETION;
-        }
-
-        return FRAMESHIFT;
-    }
+    public NeoEpitopeType variantType() { return mType; }
 
     public String variantInfo()
     {
@@ -124,7 +128,7 @@ public class PmNeoEpitope extends NeoEpitope
 
     public boolean phaseMatched()
     {
-        return (abs(mIndelBaseDiff) % 3) == 0;
+        return (abs(mIndelBaseDiff) % 3) == 0 && mType != STOP_LOST;
     }
 
     private boolean posStrand() { return TransData[FS_UP].Strand == POS_STRAND; }
@@ -440,11 +444,28 @@ public class PmNeoEpitope extends NeoEpitope
             upBases = upBases.substring(0, upBases.length() - upOpenCodonBases);
         }
 
-        mWildtypeBases = trimIncompleteCodons(upBases) + downBases;
-
         final String upstreamAcids = getAminoAcids(upBases, false);
         final String downstreamAcids = getAminoAcids(downBases, true);
         mWildtypeAcids = upstreamAcids + downstreamAcids;
+    }
+
+    public void checkStopLost(final RefGenomeInterface refGenome, int reqWildtypeAminoAcids)
+    {
+        if(variantType() != MISSENSE)
+            return;
+
+        if(!wildtypeAcids().endsWith(STOP_SYMBOL))
+            return;
+
+        // check for stop-lost in point mutations mis-classified as missense
+        if(DownstreamAcids.isEmpty() && !NovelAcid.endsWith(STOP_SYMBOL))
+        {
+            mType = STOP_LOST;
+
+            // now recalculate downstream bases and AAs
+            setCodingBases(refGenome, reqWildtypeAminoAcids);
+            setAminoAcids(refGenome, reqWildtypeAminoAcids);
+        }
     }
 
     public String toString()

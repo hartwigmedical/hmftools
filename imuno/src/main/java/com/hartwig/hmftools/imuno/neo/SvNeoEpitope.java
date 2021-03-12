@@ -231,6 +231,8 @@ public class SvNeoEpitope extends NeoEpitope
                 toString(), phaseMatched(), upExtraBases, downExtraBases, upRequiredBases, downRequiredBases, codingInsSeqLen);
     }
 
+    public void checkStopLost(final RefGenomeInterface refGenome, int reqWildtypeAminoAcids) {}
+
     public void setSkippedSpliceSites(final EnsemblDataCache geneTransCache)
     {
         // between the fusion position and the nearest coding

@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeType.STOP_LOST;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
@@ -30,6 +31,7 @@ import static junit.framework.TestCase.assertTrue;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
+import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -859,7 +861,54 @@ public class NeoEpitopeTest
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
     }
 
-     @Test
+    @Test
+    public void testStopLostPointMutations()
+    {
+        final MockRefGenome refGenome = new MockRefGenome();
+
+        final String chr1Bases = generateRandomBases(64) + "TGA" + generateRandomBases(60);
+
+        refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
+
+        int[] exonStarts = { 0, 20, 40, 60, 80, 100 };
+        Integer codingStart = new Integer(25);
+        Integer codingEnd = new Integer(66);
+
+        TranscriptData transDataPosStrand = createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
+
+        // stop-lost
+        PointMutationData pmData = new PointMutationData(
+                CHR_1, 64, chr1Bases.substring(64, 65), "A", GENE_ID_1, MISSENSE, 1, -1);
+
+        PmNeoEpitope neData = new PmNeoEpitope(pmData);
+
+        neData.setTranscriptData(transDataPosStrand, transDataPosStrand);
+
+        assertEquals(CODING, neData.CodingType[FS_UP]);
+        assertEquals(CODING, neData.CodingType[FS_DOWN]);
+        assertEquals(EXONIC, neData.RegionType[FS_UP]);
+        assertEquals(EXONIC, neData.RegionType[FS_DOWN]);
+        assertEquals(PHASE_1, neData.Phases[FS_UP]);
+        assertEquals(PHASE_2, neData.Phases[FS_DOWN]);
+        Assert.assertTrue(neData.phaseMatched());
+
+        assertEquals(NeoEpitopeType.MISSENSE, neData.variantType());
+
+        neData.setCodingBases(refGenome, 3);
+        neData.setAminoAcids(refGenome, 3);
+        assertEquals(STOP_LOST, neData.variantType());
+
+        String upBases = chr1Bases.substring(46, 51) + chr1Bases.substring(60, 64);
+        assertEquals(upBases, neData.CodingBases[FS_UP]);
+
+        String novelBases = pmData.Alt + chr1Bases.substring(65, 71) + chr1Bases.substring(80, 91) + chr1Bases.substring(100, 111);
+        assertEquals(novelBases, neData.NovelCodonBases);
+
+        assertEquals("", neData.CodingBases[FS_DOWN]);
+    }
+
+    @Test
     public void testSvFusions()
     {
         final MockRefGenome refGenome = new MockRefGenome();

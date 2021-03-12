@@ -6,6 +6,7 @@ public enum NeoEpitopeType
     INFRAME_INSERTION,
     INFRAME_DELETION,
     FRAMESHIFT,
+    STOP_LOST,
     INFRAME_FUSION,
     OUT_OF_FRAME_FUSION;
 

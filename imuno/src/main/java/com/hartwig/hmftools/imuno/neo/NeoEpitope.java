@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeType.MISSENSE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -244,7 +245,11 @@ public abstract class NeoEpitope
 
         IM_LOGGER.trace("ne({}) upAA({}) novel({}) downAA({})",
                 this, UpstreamAcids, checkTrimBases(NovelAcid), checkTrimBases(DownstreamAcids));
+
+        checkStopLost(refGenome, reqWildtypeAminoAcids);
     }
+
+    public abstract void checkStopLost(final RefGenomeInterface refGenome, int reqWildtypeAminoAcids);
 
     public abstract void setSkippedSpliceSites(final EnsemblDataCache geneTransCache);
 
