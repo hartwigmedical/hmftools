@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.CHR_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_19;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.is37;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
@@ -240,7 +241,7 @@ public class IsofoxConfig
             ISF_LOGGER.info("file({}) loaded {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
 
-        ExcludedRegion = RefGenVersion == RG_19 ? EXCLUDED_REGION_1_REF_37 : EXCLUDED_REGION_1_REF_38;
+        ExcludedRegion = is37(RefGenVersion) ? EXCLUDED_REGION_1_REF_37 : EXCLUDED_REGION_1_REF_38;
 
         GeneReadLimit = Integer.parseInt(cmd.getOptionValue(GENE_READ_LIMIT, "0"));
         MaxFragmentLength = Integer.parseInt(cmd.getOptionValue(LONG_FRAGMENT_LIMIT, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
@@ -489,7 +490,7 @@ public class IsofoxConfig
         OutputDir = null;
         BamFile = null;
         RefGenomeFile = null;
-        RefGenVersion = RG_19;
+        RefGenVersion = RG_37;
         RefGenome = new MockRefGenome();
         CanonicalTranscriptOnly = false;
         GeneReadLimit = 0;
