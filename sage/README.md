@@ -634,7 +634,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 32 | 45 | 943 | 15
 
 # Version History and Download Links
-- Upcoming
+- [2.7](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.7)
   - Calculate NM field if not present in alignment file
 - [2.6](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.6)
   - Coverage is now calculated on supplied bed file rather than on panel bed file
