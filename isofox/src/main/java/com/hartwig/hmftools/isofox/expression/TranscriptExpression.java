@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_GENE_PERC_CONTRIBUTION;
 import static com.hartwig.hmftools.isofox.expression.CategoryCountsData.hasGeneIdentifier;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.formTranscriptDefinitions;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.writeExpectedRates;
@@ -154,7 +155,6 @@ public class TranscriptExpression
         }
     }
 
-    private static final double MAX_GENE_PERC_CONTRIBUTION = 0.01;
     private static final int RAW_TPM = 0;
     private static final int ADJUSTED_TPM = 1;
     private static final double TPM_MILLION = 1000000;

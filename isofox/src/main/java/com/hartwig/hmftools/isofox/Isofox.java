@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
@@ -29,12 +30,15 @@ import static com.hartwig.hmftools.isofox.results.SummaryStats.createSummaryStat
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
@@ -178,11 +182,28 @@ public class Isofox
 
         final List<BamFragmentReader> chrTasks = Lists.newArrayList();
         final List<Callable> callableList = Lists.newArrayList();
+        final List<String> chromosomes = Lists.newArrayList();
 
-        for(Map.Entry<String,List<EnsemblGeneData>> entry : chrGeneMap.entrySet())
+        // process any enriched genes first, then add the rest in order of descreasing length
+        chromosomes.add(refGenomeChromosome("14", mConfig.RefGenVersion));
+        chromosomes.add(refGenomeChromosome("3", mConfig.RefGenVersion));
+        chromosomes.add(refGenomeChromosome("6", mConfig.RefGenVersion));
+        chromosomes.add(refGenomeChromosome("9", mConfig.RefGenVersion));
+
+        Arrays.stream(HumanChromosome.values())
+                .map(x -> refGenomeChromosome(x.toString(), mConfig.RefGenVersion))
+                .filter(x -> !chromosomes.contains(x))
+                .forEach(x -> chromosomes.add(x));
+
+        for(String chromosome : chromosomes)
         {
+            List<EnsemblGeneData> geneDataList = chrGeneMap.get(chromosome);
+
+            if(geneDataList == null)
+                continue;
+
             BamFragmentReader bamReaderTask = new BamFragmentReader(
-                    mConfig, entry.getKey(), entry.getValue(), mGeneTransCache, mResultsWriter,
+                    mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter,
                     mFusionTaskManager, mExpectedCountsCache, mGcTranscriptCalcs);
 
             chrTasks.add(bamReaderTask);

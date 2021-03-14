@@ -182,7 +182,7 @@ public class BamFragmentReader implements Callable
     {
         if(mGeneDataList.size() > 10)
         {
-            ISF_LOGGER.info("processing {} genes for chromosome({})", mGeneDataList.size(), mChromosome);
+            ISF_LOGGER.info("chr({}) processing {} genes", mChromosome, mGeneDataList.size());
         }
 
         mCurrentGeneIndex = 0;
@@ -291,6 +291,11 @@ public class BamFragmentReader implements Callable
 
             mPerfCounters[PERF_FUSIONS].stop();
         }
+
+        if(mGeneDataList.size() > 10)
+        {
+            ISF_LOGGER.info("chr({}) processing complete", mChromosome);
+        }
     }
 
     public static int findNextOverlappingGenes(
@@ -397,6 +402,10 @@ public class BamFragmentReader implements Callable
                 ISF_LOGGER.debug(String.format("genes(%s) catCounts(all=%.2f trans=%.1f)",
                         geneCollection.geneNames(), allCategoryTotals, transCategoryTotals));
             }
+
+            ISF_LOGGER.debug("chr({}) gene({}) transCombo(gene={} total={})",
+                    mChromosome, geneCollection.geneNames(10), mBamFragmentAllocator.getTransComboData().size(),
+                    mGeneCollectionSummaryData.stream().mapToInt(x -> x.TransCategoryCounts.size()).sum());
         }
 
         if (mExpTransRates != null)

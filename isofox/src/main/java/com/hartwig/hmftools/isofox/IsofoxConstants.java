@@ -19,8 +19,11 @@ public class IsofoxConstants
     public static short MULTI_MAP_QUALITY_THRESHOLD = 3; // multi-mapped fragments are given map quals of 3 or lower
 
     public static final int ENRICHED_GENE_BUFFER = 100000;
+    public static final int DEFAULT_ENRICHED_GENE_READ_LIMIT = 10000000;
 
     public static final int MAX_NOVEL_SJ_DISTANCE = 500000; // beyond which a fragment will be considered chimeric
+
+    public static final double MAX_GENE_PERC_CONTRIBUTION = 0.01;
 
     // LINC00486
     public static final BaseRegion EXCLUDED_REGION_1_REF_37 = new BaseRegion("2", 33141260, 33141700);

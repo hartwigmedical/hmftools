@@ -171,7 +171,7 @@ public class BamFragmentAllocator
     public final ChimericReadTracker getChimericReadTracker() { return mChimericReads; }
     public final SpliceSiteCounter getSpliceSiteCounter() { return mSpliceSiteCounter; }
 
-    private static int GENE_LOG_COUNT = 100000;
+    private static int GENE_LOG_COUNT = 1000000;
 
     public void clearCache()
     {
@@ -313,6 +313,12 @@ public class BamFragmentAllocator
         if(excludeRegion(record))
             return;
 
+        if(mCurrentGenes.inEnrichedRegion(record.getStart(), record.getEnd()))
+        {
+            processEnrichedRegionRead(record);
+            return;
+        }
+
         if(mDuplicateTracker.checkDuplicates(record))
         {
             if(mConfig.DropDuplicates)
@@ -320,14 +326,6 @@ public class BamFragmentAllocator
                 if(record.getFirstOfPairFlag())
                     mCurrentGenes.addCount(DUPLICATE, 1);
 
-                return;
-            }
-
-            // optimised processing for enriched genes
-            if(checkDuplicateEnrichedReads(record))
-            {
-                ++mTotalBamReadCount;
-                ++mGeneReadCount;
                 return;
             }
         }
@@ -354,17 +352,14 @@ public class BamFragmentAllocator
         if(mGeneReadCount >= mNextGeneCountLog)
         {
             mNextGeneCountLog += GENE_LOG_COUNT;
-            ISF_LOGGER.debug("genes({}) bamRecordCount({})", mCurrentGenes.geneNames(), mGeneReadCount);
+            ISF_LOGGER.info("chr({}) genes({}) bamRecordCount({})", mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
         }
 
         if(mConfig.GeneReadLimit > 0 && mGeneReadCount >= mConfig.GeneReadLimit)
         {
-            if(mGeneReadCount >= mConfig.GeneReadLimit)
-            {
-                mBamSlicer.haltProcessing();
-                ISF_LOGGER.warn("genes({}) readCount({}) exceeds max read count", mCurrentGenes.geneNames(), mGeneReadCount);
-            }
-
+            mBamSlicer.haltProcessing();
+            ISF_LOGGER.warn("chr({}) genes({}) readCount({}) exceeds max read count",
+                    mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
             return;
         }
 
@@ -770,6 +765,39 @@ public class BamFragmentAllocator
                 || mExcludedRegion.containsPosition(record.getMateAlignmentStart()));
     }
 
+    private void processEnrichedRegionRead(final SAMRecord record)
+    {
+        ++mTotalBamReadCount;
+        ++mGeneReadCount;
+
+        if(mGeneReadCount >= mNextGeneCountLog)
+        {
+            mNextGeneCountLog += GENE_LOG_COUNT;
+            ISF_LOGGER.info("chr({}) genes({}) bamRecordCount({})", mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
+        }
+
+        if(mConfig.GeneReadLimit > 0 && mGeneReadCount >= mConfig.GeneReadLimit)
+        {
+            mBamSlicer.haltProcessing();
+            ISF_LOGGER.warn("chr({}) genes({}) readCount({}) exceeds max read count",
+                    mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
+            return;
+        }
+
+        if(record.getFirstOfPairFlag()) // only count once per fragment
+            return;
+
+        if(!mConfig.runFunction(TRANSCRIPT_COUNTS))
+            return;
+
+        if(record.getDuplicateReadFlag())
+            mCurrentGenes.addCount(DUPLICATE, 1);
+
+        // no further classification of fragment is performed - ie they are considered supporting
+        ++mEnrichedGeneFragments;
+    }
+
+    /*
     private boolean checkDuplicateEnrichedReads(final SAMRecord record)
     {
         if(!mCurrentGenes.inEnrichedRegion(record.getStart(), record.getEnd()))
@@ -777,6 +805,10 @@ public class BamFragmentAllocator
 
         if(!record.getFirstOfPairFlag())
             return true;
+
+        ++mTotalBamReadCount;
+        ++mGeneReadCount;
+
 
         mCurrentGenes.addCount(DUPLICATE, 1);
 
@@ -788,6 +820,7 @@ public class BamFragmentAllocator
 
         return true;
     }
+    */
 
     private void processEnrichedGeneFragments()
     {
@@ -817,13 +850,6 @@ public class BamFragmentAllocator
         }
 
         addGcCounts(catCounts, gcRatioIndices, gcRatioCounts, mEnrichedGeneFragments);
-
-        if(ISF_LOGGER.isInfoEnabled() && mGeneReadCount >= mNextGeneCountLog)
-        {
-            mNextGeneCountLog += GENE_LOG_COUNT;
-            final String geneId = mCurrentGenes.getEnrichedTranscripts().get(0).GeneId;
-            ISF_LOGGER.info("enriched gene({}) bamRecordCount({})", geneId, mGeneReadCount);
-        }
     }
 
     public List<CategoryCountsData> getTransComboData() { return mTransComboData; }

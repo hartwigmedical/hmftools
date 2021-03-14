@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.is37;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_ENRICHED_GENE_READ_LIMIT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MAX_FRAGMENT_SIZE;
@@ -65,6 +66,7 @@ public class IsofoxConfig
     public static final String EXCLUDED_GENE_ID_FILE = "excluded_gene_id_file";
     private static final String ENRICHED_GENE_IDS = "enriched_gene_ids";
     private static final String CANONICAL_ONLY = "canonical_only";
+
     private static final String WRITE_EXON_DATA = "write_exon_data";
     private static final String WRITE_READ_DATA = "write_read_data";
     private static final String WRITE_SPLICE_SITE_DATA = "write_splice_sites";
@@ -244,6 +246,7 @@ public class IsofoxConfig
         ExcludedRegion = is37(RefGenVersion) ? EXCLUDED_REGION_1_REF_37 : EXCLUDED_REGION_1_REF_38;
 
         GeneReadLimit = Integer.parseInt(cmd.getOptionValue(GENE_READ_LIMIT, "0"));
+
         MaxFragmentLength = Integer.parseInt(cmd.getOptionValue(LONG_FRAGMENT_LIMIT, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
         IsofoxConstants.SINGLE_MAP_QUALITY = Short.parseShort(cmd.getOptionValue(SINGLE_MAP_QUAL, String.valueOf(DEFAULT_SINGLE_MAP_QUALITY)));
         DropDuplicates = cmd.hasOption(DROP_DUPLICATES);
