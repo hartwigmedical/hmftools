@@ -1076,6 +1076,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Added LOW_TUMOR_VCN filter to germline variants
   - Fixed bug with incorrect driver catagory in copy number drivers.
   - Better coding effect interpretation of splice variants
+  - Improved germline reporting logic
 - [2.52](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.52) 
   - Support for COBALT tumor only mode
   - Indels over splice regions should be marked as such
