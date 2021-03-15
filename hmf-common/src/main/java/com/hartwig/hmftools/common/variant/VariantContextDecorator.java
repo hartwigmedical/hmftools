@@ -14,12 +14,15 @@ import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrich
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.TRINUCLEOTIDE_FLAG;
 
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
+import com.hartwig.hmftools.common.pathogenic.Pathogenic;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.sage.SageMetaData;
@@ -37,6 +40,8 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class VariantContextDecorator implements GenomePosition {
 
+    private static final Set<CodingEffect> PATHOGENIC_EFFECT = EnumSet.of(CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.SPLICE);
+
     private final VariantContext context;
     private final VariantType type;
     private final String filter;
@@ -48,6 +53,8 @@ public class VariantContextDecorator implements GenomePosition {
     private SnpEffSummary snpEffSummary;
     @Nullable
     private DriverImpact impact;
+    @Nullable
+    private PathogenicSummary clnvarPathogenicSummary;
 
     public VariantContextDecorator(final VariantContext context) {
         this.context = context;
@@ -58,10 +65,20 @@ public class VariantContextDecorator implements GenomePosition {
         this.tier = VariantTier.fromContext(context);
         this.snpEffSummary = null;
         this.impact = null;
+        this.clnvarPathogenicSummary = null;
     }
 
     public boolean isPass() {
         return filter.equals(SomaticVariantFactory.PASS_FILTER);
+    }
+
+    @NotNull
+    public PathogenicSummary clinvarPathogenicSummary() {
+        if (clnvarPathogenicSummary == null) {
+            clnvarPathogenicSummary = PathogenicSummaryFactory.fromContext(context);
+        }
+
+        return clnvarPathogenicSummary;
     }
 
     @NotNull
@@ -188,6 +205,10 @@ public class VariantContextDecorator implements GenomePosition {
         return HotspotEnrichment.fromVariant(context);
     }
 
+    public boolean isHotspot() {
+        return hotspot() == Hotspot.HOTSPOT;
+    }
+
     @NotNull
     public String trinucleotideContext() {
         return context.getAttributeAsString(TRINUCLEOTIDE_FLAG, Strings.EMPTY);
@@ -205,6 +226,24 @@ public class VariantContextDecorator implements GenomePosition {
     public String microhomology() {
         return context.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY);
     }
+
+    public boolean isPathogenic() {
+        if (!isPass()) {
+            return false;
+        }
+
+        if (clinvarPathogenicSummary().pathogenicity() == Pathogenic.BENIGN_BLACKLIST) {
+            return false;
+        }
+
+        if (isHotspot() || clinvarPathogenicSummary().pathogenicity().isPathogenic()) {
+            return true;
+        }
+
+        return clinvarPathogenicSummary().pathogenicity() == Pathogenic.UNKNOWN
+                && PATHOGENIC_EFFECT.contains(snpEffSummary().canonicalCodingEffect());
+    }
+
 
     @NotNull
     private static String displayFilter(@NotNull final VariantContext context) {
