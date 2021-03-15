@@ -42,7 +42,7 @@ public final class ReportableVariantFactory {
                 DriverCatalog geneDriver = geneDriverMap.get(variant.gene());
 
                 if (geneDriver == null) {
-                    throw new IllegalStateException("Could not find driver entry on gene '" + variant.gene() + "'");
+                    throw new IllegalStateException("Could not find driver entry for variant on gene '" + variant.gene() + "'");
                 }
 
                 ReportableVariant reportable = fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood()).build();
