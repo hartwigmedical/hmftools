@@ -34,12 +34,12 @@ public final class ReportableVariantFactory {
     @NotNull
     private static List<ReportableVariant> reportableVariants(@NotNull List<SomaticVariant> variants,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull ReportableVariantSource source) {
-        Map<String, DriverCatalog> mutationDriverMap = driverCatalog.stream().collect(Collectors.toMap(DriverCatalog::gene, x -> x));
+        Map<String, DriverCatalog> geneDriverMap = driverCatalog.stream().collect(Collectors.toMap(DriverCatalog::gene, x -> x));
 
         List<ReportableVariant> result = Lists.newArrayList();
         for (SomaticVariant variant : variants) {
             if (variant.reported()) {
-                DriverCatalog geneDriver = mutationDriverMap.get(variant.gene());
+                DriverCatalog geneDriver = geneDriverMap.get(variant.gene());
                 assert geneDriver != null;
 
                 ReportableVariant reportable = fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood()).build();
