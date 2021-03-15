@@ -25,10 +25,10 @@ public final class ReportableVariantFactory {
 
     @NotNull
     public static List<ReportableVariant> reportableSomaticVariants(@NotNull List<SomaticVariant> variants,
-            @NotNull List<DriverCatalog> driverCatalog) {
-        List<DriverCatalog> mutationCatalog =
-                driverCatalog.stream().filter(x -> x.driver() == DriverType.MUTATION).collect(Collectors.toList());
-        return reportableVariants(variants, mutationCatalog, ReportableVariantSource.SOMATIC);
+            @NotNull List<DriverCatalog> somaticDriverCatalog) {
+        List<DriverCatalog> somaticMutationCatalog =
+                somaticDriverCatalog.stream().filter(x -> x.driver() == DriverType.MUTATION).collect(Collectors.toList());
+        return reportableVariants(variants, somaticMutationCatalog, ReportableVariantSource.SOMATIC);
     }
 
     @NotNull
