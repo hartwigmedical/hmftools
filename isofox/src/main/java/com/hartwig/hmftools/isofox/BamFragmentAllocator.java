@@ -171,7 +171,7 @@ public class BamFragmentAllocator
     public final ChimericReadTracker getChimericReadTracker() { return mChimericReads; }
     public final SpliceSiteCounter getSpliceSiteCounter() { return mSpliceSiteCounter; }
 
-    private static int GENE_LOG_COUNT = 1000000;
+    private static int GENE_LOG_COUNT = 5000000;
 
     public void clearCache()
     {

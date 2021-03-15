@@ -150,7 +150,7 @@ public class ExpressionMatrix
                 {
                     final String itemId = isTranscriptLevel ? transName : geneId;
 
-                    if(!itemCache.get(itemIndex).equals(itemId))
+                    if(itemIndex >= itemCache.size() || !itemCache.get(itemIndex).equals(itemId))
                     {
                         ++manualLookupCount;
 
@@ -232,7 +232,13 @@ public class ExpressionMatrix
 
                 for(int j = 0; j < mExpressionMatrix.Cols; ++j)
                 {
-                    writer.write(String.format(",%.4f", matrixData[i][j]));
+                    // write decimal is most efficient form
+                    if(matrixData[i][j] == 0)
+                        writer.write(",0");
+                    else if(matrixData[i][j] > 999 || matrixData[i][j] < 0.001)
+                        writer.write(String.format(",%6.3e", matrixData[i][j]));
+                    else
+                        writer.write(String.format(",%.4g", matrixData[i][j]));
                 }
 
                 writer.newLine();
