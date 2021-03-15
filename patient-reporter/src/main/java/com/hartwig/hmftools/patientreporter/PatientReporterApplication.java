@@ -6,7 +6,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.gson.Gson;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.GsonBuilder;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -86,7 +87,7 @@ public class PatientReporterApplication {
                     report.sampleReport().tumorSampleBarcode(),
                     report);
 
-            if (report.sampleReport().cohort().cohortId().equals("COLO")) {
+            if (!report.sampleReport().cohort().cohortId().equals("COLO")) {
                 ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
             }
         }
@@ -138,11 +139,16 @@ public class PatientReporterApplication {
     private static void writeReportDataToJson(@NotNull String outputDirData, @NotNull String tumorSampleId, @NotNull String tumorBarcode,
             @NotNull PatientReport report) throws IOException {
         String outputFileData = outputDirData + File.separator + tumorSampleId + "_" + tumorBarcode + ".json";
-        Gson gson = new Gson();
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
-        writer.write(gson.toJson(report));
+        writer.write(convertToJson(report));
         writer.close();
         LOGGER.info("Created json file at {} ", outputFileData);
+    }
+
+    @VisibleForTesting
+    @NotNull
+    static String convertToJson(@NotNull PatientReport report) {
+        return new GsonBuilder().serializeSpecialFloatingPointValues().create().toJson(report);
     }
 
     @NotNull

@@ -25,22 +25,25 @@ public final class ReportableVariantFactory {
 
     @NotNull
     public static List<ReportableVariant> reportableSomaticVariants(@NotNull List<SomaticVariant> variants,
-            @NotNull List<DriverCatalog> driverCatalog) {
-        List<DriverCatalog> mutationCatalog =
-                driverCatalog.stream().filter(x -> x.driver() == DriverType.MUTATION).collect(Collectors.toList());
-        return reportableVariants(variants, mutationCatalog, ReportableVariantSource.SOMATIC);
+            @NotNull List<DriverCatalog> somaticDriverCatalog) {
+        List<DriverCatalog> somaticMutationCatalog =
+                somaticDriverCatalog.stream().filter(x -> x.driver() == DriverType.MUTATION).collect(Collectors.toList());
+        return reportableVariants(variants, somaticMutationCatalog, ReportableVariantSource.SOMATIC);
     }
 
     @NotNull
     private static List<ReportableVariant> reportableVariants(@NotNull List<SomaticVariant> variants,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull ReportableVariantSource source) {
-        Map<String, DriverCatalog> mutationDriverMap = driverCatalog.stream().collect(Collectors.toMap(DriverCatalog::gene, x -> x));
+        Map<String, DriverCatalog> geneDriverMap = driverCatalog.stream().collect(Collectors.toMap(DriverCatalog::gene, x -> x));
 
         List<ReportableVariant> result = Lists.newArrayList();
         for (SomaticVariant variant : variants) {
             if (variant.reported()) {
-                DriverCatalog geneDriver = mutationDriverMap.get(variant.gene());
-                assert geneDriver != null;
+                DriverCatalog geneDriver = geneDriverMap.get(variant.gene());
+
+                if (geneDriver == null) {
+                    throw new IllegalStateException("Could not find driver entry for variant on gene '" + variant.gene() + "'");
+                }
 
                 ReportableVariant reportable = fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood()).build();
                 result.add(reportable);

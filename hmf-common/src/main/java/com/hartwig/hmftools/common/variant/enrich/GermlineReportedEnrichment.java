@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.variant.VariantHeader.REPORTED_DESC;
 import static com.hartwig.hmftools.common.variant.VariantHeader.REPORTED_FLAG;
 
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,14 +19,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
-import com.hartwig.hmftools.common.pathogenic.Pathogenic;
-import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
-import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -38,7 +31,6 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class GermlineReportedEnrichment implements VariantContextEnrichment {
 
-    private static final Set<CodingEffect> REPORTABLE_EFFECT = EnumSet.of(CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.SPLICE);
     private static final double MIN_VARIANT_COPY_NUMBER = 0.5;
 
     @NotNull
@@ -117,14 +109,11 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
             return false;
         }
 
-        final boolean isHotspot = variant.hotspot() == Hotspot.HOTSPOT;
-        final SnpEffSummary snpEffSummary = variant.snpEffSummary();
-        final PathogenicSummary pathogenicSummary = PathogenicSummaryFactory.fromContext(variant.context());
-        if (!isPathogenic(isHotspot, pathogenicSummary, snpEffSummary)) {
+        if (!variant.isPathogenic()) {
             return false;
         }
 
-        final DriverGeneGermlineReporting reporting = isHotspot ? hotspotReporting : variantReporting;
+        final DriverGeneGermlineReporting reporting = variant.isHotspot() ? hotspotReporting : variantReporting;
         if (reporting == NONE) {
             return false;
         }
@@ -150,18 +139,5 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
 
     public boolean isVariantLost(VariantContextDecorator variant, double minVariantCopyNumber) {
         return Doubles.lessThan(variant.variantCopyNumber(), minVariantCopyNumber);
-    }
-
-    private static boolean isPathogenic(boolean isHotspot, @NotNull PathogenicSummary pathogenicSummary,
-            @NotNull SnpEffSummary snpEffSummary) {
-        if (pathogenicSummary.pathogenicity() == Pathogenic.BENIGN_BLACKLIST) {
-            return false;
-        }
-
-        if (isHotspot || pathogenicSummary.pathogenicity().isPathogenic()) {
-            return true;
-        }
-
-        return pathogenicSummary.pathogenicity() == Pathogenic.UNKNOWN && REPORTABLE_EFFECT.contains(snpEffSummary.canonicalCodingEffect());
     }
 }

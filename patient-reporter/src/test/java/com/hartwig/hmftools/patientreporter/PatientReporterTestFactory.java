@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
@@ -29,6 +28,11 @@ public final class PatientReporterTestFactory {
     private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
 
     private PatientReporterTestFactory() {
+    }
+
+    @NotNull
+    public static LimsCohortConfig createTestCohortConfig() {
+        return createCohortConfig("TestCohort", false, false, false, false, false, false, false, false, false, false);
     }
 
     @NotNull

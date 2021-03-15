@@ -61,7 +61,7 @@ public class GermlinePurityEnrichment implements VariantContextEnrichment {
             if (optionalPurpleCopyNumber.isPresent()) {
                 PurpleCopyNumber purpleCopyNumber = optionalPurpleCopyNumber.get();
                 double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
-                double vaf = vaf(germlineGenotype, purpleCopyNumber, tumorDepth);
+                double vaf = germlineGenotype == GenotypeStatus.HOM_ALT ? 1.0 : vaf(germlineGenotype, purpleCopyNumber, tumorDepth);
                 double variantCopyNumber = Math.max(0, vaf * copyNumber);
                 boolean biallelic = Doubles.lessOrEqual(copyNumber, 0) || Doubles.greaterOrEqual(variantCopyNumber, copyNumber - 0.5);
 

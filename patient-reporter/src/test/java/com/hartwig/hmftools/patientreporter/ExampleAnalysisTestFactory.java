@@ -63,9 +63,21 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
+    public static AnalysedPatientReport buildTestReport() {
+        return buildWithCOLO829Data("TestSample",
+                false,
+                null,
+                QsFormNumber.FOR_080.display(),
+                true,
+                1D,
+                true,
+                false,
+                PatientReporterTestFactory.createTestCohortConfig());
+    }
+
+    @NotNull
     public static AnalysedPatientReport buildCOLO829(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
             @NotNull LimsCohortConfig limsCohortConfig) {
-
         return buildWithCOLO829Data(sampleId,
                 correctionReport,
                 comments,
@@ -385,7 +397,7 @@ public final class ExampleAnalysisTestFactory {
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/25672916\""))
+                .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/25672916"))
                 .build());
 
         return evidenceItemsOnLabel;

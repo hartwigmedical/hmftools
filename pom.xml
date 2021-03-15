@@ -59,10 +59,10 @@
 
         <patient-db.version>3.59</patient-db.version>
         <id-generator.version>2.6</id-generator.version>
-        <sage.version>2.6</sage.version>
+        <sage.version>2.7</sage.version>
         <amber.version>3.5</amber.version>
         <cobalt.version>1.11</cobalt.version>
-        <purple.version>2.52</purple.version>
+        <purple.version>2.53</purple.version>
         <bam-slicer.version>1.5</bam-slicer.version>
         <bachelor.version>1.12</bachelor.version>
         <gripss.version>1.11</gripss.version>

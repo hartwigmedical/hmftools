@@ -60,7 +60,13 @@ public final class EvidenceItems {
             }
         }
 
-        return evidence.urls().iterator().next();
+        // If there are no pubmeds, and the first url refers to google we remove it.
+        String url = evidence.urls().iterator().next();
+        if (url.contains("google")) {
+            return Strings.EMPTY;
+        } else {
+            return url;
+        }
     }
 
     public static int uniqueEventCount(@NotNull List<ProtectEvidence> evidenceItems) {

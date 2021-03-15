@@ -598,18 +598,16 @@ Regardless of the clinvar signals, a variant will be set to `BENIGN_BLACKLIST` i
 Valid values are `PATHOGENIC`, `LIKELY_PATHOGENIC`, `BENIGN`, `LIKELY_BENIGN`, `BENIGN_BLACKLIST`, `CONFLICTING`, `UNKNOWN`.
 
 #### Genotype
-The genotype enrichment can set the GT field of the germline sample to `0/1` (HET), `1/1` (HOM) or leave it unchanged as `./.` and filter the variant as `LOW_VAF`.
+The genotype enrichment can set the GT field of the germline sample to `0/1` (HET), `1/1` (HOM) or leave it unchanged as `./.` and filter the variant as `LOW_VAF` or 'LOW_TUMOR_VCN'. A variant is filtered as 'LOW_VAF' if AltReadCount < 0.3*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.002. A variant is filtered as 'LOW_TUMOR_VCN' if the quality is below 120 for HOTSPOT or 200 for PANEL and the variant and the implied variant copy number (VCN) in the tumor is < 0.5.
 
-A variant is filtered as `LOW_VAF` if AltReadCount < 0.3*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.002.
-
-Alternatively, the variant GT will be set to `1/1` (HOM)  if (totalReadCount==AltReadCount) OR (AltReadCount > 0.75*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.005) and `0/1` (HET) otherwise.
+Alternatively, the variant GT will be set to `1/1` (HOM)  if (totalReadCount==AltReadCount) OR (AltReadCount > 0.75*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.005) in BOTH tumor and normal and `0/1` (HET) otherwise.  AdjustedVAF is set to 1 for Homozygous germline variants.
 
 #### Reported
-The reported flag controls if the variant should appear in the driver catalog.
-
-To be reported, the variant must PASS and either:
-- be a hotspot (but not `BENIGN_BLACKLIST`) on a gene where we report germline hotspots; or
-- be a nonsense/frameshift or splice on a gene where we report germline variants.
+The reported flag controls if the variant should appear in the driver catalog.   In the gene panel configuration reporting may be configured per gene independently for known hotpsots and also other likely pathgogenic germline variants (specifically nonsense/frameshift or splice variants that are not annotated as BENIGN or LIKELY BENIGN in CLINVAR).    For both types of events, the configuration allows the following per gene reportingoptions:
+- 'NONE' - never report for this gene
+- 'ANY' - always report events for this gene
+- 'WILDTYPE_LOST' - report only if the wildtype is predicted to be lost in the tumor for this gene either via LOH or a somatic 2nd hit
+- 'VARIANT_NOT_LOST' - report only if the variant is predicted to be NOT lost in the tumor for this gene:
 
 ### 12. Driver Catalog
 
@@ -1074,10 +1072,11 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
-- Upcoming
+- [2.53](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.53) 
   - Added LOW_TUMOR_VCN filter to germline variants
   - Fixed bug with incorrect driver catagory in copy number drivers.
   - Better coding effect interpretation of splice variants
+  - Improved germline reporting logic
 - [2.52](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.52) 
   - Support for COBALT tumor only mode
   - Indels over splice regions should be marked as such

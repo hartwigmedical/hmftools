@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.protect.linx.ViralInsertion;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
@@ -77,11 +78,11 @@ public final class ConsentFilterFunctions {
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (evidence.germline() && germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING) {
+            if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION) {
+                filtered.add(ImmutableProtectEvidence.builder().from(evidence).germline(false).build());
+            } else if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION) {
                 filtered.add(evidence);
-            }
-
-            if (!evidence.germline()) {
+            } else if (!evidence.germline()) {
                 filtered.add(evidence);
             }
         }
@@ -99,6 +100,7 @@ public final class ConsentFilterFunctions {
                 .source(source)
                 .totalCopyNumber(hasReliablePurity ? flooredCopyNumber : Double.NaN)
                 .alleleCopyNumber(hasReliablePurity ? variant.alleleCopyNumber() : Double.NaN)
+                .biallelic(hasReliablePurity ? variant.biallelic() : null)
                 .build();
     }
 }
