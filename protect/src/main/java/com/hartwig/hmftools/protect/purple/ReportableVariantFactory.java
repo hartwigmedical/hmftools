@@ -40,7 +40,10 @@ public final class ReportableVariantFactory {
         for (SomaticVariant variant : variants) {
             if (variant.reported()) {
                 DriverCatalog geneDriver = geneDriverMap.get(variant.gene());
-                assert geneDriver != null;
+
+                if (geneDriver == null) {
+                    throw new IllegalStateException("Could not find driver entry on gene '" + variant.gene() + "'");
+                }
 
                 ReportableVariant reportable = fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood()).build();
                 result.add(reportable);
