@@ -40,7 +40,7 @@ public class ExonAnnotationToVCFConverter {
         String knownExonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownExons.SERVE.37.tsv";
         String outputFile = System.getProperty("user.home") + "/hmf/tmp/exons.vcf.gz";
         GenerateAltBase altBaseGenerator = new GenerateAltBase(new IndexedFastaSequenceFile(new File(
-                System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta")));
+                System.getProperty("user.home") + "/hmf/refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina.fasta")));
 
         List<KnownExon> exons = KnownExonFile.read(knownExonsTsv);
         LOGGER.info("The number of known exons in the known exon file is '{}'", exons.size());

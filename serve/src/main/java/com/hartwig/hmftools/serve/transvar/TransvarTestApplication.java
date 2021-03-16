@@ -22,7 +22,7 @@ public class TransvarTestApplication {
         Configurator.setRootLevel(Level.DEBUG);
 
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.V37;
-        String refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
+        String refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina.fasta";
 
         Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile, HmfGenePanelSupplier.allGenesMap37());
 
