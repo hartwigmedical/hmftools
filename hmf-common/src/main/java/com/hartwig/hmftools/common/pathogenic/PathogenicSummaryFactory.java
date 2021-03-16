@@ -21,9 +21,10 @@ public final class PathogenicSummaryFactory {
         final String clnSigConf = clnSigConf(context);
         final String clinvarInfo = !clnSigConf.isEmpty() ? clnSigConf : clnSig;
 
-        final Pathogenic path = context.getAttributeAsBoolean(BLACKLIST_BED, false) || context.getAttributeAsBoolean(BLACKLIST_VCF, false)
-                ? Pathogenic.BENIGN_BLACKLIST
-                : Pathogenic.fromClinvarAnnotation(clnSig, clnSigConf);
+        final Pathogenicity path =
+                context.getAttributeAsBoolean(BLACKLIST_BED, false) || context.getAttributeAsBoolean(BLACKLIST_VCF, false)
+                        ? Pathogenicity.BENIGN_BLACKLIST
+                        : Pathogenicity.fromClinvarAnnotation(clnSig, clnSigConf);
 
         return ImmutablePathogenicSummary.builder().clinvarInfo(clinvarInfo).pathogenicity(path).build();
     }

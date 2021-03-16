@@ -797,7 +797,8 @@ CREATE TABLE germlineVariant2
 
     ### PATHOGENIC
     clinvarInfo varchar(255) NOT NULL,
-    pathogenic varchar(255) NOT NULL,
+    pathogenicity varchar(255) NOT NULL,
+    pathogenic BOOLEAN NOT NULL,
 
     ## SNP EFF ENRICHMENT
     gene varchar(255) NOT NULL,

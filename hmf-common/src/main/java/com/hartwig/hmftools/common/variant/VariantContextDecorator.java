@@ -22,9 +22,9 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
-import com.hartwig.hmftools.common.pathogenic.Pathogenic;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
+import com.hartwig.hmftools.common.pathogenic.Pathogenicity;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
@@ -54,7 +54,7 @@ public class VariantContextDecorator implements GenomePosition {
     @Nullable
     private DriverImpact impact;
     @Nullable
-    private PathogenicSummary clnvarPathogenicSummary;
+    private PathogenicSummary clinvarPathogenicSummary;
 
     public VariantContextDecorator(final VariantContext context) {
         this.context = context;
@@ -65,7 +65,7 @@ public class VariantContextDecorator implements GenomePosition {
         this.tier = VariantTier.fromContext(context);
         this.snpEffSummary = null;
         this.impact = null;
-        this.clnvarPathogenicSummary = null;
+        this.clinvarPathogenicSummary = null;
     }
 
     public boolean isPass() {
@@ -74,11 +74,11 @@ public class VariantContextDecorator implements GenomePosition {
 
     @NotNull
     public PathogenicSummary clinvarPathogenicSummary() {
-        if (clnvarPathogenicSummary == null) {
-            clnvarPathogenicSummary = PathogenicSummaryFactory.fromContext(context);
+        if (clinvarPathogenicSummary == null) {
+            clinvarPathogenicSummary = PathogenicSummaryFactory.fromContext(context);
         }
 
-        return clnvarPathogenicSummary;
+        return clinvarPathogenicSummary;
     }
 
     @NotNull
@@ -232,7 +232,7 @@ public class VariantContextDecorator implements GenomePosition {
             return false;
         }
 
-        if (clinvarPathogenicSummary().pathogenicity() == Pathogenic.BENIGN_BLACKLIST) {
+        if (clinvarPathogenicSummary().pathogenicity() == Pathogenicity.BENIGN_BLACKLIST) {
             return false;
         }
 
@@ -240,10 +240,9 @@ public class VariantContextDecorator implements GenomePosition {
             return true;
         }
 
-        return clinvarPathogenicSummary().pathogenicity() == Pathogenic.UNKNOWN
+        return clinvarPathogenicSummary().pathogenicity() == Pathogenicity.UNKNOWN
                 && PATHOGENIC_EFFECT.contains(snpEffSummary().canonicalCodingEffect());
     }
-
 
     @NotNull
     private static String displayFilter(@NotNull final VariantContext context) {

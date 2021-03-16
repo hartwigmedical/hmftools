@@ -20,6 +20,7 @@
         <module>paddle</module>
         <module>health-checker</module>
         <module>fastq-stats</module>
+        <module>compar</module>
         <module>amber</module>
         <module>count-bam-lines</module>
         <module>purity-ploidy-estimator</module>
@@ -38,7 +39,6 @@
         <module>serve</module>
         <module>protect</module>
         <module>patient-reporter</module>
-        <module>compar</module>
     </modules>
 
     <properties>
@@ -69,7 +69,6 @@
         <lilac.version>0.1</lilac.version>
         <sv-linx.version>1.14</sv-linx.version>
         <health-checker.version>3.2</health-checker.version>
-        <patient-reporter.version>7.22</patient-reporter.version>
         <sv-tools.version>1.0</sv-tools.version>
         <imuno.version>1.0</imuno.version>
         <sig-analyser.version>1.0</sig-analyser.version>
@@ -82,6 +81,7 @@
         <ckb-importer.version>1.1</ckb-importer.version>
         <serve.version>1.1</serve.version>
         <protect.version>1.2</protect.version>
+        <patient-reporter.version>7.22</patient-reporter.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
         <immutables.version>2.4.4</immutables.version>
