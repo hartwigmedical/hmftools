@@ -293,6 +293,9 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
+    public List<LinxDriver> readSvDriver(@NotNull String sample) { return structuralVariantClusterDAO.readSvDrivers(sample); }
+
+    @NotNull
     public List<SignatureAllocation> readSignatureAllocations(@NotNull String sample) {
         return signatureDAO.readAllocations(sample);
     }

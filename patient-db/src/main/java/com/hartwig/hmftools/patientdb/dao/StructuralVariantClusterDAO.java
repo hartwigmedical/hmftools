@@ -14,6 +14,7 @@ import java.util.List;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxCluster;
+import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
@@ -315,6 +316,27 @@ class StructuralVariantClusterDAO
         }
 
         return clusterList;
+    }
+
+    @NotNull
+    public List<LinxDriver> readSvDrivers(@NotNull String sample)
+    {
+        List<LinxDriver> driverList = Lists.newArrayList();
+
+        Result<Record> result = context.select().from(SVDRIVER).where(SVDRIVER.SAMPLEID.eq(sample)).fetch();
+
+        for (Record record : result)
+        {
+            LinxDriver driver = ImmutableLinxDriver.builder()
+                    .clusterId(DatabaseUtil.valueNotNull(record.getValue(SVDRIVER.CLUSTERID)))
+                    .eventType(record.getValue(SVDRIVER.EVENTTYPE))
+                    .gene(record.getValue(SVDRIVER.GENE))
+                    .build();
+
+            driverList.add(driver);
+        }
+
+        return driverList;
     }
 
     public void deleteClusterDataForSample(@NotNull String sample)

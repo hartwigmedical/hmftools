@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.MatchLevel;
@@ -24,12 +25,16 @@ public class LinxSvData implements ComparableItem
     public final StructuralVariantData SvData;
     public final LinxSvAnnotation Annotation;
     public final LinxCluster Cluster;
+    public final LinxViralInsertion ViralInsertion;
 
-    public LinxSvData(final StructuralVariantData svData, final LinxSvAnnotation annotation, final LinxCluster cluster)
+    public LinxSvData(
+            final StructuralVariantData svData, final LinxSvAnnotation annotation,
+            final LinxCluster cluster, final LinxViralInsertion viralInsertion)
     {
         SvData = svData;
         Cluster = cluster;
         Annotation = annotation;
+        ViralInsertion = viralInsertion;
     }
 
     public Category category() { return LINX_DATA; }
@@ -91,6 +96,13 @@ public class LinxSvData implements ComparableItem
         if(Annotation.isFoldback() != otherSv.Annotation.isFoldback())
         {
             diffs.add(String.format("foldback(%s/%s)", Annotation.isFoldback(), otherSv.Annotation.isFoldback()));
+        }
+
+        if((ViralInsertion == null) != (otherSv.ViralInsertion == null))
+        {
+            diffs.add(String.format("viralInsert(%s/%s)",
+                    ViralInsertion != null ? ViralInsertion.VirusName : "NONE",
+                    otherSv.ViralInsertion != null ? otherSv.ViralInsertion.VirusName : "NONE"));
         }
 
         return diffs;

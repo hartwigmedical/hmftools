@@ -1,12 +1,16 @@
 package com.hartwig.hmftools.compar.driver;
 
 import static com.hartwig.hmftools.compar.Category.DRIVER;
+import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.CommonUtils.diffValue;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.List;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.MatchLevel;
@@ -16,10 +20,12 @@ import org.apache.commons.compress.utils.Lists;
 public class DriverData implements ComparableItem
 {
     public final DriverCatalog DriverCatalog;
+    public final List<LinxDriver> SvDrivers;
 
-    public DriverData(final DriverCatalog driverCatalog)
+    public DriverData(final DriverCatalog driverCatalog, final List<LinxDriver> svDrivers)
     {
         DriverCatalog = driverCatalog;
+        SvDrivers = svDrivers;
     }
 
     public Category category() { return DRIVER; }
@@ -37,7 +43,6 @@ public class DriverData implements ComparableItem
             return false;
 
         return true;
-
     }
 
     public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
@@ -54,6 +59,34 @@ public class DriverData implements ComparableItem
             diffs.add(String.format("likelihood(%.3f/%.3f)",
                     DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood()));
         }
+
+        // check matches in Linx cluster event types
+        boolean hasDiffs = ((DriverData) other).SvDrivers.size() != SvDrivers.size();
+
+        if(!hasDiffs)
+        {
+            for(final LinxDriver svDriver : SvDrivers)
+            {
+                if(((DriverData) other).SvDrivers.stream().noneMatch(x -> x.eventType() == svDriver.eventType()))
+                {
+                    hasDiffs = true;
+                    break;
+                }
+            }
+        }
+
+        if(hasDiffs)
+        {
+            final StringJoiner eventTypes = new StringJoiner(ITEM_DELIM);
+            SvDrivers.stream().map(x -> x.eventType()).forEach(x -> eventTypes.add(x));
+
+            final StringJoiner otherEventTypes = new StringJoiner(ITEM_DELIM);
+            ((DriverData) other).SvDrivers.stream().map(x -> x.eventType()).forEach(x -> otherEventTypes.add(x));
+
+            diffs.add(String.format("svDriver eventTypes(%s/%s)",
+                    eventTypes.toString(), otherEventTypes.toString()));
+        }
+
 
         return diffs;
     }

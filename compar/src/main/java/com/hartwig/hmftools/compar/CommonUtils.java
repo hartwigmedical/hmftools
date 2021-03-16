@@ -72,7 +72,7 @@ public class CommonUtils
                             diffs.forEach(x -> differencesStr.add(x));
 
                             mismatches.add(new Mismatch(
-                                    sampleId, item1.category(), VALUE, source1, source2, item1.description(), differencesStr.toString()));
+                                    item1.category(), VALUE, source1, source2, item1.description(), differencesStr.toString()));
                         }
                     }
 
@@ -89,10 +89,10 @@ public class CommonUtils
         }
 
         items1.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
-                .forEach(x -> mismatches.add(new Mismatch(sampleId, x.category(), PRESENCE, source1, source2, x.description(), "")));
+                .forEach(x -> mismatches.add(new Mismatch(x.category(), PRESENCE, source1, source2, x.description(), "")));
 
         items2.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
-                .forEach(x -> mismatches.add(new Mismatch(sampleId, x.category(), PRESENCE, source2, source1, x.description(), "")));
+                .forEach(x -> mismatches.add(new Mismatch(x.category(), PRESENCE, source2, source1, x.description(), "")));
     }
 
 }

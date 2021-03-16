@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -15,6 +16,9 @@ import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+
+import org.apache.commons.compress.utils.Lists;
+import org.jetbrains.annotations.NotNull;
 
 public class DriverComparer implements ItemComparer
 {
@@ -29,21 +33,22 @@ public class DriverComparer implements ItemComparer
     {
         final MatchLevel matchLevel = mConfig.Categories.get(DRIVER);
 
-        for(Map.Entry<String, DatabaseAccess> entry1 : mConfig.DbConnections.entrySet())
+        final List<List<ComparableItem>> sourceDrivers = Lists.newArrayList();
+
+        for(String sourceName : mConfig.DbSourceNames)
         {
-            final String source1 = entry1.getKey();
-            final List<ComparableItem> drivers1 = getSampleDrivers(sampleId, entry1.getValue());
+            sourceDrivers.add(getSampleDrivers(sampleId, mConfig.DbConnections.get(sourceName)));
+        }
 
-            for(Map.Entry<String, DatabaseAccess> entry2 : mConfig.DbConnections.entrySet())
+        for(int i = 0; i < mConfig.DbSourceNames.size() - 1; ++i)
+        {
+            final String source1 = mConfig.DbSourceNames.get(i);
+
+            for(int j = i + 1; j < mConfig.DbSourceNames.size(); ++j)
             {
-                if(entry1 == entry2)
-                    continue;
+                final String source2 = mConfig.DbSourceNames.get(j);
 
-                final String source2 = entry2.getKey();
-
-                final List<ComparableItem> drivers2 = getSampleDrivers(sampleId, entry2.getValue());
-
-                CommonUtils.compareItems(sampleId, mismatches, matchLevel, source1, source2, drivers1, drivers2);
+                CommonUtils.compareItems(sampleId, mismatches, matchLevel, source1, source2, sourceDrivers.get(i), sourceDrivers.get(j));
             }
         }
     }
@@ -51,8 +56,17 @@ public class DriverComparer implements ItemComparer
     private List<ComparableItem> getSampleDrivers(final String sampleId, final DatabaseAccess dbAccess)
     {
         final List<DriverCatalog> drivers = dbAccess.readDriverCatalog(sampleId);
+        final List<LinxDriver> svDrivers = dbAccess.readSvDriver(sampleId);
 
-        return drivers.stream().map(x -> new DriverData(x)).collect(Collectors.toList());
+        final List<ComparableItem> driverDataList = Lists.newArrayList();
+
+        for(DriverCatalog driver : drivers)
+        {
+            List<LinxDriver> svDriverList = svDrivers.stream().filter(x -> x.gene().equals(driver.gene())).collect(Collectors.toList());
+            driverDataList.add(new DriverData(driver, svDriverList));
+        }
+
+        return driverDataList;
     }
 
 

@@ -16,6 +16,8 @@ import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
+import org.apache.commons.compress.utils.Lists;
+
 public class DisruptionComparer implements ItemComparer
 {
     private final ComparConfig mConfig;
@@ -29,24 +31,22 @@ public class DisruptionComparer implements ItemComparer
     {
         final MatchLevel matchLevel = mConfig.Categories.get(DISRUPTION);
 
-        Map<String,List<ComparableItem>> sourceBreakends = Maps.newHashMap();
+        final List<List<ComparableItem>> sourceBreakends = Lists.newArrayList();
 
-        for(Map.Entry<String,DatabaseAccess> entry : mConfig.DbConnections.entrySet())
+        for(String sourceName : mConfig.DbSourceNames)
         {
-            sourceBreakends.put(entry.getKey(), getDisruptions(sampleId, entry.getValue()));
+            sourceBreakends.add(getDisruptions(sampleId, mConfig.DbConnections.get(sourceName)));
         }
 
-        for(Map.Entry<String,List<ComparableItem>> entry1 : sourceBreakends.entrySet())
+        for(int i = 0; i < mConfig.DbSourceNames.size() - 1; ++i)
         {
-            for(Map.Entry<String,List<ComparableItem>> entry2 : sourceBreakends.entrySet())
+            final String source1 = mConfig.DbSourceNames.get(i);
+
+            for(int j = i + 1; j < mConfig.DbSourceNames.size(); ++j)
             {
-                if(entry1 == entry2)
-                    continue;
+                final String source2 = mConfig.DbSourceNames.get(j);
 
-                final String source1 = entry1.getKey();
-                final String source2 = entry2.getKey();
-
-                CommonUtils.compareItems(sampleId, mismatches, matchLevel, source1, source2, entry1.getValue(), entry2.getValue());
+                CommonUtils.compareItems(sampleId, mismatches, matchLevel, source1, source2, sourceBreakends.get(i), sourceBreakends.get(j));
             }
         }
     }

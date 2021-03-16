@@ -33,6 +33,7 @@ public class ComparConfig
 
     // database access
     public final Map<String,DatabaseAccess> DbConnections;
+    public final List<String> DbSourceNames;
 
     public final String OutputDir;
 
@@ -95,6 +96,7 @@ public class ComparConfig
         OutputDir = parseOutputDir(cmd);
 
         DbConnections = Maps.newHashMap();
+        DbSourceNames = Lists.newArrayList();
         loadDatabaseSources(cmd);
     }
 
@@ -159,6 +161,7 @@ public class ComparConfig
                 }
 
                 DbConnections.put(sourceName, dbAccess);
+                DbSourceNames.add(sourceName);
             }
             catch(SQLException e)
             {

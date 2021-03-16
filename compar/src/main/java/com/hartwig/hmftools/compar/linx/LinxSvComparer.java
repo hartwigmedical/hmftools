@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.compar.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -65,6 +66,7 @@ public class LinxSvComparer implements ItemComparer
         final List<LinxCluster> clusters = dbAccess.readClusters(sampleId);
         final List<StructuralVariantData> svDataList = dbAccess.readStructuralVariantData(sampleId);
         final List<LinxSvAnnotation> annotations = dbAccess.readSvAnnotations(sampleId);
+        final List<LinxViralInsertion> viralInsertions = dbAccess.readViralInsertions(sampleId);
 
         for(StructuralVariantData svData : svDataList)
         {
@@ -78,7 +80,9 @@ public class LinxSvComparer implements ItemComparer
             if(cluster == null)
                 continue;
 
-            svItems.add(new LinxSvData(svData, annotation, cluster));
+            LinxViralInsertion viralInsertion = viralInsertions.stream().filter(x -> x.SvId == svData.id()).findFirst().orElse(null);
+
+            svItems.add(new LinxSvData(svData, annotation, cluster, viralInsertion));
         }
 
         return svItems;

@@ -122,6 +122,7 @@ public class Compar
 
             mDiffWriter = createBufferedWriter(diffFilename, false);
 
+            mDiffWriter.write("SampleId,");
             mDiffWriter.write(Mismatch.header());
 
             mDiffWriter.newLine();
@@ -141,6 +142,7 @@ public class Compar
         {
             for(Mismatch mismatch : mismatches)
             {
+                mDiffWriter.write(String.format("%s,", sampleId));
                 mDiffWriter.write(mismatch.toCsv());
                 mDiffWriter.newLine();
             }

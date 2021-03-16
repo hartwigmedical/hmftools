@@ -35,24 +35,22 @@ public class FusionComparer implements ItemComparer
     {
         final MatchLevel matchLevel = mConfig.Categories.get(FUSION);
 
-        Map<String,List<ComparableItem>> sourceFusions = Maps.newHashMap();
+        final List<List<ComparableItem>> sourceFusions = Lists.newArrayList();
 
-        for(Map.Entry<String,DatabaseAccess> entry : mConfig.DbConnections.entrySet())
+        for(String sourceName : mConfig.DbSourceNames)
         {
-            sourceFusions.put(entry.getKey(), getFusions(sampleId, entry.getValue()));
+            sourceFusions.add(getFusions(sampleId, mConfig.DbConnections.get(sourceName)));
         }
 
-        for(Map.Entry<String,List<ComparableItem>> entry1 : sourceFusions.entrySet())
+        for(int i = 0; i < mConfig.DbSourceNames.size() - 1; ++i)
         {
-            for(Map.Entry<String,List<ComparableItem>> entry2 : sourceFusions.entrySet())
+            final String source1 = mConfig.DbSourceNames.get(i);
+
+            for(int j = i + 1; j < mConfig.DbSourceNames.size(); ++j)
             {
-                if(entry1 == entry2)
-                    continue;
+                final String source2 = mConfig.DbSourceNames.get(j);
 
-                final String source1 = entry1.getKey();
-                final String source2 = entry2.getKey();
-
-                CommonUtils.compareItems(sampleId, mismatches, matchLevel, source1, source2, entry1.getValue(), entry2.getValue());
+                CommonUtils.compareItems(sampleId, mismatches, matchLevel, source1, source2, sourceFusions.get(i), sourceFusions.get(j));
             }
         }
     }
