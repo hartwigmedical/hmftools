@@ -46,7 +46,7 @@ public class ServeAlgo {
     @NotNull
     private final KnownFusionCache knownFusionCache;
     @NotNull
-    private Map<String, HmfTranscriptRegion> allGenesMap;
+    private final Map<String, HmfTranscriptRegion> allGenesMap;
     @NotNull
     private final ProteinResolver proteinResolver;
     @NotNull

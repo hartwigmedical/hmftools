@@ -2,7 +2,6 @@ package com.hartwig.hmftools.serve.sources.vicc;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +30,7 @@ public class ViccExtractorTest {
     private static final Map<String, HmfTranscriptRegion> V37_GENE_MAP = HmfGenePanelSupplier.allGenesMap37();
 
     @Test
-    public void canExtractFromViccEntries() throws IOException {
+    public void canExtractFromViccEntries() {
         EventClassifierConfig config = ViccClassificationConfig.build();
         ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(config,
                 new TestProteinResolver(),
