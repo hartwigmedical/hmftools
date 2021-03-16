@@ -288,7 +288,7 @@ public class VariantReader extends CkbJsonDirectoryReader<JsonVariant> {
             molecularProfiles.add(ImmutableMolecularProfileInfo.builder()
                     .id(JsonFunctions.integer(molecularProfileJsonObject, "id"))
                     .profileName(JsonFunctions.string(molecularProfileJsonObject, "profileName"))
-                    .treatmentApproaches(extractProfileTreatmentApproches(molecularProfileJsonObject.getAsJsonArray(
+                    .treatmentApproaches(extractProfileTreatmentApproaches(molecularProfileJsonObject.getAsJsonArray(
                             "profileTreatmentApproaches")))
                     .build());
         }
@@ -297,7 +297,7 @@ public class VariantReader extends CkbJsonDirectoryReader<JsonVariant> {
     }
 
     @NotNull
-    private static List<TreatmentApproachInfo> extractProfileTreatmentApproches(@NotNull JsonArray jsonArray) {
+    private static List<TreatmentApproachInfo> extractProfileTreatmentApproaches(@NotNull JsonArray jsonArray) {
         List<TreatmentApproachInfo> profileTreatmentApproaches = Lists.newArrayList();
         JsonDatamodelChecker profileTreatmentApproachChecker = VariantDataModelChecker.profileTreatmentApproachObjectChecker();
 
