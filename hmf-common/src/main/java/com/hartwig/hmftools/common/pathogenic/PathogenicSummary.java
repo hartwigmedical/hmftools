@@ -12,5 +12,5 @@ public interface PathogenicSummary {
     String clinvarInfo();
 
     @NotNull
-    Pathogenic pathogenicity();
+    Pathogenicity pathogenicity();
 }

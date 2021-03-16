@@ -4,9 +4,9 @@ import java.util.Arrays;
 import java.util.StringJoiner;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.pathogenic.Pathogenic;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
+import com.hartwig.hmftools.common.pathogenic.Pathogenicity;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -41,7 +41,7 @@ public class GermlinePathogenicEnrichment implements VariantContextEnrichment {
     @Override
     public VCFHeader enrichHeader(@NotNull final VCFHeader template) {
         StringJoiner joiner = new StringJoiner(",");
-        Arrays.stream(Pathogenic.values()).forEach(x -> joiner.add(x.toString()));
+        Arrays.stream(Pathogenicity.values()).forEach(x -> joiner.add(x.toString()));
         template.addMetaDataLine(new VCFInfoHeaderLine(PATHOGENICITY,
                 1,
                 VCFHeaderLineType.String,

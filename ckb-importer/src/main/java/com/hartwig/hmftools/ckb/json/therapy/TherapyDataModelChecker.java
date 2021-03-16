@@ -95,18 +95,7 @@ final class TherapyDataModelChecker {
 
         return new JsonDatamodelChecker("TherapyIndicationObject", map);
     }
-
-    @NotNull
-    public static JsonDatamodelChecker referenceChecker() {
-        Map<String, Boolean> map = Maps.newHashMap();
-        map.put("id", true);
-        map.put("pubMedId", true);
-        map.put("title", true);
-        map.put("url", true);
-
-        return new JsonDatamodelChecker("TherapyReferenceObject", map);
-    }
-
+    
     @NotNull
     public static JsonDatamodelChecker clinicalTrialChecker() {
         Map<String, Boolean> map = Maps.newHashMap();

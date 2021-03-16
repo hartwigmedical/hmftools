@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.pathogenic;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum Pathogenic {
+public enum Pathogenicity {
     PATHOGENIC(true),
     LIKELY_PATHOGENIC(true),
     BENIGN(false),
@@ -13,7 +13,7 @@ public enum Pathogenic {
 
     private final boolean pathogenic;
 
-    Pathogenic(final boolean pathogenic) {
+    Pathogenicity(final boolean pathogenic) {
         this.pathogenic = pathogenic;
     }
 
@@ -22,7 +22,7 @@ public enum Pathogenic {
     }
 
     @NotNull
-    public static Pathogenic fromClinvarAnnotation(@NotNull final String clnSig, @NotNull final String clnSigConf) {
+    public static Pathogenicity fromClinvarAnnotation(@NotNull final String clnSig, @NotNull final String clnSigConf) {
 
         /*
          * CLINVAR_PATHOGENIC - At least 1 interpretation of 'PATHOGENIC' and none ‘BENIGN’ or ‘LIKELY_BENIGN’

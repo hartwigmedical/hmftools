@@ -125,67 +125,6 @@ public final class ViccUtil {
         LOGGER.info(" Extracted {} signatures", featuresWithSignatureCount);
     }
 
-    public static void writeInterpretationToTsv(@NotNull String featureInterpretationTsv,
-            @NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) throws IOException {
-        List<String> lines = Lists.newArrayList();
-        String header =
-                new StringJoiner(FIELD_DELIMITER).add("source").add("gene").add("type").add("feature").add("interpretation").toString();
-        lines.add(header);
-
-        for (Map.Entry<ViccEntry, ViccExtractionResult> resultPerEntry : resultsPerEntry.entrySet()) {
-            ViccEntry entry = resultPerEntry.getKey();
-            ViccExtractionResult result = resultPerEntry.getValue();
-            for (Feature feature : entry.features()) {
-                StringJoiner interpretation = new StringJoiner(SUB_FIELD_DELIMITER);
-
-                List<VariantHotspot> hotspotsForFeature = result.hotspotsPerFeature().get(feature);
-                if (hotspotsForFeature != null) {
-                    interpretation.add(hotspotsForFeature.toString());
-                }
-
-                List<CodonAnnotation> codonsForFeature = result.codonsPerFeature().get(feature);
-                if (codonsForFeature != null) {
-                    interpretation.add(codonsForFeature.toString());
-                }
-
-                List<ExonAnnotation> exonsForFeature = result.exonsPerFeature().get(feature);
-                if (exonsForFeature != null) {
-                    interpretation.add(exonsForFeature.toString());
-                }
-
-                GeneLevelAnnotation geneLevelEventForFeature = result.geneLevelEventsPerFeature().get(feature);
-                if (geneLevelEventForFeature != null) {
-                    interpretation.add(geneLevelEventForFeature.toString());
-                }
-
-                KnownCopyNumber ampDelForFeature = result.ampsDelsPerFeature().get(feature);
-                if (ampDelForFeature != null) {
-                    interpretation.add(ampDelForFeature.toString());
-                }
-
-                KnownFusionPair fusionForFeature = result.fusionsPerFeature().get(feature);
-                if (fusionForFeature != null) {
-                    interpretation.add(fusionForFeature.toString());
-                }
-
-                SignatureName signatureForFeature = result.signaturesPerFeature().get(feature);
-                if (signatureForFeature != null) {
-                    interpretation.add(signatureForFeature.toString());
-                }
-
-                lines.add(new StringJoiner(FIELD_DELIMITER).add(entry.source().display())
-                        .add(feature.geneSymbol())
-                        .add(feature.type().toString())
-                        .add(feature.name())
-                        .add(interpretation.toString())
-                        .toString());
-            }
-        }
-
-        LOGGER.info("Writing {} VICC feature interpretations to {}", lines.size() - 1, featureInterpretationTsv);
-        Files.write(new File(featureInterpretationTsv).toPath(), lines);
-    }
-
     public static void writeFeaturesToTsv(@NotNull String featureTsv, @NotNull List<ViccEntry> entries) throws IOException {
         List<String> lines = Lists.newArrayList();
         String header = new StringJoiner(FIELD_DELIMITER).add("source").add("gene").add("transcript").add("type").add("feature").toString();

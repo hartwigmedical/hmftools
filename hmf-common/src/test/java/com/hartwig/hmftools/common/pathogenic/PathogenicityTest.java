@@ -1,24 +1,24 @@
 package com.hartwig.hmftools.common.pathogenic;
 
-import static com.hartwig.hmftools.common.pathogenic.Pathogenic.BENIGN;
-import static com.hartwig.hmftools.common.pathogenic.Pathogenic.CLINVAR_STR_BENIGN;
-import static com.hartwig.hmftools.common.pathogenic.Pathogenic.CLINVAR_STR_CONFLICTING;
-import static com.hartwig.hmftools.common.pathogenic.Pathogenic.CLINVAR_STR_LIKELY_BENIGN;
-import static com.hartwig.hmftools.common.pathogenic.Pathogenic.CLINVAR_STR_LIKELY_PATHOGENIC;
-import static com.hartwig.hmftools.common.pathogenic.Pathogenic.CLINVAR_STR_PATHOGENIC;
-import static com.hartwig.hmftools.common.pathogenic.Pathogenic.CONFLICTING;
-import static com.hartwig.hmftools.common.pathogenic.Pathogenic.LIKELY_BENIGN;
-import static com.hartwig.hmftools.common.pathogenic.Pathogenic.LIKELY_PATHOGENIC;
-import static com.hartwig.hmftools.common.pathogenic.Pathogenic.PATHOGENIC;
-import static com.hartwig.hmftools.common.pathogenic.Pathogenic.UNKNOWN;
-import static com.hartwig.hmftools.common.pathogenic.Pathogenic.fromClinvarAnnotation;
+import static com.hartwig.hmftools.common.pathogenic.Pathogenicity.BENIGN;
+import static com.hartwig.hmftools.common.pathogenic.Pathogenicity.CLINVAR_STR_BENIGN;
+import static com.hartwig.hmftools.common.pathogenic.Pathogenicity.CLINVAR_STR_CONFLICTING;
+import static com.hartwig.hmftools.common.pathogenic.Pathogenicity.CLINVAR_STR_LIKELY_BENIGN;
+import static com.hartwig.hmftools.common.pathogenic.Pathogenicity.CLINVAR_STR_LIKELY_PATHOGENIC;
+import static com.hartwig.hmftools.common.pathogenic.Pathogenicity.CLINVAR_STR_PATHOGENIC;
+import static com.hartwig.hmftools.common.pathogenic.Pathogenicity.CONFLICTING;
+import static com.hartwig.hmftools.common.pathogenic.Pathogenicity.LIKELY_BENIGN;
+import static com.hartwig.hmftools.common.pathogenic.Pathogenicity.LIKELY_PATHOGENIC;
+import static com.hartwig.hmftools.common.pathogenic.Pathogenicity.PATHOGENIC;
+import static com.hartwig.hmftools.common.pathogenic.Pathogenicity.UNKNOWN;
+import static com.hartwig.hmftools.common.pathogenic.Pathogenicity.fromClinvarAnnotation;
 
 import static org.junit.Assert.assertEquals;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class PathogenicTest {
+public class PathogenicityTest {
 
     @Test
     public void testFromAnnotation() {

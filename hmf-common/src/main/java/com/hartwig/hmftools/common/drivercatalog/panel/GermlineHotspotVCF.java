@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.pathogenic.Pathogenic;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
+import com.hartwig.hmftools.common.pathogenic.Pathogenicity;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;
@@ -60,8 +60,8 @@ class GermlineHotspotVCF {
             // Intersection of variant and approved genes
             variantGenes.retainAll(germlineGenes);
 
-            Pathogenic pathogenic = PathogenicSummaryFactory.fromContext(context).pathogenicity();
-            if (!variantGenes.isEmpty() && isPathogenicOrLikelyPathogenic(pathogenic) && context.getAlleles().size() == 2) {
+            Pathogenicity pathogenicity = PathogenicSummaryFactory.fromContext(context).pathogenicity();
+            if (!variantGenes.isEmpty() && isPathogenicOrLikelyPathogenic(pathogenicity) && context.getAlleles().size() == 2) {
                 final String clinSigConf = PathogenicSummaryFactory.clnSigConf(context);
                 VariantContextBuilder builder = new VariantContextBuilder("clinvar",
                         contigPrefix + context.getContig(),
@@ -105,7 +105,7 @@ class GermlineHotspotVCF {
         return variants.stream().map(x -> GenomeRegions.create(x.getContig(), x.getStart(), x.getEnd())).collect(Collectors.toList());
     }
 
-    private static boolean isPathogenicOrLikelyPathogenic(@NotNull Pathogenic pathogenic) {
-        return pathogenic.isPathogenic();
+    private static boolean isPathogenicOrLikelyPathogenic(@NotNull Pathogenicity pathogenicity) {
+        return pathogenicity.isPathogenic();
     }
 }

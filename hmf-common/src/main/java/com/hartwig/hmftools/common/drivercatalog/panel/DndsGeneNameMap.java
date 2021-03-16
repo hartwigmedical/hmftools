@@ -4,16 +4,13 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
 public class DndsGeneNameMap {
 
-    private final Set<String> hg19Set = Sets.newHashSet();
     private final Map<String, String> hg38Map = Maps.newHashMap();
     private final Map<String, String> hg19Map = Maps.newHashMap();
 
@@ -28,7 +25,6 @@ public class DndsGeneNameMap {
                     if (!hg38.equals("NA")) {
                         hg38Map.put(hg38, hg19);
                     }
-                    hg19Set.add(hg19);
                     hg19Map.put(hg19, hg38);
                 });
     }
