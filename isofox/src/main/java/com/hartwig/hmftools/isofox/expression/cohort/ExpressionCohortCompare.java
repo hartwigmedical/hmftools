@@ -36,6 +36,9 @@ public class ExpressionCohortCompare
 
     private BufferedWriter mWriter;
 
+    private static final String CANCER_TYPE_ALL = "ALL";
+    private static final String CANCER_TYPE_OTHER = "Other";
+
     public ExpressionCohortCompare(final CohortConfig config)
     {
         mConfig = config;
@@ -98,6 +101,20 @@ public class ExpressionCohortCompare
             return;
         }
 
+        if(!mConfig.SampleData.CancerTypeSamples.isEmpty())
+        {
+            mConfig.SampleData.CancerTypeSamples.keySet().stream()
+                    .filter(x -> !x.equals(CANCER_TYPE_OTHER))
+                    .forEach(x -> analyseCohorts(x));
+        }
+
+        analyseCohorts(CANCER_TYPE_ALL);
+
+        closeBufferedWriter(mWriter);
+    }
+
+    private void analyseCohorts(final String cancerType)
+    {
         final String cohortA = mConfig.SampleData.CohortNames.get(0);
         final String cohortB = mConfig.SampleData.CohortNames.get(1);
         final List<Integer> cohortASampleIndices = Lists.newArrayList();
@@ -105,6 +122,9 @@ public class ExpressionCohortCompare
 
         for(final String sampleId : mConfig.SampleData.SampleIds)
         {
+            if(!cancerType.equals(CANCER_TYPE_ALL) && cancerType.equals(mConfig.SampleData.SampleCancerType.get(sampleId)))
+                continue;
+
             final String cohortName = mConfig.SampleData.SampleCohort.get(sampleId);
             Integer matrixIndex = mSampleIndexMap.get(sampleId);
 
@@ -120,8 +140,11 @@ public class ExpressionCohortCompare
                 cohortBSampleIndices.add(matrixIndex);
         }
 
-        ISF_LOGGER.info("cohortA({} samples={}) cohortB({} samples={})",
-                cohortA, cohortASampleIndices.size(), cohortB, cohortBSampleIndices.size());
+        ISF_LOGGER.info("cancerType({}) cohortA({} samples={}) cohortB({} samples={})",
+                cancerType, cohortA, cohortASampleIndices.size(), cohortB, cohortBSampleIndices.size());
+
+        if(cohortASampleIndices.isEmpty() || cohortBSampleIndices.isEmpty())
+            return;
 
         double[] cohortAValues = new double[cohortASampleIndices.size()];
         double[] cohortBValues = new double[cohortBSampleIndices.size()];
@@ -146,10 +169,9 @@ public class ExpressionCohortCompare
 
         for(final PValueResult pValue : pValueResults)
         {
-            writeResults(pValue.Id, pValue);
+            writeResults(cancerType, pValue.Id, pValue);
         }
 
-        closeBufferedWriter(mWriter);
     }
 
     private void populateCohortValues(final double[] cohortValues, int geneIndex, final List<Integer> cohortSampleIndices)
@@ -169,7 +191,7 @@ public class ExpressionCohortCompare
             final String outputFileName = mConfig.formCohortFilename("gene_expression_compare.csv");
             mWriter = createBufferedWriter(outputFileName, false);
 
-            mWriter.write("GeneId,GeneName,PValue,QValue,TestRank");
+            mWriter.write("CancerType,GeneId,GeneName,PValue,QValue,TestRank");
             mWriter.newLine();
         }
         catch(IOException e)
@@ -178,14 +200,14 @@ public class ExpressionCohortCompare
         }
     }
 
-    private void writeResults(final String geneId, final PValueResult pValue)
+    private void writeResults(final String cancerType, final String geneId, final PValueResult pValue)
     {
         try
         {
             final String geneName = mGeneIdNameMap.get(geneId);
 
-            mWriter.write(String.format("%s,%s,%g,%g,%d",
-                    geneId, geneName, pValue.PValue, pValue.QValue, pValue.Rank));
+            mWriter.write(String.format("%s,%s,%s,%g,%g,%d",
+                    cancerType, geneId, geneName, pValue.PValue, pValue.QValue, pValue.Rank));
             mWriter.newLine();
         }
         catch (IOException e)

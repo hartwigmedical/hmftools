@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox.cohort;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.EXCLUDED_GENE_ID_FILE;
@@ -86,12 +87,7 @@ public class CohortConfig
 
     public CohortConfig(final CommandLine cmd)
     {
-        String rootDir = cmd.getOptionValue(ROOT_DATA_DIRECTORY);
-
-        if(!rootDir.endsWith(File.separator))
-            rootDir += File.separator;
-
-        RootDataDir = rootDir;
+        RootDataDir = cmd.hasOption(ROOT_DATA_DIRECTORY) ? checkAddDirSeparator(cmd.getOptionValue(ROOT_DATA_DIRECTORY)) : "";;
 
         UseSampleDirectories = cmd.hasOption(USE_SAMPLE_DIRS);
         AllAvailableFiles = !UseSampleDirectories && cmd.hasOption(ALL_AVAILABLE_FILES);
@@ -155,8 +151,7 @@ public class CohortConfig
 
     public static boolean isValid(final CommandLine cmd)
     {
-        if(!cmd.hasOption(ROOT_DATA_DIRECTORY) || !cmd.hasOption(DATA_OUTPUT_DIR) || !cmd.hasOption(SAMPLE_DATA_FILE)
-        || !cmd.hasOption(ANALYSIS_TYPES))
+        if(!cmd.hasOption(DATA_OUTPUT_DIR) || !cmd.hasOption(SAMPLE_DATA_FILE) || !cmd.hasOption(ANALYSIS_TYPES))
         {
             return false;
         }
