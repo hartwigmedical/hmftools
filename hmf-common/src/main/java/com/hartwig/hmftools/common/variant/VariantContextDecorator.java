@@ -228,10 +228,6 @@ public class VariantContextDecorator implements GenomePosition {
     }
 
     public boolean isPathogenic() {
-        if (!isPass()) {
-            return false;
-        }
-
         if (clinvarPathogenicSummary().pathogenicity() == Pathogenicity.BENIGN_BLACKLIST) {
             return false;
         }

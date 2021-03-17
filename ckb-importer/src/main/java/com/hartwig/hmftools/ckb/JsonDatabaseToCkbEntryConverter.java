@@ -44,8 +44,10 @@ public final class JsonDatabaseToCkbEntryConverter {
                     .build());
             current++;
 
-            if (current % report == 0) {
-                LOGGER.debug(" Processed {} of {} molecular profiles", current, profileCount);
+            if (current > 1) {
+                if (current % report == 0) {
+                    LOGGER.debug(" Processed {} of {} molecular profiles", current, profileCount);
+                }
             }
         }
 

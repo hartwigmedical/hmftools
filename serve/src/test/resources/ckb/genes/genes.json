@@ -1,0 +1,27 @@
+{
+  "id": 0,
+  "geneSymbol": "0",
+  "terms": [
+  ],
+  "entrezId": 0,
+  "synonyms": [
+  ],
+  "chromosome": "",
+  "mapLocation": "",
+  "geneDescriptions": [
+  ],
+  "canonicalTranscript": "",
+  "geneRole": "",
+  "createDate": "01/01/1900",
+  "updateDate": "01/01/1900",
+  "clinicalTrials": [
+  ],
+  "evidence": [
+  ],
+  "variants": [
+  ],
+  "molecularProfiles": [
+  ],
+  "categoryVariants": [
+  ]
+}
