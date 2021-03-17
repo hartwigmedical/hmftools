@@ -49,7 +49,7 @@ public class CKBExtractor {
             if (entry.variants().size() == 1) {
                 for (Variant variant : entry.variants()) {
                     LOGGER.info("profileName: {} ", entry.profileName());
-                    LOGGER.info("eentType: {}", EventTypeExtractor.classify(variant.gene().geneSymbol(), variant.variant()));
+                    LOGGER.info("eventType: {}", EventTypeExtractor.classify(variant.gene().geneSymbol(), variant.variant()));
                     eventExtractor.extract(variant.gene().geneSymbol(),
                             variant.gene().canonicalTranscript(),
                             EventTypeExtractor.classify(variant.gene().geneSymbol(), variant.variant()),
