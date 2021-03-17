@@ -6,7 +6,9 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.ckb.classification.EventTypeExtractor;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
+import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
@@ -17,7 +19,6 @@ import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
-import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,16 +40,28 @@ public class CKBExtractor {
 
     @NotNull
     public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries) {
-        Map<ViccEntry, ExtractResult> resultsPerEntry = Maps.newHashMap();
+        Map<CkbEntry, ExtractResult> resultsPerEntry = Maps.newHashMap();
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
         for (CkbEntry entry : ckbEntries) {
-          //  resultsPerEntry.put(entry, extractSingleEntry(entry));
+            //   resultsPerEntry.put(entry, extractSingleEntry(entry));
+
+            if (entry.variants().size() == 1) {
+                for (Variant variant : entry.variants()) {
+                    eventExtractor.extract(variant.gene().geneSymbol(),
+                            variant.gene().canonicalTranscript(),
+                            EventTypeExtractor.classify(variant.gene().geneSymbol(), variant.variant()),
+                            variant.impact());
+
+                }
+            } else {
+                LOGGER.info("Molecular profile is complex {}", entry.profileName());
+            }
+
             tracker.update();
         }
 
-       // actionableEvidenceFactory.evaluateCuration();
-
+        // actionableEvidenceFactory.evaluateCuration();
 
         ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
                 .knownHotspots(Sets.newHashSet())
