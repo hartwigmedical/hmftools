@@ -67,14 +67,14 @@
         <bachelor.version>1.12</bachelor.version>
         <gripss.version>1.11</gripss.version>
         <lilac.version>0.1</lilac.version>
-        <sv-linx.version>1.14</sv-linx.version>
+        <sv-linx.version>1.15</sv-linx.version>
         <health-checker.version>3.2</health-checker.version>
         <sv-tools.version>1.0</sv-tools.version>
         <imuno.version>1.0</imuno.version>
         <sig-analyser.version>1.0</sig-analyser.version>
-        <cuppa.version>1.3</cuppa.version>
+        <cuppa.version>1.4</cuppa.version>
         <compar.version>1.0</compar.version>
-        <isofox.version>1.2</isofox.version>
+        <isofox.version>1.3</isofox.version>
         <paddle.version>0.1</paddle.version>
         <vicc-importer.version>1.1</vicc-importer.version>
         <iclusion-importer.version>1.3</iclusion-importer.version>
