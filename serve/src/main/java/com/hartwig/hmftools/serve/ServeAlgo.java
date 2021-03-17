@@ -6,6 +6,11 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.ckb.JsonDatabaseToCkbEntryConverter;
+import com.hartwig.hmftools.ckb.classification.CKBClassificationConfig;
+import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
+import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
+import com.hartwig.hmftools.ckb.json.CkbJsonReader;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
@@ -17,6 +22,8 @@ import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
+import com.hartwig.hmftools.serve.sources.ckb.CKBExtractor;
+import com.hartwig.hmftools.serve.sources.ckb.CKBExtractorFactory;
 import com.hartwig.hmftools.serve.sources.docm.DocmEntry;
 import com.hartwig.hmftools.serve.sources.docm.DocmExtractor;
 import com.hartwig.hmftools.serve.sources.docm.DocmReader;
@@ -74,6 +81,10 @@ public class ServeAlgo {
             extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv()));
         }
 
+        if (config.useCkb()) {
+            extractions.add(extractCKBKnowledge(config.CKBdir()));
+        }
+
         if (config.useDocm()) {
             extractions.add(extractDocmKnowledge(config.docmTsv()));
         }
@@ -122,6 +133,24 @@ public class ServeAlgo {
 
         LOGGER.info("Running iClusion knowledge extraction");
         return extractor.extract(trials);
+    }
+
+    @NotNull
+    private ExtractionResult extractCKBKnowledge(@NotNull String ckbDir) throws IOException{
+
+        CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
+        List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
+
+        EventClassifierConfig config = CKBClassificationConfig.build();
+        CKBExtractor extractor = CKBExtractorFactory.buildCKBExtractor(config,
+                proteinResolver,
+                driverGenes,
+                knownFusionCache,
+                allGenesMap,
+                missingDoidLookup);
+
+        LOGGER.info("Running CKB knowledge extraction");
+        return extractor.extract(ckbEntries);
     }
 
     @NotNull
