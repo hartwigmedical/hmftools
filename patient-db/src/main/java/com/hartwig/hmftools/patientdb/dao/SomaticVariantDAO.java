@@ -177,6 +177,7 @@ class SomaticVariantDAO {
                             ? CodingEffect.UNDEFINED
                             : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)))
                     .worstEffectTranscript(record.getValue(SOMATICVARIANT.WORSTEFFECTTRANSCRIPT))
+                    .canonicalTranscript("")
                     .canonicalEffect(record.getValue(SOMATICVARIANT.CANONICALEFFECT))
                     .canonicalCodingEffect(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT).isEmpty()
                             ? CodingEffect.UNDEFINED
