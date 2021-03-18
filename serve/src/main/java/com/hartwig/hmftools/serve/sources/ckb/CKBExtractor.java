@@ -45,8 +45,9 @@ public class CKBExtractor {
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
         for (CkbEntry entry : ckbEntries) {
             //   resultsPerEntry.put(entry, extractSingleEntry(entry));
+            LOGGER.info(entry.profileName());
+            LOGGER.info(entry.variants());
 
-            if (entry.variants().size() == 1) {
                 for (Variant variant : entry.variants()) {
                     LOGGER.info("profileName: {} ", entry.profileName());
                     LOGGER.info("eventType: {}", EventTypeExtractor.classify(variant.gene().geneSymbol(), variant.variant()));
@@ -56,9 +57,7 @@ public class CKBExtractor {
                             variant.impact());
 
                 }
-            } else {
-                LOGGER.info("Molecular profile is complex {}", entry.profileName());
-            }
+
 
             tracker.update();
         }
