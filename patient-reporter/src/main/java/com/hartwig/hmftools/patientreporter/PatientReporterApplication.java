@@ -109,7 +109,7 @@ public class PatientReporterApplication {
                 config.linxFusionTsv(),
                 config.linxBreakendTsv(),
                 config.linxViralInsertionTsv(),
-                config.linxDriversTsv(),
+                config.linxDriverCatalogTsv(),
                 config.chordPredictionTxt(),
                 config.circosFile(),
                 config.protectEvidenceTsv(),
