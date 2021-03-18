@@ -190,7 +190,14 @@ public class RefSomatics implements RefClassifier
     private Matrix loadReferenceSnvCounts(final String refFilename, final Map<String,Integer> sampleCountsIndex, final String type)
     {
         if(refFilename.isEmpty())
+        {
+            if(type.equals(MATRIX_TYPE_SNV_96))
+                mWriteTriNucMatrixData = true;
+            else
+                mWritePosFreqMatrixData = true;
+
             return null;
+        }
 
         CUP_LOGGER.debug("loading SNV {} reference data", type);
 
