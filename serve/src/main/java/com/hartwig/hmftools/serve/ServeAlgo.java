@@ -83,7 +83,7 @@ public class ServeAlgo {
         }
 
         if (config.useCkb()) {
-            extractions.add(extractCKBKnowledge(config.CKBdir()));
+            extractions.add(extractCKBKnowledge(config.ckbDir()));
         }
 
         if (config.useDocm()) {

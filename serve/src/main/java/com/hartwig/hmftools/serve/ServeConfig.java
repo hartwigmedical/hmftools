@@ -64,8 +64,8 @@ public interface ServeConfig {
         options.addOption(VICC_SOURCES, true, "Comma-separated list of (lowercase) VICC sources to include");
         options.addOption(USE_ICLUSION, false, "If provided, iClusion will be used as a source in SERVE");
         options.addOption(ICLUSION_TRIAL_TSV, true, "Path to the iClusion input trial TSV");
-        options.addOption(USE_CKB, false, "If provided, CKB importer will be used as a source in SERVE");
-        options.addOption(CKB_DIR, true, "Path to the CKB input dir");
+        options.addOption(USE_CKB, false, "If provided, CKB FLEX will be used as a source in SERVE");
+        options.addOption(CKB_DIR, true, "Path to the CKB FLEX json input dir");
         options.addOption(USE_DOCM, false, "If provided, DoCM will be used as a source in SERVE");
         options.addOption(DOCM_TSV, true, "Path to the DoCM knowledgebase input TSV");
         options.addOption(USE_HARTWIG_COHORT, false, "If provided, Hartwig Cohort will be used as a source in SERVE");
@@ -104,7 +104,7 @@ public interface ServeConfig {
     boolean useCkb();
 
     @NotNull
-    String CKBdir();
+    String ckbDir();
 
     boolean useDocm();
 
@@ -161,7 +161,7 @@ public interface ServeConfig {
                 .useIclusion(useIclusion)
                 .iClusionTrialTsv(useIclusion ? nonOptionalFile(cmd, ICLUSION_TRIAL_TSV) : NOT_APPLICABLE)
                 .useCkb(useCKB)
-                .CKBdir(nonOptionalDir(cmd, CKB_DIR))
+                .ckbDir(useCKB ? nonOptionalDir(cmd, CKB_DIR) : NOT_APPLICABLE)
                 .useDocm(useDocm)
                 .docmTsv(useDocm ? nonOptionalFile(cmd, DOCM_TSV) : NOT_APPLICABLE)
                 .useHartwigCohort(useHartwigCohort)

@@ -25,8 +25,7 @@ public class ServeAlgoTest {
     private static final String HARTWIG_CURATED_TSV = Resources.getResource("hartwig/example.tsv").getPath();
     private static final String HARTWIG_COHORT_TSV = Resources.getResource("hartwig/example.tsv").getPath();
     private static final String REF_GENOME_FASTA_FILE = Resources.getResource("refgenome/ref.fasta").getPath();
-    private static final String CKB_DIR = Resources.getResource("ckb/").getPath();
-
+    private static final String CKB_DIR = Resources.getResource("ckb").getPath();
 
     @Test
     public void canRunServeAlgo() throws IOException {
@@ -44,7 +43,7 @@ public class ServeAlgoTest {
                 .useDocm(true)
                 .docmTsv(DOCM_TSV)
                 .useCkb(true)
-                .CKBdir(CKB_DIR)
+                .ckbDir(CKB_DIR)
                 .useHartwigCohort(true)
                 .hartwigCohortTsv(HARTWIG_COHORT_TSV)
                 .useHartwigCurated(true)
