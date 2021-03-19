@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.extraction.signature;
+package com.hartwig.hmftools.serve.extraction.characteristic;
 
 public enum SignatureName {
     MICROSATELLITE_UNSTABLE,

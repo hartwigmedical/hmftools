@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
+import com.hartwig.hmftools.serve.extraction.characteristic.SignatureExtractor;
 import com.hartwig.hmftools.serve.extraction.codon.CodonExtractor;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.extraction.exon.ExonExtractor;
@@ -18,7 +19,6 @@ import com.hartwig.hmftools.serve.extraction.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
-import com.hartwig.hmftools.serve.extraction.signature.SignatureExtractor;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
 

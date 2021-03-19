@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.extraction.signature;
+package com.hartwig.hmftools.serve.extraction.characteristic;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

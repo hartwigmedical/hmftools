@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.serve.actionability.characteristic;
 
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
+import com.hartwig.hmftools.serve.extraction.characteristic.SignatureName;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

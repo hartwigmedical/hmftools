@@ -7,12 +7,12 @@ import java.util.Set;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
+import com.hartwig.hmftools.serve.extraction.characteristic.SignatureName;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
-import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

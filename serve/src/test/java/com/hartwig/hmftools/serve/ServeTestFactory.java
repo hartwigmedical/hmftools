@@ -18,6 +18,7 @@ import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
+import com.hartwig.hmftools.serve.extraction.characteristic.SignatureName;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
@@ -32,7 +33,6 @@ import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
-import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 
 import org.apache.logging.log4j.util.Strings;

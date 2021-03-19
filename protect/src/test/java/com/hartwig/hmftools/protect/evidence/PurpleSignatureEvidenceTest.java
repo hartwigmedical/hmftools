@@ -16,7 +16,7 @@ import com.hartwig.hmftools.protect.purple.ImmutablePurpleData;
 import com.hartwig.hmftools.protect.purple.PurpleData;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignature;
 import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableSignature;
-import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
+import com.hartwig.hmftools.serve.extraction.characteristic.SignatureName;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

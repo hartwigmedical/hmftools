@@ -6,14 +6,13 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
-import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.extraction.characteristic.SignatureName;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
-import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

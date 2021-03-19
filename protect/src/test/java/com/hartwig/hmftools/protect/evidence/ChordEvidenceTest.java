@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignature;
 import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableSignature;
-import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
+import com.hartwig.hmftools.serve.extraction.characteristic.SignatureName;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

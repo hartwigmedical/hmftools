@@ -11,7 +11,7 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions;
-import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
+import com.hartwig.hmftools.serve.extraction.characteristic.SignatureName;
 import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
