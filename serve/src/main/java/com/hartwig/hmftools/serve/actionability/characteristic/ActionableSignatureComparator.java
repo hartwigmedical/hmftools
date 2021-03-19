@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.actionability.signature;
+package com.hartwig.hmftools.serve.actionability.characteristic;
 
 import java.util.Comparator;
 

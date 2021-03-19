@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignatureUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeUrlConsolidator;
-import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.util.ActionableEventUrlMerger;
 import com.hartwig.hmftools.serve.extraction.codon.CodonFunctions;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;

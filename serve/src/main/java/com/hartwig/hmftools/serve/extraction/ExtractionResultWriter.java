@@ -2,11 +2,11 @@ package com.hartwig.hmftools.serve.extraction;
 
 import java.io.IOException;
 
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignatureFile;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneFile;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
-import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureFile;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodonFile;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumberFile;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExonFile;

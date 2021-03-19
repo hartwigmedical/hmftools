@@ -3,6 +3,8 @@ package com.hartwig.hmftools.serve.actionability;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignature;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignatureFile;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
@@ -11,8 +13,6 @@ import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
-import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
-import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureFile;
 import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.apache.logging.log4j.LogManager;

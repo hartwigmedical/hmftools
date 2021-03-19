@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignature;
 import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
 
 import org.jetbrains.annotations.NotNull;

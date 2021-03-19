@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.actionability.signature;
+package com.hartwig.hmftools.serve.actionability.characteristic;
 
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.extraction.signature.SignatureName;

@@ -14,8 +14,8 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.protect.purple.ImmutablePurpleData;
 import com.hartwig.hmftools.protect.purple.PurpleData;
-import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
-import com.hartwig.hmftools.serve.actionability.signature.ImmutableActionableSignature;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignature;
+import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableSignature;
 import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
 
 import org.jetbrains.annotations.NotNull;
