@@ -34,6 +34,11 @@ public final class HmfGenePanelSupplier {
     }
 
     @NotNull
+    public static Map<String, HmfTranscriptRegion> allGenesMap38() {
+        return allGenesMap(allGeneList38());
+    }
+
+    @NotNull
     public static SortedSetMultimap<String, HmfTranscriptRegion> allGenesPerChromosomeMap37() {
         return toSortedMap(allGeneList37());
     }

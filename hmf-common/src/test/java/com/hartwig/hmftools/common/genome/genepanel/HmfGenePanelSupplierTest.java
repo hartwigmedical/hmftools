@@ -28,9 +28,17 @@ public class HmfGenePanelSupplierTest {
     }
 
     @Test
-    public void allGenesAreUnique() {
+    public void allGenesAreUnique37() {
         List<HmfTranscriptRegion> regionList = HmfGenePanelSupplier.allGeneList37();
         Map<String, HmfTranscriptRegion> regionsByGene = HmfGenePanelSupplier.allGenesMap37();
+
+        assertEquals(regionList.size(), regionsByGene.values().size());
+    }
+
+    @Test
+    public void allGenesAreUnique38() {
+        List<HmfTranscriptRegion> regionList = HmfGenePanelSupplier.allGeneList38();
+        Map<String, HmfTranscriptRegion> regionsByGene = HmfGenePanelSupplier.allGenesMap38();
 
         assertEquals(regionList.size(), regionsByGene.values().size());
     }
