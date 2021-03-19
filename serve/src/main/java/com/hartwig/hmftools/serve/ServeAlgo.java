@@ -141,7 +141,7 @@ public class ServeAlgo {
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
         List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-        List<CkbEntry> curateCKBEntries = CkBReader.filterRelevantEntries(ckbEntries);
+     //   List<CkbEntry> curateCKBEntries = CkBReader.filterRelevantEntries(ckbEntries);
 
 
         EventClassifierConfig config = CKBClassificationConfig.build();
@@ -153,7 +153,7 @@ public class ServeAlgo {
                 missingDoidLookup);
 
         LOGGER.info("Running CKB knowledge extraction");
-        return extractor.extract(curateCKBEntries);
+        return extractor.extract(ckbEntries);
     }
 
     @NotNull
