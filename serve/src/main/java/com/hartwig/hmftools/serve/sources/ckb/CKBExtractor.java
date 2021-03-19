@@ -6,9 +6,7 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.ckb.classification.EventTypeExtractor;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
-import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
@@ -43,24 +41,6 @@ public class CKBExtractor {
         Map<CkbEntry, ExtractResult> resultsPerEntry = Maps.newHashMap();
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
-        for (CkbEntry entry : ckbEntries) {
-            //   resultsPerEntry.put(entry, extractSingleEntry(entry));
-            LOGGER.info(entry.profileName());
-            LOGGER.info(entry.variants());
-
-                for (Variant variant : entry.variants()) {
-                    LOGGER.info("profileName: {} ", entry.profileName());
-                    LOGGER.info("eventType: {}", EventTypeExtractor.classify(variant.gene().geneSymbol(), variant.variant()));
-                    eventExtractor.extract(variant.gene().geneSymbol(),
-                            variant.gene().canonicalTranscript(),
-                            EventTypeExtractor.classify(variant.gene().geneSymbol(), variant.variant()),
-                            variant.impact());
-
-                }
-
-
-            tracker.update();
-        }
 
         // actionableEvidenceFactory.evaluateCuration();
 
