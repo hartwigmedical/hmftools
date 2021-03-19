@@ -26,14 +26,14 @@ public class CkbExtractorTestApp {
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
         List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-        List<CkbEntry> curateCKBEntries = CkBReader.filterRelevantEntries(ckbEntries);
+      //  List<CkbEntry> curateCKBEntries = CkBReader.filterRelevantEntries(ckbEntries);
 
 
         EventClassifierConfig config = CKBClassificationConfig.build();
         EventClassifier classifier = EventClassifierFactory.buildClassifier(config);
 
         // TODO 1. Make sure every entry has correct event type.
-        for (CkbEntry entry : curateCKBEntries) {
+        for (CkbEntry entry : ckbEntries) {
             String gene = entry.variants().get(0).gene().geneSymbol();
             EventType type = classifier.determineType(gene, entry.profileName());
             LOGGER.info("Type of {} on {} is {}", entry.profileName(), gene, type);
