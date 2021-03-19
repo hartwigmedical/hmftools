@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionMutation;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionMutationCondition;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
@@ -55,6 +56,9 @@ public class IclusionExtractor {
             for (IclusionMutationCondition mutationCondition : trial.mutationConditions()) {
                 for (IclusionMutation mutation : mutationCondition.mutations()) {
                     LOGGER.debug("Interpreting '{}' on '{}' for {}", mutation.name(), mutation.gene(), trial.acronym());
+                    if (mutation.type() == EventType.UNKNOWN) {
+                        LOGGER.warn("No event type known for '{}' on '{}'", mutation.name(), mutation.gene());
+                    }
                     eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name()));
                 }
             }

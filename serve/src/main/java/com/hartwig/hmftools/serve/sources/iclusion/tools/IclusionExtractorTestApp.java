@@ -38,7 +38,7 @@ public class IclusionExtractorTestApp {
     private static final Logger LOGGER = LogManager.getLogger(IclusionExtractorTestApp.class);
 
     public static void main(String[] args) throws IOException {
-        Configurator.setRootLevel(Level.DEBUG);
+        Configurator.setRootLevel(Level.WARN);
 
         String hostname = InetAddress.getLocalHost().getHostName();
         LOGGER.debug("Running on '{}'", hostname);
