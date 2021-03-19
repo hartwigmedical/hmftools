@@ -14,7 +14,7 @@ public class CharacteristicMatcherTest {
     private static final Set<String> CHARACTERISTIC_EVENTS = Sets.newHashSet("Characteristic");
 
     @Test
-    public void canAssessWhetherEventIsSignature() {
+    public void canAssessWhetherEventIsCharacteristic() {
         EventMatcher matcher = new CharacteristicMatcher(CHARACTERISTIC_EVENTS);
 
         assertTrue(matcher.matches("-", "Characteristic"));
