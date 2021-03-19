@@ -72,6 +72,12 @@ public abstract class EventClassifierConfig {
     public abstract Set<String> hrDeficiencyEvents();
 
     @NotNull
+    public abstract Set<String> hpvPositiveEvents();
+
+    @NotNull
+    public abstract Set<String> ebvPositiveEvents();
+
+    @NotNull
     public abstract Map<String, Set<String>> combinedEventsPerGene();
 
     @NotNull

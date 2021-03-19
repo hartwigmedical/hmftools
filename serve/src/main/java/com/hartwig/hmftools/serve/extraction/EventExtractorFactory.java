@@ -55,7 +55,9 @@ public final class EventExtractorFactory {
                 new FusionExtractor(fusionGeneChecker, knownFusionCache),
                 new TumorCharacteristicExtractor(config.microsatelliteUnstableEvents(),
                         config.highTumorMutationalLoadEvents(),
-                        config.hrDeficiencyEvents()));
+                        config.hrDeficiencyEvents(),
+                        config.hpvPositiveEvents(),
+                        config.ebvPositiveEvents()));
     }
 
     @NotNull

@@ -19,12 +19,19 @@ public class TumorCharacteristicExtractor {
     private final Set<String> highTumorMutationalLoadEvents;
     @NotNull
     private final Set<String> hrDeficiencyEvents;
+    @NotNull
+    private final Set<String> hpvPositiveEvents;
+    @NotNull
+    private final Set<String> ebvPositiveEvents;
 
     public TumorCharacteristicExtractor(@NotNull final Set<String> microsatelliteUnstableEvents,
-            @NotNull final Set<String> highTumorMutationalLoadEvents, @NotNull final Set<String> hrDeficiencyEvents) {
+            @NotNull final Set<String> highTumorMutationalLoadEvents, @NotNull final Set<String> hrDeficiencyEvents,
+            @NotNull final Set<String> hpvPositiveEvents, @NotNull final Set<String> ebvPositiveEvents) {
         this.microsatelliteUnstableEvents = microsatelliteUnstableEvents;
         this.highTumorMutationalLoadEvents = highTumorMutationalLoadEvents;
         this.hrDeficiencyEvents = hrDeficiencyEvents;
+        this.hpvPositiveEvents = hpvPositiveEvents;
+        this.ebvPositiveEvents = ebvPositiveEvents;
     }
 
     @Nullable
@@ -48,6 +55,10 @@ public class TumorCharacteristicExtractor {
             return TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD;
         } else if (hrDeficiencyEvents.contains(event)) {
             return TumorCharacteristic.HOMOLOGOUS_RECOMBINATION_DEFICIENT;
+        } else if (hpvPositiveEvents.contains(event)) {
+            return TumorCharacteristic.HPV_POSITIVE;
+        } else if (ebvPositiveEvents.contains(event)) {
+            return TumorCharacteristic.EBV_POSITIVE;
         }
 
         return null;

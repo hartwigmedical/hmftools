@@ -15,6 +15,8 @@ public class TumorCharacteristicExtractorTest {
     private static final String MSI = "msi";
     private static final String TMB = "tmb";
     private static final String HRD = "hrd";
+    private static final String HPV = "hpv";
+    private static final String EBV = "ebv";
 
     @Test
     public void canExtractMicrosatelliteUnstableCharacteristic() {
@@ -44,6 +46,24 @@ public class TumorCharacteristicExtractorTest {
     }
 
     @Test
+    public void canExtractHPVPositiveCharacteristic() {
+        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HPV);
+
+        assertNotNull(characteristic);
+        assertEquals(TumorCharacteristic.HPV_POSITIVE, characteristic);
+    }
+
+    @Test
+    public void canExtractEBVPositiveCharacteristic() {
+        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, EBV);
+
+        assertNotNull(characteristic);
+        assertEquals(TumorCharacteristic.EBV_POSITIVE, characteristic);
+    }
+
+    @Test
     public void canFilterUnknownCharacteristic() {
         TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
 
@@ -59,6 +79,10 @@ public class TumorCharacteristicExtractorTest {
 
     @NotNull
     private static TumorCharacteristicExtractor buildTestExtractor() {
-        return new TumorCharacteristicExtractor(Sets.newHashSet(MSI), Sets.newHashSet(TMB), Sets.newHashSet(HRD));
+        return new TumorCharacteristicExtractor(Sets.newHashSet(MSI),
+                Sets.newHashSet(TMB),
+                Sets.newHashSet(HRD),
+                Sets.newHashSet(HPV),
+                Sets.newHashSet(EBV));
     }
 }
