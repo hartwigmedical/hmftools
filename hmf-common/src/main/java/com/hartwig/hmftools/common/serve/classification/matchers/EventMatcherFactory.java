@@ -37,7 +37,7 @@ public final class EventMatcherFactory {
         DeletionMatcher deletionMatcher =
                 new DeletionMatcher(config.deletionBlacklistKeyPhrases(), config.deletionKeywords(), config.deletionKeyPhrases());
 
-        SignatureMatcher signatureMatcher = new SignatureMatcher(allSignatureEvents(config));
+        CharacteristicMatcher characteristicMatcher = new CharacteristicMatcher(allCharacteristicEvents(config));
         ComplexMatcher complexMatcher = new ComplexMatcher(config.complexEventsPerGene());
         CombinedMatcher combinedMatcher =
                 new CombinedMatcher(config.combinedEventsPerGene(), hotspotMatcher, fusionPairMatcher, amplificationMatcher);
@@ -54,7 +54,7 @@ public final class EventMatcherFactory {
         map.put(EventType.DELETION, withFirstTierMatchers(firstTierEventMatchers, deletionMatcher));
         map.put(EventType.FUSION_PAIR, withFirstTierMatchers(firstTierEventMatchers, fusionPairMatcher));
         map.put(EventType.PROMISCUOUS_FUSION, withFirstTierMatchers(firstTierEventMatchers, promiscuousFusionMatcher));
-        map.put(EventType.SIGNATURE, withFirstTierMatchers(firstTierEventMatchers, signatureMatcher));
+        map.put(EventType.CHARACTERISTIC, withFirstTierMatchers(firstTierEventMatchers, characteristicMatcher));
         map.put(EventType.COMBINED, combinedMatcher);
         map.put(EventType.COMPLEX, complexMatcher);
 
@@ -62,12 +62,12 @@ public final class EventMatcherFactory {
     }
 
     @NotNull
-    private static Set<String> allSignatureEvents(@NotNull EventClassifierConfig config) {
-        Set<String> signatures = Sets.newHashSet();
-        signatures.addAll(config.microsatelliteUnstableEvents());
-        signatures.addAll(config.highTumorMutationalLoadEvents());
-        signatures.addAll(config.hrDeficiencyEvents());
-        return signatures;
+    private static Set<String> allCharacteristicEvents(@NotNull EventClassifierConfig config) {
+        Set<String> tumorCharacteristics = Sets.newHashSet();
+        tumorCharacteristics.addAll(config.microsatelliteUnstableEvents());
+        tumorCharacteristics.addAll(config.highTumorMutationalLoadEvents());
+        tumorCharacteristics.addAll(config.hrDeficiencyEvents());
+        return tumorCharacteristics;
     }
 
     @NotNull

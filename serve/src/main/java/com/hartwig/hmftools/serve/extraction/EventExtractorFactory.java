@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
-import com.hartwig.hmftools.serve.extraction.characteristic.SignatureExtractor;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicExtractor;
 import com.hartwig.hmftools.serve.extraction.codon.CodonExtractor;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.extraction.exon.ExonExtractor;
@@ -53,7 +53,7 @@ public final class EventExtractorFactory {
                         config.inactivatingGeneLevelKeyPhrases()),
                 new CopyNumberExtractor(exomeGeneChecker, driverGenes),
                 new FusionExtractor(fusionGeneChecker, knownFusionCache),
-                new SignatureExtractor(config.microsatelliteUnstableEvents(),
+                new TumorCharacteristicExtractor(config.microsatelliteUnstableEvents(),
                         config.highTumorMutationalLoadEvents(),
                         config.hrDeficiencyEvents()));
     }

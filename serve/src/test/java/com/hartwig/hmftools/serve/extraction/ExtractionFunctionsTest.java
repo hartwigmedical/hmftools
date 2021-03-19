@@ -54,6 +54,6 @@ public class ExtractionFunctionsTest {
         assertEquals(2, merged.actionableRanges().size());
         assertEquals(2, merged.actionableGenes().size());
         assertEquals(2, merged.actionableFusions().size());
-        assertEquals(2, merged.actionableSignatures().size());
+        assertEquals(2, merged.actionableCharacteristics().size());
     }
 }

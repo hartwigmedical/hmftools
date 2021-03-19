@@ -59,7 +59,7 @@ public class ViccExtractorTest {
         assertEquals(2, result.actionableRanges().size());
         assertEquals(2, result.actionableGenes().size());
         assertEquals(1, result.actionableFusions().size());
-        assertEquals(1, result.actionableSignatures().size());
+        assertEquals(1, result.actionableCharacteristics().size());
     }
 
     private static class TestProteinResolver implements ProteinResolver {

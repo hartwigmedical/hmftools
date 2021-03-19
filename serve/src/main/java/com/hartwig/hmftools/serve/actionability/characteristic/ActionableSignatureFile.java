@@ -6,19 +6,26 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.serve.actionability.util.ActionableFileFunctions;
-import com.hartwig.hmftools.serve.extraction.characteristic.SignatureName;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 
+// TODO: Can be removed once PROTECT reads actionable characteristics
 public final class ActionableSignatureFile {
 
     private static final String ACTIONABLE_SIGNATURE_TSV = "ActionableSignatures.tsv";
+
+    private static final Set<TumorCharacteristic> SUPPORTED_CHARACTERISTICS =
+            Sets.newHashSet(TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD,
+                    TumorCharacteristic.HOMOLOGOUS_RECOMBINATION_DEFICIENT,
+                    TumorCharacteristic.MICROSATELLITE_UNSTABLE);
 
     private ActionableSignatureFile() {
     }
@@ -28,19 +35,23 @@ public final class ActionableSignatureFile {
         return refGenomeVersion.addVersionToFilePath(serveActionabilityDir + File.separator + ACTIONABLE_SIGNATURE_TSV);
     }
 
-    public static void write(@NotNull String actionableSignatureTsv, @NotNull Iterable<ActionableSignature> actionableSignatures)
+    public static void write(@NotNull String actionableSignatureTsv, @NotNull Iterable<ActionableCharacteristic> actionableCharacteristics)
             throws IOException {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
-        lines.addAll(toLines(actionableSignatures));
+        lines.addAll(toLines(filter(actionableCharacteristics)));
         Files.write(new File(actionableSignatureTsv).toPath(), lines);
     }
 
     @NotNull
-    public static List<ActionableSignature> read(@NotNull String actionableSignatureTsv) throws IOException {
-        List<String> lines = Files.readAllLines(new File(actionableSignatureTsv).toPath());
-        // Skip header
-        return fromLines(lines.subList(1, lines.size()));
+    private static Iterable<ActionableCharacteristic> filter(@NotNull Iterable<ActionableCharacteristic> actionableCharacteristics) {
+        List<ActionableCharacteristic> filtered = Lists.newArrayList();
+        for (ActionableCharacteristic characteristic : actionableCharacteristics) {
+            if (SUPPORTED_CHARACTERISTICS.contains(characteristic.name())) {
+                filtered.add(characteristic);
+            }
+        }
+        return filtered;
     }
 
     @NotNull
@@ -49,46 +60,27 @@ public final class ActionableSignatureFile {
     }
 
     @NotNull
-    @VisibleForTesting
-    static List<ActionableSignature> fromLines(@NotNull List<String> lines) {
-        List<ActionableSignature> actionableSignatures = Lists.newArrayList();
-        for (String line : lines) {
-            actionableSignatures.add(fromLine(line));
-        }
-        return actionableSignatures;
-    }
-
-    @NotNull
-    private static ActionableSignature fromLine(@NotNull String line) {
-        String[] values = line.split(FIELD_DELIMITER);
-
-        return ImmutableActionableSignature.builder()
-                .from(ActionableFileFunctions.fromLine(values, 1))
-                .name(SignatureName.valueOf(values[0]))
-                .build();
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static List<String> toLines(@NotNull Iterable<ActionableSignature> actionableSignatures) {
+    private static List<String> toLines(@NotNull Iterable<ActionableCharacteristic> actionableCharacteristics) {
         List<String> lines = Lists.newArrayList();
-        for (ActionableSignature actionableSignature : sort(actionableSignatures)) {
-            lines.add(toLine(actionableSignature));
+        for (ActionableCharacteristic actionableCharacteristic : sort(actionableCharacteristics)) {
+            lines.add(toLine(actionableCharacteristic));
         }
         return lines;
     }
 
     @NotNull
-    private static List<ActionableSignature> sort(@NotNull Iterable<ActionableSignature> actionableSignatures) {
+    private static List<ActionableCharacteristic> sort(@NotNull Iterable<ActionableCharacteristic> actionableCharacteristics) {
         // Need to make a copy since the input may be immutable and cannot be sorted!
-        List<ActionableSignature> sorted = Lists.newArrayList(actionableSignatures);
-        sorted.sort(new ActionableSignatureComparator());
+        List<ActionableCharacteristic> sorted = Lists.newArrayList(actionableCharacteristics);
+        sorted.sort(new ActionableCharacteristicComparator());
 
         return sorted;
     }
 
     @NotNull
-    private static String toLine(@NotNull ActionableSignature signature) {
-        return new StringJoiner(FIELD_DELIMITER).add(signature.name().toString()).add(ActionableFileFunctions.toLine(signature)).toString();
+    private static String toLine(@NotNull ActionableCharacteristic characteristic) {
+        return new StringJoiner(FIELD_DELIMITER).add(characteristic.name().toString())
+                .add(ActionableFileFunctions.toLine(characteristic))
+                .toString();
     }
 }

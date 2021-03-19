@@ -8,8 +8,8 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.protect.purple.PurpleData;
-import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignature;
-import com.hartwig.hmftools.serve.extraction.characteristic.SignatureName;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -18,20 +18,20 @@ public class PurpleSignatureEvidence {
     @NotNull
     private final PersonalizedEvidenceFactory personalizedEvidenceFactory;
     @NotNull
-    private final List<ActionableSignature> actionableSignatures;
+    private final List<ActionableCharacteristic> actionableCharacteristics;
 
     public PurpleSignatureEvidence(@NotNull final PersonalizedEvidenceFactory personalizedEvidenceFactory,
-            @NotNull final List<ActionableSignature> actionableSignatures) {
+            @NotNull final List<ActionableCharacteristic> actionableCharacteristics) {
         this.personalizedEvidenceFactory = personalizedEvidenceFactory;
-        this.actionableSignatures = actionableSignatures.stream()
-                .filter(x -> x.name() == SignatureName.MICROSATELLITE_UNSTABLE || x.name() == SignatureName.HIGH_TUMOR_MUTATIONAL_LOAD)
+        this.actionableCharacteristics = actionableCharacteristics.stream()
+                .filter(x -> x.name() == TumorCharacteristic.MICROSATELLITE_UNSTABLE || x.name() == TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD)
                 .collect(Collectors.toList());
     }
 
     @NotNull
     public List<ProtectEvidence> evidence(@NotNull PurpleData purpleData) {
         List<ProtectEvidence> result = Lists.newArrayList();
-        for (ActionableSignature signature : actionableSignatures) {
+        for (ActionableCharacteristic signature : actionableCharacteristics) {
             switch (signature.name()) {
                 case MICROSATELLITE_UNSTABLE: {
                     if (purpleData.microsatelliteStatus() == MicrosatelliteStatus.MSI) {

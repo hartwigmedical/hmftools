@@ -2,7 +2,7 @@ package com.hartwig.hmftools.serve.extraction;
 
 import java.util.Set;
 
-import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignature;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
@@ -50,5 +50,5 @@ public abstract class ExtractionResult {
     public abstract Set<ActionableFusion> actionableFusions();
 
     @NotNull
-    public abstract Set<ActionableSignature> actionableSignatures();
+    public abstract Set<ActionableCharacteristic> actionableCharacteristics();
 }

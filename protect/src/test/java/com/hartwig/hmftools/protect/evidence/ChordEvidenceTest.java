@@ -13,9 +13,9 @@ import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignature;
-import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableSignature;
-import com.hartwig.hmftools.serve.extraction.characteristic.SignatureName;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
+import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableCharacteristic;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -25,13 +25,13 @@ public class ChordEvidenceTest {
 
     @Test
     public void canDetermineEvidenceForCHORD() {
-        ActionableSignature signature1 = ImmutableActionableSignature.builder()
+        ActionableCharacteristic signature1 = ImmutableActionableCharacteristic.builder()
                 .from(createTestEvent())
-                .name(SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
+                .name(TumorCharacteristic.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
                 .build();
 
-        ActionableSignature signature2 =
-                ImmutableActionableSignature.builder().from(createTestEvent()).name(SignatureName.HIGH_TUMOR_MUTATIONAL_LOAD).build();
+        ActionableCharacteristic signature2 =
+                ImmutableActionableCharacteristic.builder().from(createTestEvent()).name(TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD).build();
 
         ChordEvidence chordEvidence = new ChordEvidence(createTestEvidenceFactory(), Lists.newArrayList(signature1, signature2));
 

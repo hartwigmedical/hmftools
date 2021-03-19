@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.serve.extraction.characteristic.SignatureName;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
@@ -36,7 +36,7 @@ public class CKBUtils {
         int featuresWithGeneLevelEventCount = 0;
         int featuresWithCopyNumberCount = 0;
         int featuresWithFusionCount = 0;
-        int featuresWithSignatureCount = 0;
+        int featuresWithCharacteristicCount = 0;
 
         for (Map.Entry<CkbEntry, ExtractResult> resultPerEntry : resultsPerEntry.entrySet()) {
             CkbEntry entry = resultPerEntry.getKey();
@@ -48,10 +48,10 @@ public class CKBUtils {
                 GeneLevelAnnotation geneLevelEventForFeature = result.geneLevelEventsPerFeature().get(variant);
                 KnownCopyNumber ampDelForFeature = result.ampsDelsPerFeature().get(variant);
                 KnownFusionPair fusionForFeature = result.fusionsPerFeature().get(variant);
-                SignatureName signatureForFeature = result.signaturesPerFeature().get(variant);
+                TumorCharacteristic characteristicForFeature = result.characteristicsPerFeature().get(variant);
 
                 if (hotspotsForFeature == null && codonsForFeature == null && exonsForFeature == null && geneLevelEventForFeature == null
-                        && ampDelForFeature == null && fusionForFeature == null && signatureForFeature == null) {
+                        && ampDelForFeature == null && fusionForFeature == null && characteristicForFeature == null) {
                     //                            if (feature.type() != EventType.COMBINED && feature.type() != EventType.COMPLEX) {
                     //                                // For both combined and complex events we expect no genomic events to be derived.
                     //                                featuresWithoutGenomicEvents.add(variant);
@@ -84,8 +84,8 @@ public class CKBUtils {
                         featuresWithFusionCount++;
                     }
 
-                    if (signatureForFeature != null) {
-                        featuresWithSignatureCount++;
+                    if (characteristicForFeature != null) {
+                        featuresWithCharacteristicCount++;
                     }
                 }
 
@@ -107,7 +107,7 @@ public class CKBUtils {
         LOGGER.info(" Extracted {} gene level events", featuresWithGeneLevelEventCount);
         LOGGER.info(" Extracted {} known amps and dels", featuresWithCopyNumberCount);
         LOGGER.info(" Extracted {} known fusions pairs", featuresWithFusionCount);
-        LOGGER.info(" Extracted {} signatures", featuresWithSignatureCount);
+        LOGGER.info(" Extracted {} tumor characteristics", featuresWithCharacteristicCount);
     }
 }
 

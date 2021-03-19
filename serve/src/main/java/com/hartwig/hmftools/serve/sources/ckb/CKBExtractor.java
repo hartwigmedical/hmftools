@@ -9,7 +9,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.classification.EventTypeExtractor;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
-import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignature;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
@@ -84,13 +84,13 @@ public class CKBExtractor {
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
         Set<ActionableFusion> actionableFusions = Sets.newHashSet();
-        Set<ActionableSignature> actionableSignatures = Sets.newHashSet();
+        Set<ActionableCharacteristic> actionableCharacteristics = Sets.newHashSet();
 
         outputBuilder.actionableHotspots(actionableHotspots);
         outputBuilder.actionableRanges(actionableRanges);
         outputBuilder.actionableGenes(actionableGenes);
         outputBuilder.actionableFusions(actionableFusions);
-        outputBuilder.actionableSignatures(actionableSignatures);
+        outputBuilder.actionableCharacteristics(actionableCharacteristics);
     }
 
 }

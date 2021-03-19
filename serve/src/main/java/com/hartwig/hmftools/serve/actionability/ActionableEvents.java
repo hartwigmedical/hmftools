@@ -2,7 +2,7 @@ package com.hartwig.hmftools.serve.actionability;
 
 import java.util.List;
 
-import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignature;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
@@ -30,5 +30,5 @@ public interface ActionableEvents {
     List<ActionableFusion> fusions();
 
     @NotNull
-    List<ActionableSignature> signatures();
+    List<ActionableCharacteristic> characteristics();
 }

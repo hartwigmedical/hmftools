@@ -6,8 +6,8 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignature;
-import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableSignature;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
+import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
@@ -18,7 +18,7 @@ import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
-import com.hartwig.hmftools.serve.extraction.characteristic.SignatureName;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
@@ -55,7 +55,7 @@ public final class ServeTestFactory {
                 .addActionableRanges(createTestActionableRangeForSource(source))
                 .addActionableGenes(createTestActionableGeneForSource(source))
                 .addActionableFusions(createTestActionableFusionForSource(source))
-                .addActionableSignatures(createTestActionableSignatureForSource(source))
+                .addActionableCharacteristics(createTestActionableCharacteristicForSource(source))
                 .build();
     }
 
@@ -152,8 +152,11 @@ public final class ServeTestFactory {
     }
 
     @NotNull
-    public static ActionableSignature createTestActionableSignatureForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableSignature.builder().from(createTestBaseEvent(source)).name(SignatureName.MICROSATELLITE_UNSTABLE).build();
+    public static ActionableCharacteristic createTestActionableCharacteristicForSource(@NotNull Knowledgebase source) {
+        return ImmutableActionableCharacteristic.builder()
+                .from(createTestBaseEvent(source))
+                .name(TumorCharacteristic.MICROSATELLITE_UNSTABLE)
+                .build();
     }
 
     @NotNull

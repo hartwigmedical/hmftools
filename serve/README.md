@@ -8,7 +8,7 @@ In addition, SERVE generates output containing all genomic events that are impli
 
 * [Which knowledgebases are supported?](#supported-input-knowledgebases)
 * [What is generated as final SERVE output?](#outputs)
-* [How are genomic events extracted from the source knowledgebases?](#extraction-of-genomic-events-and-signatures-from-knowledgebases)
+* [How are genomic events extracted from the source knowledgebases?](#Extraction of genomic events and characteristics from knowledgebases)
 * [What is done in terms of curation and harmonization?](#curation-and-harmonization-of-individual-knowledgebases)
 * [How does everything come together?](#overview-of-the-serve-algorithm)
 
@@ -49,8 +49,8 @@ SERVE generates clinical evidence in the following datamodel:
  - Direction (Responsive for the treatment or resistant to the treatment)
  - A set of URLs with extra information about the evidence (could be a publication, or a general website)
  
-The following genomic events and signatures can be mapped to clinical evidence:
- - Genome-wide events such as signatures or MSI status
+The following genomic events and tumor characteristics can be mapped to clinical evidence:
+ - Genome-wide tumor characteristics such as signatures or MSI status
  - Multi-gene events such as gene fusions
  - Single gene events such as amplification or general (in)activation of a gene
  - Types of mutations in ranges overlapping with specific genes such as:
@@ -69,7 +69,7 @@ genomic events implied to be able to driver cancer:
 
 SERVE can be configured to generate its output either for reference genome version 37 or version 38.  
 
-## Extraction of genomic events and signatures from knowledgebases
+## Extraction of genomic events and characteristics from knowledgebases
  
 ### Gene checking
 

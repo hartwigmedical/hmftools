@@ -7,7 +7,7 @@ import java.util.Set;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.serve.extraction.characteristic.SignatureName;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
@@ -42,7 +42,7 @@ public abstract class ExtractResult {
     public abstract Map<Variant, KnownFusionPair> fusionsPerFeature();
 
     @NotNull
-    public abstract Map<Variant, SignatureName> signaturesPerFeature();
+    public abstract Map<Variant, TumorCharacteristic> characteristicsPerFeature();
 
     @NotNull
     public abstract Set<ActionableEvent> actionableEvents();

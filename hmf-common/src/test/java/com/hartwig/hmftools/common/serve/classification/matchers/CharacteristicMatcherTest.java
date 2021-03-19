@@ -9,15 +9,15 @@ import com.google.common.collect.Sets;
 
 import org.junit.Test;
 
-public class SignatureMatcherTest {
+public class CharacteristicMatcherTest {
 
-    private static final Set<String> SIGNATURE_EVENTS = Sets.newHashSet("Signature");
+    private static final Set<String> CHARACTERISTIC_EVENTS = Sets.newHashSet("Characteristic");
 
     @Test
     public void canAssessWhetherEventIsSignature() {
-        EventMatcher matcher = new SignatureMatcher(SIGNATURE_EVENTS);
+        EventMatcher matcher = new CharacteristicMatcher(CHARACTERISTIC_EVENTS);
 
-        assertTrue(matcher.matches("-", "Signature"));
+        assertTrue(matcher.matches("-", "Characteristic"));
 
         assertFalse(matcher.matches("BRAF", "V600E"));
     }

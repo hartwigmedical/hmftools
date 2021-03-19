@@ -14,9 +14,9 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.protect.purple.ImmutablePurpleData;
 import com.hartwig.hmftools.protect.purple.PurpleData;
-import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignature;
-import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableSignature;
-import com.hartwig.hmftools.serve.extraction.characteristic.SignatureName;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
+import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableCharacteristic;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -25,16 +25,16 @@ public class PurpleSignatureEvidenceTest {
 
     @Test
     public void canDeterminePurpleSignatureEvidence() {
-        ActionableSignature signature1 = ImmutableActionableSignature.builder()
+        ActionableCharacteristic signature1 = ImmutableActionableCharacteristic.builder()
                 .from(createTestEvent())
-                .name(SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
+                .name(TumorCharacteristic.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
                 .build();
 
-        ActionableSignature signature2 =
-                ImmutableActionableSignature.builder().from(createTestEvent()).name(SignatureName.HIGH_TUMOR_MUTATIONAL_LOAD).build();
+        ActionableCharacteristic signature2 =
+                ImmutableActionableCharacteristic.builder().from(createTestEvent()).name(TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD).build();
 
-        ActionableSignature signature3 =
-                ImmutableActionableSignature.builder().from(createTestEvent()).name(SignatureName.MICROSATELLITE_UNSTABLE).build();
+        ActionableCharacteristic signature3 =
+                ImmutableActionableCharacteristic.builder().from(createTestEvent()).name(TumorCharacteristic.MICROSATELLITE_UNSTABLE).build();
 
         PurpleSignatureEvidence purpleSignatureEvidence =
                 new PurpleSignatureEvidence(createTestEvidenceFactory(), Lists.newArrayList(signature1, signature2, signature3));

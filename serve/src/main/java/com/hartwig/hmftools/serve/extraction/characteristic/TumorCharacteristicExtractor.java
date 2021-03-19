@@ -9,9 +9,9 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class SignatureExtractor {
+public class TumorCharacteristicExtractor {
 
-    private static final Logger LOGGER = LogManager.getLogger(SignatureExtractor.class);
+    private static final Logger LOGGER = LogManager.getLogger(TumorCharacteristicExtractor.class);
 
     @NotNull
     private final Set<String> microsatelliteUnstableEvents;
@@ -20,7 +20,7 @@ public class SignatureExtractor {
     @NotNull
     private final Set<String> hrDeficiencyEvents;
 
-    public SignatureExtractor(@NotNull final Set<String> microsatelliteUnstableEvents,
+    public TumorCharacteristicExtractor(@NotNull final Set<String> microsatelliteUnstableEvents,
             @NotNull final Set<String> highTumorMutationalLoadEvents, @NotNull final Set<String> hrDeficiencyEvents) {
         this.microsatelliteUnstableEvents = microsatelliteUnstableEvents;
         this.highTumorMutationalLoadEvents = highTumorMutationalLoadEvents;
@@ -28,26 +28,26 @@ public class SignatureExtractor {
     }
 
     @Nullable
-    public SignatureName extract(@NotNull EventType type, @NotNull String event) {
-        if (type == EventType.SIGNATURE) {
-            SignatureName signature = determineSignature(event);
-            if (signature == null) {
-                LOGGER.warn("Could not extract signature from '{}'", event);
+    public TumorCharacteristic extract(@NotNull EventType type, @NotNull String event) {
+        if (type == EventType.CHARACTERISTIC) {
+            TumorCharacteristic characteristic = determineCharacteristic(event);
+            if (characteristic == null) {
+                LOGGER.warn("Could not extract characteristic from '{}'", event);
             }
-            return signature;
+            return characteristic;
         }
 
         return null;
     }
 
     @Nullable
-    private SignatureName determineSignature(@NotNull String event) {
+    private TumorCharacteristic determineCharacteristic(@NotNull String event) {
         if (microsatelliteUnstableEvents.contains(event)) {
-            return SignatureName.MICROSATELLITE_UNSTABLE;
+            return TumorCharacteristic.MICROSATELLITE_UNSTABLE;
         } else if (highTumorMutationalLoadEvents.contains(event)) {
-            return SignatureName.HIGH_TUMOR_MUTATIONAL_LOAD;
+            return TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD;
         } else if (hrDeficiencyEvents.contains(event)) {
-            return SignatureName.HOMOLOGOUS_RECOMBINATION_DEFICIENT;
+            return TumorCharacteristic.HOMOLOGOUS_RECOMBINATION_DEFICIENT;
         }
 
         return null;

@@ -3,8 +3,8 @@ package com.hartwig.hmftools.serve.actionability;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignature;
-import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignatureFile;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristicFile;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
@@ -47,16 +47,17 @@ public final class ActionableEventsLoader {
         List<ActionableFusion> fusions = ActionableFusionFile.read(actionableFusionTsv);
         LOGGER.info(" Loaded {} actionable fusions from {}", fusions.size(), actionableFusionTsv);
 
-        String actionableSignatureTsv = ActionableSignatureFile.actionableSignatureTsvPath(actionabilityDir, refGenomeVersion);
-        List<ActionableSignature> signatures = ActionableSignatureFile.read(actionableSignatureTsv);
-        LOGGER.info(" Loaded {} actionable signatures from {}", signatures.size(), actionableSignatureTsv);
+        String actionableCharacteristicTsv =
+                ActionableCharacteristicFile.actionableCharacteristicTsvPath(actionabilityDir, refGenomeVersion);
+        List<ActionableCharacteristic> characteristics = ActionableCharacteristicFile.read(actionableCharacteristicTsv);
+        LOGGER.info(" Loaded {} actionable tumor characteristics from {}", characteristics.size(), actionableCharacteristicTsv);
 
         return ImmutableActionableEvents.builder()
                 .hotspots(hotspots)
                 .ranges(ranges)
                 .genes(genes)
                 .fusions(fusions)
-                .signatures(signatures)
+                .characteristics(characteristics)
                 .build();
     }
 }

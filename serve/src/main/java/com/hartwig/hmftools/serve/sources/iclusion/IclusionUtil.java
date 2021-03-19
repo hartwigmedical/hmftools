@@ -35,7 +35,7 @@ public final class IclusionUtil {
         LOGGER.info(" {} actionable range records generated", result.actionableRanges().size());
         LOGGER.info(" {} actionable gene records generated", result.actionableGenes().size());
         LOGGER.info(" {} actionable fusion records generated", result.actionableFusions().size());
-        LOGGER.info(" {} actionable signature records generated", result.actionableSignatures().size());
+        LOGGER.info(" {} actionable tumor characteristics records generated", result.actionableCharacteristics().size());
     }
 
     public static void writeIclusionMutationTypes(@NotNull String iClusionMutationTsv, @NotNull List<IclusionTrial> trials)
