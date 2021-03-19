@@ -10,13 +10,13 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.curation.DoidLookupFactory;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ExtractionResultWriter;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolverFactory;
-import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -46,7 +46,7 @@ public class ServeApplication {
             System.exit(1);
         }
 
-        Map<String, HmfTranscriptRegion> allGenesMap = selectAllGeneMap(config.refGenomeVersion());
+        Map<String, HmfTranscriptRegion> allGenesMap = selectAllGeneMap(RefGenomeVersion.V37);
 
         ServeAlgo algo = new ServeAlgo(readDriverGenesFromFile(config.driverGeneTsv()),
                 buildKnownFusionCacheFromFile(config.knownFusionFile()),
@@ -56,7 +56,7 @@ public class ServeApplication {
 
         ExtractionResult result = algo.run(config);
 
-        new ExtractionResultWriter(config.outputDir(), config.refGenomeVersion()).write(result);
+        new ExtractionResultWriter(config.outputDir(), RefGenomeVersion.V37).write(result);
 
         LOGGER.info("Done!");
     }
@@ -97,11 +97,10 @@ public class ServeApplication {
             LOGGER.info("Creating dummy protein resolver");
             return ProteinResolverFactory.dummy();
         } else {
-            LOGGER.info("Creating transvar protein resolver with ref genome version '{}' using FASTA {}",
-                    config.refGenomeVersion(),
-                    config.refGenomeFastaFile());
-            return ProteinResolverFactory.transvarWithRefGenome(config.refGenomeVersion(),
-                    config.refGenomeFastaFile(),
+            LOGGER.info("Creating transvar protein resolver with ref genome version V37 using FASTA {}",
+                    config.refGenome37FastaFile());
+            return ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.V37,
+                    config.refGenome37FastaFile(),
                     transcriptsPerGeneMap);
         }
     }

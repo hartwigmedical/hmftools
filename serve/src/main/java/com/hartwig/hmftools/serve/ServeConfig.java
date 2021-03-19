@@ -6,7 +6,6 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.commons.cli.CommandLine;
@@ -43,8 +42,10 @@ public interface ServeConfig {
     String MISSING_DOIDS_MAPPING_TSV = "missing_doids_mapping_tsv";
 
     // Additional config for knowledge generation
-    String REF_GENOME_VERSION = "ref_genome_version";
-    String REF_GENOME_FASTA_FILE = "ref_genome_fasta_file";
+    String REF_GENOME_37_FASTA_FILE = "ref_genome_37_fasta_file";
+    String REF_GENOME_38_FASTA_FILE = "ref_genome_38_fasta_file";
+    String REF_GENOME_37_TO_38_CHAIN = "ref_genome_37_to_38_chain";
+    String REF_GENOME_38_TO_37_CHAIN = "ref_genome_38_to_37_chain";
     String DRIVER_GENE_TSV = "driver_gene_tsv";
     String KNOWN_FUSION_FILE = KnownFusionCache.KNOWN_FUSIONS_FILE;
 
@@ -75,8 +76,10 @@ public interface ServeConfig {
 
         options.addOption(MISSING_DOIDS_MAPPING_TSV, true, "Path to the mapping TSV containing entries for missing DOIDs");
 
-        options.addOption(REF_GENOME_VERSION, true, "Ref version. Should be 'hgXX'");
-        options.addOption(REF_GENOME_FASTA_FILE, true, "Path to the ref genome fasta file");
+        options.addOption(REF_GENOME_37_FASTA_FILE, true, "Path to the V37 ref genome fasta file");
+        options.addOption(REF_GENOME_38_FASTA_FILE, true, "Path to the V38 ref genome fasta file");
+        options.addOption(REF_GENOME_37_TO_38_CHAIN, true, "Chain file to lift over ref genome V37 to V38");
+        options.addOption(REF_GENOME_38_TO_37_CHAIN, true, "Chain file to lift over ref genome V38 to V37");
         options.addOption(DRIVER_GENE_TSV, true, "Path to driver gene TSV");
         options.addOption(KNOWN_FUSION_FILE, true, "Path to the known fusion file");
 
@@ -125,10 +128,16 @@ public interface ServeConfig {
     String missingDoidsMappingTsv();
 
     @NotNull
-    RefGenomeVersion refGenomeVersion();
+    String refGenome37FastaFile();
 
     @NotNull
-    String refGenomeFastaFile();
+    String refGenome38FastaFile();
+
+    @NotNull
+    String refGenome37To38Chain();
+
+    @NotNull
+    String refGenome38To37Chain();
 
     @NotNull
     String driverGeneTsv();
@@ -169,8 +178,10 @@ public interface ServeConfig {
                 .useHartwigCurated(useHartwigCurated)
                 .hartwigCuratedTsv(useHartwigCurated ? nonOptionalFile(cmd, HARTWIG_CURATED_TSV) : NOT_APPLICABLE)
                 .missingDoidsMappingTsv(nonOptionalFile(cmd, MISSING_DOIDS_MAPPING_TSV))
-                .refGenomeVersion(RefGenomeVersion.fromIdentifier(nonOptionalValue(cmd, REF_GENOME_VERSION)))
-                .refGenomeFastaFile(nonOptionalFile(cmd, REF_GENOME_FASTA_FILE))
+                .refGenome37FastaFile(nonOptionalFile(cmd, REF_GENOME_37_FASTA_FILE))
+                .refGenome38FastaFile(nonOptionalFile(cmd, REF_GENOME_38_FASTA_FILE))
+                .refGenome37To38Chain(nonOptionalFile(cmd, REF_GENOME_37_TO_38_CHAIN))
+                .refGenome38To37Chain(nonOptionalFile(cmd, REF_GENOME_38_TO_37_CHAIN))
                 .driverGeneTsv(nonOptionalFile(cmd, DRIVER_GENE_TSV))
                 .knownFusionFile(nonOptionalFile(cmd, KNOWN_FUSION_FILE))
                 .outputDir(nonOptionalDir(cmd, OUTPUT_DIR))

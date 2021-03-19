@@ -10,7 +10,6 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolverFactory;
-import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.util.Strings;
@@ -21,11 +20,15 @@ public class ServeAlgoTest {
 
     private static final String VICC_JSON = Resources.getResource("vicc/empty.vicc.json").getPath();
     private static final String ICLUSION_TRIAL_TSV = Resources.getResource("iclusion/empty.iclusion.tsv").getPath();
+    private static final String CKB_DIR = Resources.getResource("ckb").getPath();
     private static final String DOCM_TSV = Resources.getResource("docm/example.tsv").getPath();
     private static final String HARTWIG_CURATED_TSV = Resources.getResource("hartwig/example.tsv").getPath();
     private static final String HARTWIG_COHORT_TSV = Resources.getResource("hartwig/example.tsv").getPath();
-    private static final String REF_GENOME_FASTA_FILE = Resources.getResource("refgenome/ref.fasta").getPath();
-    private static final String CKB_DIR = Resources.getResource("ckb").getPath();
+
+    private static final String REF_GENOME_37_FASTA_FILE = Resources.getResource("refgenome/v37/ref.fasta").getPath();
+    private static final String REF_GENOME_38_FASTA_FILE = Resources.getResource("refgenome/v38/ref.fasta").getPath();
+    private static final String REF_GENOME_37_TO_38_CHAIN = Resources.getResource("refgenome/liftover/V37ToV38.over.chain").getPath();
+    private static final String REF_GENOME_38_TO_37_CHAIN = Resources.getResource("refgenome/liftover/V38ToV37.over.chain").getPath();
 
     @Test
     public void canRunServeAlgo() throws IOException {
@@ -40,16 +43,18 @@ public class ServeAlgoTest {
                 .addViccSources(ViccSource.CIVIC, ViccSource.CGI)
                 .useIclusion(true)
                 .iClusionTrialTsv(ICLUSION_TRIAL_TSV)
-                .useDocm(true)
-                .docmTsv(DOCM_TSV)
                 .useCkb(true)
                 .ckbDir(CKB_DIR)
+                .useDocm(true)
+                .docmTsv(DOCM_TSV)
                 .useHartwigCohort(true)
                 .hartwigCohortTsv(HARTWIG_COHORT_TSV)
                 .useHartwigCurated(true)
                 .hartwigCuratedTsv(HARTWIG_CURATED_TSV)
-                .refGenomeVersion(RefGenomeVersion.V37)
-                .refGenomeFastaFile(REF_GENOME_FASTA_FILE)
+                .refGenome37FastaFile(REF_GENOME_37_FASTA_FILE)
+                .refGenome38FastaFile(REF_GENOME_38_FASTA_FILE)
+                .refGenome37To38Chain(REF_GENOME_37_TO_38_CHAIN)
+                .refGenome38To37Chain((REF_GENOME_38_TO_37_CHAIN))
                 .build();
 
         assertNotNull(algo.run(config));

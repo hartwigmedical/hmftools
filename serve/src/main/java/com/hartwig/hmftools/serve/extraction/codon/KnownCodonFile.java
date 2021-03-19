@@ -11,8 +11,8 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
-import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -60,7 +60,7 @@ public final class KnownCodonFile {
                         .mutationType(MutationTypeFilter.valueOf(values[5]))
                         .codonIndex(Integer.parseInt(values[6]))
                         .build())
-                .sources(Knowledgebase.fromCommaSeparatedSourceString(values[7]))
+                .sources(Knowledgebase.fromCommaSeparatedTechnicalDisplayString(values[7]))
                 .build();
     }
 

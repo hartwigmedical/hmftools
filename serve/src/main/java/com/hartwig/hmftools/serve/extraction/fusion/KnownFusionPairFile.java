@@ -8,7 +8,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.serve.util.RefGenomeVersion;
+import com.hartwig.hmftools.common.serve.RefGenomeVersion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

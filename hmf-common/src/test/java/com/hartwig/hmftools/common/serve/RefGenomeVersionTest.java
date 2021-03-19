@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.util;
+package com.hartwig.hmftools.common.serve;
 
 import static org.junit.Assert.assertEquals;
 

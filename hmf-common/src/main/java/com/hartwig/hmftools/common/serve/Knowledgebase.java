@@ -12,25 +12,35 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum Knowledgebase {
-    DOCM("docm", "DoCM"),
-    HARTWIG_COHORT("hartwig_cohort", "HMF Cohort"),
-    HARTWIG_CURATED("hartwig_curated", "HMF Curated"),
-    ICLUSION("iclusion", "iClusion"),
-    VICC_CGI("vicc_cgi", "CGI"),
-    VICC_CIVIC("vicc_civic", "CIViC"),
-    VICC_JAX("vicc_jax", "CKB"),
-    VICC_ONCOKB("vicc_oncokb", "OncoKB");
+    CKB(RefGenomeVersion.V38, "ckb", "CKB"),
+    DOCM(RefGenomeVersion.V37, "docm", "DoCM"),
+    HARTWIG_COHORT(RefGenomeVersion.V37, "hartwig_cohort", "HMF Cohort"),
+    HARTWIG_CURATED(RefGenomeVersion.V37, "hartwig_curated", "HMF Curated"),
+    ICLUSION(RefGenomeVersion.V37, "iclusion", "iClusion"),
+    VICC_CGI(RefGenomeVersion.V37, "vicc_cgi", "CGI"),
+    VICC_CIVIC(RefGenomeVersion.V37, "vicc_civic", "CIViC"),
+    VICC_JAX(RefGenomeVersion.V37, "vicc_jax", "CKB Core"),
+    VICC_ONCOKB(RefGenomeVersion.V37, "vicc_oncokb", "OncoKB");
 
+    private static final Logger LOGGER = LogManager.getLogger(Knowledgebase.class);
+
+    @NotNull
+    private final RefGenomeVersion refGenomeVersion;
     @NotNull
     private final String technicalDisplay;
     @NotNull
     private final String reportDisplay;
 
-    private static final Logger LOGGER = LogManager.getLogger(Knowledgebase.class);
-
-    Knowledgebase(@NotNull final String technicalDisplay, @NotNull final String reportDisplay) {
+    Knowledgebase(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final String technicalDisplay,
+            @NotNull final String reportDisplay) {
+        this.refGenomeVersion = refGenomeVersion;
         this.technicalDisplay = technicalDisplay;
         this.reportDisplay = reportDisplay;
+    }
+
+    @NotNull
+    public RefGenomeVersion refGenomeVersion() {
+        return refGenomeVersion;
     }
 
     @NotNull
@@ -44,15 +54,15 @@ public enum Knowledgebase {
     }
 
     @NotNull
-    public static Set<Knowledgebase> fromCommaSeparatedSourceString(@NotNull String sources) {
+    public static Set<Knowledgebase> fromCommaSeparatedTechnicalDisplayString(@NotNull String knowledgebases) {
         Set<Knowledgebase> consolidated = Sets.newHashSet();
 
-        for (String source : sources.split(",")) {
-            Knowledgebase knowledgebase = lookupKnowledgebase(source);
+        for (String technicalDisplay : knowledgebases.split(",")) {
+            Knowledgebase knowledgebase = lookupKnowledgebase(technicalDisplay);
             if (knowledgebase != null) {
                 consolidated.add(knowledgebase);
             } else {
-                LOGGER.warn("Could not resolve knowledgebase with display '{}'", source);
+                LOGGER.warn("Could not resolve knowledgebase with display '{}'", knowledgebase);
             }
         }
 

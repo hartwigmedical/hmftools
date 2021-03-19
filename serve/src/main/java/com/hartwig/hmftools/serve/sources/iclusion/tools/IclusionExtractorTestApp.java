@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.serve.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.iclusion.classification.IclusionClassificationConfig;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
@@ -26,7 +27,6 @@ import com.hartwig.hmftools.serve.sources.iclusion.IclusionExtractor;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionExtractorFactory;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionReader;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionUtil;
-import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;

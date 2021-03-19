@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class TransvarTestFactory {
 
-    private static final String REF_GENOME_FASTA_FILE = Resources.getResource("refgenome/ref.fasta").getPath();
+    private static final String REF_GENOME_FASTA_FILE = Resources.getResource("refgenome/v37/ref.fasta").getPath();
 
     private TransvarTestFactory() {
     }

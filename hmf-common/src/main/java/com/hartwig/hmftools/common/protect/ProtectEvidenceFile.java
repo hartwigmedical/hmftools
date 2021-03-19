@@ -96,7 +96,7 @@ public final class ProtectEvidenceFile {
                 .onLabel(Boolean.parseBoolean(values[4]))
                 .level(EvidenceLevel.valueOf(values[5]))
                 .direction(EvidenceDirection.valueOf(values[6]))
-                .sources(Knowledgebase.fromCommaSeparatedSourceString(values[7]))
+                .sources(Knowledgebase.fromCommaSeparatedTechnicalDisplayString(values[7]))
                 .urls(Lists.newArrayList(values[8].split(SUBFIELD_DELIMITER)))
                 .build();
     }

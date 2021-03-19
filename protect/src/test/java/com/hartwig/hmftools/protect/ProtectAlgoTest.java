@@ -6,9 +6,9 @@ import java.io.IOException;
 
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
-import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
