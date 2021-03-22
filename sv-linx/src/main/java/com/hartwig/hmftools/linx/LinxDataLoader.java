@@ -50,6 +50,7 @@ public class LinxDataLoader
     public static final String SV_DATA_DIR = "sv_data_dir";
     public static final String VCF_FILE = "sv_vcf";
 
+    @Deprecated
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = createBasicOptions();
@@ -70,6 +71,7 @@ public class LinxDataLoader
         LOGGER.info("sample({}) data loading complete", sampleId);
     }
 
+    @Deprecated
     private static void loadLinxData(final DatabaseAccess dbAccess, final String sampleId, final String svDataOutputDir)
     {
         try

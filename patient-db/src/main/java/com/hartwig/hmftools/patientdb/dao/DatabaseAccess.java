@@ -166,6 +166,7 @@ public class DatabaseAccess implements AutoCloseable {
     public static DatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
         return databaseAccess(cmd, false);
     }
+
     @NotNull
     public static DatabaseAccess databaseAccess(@NotNull CommandLine cmd, boolean applyDefaultArgs) throws SQLException {
         String userName = cmd.getOptionValue(DB_USER);
@@ -173,8 +174,9 @@ public class DatabaseAccess implements AutoCloseable {
         String databaseUrl = cmd.getOptionValue(DB_URL);
         String jdbcUrl = "jdbc:" + databaseUrl;
 
-        if(applyDefaultArgs)
+        if (applyDefaultArgs) {
             jdbcUrl += DB_DEFAULT_ARGS;
+        }
 
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
@@ -282,10 +284,14 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
-    public List<LinxCluster> readClusters(@NotNull String sample) { return structuralVariantClusterDAO.readClusters(sample); }
+    public List<LinxCluster> readClusters(@NotNull String sample) {
+        return structuralVariantClusterDAO.readClusters(sample);
+    }
 
     @NotNull
-    public List<LinxSvAnnotation> readSvAnnotations(@NotNull String sample) { return structuralVariantClusterDAO.readAnnotations(sample); }
+    public List<LinxSvAnnotation> readSvAnnotations(@NotNull String sample) {
+        return structuralVariantClusterDAO.readAnnotations(sample);
+    }
 
     @NotNull
     public List<DriverCatalog> readDriverCatalog(@NotNull String sample) {
@@ -293,7 +299,9 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
-    public List<LinxDriver> readSvDriver(@NotNull String sample) { return structuralVariantClusterDAO.readSvDrivers(sample); }
+    public List<LinxDriver> readSvDriver(@NotNull String sample) {
+        return structuralVariantClusterDAO.readSvDrivers(sample);
+    }
 
     @NotNull
     public List<SignatureAllocation> readSignatureAllocations(@NotNull String sample) {
@@ -301,10 +309,14 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
-    public List<LinxFusion> readFusions(@NotNull String sample) { return structuralVariantFusionDAO.readFusions(sample); }
+    public List<LinxFusion> readFusions(@NotNull String sample) {
+        return structuralVariantFusionDAO.readFusions(sample);
+    }
 
     @NotNull
-    public List<LinxBreakend> readBreakends(@NotNull String sample) { return structuralVariantFusionDAO.readBreakends(sample); }
+    public List<LinxBreakend> readBreakends(@NotNull String sample) {
+        return structuralVariantFusionDAO.readBreakends(sample);
+    }
 
     @NotNull
     public List<LinxViralInsertion> readViralInsertions(@NotNull String sample) {
@@ -415,7 +427,8 @@ public class DatabaseAccess implements AutoCloseable {
         driverCatalogDAO.writeLinx(sample, somaticCatalog);
     }
 
-    public void writePurpleDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog, @NotNull List<DriverCatalog> germlineCatalog) {
+    public void writePurpleDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog,
+            @NotNull List<DriverCatalog> germlineCatalog) {
         driverCatalogDAO.writePurple(sample, somaticCatalog, germlineCatalog);
     }
 
