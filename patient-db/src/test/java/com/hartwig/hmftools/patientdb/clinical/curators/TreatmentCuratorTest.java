@@ -9,9 +9,23 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedDrug;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class TreatmentCuratorTest {
+
+    @Test
+    public void canConvertStringFieldToSynonyms() {
+        assertTrue(TreatmentCurator.toSynonyms(Strings.EMPTY).isEmpty());
+        assertEquals("hi", TreatmentCurator.toSynonyms("hi").get(0));
+
+        List<String> complex = TreatmentCurator.toSynonyms("hi, \"hi, there\", second, third, \"fourth, fifth\"");
+        assertEquals("hi", complex.get(0));
+        assertEquals("hi, there", complex.get(1));
+        assertEquals("second", complex.get(2));
+        assertEquals("third", complex.get(3));
+        assertEquals("fourth, fifth", complex.get(4));
+    }
 
     @Test
     public void matchesExactSingleWord() {

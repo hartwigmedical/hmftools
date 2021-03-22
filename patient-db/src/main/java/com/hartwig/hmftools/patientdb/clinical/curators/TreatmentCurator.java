@@ -148,20 +148,34 @@ public class TreatmentCurator implements CleanableCurator {
             String treatmentMechanism = parts.length > 2 ? parts[2] : Strings.EMPTY;
             String synonymsField = parts.length > 3 ? parts[3] :Strings.EMPTY;
 
-            List<String> synonyms = Lists.newArrayList();
-            if (!synonymsField.isEmpty()) {
-
-                synonyms.addAll(Lists.newArrayList(synonymsField.split(SYNONYM_DELIMITER)));
-            }
-
             drugEntries.add(ImmutableDrugEntry.builder()
                     .canonicalName(drugCanonicalName)
                     .type(treatmentType)
                     .treatmentMechanism(treatmentMechanism)
-                    .synonyms(synonyms)
+                    .synonyms(toSynonyms(synonymsField))
                     .build());
         }
         return drugEntries;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<String> toSynonyms(@NotNull String synonymField) {
+        if (synonymField.isEmpty()) {
+            return Lists.newArrayList();
+        }
+
+        List<String> synonyms = Lists.newArrayList();
+        // Split on comma but ignore comma's within quotes
+        for (String token : synonymField.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1)) {
+            String trimmed = token.trim();
+            if (trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
+                synonyms.add(trimmed.substring(1, trimmed.length() - 1));
+            } else {
+                synonyms.add(trimmed);
+            }
+        }
+        return synonyms;
     }
 
     @NotNull
