@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.sources.ckb.tools;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -20,6 +21,7 @@ import com.hartwig.hmftools.serve.sources.ckb.CkBReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 
 public class CkbExtractorTestApp {
 
@@ -45,18 +47,25 @@ public class CkbExtractorTestApp {
 
         for (CkbEntry entry : ckbEntries) {
             String gene = entry.variants().get(0).gene().geneSymbol();
-            EventType type = classifier.determineType(gene, entry.profileName());
+            String profileName = Strings.EMPTY;
+            if (entry.profileName().split(" ")[0].equals(gene)) {
+                profileName = entry.profileName().split(" ", 2)[1]; // remove gene name of profileName
+            } else {
+                profileName = entry.profileName();
+            }
+
+            EventType type = classifier.determineType(gene, profileName);
             if (entry.variants().size() > 1) {
                 type = EventType.COMBINED;
             } else {
-                LOGGER.info("Type of {} on {} is {}", entry.profileName(), gene, type);
+                LOGGER.info("Type of {} on {} is {}", profileName, gene, type);
                 if (type == EventType.UNKNOWN) {
-                    LOGGER.warn("Hier moet Lieke nog iets mee doen!!! {}", entry.profileName());
+                    LOGGER.warn("Hier moet Lieke nog iets mee doen!!! {}", profileName);
                 }
 
             }
 
-            lines.add(new StringJoiner(FIELD_DELIMITER).add(entry.profileName()).add(type.toString()).toString());
+            lines.add(new StringJoiner(FIELD_DELIMITER).add(profileName).add(type.toString()).toString());
         }
         Files.write(new File("/data/common/dbs/serve/pilot_output/events.tsv").toPath(), lines);
 
