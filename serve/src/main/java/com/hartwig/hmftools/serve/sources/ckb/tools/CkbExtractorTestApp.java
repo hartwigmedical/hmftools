@@ -48,7 +48,7 @@ public class CkbExtractorTestApp {
         for (CkbEntry entry : ckbEntries) {
             String gene = entry.variants().get(0).gene().geneSymbol();
             String profileName = Strings.EMPTY;
-            if (entry.profileName().split(" ")[0].equals(gene)) {
+            if (entry.profileName().split(" ")[0].equals(gene) && !entry.profileName().contains("-")) {
                 profileName = entry.profileName().split(" ", 2)[1]; // remove gene name of profileName
             } else {
                 profileName = entry.profileName();
