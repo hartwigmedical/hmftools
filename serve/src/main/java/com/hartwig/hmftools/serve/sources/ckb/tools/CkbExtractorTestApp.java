@@ -59,9 +59,13 @@ public class CkbExtractorTestApp {
                         .equals("fusion")) {
                     profileName = "fusion promisuous";
                 } else if (entry.variants().get(0).impact() != null && entry.variants().get(0).impact().equals("fusion")) {
-                    profileName = "fusion pair";
-                } else {
-                    profileName = entry.variants().get(0).variant();
+                    profileName = entry.variants().get(0).variant().replaceAll("\\s+","") + " fusion";
+                } else if (entry.variants().get(0).variant().contains("exon")) {
+                    StringBuffer str = new StringBuffer(entry.variants().get(0).variant());
+                    profileName = str.insert(entry.variants().get(0).variant().indexOf("exon"), " ").toString();
+                }
+                else {
+                    profileName = entry.variants().get(0).variant() ;
                 }
 
                 type = classifier.determineType(gene, profileName);

@@ -72,7 +72,8 @@ public class CKBClassificationConfig {
     @NotNull
     private static Set<String> exonIdentifiers() {
         Set<String> set = Sets.newHashSet();
-               return set;
+        set.add("exon");
+        return set;
     }
 
     @NotNull
@@ -101,12 +102,14 @@ public class CKBClassificationConfig {
     @NotNull
     private static Set<String> genericGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
+        set.add("mutant");
         return set;
     }
 
     @NotNull
     private static Set<String> activatingGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
+        set.add("act mut");
         set.add("positive");
         return set;
     }
@@ -116,25 +119,28 @@ public class CKBClassificationConfig {
         Set<String> set = Sets.newHashSet();
         set.add("inact mut");
         set.add("negative");
+        set.add("LOH");
         return set;
     }
 
     @NotNull
     private static Set<String> amplificationKeywords() {
         Set<String> set = Sets.newHashSet();
-        set.add("over exp");
         set.add("amp");
         return set;
     }
 
     @NotNull
     private static Set<String> amplificationKeyPhrases() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add("over exp");
+        return set;
     }
 
     @NotNull
     private static Set<String> deletionBlacklistKeyPhrases() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        return set;
     }
 
     @NotNull
@@ -147,7 +153,9 @@ public class CKBClassificationConfig {
 
     @NotNull
     private static Set<String> deletionKeyPhrases() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add("dec exp");
+        return set;
     }
 
     @NotNull
@@ -165,6 +173,7 @@ public class CKBClassificationConfig {
     private static Set<String> promiscuousFusionKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add("fusion promisuous");
+        set.add("rearrange");
         return set;
     }
 
@@ -203,15 +212,12 @@ public class CKBClassificationConfig {
     @NotNull
     private static Map<String, Set<String>> combinedEventsPerGene() {
         Map<String, Set<String>> map = Maps.newHashMap();
-
-
         return map;
     }
 
     @NotNull
     private static Map<String, Set<String>> complexEventsPerGene() {
         Map<String, Set<String>> map = Maps.newHashMap();
-
-               return map;
+        return map;
     }
 }
