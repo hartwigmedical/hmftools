@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.serve.sources.ckb.tools;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
+import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.JsonDatabaseToCkbEntryConverter;
 import com.hartwig.hmftools.ckb.classification.CKBClassificationConfig;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
@@ -20,6 +24,7 @@ import org.apache.logging.log4j.Logger;
 public class CkbExtractorTestApp {
 
     private static final Logger LOGGER = LogManager.getLogger(CkbExtractorTestApp.class);
+    private static final String FIELD_DELIMITER = "\t";
 
     public static void main(String[] args) throws IOException {
         String ckbDir =  "/data/common/dbs/ckb/210319_flex_dump";
@@ -33,14 +38,28 @@ public class CkbExtractorTestApp {
         EventClassifier classifier = EventClassifierFactory.buildClassifier(config);
 
         // TODO 1. Make sure every entry has correct event type.
+
+        List<String> lines = Lists.newArrayList();
+        String header = new StringJoiner(FIELD_DELIMITER).add("event").add("type").toString();
+        lines.add(header);
+
         for (CkbEntry entry : ckbEntries) {
             String gene = entry.variants().get(0).gene().geneSymbol();
             EventType type = classifier.determineType(gene, entry.profileName());
-            LOGGER.info("Type of {} on {} is {}", entry.profileName(), gene, type);
-            if (type == EventType.UNKNOWN) {
-                LOGGER.warn("Hier moet Lieke nog iets mee doen!!!");
+            if (entry.variants().size() > 1) {
+                type = EventType.COMBINED;
+            } else {
+                LOGGER.info("Type of {} on {} is {}", entry.profileName(), gene, type);
+                if (type == EventType.UNKNOWN) {
+                    LOGGER.warn("Hier moet Lieke nog iets mee doen!!! {}", entry.profileName());
+                }
+
             }
+
+            lines.add(new StringJoiner(FIELD_DELIMITER).add(entry.profileName()).add(type.toString()).toString());
         }
+        Files.write(new File("/data/common/dbs/serve/pilot_output/events.tsv").toPath(), lines);
+
 
         // TODO 2. Make sure every event is extracted correctly using EventExtractor
 //        EventExtractor extractor = EventExtractorFactory.create(config, ....);
