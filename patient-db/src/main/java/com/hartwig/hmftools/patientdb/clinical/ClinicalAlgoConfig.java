@@ -155,10 +155,17 @@ public interface ClinicalAlgoConfig {
 
     @NotNull
     static ClinicalAlgoConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
+        String runsJson = optionalFile(cmd, RUNS_JSON);
+        String runsDirectory = optionalDir(cmd, RUNS_DIRECTORY);
+
+        if ((runsJson == null && runsDirectory == null) || (runsJson != null && runsDirectory != null)) {
+            throw new IllegalStateException("Either a runs directory or runs json must be specified, and not both");
+        }
+
         boolean doProcessWideClinicalData = cmd.hasOption(DO_PROCESS_WIDE_CLINICAL_DATA);
         ImmutableClinicalAlgoConfig.Builder builder = ImmutableClinicalAlgoConfig.builder()
-                .runsDirectory(cmd.getOptionValue(RUNS_DIRECTORY))
-                .runsJson(cmd.getOptionValue(RUNS_JSON))
+                .runsDirectory(runsDirectory)
+                .runsJson(runsJson)
                 .pipelineVersionFile(nonOptionalValue(cmd, PIPELINE_VERSION_FILE))
                 .cpctEcrfFile(nonOptionalFile(cmd, CPCT_ECRF_FILE))
                 .cpctFormStatusCsv(nonOptionalFile(cmd, CPCT_FORM_STATUS_CSV))
@@ -208,12 +215,42 @@ public interface ClinicalAlgoConfig {
         return value;
     }
 
+    @Nullable
+    static String optionalDir(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+        String value = cmd.getOptionValue(param);
+
+        if (value == null) {
+            return null;
+        }
+
+        if (!pathExists(value) || !pathIsDirectory(value)) {
+            throw new ParseException("Parameter '" + param + "', if provided, must be an existing directory: " + value);
+        }
+
+        return value;
+    }
+
     @NotNull
     static String nonOptionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
         String value = nonOptionalValue(cmd, param);
 
         if (!pathExists(value)) {
             throw new ParseException("Parameter '" + param + "' must be an existing file: " + value);
+        }
+
+        return value;
+    }
+
+    @Nullable
+    static String optionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+        String value = cmd.getOptionValue(param);
+
+        if (value == null) {
+            return null;
+        }
+
+        if (!pathExists(value)) {
+            throw new ParseException("Parameter '" + param + "', if provided, must be an existing file: " + value);
         }
 
         return value;
