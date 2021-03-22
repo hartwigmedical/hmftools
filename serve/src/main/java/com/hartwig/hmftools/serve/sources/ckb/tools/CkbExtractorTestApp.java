@@ -61,8 +61,8 @@ public class CkbExtractorTestApp {
                 } else if (entry.variants().get(0).impact() != null && entry.variants().get(0).impact().equals("fusion")) {
                     profileName = entry.variants().get(0).variant().replaceAll("\\s+","") + " fusion";
                 } else if (entry.variants().get(0).variant().contains("exon")) {
-                    StringBuffer str = new StringBuffer(entry.variants().get(0).variant());
-                    profileName = str.insert(entry.variants().get(0).variant().indexOf("exon"), " ").toString();
+
+                    profileName = entry.variants().get(0).variant().replace("exon", "exon ");
                 }
                 else {
                     profileName = entry.variants().get(0).variant() ;
