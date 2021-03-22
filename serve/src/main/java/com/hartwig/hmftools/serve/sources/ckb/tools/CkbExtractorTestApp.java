@@ -29,12 +29,11 @@ public class CkbExtractorTestApp {
     private static final String FIELD_DELIMITER = "\t";
 
     public static void main(String[] args) throws IOException {
-        String ckbDir =  "/data/common/dbs/ckb/210319_flex_dump";
+        String ckbDir = "/data/common/dbs/ckb/210319_flex_dump";
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
         List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-      //  List<CkbEntry> curateCKBEntries = CkBReader.filterRelevantEntries(ckbEntries);
-
+        //  List<CkbEntry> curateCKBEntries = CkBReader.filterRelevantEntries(ckbEntries);
 
         EventClassifierConfig config = CKBClassificationConfig.build();
         EventClassifier classifier = EventClassifierFactory.buildClassifier(config);
@@ -47,31 +46,33 @@ public class CkbExtractorTestApp {
 
         for (CkbEntry entry : ckbEntries) {
             String gene = entry.variants().get(0).gene().geneSymbol();
-            String profileName = Strings.EMPTY;
-            if (entry.profileName().split(" ")[0].equals(gene) && !entry.profileName().contains("-")) {
-                profileName = entry.profileName().split(" ", 2)[1]; // remove gene name of profileName
-            } else {
-                profileName = entry.profileName();
-            }
 
-            EventType type = classifier.determineType(gene, profileName);
+            EventType type;
+            String profileName = Strings.EMPTY;
             if (entry.variants().size() > 1) {
                 type = EventType.COMBINED;
+                profileName = entry.profileName();
             } else {
-                LOGGER.info("Type of {} on {} is {}", profileName, gene, type);
-                if (type == EventType.UNKNOWN) {
-                    LOGGER.warn("Hier moet Lieke nog iets mee doen!!! {}", entry.profileName());
+                if (entry.variants().get(0).variant().equals("fusion") && entry.variants().get(0).impact() != null && entry.variants()
+                        .get(0)
+                        .impact()
+                        .equals("fusion")) {
+                    profileName = "fusion promisuous";
+                } else if (entry.variants().get(0).impact() != null && entry.variants().get(0).impact().equals("fusion")) {
+                    profileName = "fusion pair";
+                } else {
+                    profileName = entry.variants().get(0).variant();
                 }
 
+                type = classifier.determineType(gene, profileName);
             }
 
             lines.add(new StringJoiner(FIELD_DELIMITER).add(gene).add(profileName).add(type.toString()).toString());
         }
         Files.write(new File("/data/common/dbs/serve/pilot_output/events.tsv").toPath(), lines);
 
-
         // TODO 2. Make sure every event is extracted correctly using EventExtractor
-//        EventExtractor extractor = EventExtractorFactory.create(config, ....);
+        //        EventExtractor extractor = EventExtractorFactory.create(config, ....);
 
         // TODO 3. Create ActionableEvents for all relevant entries.
     }

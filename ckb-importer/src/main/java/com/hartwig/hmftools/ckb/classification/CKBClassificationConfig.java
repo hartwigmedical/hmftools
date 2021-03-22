@@ -164,7 +164,7 @@ public class CKBClassificationConfig {
     @NotNull
     private static Set<String> promiscuousFusionKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-
+        set.add("fusion promisuous");
         return set;
     }
 
