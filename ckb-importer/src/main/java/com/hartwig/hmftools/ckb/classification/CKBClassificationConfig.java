@@ -107,18 +107,23 @@ public class CKBClassificationConfig {
     @NotNull
     private static Set<String> activatingGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
+        set.add("positive");
         return set;
     }
 
     @NotNull
     private static Set<String> inactivatingGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-               return set;
+        set.add("inact mut");
+        set.add("negative");
+        return set;
     }
 
     @NotNull
     private static Set<String> amplificationKeywords() {
         Set<String> set = Sets.newHashSet();
+        set.add("over exp");
+        set.add("amp");
         return set;
     }
 
@@ -135,6 +140,8 @@ public class CKBClassificationConfig {
     @NotNull
     private static Set<String> deletionKeywords() {
         Set<String> set = Sets.newHashSet();
+        set.add("loss");
+        set.add("del");
         return set;
     }
 
@@ -164,12 +171,14 @@ public class CKBClassificationConfig {
     @NotNull
     private static Set<String> microsatelliteUnstableEvents() {
         Set<String> set = Sets.newHashSet();
+        set.add("MSI high");
         return set;
     }
 
     @NotNull
     private static Set<String> highTumorMutationalLoadEvents() {
         Set<String> set = Sets.newHashSet();
+        set.add("TMB high");
         return set;
     }
 
