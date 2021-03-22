@@ -24,6 +24,7 @@ import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableCuratedDrug;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.LowerCaseFilter;
 import org.apache.lucene.analysis.TokenFilter;
@@ -144,10 +145,14 @@ public class TreatmentCurator implements CleanableCurator {
             String[] parts = line.split(FIELD_DELIMITER);
             String drugCanonicalName = parts[0];
             String treatmentType = parts[1];
-            String treatmentMechanism = parts[2];
-            String synonymsField = parts[3];
+            String treatmentMechanism = parts.length > 2 ? parts[2] : Strings.EMPTY;
+            String synonymsField = parts.length > 3 ? parts[3] :Strings.EMPTY;
 
-            List<String> synonyms = Lists.newArrayList(synonymsField.split(SYNONYM_DELIMITER));
+            List<String> synonyms = Lists.newArrayList();
+            if (!synonymsField.isEmpty()) {
+
+                synonyms.addAll(Lists.newArrayList(synonymsField.split(SYNONYM_DELIMITER)));
+            }
 
             drugEntries.add(ImmutableDrugEntry.builder()
                     .canonicalName(drugCanonicalName)
