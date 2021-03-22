@@ -4,10 +4,10 @@ import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.
 import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.GENERATE_WORD_PARTS;
 import static org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter.SPLIT_ON_NUMERICS;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Files;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -22,9 +22,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedDrug;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableCuratedDrug;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
@@ -63,17 +60,14 @@ import org.jetbrains.annotations.NotNull;
 public class TreatmentCurator implements CleanableCurator {
 
     private static final Logger LOGGER = LogManager.getLogger(TreatmentCurator.class);
+    private static final String FIELD_DELIMITER = "\t";
+    private static final String SYNONYM_DELIMITER = ",";
 
-    private static final String DRUG_TERMS_FIELD = "drugTerms";
-    private static final String DRUG_NAME_FIELD = "drugName";
     private static final String CANONICAL_DRUG_NAME_FIELD = "canonicalDrugName";
+    private static final String DRUG_NAME_FIELD = "drugName";
     private static final String DRUG_TYPE_FIELD = "drugType";
     private static final String DRUG_MECHANISM_FIELD = "drugMechanism";
-
-    private static final String DRUG_NAME_CSV_FIELD = "drug";
-    private static final String DRUG_TYPE_CSV_FIELD = "type";
-    private static final String DRUG_MECHANISM_CSV_FILE = "mechanism";
-    private static final String DRUG_SYNONYMS_CSV_FIELD = "synonyms";
+    private static final String DRUG_SYNONYMS_FIELD = "drugSynonyms";
 
     private static final int NUM_HITS = 20;
     private static final int MAX_SHINGLES = 10;
@@ -87,8 +81,8 @@ public class TreatmentCurator implements CleanableCurator {
     private final IndexSearcher indexSearcher;
 
     @VisibleForTesting
-    public TreatmentCurator(@NotNull String mappingInputStream) throws IOException {
-        List<DrugEntry> drugEntries = readEntries(mappingInputStream);
+    public TreatmentCurator(@NotNull String treatmentMappingTsv) throws IOException {
+        List<DrugEntry> drugEntries = readEntries(treatmentMappingTsv);
         Directory index = createIndex(drugEntries);
         IndexReader reader = DirectoryReader.open(index);
 
@@ -140,27 +134,27 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    private static List<DrugEntry> readEntries(@NotNull String mappingInput) throws IOException {
+    private static List<DrugEntry> readEntries(@NotNull String treatmentMappingTsv) throws IOException {
         List<DrugEntry> drugEntries = Lists.newArrayList();
-        BufferedReader file = new BufferedReader(new FileReader(mappingInput));
-        CSVParser parser = CSVFormat.DEFAULT.withDelimiter(',').withHeader().parse(file);
 
-        for (CSVRecord record : parser) {
-            String canonicalName = record.get(DRUG_NAME_CSV_FIELD).trim();
-            String drugType = record.get(DRUG_TYPE_CSV_FIELD).trim();
-            String synonymsField = record.get(DRUG_SYNONYMS_CSV_FIELD).trim();
-            String treatmentMechanism = record.get(DRUG_MECHANISM_CSV_FILE.trim());
+        List<String> lines = Files.readAllLines(new File(treatmentMappingTsv).toPath());
 
-            List<String> synonyms = Lists.newArrayList();
-            if (!synonymsField.isEmpty()) {
-                CSVParser synonymsParser = CSVParser.parse(synonymsField, CSVFormat.DEFAULT);
-                for (CSVRecord synonymsRecord : synonymsParser) {
-                    for (String synonym : synonymsRecord) {
-                        synonyms.add(synonym.trim());
-                    }
-                }
-            }
-            drugEntries.add(ImmutableDrugEntry.of(canonicalName, synonyms, drugType, treatmentMechanism));
+        // Skip header
+        for (String line : lines.subList(1, lines.size())) {
+            String[] parts = line.split(FIELD_DELIMITER);
+            String drugCanonicalName = parts[0];
+            String treatmentType = parts[1];
+            String treatmentMechanism = parts[2];
+            String synonymsField = parts[3];
+
+            List<String> synonyms = Lists.newArrayList(synonymsField.split(SYNONYM_DELIMITER));
+
+            drugEntries.add(ImmutableDrugEntry.builder()
+                    .canonicalName(drugCanonicalName)
+                    .type(treatmentType)
+                    .treatmentMechanism(treatmentMechanism)
+                    .synonyms(synonyms)
+                    .build());
         }
         return drugEntries;
     }
@@ -274,10 +268,10 @@ public class TreatmentCurator implements CleanableCurator {
         Document document = new Document();
         drugEntry.synonyms().forEach(synonym -> {
             document.add(new TextField(DRUG_NAME_FIELD, synonym, Field.Store.NO));
-            document.add(new TextField(DRUG_TERMS_FIELD, synonym, Field.Store.YES));
+            document.add(new TextField(DRUG_SYNONYMS_FIELD, synonym, Field.Store.YES));
         });
         document.add(new TextField(DRUG_NAME_FIELD, drugEntry.canonicalName(), Field.Store.NO));
-        document.add(new TextField(DRUG_TERMS_FIELD, drugEntry.canonicalName(), Field.Store.YES));
+        document.add(new TextField(DRUG_SYNONYMS_FIELD, drugEntry.canonicalName(), Field.Store.YES));
         document.add(new StringField(DRUG_TYPE_FIELD, drugEntry.type(), Field.Store.YES));
         document.add(new TextField(DRUG_MECHANISM_FIELD, drugEntry.treatmentMechanism(), Field.Store.YES));
         document.add(new TextField(CANONICAL_DRUG_NAME_FIELD, drugEntry.canonicalName(), Field.Store.YES));
@@ -290,7 +284,7 @@ public class TreatmentCurator implements CleanableCurator {
         IndexReader indexReader = DirectoryReader.open(index);
         Analyzer analyzer = new SimpleAnalyzer();
         IndexWriterConfig config = new IndexWriterConfig(analyzer);
-        Dictionary dictionary = new HighFrequencyDictionary(indexReader, DRUG_TERMS_FIELD, 0.0f);
+        Dictionary dictionary = new HighFrequencyDictionary(indexReader, DRUG_SYNONYMS_FIELD, 0.0f);
         SpellChecker spellChecker = new SpellChecker(spellCheckerDirectory);
 
         spellChecker.indexDictionary(dictionary, config, false);

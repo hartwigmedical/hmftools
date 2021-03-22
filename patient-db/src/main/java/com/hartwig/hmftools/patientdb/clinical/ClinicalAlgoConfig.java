@@ -42,8 +42,9 @@ public interface ClinicalAlgoConfig {
 
     String DOID_JSON = "doid_json";
     String TUMOR_LOCATION_MAPPING_TSV = "tumor_location_mapping_tsv";
-    String BIOPSY_MAPPING_CSV = "biopsy_mapping_csv";
-    String TREATMENT_MAPPING_CSV = "treatment_mapping_csv";
+    String TUMOR_LOCATION_OVERRIDES_TSV = "tumor_location_overrides_tsv";
+    String BIOPSY_MAPPING_TSV = "biopsy_mapping_tsv";
+    String TREATMENT_MAPPING_TSV = "treatment_mapping_tsv";
 
     @NotNull
     static Options createOptions() {
@@ -78,8 +79,9 @@ public interface ClinicalAlgoConfig {
 
         options.addOption(DOID_JSON, true, "Path towards to the json file of the doid ID of primary tumors.");
         options.addOption(TUMOR_LOCATION_MAPPING_TSV, true, "Path towards to the tumor location mapping TSV.");
-        options.addOption(BIOPSY_MAPPING_CSV, true, "Path towards to the biopsy mapping CSV.");
-        options.addOption(TREATMENT_MAPPING_CSV, true, "Path towards to the treatment mapping CSV.");
+        options.addOption(TUMOR_LOCATION_OVERRIDES_TSV, true, "Path towards to the tumor location overrides TSV.");
+        options.addOption(BIOPSY_MAPPING_TSV, true, "Path towards to the biopsy mapping TSV.");
+        options.addOption(TREATMENT_MAPPING_TSV, true, "Path towards to the treatment mapping TSV.");
 
         addDatabaseCmdLineArgs(options);
         return options;
@@ -143,10 +145,13 @@ public interface ClinicalAlgoConfig {
     String tumorLocationMappingTsv();
 
     @NotNull
-    String biopsyMappingCsv();
+    String tumorLocationOverridesTsv();
 
     @NotNull
-    String treatmentMappingCsv();
+    String biopsyMappingTsv();
+
+    @NotNull
+    String treatmentMappingTsv();
 
     @NotNull
     static ClinicalAlgoConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
@@ -166,8 +171,9 @@ public interface ClinicalAlgoConfig {
                 .patientTumorCurationStatusTsv(nonOptionalValue(cmd, PATIENT_TUMOR_CURATION_STATUS_TSV))
                 .doidJson(nonOptionalFile(cmd, DOID_JSON))
                 .tumorLocationMappingTsv(nonOptionalFile(cmd, TUMOR_LOCATION_MAPPING_TSV))
-                .biopsyMappingCsv(nonOptionalFile(cmd, BIOPSY_MAPPING_CSV))
-                .treatmentMappingCsv(nonOptionalFile(cmd, TREATMENT_MAPPING_CSV));
+                .tumorLocationOverridesTsv(nonOptionalFile(cmd, TUMOR_LOCATION_OVERRIDES_TSV))
+                .biopsyMappingTsv(nonOptionalFile(cmd, BIOPSY_MAPPING_TSV))
+                .treatmentMappingTsv(nonOptionalFile(cmd, TREATMENT_MAPPING_TSV));
 
         if (doProcessWideClinicalData) {
             builder = builder.widePreAvlTreatmentCsv(nonOptionalFile(cmd, WIDE_PRE_AVL_TREATMENT_CSV))

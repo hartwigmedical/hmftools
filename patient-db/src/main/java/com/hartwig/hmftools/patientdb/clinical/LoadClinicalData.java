@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.patientdb.clinical;
 
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
@@ -17,12 +17,6 @@ import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.patientdb.clinical.ClinicalAlgo;
-import com.hartwig.hmftools.patientdb.clinical.ClinicalAlgoBuilder;
-import com.hartwig.hmftools.patientdb.clinical.ClinicalAlgoConfig;
-import com.hartwig.hmftools.patientdb.clinical.EcrfModels;
-import com.hartwig.hmftools.patientdb.clinical.PrimaryTumorDataWriter;
-import com.hartwig.hmftools.patientdb.clinical.SampleLoader;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 import com.hartwig.hmftools.patientdb.clinical.validators.CurationValidator;

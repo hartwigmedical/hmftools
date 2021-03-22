@@ -98,7 +98,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.patientdb.LoadClinicalData</mainClass>
+                            <mainClass>com.hartwig.hmftools.patientdb.clinical.LoadClinicalData</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
