@@ -60,7 +60,7 @@ public class CkbExtractorTestApp {
             } else {
                 LOGGER.info("Type of {} on {} is {}", profileName, gene, type);
                 if (type == EventType.UNKNOWN) {
-                    LOGGER.warn("Hier moet Lieke nog iets mee doen!!! {}", profileName);
+                    LOGGER.warn("Hier moet Lieke nog iets mee doen!!! {}", entry.profileName());
                 }
 
             }
