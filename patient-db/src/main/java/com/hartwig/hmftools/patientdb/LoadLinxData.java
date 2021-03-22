@@ -38,7 +38,7 @@ public class LoadLinxData {
     private static final String VCF_FILE = "sv_vcf";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException {
-        Options options = createBasicOptions();
+        Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
         DatabaseAccess dbAccess = createDatabaseAccess(cmd);
 
@@ -110,7 +110,7 @@ public class LoadLinxData {
     }
 
     @NotNull
-    private static Options createBasicOptions() {
+    private static Options createOptions() {
         Options options = new Options();
         addDatabaseCmdLineArgs(options);
         options.addOption(SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE");
