@@ -42,7 +42,7 @@ public class CkbExtractorTestApp {
         // TODO 1. Make sure every entry has correct event type.
 
         List<String> lines = Lists.newArrayList();
-        String header = new StringJoiner(FIELD_DELIMITER).add("event").add("type").toString();
+        String header = new StringJoiner(FIELD_DELIMITER).add("gene").add("event").add("type").toString();
         lines.add(header);
 
         for (CkbEntry entry : ckbEntries) {
@@ -65,7 +65,7 @@ public class CkbExtractorTestApp {
 
             }
 
-            lines.add(new StringJoiner(FIELD_DELIMITER).add(profileName).add(type.toString()).toString());
+            lines.add(new StringJoiner(FIELD_DELIMITER).add(gene).add(profileName).add(type.toString()).toString());
         }
         Files.write(new File("/data/common/dbs/serve/pilot_output/events.tsv").toPath(), lines);
 
