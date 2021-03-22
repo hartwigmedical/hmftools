@@ -157,7 +157,8 @@ public interface ClinicalAlgoConfig {
     static ClinicalAlgoConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
         boolean doProcessWideClinicalData = cmd.hasOption(DO_PROCESS_WIDE_CLINICAL_DATA);
         ImmutableClinicalAlgoConfig.Builder builder = ImmutableClinicalAlgoConfig.builder()
-                .runsDirectory(nonOptionalDir(cmd, RUNS_DIRECTORY))
+                .runsDirectory(cmd.getOptionValue(RUNS_DIRECTORY))
+                .runsJson(cmd.getOptionValue(RUNS_JSON))
                 .pipelineVersionFile(nonOptionalValue(cmd, PIPELINE_VERSION_FILE))
                 .cpctEcrfFile(nonOptionalFile(cmd, CPCT_ECRF_FILE))
                 .cpctFormStatusCsv(nonOptionalFile(cmd, CPCT_FORM_STATUS_CSV))
