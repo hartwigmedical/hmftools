@@ -22,7 +22,7 @@ public class CkbExtractorTestApp {
     private static final Logger LOGGER = LogManager.getLogger(CkbExtractorTestApp.class);
 
     public static void main(String[] args) throws IOException {
-        String ckbDir =  "/data/common/dbs/ckb/210312_flex_dump";
+        String ckbDir =  "/data/common/dbs/ckb/210319_flex_dump";
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
         List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
