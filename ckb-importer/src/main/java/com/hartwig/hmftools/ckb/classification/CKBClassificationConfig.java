@@ -79,7 +79,8 @@ public class CKBClassificationConfig {
     @NotNull
     private static Set<String> exonKeywords() {
         Set<String> set = Sets.newHashSet();
-               return set;
+        set.add("exon");
+        return set;
     }
 
     @NotNull
@@ -140,6 +141,7 @@ public class CKBClassificationConfig {
     @NotNull
     private static Set<String> deletionBlacklistKeyPhrases() {
         Set<String> set = Sets.newHashSet();
+        set.add("exon");
         return set;
     }
 
