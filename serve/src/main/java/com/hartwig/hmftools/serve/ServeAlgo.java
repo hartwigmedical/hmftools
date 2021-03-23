@@ -10,8 +10,6 @@ import com.hartwig.hmftools.ckb.classification.CKBClassificationConfig;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.CkbJsonReader;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.iclusion.classification.IclusionClassificationConfig;
@@ -49,17 +47,10 @@ public class ServeAlgo {
     @NotNull
     private final RefGenomeManager refGenomeManager;
     @NotNull
-    private final List<DriverGene> driverGenes;
-    @NotNull
-    private final KnownFusionCache knownFusionCache;
-    @NotNull
     private final DoidLookup missingDoidLookup;
 
-    public ServeAlgo(@NotNull final RefGenomeManager refGenomeManager, @NotNull final List<DriverGene> driverGenes,
-            @NotNull final KnownFusionCache knownFusionCache, @NotNull final DoidLookup missingDoidLookup) {
+    public ServeAlgo(@NotNull final RefGenomeManager refGenomeManager, @NotNull final DoidLookup missingDoidLookup) {
         this.refGenomeManager = refGenomeManager;
-        this.driverGenes = driverGenes;
-        this.knownFusionCache = knownFusionCache;
         this.missingDoidLookup = missingDoidLookup;
     }
 
@@ -104,8 +95,6 @@ public class ServeAlgo {
         // Assume all VICC sources share the same ref genome version
         ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(config,
                 refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.VICC_CIVIC),
-                driverGenes,
-                knownFusionCache,
                 missingDoidLookup);
 
         LOGGER.info("Running VICC knowledge extraction");
@@ -119,8 +108,6 @@ public class ServeAlgo {
         EventClassifierConfig config = IclusionClassificationConfig.build();
         IclusionExtractor extractor = IclusionExtractorFactory.buildIclusionExtractor(config,
                 refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.ICLUSION),
-                driverGenes,
-                knownFusionCache,
                 missingDoidLookup);
 
         LOGGER.info("Running iClusion knowledge extraction");
@@ -137,8 +124,6 @@ public class ServeAlgo {
         EventClassifierConfig config = CKBClassificationConfig.build();
         CKBExtractor extractor = CKBExtractorFactory.buildCkbExtractor(config,
                 refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB),
-                driverGenes,
-                knownFusionCache,
                 missingDoidLookup);
 
         LOGGER.info("Running CKB knowledge extraction");

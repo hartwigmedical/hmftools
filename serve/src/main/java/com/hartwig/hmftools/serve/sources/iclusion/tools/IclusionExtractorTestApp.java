@@ -100,6 +100,8 @@ public class IclusionExtractorTestApp {
 
         RefGenomeResource refGenomeResource = ImmutableRefGenomeResource.builder()
                 .fastaFile(fastaFile)
+                .driverGenes(driverGenes)
+                .knownFusionCache(fusionCache)
                 .canonicalTranscriptPerGeneMap(allGenesMap)
                 .proteinResolver(proteinResolver)
                 .build();
@@ -109,8 +111,7 @@ public class IclusionExtractorTestApp {
         List<IclusionTrial> trials = IclusionReader.readAndCurate(iclusionTrialTsv);
 
         EventClassifierConfig config = IclusionClassificationConfig.build();
-        IclusionExtractor extractor =
-                IclusionExtractorFactory.buildIclusionExtractor(config, refGenomeResource, driverGenes, fusionCache, doidLookup);
+        IclusionExtractor extractor = IclusionExtractorFactory.buildIclusionExtractor(config, refGenomeResource, doidLookup);
 
         ExtractionResult result = extractor.extract(trials);
 

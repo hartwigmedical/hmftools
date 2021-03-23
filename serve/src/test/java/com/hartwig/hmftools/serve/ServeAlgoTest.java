@@ -4,9 +4,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
-import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeManagerFactory;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -60,19 +58,13 @@ public class ServeAlgoTest {
                 .knownFusion38File(KNOWN_FUSION_38_FILE)
                 .build();
 
-        ServeAlgo algo = new ServeAlgo(RefGenomeManagerFactory.createFromServeConfig(config),
-                Lists.newArrayList(),
-                new KnownFusionCache(),
-                DoidLookupTestFactory.dummy());
+        ServeAlgo algo = new ServeAlgo(RefGenomeManagerFactory.createFromServeConfig(config), DoidLookupTestFactory.dummy());
 
         assertNotNull(algo.run(config));
     }
 
     @NotNull
     private static ImmutableServeConfig.Builder algoBuilder() {
-        return ImmutableServeConfig.builder()
-                .missingDoidsMappingTsv(Strings.EMPTY)
-                .outputDir(Strings.EMPTY)
-                .skipHotspotResolving(true);
+        return ImmutableServeConfig.builder().missingDoidsMappingTsv(Strings.EMPTY).outputDir(Strings.EMPTY).skipHotspotResolving(true);
     }
 }

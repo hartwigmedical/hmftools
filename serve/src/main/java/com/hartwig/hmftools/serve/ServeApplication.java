@@ -1,11 +1,7 @@
 package com.hartwig.hmftools.serve;
 
 import java.io.IOException;
-import java.util.List;
 
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.curation.DoidLookupFactory;
@@ -44,35 +40,13 @@ public class ServeApplication {
 
         RefGenomeManager refGenomeManager = RefGenomeManagerFactory.createFromServeConfig(config);
 
-        ServeAlgo algo = new ServeAlgo(refGenomeManager,
-                readDriverGenesFromFile(config.driverGene37Tsv()),
-                buildKnownFusionCacheFromFile(config.knownFusion37File()),
-                buildDoidLookup(config.missingDoidsMappingTsv()));
+        ServeAlgo algo = new ServeAlgo(refGenomeManager, buildDoidLookup(config.missingDoidsMappingTsv()));
 
         ExtractionResult result = algo.run(config);
 
         new ExtractionResultWriter(config.outputDir(), RefGenomeVersion.V37).write(result);
 
         LOGGER.info("Done!");
-    }
-
-    @NotNull
-    private static List<DriverGene> readDriverGenesFromFile(@NotNull String driverGeneTsv) throws IOException {
-        LOGGER.info("Reading driver genes from {}", driverGeneTsv);
-        List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneTsv);
-        LOGGER.info(" Read {} driver gene entries", driverGenes.size());
-        return driverGenes;
-    }
-
-    @NotNull
-    private static KnownFusionCache buildKnownFusionCacheFromFile(@NotNull String knownFusionFile) throws IOException {
-        LOGGER.info("Reading known fusions from {}", knownFusionFile);
-        KnownFusionCache cache = new KnownFusionCache();
-        if (!cache.loadFile(knownFusionFile)) {
-            throw new IOException("Could not load known fusions from " + knownFusionFile);
-        }
-        LOGGER.info(" Read {} known fusion entries", cache.getData().size());
-        return cache;
     }
 
     @NotNull

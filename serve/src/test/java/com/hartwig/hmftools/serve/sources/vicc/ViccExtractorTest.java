@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
@@ -23,8 +22,6 @@ public class ViccExtractorTest {
         EventClassifierConfig config = ViccClassificationConfig.build();
         ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(config,
                 RefGenomeResourceTestFactory.buildTest37(),
-                Lists.newArrayList(),
-                new KnownFusionCache(),
                 DoidLookupTestFactory.dummy());
 
         Association association =

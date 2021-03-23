@@ -104,18 +104,18 @@ public class ViccExtractorTestApp {
         }
         LOGGER.debug(" Read {} known fusions from {}", fusionCache.getData().size(), knownFusionFilePath);
 
-        DoidLookup doidLookup = DoidLookupFactory.buildFromConfigTsv(missingDoidMappingTsv);
-
         RefGenomeResource refGenomeResource = ImmutableRefGenomeResource.builder()
                 .fastaFile(fastaFile)
+                .driverGenes(driverGenes)
+                .knownFusionCache(fusionCache)
                 .canonicalTranscriptPerGeneMap(allGenesMap)
                 .proteinResolver(proteinResolver)
                 .build();
+        DoidLookup doidLookup = DoidLookupFactory.buildFromConfigTsv(missingDoidMappingTsv);
 
         List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         EventClassifierConfig config = ViccClassificationConfig.build();
-        ViccExtractor viccExtractor =
-                ViccExtractorFactory.buildViccExtractor(config, refGenomeResource, driverGenes, fusionCache, doidLookup);
+        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(config, refGenomeResource, doidLookup);
 
         ExtractionResult result = viccExtractor.extract(entries);
 
