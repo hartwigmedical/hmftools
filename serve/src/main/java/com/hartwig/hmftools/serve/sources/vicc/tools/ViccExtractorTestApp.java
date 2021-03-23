@@ -23,6 +23,8 @@ import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ExtractionResultWriter;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolverFactory;
+import com.hartwig.hmftools.serve.refgenome.ImmutableRefGenomeResource;
+import com.hartwig.hmftools.serve.refgenome.RefGenomeResource;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractorFactory;
 import com.hartwig.hmftools.serve.sources.vicc.ViccReader;
@@ -35,6 +37,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.util.Strings;
 
 public class ViccExtractorTestApp {
 
@@ -56,6 +59,7 @@ public class ViccExtractorTestApp {
         String knownFusionFilePath;
         String missingDoidMappingTsv;
         String outputDir;
+        String fastaFile;
         ProteinResolver proteinResolver;
 
         Map<String, HmfTranscriptRegion> allGenesMap = HmfGenePanelSupplier.allGenesMap37();
@@ -65,15 +69,15 @@ public class ViccExtractorTestApp {
             knownFusionFilePath = "/data/common/dbs/fusions/known_fusion_data.csv";
             missingDoidMappingTsv = "/data/common/dbs/serve/curation/missing_doids_mapping.tsv";
             outputDir = System.getProperty("user.home") + "/tmp";
-            proteinResolver = ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion,
-                    "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta",
-                    allGenesMap);
+            fastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
+            proteinResolver = ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, fastaFile, allGenesMap);
         } else {
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/serve/static_sources/vicc/all.json";
             driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.hg19.tsv";
             knownFusionFilePath = System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.csv";
             missingDoidMappingTsv = System.getProperty("user.home") + "/hmf/projects/serve/curation/missing_doids_mapping.tsv";
             outputDir = System.getProperty("user.home") + "/hmf/tmp/serve";
+            fastaFile = Strings.EMPTY;
             proteinResolver = ProteinResolverFactory.dummy();
         }
 
@@ -102,10 +106,16 @@ public class ViccExtractorTestApp {
 
         DoidLookup doidLookup = DoidLookupFactory.buildFromConfigTsv(missingDoidMappingTsv);
 
+        RefGenomeResource refGenomeResource = ImmutableRefGenomeResource.builder()
+                .fastaFile(fastaFile)
+                .canonicalTranscriptPerGeneMap(allGenesMap)
+                .proteinResolver(proteinResolver)
+                .build();
+
         List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         EventClassifierConfig config = ViccClassificationConfig.build();
         ViccExtractor viccExtractor =
-                ViccExtractorFactory.buildViccExtractor(config, proteinResolver, driverGenes, fusionCache, allGenesMap, doidLookup);
+                ViccExtractorFactory.buildViccExtractor(config, refGenomeResource, driverGenes, fusionCache, doidLookup);
 
         ExtractionResult result = viccExtractor.extract(entries);
 

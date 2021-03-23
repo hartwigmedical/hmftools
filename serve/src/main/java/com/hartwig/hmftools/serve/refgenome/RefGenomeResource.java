@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -22,5 +23,8 @@ public abstract class RefGenomeResource {
 
     @NotNull
     public abstract Map<RefGenomeVersion, String> chainToOtherRefGenomeMap();
+
+    @NotNull
+    public abstract ProteinResolver proteinResolver();
 
 }

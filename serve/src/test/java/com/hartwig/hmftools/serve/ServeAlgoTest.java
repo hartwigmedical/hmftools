@@ -5,11 +5,10 @@ import static org.junit.Assert.assertNotNull;
 import java.io.IOException;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
-import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolverFactory;
+import com.hartwig.hmftools.serve.refgenome.RefGenomeManager;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.util.Strings;
@@ -32,12 +31,6 @@ public class ServeAlgoTest {
 
     @Test
     public void canRunServeAlgo() throws IOException {
-        ServeAlgo algo = new ServeAlgo(Lists.newArrayList(),
-                new KnownFusionCache(),
-                Maps.newHashMap(),
-                ProteinResolverFactory.dummy(),
-                DoidLookupTestFactory.dummy());
-
         ServeConfig config = algoBuilder().useVicc(true)
                 .viccJson(VICC_JSON)
                 .addViccSources(ViccSource.CIVIC, ViccSource.CGI)
@@ -56,6 +49,11 @@ public class ServeAlgoTest {
                 .refGenome37To38Chain(REF_GENOME_37_TO_38_CHAIN)
                 .refGenome38To37Chain((REF_GENOME_38_TO_37_CHAIN))
                 .build();
+
+        ServeAlgo algo = new ServeAlgo(RefGenomeManager.buildFromServeConfig(config),
+                Lists.newArrayList(),
+                new KnownFusionCache(),
+                DoidLookupTestFactory.dummy());
 
         assertNotNull(algo.run(config));
     }

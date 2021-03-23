@@ -1,22 +1,17 @@
 package com.hartwig.hmftools.serve;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.curation.DoidLookupFactory;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ExtractionResultWriter;
-import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
-import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolverFactory;
+import com.hartwig.hmftools.serve.refgenome.RefGenomeManager;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -46,12 +41,11 @@ public class ServeApplication {
             System.exit(1);
         }
 
-        Map<String, HmfTranscriptRegion> allGenesMap = selectAllGeneMap(RefGenomeVersion.V37);
+        RefGenomeManager refGenomeManager = RefGenomeManager.buildFromServeConfig(config);
 
-        ServeAlgo algo = new ServeAlgo(readDriverGenesFromFile(config.driverGeneTsv()),
+        ServeAlgo algo = new ServeAlgo(refGenomeManager,
+                readDriverGenesFromFile(config.driverGeneTsv()),
                 buildKnownFusionCacheFromFile(config.knownFusionFile()),
-                allGenesMap,
-                buildProteinResolver(config, allGenesMap),
                 buildDoidLookup(config.missingDoidsMappingTsv()));
 
         ExtractionResult result = algo.run(config);
@@ -78,31 +72,6 @@ public class ServeApplication {
         }
         LOGGER.info(" Read {} known fusion entries", cache.getData().size());
         return cache;
-    }
-
-    @NotNull
-    private static Map<String, HmfTranscriptRegion> selectAllGeneMap(@NotNull RefGenomeVersion refGenomeVersion) {
-        if (refGenomeVersion == RefGenomeVersion.V37) {
-            return HmfGenePanelSupplier.allGenesMap37();
-        }
-
-        LOGGER.warn("Ref genome version not supported: '{}'. Reverting to V37 Gene Map.", refGenomeVersion);
-        return HmfGenePanelSupplier.allGenesMap37();
-    }
-
-    @NotNull
-    private static ProteinResolver buildProteinResolver(@NotNull ServeConfig config,
-            @NotNull Map<String, HmfTranscriptRegion> transcriptsPerGeneMap) throws FileNotFoundException {
-        if (config.skipHotspotResolving()) {
-            LOGGER.info("Creating dummy protein resolver");
-            return ProteinResolverFactory.dummy();
-        } else {
-            LOGGER.info("Creating transvar protein resolver with ref genome version V37 using FASTA {}",
-                    config.refGenome37FastaFile());
-            return ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.V37,
-                    config.refGenome37FastaFile(),
-                    transcriptsPerGeneMap);
-        }
     }
 
     @NotNull
