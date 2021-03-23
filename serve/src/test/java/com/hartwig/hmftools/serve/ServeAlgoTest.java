@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
-import com.hartwig.hmftools.serve.refgenome.RefGenomeManager;
+import com.hartwig.hmftools.serve.refgenome.RefGenomeManagerFactory;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.util.Strings;
@@ -60,7 +60,7 @@ public class ServeAlgoTest {
                 .knownFusion38File(KNOWN_FUSION_38_FILE)
                 .build();
 
-        ServeAlgo algo = new ServeAlgo(RefGenomeManager.buildFromServeConfig(config),
+        ServeAlgo algo = new ServeAlgo(RefGenomeManagerFactory.createFromServeConfig(config),
                 Lists.newArrayList(),
                 new KnownFusionCache(),
                 DoidLookupTestFactory.dummy());

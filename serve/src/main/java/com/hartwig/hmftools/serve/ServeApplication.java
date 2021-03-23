@@ -12,6 +12,7 @@ import com.hartwig.hmftools.serve.curation.DoidLookupFactory;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ExtractionResultWriter;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeManager;
+import com.hartwig.hmftools.serve.refgenome.RefGenomeManagerFactory;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -41,7 +42,7 @@ public class ServeApplication {
             System.exit(1);
         }
 
-        RefGenomeManager refGenomeManager = RefGenomeManager.buildFromServeConfig(config);
+        RefGenomeManager refGenomeManager = RefGenomeManagerFactory.createFromServeConfig(config);
 
         ServeAlgo algo = new ServeAlgo(refGenomeManager,
                 readDriverGenesFromFile(config.driverGene37Tsv()),
