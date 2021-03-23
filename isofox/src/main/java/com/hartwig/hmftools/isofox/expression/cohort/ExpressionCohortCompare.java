@@ -143,15 +143,16 @@ public class ExpressionCohortCompare
                 cohortBSampleIndices.add(matrixIndex);
         }
 
-        ISF_LOGGER.info("cancerType({}) cohortA({} samples={}) cohortB({} samples={})",
-                cancerType, cohortA, cohortASampleIndices.size(), cohortB, cohortBSampleIndices.size());
+        int totalSampleCount = cohortASampleIndices.size() + cohortBSampleIndices.size();
+
+        ISF_LOGGER.info("cancerType({}) totalSamples({}) cohortA({} samples={}) cohortB({} samples={})",
+                cancerType, totalSampleCount, cohortA, cohortASampleIndices.size(), cohortB, cohortBSampleIndices.size());
 
         if(cohortASampleIndices.isEmpty() || cohortBSampleIndices.isEmpty())
             return;
 
         double[] cohortAValues = new double[cohortASampleIndices.size()];
         double[] cohortBValues = new double[cohortBSampleIndices.size()];
-        int totalSampleCount = cohortASampleIndices.size() + cohortBSampleIndices.size();
 
         // for each gene, extract the expression for each cohort
         final MannWhitneyUTest mww = new MannWhitneyUTest();
