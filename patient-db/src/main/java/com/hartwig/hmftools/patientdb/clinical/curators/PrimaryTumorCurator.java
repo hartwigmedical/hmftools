@@ -65,6 +65,7 @@ public class PrimaryTumorCurator implements CleanableCurator {
             primaryTumorMap.put(searchTerm,
                     ImmutableCuratedPrimaryTumor.builder()
                             .searchTerm(searchTerm)
+                            .isOverridden(false)
                             .location(location)
                             .subLocation(subLocation)
                             .type(type)
@@ -118,11 +119,11 @@ public class PrimaryTumorCurator implements CleanableCurator {
             CuratedPrimaryTumor result = primaryTumorMap.get(effectiveSearchTerm);
 
             if (result != null) {
-                return result;
+                return ImmutableCuratedPrimaryTumor.builder().from(result).isOverridden(override != null).build();
             }
         }
 
-        return ImmutableCuratedPrimaryTumor.builder().searchTerm(effectiveSearchTerm).build();
+        return ImmutableCuratedPrimaryTumor.builder().isOverridden(false).searchTerm(effectiveSearchTerm).build();
     }
 
     @NotNull

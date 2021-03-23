@@ -69,7 +69,7 @@ class BaselineReader {
         ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
                 .demographyStatus(FormStatus.undefined())
                 .primaryTumorStatus(FormStatus.undefined())
-                .curatedPrimaryTumor(ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY).build())
+                .curatedPrimaryTumor(ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY).isOverridden(false).build())
                 .eligibilityStatus(FormStatus.undefined())
                 .selectionCriteriaStatus(FormStatus.undefined())
                 .informedConsentStatus(FormStatus.undefined())

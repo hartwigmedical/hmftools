@@ -96,6 +96,6 @@ public class BiopsyReaderTest {
 
     @NotNull
     private static CuratedPrimaryTumor noCuration() {
-        return ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY).build();
+        return ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY).isOverridden(false).build();
     }
 }

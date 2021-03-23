@@ -54,7 +54,7 @@ class BaselineReader {
     @NotNull
     BaselineData read(@NotNull EcrfPatient patient) {
         ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
-                .curatedPrimaryTumor(ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY).build())
+                .curatedPrimaryTumor(ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY).isOverridden(false).build())
                 .demographyStatus(FormStatus.undefined())
                 .deathStatus(FormStatus.undefined())
                 .eligibilityStatus(FormStatus.undefined())

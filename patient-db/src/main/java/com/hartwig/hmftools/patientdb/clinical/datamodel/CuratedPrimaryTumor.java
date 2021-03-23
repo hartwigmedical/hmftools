@@ -16,6 +16,8 @@ public abstract class CuratedPrimaryTumor {
     @Nullable
     public abstract String searchTerm();
 
+    public abstract boolean isOverridden();
+
     @Nullable
     public abstract String location();
 

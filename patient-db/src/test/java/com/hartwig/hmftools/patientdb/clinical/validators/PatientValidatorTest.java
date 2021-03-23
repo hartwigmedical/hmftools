@@ -42,7 +42,7 @@ public class PatientValidatorTest {
     private static final String HOSPITAL = "Test Hospital";
     private static final BaselineData EMPTY_BASELINE = baselineBuilder().build();
     private static final BaselineData BASELINE_DATA_MISSING_LOCATION_MAPPING = baselineBuilder().hospital(HOSPITAL)
-            .curatedPrimaryTumor(ImmutableCuratedPrimaryTumor.builder().searchTerm("some_location").build())
+            .curatedPrimaryTumor(ImmutableCuratedPrimaryTumor.builder().searchTerm("some_location").isOverridden(false).build())
             .build();
 
     private static final BiopsyData BIOPSY_NULL = biopsyBuilder().sampleId("sample-1").date(null).build();

@@ -30,7 +30,7 @@ public final class TestDatamodelFactory {
     @NotNull
     public static ImmutableBaselineData.Builder baselineBuilder() {
         return ImmutableBaselineData.builder()
-                .curatedPrimaryTumor(ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY).build())
+                .curatedPrimaryTumor(ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY).isOverridden(false).build())
                 .demographyStatus(FormStatus.undefined())
                 .primaryTumorStatus(FormStatus.undefined())
                 .selectionCriteriaStatus(FormStatus.undefined())
