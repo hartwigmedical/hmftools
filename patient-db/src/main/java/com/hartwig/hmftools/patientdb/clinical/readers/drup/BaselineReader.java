@@ -90,7 +90,7 @@ class BaselineReader {
         }
 
         String finalPrimaryTumor = determineFinalPrimaryTumor(cohortPrimaryTumor, baselinePrimaryTumor, registrationPrimaryTumor);
-        baselineBuilder.curatedPrimaryTumor(primaryTumorCurator.search(finalPrimaryTumor));
+        baselineBuilder.curatedPrimaryTumor(primaryTumorCurator.search(patient.patientId(), finalPrimaryTumor));
 
         return baselineBuilder.build();
     }

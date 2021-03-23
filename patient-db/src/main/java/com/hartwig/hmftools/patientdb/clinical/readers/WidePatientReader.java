@@ -86,7 +86,7 @@ public class WidePatientReader {
         String gender = !fiveDays.isEmpty() ? fiveDays.get(0).gender() : null;
         LocalDate informedConsentDate = !fiveDays.isEmpty() ? fiveDays.get(0).informedConsentDate() : null;
 
-        CuratedPrimaryTumor curatedPrimaryTumor = primaryTumorCurator.search(limsPrimaryTumorLocation);
+        CuratedPrimaryTumor curatedPrimaryTumor = primaryTumorCurator.search(patientIdentifier, limsPrimaryTumorLocation);
 
         return ImmutableBaselineData.builder()
                 .registrationDate(null)

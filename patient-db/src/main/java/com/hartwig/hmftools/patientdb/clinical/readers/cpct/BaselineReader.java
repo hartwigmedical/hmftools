@@ -78,7 +78,7 @@ class BaselineReader {
 
         for (EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
             setDemographyData(baselineBuilder, studyEvent);
-            setPrimaryTumorData(baselineBuilder, studyEvent);
+            setPrimaryTumorData(patient.patientId(), baselineBuilder, studyEvent);
             setRegistrationAndBirthData(baselineBuilder, studyEvent);
             setInformedConsent(baselineBuilder, studyEvent);
         }
@@ -111,7 +111,8 @@ class BaselineReader {
         }
     }
 
-    private void setPrimaryTumorData(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent) {
+    private void setPrimaryTumorData(@NotNull String patientIdentifier, @NotNull ImmutableBaselineData.Builder builder,
+            @NotNull EcrfStudyEvent studyEvent) {
         String primaryTumorLocationSelcritForm = null;
         FormStatus primaryTumorLocationSelcritStatus = null;
         for (EcrfForm selcritForm : studyEvent.nonEmptyFormsPerOID(FORM_SELCRIT)) {
@@ -138,7 +139,7 @@ class BaselineReader {
         FormStatus primaryTumorFormStatus = useCarcinomaForm ? primaryTumorLocationCarcinomaStatus : primaryTumorLocationSelcritStatus;
         String finalPrimaryTumor = useCarcinomaForm ? primaryTumorLocationCarcinomaForm : primaryTumorLocationSelcritForm;
 
-        builder.curatedPrimaryTumor(primaryTumorCurator.search(finalPrimaryTumor));
+        builder.curatedPrimaryTumor(primaryTumorCurator.search(patientIdentifier, finalPrimaryTumor));
         builder.primaryTumorStatus(primaryTumorFormStatus != null ? primaryTumorFormStatus : FormStatus.undefined());
     }
 
