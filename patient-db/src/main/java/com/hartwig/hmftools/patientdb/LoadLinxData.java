@@ -4,11 +4,8 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLi
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
@@ -34,8 +31,7 @@ public class LoadLinxData {
     private static final Logger LOGGER = LogManager.getLogger(LoadLinxData.class);
 
     private static final String SAMPLE = "sample";
-    private static final String SV_DATA_DIR = "sv_data_dir";
-    private static final String VCF_FILE = "sv_vcf";
+    private static final String LINX_DIR = "linx_dir";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException {
         Options options = createOptions();
@@ -44,78 +40,56 @@ public class LoadLinxData {
 
         if (dbAccess == null) {
             LOGGER.error("Failed to create DB connection");
-            return;
+            System.exit(1);
         }
 
         String sampleId = cmd.getOptionValue(SAMPLE);
-        String svDataPath = cmd.getOptionValue(SV_DATA_DIR);
+        String linxDir = cmd.getOptionValue(LINX_DIR);
 
-        loadLinxData(dbAccess, sampleId, svDataPath);
+        loadLinxData(dbAccess, sampleId, linxDir);
 
-        LOGGER.info("sample({}) data loading complete", sampleId);
+        LOGGER.info("Complete");
     }
 
-    private static void loadLinxData(@NotNull DatabaseAccess dbAccess, @NotNull String sampleId, @NotNull String svDataOutputDir)
+    private static void loadLinxData(@NotNull DatabaseAccess dbAccess, @NotNull String sampleId, @NotNull String linxDir)
             throws IOException {
-        List<LinxSvAnnotation> linxSvData = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(svDataOutputDir, sampleId));
-        LOGGER.info("Sample({}) loading {} SV annotation records", sampleId, linxSvData.size());
-        dbAccess.writeSvLinxData(sampleId, linxSvData);
+        List<LinxSvAnnotation> svAnnotations = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(linxDir, sampleId));
+        LOGGER.info("Sample({}) loading {} SV annotation records", sampleId, svAnnotations.size());
+        dbAccess.writeSvLinxData(sampleId, svAnnotations);
 
-        List<LinxCluster> clusterData = LinxCluster.read(LinxCluster.generateFilename(svDataOutputDir, sampleId));
-        LOGGER.info("Sample({}) loading {} SV cluster records", sampleId, clusterData.size());
-        dbAccess.writeSvClusters(sampleId, clusterData);
+        List<LinxCluster> clusters = LinxCluster.read(LinxCluster.generateFilename(linxDir, sampleId));
+        LOGGER.info("Sample({}) loading {} SV cluster records", sampleId, clusters.size());
+        dbAccess.writeSvClusters(sampleId, clusters);
 
-        List<LinxLink> linksData = LinxLink.read(LinxLink.generateFilename(svDataOutputDir, sampleId));
-        LOGGER.info("Sample({}) loading {} SV links records", sampleId, linksData.size());
-        dbAccess.writeSvLinks(sampleId, linksData);
+        List<LinxLink> links = LinxLink.read(LinxLink.generateFilename(linxDir, sampleId));
+        LOGGER.info("Sample({}) loading {} SV links records", sampleId, links.size());
+        dbAccess.writeSvLinks(sampleId, links);
 
-        String viralInsertFilename = LinxViralInsertion.generateFilename(svDataOutputDir, sampleId);
-        if (Files.exists(Paths.get(viralInsertFilename))) {
-            List<LinxViralInsertion> viralInserts = LinxViralInsertion.read(viralInsertFilename);
+        List<LinxViralInsertion> viralInserts = LinxViralInsertion.read(LinxViralInsertion.generateFilename(linxDir, sampleId));
+        LOGGER.info("Sample({}) loading {} SV viral inserts records", sampleId, viralInserts.size());
+        dbAccess.writeSvViralInserts(sampleId, viralInserts);
 
-            LOGGER.info("Sample({}) loading {} SV viral inserts records", sampleId, viralInserts.size());
+        List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(linxDir, sampleId));
+        List<LinxFusion> fusions = LinxFusion.read(LinxFusion.generateFilename(linxDir, sampleId));
+        LOGGER.info("Sample({}) loading {} breakends and {} fusion records", sampleId, breakends.size(), fusions.size());
+        StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(dbAccess.context());
+        annotationDAO.writeBreakendsAndFusions(sampleId, breakends, fusions);
 
-            dbAccess.writeSvViralInserts(sampleId, viralInserts);
-        }
+        List<DriverCatalog> driverCatalog = DriverCatalogFile.read(LinxDriver.generateCatalogFilenameForReading(linxDir, sampleId));
+        LOGGER.info("Sample({}) loading {} driver catalog records", sampleId, driverCatalog.size());
+        dbAccess.writeLinxDriverCatalog(sampleId, driverCatalog);
 
-        String fusionsFilename = LinxFusion.generateFilename(svDataOutputDir, sampleId);
-        String breakendsFilename = LinxBreakend.generateFilename(svDataOutputDir, sampleId);
-
-        if (Files.exists(Paths.get(breakendsFilename))) {
-            List<LinxBreakend> breakends = LinxBreakend.read(breakendsFilename);
-
-            List<LinxFusion> fusions = Files.exists(Paths.get(fusionsFilename)) ? LinxFusion.read(fusionsFilename) : Lists.newArrayList();
-
-            LOGGER.info("Sample({}) loading {} breakends and {} fusion records", sampleId, breakends.size(), fusions.size());
-
-            StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(dbAccess.context());
-            annotationDAO.writeBreakendsAndFusions(sampleId, breakends, fusions);
-        }
-
-        String driverCatalogFilename = LinxDriver.generateCatalogFilenameForReading(svDataOutputDir, sampleId);
-
-        if (Files.exists(Paths.get(driverCatalogFilename))) {
-            List<DriverCatalog> drivers = DriverCatalogFile.read(driverCatalogFilename);
-            LOGGER.info("Sample({}) loading {} driver catalog records", sampleId, drivers.size());
-            dbAccess.writeLinxDriverCatalog(sampleId, drivers);
-        }
-
-        String driversFilename = LinxDriver.generateFilename(svDataOutputDir, sampleId);
-
-        if (Files.exists(Paths.get(driversFilename))) {
-            List<LinxDriver> drivers = LinxDriver.read(driversFilename);
-            LOGGER.info("Sample({}) loading {} SV driver records", sampleId, drivers.size());
-            dbAccess.writeSvDrivers(sampleId, drivers);
-        }
+        List<LinxDriver> drivers = LinxDriver.read(LinxDriver.generateFilename(linxDir, sampleId));
+        LOGGER.info("Sample({}) loading {} SV driver records", sampleId, drivers.size());
+        dbAccess.writeSvDrivers(sampleId, drivers);
     }
 
     @NotNull
     private static Options createOptions() {
         Options options = new Options();
         addDatabaseCmdLineArgs(options);
-        options.addOption(SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE");
-        options.addOption(VCF_FILE, true, "Path to the PURPLE structural variant VCF file");
-        options.addOption(SV_DATA_DIR, true, "Directory to read or write SV data");
+        options.addOption(SAMPLE, true, "Name of the tumor sample");
+        options.addOption(LINX_DIR, true, "Directory to read LINX data from");
 
         return options;
     }

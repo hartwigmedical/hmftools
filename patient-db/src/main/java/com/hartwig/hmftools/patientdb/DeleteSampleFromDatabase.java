@@ -27,7 +27,7 @@ public class DeleteSampleFromDatabase {
         DatabaseAccess dbAccess = databaseAccess(cmd);
         String sample = cmd.getOptionValue(SAMPLE);
 
-        LOGGER.info("Removing sample '{}' from hmf database", sample);
+        LOGGER.info("Removing sample '{}' from database", sample);
         dbAccess.deleteAllDataForSample(sample);
         LOGGER.info("Complete");
     }

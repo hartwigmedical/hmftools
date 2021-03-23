@@ -40,16 +40,19 @@ public class LoadMetricsData {
 
         if (Utils.anyNull(sample, refMetricsFile, tumorMetricsFile)) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db - load metrics data", options);
-        } else {
-            DatabaseAccess dbWriter = databaseAccess(cmd);
-
-            LOGGER.info("Extracting and writing metrics for {}", sample);
-
-            WGSMetrics metrics = WGSMetricsFile.read(refMetricsFile, tumorMetricsFile);
-            WGSMetricWithQC wgsMetricWithQC = WGSMetricQC.buildWithQCMetric(metrics);
-            dbWriter.writeMetrics(sample, wgsMetricWithQC);
+            formatter.printHelp("Patient-DB - Load Metrics Data", options);
+            System.exit(1);
         }
+
+        DatabaseAccess dbWriter = databaseAccess(cmd);
+
+        LOGGER.info("Extracting and writing metrics for {}", sample);
+
+        WGSMetrics metrics = WGSMetricsFile.read(refMetricsFile, tumorMetricsFile);
+        WGSMetricWithQC wgsMetricWithQC = WGSMetricQC.buildWithQCMetric(metrics);
+        dbWriter.writeMetrics(sample, wgsMetricWithQC);
+
+        LOGGER.info("Complete");
     }
 
     @NotNull

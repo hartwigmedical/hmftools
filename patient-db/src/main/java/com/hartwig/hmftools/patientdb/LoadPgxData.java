@@ -41,22 +41,24 @@ public class LoadPgxData {
 
         if (Utils.anyNull(sample, pgxCallsFileName, pgxGenotypeFileName)) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db - load metrics data", options);
-        } else {
-            DatabaseAccess dbWriter = databaseAccess(cmd);
-
-            LOGGER.info("Reading pgx calls file {}", pgxCallsFileName);
-            List<PGXCalls> pgxCalls = PGXCallsFile.read(pgxCallsFileName);
-            LOGGER.info(" Read {} pgx calls", pgxCalls.size());
-
-            LOGGER.info("Reading pgx genotype file {}", pgxGenotypeFileName);
-            List<PGXGenotype> pgxGenotype = PGXGenotypeFile.read(pgxGenotypeFileName);
-            LOGGER.info(" Read {} pgx genotypes", pgxGenotype.size());
-
-            LOGGER.info("Writing pgx into database for {}", sample);
-            dbWriter.writePGX(sample, pgxGenotype, pgxCalls);
-            LOGGER.info("Complete");
+            formatter.printHelp("Patient-DB - Load PGX Data", options);
+            System.exit(1);
         }
+
+        DatabaseAccess dbWriter = databaseAccess(cmd);
+
+        LOGGER.info("Reading pgx calls file {}", pgxCallsFileName);
+        List<PGXCalls> pgxCalls = PGXCallsFile.read(pgxCallsFileName);
+        LOGGER.info(" Read {} pgx calls", pgxCalls.size());
+
+        LOGGER.info("Reading pgx genotype file {}", pgxGenotypeFileName);
+        List<PGXGenotype> pgxGenotype = PGXGenotypeFile.read(pgxGenotypeFileName);
+        LOGGER.info(" Read {} pgx genotypes", pgxGenotype.size());
+
+        LOGGER.info("Writing pgx into database for {}", sample);
+        dbWriter.writePGX(sample, pgxGenotype, pgxCalls);
+
+        LOGGER.info("Complete");
     }
 
     @NotNull

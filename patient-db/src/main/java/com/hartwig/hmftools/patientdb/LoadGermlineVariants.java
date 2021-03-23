@@ -38,6 +38,7 @@ public class LoadGermlineVariants {
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
         Options options = createBasicOptions();
         CommandLine cmd = createCommandLine(args, options);
+
         String vcfFileLocation = cmd.getOptionValue(GERMLINE_VCF);
         String sample = cmd.getOptionValue(SAMPLE);
         String referenceSample = cmd.getOptionValue(REFERENCE, Strings.EMPTY);
@@ -65,7 +66,7 @@ public class LoadGermlineVariants {
         options.addOption(REFERENCE, true, "Optional name of the reference sample. ");
         options.addOption(RNA, true, "Optional name of the rna sample.");
 
-        options.addOption(GERMLINE_VCF, true, "Path to the somatic SNV/indel vcf file.");
+        options.addOption(GERMLINE_VCF, true, "Path to the germline SNV/indel vcf file.");
         addDatabaseCmdLineArgs(options);
 
         return options;

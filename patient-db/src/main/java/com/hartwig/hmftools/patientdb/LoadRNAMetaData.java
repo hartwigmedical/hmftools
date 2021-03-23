@@ -34,7 +34,9 @@ public class LoadRNAMetaData {
         String rnaSamplesTsv = cmd.getOptionValue(RNA_SAMPLES_TSV);
 
         if (Utils.anyNull(rnaSamplesTsv)) {
-            printUsageAndExit(options);
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("Patient-DB - Load RNA Metadata", options);
+            System.exit(1);
         }
 
         DatabaseAccess dbAccess = databaseAccess(cmd);
@@ -46,12 +48,6 @@ public class LoadRNAMetaData {
         LOGGER.info("Persisting to db");
         dbAccess.writeRNA(samples);
         LOGGER.info("Complete");
-    }
-
-    private static void printUsageAndExit(@NotNull Options options) {
-        HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("patient-db - load rna metadata", options);
-        System.exit(1);
     }
 
     @NotNull

@@ -57,15 +57,14 @@ public class LoadAmberData {
         String amberSnpPath = cmd.getOptionValue(AMBER_SNP_VCF);
         String mappingLoci = cmd.getOptionValue(SNPCHECK_VCF);
 
-        LOGGER.info("Loading mapping loci: {}", mappingLoci);
+        LOGGER.info("Loading mapping loci from {}", mappingLoci);
         final ListMultimap<Chromosome, AmberSite> mappingSites = AmberSiteFactory.sites(mappingLoci);
 
         final GenomePositionSelector<AmberSite> selector = GenomePositionSelectorFactory.create(mappingSites);
 
         try (final DatabaseAccess dbAccess = databaseAccess(cmd);
                 final VCFFileReader fileReader = new VCFFileReader(new File(amberSnpPath), false)) {
-
-            LOGGER.info("Loading vcf snp data: {}", amberSnpPath);
+            LOGGER.info("Loading vcf snp data from {}", amberSnpPath);
             final List<BaseDepth> baseDepths = fileReader.iterator()
                     .stream()
                     .map(BaseDepthFactory::fromVariantContext)
@@ -77,7 +76,6 @@ public class LoadAmberData {
             final AmberSample sample = amberSampleFactory.fromBaseDepth(tumorSample, baseDepths);
 
             processSample(sample, dbAccess);
-
         }
 
         LOGGER.info("Complete");

@@ -17,9 +17,13 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class LoadDriverGenePanel {
+
+    private static final Logger LOGGER = LogManager.getLogger(LoadDriverGenePanel.class);
 
     private static final String ASSEMBLY = "assembly";
 
@@ -29,12 +33,14 @@ public class LoadDriverGenePanel {
 
         DatabaseAccess.addDatabaseCmdLineArgs(options);
         DriverGenePanelConfig.addGenePanelOption(true, options);
-
         CommandLine cmd = new DefaultParser().parse(options, args);
+
         DriverGenePanelAssembly assembly = DriverGenePanelAssembly.valueOf(cmd.getOptionValue(ASSEMBLY, "hg19").toUpperCase());
         List<DriverGene> driverGenes = DriverGenePanelConfig.driverGenes(cmd);
         DriverGenePanel panel = DriverGenePanelFactory.create(assembly, driverGenes);
+
         DatabaseAccess dbAccess = databaseAccess(cmd);
         dbAccess.writeGenePanel(panel);
+        LOGGER.info("Complete");
     }
 }
