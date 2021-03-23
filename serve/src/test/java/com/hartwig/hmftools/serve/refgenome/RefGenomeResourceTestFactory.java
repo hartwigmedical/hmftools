@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -23,6 +24,8 @@ public final class RefGenomeResourceTestFactory {
     public static RefGenomeResource buildTest37() {
         return ImmutableRefGenomeResource.builder()
                 .fastaFile(Strings.EMPTY)
+                .driverGenes(Lists.newArrayList())
+                .knownFusionCache(new KnownFusionCache())
                 .canonicalTranscriptPerGeneMap(HmfGenePanelSupplier.allGenesMap37())
                 .proteinResolver(new TestProteinResolver())
                 .build();

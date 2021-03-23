@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.commons.cli.CommandLine;
@@ -46,8 +45,10 @@ public interface ServeConfig {
     String REF_GENOME_38_FASTA_FILE = "ref_genome_38_fasta_file";
     String REF_GENOME_37_TO_38_CHAIN = "ref_genome_37_to_38_chain";
     String REF_GENOME_38_TO_37_CHAIN = "ref_genome_38_to_37_chain";
-    String DRIVER_GENE_TSV = "driver_gene_tsv";
-    String KNOWN_FUSION_FILE = KnownFusionCache.KNOWN_FUSIONS_FILE;
+    String DRIVER_GENE_37_TSV = "driver_gene_37_tsv";
+    String DRIVER_GENE_38_TSV = "driver_gene_38_tsv";
+    String KNOWN_FUSION_37_FILE = "known_fusion_37_file";
+    String KNOWN_FUSION_38_FILE = "known_fusion_38_file";
 
     // All output from SERVE will be written to this dir
     String OUTPUT_DIR = "output_dir";
@@ -80,8 +81,10 @@ public interface ServeConfig {
         options.addOption(REF_GENOME_38_FASTA_FILE, true, "Path to the V38 ref genome fasta file");
         options.addOption(REF_GENOME_37_TO_38_CHAIN, true, "Chain file to lift over ref genome V37 to V38");
         options.addOption(REF_GENOME_38_TO_37_CHAIN, true, "Chain file to lift over ref genome V38 to V37");
-        options.addOption(DRIVER_GENE_TSV, true, "Path to driver gene TSV");
-        options.addOption(KNOWN_FUSION_FILE, true, "Path to the known fusion file");
+        options.addOption(DRIVER_GENE_37_TSV, true, "Path to driver gene v37 TSV");
+        options.addOption(DRIVER_GENE_38_TSV, true, "Path to driver gene v38 TSV");
+        options.addOption(KNOWN_FUSION_37_FILE, true, "Path to the known fusion v37 file");
+        options.addOption(KNOWN_FUSION_38_FILE, true, "Path to the known fusion v38 file");
 
         options.addOption(OUTPUT_DIR, true, "Dir which will hold all SERVE output files");
 
@@ -140,10 +143,16 @@ public interface ServeConfig {
     String refGenome38To37Chain();
 
     @NotNull
-    String driverGeneTsv();
+    String driverGene37Tsv();
 
     @NotNull
-    String knownFusionFile();
+    String driverGene38Tsv();
+
+    @NotNull
+    String knownFusion37File();
+
+    @NotNull
+    String knownFusion38File();
 
     @NotNull
     String outputDir();
@@ -182,8 +191,10 @@ public interface ServeConfig {
                 .refGenome38FastaFile(nonOptionalFile(cmd, REF_GENOME_38_FASTA_FILE))
                 .refGenome37To38Chain(nonOptionalFile(cmd, REF_GENOME_37_TO_38_CHAIN))
                 .refGenome38To37Chain(nonOptionalFile(cmd, REF_GENOME_38_TO_37_CHAIN))
-                .driverGeneTsv(nonOptionalFile(cmd, DRIVER_GENE_TSV))
-                .knownFusionFile(nonOptionalFile(cmd, KNOWN_FUSION_FILE))
+                .driverGene37Tsv(nonOptionalFile(cmd, DRIVER_GENE_37_TSV))
+                .driverGene38Tsv(nonOptionalFile(cmd, DRIVER_GENE_38_TSV))
+                .knownFusion37File(nonOptionalFile(cmd, KNOWN_FUSION_37_FILE))
+                .knownFusion38File(nonOptionalFile(cmd, KNOWN_FUSION_38_FILE))
                 .outputDir(nonOptionalDir(cmd, OUTPUT_DIR))
                 .skipHotspotResolving(cmd.hasOption(SKIP_HOTSPOT_RESOLVING))
                 .build();

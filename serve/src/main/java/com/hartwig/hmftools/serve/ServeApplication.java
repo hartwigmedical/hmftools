@@ -44,8 +44,8 @@ public class ServeApplication {
         RefGenomeManager refGenomeManager = RefGenomeManager.buildFromServeConfig(config);
 
         ServeAlgo algo = new ServeAlgo(refGenomeManager,
-                readDriverGenesFromFile(config.driverGeneTsv()),
-                buildKnownFusionCacheFromFile(config.knownFusionFile()),
+                readDriverGenesFromFile(config.driverGene37Tsv()),
+                buildKnownFusionCacheFromFile(config.knownFusion37File()),
                 buildDoidLookup(config.missingDoidsMappingTsv()));
 
         ExtractionResult result = algo.run(config);
