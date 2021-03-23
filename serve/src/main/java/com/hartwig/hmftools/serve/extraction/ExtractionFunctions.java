@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristicUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeUrlConsolidator;
-import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.util.ActionableEventUrlMerger;
 import com.hartwig.hmftools.serve.extraction.codon.CodonFunctions;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
@@ -36,8 +36,8 @@ public final class ExtractionFunctions {
                 .actionableRanges(ActionableEventUrlMerger.merge(result.actionableRanges(), new ActionableRangeUrlConsolidator()))
                 .actionableGenes(ActionableEventUrlMerger.merge(result.actionableGenes(), new ActionableGeneUrlConsolidator()))
                 .actionableFusions(ActionableEventUrlMerger.merge(result.actionableFusions(), new ActionableFusionUrlConsolidator()))
-                .actionableSignatures(ActionableEventUrlMerger.merge(result.actionableSignatures(),
-                        new ActionableSignatureUrlConsolidator()))
+                .actionableCharacteristics(ActionableEventUrlMerger.merge(result.actionableCharacteristics(),
+                        new ActionableCharacteristicUrlConsolidator()))
                 .build();
     }
 
@@ -62,7 +62,7 @@ public final class ExtractionFunctions {
             mergedBuilder.addAllActionableRanges(result.actionableRanges());
             mergedBuilder.addAllActionableGenes(result.actionableGenes());
             mergedBuilder.addAllActionableFusions(result.actionableFusions());
-            mergedBuilder.addAllActionableSignatures(result.actionableSignatures());
+            mergedBuilder.addAllActionableCharacteristics(result.actionableCharacteristics());
         }
 
         ExtractionResult mergedResult = mergedBuilder.knownHotspots(HotspotFunctions.consolidate(allHotspots))

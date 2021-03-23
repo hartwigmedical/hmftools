@@ -42,8 +42,9 @@ public interface ClinicalAlgoConfig {
 
     String DOID_JSON = "doid_json";
     String TUMOR_LOCATION_MAPPING_TSV = "tumor_location_mapping_tsv";
-    String BIOPSY_MAPPING_CSV = "biopsy_mapping_csv";
-    String TREATMENT_MAPPING_CSV = "treatment_mapping_csv";
+    String TUMOR_LOCATION_OVERRIDES_TSV = "tumor_location_overrides_tsv";
+    String BIOPSY_MAPPING_TSV = "biopsy_mapping_tsv";
+    String TREATMENT_MAPPING_TSV = "treatment_mapping_tsv";
 
     @NotNull
     static Options createOptions() {
@@ -78,8 +79,9 @@ public interface ClinicalAlgoConfig {
 
         options.addOption(DOID_JSON, true, "Path towards to the json file of the doid ID of primary tumors.");
         options.addOption(TUMOR_LOCATION_MAPPING_TSV, true, "Path towards to the tumor location mapping TSV.");
-        options.addOption(BIOPSY_MAPPING_CSV, true, "Path towards to the biopsy mapping CSV.");
-        options.addOption(TREATMENT_MAPPING_CSV, true, "Path towards to the treatment mapping CSV.");
+        options.addOption(TUMOR_LOCATION_OVERRIDES_TSV, true, "Path towards to the tumor location overrides TSV.");
+        options.addOption(BIOPSY_MAPPING_TSV, true, "Path towards to the biopsy mapping TSV.");
+        options.addOption(TREATMENT_MAPPING_TSV, true, "Path towards to the treatment mapping TSV.");
 
         addDatabaseCmdLineArgs(options);
         return options;
@@ -143,16 +145,27 @@ public interface ClinicalAlgoConfig {
     String tumorLocationMappingTsv();
 
     @NotNull
-    String biopsyMappingCsv();
+    String tumorLocationOverridesTsv();
 
     @NotNull
-    String treatmentMappingCsv();
+    String biopsyMappingTsv();
+
+    @NotNull
+    String treatmentMappingTsv();
 
     @NotNull
     static ClinicalAlgoConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
+        String runsJson = optionalFile(cmd, RUNS_JSON);
+        String runsDirectory = optionalDir(cmd, RUNS_DIRECTORY);
+
+        if ((runsJson == null && runsDirectory == null) || (runsJson != null && runsDirectory != null)) {
+            throw new IllegalStateException("Either a runs directory or runs json must be specified, and not both");
+        }
+
         boolean doProcessWideClinicalData = cmd.hasOption(DO_PROCESS_WIDE_CLINICAL_DATA);
         ImmutableClinicalAlgoConfig.Builder builder = ImmutableClinicalAlgoConfig.builder()
-                .runsDirectory(nonOptionalDir(cmd, RUNS_DIRECTORY))
+                .runsDirectory(runsDirectory)
+                .runsJson(runsJson)
                 .pipelineVersionFile(nonOptionalValue(cmd, PIPELINE_VERSION_FILE))
                 .cpctEcrfFile(nonOptionalFile(cmd, CPCT_ECRF_FILE))
                 .cpctFormStatusCsv(nonOptionalFile(cmd, CPCT_FORM_STATUS_CSV))
@@ -166,8 +179,9 @@ public interface ClinicalAlgoConfig {
                 .patientTumorCurationStatusTsv(nonOptionalValue(cmd, PATIENT_TUMOR_CURATION_STATUS_TSV))
                 .doidJson(nonOptionalFile(cmd, DOID_JSON))
                 .tumorLocationMappingTsv(nonOptionalFile(cmd, TUMOR_LOCATION_MAPPING_TSV))
-                .biopsyMappingCsv(nonOptionalFile(cmd, BIOPSY_MAPPING_CSV))
-                .treatmentMappingCsv(nonOptionalFile(cmd, TREATMENT_MAPPING_CSV));
+                .tumorLocationOverridesTsv(nonOptionalFile(cmd, TUMOR_LOCATION_OVERRIDES_TSV))
+                .biopsyMappingTsv(nonOptionalFile(cmd, BIOPSY_MAPPING_TSV))
+                .treatmentMappingTsv(nonOptionalFile(cmd, TREATMENT_MAPPING_TSV));
 
         if (doProcessWideClinicalData) {
             builder = builder.widePreAvlTreatmentCsv(nonOptionalFile(cmd, WIDE_PRE_AVL_TREATMENT_CSV))
@@ -201,12 +215,42 @@ public interface ClinicalAlgoConfig {
         return value;
     }
 
+    @Nullable
+    static String optionalDir(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+        String value = cmd.getOptionValue(param);
+
+        if (value == null) {
+            return null;
+        }
+
+        if (!pathExists(value) || !pathIsDirectory(value)) {
+            throw new ParseException("Parameter '" + param + "', if provided, must be an existing directory: " + value);
+        }
+
+        return value;
+    }
+
     @NotNull
     static String nonOptionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
         String value = nonOptionalValue(cmd, param);
 
         if (!pathExists(value)) {
             throw new ParseException("Parameter '" + param + "' must be an existing file: " + value);
+        }
+
+        return value;
+    }
+
+    @Nullable
+    static String optionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+        String value = cmd.getOptionValue(param);
+
+        if (value == null) {
+            return null;
+        }
+
+        if (!pathExists(value)) {
+            throw new ParseException("Parameter '" + param + "', if provided, must be an existing file: " + value);
         }
 
         return value;

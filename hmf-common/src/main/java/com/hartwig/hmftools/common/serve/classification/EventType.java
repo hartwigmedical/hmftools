@@ -10,7 +10,7 @@ public enum EventType {
     DELETION,
     FUSION_PAIR,
     PROMISCUOUS_FUSION,
-    SIGNATURE,
+    CHARACTERISTIC,
     COMBINED,
     COMPLEX,
     UNKNOWN

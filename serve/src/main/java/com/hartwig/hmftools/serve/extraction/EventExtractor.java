@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.serve.extraction;
 
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicExtractor;
 import com.hartwig.hmftools.serve.extraction.codon.CodonExtractor;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.extraction.exon.ExonExtractor;
 import com.hartwig.hmftools.serve.extraction.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotExtractor;
-import com.hartwig.hmftools.serve.extraction.signature.SignatureExtractor;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,19 +27,19 @@ public class EventExtractor {
     @NotNull
     private final FusionExtractor fusionExtractor;
     @NotNull
-    private final SignatureExtractor signatureExtractor;
+    private final TumorCharacteristicExtractor tumorCharacteristicExtractor;
 
     public EventExtractor(@NotNull final HotspotExtractor hotspotExtractor, @NotNull final CodonExtractor codonExtractor,
             @NotNull final ExonExtractor exonExtractor, @NotNull final GeneLevelExtractor geneLevelExtractor,
             @NotNull final CopyNumberExtractor copyNumberExtractor, @NotNull final FusionExtractor fusionExtractor,
-            @NotNull final SignatureExtractor signatureExtractor) {
+            @NotNull final TumorCharacteristicExtractor tumorCharacteristicExtractor) {
         this.hotspotExtractor = hotspotExtractor;
         this.codonExtractor = codonExtractor;
         this.exonExtractor = exonExtractor;
         this.geneLevelExtractor = geneLevelExtractor;
         this.copyNumberExtractor = copyNumberExtractor;
         this.fusionExtractor = fusionExtractor;
-        this.signatureExtractor = signatureExtractor;
+        this.tumorCharacteristicExtractor = tumorCharacteristicExtractor;
     }
 
     @NotNull
@@ -52,7 +52,7 @@ public class EventExtractor {
                 .geneLevelEvent(geneLevelExtractor.extract(gene, type, event))
                 .knownCopyNumber(copyNumberExtractor.extract(gene, type))
                 .knownFusionPair(fusionExtractor.extract(gene, type, event))
-                .signatureName(signatureExtractor.extract(type, event))
+                .characteristic(tumorCharacteristicExtractor.extract(type, event))
                 .build();
     }
 }

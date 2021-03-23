@@ -3,6 +3,9 @@ package com.hartwig.hmftools.serve.actionability;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.common.serve.RefGenomeVersion;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristicFile;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
@@ -11,9 +14,6 @@ import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRangeFile;
-import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
-import com.hartwig.hmftools.serve.actionability.signature.ActionableSignatureFile;
-import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,16 +47,17 @@ public final class ActionableEventsLoader {
         List<ActionableFusion> fusions = ActionableFusionFile.read(actionableFusionTsv);
         LOGGER.info(" Loaded {} actionable fusions from {}", fusions.size(), actionableFusionTsv);
 
-        String actionableSignatureTsv = ActionableSignatureFile.actionableSignatureTsvPath(actionabilityDir, refGenomeVersion);
-        List<ActionableSignature> signatures = ActionableSignatureFile.read(actionableSignatureTsv);
-        LOGGER.info(" Loaded {} actionable signatures from {}", signatures.size(), actionableSignatureTsv);
+        String actionableCharacteristicTsv =
+                ActionableCharacteristicFile.actionableCharacteristicTsvPath(actionabilityDir, refGenomeVersion);
+        List<ActionableCharacteristic> characteristics = ActionableCharacteristicFile.read(actionableCharacteristicTsv);
+        LOGGER.info(" Loaded {} actionable tumor characteristics from {}", characteristics.size(), actionableCharacteristicTsv);
 
         return ImmutableActionableEvents.builder()
                 .hotspots(hotspots)
                 .ranges(ranges)
                 .genes(genes)
                 .fusions(fusions)
-                .signatures(signatures)
+                .characteristics(characteristics)
                 .build();
     }
 }

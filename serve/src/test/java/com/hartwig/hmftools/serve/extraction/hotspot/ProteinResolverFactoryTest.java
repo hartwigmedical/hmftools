@@ -6,13 +6,13 @@ import java.io.FileNotFoundException;
 
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.serve.util.RefGenomeVersion;
+import com.hartwig.hmftools.common.serve.RefGenomeVersion;
 
 import org.junit.Test;
 
 public class ProteinResolverFactoryTest {
 
-    private static final String REF_GENOME_FASTA_FILE = Resources.getResource("refgenome/ref.fasta").getPath();
+    private static final String REF_GENOME_FASTA_FILE = Resources.getResource("refgenome/v37/ref.fasta").getPath();
 
     @Test
     public void canCreateTransvarResolver() throws FileNotFoundException {

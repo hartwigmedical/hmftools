@@ -6,6 +6,8 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
+import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
@@ -14,14 +16,12 @@ import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
-import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
-import com.hartwig.hmftools.serve.actionability.signature.ImmutableActionableSignature;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 import com.hartwig.hmftools.serve.extraction.range.RangeAnnotation;
-import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -113,7 +113,8 @@ public final class ActionableEventFactory {
     }
 
     @NotNull
-    public static ActionableSignature toActionableSignature(@NotNull ActionableEvent actionableEvent, @NotNull SignatureName signature) {
-        return ImmutableActionableSignature.builder().from(actionableEvent).name(signature).build();
+    public static ActionableCharacteristic toActionableCharacteristic(@NotNull ActionableEvent actionableEvent,
+            @NotNull TumorCharacteristic characteristic) {
+        return ImmutableActionableCharacteristic.builder().from(actionableEvent).name(characteristic).build();
     }
 }

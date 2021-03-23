@@ -1,22 +1,14 @@
 package com.hartwig.hmftools.serve;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.curation.DoidLookupFactory;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ExtractionResultWriter;
-import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
-import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolverFactory;
-import com.hartwig.hmftools.serve.util.RefGenomeVersion;
+import com.hartwig.hmftools.serve.refgenome.RefGenomeManager;
+import com.hartwig.hmftools.serve.refgenome.RefGenomeManagerFactory;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -46,64 +38,15 @@ public class ServeApplication {
             System.exit(1);
         }
 
-        Map<String, HmfTranscriptRegion> allGenesMap = selectAllGeneMap(config.refGenomeVersion());
+        RefGenomeManager refGenomeManager = RefGenomeManagerFactory.createFromServeConfig(config);
 
-        ServeAlgo algo = new ServeAlgo(readDriverGenesFromFile(config.driverGeneTsv()),
-                buildKnownFusionCacheFromFile(config.knownFusionFile()),
-                allGenesMap,
-                buildProteinResolver(config, allGenesMap),
-                buildDoidLookup(config.missingDoidsMappingTsv()));
+        ServeAlgo algo = new ServeAlgo(refGenomeManager, buildDoidLookup(config.missingDoidsMappingTsv()));
 
         ExtractionResult result = algo.run(config);
 
-        new ExtractionResultWriter(config.outputDir(), config.refGenomeVersion()).write(result);
+        new ExtractionResultWriter(config.outputDir(), RefGenomeVersion.V37).write(result);
 
         LOGGER.info("Done!");
-    }
-
-    @NotNull
-    private static List<DriverGene> readDriverGenesFromFile(@NotNull String driverGeneTsv) throws IOException {
-        LOGGER.info("Reading driver genes from {}", driverGeneTsv);
-        List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneTsv);
-        LOGGER.info(" Read {} driver gene entries", driverGenes.size());
-        return driverGenes;
-    }
-
-    @NotNull
-    private static KnownFusionCache buildKnownFusionCacheFromFile(@NotNull String knownFusionFile) throws IOException {
-        LOGGER.info("Reading known fusions from {}", knownFusionFile);
-        KnownFusionCache cache = new KnownFusionCache();
-        if (!cache.loadFile(knownFusionFile)) {
-            throw new IOException("Could not load known fusions from " + knownFusionFile);
-        }
-        LOGGER.info(" Read {} known fusion entries", cache.getData().size());
-        return cache;
-    }
-
-    @NotNull
-    private static Map<String, HmfTranscriptRegion> selectAllGeneMap(@NotNull RefGenomeVersion refGenomeVersion) {
-        if (refGenomeVersion == RefGenomeVersion.V37) {
-            return HmfGenePanelSupplier.allGenesMap37();
-        }
-
-        LOGGER.warn("Ref genome version not supported: '{}'. Reverting to V37 Gene Map.", refGenomeVersion);
-        return HmfGenePanelSupplier.allGenesMap37();
-    }
-
-    @NotNull
-    private static ProteinResolver buildProteinResolver(@NotNull ServeConfig config,
-            @NotNull Map<String, HmfTranscriptRegion> transcriptsPerGeneMap) throws FileNotFoundException {
-        if (config.skipHotspotResolving()) {
-            LOGGER.info("Creating dummy protein resolver");
-            return ProteinResolverFactory.dummy();
-        } else {
-            LOGGER.info("Creating transvar protein resolver with ref genome version '{}' using FASTA {}",
-                    config.refGenomeVersion(),
-                    config.refGenomeFastaFile());
-            return ProteinResolverFactory.transvarWithRefGenome(config.refGenomeVersion(),
-                    config.refGenomeFastaFile(),
-                    transcriptsPerGeneMap);
-        }
     }
 
     @NotNull

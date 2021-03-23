@@ -38,9 +38,10 @@ public final class ClinicalAlgoBuilder {
     @NotNull
     public static ClinicalAlgo fromConfig(@NotNull ClinicalAlgoConfig config) throws IOException, XMLStreamException {
         List<DoidNode> doidNodes = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJson()).nodes();
-        PrimaryTumorCurator primaryTumorCurator = new PrimaryTumorCurator(config.tumorLocationMappingTsv(), doidNodes);
-        BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(config.biopsyMappingCsv());
-        TreatmentCurator treatmentCurator = new TreatmentCurator(config.treatmentMappingCsv());
+        PrimaryTumorCurator primaryTumorCurator =
+                new PrimaryTumorCurator(config.tumorLocationMappingTsv(), config.tumorLocationOverridesTsv(), doidNodes);
+        BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(config.biopsyMappingTsv());
+        TreatmentCurator treatmentCurator = new TreatmentCurator(config.treatmentMappingTsv());
 
         EcrfModels ecrfModels = loadEcrfModels(config);
 

@@ -17,7 +17,7 @@ public class KnowledgebaseTest {
         String sourceString = Knowledgebase.toCommaSeparatedSourceString(sources);
         assertEquals("vicc_cgi,vicc_civic", sourceString);
 
-        Set<Knowledgebase> convertedSources = Knowledgebase.fromCommaSeparatedSourceString(sourceString);
+        Set<Knowledgebase> convertedSources = Knowledgebase.fromCommaSeparatedTechnicalDisplayString(sourceString);
         assertEquals(sources, convertedSources);
 
         // Converting also sorts alphabetically:

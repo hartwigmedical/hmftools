@@ -3,10 +3,8 @@ package com.hartwig.hmftools.patientdb;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -26,7 +24,6 @@ public class LoadGermlineDriverCatalog {
     private static final Logger LOGGER = LogManager.getLogger(LoadGermlineDriverCatalog.class);
 
     private static final String SAMPLE = "sample";
-
     private static final String PURPLE_DIR = "purple_dir";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
@@ -35,14 +32,11 @@ public class LoadGermlineDriverCatalog {
         DatabaseAccess dbAccess = databaseAccess(cmd);
 
         String tumorSample = cmd.getOptionValue(SAMPLE);
-        String purplePath = cmd.getOptionValue(PURPLE_DIR);
+        String purpleDir = cmd.getOptionValue(PURPLE_DIR);
 
-        LOGGER.info("Reading data from {}", purplePath);
-
-        String germlineDriverCatalogFileName = DriverCatalogFile.generateGermlineFilename(purplePath, tumorSample);
-        List<DriverCatalog> germlineDriverCatalog = new File(germlineDriverCatalogFileName).exists()
-                ? DriverCatalogFile.read(germlineDriverCatalogFileName)
-                : Collections.emptyList();
+        String germlineDriverCatalogFileName = DriverCatalogFile.generateGermlineFilename(purpleDir, tumorSample);
+        List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(germlineDriverCatalogFileName);
+        LOGGER.info("Read {} drivers from {}", germlineDriverCatalog.size(), germlineDriverCatalogFileName);
 
         dbAccess.writeGermlineDriverCatalog(tumorSample, germlineDriverCatalog);
         LOGGER.info("Complete");

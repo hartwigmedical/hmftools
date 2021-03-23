@@ -31,6 +31,8 @@ public final class ViccClassificationConfig {
     private static final Set<String> MICROSATELLITE_UNSTABLE_EVENTS = microsatelliteUnstableEvents();
     private static final Set<String> HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS = highTumorMutationalLoadEvents();
     private static final Set<String> HR_DEFICIENCY_EVENTS = hrDeficiencyEvents();
+    private static final Set<String> HPV_POSITIVE_EVENTS = hpvPositiveEvents();
+    private static final Set<String> EBV_POSITIVE_EVENTS = ebvPositiveEvents();
     private static final Map<String, Set<String>> COMBINED_EVENTS_PER_GENE = combinedEventsPerGene();
     private static final Map<String, Set<String>> COMPLEX_EVENTS_PER_GENE = complexEventsPerGene();
 
@@ -60,6 +62,8 @@ public final class ViccClassificationConfig {
                 .microsatelliteUnstableEvents(MICROSATELLITE_UNSTABLE_EVENTS)
                 .highTumorMutationalLoadEvents(HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS)
                 .hrDeficiencyEvents(HR_DEFICIENCY_EVENTS)
+                .hpvPositiveEvents(HPV_POSITIVE_EVENTS)
+                .ebvPositiveEvents(EBV_POSITIVE_EVENTS)
                 .combinedEventsPerGene(COMBINED_EVENTS_PER_GENE)
                 .complexEventsPerGene(COMPLEX_EVENTS_PER_GENE)
                 .build();
@@ -265,6 +269,16 @@ public final class ViccClassificationConfig {
 
     @NotNull
     private static Set<String> hrDeficiencyEvents() {
+        return Sets.newHashSet();
+    }
+
+    @NotNull
+    private static Set<String> hpvPositiveEvents() {
+        return Sets.newHashSet();
+    }
+
+    @NotNull
+    private static Set<String> ebvPositiveEvents() {
         return Sets.newHashSet();
     }
 

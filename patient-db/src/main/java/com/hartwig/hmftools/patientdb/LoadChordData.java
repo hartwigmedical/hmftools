@@ -25,38 +25,36 @@ public class LoadChordData {
     private static final Logger LOGGER = LogManager.getLogger(LoadChordData.class);
 
     private static final String SAMPLE = "sample";
-
     private static final String PREDICTION_FILE = "prediction_file";
 
-    public static void main(@NotNull String[] args) throws ParseException, SQLException {
+    public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
 
-        String predictionFile = cmd.getOptionValue(PREDICTION_FILE);
         String sample = cmd.getOptionValue(SAMPLE);
+        String predictionFile = cmd.getOptionValue(PREDICTION_FILE);
 
         if (Utils.anyNull(predictionFile, sample)) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db - load chord data", options);
-        } else {
-            File fileObject = new File(predictionFile);
-            if (fileObject.isFile()) {
-                DatabaseAccess dbWriter = databaseAccess(cmd);
+            formatter.printHelp("Patient-DB - Load Chord Data", options);
+            System.exit(1);
+        }
 
-                LOGGER.info("Extracting and writing chord for {}", predictionFile);
-                try {
-                    ChordAnalysis chordAnalysis = ChordFileReader.read(predictionFile);
-                    dbWriter.writeChord(sample, chordAnalysis);
-                } catch (IOException e) {
-                    LOGGER.warn("Cannot extract chord for {}", predictionFile);
-                }
-            } else {
-                if (!fileObject.exists()) {
-                    LOGGER.warn("file '{}' does not exist.", predictionFile);
-                }
-                HelpFormatter formatter = new HelpFormatter();
-                formatter.printHelp("patient-db - load chord data", options);
+        File fileObject = new File(predictionFile);
+        if (fileObject.isFile()) {
+            DatabaseAccess dbWriter = databaseAccess(cmd);
+
+            LOGGER.info("Extracting and writing chord for {}", predictionFile);
+            ChordAnalysis chordAnalysis = ChordFileReader.read(predictionFile);
+            dbWriter.writeChord(sample, chordAnalysis);
+
+            LOGGER.info("Complete");
+        } else {
+            if (!fileObject.exists()) {
+                LOGGER.warn("file '{}' does not exist.", predictionFile);
             }
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("patient-db - load chord data", options);
         }
     }
 

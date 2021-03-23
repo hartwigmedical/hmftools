@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.patientdb.clinical.curators;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -11,9 +12,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedBiopsyType;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableCuratedBiopsyType;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -22,21 +20,23 @@ import org.jetbrains.annotations.Nullable;
 public class BiopsySiteCurator {
 
     private static final Logger LOGGER = LogManager.getLogger(BiopsySiteCurator.class);
+    private static final String FIELD_DELIMITER = "\t";
 
     @NotNull
     private final Map<Key, CuratedBiopsyType> curationMap = Maps.newHashMap();
 
     @VisibleForTesting
-    public BiopsySiteCurator(@NotNull String mappingInput) throws IOException {
-        BufferedReader file = new BufferedReader(new FileReader(mappingInput));
-        CSVParser parser = CSVFormat.DEFAULT.withDelimiter(',').withHeader().parse(file);
+    public BiopsySiteCurator(@NotNull String biopsyMappingTsv) throws IOException {
+        List<String> lines = Files.readAllLines(new File(biopsyMappingTsv).toPath());
 
-        for (CSVRecord record : parser) {
-            String primaryTumorLocation = record.get("primaryTumorLocation");
-            String cancerSubType = record.get("cancerSubType");
-            String biopsySite = record.get("biopsySite");
-            String biopsyLocation = record.get("biopsyLocation");
-            String biopsyType = record.get("biopsyType");
+        // Skip header
+        for (String line : lines.subList(1, lines.size())) {
+            String[] parts = line.split(FIELD_DELIMITER);
+            String primaryTumorLocation = parts[0];
+            String cancerSubType = parts[1];
+            String biopsySite = parts[2];
+            String biopsyLocation = parts[3];
+            String biopsyType = parts[4];
 
             Key key = Key.fromInputs(primaryTumorLocation, cancerSubType, biopsySite, biopsyLocation);
 

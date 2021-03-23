@@ -5,14 +5,15 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionMutation;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionMutationCondition;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
-import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.extraction.ActionableEventFactory;
 import com.hartwig.hmftools.serve.extraction.EventExtractor;
 import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
@@ -55,6 +56,9 @@ public class IclusionExtractor {
             for (IclusionMutationCondition mutationCondition : trial.mutationConditions()) {
                 for (IclusionMutation mutation : mutationCondition.mutations()) {
                     LOGGER.debug("Interpreting '{}' on '{}' for {}", mutation.name(), mutation.gene(), trial.acronym());
+                    if (mutation.type() == EventType.UNKNOWN) {
+                        LOGGER.warn("No event type known for '{}' on '{}'", mutation.name(), mutation.gene());
+                    }
                     eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name()));
                 }
             }
@@ -74,7 +78,7 @@ public class IclusionExtractor {
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
         Set<ActionableFusion> actionableFusions = Sets.newHashSet();
-        Set<ActionableSignature> actionableSignatures = Sets.newHashSet();
+        Set<ActionableCharacteristic> actionableCharacteristics = Sets.newHashSet();
 
         for (ActionableTrial trial : actionableTrials) {
             for (EventExtractorOutput extraction : eventExtractions) {
@@ -94,8 +98,8 @@ public class IclusionExtractor {
                     actionableFusions.add(ActionableEventFactory.toActionableFusion(trial, extraction.knownFusionPair()));
                 }
 
-                if (extraction.signatureName() != null) {
-                    actionableSignatures.add(ActionableEventFactory.toActionableSignature(trial, extraction.signatureName()));
+                if (extraction.characteristic() != null) {
+                    actionableCharacteristics.add(ActionableEventFactory.toActionableCharacteristic(trial, extraction.characteristic()));
                 }
             }
         }
@@ -105,7 +109,7 @@ public class IclusionExtractor {
                 .actionableRanges(actionableRanges)
                 .actionableGenes(actionableGenes)
                 .actionableFusions(actionableFusions)
-                .actionableSignatures(actionableSignatures)
+                .actionableCharacteristics(actionableCharacteristics)
                 .build();
     }
 }

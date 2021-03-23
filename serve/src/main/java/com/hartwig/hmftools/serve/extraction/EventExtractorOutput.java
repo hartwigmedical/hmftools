@@ -3,12 +3,12 @@ package com.hartwig.hmftools.serve.extraction;
 import java.util.List;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
-import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -38,5 +38,5 @@ public abstract class EventExtractorOutput {
     public abstract KnownFusionPair knownFusionPair();
 
     @Nullable
-    public abstract SignatureName signatureName();
+    public abstract TumorCharacteristic characteristic();
 }

@@ -49,7 +49,7 @@ public class CreateShallowSeqDB {
 
         if (!checkInputs(cmd)) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("shallow seq db ", options);
+            formatter.printHelp("Patient-DB - Create Shallow Seq DB ", options);
             System.exit(1);
         }
 
@@ -66,7 +66,7 @@ public class CreateShallowSeqDB {
 
         appendToCsv(cmd.getOptionValue(SHALLOW_SEQ_TSV), newShallowSeqEntries);
 
-        LOGGER.info("Shallow seq DB is complete!");
+        LOGGER.info("Complete");
     }
 
     @NotNull

@@ -6,14 +6,12 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.ckb.classification.EventTypeExtractor;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
-import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
-import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.extraction.EventExtractor;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
@@ -43,27 +41,11 @@ public class CKBExtractor {
         Map<CkbEntry, ExtractResult> resultsPerEntry = Maps.newHashMap();
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
-        for (CkbEntry entry : ckbEntries) {
-            //   resultsPerEntry.put(entry, extractSingleEntry(entry));
-
-            if (entry.variants().size() == 1) {
-                for (Variant variant : entry.variants()) {
-                    LOGGER.info("profileName: {} ", entry.profileName());
-                    LOGGER.info("eventType: {}", EventTypeExtractor.classify(variant.gene().geneSymbol(), variant.variant()));
-                    eventExtractor.extract(variant.gene().geneSymbol(),
-                            variant.gene().canonicalTranscript(),
-                            EventTypeExtractor.classify(variant.gene().geneSymbol(), variant.variant()),
-                            variant.impact());
-
-                }
-            } else {
-                LOGGER.info("Molecular profile is complex {}", entry.profileName());
-            }
-
-            tracker.update();
-        }
 
         // actionableEvidenceFactory.evaluateCuration();
+
+        CKBUtils.printExtractionResults(resultsPerEntry);
+
 
         ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
                 .knownHotspots(Sets.newHashSet())
@@ -82,13 +64,13 @@ public class CKBExtractor {
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
         Set<ActionableFusion> actionableFusions = Sets.newHashSet();
-        Set<ActionableSignature> actionableSignatures = Sets.newHashSet();
+        Set<ActionableCharacteristic> actionableCharacteristics = Sets.newHashSet();
 
         outputBuilder.actionableHotspots(actionableHotspots);
         outputBuilder.actionableRanges(actionableRanges);
         outputBuilder.actionableGenes(actionableGenes);
         outputBuilder.actionableFusions(actionableFusions);
-        outputBuilder.actionableSignatures(actionableSignatures);
+        outputBuilder.actionableCharacteristics(actionableCharacteristics);
     }
 
 }

@@ -9,17 +9,18 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
-import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
 import com.hartwig.hmftools.serve.extraction.ActionableEventFactory;
 import com.hartwig.hmftools.serve.extraction.EventExtractor;
 import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.CodonFunctions;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
@@ -39,7 +40,6 @@ import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.extraction.range.RangeAnnotation;
-import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
@@ -98,7 +98,7 @@ public final class ViccExtractor {
         Map<Feature, GeneLevelAnnotation> geneLevelEventsPerFeature = Maps.newHashMap();
         Map<Feature, KnownCopyNumber> ampsDelsPerFeature = Maps.newHashMap();
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
-        Map<Feature, SignatureName> signaturesPerFeature = Maps.newHashMap();
+        Map<Feature, TumorCharacteristic> characteristicsPerFeature = Maps.newHashMap();
 
         for (Feature feature : entry.features()) {
             String gene = feature.geneSymbol();
@@ -130,8 +130,8 @@ public final class ViccExtractor {
                     fusionsPerFeature.put(feature, extractorOutput.knownFusionPair());
                 }
 
-                if (extractorOutput.signatureName() != null) {
-                    signaturesPerFeature.put(feature, extractorOutput.signatureName());
+                if (extractorOutput.characteristic() != null) {
+                    characteristicsPerFeature.put(feature, extractorOutput.characteristic());
                 }
             }
         }
@@ -139,7 +139,7 @@ public final class ViccExtractor {
         // We only need to resolve the actionable event in case we have extracted at least one feature interpretation.
         Set<ActionableEvent> actionableEvents;
         if (hotspotsPerFeature.isEmpty() && codonsPerFeature.isEmpty() && exonsPerFeature.isEmpty() && geneLevelEventsPerFeature.isEmpty()
-                && ampsDelsPerFeature.isEmpty() && fusionsPerFeature.isEmpty() && signaturesPerFeature.isEmpty()) {
+                && ampsDelsPerFeature.isEmpty() && fusionsPerFeature.isEmpty() && characteristicsPerFeature.isEmpty()) {
             actionableEvents = Sets.newHashSet();
         } else {
             actionableEvents = actionableEvidenceFactory.toActionableEvents(entry);
@@ -152,7 +152,7 @@ public final class ViccExtractor {
                 .geneLevelEventsPerFeature(geneLevelEventsPerFeature)
                 .ampsDelsPerFeature(ampsDelsPerFeature)
                 .fusionsPerFeature(fusionsPerFeature)
-                .signaturesPerFeature(signaturesPerFeature)
+                .characteristicsPerFeature(characteristicsPerFeature)
                 .actionableEvents(actionableEvents)
                 .build();
     }
@@ -243,7 +243,7 @@ public final class ViccExtractor {
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
         Set<ActionableFusion> actionableFusions = Sets.newHashSet();
-        Set<ActionableSignature> actionableSignatures = Sets.newHashSet();
+        Set<ActionableCharacteristic> actionableCharacteristics = Sets.newHashSet();
 
         for (ViccExtractionResult result : results) {
             actionableHotspots.addAll(extractActionableHotspots(result.actionableEvents(), result.hotspotsPerFeature().values()));
@@ -253,14 +253,15 @@ public final class ViccExtractor {
             actionableGenes.addAll(extractActionableGeneLevelEvents(result.actionableEvents(),
                     result.geneLevelEventsPerFeature().values()));
             actionableFusions.addAll(extractActionableFusions(result.actionableEvents(), result.fusionsPerFeature().values()));
-            actionableSignatures.addAll(extractActionableSignatures(result.actionableEvents(), result.signaturesPerFeature().values()));
+            actionableCharacteristics.addAll(extractActionableCharacteristics(result.actionableEvents(),
+                    result.characteristicsPerFeature().values()));
         }
 
         outputBuilder.actionableHotspots(actionableHotspots);
         outputBuilder.actionableRanges(actionableRanges);
         outputBuilder.actionableGenes(actionableGenes);
         outputBuilder.actionableFusions(actionableFusions);
-        outputBuilder.actionableSignatures(actionableSignatures);
+        outputBuilder.actionableCharacteristics(actionableCharacteristics);
     }
 
     @NotNull
@@ -324,14 +325,14 @@ public final class ViccExtractor {
     }
 
     @NotNull
-    private static Set<ActionableSignature> extractActionableSignatures(@NotNull Iterable<ActionableEvent> actionableEvents,
-            @NotNull Iterable<SignatureName> signatures) {
-        Set<ActionableSignature> actionableSignatures = Sets.newHashSet();
-        for (SignatureName signature : signatures) {
+    private static Set<ActionableCharacteristic> extractActionableCharacteristics(@NotNull Iterable<ActionableEvent> actionableEvents,
+            @NotNull Iterable<TumorCharacteristic> characteristics) {
+        Set<ActionableCharacteristic> actionableCharacteristics = Sets.newHashSet();
+        for (TumorCharacteristic characteristic : characteristics) {
             for (ActionableEvent actionableEvent : actionableEvents) {
-                actionableSignatures.add(ActionableEventFactory.toActionableSignature(actionableEvent, signature));
+                actionableCharacteristics.add(ActionableEventFactory.toActionableCharacteristic(actionableEvent, characteristic));
             }
         }
-        return actionableSignatures;
+        return actionableCharacteristics;
     }
 }

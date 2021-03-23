@@ -28,8 +28,10 @@ public class CorePatientReader {
     @NotNull
     public Patient read(@NotNull String patientIdentifier, @Nullable String limsPrimaryTumorLocation,
             @NotNull List<SampleData> sequencedSamples) {
+        CuratedPrimaryTumor curatedPrimaryTumor = primaryTumorCurator.search(patientIdentifier, limsPrimaryTumorLocation);
+
         return new Patient(patientIdentifier,
-                toBaselineData(limsPrimaryTumorLocation),
+                toBaselineData(curatedPrimaryTumor),
                 noPreTreatmentData(),
                 sequencedSamples,
                 Lists.newArrayList(),
@@ -41,9 +43,7 @@ public class CorePatientReader {
     }
 
     @NotNull
-    private BaselineData toBaselineData(@Nullable String limsPrimaryTumorLocation) {
-        CuratedPrimaryTumor curatedPrimaryTumor = primaryTumorCurator.search(limsPrimaryTumorLocation);
-
+    private BaselineData toBaselineData(@NotNull CuratedPrimaryTumor curatedPrimaryTumor) {
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
                 .informedConsentDate(null)

@@ -55,7 +55,7 @@ public interface PatientReporterConfig {
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
     String LINX_VIRAL_INSERTION_TSV = "linx_viral_insertion_tsv";
-    String LINX_DRIVERS_TSV = "linx_drivers_tsv";
+    String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     String CIRCOS_FILE = "circos_file";
     String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
@@ -106,7 +106,7 @@ public interface PatientReporterConfig {
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the linx breakend TSV.");
         options.addOption(LINX_VIRAL_INSERTION_TSV, true, "Path towards the LINX viral insertion TSV.");
-        options.addOption(LINX_DRIVERS_TSV, true, "Path towards the LINX driver catalog TSV.");
+        options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
         options.addOption(CIRCOS_FILE, true, "Path towards the circos file.");
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
@@ -197,7 +197,7 @@ public interface PatientReporterConfig {
     String linxViralInsertionTsv();
 
     @NotNull
-    String linxDriversTsv();
+    String linxDriverCatalogTsv();
 
     @NotNull
     String chordPredictionTxt();
@@ -247,7 +247,7 @@ public interface PatientReporterConfig {
         String linxFusionTsv = Strings.EMPTY;
         String linxBreakendTsv = Strings.EMPTY;
         String linxViralInsertionTsv = Strings.EMPTY;
-        String linxDriversTsv = Strings.EMPTY;
+        String linxDriverCatalogTsv = Strings.EMPTY;
         String chordPredictionTxt = Strings.EMPTY;
         String circosFile = Strings.EMPTY;
         String protectEvidenceFile = Strings.EMPTY;
@@ -269,7 +269,7 @@ public interface PatientReporterConfig {
             linxFusionTsv = nonOptionalFile(cmd, LINX_FUSION_TSV);
             linxBreakendTsv = nonOptionalFile(cmd, LINX_BREAKEND_TSV);
             linxViralInsertionTsv = nonOptionalFile(cmd, LINX_VIRAL_INSERTION_TSV);
-            linxDriversTsv = nonOptionalFile(cmd, LINX_DRIVERS_TSV);
+            linxDriverCatalogTsv = nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV);
             chordPredictionTxt = nonOptionalFile(cmd, CHORD_PREDICTION_TXT);
             circosFile = nonOptionalFile(cmd, CIRCOS_FILE);
             protectEvidenceFile = nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV);
@@ -304,7 +304,7 @@ public interface PatientReporterConfig {
                 .linxFusionTsv(linxFusionTsv)
                 .linxBreakendTsv(linxBreakendTsv)
                 .linxViralInsertionTsv(linxViralInsertionTsv)
-                .linxDriversTsv(linxDriversTsv)
+                .linxDriverCatalogTsv(linxDriverCatalogTsv)
                 .chordPredictionTxt(chordPredictionTxt)
                 .circosFile(circosFile)
                 .protectEvidenceTsv(protectEvidenceFile)

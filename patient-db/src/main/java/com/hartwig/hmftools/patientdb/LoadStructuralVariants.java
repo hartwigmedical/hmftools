@@ -16,7 +16,6 @@ import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantL
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFile;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
@@ -34,19 +33,22 @@ public class LoadStructuralVariants {
     private static final Logger LOGGER = LogManager.getLogger(LoadStructuralVariants.class);
 
     private static final String SAMPLE = "sample";
-
     private static final String SV_VCF = "structural_vcf";
-    private static final String SV_DATA_DIRECTORY = "sv_data_dir";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
         DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        String tumorSample = cmd.getOptionValue(SAMPLE);
-        String vcfPath = cmd.getOptionValue(SV_VCF);
-        String svDataOutputDir = cmd.getOptionValue(SV_DATA_DIRECTORY);
+        if (dbAccess == null) {
+            LOGGER.error("Failed to create DB connection");
+            return;
+        }
 
+        String sample = cmd.getOptionValue(SAMPLE);
+        LOGGER.info("Loading structural variants for {}", sample);
+
+        String vcfPath = cmd.getOptionValue(SV_VCF);
         LOGGER.info("Reading SV data from {}", vcfPath);
         List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfPath, new AlwaysPassFilter());
         List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
@@ -54,22 +56,13 @@ public class LoadStructuralVariants {
         // Generate a unique ID for each SV record
         int svId = 0;
 
-        List<StructuralVariantData> svDataList = Lists.newArrayList();
-        for (EnrichedStructuralVariant var : enrichedVariants) {
-            svDataList.add(convertSvData(var, svId++));
+        List<StructuralVariantData> structuralVariants = Lists.newArrayList();
+        for (EnrichedStructuralVariant variant : enrichedVariants) {
+            structuralVariants.add(convertSvData(variant, svId++));
         }
 
-        LOGGER.info("Persisting {} SVs to db", svDataList.size());
-        dbAccess.writeStructuralVariants(tumorSample, svDataList);
-
-        if (svDataOutputDir != null) {
-            try {
-                String svFilename = StructuralVariantFile.generateFilename(svDataOutputDir, tumorSample);
-                StructuralVariantFile.write(svFilename, svDataList);
-            } catch (IOException e) {
-                LOGGER.error("Failed to write SV data: {}", e.toString());
-            }
-        }
+        LOGGER.info("Writing {} SVs", structuralVariants.size());
+        dbAccess.writeStructuralVariants(sample, structuralVariants);
 
         LOGGER.info("Complete");
     }
@@ -143,7 +136,6 @@ public class LoadStructuralVariants {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE.");
         options.addOption(SV_VCF, true, "Path to the PURPLE structural variant VCF file.");
-        options.addOption(SV_DATA_DIRECTORY, true, "Optional: directory to write SV data in TSV format");
         addDatabaseCmdLineArgs(options);
 
         return options;

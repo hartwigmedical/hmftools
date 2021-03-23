@@ -6,12 +6,12 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
-import com.hartwig.hmftools.serve.extraction.signature.SignatureName;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 
 import org.immutables.value.Value;
@@ -42,7 +42,7 @@ abstract class ViccExtractionResult {
     public abstract Map<Feature, KnownFusionPair> fusionsPerFeature();
 
     @NotNull
-    public abstract Map<Feature, SignatureName> signaturesPerFeature();
+    public abstract Map<Feature, TumorCharacteristic> characteristicsPerFeature();
 
     @NotNull
     public abstract Set<ActionableEvent> actionableEvents();

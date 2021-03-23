@@ -29,7 +29,7 @@ public class DoidLookup {
         return cancerTypeToDoidsMapping.get(cancerType);
     }
 
-    public void reportUnusedMappings() {
+    public void evaluateMappingUsage() {
         int unusedCancerTypeCount = 0;
         for (String cancerType : cancerTypeToDoidsMapping.keySet()) {
             if (!evaluatedCancerTypes.contains(cancerType)) {

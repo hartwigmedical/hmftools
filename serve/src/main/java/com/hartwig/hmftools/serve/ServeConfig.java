@@ -5,8 +5,6 @@ import java.nio.file.Files;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.serve.util.RefGenomeVersion;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.commons.cli.CommandLine;
@@ -43,10 +41,14 @@ public interface ServeConfig {
     String MISSING_DOIDS_MAPPING_TSV = "missing_doids_mapping_tsv";
 
     // Additional config for knowledge generation
-    String REF_GENOME_VERSION = "ref_genome_version";
-    String REF_GENOME_FASTA_FILE = "ref_genome_fasta_file";
-    String DRIVER_GENE_TSV = "driver_gene_tsv";
-    String KNOWN_FUSION_FILE = KnownFusionCache.KNOWN_FUSIONS_FILE;
+    String REF_GENOME_37_FASTA_FILE = "ref_genome_37_fasta_file";
+    String REF_GENOME_38_FASTA_FILE = "ref_genome_38_fasta_file";
+    String REF_GENOME_37_TO_38_CHAIN = "ref_genome_37_to_38_chain";
+    String REF_GENOME_38_TO_37_CHAIN = "ref_genome_38_to_37_chain";
+    String DRIVER_GENE_37_TSV = "driver_gene_37_tsv";
+    String DRIVER_GENE_38_TSV = "driver_gene_38_tsv";
+    String KNOWN_FUSION_37_FILE = "known_fusion_37_file";
+    String KNOWN_FUSION_38_FILE = "known_fusion_38_file";
 
     // All output from SERVE will be written to this dir
     String OUTPUT_DIR = "output_dir";
@@ -64,8 +66,8 @@ public interface ServeConfig {
         options.addOption(VICC_SOURCES, true, "Comma-separated list of (lowercase) VICC sources to include");
         options.addOption(USE_ICLUSION, false, "If provided, iClusion will be used as a source in SERVE");
         options.addOption(ICLUSION_TRIAL_TSV, true, "Path to the iClusion input trial TSV");
-        options.addOption(USE_CKB, false, "If provided, CKB importer will be used as a source in SERVE");
-        options.addOption(CKB_DIR, true, "Path to the CKB input dir");
+        options.addOption(USE_CKB, false, "If provided, CKB FLEX will be used as a source in SERVE");
+        options.addOption(CKB_DIR, true, "Path to the CKB FLEX json input dir");
         options.addOption(USE_DOCM, false, "If provided, DoCM will be used as a source in SERVE");
         options.addOption(DOCM_TSV, true, "Path to the DoCM knowledgebase input TSV");
         options.addOption(USE_HARTWIG_COHORT, false, "If provided, Hartwig Cohort will be used as a source in SERVE");
@@ -75,10 +77,14 @@ public interface ServeConfig {
 
         options.addOption(MISSING_DOIDS_MAPPING_TSV, true, "Path to the mapping TSV containing entries for missing DOIDs");
 
-        options.addOption(REF_GENOME_VERSION, true, "Ref version. Should be 'hgXX'");
-        options.addOption(REF_GENOME_FASTA_FILE, true, "Path to the ref genome fasta file");
-        options.addOption(DRIVER_GENE_TSV, true, "Path to driver gene TSV");
-        options.addOption(KNOWN_FUSION_FILE, true, "Path to the known fusion file");
+        options.addOption(REF_GENOME_37_FASTA_FILE, true, "Path to the V37 ref genome fasta file");
+        options.addOption(REF_GENOME_38_FASTA_FILE, true, "Path to the V38 ref genome fasta file");
+        options.addOption(REF_GENOME_37_TO_38_CHAIN, true, "Chain file to lift over ref genome V37 to V38");
+        options.addOption(REF_GENOME_38_TO_37_CHAIN, true, "Chain file to lift over ref genome V38 to V37");
+        options.addOption(DRIVER_GENE_37_TSV, true, "Path to driver gene v37 TSV");
+        options.addOption(DRIVER_GENE_38_TSV, true, "Path to driver gene v38 TSV");
+        options.addOption(KNOWN_FUSION_37_FILE, true, "Path to the known fusion v37 file");
+        options.addOption(KNOWN_FUSION_38_FILE, true, "Path to the known fusion v38 file");
 
         options.addOption(OUTPUT_DIR, true, "Dir which will hold all SERVE output files");
 
@@ -104,7 +110,7 @@ public interface ServeConfig {
     boolean useCkb();
 
     @NotNull
-    String CKBdir();
+    String ckbDir();
 
     boolean useDocm();
 
@@ -125,16 +131,28 @@ public interface ServeConfig {
     String missingDoidsMappingTsv();
 
     @NotNull
-    RefGenomeVersion refGenomeVersion();
+    String refGenome37FastaFile();
 
     @NotNull
-    String refGenomeFastaFile();
+    String refGenome38FastaFile();
 
     @NotNull
-    String driverGeneTsv();
+    String refGenome37To38Chain();
 
     @NotNull
-    String knownFusionFile();
+    String refGenome38To37Chain();
+
+    @NotNull
+    String driverGene37Tsv();
+
+    @NotNull
+    String driverGene38Tsv();
+
+    @NotNull
+    String knownFusion37File();
+
+    @NotNull
+    String knownFusion38File();
 
     @NotNull
     String outputDir();
@@ -161,7 +179,7 @@ public interface ServeConfig {
                 .useIclusion(useIclusion)
                 .iClusionTrialTsv(useIclusion ? nonOptionalFile(cmd, ICLUSION_TRIAL_TSV) : NOT_APPLICABLE)
                 .useCkb(useCKB)
-                .CKBdir(nonOptionalDir(cmd, CKB_DIR))
+                .ckbDir(useCKB ? nonOptionalDir(cmd, CKB_DIR) : NOT_APPLICABLE)
                 .useDocm(useDocm)
                 .docmTsv(useDocm ? nonOptionalFile(cmd, DOCM_TSV) : NOT_APPLICABLE)
                 .useHartwigCohort(useHartwigCohort)
@@ -169,10 +187,14 @@ public interface ServeConfig {
                 .useHartwigCurated(useHartwigCurated)
                 .hartwigCuratedTsv(useHartwigCurated ? nonOptionalFile(cmd, HARTWIG_CURATED_TSV) : NOT_APPLICABLE)
                 .missingDoidsMappingTsv(nonOptionalFile(cmd, MISSING_DOIDS_MAPPING_TSV))
-                .refGenomeVersion(RefGenomeVersion.fromIdentifier(nonOptionalValue(cmd, REF_GENOME_VERSION)))
-                .refGenomeFastaFile(nonOptionalFile(cmd, REF_GENOME_FASTA_FILE))
-                .driverGeneTsv(nonOptionalFile(cmd, DRIVER_GENE_TSV))
-                .knownFusionFile(nonOptionalFile(cmd, KNOWN_FUSION_FILE))
+                .refGenome37FastaFile(nonOptionalFile(cmd, REF_GENOME_37_FASTA_FILE))
+                .refGenome38FastaFile(nonOptionalFile(cmd, REF_GENOME_38_FASTA_FILE))
+                .refGenome37To38Chain(nonOptionalFile(cmd, REF_GENOME_37_TO_38_CHAIN))
+                .refGenome38To37Chain(nonOptionalFile(cmd, REF_GENOME_38_TO_37_CHAIN))
+                .driverGene37Tsv(nonOptionalFile(cmd, DRIVER_GENE_37_TSV))
+                .driverGene38Tsv(nonOptionalFile(cmd, DRIVER_GENE_38_TSV))
+                .knownFusion37File(nonOptionalFile(cmd, KNOWN_FUSION_37_FILE))
+                .knownFusion38File(nonOptionalFile(cmd, KNOWN_FUSION_38_FILE))
                 .outputDir(nonOptionalDir(cmd, OUTPUT_DIR))
                 .skipHotspotResolving(cmd.hasOption(SKIP_HOTSPOT_RESOLVING))
                 .build();

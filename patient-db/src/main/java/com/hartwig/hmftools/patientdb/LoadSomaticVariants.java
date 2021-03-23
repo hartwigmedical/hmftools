@@ -39,16 +39,17 @@ public class LoadSomaticVariants {
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
-        String vcfFileLocation = cmd.getOptionValue(SOMATIC_VCF);
         String sample = cmd.getOptionValue(SAMPLE);
         String referenceSample = cmd.getOptionValue(REFERENCE, null);
         String rnaSample = cmd.getOptionValue(RNA, null);
+        String vcfFileLocation = cmd.getOptionValue(SOMATIC_VCF);
         DatabaseAccess dbAccess = databaseAccess(cmd);
 
         CompoundFilter filter = new CompoundFilter(true);
         if (cmd.hasOption(PASS_FILTER)) {
             filter.add(new PassingVariantFilter());
         }
+
         if (cmd.hasOption(SOMATIC_FILTER)) {
             filter.add(new SomaticFilter());
         }

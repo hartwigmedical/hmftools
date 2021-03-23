@@ -3,13 +3,10 @@ package com.hartwig.hmftools.patientdb;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -44,39 +41,31 @@ public class LoadPurpleData {
         CommandLine cmd = new DefaultParser().parse(options, args);
         DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        String tumorSample = cmd.getOptionValue(SAMPLE);
-        String purplePath = cmd.getOptionValue(PURPLE_DIR);
+        String sample = cmd.getOptionValue(SAMPLE);
+        String purpleDir = cmd.getOptionValue(PURPLE_DIR);
 
-        LOGGER.info("Reading data from {}", purplePath);
-        PurityContext purityContext = PurityContextFile.read(purplePath, tumorSample);
-        List<GeneCopyNumber> geneCopyNumbers =
-                GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(purplePath, tumorSample));
-        List<PurpleCopyNumber> copyNumbers =
-                PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(purplePath, tumorSample));
+        LOGGER.info("Reading data from {}", purpleDir);
+        PurityContext purityContext = PurityContextFile.read(purpleDir, sample);
+        List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.readBestFitPerPurity(purpleDir, sample);
+
+        List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(purpleDir, sample));
+        List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(purpleDir, sample));
+
+        List<PurpleCopyNumber> germlineCopyNumbers =
+                PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateGermlineFilenameForReading(purpleDir, sample));
+
         List<DriverCatalog> somaticDriverCatalog =
-                DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilenameForReading(purplePath, tumorSample));
+                DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilenameForReading(purpleDir, sample));
+        List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(DriverCatalogFile.generateGermlineFilename(purpleDir, sample));
 
-        String germlineDriverCatalogFileName = DriverCatalogFile.generateGermlineFilename(purplePath, tumorSample);
-        List<DriverCatalog> germlineDriverCatalog = new File(germlineDriverCatalogFileName).exists()
-                ? DriverCatalogFile.read(germlineDriverCatalogFileName)
-                : Collections.emptyList();
-
-        PurpleQC purpleQC = purityContext.qc();
-        List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.readBestFitPerPurity(purplePath, tumorSample);
-
-        String germlineCopyNumberFilename = PurpleCopyNumberFile.generateGermlineFilenameForReading(purplePath, tumorSample);
-        List<PurpleCopyNumber> germlineCopyNumbers = new File(germlineCopyNumberFilename).exists()
-                ? PurpleCopyNumberFile.read(germlineCopyNumberFilename)
-                : Lists.newArrayList();
-
-        LOGGER.info("Persisting purple data to db for {}", tumorSample);
+        LOGGER.info("Persisting purple data to db for {}", sample);
         persistToDatabase(dbAccess,
-                tumorSample,
+                sample,
                 bestFitPerPurity,
                 copyNumbers,
                 germlineCopyNumbers,
                 purityContext,
-                purpleQC,
+                purityContext.qc(),
                 geneCopyNumbers,
                 somaticDriverCatalog,
                 germlineDriverCatalog);

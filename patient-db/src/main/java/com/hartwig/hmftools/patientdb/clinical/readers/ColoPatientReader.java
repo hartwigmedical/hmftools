@@ -24,7 +24,9 @@ public class ColoPatientReader {
 
         String patientId = isColo829 ? "COLO829" : Strings.EMPTY;
 
-        ImmutableCuratedPrimaryTumor.Builder primaryTumorBuilder = ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY);
+        ImmutableCuratedPrimaryTumor.Builder primaryTumorBuilder =
+                ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY).isOverridden(false);
+
         CuratedPrimaryTumor curatedPrimaryTumor = isColo829 ? primaryTumorBuilder.location("Skin")
                 .subLocation(Strings.EMPTY)
                 .type("Melanoma")

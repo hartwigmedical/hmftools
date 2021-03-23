@@ -1,17 +1,18 @@
 package com.hartwig.hmftools.serve.sources.ckb;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
-import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
-import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
-import com.hartwig.hmftools.serve.actionability.signature.ActionableSignature;
-import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
+import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.actionability.ActionableEvent;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
+import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
-import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
+import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
-import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
+import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -23,32 +24,26 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ExtractResult {
 
     @NotNull
-    public abstract Set<KnownHotspot> knownHotspots();
+    public abstract Map<Variant, List<VariantHotspot>> hotspotsPerFeature();
 
     @NotNull
-    public abstract Set<KnownCodon> knownCodons();
+    public abstract Map<Variant, List<CodonAnnotation>> codonsPerFeature();
 
     @NotNull
-    public abstract Set<KnownExon> knownExons();
+    public abstract Map<Variant, List<ExonAnnotation>> exonsPerFeature();
 
     @NotNull
-    public abstract Set<KnownCopyNumber> knownCopyNumbers();
+    public abstract Map<Variant, GeneLevelAnnotation> geneLevelEventsPerFeature();
 
     @NotNull
-    public abstract Set<KnownFusionPair> knownFusionPairs();
+    public abstract Map<Variant, KnownCopyNumber> ampsDelsPerFeature();
 
     @NotNull
-    public abstract Set<ActionableHotspot> actionableHotspots();
+    public abstract Map<Variant, KnownFusionPair> fusionsPerFeature();
 
     @NotNull
-    public abstract Set<ActionableRange> actionableRanges();
+    public abstract Map<Variant, TumorCharacteristic> characteristicsPerFeature();
 
     @NotNull
-    public abstract Set<ActionableGene> actionableGenes();
-
-    @NotNull
-    public abstract Set<ActionableFusion> actionableFusions();
-
-    @NotNull
-    public abstract Set<ActionableSignature> actionableSignatures();
+    public abstract Set<ActionableEvent> actionableEvents();
 }

@@ -1,26 +1,22 @@
 package com.hartwig.hmftools.serve.extraction;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicExtractor;
 import com.hartwig.hmftools.serve.extraction.codon.CodonExtractor;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberExtractor;
 import com.hartwig.hmftools.serve.extraction.exon.ExonExtractor;
 import com.hartwig.hmftools.serve.extraction.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotExtractor;
-import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
-import com.hartwig.hmftools.serve.extraction.signature.SignatureExtractor;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
+import com.hartwig.hmftools.serve.refgenome.RefGenomeResource;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -30,32 +26,34 @@ public final class EventExtractorFactory {
     }
 
     @NotNull
-    public static EventExtractor create(@NotNull EventClassifierConfig config, @NotNull ProteinResolver proteinResolver,
-            @NotNull List<DriverGene> driverGenes, @NotNull KnownFusionCache knownFusionCache,
-            @NotNull Map<String, HmfTranscriptRegion> allGenesMap) {
-        Set<String> genesInExome = allGenesMap.keySet();
+    public static EventExtractor create(@NotNull EventClassifierConfig config, @NotNull RefGenomeResource refGenomeResource) {
+        Set<String> genesInExome = refGenomeResource.canonicalTranscriptPerGeneMap().keySet();
         GeneChecker exomeGeneChecker = new GeneChecker(genesInExome);
 
         Set<String> fusionGeneSet = Sets.newHashSet();
         fusionGeneSet.addAll(genesInExome);
-        fusionGeneSet.addAll(extractAllGenesInvolvedInFusions(knownFusionCache));
+        fusionGeneSet.addAll(extractAllGenesInvolvedInFusions(refGenomeResource.knownFusionCache()));
         GeneChecker fusionGeneChecker = new GeneChecker(fusionGeneSet);
 
-        MutationTypeFilterAlgo mutationTypeFilterAlgo = new MutationTypeFilterAlgo(driverGenes);
-        return new EventExtractor(new HotspotExtractor(exomeGeneChecker, proteinResolver, config.proteinAnnotationExtractor()),
-                new CodonExtractor(exomeGeneChecker, mutationTypeFilterAlgo, allGenesMap),
-                new ExonExtractor(exomeGeneChecker, mutationTypeFilterAlgo, allGenesMap),
+        MutationTypeFilterAlgo mutationTypeFilterAlgo = new MutationTypeFilterAlgo(refGenomeResource.driverGenes());
+        return new EventExtractor(new HotspotExtractor(exomeGeneChecker,
+                refGenomeResource.proteinResolver(),
+                config.proteinAnnotationExtractor()),
+                new CodonExtractor(exomeGeneChecker, mutationTypeFilterAlgo, refGenomeResource.canonicalTranscriptPerGeneMap()),
+                new ExonExtractor(exomeGeneChecker, mutationTypeFilterAlgo, refGenomeResource.canonicalTranscriptPerGeneMap()),
                 new GeneLevelExtractor(exomeGeneChecker,
                         fusionGeneChecker,
-                        driverGenes,
-                        knownFusionCache,
+                        refGenomeResource.driverGenes(),
+                        refGenomeResource.knownFusionCache(),
                         config.activatingGeneLevelKeyPhrases(),
                         config.inactivatingGeneLevelKeyPhrases()),
-                new CopyNumberExtractor(exomeGeneChecker, driverGenes),
-                new FusionExtractor(fusionGeneChecker, knownFusionCache),
-                new SignatureExtractor(config.microsatelliteUnstableEvents(),
+                new CopyNumberExtractor(exomeGeneChecker, refGenomeResource.driverGenes()),
+                new FusionExtractor(fusionGeneChecker, refGenomeResource.knownFusionCache()),
+                new TumorCharacteristicExtractor(config.microsatelliteUnstableEvents(),
                         config.highTumorMutationalLoadEvents(),
-                        config.hrDeficiencyEvents()));
+                        config.hrDeficiencyEvents(),
+                        config.hpvPositiveEvents(),
+                        config.ebvPositiveEvents()));
     }
 
     @NotNull

@@ -59,8 +59,8 @@ public class ProtectAlgo {
         FusionEvidence fusionEvidenceFactory =
                 new FusionEvidence(personalizedEvidenceFactory, actionableEvents.genes(), actionableEvents.fusions());
         PurpleSignatureEvidence purpleSignatureEvidenceFactory =
-                new PurpleSignatureEvidence(personalizedEvidenceFactory, actionableEvents.signatures());
-        ChordEvidence chordEvidenceFactory = new ChordEvidence(personalizedEvidenceFactory, actionableEvents.signatures());
+                new PurpleSignatureEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
+        ChordEvidence chordEvidenceFactory = new ChordEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
 
         return new ProtectAlgo(variantEvidenceFactory,
                 copyNumberEvidenceFactory,
