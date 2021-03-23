@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.stats;
 
+import static java.lang.Math.min;
+import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
 import java.util.List;
@@ -46,10 +48,35 @@ public class MannWhitneyUTest
 
         MwuResult result = new MwuResult(true);
 
-        int count1 = 0;
+        // assign zero values equal ranks
+        int zeroCount1 = 0;
+        int zeroCount2 = 0;
+        for(int i = 0; i < values.length; ++i)
+        {
+            if(values[i] > 0)
+                break;
+
+            if(isCohort1[i])
+                ++zeroCount1;
+            else
+                ++zeroCount2;
+        }
+
+        if(zeroCount1 > 0 || zeroCount2 > 0)
+        {
+            int totalZeroValues = zeroCount1 + zeroCount2;
+            int zeroRankSum = totalZeroValues * (totalZeroValues + 1) / 2;
+            double cohortZeroValueRank1 = zeroCount1 / (double)totalZeroValues * zeroRankSum;
+            result.RankSum1 += (int)round(cohortZeroValueRank1);
+        }
+
+        int count1 = zeroCount1;
 
         for(int i = 0; i < values.length; ++i)
         {
+            if(values[i] == 0)
+                continue;
+
             if(isCohort1[i])
             {
                 result.RankSum1 += i + 1; // rank starts at 1 not 0
@@ -58,10 +85,13 @@ public class MannWhitneyUTest
         }
 
         int count2 = values.length - count1;
-        double mean = count1 * count2 * 0.5;
-        double variance = sqrt(count1 * count2 * (count1 + count2 + 1) / 12.0);
-        double uTest = result.RankSum1 - count1 * (count1 + 1) / 2.0;
-        double z = (uTest - mean) / variance;
+        double n1n2 = count1 * count2;
+        double mean = n1n2 * 0.5;
+        double variance = sqrt(n1n2 * (count1 + count2 + 1) / 12.0);
+        double u1 = result.RankSum1 - count1 * (count1 + 1) / 2.0;
+        double u2 = n1n2 - u1;
+        double uMin = min(u1, u2);
+        double z = (uMin - mean) / variance;
 
         result.PValue = normalDistribution.cumulativeProbability(z) * 2;
         result.Count1 = count1;

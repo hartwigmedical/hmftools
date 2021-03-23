@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.isofox.expression.cohort;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
@@ -19,11 +22,11 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.stats.MannWhitneyUTest;
+import com.hartwig.hmftools.common.stats.MwuResult;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.stats.PValueResult;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-
-import org.apache.commons.math3.stat.inference.MannWhitneyUTest;
 
 public class ExpressionCohortCompare
 {
@@ -90,7 +93,7 @@ public class ExpressionCohortCompare
             ISF_LOGGER.debug("failed to load RNA expression ref data from {}: {}", mConfig.Expression.GeneExpMatrixFile, e.toString());
         }
 
-        ISF_LOGGER.debug("loaded genes({}) and {} samples({}) expression matrix data", mGeneIds.size(), mGeneExpressionMatrix.Cols);
+        ISF_LOGGER.debug("loaded genes({}) and {} samples expression matrix data", mGeneIds.size(), mGeneExpressionMatrix.Cols);
     }
 
     public void runAnalysis()
@@ -122,7 +125,7 @@ public class ExpressionCohortCompare
 
         for(final String sampleId : mConfig.SampleData.SampleIds)
         {
-            if(!cancerType.equals(CANCER_TYPE_ALL) && cancerType.equals(mConfig.SampleData.SampleCancerType.get(sampleId)))
+            if(!cancerType.equals(CANCER_TYPE_ALL) && !cancerType.equals(mConfig.SampleData.SampleCancerType.get(sampleId)))
                 continue;
 
             final String cohortName = mConfig.SampleData.SampleCohort.get(sampleId);
@@ -148,10 +151,12 @@ public class ExpressionCohortCompare
 
         double[] cohortAValues = new double[cohortASampleIndices.size()];
         double[] cohortBValues = new double[cohortBSampleIndices.size()];
+        int totalSampleCount = cohortASampleIndices.size() + cohortBSampleIndices.size();
 
         // for each gene, extract the expression for each cohort
         final MannWhitneyUTest mww = new MannWhitneyUTest();
         final List<PValueResult> pValueResults = Lists.newArrayList();
+        final Map<String,MwuResult> mwuResults = Maps.newHashMap();
 
         for(int geneIndex = 0; geneIndex < mGeneIds.size(); ++geneIndex)
         {
@@ -160,18 +165,23 @@ public class ExpressionCohortCompare
             populateCohortValues(cohortAValues, geneIndex, cohortASampleIndices);
             populateCohortValues(cohortBValues, geneIndex, cohortBSampleIndices);
 
-            double pValue = mww.mannWhitneyUTest(cohortAValues, cohortBValues);
-            pValueResults.add(new PValueResult(geneId, pValue));
+            final MwuResult result = mww.calculate(cohortAValues, cohortBValues);
+            mwuResults.put(geneId, result);
+            pValueResults.add(new PValueResult(geneId, result.PValue));
         }
 
         ISF_LOGGER.debug("calculating FDRs for {} results", pValueResults.size());
         calculateFDRs(pValueResults);
 
-        for(final PValueResult pValue : pValueResults)
+        for(int i = 0; i < pValueResults.size(); ++i)
         {
-            writeResults(cancerType, pValue.Id, pValue);
-        }
+            final PValueResult pValue = pValueResults.get(i);
+            final MwuResult result = mwuResults.get(pValue.Id);
 
+            final String higherRankedCohort = result.rankAverage1() > result.rankAverage2(totalSampleCount) ? cohortA : cohortB;
+
+            writeResults(cancerType, pValue.Id, pValue, higherRankedCohort);
+        }
     }
 
     private void populateCohortValues(final double[] cohortValues, int geneIndex, final List<Integer> cohortSampleIndices)
@@ -191,7 +201,7 @@ public class ExpressionCohortCompare
             final String outputFileName = mConfig.formCohortFilename("gene_expression_compare.csv");
             mWriter = createBufferedWriter(outputFileName, false);
 
-            mWriter.write("CancerType,GeneId,GeneName,PValue,QValue,TestRank");
+            mWriter.write("CancerType,GeneId,GeneName,PValue,QValue,TestRank,HigherCohort");
             mWriter.newLine();
         }
         catch(IOException e)
@@ -200,14 +210,14 @@ public class ExpressionCohortCompare
         }
     }
 
-    private void writeResults(final String cancerType, final String geneId, final PValueResult pValue)
+    private void writeResults(final String cancerType, final String geneId, final PValueResult pValue, final String higherCohort)
     {
         try
         {
             final String geneName = mGeneIdNameMap.get(geneId);
 
-            mWriter.write(String.format("%s,%s,%s,%g,%g,%d",
-                    cancerType, geneId, geneName, pValue.PValue, pValue.QValue, pValue.Rank));
+            mWriter.write(String.format("%s,%s,%s,%g,%g,%d,%s",
+                    cancerType, geneId, geneName, pValue.PValue, pValue.QValue, pValue.Rank, higherCohort));
             mWriter.newLine();
         }
         catch (IOException e)

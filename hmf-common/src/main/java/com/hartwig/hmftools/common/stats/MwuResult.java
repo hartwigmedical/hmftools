@@ -29,6 +29,6 @@ public class MwuResult
 
         double rankTotal = totalValuesCount * (totalValuesCount + 1) * 0.5;
         double rankSum2 = rankTotal - RankSum1;
-        return rankSum2 / (totalValuesCount - Count1);
+        return rankSum2 / (double)(totalValuesCount - Count1);
     }
 }
