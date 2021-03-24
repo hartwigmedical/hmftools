@@ -30,9 +30,17 @@ public class GermlineResourcesTest {
             VariantContext hg19 = hg19list.get(i);
             VariantContext hg38 = hg38list.get(i);
 
+            if (hg38.getStart() == 99672916) {
+                // rs776746 is defined such that it indicates a C>T snp in hg19 and a T>C snp in hg38
+                assertEquals(hg19.getReference().getBaseString(), hg38.getAlternateAllele(0).getBaseString());
+                assertEquals(hg19.getAlternateAllele(0).getBaseString(), hg38.getReference().getBaseString());
+            } else {
+                assertEquals(hg19.getReference().getBaseString(), hg38.getReference().getBaseString());
+                assertEquals(hg19.getAlternateAllele(0).getBaseString(), hg38.getAlternateAllele(0).getBaseString());
+            }
+
+
             assertEquals(hg19.getContig(), hg38.getContig().replace("chr", ""));
-            assertEquals(hg19.getReference().getBaseString(), hg38.getReference().getBaseString());
-            assertEquals(hg19.getAlternateAllele(0).getBaseString(), hg38.getAlternateAllele(0).getBaseString());
             assertTrue(hg38.getContig().contains("chr"));
         }
 
