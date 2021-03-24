@@ -174,7 +174,7 @@ public class DatabaseAccess implements AutoCloseable {
         String databaseUrl = cmd.getOptionValue(DB_URL);
         String jdbcUrl = "jdbc:" + databaseUrl;
 
-        if (applyDefaultArgs) {
+        if (applyDefaultArgs && !jdbcUrl.contains("serverTimezone") && !jdbcUrl.contains("useSSL")) {
             jdbcUrl += DB_DEFAULT_ARGS;
         }
 
@@ -188,7 +188,7 @@ public class DatabaseAccess implements AutoCloseable {
         }
 
         try {
-            return databaseAccess(cmd);
+            return databaseAccess(cmd, true);
         } catch (SQLException e) {
             LOGGER.error("DB connection failed: {}", e.toString());
             return null;
