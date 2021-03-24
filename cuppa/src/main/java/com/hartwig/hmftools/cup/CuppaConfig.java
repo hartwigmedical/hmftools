@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SIG_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_SIGNATURES;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_PERC;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_TRAIT_RATES;
@@ -65,6 +66,7 @@ public class CuppaConfig
     public final String RefGeneExpSampleFile;
     public final String RefAltSjCancerFile;
     public final String RefAltSjSampleFile;
+    public final String RefSnvSignaturesFile;
 
     // sample data, if not sourced from the database
     public final String SampleDataDir;
@@ -121,6 +123,7 @@ public class CuppaConfig
     public static final String REF_RNA_GENE_EXP_SAMPLE_FILE = "ref_gene_exp_sample_file";
     private static final String REF_RNA_ALT_SJ_CANCER_FILE = "ref_alt_sj_cancer_file";
     public static final String REF_RNA_ALT_SJ_SAMPLE_FILE = "ref_alt_sj_sample_file";
+    public static final String REF_SNV_SIGNATURES_FILE = "ref_snv_signatures_file";
 
     public static final String WRITE_SIMS = "write_similarities";
     public static final String WRITE_CLASSIFIERS_ONLY = "write_classifiers_only";
@@ -191,6 +194,7 @@ public class CuppaConfig
         RefSnvCancerPosFreqFile = getRefDataFile(cmd, REF_SNV_CANCER_POS_FREQ_FILE, REF_FILE_CANCER_POS_FREQ_COUNTS);
         RefSnvSamplePosFreqFile = getRefDataFile(cmd, REF_SNV_SAMPLE_POS_FREQ_FILE, REF_FILE_SAMPLE_POS_FREQ_COUNTS);
         RefDriverAvgFile = getRefDataFile(cmd, REF_DRIVER_AVG_FILE, REF_FILE_DRIVER_AVG);
+        RefSnvSignaturesFile = getRefDataFile(cmd, REF_SNV_SIGNATURES_FILE, REF_FILE_SNV_SIGNATURES);
 
         RefGeneExpCancerFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_CANCER_FILE, REF_FILE_GENE_EXP_CANCER);
         RefGeneExpSampleFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_SAMPLE_FILE, REF_FILE_GENE_EXP_SAMPLE);
@@ -270,6 +274,7 @@ public class CuppaConfig
         options.addOption(REF_SNV_CANCER_POS_FREQ_FILE, true, "Reference SNV cancer position frequency file, default: " + REF_FILE_CANCER_POS_FREQ_COUNTS);
         options.addOption(REF_SNV_SAMPLE_POS_FREQ_FILE, true, "Reference SNV sample position frequency file, default: " + REF_FILE_SAMPLE_POS_FREQ_COUNTS);
         options.addOption(REF_DRIVER_AVG_FILE, true, "Reference features per sample file, default: " + REF_FILE_DRIVER_AVG);
+        options.addOption(REF_SNV_SIGNATURES_FILE, true, "Reference SNV signatures, default: " + REF_FILE_SNV_SIGNATURES);
         options.addOption(REF_RNA_GENE_EXP_CANCER_FILE, true, "Reference RNA cancer gene expression file, default: " + REF_FILE_GENE_EXP_CANCER);
         options.addOption(REF_RNA_GENE_EXP_SAMPLE_FILE, true, "Reference RNA sample gene expression file, default: " + REF_FILE_GENE_EXP_SAMPLE);
         options.addOption(REF_RNA_ALT_SJ_CANCER_FILE, true, "Reference RNA alternative splice-junction cancer file, default: " + REF_FILE_ALT_SJ_CANCER);
@@ -304,6 +309,7 @@ public class CuppaConfig
         RefSnvCancerPosFreqFile = "";
         RefSnvSamplePosFreqFile = "";
         RefDriverAvgFile = "";
+        RefSnvSignaturesFile = "";
 
         RefGeneExpCancerFile = "";
         RefGeneExpSampleFile = "";

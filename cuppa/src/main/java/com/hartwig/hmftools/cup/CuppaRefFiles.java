@@ -24,6 +24,7 @@ public class CuppaRefFiles
     public static final String REF_FILE_GENE_EXP_SAMPLE = formatRefFilename("gene_exp_sample");
     public static final String REF_FILE_ALT_SJ_CANCER = formatRefFilename("alt_sj_cancer");
     public static final String REF_FILE_ALT_SJ_SAMPLE = formatRefFilename("alt_sj_sample");
+    public static final String REF_FILE_SNV_SIGNATURES = formatRefFilename("snv_signatures");
 
     // cohort files for building reference data
     public static final String COHORT_REF_FILE_SV_DATA = formatRefFilename("cohort_sv_data");

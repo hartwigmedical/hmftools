@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.cup.somatics;
 
+import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.contextFromVariant;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
+import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
+import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.cup.somatics.RefSomatics.convertSignatureName;
 import static com.hartwig.hmftools.cup.somatics.RefSomatics.populateRefPercentileData;
 
@@ -110,7 +113,7 @@ public class SomaticDataLoader
         return somaticVariants;
     }
 
-    public static List<SomaticVariant> loadSomaticVariants(final String sampleId, final String vcfFile, final List<VariantType> types)
+    public static List<SomaticVariant> loadSomaticVariants(final String sampleId, final String vcfFile, final List<VariantContext.Type> types)
     {
         CompoundFilter filter = new CompoundFilter(true);
         filter.add(new PassingVariantFilter());
@@ -237,51 +240,37 @@ public class SomaticDataLoader
         return true;
     }
 
-    /*
-    private void populateSomaticCounts(final List<SomaticVariant> variants)
+    public static Matrix convertSomaticVariantsToSnvCounts(
+            final String sampleId, final List<SomaticVariant> variants, final Map<String,Integer> sampleSnvCountsIndex)
     {
-        // PositionFrequencies
-        //             SigMatrix loadSampleCountsFromFile(final String filename, final Map<String,Integer> sampleCountsIndex
+        final Map<String,Integer> triNucBucketNameMap = Maps.newHashMap();
+        populateBucketMap(triNucBucketNameMap);
 
-        PositionFrequencies positionFrequencies = new PositionFrequencies(null, POS_FREQ_BUCKET_SIZE);
-        final Map<String,Integer> bucketNameMap = Maps.newHashMap();
-        populateBucketMap(bucketNameMap);
+        final double[] triNucCounts = extractTrinucleotideCounts(variants, triNucBucketNameMap);
 
-        for(final SomaticVariant variant : variants)
-        {
-            if(variant.isFiltered())
-                continue;
+        final Matrix sampleSnvCounts = new Matrix(triNucCounts.length, 1);
 
-            if(variant.type() == INDEL)
-            {
+        sampleSnvCounts.setCol(0, triNucCounts);
+        sampleSnvCountsIndex.put(sampleId, 0);
 
-                continue;
-            }
-
-            if(variant.alt().length() != 1)
-                continue;
-
-            String rawContext = variant.trinucleotideContext();
-
-            if(rawContext.contains("N"))
-                continue;
-
-            // check filters
-            positionFrequencies.addPosition(variant.chromosome(), (int)variant.position());
-
-            final String bucketName = contextFromVariant(variant);
-            Integer bucketIndex = bucketNameMap.get(bucketName);
-
-            if(bucketIndex == null)
-            {
-                CUP_LOGGER.error("invalid bucketName({}) from var({}>{}) context={})",
-                        bucketName, variant.ref(), variant.alt(), variant.trinucleotideContext());
-
-                return;
-            }
-
-            // ++sampleCounts[bucketIndex][sampleIndex];
-        }
+        return sampleSnvCounts;
     }
-    */
+
+    public static Matrix convertSomaticVariantsToPosFrequencies(
+            final String sampleId, final List<SomaticVariant> variants, final Map<String,Integer> samplePosFreqIndex)
+    {
+        PositionFrequencies posFrequency = new PositionFrequencies(POS_FREQ_BUCKET_SIZE, POS_FREQ_MAX_SAMPLE_COUNT);
+
+        extractPositionFrequencyCounts(variants, posFrequency);
+
+        final Matrix matrix = new Matrix(posFrequency.getCounts().length, 1);
+
+        matrix.setCol(0, posFrequency.getCounts());
+        samplePosFreqIndex.put(sampleId, 0);
+
+        return matrix;
+
+
+    }
+
 }

@@ -52,6 +52,8 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import org.jooq.Record;
 import org.jooq.Result;
 
+import htsjdk.variant.variantcontext.VariantContext;
+
 public class FeatureDataLoader
 {
     public static boolean loadFeaturesFromCohortFile(final String filename, final Map<String,List<SampleFeatureData>> sampleDrivers)
@@ -355,11 +357,13 @@ public class FeatureDataLoader
 
     private static List<String> loadSpecificIndels(final String sampleId, final String vcfFile)
     {
-        final List<SomaticVariant> variants = SomaticDataLoader.loadSomaticVariants(sampleId, vcfFile, Lists.newArrayList(VariantType.INDEL));
+        final List<SomaticVariant> variants = SomaticDataLoader.loadSomaticVariants(
+                sampleId, vcfFile, Lists.newArrayList(VariantContext.Type.INDEL));
 
         return variants.stream()
                 .filter(x -> x.repeatCount() <= INDEL_MAX_REPEAT_COUNT)
                 .filter(x -> x.filter().equals("PASS"))
+                .filter(x -> x.gene().equals(INDEL_ALB) || x.gene().equals(INDEL_SFTPB) || x.gene().equals(INDEL_SLC34A2))
                 .map(x -> x.gene())
                 .collect(Collectors.toList());
     }

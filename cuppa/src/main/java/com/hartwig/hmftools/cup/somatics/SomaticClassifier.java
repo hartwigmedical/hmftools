@@ -20,7 +20,6 @@ import static com.hartwig.hmftools.cup.common.ClassifierType.GENOMIC_POSITION_SI
 import static com.hartwig.hmftools.cup.common.CupCalcs.adjustRefCounts;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
-import static com.hartwig.hmftools.cup.common.CupCalcs.fillMissingCancerTypeValues;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_DIFF_EXPONENT;
@@ -34,15 +33,20 @@ import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerTyp
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
 import static com.hartwig.hmftools.cup.somatics.RefSomatics.convertSignatureName;
 import static com.hartwig.hmftools.cup.somatics.RefSomatics.populateReportableSignatures;
+import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.convertSomaticVariantsToPosFrequencies;
+import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.convertSomaticVariantsToSnvCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSignaturePercentileData;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSampleCountsFromFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSamplePosFreqFromFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromDatabase;
+import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -52,6 +56,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
@@ -62,6 +68,8 @@ import com.hartwig.hmftools.cup.common.SampleSimilarity;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+
+import htsjdk.variant.variantcontext.VariantContext;
 
 public class SomaticClassifier implements CuppaClassifier
 {
@@ -79,13 +87,15 @@ public class SomaticClassifier implements CuppaClassifier
     private Matrix mRefSamplePosFrequencies;
     private final Map<String,Integer> mRefSamplePosFreqIndex;
 
-    private Matrix mSampleCounts;
-    private final Map<String,Integer> mSampleCountsIndex;
+    private Matrix mSampleSnvCounts;
+    private final Map<String,Integer> mSampleSnvCountsIndex;
 
     private final Map<String,Map<String,Double>> mSampleSigContributions;
 
     private Matrix mSamplePosFrequencies;
     private final Map<String,Integer> mSamplePosFreqIndex;
+
+    private final SomaticSigs mSomaticFigs;
 
     private boolean mIsValid;
     private BufferedWriter mCssWriter;
@@ -110,11 +120,11 @@ public class SomaticClassifier implements CuppaClassifier
         mConfig = config;
         mSampleDataCache = sampleDataCache;
 
-        mSampleCounts = null;
+        mSampleSnvCounts = null;
         mRefCancerSnvPosFrequencies = null;
         mRefSamplePosFrequencies = null;
         mSampleSigContributions = Maps.newHashMap();
-        mSampleCountsIndex = Maps.newHashMap();
+        mSampleSnvCountsIndex = Maps.newHashMap();
         mSamplePosFreqIndex = Maps.newHashMap();
 
         mRefSampleCounts = null;
@@ -131,6 +141,8 @@ public class SomaticClassifier implements CuppaClassifier
 
         mIsValid = true;
         mCssWriter = null;
+
+        mSomaticFigs = new SomaticSigs(mConfig.RefSnvSignaturesFile);
 
         if(mConfig.RefSnvCountsFile.isEmpty() && mConfig.RefSigContributionFile.isEmpty() && mConfig.RefSnvCancerPosFreqFile.isEmpty())
             return;
@@ -172,20 +184,57 @@ public class SomaticClassifier implements CuppaClassifier
 
     private boolean loadSampleCounts()
     {
+        if(mSampleDataCache.isSingleSample())
+        {
+            final String sampleId = mSampleDataCache.SampleIds.get(0);
+
+            // load from VCF, database, sig-analyser file or generic counts files
+            if(mConfig.DbAccess != null || !mConfig.SampleSomaticVcf.isEmpty())
+            {
+                final List<SomaticVariant> somaticVariants = Lists.newArrayList();
+
+                if(mConfig.DbAccess != null)
+                {
+                    somaticVariants.addAll(loadSomaticVariants(sampleId, mConfig.DbAccess));
+                }
+                else
+                {
+                    somaticVariants.addAll(loadSomaticVariants(
+                            sampleId, mConfig.SampleSomaticVcf, Lists.newArrayList(VariantContext.Type.SNP)));
+                }
+
+                mSampleSnvCounts = convertSomaticVariantsToSnvCounts(sampleId, somaticVariants, mSampleSnvCountsIndex);
+                mSamplePosFrequencies = convertSomaticVariantsToPosFrequencies(sampleId, somaticVariants, mSamplePosFreqIndex);
+            }
+            else
+            {
+                final String snvCountsFile = !mConfig.SampleSnvCountsFile.isEmpty() ?
+                        mConfig.SampleSnvCountsFile : mConfig.SampleDataDir + sampleId + ".sig.snv_counts.csv";
+
+                final String snvPosFreqFile = !mConfig.SampleSnvPosFreqFile.isEmpty() ?
+                        mConfig.SampleSnvPosFreqFile : mConfig.SampleDataDir + sampleId + ".sig.pos_freq_counts.csv";
+
+                mSampleSnvCounts = loadSampleCountsFromFile(snvCountsFile, mSampleSnvCountsIndex);
+                mSamplePosFrequencies = loadSamplePosFreqFromFile(snvPosFreqFile, mSamplePosFreqIndex);
+            }
+
+            return mSampleSnvCounts != null && mSamplePosFrequencies != null;
+        }
+
         if(!mConfig.SampleSnvCountsFile.isEmpty() && !mConfig.SampleSnvPosFreqFile.isEmpty())
         {
             if(mConfig.SampleSnvCountsFile.equals(mConfig.RefSnvCountsFile))
             {
-                mSampleCounts = mRefSampleCounts;
+                mSampleSnvCounts = mRefSampleCounts;
 
                 for(int i = 0; i < mRefSampleNames.size(); ++i)
                 {
-                    mSampleCountsIndex.put(mRefSampleNames.get(i), i);
+                    mSampleSnvCountsIndex.put(mRefSampleNames.get(i), i);
                 }
             }
             else
             {
-                mSampleCounts = loadSampleCountsFromFile(mConfig.SampleSnvCountsFile, mSampleCountsIndex);
+                mSampleSnvCounts = loadSampleCountsFromFile(mConfig.SampleSnvCountsFile, mSampleSnvCountsIndex);
             }
 
             if(mConfig.SampleSnvPosFreqFile.equals(mConfig.RefSnvSamplePosFreqFile))
@@ -198,51 +247,11 @@ public class SomaticClassifier implements CuppaClassifier
                 mSamplePosFrequencies = loadSamplePosFreqFromFile(mConfig.SampleSnvPosFreqFile, mSamplePosFreqIndex);
             }
 
-            return mSampleCounts != null && mSamplePosFrequencies != null;
+            return mSampleSnvCounts != null && mSamplePosFrequencies != null;
         }
 
-        if(mSampleDataCache.isSingleSample())
-        {
-            final String sampleId = mSampleDataCache.SampleIds.get(0);
-
-            /*
-            if(!mConfig.SampleSomaticVcf.isEmpty())
-            {
-                final List<SomaticVariant> somaticVariants = loadSomaticVariants(sampleId, mConfig.SampleSomaticVcf);
-                populateSomaticCounts(somaticVariants);
-            }
-            */
-
-            final String snvCountsFile = !mConfig.SampleSnvCountsFile.isEmpty() ?
-                    mConfig.SampleSnvCountsFile : mConfig.SampleDataDir + sampleId + ".sig.snv_counts.csv";
-
-            final String snvPosFreqFile = !mConfig.SampleSnvPosFreqFile.isEmpty() ?
-                    mConfig.SampleSnvPosFreqFile : mConfig.SampleDataDir + sampleId + ".sig.pos_freq_counts.csv";
-
-            mSampleCounts = loadSampleCountsFromFile(snvCountsFile, mSampleCountsIndex);
-            mSamplePosFrequencies = loadSamplePosFreqFromFile(snvPosFreqFile, mSamplePosFreqIndex);
-
-            return mSampleCounts != null && mSamplePosFrequencies != null;
-        }
-        else if(mConfig.DbAccess != null)
-        {
-            CUP_LOGGER.error("somatic variants from DB not supported");
-
-            /*
-            final String sampleId = mSampleDataCache.SampleIds.get(0);
-            final List<SomaticVariant> somaticVariants = loadSomaticVariants(sampleId, mConfig.DbAccess);
-            populateSomaticCounts(somaticVariants);
-
-            return mSampleCounts != null && mSamplePosFrequencies != null;
-            */
-
-            return false;
-        }
-        else
-        {
-            CUP_LOGGER.error("no sample SNV count source specified");
-            return false;
-        }
+        CUP_LOGGER.error("no sample SNV count source specified");
+        return false;
     }
 
     private boolean loadSigContributions()
@@ -258,26 +267,50 @@ public class SomaticClassifier implements CuppaClassifier
             return loadSigContribsFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleSigContributions);
         }
 
+        if(mSampleDataCache.isMultiSample())
+        {
+            CUP_LOGGER.error("missing loading config for SNV sig contributions - requires database or cohort file");
+            return false;
+        }
+
         final String sampleId = mSampleDataCache.SampleIds.get(0);
+
+        // use sig-allocation file if exists
         final String sigAllocFile = SignatureAllocationFile.generateFilename(mConfig.SampleDataDir, sampleId);
 
-        try
+        if(Files.exists(Paths.get(sigAllocFile)))
         {
-            final List<SignatureAllocation> sigAllocations = SignatureAllocationFile.read(sigAllocFile);
-            Map<String,Double> sigContribs = Maps.newHashMap();
-            for(final SignatureAllocation sigAllocation : sigAllocations)
+            try
             {
-                final String sigName = convertSignatureName(sigAllocation.signature());
-                sigContribs.put(sigName, sigAllocation.allocation());
-            }
+                final List<SignatureAllocation> sigAllocations = SignatureAllocationFile.read(sigAllocFile);
+                Map<String, Double> sigContribs = Maps.newHashMap();
+                for(final SignatureAllocation sigAllocation : sigAllocations)
+                {
+                    final String sigName = convertSignatureName(sigAllocation.signature());
+                    sigContribs.put(sigName, sigAllocation.allocation());
+                }
 
-            mSampleSigContributions.put(sampleId, sigContribs);
+                mSampleSigContributions.put(sampleId, sigContribs);
+            }
+            catch (Exception e)
+            {
+                CUP_LOGGER.error("sample({}) failed to load sig allocations file({}): {}",
+                        sampleId, sigAllocFile, e.toString());
+                return false;
+            }
         }
-        catch(Exception e)
+        else if(mSomaticFigs.hasValidData() && mSampleSnvCounts != null)
         {
-            CUP_LOGGER.error("sample({}) failed to load sig allocations file({}): {}",
-                    sampleId, sigAllocFile, e.toString());
-            return false;
+            final double[] sigAllocations = mSomaticFigs.fitSampleCounts(mSampleSnvCounts.getCol(0));
+
+            final Map<String, Double> sigContribs = Maps.newHashMap();
+            mSampleSigContributions.put(sampleId, sigContribs);
+
+            for(int i = 0; i < sigAllocations.length; ++i)
+            {
+                final String sigName = mSomaticFigs.getSigName(i);
+                sigContribs.put(sigName, sigAllocations[i]);
+            }
         }
 
         return true;
@@ -288,7 +321,7 @@ public class SomaticClassifier implements CuppaClassifier
         if(!mIsValid || mRefSampleCounts == null)
             return;
 
-        Integer sampleCountsIndex = mSampleCountsIndex.get(sample.Id);
+        Integer sampleCountsIndex = mSampleSnvCountsIndex.get(sample.Id);
 
         if(sampleCountsIndex == null)
         {
@@ -296,7 +329,7 @@ public class SomaticClassifier implements CuppaClassifier
             return;
         }
 
-        final double[] sampleCounts = mSampleCounts.getCol(sampleCountsIndex);
+        final double[] sampleCounts = mSampleSnvCounts.getCol(sampleCountsIndex);
         int snvTotal = (int)sumVector(sampleCounts);
 
         addCssResults(sample, sampleCounts, snvTotal, results, similarities);
@@ -412,14 +445,14 @@ public class SomaticClassifier implements CuppaClassifier
         // for non-ref cohorts, also report closest matches from amongst these
         if(mConfig.WriteSimilarities && mSampleDataCache.isMultiSampleNonRef())
         {
-            for(Map.Entry<String,Integer> entry : mSampleCountsIndex.entrySet())
+            for(Map.Entry<String,Integer> entry : mSampleSnvCountsIndex.entrySet())
             {
                 final String nonRefSampleId = entry.getKey();
 
                 if(nonRefSampleId.equals(sample.Id))
                     continue;
 
-                final double[] otherSampleCounts = mSampleCounts.getCol(entry.getValue());
+                final double[] otherSampleCounts = mSampleSnvCounts.getCol(entry.getValue());
 
                 double css = calcCosineSim(sampleCounts, otherSampleCounts);
 
@@ -685,12 +718,12 @@ public class SomaticClassifier implements CuppaClassifier
 
     public void addSampleData(final List<String> sampleIds, final List<double[]> snvCounts, final List<double[]> posFreqCounts)
     {
-        mSampleCounts = new Matrix(snvCounts.get(0).length, snvCounts.size());
+        mSampleSnvCounts = new Matrix(snvCounts.get(0).length, snvCounts.size());
 
         for(int i = 0; i < snvCounts.size(); ++i)
         {
-            mSampleCounts.setCol(i, snvCounts.get(i));
-            mSampleCountsIndex.put(sampleIds.get(i), i);
+            mSampleSnvCounts.setCol(i, snvCounts.get(i));
+            mSampleSnvCountsIndex.put(sampleIds.get(i), i);
         }
 
         mSamplePosFrequencies = new Matrix(posFreqCounts.get(0).length, posFreqCounts.size());
