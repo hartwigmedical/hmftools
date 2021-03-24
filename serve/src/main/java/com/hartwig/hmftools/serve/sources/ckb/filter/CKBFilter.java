@@ -9,7 +9,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.ImmutableCkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
-import com.hartwig.hmftools.iclusion.datamodel.ImmutableIclusionTrial;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,7 +57,7 @@ public final class CKBFilter {
         for (String keyword : FilterFactory.PROFILE_NAME_TO_FILTER) {
             if (!filteredMutations.contains(keyword)) {
                 unusedKeywordCount++;
-                LOGGER.debug("Keyword '{}' hasn't been used for VICC filtering", keyword);
+                LOGGER.debug("Keyword '{}' hasn't been used for CKB filtering", keyword);
             }
         }
 

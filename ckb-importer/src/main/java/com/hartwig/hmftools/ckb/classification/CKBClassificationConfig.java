@@ -184,14 +184,14 @@ public class CKBClassificationConfig {
     @NotNull
     private static Set<String> microsatelliteUnstableEvents() {
         Set<String> set = Sets.newHashSet();
-        set.add("MSI high");
+        set.add("MSI HIGH");
         return set;
     }
 
     @NotNull
     private static Set<String> highTumorMutationalLoadEvents() {
         Set<String> set = Sets.newHashSet();
-        set.add("TMB high");
+        set.add("TumMutLoad HIGH");
         return set;
     }
 
