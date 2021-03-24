@@ -33,7 +33,7 @@ public class CkbExtractorTestApp {
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
         List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-        //  List<CkbEntry> curateCKBEntries = CkBReader.filterRelevantEntries(ckbEntries);
+          List<CkbEntry> curateCKBEntries = CkBReader.filterRelevantEntries(ckbEntries);
 
         EventClassifierConfig config = CKBClassificationConfig.build();
         EventClassifier classifier = EventClassifierFactory.buildClassifier(config);
@@ -44,7 +44,7 @@ public class CkbExtractorTestApp {
         String header = new StringJoiner(FIELD_DELIMITER).add("gene").add("event").add("type").toString();
         lines.add(header);
 
-        for (CkbEntry entry : ckbEntries) {
+        for (CkbEntry entry : curateCKBEntries) {
             String gene = entry.variants().get(0).gene().geneSymbol();
 
             EventType type;

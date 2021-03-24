@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.serve.sources.ckb;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
+import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
+import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 import com.hartwig.hmftools.serve.sources.ckb.filter.CKBFilter;
+import com.hartwig.hmftools.serve.sources.iclusion.curation.IclusionCurator;
+import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilter;
 import com.hartwig.hmftools.serve.sources.vicc.ViccReader;
 
 import org.apache.logging.log4j.LogManager;
@@ -23,6 +28,30 @@ public final class CkBReader {
 
         return filter(ckbEntries);
     }
+
+//    @NotNull
+//    public static List<IclusionTrial> readAndCurate(@NotNull String iClusionTrialTsv) throws IOException {
+//        LOGGER.info("Reading iClusion trial TSV from '{}'", iClusionTrialTsv);
+//        List<IclusionTrial> trials = IclusionTrialFile.read(iClusionTrialTsv);
+//        LOGGER.info(" Read {} trials", trials.size());
+//
+//        return filter(curate(trials));
+//    }
+//
+//    @NotNull
+//    private static List<CkbEntry> curate(@NotNull List<CkbEntry> trials) {
+//        IclusionCurator curator = new IclusionCurator();
+//
+//        LOGGER.info("Curating {} iClusion trials", trials.size());
+//        List<IclusionTrial> curatedTrials = curator.run(trials);
+//        LOGGER.info(" Finished iClusion curation. {} trials remaining, {} trials have been removed",
+//                curatedTrials.size(),
+//                trials.size() - curatedTrials.size());
+//
+//        curator.reportUnusedCurationEntries();
+//
+//        return curatedTrials;
+//    }
 
     @NotNull
     private static List<CkbEntry> filter(@NotNull List<CkbEntry> entries) {
