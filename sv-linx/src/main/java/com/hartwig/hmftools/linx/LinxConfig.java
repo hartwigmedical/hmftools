@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.linx.LinxDataLoader.VCF_FILE;
+import static com.hartwig.hmftools.linx.SvFileLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_CHAINING_SV_LIMIT;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;

@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
-import static com.hartwig.hmftools.linx.LinxDataLoader.VCF_FILE;
+import static com.hartwig.hmftools.linx.SvFileLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.ext_compare.AmpliconCompare.AMPLICON_DATA_FILE;
 import static com.hartwig.hmftools.linx.ext_compare.ChainFinderCompare.CHAIN_FINDER_DATA_DIR;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
