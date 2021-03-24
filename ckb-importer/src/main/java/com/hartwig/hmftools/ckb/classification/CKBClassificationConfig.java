@@ -91,8 +91,6 @@ public class CKBClassificationConfig {
     @NotNull
     private static Map<String, Set<String>> fusionPairAndExonsPerGene() {
         Map<String, Set<String>> map = Maps.newHashMap();
-      //  map.put("FLT3", Sets.newHashSet(""));
-      //  map.put("EGFR", Sets.newHashSet(""));
         map.put("KIT", Sets.newHashSet("exon  11 del", "exon 11"));
         map.put("MET", Sets.newHashSet("del exon 14", "exon 14"));
 
