@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.serve.classification.ImmutableEventClassifier
 
 import org.jetbrains.annotations.NotNull;
 
-public class CKBClassificationConfig {
+public class CkbClassificationConfig {
 
     private static final Set<String> EXON_IDENTIFIERS = exonIdentifiers();
     private static final Set<String> EXON_KEYWORDS = exonKeywords();
@@ -38,7 +38,7 @@ public class CKBClassificationConfig {
     private static final Map<String, Set<String>> COMBINED_EVENTS_PER_GENE = combinedEventsPerGene();
     private static final Map<String, Set<String>> COMPLEX_EVENTS_PER_GENE = complexEventsPerGene();
 
-    private CKBClassificationConfig() {
+    private CkbClassificationConfig() {
     }
 
     @NotNull

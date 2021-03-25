@@ -9,16 +9,16 @@ import com.hartwig.hmftools.serve.sources.vicc.curation.EvidenceLevelCurator;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CKBExtractorFactory {
+public class CkbExtractorFactory {
 
-    private CKBExtractorFactory() {
+    private CkbExtractorFactory() {
 
     }
 
     @NotNull
-    public static CKBExtractor buildCkbExtractor(@NotNull EventClassifierConfig config, @NotNull RefGenomeResource refGenomeResource,
+    public static CkbExtractor buildCkbExtractor(@NotNull EventClassifierConfig config, @NotNull RefGenomeResource refGenomeResource,
             @NotNull DoidLookup missingDoidLookup) {
-        return new CKBExtractor(EventExtractorFactory.create(config, refGenomeResource),
+        return new CkbExtractor(EventExtractorFactory.create(config, refGenomeResource),
                 new ActionableEvidenceFactory(missingDoidLookup, new DrugCurator(), new EvidenceLevelCurator()));
     }
 }

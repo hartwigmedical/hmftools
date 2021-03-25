@@ -21,5 +21,4 @@ public class CurationFactory {
         MUTATION_MAPPINGS.put(new CurationEntry("TMB", "low"), new CurationEntry("-", "TumMutLoad LOW"));
 
     }
-
 }

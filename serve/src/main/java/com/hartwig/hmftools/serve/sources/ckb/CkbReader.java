@@ -1,26 +1,21 @@
 package com.hartwig.hmftools.serve.sources.ckb;
 
-import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
-import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
-import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 import com.hartwig.hmftools.serve.sources.ckb.curation.CkbCurator;
-import com.hartwig.hmftools.serve.sources.ckb.filter.CKBFilter;
-import com.hartwig.hmftools.serve.sources.iclusion.curation.IclusionCurator;
-import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilter;
+import com.hartwig.hmftools.serve.sources.ckb.filter.CkbFilter;
 import com.hartwig.hmftools.serve.sources.vicc.ViccReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class CkBReader {
+public final class CkbReader {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccReader.class);
 
-    private CkBReader(){
+    private CkbReader(){
 
     }
 
@@ -47,7 +42,7 @@ public final class CkBReader {
 
     @NotNull
     private static List<CkbEntry> filter(@NotNull List<CkbEntry> entries) {
-        CKBFilter filter = new CKBFilter();
+        CkbFilter filter = new CkbFilter();
 
         LOGGER.info("Filtering {} CKB entries", entries.size());
         List<CkbEntry> filteredEntries = filter.run(entries);

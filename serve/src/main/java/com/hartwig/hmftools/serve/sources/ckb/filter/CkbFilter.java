@@ -14,34 +14,34 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class CKBFilter {
+public final class CkbFilter {
 
-    private static final Logger LOGGER = LogManager.getLogger(CKBFilter.class);
+    private static final Logger LOGGER = LogManager.getLogger(CkbFilter.class);
 
     @NotNull
     private final Set<String> filteredMutations = Sets.newHashSet();
 
 
-    public CKBFilter() {
+    public CkbFilter() {
     }
 
 
     @NotNull
-    public List<CkbEntry> run(@NotNull List<CkbEntry> entries) {
+    public List<CkbEntry> run(@NotNull List<CkbEntry> ckbEntries) {
 
-        List<CkbEntry> filteredTrials = Lists.newArrayList();
-        for (CkbEntry entry : entries) {
-            if (entry.variants().size() == 1) {
-                List<Variant> filteredVariants = Lists.newArrayList();
+        List<CkbEntry> filteredCkbEntries = Lists.newArrayList();
+        for (CkbEntry ckbEntry : ckbEntries) {
+            if (ckbEntry.variants().size() == 1) {
+                List<Variant> filteredMutations = Lists.newArrayList();
 
-                if (include(entry.variants().get(0))) {
-                    filteredVariants.add(entry.variants().get(0));
+                if (include(ckbEntry.variants().get(0))) {
+                    filteredMutations.add(ckbEntry.variants().get(0));
                 } else {
-                    LOGGER.info("Filtering feature '{}' on '{}'", entry.variants().get(0).variant(), entry.variants().get(0).gene().geneSymbol());
+                    LOGGER.info("Filtering feature '{}' on '{}'", ckbEntry.variants().get(0).variant(), ckbEntry.variants().get(0).gene().geneSymbol());
                 }
 
-                if (!filteredVariants.isEmpty()) {
-                    filteredTrials.add(ImmutableCkbEntry.builder().from(entry).variants(filteredVariants).build());
+                if (!filteredMutations.isEmpty()) {
+                    filteredCkbEntries.add(ImmutableCkbEntry.builder().from(ckbEntry).variants(filteredMutations).build());
                 }
 
             }
@@ -49,7 +49,7 @@ public final class CKBFilter {
         }
 
 
-        return filteredTrials;
+        return filteredCkbEntries;
 
     }
 

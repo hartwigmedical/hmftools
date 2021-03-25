@@ -29,15 +29,15 @@ public class CkbCurator {
     }
 
     @NotNull
-    public List<CkbEntry> run(@NotNull List<CkbEntry> ckbEntryList) {
+    public List<CkbEntry> run(@NotNull List<CkbEntry> ckbEntries) {
         List<CkbEntry> curatedCkbEntries = Lists.newArrayList();
 
-        for (CkbEntry ckbEntry : ckbEntryList) {
-            List<Variant> curatedMutations = Lists.newArrayList();
+        for (CkbEntry ckbEntry : ckbEntries) {
+            List<Variant> curatedVariants = Lists.newArrayList();
             if (ckbEntry.variants().size() == 1) {
-                curatedMutations.add(curate(ckbEntry.variants()));
+                curatedVariants.add(curate(ckbEntry.variants()));
 
-                curatedCkbEntries.add(ImmutableCkbEntry.builder().from(ckbEntry).variants(curatedMutations).build());
+                curatedCkbEntries.add(ImmutableCkbEntry.builder().from(ckbEntry).variants(curatedVariants).build());
 
             }
         }

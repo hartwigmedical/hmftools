@@ -20,7 +20,7 @@ public class FilterFactory {
         // We cannot determine methylation with WGS/WTS
         PROFILE_NAME_TO_FILTER.add("hypermethylation");
 
-        // Is not clear what profile is
+        // Is not clear what profile it is
         PROFILE_NAME_TO_FILTER.add("unknown");
 
     }
