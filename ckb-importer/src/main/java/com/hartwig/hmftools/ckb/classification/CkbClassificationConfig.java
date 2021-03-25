@@ -196,6 +196,7 @@ public class CkbClassificationConfig {
     private static Set<String> microsatelliteStableEvents() {
         Set<String> set = Sets.newHashSet();
         set.add("MSI LOW");
+        set.add("MSI NEGATIVE"); // indicates lack of microsatellite instability
         return set;
     }
 
