@@ -21,10 +21,8 @@ public final class CkbFilter {
     @NotNull
     private final Set<String> filteredMutations = Sets.newHashSet();
 
-
     public CkbFilter() {
     }
-
 
     @NotNull
     public List<CkbEntry> run(@NotNull List<CkbEntry> ckbEntries) {
@@ -37,17 +35,21 @@ public final class CkbFilter {
                 if (include(ckbEntry.variants().get(0))) {
                     filteredMutations.add(ckbEntry.variants().get(0));
                 } else {
-                    LOGGER.info("Filtering feature '{}' on '{}'", ckbEntry.variants().get(0).variant(), ckbEntry.variants().get(0).gene().geneSymbol());
+                    LOGGER.info("Filtering feature '{}' on '{}'",
+                            ckbEntry.variants().get(0).variant(),
+                            ckbEntry.variants().get(0).gene().geneSymbol());
                 }
 
                 if (!filteredMutations.isEmpty()) {
                     filteredCkbEntries.add(ImmutableCkbEntry.builder().from(ckbEntry).variants(filteredMutations).build());
                 }
 
+            } else {
+                filteredCkbEntries.add(ImmutableCkbEntry.builder().from(ckbEntry).build());
+
             }
 
         }
-
 
         return filteredCkbEntries;
 
@@ -62,8 +64,7 @@ public final class CkbFilter {
             }
         }
 
-               LOGGER.debug("Found {} unused keywords during CKB filtering",
-                unusedKeywordCount);
+        LOGGER.debug("Found {} unused keywords during CKB filtering", unusedKeywordCount);
     }
 
     @VisibleForTesting

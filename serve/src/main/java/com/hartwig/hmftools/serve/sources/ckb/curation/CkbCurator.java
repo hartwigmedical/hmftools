@@ -38,6 +38,8 @@ public class CkbCurator {
                 curatedVariants.add(curate(ckbEntry.variants()));
 
                 curatedCkbEntries.add(ImmutableCkbEntry.builder().from(ckbEntry).variants(curatedVariants).build());
+            } else {
+                curatedCkbEntries.add(ImmutableCkbEntry.builder().from(ckbEntry).build());
 
             }
         }
