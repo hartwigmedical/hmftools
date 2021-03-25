@@ -25,12 +25,9 @@ public final class CkBReader {
     }
 
     @NotNull
-    public static List<CkbEntry> filterRelevantEntries(@NotNull List<CkbEntry> ckbEntries) {
-        List<CkbEntry> filteredEntries = filter(ckbEntries);
+    public static List<CkbEntry> filterAndCurateRelevantEntries(@NotNull List<CkbEntry> ckbEntries) {
 
-        List<CkbEntry> curatedEntries = curate(filteredEntries);
-
-        return curatedEntries;
+        return filter(curate(ckbEntries));
     }
 
     @NotNull

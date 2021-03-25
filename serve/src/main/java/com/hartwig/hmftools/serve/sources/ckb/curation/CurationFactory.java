@@ -16,7 +16,10 @@ public class CurationFactory {
     static {
 
         MUTATION_MAPPINGS.put(new CurationEntry("MSI", "high"), new CurationEntry("-", "MSI HIGH"));
+        MUTATION_MAPPINGS.put(new CurationEntry("MSI", "low"), new CurationEntry("-", "MSI LOW"));
         MUTATION_MAPPINGS.put(new CurationEntry("TMB", "high"), new CurationEntry("-", "TumMutLoad HIGH"));
+        MUTATION_MAPPINGS.put(new CurationEntry("TMB", "low"), new CurationEntry("-", "TumMutLoad LOW"));
+
     }
 
 }

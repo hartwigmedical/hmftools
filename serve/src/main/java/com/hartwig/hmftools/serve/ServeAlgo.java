@@ -119,7 +119,7 @@ public class ServeAlgo {
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
         List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-        //   List<CkbEntry> curateCKBEntries = CkBReader.filterRelevantEntries(ckbEntries);
+        //   List<CkbEntry> curateCKBEntries = CkBReader.filterAndCurateRelevantEntries(ckbEntries);
 
         EventClassifierConfig config = CKBClassificationConfig.build();
         CKBExtractor extractor = CKBExtractorFactory.buildCkbExtractor(config,

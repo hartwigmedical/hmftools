@@ -32,15 +32,16 @@ public final class CKBFilter {
         List<CkbEntry> filteredTrials = Lists.newArrayList();
         for (CkbEntry entry : entries) {
             if (entry.variants().size() == 1) {
+                List<Variant> filteredVariants = Lists.newArrayList();
 
                 if (include(entry.variants().get(0))) {
-                    filteredMutations.add(entry.variants().get(0).variant());
+                    filteredVariants.add(entry.variants().get(0));
                 } else {
                     LOGGER.info("Filtering feature '{}' on '{}'", entry.variants().get(0).variant(), entry.variants().get(0).gene().geneSymbol());
                 }
 
-                if (!filteredMutations.isEmpty()) {
-                    filteredTrials.add(ImmutableCkbEntry.builder().from(entry).build());
+                if (!filteredVariants.isEmpty()) {
+                    filteredTrials.add(ImmutableCkbEntry.builder().from(entry).variants(filteredVariants).build());
                 }
 
             }

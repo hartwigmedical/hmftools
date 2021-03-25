@@ -3,7 +3,6 @@ package com.hartwig.hmftools.serve.sources.ckb.tools;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -33,7 +32,7 @@ public class CkbExtractorTestApp {
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
         List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-          List<CkbEntry> curateCKBEntries = CkBReader.filterRelevantEntries(ckbEntries);
+          List<CkbEntry> curateCKBEntries = CkBReader.filterAndCurateRelevantEntries(ckbEntries);
 
         EventClassifierConfig config = CKBClassificationConfig.build();
         EventClassifier classifier = EventClassifierFactory.buildClassifier(config);

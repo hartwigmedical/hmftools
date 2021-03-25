@@ -63,10 +63,16 @@ public abstract class EventClassifierConfig {
     public abstract Set<String> promiscuousFusionKeyPhrases();
 
     @NotNull
+    public abstract Set<String> microsatelliteStableEvents();
+
+    @NotNull
     public abstract Set<String> microsatelliteUnstableEvents();
 
     @NotNull
     public abstract Set<String> highTumorMutationalLoadEvents();
+
+    @NotNull
+    public abstract Set<String> lowTumorMutationalLoadEvents();
 
     @NotNull
     public abstract Set<String> hrDeficiencyEvents();
