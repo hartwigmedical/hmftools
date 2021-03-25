@@ -65,7 +65,9 @@ public final class EventMatcherFactory {
     private static Set<String> allCharacteristicEvents(@NotNull EventClassifierConfig config) {
         Set<String> tumorCharacteristics = Sets.newHashSet();
         tumorCharacteristics.addAll(config.microsatelliteUnstableEvents());
+        tumorCharacteristics.addAll(config.microsatelliteStableEvents());
         tumorCharacteristics.addAll(config.highTumorMutationalLoadEvents());
+        tumorCharacteristics.addAll(config.lowTumorMutationalLoadEvents());
         tumorCharacteristics.addAll(config.hrDeficiencyEvents());
         tumorCharacteristics.addAll(config.hpvPositiveEvents());
         tumorCharacteristics.addAll(config.ebvPositiveEvents());
