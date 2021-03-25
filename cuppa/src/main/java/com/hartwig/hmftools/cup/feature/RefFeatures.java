@@ -11,9 +11,9 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_FEATURE_PREV;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
+import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefFeatureOverrides;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
-import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -27,7 +27,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.cup.common.CategoryType;
-import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
@@ -37,10 +36,15 @@ public class RefFeatures implements RefClassifier
     private final RefDataConfig mConfig;
     private final SampleDataCache mSampleDataCache;
 
+    private final Map<String,List<FeaturePrevData>> mFeatureOverrides;
+
     public RefFeatures(final RefDataConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
+
+        mFeatureOverrides = Maps.newHashMap();
+        loadRefFeatureOverrides(mConfig.RefFeatureOverrideFile, mFeatureOverrides);
     }
 
     public CategoryType categoryType() { return FEATURE; }
@@ -52,7 +56,25 @@ public class RefFeatures implements RefClassifier
         CUP_LOGGER.info("building feature reference data");
 
         final Map<String,List<SampleFeatureData>> sampleFeaturesMap = Maps.newHashMap();
+        loadSampleData(sampleFeaturesMap);
 
+        writeCohortData(sampleFeaturesMap);
+
+        final Map<String,Map<String,Double>> cancerFeatureCounts = Maps.newHashMap();
+        final Map<String,FeatureType> featureTypes = Maps.newHashMap();
+
+        final Map<String,List<Double>> driversPerSampleMap = Maps.newHashMap();
+        final List<Double> panCancerDriversPerSample = Lists.newArrayList();
+
+        assignFeatures(sampleFeaturesMap, cancerFeatureCounts, featureTypes, driversPerSampleMap, panCancerDriversPerSample);
+
+        writeFeaturePrevalenceFile(cancerFeatureCounts, featureTypes);
+
+        writeAverageDriversFile(driversPerSampleMap, panCancerDriversPerSample);
+    }
+
+    private void loadSampleData(final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
+    {
         if(!mConfig.RefFeaturesFile.isEmpty())
         {
             final Map<String,List<SampleFeatureData>> allSampleFeatures = Maps.newHashMap();
@@ -75,15 +97,13 @@ public class RefFeatures implements RefClassifier
         {
             loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(true), sampleFeaturesMap, true);
         }
+    }
 
-        writeCohortData(sampleFeaturesMap);
-
-        final Map<String,Map<String,Double>> cancerFeatureCounts = Maps.newHashMap();
-        final Map<String,FeatureType> featureTypes = Maps.newHashMap();
-
-        final Map<String,List<Double>> driversPerSampleMap = Maps.newHashMap();
-        final List<Double> panCancerDriversPerSample = Lists.newArrayList();
-
+    private void assignFeatures(
+            final Map<String,List<SampleFeatureData>> sampleFeaturesMap,
+            final Map<String,Map<String,Double>> cancerFeatureCounts, final Map<String,FeatureType> featureTypes,
+            final Map<String,List<Double>> driversPerSampleMap, final List<Double> panCancerDriversPerSample)
+    {
         for(Map.Entry<String,List<SampleFeatureData>> sampleEntry : sampleFeaturesMap.entrySet())
         {
             final String sampleId = sampleEntry.getKey();
@@ -134,9 +154,6 @@ public class RefFeatures implements RefClassifier
 
             panCancerDriversPerSample.add(driverTotal);
         }
-
-        writeFeaturePrevalenceFile(cancerFeatureCounts, featureTypes);
-        writeAverageDriversFile(driversPerSampleMap, panCancerDriversPerSample);
     }
 
     private void writeFeaturePrevalenceFile(final Map<String,Map<String,Double>> cancerFeatureCounts, final Map<String,FeatureType> featureTypes)
@@ -158,11 +175,43 @@ public class RefFeatures implements RefClassifier
                 for(Map.Entry<String,Double> featureEntry : cancerEntry.getValue().entrySet())
                 {
                     final String feature = featureEntry.getKey();
-                    double sampleTotal = featureEntry.getValue();
-                    double prevalence = sampleTotal / cancerSamples;
-                    final FeatureType featureType = featureTypes.get(feature);
 
-                    writer.write(String.format("%s,%s,%s,%.6f", cancerType, feature, featureType, prevalence));
+                    // check for any feature-cancer overrides
+                    final List<FeaturePrevData> overrides = mFeatureOverrides.get(feature);
+
+                    if(overrides == null)
+                    {
+                        double sampleTotal = featureEntry.getValue();
+                        double prevalence = sampleTotal / cancerSamples;
+                        FeatureType featureType = featureTypes.get(feature);
+
+                        writer.write(String.format("%s,%s,%s,%.6f", cancerType, feature, featureType, prevalence));
+                        writer.newLine();
+                    }
+                    else
+                    {
+                        // remove this entry since unobserved features will then be written at the end
+                        final FeaturePrevData override = overrides.stream().filter(x -> x.CancerType.equals(cancerType)).findFirst().orElse(null);
+
+                        if(override != null)
+                        {
+                            writer.write(String.format("%s,%s,%s,%.6f", cancerType, feature, override.Type, override.Prevalence));
+                            writer.newLine();
+
+                            overrides.remove(override);
+                        }
+                    }
+                }
+            }
+
+            for(List<FeaturePrevData> overrides : mFeatureOverrides.values())
+            {
+                if(overrides.isEmpty())
+                    continue;
+
+                for(FeaturePrevData override : overrides)
+                {
+                    writer.write(String.format("%s,%s,%s,%.6f", override.CancerType, override.Name, override.Type, override.Prevalence));
                     writer.newLine();
                 }
             }

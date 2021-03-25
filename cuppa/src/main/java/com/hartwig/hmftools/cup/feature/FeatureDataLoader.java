@@ -452,7 +452,7 @@ public class FeatureDataLoader
     private static final String INDEL_SLC34A2 = "SLC34A2";
 
     public static boolean loadRefPrevalenceData(
-            final String filename, final Map<String,FeaturePrevCounts> genePrevalenceTotals,
+            final String filename, final Map<String,FeaturePrevCounts> featurePrevTotals,
             final Map<String,List<FeaturePrevData>> cancerDriverPrevalence)
     {
         if(filename == null || filename.isEmpty())
@@ -471,12 +471,12 @@ public class FeatureDataLoader
                 if(prevData == null)
                     continue;
 
-                FeaturePrevCounts genePrevTotals = genePrevalenceTotals.get(prevData.Name);
+                FeaturePrevCounts genePrevTotals = featurePrevTotals.get(prevData.Name);
 
                 if(genePrevTotals == null)
                 {
                     genePrevTotals = new FeaturePrevCounts();
-                    genePrevalenceTotals.put(prevData.Name, genePrevTotals);
+                    featurePrevTotals.put(prevData.Name, genePrevTotals);
                 }
 
                 genePrevTotals.MaxPrevalence = max(genePrevTotals.MaxPrevalence, prevData.Prevalence);
@@ -494,7 +494,43 @@ public class FeatureDataLoader
         }
         catch (IOException e)
         {
-            CUP_LOGGER.error("failed to read driver prevalence data file({}): {}", filename, e.toString());
+            CUP_LOGGER.error("failed to read feature prevalence data: {}", e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean loadRefFeatureOverrides(
+            final String filename, final Map<String,List<FeaturePrevData>> cancerFeaturePrevOverrides)
+    {
+        if(filename == null || filename.isEmpty())
+            return true;
+
+        try
+        {
+            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+
+            fileData.remove(0);
+
+            for(final String line : fileData)
+            {
+                final FeaturePrevData prevData = FeaturePrevData.from(line);
+
+                if(prevData == null)
+                    continue;
+
+                final List<FeaturePrevData> dataList = cancerFeaturePrevOverrides.get(prevData.Name);
+
+                if(dataList == null)
+                    cancerFeaturePrevOverrides.put(prevData.Name, Lists.newArrayList(prevData));
+                else
+                    dataList.add(prevData);
+            }
+        }
+        catch (IOException e)
+        {
+            CUP_LOGGER.error("failed to read feature overrides prevalence data file: {}", e.toString());
             return false;
         }
 

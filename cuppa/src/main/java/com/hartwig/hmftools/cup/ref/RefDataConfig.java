@@ -33,18 +33,23 @@ public class RefDataConfig
     public final String RefFeaturesFile;
     public final String RefGeneExpFile;
     public final String RefAltSjFile;
+    public final String RefFeatureOverrideFile;
 
     public final DatabaseAccess DbAccess;
 
     public final boolean WriteCohortFiles; // re-write data sourced from database or flat files into single cohort files
 
     // config strings
+
+    // cohort files to avoid database data extraction
     public static final String REF_SAMPLE_TRAITS_FILE = "ref_sample_traits_file";
     public static final String REF_SIG_CONTRIBS_FILE = "ref_sig_contribs_file";
     public static final String REF_SV_DATA_FILE = "ref_sv_data_file";
     public static final String REF_FEATURES_FILE = "ref_features_file";
+
     public static final String REF_GENE_EXP_DATA_FILE = "ref_gene_exp_file";
     public static final String REF_ALT_SJ_DATA_FILE = "ref_alt_sj_file";
+    public static final String REF_FEATURE_OVERRIDE_FILE = "feature_override_file";
     public static final String GENDER_RATES = "gender_rates";
     public static final String WRITE_COHORT_FILES = "write_cohort_files";
 
@@ -61,6 +66,7 @@ public class RefDataConfig
         RefFeaturesFile = cmd.getOptionValue(REF_FEATURES_FILE, "");
         RefGeneExpFile = cmd.getOptionValue(REF_GENE_EXP_DATA_FILE, "");
         RefAltSjFile = cmd.getOptionValue(REF_ALT_SJ_DATA_FILE, "");
+        RefFeatureOverrideFile = cmd.getOptionValue(REF_FEATURE_OVERRIDE_FILE, "");
 
         DbAccess = createDatabaseAccess(cmd);
 
@@ -85,6 +91,7 @@ public class RefDataConfig
         options.addOption(REF_FEATURES_FILE, true, "Ref sample features data file");
         options.addOption(REF_GENE_EXP_DATA_FILE, true, "Ref sample RNA gene expression cohort data file");
         options.addOption(REF_ALT_SJ_DATA_FILE, true, "Ref sample RNA alternate splice junction cohort data file");
+        options.addOption(REF_FEATURE_OVERRIDE_FILE, true, "Ref feature override data file");
         options.addOption(GENDER_RATES, true, "Gender-rate overrides - format CancerType;MalePerc;FemalePerc, etc");
         options.addOption(WRITE_COHORT_FILES, false, "Re-write ref data as cohort files");
 
