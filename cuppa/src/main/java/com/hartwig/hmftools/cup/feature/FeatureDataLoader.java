@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.cup.feature;
 
 import static java.lang.Math.max;
+import static java.util.function.Predicate.isEqual;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
+import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
+import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSS;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
@@ -121,8 +125,8 @@ public class FeatureDataLoader
             else if(Files.exists(Paths.get(purpleDriverCatalogFilename)))
                 drivers.addAll(DriverCatalogFile.read(purpleDriverCatalogFilename));
 
-            final List<String> indelGenes = checkIndels(sampleId, sampleDataDir, null) ?
-                    loadSpecificIndels(sampleId, sampleVcfFile) : null;
+            boolean checkIndels = checkIndels(sampleId, sampleDataDir, null);
+            final List<String> indelGenes = loadSpecificMutations(sampleId, sampleVcfFile, checkIndels);
 
             mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts, indelGenes);
         }
@@ -175,7 +179,7 @@ public class FeatureDataLoader
 
         final Map<String,List<LinxViralInsertion>> sampleVirusMap = getAllViruses(dbAccess, specificSampleId);
 
-        final Map<String,List<String>> sampleIndelMap = getAllIndels(dbAccess, specificSampleId);
+        final Map<String,List<String>> sampleIndelMap = getSpecificMutations(dbAccess, specificSampleId, true);
 
         int i = 0;
         int nextLog = 100;
@@ -186,9 +190,16 @@ public class FeatureDataLoader
             final List<LinxFusion> fusions = sampleFusionMap.get(sampleId);
             final List<LinxViralInsertion> viralInserts = sampleVirusMap.get(sampleId);
 
-            final List<String> indelGenes = checkIndels(sampleId, null, dbAccess) ? sampleIndelMap.get(sampleId) : null;
+            final List<String> mutationGenes = sampleIndelMap.get(sampleId);
 
-            mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts, indelGenes);
+            if(mutationGenes != null && !checkIndels(sampleId, null, dbAccess))
+            {
+                final List<String> nonIndelMutations = mutationGenes.stream().filter(x -> !isKnownIndelGene(x)).collect(Collectors.toList());
+                mutationGenes.clear();
+                mutationGenes.addAll(nonIndelMutations);
+            }
+
+            mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts, mutationGenes);
 
             ++i;
             if(i >= nextLog)
@@ -277,32 +288,121 @@ public class FeatureDataLoader
         return sampleVirusMap;
     }
 
-    private static final Map<String,List<String>> getAllIndels(final DatabaseAccess dbAccess, final String specificSampleId)
+    private static final int INDEL_MAX_REPEAT_COUNT = 6;
+    private static final String INDEL_ALB = "ALB";
+    private static final String INDEL_SFTPB = "SFTPB";
+    private static final String INDEL_SLC34A2 = "SLC34A2";
+
+    private static boolean isKnownIndelGene(final String gene)
     {
-        final Map<String,List<String>> sampleIndelMap = Maps.newHashMap();
+        return gene.equals(INDEL_ALB) || gene.equals(INDEL_SFTPB) || gene.equals(INDEL_SLC34A2);
+    }
+
+    private static boolean isKnownIndel(final String gene, final int repeatCount, final VariantType variantType)
+    {
+        return isKnownIndelGene(gene) && variantType == INDEL && repeatCount <= INDEL_MAX_REPEAT_COUNT;
+    }
+
+    private static final String MUTATION_EGFR = "EGFR";
+
+    private static boolean isKnownEGFRMutation(
+            final String gene, final VariantType variantType, final int position, final String ref, final String alt)
+    {
+        if(!gene.equals(MUTATION_EGFR))
+            return false;
+
+        // GRCh37 coords hard-coded for now
+
+        // p.Thr790Met
+        if(variantType == SNP && ref.equals("C") && alt.equals("T") && position == 55249071)
+            return true;
+
+        // p.Leu858Ar
+        if(variantType == SNP && ref.equals("T") && alt.equals("G") && position == 55259515)
+            return true;
+
+        // inframe DEL in exon 19 (canonical transcript)
+        if(variantType == INDEL && positionWithin(position, 55242415, 55242513))
+            return true;
+
+        // exon 20
+        if(variantType == INDEL && positionWithin(position, 55248986, 55249171))
+            return true;
+
+        return false;
+    }
+
+    private static final Map<String,List<String>> getSpecificMutations(
+            final DatabaseAccess dbAccess, final String specificSampleId, boolean checkIndels)
+    {
+        final Map<String,List<String>> sampleMutationMap = Maps.newHashMap();
 
         Result<Record> result = dbAccess.context().select()
                 .from(SOMATICVARIANT)
                 .where(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
                 .and(specificSampleId != null ? SOMATICVARIANT.SAMPLEID.eq(specificSampleId) : SOMATICVARIANT.SAMPLEID.isNotNull())
-                .and(SOMATICVARIANT.GENE.in(INDEL_ALB, INDEL_SFTPB, INDEL_SLC34A2))
-                .and(SOMATICVARIANT.REPEATCOUNT.lessOrEqual(INDEL_MAX_REPEAT_COUNT))
-                .and(SOMATICVARIANT.TYPE.eq(VariantType.INDEL.toString()))
+                .and(SOMATICVARIANT.GENE.in(INDEL_ALB, INDEL_SFTPB, INDEL_SLC34A2, MUTATION_EGFR))
                 .fetch();
 
         for (Record record : result)
         {
             final String sampleId = record.getValue(SOMATICVARIANT.SAMPLEID);
             final String gene = record.getValue(SOMATICVARIANT.GENE);
+            final VariantType type = VariantType.valueOf(record.getValue(SOMATICVARIANT.TYPE));
 
-            final List<String> genes = sampleIndelMap.get(sampleId);
-            if(genes == null)
-                sampleIndelMap.put(sampleId, Lists.newArrayList(gene));
+            int repeatCount = record.getValue(SOMATICVARIANT.REPEATCOUNT);
+            int position = record.getValue(SOMATICVARIANT.POSITION);
+            final String ref = record.getValue(SOMATICVARIANT.REF);
+            final String alt = record.getValue(SOMATICVARIANT.ALT);
+
+            String muation = "";
+
+            if(checkIndels && isKnownIndel(gene, repeatCount, type))
+            {
+                muation = "KNOWN_INDEL_" + gene;
+            }
+            else if(isKnownEGFRMutation(gene, type, position, ref, alt))
+            {
+                muation = "KNOWN_EGFR";
+            }
             else
-                genes.add(gene);
+            {
+                continue;
+            }
+
+            final List<String> genes = sampleMutationMap.get(sampleId);
+            if(genes == null)
+                sampleMutationMap.put(sampleId, Lists.newArrayList(muation));
+            else
+                genes.add(muation);
         }
 
-        return sampleIndelMap;
+        return sampleMutationMap;
+    }
+
+
+    private static List<String> loadSpecificMutations(final String sampleId, final String vcfFile, boolean checkIndels)
+    {
+        final List<SomaticVariant> variants = SomaticDataLoader.loadSomaticVariants(sampleId, vcfFile, Lists.newArrayList());
+
+        final List<String> mutations = Lists.newArrayList();
+
+        for(SomaticVariant variant : variants)
+        {
+            if(!variant.filter().equals("PASS"))
+                continue;
+
+            if(checkIndels && isKnownIndel(variant.gene(), variant.repeatCount(), variant.type()))
+            {
+                mutations.add(String.format("KNOWN_INDEL_%s", variant.gene()));
+            }
+            else if(isKnownEGFRMutation(variant.gene(), variant.type(), (int)variant.position(), variant.ref(), variant.alt()))
+            {
+                mutations.add("KNOWN_EGFR");
+            }
+        }
+
+        return mutations;
     }
 
     private static final Map<String,List<DriverCatalog>> getAllDrivers(
@@ -351,21 +451,6 @@ public class FeatureDataLoader
         }
 
         return sampleDriverMap;
-    }
-
-    private static final int INDEL_MAX_REPEAT_COUNT = 6;
-
-    private static List<String> loadSpecificIndels(final String sampleId, final String vcfFile)
-    {
-        final List<SomaticVariant> variants = SomaticDataLoader.loadSomaticVariants(
-                sampleId, vcfFile, Lists.newArrayList(VariantContext.Type.INDEL));
-
-        return variants.stream()
-                .filter(x -> x.repeatCount() <= INDEL_MAX_REPEAT_COUNT)
-                .filter(x -> x.filter().equals("PASS"))
-                .filter(x -> x.gene().equals(INDEL_ALB) || x.gene().equals(INDEL_SFTPB) || x.gene().equals(INDEL_SLC34A2))
-                .map(x -> x.gene())
-                .collect(Collectors.toList());
     }
 
     private static void mapFeatureData(
@@ -446,10 +531,6 @@ public class FeatureDataLoader
 
         sampleDrivers.put(sampleId, featuresList);
     }
-
-    private static final String INDEL_ALB = "ALB";
-    private static final String INDEL_SFTPB = "SFTPB";
-    private static final String INDEL_SLC34A2 = "SLC34A2";
 
     public static boolean loadRefPrevalenceData(
             final String filename, final Map<String,FeaturePrevCounts> featurePrevTotals,
