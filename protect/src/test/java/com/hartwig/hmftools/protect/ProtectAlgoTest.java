@@ -32,7 +32,7 @@ public class ProtectAlgoTest {
     private static final String LINX_FUSION_TSV = Resources.getResource("test_run/linx/sample.linx.fusion.tsv").getPath();
     private static final String LINX_BREAKEND_TSV = Resources.getResource("test_run/linx/sample.linx.breakend.tsv").getPath();
     private static final String LINX_VIRAL_INSERTION_TSV = Resources.getResource("test_run/linx/sample.linx.viral_inserts.tsv").getPath();
-    private static final String LINX_DRIVER_CATELOG_TSV = Resources.getResource("test_run/linx/sample.drivers.catalog.tsv").getPath();
+    private static final String LINX_DRIVER_CATALOG_TSV = Resources.getResource("test_run/linx/sample.drivers.catalog.tsv").getPath();
     private static final String CHORD_PREDICTION_TXT = Resources.getResource("test_run/chord/sample_chord_prediction.txt").getPath();
 
     @Test
@@ -53,7 +53,7 @@ public class ProtectAlgoTest {
                 .linxFusionTsv(LINX_FUSION_TSV)
                 .linxBreakendTsv(LINX_BREAKEND_TSV)
                 .linxViralInsertionTsv(LINX_VIRAL_INSERTION_TSV)
-                .linxDriverCatalogTsv(LINX_DRIVER_CATELOG_TSV)
+                .linxDriverCatalogTsv(LINX_DRIVER_CATALOG_TSV)
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .build();
 
