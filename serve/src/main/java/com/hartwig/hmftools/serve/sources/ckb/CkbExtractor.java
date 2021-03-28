@@ -22,16 +22,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class CKBExtractor {
+public class CkbExtractor {
 
-    private static final Logger LOGGER = LogManager.getLogger(CKBExtractor.class);
+    private static final Logger LOGGER = LogManager.getLogger(CkbExtractor.class);
 
     @NotNull
     private final EventExtractor eventExtractor;
     @NotNull
     private final ActionableEvidenceFactory actionableEvidenceFactory;
 
-    public CKBExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableEvidenceFactory actionableEvidenceFactory) {
+    public CkbExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableEvidenceFactory actionableEvidenceFactory) {
         this.eventExtractor = eventExtractor;
         this.actionableEvidenceFactory = actionableEvidenceFactory;
     }
@@ -44,7 +44,7 @@ public class CKBExtractor {
 
         // actionableEvidenceFactory.evaluateCuration();
 
-        CKBUtils.printExtractionResults(resultsPerEntry);
+        CkbUtils.printExtractionResults(resultsPerEntry);
 
 
         ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()

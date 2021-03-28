@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 public class EventTypeExtractor {
 
     @NotNull
-    private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(CKBClassificationConfig.build());
+    private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(CkbClassificationConfig.build());
 
     private EventTypeExtractor() {
     }

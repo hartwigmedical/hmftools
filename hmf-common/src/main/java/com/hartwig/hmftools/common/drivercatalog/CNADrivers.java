@@ -79,8 +79,6 @@ public class CNADrivers {
                 .collect(Collectors.toList());
     }
 
-    private
-
     static boolean supportedByOneSV(@NotNull final GeneCopyNumber geneCopyNumber) {
         return geneCopyNumber.minRegionStartSupport().isSV() || geneCopyNumber.minRegionEndSupport().isSV();
     }

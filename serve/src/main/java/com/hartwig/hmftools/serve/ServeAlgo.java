@@ -6,7 +6,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.JsonDatabaseToCkbEntryConverter;
-import com.hartwig.hmftools.ckb.classification.CKBClassificationConfig;
+import com.hartwig.hmftools.ckb.classification.CkbClassificationConfig;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.CkbJsonReader;
@@ -18,8 +18,8 @@ import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeManager;
-import com.hartwig.hmftools.serve.sources.ckb.CKBExtractor;
-import com.hartwig.hmftools.serve.sources.ckb.CKBExtractorFactory;
+import com.hartwig.hmftools.serve.sources.ckb.CkbExtractor;
+import com.hartwig.hmftools.serve.sources.ckb.CkbExtractorFactory;
 import com.hartwig.hmftools.serve.sources.docm.DocmEntry;
 import com.hartwig.hmftools.serve.sources.docm.DocmExtractor;
 import com.hartwig.hmftools.serve.sources.docm.DocmReader;
@@ -119,10 +119,10 @@ public class ServeAlgo {
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
         List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-        //   List<CkbEntry> curateCKBEntries = CkBReader.filterRelevantEntries(ckbEntries);
+        //   List<CkbEntry> curateCKBEntries = CkbReader.filterAndCurateRelevantEntries(ckbEntries);
 
-        EventClassifierConfig config = CKBClassificationConfig.build();
-        CKBExtractor extractor = CKBExtractorFactory.buildCkbExtractor(config,
+        EventClassifierConfig config = CkbClassificationConfig.build();
+        CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config,
                 refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB),
                 missingDoidLookup);
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.sources.ckb.filter;
+package com.hartwig.hmftools.serve.sources.ckb.curation;
 
 import java.util.Objects;
 
@@ -6,14 +6,13 @@ import com.google.common.annotations.VisibleForTesting;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FilterKey {
-
+class CurationEntry {
     @NotNull
     private final String gene;
     @NotNull
     private final String name;
 
-    public FilterKey(@NotNull final String gene, @NotNull final String name) {
+    public CurationEntry(@NotNull final String gene, @NotNull final String name) {
         this.gene = gene;
         this.name = name;
     }
@@ -38,9 +37,8 @@ public class FilterKey {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        final FilterKey
-                filterKey = (FilterKey) o;
-        return gene.equals(filterKey.gene) && name.equals(filterKey.name);
+        final CurationEntry that = (CurationEntry) o;
+        return gene.equals(that.gene) && name.equals(that.name);
     }
 
     @Override
@@ -50,6 +48,6 @@ public class FilterKey {
 
     @Override
     public String toString() {
-        return "FilterKey{" + "gene='" + gene + '\'' + ", name='" + name + '\'' + '}';
+        return "CurationEntry{" + "gene='" + gene + '\'' + ", name='" + name + '\'' + '}';
     }
 }

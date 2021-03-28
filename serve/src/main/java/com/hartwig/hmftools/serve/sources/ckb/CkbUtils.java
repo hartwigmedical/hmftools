@@ -18,9 +18,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class CKBUtils {
+public class CkbUtils {
 
-    private static final Logger LOGGER = LogManager.getLogger(CKBUtils.class);
+    private static final Logger LOGGER = LogManager.getLogger(CkbUtils.class);
 
     public static void printExtractionResults(@NotNull Map<CkbEntry, ExtractResult> resultsPerEntry) {
         List<Variant> featuresWithoutGenomicEvents = Lists.newArrayList();

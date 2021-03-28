@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.serve.classification.ImmutableEventClassifier
 
 import org.jetbrains.annotations.NotNull;
 
-public class CKBClassificationConfig {
+public class CkbClassificationConfig {
 
     private static final Set<String> EXON_IDENTIFIERS = exonIdentifiers();
     private static final Set<String> EXON_KEYWORDS = exonKeywords();
@@ -29,14 +29,16 @@ public class CKBClassificationConfig {
     private static final Set<String> FUSION_PAIR_EVENTS_TO_SKIP = fusionPairEventsToSkip();
     private static final Set<String> PROMISCUOUS_FUSION_KEY_PHRASES = promiscuousFusionKeyPhrases();
     private static final Set<String> MICROSATELLITE_UNSTABLE_EVENTS = microsatelliteUnstableEvents();
+    private static final Set<String> MICROSATELLITE_STABLE_EVENTS = microsatelliteStableEvents();
     private static final Set<String> HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS = highTumorMutationalLoadEvents();
+    private static final Set<String> LOW_TUMOR_MUTATIONAL_LOAD_EVENTS = lowTumorMutationalLoadEvents();
     private static final Set<String> HR_DEFICIENCY_EVENTS = hrDeficiencyEvents();
     private static final Set<String> HPV_POSITIVE_EVENTS = hpvPositiveEvents();
     private static final Set<String> EBV_POSITIVE_EVENTS = ebvPositiveEvents();
     private static final Map<String, Set<String>> COMBINED_EVENTS_PER_GENE = combinedEventsPerGene();
     private static final Map<String, Set<String>> COMPLEX_EVENTS_PER_GENE = complexEventsPerGene();
 
-    private CKBClassificationConfig() {
+    private CkbClassificationConfig() {
     }
 
     @NotNull
@@ -60,7 +62,9 @@ public class CKBClassificationConfig {
                 .fusionPairEventsToSkip(FUSION_PAIR_EVENTS_TO_SKIP)
                 .promiscuousFusionKeyPhrases(PROMISCUOUS_FUSION_KEY_PHRASES)
                 .microsatelliteUnstableEvents(MICROSATELLITE_UNSTABLE_EVENTS)
+                .microsatelliteStableEvents(MICROSATELLITE_STABLE_EVENTS)
                 .highTumorMutationalLoadEvents(HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS)
+                .lowTumorMutationalLoadEvents(LOW_TUMOR_MUTATIONAL_LOAD_EVENTS)
                 .hrDeficiencyEvents(HR_DEFICIENCY_EVENTS)
                 .hpvPositiveEvents(HPV_POSITIVE_EVENTS)
                 .ebvPositiveEvents(EBV_POSITIVE_EVENTS)
@@ -91,8 +95,6 @@ public class CKBClassificationConfig {
     @NotNull
     private static Map<String, Set<String>> fusionPairAndExonsPerGene() {
         Map<String, Set<String>> map = Maps.newHashMap();
-      //  map.put("FLT3", Sets.newHashSet(""));
-      //  map.put("EGFR", Sets.newHashSet(""));
         map.put("KIT", Sets.newHashSet("exon  11 del", "exon 11"));
         map.put("MET", Sets.newHashSet("del exon 14", "exon 14"));
 
@@ -186,14 +188,29 @@ public class CKBClassificationConfig {
     @NotNull
     private static Set<String> microsatelliteUnstableEvents() {
         Set<String> set = Sets.newHashSet();
-        set.add("MSI high");
+        set.add("MSI HIGH");
+        return set;
+    }
+
+    @NotNull
+    private static Set<String> microsatelliteStableEvents() {
+        Set<String> set = Sets.newHashSet();
+        set.add("MSI LOW");
+        set.add("MSI NEGATIVE"); // indicates lack of microsatellite instability
         return set;
     }
 
     @NotNull
     private static Set<String> highTumorMutationalLoadEvents() {
         Set<String> set = Sets.newHashSet();
-        set.add("TMB high");
+        set.add("TumMutLoad HIGH");
+        return set;
+    }
+
+    @NotNull
+    private static Set<String> lowTumorMutationalLoadEvents() {
+        Set<String> set = Sets.newHashSet();
+        set.add("TumMutLoad LOW");
         return set;
     }
 
