@@ -62,6 +62,8 @@ public class DriverGeneAnnotator
     private Map<String, List<SvBreakend>> mChrBreakendMap;
     private VisualiserWriter mVisWriter;
 
+    public static final String LINX_DRIVER_CATALOG = ".linx.driver.catalog.tsv";
+
     public DriverGeneAnnotator(DatabaseAccess dbAccess, final EnsemblDataCache geneTransCache,
             final LinxConfig config, final CnDataLoader cnDataLoader)
     {
@@ -224,7 +226,7 @@ public class DriverGeneAnnotator
         // generate an empty Linx driver file even if no annotations were found
         try
         {
-            final String driverCatalogFile = mOutputDir + mSampleId + ".linx.driver.catalog.tsv";
+            final String driverCatalogFile = mOutputDir + mSampleId + LINX_DRIVER_CATALOG;
             DriverCatalogFile.write(driverCatalogFile, mDataCache.getDriverCatalog());
 
             final String driversFile = LinxDriver.generateFilename(mOutputDir, mSampleId);

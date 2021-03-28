@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getCluste
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_ID;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_NAME;
+import static com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator.LINX_DRIVER_CATALOG;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
 
@@ -18,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -422,6 +425,9 @@ public class SampleAnalyser
             LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
             LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
             LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
+
+            final String driverCatalogFile = mConfig.OutputDataPath + mSampleId + LINX_DRIVER_CATALOG;
+            DriverCatalogFile.write(driverCatalogFile, Lists.newArrayList());
 
             VisSvDataFile.write(VisSvDataFile.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
             VisCopyNumberFile.write(VisCopyNumberFile.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
