@@ -116,8 +116,8 @@ public class RefSampleTraits implements RefClassifier
         }
         else
         {
-            loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(true), sampleTraitsData);
-            sampleTraitsData. values().forEach(x -> assignSampleTraitsData(x));
+            loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleTraitsData);
+            sampleTraitsData.values().forEach(x -> assignSampleTraitsData(x));
         }
 
         writeCohortData(sampleTraitsData);
@@ -127,6 +127,10 @@ public class RefSampleTraits implements RefClassifier
         for(Map.Entry<String,List<SampleTraitsData>> entry : mCancerTraitsData.entrySet())
         {
             final String cancerType = entry.getKey();
+
+            if(!isKnownCancerType(cancerType))
+                continue;
+
             final List<SampleTraitsData> traitsData = entry.getValue();
 
             final List<Double> purityValues = traitsData.stream().map(x -> x.Purity).collect(Collectors.toList());

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_FEATURE_DAT
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_DRIVER_AVG;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_FEATURE_PREV;
 import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
+import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefFeatureOverrides;
@@ -95,7 +96,7 @@ public class RefFeatures implements RefClassifier
         }
         else
         {
-            loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(true), sampleFeaturesMap, true);
+            loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleFeaturesMap, true);
         }
     }
 
@@ -108,6 +109,9 @@ public class RefFeatures implements RefClassifier
         {
             final String sampleId = sampleEntry.getKey();
             final String cancerType = mSampleDataCache.RefSampleCancerTypeMap.get(sampleId);
+
+            if(!isKnownCancerType(cancerType))
+                continue;
 
             final Set<String> features = Sets.newHashSet();
             double driverTotal = 0;

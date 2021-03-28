@@ -194,7 +194,10 @@ public class FeatureDataLoader
 
             if(mutationGenes != null && !checkIndels(sampleId, null, dbAccess))
             {
-                final List<String> nonIndelMutations = mutationGenes.stream().filter(x -> !isKnownIndelGene(x)).collect(Collectors.toList());
+                final List<String> nonIndelMutations = mutationGenes.stream()
+                        .filter(x -> !isKnownIndelGene(x))
+                        .collect(Collectors.toList());
+
                 mutationGenes.clear();
                 mutationGenes.addAll(nonIndelMutations);
             }
@@ -293,6 +296,8 @@ public class FeatureDataLoader
     private static final String INDEL_SFTPB = "SFTPB";
     private static final String INDEL_SLC34A2 = "SLC34A2";
 
+    private static final String KNOWN_INDEL_STR = "KNOWN_INDEL_";
+
     private static boolean isKnownIndelGene(final String gene)
     {
         return gene.equals(INDEL_ALB) || gene.equals(INDEL_SFTPB) || gene.equals(INDEL_SLC34A2);
@@ -355,26 +360,14 @@ public class FeatureDataLoader
             final String ref = record.getValue(SOMATICVARIANT.REF);
             final String alt = record.getValue(SOMATICVARIANT.ALT);
 
-            String muation = "";
-
-            if(checkIndels && isKnownIndel(gene, repeatCount, type))
+            if((checkIndels && isKnownIndel(gene, repeatCount, type)) || isKnownEGFRMutation(gene, type, position, ref, alt))
             {
-                muation = "KNOWN_INDEL_" + gene;
+                final List<String> genes = sampleMutationMap.get(sampleId);
+                if(genes == null)
+                    sampleMutationMap.put(sampleId, Lists.newArrayList(gene));
+                else
+                    genes.add(gene);
             }
-            else if(isKnownEGFRMutation(gene, type, position, ref, alt))
-            {
-                muation = "KNOWN_EGFR";
-            }
-            else
-            {
-                continue;
-            }
-
-            final List<String> genes = sampleMutationMap.get(sampleId);
-            if(genes == null)
-                sampleMutationMap.put(sampleId, Lists.newArrayList(muation));
-            else
-                genes.add(muation);
         }
 
         return sampleMutationMap;
@@ -392,13 +385,10 @@ public class FeatureDataLoader
             if(!variant.filter().equals("PASS"))
                 continue;
 
-            if(checkIndels && isKnownIndel(variant.gene(), variant.repeatCount(), variant.type()))
+            if((checkIndels && isKnownIndel(variant.gene(), variant.repeatCount(), variant.type()))
+            || isKnownEGFRMutation(variant.gene(), variant.type(), (int)variant.position(), variant.ref(), variant.alt()))
             {
-                mutations.add(String.format("KNOWN_INDEL_%s", variant.gene()));
-            }
-            else if(isKnownEGFRMutation(variant.gene(), variant.type(), (int)variant.position(), variant.ref(), variant.alt()))
-            {
-                mutations.add("KNOWN_EGFR");
+                mutations.add(variant.gene());
             }
         }
 

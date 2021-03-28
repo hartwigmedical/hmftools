@@ -67,7 +67,7 @@ public class RefSvData implements RefClassifier
 
         if(mConfig.RefSampleSvDataFile.isEmpty())
         {
-            loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(true), sampleSvData);
+            loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleSvData);
             sampleSvData.values().forEach(x -> assignSampleData(x));
         }
         else
@@ -95,12 +95,15 @@ public class RefSvData implements RefClassifier
             for(Map.Entry<String,List<SvData>> entry : mCancerSvData.entrySet())
             {
                 final String cancerType = entry.getKey();
+
+                if(!isKnownCancerType(cancerType))
+                    continue;
+
                 final List<SvData> svDataList = entry.getValue();
 
                 for(SvDataType dataType : SvDataType.values())
                 {
                     final List<Double> values = svDataList.stream().map(x -> (double)x.getCount(dataType)).collect(Collectors.toList());
-                    // writeRefDataType(cancerType, dataType, createPercentileData(values));
 
                     writer.write(String.format("%s,%s", cancerType, dataType));
 
