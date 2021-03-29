@@ -63,7 +63,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         const val HLA_B = "HLA-B"
         const val HLA_C = "HLA-C"
 
-        val EXCLUDED_ALLELES = setOf(HlaAllele("A*01:81"))
+        val EXCLUDED_ALLELES = setOf(HlaAllele("A*01:81"), HlaAllele("A*01:237"))
 
         val A_EXON_BOUNDARIES = setOf(24, 114, 206, 298, 337, 348, 364)
         val B_EXON_BOUNDARIES = setOf(24, 114, 206, 298, 337, 348)
@@ -195,7 +195,6 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         logger.info("Calculating coverage of ${complexes.size} complexes")
 
         val referenceComplexCoverage = referenceCoverageFactory.complexCoverage(complexes)
-
 
         if (expectedSequences.isNotEmpty()) {
             val expectedCoverage = referenceCoverageFactory.proteinCoverage(expectedSequences.map { it.allele })
