@@ -15,6 +15,7 @@ import com.hartwig.hmftools.lilac.hla.HlaContextFactory
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory
 import com.hartwig.hmftools.lilac.nuc.NucleotideGeneEnrichment
+import com.hartwig.hmftools.lilac.out.HlaOut
 import com.hartwig.hmftools.lilac.qc.*
 import com.hartwig.hmftools.lilac.read.FragmentAlleles
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
@@ -231,23 +232,25 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             lilacQC.writefile("$outputDir/$sample.qc.txt")
 
 
+            val winningTumorCoverage: List<HlaAlleleCoverage>
+            val winningTumorCopyNumber: List<Double>
             if (config.tumorBam.isNotEmpty()) {
                 logger.info("Calculating tumor coverage of winning alleles")
-
 
                 val tumorFragmentAlleles = FragmentAlleles.create(aminoAcidPipeline.tumorCoverageFragments(),
                         referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences, referenceNucleotideHeterozygousLoci, candidateNucleotideSequences)
                 val tumorCoverageFactory = HlaComplexCoverageFactory(executorService, tumorFragmentAlleles)
-                val winningTumorCoverage = tumorCoverageFactory.proteinCoverage(winningAlleles)
+                winningTumorCoverage = tumorCoverageFactory.proteinCoverage(winningAlleles).alleleCoverage
 
                 logger.info("Calculating tumor copy number of winning alleles")
-                val tumorAlleleCopyNumber = HlaCopyNumber.alleleCopyNumber(config.geneCopyNumberFile, winningTumorCoverage)
-                println(tumorAlleleCopyNumber)
-
-
+                winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(config.geneCopyNumberFile, winningTumorCoverage).copyNumbers
+            } else {
+                winningTumorCoverage = listOf()
+                winningTumorCopyNumber = listOf()
             }
 
-
+            val output = HlaOut(winningReferenceCoverage.alleleCoverage, winningTumorCoverage, winningTumorCopyNumber)
+            output.write("$outputDir/$sample.lilac.txt")
         }
 
         logger.info("Writing output to $outputDir")

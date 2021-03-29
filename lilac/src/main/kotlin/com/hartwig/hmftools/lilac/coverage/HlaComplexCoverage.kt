@@ -43,13 +43,15 @@ data class HlaComplexCoverage(val uniqueCoverage: Int, val sharedCoverage: Int, 
             val b = this.filter { it.allele.gene == "B" }
             val c = this.filter { it.allele.gene == "C" }
 
-            return (a.duplicateSingle() + b.duplicateSingle() + c.duplicateSingle()).sortedBy { it.allele }
+            return (a.splitSingle() + b.splitSingle() + c.splitSingle()).sortedBy { it.allele }
         }
 
-        private fun List<HlaAlleleCoverage>.duplicateSingle(): List<HlaAlleleCoverage> {
+        private fun List<HlaAlleleCoverage>.splitSingle(): List<HlaAlleleCoverage> {
             if (this.size == 1) {
                 val single = this[0]
-                return listOf(single, single)
+                val first = HlaAlleleCoverage(single.allele, single.uniqueCoverage / 2, single.sharedCoverage / 2, single.wildCoverage / 2)
+                val remainder = HlaAlleleCoverage(single.allele, single.uniqueCoverage - first.uniqueCoverage, single.sharedCoverage - first.sharedCoverage, single.wildCoverage - single.wildCoverage)
+                return listOf(first, remainder).sortedBy { it.totalCoverage }.reversed()
             }
 
             return this
