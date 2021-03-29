@@ -22,6 +22,7 @@ const val MIN_FRAGMENTS_PER_ALLELE = "min_fragments_per_allele"
 const val MIN_FRAGMENTS_TO_REMOVE_SINGLE = "min_fragments_to_remove_single"
 const val MIN_CONFIRMED_UNIQUE_COVERAGE = "min_confirmed_unique_coverage"
 const val EXPECTED_ALLELES = "expected_alleles"
+const val GENE_COPY_NUMBER = "gene_copy_number"
 
 data class LilacConfig(
         val sample: String,
@@ -36,6 +37,7 @@ data class LilacConfig(
         val minFragmentsToRemoveSingle: Int,
         val minConfirmedUniqueCoverage: Int,
         val threads: Int,
+        val geneCopyNumberFile: String,
         val expectedAlleles: List<HlaAllele>
 ) {
 
@@ -48,6 +50,7 @@ data class LilacConfig(
             val sample = cmd.getOptionValue(SAMPLE)
             val referenceBam = cmd.requiredFile(REFERENCE_BAM_OPTION)
             val tumorBam = cmd.optionalFile(TUMOR_BAM_OPTION, "")
+            val geneCopyNumberFile = cmd.optionalFile(GENE_COPY_NUMBER, "")
             val resourceDir = cmd.requiredDir(RESOURCE_DIR_OPTION)
             val outputDir = cmd.requiredDir(OUTPUT_DIR_OPTION)
             val defaultConfig = default()
@@ -80,6 +83,7 @@ data class LilacConfig(
                     minFragmentsToRemoveSingle,
                     minConfirmedUniqueCoverage,
                     threads,
+                    geneCopyNumberFile,
                     expectedAlleles)
         }
 
@@ -97,6 +101,7 @@ data class LilacConfig(
                     40,
                     10,
                     1,
+                    "",
                     listOf())
         }
 
@@ -115,6 +120,7 @@ data class LilacConfig(
             options.addOption(optional(MIN_CONFIRMED_UNIQUE_COVERAGE, "MIN_CONFIRMED_UNIQUE_COVERAGE"))
             options.addOption(optional(THREADS, "Number of threads"))
             options.addOption(optional(EXPECTED_ALLELES, "Comma separated expected alleles"))
+            options.addOption(optional(GENE_COPY_NUMBER, "Path to gene copy number file"))
             return options
         }
 
