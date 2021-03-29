@@ -49,9 +49,7 @@ data class HlaComplexCoverage(val uniqueCoverage: Int, val sharedCoverage: Int, 
         private fun List<HlaAlleleCoverage>.duplicateSingle(): List<HlaAlleleCoverage> {
             if (this.size == 1) {
                 val single = this[0]
-                val duplicate = HlaAlleleCoverage(single.allele, 0, 0.0, 0.0)
-                return listOf(single, duplicate)
-
+                return listOf(single, single)
             }
 
             return this
