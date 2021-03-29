@@ -127,6 +127,8 @@ public class CkbExtractorTestApp {
                 .build();
 
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config, refGenomeResource, doidLookup);
+
+        // TODO 3. Create ActionableEvents for all relevant entries.
         ExtractionResult result = extractor.extract(filteredAndcurateCkbEntries, type);
 
         CkbUtils.printExtractionResults(result, type);
@@ -136,6 +138,5 @@ public class CkbExtractorTestApp {
 
         new ExtractionResultWriter(outputDir, refGenomeVersion).write(result);
 
-        // TODO 3. Create ActionableEvents for all relevant entries.
     }
 }
