@@ -59,10 +59,31 @@ public class CodingEffectFactoryTest {
     }
 
     @Test
-    public void testAcceptorPlusThree() {
+    public void testAcceptorPlusThreeForwardStrandG() {
         String vcf =
                 "5\t76640675\t.\tC\tG\t972\tPASS\tANN=G|splice_region_variant&intron_variant|LOW|PDE8B|ENSG00000113231|transcript|ENST00000264917|protein_coding|6/21|c.798-3C>G||||||,G|splice_region_variant&intron_variant|LOW|PDE8B|ENSG00000113231|transcript|ENST00000340978|protein_coding|6/20|c.798-3C>G||||||,G|splice_region_variant&intron_variant|LOW|PDE8B|ENSG00000113231|transcript|ENST00000346042|protein_coding|6/18|c.798-3C>G||||||,G|splice_region_variant&intron_variant|LOW|PDE8B|ENSG00000113231|transcript|ENST00000333194|protein_coding|6/20|c.798-3C>G||||||,G|splice_region_variant&intron_variant|LOW|PDE8B|ENSG00000113231|transcript|ENST00000342343|protein_coding|5/20|c.738-3C>G||||||,G|splice_region_variant&intron_variant|LOW|PDE8B|ENSG00000113231|transcript|ENST00000503963|protein_coding|4/6|c.84-3C>G||||||WARNING_TRANSCRIPT_NO_STOP_CODON;BIALLELIC;MAPPABILITY=1;PURPLE_AF=1.0846;PURPLE_CN=1.06;PURPLE_GERMLINE=DIPLOID;PURPLE_MACN=9.422e-03;PURPLE_VCN=1.15;RC=CTTTGAG;RC_NM=1;REP_C=3;REP_S=T;SEC=PDE8B,ENST00000264917,splice_region_variant&intron_variant,NONE,c.798-3C>G,;SEW=PDE8B,ENST00000264917,splice_region_variant&intron_variant,NONE,1;TIER=HIGH_CONFIDENCE;TNC=TCA\tGT:AD:AF:DP:RABQ:RAD:RC_CNT:RC_IPC:RC_JIT:RC_QUAL:RDP\t0/0:93,0:0:93:3851,0:96,0:0,0,0,0,93,93:0:0,0,0:0,0,0,0,2757,2757:96\t0/1:8,35:0.814:43:331,1548:8,39:27,7,1,0,8,43:0:0,0,0:900,72,18,0,217,1207:47";
-        assertEffect(CodingEffect.SPLICE, vcf);
+        assertEffect(SPLICE, vcf);
+    }
+
+    @Test
+    public void testAcceptorPlusThreeForwardStrandC() {
+        String vcf =
+                "5\t76640675\t.\tT\tC\t972\tPASS\tANN=G|splice_region_variant&intron_variant|LOW|PDE8B|ENSG00000113231|transcript|ENST00000264917|protein_coding|6/21|c.798-3C>G||||||,G|splice_region_variant&intron_variant|LOW|PDE8B|ENSG00000113231|transcript|ENST00000340978|protein_coding|6/20|c.798-3C>G||||||,G|splice_region_variant&intron_variant|LOW|PDE8B|ENSG00000113231|transcript|ENST00000346042|protein_coding|6/18|c.798-3C>G||||||,G|splice_region_variant&intron_variant|LOW|PDE8B|ENSG00000113231|transcript|ENST00000333194|protein_coding|6/20|c.798-3C>G||||||,G|splice_region_variant&intron_variant|LOW|PDE8B|ENSG00000113231|transcript|ENST00000342343|protein_coding|5/20|c.738-3C>G||||||,G|splice_region_variant&intron_variant|LOW|PDE8B|ENSG00000113231|transcript|ENST00000503963|protein_coding|4/6|c.84-3C>G||||||WARNING_TRANSCRIPT_NO_STOP_CODON;BIALLELIC;MAPPABILITY=1;PURPLE_AF=1.0846;PURPLE_CN=1.06;PURPLE_GERMLINE=DIPLOID;PURPLE_MACN=9.422e-03;PURPLE_VCN=1.15;RC=CTTTGAG;RC_NM=1;REP_C=3;REP_S=T;SEC=PDE8B,ENST00000264917,splice_region_variant&intron_variant,NONE,c.798-3C>G,;SEW=PDE8B,ENST00000264917,splice_region_variant&intron_variant,NONE,1;TIER=HIGH_CONFIDENCE;TNC=TCA\tGT:AD:AF:DP:RABQ:RAD:RC_CNT:RC_IPC:RC_JIT:RC_QUAL:RDP\t0/0:93,0:0:93:3851,0:96,0:0,0,0,0,93,93:0:0,0,0:0,0,0,0,2757,2757:96\t0/1:8,35:0.814:43:331,1548:8,39:27,7,1,0,8,43:0:0,0,0:900,72,18,0,217,1207:47";
+        assertEffect(NONE, vcf);
+    }
+
+    @Test
+    public void testAcceptorPlusThreeReverseStrandG() {
+        String vcf =
+                "13\t28610183\t.\tA\tG\t409.0\tPASS\tRC=CTGTA;RC_IDX=2;RC_LF=TGAGGTTTCC;RC_NM=1;RC_RF=GAAAAGAACG;REP_C=2;REP_S=TA;TIER=PANEL;TNC=TAT;AC=0;AN=0;MAPPABILITY=1;ANN=G|splice_region_variant&intron_variant|LOW|FLT3|ENSG00000122025|transcript|ENST00000380982|protein_coding|10/23|c.1310-3T>C||||||,G|splice_region_variant&intron_variant|LOW|FLT3|ENSG00000122025|transcript|ENST00000241453|protein_coding|10/23|c.1310-3T>C||||||,G|splice_region_variant&intron_variant|LOW|FLT3|ENSG00000122025|transcript|ENST00000380987|nonsense_mediated_decay|10/24|c.1310-3T>C||||||,G|splice_region_variant&intron_variant|LOW|FLT3|ENSG00000122025|transcript|ENST00000537084|protein_coding|10/22|c.1310-3T>C||||||\tGT:AD:AF:DP:RABQ:RAD:RC_CNT:RC_IPC:RC_JIT:RC_QUAL:RDP\t./.:17,18:0.514:35:579,666:17,18:14,3,0,0,1,17,35:0:0,0,0:382,27,0,0,1,423,832:35\t./.:50,65:0.565:115:1824,2490:50,68:50,12,3,0,0,50,115:1:0,0,0:1545,189,65,0,0,1385,3184:118";
+        assertEffect(NONE, vcf);
+    }
+
+    @Test
+    public void testAcceptorPlusThreeReverseStrandC() {
+        String vcf =
+                "13\t28610183\t.\tA\tC\t409.0\tPASS\tRC=CTGTA;RC_IDX=2;RC_LF=TGAGGTTTCC;RC_NM=1;RC_RF=GAAAAGAACG;REP_C=2;REP_S=TA;TIER=PANEL;TNC=TAT;AC=0;AN=0;MAPPABILITY=1;ANN=G|splice_region_variant&intron_variant|LOW|FLT3|ENSG00000122025|transcript|ENST00000380982|protein_coding|10/23|c.1310-3T>C||||||,G|splice_region_variant&intron_variant|LOW|FLT3|ENSG00000122025|transcript|ENST00000241453|protein_coding|10/23|c.1310-3T>C||||||,G|splice_region_variant&intron_variant|LOW|FLT3|ENSG00000122025|transcript|ENST00000380987|nonsense_mediated_decay|10/24|c.1310-3T>C||||||,G|splice_region_variant&intron_variant|LOW|FLT3|ENSG00000122025|transcript|ENST00000537084|protein_coding|10/22|c.1310-3T>C||||||\tGT:AD:AF:DP:RABQ:RAD:RC_CNT:RC_IPC:RC_JIT:RC_QUAL:RDP\t./.:17,18:0.514:35:579,666:17,18:14,3,0,0,1,17,35:0:0,0,0:382,27,0,0,1,423,832:35\t./.:50,65:0.565:115:1824,2490:50,68:50,12,3,0,0,50,115:1:0,0,0:1545,189,65,0,0,1385,3184:118";
+        assertEffect(SPLICE, vcf);
     }
 
     private void assertEffect(CodingEffect expected, String line) {

@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
@@ -51,7 +52,8 @@ public class CodingEffectFactory {
                 int position = variant.context().getStart();
                 int end = variant.context().getEnd();
                 while (position <= end) {
-                    if (consequences.contains(SPLICE_REGION_VARIANT) && alt.equals("G") && transcript.isAcceptorPlusThree(position)) {
+                    String acceptorPlusThreeSpliceAlt = transcript.strand() == Strand.FORWARD ? "G" : "C";
+                    if (consequences.contains(SPLICE_REGION_VARIANT) && alt.equals(acceptorPlusThreeSpliceAlt) && transcript.isAcceptorPlusThree(position)) {
                         return SPLICE;
                     }
 

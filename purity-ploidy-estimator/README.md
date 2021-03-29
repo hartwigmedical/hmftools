@@ -1072,6 +1072,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- Upcoming
+  - Fix logic for acceptor +3 splice variant to consider strand
 - [2.53](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.53) 
   - Added LOW_TUMOR_VCN filter to germline variants
   - Fixed bug with incorrect driver catagory in copy number drivers.
