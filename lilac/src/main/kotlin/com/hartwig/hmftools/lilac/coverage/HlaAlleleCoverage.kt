@@ -9,6 +9,14 @@ data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val
 
     companion object {
 
+        fun List<HlaAlleleCoverage>.expand(): List<HlaAlleleCoverage> {
+            val a = this.filter { it.allele.gene == "A" }
+            val b = this.filter { it.allele.gene == "B" }
+            val c = this.filter { it.allele.gene == "C" }
+
+            return (a.splitSingle() + b.splitSingle() + c.splitSingle()).sortedBy { it.allele }
+        }
+
         fun proteinCoverage(fragmentSequences: List<FragmentAlleles>): List<HlaAlleleCoverage> {
             return create(fragmentSequences) { it }
         }
@@ -52,6 +60,19 @@ data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val
 
             return result.sortedDescending()
         }
+
+        private fun List<HlaAlleleCoverage>.splitSingle(): List<HlaAlleleCoverage> {
+            if (this.size == 1) {
+                val single = this[0]
+                val first = HlaAlleleCoverage(single.allele, single.uniqueCoverage / 2, single.sharedCoverage / 2, single.wildCoverage / 2)
+                val remainder = HlaAlleleCoverage(single.allele, single.uniqueCoverage - first.uniqueCoverage, single.sharedCoverage - first.sharedCoverage, single.wildCoverage - single.wildCoverage)
+                return listOf(first, remainder).sortedBy { it.totalCoverage }.reversed()
+
+            }
+
+            return this
+        }
+
     }
 
     override fun compareTo(other: HlaAlleleCoverage): Int {

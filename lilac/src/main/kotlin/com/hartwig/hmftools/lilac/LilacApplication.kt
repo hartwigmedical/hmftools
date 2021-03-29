@@ -203,7 +203,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         if (referenceComplexCoverage.isNotEmpty()) {
             val referenceRankedComplexes = HlaComplexCoverageRanking().candidateRanking(referenceComplexCoverage)
-            val winningReferenceCoverage = referenceRankedComplexes[0]
+            val winningReferenceCoverage = referenceRankedComplexes[0].expandToSixAlleles()
             val winningAlleles = winningReferenceCoverage.alleleCoverage.alleles()
             val winningSequences = candidates.filter { candidate -> candidate.allele in winningAlleles }
 
@@ -211,8 +211,8 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             referenceRankedComplexes.writeToFile("$outputDir/$sample.reference.coverage.txt")
 
             logger.info(HlaComplexCoverage.header())
-            for (winningCandidate in referenceRankedComplexes) {
-                logger.info(winningCandidate)
+            for (rankedComplex in referenceRankedComplexes) {
+                logger.info(rankedComplex)
             }
 
             logger.info("${config.sample} - REF - ${referenceRankedComplexes.size} CANDIDATES, WINNING ALLELES: ${winningReferenceCoverage.alleleCoverage.map { it.allele }}")
@@ -231,24 +231,25 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             lilacQC.writefile("$outputDir/$sample.qc.txt")
 
 
-            val winningTumorCoverage: List<HlaAlleleCoverage>
-            val winningTumorCopyNumber: List<Double>
+            val winningTumorCoverage: HlaComplexCoverage
+            val winningTumorCopyNumber: HlaCopyNumber
+
             if (config.tumorBam.isNotEmpty()) {
                 logger.info("Calculating tumor coverage of winning alleles")
 
                 val tumorFragmentAlleles = FragmentAlleles.create(aminoAcidPipeline.tumorCoverageFragments(),
                         referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences, referenceNucleotideHeterozygousLoci, candidateNucleotideSequences)
                 val tumorCoverageFactory = HlaComplexCoverageFactory(executorService, tumorFragmentAlleles)
-                winningTumorCoverage = tumorCoverageFactory.proteinCoverage(winningAlleles).alleleCoverage
+                winningTumorCoverage = tumorCoverageFactory.proteinCoverage(winningAlleles).expandToSixAlleles()
 
                 logger.info("Calculating tumor copy number of winning alleles")
-                winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(config.geneCopyNumberFile, winningTumorCoverage).copyNumbers
+                winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(config.geneCopyNumberFile, winningTumorCoverage)
             } else {
-                winningTumorCoverage = listOf()
-                winningTumorCopyNumber = listOf()
+                winningTumorCoverage = HlaComplexCoverage.create(listOf())
+                winningTumorCopyNumber = HlaCopyNumber.Companion.alleleCopyNumber(config.geneCopyNumberFile, winningTumorCoverage)
             }
 
-            val output = HlaOut(winningReferenceCoverage.alleleCoverage, winningTumorCoverage, winningTumorCopyNumber)
+            val output = HlaOut(winningReferenceCoverage, winningTumorCoverage, winningTumorCopyNumber)
             output.write("$outputDir/$sample.lilac.txt")
         }
 
@@ -265,7 +266,6 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
     private fun nucleotideLoci(inputFilename: String): List<HlaSequenceLoci> {
         val sequences = HlaSequenceFile.readFile(inputFilename)
                 .filter { it.allele !in EXCLUDED_ALLELES }
-//                .filter { it.allele.gene in setOf("A", "B") ||  it.allele in listOf(HlaAllele("C*01:02:01:01"), HlaAllele("C*17:01:01:02")) }
                 .reduceToSixDigit()
         return HlaSequenceLoci.create(sequences)
                 .filter { it.sequences.isNotEmpty() }

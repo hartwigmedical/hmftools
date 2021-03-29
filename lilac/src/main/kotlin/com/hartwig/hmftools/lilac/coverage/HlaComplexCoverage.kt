@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.coverage
 
+import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage.Companion.expand
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -18,7 +19,7 @@ data class HlaComplexCoverage(val uniqueCoverage: Int, val sharedCoverage: Int, 
                 wild += coverage.wildCoverage
             }
 
-            return HlaComplexCoverage(unique, shared.roundToInt(), wild.roundToInt(), alleles.expand())
+            return HlaComplexCoverage(unique, shared.roundToInt(), wild.roundToInt(), alleles)
         }
 
         fun header(): String {
@@ -34,35 +35,15 @@ data class HlaComplexCoverage(val uniqueCoverage: Int, val sharedCoverage: Int, 
             }
         }
 
-        private fun List<HlaAlleleCoverage>.expand(): List<HlaAlleleCoverage> {
-            if (this.size == 6) {
-                return this.sortedBy { it.allele }
-            }
+    }
 
-            val a = this.filter { it.allele.gene == "A" }
-            val b = this.filter { it.allele.gene == "B" }
-            val c = this.filter { it.allele.gene == "C" }
-
-            return (a.splitSingle() + b.splitSingle() + c.splitSingle()).sortedBy { it.allele }
-        }
-
-        private fun List<HlaAlleleCoverage>.splitSingle(): List<HlaAlleleCoverage> {
-            if (this.size == 1) {
-                val single = this[0]
-                val first = HlaAlleleCoverage(single.allele, single.uniqueCoverage / 2, single.sharedCoverage / 2, single.wildCoverage / 2)
-                val remainder = HlaAlleleCoverage(single.allele, single.uniqueCoverage - first.uniqueCoverage, single.sharedCoverage - first.sharedCoverage, single.wildCoverage - single.wildCoverage)
-                return listOf(first, remainder).sortedBy { it.totalCoverage }.reversed()
-            }
-
-            return this
-        }
-
+    fun expandToSixAlleles(): HlaComplexCoverage {
+        return create(this.alleleCoverage.expand())
     }
 
     fun homozygousAlleles(): Int {
-        val size = alleleCoverage.size
-        val distinct = alleleCoverage.distinct().size
-        return size - distinct
+        val distinct = alleleCoverage.map { it.allele }.distinct().size
+        return 6 - distinct
     }
 
     override fun compareTo(other: HlaComplexCoverage): Int {
