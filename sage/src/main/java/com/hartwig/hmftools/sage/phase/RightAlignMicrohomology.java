@@ -52,7 +52,7 @@ public class RightAlignMicrohomology implements Consumer<SageVariant> {
         }
 
         final boolean isInframeDel = variant.variant().isInframeIndel() && variant.alt().length() == 1;
-        if (!isInframeDel) {
+        if (!variant.variant().isInframeIndel()) {
             return false;
         }
 
@@ -67,7 +67,7 @@ public class RightAlignMicrohomology implements Consumer<SageVariant> {
             return false;
         }
 
-        final VariantHotspot rightAligned = rightAlignDel(variant.variant(), microhomology);
+        final VariantHotspot rightAligned = isInframeDel ? rightAlignDel(variant.variant(), microhomology) : rightAlignIns(variant.variant(), microhomology);
         final Optional<HmfTranscriptRegion> maybeRightAlignedTranscript = selector.select(rightAligned.position() + 1);
         if (!maybeRightAlignedTranscript.isPresent()) {
             return false;
@@ -101,6 +101,19 @@ public class RightAlignMicrohomology implements Consumer<SageVariant> {
         int microhomologyLength = microhomology.length();
         final String alt = microhomology.substring(microhomologyLength - 1);
         final String ref = variant.ref().substring(microhomologyLength) + microhomology;
+        return ImmutableVariantHotspotImpl.builder()
+                .from(variant)
+                .position(variant.position() + microhomologyLength)
+                .ref(ref)
+                .alt(alt)
+                .build();
+    }
+
+    @NotNull
+    static VariantHotspot rightAlignIns(@NotNull final VariantHotspot variant, @NotNull final String microhomology) {
+        int microhomologyLength = microhomology.length();
+        final String alt = variant.alt().substring(microhomologyLength) + microhomology;
+        final String ref = microhomology.substring(microhomologyLength - 1);
         return ImmutableVariantHotspotImpl.builder()
                 .from(variant)
                 .position(variant.position() + microhomologyLength)
