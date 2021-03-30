@@ -62,6 +62,11 @@ public class PositionFrequencies
         }
     }
 
+    public boolean isValidChromosome(final String chromosome)
+    {
+        return mChromosomePosIndex.containsKey(chromosome);
+    }
+
     public void addPosition(final String chromosome, int position)
     {
         int bucketIndex = getBucketIndex(mBucketSize, mChromosomePosIndex, chromosome, position);
@@ -120,10 +125,16 @@ public class PositionFrequencies
         return positionCacheSize;
     }
 
+    public static final int INVALID_BUCKET_INDEX = -1;
+
     public static int getBucketIndex(
             final int bucketSize, final Map<String,Integer> chrPosIndexMap, final String chromosome, int position)
     {
-        int chromosomePosIndex = chrPosIndexMap.get(chromosome);
+        Integer chromosomePosIndex = chrPosIndexMap.get(chromosome);
+
+        if(chromosomePosIndex == null)
+            return INVALID_BUCKET_INDEX;
+
         int posBucket = (int)floor(position/(double)bucketSize);
         return chromosomePosIndex + posBucket;
     }

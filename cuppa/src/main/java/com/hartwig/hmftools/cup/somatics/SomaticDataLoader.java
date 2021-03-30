@@ -199,6 +199,12 @@ public class SomaticDataLoader
             if(rawContext.contains("N"))
                 continue;
 
+            if(!positionFrequencies.isValidChromosome(variant.chromosome()))
+            {
+                CUP_LOGGER.warn("variant chr({}) position({}) cannot map to genomic position", variant.chromosome(), variant.position());
+                continue;
+            }
+
             positionFrequencies.addPosition(variant.chromosome(), (int)variant.position());
         }
     }
