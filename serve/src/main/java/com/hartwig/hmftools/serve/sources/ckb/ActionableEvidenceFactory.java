@@ -28,6 +28,8 @@ class ActionableEvidenceFactory {
     private static final Set<String> RESPONSIVE_DIRECTIONS = Sets.newHashSet();
     private static final Set<String> RESISTANT_DIRECTIONS = Sets.newHashSet();
     private static final Set<String> DIRECTIONS_TO_IGNORE = Sets.newHashSet();
+    private static final Set<String> EVIDENCE_TYPE = Sets.newHashSet();
+    private static final Set<String> EVIDENCE_TYPE_TO_IGNORE = Sets.newHashSet();
 
     static {
         RESPONSIVE_DIRECTIONS.add("sensitive");
@@ -42,6 +44,14 @@ class ActionableEvidenceFactory {
         DIRECTIONS_TO_IGNORE.add("conflicting");
         DIRECTIONS_TO_IGNORE.add("no benefit");
         DIRECTIONS_TO_IGNORE.add("not predictive");
+
+        EVIDENCE_TYPE.add("Actionable");
+
+        EVIDENCE_TYPE_TO_IGNORE.add("Prognostic");
+        EVIDENCE_TYPE_TO_IGNORE.add("Emerging");
+        EVIDENCE_TYPE_TO_IGNORE.add("Risk Factor");
+        EVIDENCE_TYPE_TO_IGNORE.add("Diagnostic");
+
     }
 
     @NotNull
@@ -64,34 +74,40 @@ class ActionableEvidenceFactory {
 
         for (Evidence evidence : entry.evidences()) {
 
-            String therapyName = evidence.therapy().therapyName();
+            if (resolveEvidenceType(evidence.evidenceType())) {
+                String therapyName = evidence.therapy().therapyName();
 
-            EvidenceLevel level = resolveLevel(evidence.ampCapAscoEvidenceLevel());
-            EvidenceDirection direction = resolveDirection(evidence.responseType());
-            String cancerType = evidence.indication().name();
-            Set<String> urls = Sets.newHashSet();
+                EvidenceLevel level = resolveLevel(evidence.ampCapAscoEvidenceLevel());
+                EvidenceDirection direction = resolveDirection(evidence.responseType());
+                String cancerType = evidence.indication().name();
+                Set<String> urls = Sets.newHashSet();
 
-            for (Reference reference : evidence.references()) {
-                if (reference.url() != null) {
-                    urls.add(reference.url());
+                for (Reference reference : evidence.references()) {
+                    if (reference.url() != null) {
+                        urls.add(reference.url());
+                    }
+                }
+
+                if (therapyName != null && level != null && direction != null) {
+                    ImmutableActionableEvidence.Builder builder =
+                            ImmutableActionableEvidence.builder().source(Knowledgebase.CKB).level(level).direction(direction).urls(urls);
+                    actionableEvents.add(builder.cancerType(cancerType).doid(Strings.EMPTY).treatment(therapyName).build());
                 }
             }
 
-            if (therapyName != null && level != null && direction != null) {
-                LOGGER.info("adding");
-                ImmutableActionableEvidence.Builder builder =
-                        ImmutableActionableEvidence.builder().source(Knowledgebase.CKB).level(level).direction(direction).urls(urls);
-                actionableEvents.add(builder.cancerType(cancerType).doid(Strings.EMPTY).treatment(therapyName).build());
-            }
-
-
         }
 
-        LOGGER.info(actionableEvents);
-
-
-
         return actionableEvents;
+    }
+
+    private static boolean resolveEvidenceType(@NotNull String evidenceType) {
+        boolean useubleEvidence = false;
+        if (EVIDENCE_TYPE.contains(evidenceType)) {
+            useubleEvidence = true;
+        } else if (EVIDENCE_TYPE_TO_IGNORE.contains(evidenceType)) {
+            useubleEvidence = false;
+        }
+        return useubleEvidence;
     }
 
     @Nullable
