@@ -21,6 +21,7 @@ import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeManager;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractor;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractorFactory;
+import com.hartwig.hmftools.serve.sources.ckb.CkbReader;
 import com.hartwig.hmftools.serve.sources.docm.DocmEntry;
 import com.hartwig.hmftools.serve.sources.docm.DocmExtractor;
 import com.hartwig.hmftools.serve.sources.docm.DocmReader;
@@ -120,7 +121,7 @@ public class ServeAlgo {
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
         List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-        //   List<CkbEntry> curateCKBEntries = CkbReader.filterAndCurateRelevantEntries(ckbEntries);
+        List<CkbEntry> curateCKBEntries = CkbReader.filterAndCurateRelevantEntries(ckbEntries);
 
         EventClassifierConfig config = CkbClassificationConfig.build();
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config,
@@ -128,7 +129,7 @@ public class ServeAlgo {
                 missingDoidLookup);
 
         LOGGER.info("Running CKB knowledge extraction");
-        return extractor.extract(ckbEntries, EventType.UNKNOWN);
+        return extractor.extract(curateCKBEntries);
     }
 
     @NotNull

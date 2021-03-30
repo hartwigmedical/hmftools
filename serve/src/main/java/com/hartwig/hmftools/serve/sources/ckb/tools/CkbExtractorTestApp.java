@@ -129,9 +129,9 @@ public class CkbExtractorTestApp {
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config, refGenomeResource, doidLookup);
 
         // TODO 3. Create ActionableEvents for all relevant entries.
-        ExtractionResult result = extractor.extract(filteredAndcurateCkbEntries, type);
+        ExtractionResult result = extractor.extract(filteredAndcurateCkbEntries);
 
-        CkbUtils.printExtractionResults(result, type);
+       // CkbUtils.printExtractionResults(result, type);
 
 
         // IclusionUtil.printIclusionResult(result);

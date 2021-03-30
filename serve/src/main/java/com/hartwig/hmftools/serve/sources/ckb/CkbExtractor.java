@@ -60,9 +60,8 @@ public class CkbExtractor {
     }
 
     @NotNull
-    public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries, @NotNull EventType type) {
+    public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries) {
         List<ExtractionResult> extractions = Lists.newArrayList();
-        Set<ActionableEvent> actionableEvents = Sets.newHashSet();
         List<EventExtractorOutput> eventExtractions = Lists.newArrayList();
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
@@ -71,11 +70,20 @@ public class CkbExtractor {
             if (entry.variants().size() == 1) {
                 eventExtractions.add(eventExtractor.extract(entry.variants().get(0).gene().geneSymbol(),
                         entry.variants().get(0).gene().canonicalTranscript(),
-                        type,
+                        entry.type(),
                         entry.variants().get(0).variant()));
-                actionableEvents = actionableEvidenceFactory.toActionableEvents(entry);
+                Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry);
 
-                if (type == EventType.UNKNOWN) {
+                extractions.add(toExtractionResult(actionableEvents, eventExtractions));
+                extractions.add(ImmutableExtractionResult.builder()
+                        .knownHotspots(convertToHotspots(eventExtractions, entry))
+                        .knownCodons(convertToCodons(eventExtractions))
+                        .knownExons(convertToExons(eventExtractions))
+                        .knownCopyNumbers(convertToKnownAmpsDels(eventExtractions))
+                        .knownFusionPairs(convertToKnownFusions(eventExtractions))
+                        .build());
+
+                if (entry.type() == EventType.UNKNOWN) {
                     LOGGER.warn("No event type known for '{}' on '{}'",
                             entry.variants().get(0).variant(),
                             entry.variants().get(0).gene().geneSymbol());
@@ -83,17 +91,12 @@ public class CkbExtractor {
 
             }
 
-            extractions.add(toExtractionResult(actionableEvents, eventExtractions));
-            extractions.add(ImmutableExtractionResult.builder()
-                    .knownHotspots(convertToHotspots(eventExtractions, entry))
-                    .knownCodons(convertToCodons(eventExtractions))
-                    .knownExons(convertToExons(eventExtractions))
-                    .knownCopyNumbers(convertToKnownAmpsDels(eventExtractions))
-                    .knownFusionPairs(convertToKnownFusions(eventExtractions))
-                    .build());
+
 
             tracker.update();
         }
+        LOGGER.info(extractions.size());
+        LOGGER.info(extractions);
 
         actionableEvidenceFactory.evaluateCuration();
 

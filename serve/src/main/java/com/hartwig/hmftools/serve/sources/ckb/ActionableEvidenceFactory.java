@@ -94,27 +94,27 @@ class ActionableEvidenceFactory {
                     }
                 }
 
-                if (level != null && direction != null) {
-                    level = evidenceLevelCurator.curate(Knowledgebase.CKB,
-                            entry.variants().get(0).gene().geneSymbol(),
-                            therapyName,
-                            level,
-                            direction);
-                }
-
-                List<List<String>> drugLists = Lists.newArrayList();
-                if (level != null) {
-                    drugLists = drugCurator.curate(Knowledgebase.CKB, level, therapyName);
-                }
+//                if (level != null && direction != null) {
+//                    level = evidenceLevelCurator.curate(Knowledgebase.CKB,
+//                            entry.variants().get(0).gene().geneSymbol(),
+//                            therapyName,
+//                            level,
+//                            direction);
+//                }
+//
+//                List<List<String>> drugLists = Lists.newArrayList();
+//                if (level != null) {
+//                    drugLists = drugCurator.curate(Knowledgebase.CKB, level, therapyName);
+//                }
 
                 if (therapyName != null && level != null && direction != null) {
                     ImmutableActionableEvidence.Builder builder =
                             ImmutableActionableEvidence.builder().source(Knowledgebase.CKB).level(level).direction(direction).urls(urls);
                     for (Map.Entry<String, Set<String>> cancerTypeEntry : cancerTypeToDoidsMap.entrySet()) {
                         for (String doidSet : cancerTypeEntry.getValue()) {
-                            for (List<String> drugList : drugLists) {
-                                actionableEvents.add(builder.cancerType(cancerType).doid(doidSet).treatment(drugList.toString()).build());
-                            }
+                           // for (List<String> drugList : drugLists) {
+                                actionableEvents.add(builder.cancerType(cancerType).doid(doidSet).treatment(therapyName).build());
+                           // }
                         }
                     }
                 }
