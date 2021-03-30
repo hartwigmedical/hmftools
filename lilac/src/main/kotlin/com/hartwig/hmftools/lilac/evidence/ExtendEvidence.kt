@@ -2,7 +2,6 @@ package com.hartwig.hmftools.lilac.evidence
 
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.nuc.ExpectedAlleles
-import java.util.*
 
 class ExtendEvidence(
         private val minFragmentsPerAllele: Int,
@@ -26,7 +25,7 @@ class ExtendEvidence(
                 if (combinedEvidence.totalEvidence() >= minTotalFragments && CombineEvidence.canCombine(left, combinedEvidence, right)) {
                     result.add(combinedEvidence)
                 } else {
-                    println("FAIL:" + combinedEvidence)
+//                    println("FAIL:$combinedEvidence")
                 }
             }
         }
@@ -36,11 +35,6 @@ class ExtendEvidence(
 
 
     fun merge(current: PhasedEvidence, others: Set<PhasedEvidence>): Pair<PhasedEvidence, Set<PhasedEvidence>> {
-
-//        val expected = setOf(206, 207, 212, 217, 242)
-//        if (current.aminoAcidIndices.size == expected.size && expected.all { current.aminoAcidIndices.contains(it) }) {
-//            println("HERE")
-//        }
 
         val existingIndices = current.aminoAcidIndices
         val minExisting = existingIndices.min()!!
@@ -106,70 +100,6 @@ class ExtendEvidence(
         }
 
         return Pair(current, setOf())
-    }
-
-    fun extendConsecutive(current: PhasedEvidence, others: Set<PhasedEvidence>): List<PhasedEvidence> {
-
-
-        val existingIndices = current.aminoAcidIndices
-        val remainingIndices = heterozygousLoci.filter { it !in existingIndices }
-
-        val minExisting = existingIndices.min()!!
-        val maxExisting = existingIndices.max()!!
-
-        val remainingIndicesAbove = remainingIndices.filter { it > maxExisting }.sorted()
-        val remainingIndicesBelow = remainingIndices.filter { it < minExisting }.sorted().reversed()
-
-        val result = mutableListOf<PhasedEvidence>()
-        if (remainingIndicesAbove.isNotEmpty()) {
-            val unambiguousIndices = current.unambiguousTailIndices() + remainingIndicesAbove[0]
-            val allNewIndices = current.aminoAcidIndices + remainingIndicesAbove[0]
-            val next = next(true, current, unambiguousIndices, allNewIndices, others)
-            if (next != null) {
-                result.add(next)
-            }
-        }
-
-        if (remainingIndicesBelow.isNotEmpty()) {
-            val unambiguousIndices = (current.unambiguousHeadIndices() + remainingIndicesBelow[0]).sortedArray()
-            val allNewIndices = (current.aminoAcidIndices + remainingIndicesBelow[0]).sortedArray()
-            val next = next(false, current, unambiguousIndices, allNewIndices, others)
-            if (next != null) {
-                result.add(next)
-            }
-        }
-
-        return result.sorted().filter { it.totalEvidence() >= 30 }
-    }
-
-    private fun next(currentIsLeft: Boolean, current: PhasedEvidence, unambiguousIndices: IntArray, allIndices: IntArray, others: Set<PhasedEvidence>): PhasedEvidence? {
-        val fake = PhasedEvidence(allIndices, Collections.emptyMap())
-        if (!others.contains(fake)) {
-
-            val newEvidence = PhasedEvidence.evidence(aminoAcidFragments, *unambiguousIndices)
-            if (newEvidence.totalEvidence() < 30) {
-                return null
-            }
-
-            if (newEvidence.evidence.isNotEmpty()) {
-                val allIndicesInNewEvidence = newEvidence.aminoAcidIndices.size == allIndices.size
-                val left = if (currentIsLeft) current else newEvidence
-                val right = if (currentIsLeft) newEvidence else current
-                if (!CombineEvidence.canCombine(left, right)) {
-//                    println("BAD MERGE: $allIndicesInNewEvidence")
-//                    println(left)
-//                    println(right)
-                    return null
-                }
-
-                return if (allIndicesInNewEvidence) {
-                    newEvidence
-                } else {
-                    CombineEvidence.combineOverlapping(left, right)
-                }
-            }
-        }
-        return null
     }
 
 

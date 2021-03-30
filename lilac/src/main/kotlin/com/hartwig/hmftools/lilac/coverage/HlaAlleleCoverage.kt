@@ -9,6 +9,14 @@ data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val
 
     companion object {
 
+        fun List<HlaAlleleCoverage>.expand(): List<HlaAlleleCoverage> {
+            val a = this.filter { it.allele.gene == "A" }
+            val b = this.filter { it.allele.gene == "B" }
+            val c = this.filter { it.allele.gene == "C" }
+
+            return (a.splitSingle() + b.splitSingle() + c.splitSingle()).sortedBy { it.allele }
+        }
+
         fun proteinCoverage(fragmentSequences: List<FragmentAlleles>): List<HlaAlleleCoverage> {
             return create(fragmentSequences) { it }
         }
@@ -30,20 +38,8 @@ data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val
                 val partialAlleles = fragment.partial.map(type).toSet()
                 val wildAlleles = fragment.wild.map(type).toSet()
 
-//                if (fragment.aminoAcidFragment.id == "A00624:78:H2MLGDSXY:4:2152:5837:27132") {
-//                    println("AR")
-//                }
-//
-//                if (fragment.aminoAcidFragment.id == "A00624:78:H2MLGDSXY:4:1145:1967:11976") {
-//                    println("AG")
-//                }
-
                 if (fullAlleles.size == 1 && partialAlleles.isEmpty())  {
                     uniqueCoverageMap.compute(fullAlleles.first()) {_, oldValue ->  (oldValue ?: 0) + 1}
-//                    if (fullAlleles.first() == HlaAllele("C*07:57")) {
-//                        println(fragment.aminoAcidFragment.id)
-//                    }
-
                 } else {
                     val contribution = 1.0 / (fullAlleles.size + partialAlleles.size + wildAlleles.size)
                     fullAlleles.forEach {combinedCoverageMap.compute(it) {_, oldValue -> (oldValue ?: 0.0) + contribution} }
@@ -64,6 +60,19 @@ data class HlaAlleleCoverage(val allele: HlaAllele, val uniqueCoverage: Int, val
 
             return result.sortedDescending()
         }
+
+        private fun List<HlaAlleleCoverage>.splitSingle(): List<HlaAlleleCoverage> {
+            if (this.size == 1) {
+                val single = this[0]
+                val first = HlaAlleleCoverage(single.allele, single.uniqueCoverage / 2, single.sharedCoverage / 2, single.wildCoverage / 2)
+                val remainder = HlaAlleleCoverage(single.allele, single.uniqueCoverage - first.uniqueCoverage, single.sharedCoverage - first.sharedCoverage, single.wildCoverage - single.wildCoverage)
+                return listOf(first, remainder).sortedBy { it.totalCoverage }.reversed()
+
+            }
+
+            return this
+        }
+
     }
 
     override fun compareTo(other: HlaAlleleCoverage): Int {

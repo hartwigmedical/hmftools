@@ -39,12 +39,12 @@ class PhasedEvidenceFactory(private val minFragmentsPerAllele: Int, private val 
 
         while (unprocessedEvidence.isNotEmpty()) {
             val top = unprocessedEvidence.removeAt(0)
-            println("Processing: $top")
+//            println("Processing: $top")
 
             val (parent, children) = heterozygousEvidence.merge(top, finalisedEvidence + unprocessedEvidence)
 
             if (children.isNotEmpty()) {
-                println("Produced:   $parent")
+//                println("Produced:   $parent")
                 finalisedEvidence.removeAll(children)
                 unprocessedEvidence.removeAll(children)
                 unprocessedEvidence.add(parent)
@@ -57,15 +57,6 @@ class PhasedEvidenceFactory(private val minFragmentsPerAllele: Int, private val 
 
         return finalisedEvidence.sortedBy { it.aminoAcidIndices[0] }
 
-    }
-
-    private fun longestEvidence(evidence: Collection<PhasedEvidence>): List<PhasedEvidence> {
-        fun Collection<PhasedEvidence>.otherContains(victim: PhasedEvidence): Boolean {
-            return this.any { it != victim && it.contains(victim) }
-        }
-        return evidence
-                .filter { !evidence.otherContains(it) }
-                .sortedBy { it.aminoAcidIndices[0] }
     }
 
 }

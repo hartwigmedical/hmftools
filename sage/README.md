@@ -551,7 +551,7 @@ Any MNVs that have a germline component and all associated SNVs (including somat
 
 ## 8. Realignment
 
-Inframe deletes with microhomology are re-aligned to the right if the left-aligned variant is not in a coding region but the right-aligned variant is.
+Inframe indels with microhomology are re-aligned to the right if the left-aligned variant is not in a coding region but the right-aligned variant is.
 
 For example, because of the `AG` microhomology at this (hg19) location, the following KIT variants are equivalent but the first will be interpreted as a splice variant while the second will be interpreted as an inframe missense.
 
@@ -559,6 +559,14 @@ For example, because of the `AG` microhomology at this (hg19) location, the foll
 4:55593579 CAGAAACCCATGTATGAAGTACAGTGGA > C
 4:55593581 GAAACCCATGTATGAAGTACAGTGGAAG > G
 ```
+
+Similarly, the following EGFR inserts are equivalent:
+
+```
+7:55248980 C > CTCCAGGAAGCCT
+7:55248992 T > TTCCAGGAAGCCT
+```
+
 
 ## 9. Gene Panel Coverage
 To provide confidence that there is sufficient depth in the gene panel a count of depth of each base in the gene panel is calculated and written to file for each tumor sample. 
@@ -634,6 +642,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 32 | 45 | 943 | 15
 
 # Version History and Download Links
+- Upcoming
+  - Right align inserts that would otherwise be outside a coding region in the same manner as deletes
 - [2.7](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.7)
   - Calculate NM field if not present in alignment file
 - [2.6](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.6)

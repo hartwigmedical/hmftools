@@ -5,6 +5,7 @@ import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier
 import com.hartwig.hmftools.lilac.LilacApplication.Companion.logger
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragmentPipeline
 import com.hartwig.hmftools.lilac.candidates.Candidates
+import com.hartwig.hmftools.lilac.cna.HlaCopyNumber
 import com.hartwig.hmftools.lilac.coverage.*
 import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage.Companion.writeToFile
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory
@@ -14,6 +15,7 @@ import com.hartwig.hmftools.lilac.hla.HlaContextFactory
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory
 import com.hartwig.hmftools.lilac.nuc.NucleotideGeneEnrichment
+import com.hartwig.hmftools.lilac.out.HlaOut
 import com.hartwig.hmftools.lilac.qc.*
 import com.hartwig.hmftools.lilac.read.FragmentAlleles
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
@@ -61,7 +63,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         const val HLA_B = "HLA-B"
         const val HLA_C = "HLA-C"
 
-        val EXCLUDED_ALLELES = setOf(HlaAllele("A*01:81"))
+        val EXCLUDED_ALLELES = setOf(HlaAllele("A*01:81"), HlaAllele("A*01:237"))
 
         val A_EXON_BOUNDARIES = setOf(24, 114, 206, 298, 337, 348, 364)
         val B_EXON_BOUNDARIES = setOf(24, 114, 206, 298, 337, 348)
@@ -128,20 +130,18 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             listOf()
         }
 
-//        val tumorNucleotideFragments = listOf<NucleotideFragment>()
-
         logger.info("Enriching reference bam records")
         val aminoAcidPipeline = AminoAcidFragmentPipeline(config, referenceNucleotideFragments, tumorNucleotideFragments)
-        val aFragments = aminoAcidPipeline.phasingFragments(hlaAContext)
-        val bFragments = aminoAcidPipeline.phasingFragments(hlaBContext)
-        val cFragments = aminoAcidPipeline.phasingFragments(hlaCContext)
+        val aCandidateFragments = aminoAcidPipeline.referenceCandidateFragments(hlaAContext)
+        val bCandidateFragments = aminoAcidPipeline.referenceCandidateFragments(hlaBContext)
+        val cCandidateFragments = aminoAcidPipeline.referenceCandidateFragments(hlaCContext)
 
         // Phasing
         logger.info("Phasing bam records")
         val phasedEvidenceFactory = PhasedEvidenceFactory(minFragmentsPerAllele, config.minFragmentsToRemoveSingle, config.minEvidence)
-        val aPhasedEvidence = phasedEvidenceFactory.evidence(hlaAContext, aFragments)
-        val bPhasedEvidence = phasedEvidenceFactory.evidence(hlaBContext, bFragments)
-        val cPhasedEvidence = phasedEvidenceFactory.evidence(hlaCContext, cFragments)
+        val aPhasedEvidence = phasedEvidenceFactory.evidence(hlaAContext, aCandidateFragments)
+        val bPhasedEvidence = phasedEvidenceFactory.evidence(hlaBContext, bCandidateFragments)
+        val cPhasedEvidence = phasedEvidenceFactory.evidence(hlaCContext, cCandidateFragments)
 
         // Validate phasing against expected sequences
         val expectedSequences = aminoAcidSequences.filter { it.allele in config.expectedAlleles }
@@ -151,31 +151,26 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         // Candidates
         val candidateFactory = Candidates(config, nucleotideSequences, aminoAcidSequences)
-        val aCandidates = candidateFactory.candidates(hlaAContext, aFragments, aPhasedEvidence)
-        val bCandidates = candidateFactory.candidates(hlaBContext, bFragments, bPhasedEvidence)
-        val cCandidates = candidateFactory.candidates(hlaCContext, cFragments, cPhasedEvidence)
+        val aCandidates = candidateFactory.candidates(hlaAContext, aCandidateFragments, aPhasedEvidence)
+        val bCandidates = candidateFactory.candidates(hlaBContext, bCandidateFragments, bPhasedEvidence)
+        val cCandidates = candidateFactory.candidates(hlaCContext, cCandidateFragments, cPhasedEvidence)
         val candidates = aCandidates + bCandidates + cCandidates
 
         // Coverage
-        val highQualityAminoAcidFragments = aminoAcidPipeline.referenceCoverageFragments()
-        val aminoAcidCounts = SequenceCount.aminoAcids(minEvidence, highQualityAminoAcidFragments)
-        val aminoAcidHeterozygousLoci = aminoAcidCounts.heterozygousLoci()
-        val nucleotideCounts = SequenceCount.nucleotides(minEvidence, highQualityAminoAcidFragments)
-        val nucleotideHeterozygousLoci = nucleotideCounts.heterozygousLoci() intersect ALL_NUCLEOTIDE_EXON_BOUNDARIES
+        val referenceCoverageFragments = aminoAcidPipeline.referenceCoverageFragments()
+        val referenceAminoAcidCounts = SequenceCount.aminoAcids(minEvidence, referenceCoverageFragments)
+        val referenceAminoAcidHeterozygousLoci = referenceAminoAcidCounts.heterozygousLoci()
+        val referenceNucleotideCounts = SequenceCount.nucleotides(minEvidence, referenceCoverageFragments)
+        val referenceNucleotideHeterozygousLoci = referenceNucleotideCounts.heterozygousLoci() intersect ALL_NUCLEOTIDE_EXON_BOUNDARIES
 
         val candidateAlleles = candidates.map { it.allele }
         val candidateAlleleSpecificProteins = candidateAlleles.map { it.asFourDigit() }
+        val candidateAminoAcidSequences = aminoAcidSequences.filter { it.allele in candidateAlleles }
+        val candidateNucleotideSequences = nucleotideSequences.filter { it.allele.asFourDigit() in candidateAlleleSpecificProteins }
 
-        val aminoAcidCandidates = aminoAcidSequences.filter { it.allele in candidateAlleles }
-        val nucleotideCandidates = nucleotideSequences.filter { it.allele.asFourDigit() in candidateAlleleSpecificProteins }
-
-        val referenceFragmentAlleles = FragmentAlleles.create(highQualityAminoAcidFragments,
-                aminoAcidHeterozygousLoci, aminoAcidCandidates, nucleotideHeterozygousLoci, nucleotideCandidates)
+        val referenceFragmentAlleles = FragmentAlleles.create(referenceCoverageFragments,
+                referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences, referenceNucleotideHeterozygousLoci, candidateNucleotideSequences)
         val referenceCoverageFactory = HlaComplexCoverageFactory(executorService, referenceFragmentAlleles)
-
-        val tumorFragmentAlleles = FragmentAlleles.create(aminoAcidPipeline.tumorCoverageFragments(),
-                aminoAcidHeterozygousLoci, aminoAcidCandidates, nucleotideHeterozygousLoci, nucleotideCandidates)
-        val tumorCoverageFactory = HlaComplexCoverageFactory(executorService, tumorFragmentAlleles)
 
 
         logger.info("Identifying uniquely identifiable groups and proteins [total,unique,shared,wide]")
@@ -200,7 +195,6 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         logger.info("Calculating coverage of ${complexes.size} complexes")
 
         val referenceComplexCoverage = referenceCoverageFactory.complexCoverage(complexes)
-        val tumorComplexCoverage = tumorCoverageFactory.complexCoverage(complexes)
 
         if (expectedSequences.isNotEmpty()) {
             val expectedCoverage = referenceCoverageFactory.proteinCoverage(expectedSequences.map { it.allele })
@@ -208,35 +202,26 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         }
 
         if (referenceComplexCoverage.isNotEmpty()) {
-            val tumorRankedComplexes = HlaComplexCoverageRanking().candidateRanking(tumorComplexCoverage)
             val referenceRankedComplexes = HlaComplexCoverageRanking().candidateRanking(referenceComplexCoverage)
-            val winningComplex = referenceRankedComplexes[0]
-            val winningAlleles = winningComplex.alleleCoverage.alleles()
+            val winningReferenceCoverage = referenceRankedComplexes[0].expandToSixAlleles()
+            val winningAlleles = winningReferenceCoverage.alleleCoverage.alleles()
             val winningSequences = candidates.filter { candidate -> candidate.allele in winningAlleles }
 
 
-            tumorRankedComplexes.writeToFile("$outputDir/$sample.tumor.coverage.txt")
             referenceRankedComplexes.writeToFile("$outputDir/$sample.reference.coverage.txt")
 
             logger.info(HlaComplexCoverage.header())
-            for (winningCandidate in referenceRankedComplexes) {
-                logger.info(winningCandidate)
+            for (rankedComplex in referenceRankedComplexes) {
+                logger.info(rankedComplex)
             }
 
-            logger.info("${config.sample} - REF - ${referenceRankedComplexes.size} CANDIDATES, WINNING ALLELES: ${winningComplex.alleleCoverage.map { it.allele }}")
+            logger.info("${config.sample} - REF - ${referenceRankedComplexes.size} CANDIDATES, WINNING ALLELES: ${winningReferenceCoverage.alleleCoverage.map { it.allele }}")
 
-            if (tumorRankedComplexes.isNotEmpty()) {
-                logger.info("TUMOR WINNERS:")
-                for (winningCandidate in tumorRankedComplexes) {
-                    logger.info(winningCandidate)
-                }
-                logger.info("${config.sample} - TUMOR - ${tumorRankedComplexes.size} CANDIDATES, WINNING ALLELES: ${tumorRankedComplexes[0].alleleCoverage.map { it.allele }}")
-            }
 
-            val aminoAcidQC = AminoAcidQC.create(winningSequences, aminoAcidCounts)
-            val haplotypeQC = HaplotypeQC.create(3, winningSequences, aPhasedEvidence + bPhasedEvidence + cPhasedEvidence, aminoAcidCounts)
+            val aminoAcidQC = AminoAcidQC.create(winningSequences, referenceAminoAcidCounts)
+            val haplotypeQC = HaplotypeQC.create(3, winningSequences, aPhasedEvidence + bPhasedEvidence + cPhasedEvidence, referenceAminoAcidCounts)
             val bamQC = BamQC.create(bamReader)
-            val coverageQC = CoverageQC.create(referenceFragmentAlleles.size, winningComplex)
+            val coverageQC = CoverageQC.create(referenceFragmentAlleles.size, winningReferenceCoverage)
             val lilacQC = LilacQC(aminoAcidQC, bamQC, coverageQC, haplotypeQC)
 
             logger.info("QC Stats:")
@@ -244,14 +229,36 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             logger.info("   ${lilacQC.body().joinToString(",")}")
 
             lilacQC.writefile("$outputDir/$sample.qc.txt")
+
+
+            val winningTumorCoverage: HlaComplexCoverage
+            val winningTumorCopyNumber: HlaCopyNumber
+
+            if (config.tumorBam.isNotEmpty()) {
+                logger.info("Calculating tumor coverage of winning alleles")
+
+                val tumorFragmentAlleles = FragmentAlleles.create(aminoAcidPipeline.tumorCoverageFragments(),
+                        referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences, referenceNucleotideHeterozygousLoci, candidateNucleotideSequences)
+                val tumorCoverageFactory = HlaComplexCoverageFactory(executorService, tumorFragmentAlleles)
+                winningTumorCoverage = tumorCoverageFactory.proteinCoverage(winningAlleles).expandToSixAlleles()
+
+                logger.info("Calculating tumor copy number of winning alleles")
+                winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(config.geneCopyNumberFile, winningTumorCoverage)
+            } else {
+                winningTumorCoverage = HlaComplexCoverage.create(listOf())
+                winningTumorCopyNumber = HlaCopyNumber.Companion.alleleCopyNumber(config.geneCopyNumberFile, winningTumorCoverage)
+            }
+
+            val output = HlaOut(winningReferenceCoverage, winningTumorCoverage, winningTumorCopyNumber)
+            output.write("$outputDir/$sample.lilac.txt")
         }
 
         logger.info("Writing output to $outputDir")
         val deflatedSequenceTemplate = aminoAcidSequences.first { it.allele == HlaAllele("A*01:01:01:01") }
         val candidateToWrite = (candidates + expectedSequences + deflatedSequenceTemplate).distinct().sortedBy { it.allele }
         HlaSequenceLociFile.write("$outputDir/$sample.candidates.deflate.txt", A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES, candidateToWrite)
-        aminoAcidCounts.writeVertically("$outputDir/$sample.aminoacids.count.txt")
-        nucleotideCounts.writeVertically("$outputDir/$sample.nucleotides.count.txt")
+        referenceAminoAcidCounts.writeVertically("$outputDir/$sample.aminoacids.count.txt")
+        referenceNucleotideCounts.writeVertically("$outputDir/$sample.nucleotides.count.txt")
 
     }
 
@@ -259,7 +266,6 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
     private fun nucleotideLoci(inputFilename: String): List<HlaSequenceLoci> {
         val sequences = HlaSequenceFile.readFile(inputFilename)
                 .filter { it.allele !in EXCLUDED_ALLELES }
-//                .filter { it.allele.gene in setOf("A", "B") ||  it.allele in listOf(HlaAllele("C*01:02:01:01"), HlaAllele("C*17:01:01:02")) }
                 .reduceToSixDigit()
         return HlaSequenceLoci.create(sequences)
                 .filter { it.sequences.isNotEmpty() }

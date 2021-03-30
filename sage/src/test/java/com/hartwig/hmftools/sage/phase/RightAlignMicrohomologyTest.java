@@ -33,6 +33,17 @@ public class RightAlignMicrohomologyTest {
     }
 
     @Test
+    public void testRightAlignIns() {
+        final String microhomology = "TCCAGGAAGCCT";
+        final VariantHotspot leftAligned = BufferedPostProcessorTest.create(100, "C", "CTCCAGGAAGCCT");
+        final VariantHotspot rightAligned = RightAlignMicrohomology.rightAlignIns(leftAligned, microhomology);
+
+        assertEquals(112, rightAligned.position());
+        assertEquals("T", rightAligned.ref());
+        assertEquals("TTCCAGGAAGCCT", rightAligned.alt());
+    }
+
+    @Test
     public void testKit() {
         final List<HmfTranscriptRegion> transcriptRegions =
                 HmfGenePanelSupplier.allGeneList37().stream().filter(x -> x.chromosome().equals("4")).collect(Collectors.toList());
@@ -55,4 +66,30 @@ public class RightAlignMicrohomologyTest {
 
         assertTrue(victim.realign(variant));
     }
+
+
+    @Test
+    public void testEGFRIns() {
+        final List<HmfTranscriptRegion> transcriptRegions =
+                HmfGenePanelSupplier.allGeneList37().stream().filter(x -> x.chromosome().equals("7")).collect(Collectors.toList());
+
+        final List<SageVariant> collector = Lists.newArrayList();
+        final RightAlignMicrohomology victim = new RightAlignMicrohomology(collector::add, transcriptRegions);
+
+        final VariantHotspot leftAligned = ImmutableVariantHotspotImpl.builder()
+                .chromosome("7")
+                .position(55248980)
+                .ref("C")
+                .alt("CTCCAGGAAGCCT")
+                .build();
+
+        ReadContextCounter counter = MixedGermlineTest.dummyCounter(leftAligned, "TCCAGGAAGCCT");
+        Candidate candidate = new Candidate(SageVariantTier.PANEL, leftAligned, counter.readContext(), 0, 0);
+
+        SageVariant variant =
+                new SageVariant(candidate, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));
+
+        assertTrue(victim.realign(variant));
+    }
+
 }
