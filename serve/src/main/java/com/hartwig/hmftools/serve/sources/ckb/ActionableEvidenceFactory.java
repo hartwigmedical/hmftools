@@ -127,7 +127,7 @@ class ActionableEvidenceFactory {
         String[] parts = doidString.split(":");
         if (parts.length == 2) {
             if (parts[0].equalsIgnoreCase("doid")) {
-                return parts[2];
+                return parts[1];
             } else if (parts[0].equalsIgnoreCase("jax")) {
                 return doidString;
             } else {
