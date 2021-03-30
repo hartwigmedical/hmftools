@@ -25,6 +25,25 @@ import org.jetbrains.annotations.Nullable;
 class ActionableEvidenceFactory {
     private static final Logger LOGGER = LogManager.getLogger(ActionableEvidenceFactory.class);
 
+    private static final Set<String> RESPONSIVE_DIRECTIONS = Sets.newHashSet();
+    private static final Set<String> RESISTANT_DIRECTIONS = Sets.newHashSet();
+    private static final Set<String> DIRECTIONS_TO_IGNORE = Sets.newHashSet();
+
+    static {
+        RESPONSIVE_DIRECTIONS.add("sensitive");
+        RESPONSIVE_DIRECTIONS.add("predicted - sensitive");
+        RESPONSIVE_DIRECTIONS.add("decreased response");
+
+        RESISTANT_DIRECTIONS.add("resistant");
+        RESISTANT_DIRECTIONS.add("predicted - resistant");
+
+        DIRECTIONS_TO_IGNORE.add("unknown");
+        DIRECTIONS_TO_IGNORE.add("not applicable");
+        DIRECTIONS_TO_IGNORE.add("conflicting");
+        DIRECTIONS_TO_IGNORE.add("no benefit");
+        DIRECTIONS_TO_IGNORE.add("not predictive");
+    }
+
     @NotNull
     private final DoidLookup missingDoidLookup;
     @NotNull
@@ -43,26 +62,34 @@ class ActionableEvidenceFactory {
     public Set<ActionableEvent> toActionableEvents(@NotNull CkbEntry entry) {
         Set<ActionableEvent> actionableEvents = Sets.newHashSet();
 
-        EvidenceLevel level = EvidenceLevel.A;
-        EvidenceDirection direction = EvidenceDirection.RESPONSIVE;
-        Set<String> urls = Sets.newHashSet();
-        String cancerType = Strings.EMPTY;
-        String therapyName = Strings.EMPTY;
         for (Evidence evidence : entry.evidences()) {
-            therapyName = evidence.therapy().therapyName();
-            level = resolveLevel(evidence.ampCapAscoEvidenceLevel());
-            direction = resolveDirection(evidence.responseType());
-            cancerType = evidence.indication().name();
+
+            String therapyName = evidence.therapy().therapyName();
+
+            EvidenceLevel level = resolveLevel(evidence.ampCapAscoEvidenceLevel());
+            EvidenceDirection direction = resolveDirection(evidence.responseType());
+            String cancerType = evidence.indication().name();
+            Set<String> urls = Sets.newHashSet();
 
             for (Reference reference : evidence.references()) {
-                urls.add(reference.url());
+                if (reference.url() != null) {
+                    urls.add(reference.url());
+                }
             }
+
+            if (therapyName != null && level != null && direction != null) {
+                LOGGER.info("adding");
+                ImmutableActionableEvidence.Builder builder =
+                        ImmutableActionableEvidence.builder().source(Knowledgebase.CKB).level(level).direction(direction).urls(urls);
+                actionableEvents.add(builder.cancerType(cancerType).doid(Strings.EMPTY).treatment(therapyName).build());
+            }
+
 
         }
 
-        ImmutableActionableEvidence.Builder builder =
-                ImmutableActionableEvidence.builder().source(Knowledgebase.CKB).level(level).direction(direction).urls(urls);
-        actionableEvents.add(builder.cancerType(cancerType).doid(Strings.EMPTY).treatment(therapyName).build());
+        LOGGER.info(actionableEvents);
+
+
 
         return actionableEvents;
     }
@@ -84,7 +111,19 @@ class ActionableEvidenceFactory {
     @Nullable
     @VisibleForTesting
     static EvidenceDirection resolveDirection(@Nullable String direction) {
+        if (direction == null) {
+            return null;
+        }
 
+        if (RESPONSIVE_DIRECTIONS.contains(direction)) {
+            return EvidenceDirection.RESPONSIVE;
+        } else if (RESISTANT_DIRECTIONS.contains(direction)) {
+            return EvidenceDirection.RESISTANT;
+        }
+
+        if (!DIRECTIONS_TO_IGNORE.contains(direction)) {
+            LOGGER.warn("Could not resolve CKB direction '{}'", direction);
+        }
         return null;
     }
 }

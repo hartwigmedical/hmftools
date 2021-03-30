@@ -46,23 +46,26 @@ public class CkbExtractor {
     @NotNull
     public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries, @NotNull EventType type) {
         List<ExtractionResult> extractions = Lists.newArrayList();
+        Set<ActionableEvent> actionableEvents = Sets.newHashSet();
+        List<EventExtractorOutput> eventExtractions = Lists.newArrayList();
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
         for (CkbEntry entry : ckbEntries) {
-            List<EventExtractorOutput> eventExtractions = Lists.newArrayList();
 
             if (entry.variants().size() == 1) {
                 eventExtractions.add(eventExtractor.extract(entry.variants().get(0).gene().geneSymbol(),
                         entry.variants().get(0).gene().canonicalTranscript(),
                         type,
                         entry.variants().get(0).variant()));
+                actionableEvents = actionableEvidenceFactory.toActionableEvents(entry);
+
                 if (type == EventType.UNKNOWN) {
-                    LOGGER.warn("No event type known for '{}' on '{}'", entry.variants().get(0).variant(), entry.variants().get(0).gene().geneSymbol());
+                    LOGGER.warn("No event type known for '{}' on '{}'",
+                            entry.variants().get(0).variant(),
+                            entry.variants().get(0).gene().geneSymbol());
                 }
 
             }
-
-            Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry);
 
             extractions.add(toExtractionResult(actionableEvents, eventExtractions));
 
@@ -71,7 +74,7 @@ public class CkbExtractor {
 
         // actionableEvidenceFactory.evaluateCuration();
 
-       // CkbUtils.printExtractionResults(resultsPerEntry);
+        // CkbUtils.printExtractionResults(resultsPerEntry);
 
         ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
                 .knownHotspots(Sets.newHashSet())
@@ -80,8 +83,8 @@ public class CkbExtractor {
                 .knownCopyNumbers(Sets.newHashSet())
                 .knownFusionPairs(Sets.newHashSet());
 
+        return ExtractionFunctions.merge(extractions);
 
-        return ExtractionFunctions.consolidateActionableEvents(outputBuilder.build());
     }
 
     @NotNull
@@ -125,6 +128,5 @@ public class CkbExtractor {
                 .actionableCharacteristics(actionableCharacteristics)
                 .build();
     }
-
 
 }
