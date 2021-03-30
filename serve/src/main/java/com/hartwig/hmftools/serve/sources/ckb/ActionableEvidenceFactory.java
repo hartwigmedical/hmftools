@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
@@ -93,7 +94,7 @@ class ActionableEvidenceFactory {
                     }
                 }
 
-                if (level != null) {
+                if (level != null && direction != null) {
                     level = evidenceLevelCurator.curate(Knowledgebase.CKB,
                             entry.variants().get(0).gene().geneSymbol(),
                             therapyName,
@@ -101,7 +102,10 @@ class ActionableEvidenceFactory {
                             direction);
                 }
 
-                List<List<String>> drugLists = drugCurator.curate(Knowledgebase.CKB, level, therapyName);
+                List<List<String>> drugLists = Lists.newArrayList();
+                if (level != null) {
+                    drugLists = drugCurator.curate(Knowledgebase.CKB, level, therapyName);
+                }
 
                 if (therapyName != null && level != null && direction != null) {
                     ImmutableActionableEvidence.Builder builder =
