@@ -96,7 +96,7 @@ class SequenceCount(private val minCount: Int, private val count: Array<Map<Stri
             val baseCountList = count[i].map { (k, v) -> Pair(k, v) }.sortedBy { it.second }.reversed()
             for (j in 0..min(5, baseCountList.size - 1)) {
                 val (base, count) = baseCountList[j]
-                lineBuilder.add(base.toString()).add(count.toString())
+                lineBuilder.add(base).add(count.toString())
             }
 
             file.appendText(lineBuilder.toString() + "\n")

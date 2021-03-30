@@ -63,6 +63,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         const val HLA_B = "HLA-B"
         const val HLA_C = "HLA-C"
 
+        val DEFLATE_TEMPLATE = HlaAllele("A*01:01")
         val EXCLUDED_ALLELES = setOf(HlaAllele("A*01:81"), HlaAllele("A*01:237"))
 
         val A_EXON_BOUNDARIES = setOf(24, 114, 206, 298, 337, 348, 364)
@@ -91,11 +92,11 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
     override fun run() {
         logger.info("Starting LILAC with parameters:")
-        logger.info("     minFragmentsPerAllele = $minFragmentsPerAllele")
-        logger.info("minFragmentsToRemoveSingle = $minFragmentsToRemoveSingle")
-        logger.info("               minBaseQual = $minBaseQual")
-        logger.info("               minEvidence = $minEvidence")
-        logger.info("         minUniqueCoverage = $minConfirmedUniqueCoverage")
+        logger.info("... minBaseQual = $minBaseQual")
+        logger.info("... minEvidence = $minEvidence")
+        logger.info("... minUniqueCoverage = $minConfirmedUniqueCoverage")
+        logger.info("... minFragmentsPerAllele = $minFragmentsPerAllele")
+        logger.info("... minFragmentsToRemoveSingle = $minFragmentsToRemoveSingle")
 
         // Context
         val hlaContextFactory = HlaContextFactory(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES)
@@ -144,7 +145,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val cPhasedEvidence = phasedEvidenceFactory.evidence(hlaCContext, cCandidateFragments)
 
         // Validate phasing against expected sequences
-        val expectedSequences = aminoAcidSequences.filter { it.allele in config.expectedAlleles }
+        val expectedSequences = aminoAcidSequences.filter { it.allele.asFourDigit() in config.expectedAlleles }
         PhasedEvidenceValidation.validateExpected("A", aPhasedEvidence, expectedSequences)
         PhasedEvidenceValidation.validateExpected("B", bPhasedEvidence, expectedSequences)
         PhasedEvidenceValidation.validateExpected("C", cPhasedEvidence, expectedSequences)
@@ -185,7 +186,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val candidatesAfterConfirmedGroups = candidateAlleles.filterWithConfirmedGroups(confirmedGroups.map { it.allele })
         val proteinCoverage = referenceCoverageFactory.proteinCoverage(candidatesAfterConfirmedGroups)
         val confirmedProtein = proteinCoverage.confirmUnique()
-        val discardedProtein = proteinCoverage.alleleCoverage.filter { it.uniqueCoverage > 0 && it !in confirmedGroups }.sortedDescending()
+        val discardedProtein = proteinCoverage.alleleCoverage.filter { it.uniqueCoverage > 0 && it !in confirmedProtein }.sortedDescending()
         logger.info("... confirmed ${confirmedProtein.size} unique proteins: " + confirmedProtein.joinToString(", "))
         if (discardedProtein.isNotEmpty()) {
             logger.info("... found ${discardedProtein.size} insufficiently unique proteins: " + discardedProtein.joinToString(", "))
@@ -254,7 +255,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         }
 
         logger.info("Writing output to $outputDir")
-        val deflatedSequenceTemplate = aminoAcidSequences.first { it.allele == HlaAllele("A*01:01:01:01") }
+        val deflatedSequenceTemplate = aminoAcidSequences.first { it.allele == DEFLATE_TEMPLATE }
         val candidateToWrite = (candidates + expectedSequences + deflatedSequenceTemplate).distinct().sortedBy { it.allele }
         HlaSequenceLociFile.write("$outputDir/$sample.candidates.deflate.txt", A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES, candidateToWrite)
         referenceAminoAcidCounts.writeVertically("$outputDir/$sample.aminoacids.count.txt")

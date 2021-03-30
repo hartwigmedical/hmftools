@@ -6,6 +6,7 @@ import org.apache.commons.cli.CommandLine
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
 import org.apache.commons.cli.ParseException
+import org.apache.logging.log4j.LogManager
 import java.io.File
 import java.io.IOException
 
@@ -45,6 +46,8 @@ data class LilacConfig(
 
     companion object {
 
+        val logger = LogManager.getLogger(this::class.java)
+
         @Throws(ParseException::class, IOException::class)
         fun createConfig(cmd: CommandLine): LilacConfig {
             val sample = cmd.getOptionValue(SAMPLE)
@@ -62,13 +65,7 @@ data class LilacConfig(
             val minFragmentsToRemoveSingle = Configs.defaultIntValue(cmd, MIN_FRAGMENTS_TO_REMOVE_SINGLE, defaultConfig.minFragmentsToRemoveSingle)
             val minConfirmedUniqueCoverage = Configs.defaultIntValue(cmd, MIN_CONFIRMED_UNIQUE_COVERAGE, defaultConfig.minConfirmedUniqueCoverage)
             val threads = Configs.defaultIntValue(cmd, THREADS, defaultConfig.threads)
-            val expectedAlleleString = Configs.defaultStringValue(cmd, EXPECTED_ALLELES, "")
-            val expectedAlleles = if (expectedAlleleString.isNotEmpty()) {
-                expectedAlleleString.split(",").map { HlaAllele(it) }
-            } else {
-                listOf()
-            }
-
+            val expectedAlleles = cmd.expectedAlleles(EXPECTED_ALLELES);
 
             return LilacConfig(
                     sample,
@@ -142,6 +139,16 @@ data class LilacConfig(
 
             return default
         }
+
+        private fun CommandLine.expectedAlleles(opt: String): List<HlaAllele> {
+            if (this.hasOption(opt)) {
+                val result = this.getOptionValue(opt)!!.split(",").map { HlaAllele(it).asFourDigit() }
+                logger.info("Using non default value {} for parameter {}", result.joinToString(","), opt)
+                return result
+            }
+            return listOf()
+        }
+
 
         @Throws(IOException::class)
         internal fun CommandLine.requiredDir(argument: String): String {

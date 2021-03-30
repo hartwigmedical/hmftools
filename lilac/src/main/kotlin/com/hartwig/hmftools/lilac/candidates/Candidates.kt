@@ -4,9 +4,7 @@ import com.hartwig.hmftools.lilac.LilacConfig
 import com.hartwig.hmftools.lilac.SequenceCount
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence
-import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.hla.HlaContext
-import com.hartwig.hmftools.lilac.seq.HlaSequence
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 import org.apache.logging.log4j.LogManager
 
@@ -21,7 +19,6 @@ class Candidates(private val config: LilacConfig,
     fun candidates(context: HlaContext, fragments: List<AminoAcidFragment>, phasedEvidence: List<PhasedEvidence>): List<HlaSequenceLoci> {
         val gene = context.gene
         val aminoAcidBoundary = context.aminoAcidBoundaries
-        val expectedAlleles = context.expectedAlleles
 
         logger.info("Determining initial candidate set for gene HLA-$gene")
         val aminoAcidCounts = SequenceCount.aminoAcids(config.minEvidence, fragments)
@@ -66,61 +63,4 @@ class Candidates(private val config: LilacConfig,
 
         return candidates
     }
-
-    private fun checkCandidates(candidates: Collection<HlaSequence>): Int {
-        var count = 0
-
-        if (candidates.any { it.allele == HlaAllele("A*01:01:01:01") }) {
-            count++;
-        }
-
-        if (candidates.any { it.allele == HlaAllele("A*11:01:01:01") }) {
-            count++;
-        }
-        if (candidates.any { it.allele == HlaAllele("B*08:01:01:01") }) {
-            count++;
-        }
-        if (candidates.any { it.allele == HlaAllele("B*56:01:01:01") }) {
-            count++;
-        }
-        if (candidates.any { it.allele == HlaAllele("C*01:02:01:01") }) {
-            count++;
-        }
-        if (candidates.any { it.allele == HlaAllele("C*07:01:01:01") }) {
-            count++;
-        }
-
-
-        return count;
-    }
-
-    private fun checkColo8289Candidates(candidates: Collection<HlaSequence>): Int {
-        var count = 0
-
-        if (candidates.any { it.allele == HlaAllele("A*01:01:01:01") }) {
-            count++;
-        }
-
-        if (candidates.any { it.allele == HlaAllele("C*03:04:01:01") }) {
-            count++;
-        }
-        if (candidates.any { it.allele == HlaAllele("C*07:01:01:01") }) {
-            count++;
-        }
-
-        if (candidates.any { it.allele == HlaAllele("B*08:01:01:01") }) {
-            count++;
-        }
-
-        if (candidates.any { it.allele == HlaAllele("B*40:02:01:01") }) {
-            count++;
-        }
-
-        return count;
-    }
-
-
-
-
-
 }
