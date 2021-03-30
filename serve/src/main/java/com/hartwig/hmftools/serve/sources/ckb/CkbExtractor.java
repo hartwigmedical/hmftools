@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.serve.sources.ckb;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
@@ -21,9 +21,25 @@ import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
-import com.hartwig.hmftools.serve.sources.iclusion.ActionableTrial;
+import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
+import com.hartwig.hmftools.serve.extraction.codon.CodonFunctions;
+import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
+import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
+import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberFunctions;
+import com.hartwig.hmftools.serve.extraction.copynumber.ImmutableKnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
+import com.hartwig.hmftools.serve.extraction.exon.ExonFunctions;
+import com.hartwig.hmftools.serve.extraction.exon.ImmutableKnownExon;
+import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
+import com.hartwig.hmftools.serve.extraction.fusion.FusionFunctions;
+import com.hartwig.hmftools.serve.extraction.fusion.ImmutableKnownFusionPair;
+import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
+import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
+import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
+import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
-import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -69,11 +85,11 @@ public class CkbExtractor {
 
             extractions.add(toExtractionResult(actionableEvents, eventExtractions));
             extractions.add(ImmutableExtractionResult.builder()
-                    .knownHotspots(Sets.newHashSet())
-                    .knownCodons(Sets.newHashSet())
-                    .knownExons(Sets.newHashSet())
-                    .knownCopyNumbers(Sets.newHashSet())
-                    .knownFusionPairs(Sets.newHashSet())
+                    .knownHotspots(convertToHotspots(eventExtractions, entry))
+                    .knownCodons(convertToCodons(eventExtractions))
+                    .knownExons(convertToExons(eventExtractions))
+                    .knownCopyNumbers(convertToKnownAmpsDels(eventExtractions))
+                    .knownFusionPairs(convertToKnownFusions(eventExtractions))
                     .build());
 
             tracker.update();
@@ -83,6 +99,81 @@ public class CkbExtractor {
 
         return ExtractionFunctions.merge(extractions);
 
+    }
+
+    @NotNull
+    private static Set<KnownHotspot> convertToHotspots(@NotNull List<EventExtractorOutput> results, @NotNull CkbEntry entry) {
+        ProteinAnnotationExtractor proteinExtractor = new ProteinAnnotationExtractor();
+        Set<KnownHotspot> hotspots = Sets.newHashSet();
+        for (EventExtractorOutput result : results) {
+            if (result.hotspots() != null) {
+                for (VariantHotspot hotspot : result.hotspots()) {
+                    hotspots.add(ImmutableKnownHotspot.builder()
+                            .from(hotspot)
+                            .addSources(Knowledgebase.CKB)
+                            .gene(entry.variants().get(0).gene().geneSymbol())
+                            .transcript(entry.variants().get(0).gene().canonicalTranscript())
+                            .proteinAnnotation(proteinExtractor.apply(entry.variants().get(0).variant()))
+                            .build());
+                }
+            }
+
+        }
+
+        return HotspotFunctions.consolidate(hotspots);
+    }
+
+    @NotNull
+    private static Set<KnownCodon> convertToCodons(@NotNull List<EventExtractorOutput> results) {
+        Set<KnownCodon> codons = Sets.newHashSet();
+
+        for (EventExtractorOutput result : results) {
+            if (result.codons() != null) {
+                for (CodonAnnotation codonAnnotation : result.codons()) {
+                    codons.add(ImmutableKnownCodon.builder().annotation(codonAnnotation).addSources(Knowledgebase.CKB).build());
+                }
+            }
+        }
+        return CodonFunctions.consolidate(codons);
+    }
+
+    @NotNull
+    private static Set<KnownExon> convertToExons(@NotNull List<EventExtractorOutput> results) {
+        Set<KnownExon> exons = Sets.newHashSet();
+
+        for (EventExtractorOutput result : results) {
+            if (result.exons() != null) {
+                for (ExonAnnotation exonAnnotation : result.exons()) {
+                    exons.add(ImmutableKnownExon.builder().annotation(exonAnnotation).addSources(Knowledgebase.CKB).build());
+                }
+            }
+        }
+        return ExonFunctions.consolidate(exons);
+    }
+
+    @NotNull
+    private static Set<KnownCopyNumber> convertToKnownAmpsDels(@NotNull List<EventExtractorOutput> results) {
+        Set<KnownCopyNumber> copyNumbers = Sets.newHashSet();
+        for (EventExtractorOutput result : results) {
+            if (result.knownCopyNumber() != null) {
+                copyNumbers.add(ImmutableKnownCopyNumber.builder().from(result.knownCopyNumber()).addSources(Knowledgebase.CKB).build());
+
+            }
+        }
+
+        return CopyNumberFunctions.consolidate(copyNumbers);
+    }
+
+    @NotNull
+    private static Set<KnownFusionPair> convertToKnownFusions(@NotNull List<EventExtractorOutput> results) {
+        Set<KnownFusionPair> fusions = Sets.newHashSet();
+        for (EventExtractorOutput result : results) {
+            if (result.knownFusionPair() != null) {
+                fusions.add(ImmutableKnownFusionPair.builder().from(result.knownFusionPair()).addSources(Knowledgebase.CKB).build());
+            }
+        }
+
+        return FusionFunctions.consolidate(fusions);
     }
 
     @NotNull
