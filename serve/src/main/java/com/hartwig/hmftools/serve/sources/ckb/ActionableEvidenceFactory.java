@@ -95,7 +95,9 @@ class ActionableEvidenceFactory {
                 if (therapyName != null && level != null && direction != null) {
                     ImmutableActionableEvidence.Builder builder =
                             ImmutableActionableEvidence.builder().source(Knowledgebase.CKB).level(level).direction(direction).urls(urls);
-                    actionableEvents.add(builder.cancerType(cancerType).doid(Strings.EMPTY).treatment(therapyName).build());
+                    for (List<String> drugList : drugLists) {
+                        actionableEvents.add(builder.cancerType(cancerType).doid(Strings.EMPTY).treatment(drugList.toString()).build());
+                    }
                 }
             }
 
