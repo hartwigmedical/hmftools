@@ -19,7 +19,7 @@ data class HlaComplexCoverage(val uniqueCoverage: Int, val sharedCoverage: Int, 
                 wild += coverage.wildCoverage
             }
 
-            return HlaComplexCoverage(unique, shared.roundToInt(), wild.roundToInt(), alleles)
+            return HlaComplexCoverage(unique, shared.roundToInt(), wild.roundToInt(), alleles.sortedBy { it.allele })
         }
 
         fun header(): String {
