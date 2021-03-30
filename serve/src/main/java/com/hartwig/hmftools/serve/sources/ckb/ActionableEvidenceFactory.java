@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.sources.ckb;
 
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -12,8 +13,8 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
+import com.hartwig.hmftools.serve.sources.ckb.curation.DrugCurator;
 import com.hartwig.hmftools.serve.sources.ckb.curation.EvidenceLevelCurator;
-import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -89,7 +90,7 @@ class ActionableEvidenceFactory {
                 }
 
                 level = evidenceLevelCurator.curate(Knowledgebase.CKB, entry.variants().get(0).gene().geneSymbol(), therapyName, level, direction);
-
+                List<List<String>> drugLists = drugCurator.curate(Knowledgebase.CKB, level, therapyName);
 
                 if (therapyName != null && level != null && direction != null) {
                     ImmutableActionableEvidence.Builder builder =
@@ -101,6 +102,11 @@ class ActionableEvidenceFactory {
         }
 
         return actionableEvents;
+    }
+
+    public void evaluateCuration() {
+        drugCurator.reportUnusedCurationKeys();
+        evidenceLevelCurator.reportUnusedCurationKeys();
     }
 
     private static boolean resolveEvidenceType(@NotNull String evidenceType) {

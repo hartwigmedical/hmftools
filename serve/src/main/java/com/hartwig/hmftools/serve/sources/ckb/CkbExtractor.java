@@ -72,7 +72,7 @@ public class CkbExtractor {
             tracker.update();
         }
 
-        // actionableEvidenceFactory.evaluateCuration();
+         actionableEvidenceFactory.evaluateCuration();
 
         // CkbUtils.printExtractionResults(resultsPerEntry);
 
