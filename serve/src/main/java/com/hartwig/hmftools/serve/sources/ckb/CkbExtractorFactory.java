@@ -4,8 +4,8 @@ import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.extraction.EventExtractorFactory;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeResource;
-import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
-import com.hartwig.hmftools.serve.sources.vicc.curation.EvidenceLevelCurator;
+import com.hartwig.hmftools.serve.sources.ckb.curation.DrugCurator;
+import com.hartwig.hmftools.serve.sources.ckb.curation.EvidenceLevelCurator;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -3,9 +3,11 @@ package com.hartwig.hmftools.ckb.datamodel;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.classification.EventTypeExtractor;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.datamodel.evidence.Evidence;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
+import com.hartwig.hmftools.common.serve.classification.EventType;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -16,6 +18,12 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CkbEntry {
 
     public abstract int profileId();
+
+    @NotNull
+    @Value.Derived
+    public EventType type() {
+        return EventTypeExtractor.classify(this);
+    }
 
     @NotNull
     public abstract LocalDate createDate();
