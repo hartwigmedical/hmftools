@@ -133,7 +133,8 @@ public class CkbExtractorTestApp {
 
         CkbUtils.printExtractionResults(result, type);
 
-       // IclusionUtil.printIclusionResult(result);
+
+        // IclusionUtil.printIclusionResult(result);
      //   IclusionUtil.writeIclusionMutationTypes(iclusionMutationTsv, trials);
 
         new ExtractionResultWriter(outputDir, refGenomeVersion).write(result);

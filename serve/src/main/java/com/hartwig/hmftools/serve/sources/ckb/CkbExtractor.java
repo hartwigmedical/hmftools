@@ -74,8 +74,6 @@ public class CkbExtractor {
 
          actionableEvidenceFactory.evaluateCuration();
 
-        // CkbUtils.printExtractionResults(resultsPerEntry);
-
         ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
                 .knownHotspots(Sets.newHashSet())
                 .knownCodons(Sets.newHashSet())
