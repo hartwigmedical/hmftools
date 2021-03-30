@@ -27,7 +27,7 @@ data class SAMCodingRecord(
     }
 
     fun containsIndel(): Boolean {
-        return indels.map { it.length }.sum() != 0
+        return indels.isNotEmpty()
     }
 
     fun codingRegionRead(reverseCompliment: Boolean): CharArray {
@@ -54,6 +54,10 @@ data class SAMCodingRecord(
 
     companion object {
         fun create(codingRegion: GenomeRegion, record: SAMRecord): SAMCodingRecord {
+            if (record.readName == "ST-E00287:199:HM7JMCCXY:7:1206:25185:31582") {
+                println("Sdf")
+            }
+
             val softClipStart = record.softClipStart()
             val softClipEnd = record.softClipEnd()
 

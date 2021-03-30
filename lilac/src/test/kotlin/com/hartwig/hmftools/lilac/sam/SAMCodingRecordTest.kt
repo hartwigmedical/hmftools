@@ -2,7 +2,8 @@ package com.hartwig.hmftools.lilac.sam
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import htsjdk.samtools.SAMRecord
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SAMCodingRecordTest {
@@ -82,11 +83,11 @@ class SAMCodingRecordTest {
     }
 
     @Test
-    fun testMultipleIndelsCancellingOut() {
+    fun testOppositeIndelsDoNotCancelOut() {
         val samRecord = buildSamRecord(1100, "50M3D1M3I50M", 100)
         val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
         assertEquals(2, victim.indels.size)
-        assertFalse(victim.containsIndel())
+        assertTrue(victim.containsIndel())
     }
 
     @Test
