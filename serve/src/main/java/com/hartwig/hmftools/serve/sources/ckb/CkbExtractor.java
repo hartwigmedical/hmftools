@@ -68,18 +68,18 @@ public class CkbExtractor {
             }
 
             extractions.add(toExtractionResult(actionableEvents, eventExtractions));
+            extractions.add(ImmutableExtractionResult.builder()
+                    .knownHotspots(Sets.newHashSet())
+                    .knownCodons(Sets.newHashSet())
+                    .knownExons(Sets.newHashSet())
+                    .knownCopyNumbers(Sets.newHashSet())
+                    .knownFusionPairs(Sets.newHashSet())
+                    .build());
 
             tracker.update();
         }
 
-         actionableEvidenceFactory.evaluateCuration();
-
-        ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
-                .knownHotspots(Sets.newHashSet())
-                .knownCodons(Sets.newHashSet())
-                .knownExons(Sets.newHashSet())
-                .knownCopyNumbers(Sets.newHashSet())
-                .knownFusionPairs(Sets.newHashSet());
+        actionableEvidenceFactory.evaluateCuration();
 
         return ExtractionFunctions.merge(extractions);
 
