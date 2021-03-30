@@ -12,8 +12,8 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
+import com.hartwig.hmftools.serve.sources.ckb.curation.EvidenceLevelCurator;
 import com.hartwig.hmftools.serve.sources.vicc.curation.DrugCurator;
-import com.hartwig.hmftools.serve.sources.vicc.curation.EvidenceLevelCurator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -87,6 +87,9 @@ class ActionableEvidenceFactory {
                         urls.add(reference.url());
                     }
                 }
+
+                level = evidenceLevelCurator.curate(Knowledgebase.CKB, entry.variants().get(0).gene().geneSymbol(), therapyName, level, direction);
+
 
                 if (therapyName != null && level != null && direction != null) {
                     ImmutableActionableEvidence.Builder builder =
