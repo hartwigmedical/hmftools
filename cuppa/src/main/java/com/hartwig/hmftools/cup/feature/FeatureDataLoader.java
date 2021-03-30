@@ -296,8 +296,6 @@ public class FeatureDataLoader
     private static final String INDEL_SFTPB = "SFTPB";
     private static final String INDEL_SLC34A2 = "SLC34A2";
 
-    private static final String KNOWN_INDEL_STR = "KNOWN_INDEL_";
-
     private static boolean isKnownIndelGene(final String gene)
     {
         return gene.equals(INDEL_ALB) || gene.equals(INDEL_SFTPB) || gene.equals(INDEL_SLC34A2);
