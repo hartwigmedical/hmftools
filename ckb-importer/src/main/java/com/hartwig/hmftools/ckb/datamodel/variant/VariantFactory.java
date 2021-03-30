@@ -65,7 +65,7 @@ public final class VariantFactory {
                         .id(gene.id())
                         .createDate(gene.createDate())
                         .updateDate(gene.updateDate())
-                        .geneSymbol(gene.geneSymbol())
+                        .geneSymbol(gene.geneSymbol().replace(" ", ""))
                         .geneRole(gene.geneRole())
                         .entrezId(gene.entrezId())
                         .chromosome(gene.chromosome())
