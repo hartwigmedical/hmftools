@@ -92,11 +92,11 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
     override fun run() {
         logger.info("Starting LILAC with parameters:")
-        logger.info("... minBaseQual = $minBaseQual")
-        logger.info("... minEvidence = $minEvidence")
-        logger.info("... minUniqueCoverage = $minConfirmedUniqueCoverage")
-        logger.info("... minFragmentsPerAllele = $minFragmentsPerAllele")
-        logger.info("... minFragmentsToRemoveSingle = $minFragmentsToRemoveSingle")
+        logger.info("    minBaseQual = $minBaseQual")
+        logger.info("    minEvidence = $minEvidence")
+        logger.info("    minUniqueCoverage = $minConfirmedUniqueCoverage")
+        logger.info("    minFragmentsPerAllele = $minFragmentsPerAllele")
+        logger.info("    minFragmentsToRemoveSingle = $minFragmentsToRemoveSingle")
 
         // Context
         val hlaContextFactory = HlaContextFactory(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES)
@@ -206,7 +206,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             logger.info("Expected allele coverage: $expectedCoverage")
         }
 
-        val referenceRankedComplexes = HlaComplexCoverageRanking().candidateRanking(referenceComplexCoverage)
+        val referenceRankedComplexes = HlaComplexCoverageRanking(config.maxDistanceFromTopScore).candidateRanking(referenceComplexCoverage)
         val winningReferenceCoverage = referenceRankedComplexes[0].expandToSixAlleles()
         val winningAlleles = winningReferenceCoverage.alleleCoverage.alleles()
         val winningSequences = candidates.filter { candidate -> candidate.allele in winningAlleles }
