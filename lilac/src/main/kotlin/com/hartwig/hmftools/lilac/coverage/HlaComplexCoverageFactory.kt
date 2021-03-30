@@ -37,8 +37,22 @@ class HlaComplexCoverageFactory(config: LilacConfig, private val executorService
             list.add(executorService.submit(trackedCallable))
         }
 
-        val all =  list.map { it.get() }.sortedDescending()
-        return ranking.candidateRanking(all)
+        val result = mutableListOf<HlaComplexCoverage>()
+        val iterator = list.iterator()
+        while (iterator.hasNext()) {
+            val coverage = iterator.next().get()
+            result.add(coverage)
+
+            if (result.size > 100) {
+                val filtered = ranking.candidateRanking(result)
+                result.clear()
+                result.addAll(filtered)
+            }
+
+            iterator.remove()
+        }
+
+        return ranking.candidateRanking(result)
 
     }
 

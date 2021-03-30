@@ -181,18 +181,26 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val groupCoverage = HlaComplexCoverageFactory.groupCoverage(referenceFragmentAlleles, candidateAlleles)
         val confirmedGroups = groupCoverage.confirmUnique()
         val discardedGroups = groupCoverage.alleleCoverage.filter { it.uniqueCoverage > 0 && it !in confirmedGroups }.sortedDescending()
-        logger.info("... confirmed ${confirmedGroups.size} unique groups: " + confirmedGroups.joinToString(", "))
+        if (confirmedGroups.isNotEmpty()) {
+            logger.info("    confirmed ${confirmedGroups.size} unique groups: " + confirmedGroups.joinToString(", "))
+        } else {
+            logger.info("    confirmed 0 unique groups")
+        }
         if (discardedGroups.isNotEmpty()) {
-            logger.info("... found ${discardedGroups.size} insufficiently unique groups: " + discardedGroups.joinToString(", "))
+            logger.info("    found ${discardedGroups.size} insufficiently unique groups: " + discardedGroups.joinToString(", "))
         }
 
         val candidatesAfterConfirmedGroups = candidateAlleles.filterWithConfirmedGroups(confirmedGroups.map { it.allele })
         val proteinCoverage = HlaComplexCoverageFactory.proteinCoverage(referenceFragmentAlleles, candidatesAfterConfirmedGroups)
         val confirmedProtein = proteinCoverage.confirmUnique()
         val discardedProtein = proteinCoverage.alleleCoverage.filter { it.uniqueCoverage > 0 && it !in confirmedProtein }.sortedDescending()
-        logger.info("... confirmed ${confirmedProtein.size} unique proteins: " + confirmedProtein.joinToString(", "))
+        if (confirmedProtein.isNotEmpty()) {
+            logger.info("    confirmed ${confirmedProtein.size} unique proteins: " + confirmedProtein.joinToString(", "))
+        } else {
+            logger.info("    confirmed 0 unique proteins")
+        }
         if (discardedProtein.isNotEmpty()) {
-            logger.info("... found ${discardedProtein.size} insufficiently unique proteins: " + discardedProtein.joinToString(", "))
+            logger.info("    found ${discardedProtein.size} insufficiently unique proteins: " + discardedProtein.joinToString(", "))
         }
 
         val complexes = HlaComplex.complexes(confirmedGroups.alleles(), confirmedProtein.alleles(), candidates.map { it.allele })
@@ -227,8 +235,8 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val lilacQC = LilacQC(aminoAcidQC, bamQC, coverageQC, haplotypeQC)
 
         logger.info("QC Stats:")
-        logger.info("   ${lilacQC.header().joinToString(",")}")
-        logger.info("   ${lilacQC.body().joinToString(",")}")
+        logger.info("    ${lilacQC.header().joinToString(",")}")
+        logger.info("    ${lilacQC.body().joinToString(",")}")
 
         lilacQC.writefile("$outputDir/$sample.qc.txt")
 

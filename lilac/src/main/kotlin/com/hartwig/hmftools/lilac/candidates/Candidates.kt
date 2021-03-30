@@ -27,14 +27,14 @@ class Candidates(private val config: LilacConfig,
         nucleotideCounts.writeVertically("${config.outputFilePrefix}.nucleotides.${gene}.count.txt")
 
         val geneCandidates = aminoAcidSequences.filter { it.allele.gene == gene }
-        logger.info(" ... ${geneCandidates.size} candidates before filtering")
+        logger.info("    ${geneCandidates.size} candidates before filtering")
 
         // Amino acid filtering
         val aminoAcidFilter = AminoAcidFiltering(aminoAcidBoundary)
         val aminoAcidCandidates = aminoAcidFilter.aminoAcidCandidates(geneCandidates, aminoAcidCounts)
         val aminoAcidCandidateAlleles = aminoAcidCandidates.map { it.allele }.toSet()
         val aminoAcidSpecificAllelesCandidate = aminoAcidCandidateAlleles.map { it.asFourDigit() }.toSet()
-        logger.info(" ... ${aminoAcidCandidates.size} candidates after amino acid filtering")
+        logger.info("    ${aminoAcidCandidates.size} candidates after amino acid filtering")
 
         // Nucleotide filtering
         val nucleotideFiltering = NucleotideFiltering(config.minEvidence, aminoAcidBoundary)
@@ -45,10 +45,10 @@ class Candidates(private val config: LilacConfig,
                 .toSet()
 
         val nucleotideCandidates = aminoAcidCandidates.filter { it.allele.asFourDigit() in nucleotideSpecificAllelesCandidate }
-        logger.info(" ... ${nucleotideCandidates.size} candidates after exon boundary filtering")
+        logger.info("    ${nucleotideCandidates.size} candidates after exon boundary filtering")
 
         val phasedCandidates = filterCandidates(nucleotideCandidates, phasedEvidence)
-        logger.info(" ... ${phasedCandidates.size} candidates after phasing: " + phasedCandidates.map { it.allele }.joinToString(", "))
+        logger.info("    ${phasedCandidates.size} candidates after phasing: " + phasedCandidates.map { it.allele }.joinToString(", "))
 
         return phasedCandidates
 
