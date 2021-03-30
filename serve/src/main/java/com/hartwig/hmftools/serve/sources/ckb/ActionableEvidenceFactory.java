@@ -93,11 +93,14 @@ class ActionableEvidenceFactory {
                     }
                 }
 
-                level = evidenceLevelCurator.curate(Knowledgebase.CKB,
-                        entry.variants().get(0).gene().geneSymbol(),
-                        therapyName,
-                        level,
-                        direction);
+                if (level != null) {
+                    level = evidenceLevelCurator.curate(Knowledgebase.CKB,
+                            entry.variants().get(0).gene().geneSymbol(),
+                            therapyName,
+                            level,
+                            direction);
+                }
+
                 List<List<String>> drugLists = drugCurator.curate(Knowledgebase.CKB, level, therapyName);
 
                 if (therapyName != null && level != null && direction != null) {
