@@ -26,7 +26,6 @@ class ActionableEvidenceFactory {
     private static final Logger LOGGER = LogManager.getLogger(ActionableEvidenceFactory.class);
 
     private static final Set<String> RESPONSIVE_DIRECTIONS = Sets.newHashSet();
-    private static final Set<String> DECREASED_RESPONSIVE_DIRECTIONS = Sets.newHashSet();
     private static final Set<String> RESISTANT_DIRECTIONS = Sets.newHashSet();
     private static final Set<String> DIRECTIONS_TO_IGNORE = Sets.newHashSet();
     private static final Set<String> EVIDENCE_TYPE = Sets.newHashSet();
@@ -35,7 +34,7 @@ class ActionableEvidenceFactory {
     static {
         RESPONSIVE_DIRECTIONS.add("sensitive");
         RESPONSIVE_DIRECTIONS.add("predicted - sensitive");
-        DECREASED_RESPONSIVE_DIRECTIONS.add("decreased response");
+        RESPONSIVE_DIRECTIONS.add("decreased response");
 
         RESISTANT_DIRECTIONS.add("resistant");
         RESISTANT_DIRECTIONS.add("predicted - resistant");
@@ -196,8 +195,6 @@ class ActionableEvidenceFactory {
 
         if (RESPONSIVE_DIRECTIONS.contains(direction)) {
             return EvidenceDirection.RESPONSIVE;
-        } else if (DECREASED_RESPONSIVE_DIRECTIONS.contains(direction)) {
-            return EvidenceDirection.DECREASED_RESPONSIVE;
         } else if (RESISTANT_DIRECTIONS.contains(direction)) {
             return EvidenceDirection.RESISTANT;
         }
