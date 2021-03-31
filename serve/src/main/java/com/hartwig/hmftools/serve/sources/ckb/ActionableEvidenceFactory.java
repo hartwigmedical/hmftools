@@ -140,7 +140,7 @@ class ActionableEvidenceFactory {
         if (doids != null) {
             return doids;
         } else {
-            LOGGER.warn("Could not resolve doids for VICC cancer type '{}'", cancerType);
+            LOGGER.warn("Could not resolve doids for CKB cancer type '{}'", cancerType);
             return Sets.newHashSet();
         }
     }
