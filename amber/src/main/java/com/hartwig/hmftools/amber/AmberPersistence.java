@@ -53,7 +53,7 @@ class AmberPersistence {
         new AmberVCF(config).writeBAF(outputVcf, tumorBAFList, amberHetNormalEvidence);
     }
 
-    void persisQC(@NotNull final List<AmberBAF> result, @NotNull final List<TumorContamination> contaminationRecords) throws IOException {
+    void persistQC(@NotNull final List<AmberBAF> result, @NotNull final List<TumorContamination> contaminationRecords) throws IOException {
         final double contamination = new TumorContaminationModel().contamination(contaminationRecords);
         final AmberQC qcStats = AmberQCFactory.create(contamination, result);
         final String qcFilename = AmberQCFile.generateFilename(config.outputDirectory(), config.tumor());

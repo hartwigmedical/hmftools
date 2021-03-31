@@ -155,7 +155,7 @@ public class AmberApplication implements AutoCloseable {
         final ListMultimap<Chromosome, TumorContamination> tumorContamination = contamination(readerFactory, homNormal);
         final List<TumorContamination> contaminationList = Lists.newArrayList(tumorContamination.values());
 
-        persistence.persisQC(amberBAFList, contaminationList);
+        persistence.persistQC(amberBAFList, contaminationList);
         persistence.persistVersionInfo(versionInfo);
         persistence.persistBafVcf(tumorBAFList, hetNormalEvidence);
         persistence.persistContamination(contaminationList);
@@ -180,7 +180,7 @@ public class AmberApplication implements AutoCloseable {
         final List<AmberBAF> amberBAFList =
                 tumorBAFList.stream().map(AmberBAF::create).filter(x -> Double.isFinite(x.tumorBAF())).collect(toList());
 
-        persistence.persisQC(amberBAFList, Lists.newArrayList());
+        persistence.persistQC(amberBAFList, Lists.newArrayList());
         persistence.persistVersionInfo(versionInfo);
         persistence.persistBafVcf(tumorBAFList, new AmberHetNormalEvidence());
         persistence.persistBAF(amberBAFList);
