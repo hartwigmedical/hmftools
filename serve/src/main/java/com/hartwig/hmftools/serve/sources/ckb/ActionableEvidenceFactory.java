@@ -150,9 +150,9 @@ class ActionableEvidenceFactory {
         Map<String, Set<String>> cancerTypeToDoidsMap = Maps.newHashMap();
         if (cancerType != null) {
             if (doid != null) {
-                if (doid.split(";")[0].equalsIgnoreCase("jax") && doid.split(";")[1].equalsIgnoreCase("10000003")) {
+                if (doid.split(":")[0].equalsIgnoreCase("jax") && doid.split(":")[1].equalsIgnoreCase("10000003")) {
                     cancerTypeToDoidsMap.put(cancerType, Sets.newHashSet("0050686"));
-                } else if (doid.split(";")[0].equalsIgnoreCase("doid")){
+                } else if (doid.split(":")[0].equalsIgnoreCase("doid")){
                     cancerTypeToDoidsMap.put(cancerType, Sets.newHashSet(doid));
                 } else {
                     cancerTypeToDoidsMap.put(cancerType, lookupDoids(cancerType));
