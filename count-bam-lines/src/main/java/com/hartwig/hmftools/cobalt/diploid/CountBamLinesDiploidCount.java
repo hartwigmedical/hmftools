@@ -76,7 +76,7 @@ public class CountBamLinesDiploidCount implements AutoCloseable {
         final List<MedianRatio> medianRatios = MedianRatioFactory.create(ratios);
         final CobaltChromosomes chromosomes = new CobaltChromosomes(medianRatios);
         if (chromosomes.hasGermlineAberrations()) {
-            LOGGER.warn("Excluding {} because of germline abberations", inputFile);
+            LOGGER.warn("Excluding {} because of germline aberrations", inputFile);
             return;
         }
 

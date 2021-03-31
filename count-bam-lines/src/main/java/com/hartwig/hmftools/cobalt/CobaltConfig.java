@@ -12,8 +12,6 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +22,6 @@ import htsjdk.samtools.ValidationStringency;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface CobaltConfig {
-    Logger LOGGER = LogManager.getLogger(CobaltConfig.class);
 
     int DEFAULT_THREADS = 4;
     int DEFAULT_MIN_MAPPING_QUALITY = 10;
@@ -173,7 +170,6 @@ public interface CobaltConfig {
 
     @NotNull
     static CobaltConfig createMigrationConfig(@NotNull final CommandLine cmd) throws ParseException {
-
         final StringJoiner missingJoiner = new StringJoiner(", ");
 
         final String gcProfilePath = parameter(cmd, GC_PROFILE, missingJoiner);

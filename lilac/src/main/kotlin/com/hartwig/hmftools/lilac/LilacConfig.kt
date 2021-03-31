@@ -6,6 +6,7 @@ import org.apache.commons.cli.CommandLine
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
 import org.apache.commons.cli.ParseException
+import org.apache.logging.log4j.LogManager
 import java.io.File
 import java.io.IOException
 
@@ -23,6 +24,7 @@ const val MIN_FRAGMENTS_TO_REMOVE_SINGLE = "min_fragments_to_remove_single"
 const val MIN_CONFIRMED_UNIQUE_COVERAGE = "min_confirmed_unique_coverage"
 const val EXPECTED_ALLELES = "expected_alleles"
 const val GENE_COPY_NUMBER = "gene_copy_number"
+const val MAX_DISTANCE_FROM_TOP_SCORE = "max_distance_from_top_score"
 
 data class LilacConfig(
         val sample: String,
@@ -37,6 +39,7 @@ data class LilacConfig(
         val minFragmentsToRemoveSingle: Int,
         val minConfirmedUniqueCoverage: Int,
         val threads: Int,
+        val maxDistanceFromTopScore: Int,
         val geneCopyNumberFile: String,
         val expectedAlleles: List<HlaAllele>
 ) {
@@ -44,6 +47,8 @@ data class LilacConfig(
     val outputFilePrefix = "${outputDir}/$sample"
 
     companion object {
+
+        val logger = LogManager.getLogger(this::class.java)
 
         @Throws(ParseException::class, IOException::class)
         fun createConfig(cmd: CommandLine): LilacConfig {
@@ -62,13 +67,8 @@ data class LilacConfig(
             val minFragmentsToRemoveSingle = Configs.defaultIntValue(cmd, MIN_FRAGMENTS_TO_REMOVE_SINGLE, defaultConfig.minFragmentsToRemoveSingle)
             val minConfirmedUniqueCoverage = Configs.defaultIntValue(cmd, MIN_CONFIRMED_UNIQUE_COVERAGE, defaultConfig.minConfirmedUniqueCoverage)
             val threads = Configs.defaultIntValue(cmd, THREADS, defaultConfig.threads)
-            val expectedAlleleString = Configs.defaultStringValue(cmd, EXPECTED_ALLELES, "")
-            val expectedAlleles = if (expectedAlleleString.isNotEmpty()) {
-                expectedAlleleString.split(",").map { HlaAllele(it) }
-            } else {
-                listOf()
-            }
-
+            val maxDistanceFromTopScore = Configs.defaultIntValue(cmd, MAX_DISTANCE_FROM_TOP_SCORE, defaultConfig.maxDistanceFromTopScore)
+            val expectedAlleles = cmd.expectedAlleles(EXPECTED_ALLELES);
 
             return LilacConfig(
                     sample,
@@ -83,6 +83,7 @@ data class LilacConfig(
                     minFragmentsToRemoveSingle,
                     minConfirmedUniqueCoverage,
                     threads,
+                    maxDistanceFromTopScore,
                     geneCopyNumberFile,
                     expectedAlleles)
         }
@@ -101,6 +102,7 @@ data class LilacConfig(
                     40,
                     10,
                     1,
+                    3,
                     "",
                     listOf())
         }
@@ -118,6 +120,7 @@ data class LilacConfig(
             options.addOption(optional(MIN_FRAGMENTS_PER_ALLELE, "MIN_FRAGMENTS_PER_ALLELE"))
             options.addOption(optional(MIN_FRAGMENTS_TO_REMOVE_SINGLE, "MIN_FRAGMENTS_TO_REMOVE_SINGLE"))
             options.addOption(optional(MIN_CONFIRMED_UNIQUE_COVERAGE, "MIN_CONFIRMED_UNIQUE_COVERAGE"))
+            options.addOption(optional(MAX_DISTANCE_FROM_TOP_SCORE, "Max distance from top score"))
             options.addOption(optional(THREADS, "Number of threads"))
             options.addOption(optional(EXPECTED_ALLELES, "Comma separated expected alleles"))
             options.addOption(optional(GENE_COPY_NUMBER, "Path to gene copy number file"))
@@ -142,6 +145,16 @@ data class LilacConfig(
 
             return default
         }
+
+        private fun CommandLine.expectedAlleles(opt: String): List<HlaAllele> {
+            if (this.hasOption(opt)) {
+                val result = this.getOptionValue(opt)!!.split(",").map { HlaAllele(it).asFourDigit() }
+                logger.info("Using non default value {} for parameter {}", result.joinToString(","), opt)
+                return result
+            }
+            return listOf()
+        }
+
 
         @Throws(IOException::class)
         internal fun CommandLine.requiredDir(argument: String): String {

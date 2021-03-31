@@ -9,7 +9,7 @@ import kotlin.math.min
  * - then choosing solutions with the most homozygous alleles,
  * - then choosing the solution with the highest allele population frequency.
  */
-class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int = 3) { // TODO: MOVE INTO CONFIG
+class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int) {
 
     fun candidateRanking(complexes: List<HlaComplexCoverage>): List<HlaComplexCoverage> {
         require(complexes.isNotEmpty())

@@ -34,7 +34,7 @@ class DiploidCount implements Comparable<DiploidCount> {
     private int diploid;
     private int count;
 
-    private DiploidCount(String line) {
+    private DiploidCount(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
         this.position = GenomePositions.create(values[0], Long.parseLong(values[1]));
         this.diploid = Integer.parseInt(values[2]);

@@ -28,15 +28,13 @@ public class DiploidRatioBuilderTest {
         assertReadRatio("1", 5001, result.get(HumanChromosome._1).get(2));
         assertReadRatio("2", 1001, result.get(HumanChromosome._2).get(0));
         assertReadRatio("2", 2001, result.get(HumanChromosome._2).get(1));
-
     }
 
-    private void assertReadRatio(String contig, long position, ReadRatio victim) {
+    private void assertReadRatio(@NotNull String contig, long position, @NotNull ReadRatio victim) {
         assertEquals(contig, victim.chromosome());
         assertEquals(position, victim.position());
         assertEquals(1, victim.ratio(), 0.01);
     }
-
 
     @NotNull
     private static Locatable locatable(String contig, int start, int end) {
@@ -57,5 +55,4 @@ public class DiploidRatioBuilderTest {
             }
         };
     }
-
 }

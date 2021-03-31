@@ -82,7 +82,6 @@ public class CountBamLinesMigration implements AutoCloseable {
     }
 
     private void run() throws IOException, ExecutionException, InterruptedException {
-
         LOGGER.info("Reading GC Profile");
         final Multimap<Chromosome, GCProfile> gcProfiles = GCProfileFactory.loadGCContent(config.windowSize(), config.gcProfilePath());
 

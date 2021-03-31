@@ -19,7 +19,7 @@ class PhasedEvidenceFactory(private val minFragmentsPerAllele: Int, private val 
 
         logger.info("Phased ${result.size} sequences: ")
         for (phasedEvidence in result) {
-            logger.info(" ... $phasedEvidence")
+            logger.info("    $phasedEvidence")
         }
 
         return result
@@ -28,7 +28,7 @@ class PhasedEvidenceFactory(private val minFragmentsPerAllele: Int, private val 
     fun evidence(expectedAlleles: ExpectedAlleles, aminoAcidAminoAcidFragments: List<AminoAcidFragment>): List<PhasedEvidence> {
         val aminoAcidCounts = SequenceCount.aminoAcids(minEvidence, aminoAcidAminoAcidFragments)
         val heterozygousIndices = aminoAcidCounts.heterozygousLoci()
-        println(heterozygousIndices)
+//        println(heterozygousIndices)
 
         val heterozygousEvidence = ExtendEvidence(minFragmentsPerAllele, minFragmentsToRemoveSingles, heterozygousIndices, aminoAcidAminoAcidFragments, expectedAlleles)
 

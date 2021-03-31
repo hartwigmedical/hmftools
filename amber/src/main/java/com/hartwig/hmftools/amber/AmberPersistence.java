@@ -46,14 +46,13 @@ class AmberPersistence {
         new BAFSegmentation(config.outputDirectory()).applySegmentation(config.tumor());
     }
 
-
     void persistBafVcf(@NotNull final List<TumorBAF> tumorBAFList, final AmberHetNormalEvidence amberHetNormalEvidence) {
         final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.baf.vcf.gz";
         LOGGER.info("Writing {} BAF records to {}", tumorBAFList.size(), outputVcf);
         new AmberVCF(config).writeBAF(outputVcf, tumorBAFList, amberHetNormalEvidence);
     }
 
-    void persisQC(@NotNull final List<AmberBAF> result, @NotNull final List<TumorContamination> contaminationRecords) throws IOException {
+    void persistQC(@NotNull final List<AmberBAF> result, @NotNull final List<TumorContamination> contaminationRecords) throws IOException {
         final double contamination = new TumorContaminationModel().contamination(contaminationRecords);
         final AmberQC qcStats = AmberQCFactory.create(contamination, result);
         final String qcFilename = AmberQCFile.generateFilename(config.outputDirectory(), config.tumor());

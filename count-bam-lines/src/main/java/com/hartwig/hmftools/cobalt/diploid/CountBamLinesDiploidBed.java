@@ -18,8 +18,9 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class CountBamLinesDiploidBed implements AutoCloseable {
+
+    private static final Logger LOGGER = LogManager.getLogger(CountBamLinesDiploidBed.class);
     private static final String DELIMITER = "\t";
-    private static final Logger LOGGER = LogManager.getLogger(CountBamLinesDiploidCount.class);
 
     public static void main(String[] args) throws ParseException {
         final Options options = createOptions();
@@ -62,7 +63,8 @@ public class CountBamLinesDiploidBed implements AutoCloseable {
                 diploidRegions.stream().sorted().map(CountBamLinesDiploidBed::toBedString).collect(Collectors.toList()));
     }
 
-    public static String toBedString(GenomeRegion region) {
+    @NotNull
+    private static String toBedString(@NotNull GenomeRegion region) {
         return new StringJoiner(DELIMITER).add(region.chromosome())
                 .add(String.valueOf(region.start() - 1))
                 .add(String.valueOf(region.end()))
@@ -81,5 +83,4 @@ public class CountBamLinesDiploidBed implements AutoCloseable {
         options.addOption("out", true, "Bed File");
         return options;
     }
-
 }

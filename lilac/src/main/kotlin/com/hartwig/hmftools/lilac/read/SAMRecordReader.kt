@@ -34,7 +34,7 @@ class SAMRecordReader(maxDistance: Int, private val refGenome: String, private v
     }
 
     private fun readFromBam(transcript: HmfTranscriptRegion, bamFile: String): List<NucleotideFragment> {
-        logger.info("... querying ${transcript.gene()} (${transcript.chromosome()}:${transcript.codingStart()}-${transcript.codingEnd()})")
+        logger.info("    querying ${transcript.gene()} (${transcript.chromosome()}:${transcript.codingStart()}-${transcript.codingEnd()})")
 
         val reverseStrand = transcript.strand() == Strand.REVERSE
         val codingRegions = if (reverseStrand) codingRegions(transcript).reversed() else codingRegions(transcript)

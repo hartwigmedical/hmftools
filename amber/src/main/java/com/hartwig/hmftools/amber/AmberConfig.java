@@ -13,8 +13,6 @@ import com.hartwig.hmftools.common.cli.Configs;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -25,8 +23,6 @@ import htsjdk.samtools.ValidationStringency;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface AmberConfig {
-
-    Logger LOGGER = LogManager.getLogger(AmberConfig.class);
 
     int DEFAULT_THREADS = 1;
     int DEFAULT_MIN_BASE_QUALITY = 13;

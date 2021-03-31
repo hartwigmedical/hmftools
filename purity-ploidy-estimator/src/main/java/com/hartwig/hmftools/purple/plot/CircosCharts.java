@@ -158,10 +158,6 @@ class CircosCharts {
         Files.write(new File(confFile(type)).toPath(), content.getBytes(charset));
     }
 
-    private void copyResourceToCircos(@NotNull final String name) throws IOException {
-        copyResourceToCircos(name, name);
-    }
-
     private void copyResourceToCircos(@NotNull final String inputName, @NotNull final String outputName) throws IOException {
         Charset charset = StandardCharsets.UTF_8;
         final String content = readResource("/circos/" + inputName);
@@ -191,5 +187,4 @@ class CircosCharts {
                 .filter(x -> HumanChromosome.fromString(x.chromosome()).intValue() <= 25)
                 .collect(Collectors.toList());
     }
-
 }

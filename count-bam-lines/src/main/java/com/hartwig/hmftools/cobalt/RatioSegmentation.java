@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.utils.r.RExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 class RatioSegmentation {
 
@@ -40,6 +41,7 @@ class RatioSegmentation {
         LOGGER.info("Segmentation Complete");
     }
 
+    @Nullable
     private Object ratioSegmentation(@NotNull final String ratioFile, @NotNull final String sample, @NotNull final String column)
             throws IOException, InterruptedException {
         final String pcfFile = PCFFile.generateRatioFilename(outputDirectory, sample);

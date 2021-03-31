@@ -7,6 +7,8 @@ import org.junit.Test
 
 class HlaComplexCoverageRankingTest {
 
+    val victim = HlaComplexCoverageRanking(3)
+
     val a1 = HlaAlleleCoverage(HlaAllele("A*01:01"), 10, 0.0, 0.0)
     val a2 = HlaAlleleCoverage(HlaAllele("A*01:02"), 10, 0.0, 0.0)
     val a3 = HlaAlleleCoverage(HlaAllele("A*01:03"), 10, 0.0, 0.0)
@@ -28,10 +30,9 @@ class HlaComplexCoverageRankingTest {
 
         for (lower in lowerList) {
             val complexes = mutableListOf(highest, lower).shuffled()
-            val winner = HlaComplexCoverageRanking().candidateRanking(complexes)[0]
+            val winner = victim.candidateRanking(complexes)[0]
             assertEquals(highest, winner)
         }
-
     }
 
     @Test
@@ -48,14 +49,14 @@ class HlaComplexCoverageRankingTest {
 
         for (hom in homList) {
             val complexes = mutableListOf(het, hom).shuffled()
-            val winner = HlaComplexCoverageRanking().candidateRanking(complexes)[0]
+            val winner = victim.candidateRanking(complexes)[0]
             assertEquals(hom, winner)
         }
 
         val homA = HlaComplexCoverage.create(listOf(a1, a1, b1, b2, c1, c2))
         val homAAndB = HlaComplexCoverage.create(listOf(a1, a1, b2, b2, c1, c2))
         val complexes = mutableListOf(homA, homAAndB).shuffled()
-        assertEquals(homAAndB, HlaComplexCoverageRanking().candidateRanking(complexes)[0])
+        assertEquals(homAAndB, victim.candidateRanking(complexes)[0])
     }
 
     @Test
@@ -64,9 +65,8 @@ class HlaComplexCoverageRankingTest {
         val homWithoutWild = HlaComplexCoverage.create(listOf(a1, a1, b1, b1, c1, c1))
         val homWithWild = HlaComplexCoverage.create(listOf(a1, a1, b1, b1, c1, c1.copy(uniqueCoverage = 9, wildCoverage = 1.0)))
 
-        assertEquals(homWithoutWild, HlaComplexCoverageRanking().candidateRanking(mutableListOf(het, homWithoutWild).shuffled())[0])
-        assertEquals(het, HlaComplexCoverageRanking().candidateRanking(mutableListOf(het, homWithWild).shuffled())[0])
-
+        assertEquals(homWithoutWild, victim.candidateRanking(mutableListOf(het, homWithoutWild).shuffled())[0])
+        assertEquals(het, victim.candidateRanking(mutableListOf(het, homWithWild).shuffled())[0])
     }
 
 

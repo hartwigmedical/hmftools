@@ -5,8 +5,6 @@ import java.util.Optional;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,7 +13,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface ChartConfig {
 
-    Logger LOGGER = LogManager.getLogger(CommonConfig.class);
     String CIRCOS = "circos";
     String DISABLE = "no_charts";
 
@@ -41,5 +38,4 @@ public interface ChartConfig {
                 .circosBinary(cmd.hasOption(CIRCOS) ? Optional.of(cmd.getOptionValue(CIRCOS)) : Optional.empty())
                 .build();
     }
-
 }

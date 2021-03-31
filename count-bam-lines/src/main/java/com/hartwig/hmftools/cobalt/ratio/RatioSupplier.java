@@ -27,7 +27,7 @@ import htsjdk.tribble.bed.BEDFeature;
 
 public class RatioSupplier {
 
-    private static final Logger LOGGER = LogManager.getLogger(GCRatioSupplier.class);
+    private static final Logger LOGGER = LogManager.getLogger(RatioSupplier.class);
 
     private final String tumor;
     private final String reference;
