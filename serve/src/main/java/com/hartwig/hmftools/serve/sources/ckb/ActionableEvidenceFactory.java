@@ -179,13 +179,13 @@ class ActionableEvidenceFactory {
     }
 
     private static boolean resolveEvidenceType(@NotNull String evidenceType) {
-        boolean useubleEvidence = false;
+        boolean usableEvidence = false;
         if (EVIDENCE_TYPE.contains(evidenceType)) {
-            useubleEvidence = true;
+            usableEvidence = true;
         } else if (EVIDENCE_TYPE_TO_IGNORE.contains(evidenceType)) {
-            useubleEvidence = false;
+            usableEvidence = false;
         }
-        return useubleEvidence;
+        return usableEvidence;
     }
 
     @Nullable
