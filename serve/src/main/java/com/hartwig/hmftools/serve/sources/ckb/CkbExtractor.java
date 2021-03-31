@@ -66,6 +66,7 @@ public class CkbExtractor {
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
         for (CkbEntry entry : ckbEntries) {
+            LOGGER.info("entry: {}" + entry.profileId());
 
             if (entry.variants().size() == 1) {
                 eventExtractions.add(eventExtractor.extract(entry.variants().get(0).gene().geneSymbol(),
