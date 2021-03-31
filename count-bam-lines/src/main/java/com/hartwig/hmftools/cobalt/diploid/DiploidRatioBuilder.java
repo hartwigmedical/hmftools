@@ -17,6 +17,7 @@ import htsjdk.samtools.util.Locatable;
 import htsjdk.tribble.bed.BEDFeature;
 
 public class DiploidRatioBuilder implements Consumer<Locatable> {
+
     private static final int WINDOW_SIZE = 1000;
 
     private final ListMultimap<Chromosome, ReadRatio> result = ArrayListMultimap.create();
@@ -70,5 +71,4 @@ public class DiploidRatioBuilder implements Consumer<Locatable> {
         finaliseCurrent();
         return result;
     }
-
 }

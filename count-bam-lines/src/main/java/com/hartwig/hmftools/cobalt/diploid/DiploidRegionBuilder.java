@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import org.jetbrains.annotations.NotNull;
 
 class DiploidRegionBuilder implements Consumer<DiploidCount> {
+
     private static final int WINDOW_SIZE = 1000;
 
     private final List<GenomeRegion> result = Lists.newArrayList();
@@ -62,5 +63,4 @@ class DiploidRegionBuilder implements Consumer<DiploidCount> {
         finaliseCurrent();
         return result;
     }
-
 }

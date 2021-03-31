@@ -95,7 +95,6 @@ public class CountSupplier {
         return CobaltCountFactory.tumorOnly(tumorCounts);
     }
 
-
     @NotNull
     private List<Future<ChromosomeReadCount>> createFutures(final SamReaderFactory readerFactory, final File file,
             final List<ChromosomeLength> lengths) {

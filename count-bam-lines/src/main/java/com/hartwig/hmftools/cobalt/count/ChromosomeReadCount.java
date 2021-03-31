@@ -80,7 +80,6 @@ class ChromosomeReadCount implements Callable<ChromosomeReadCount> {
 
     private void addRecord(@NotNull SAMRecord record) {
         if (isEligible(record)) {
-
             long window = windowPosition(record.getAlignmentStart());
             if (start != window) {
                 addReadCount(start, count);
