@@ -55,7 +55,7 @@ public class CkbExtractorTestApp {
         LOGGER.debug(" Read {} driver genes from {}", driverGenes.size(), driverGeneTsvPath);
 
         KnownFusionCache fusionCache = new KnownFusionCache();
-        String knownFusionFilePath = "/data/common/dbs/fusions/known_fusion_data.csv";
+        String knownFusionFilePath = "/data/common/dbs/fusions/known_fusion_data.38_v3.csv";
         if (!fusionCache.loadFile(knownFusionFilePath)) {
             throw new IllegalStateException("Could not load known fusion cache from " + knownFusionFilePath);
         }
