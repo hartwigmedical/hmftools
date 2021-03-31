@@ -97,7 +97,7 @@ data class LilacConfig(
                     "",
                     "",
                     30,
-                    3,
+                    2,
                     6,
                     40,
                     10,
