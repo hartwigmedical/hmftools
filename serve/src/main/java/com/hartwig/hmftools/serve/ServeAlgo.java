@@ -67,9 +67,10 @@ public class ServeAlgo {
             extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv()));
         }
 
-        if (config.useCkb()) {
-            extractions.add(extractCKBKnowledge(config.ckbDir()));
-        }
+        // skip CKB for test run
+//        if (config.useCkb()) {
+//            extractions.add(extractCKBKnowledge(config.ckbDir()));
+//        }
 
         if (config.useDocm()) {
             extractions.add(extractDocmKnowledge(config.docmTsv()));
