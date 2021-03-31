@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.serve.sources.ckb;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
@@ -21,7 +19,6 @@ import com.hartwig.hmftools.serve.sources.ckb.curation.EvidenceLevelCurator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -124,7 +121,12 @@ class ActionableEvidenceFactory {
             if (parts[0].equalsIgnoreCase("doid")) {
                 return parts[1];
             } else if (parts[0].equalsIgnoreCase("jax")) {
-                return doidString;
+                if (parts[1].equals("10000003")) {
+                    return "0050686";
+                } else {
+                    LOGGER.warn("Unexpected Doid string of annotated by JAX: '{}'", doidString);
+                    return null;
+                }
             } else {
                 return null;
             }
@@ -150,13 +152,9 @@ class ActionableEvidenceFactory {
         Map<String, Set<String>> cancerTypeToDoidsMap = Maps.newHashMap();
         if (cancerType != null) {
             if (doid != null) {
-                if (doid.split(":")[0].equalsIgnoreCase("jax") && doid.split(":")[1].equalsIgnoreCase("10000003")) {
-                    cancerTypeToDoidsMap.put(cancerType, Sets.newHashSet("0050686"));
-                } else if (doid.split(":")[0].equalsIgnoreCase("doid")){
-                    cancerTypeToDoidsMap.put(cancerType, Sets.newHashSet(doid));
-                } else {
-                    cancerTypeToDoidsMap.put(cancerType, lookupDoids(cancerType));
-                }
+                cancerTypeToDoidsMap.put(cancerType, Sets.newHashSet(doid));
+            } else {
+                cancerTypeToDoidsMap.put(cancerType, lookupDoids(cancerType));
             }
         }
         return cancerTypeToDoidsMap;
