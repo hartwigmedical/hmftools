@@ -46,7 +46,6 @@ class AmberPersistence {
         new BAFSegmentation(config.outputDirectory()).applySegmentation(config.tumor());
     }
 
-
     void persistBafVcf(@NotNull final List<TumorBAF> tumorBAFList, final AmberHetNormalEvidence amberHetNormalEvidence) {
         final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.baf.vcf.gz";
         LOGGER.info("Writing {} BAF records to {}", tumorBAFList.size(), outputVcf);
