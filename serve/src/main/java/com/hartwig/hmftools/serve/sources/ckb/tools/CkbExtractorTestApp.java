@@ -47,22 +47,24 @@ public class CkbExtractorTestApp {
         List<CkbEntry> filteredAndcurateCkbEntries = CkbReader.filterAndCurateRelevantEntries(allCkbEntries);
 
         // Read required data
-        String driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.hg38.tsv";
-        String knownFusionFilePath = "/data/common/dbs/fusions/known_fusion_data.csv";
         String missingDoidMappingTsv = "/data/common/dbs/serve/curation/missing_doids_mapping.tsv";
-        String fastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh38.no.alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna";
-        RefGenomeVersion refGenomeVersion = RefGenomeVersion.V38;
-        Map<String, HmfTranscriptRegion> allGenesMap = HmfGenePanelSupplier.allGenesMap38();
-        ProteinResolver proteinResolver = ProteinResolverFactory.dummy();
         DoidLookup doidLookup = DoidLookupFactory.buildFromConfigTsv(missingDoidMappingTsv);
+
+        String driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.hg38.tsv";
         List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneTsvPath);
         LOGGER.debug(" Read {} driver genes from {}", driverGenes.size(), driverGeneTsvPath);
 
         KnownFusionCache fusionCache = new KnownFusionCache();
+        String knownFusionFilePath = "/data/common/dbs/fusions/known_fusion_data.csv";
         if (!fusionCache.loadFile(knownFusionFilePath)) {
             throw new IllegalStateException("Could not load known fusion cache from " + knownFusionFilePath);
         }
         LOGGER.debug(" Read {} known fusions from {}", fusionCache.getData().size(), knownFusionFilePath);
+
+        String fastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh38.no.alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna";
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.V38;
+        Map<String, HmfTranscriptRegion> allGenesMap = HmfGenePanelSupplier.allGenesMap38();
+        ProteinResolver proteinResolver = ProteinResolverFactory.dummy();
         RefGenomeResource refGenomeResource = ImmutableRefGenomeResource.builder()
                 .fastaFile(fastaFile)
                 .driverGenes(driverGenes)
@@ -71,19 +73,14 @@ public class CkbExtractorTestApp {
                 .proteinResolver(proteinResolver)
                 .build();
 
-        // TODO 1. Make sure every entry has correct event type.
-
-        CkbUtils.writeEventsToTsv(eventsTsv, filteredAndcurateCkbEntries);
-
-        // TODO 2. Make sure every event is extracted correctly using EventExtractor
         EventClassifierConfig config = CkbClassificationConfig.build();
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config, refGenomeResource, doidLookup);
 
-        // TODO 3. Create ActionableEvents for all relevant entries.
         ExtractionResult result = extractor.extract(filteredAndcurateCkbEntries);
+
+        CkbUtils.writeEventsToTsv(eventsTsv, filteredAndcurateCkbEntries);
         CkbUtils.printExtractionResults(result);
 
         new ExtractionResultWriter(outputDir, refGenomeVersion).write(result);
-
     }
 }

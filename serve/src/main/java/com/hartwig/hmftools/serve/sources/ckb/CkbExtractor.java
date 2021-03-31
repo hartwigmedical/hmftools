@@ -66,7 +66,6 @@ public class CkbExtractor {
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
         for (CkbEntry entry : ckbEntries) {
-            LOGGER.info("entry: {}" + entry.profileId());
 
             if (entry.variants().size() == 1) {
                 eventExtractions.add(eventExtractor.extract(entry.variants().get(0).gene().geneSymbol(),
@@ -89,20 +88,13 @@ public class CkbExtractor {
                             entry.variants().get(0).variant(),
                             entry.variants().get(0).gene().geneSymbol());
                 }
-
             }
-
-
-
             tracker.update();
         }
-        LOGGER.info(extractions.size());
-        LOGGER.info(extractions);
 
         actionableEvidenceFactory.evaluateCuration();
 
         return ExtractionFunctions.merge(extractions);
-
     }
 
     @NotNull
@@ -121,9 +113,7 @@ public class CkbExtractor {
                             .build());
                 }
             }
-
         }
-
         return HotspotFunctions.consolidate(hotspots);
     }
 
@@ -164,7 +154,6 @@ public class CkbExtractor {
 
             }
         }
-
         return CopyNumberFunctions.consolidate(copyNumbers);
     }
 
@@ -176,7 +165,6 @@ public class CkbExtractor {
                 fusions.add(ImmutableKnownFusionPair.builder().from(result.knownFusionPair()).addSources(Knowledgebase.CKB).build());
             }
         }
-
         return FusionFunctions.consolidate(fusions);
     }
 
@@ -221,5 +209,4 @@ public class CkbExtractor {
                 .actionableCharacteristics(actionableCharacteristics)
                 .build();
     }
-
 }
