@@ -105,7 +105,7 @@ public class SampleFitter
         mFitWriter = null;
         mDbAccess = createDatabaseAccess(cmd);
         mVcfFile = cmd.getOptionValue(SOMATIC_VCF_FILE);
-        mUploadToDb = Boolean.parseBoolean(cmd.getOptionValue(UPLOAD_TO_DB, "true"));
+        mUploadToDb = cmd.hasOption(UPLOAD_TO_DB);
         mFitToTotal = Boolean.parseBoolean(cmd.getOptionValue(FIT_TO_TOTAL, "true"));
         mWritePosFreqCoords = cmd.hasOption(WRITE_POS_COORDS);
 
@@ -364,8 +364,8 @@ public class SampleFitter
         CommonUtils.addCmdLineArgs(options);
         addDatabaseCmdLineArgs(options);
         options.addOption(POSITION_BUCKET_SIZE, true, "Position bucket size");
-        options.addOption(MAX_SAMPLE_COUNT, true, "Max sample SNV count, default = 20K");
-        options.addOption(UPLOAD_TO_DB, true, "Upload results to database (default: true)");
+        options.addOption(MAX_SAMPLE_COUNT, true, "Max sample SNV count for position frequencies, default = 20K");
+        options.addOption(UPLOAD_TO_DB, false, "Upload results to database if present");
         options.addOption(SOMATIC_VCF_FILE, true, "Somatic variant VCF file");
         options.addOption(MIN_ALLOC_PERC, true, "Min signature allocation as percentage (default=0.5%)");
         options.addOption(MIN_ALLOC, true, "Min signature allocation (default=1)");

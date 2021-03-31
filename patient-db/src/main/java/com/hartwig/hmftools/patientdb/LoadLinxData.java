@@ -33,12 +33,14 @@ public class LoadLinxData {
     private static final String SAMPLE = "sample";
     private static final String LINX_DIR = "linx_dir";
 
-    public static void main(@NotNull String[] args) throws ParseException, IOException {
+    public static void main(@NotNull String[] args) throws ParseException, IOException
+    {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
         DatabaseAccess dbAccess = createDatabaseAccess(cmd);
 
-        if (dbAccess == null) {
+        if (dbAccess == null)
+        {
             LOGGER.error("Failed to create DB connection");
             System.exit(1);
         }
@@ -52,7 +54,8 @@ public class LoadLinxData {
     }
 
     private static void loadLinxData(@NotNull DatabaseAccess dbAccess, @NotNull String sampleId, @NotNull String linxDir)
-            throws IOException {
+            throws IOException
+    {
         List<LinxSvAnnotation> svAnnotations = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(linxDir, sampleId));
         LOGGER.info("Sample({}) loading {} SV annotation records", sampleId, svAnnotations.size());
         dbAccess.writeSvLinxData(sampleId, svAnnotations);
@@ -85,7 +88,8 @@ public class LoadLinxData {
     }
 
     @NotNull
-    private static Options createOptions() {
+    private static Options createOptions()
+    {
         Options options = new Options();
         addDatabaseCmdLineArgs(options);
         options.addOption(SAMPLE, true, "Name of the tumor sample");
