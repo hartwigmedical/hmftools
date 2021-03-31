@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.serve.sources.ckb;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
@@ -21,7 +19,6 @@ import com.hartwig.hmftools.serve.sources.ckb.curation.EvidenceLevelCurator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,6 +26,7 @@ class ActionableEvidenceFactory {
     private static final Logger LOGGER = LogManager.getLogger(ActionableEvidenceFactory.class);
 
     private static final Set<String> RESPONSIVE_DIRECTIONS = Sets.newHashSet();
+    private static final Set<String> DECREASED_RESPONSIVE_DIRECTIONS = Sets.newHashSet();
     private static final Set<String> RESISTANT_DIRECTIONS = Sets.newHashSet();
     private static final Set<String> DIRECTIONS_TO_IGNORE = Sets.newHashSet();
     private static final Set<String> EVIDENCE_TYPE = Sets.newHashSet();
@@ -37,7 +35,7 @@ class ActionableEvidenceFactory {
     static {
         RESPONSIVE_DIRECTIONS.add("sensitive");
         RESPONSIVE_DIRECTIONS.add("predicted - sensitive");
-        RESPONSIVE_DIRECTIONS.add("decreased response");
+        DECREASED_RESPONSIVE_DIRECTIONS.add("decreased response");
 
         RESISTANT_DIRECTIONS.add("resistant");
         RESISTANT_DIRECTIONS.add("predicted - resistant");
@@ -94,27 +92,14 @@ class ActionableEvidenceFactory {
                     }
                 }
 
-//                if (level != null && direction != null) {
-//                    level = evidenceLevelCurator.curate(Knowledgebase.CKB,
-//                            entry.variants().get(0).gene().geneSymbol(),
-//                            therapyName,
-//                            level,
-//                            direction);
-//                }
-//
-//                List<List<String>> drugLists = Lists.newArrayList();
-//                if (level != null) {
-//                    drugLists = drugCurator.curate(Knowledgebase.CKB, level, therapyName);
-//                }
+                // TODO: Determine if curation of drugs and evidence is needed
 
                 if (therapyName != null && level != null && direction != null) {
                     ImmutableActionableEvidence.Builder builder =
                             ImmutableActionableEvidence.builder().source(Knowledgebase.CKB).level(level).direction(direction).urls(urls);
                     for (Map.Entry<String, Set<String>> cancerTypeEntry : cancerTypeToDoidsMap.entrySet()) {
                         for (String doidSet : cancerTypeEntry.getValue()) {
-                           // for (List<String> drugList : drugLists) {
-                                actionableEvents.add(builder.cancerType(cancerType).doid(doidSet).treatment(therapyName).build());
-                           // }
+                            actionableEvents.add(builder.cancerType(cancerType).doid(doidSet).treatment(therapyName).build());
                         }
                     }
                 }
@@ -136,7 +121,12 @@ class ActionableEvidenceFactory {
             if (parts[0].equalsIgnoreCase("doid")) {
                 return parts[1];
             } else if (parts[0].equalsIgnoreCase("jax")) {
-                return doidString;
+                if (parts[1].equals("10000003")) {
+                    return "0050686";
+                } else {
+                    LOGGER.warn("Unexpected Doid string of annotated by JAX: '{}'", doidString);
+                    return null;
+                }
             } else {
                 return null;
             }
@@ -152,7 +142,7 @@ class ActionableEvidenceFactory {
         if (doids != null) {
             return doids;
         } else {
-            LOGGER.warn("Could not resolve doids for VICC cancer type '{}'", cancerType);
+            LOGGER.warn("Could not resolve doids for CKB cancer type '{}'", cancerType);
             return Sets.newHashSet();
         }
     }
@@ -162,12 +152,9 @@ class ActionableEvidenceFactory {
         Map<String, Set<String>> cancerTypeToDoidsMap = Maps.newHashMap();
         if (cancerType != null) {
             if (doid != null) {
-                if (doid.split(";")[0].equalsIgnoreCase("jax")) {
-                    cancerTypeToDoidsMap.put(cancerType, Sets.newHashSet("0050686"));
-                } else {
-                    cancerTypeToDoidsMap.put(cancerType, Sets.newHashSet(doid));
-
-                }
+                cancerTypeToDoidsMap.put(cancerType, Sets.newHashSet(doid));
+            } else {
+                cancerTypeToDoidsMap.put(cancerType, lookupDoids(cancerType));
             }
         }
         return cancerTypeToDoidsMap;
@@ -189,7 +176,6 @@ class ActionableEvidenceFactory {
     }
 
     @Nullable
-    @$VisibleForTesting
     static EvidenceLevel resolveLevel(@Nullable String evidenceLabel) {
         if (evidenceLabel == null) {
             return null;
@@ -203,7 +189,6 @@ class ActionableEvidenceFactory {
     }
 
     @Nullable
-    @VisibleForTesting
     static EvidenceDirection resolveDirection(@Nullable String direction) {
         if (direction == null) {
             return null;
@@ -211,6 +196,8 @@ class ActionableEvidenceFactory {
 
         if (RESPONSIVE_DIRECTIONS.contains(direction)) {
             return EvidenceDirection.RESPONSIVE;
+        } else if (DECREASED_RESPONSIVE_DIRECTIONS.contains(direction)) {
+            return EvidenceDirection.DECREASED_RESPONSIVE;
         } else if (RESISTANT_DIRECTIONS.contains(direction)) {
             return EvidenceDirection.RESISTANT;
         }
