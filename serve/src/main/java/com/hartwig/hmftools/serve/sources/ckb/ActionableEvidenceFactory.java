@@ -150,11 +150,12 @@ class ActionableEvidenceFactory {
         Map<String, Set<String>> cancerTypeToDoidsMap = Maps.newHashMap();
         if (cancerType != null) {
             if (doid != null) {
-                if (doid.split(";")[0].equalsIgnoreCase("jax")) {
+                if (doid.split(";")[0].equalsIgnoreCase("jax") && doid.split(";")[1].equalsIgnoreCase("10000003")) {
                     cancerTypeToDoidsMap.put(cancerType, Sets.newHashSet("0050686"));
-                } else {
+                } else if (doid.split(";")[0].equalsIgnoreCase("doid")){
                     cancerTypeToDoidsMap.put(cancerType, Sets.newHashSet(doid));
-
+                } else {
+                    cancerTypeToDoidsMap.put(cancerType, lookupDoids(cancerType));
                 }
             }
         }
@@ -177,7 +178,6 @@ class ActionableEvidenceFactory {
     }
 
     @Nullable
-    @$VisibleForTesting
     static EvidenceLevel resolveLevel(@Nullable String evidenceLabel) {
         if (evidenceLabel == null) {
             return null;
@@ -191,7 +191,6 @@ class ActionableEvidenceFactory {
     }
 
     @Nullable
-    @VisibleForTesting
     static EvidenceDirection resolveDirection(@Nullable String direction) {
         if (direction == null) {
             return null;
