@@ -173,14 +173,13 @@ public class CkbClassificationConfig {
 
     @NotNull
     private static Set<String> fusionPairEventsToSkip() {
-        Set<String> set = Sets.newHashSet();
-        return set;
+        return Sets.newHashSet();
     }
 
     @NotNull
     private static Set<String> promiscuousFusionKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-        set.add("fusion promisuous");
+        set.add("fusion promiscuous");
         set.add("rearrange");
         return set;
     }
@@ -216,26 +215,22 @@ public class CkbClassificationConfig {
 
     @NotNull
     private static Set<String> hrDeficiencyEvents() {
-        Set<String> set = Sets.newHashSet();
-        return set;
+        return Sets.newHashSet();
     }
 
     @NotNull
     private static Set<String> hpvPositiveEvents() {
-        Set<String> set = Sets.newHashSet();
-        return set;
+        return Sets.newHashSet();
     }
 
     @NotNull
     private static Set<String> ebvPositiveEvents() {
-        Set<String> set = Sets.newHashSet();
-        return set;
+        return Sets.newHashSet();
     }
 
     @NotNull
     private static Map<String, Set<String>> combinedEventsPerGene() {
-        Map<String, Set<String>> map = Maps.newHashMap();
-        return map;
+        return Maps.newHashMap();
     }
 
     @NotNull
