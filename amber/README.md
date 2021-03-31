@@ -141,8 +141,7 @@ TUMOR.amber.baf.vcf.gz | Similar information as BAF file but in VCF format.
 TUMOR.amber.contamination.vcf.gz | Entry at each homozygous site in the reference and tumor.
 REFERENCE.amber.snp.vcf.gz | Entry at each SNP location in the reference. 
  
-# Patient Matching*
-\* Currently beta functionality and subject to change
+# Patient Matching
 
 The REFERENCE.amber.snp.vcf.gz contains some 1000 SNP points that can be used to identify if a new sample belongs to an existing patient. 
 This is particularly important when doing cohort analysis as multiple samples from the same patient can skew results.
@@ -150,7 +149,7 @@ This is particularly important when doing cohort analysis as multiple samples fr
 To enable patient matching a database is required with three tables, AmberSample, AmberMapping and AmberPatient. 
 Scripts to generate these tables are available [here](../patient-db/src/main/resources/patches/amber/amber3.4_to_3.5_migration.sql).   
 
-Each sample is loaded into AmberSample with the `LoadAmberSample` application which downsamples the REFERENCE.amber.snp.vcf.gz file to 100 loci and describes each locus as:
+Each sample is loaded into AmberSample with the `LoadAmberData` application which downsamples the REFERENCE.amber.snp.vcf.gz file to 100 loci and describes each locus as:
 - 1: Homozygous ref
 - 2: Hetrozygous
 - 3: Homozygous alt
