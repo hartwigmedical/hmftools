@@ -183,7 +183,7 @@ class ActionableEvidenceFactory {
 
         EvidenceLevel level = EvidenceLevel.fromString(evidenceLabel);
         if (level == null) {
-            LOGGER.warn("Could not resolve evidence label '{}'", evidenceLabel);
+            LOGGER.warn("Could not resolve evidence level '{}'", evidenceLabel);
         }
         return level;
     }
