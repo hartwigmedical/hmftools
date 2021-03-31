@@ -174,7 +174,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         val referenceFragmentAlleles = FragmentAlleles.create(referenceCoverageFragments,
                 referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences, referenceNucleotideHeterozygousLoci, candidateNucleotideSequences)
-        val coverageFactory = HlaComplexCoverageFactory(config, executorService)
+        val coverageFactory = HlaComplexCoverageFactory(config.maxDistanceFromTopScore, executorService)
 
 
         logger.info("Identifying uniquely identifiable groups and proteins [total,unique,shared,wide]")
@@ -203,9 +203,25 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             logger.info("    found ${discardedProtein.size} insufficiently unique proteins: " + discardedProtein.joinToString(", "))
         }
 
-        val complexes = HlaComplex.complexes(confirmedGroups.alleles(), confirmedProtein.alleles(), candidates.map { it.allele })
-        logger.info("Calculating coverage of ${complexes.size} complexes")
+        val aOnlyComplexes = HlaComplex.gene("A", confirmedGroups.alleles(), confirmedProtein.alleles(), candidatesAfterConfirmedGroups)
+        val bOnlyComplexes = HlaComplex.gene("B", confirmedGroups.alleles(), confirmedProtein.alleles(), candidatesAfterConfirmedGroups)
+        val cOnlyComplexes = HlaComplex.gene("C", confirmedGroups.alleles(), confirmedProtein.alleles(), candidatesAfterConfirmedGroups)
 
+        val complexes: List<HlaComplex>
+        val simpleComplexCount = aOnlyComplexes.size * bOnlyComplexes.size * cOnlyComplexes.size
+        complexes = if (simpleComplexCount > 100_000) {
+            logger.info("Reducing complex count by taking top alleles from each gene")
+            val groupRankedCoverageFactory = HlaComplexCoverageFactory(100, executorService)
+            val aTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(12, referenceFragmentAlleles, aOnlyComplexes)
+            val bTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(12, referenceFragmentAlleles, bOnlyComplexes)
+            val cTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(12, referenceFragmentAlleles, cOnlyComplexes)
+            val topCandidates  = aTopCandidates + bTopCandidates + cTopCandidates
+            HlaComplex.complexes(confirmedGroups.alleles(), confirmedProtein.alleles(), topCandidates)
+        } else {
+            HlaComplex.complexes(confirmedGroups.alleles(), confirmedProtein.alleles(), candidates.map { it.allele })
+        }
+
+        logger.info("Calculating coverage of ${complexes.size} complexes")
         val referenceRankedComplexes = coverageFactory.rankedComplexCoverage(referenceFragmentAlleles, complexes)
         if (referenceRankedComplexes.isEmpty()) {
             logger.fatal("Failed to calculate complex coverage")

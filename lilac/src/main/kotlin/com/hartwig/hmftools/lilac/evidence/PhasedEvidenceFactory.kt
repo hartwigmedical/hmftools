@@ -14,10 +14,8 @@ class PhasedEvidenceFactory(private val minFragmentsPerAllele: Int, private val 
 
 
     fun evidence(context: HlaContext, fragments: List<AminoAcidFragment>): List<PhasedEvidence> {
-        logger.info("Phasing HLA-${context.gene} records")
+        logger.info("Phasing HLA-${context.gene} records:")
         val result =  evidence(context.expectedAlleles, fragments)
-
-        logger.info("Phased ${result.size} sequences: ")
         for (phasedEvidence in result) {
             logger.info("    $phasedEvidence")
         }

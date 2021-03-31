@@ -7,14 +7,18 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
     companion object {
 
         fun complexes(confirmedGroups: List<HlaAllele>, confirmedProteins: List<HlaAllele>, candidates: List<HlaAllele>): List<HlaComplex> {
-            val a = gene(confirmedGroups.filter { it.gene == "A" }.take(2), confirmedProteins.filter { it.gene == "A" }.take(2), candidates.filter { it.gene == "A" })
-            val b = gene(confirmedGroups.filter { it.gene == "B" }.take(2), confirmedProteins.filter { it.gene == "B" }.take(2), candidates.filter { it.gene == "B" })
-            val c = gene(confirmedGroups.filter { it.gene == "C" }.take(2), confirmedProteins.filter { it.gene == "C" }.take(2), candidates.filter { it.gene == "C" })
+            val a = gene("A", confirmedGroups, confirmedProteins, candidates)
+            val b = gene("B", confirmedGroups, confirmedProteins, candidates)
+            val c = gene("C", confirmedGroups, confirmedProteins, candidates)
 
             return combineComplexes(combineComplexes(a, b), c)
         }
 
-        fun gene(confirmedGroups: List<HlaAllele>, confirmedProteins: List<HlaAllele>, candidates: List<HlaAllele>): List<HlaComplex> {
+        fun gene(gene: String, unfilteredGroups: List<HlaAllele>, unfilteredProteins: List<HlaAllele>, unfilteredCandidates: List<HlaAllele>): List<HlaComplex> {
+
+            val confirmedGroups: List<HlaAllele> = unfilteredGroups.filter { it.gene == gene }.take(2)
+            val confirmedProteins: List<HlaAllele> = unfilteredProteins.filter { it.gene == gene }.take(2)
+            val candidates: List<HlaAllele> = unfilteredCandidates.filter { it.gene == gene }
 
             if (confirmedProteins.size == 2) {
                 return listOf(HlaComplex(confirmedProteins))
@@ -26,7 +30,7 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
                 val first = confirmedProteins
                 val second = if (remainingGroups.isEmpty()) candidates.filter { it != confirmedProteins[0] } else candidates.filter { it.asAlleleGroup() in remainingGroups }
 
-                return if (remainingGroups.isEmpty())  combineAlleles(first, second) + HlaComplex(first) else  combineAlleles(first, second)
+                return if (remainingGroups.isEmpty()) combineAlleles(first, second) + HlaComplex(first) else combineAlleles(first, second)
             }
 
             if (confirmedGroups.size == 2) {

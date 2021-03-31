@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.lilac.coverage
 
 import com.hartwig.hmftools.common.progress.FutureProgressTracker
-import com.hartwig.hmftools.lilac.LilacConfig
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.read.FragmentAlleles
 import com.hartwig.hmftools.lilac.read.FragmentAlleles.Companion.filter
@@ -9,9 +8,9 @@ import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
 
-class HlaComplexCoverageFactory(config: LilacConfig, private val executorService: ExecutorService) {
+class HlaComplexCoverageFactory(maxDistanceFromTopScore: Int, private val executorService: ExecutorService) {
     private val progressTracker = FutureProgressTracker(0.1, 10000)
-    private val ranking = HlaComplexCoverageRanking(config.maxDistanceFromTopScore)
+    private val ranking = HlaComplexCoverageRanking(maxDistanceFromTopScore)
 
     companion object {
         fun groupCoverage(fragmentAlleles: List<FragmentAlleles>, alleles: Collection<HlaAllele>): HlaComplexCoverage {
@@ -27,6 +26,16 @@ class HlaComplexCoverageFactory(config: LilacConfig, private val executorService
         private fun fragmentAlleles(fragmentAlleles: List<FragmentAlleles>, alleles: Collection<HlaAllele>): List<FragmentAlleles> {
             return fragmentAlleles.filter(alleles)
         }
+    }
+
+    fun rankedGroupCoverage(take: Int, fragmentAlleles: List<FragmentAlleles>, complexes: List<HlaComplex>): List<HlaAllele> {
+        return complexes
+                .map { proteinCoverage(fragmentAlleles, it.alleles) }
+                .sortedBy { -it.totalCoverage }
+                .flatMap { it.alleleCoverage }
+                .map { it.allele }
+                .distinct()
+                .take(take)
     }
 
     fun rankedComplexCoverage(fragmentAlleles: List<FragmentAlleles>, complexes: List<HlaComplex>): List<HlaComplexCoverage> {
