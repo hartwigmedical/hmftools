@@ -302,7 +302,7 @@ Tumor only mode impacts PURPLE in the following ways:
   - Somatic variants are excluded from fitting
   - X and Y chromosomes are excluded from fitting
   - Gender is determined only from AMBER
-  - COBALT allosome reference ratios are adjusted accoring to AMBER gender
+  - COBALT allosome reference ratios are adjusted according to AMBER gender
   - No germline chromosomal aberrations are detected 
 
 
@@ -590,7 +590,7 @@ If a germline VCF is supplied to PURPLE each variant is enriched with the follow
 More detailed descriptions of the PATH and GT fields are found below.
 
 #### Pathogenicity
-The pathogencity enrichment requires the clinvar `CLNSIG` and `CLNSIGCONF` annotations. These are consolidated into a single interpretation by taking the strongest signal after ignoring `Uncertain_significance`. 
+The pathogenicity enrichment requires the clinvar `CLNSIG` and `CLNSIGCONF` annotations. These are consolidated into a single interpretation by taking the strongest signal after ignoring `Uncertain_significance`. 
 If both benign and pathogenic signals exist the pathogenicity is set to `CONFLICTING`. 
 
 Regardless of the clinvar signals, a variant will be set to `BENIGN_BLACKLIST` if it contains either of the `BLACKLIST_BED` or `BLACKLIST_VCF` flags.
@@ -603,7 +603,7 @@ The genotype enrichment can set the GT field of the germline sample to `0/1` (HE
 Alternatively, the variant GT will be set to `1/1` (HOM)  if (totalReadCount==AltReadCount) OR (AltReadCount > 0.75*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.005) in BOTH tumor and normal and `0/1` (HET) otherwise.  AdjustedVAF is set to 1 for Homozygous germline variants.
 
 #### Reported
-The reported flag controls if the variant should appear in the driver catalog.   In the gene panel configuration reporting may be configured per gene independently for known hotpsots and also other likely pathgogenic germline variants (specifically nonsense/frameshift or splice variants that are not annotated as BENIGN or LIKELY BENIGN in CLINVAR).    For both types of events, the configuration allows the following per gene reportingoptions:
+The reported flag controls if the variant should appear in the driver catalog.   In the gene panel configuration reporting may be configured per gene independently for known hotspots and also other likely pathogenic germline variants (specifically nonsense/frameshift or splice variants that are not annotated as BENIGN or LIKELY BENIGN in CLINVAR).    For both types of events, the configuration allows the following per gene reporting options:
 - 'NONE' - never report for this gene
 - 'ANY' - always report events for this gene
 - 'WILDTYPE_LOST' - report only if the wildtype is predicted to be lost in the tumor for this gene either via LOH or a somatic 2nd hit
@@ -615,7 +615,7 @@ PURPLE builds a catalog of drivers based on a configured gene panel.    PURPLE a
 
 A detailed description of the driver catalog is available [here](./DriverCatalog.md).
 
-Note that addditional restrictions apply on amplification and deletion drivers for samples with QC warnings:
+Note that additional restrictions apply on amplification and deletion drivers for samples with QC warnings:
 - If warning = DELETED_GENES or WARN_HIGH_COPY_NUMBER_NOISE, DELs must be supported on both sides by SV OR (supported by SV + CENTROMERE/TELOMERE and be <10M bases).
 - If warning = HIGH_CN_WARN_HIGH_COPY_NUMBER_NOISE, AMPS must be bounded on at least one side by an SV.   
 
@@ -652,9 +652,9 @@ tmbPerMb | 13.6352 | Tumor mutational burden (#passing variants per Mb) per mega
 tmbStatus | HIGH | Tumor mutational burden status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied.  High = > 10 pass variants per Mb
 tml | 182 | Tumor mutational load (# of missense variants in sample)
 tmlStatus | HIGH | Tumor mutational load status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied
-germlineAbberation | NONE | Any germline chromosomal abberations detected.  Can be one or more of: {KLINEFELTER,TRISOMY_X,TRISOMY_21,TRISOMY_13,TRISOMY_18,TRISOMY_15,XYY,MOSAIC_X}
+germlineAberration | NONE | Any germline chromosomal aberrations detected.  Can be one or more of: {KLINEFELTER,TRISOMY_X,TRISOMY_21,TRISOMY_13,TRISOMY_18,TRISOMY_15,XYY,MOSAIC_X}
 fitMethod | NORMAL | One of `NORMAL`, `HIGHLY_DIPLOID`, `SOMATIC` or `NO_TUMOR`
-qcStatus | PASS | Either PASS or one or more warning or fail statuss.  Warnings include 'WARN_DELETED_GENES', 'WARN_HIGH_COPY_NUMBER_NOISE', 'FAIL_CONTAMINATION', FAIL_NO_TUMOR, 'WARN_GENDER_MISMATCH' or 'WARN_LOW_PURITY
+qcStatus | PASS | Either PASS or one or more warning or fail status.  Warnings include 'WARN_DELETED_GENES', 'WARN_HIGH_COPY_NUMBER_NOISE', 'FAIL_CONTAMINATION', FAIL_NO_TUMOR, 'WARN_GENDER_MISMATCH' or 'WARN_LOW_PURITY
 copyNumberSegments | 462 | Total number of copy number segments in sample
 unsupportedCopyNumberSegments | 256 | Count of copy number segments with no SV support on either side.  A high number is an indicator of poor sample quality
 svTmb | 168 | Total number of non inferred, non single passing structural variants detected in sample
@@ -1076,7 +1076,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Fix logic for acceptor +3 splice variant to consider strand
 - [2.53](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.53) 
   - Added LOW_TUMOR_VCN filter to germline variants
-  - Fixed bug with incorrect driver catagory in copy number drivers.
+  - Fixed bug with incorrect driver category in copy number drivers.
   - Better coding effect interpretation of splice variants
   - Improved germline reporting logic
 - [2.52](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.52) 
@@ -1096,7 +1096,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Do not produce somatic variant rainfall plot if >100000 variants
   - Refreshed DNDS values with larger cohort (4404 samples)
   - Add support for XXY, XYY, Female Mosaic X, and Trisomy 13,15,18,21,X germline aberrations. Requires [patch](../patient-db/src/main/resources/patches/purple/purple2.47_to_2.48_migration.sql) to load to data base.
-  - Removed MALE_KLINEFELTER as a gender. Gender will instead be MALE and KLINEFELTER will be added to the germline abberations field.
+  - Removed MALE_KLINEFELTER as a gender. Gender will instead be MALE and KLINEFELTER will be added to the germline aberrations field.
   - QC Status improvements.
   - Changing fitting space from ‘normFactor’ to ‘ploidy’ (allows configuration of min-max ploidy and improves fitting resolution at low purity).
   - Add `min_ploidy` [1] and `max_ploidy` [8] parameters. 

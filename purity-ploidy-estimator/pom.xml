@@ -20,14 +20,6 @@
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
-            <artifactId>count-bam-lines</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.hartwig</groupId>
-            <artifactId>amber</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.hartwig</groupId>
             <artifactId>patient-db</artifactId>
         </dependency>
         <dependency>

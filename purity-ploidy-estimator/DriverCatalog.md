@@ -18,9 +18,9 @@ Report Amplification | T/F | Report if gene copy number > 3x sample ploidy
 Report Deletion | T/F | Report if gene copy number < 0.5
 Report Disruption | T/F | LINX will report ‘homozygous disruptions’ - ie disruptions where the exonic copy number of the gene is > 0.5 but where no intact copies of the gene are predicted to remain
 Report Hotspot | T/F | Report a hotspot mutation regardless 
-Likelihood Type | ONCO/TSG | Calculate driver likelihood as a tumor supressor gene or onco gene
+Likelihood Type | ONCO/TSG | Calculate driver likelihood as a tumor suppressor gene or onco gene
 
-The Hartwig Medical Foundation curated gene panel is available from [HMFTools-Resources > Gene Panel](https://resources.hartwigmedicalfoundation.nl) and is updated periodially. 
+The Hartwig Medical Foundation curated gene panel is available from [HMFTools-Resources > Gene Panel](https://resources.hartwigmedicalfoundation.nl) and is updated periodically. 
 A detailed description of our gene discovery and initial construction of our gene panel is available in the [supplementary information](https://static-content.springer.com/esm/art%3A10.1038%2Fs41586-019-1689-y/MediaObjects/41586_2019_1689_MOESM1_ESM.pdf) of our ["Pan-cancer whole genome analyses of metastatic solid tumors"](https://www.nature.com/articles/s41586-019-1689-y) paper.
 
 ## Gene Driver Likelihood
@@ -29,14 +29,14 @@ A driver likelihood estimate between 0 and 1 is calculated for each variant in t
 High level amplifications, deletions, fusions (when using LINX), and TERT promoter mutations are all rare so have a likelihood of 1 when found affecting a driver gene, but for coding mutations we need to account for the large number of passenger point mutations that are present throughout the genome and thus also in driver genes.
 
 For coding mutations the driver likelihood algorithm depends on the configured 'likelihood type' in the gene panel.
-The impacts of confguring `ONCO` vs `TSG` type is the following:
+The impacts of configuring `ONCO` vs `TSG` type is the following:
 
 Characteristic | `ONCO` | `TSG`
 ---|---|---
 High likelihood variants | Hotspot & Inframe (excluding repeat count > 7) assigned likelihood = 1 | Hotspot & Biallelic splice, indel and nonsense assigned likelihood = 1
-Biallelic mutations | Ignored in dnds calculations | For bialllelic mutations, biallelic TMB only used in passenger likelihood. For non biallelic, the full TMB is used
-Multi-hit | Maximum likelihood used. Highest ranked variant used only in dnds calculation (missense & inframe ranked first) | Multiple mutations are additive (product of probabilities used).  For non bialllelic variants highest 2 ranked variants used in dnds calcluations (nonsense & splice ranked first)
-Non-biallelic frameshift/Splice/Nonsense | No special treatment | driverLikelihood=max(selflikelihood,missenseDriverLikelihood)
+Biallelic mutations | Ignored in dnds calculations | For biallelic mutations, biallelic TMB only used in passenger likelihood. For non biallelic, the full TMB is used
+Multi-hit | Maximum likelihood used. Highest ranked variant used only in dnds calculation (missense & inframe ranked first) | Multiple mutations are additive (product of probabilities used).  For non biallelic variants highest 2 ranked variants used in dnds calculations (nonsense & splice ranked first)
+Non-biallelic frameshift/Splice/Nonsense | No special treatment | driverLikelihood=max(selfLikelihood,missenseDriverLikelihood)
 
 For point mutations, we first determine a list of variants that are highly likely to be drivers and/or highly unlikely to have occurred as passengers as driver likelihood of 1 as per the table above.
 For the remaining point mutation variants these are only assigned a > 0 driver likelihood where there is a remaining excess of unallocated drivers based on the calculated dNdS rates in that gene across the cohort after applying the above rules. 
@@ -62,5 +62,5 @@ And P(Variant|Non-Driver), the probability of observing n or more passenger vari
 P(Variant|Non-Driver) = 1 - poisson(λ = TMB(Sample) / TMB(Cohort) * (# of passenger variants in cohort),k=n-1)
 ```
 
-Note that the TMB is calculated separately for INDELs and SNVs.   For TSG dnds rates, we find that biallelic dnds rates are typically much higher than non-biallelic rates reflecting the biology that both alleles are normally required to be knocked out to cause a TSG driver.   To accomodate for this, we use count biallelic TMB in the passenger likelihood for biallelic TSG VUS.
+Note that the TMB is calculated separately for INDELs and SNVs.   For TSG dnds rates, we find that biallelic dnds rates are typically much higher than non-biallelic rates reflecting the biology that both alleles are normally required to be knocked out to cause a TSG driver.   To accommodate for this, we use count biallelic TMB in the passenger likelihood for biallelic TSG VUS.
 
