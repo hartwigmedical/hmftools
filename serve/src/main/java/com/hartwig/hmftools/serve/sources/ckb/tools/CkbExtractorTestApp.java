@@ -64,7 +64,7 @@ public class CkbExtractorTestApp {
         String fastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh38.no.alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna";
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.V38;
         Map<String, HmfTranscriptRegion> allGenesMap = HmfGenePanelSupplier.allGenesMap38();
-        ProteinResolver proteinResolver = ProteinResolverFactory.dummy();
+        ProteinResolver proteinResolver = ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, fastaFile, allGenesMap);
         RefGenomeResource refGenomeResource = ImmutableRefGenomeResource.builder()
                 .fastaFile(fastaFile)
                 .driverGenes(driverGenes)
