@@ -34,7 +34,6 @@ class ActionableEvidenceFactory {
     static {
         RESPONSIVE_DIRECTIONS.add("sensitive");
         RESPONSIVE_DIRECTIONS.add("predicted - sensitive");
-        RESPONSIVE_DIRECTIONS.add("decreased response");
 
         RESISTANT_DIRECTIONS.add("resistant");
         RESISTANT_DIRECTIONS.add("predicted - resistant");
@@ -44,6 +43,9 @@ class ActionableEvidenceFactory {
         DIRECTIONS_TO_IGNORE.add("conflicting");
         DIRECTIONS_TO_IGNORE.add("no benefit");
         DIRECTIONS_TO_IGNORE.add("not predictive");
+
+        // Determine first what they mean with below direction
+        DIRECTIONS_TO_IGNORE.add("decreased response");
 
         EVIDENCE_TYPE.add("Actionable");
 
