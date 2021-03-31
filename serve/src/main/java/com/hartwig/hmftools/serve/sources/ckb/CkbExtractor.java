@@ -66,10 +66,10 @@ public class CkbExtractor {
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
         for (CkbEntry entry : ckbEntries) {
-
             if (entry.variants().size() == 1) {
+                // TODO: Canonical transcript in CKB is refseq. Could maybe be converted to ensembl.
                 eventExtractions.add(eventExtractor.extract(entry.variants().get(0).gene().geneSymbol(),
-                        entry.variants().get(0).gene().canonicalTranscript(),
+                        null,
                         entry.type(),
                         entry.variants().get(0).variant()));
                 Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry);
