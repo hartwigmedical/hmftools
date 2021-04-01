@@ -28,14 +28,18 @@ class HlaComplexCoverageFactory(maxDistanceFromTopScore: Int, private val execut
         }
     }
 
-    fun rankedGroupCoverage(take: Int, fragmentAlleles: List<FragmentAlleles>, complexes: List<HlaComplex>): List<HlaAllele> {
-        return complexes
+    fun rankedGroupCoverage(take: Int, fragmentAlleles: List<FragmentAlleles>, complexes: List<HlaComplex>, keepers: List<HlaAllele>): List<HlaAllele> {
+        val topRanked =  complexes
                 .map { proteinCoverage(fragmentAlleles, it.alleles) }
                 .sortedBy { -it.totalCoverage }
                 .flatMap { it.alleleCoverage }
                 .map { it.allele }
                 .distinct()
-                .take(take)
+
+        val topTakers = topRanked.take(take)
+        val topRankedKeepers = topRanked.filter { it in keepers }
+
+        return (topTakers + topRankedKeepers).distinct()
     }
 
     fun rankedComplexCoverage(fragmentAlleles: List<FragmentAlleles>, complexes: List<HlaComplex>): List<HlaComplexCoverage> {

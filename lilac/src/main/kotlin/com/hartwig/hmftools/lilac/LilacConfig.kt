@@ -41,7 +41,8 @@ data class LilacConfig(
         val threads: Int,
         val maxDistanceFromTopScore: Int,
         val geneCopyNumberFile: String,
-        val expectedAlleles: List<HlaAllele>
+        val expectedAlleles: List<HlaAllele>,
+        val commonAlleles: List<HlaAllele>
 ) {
 
     val outputFilePrefix = "${outputDir}/$sample"
@@ -69,6 +70,10 @@ data class LilacConfig(
             val threads = Configs.defaultIntValue(cmd, THREADS, defaultConfig.threads)
             val maxDistanceFromTopScore = Configs.defaultIntValue(cmd, MAX_DISTANCE_FROM_TOP_SCORE, defaultConfig.maxDistanceFromTopScore)
             val expectedAlleles = cmd.expectedAlleles(EXPECTED_ALLELES);
+            val commonAlleles = LilacConfig::class.java.getResource("/alleles/common.txt")
+                    .readText()
+                    .split("\n")
+                    .map { HlaAllele(it) }
 
             return LilacConfig(
                     sample,
@@ -85,7 +90,8 @@ data class LilacConfig(
                     threads,
                     maxDistanceFromTopScore,
                     geneCopyNumberFile,
-                    expectedAlleles)
+                    expectedAlleles,
+                    commonAlleles)
         }
 
         private fun default(): LilacConfig {
@@ -104,6 +110,7 @@ data class LilacConfig(
                     1,
                     3,
                     "",
+                    listOf(),
                     listOf())
         }
 
