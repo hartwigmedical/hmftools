@@ -14,7 +14,6 @@
         <module>hmf-extensions</module>
         <module>hmf-gene-panel-builder</module>
         <module>hmf-id-generator</module>
-        <module>bam-slicer</module>
         <module>gripss</module>
         <module>lilac</module>
         <module>paddle</module>
@@ -63,7 +62,6 @@
         <amber.version>3.5</amber.version>
         <cobalt.version>1.11</cobalt.version>
         <purple.version>2.53</purple.version>
-        <bam-slicer.version>1.5</bam-slicer.version>
         <bachelor.version>1.12</bachelor.version>
         <gripss.version>1.11</gripss.version>
         <lilac.version>0.1</lilac.version>
