@@ -77,7 +77,6 @@ public class PonApplication implements AutoCloseable {
     }
 
     private void run() throws IOException, ExecutionException, InterruptedException {
-
         if (files.isEmpty()) {
             return;
         }
