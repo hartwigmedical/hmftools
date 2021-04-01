@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.lilac.coverage
 
-import com.hartwig.hmftools.lilac.LilacApplication
 import com.hartwig.hmftools.lilac.LilacConfig
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.read.FragmentAlleles
@@ -19,12 +18,12 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
             val confirmedGroups = groupCoverage.confirmUnique(config)
             val discardedGroups = groupCoverage.alleleCoverage.filter { it.uniqueCoverage > 0 && it !in confirmedGroups }.sortedDescending()
             if (confirmedGroups.isNotEmpty()) {
-                LilacApplication.logger.info("    confirmed ${confirmedGroups.size} unique groups: " + confirmedGroups.joinToString(", "))
+                logger.info("    confirmed ${confirmedGroups.size} unique groups: " + confirmedGroups.joinToString(", "))
             } else {
-                LilacApplication.logger.info("    confirmed 0 unique groups")
+                logger.info("    confirmed 0 unique groups")
             }
             if (discardedGroups.isNotEmpty()) {
-                LilacApplication.logger.info("    found ${discardedGroups.size} insufficiently unique groups: " + discardedGroups.joinToString(", "))
+                logger.info("    found ${discardedGroups.size} insufficiently unique groups: " + discardedGroups.joinToString(", "))
             }
 
             val candidatesAfterConfirmedGroups = candidateAlleles.filterWithConfirmedGroups(confirmedGroups.map { it.allele })
@@ -32,12 +31,12 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
             val confirmedProtein = proteinCoverage.confirmUnique(config)
             val discardedProtein = proteinCoverage.alleleCoverage.filter { it.uniqueCoverage > 0 && it !in confirmedProtein }.sortedDescending()
             if (confirmedProtein.isNotEmpty()) {
-                LilacApplication.logger.info("    confirmed ${confirmedProtein.size} unique proteins: " + confirmedProtein.joinToString(", "))
+                logger.info("    confirmed ${confirmedProtein.size} unique proteins: " + confirmedProtein.joinToString(", "))
             } else {
-                LilacApplication.logger.info("    confirmed 0 unique proteins")
+                logger.info("    confirmed 0 unique proteins")
             }
             if (discardedProtein.isNotEmpty()) {
-                LilacApplication.logger.info("    found ${discardedProtein.size} insufficiently unique proteins: " + discardedProtein.joinToString(", "))
+                logger.info("    found ${discardedProtein.size} insufficiently unique proteins: " + discardedProtein.joinToString(", "))
             }
 
             val candidatesAfterConfirmedProteins = candidatesAfterConfirmedGroups.filterWithConfirmedProteins(confirmedProtein.map { it.allele })
@@ -48,12 +47,15 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
             val complexes: List<HlaComplex>
             val simpleComplexCount = aOnlyComplexes.size * bOnlyComplexes.size * cOnlyComplexes.size
             complexes = if (simpleComplexCount > 100_000) {
-                LilacApplication.logger.info("Reducing complex count by taking top alleles from each gene")
+                logger.info("Candidate allele complexity exceeds maximum")
+                logger.info("    finding top 10 candidates in each allele group")
                 val groupRankedCoverageFactory = HlaComplexCoverageFactory(100)
                 val aTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, aOnlyComplexes, config.commonAlleles)
                 val bTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, bOnlyComplexes, config.commonAlleles)
                 val cTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, cOnlyComplexes, config.commonAlleles)
                 val topCandidates  = aTopCandidates + bTopCandidates + cTopCandidates
+                val rejected = candidatesAfterConfirmedProteins subtract topCandidates
+                logger.info("    discarding unlikely candidates: " + rejected.joinToString(", "))
                 complexes(confirmedGroups.alleles(), confirmedProtein.alleles(), topCandidates)
             } else {
                 complexes(confirmedGroups.alleles(), confirmedProtein.alleles(), candidatesAfterConfirmedProteins)

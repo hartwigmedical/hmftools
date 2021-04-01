@@ -174,9 +174,10 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val referenceFragmentAlleles = FragmentAlleles.create(referenceCoverageFragments,
                 referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences, referenceNucleotideHeterozygousLoci, candidateNucleotideSequences)
 
+        // Complexes
         val complexes = HlaComplex.complexes(config, referenceFragmentAlleles, candidateAlleles)
-        logger.info("Calculating coverage of ${complexes.size} complexes")
 
+        logger.info("Calculating coverage of ${complexes.size} complexes")
         val coverageFactory = HlaComplexCoverageFactory(config.maxDistanceFromTopScore)
         val referenceRankedComplexes = coverageFactory.rankedComplexCoverage(executorService, referenceFragmentAlleles, complexes)
         if (referenceRankedComplexes.isEmpty()) {
