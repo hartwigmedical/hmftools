@@ -26,7 +26,12 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
                 logger.info("    found ${discardedGroups.size} insufficiently unique groups: " + discardedGroups.joinToString(", "))
             }
 
-            val candidatesAfterConfirmedGroups = candidateAlleles.filterWithConfirmedGroups(confirmedGroups.map { it.allele })
+            val confirmedGroupAlleles = confirmedGroups.alleles()
+            val commonAllelesInConfirmedGroups = config.commonAlleles.filter { it.asAlleleGroup() in confirmedGroupAlleles }
+
+            // Reintroduce common alleles that match confirmed groups
+            val candidatesWithCommon = (candidateAlleles + commonAllelesInConfirmedGroups).distinct()
+            val candidatesAfterConfirmedGroups = candidatesWithCommon.filterWithConfirmedGroups(confirmedGroupAlleles)
             val proteinCoverage = HlaComplexCoverageFactory.proteinCoverage(referenceFragmentAlleles, candidatesAfterConfirmedGroups)
             val confirmedProtein = proteinCoverage.confirmUnique(config)
             val discardedProtein = proteinCoverage.alleleCoverage.filter { it.uniqueCoverage > 0 && it !in confirmedProtein }.sortedDescending()
