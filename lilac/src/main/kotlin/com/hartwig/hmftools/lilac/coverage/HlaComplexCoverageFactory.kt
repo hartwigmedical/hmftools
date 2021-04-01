@@ -50,24 +50,23 @@ class HlaComplexCoverageFactory(maxDistanceFromTopScore: Int, private val common
             list.add(executorService.submit(trackedCallable))
         }
 
-        val result = mutableListOf<HlaComplexCoverage>()
+        val result = mutableSetOf<HlaComplexCoverage>()
         val iterator = list.iterator()
         while (iterator.hasNext()) {
             val coverage = iterator.next().get()
             result.add(coverage)
 
-//            if (result.size > 100) {
-//                val filtered = ranking.candidateRanking(result)
-//                result.clear()
-//                result.addAll(filtered)
-//            }
+            if (result.size > 100) {
+                val filtered = ranking.candidateRanking(result.toList())
+                result.clear()
+                result.addAll(filtered)
+            }
 
             iterator.remove()
         }
 
-//        result.filter { it.alleleCoverage.map { it.allele }.contains(HlaAllele("A*02:01")) && it.alleleCoverage.map { it.allele }.contains(HlaAllele("A*15:01"))&& it.alleleCoverage.map { it.allele }.contains(HlaAllele("A*03:03"))}
 
-        return ranking.candidateRanking(result)
+        return ranking.candidateRanking(result.toList())
 
     }
 
