@@ -23,9 +23,9 @@ public class LoadSignatures
     private static final Logger LOGGER = LogManager.getLogger(LoadSignatures.class);
 
     private static final String SAMPLE = "sample";
-    private static final String SAMLE_DIR = "sample_dir";
+    private static final String SAMPLE_DIR = "sample_dir";
 
-    public static void main(@NotNull String[] args) throws ParseException, IOException
+    public static void main(@NotNull String[] args) throws ParseException
     {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
@@ -38,7 +38,7 @@ public class LoadSignatures
         }
 
         String sampleId = cmd.getOptionValue(SAMPLE);
-        String sampleDir = cmd.getOptionValue(SAMLE_DIR);
+        String sampleDir = cmd.getOptionValue(SAMPLE_DIR);
 
         loadSignatureData(dbAccess, sampleId, sampleDir);
 
@@ -74,7 +74,7 @@ public class LoadSignatures
         Options options = new Options();
         addDatabaseCmdLineArgs(options);
         options.addOption(SAMPLE, true, "Name of the tumor sample");
-        options.addOption(SAMLE_DIR, true, "Directory to read LINX data from");
+        options.addOption(SAMPLE_DIR, true, "Directory to read signature data from");
 
         return options;
     }
