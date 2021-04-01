@@ -7,7 +7,7 @@ import org.junit.Test
 
 class HlaComplexCoverageRankingTest {
 
-    val victim = HlaComplexCoverageRanking(3)
+    val victim = HlaComplexCoverageRanking(3, listOf())
 
     val a1 = HlaAlleleCoverage(HlaAllele("A*01:01"), 10, 0.0, 0.0)
     val a2 = HlaAlleleCoverage(HlaAllele("A*01:02"), 10, 0.0, 0.0)
@@ -18,6 +18,23 @@ class HlaComplexCoverageRankingTest {
     val c1 = HlaAlleleCoverage(HlaAllele("C*01:01"), 10, 0.0, 0.0)
     val c2 = HlaAlleleCoverage(HlaAllele("C*01:02"), 10, 0.0, 0.0)
     val c3 = HlaAlleleCoverage(HlaAllele("C*01:03"), 10, 0.0, 0.0)
+
+    @Test
+    fun testMostCommon() {
+        val common = HlaComplexCoverage.create(listOf(a1, a3, b1, b3, c1, c2))
+        val lessCommon = mutableListOf<HlaComplexCoverage>()
+
+        lessCommon.add(HlaComplexCoverage.create(listOf(a1, a2, b1, b2, c1, c2)))
+        lessCommon.add(HlaComplexCoverage.create(listOf(a1, a3, b1, b2, c1, c2)))
+        lessCommon.add(HlaComplexCoverage.create(listOf(a1, a2, b1, b3, c1, c2)))
+        lessCommon.add(HlaComplexCoverage.create(listOf(a1, a2, b1, b2, c1, c3)))
+
+        for (lower in lessCommon) {
+            val complexes = mutableListOf(common, lower).shuffled()
+            val winner = HlaComplexCoverageRanking(3, listOf(a3.allele, b3.allele, c3.allele)).candidateRanking(complexes)[0]
+            assertEquals(common, winner)
+        }
+    }
 
     @Test
     fun testHighestAllele() {

@@ -178,7 +178,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val complexes = HlaComplex.complexes(config, referenceFragmentAlleles, candidateAlleles)
 
         logger.info("Calculating coverage of ${complexes.size} complexes")
-        val coverageFactory = HlaComplexCoverageFactory(config.maxDistanceFromTopScore)
+        val coverageFactory = HlaComplexCoverageFactory(config.maxDistanceFromTopScore, config.commonAlleles)
         val referenceRankedComplexes = coverageFactory.rankedComplexCoverage(executorService, referenceFragmentAlleles, complexes)
         if (referenceRankedComplexes.isEmpty()) {
             logger.fatal("Failed to calculate complex coverage")

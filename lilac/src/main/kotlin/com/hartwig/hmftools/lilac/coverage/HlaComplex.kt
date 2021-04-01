@@ -54,10 +54,10 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
             complexes = if (simpleComplexCount > 100_000) {
                 logger.info("Candidate allele complexity exceeds maximum")
                 logger.info("    finding top 10 candidates in each allele group")
-                val groupRankedCoverageFactory = HlaComplexCoverageFactory(100)
-                val aTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, aOnlyComplexes, config.commonAlleles)
-                val bTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, bOnlyComplexes, config.commonAlleles)
-                val cTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, cOnlyComplexes, config.commonAlleles)
+                val groupRankedCoverageFactory = HlaComplexCoverageFactory(100, config.commonAlleles)
+                val aTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, aOnlyComplexes)
+                val bTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, bOnlyComplexes)
+                val cTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, cOnlyComplexes)
                 val topCandidates  = aTopCandidates + bTopCandidates + cTopCandidates
                 val rejected = candidatesAfterConfirmedProteins subtract topCandidates
                 logger.info("    discarding unlikely candidates: " + rejected.joinToString(", "))

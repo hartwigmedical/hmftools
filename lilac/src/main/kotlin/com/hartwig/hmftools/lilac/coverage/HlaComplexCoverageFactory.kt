@@ -8,9 +8,9 @@ import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
 
-class HlaComplexCoverageFactory(maxDistanceFromTopScore: Int) {
+class HlaComplexCoverageFactory(maxDistanceFromTopScore: Int, private val common: List<HlaAllele>) {
     private val progressTracker = FutureProgressTracker(0.1, 10000)
-    private val ranking = HlaComplexCoverageRanking(maxDistanceFromTopScore)
+    private val ranking = HlaComplexCoverageRanking(maxDistanceFromTopScore, common)
 
     companion object {
         fun groupCoverage(fragmentAlleles: List<FragmentAlleles>, alleles: Collection<HlaAllele>): HlaComplexCoverage {
@@ -28,7 +28,7 @@ class HlaComplexCoverageFactory(maxDistanceFromTopScore: Int) {
         }
     }
 
-    fun rankedGroupCoverage(take: Int, fragmentAlleles: List<FragmentAlleles>, complexes: List<HlaComplex>, keepers: List<HlaAllele>): List<HlaAllele> {
+    fun rankedGroupCoverage(take: Int, fragmentAlleles: List<FragmentAlleles>, complexes: List<HlaComplex>): List<HlaAllele> {
         val topRanked =  complexes
                 .map { proteinCoverage(fragmentAlleles, it.alleles) }
                 .sortedBy { -it.totalCoverage }
@@ -37,7 +37,7 @@ class HlaComplexCoverageFactory(maxDistanceFromTopScore: Int) {
                 .distinct()
 
         val topTakers = topRanked.take(take)
-        val topRankedKeepers = topRanked.filter { it in keepers }
+        val topRankedKeepers = topRanked.filter { it in common }
 
         return (topTakers + topRankedKeepers).distinct()
     }
