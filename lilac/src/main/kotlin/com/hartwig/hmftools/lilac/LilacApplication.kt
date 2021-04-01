@@ -134,14 +134,13 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             listOf()
         }
 
-        logger.info("Enriching reference bam records")
+        // Enrich bam records
         val aminoAcidPipeline = AminoAcidFragmentPipeline(config, referenceNucleotideFragments, tumorNucleotideFragments)
-        val aCandidateFragments = aminoAcidPipeline.referenceCandidateFragments(hlaAContext)
-        val bCandidateFragments = aminoAcidPipeline.referenceCandidateFragments(hlaBContext)
-        val cCandidateFragments = aminoAcidPipeline.referenceCandidateFragments(hlaCContext)
+        val aCandidateFragments = aminoAcidPipeline.referencePhasingFragments(hlaAContext)
+        val bCandidateFragments = aminoAcidPipeline.referencePhasingFragments(hlaBContext)
+        val cCandidateFragments = aminoAcidPipeline.referencePhasingFragments(hlaCContext)
 
         // Phasing
-        logger.info("Phasing bam records")
         val phasedEvidenceFactory = PhasedEvidenceFactory(minFragmentsPerAllele, config.minFragmentsToRemoveSingle, config.minEvidence)
         val aPhasedEvidence = phasedEvidenceFactory.evidence(hlaAContext, aCandidateFragments)
         val bPhasedEvidence = phasedEvidenceFactory.evidence(hlaBContext, bCandidateFragments)
@@ -174,56 +173,12 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         val referenceFragmentAlleles = FragmentAlleles.create(referenceCoverageFragments,
                 referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences, referenceNucleotideHeterozygousLoci, candidateNucleotideSequences)
-        val coverageFactory = HlaComplexCoverageFactory(config.maxDistanceFromTopScore, executorService)
 
-
-        logger.info("Identifying uniquely identifiable groups and proteins [total,unique,shared,wide]")
-        val groupCoverage = HlaComplexCoverageFactory.groupCoverage(referenceFragmentAlleles, candidateAlleles)
-        val confirmedGroups = groupCoverage.confirmUnique()
-        val discardedGroups = groupCoverage.alleleCoverage.filter { it.uniqueCoverage > 0 && it !in confirmedGroups }.sortedDescending()
-        if (confirmedGroups.isNotEmpty()) {
-            logger.info("    confirmed ${confirmedGroups.size} unique groups: " + confirmedGroups.joinToString(", "))
-        } else {
-            logger.info("    confirmed 0 unique groups")
-        }
-        if (discardedGroups.isNotEmpty()) {
-            logger.info("    found ${discardedGroups.size} insufficiently unique groups: " + discardedGroups.joinToString(", "))
-        }
-
-        val candidatesAfterConfirmedGroups = candidateAlleles.filterWithConfirmedGroups(confirmedGroups.map { it.allele })
-        val proteinCoverage = HlaComplexCoverageFactory.proteinCoverage(referenceFragmentAlleles, candidatesAfterConfirmedGroups)
-        val confirmedProtein = proteinCoverage.confirmUnique()
-        val discardedProtein = proteinCoverage.alleleCoverage.filter { it.uniqueCoverage > 0 && it !in confirmedProtein }.sortedDescending()
-        if (confirmedProtein.isNotEmpty()) {
-            logger.info("    confirmed ${confirmedProtein.size} unique proteins: " + confirmedProtein.joinToString(", "))
-        } else {
-            logger.info("    confirmed 0 unique proteins")
-        }
-        if (discardedProtein.isNotEmpty()) {
-            logger.info("    found ${discardedProtein.size} insufficiently unique proteins: " + discardedProtein.joinToString(", "))
-        }
-
-        val candidatesAfterConfirmedProteins = candidatesAfterConfirmedGroups.filterWithConfirmedProteins(confirmedProtein.map { it.allele })
-        val aOnlyComplexes = HlaComplex.gene("A", confirmedGroups.alleles(), confirmedProtein.alleles(), candidatesAfterConfirmedProteins)
-        val bOnlyComplexes = HlaComplex.gene("B", confirmedGroups.alleles(), confirmedProtein.alleles(), candidatesAfterConfirmedProteins)
-        val cOnlyComplexes = HlaComplex.gene("C", confirmedGroups.alleles(), confirmedProtein.alleles(), candidatesAfterConfirmedProteins)
-
-        val complexes: List<HlaComplex>
-        val simpleComplexCount = aOnlyComplexes.size * bOnlyComplexes.size * cOnlyComplexes.size
-        complexes = if (simpleComplexCount > 100_000) {
-            logger.info("Reducing complex count by taking top alleles from each gene")
-            val groupRankedCoverageFactory = HlaComplexCoverageFactory(100, executorService)
-            val aTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, aOnlyComplexes, config.commonAlleles)
-            val bTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, bOnlyComplexes, config.commonAlleles)
-            val cTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, cOnlyComplexes, config.commonAlleles)
-            val topCandidates  = aTopCandidates + bTopCandidates + cTopCandidates
-            HlaComplex.complexes(confirmedGroups.alleles(), confirmedProtein.alleles(), topCandidates)
-        } else {
-            HlaComplex.complexes(confirmedGroups.alleles(), confirmedProtein.alleles(), candidates.map { it.allele })
-        }
-
+        val complexes = HlaComplex.complexes(config, referenceFragmentAlleles, candidateAlleles)
         logger.info("Calculating coverage of ${complexes.size} complexes")
-        val referenceRankedComplexes = coverageFactory.rankedComplexCoverage(referenceFragmentAlleles, complexes)
+
+        val coverageFactory = HlaComplexCoverageFactory(config.maxDistanceFromTopScore)
+        val referenceRankedComplexes = coverageFactory.rankedComplexCoverage(executorService, referenceFragmentAlleles, complexes)
         if (referenceRankedComplexes.isEmpty()) {
             logger.fatal("Failed to calculate complex coverage")
             exitProcess(1)
@@ -313,31 +268,6 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         logger.info("Finished in ${(System.currentTimeMillis() - startTime) / 1000} seconds")
     }
 
-    private fun List<HlaAllele>.filterWithConfirmedProteins(confirmedGroups: List<HlaAllele>): List<HlaAllele> {
-        return this.filterWithConfirmed(confirmedGroups) { it}
-    }
-
-    private fun List<HlaAllele>.filterWithConfirmedGroups(confirmedGroups: List<HlaAllele>): List<HlaAllele> {
-        return this.filterWithConfirmed(confirmedGroups) { it.asAlleleGroup()}
-    }
-
-    private fun List<HlaAllele>.filterWithConfirmed(confirmed: List<HlaAllele>, transform: (HlaAllele) -> HlaAllele): List<HlaAllele> {
-        val a = confirmed.filter { it.gene == "A" }
-        val b = confirmed.filter { it.gene == "B" }
-        val c = confirmed.filter { it.gene == "C" }
-        val map = mapOf(Pair("A", a), Pair("B", b), Pair("C", c))
-
-        return this.filter { map[it.gene]!!.size < 2 || map[it.gene]!!.contains(transform(it)) }
-    }
-
-    private fun HlaComplexCoverage.confirmUnique(): List<HlaAlleleCoverage> {
-        val unique = this.alleleCoverage.filter { it.uniqueCoverage >= config.minConfirmedUniqueCoverage }.sortedDescending()
-        val a = unique.filter { it.allele.gene == "A" }.take(2)
-        val b = unique.filter { it.allele.gene == "B" }.take(2)
-        val c = unique.filter { it.allele.gene == "C" }.take(2)
-
-        return (a + b + c).sortedDescending()
-    }
 
 
     private fun List<HlaAlleleCoverage>.alleles(): List<HlaAllele> {

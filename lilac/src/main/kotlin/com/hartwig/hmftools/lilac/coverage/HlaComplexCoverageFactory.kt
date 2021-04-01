@@ -8,7 +8,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
 
-class HlaComplexCoverageFactory(maxDistanceFromTopScore: Int, private val executorService: ExecutorService) {
+class HlaComplexCoverageFactory(maxDistanceFromTopScore: Int) {
     private val progressTracker = FutureProgressTracker(0.1, 10000)
     private val ranking = HlaComplexCoverageRanking(maxDistanceFromTopScore)
 
@@ -42,7 +42,7 @@ class HlaComplexCoverageFactory(maxDistanceFromTopScore: Int, private val execut
         return (topTakers + topRankedKeepers).distinct()
     }
 
-    fun rankedComplexCoverage(fragmentAlleles: List<FragmentAlleles>, complexes: List<HlaComplex>): List<HlaComplexCoverage> {
+    fun rankedComplexCoverage(executorService: ExecutorService, fragmentAlleles: List<FragmentAlleles>, complexes: List<HlaComplex>): List<HlaComplexCoverage> {
         val list = mutableListOf<Future<HlaComplexCoverage>>()
         for (complex in complexes) {
             val untrackedCallable: Callable<HlaComplexCoverage> = Callable { proteinCoverage(fragmentAlleles, complex.alleles) }
