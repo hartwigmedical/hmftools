@@ -153,7 +153,6 @@ public final class IclusionClassificationConfig {
     private static Set<String> deletionKeywords() {
         Set<String> set = Sets.newHashSet();
         set.add("LOSS");
-        set.add("DELETION");
         return set;
     }
 
