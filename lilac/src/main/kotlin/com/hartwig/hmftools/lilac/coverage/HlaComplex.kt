@@ -27,11 +27,7 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
             }
 
             val confirmedGroupAlleles = confirmedGroups.alleles()
-            val commonAllelesInConfirmedGroups = config.commonAlleles.filter { it.asAlleleGroup() in confirmedGroupAlleles }
-
-            // Reintroduce common alleles that match confirmed groups
-            val candidatesWithCommon = (candidateAlleles + commonAllelesInConfirmedGroups).distinct()
-            val candidatesAfterConfirmedGroups = candidatesWithCommon.filterWithConfirmedGroups(confirmedGroupAlleles)
+            val candidatesAfterConfirmedGroups = candidateAlleles.filterWithConfirmedGroups(confirmedGroupAlleles)
             val proteinCoverage = HlaComplexCoverageFactory.proteinCoverage(referenceFragmentAlleles, candidatesAfterConfirmedGroups)
             val confirmedProtein = proteinCoverage.confirmUnique(config)
             val discardedProtein = proteinCoverage.alleleCoverage.filter { it.uniqueCoverage > 0 && it !in confirmedProtein }.sortedDescending()
@@ -52,8 +48,7 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
             val complexes: List<HlaComplex>
             val simpleComplexCount = aOnlyComplexes.size * bOnlyComplexes.size * cOnlyComplexes.size
             complexes = if (simpleComplexCount > 100_000) {
-                logger.info("Candidate allele complexity exceeds maximum")
-                logger.info("    finding top 10 candidates in each allele group")
+                logger.info("Candidate permutations exceeds maximum complexity")
                 val groupRankedCoverageFactory = HlaComplexCoverageFactory(100, config.commonAlleles)
                 val aTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, aOnlyComplexes)
                 val bTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, bOnlyComplexes)
@@ -68,7 +63,6 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
 
             return complexes
         }
-
 
         private fun complexes(confirmedGroups: List<HlaAllele>, confirmedProteins: List<HlaAllele>, candidates: List<HlaAllele>): List<HlaComplex> {
             val a = gene("A", confirmedGroups, confirmedProteins, candidates)

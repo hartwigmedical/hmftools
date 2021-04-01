@@ -4,6 +4,7 @@ import com.hartwig.hmftools.lilac.LilacConfig
 import com.hartwig.hmftools.lilac.SequenceCount
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence
+import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.hla.HlaContext
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 import org.apache.logging.log4j.LogManager
@@ -16,7 +17,7 @@ class Candidates(private val config: LilacConfig,
         val logger = LogManager.getLogger(this::class.java)
     }
 
-    fun candidates(context: HlaContext, fragments: List<AminoAcidFragment>, phasedEvidence: List<PhasedEvidence>): List<HlaSequenceLoci> {
+    fun candidates(context: HlaContext, fragments: List<AminoAcidFragment>, phasedEvidence: List<PhasedEvidence>): List<HlaAllele> {
         val gene = context.gene
         val aminoAcidBoundary = context.aminoAcidBoundaries
 
@@ -50,7 +51,7 @@ class Candidates(private val config: LilacConfig,
         val phasedCandidates = filterCandidates(nucleotideCandidates, phasedEvidence)
         logger.info("    ${phasedCandidates.size} candidates after phasing: " + phasedCandidates.map { it.allele }.joinToString(", "))
 
-        return phasedCandidates
+        return phasedCandidates.map { it.allele }
 
     }
 

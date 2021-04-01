@@ -56,14 +56,16 @@ class HlaComplexCoverageFactory(maxDistanceFromTopScore: Int, private val common
             val coverage = iterator.next().get()
             result.add(coverage)
 
-            if (result.size > 100) {
-                val filtered = ranking.candidateRanking(result)
-                result.clear()
-                result.addAll(filtered)
-            }
+//            if (result.size > 100) {
+//                val filtered = ranking.candidateRanking(result)
+//                result.clear()
+//                result.addAll(filtered)
+//            }
 
             iterator.remove()
         }
+
+//        result.filter { it.alleleCoverage.map { it.allele }.contains(HlaAllele("A*02:01")) && it.alleleCoverage.map { it.allele }.contains(HlaAllele("A*15:01"))&& it.alleleCoverage.map { it.allele }.contains(HlaAllele("A*03:03"))}
 
         return ranking.candidateRanking(result)
 
