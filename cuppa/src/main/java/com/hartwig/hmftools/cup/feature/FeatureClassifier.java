@@ -127,8 +127,12 @@ public class FeatureClassifier implements CuppaClassifier
                 cancerTypeValues.put(cancerType, driverPrev != null ? driverPrev.RawPrevalence : 0);
             }
 
-            final String featureName = feature.Likelihood == 1 ?
-                    String.format("%s (1)", feature.Name) : String.format("%s (%.2f)", feature.Name, feature.Likelihood);
+            // report the max likelihood if there are multiple
+            double maxLikelihood = sampleFeatures.stream()
+                    .filter(x -> x.Name.equals(feature.Name)).mapToDouble(x -> x.Likelihood).max().orElse(0);
+
+            final String featureName = maxLikelihood == 1 ?
+                    String.format("%s (1)", feature.Name) : String.format("%s (%.2f)", feature.Name, maxLikelihood);
 
             SampleResult result = new SampleResult(sample.Id, FEATURE, PREVALENCE, feature.Type.toString(), featureName, cancerTypeValues);
             results.add(result);
