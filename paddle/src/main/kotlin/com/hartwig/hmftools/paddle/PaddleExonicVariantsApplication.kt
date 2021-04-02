@@ -45,10 +45,14 @@ class PaddleExonicVariantsApplication(cmd: CommandLine) : AutoCloseable, Runnabl
     private val dbAccess = DatabaseAccess.databaseAccess(cmd)
 
     override fun run() {
-        val cohortFile = "/Users/jon/hmf/analysis/dnds5441/hpc.5441.tsv"
-        val cohortMutationalLoadFile = "/Users/jon/hmf/analysis/dnds5441/mutationalLoad.tsv"
-        fun somaticFilename(x:String) = "/Users/jon/hmf/analysis/dnds5441/somatics/${x}.exonic.somatics.tsv"
+        val somaticsDir = "/Users/jon/hmf/analysis/paddle/somatics/"
+        val cohortFile = "/Users/jon/hmf/analysis/paddle/hpc.head.tsv"
+        val cohortMutationalLoadFile = "/Users/jon/hmf/analysis/paddle/mutationalLoad.tsv"
+        fun somaticFilename(x:String) = "${somaticsDir}${x}.exonic.somatics.tsv"
 
+
+        // Make output dirs
+        File(somaticsDir).mkdirs()
 
         if (!File(cohortMutationalLoadFile).exists()) {
             DndsMutationalLoadFile.writeHeader(cohortMutationalLoadFile)
