@@ -140,6 +140,13 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val bCandidateFragments = aminoAcidPipeline.referencePhasingFragments(hlaBContext)
         val cCandidateFragments = aminoAcidPipeline.referencePhasingFragments(hlaCContext)
 
+        // Un-phased Candidates
+        val candidateFactory = Candidates(config, nucleotideSequences, aminoAcidSequences)
+        val aUnphasedCandidates = candidateFactory.unphasedCandidates(hlaAContext, aCandidateFragments)
+        val bUnphasedCandidates = candidateFactory.unphasedCandidates(hlaBContext, bCandidateFragments)
+        val cUnphasedCandidates = candidateFactory.unphasedCandidates(hlaCContext, cCandidateFragments)
+        val allUnphasedCandidates = (aUnphasedCandidates + bUnphasedCandidates + cUnphasedCandidates)
+
         // Phasing
         val phasedEvidenceFactory = PhasedEvidenceFactory(minFragmentsPerAllele, config.minFragmentsToRemoveSingle, config.minEvidence)
         val aPhasedEvidence = phasedEvidenceFactory.evidence(hlaAContext, aCandidateFragments)
@@ -152,17 +159,17 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         PhasedEvidenceValidation.validateExpected("B", bPhasedEvidence, expectedSequences)
         PhasedEvidenceValidation.validateExpected("C", cPhasedEvidence, expectedSequences)
 
-        // Candidates
-        val candidateFactory = Candidates(config, nucleotideSequences, aminoAcidSequences)
-        val aCandidates = candidateFactory.candidates(hlaAContext, aCandidateFragments, aPhasedEvidence)
-        val bCandidates = candidateFactory.candidates(hlaBContext, bCandidateFragments, bPhasedEvidence)
-        val cCandidates = candidateFactory.candidates(hlaCContext, cCandidateFragments, cPhasedEvidence)
+        // Phased Candidates
+        val aCandidates = candidateFactory.phasedCandidates(hlaAContext, aUnphasedCandidates, aPhasedEvidence)
+        val bCandidates = candidateFactory.phasedCandidates(hlaBContext, bUnphasedCandidates, bPhasedEvidence)
+        val cCandidates = candidateFactory.phasedCandidates(hlaCContext, cUnphasedCandidates, cPhasedEvidence)
         val phasedCandidateAlleles = (aCandidates + bCandidates + cCandidates)
-        val phasedCandidateAllelesGroups = phasedCandidateAlleles.map { it.asAlleleGroup() }
 
         // Common Candidate Recovery
-        logger.info("Recovering common alleles in candidate allele group:")
-        val commonCandidateAlleles = config.commonAlleles.filter { it !in phasedCandidateAlleles && it.asAlleleGroup() in phasedCandidateAllelesGroups }
+        logger.info("Recovering common un-phased candidates:")
+        val commonCandidateAlleles = config.commonAlleles
+                .filter { it !in phasedCandidateAlleles && it in allUnphasedCandidates}
+
         val candidateAlleles = phasedCandidateAlleles + commonCandidateAlleles
         val candidateSequences = aminoAcidSequences.filter { it.allele in candidateAlleles }
         if (commonCandidateAlleles.isNotEmpty()) {

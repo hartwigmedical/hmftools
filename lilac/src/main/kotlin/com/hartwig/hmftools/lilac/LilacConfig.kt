@@ -74,6 +74,7 @@ data class LilacConfig(
                     .readText()
                     .split("\n")
                     .map { HlaAllele(it) }
+                    .map { it.asFourDigit() }
 
             return LilacConfig(
                     sample,
