@@ -65,7 +65,7 @@ public class ViccExtractorTestApp {
         Map<String, HmfTranscriptRegion> allGenesMap = HmfGenePanelSupplier.allGenesMap37();
         if (hostname.toLowerCase().contains("datastore")) {
             viccJsonPath = "/data/common/dbs/serve/vicc/all.json";
-            driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.hg19.tsv";
+            driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.37.tsv";
             knownFusionFilePath = "/data/common/dbs/fusions/known_fusion_data.csv";
             missingDoidMappingTsv = "/data/common/dbs/serve/curation/missing_doids_mapping.tsv";
             outputDir = System.getProperty("user.home") + "/tmp";
@@ -73,7 +73,7 @@ public class ViccExtractorTestApp {
             proteinResolver = ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, fastaFile, allGenesMap);
         } else {
             viccJsonPath = System.getProperty("user.home") + "/hmf/projects/serve/static_sources/vicc/all.json";
-            driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.hg19.tsv";
+            driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.37.tsv";
             knownFusionFilePath = System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.csv";
             missingDoidMappingTsv = System.getProperty("user.home") + "/hmf/projects/serve/curation/missing_doids_mapping.tsv";
             outputDir = System.getProperty("user.home") + "/hmf/tmp/serve";

@@ -19,11 +19,11 @@ class DndsGeneName {
         this.dndsGenes = dndsGenes;
         this.dndsGeneNameMap = new DndsGeneNameMap();
         if (refGenomeVersion == RefGenomeVersion.V37) {
-            alignmentMapPredicate = aDriverGene -> dndsGeneNameMap.isValidHg19Gene(aDriverGene.gene());
+            alignmentMapPredicate = aDriverGene -> dndsGeneNameMap.isValidV37Gene(aDriverGene.gene());
             dndsGeneFunction = DriverGene::gene;
         } else {
-            alignmentMapPredicate = aDriverGene -> dndsGeneNameMap.isValidHg38Gene(aDriverGene.gene());
-            dndsGeneFunction = aDriverGene -> dndsGeneNameMap.hg19Gene(aDriverGene.gene());
+            alignmentMapPredicate = aDriverGene -> dndsGeneNameMap.isValidV38Gene(aDriverGene.gene());
+            dndsGeneFunction = aDriverGene -> dndsGeneNameMap.v37Gene(aDriverGene.gene());
         }
     }
 

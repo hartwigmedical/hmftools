@@ -34,7 +34,7 @@ Converting them first up front saves significant CPU time overall.
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
 
-HG19 and HG38 resources are available to download from [HMFTools-Resources > SAGE](https://resources.hartwigmedicalfoundation.nl/). 
+37 and 38 resources are available to download from [HMFTools-Resources > SAGE](https://resources.hartwigmedicalfoundation.nl/). 
 
 R is used to generate the base quality recalibration charts. Required packages include `ggplot2`,`tidyr` and `dplyr`. 
 R is not required if the charts are disable with the `-bqr_plot false` argument. 
@@ -614,10 +614,10 @@ bcftools filter -e 'PON_COUNT!="." && INFO/TIER="PANEL" && PON_MAX>=5 && PON_COU
 bcftools filter -e 'PON_COUNT!="." && INFO/TIER!="HOTSPOT" && INFO/TIER!="PANEL" && PON_COUNT >= 6' -s PON -m+ -O z -o $pon_filtered_vcf
 ```
 
-As the HG38 PON is smaller with only 98 germline samples it is recommended that the following filters are used:
+As the 38 PON is smaller with only 98 germline samples it is recommended that the following filters are used:
 
 ```
-bcftools annotate -a SageGermlinePon.hg38.98x.vcf.gz -c PON_COUNT,PON_MAX $sage_vcf -O z -o $annotated_vcf
+bcftools annotate -a SageGermlinePon.98x.38.vcf.gz -c PON_COUNT,PON_MAX $sage_vcf -O z -o $annotated_vcf
 
 bcftools filter -e 'PON_COUNT!="." && INFO/TIER="HOTSPOT" && PON_MAX>=5 && PON_COUNT >= 5' -s PON -m+ $annotated_vcf -O u | \
 bcftools filter -e 'PON_COUNT!="." && INFO/TIER="PANEL" && PON_MAX>=5 && PON_COUNT >= 2' -s PON -m+ -O u | \
@@ -680,6 +680,6 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - CRAM support
   - Filter variants with ref containing bases other then G,A,T,C
   - Look for read context of variants that are partially soft clipped
-  - HG38 support
+  - Ref genome 38 support
 - 2.0
   - Revamped small indel / SNV caller

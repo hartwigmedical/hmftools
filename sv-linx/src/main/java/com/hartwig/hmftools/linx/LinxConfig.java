@@ -358,7 +358,7 @@ public class LinxConfig
         options.addOption(SAMPLE_DATA_DIR, true, "Optional: directory for per-sample SV data, default is to use output_dir");
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
         options.addOption(UPLOAD_TO_DB, true, "Upload all LINX data to DB (true/false), single-sample default=true, batch-mode default=false");
-        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts HG37 (default), HG19 or HG38");
+        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default), or 38");
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, "Driver gene panel file");
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 5000");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file");

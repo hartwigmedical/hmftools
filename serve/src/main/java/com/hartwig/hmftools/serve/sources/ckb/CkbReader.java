@@ -17,7 +17,6 @@ public final class CkbReader {
     private static final Logger LOGGER = LogManager.getLogger(ViccReader.class);
 
     private CkbReader(){
-
     }
 
     @NotNull
@@ -28,7 +27,6 @@ public final class CkbReader {
 
     @NotNull
     public static List<CkbEntry> filterAndCurateRelevantEntries(@NotNull List<CkbEntry> ckbEntries) {
-
         return filter(curate(ckbEntries));
     }
 
@@ -61,5 +59,4 @@ public final class CkbReader {
 
         return filteredEntries;
     }
-
 }

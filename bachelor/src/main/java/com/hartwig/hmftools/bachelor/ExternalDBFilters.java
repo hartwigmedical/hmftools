@@ -199,7 +199,7 @@ public class ExternalDBFilters
 
     static String stripTranscriptVersion(final String transcript)
     {
-        // necessary since SnpEff adds the version id in HG38
+        // necessary since SnpEff adds the version id in V38
         if(transcript.contains("."))
             return transcript.substring(0, transcript.indexOf('.'));
         else
@@ -235,7 +235,7 @@ public class ExternalDBFilters
         str = str.replaceAll(",", ";");
         str = str.replaceAll("\\[", "");
         str = str.replaceAll("]", "");
-        str = str.replaceAll("%3B", ";"); // in HG38 version
+        str = str.replaceAll("%3B", ";"); // in V38 version
         return str;
     }
 

@@ -30,7 +30,7 @@ public final class DriverGeneFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").
+        return new StringJoiner(DELIMITER).
                 add("gene")
                 .add("reportMissense")
                 .add("reportNonsense")

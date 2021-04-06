@@ -39,21 +39,20 @@ public class DriverGenePanelConversion {
         List<DriverGene> inputDriverGenes = DriverGeneFile.read(templateFile);
         List<DriverGene> outputDriverGenes = Lists.newArrayList();
         for (DriverGene input : inputDriverGenes) {
-            final String hg19Gene = input.gene();
-            final String hg38Gene = geneNameMap.hg38Gene(input.gene());
-            if (hg19Gene.equals("LINC00290") || hg19Gene.equals("LINC01001")) {
+            final String v37Gene = input.gene();
+            final String v38Gene = geneNameMap.v38Gene(input.gene());
+            if (v37Gene.equals("LINC00290") || v37Gene.equals("LINC01001")) {
                 outputDriverGenes.add(input);
-            } else if (hg38Gene.equals("NA")) {
-                System.out.println("Excluding: " + hg19Gene);
+            } else if (v38Gene.equals("NA")) {
+                System.out.println("Excluding: " + v37Gene);
             } else {
-                DriverGene converted = ImmutableDriverGene.builder().from(input).gene(hg38Gene).build();
+                DriverGene converted = ImmutableDriverGene.builder().from(input).gene(v38Gene).build();
                 outputDriverGenes.add(converted);
             }
         }
 
         process(RefGenomeVersion.V37, inputDriverGenes);
         process(RefGenomeVersion.V38, outputDriverGenes);
-
     }
 
     private static void process(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final List<DriverGene> driverGenes)

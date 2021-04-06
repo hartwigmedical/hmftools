@@ -23,7 +23,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class Charts {
 
-    private static final Logger LOGGER = LogManager.getLogger(RCharts.class);
+    private static final Logger LOGGER = LogManager.getLogger(Charts.class);
 
     private final ConfigSupplier configSupplier;
     private final ExecutorService executorService;

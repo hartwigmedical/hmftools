@@ -12,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
 public class CkbExtractorFactory {
 
     private CkbExtractorFactory() {
-
     }
 
     @NotNull

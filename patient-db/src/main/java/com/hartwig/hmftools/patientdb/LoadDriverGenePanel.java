@@ -25,20 +25,17 @@ public class LoadDriverGenePanel {
 
     private static final Logger LOGGER = LogManager.getLogger(LoadDriverGenePanel.class);
 
-    private static final String ASSEMBLY = "assembly";
-
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         Options options = new Options();
-        // TODO: Rename ref genome versions
-        options.addOption(ASSEMBLY, true, "Must be one of [hg19, hg38]");
+        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Must be one of [37, 38]");
 
         DatabaseAccess.addDatabaseCmdLineArgs(options);
         DriverGenePanelConfig.addGenePanelOption(true, options);
         CommandLine cmd = new DefaultParser().parse(options, args);
 
-        String refGenomeVersionArg = cmd.getOptionValue(ASSEMBLY, "hg19");
+        String refGenomeVersionArg = cmd.getOptionValue(RefGenomeVersion.REF_GENOME_VERSION, "37");
 
-        RefGenomeVersion refGenomeVersion = refGenomeVersionArg.equals("hg19") ? RefGenomeVersion.V37 : RefGenomeVersion.V38;
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(refGenomeVersionArg);
         List<DriverGene> driverGenes = DriverGenePanelConfig.driverGenes(cmd);
         DriverGenePanel panel = DriverGenePanelFactory.create(refGenomeVersion, driverGenes);
 

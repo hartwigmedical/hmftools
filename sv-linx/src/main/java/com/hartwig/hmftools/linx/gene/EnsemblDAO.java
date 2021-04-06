@@ -64,7 +64,7 @@ public class EnsemblDAO
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - HG19 (default) or HG38");
+        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - 37 (default) or 38");
         options.addOption(DB_PASS, true, "Ensembl DB password");
         options.addOption(DB_URL, true, "Ensembl DB URL");
         options.addOption(DB_USER, true, "Ensembl DB username");
@@ -187,7 +187,7 @@ public class EnsemblDAO
                 }
 
                 EnsemblGeneData geneData = new EnsemblGeneData(
-                        geneId, geneName, chromosome, strand.byteValue(), geneStart.intValue(), geneEnd.intValue(),
+                        geneId, geneName, chromosome, strand, geneStart.intValue(), geneEnd.intValue(),
                         record.get("KaryotypeBand").toString());
 
                 geneData.addSynonyms(record.get("Synonyms").toString());

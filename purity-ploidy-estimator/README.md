@@ -75,7 +75,7 @@ java -jar purple.jar \
    -output_dir /path/to/COLO829/purple \
    -amber /path/to/COLO829/amber \
    -cobalt /path/to/COLO829/cobalt \
-   -gc_profile /path/to/GC_profile.hg19.1000bp.cnp \
+   -gc_profile /path/to/GC_profile.1000bp.37.cnp \
    -ref_genome /path/to/Homo_sapiens_assembly37.fasta
 ```
 
@@ -88,7 +88,7 @@ java -jar purple.jar \
    -output_dir /path/to/COLO829/purple \
    -amber /path/to/COLO829/amber \
    -cobalt /path/to/COLO829/cobalt \
-   -gc_profile /path/to/GC_profile.hg19.1000bp.cnp \
+   -gc_profile /path/to/GC_profile.1000bp.37.cnp \
    -ref_genome /path/to/Homo_sapiens_assembly37.fasta \
    -somatic_vcf /path/to/COLO829/COLO829.somatic.vcf.gz \
    -structural_vcf /path/to/COLO829/COLO829.sv.high_confidence.vcf.gz \
@@ -112,8 +112,8 @@ cobalt | Path to COBALT output. This should correspond to the output_dir used in
 gc_profile | Path to GC profile.
 ref_genome | Path to reference genome fasta file.
 
-The GC Profile file used by HMF (GC_profile.hg19.1000bp.cnp) is available to download from [HMFTools-Resources > Cobalt](https://resources.hartwigmedicalfoundation.nl). 
-A HG38 equivalent is also available.
+The GC Profile file used by HMF (GC_profile.1000bp.37.cnp) is available to download from [HMFTools-Resources > Cobalt](https://resources.hartwigmedicalfoundation.nl). 
+A 38 equivalent is also available.
 
 The ref genome must be indexed and have an associated sequence dictionary. These can be created with samtools as follows:
 ```
@@ -189,11 +189,11 @@ somatic_hotspots | VCF of somatic hotspot locations. Mandatory if driver catalog
 germline_hotspots | VCF of germline hotspot locations. Mandatory if driver catalog enabled and germline variants supplied.
 driver_gene_panel | TSV of driver genes. Mandatory if driver catalog enabled.
 
-The hotspot VCF used by HMF (KnownHotspots.hg19.vcf.gz) is available to download from [HMFTools-Resources > Sage2](https://resources.hartwigmedicalfoundation.nl). 
-A HG38 equivalent is also available. The file is used to re-annotate all somatic variants with a HOTSPOT or NEAR_HOTSPOT flag if they are on or within 5 bases of a hotspot. 
+The hotspot VCF used by HMF (KnownHotspots.37.vcf.gz) is available to download from [HMFTools-Resources > Sage2](https://resources.hartwigmedicalfoundation.nl). 
+A 38 equivalent is also available. The file is used to re-annotate all somatic variants with a HOTSPOT or NEAR_HOTSPOT flag if they are on or within 5 bases of a hotspot. 
 Hotspots are assigned a driver likelihood of 1. 
 
-The driver gene panel (DriverGenePanel.hg19.tsv) and hg38 equivalent is also available from [HMFTools-Resources > Gene Panel](https://resources.hartwigmedicalfoundation.nl)
+The driver gene panel (DriverGenePanel.37.tsv) and 38 equivalent is also available from [HMFTools-Resources > Gene Panel](https://resources.hartwigmedicalfoundation.nl)
 
 Note that generating the driver catalog for SNVs assumes that the VCF has been annotated with SNPEFF.
 
@@ -1090,7 +1090,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Correctly identify SV genotypes in tumor-only mode
   - Allow overwrites of MH field in somatic VCF
 - [2.50](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.50) 
-  - Fixed HG38 regression
+  - Fixed ref genome 38 regression
 - [2.49](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.49) 
   - Re-added support for cancel panel integration test 
 - [2.48](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.48) 
@@ -1106,7 +1106,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
   - Changed default value of `somatic_min_peak` to 10
   - Write all purity range records to `TUMOR.purple.purity.range.tsv` file
 - [2.47](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.47) 
-  - Add hg38 support for driver gene panel
+  - Add ref genome 38 support for driver gene panel
   - Phased inframe indels only annotated as MISSENSE if they are otherwise NONSENSE or FRAMESHIFT
 - [2.46](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.46) 
   - Configurable driver gene panel
@@ -1118,7 +1118,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 - [2.44](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.44) 
   - Requires [database patch](../patient-db/src/main/resources/patches/purple/purple2.43_to_2.44_migration.sql). Note that there are corresponding patches for [Linx](../patient-db/src/main/resources/patches/linx/linx_1.10.sql) and [PatientDb](../patient-db/src/main/resources/patches/patientdb/patientdb3.43_to_3.44_migration.sql).
   - Use non diploid-normalised normal ratio for input circos figure
-  - Do not include chrY in female output in HG38
+  - Do not include chrY in female output in ref genome 38
   - Small change to LOH BAF inferring
   - Always use LONG-ARM inferring for 21p copy number
   - Rename structural variant VCF field PURPLE_PLOIDY to PURPLE_JCN
@@ -1160,7 +1160,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 - [2.33](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.33)
   - Raised QC segment fail to >220 unsupported segments
   - Infer LOH in simple DUPs between 2 LOH regions 
-  - Fixed HG38 regression bug
+  - Fixed ref genome 38 regression bug
   - Added new logic to structural variant recovery to create inferred variant if unable to find suitable candidate in file.  
   - Changed relative copy number tolerance when smoothing from fixed 10% to 0.12 + 0.8 / sqrt(min depth window count) 
   - Fixed bug in subclonal plot
@@ -1224,11 +1224,11 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 - 2.18
   - Allow recovery of pon filtered SVs
 - 2.17
-  - Added HG38 support for gene copy numbers.
+  - Added ref genome 38 support for gene copy numbers.
   - Look further out to infer baf if there are no amber points in a region.
   - Fixed bug where some structural variant breakpoints were off by one base.  
 - 2.16
-  - Added support for hg38. Purple will try to automatically detect the ref genome used from the cobalt output otherwise -ref_genome should be set to either hg19 or hg38.
+  - Added support for ref genome 38. Purple will try to automatically detect the ref genome used from the cobalt output otherwise -ref_genome should be set to either 37 or 38.
   - Added feature to recover filtered structural variants. If supplied, the recovery vcf will be searched for candidates at any copy number break points that are currently unexplained by an SV.
     If suitable, they will be recovered and included in the segmentation and smoothing algorithms. 
     All passing and recovered structural variants are now written as a VCF to the purple output directory.

@@ -52,7 +52,7 @@ java -cp -Xmx8G cobalt.jar com.hartwig.hmftools.cobalt.CountBamLinesApplication 
     -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
     -output_dir /run_dir/cobalt \ 
     -threads 16 \ 
-    -gc_profile /path/to/GC_profile.hg19.1000bp.cnp
+    -gc_profile /path/to/GC_profile.1000bp.37.cnp
 ```
 
 ## Mandatory Arguments
@@ -66,8 +66,8 @@ tumor_bam | Path to tumor BAM file
 output_dir | Path to the output directory. This directory will be created if it does not already exist
 gc_profile | Path to GC profile 
 
-A compressed copy of the GC Profile file used by HMF (GC_profile.hg19.1000bp.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
-A HG38 equivalent is also available. Please note the downloaded file must be un-compressed before use. 
+A compressed copy of the GC Profile file used by HMF (GC_profile.1000bp.37.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
+A 38 equivalent is also available. Please note the downloaded file must be un-compressed before use. 
 
 COBALT supports both BAM and CRAM file formats. If using CRAM, the ref_genome argument must be included.
 
@@ -92,7 +92,7 @@ Downstream, PURPLE will adjust the allosome ratios according to the AMBER gender
 A file called `DIPLOID.cobalt.ratio.pcf' will be created in lieu of a reference PCF file.
 
 Without a means to determine which regions of the normal are diploid, a bed file specifying these locations must be included with the `tumor-only-diploid-bed` parameter. 
-A HG19 bed file (DiploidRegions.hg19.bed.gz) and HG38 equivalent are available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl).
+A 37 bed file (DiploidRegions.37.bed.gz) and 38 equivalent are available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl).
 
 To create this bed file we examined the COBALT output of 100 samples. 
 We considered each 1000 base region to be diploid if 50% or more of the samples were diploid (0.85 >= referenceGCDiploidRatio <= 1.15 ) at this point. 
@@ -143,7 +143,7 @@ As germline aberrations only effect the final normalization it is possible to mi
 ```
 java -Xmx8G -Xms4G -cp ${cobalt_jar} com.hartwig.hmftools.cobalt.CountBamLinesMigration \
     -reference COLO829R -tumor COLO829T \
-    -gc_profile /path/to/GC_profile.hg19.1000bp.cnp \
+    -gc_profile /path/to/GC_profile.1000bp.37.cnp \
     -input_dir /path/to/existing/cobalt/data/ \
     -output_dir /path/to/new/cobalt/data/ 
 ```
@@ -165,6 +165,6 @@ java -Xmx8G -Xms4G -cp ${cobalt_jar} com.hartwig.hmftools.cobalt.CountBamLinesMi
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.6)
   - CRAM support
 - 1.5
-  - Support for HG38
+  - Support for ref genome 38
 - 1.4
   - Support for Klinefelter syndrome

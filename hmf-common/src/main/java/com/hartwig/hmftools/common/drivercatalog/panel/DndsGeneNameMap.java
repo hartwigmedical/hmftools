@@ -11,44 +11,44 @@ import org.jetbrains.annotations.NotNull;
 
 public class DndsGeneNameMap {
 
-    private final Map<String, String> hg38Map = Maps.newHashMap();
-    private final Map<String, String> hg19Map = Maps.newHashMap();
+    private final Map<String, String> v38Map = Maps.newHashMap();
+    private final Map<String, String> v37Map = Maps.newHashMap();
 
     public DndsGeneNameMap() {
         final InputStream inputStream = DriverGenePanel.class.getResourceAsStream("/drivercatalog/DndsGeneNameMap.tsv");
         new BufferedReader(new InputStreamReader(inputStream)).lines()
-                .filter(x -> !x.startsWith("hg19"))
+                .filter(x -> !x.startsWith("v37"))
                 .map(x -> x.split("\t"))
                 .forEach(strings -> {
-                    String hg19 = strings[0];
-                    String hg38 = strings[1];
-                    if (!hg38.equals("NA")) {
-                        hg38Map.put(hg38, hg19);
+                    String v37 = strings[0];
+                    String v38 = strings[1];
+                    if (!v38.equals("NA")) {
+                        v38Map.put(v38, v37);
                     }
-                    hg19Map.put(hg19, hg38);
+                    v37Map.put(v37, v38);
                 });
     }
 
-    public boolean isValidHg38Gene(@NotNull final String hg38GeneId) {
-        return hg38Map.containsKey(hg38GeneId) && !hg38Map.get(hg38GeneId).equals("NA");
+    public boolean isValidV38Gene(@NotNull final String v38GeneId) {
+        return v38Map.containsKey(v38GeneId) && !v38Map.get(v38GeneId).equals("NA");
     }
 
-    public boolean isValidHg19Gene(@NotNull final String hg19GeneId) {
-        return hg19Map.containsKey(hg19GeneId);
+    public boolean isValidV37Gene(@NotNull final String v37GeneId) {
+        return v37Map.containsKey(v37GeneId);
     }
 
     @NotNull
-    public String hg19Gene(@NotNull final String hg38GeneId) {
-        String result = hg38Map.get(hg38GeneId);
+    public String v37Gene(@NotNull final String v38GeneId) {
+        String result = v38Map.get(v38GeneId);
         if (result == null || result.equals("NA")) {
-            throw new IllegalArgumentException("Invalid hg38 gene " + hg38GeneId);
+            throw new IllegalArgumentException("Invalid v38 gene " + v38GeneId);
         }
         return result;
     }
 
     @NotNull
-    String hg38Gene(@NotNull final String hg19GeneId) {
-        String result = hg19Map.get(hg19GeneId);
+    String v38Gene(@NotNull final String v37GeneId) {
+        String result = v37Map.get(v37GeneId);
         if (result == null ) {
             return "NA";
         }

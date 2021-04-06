@@ -55,7 +55,7 @@ public class HotspotEnrichmentTest {
 
     @Test
     public void testFromVariant() {
-        VariantContext variant = createNonHotspotHG37(1, "G");
+        VariantContext variant = createNonHotspotV37(1, "G");
         VariantContext nonHotspot = new VariantContextBuilder(variant).attribute("HOTSPOT", false).make();
         assertEquals(Hotspot.NON_HOTSPOT, HotspotEnrichment.fromVariant(nonHotspot));
     }
@@ -66,25 +66,25 @@ public class HotspotEnrichmentTest {
         final VariantHotspotEnrichment enrichment =
                 new VariantHotspotEnrichment(Multimaps.fromPositions(Lists.newArrayList(hotspot)), result::add);
 
-        final VariantContext hg37Variant = createNonHotspotHG37(variantStart, variantRef);
-        final VariantContext hg38Variant = createNonHotspotHG38(variantStart, variantRef);
+        final VariantContext v37Variant = createNonHotspotV37(variantStart, variantRef);
+        final VariantContext v38Variant = createNonHotspotV38(variantStart, variantRef);
 
-        enrichment.accept(hg37Variant);
-        enrichment.accept(hg38Variant);
+        enrichment.accept(v37Variant);
+        enrichment.accept(v38Variant);
 
         assertEquals(expected, HotspotEnrichment.fromVariant(result.get(0)));
         assertEquals(expected, HotspotEnrichment.fromVariant(result.get(1)));
     }
 
     @NotNull
-    private static VariantContext createNonHotspotHG37(int start, @NotNull final String ref) {
+    private static VariantContext createNonHotspotV37(int start, @NotNull final String ref) {
         final String line = "11\t" + start + "\tCOSM123;COSM456\t" + ref
                 + "\tA\t.\tPASS\tCOSM2ENST=COSM123|GENE_TRANS1|c.1A>G|p.E1E|1,COSM456|GENE_TRANS2|c.2A>G|p.E2E|1\tGT:AD:DP\t0/1:73,17:91";
         return VariantContextFromString.decode(line);
     }
 
     @NotNull
-    private static VariantContext createNonHotspotHG38(int start, @NotNull final String ref) {
+    private static VariantContext createNonHotspotV38(int start, @NotNull final String ref) {
         final String line = "chr11\t" + start + "\tCOSM123;COSM456\t" + ref
                 + "\tA\t.\tPASS\tCOSM2ENST=COSM123|GENE_TRANS1|c.1A>G|p.E1E|1,COSM456|GENE_TRANS2|c.2A>G|p.E2E|1\tGT:AD:DP\t0/1:73,17:91";
         return VariantContextFromString.decode(line);
