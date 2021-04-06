@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.serve.sources.ckb.tools;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
 
@@ -31,40 +32,63 @@ import com.hartwig.hmftools.serve.sources.ckb.CkbUtils;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 
 public class CkbExtractorTestApp {
 
     private static final Logger LOGGER = LogManager.getLogger(CkbExtractorTestApp.class);
 
     public static void main(String[] args) throws IOException {
-        String ckbDir = "/data/common/dbs/ckb/210326_flex_dump";
-        String outputDir = System.getProperty("user.home") + "/tmp/serve_ckb";
-        String eventsTsv = outputDir + "/CkbEvents.tsv";
+        String hostname = InetAddress.getLocalHost().getHostName();
+        LOGGER.debug("Running on '{}'", hostname);
 
-        // Read and curate CKB datamodel
+        String ckbDir;
+        String outputDir;
+        String missingDoidMappingTsv;
+        String driverGeneTsvPath;
+        String knownFusionFilePath;
+        String fastaFile;
+        ProteinResolver proteinResolver;
+        String eventsTsv;
+
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.V38;
+        Map<String, HmfTranscriptRegion> allGenesMap = HmfGenePanelSupplier.allGenesMap38();
+
+        if (hostname.toLowerCase().contains("datastore")) {
+            ckbDir = "/data/common/dbs/ckb/210326_flex_dump";
+            outputDir = System.getProperty("user.home") + "/tmp/serve_ckb";
+            eventsTsv = outputDir + "/CkbEvents.tsv";
+            missingDoidMappingTsv = "/data/common/dbs/serve/curation/missing_doids_mapping.tsv";
+            driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.hg38.tsv";
+            knownFusionFilePath = "/data/common/dbs/fusions/known_fusion_data.38_v3.csv";
+            fastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh38.no.alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna";
+            proteinResolver = ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, fastaFile, allGenesMap);
+        } else {
+            ckbDir = System.getProperty("user.home") + "/hmf/projects/serve/ckb";
+            outputDir = System.getProperty("user.home") + "/tmp/serve_ckb";
+            eventsTsv = outputDir + "/CkbEvents.tsv";
+            missingDoidMappingTsv = System.getProperty("user.home") + "/hmf/projects/serve/curation/missing_doids_mapping.tsv";
+            driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.hg38.tsv";
+            knownFusionFilePath = System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.38_v3.csv";
+            fastaFile = Strings.EMPTY;
+            proteinResolver = ProteinResolverFactory.dummy();
+        }
+
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
         List<CkbEntry> allCkbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-        List<CkbEntry> filteredAndcurateCkbEntries = CkbReader.filterAndCurateRelevantEntries(allCkbEntries);
+        List<CkbEntry> filteredAndcurateCkbEntries = CkbReader.filterAndCurateRelevantEntries(allCkbEntries, 10);
 
-        // Read required data
-        String missingDoidMappingTsv = "/data/common/dbs/serve/curation/missing_doids_mapping.tsv";
         DoidLookup doidLookup = DoidLookupFactory.buildFromConfigTsv(missingDoidMappingTsv);
 
-        String driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.hg38.tsv";
         List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneTsvPath);
         LOGGER.debug(" Read {} driver genes from {}", driverGenes.size(), driverGeneTsvPath);
 
         KnownFusionCache fusionCache = new KnownFusionCache();
-        String knownFusionFilePath = "/data/common/dbs/fusions/known_fusion_data.38_v3.csv";
         if (!fusionCache.loadFile(knownFusionFilePath)) {
             throw new IllegalStateException("Could not load known fusion cache from " + knownFusionFilePath);
         }
         LOGGER.debug(" Read {} known fusions from {}", fusionCache.getData().size(), knownFusionFilePath);
 
-        String fastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh38.no.alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna";
-        RefGenomeVersion refGenomeVersion = RefGenomeVersion.V38;
-        Map<String, HmfTranscriptRegion> allGenesMap = HmfGenePanelSupplier.allGenesMap38();
-        ProteinResolver proteinResolver = ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, fastaFile, allGenesMap);
         RefGenomeResource refGenomeResource = ImmutableRefGenomeResource.builder()
                 .fastaFile(fastaFile)
                 .driverGenes(driverGenes)

@@ -10,6 +10,7 @@ import com.hartwig.hmftools.serve.sources.vicc.ViccReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class CkbReader {
 
@@ -17,6 +18,12 @@ public final class CkbReader {
 
     private CkbReader(){
 
+    }
+
+    @NotNull
+    public static List<CkbEntry> filterAndCurateRelevantEntries(@NotNull List<CkbEntry> ckbEntries, @Nullable Integer maxFilesToReadPerType) {
+
+        return filter(curate(ckbEntries));
     }
 
     @NotNull
