@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 public class CountBamLinesDiploidBed implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger(CountBamLinesDiploidBed.class);
+
     private static final String DELIMITER = "\t";
 
     public static void main(String[] args) throws ParseException {
@@ -77,7 +78,7 @@ public class CountBamLinesDiploidBed implements AutoCloseable {
     }
 
     @NotNull
-    static Options createOptions() {
+    private static Options createOptions() {
         final Options options = new Options();
         options.addOption("in", true, "Cobalt diploid count");
         options.addOption("out", true, "Bed File");

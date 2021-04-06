@@ -26,9 +26,10 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class DriverGenePanelConversion {
 
+    private static final Logger LOGGER = LogManager.getLogger(DriverGenePanelConversion.class);
+
     private static final String OUTPUT_DIR = "/Users/jon/hmf/resources/newGenePanel/";
     private static final String INPUT_DIR = "/Users/jon/hmf/resources/";
-    private static final Logger LOGGER = LogManager.getLogger(DriverGenePanelConversion.class);
 
     public static void main(String[] args) throws IOException {
         LOGGER.info("Starting driver gene panel generation");
@@ -111,7 +112,6 @@ public class DriverGenePanelConversion {
         final List<VariantContext> germlineBlackList =
                 refGenomeVersion == RefGenomeVersion.V37 ? GermlineResources.blacklist37() : GermlineResources.blacklist38();
         GermlineBlacklistVCF.process(germlineBlacklistFile, germlineBlackList);
-
     }
 
     private static void createSliceFile(String file, Collection<GenomeRegion>... allRegions) throws IOException {
@@ -126,21 +126,22 @@ public class DriverGenePanelConversion {
         NamedBedFile.writeUnnamedBedFile(file, combined);
     }
 
-    private static void createNamedBedFiles(boolean includeUTR, String file, Set<String> genes, List<HmfTranscriptRegion> transcripts)
-            throws IOException {
+    private static void createNamedBedFiles(boolean includeUTR, @NotNull String file, @NotNull Set<String> genes,
+            @NotNull List<HmfTranscriptRegion> transcripts) throws IOException {
         final List<NamedBed> somaticBed = HmfExonPanelBed.createNamedCodingRegions(includeUTR, genes, transcripts);
         NamedBedFile.writeBedFile(file, somaticBed);
     }
 
-    private static List<GenomeRegion> createUnnamedBedFiles(boolean includeUTR, String file, Set<String> genes,
-            List<HmfTranscriptRegion> transcripts) throws IOException {
+    @NotNull
+    private static List<GenomeRegion> createUnnamedBedFiles(boolean includeUTR, @NotNull String file, @NotNull Set<String> genes,
+            @NotNull List<HmfTranscriptRegion> transcripts) throws IOException {
         final List<GenomeRegion> somaticBed = HmfExonPanelBed.createUnnamedCodingRegions(includeUTR, genes, transcripts);
         NamedBedFile.writeUnnamedBedFile(file, somaticBed);
         return somaticBed;
     }
 
     @NotNull
-    static Set<String> somaticGenes(@NotNull final List<DriverGene> genePanel) {
+    private static Set<String> somaticGenes(@NotNull final List<DriverGene> genePanel) {
         final Set<String> actionableGenes = Sets.newHashSet();
         for (DriverGene driverGene : genePanel) {
             if (driverGene.reportSomatic()) {
@@ -152,7 +153,7 @@ public class DriverGenePanelConversion {
     }
 
     @NotNull
-    static Set<String> germlineGenes(@NotNull final List<DriverGene> genePanel) {
+    private static Set<String> germlineGenes(@NotNull final List<DriverGene> genePanel) {
         final Set<String> actionableGenes = Sets.newHashSet();
         for (DriverGene driverGene : genePanel) {
             if (driverGene.reportGermline()) {
@@ -165,7 +166,7 @@ public class DriverGenePanelConversion {
     }
 
     @NotNull
-    static Set<String> germlineHotspotGenes(@NotNull final List<DriverGene> genePanel) {
+    private static Set<String> germlineHotspotGenes(@NotNull final List<DriverGene> genePanel) {
         final Set<String> actionableGenes = Sets.newHashSet();
         for (DriverGene driverGene : genePanel) {
             if (driverGene.reportGermlineHotspot() != DriverGeneGermlineReporting.NONE) {
@@ -177,8 +178,8 @@ public class DriverGenePanelConversion {
         return actionableGenes;
     }
 
-    private static String getResourceURL(String location) {
+    @NotNull
+    private static String getResourceURL(@NotNull String location) {
         return DriverGenePanelConversion.class.getResource(location).toString();
     }
-
 }
