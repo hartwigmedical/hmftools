@@ -57,7 +57,7 @@ public class ExternalFusionCompare
     {
         mConfig = config;
 
-        mGeneTransCache = new EnsemblDataCache(config.EnsemblDataCache, RefGenomeVersion.RG_37);
+        mGeneTransCache = new EnsemblDataCache(config.EnsemblDataCache, RefGenomeVersion.V37);
         mGeneTransCache.setRequiredData(false, false, false, false);
         mGeneTransCache.setRequireGeneSynonyms();
         mGeneTransCache.load(true); // only need  genes, not transcript data
@@ -304,7 +304,7 @@ public class ExternalFusionCompare
             return matchStr + mConfig.Fusions.ComparisonSource;
     }
 
-    private final Map<String, List<ExternalFusionData>> loadExternalFusionData(final String sampleId)
+    private Map<String, List<ExternalFusionData>> loadExternalFusionData(final String sampleId)
     {
         final Map<String, List<ExternalFusionData>> mappedFusions = Maps.newHashMap();
 

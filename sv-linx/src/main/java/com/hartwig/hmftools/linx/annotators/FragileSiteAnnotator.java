@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.linx.annotators;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 
@@ -10,6 +9,7 @@ import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -49,7 +49,7 @@ public class FragileSiteAnnotator
                     continue;
 
                 final BaseRegion genomeRegion = new BaseRegion(
-                        refGenomeChromosome(items[FS_COL_CHR], RG_VERSION),
+                        RefGenomeFunctions.refGenomeChromosome(items[FS_COL_CHR], RG_VERSION),
                         Integer.parseInt(items[FS_COL_POS_START]),
                         Integer.parseInt(items[FS_COL_POS_END]));
 

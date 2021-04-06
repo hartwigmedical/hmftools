@@ -3,16 +3,15 @@ package com.hartwig.hmftools.svtools.cohort;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
@@ -28,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import org.apache.commons.cli.CommandLine;
@@ -174,7 +174,7 @@ public class CohortLineElements
                 String[] items = line.split(",");
 
                 final BaseRegion lineRegion = new BaseRegion(
-                        refGenomeChromosome(items[fieldsIndexMap.get("Chromosome")], RG_VERSION),
+                        RefGenomeFunctions.refGenomeChromosome(items[fieldsIndexMap.get("Chromosome")], RG_VERSION),
                         Integer.parseInt(items[fieldsIndexMap.get("PosStart")]),
                         Integer.parseInt(items[fieldsIndexMap.get("PosEnd")]));
 
@@ -211,7 +211,7 @@ public class CohortLineElements
                 int pos2 = Integer.parseInt(items[fieldsIndexMap.get("NegativePosition")]);
 
                 final BaseRegion lineRegion = new BaseRegion(
-                        refGenomeChromosome(items[fieldsIndexMap.get("Chromosome")], RG_VERSION),
+                        RefGenomeFunctions.refGenomeChromosome(items[fieldsIndexMap.get("Chromosome")], RG_VERSION),
                         pos1 < pos2 ? pos1 : pos2, pos1 < pos2 ? pos2 : pos1);
 
                 mPolymorphicLineElements.add(lineRegion);

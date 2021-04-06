@@ -51,14 +51,14 @@ public class DriverGenePanelConversion {
             }
         }
 
-        process(RefGenomeVersion.RG_37, inputDriverGenes);
-        process(RefGenomeVersion.RG_38, outputDriverGenes);
+        process(RefGenomeVersion.V37, inputDriverGenes);
+        process(RefGenomeVersion.V38, outputDriverGenes);
 
     }
 
     private static void process(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final List<DriverGene> driverGenes)
             throws IOException {
-        final String qualityBedFile = refGenomeVersion == RefGenomeVersion.RG_37
+        final String qualityBedFile = refGenomeVersion == RefGenomeVersion.V37
                 ? getResourceURL("/drivercatalog/QualityRecalibration.37.bed")
                 : getResourceURL("/drivercatalog/QualityRecalibration.38.bed");
         Collection<GenomeRegion> qualityRecalibrationRegions = BEDFileLoader.fromBedFile(qualityBedFile).values();
@@ -89,7 +89,7 @@ public class DriverGenePanelConversion {
 
         // Write out actionable bed files
         final List<HmfTranscriptRegion> transcripts =
-                refGenomeVersion == RefGenomeVersion.RG_37 ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
+                refGenomeVersion == RefGenomeVersion.V37 ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
 
         // Write out driver gene panel
         LOGGER.info("Creating {} {} bed file", refGenomeVersion, "somatic");
@@ -110,7 +110,7 @@ public class DriverGenePanelConversion {
 
         // Write out germline blacklist file.
         final List<VariantContext> germlineBlackList =
-                refGenomeVersion == RefGenomeVersion.RG_37 ? GermlineResources.blacklist37() : GermlineResources.blacklist38();
+                refGenomeVersion == RefGenomeVersion.V37 ? GermlineResources.blacklist37() : GermlineResources.blacklist38();
         GermlineBlacklistVCF.process(germlineBlacklistFile, germlineBlackList);
 
     }

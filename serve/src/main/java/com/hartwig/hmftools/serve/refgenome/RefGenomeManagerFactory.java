@@ -29,8 +29,8 @@ public final class RefGenomeManagerFactory {
     @NotNull
     public static RefGenomeManager createFromServeConfig(@NotNull ServeConfig config) throws IOException {
         Map<RefGenomeVersion, RefGenomeResource> refGenomeResourceMap = Maps.newHashMap();
-        refGenomeResourceMap.put(RefGenomeVersion.RG_37, buildRefGenomeResource37(config));
-        refGenomeResourceMap.put(RefGenomeVersion.RG_38, buildRefGenomeResource38(config));
+        refGenomeResourceMap.put(RefGenomeVersion.V37, buildRefGenomeResource37(config));
+        refGenomeResourceMap.put(RefGenomeVersion.V38, buildRefGenomeResource38(config));
         return new RefGenomeManager(refGenomeResourceMap);
     }
 
@@ -41,14 +41,14 @@ public final class RefGenomeManagerFactory {
         Map<String, HmfTranscriptRegion> transcriptMap37 = HmfGenePanelSupplier.allGenesMap37();
         ProteinResolver proteinResolver37 = config.skipHotspotResolving()
                 ? ProteinResolverFactory.dummy()
-                : ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.RG_37, fastaFile37, transcriptMap37);
+                : ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.V37, fastaFile37, transcriptMap37);
 
         return ImmutableRefGenomeResource.builder()
                 .fastaFile(fastaFile37)
                 .driverGenes(readDriverGenesFromFile(config.driverGene37Tsv()))
                 .knownFusionCache(buildKnownFusionCacheFromFile(config.knownFusion37File()))
                 .canonicalTranscriptPerGeneMap(transcriptMap37)
-                .putChainToOtherRefGenomeMap(RefGenomeVersion.RG_38, config.refGenome37To38Chain())
+                .putChainToOtherRefGenomeMap(RefGenomeVersion.V38, config.refGenome37To38Chain())
                 .proteinResolver(proteinResolver37)
                 .build();
     }
@@ -60,14 +60,14 @@ public final class RefGenomeManagerFactory {
         Map<String, HmfTranscriptRegion> transcriptMap38 = HmfGenePanelSupplier.allGenesMap38();
         ProteinResolver proteinResolver38 = config.skipHotspotResolving()
                 ? ProteinResolverFactory.dummy()
-                : ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.RG_38, fastaFile38, transcriptMap38);
+                : ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.V38, fastaFile38, transcriptMap38);
 
         return ImmutableRefGenomeResource.builder()
                 .fastaFile(fastaFile38)
                 .driverGenes(readDriverGenesFromFile(config.driverGene38Tsv()))
                 .knownFusionCache(buildKnownFusionCacheFromFile(config.knownFusion38File()))
                 .canonicalTranscriptPerGeneMap(transcriptMap38)
-                .putChainToOtherRefGenomeMap(RefGenomeVersion.RG_37, config.refGenome38To37Chain())
+                .putChainToOtherRefGenomeMap(RefGenomeVersion.V37, config.refGenome38To37Chain())
                 .proteinResolver(proteinResolver38)
                 .build();
     }

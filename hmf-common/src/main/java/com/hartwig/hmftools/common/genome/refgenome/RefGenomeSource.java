@@ -43,5 +43,4 @@ public class RefGenomeSource implements RefGenomeInterface
         }
     }
 
-
 }

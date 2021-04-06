@@ -18,7 +18,7 @@ class DndsGeneName {
     public DndsGeneName(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final Set<String> dndsGenes) {
         this.dndsGenes = dndsGenes;
         this.dndsGeneNameMap = new DndsGeneNameMap();
-        if (refGenomeVersion == RefGenomeVersion.RG_37) {
+        if (refGenomeVersion == RefGenomeVersion.V37) {
             alignmentMapPredicate = aDriverGene -> dndsGeneNameMap.isValidHg19Gene(aDriverGene.gene());
             dndsGeneFunction = DriverGene::gene;
         } else {

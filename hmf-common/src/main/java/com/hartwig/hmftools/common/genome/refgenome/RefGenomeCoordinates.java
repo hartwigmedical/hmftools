@@ -13,8 +13,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum RefGenomeCoordinates
-{
+public enum RefGenomeCoordinates {
     COORDS_37(fromResource("lengths.37.tsv"), fromResource("centromeres.37.tsv")),
     COORDS_38(fromResource("lengths.38.tsv"), fromResource("centromeres.38.tsv"));
 

@@ -19,7 +19,7 @@ public class DriverGenePanelFactoryTest {
 
     @NotNull
     public static DriverGenePanel testGenePanel() {
-        return DriverGenePanelFactory.create(RefGenomeVersion.RG_37, builtIn());
+        return DriverGenePanelFactory.create(RefGenomeVersion.V37, builtIn());
     }
 
     @NotNull

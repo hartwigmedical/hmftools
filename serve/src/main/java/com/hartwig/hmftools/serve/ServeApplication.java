@@ -44,7 +44,7 @@ public class ServeApplication {
 
         ExtractionResult result = algo.run(config);
 
-        new ExtractionResultWriter(config.outputDir(), RefGenomeVersion.RG_37).write(result);
+        new ExtractionResultWriter(config.outputDir(), RefGenomeVersion.V37).write(result);
 
         LOGGER.info("Done!");
     }

@@ -3,17 +3,6 @@ package com.hartwig.hmftools.isofox.novel.cohort;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.cohort.AnalysisType.ALT_SPLICE_JUNCTION;
-import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.SPLICE_JUNC;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.EXON_INTRON;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.MIXED_TRANS;
@@ -22,6 +11,17 @@ import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.NOVEL_5_PRIM
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.NOVEL_EXON;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.SKIPPED_EXONS;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.UNKNOWN;
+import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.ALT_SPLICE_JUNCTION;
+import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.ACCEPTOR;
 import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.DONOR;
 import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.NONE;
@@ -30,8 +30,8 @@ import static com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache.PSI_NO_RA
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache.SS_SUPPORT;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache.SS_TRAVERSED;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache.calcSupportRate;
-import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatchType.NOVEL;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatchType.DISRUPTION;
+import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatchType.NOVEL;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
@@ -45,17 +45,17 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
 import org.apache.commons.cli.CommandLine;
@@ -100,7 +100,7 @@ public class SpliceVariantMatcher
 
         boolean allTranscripts = cmd.hasOption(INCLUDE_ALL_TRANSCRIPTS);
 
-        mGeneTransCache = new EnsemblDataCache(mConfig.EnsemblDataCache, RefGenomeVersion.RG_37);
+        mGeneTransCache = new EnsemblDataCache(mConfig.EnsemblDataCache, RefGenomeVersion.V37);
         mGeneTransCache.setRequiredData(true, false, false, !allTranscripts);
         mGeneTransCache.load(false);
 
@@ -233,7 +233,7 @@ public class SpliceVariantMatcher
         mDataCache.writeVariantCache(sampleId, spliceVariants, svBreakends);
     }
 
-    private final List<SpliceVariant> getSomaticVariants(final String sampleId)
+    private List<SpliceVariant> getSomaticVariants(final String sampleId)
     {
         if(mDataCache.hasCachedSomaticVariants())
             return mDataCache.retrieveSomaticVariants(sampleId);
@@ -272,7 +272,7 @@ public class SpliceVariantMatcher
         return spliceVariants;
     }
 
-    private final Map<String,List<Integer>> getStructuralVariants(final String sampleId)
+    private Map<String,List<Integer>> getStructuralVariants(final String sampleId)
     {
         if(mDataCache.hasCachedSvBreakends())
             return mDataCache.retrieveSvBreakends(sampleId);

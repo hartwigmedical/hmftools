@@ -9,22 +9,22 @@ public class RefGenomeVersionTest {
     @Test
     public void canVersionFilePaths() {
         String path = "/this/is/my/path.vcf";
-        assertEquals("/this/is/my/path.37.vcf", RefGenomeVersion.RG_37.addVersionToFilePath(path));
+        assertEquals("/this/is/my/path.37.vcf", RefGenomeVersion.V37.addVersionToFilePath(path));
 
         String path2 = "file.testing.tsv";
-        assertEquals("file.testing.37.tsv", RefGenomeVersion.RG_37.addVersionToFilePath(path2));
+        assertEquals("file.testing.37.tsv", RefGenomeVersion.V37.addVersionToFilePath(path2));
 
         String path3 = "file.vcf.gz";
-        assertEquals("file.37.vcf.gz", RefGenomeVersion.RG_37.addVersionToFilePath(path3));
+        assertEquals("file.37.vcf.gz", RefGenomeVersion.V37.addVersionToFilePath(path3));
     }
 
     @Test(expected = IllegalStateException.class)
     public void cannotHandlePathsWithNoExtension() {
-        RefGenomeVersion.RG_37.addVersionToFilePath("path");
+        RefGenomeVersion.V37.addVersionToFilePath("path");
     }
 
     @Test(expected = IllegalStateException.class)
     public void cannotHandlePathWithJustGzipExtension() {
-        RefGenomeVersion.RG_37.addVersionToFilePath("path.gz");
+        RefGenomeVersion.V37.addVersionToFilePath("path.gz");
     }
 }

@@ -57,7 +57,7 @@ public class ProtectAlgoTest {
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .build();
 
-        ActionableEvents events = ActionableEventsLoader.readFromDir(SERVE_DIR, RefGenomeVersion.RG_37);
+        ActionableEvents events = ActionableEventsLoader.readFromDir(SERVE_DIR, RefGenomeVersion.V37);
         ProtectAlgo algo = ProtectAlgo.buildAlgoFromServeActionability(events, Sets.newHashSet());
 
         assertNotNull(algo.run(config));

@@ -1,65 +1,49 @@
 package com.hartwig.hmftools.common.genome.refgenome;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public enum RefGenomeVersion {
-    RG_37("37"),
-    RG_38("38"),
-    RG_19("37"); // included to distinguish from GRCh37 since has has the 'chr' prefix
+    V37("37", true),
+    V38("38", false),
+    HG19("37", true); // included to distinguish from GRCh37 since has has the 'chr' prefix
 
     // config option
     public static final String REF_GENOME_VERSION = "ref_genome_version";
 
-    public static final String CHR_PREFIX = "chr";
-
+    private static final Logger LOGGER = LogManager.getLogger(RefGenomeVersion.class);
     private static final String GZIP_EXTENSION = ".gz";
 
-    public static boolean is37(final RefGenomeVersion version) {
-        return version == RG_37 || version == RG_19;
-    }
-
     @NotNull
-    public static RefGenomeVersion from(final String version) {
-        if (version.equals(RG_37.toString()) || version.equals("37") || version.equals("HG37")) {
-            return RG_37;
+    public static RefGenomeVersion from(@NotNull final String version) {
+        // TODO Remove handling of RG per 1st of july 2021
+        if (version.startsWith("RG")) {
+            LOGGER.warn("Avoid using ref genome versions starting with RG: {}", version);
         }
 
-        if (version.equals(RG_38.toString()) || version.equals("38") || version.equals("HG38")) {
-            return RG_38;
+        if (version.equals(V37.toString()) || version.equals("RG_37") || version.equals("37") || version.equals("HG37")) {
+            return V37;
+        } else if (version.equals(V38.toString()) || version.equals("RG_38") || version.equals("38") || version.equals("HG38")) {
+            return V38;
+        } else if (version.equals(HG19.toString()) || version.equals("RG_19") || version.equals("19") || version.equals("HG19")) {
+            return HG19;
         }
 
-        if (version.equals(RG_19.toString()) || version.equals("19") || version.equals("HG19")) {
-            return RG_19;
-        }
-
-        return RG_37;
-    }
-
-    @NotNull
-    public static String refGenomeChromosome(@NotNull final String chromosome, @NotNull RefGenomeVersion version) {
-        if ((version == RG_38 || version == RG_19) && !chromosome.contains(CHR_PREFIX)) {
-            return CHR_PREFIX + chromosome;
-        } else if (version == RG_37) {
-            return stripChromosome(chromosome);
-        } else {
-            return chromosome;
-        }
-    }
-
-    @NotNull
-    public static String stripChromosome(@NotNull final String chromosome) {
-        if (chromosome.startsWith(CHR_PREFIX)) {
-            return chromosome.substring(CHR_PREFIX.length());
-        }
-
-        return chromosome;
+        throw new IllegalArgumentException("Cannot resolve ref genome version: " + version);
     }
 
     @NotNull
     private final String identifier;
+    private final boolean is37;
 
-    RefGenomeVersion(@NotNull final String identifier) {
+    RefGenomeVersion(@NotNull final String identifier, final boolean is37) {
         this.identifier = identifier;
+        this.is37 = is37;
+    }
+
+    public boolean is37() {
+        return is37;
     }
 
     @NotNull

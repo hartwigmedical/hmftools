@@ -27,7 +27,7 @@ public class ProtectApplication  {
     private static final Logger LOGGER = LogManager.getLogger(ProtectApplication.class);
     private static final String VERSION = ProtectApplication.class.getPackage().getImplementationVersion();
 
-    private static final RefGenomeVersion REF_GENOME_VERSION = RefGenomeVersion.RG_37;
+    private static final RefGenomeVersion REF_GENOME_VERSION = RefGenomeVersion.V37;
 
     public static void main(@NotNull String[] args) throws IOException {
         LOGGER.info("Running PROTECT v{}", VERSION);

@@ -2,15 +2,13 @@ package com.hartwig.hmftools.isofox;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.CHR_PREFIX;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_19;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.is37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_ENRICHED_GENE_READ_LIMIT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MAX_FRAGMENT_SIZE;
@@ -205,7 +203,7 @@ public class IsofoxConfig
         else
         {
             RefGenomeVersion refGenVersionOverride = checkRefGenomeVersion();
-            RefGenVersion = refGenVersionOverride != null ? refGenVersionOverride : RG_37;
+            RefGenVersion = refGenVersionOverride != null ? refGenVersionOverride : V37;
         }
 
         RestrictedGeneIds = Lists.newArrayList();
@@ -243,7 +241,7 @@ public class IsofoxConfig
             ISF_LOGGER.info("file({}) loaded {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
 
-        ExcludedRegion = is37(RefGenVersion) ? EXCLUDED_REGION_1_REF_37 : EXCLUDED_REGION_1_REF_38;
+        ExcludedRegion = RefGenVersion.is37() ? EXCLUDED_REGION_1_REF_37 : EXCLUDED_REGION_1_REF_38;
 
         GeneReadLimit = Integer.parseInt(cmd.getOptionValue(GENE_READ_LIMIT, "0"));
 
@@ -473,9 +471,9 @@ public class IsofoxConfig
             return null;
 
         if(samReader.getFileHeader().getSequenceDictionary().getSequences().stream().anyMatch(x -> x.getSequenceName().contains(CHR_PREFIX)))
-            return RG_19;
+            return HG19;
 
-        return RG_37;
+        return V37;
     }
 
     public IsofoxConfig()
@@ -493,7 +491,7 @@ public class IsofoxConfig
         OutputDir = null;
         BamFile = null;
         RefGenomeFile = null;
-        RefGenVersion = RG_37;
+        RefGenVersion = V37;
         RefGenome = new MockRefGenome();
         CanonicalTranscriptOnly = false;
         GeneReadLimit = 0;

@@ -14,7 +14,7 @@ public class KnownExonFileTest {
 
     @Test
     public void canReadFromFileAndConvert() throws IOException {
-        String knownExonTsv = KnownExonFile.knownExonTsvPath(ActionabilityTestUtil.TEST_SERVE_OUTPUT_DIR, RefGenomeVersion.RG_37);
+        String knownExonTsv = KnownExonFile.knownExonTsvPath(ActionabilityTestUtil.TEST_SERVE_OUTPUT_DIR, RefGenomeVersion.V37);
         List<KnownExon> knownExons = KnownExonFile.read(knownExonTsv);
 
         assertEquals(2, knownExons.size());

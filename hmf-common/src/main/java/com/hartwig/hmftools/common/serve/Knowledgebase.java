@@ -13,15 +13,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum Knowledgebase {
-    CKB(RefGenomeVersion.RG_38, "ckb", "CKB"),
-    DOCM(RefGenomeVersion.RG_37, "docm", "DoCM"),
-    HARTWIG_COHORT(RefGenomeVersion.RG_37, "hartwig_cohort", "HMF Cohort"),
-    HARTWIG_CURATED(RefGenomeVersion.RG_37, "hartwig_curated", "HMF Curated"),
-    ICLUSION(RefGenomeVersion.RG_37, "iclusion", "iClusion"),
-    VICC_CGI(RefGenomeVersion.RG_37, "vicc_cgi", "CGI"),
-    VICC_CIVIC(RefGenomeVersion.RG_37, "vicc_civic", "CIViC"),
-    VICC_JAX(RefGenomeVersion.RG_37, "vicc_jax", "CKB Core"),
-    VICC_ONCOKB(RefGenomeVersion.RG_37, "vicc_oncokb", "OncoKB");
+    CKB(RefGenomeVersion.V38, "ckb", "CKB"),
+    DOCM(RefGenomeVersion.V37, "docm", "DoCM"),
+    HARTWIG_COHORT(RefGenomeVersion.V37, "hartwig_cohort", "HMF Cohort"),
+    HARTWIG_CURATED(RefGenomeVersion.V37, "hartwig_curated", "HMF Curated"),
+    ICLUSION(RefGenomeVersion.V37, "iclusion", "iClusion"),
+    VICC_CGI(RefGenomeVersion.V37, "vicc_cgi", "CGI"),
+    VICC_CIVIC(RefGenomeVersion.V37, "vicc_civic", "CIViC"),
+    VICC_JAX(RefGenomeVersion.V37, "vicc_jax", "CKB Core"),
+    VICC_ONCOKB(RefGenomeVersion.V37, "vicc_oncokb", "OncoKB");
 
     private static final Logger LOGGER = LogManager.getLogger(Knowledgebase.class);
 

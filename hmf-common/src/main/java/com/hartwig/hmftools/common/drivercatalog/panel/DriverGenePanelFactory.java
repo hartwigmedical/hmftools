@@ -23,7 +23,7 @@ public final class DriverGenePanelFactory {
 
     @NotNull
     public static DriverGenePanel empty() {
-        return create(RefGenomeVersion.RG_37, Collections.emptyList());
+        return create(RefGenomeVersion.V37, Collections.emptyList());
     }
 
     @NotNull

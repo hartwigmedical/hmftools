@@ -14,7 +14,7 @@ public class KnownCodonFileTest {
 
     @Test
     public void canReadFromFileAndConvert() throws IOException {
-        String knownCodonTsv = KnownCodonFile.knownCodonTsvPath(ActionabilityTestUtil.TEST_SERVE_OUTPUT_DIR, RefGenomeVersion.RG_37);
+        String knownCodonTsv = KnownCodonFile.knownCodonTsvPath(ActionabilityTestUtil.TEST_SERVE_OUTPUT_DIR, RefGenomeVersion.V37);
         List<KnownCodon> knownCodons = KnownCodonFile.read(knownCodonTsv);
 
         assertEquals(2, knownCodons.size());

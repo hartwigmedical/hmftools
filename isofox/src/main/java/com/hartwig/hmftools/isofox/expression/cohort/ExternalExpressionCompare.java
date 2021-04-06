@@ -58,7 +58,7 @@ public class ExternalExpressionCompare
         
         mGeneTransMap = Maps.newHashMap();
         
-        mGeneTransCache = new EnsemblDataCache(config.EnsemblDataCache, RefGenomeVersion.RG_37);
+        mGeneTransCache = new EnsemblDataCache(config.EnsemblDataCache, RefGenomeVersion.V37);
         mGeneTransCache.setRequiredData(false, false, false, false);
         buildTransGeneMap();
     }
@@ -317,7 +317,7 @@ public class ExternalExpressionCompare
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to load external expression data file({}): {}", filename.toString(), e.toString());
+            ISF_LOGGER.error("failed to load external expression data file({}): {}", filename, e.toString());
         }
 
         return expressionDataMap;

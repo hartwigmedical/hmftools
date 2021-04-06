@@ -22,7 +22,7 @@ public class TransvarTestApplication {
         Configurator.setRootLevel(Level.DEBUG);
 
         String refGenomeFastaFile37 = System.getProperty("user.home") + "/hmf/refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina.fasta";
-        Transvar transvar37 = Transvar.withRefGenome(RefGenomeVersion.RG_37, refGenomeFastaFile37, HmfGenePanelSupplier.allGenesMap37());
+        Transvar transvar37 = Transvar.withRefGenome(RefGenomeVersion.V37, refGenomeFastaFile37, HmfGenePanelSupplier.allGenesMap37());
 
         extractAndPrintHotspots(transvar37, "FGFR3", "ENST00000440486", "K650Q");
 

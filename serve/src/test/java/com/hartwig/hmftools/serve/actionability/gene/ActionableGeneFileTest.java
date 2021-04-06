@@ -15,7 +15,7 @@ public class ActionableGeneFileTest {
     @Test
     public void canReadFromFileAndConvert() throws IOException {
         String actionableGeneTsv =
-                ActionableGeneFile.actionableGeneTsvPath(ActionabilityTestUtil.TEST_SERVE_OUTPUT_DIR, RefGenomeVersion.RG_37);
+                ActionableGeneFile.actionableGeneTsvPath(ActionabilityTestUtil.TEST_SERVE_OUTPUT_DIR, RefGenomeVersion.V37);
         List<ActionableGene> actionableGenes = ActionableGeneFile.read(actionableGeneTsv);
 
         assertEquals(7, actionableGenes.size());

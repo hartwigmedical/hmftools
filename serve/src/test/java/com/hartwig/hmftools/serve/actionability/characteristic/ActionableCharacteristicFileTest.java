@@ -16,7 +16,7 @@ public class ActionableCharacteristicFileTest {
     public void canReadFromFileAndConvert() throws IOException {
         String actionableCharacteristicTsv =
                 ActionableCharacteristicFile.actionableCharacteristicTsvPath(ActionabilityTestUtil.TEST_SERVE_OUTPUT_DIR,
-                        RefGenomeVersion.RG_37);
+                        RefGenomeVersion.V37);
         List<ActionableCharacteristic> actionableCharacteristics = ActionableCharacteristicFile.read(actionableCharacteristicTsv);
 
         assertEquals(2, actionableCharacteristics.size());

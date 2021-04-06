@@ -94,9 +94,9 @@ class TransvarProcessImpl implements TransvarProcess {
     @NotNull
     private static String toTransvarRefVersion(@NotNull RefGenomeVersion refGenomeVersion) {
         switch (refGenomeVersion) {
-            case RG_37:
+            case V37:
                 return "hg19";
-            case RG_38:
+            case V38:
                 return "hg38";
             default:
                 throw new IllegalStateException("Could not convert ref genome version to transvar ref version: " + refGenomeVersion);

@@ -38,7 +38,7 @@ public class LoadDriverGenePanel {
 
         String refGenomeVersionArg = cmd.getOptionValue(ASSEMBLY, "hg19");
 
-        RefGenomeVersion refGenomeVersion = refGenomeVersionArg.equals("hg19") ? RefGenomeVersion.RG_37 : RefGenomeVersion.RG_38;
+        RefGenomeVersion refGenomeVersion = refGenomeVersionArg.equals("hg19") ? RefGenomeVersion.V37 : RefGenomeVersion.V38;
         List<DriverGene> driverGenes = DriverGenePanelConfig.driverGenes(cmd);
         DriverGenePanel panel = DriverGenePanelFactory.create(refGenomeVersion, driverGenes);
 

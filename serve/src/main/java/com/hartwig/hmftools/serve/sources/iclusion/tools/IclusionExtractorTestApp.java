@@ -54,7 +54,7 @@ public class IclusionExtractorTestApp {
         String fastaFile;
         ProteinResolver proteinResolver;
 
-        RefGenomeVersion refGenomeVersion = RefGenomeVersion.RG_37;
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.V37;
         Map<String, HmfTranscriptRegion> allGenesMap = HmfGenePanelSupplier.allGenesMap37();
 
         if (hostname.toLowerCase().contains("datastore")) {

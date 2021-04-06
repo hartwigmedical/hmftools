@@ -2,11 +2,10 @@ package com.hartwig.hmftools.linx.annotators;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
@@ -29,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -86,7 +86,7 @@ public class LineElementAnnotator {
                     continue;
 
                 final BaseRegion lineRegion = new BaseRegion(
-                        refGenomeChromosome(items[LE_COL_CHR], RG_VERSION),
+                        RefGenomeFunctions.refGenomeChromosome(items[LE_COL_CHR], RG_VERSION),
                         Integer.parseInt(items[LE_COL_POS_START]),
                         Integer.parseInt(items[LE_COL_POS_END]));
 

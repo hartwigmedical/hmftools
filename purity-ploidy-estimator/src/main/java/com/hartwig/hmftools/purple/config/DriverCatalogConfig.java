@@ -73,7 +73,7 @@ public interface DriverCatalogConfig {
 
             final List<DriverGene> driverGenes = DriverGenePanelConfig.driverGenes(cmd);
             final RefGenomeVersion driverGeneRefGenomeVersion =
-                    refGenomeData.isHg38() ? RefGenomeVersion.RG_38 : RefGenomeVersion.RG_37;
+                    refGenomeData.isHg38() ? RefGenomeVersion.V38 : RefGenomeVersion.V37;
             genePanel = DriverGenePanelFactory.create(driverGeneRefGenomeVersion, driverGenes);
 
             if (germlineConfig.enabled()) {
