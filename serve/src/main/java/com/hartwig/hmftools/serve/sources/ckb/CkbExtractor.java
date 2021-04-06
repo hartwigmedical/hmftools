@@ -66,6 +66,8 @@ public class CkbExtractor {
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
         for (CkbEntry entry : ckbEntries) {
+            LOGGER.info("profileName: {}", entry.profileName());
+            LOGGER.info("id profileName: {}", entry.profileId());
             if (entry.variants().size() == 1) {
                 // TODO: Canonical transcript in CKB is refseq. Could maybe be converted to ensembl.
                 eventExtractions.add(eventExtractor.extract(entry.variants().get(0).gene().geneSymbol(),

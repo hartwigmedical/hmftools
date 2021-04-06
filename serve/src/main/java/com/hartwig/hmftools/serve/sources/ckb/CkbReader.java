@@ -21,8 +21,9 @@ public final class CkbReader {
 
     @NotNull
     public static List<CkbEntry> filterAndCurateRelevantEntries(@NotNull List<CkbEntry> ckbEntries, @Nullable Integer maxFilesToReadPerType) {
+        List<CkbEntry> ckbEntriesPart = ckbEntries.subList(0, maxFilesToReadPerType);
 
-        return filter(curate(ckbEntries));
+        return filter(curate(ckbEntriesPart));
     }
 
     @NotNull
