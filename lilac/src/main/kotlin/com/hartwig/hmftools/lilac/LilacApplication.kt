@@ -124,12 +124,12 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         logger.info("Querying records from reference bam ${config.referenceBam}")
         val nucleotideFragmentFactory = NucleotideFragmentFactory(config.minBaseQual, aminoAcidSequencesWithInserts, aminoAcidSequencesWithDeletes)
         val transcripts = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
-        val bamReader = SAMRecordReader(1000, config.refGenome, transcripts, nucleotideFragmentFactory)
-        val referenceNucleotideFragments = bamReader.readFromBam(config.referenceBam).enrichGenes()
+        val referenceBamReader = SAMRecordReader(1000, config.refGenome, transcripts, nucleotideFragmentFactory)
+        val referenceNucleotideFragments = referenceBamReader.readFromBam(config.referenceBam).enrichGenes()
 
         val tumorNucleotideFragments = if (config.tumorBam.isNotEmpty()) {
             logger.info("Querying records from tumor bam ${config.tumorBam}")
-            bamReader.readFromBam(config.tumorBam).enrichGenes()
+            SAMRecordReader(1000, config.refGenome, transcripts, nucleotideFragmentFactory).readFromBam(config.tumorBam).enrichGenes()
         } else {
             listOf()
         }
@@ -168,7 +168,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         // Common Candidate Recovery
         logger.info("Recovering common un-phased candidates:")
         val commonCandidateAlleles = config.commonAlleles
-                .filter { it !in phasedCandidateAlleles && it in allUnphasedCandidates}
+                .filter { it !in phasedCandidateAlleles && it in allUnphasedCandidates }
 
         val candidateAlleles = phasedCandidateAlleles + commonCandidateAlleles
         val candidateSequences = aminoAcidSequences.filter { it.allele in candidateAlleles }
@@ -221,8 +221,8 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         val aminoAcidQC = AminoAcidQC.create(winningSequences, referenceAminoAcidCounts)
         val haplotypeQC = HaplotypeQC.create(3, winningSequences, aPhasedEvidence + bPhasedEvidence + cPhasedEvidence, referenceAminoAcidCounts)
-        val bamQC = BamQC.create(bamReader)
-        val coverageQC = CoverageQC.create(referenceFragmentAlleles.size, winningReferenceCoverage)
+        val bamQC = BamQC.create(referenceBamReader)
+        val coverageQC = CoverageQC.create(referenceNucleotideFragments.size, winningReferenceCoverage)
         val lilacQC = LilacQC(aminoAcidQC, bamQC, coverageQC, haplotypeQC)
 
         logger.info("QC Stats:")
@@ -271,6 +271,17 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
                 .filter { it.sequences.isNotEmpty() }
     }
 
+
+    private fun createSynonmous(template: HlaSequenceLoci): HlaSequenceLoci {
+        val modSequences = template.sequences.toMutableList()
+        modSequences[1011] = "A"
+        modSequences[1012] = "G"
+        modSequences[1013] = "T"
+
+        return HlaSequenceLoci(HlaAllele("C*04:82:01"), modSequences)
+    }
+
+
     private fun aminoAcidLoci(inputFilename: String): List<HlaSequenceLoci> {
         val sequences = HlaSequenceFile.readFile(inputFilename)
                 .filter { it.allele !in EXCLUDED_ALLELES }
@@ -286,7 +297,6 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         executorService.shutdown()
         logger.info("Finished in ${(System.currentTimeMillis() - startTime) / 1000} seconds")
     }
-
 
 
     private fun List<HlaAlleleCoverage>.alleles(): List<HlaAllele> {
