@@ -34,10 +34,9 @@ public class GermlineLowTumorVCNEnrichmentTest {
 
     @Test
     public void testOther() {
-        assertFiltered(false, createVariant(MIN_QUAL_HOTSPOT, LOW_VN, false));
-        assertFiltered(false, createVariant(MIN_QUAL_HOTSPOT - 1, LOW_VN, false));
         assertFiltered(false, createVariant(MIN_QUAL_OTHER, LOW_VN, false));
         assertFiltered(true, createVariant(MIN_QUAL_OTHER - 1, LOW_VN, false));
+        assertFiltered(true, createVariant(MIN_QUAL_HOTSPOT, LOW_VN, false));
     }
 
     private void assertFiltered(boolean expectedFiltered, VariantContext victim) {
