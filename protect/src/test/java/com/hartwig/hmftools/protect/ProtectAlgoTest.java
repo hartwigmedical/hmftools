@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.serve.RefGenomeVersion;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
 
@@ -57,7 +57,7 @@ public class ProtectAlgoTest {
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .build();
 
-        ActionableEvents events = ActionableEventsLoader.readFromDir(SERVE_DIR, RefGenomeVersion.V37);
+        ActionableEvents events = ActionableEventsLoader.readFromDir(SERVE_DIR, RefGenomeVersion.RG_37);
         ProtectAlgo algo = ProtectAlgo.buildAlgoFromServeActionability(events, Sets.newHashSet());
 
         assertNotNull(algo.run(config));

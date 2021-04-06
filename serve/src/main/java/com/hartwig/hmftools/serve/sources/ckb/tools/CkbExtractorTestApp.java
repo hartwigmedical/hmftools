@@ -13,8 +13,8 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.serve.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.curation.DoidLookupFactory;
@@ -62,7 +62,7 @@ public class CkbExtractorTestApp {
         LOGGER.debug(" Read {} known fusions from {}", fusionCache.getData().size(), knownFusionFilePath);
 
         String fastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh38.no.alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna";
-        RefGenomeVersion refGenomeVersion = RefGenomeVersion.V38;
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.RG_38;
         Map<String, HmfTranscriptRegion> allGenesMap = HmfGenePanelSupplier.allGenesMap38();
         ProteinResolver proteinResolver = ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, fastaFile, allGenesMap);
         RefGenomeResource refGenomeResource = ImmutableRefGenomeResource.builder()

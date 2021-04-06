@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.serve.RefGenomeVersion;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 
 import org.apache.logging.log4j.LogManager;
@@ -94,9 +94,9 @@ class TransvarProcessImpl implements TransvarProcess {
     @NotNull
     private static String toTransvarRefVersion(@NotNull RefGenomeVersion refGenomeVersion) {
         switch (refGenomeVersion) {
-            case V37:
+            case RG_37:
                 return "hg19";
-            case V38:
+            case RG_38:
                 return "hg38";
             default:
                 throw new IllegalStateException("Could not convert ref genome version to transvar ref version: " + refGenomeVersion);

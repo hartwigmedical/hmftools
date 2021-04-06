@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.serve.RefGenomeVersion;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
 
 import org.junit.Test;
@@ -14,7 +14,7 @@ public class KnownExonFileTest {
 
     @Test
     public void canReadFromFileAndConvert() throws IOException {
-        String knownExonTsv = KnownExonFile.knownExonTsvPath(ActionabilityTestUtil.TEST_SERVE_OUTPUT_DIR, RefGenomeVersion.V37);
+        String knownExonTsv = KnownExonFile.knownExonTsvPath(ActionabilityTestUtil.TEST_SERVE_OUTPUT_DIR, RefGenomeVersion.RG_37);
         List<KnownExon> knownExons = KnownExonFile.read(knownExonTsv);
 
         assertEquals(2, knownExons.size());

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.serve.RefGenomeVersion;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.apache.logging.log4j.Level;
@@ -22,14 +22,14 @@ public class TransvarTestApplication {
         Configurator.setRootLevel(Level.DEBUG);
 
         String refGenomeFastaFile37 = System.getProperty("user.home") + "/hmf/refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina.fasta";
-        Transvar transvar37 = Transvar.withRefGenome(RefGenomeVersion.V37, refGenomeFastaFile37, HmfGenePanelSupplier.allGenesMap37());
+        Transvar transvar37 = Transvar.withRefGenome(RefGenomeVersion.RG_37, refGenomeFastaFile37, HmfGenePanelSupplier.allGenesMap37());
 
         extractAndPrintHotspots(transvar37, "FGFR3", "ENST00000440486", "K650Q");
 
         // Below should work in theory but transvar doesn't allow config of hg38 locally.
 //        String refGenomeFastaFile38 =
 //                System.getProperty("user.home") + "/hmf/refgenomes/grch38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna";
-//        Transvar transvar38 = Transvar.withRefGenome(RefGenomeVersion.V38, refGenomeFastaFile38, HmfGenePanelSupplier.allGenesMap38());
+//        Transvar transvar38 = Transvar.withRefGenome(RefGenomeVersion.RG_38, refGenomeFastaFile38, HmfGenePanelSupplier.allGenesMap38());
 //
 //        extractAndPrintHotspots(transvar38, "BRAF", "ENST00000288602", "V600E");
     }

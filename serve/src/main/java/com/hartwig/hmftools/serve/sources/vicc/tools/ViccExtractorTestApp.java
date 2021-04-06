@@ -14,8 +14,8 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.serve.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.curation.DoidLookupFactory;
@@ -53,7 +53,7 @@ public class ViccExtractorTestApp {
         String hostname = InetAddress.getLocalHost().getHostName();
         LOGGER.debug("Running on '{}'", hostname);
 
-        RefGenomeVersion refGenomeVersion = RefGenomeVersion.V37;
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.RG_37;
         String viccJsonPath;
         String driverGeneTsvPath;
         String knownFusionFilePath;

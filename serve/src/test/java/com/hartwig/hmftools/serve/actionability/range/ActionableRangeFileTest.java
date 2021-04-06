@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.serve.RefGenomeVersion;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
 
 import org.junit.Test;
@@ -15,7 +15,7 @@ public class ActionableRangeFileTest {
     @Test
     public void canReadFromFileAndConvert() throws IOException {
         String actionableRangeTsv =
-                ActionableRangeFile.actionableRangeTsvPath(ActionabilityTestUtil.TEST_SERVE_OUTPUT_DIR, RefGenomeVersion.V37);
+                ActionableRangeFile.actionableRangeTsvPath(ActionabilityTestUtil.TEST_SERVE_OUTPUT_DIR, RefGenomeVersion.RG_37);
         List<ActionableRange> actionableRanges = ActionableRangeFile.read(actionableRangeTsv);
 
         assertEquals(2, actionableRanges.size());

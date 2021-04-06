@@ -7,9 +7,9 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidParents;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
-import com.hartwig.hmftools.common.serve.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
 
@@ -27,7 +27,7 @@ public class ProtectApplication  {
     private static final Logger LOGGER = LogManager.getLogger(ProtectApplication.class);
     private static final String VERSION = ProtectApplication.class.getPackage().getImplementationVersion();
 
-    private static final RefGenomeVersion REF_GENOME_VERSION = RefGenomeVersion.V37;
+    private static final RefGenomeVersion REF_GENOME_VERSION = RefGenomeVersion.RG_37;
 
     public static void main(@NotNull String[] args) throws IOException {
         LOGGER.info("Running PROTECT v{}", VERSION);
