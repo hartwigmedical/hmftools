@@ -24,6 +24,11 @@ class SAMRecordReader(maxDistance: Int, private val refGenome: String, private v
 
     private val codingRegions = transcripts.map { GenomeRegions.create(it.chromosome(), it.codingStart() - maxDistance, it.codingEnd() + maxDistance) }
     private val unmatchedIndels = mutableMapOf<Indel, Int>()
+    private var alignmentFiltered = 0
+
+    fun alignmentFiltered(): Int {
+        return alignmentFiltered
+    }
 
     fun unmatchedIndels(minCount: Int): Map<Indel, Int> {
         return unmatchedIndels.filter { it.value >= minCount }
@@ -77,6 +82,8 @@ class SAMRecordReader(maxDistance: Int, private val refGenome: String, private v
                     } else {
                         codingRecord.indels.forEach { unmatchedIndels.compute(it) { _, u -> (u ?: 0) + 1 } }
                     }
+                } else {
+                    alignmentFiltered++
                 }
             }
 
