@@ -12,6 +12,9 @@ import htsjdk.variant.vcf.VCFCodec;
 
 final class GermlineResources {
 
+    private GermlineResources() {
+    }
+
     static List<VariantContext> grch37Whitelist() throws IOException {
         return getResource(getResourceURL("/drivercatalog/GermlineHotspots.whitelist.hg19.vcf"));
     }

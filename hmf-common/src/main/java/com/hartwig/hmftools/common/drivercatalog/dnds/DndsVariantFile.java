@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 
@@ -19,6 +20,10 @@ public final class DndsVariantFile {
 
     private static final String DELIMITER = "\t";
 
+    private DndsVariantFile() {
+    }
+
+    @NotNull
     public static List<DndsVariant> read(@NotNull final String filename) throws IOException {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
@@ -52,7 +57,7 @@ public final class DndsVariantFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("sample")
+        return new StringJoiner(DELIMITER).add("sample")
                 .add("chromosome")
                 .add("position")
                 .add("ref")
@@ -66,6 +71,7 @@ public final class DndsVariantFile {
                 .toString();
     }
 
+    @VisibleForTesting
     @NotNull
     static String toString(@NotNull final DndsVariant variant) {
         return new StringJoiner(DELIMITER).add(variant.sampleId())
@@ -87,11 +93,7 @@ public final class DndsVariantFile {
         return codingEffect != CodingEffect.UNDEFINED ? codingEffect.toString() : Strings.EMPTY;
     }
 
-    @NotNull
-    private static CodingEffect toCodingEffect(@NotNull String codingEffect) {
-        return codingEffect.isEmpty() ? CodingEffect.UNDEFINED : CodingEffect.valueOf(codingEffect);
-    }
-
+    @VisibleForTesting
     @NotNull
     static DndsVariant fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
@@ -108,5 +110,10 @@ public final class DndsVariantFile {
                 .hotspot(Boolean.parseBoolean(values[9]))
                 .repeatCount(Integer.parseInt(values[10]))
                 .build();
+    }
+
+    @NotNull
+    private static CodingEffect toCodingEffect(@NotNull String codingEffect) {
+        return codingEffect.isEmpty() ? CodingEffect.UNDEFINED : CodingEffect.valueOf(codingEffect);
     }
 }

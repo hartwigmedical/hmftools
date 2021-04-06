@@ -13,6 +13,9 @@ public final class DndsDriverGeneLikelihoodFile {
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "gene";
 
+    private DndsDriverGeneLikelihoodFile() {
+    }
+
     @NotNull
     public static List<DndsDriverGeneLikelihood> fromInputStream(@NotNull final InputStream genomeInputStream) {
         return fromLines(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));

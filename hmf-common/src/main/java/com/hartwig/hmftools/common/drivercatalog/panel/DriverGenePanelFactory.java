@@ -17,6 +17,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class DriverGenePanelFactory {
 
+    private DriverGenePanelFactory() {
+    }
+
     @NotNull
     public static DriverGenePanel empty() {
         return create(DriverGenePanelAssembly.HG19, Collections.emptyList());
