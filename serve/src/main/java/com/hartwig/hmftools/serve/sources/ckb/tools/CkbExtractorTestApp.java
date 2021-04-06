@@ -59,7 +59,7 @@ public class CkbExtractorTestApp {
             outputDir = System.getProperty("user.home") + "/tmp/serve_ckb";
             eventsTsv = outputDir + "/CkbEvents.tsv";
             missingDoidMappingTsv = "/data/common/dbs/serve/curation/missing_doids_mapping.tsv";
-            driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.hg38.tsv";
+            driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.38.tsv";
             knownFusionFilePath = "/data/common/dbs/fusions/known_fusion_data.38_v3.csv";
             fastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh38.no.alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna";
             proteinResolver = ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, fastaFile, allGenesMap);
@@ -68,7 +68,7 @@ public class CkbExtractorTestApp {
             outputDir = System.getProperty("user.home") + "/tmp/serve_ckb";
             eventsTsv = outputDir + "/CkbEvents.tsv";
             missingDoidMappingTsv = System.getProperty("user.home") + "/hmf/projects/serve/curation/missing_doids_mapping.tsv";
-            driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.hg38.tsv";
+            driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.38.tsv";
             knownFusionFilePath = System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.38_v3.csv";
             fastaFile = Strings.EMPTY;
             proteinResolver = ProteinResolverFactory.dummy();
