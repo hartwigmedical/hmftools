@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodFile;
 import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverGeneLikelihood;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,17 +23,17 @@ public final class DriverGenePanelFactory {
 
     @NotNull
     public static DriverGenePanel empty() {
-        return create(DriverGenePanelAssembly.HG19, Collections.emptyList());
+        return create(RefGenomeVersion.RG_37, Collections.emptyList());
     }
 
     @NotNull
-    public static DriverGenePanel create(@NotNull final DriverGenePanelAssembly assembly, final List<DriverGene> genes) {
+    public static DriverGenePanel create(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final List<DriverGene> genes) {
         final Map<String, String> dndsTsGenes = Maps.newHashMap();
         final Map<String, String> dndsOncoGenes = Maps.newHashMap();
 
         final List<DndsDriverGeneLikelihood> oncoLikelihoodList = oncoLikelihood();
         final Set<String> dndsGenes = oncoLikelihoodList.stream().map(DndsDriverGeneLikelihood::gene).collect(Collectors.toSet());
-        final DndsGeneName dndsGeneName = new DndsGeneName(assembly, dndsGenes);
+        final DndsGeneName dndsGeneName = new DndsGeneName(refGenomeVersion, dndsGenes);
 
         for (DriverGene gene : genes) {
             if (gene.reportMissenseAndInframe() || gene.reportNonsenseAndFrameshift() || gene.reportSplice()) {

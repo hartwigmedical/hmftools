@@ -9,8 +9,8 @@ import java.util.List;
 import com.hartwig.hmftools.common.cli.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelAssembly;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -29,15 +29,18 @@ public class LoadDriverGenePanel {
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         Options options = new Options();
+        // TODO: Rename ref genome versions
         options.addOption(ASSEMBLY, true, "Must be one of [hg19, hg38]");
 
         DatabaseAccess.addDatabaseCmdLineArgs(options);
         DriverGenePanelConfig.addGenePanelOption(true, options);
         CommandLine cmd = new DefaultParser().parse(options, args);
 
-        DriverGenePanelAssembly assembly = DriverGenePanelAssembly.valueOf(cmd.getOptionValue(ASSEMBLY, "hg19").toUpperCase());
+        String refGenomeVersionArg = cmd.getOptionValue(ASSEMBLY, "hg19");
+
+        RefGenomeVersion refGenomeVersion = refGenomeVersionArg.equals("hg19") ? RefGenomeVersion.RG_37 : RefGenomeVersion.RG_38;
         List<DriverGene> driverGenes = DriverGenePanelConfig.driverGenes(cmd);
-        DriverGenePanel panel = DriverGenePanelFactory.create(assembly, driverGenes);
+        DriverGenePanel panel = DriverGenePanelFactory.create(refGenomeVersion, driverGenes);
 
         DatabaseAccess dbAccess = databaseAccess(cmd);
         dbAccess.writeGenePanel(panel);

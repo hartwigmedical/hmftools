@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.genepanel.HmfExonPanelBed;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
@@ -50,19 +51,19 @@ public class DriverGenePanelConversion {
             }
         }
 
-        process(DriverGenePanelAssembly.HG19, inputDriverGenes);
-        process(DriverGenePanelAssembly.HG38, outputDriverGenes);
+        process(RefGenomeVersion.RG_37, inputDriverGenes);
+        process(RefGenomeVersion.RG_38, outputDriverGenes);
 
     }
 
-    private static void process(@NotNull final DriverGenePanelAssembly assembly, @NotNull final List<DriverGene> driverGenes)
+    private static void process(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final List<DriverGene> driverGenes)
             throws IOException {
-        final String qualityBedFile = assembly == DriverGenePanelAssembly.HG19
-                ? getResourceURL("/drivercatalog/QualityRecalibration.hg19.bed")
-                : getResourceURL("/drivercatalog/QualityRecalibration.hg38.bed");
+        final String qualityBedFile = refGenomeVersion == RefGenomeVersion.RG_37
+                ? getResourceURL("/drivercatalog/QualityRecalibration.37.bed")
+                : getResourceURL("/drivercatalog/QualityRecalibration.38.bed");
         Collection<GenomeRegion> qualityRecalibrationRegions = BEDFileLoader.fromBedFile(qualityBedFile).values();
 
-        final String extension = assembly.toString().toLowerCase();
+        final String extension = refGenomeVersion.toString().toLowerCase();
         final String driverGeneFile = String.format("%s/DriverGenePanel.%s.tsv", OUTPUT_DIR, extension);
         final String somaticCodingWithoutUtr = String.format("%s/ActionableCodingPanel.somatic.%s.bed", OUTPUT_DIR, extension);
         final String germlineCodingWithUtr = String.format("%s/ActionableCodingPanel.germline.%s.bed", OUTPUT_DIR, extension);
@@ -75,7 +76,7 @@ public class DriverGenePanelConversion {
         Collections.sort(driverGenes);
 
         // Validate
-        DriverGenePanelFactory.create(assembly, driverGenes);
+        DriverGenePanelFactory.create(refGenomeVersion, driverGenes);
 
         // Write out driver gene panel
         DriverGeneFile.write(driverGeneFile, driverGenes);
@@ -87,18 +88,17 @@ public class DriverGenePanelConversion {
         allGenes.addAll(somaticGenes);
 
         // Write out actionable bed files
-        final List<HmfTranscriptRegion> transcripts = assembly.equals(DriverGenePanelAssembly.HG19)
-                ? HmfGenePanelSupplier.allGeneList37()
-                : HmfGenePanelSupplier.allGeneList38();
+        final List<HmfTranscriptRegion> transcripts =
+                refGenomeVersion == RefGenomeVersion.RG_37 ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
 
         // Write out driver gene panel
-        LOGGER.info("Creating {} {} bed file", assembly, "somatic");
+        LOGGER.info("Creating {} {} bed file", refGenomeVersion, "somatic");
         createNamedBedFiles(false, somaticCodingWithoutUtr, somaticGenes, transcripts);
 
-        LOGGER.info("Creating {} {} coverage bed file", assembly, "germline");
+        LOGGER.info("Creating {} {} coverage bed file", refGenomeVersion, "germline");
         createNamedBedFiles(false, germlineCodingWithoutUtr, allGenes, transcripts);
 
-        LOGGER.info("Creating {} {} bed file", assembly, "germline");
+        LOGGER.info("Creating {} {} bed file", refGenomeVersion, "germline");
         List<GenomeRegion> germlinePanel = createUnnamedBedFiles(true, germlineCodingWithUtr, allGenes, transcripts);
 
         // Write out germline hotspot files
@@ -106,13 +106,12 @@ public class DriverGenePanelConversion {
                 new GermlineHotspotVCF(germlineHotspotGenes(driverGenes)).process(clinvarFile, germlineHotspotFile);
 
         // Write out germline slice file.
-         createSliceFile(germlineSliceFile, germlinePanel, germlineHotspots, qualityRecalibrationRegions);
+        createSliceFile(germlineSliceFile, germlinePanel, germlineHotspots, qualityRecalibrationRegions);
 
         // Write out germline blacklist file.
-        final List<VariantContext> germlineBlackList = assembly == DriverGenePanelAssembly.HG19
-                ? GermlineResources.grch37Blacklist()
-                : GermlineResources.grch38Blacklist();
-        GermlineBlacklistVCF.process(germlineBlacklistFile, germlineBlackList );
+        final List<VariantContext> germlineBlackList =
+                refGenomeVersion == RefGenomeVersion.RG_37 ? GermlineResources.blacklist37() : GermlineResources.blacklist38();
+        GermlineBlacklistVCF.process(germlineBlacklistFile, germlineBlackList);
 
     }
 

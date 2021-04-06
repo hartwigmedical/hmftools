@@ -14,12 +14,12 @@ public class GermlineResourcesTest {
 
     @Test
     public void testBlacklistConsistency() throws IOException {
-        testConsistency(GermlineResources.grch37Blacklist(), GermlineResources.grch38Blacklist());
+        testConsistency(GermlineResources.blacklist37(), GermlineResources.blacklist38());
     }
 
     @Test
     public void testWhiteConsistency() throws IOException {
-        testConsistency(GermlineResources.grch37Whitelist(), GermlineResources.grch38Whitelist());
+        testConsistency(GermlineResources.whitelist37(), GermlineResources.whitelist38());
     }
 
     public void testConsistency(List<VariantContext> hg19list, List<VariantContext> hg38list )  {
