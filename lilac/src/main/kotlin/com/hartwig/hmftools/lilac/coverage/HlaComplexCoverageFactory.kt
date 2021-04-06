@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.coverage
 
 import com.hartwig.hmftools.common.progress.FutureProgressTracker
+import com.hartwig.hmftools.lilac.LilacConfig
 import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.read.FragmentAlleles
 import com.hartwig.hmftools.lilac.read.FragmentAlleles.Companion.filter
@@ -8,9 +9,8 @@ import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
 
-class HlaComplexCoverageFactory(maxDistanceFromTopScore: Int, private val common: List<HlaAllele>) {
+class HlaComplexCoverageFactory(private val config: LilacConfig) {
     private val progressTracker = FutureProgressTracker(0.1, 10000)
-    private val ranking = HlaComplexCoverageRanking(maxDistanceFromTopScore, common)
 
     companion object {
         fun groupCoverage(fragmentAlleles: List<FragmentAlleles>, alleles: Collection<HlaAllele>): HlaComplexCoverage {
@@ -37,12 +37,14 @@ class HlaComplexCoverageFactory(maxDistanceFromTopScore: Int, private val common
                 .distinct()
 
         val topTakers = topRanked.take(take)
-        val topRankedKeepers = topRanked.filter { it in common }
+        val topRankedKeepers = topRanked.filter { it in config.commonAlleles }
 
         return (topTakers + topRankedKeepers).distinct()
     }
 
-    fun rankedComplexCoverage(executorService: ExecutorService, fragmentAlleles: List<FragmentAlleles>, complexes: List<HlaComplex>): List<HlaComplexCoverage> {
+    fun rankedComplexCoverage(executorService: ExecutorService, fragmentAlleles: List<FragmentAlleles>, complexes: List<HlaComplex>,  recovered: List<HlaAllele>): List<HlaComplexCoverage> {
+        val ranking = HlaComplexCoverageRanking(config.maxDistanceFromTopScore, config.commonAlleles, recovered)
+
         val list = mutableListOf<Future<HlaComplexCoverage>>()
         for (complex in complexes) {
             val untrackedCallable: Callable<HlaComplexCoverage> = Callable { proteinCoverage(fragmentAlleles, complex.alleles) }

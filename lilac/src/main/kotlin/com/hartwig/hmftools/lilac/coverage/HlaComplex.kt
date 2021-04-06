@@ -11,7 +11,7 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
 
         val logger = LogManager.getLogger(this::class.java)
 
-        fun complexes(config: LilacConfig, referenceFragmentAlleles: List<FragmentAlleles>, candidateAlleles: List<HlaAllele>): List<HlaComplex>  {
+        fun complexes(config: LilacConfig, referenceFragmentAlleles: List<FragmentAlleles>, candidateAlleles: List<HlaAllele>, recoveredAlleles: List<HlaAllele>): List<HlaComplex>  {
 
             logger.info("Identifying uniquely identifiable groups and proteins [total,unique,shared,wide]")
             val groupCoverage = HlaComplexCoverageFactory.groupCoverage(referenceFragmentAlleles, candidateAlleles)
@@ -49,7 +49,7 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
             val simpleComplexCount = aOnlyComplexes.size * bOnlyComplexes.size * cOnlyComplexes.size
             complexes = if (simpleComplexCount > 100_000) {
                 logger.info("Candidate permutations exceeds maximum complexity")
-                val groupRankedCoverageFactory = HlaComplexCoverageFactory(100, config.commonAlleles)
+                val groupRankedCoverageFactory = HlaComplexCoverageFactory(config)
                 val aTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, aOnlyComplexes)
                 val bTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, bOnlyComplexes)
                 val cTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, cOnlyComplexes)

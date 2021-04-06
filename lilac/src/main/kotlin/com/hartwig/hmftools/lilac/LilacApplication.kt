@@ -167,13 +167,13 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         // Common Candidate Recovery
         logger.info("Recovering common un-phased candidates:")
-        val commonCandidateAlleles = config.commonAlleles
+        val recoveredAlleles = config.commonAlleles
                 .filter { it !in phasedCandidateAlleles && it in allUnphasedCandidates }
 
-        val candidateAlleles = phasedCandidateAlleles + commonCandidateAlleles
+        val candidateAlleles = phasedCandidateAlleles + recoveredAlleles
         val candidateSequences = aminoAcidSequences.filter { it.allele in candidateAlleles }
-        if (commonCandidateAlleles.isNotEmpty()) {
-            logger.info("    recovered ${commonCandidateAlleles.size} common candidate alleles: " + commonCandidateAlleles.joinToString(", "))
+        if (recoveredAlleles.isNotEmpty()) {
+            logger.info("    recovered ${recoveredAlleles.size} common candidate alleles: " + recoveredAlleles.joinToString(", "))
         } else {
             logger.info("    recovered 0 common candidate alleles")
         }
@@ -193,11 +193,11 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
                 referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences, referenceNucleotideHeterozygousLoci, candidateNucleotideSequences)
 
         // Complexes
-        val complexes = HlaComplex.complexes(config, referenceFragmentAlleles, candidateAlleles)
+        val complexes = HlaComplex.complexes(config, referenceFragmentAlleles, candidateAlleles, recoveredAlleles)
 
         logger.info("Calculating coverage of ${complexes.size} complexes")
-        val coverageFactory = HlaComplexCoverageFactory(config.maxDistanceFromTopScore, config.commonAlleles)
-        val referenceRankedComplexes = coverageFactory.rankedComplexCoverage(executorService, referenceFragmentAlleles, complexes)
+        val coverageFactory = HlaComplexCoverageFactory(config)
+        val referenceRankedComplexes = coverageFactory.rankedComplexCoverage(executorService, referenceFragmentAlleles, complexes, recoveredAlleles)
         if (referenceRankedComplexes.isEmpty()) {
             logger.fatal("Failed to calculate complex coverage")
             exitProcess(1)
