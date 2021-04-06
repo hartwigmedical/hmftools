@@ -106,8 +106,8 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -tumor COLO829v003T -tumor_bam /path/to/COLO829v003T.bam \
     -assembly hg19 \
     -ref_genome /path/to/refGenome.fasta \
-    -hotspots /path/to/KnownHotspots.hg19.vcf.gz \
-    -panel_bed /path/to/ActionableCodingPanel.somatic.hg19.bed.gz \
+    -hotspots /path/to/KnownHotspots.37.vcf.gz \
+    -panel_bed /path/to/ActionableCodingPanel.somatic.37.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -out /path/to/COLO829v003.sage.vcf.gz
 ```
@@ -121,8 +121,8 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -tumor COLO829v003T -tumor_bam /path/to/COLO829v003T.bam \
     -assembly hg19 \
     -ref_genome /path/to/refGenome.fasta \
-    -hotspots /path/to/KnownHotspots.hg19.vcf.gz \
-    -panel_bed /path/to/ActionableCodingPanel.somatic.hg19.bed.gz \
+    -hotspots /path/to/KnownHotspots.37.vcf.gz \
+    -panel_bed /path/to/ActionableCodingPanel.somatic.37.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -out /path/to/COLO829v003.sage.vcf.gz
 ```
@@ -553,7 +553,7 @@ Any MNVs that have a germline component and all associated SNVs (including somat
 
 Inframe indels with microhomology are re-aligned to the right if the left-aligned variant is not in a coding region but the right-aligned variant is.
 
-For example, because of the `AG` microhomology at this (hg19) location, the following KIT variants are equivalent but the first will be interpreted as a splice variant while the second will be interpreted as an inframe missense.
+For example, because of the `AG` microhomology at this (v37) location, the following KIT variants are equivalent but the first will be interpreted as a splice variant while the second will be interpreted as an inframe missense.
 
 ```
 4:55593579 CAGAAACCCATGTATGAAGTACAGTGGA > C
@@ -607,7 +607,7 @@ Additionally, PANEL and HOTSPOT variants must have at least 1 sample with 5 or m
 The annotation and filtering are done with BCFTools using commands similar to the following:
 
 ```
-bcftools annotate -a SageGermlinePon.hg19.1000x.vcf.gz -c PON_COUNT,PON_MAX $sage_vcf -O z -o $annotated_vcf
+bcftools annotate -a SageGermlinePon.1000x.37.vcf.gz -c PON_COUNT,PON_MAX $sage_vcf -O z -o $annotated_vcf
 
 bcftools filter -e 'PON_COUNT!="." && INFO/TIER="HOTSPOT" && PON_MAX>=5 && PON_COUNT >= 10' -s PON -m+ $annotated_vcf -O u | \
 bcftools filter -e 'PON_COUNT!="." && INFO/TIER="PANEL" && PON_MAX>=5 && PON_COUNT >= 6' -s PON -m+ -O u | \
