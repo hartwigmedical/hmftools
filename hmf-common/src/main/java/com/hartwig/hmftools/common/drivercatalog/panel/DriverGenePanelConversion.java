@@ -38,6 +38,7 @@ public class DriverGenePanelConversion {
     private static final String OUTPUT_DIR = "output_dir";
 
     public static void main(String[] args) throws IOException, ParseException {
+        // See also https://github.com/hartwigmedical/scratchpad/tree/master/genePanel
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
 
