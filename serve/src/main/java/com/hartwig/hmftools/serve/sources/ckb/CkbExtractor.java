@@ -65,7 +65,7 @@ public class CkbExtractor {
     public String extractCanonicalTranscript(@NotNull String refseqToMatch, @NotNull List<RefSeq> refSeqMatchFile) {
         for (RefSeq refSeq: refSeqMatchFile) {
             if (refSeq.dbPrimaryAcc().equals(refseqToMatch)) {
-                return refSeq.geneId();
+                return refSeq.transcriptId();
             }
         }
         return null;
