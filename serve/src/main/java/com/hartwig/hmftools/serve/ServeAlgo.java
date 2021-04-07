@@ -129,7 +129,7 @@ public class ServeAlgo {
                 missingDoidLookup);
 
         LOGGER.info("Running CKB knowledge extraction");
-        return extractor.extract(curateCKBEntries);
+        return extractor.extract(curateCKBEntries, Lists.newArrayList());
     }
 
     @NotNull
