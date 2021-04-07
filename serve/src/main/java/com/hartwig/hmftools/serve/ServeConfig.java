@@ -37,6 +37,8 @@ public interface ServeConfig {
     String USE_HARTWIG_CURATED = "use_hartwig_curated";
     String HARTWIG_CURATED_TSV = "hartwig_curated_tsv";
 
+    String REFSEQ_TSV = "refseq_tsv";
+
     // Config for curation of evidence
     String MISSING_DOIDS_MAPPING_TSV = "missing_doids_mapping_tsv";
 
@@ -76,6 +78,8 @@ public interface ServeConfig {
         options.addOption(HARTWIG_CURATED_TSV, true, "Path to the Hartwig Curated input TSV");
 
         options.addOption(MISSING_DOIDS_MAPPING_TSV, true, "Path to the mapping TSV containing entries for missing DOIDs");
+
+        options.addOption(REFSEQ_TSV, true, "Path to the refseq TSV containing mapping refseq to transcript ID");
 
         options.addOption(REF_GENOME_37_FASTA_FILE, true, "Path to the V37 ref genome fasta file");
         options.addOption(REF_GENOME_38_FASTA_FILE, true, "Path to the V38 ref genome fasta file");
@@ -129,6 +133,9 @@ public interface ServeConfig {
 
     @NotNull
     String missingDoidsMappingTsv();
+
+    @NotNull
+    String refSeqTsv();
 
     @NotNull
     String refGenome37FastaFile();
@@ -187,6 +194,7 @@ public interface ServeConfig {
                 .useHartwigCurated(useHartwigCurated)
                 .hartwigCuratedTsv(useHartwigCurated ? nonOptionalFile(cmd, HARTWIG_CURATED_TSV) : NOT_APPLICABLE)
                 .missingDoidsMappingTsv(nonOptionalFile(cmd, MISSING_DOIDS_MAPPING_TSV))
+                .refSeqTsv(nonOptionalFile(cmd, REFSEQ_TSV))
                 .refGenome37FastaFile(nonOptionalFile(cmd, REF_GENOME_37_FASTA_FILE))
                 .refGenome38FastaFile(nonOptionalFile(cmd, REF_GENOME_38_FASTA_FILE))
                 .refGenome37To38Chain(nonOptionalFile(cmd, REF_GENOME_37_TO_38_CHAIN))

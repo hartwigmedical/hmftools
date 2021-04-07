@@ -10,6 +10,8 @@ import com.hartwig.hmftools.ckb.classification.CkbClassificationConfig;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
 import com.hartwig.hmftools.ckb.json.CkbJsonReader;
+import com.hartwig.hmftools.common.refseq.RefSeq;
+import com.hartwig.hmftools.common.refseq.RefSeqFile;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.common.serve.classification.EventType;
@@ -68,7 +70,7 @@ public class ServeAlgo {
         }
 
         if (config.useCkb()) {
-            extractions.add(extractCKBKnowledge(config.ckbDir()));
+            extractions.add(extractCKBKnowledge(config.ckbDir(), config.refSeqTsv()));
         }
 
         if (config.useDocm()) {
@@ -117,7 +119,10 @@ public class ServeAlgo {
     }
 
     @NotNull
-    private ExtractionResult extractCKBKnowledge(@NotNull String ckbDir) throws IOException {
+    private ExtractionResult extractCKBKnowledge(@NotNull String ckbDir, @NotNull String refseqTsv) throws IOException {
+
+        LOGGER.info("Reading ref seq matching to transcript");
+        List<RefSeq> refSeqMatchFile = RefSeqFile.readingRefSeq(refseqTsv);
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
         List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
@@ -129,7 +134,7 @@ public class ServeAlgo {
                 missingDoidLookup);
 
         LOGGER.info("Running CKB knowledge extraction");
-        return extractor.extract(curateCKBEntries, Lists.newArrayList());
+        return extractor.extract(curateCKBEntries, refSeqMatchFile);
     }
 
     @NotNull
