@@ -25,10 +25,16 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
     companion object {
         const val MAX_DISTANCE = 1000
         val logger = LogManager.getLogger(this::class.java)
+        val indelPon = SAMRecordReader::class.java.getResource("/pon/indels.txt")
+                .readText()
+                .split("\n")
+                .map { Indel.fromString(it) }
+                .toSet()
     }
 
     private val codingRegions = transcripts.map { GenomeRegions.create(it.chromosome(), it.codingStart() - MAX_DISTANCE, it.codingEnd() + MAX_DISTANCE) }
     private val unmatchedIndels = mutableMapOf<Indel, Int>()
+    private val unmatchedPONIndels = mutableMapOf<Indel, Int>()
     private var alignmentFiltered = 0
 
     fun alignmentFiltered(): Int {
@@ -36,6 +42,10 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
     }
 
     fun unmatchedIndels(minCount: Int): Map<Indel, Int> {
+        return unmatchedIndels.filter { it.value >= minCount }
+    }
+
+    fun unmatchedPonIndels(minCount: Int): Map<Indel, Int> {
         return unmatchedIndels.filter { it.value >= minCount }
     }
 
@@ -165,7 +175,13 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
             if (fragment != null) {
                 result.add(fragment)
             } else {
-                codingRecord.indels.forEach { unmatchedIndels.compute(it) { _, u -> (u ?: 0) + 1 } }
+                for (indel in codingRecord.indels) {
+                    if (indel in indelPon) {
+                        unmatchedPONIndels.compute(indel) { _, u -> (u ?: 0) + 1 }
+                    } else {
+                        unmatchedIndels.compute(indel) { _, u -> (u ?: 0) + 1 }
+                    }
+                }
             }
         }
 
