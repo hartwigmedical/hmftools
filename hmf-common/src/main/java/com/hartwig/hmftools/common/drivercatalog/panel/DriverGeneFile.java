@@ -19,6 +19,11 @@ public final class DriverGeneFile {
     private DriverGeneFile() {
     }
 
+    public static void write(@NotNull final String filename, @NotNull final List<DriverGene> driverGenes) throws IOException {
+        List<DriverGene> sorted = Lists.newArrayList(driverGenes);
+        Files.write(new File(filename).toPath(), toLines(sorted));
+    }
+
     @NotNull
     public static List<DriverGene> read(@NotNull final String filename) throws IOException {
         return Files.readAllLines(new File(filename).toPath())
@@ -30,8 +35,7 @@ public final class DriverGeneFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER).
-                add("gene")
+        return new StringJoiner(DELIMITER).add("gene")
                 .add("reportMissense")
                 .add("reportNonsense")
                 .add("reportSplice")
@@ -91,10 +95,5 @@ public final class DriverGeneFile {
         lines.add(header());
         driverGenes.stream().map(DriverGeneFile::toString).forEach(lines::add);
         return lines;
-    }
-
-    public static void write(@NotNull final String filename, @NotNull final List<DriverGene> driverGenes) throws IOException {
-        List<DriverGene> sorted = Lists.newArrayList(driverGenes);
-        Files.write(new File(filename).toPath(), toLines(sorted));
     }
 }

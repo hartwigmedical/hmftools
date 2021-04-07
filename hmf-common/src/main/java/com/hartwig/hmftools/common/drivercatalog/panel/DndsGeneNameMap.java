@@ -38,7 +38,7 @@ public class DndsGeneNameMap {
     }
 
     @NotNull
-    public String v37Gene(@NotNull final String v38GeneId) {
+    String v37Gene(@NotNull final String v38GeneId) {
         String result = v38Map.get(v38GeneId);
         if (result == null || result.equals("NA")) {
             throw new IllegalArgumentException("Invalid v38 gene " + v38GeneId);
