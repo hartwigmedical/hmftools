@@ -162,6 +162,7 @@ class TransvarInterpreter {
         if (!record.variantSpanMultipleExons()) {
             // Dups don't have ref and alt information so need to look it up in ref genome.
             long position = record.gdnaPosition() - 1;
+            // TODO: fix issue CKB
             String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
 
             String dupBases =
