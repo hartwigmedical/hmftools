@@ -69,19 +69,14 @@ class SAMRecordReader(maxDistance: Int, private val refGenome: String, private v
         }
     }
 
-    private fun realign(hlaCodingRegionOffset: Int, codingRegion: NamedBed, reverseStrand: Boolean, bamFileName: String): List<NucleotideFragment> {
+    private fun query(codingRegion: NamedBed, bamFileName: String): List<SAMCodingRecord> {
         val slicer = SAMSlicer(1)
-        val result = mutableListOf<NucleotideFragment>()
+        val result = mutableListOf<SAMCodingRecord>()
         samReaderFactory().open(File(bamFileName)).use { samReader ->
             val consumer = Consumer<SAMRecord> { samRecord ->
                 if (samRecord.bothEndsInRangeOfCodingTranscripts()) {
-                    val codingRecord = SAMCodingRecord.create(codingRegion, samRecord)
-                    val fragment = factory.createFragment(codingRecord, reverseStrand, hlaCodingRegionOffset, codingRegion)
-                    if (fragment != null) {
-                        result.add(fragment)
-                    } else {
-                        codingRecord.indels.forEach { unmatchedIndels.compute(it) { _, u -> (u ?: 0) + 1 } }
-                    }
+                    result.add(SAMCodingRecord.create(codingRegion, samRecord))
+
                 } else {
                     alignmentFiltered++
                 }
@@ -89,6 +84,20 @@ class SAMRecordReader(maxDistance: Int, private val refGenome: String, private v
 
             slicer.slice(codingRegion, samReader, consumer)
         }
+        return result
+    }
+
+    private fun realign(hlaCodingRegionOffset: Int, codingRegion: NamedBed, reverseStrand: Boolean, bamFileName: String): List<NucleotideFragment> {
+        val result = mutableListOf<NucleotideFragment>()
+        for (codingRecord in query(codingRegion, bamFileName)) {
+            val fragment = factory.createFragment(codingRecord, reverseStrand, hlaCodingRegionOffset, codingRegion)
+            if (fragment != null) {
+                result.add(fragment)
+            } else {
+                codingRecord.indels.forEach { unmatchedIndels.compute(it) { _, u -> (u ?: 0) + 1 } }
+            }
+        }
+
         return result
     }
 
