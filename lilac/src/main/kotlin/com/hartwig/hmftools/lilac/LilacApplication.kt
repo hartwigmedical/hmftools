@@ -27,6 +27,7 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToFourDigit
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToSixDigit
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLociFile
+import com.hartwig.hmftools.lilac.variant.Somatics
 import org.apache.commons.cli.*
 import org.apache.logging.log4j.LogManager
 import java.io.IOException
@@ -65,6 +66,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         const val HLA_A = "HLA-A"
         const val HLA_B = "HLA-B"
         const val HLA_C = "HLA-C"
+        val HLA_GENES = setOf(HLA_A, HLA_B, HLA_C)
 
         val DEFLATE_TEMPLATE = HlaAllele("A*01:01")
         val EXCLUDED_ALLELES = setOf(HlaAllele("A*01:81"), HlaAllele("A*01:237"), HlaAllele("A*33:191"), HlaAllele("A*31:135"))
@@ -79,6 +81,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
     private val startTime = System.currentTimeMillis()
     private val transcripts = HmfGenePanelSupplier.allGenesMap37()
+    private val hlaTranscripts = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
 
     private val sample = config.sample
     private val minBaseQual = config.minBaseQual
@@ -123,13 +126,13 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         logger.info("Querying records from reference bam ${config.referenceBam}")
         val nucleotideFragmentFactory = NucleotideFragmentFactory(config.minBaseQual, aminoAcidSequencesWithInserts, aminoAcidSequencesWithDeletes)
-        val transcripts = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
-        val referenceBamReader = SAMRecordReader(1000, config.refGenome, transcripts, nucleotideFragmentFactory)
-        val referenceNucleotideFragments = referenceBamReader.readFromBam(config.referenceBam).enrichGenes()
+        val tumorBamReader = SAMRecordReader(config.tumorBam, config.refGenome, hlaTranscripts, nucleotideFragmentFactory)
+        val referenceBamReader = SAMRecordReader(config.referenceBam, config.refGenome, hlaTranscripts, nucleotideFragmentFactory)
+        val referenceNucleotideFragments = referenceBamReader.readFromBam().enrichGenes()
 
         val tumorNucleotideFragments = if (config.tumorBam.isNotEmpty()) {
             logger.info("Querying records from tumor bam ${config.tumorBam}")
-            SAMRecordReader(1000, config.refGenome, transcripts, nucleotideFragmentFactory).readFromBam(config.tumorBam).enrichGenes()
+            tumorBamReader.readFromBam().enrichGenes()
         } else {
             listOf()
         }
@@ -259,6 +262,9 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         referenceRankedComplexes.writeToFile("$outputDir/$sample.candidates.coverage.txt")
         referenceAminoAcidCounts.writeVertically("$outputDir/$sample.aminoacids.count.txt")
         referenceNucleotideCounts.writeVertically("$outputDir/$sample.nucleotides.count.txt")
+
+
+        Somatics().doStuff(config, tumorBamReader, winningSequences, LociPosition(hlaTranscripts))
 
     }
 

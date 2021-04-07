@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.lilac.read
 
 import com.hartwig.hmftools.common.genome.bed.NamedBed
+import com.hartwig.hmftools.common.genome.position.GenomePosition
+import com.hartwig.hmftools.common.genome.position.GenomePositions
 import com.hartwig.hmftools.common.genome.region.CodingRegions
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion
 import com.hartwig.hmftools.common.genome.region.Strand
+import com.hartwig.hmftools.common.variant.VariantContextDecorator
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory
 import com.hartwig.hmftools.lilac.sam.Indel
@@ -15,14 +18,16 @@ import htsjdk.samtools.SamReaderFactory
 import org.apache.logging.log4j.LogManager
 import java.io.File
 import java.util.function.Consumer
+import kotlin.math.abs
 
-class SAMRecordReader(maxDistance: Int, private val refGenome: String, private val transcripts: List<HmfTranscriptRegion>, private val factory: NucleotideFragmentFactory) {
+class SAMRecordReader(private val bamFile: String, private val refGenome: String, private val transcripts: List<HmfTranscriptRegion>, private val factory: NucleotideFragmentFactory) {
 
     companion object {
+        const val MAX_DISTANCE = 1000
         val logger = LogManager.getLogger(this::class.java)
     }
 
-    private val codingRegions = transcripts.map { GenomeRegions.create(it.chromosome(), it.codingStart() - maxDistance, it.codingEnd() + maxDistance) }
+    private val codingRegions = transcripts.map { GenomeRegions.create(it.chromosome(), it.codingStart() - MAX_DISTANCE, it.codingEnd() + MAX_DISTANCE) }
     private val unmatchedIndels = mutableMapOf<Indel, Int>()
     private var alignmentFiltered = 0
 
@@ -34,9 +39,57 @@ class SAMRecordReader(maxDistance: Int, private val refGenome: String, private v
         return unmatchedIndels.filter { it.value >= minCount }
     }
 
-    fun readFromBam(bamFile: String): List<NucleotideFragment> {
+    fun readFromBam(): List<NucleotideFragment> {
         return transcripts.flatMap { readFromBam(it, bamFile) }
     }
+
+    fun readFromBam(variant: VariantContextDecorator): List<NucleotideFragment> {
+        val variantPosition = GenomePositions.create(variant.chromosome(), variant.position())
+
+        for (transcript in transcripts) {
+            val reverseStrand = transcript.strand() == Strand.REVERSE
+            val codingRegions = if (reverseStrand) codingRegions(transcript).reversed() else codingRegions(transcript)
+            var hlaCodingRegionOffset = 0
+            for (codingRegion in codingRegions) {
+                if (codingRegion.contains(variantPosition) || abs(codingRegion.start() - variant.position()) <= 5 || abs(codingRegion.end() - variant.position()) <= 5) {
+                    val codingRecords = query(variantPosition, codingRegion, bamFile)
+                            .filter { recordContainsVariant(variant, it) }
+
+                    val nucleotideFragments = codingRecords
+                            .mapNotNull { factory.createAlignmentFragments(it, reverseStrand, hlaCodingRegionOffset, codingRegion) }
+
+                    return nucleotideFragments
+                }
+                hlaCodingRegionOffset += codingRegion.bases().toInt()
+            }
+        }
+
+        return listOf()
+    }
+
+    private fun recordContainsVariant(variant: VariantContextDecorator, record: SAMCodingRecord): Boolean {
+        if (variant.alt().length != variant.ref().length) {
+            val expectedIndel = Indel(variant.chromosome(), variant.position().toInt(), variant.ref(), variant.alt())
+            return record.indels.contains(expectedIndel)
+        }
+
+        for (i in variant.alt().indices) {
+            val position = variant.position().toInt() + i
+            val expectedBase = variant.alt()[i]
+            val readIndex = record.record.getReadPositionAtReferencePosition(position) - 1
+            if (readIndex < 0) {
+                return false
+            }
+
+            if (record.record.readBases[readIndex].toChar() != expectedBase) {
+                return false
+            }
+
+        }
+
+        return true
+    }
+
 
     private fun readFromBam(transcript: HmfTranscriptRegion, bamFile: String): List<NucleotideFragment> {
         logger.info("    querying ${transcript.gene()} (${transcript.chromosome()}:${transcript.codingStart()}-${transcript.codingEnd()})")
@@ -67,6 +120,24 @@ class SAMRecordReader(maxDistance: Int, private val refGenome: String, private v
         } else {
             default
         }
+    }
+
+    private fun query(variantRegion: GenomePosition, nearestCodingRegion: NamedBed, bamFileName: String): List<SAMCodingRecord> {
+        val slicer = SAMSlicer(1)
+        val result = mutableListOf<SAMCodingRecord>()
+        samReaderFactory().open(File(bamFileName)).use { samReader ->
+            val consumer = Consumer<SAMRecord> { samRecord ->
+                if (samRecord.bothEndsInRangeOfCodingTranscripts()) {
+                    result.add(SAMCodingRecord.create(nearestCodingRegion, samRecord))
+
+                } else {
+                    alignmentFiltered++
+                }
+            }
+
+            slicer.slice(variantRegion.chromosome(), variantRegion.position().toInt(), variantRegion.position().toInt(), samReader, consumer)
+        }
+        return result
     }
 
     private fun query(codingRegion: NamedBed, bamFileName: String): List<SAMCodingRecord> {

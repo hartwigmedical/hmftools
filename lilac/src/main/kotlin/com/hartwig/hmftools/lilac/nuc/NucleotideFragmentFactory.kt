@@ -29,6 +29,14 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
         return createFragment(samCoding, reverseStrand, codingRegionLoci, codingRegion)
     }
 
+    fun createAlignmentFragments(samCoding: SAMCodingRecord, reverseStrand: Boolean, codingRegionLoci: Int, codingRegion: NamedBed): NucleotideFragment? {
+        val all = samCoding.alignmentsOnly().mapNotNull { createFragment(it, reverseStrand, codingRegionLoci, codingRegion) }
+        if (all.isEmpty()) {
+            return null
+        }
+
+        return all.reduce {x,y -> NucleotideFragment.merge(x,y)}
+    }
 
     fun createFragment(samCoding: SAMCodingRecord, reverseStrand: Boolean, codingRegionLoci: Int, codingRegion: NamedBed): NucleotideFragment? {
         val samCodingLength = samCoding.positionEnd - samCoding.positionStart + 1

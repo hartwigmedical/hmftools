@@ -24,6 +24,7 @@ const val MIN_FRAGMENTS_TO_REMOVE_SINGLE = "min_fragments_to_remove_single"
 const val MIN_CONFIRMED_UNIQUE_COVERAGE = "min_confirmed_unique_coverage"
 const val EXPECTED_ALLELES = "expected_alleles"
 const val GENE_COPY_NUMBER = "gene_copy_number"
+const val SOMATIC_VCF = "somatic_vcf"
 const val MAX_DISTANCE_FROM_TOP_SCORE = "max_distance_from_top_score"
 
 data class LilacConfig(
@@ -41,6 +42,7 @@ data class LilacConfig(
         val threads: Int,
         val maxDistanceFromTopScore: Int,
         val geneCopyNumberFile: String,
+        val somaticVcf: String,
         val expectedAlleles: List<HlaAllele>,
         val commonAlleles: List<HlaAllele>
 ) {
@@ -57,6 +59,7 @@ data class LilacConfig(
             val referenceBam = cmd.requiredFile(REFERENCE_BAM_OPTION)
             val tumorBam = cmd.optionalFile(TUMOR_BAM_OPTION, "")
             val geneCopyNumberFile = cmd.optionalFile(GENE_COPY_NUMBER, "")
+            val somaticVcf = cmd.optionalFile(SOMATIC_VCF, "")
             val resourceDir = cmd.requiredDir(RESOURCE_DIR_OPTION)
             val outputDir = cmd.requiredDir(OUTPUT_DIR_OPTION)
             val defaultConfig = default()
@@ -91,6 +94,7 @@ data class LilacConfig(
                     threads,
                     maxDistanceFromTopScore,
                     geneCopyNumberFile,
+                    somaticVcf,
                     expectedAlleles,
                     commonAlleles)
         }
@@ -110,6 +114,7 @@ data class LilacConfig(
                     10,
                     1,
                     3,
+                    "",
                     "",
                     listOf(),
                     listOf())
@@ -132,6 +137,7 @@ data class LilacConfig(
             options.addOption(optional(THREADS, "Number of threads"))
             options.addOption(optional(EXPECTED_ALLELES, "Comma separated expected alleles"))
             options.addOption(optional(GENE_COPY_NUMBER, "Path to gene copy number file"))
+            options.addOption(optional(SOMATIC_VCF, "Path to somatic VCF"))
             return options
         }
 

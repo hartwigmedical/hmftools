@@ -5,7 +5,9 @@ import com.hartwig.hmftools.common.variant.VariantContextDecorator
 import com.hartwig.hmftools.lilac.LilacApplication
 import com.hartwig.hmftools.lilac.LilacConfig
 import com.hartwig.hmftools.lilac.LociPosition
+import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage
 import com.hartwig.hmftools.lilac.read.AminoAcidIndices
+import com.hartwig.hmftools.lilac.read.FragmentAlleles
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 import htsjdk.variant.vcf.VCFFileReader
@@ -18,6 +20,10 @@ class Somatics {
 
 
     fun doStuff(config: LilacConfig, reader: SAMRecordReader, winners: List<HlaSequenceLoci>, lociPosition: LociPosition) {
+        if (config.tumorBam.isEmpty() || config.somaticVcf.isEmpty()) {
+            return
+        }
+
         val variants = readSomatics(config)
         val variantLoci = variants
                 .map { lociPosition.nucelotideLoci(it.position().toInt()) }
@@ -32,20 +38,13 @@ class Somatics {
                     .filter { it.isNotEmpty() }
                     .map { it.toAminoAcidFragment() }
 
-            for (variantFragment in variantFragments) {
-                val loci = (variantFragment.aminoAcidLoci() subtract variantLoci).sorted().toIntArray()
-                val lociSequence = variantFragment.aminoAcids(*loci)
-
-                for (winner in winners) {
-                    if (winner.consistentWith(lociSequence, *loci)) {
-                        alleleCount[winner.allele] = alleleCount[winner.allele]!! + 1
-                    }
-                }
+            val variantFragmentAlleles = variantFragments.flatMap {
+                val loci = (it.aminoAcidLoci() subtract variantLoci).sorted()
+                FragmentAlleles.create(listOf(it), loci, winners, listOf(), listOf())
             }
 
-            println(variant)
-            println(alleleCount)
-            println("Sdf")
+            val coverage = HlaAlleleCoverage.proteinCoverage(variantFragmentAlleles)
+            logger.info("    $variant -> $coverage")
         }
 
     }
