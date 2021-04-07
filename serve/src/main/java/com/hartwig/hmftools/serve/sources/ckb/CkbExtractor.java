@@ -6,6 +6,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
+import com.hartwig.hmftools.common.refseq.RefSeq;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -44,6 +45,7 @@ import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class CkbExtractor {
 
@@ -59,8 +61,18 @@ public class CkbExtractor {
         this.actionableEvidenceFactory = actionableEvidenceFactory;
     }
 
+    @Nullable
+    public String extractCanonicalTranscript(@NotNull String refseqToMatch, @NotNull List<RefSeq> refSeqMatchFile) {
+        for (RefSeq refSeq: refSeqMatchFile) {
+            if (refSeq.dbPrimaryAcc().equals(refseqToMatch)) {
+                return refSeq.transcriptId();
+            }
+        }
+        return null;
+    }
+
     @NotNull
-    public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries) {
+    public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries, @NotNull List<RefSeq> refSeqMatchFile) {
         List<ExtractionResult> extractions = Lists.newArrayList();
         List<EventExtractorOutput> eventExtractions = Lists.newArrayList();
 
@@ -69,9 +81,9 @@ public class CkbExtractor {
             LOGGER.info("profileName: {}", entry.profileName());
             LOGGER.info("id profileName: {}", entry.profileId());
             if (entry.variants().size() == 1) {
-                // TODO: Canonical transcript in CKB is refseq. Could maybe be converted to ensembl.
+
                 eventExtractions.add(eventExtractor.extract(entry.variants().get(0).gene().geneSymbol(),
-                        null,
+                        extractCanonicalTranscript(entry.variants().get(0).gene().canonicalTranscript(), refSeqMatchFile),
                         entry.type(),
                         entry.variants().get(0).variant()));
                 Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry);

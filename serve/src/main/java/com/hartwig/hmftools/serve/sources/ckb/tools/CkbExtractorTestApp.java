@@ -16,6 +16,8 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.refseq.RefSeq;
+import com.hartwig.hmftools.common.refseq.RefSeqFile;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.curation.DoidLookupFactory;
@@ -53,12 +55,13 @@ public class CkbExtractorTestApp {
         String fastaFile;
         ProteinResolver proteinResolver;
         String eventsTsv;
+        String refSeqMatch;
 
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.V38;
         Map<String, HmfTranscriptRegion> allGenesMap = HmfGenePanelSupplier.allGenesMap38();
 
         if (hostname.toLowerCase().contains("datastore")) {
-            ckbDir = "/data/common/dbs/ckb/210326_flex_dump";
+            ckbDir = "/data/common/dbs/ckb/210402_flex_dump";
             outputDir = System.getProperty("user.home") + "/tmp/serve_ckb";
             eventsTsv = outputDir + "/CkbEvents.tsv";
             missingDoidMappingTsv = "/data/common/dbs/serve/curation/missing_doids_mapping.tsv";
@@ -66,6 +69,7 @@ public class CkbExtractorTestApp {
             knownFusionFilePath = "/data/common/dbs/fusions/known_fusion_data.38_v3.csv";
             fastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh38.no.alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna";
             proteinResolver = ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, fastaFile, allGenesMap);
+            refSeqMatch = "/data/common/dbs/serve/static_sources/refseq/refseq_to_canonicalTranscript.tsv";
         } else {
             ckbDir = System.getProperty("user.home") + "/hmf/projects/serve/ckb";
             outputDir = System.getProperty("user.home") + "/tmp/serve_ckb";
@@ -75,6 +79,7 @@ public class CkbExtractorTestApp {
             knownFusionFilePath = System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.38_v3.csv";
             fastaFile = Strings.EMPTY;
             proteinResolver = ProteinResolverFactory.dummy();
+            refSeqMatch = System.getProperty("user.home") + "/hmf/projects/serve/static_sources/refseq/refseq_to_canonicalTranscript.tsv";
         }
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
@@ -103,7 +108,10 @@ public class CkbExtractorTestApp {
         EventClassifierConfig config = CkbClassificationConfig.build();
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config, refGenomeResource, doidLookup);
 
-        ExtractionResult result = extractor.extract(filteredAndcurateCkbEntries);
+        LOGGER.info("Reading ref seq matching to transcript");
+        List<RefSeq> refSeqMatchFile = RefSeqFile.readingRefSeq(refSeqMatch);
+
+        ExtractionResult result = extractor.extract(filteredAndcurateCkbEntries, refSeqMatchFile);
 
         CkbUtils.writeEventsToTsv(eventsTsv, filteredAndcurateCkbEntries);
         CkbUtils.printExtractionResults(result);
