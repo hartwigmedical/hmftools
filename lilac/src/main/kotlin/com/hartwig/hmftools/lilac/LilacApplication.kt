@@ -69,7 +69,12 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val HLA_GENES = setOf(HLA_A, HLA_B, HLA_C)
 
         val DEFLATE_TEMPLATE = HlaAllele("A*01:01")
-        val EXCLUDED_ALLELES = setOf(HlaAllele("A*01:81"), HlaAllele("A*01:237"), HlaAllele("A*33:191"), HlaAllele("A*31:135"))
+        val EXCLUDED_ALLELES = setOf(
+                HlaAllele("A*01:81"),
+                HlaAllele("A*01:237"),
+                HlaAllele("A*33:191"),
+                HlaAllele("A*11:353"),
+                HlaAllele("A*31:135"))
 
         val A_EXON_BOUNDARIES = setOf(24, 114, 206, 298, 337, 348, 364)
         val B_EXON_BOUNDARIES = setOf(24, 114, 206, 298, 337, 348)
