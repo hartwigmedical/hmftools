@@ -57,7 +57,7 @@ class Somatics {
         }
         val contig = LilacApplication.HLA_TRANSCRIPTS.map { it.chromosome() }.first()
         val minPosition = LilacApplication.HLA_TRANSCRIPTS.map { it.start() }.min()!!
-        val maxPosition = LilacApplication.HLA_TRANSCRIPTS.map { it.start() }.max()!!
+        val maxPosition = LilacApplication.HLA_TRANSCRIPTS.map { it.end() }.max()!!
 
         logger.info("Reading somatic vcf: ${config.somaticVcf}")
         val result = mutableListOf<VariantContextDecorator>()
