@@ -25,13 +25,13 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
     private val deleteSuffixTrees = deletes.map { Pair(it, SuffixTree(it.sequence())) }.toMap()
 
 
-    fun createAlignmentFragments(samCoding: SAMCodingRecord, reverseStrand: Boolean, codingRegion: NamedBed): NucleotideFragment? {
+    fun createAlignmentFragments(samCoding: SAMCodingRecord, codingRegion: NamedBed): NucleotideFragment? {
 
 //        if (samCoding.record.readName == "A00624:133:HGJLMDSXY:3:2320:5647:34976") {
 //            println("dsf")
 //        }
 
-        val all = samCoding.alignmentsOnly().mapNotNull { createFragment(it, reverseStrand, codingRegion) }
+        val all = samCoding.alignmentsOnly().mapNotNull { createFragment(it, codingRegion) }
         if (all.isEmpty()) {
             return null
         }
@@ -39,7 +39,8 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
         return all.reduce {x,y -> NucleotideFragment.merge(x,y)}
     }
 
-    fun createFragment(samCoding: SAMCodingRecord, reverseStrand: Boolean, codingRegion: NamedBed): NucleotideFragment? {
+    fun createFragment(samCoding: SAMCodingRecord, codingRegion: NamedBed): NucleotideFragment? {
+        val reverseStrand = samCoding.reverseStrand
         val samCodingStartLoci = if (reverseStrand) lociPosition.nucelotideLoci(samCoding.positionEnd) else lociPosition.nucelotideLoci(samCoding.positionStart)
         val samCodingEndLoci = if (reverseStrand) lociPosition.nucelotideLoci(samCoding.positionStart) else lociPosition.nucelotideLoci(samCoding.positionEnd)
 

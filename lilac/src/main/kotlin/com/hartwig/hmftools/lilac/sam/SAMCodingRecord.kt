@@ -17,7 +17,8 @@ data class SAMCodingRecord(
         val indels: List<Indel>,
         val positionStart: Int, val positionEnd: Int,
         val readStart: Int, val readEnd: Int,
-        val record: SAMRecord) {
+        val record: SAMRecord,
+        val reverseStrand: Boolean) {
 
     fun maxIndelSize(): Int {
         return indels.map { abs(it.length) }.max() ?: 0
@@ -55,11 +56,11 @@ data class SAMCodingRecord(
 
     fun alignmentsOnly(): List<SAMCodingRecord> {
         val outerRegion = GenomeRegions.create(record.contig, positionStart.toLong(), positionEnd.toLong())
-        val result =  record.alignmentBlocks
+        val result = record.alignmentBlocks
                 .map { GenomeRegions.create(record.contig, it.referenceStart.toLong(), it.referenceStart.toLong() + it.length - 1) }
                 .filter { outerRegion.overlaps(it) }
                 .map { GenomeRegions.create(record.contig, max(it.start(), outerRegion.start()), min(it.end(), outerRegion.end())) }
-                .map { create(it, record, false, false) }
+                .map { create(this.reverseStrand, it, record, false, false) }
 
         return result
 
@@ -68,7 +69,7 @@ data class SAMCodingRecord(
     companion object {
 
 
-        fun create(codingRegion: GenomeRegion, record: SAMRecord, includeSoftClips: Boolean = true, includeIndels: Boolean = true): SAMCodingRecord {
+        fun create(reverseStrand: Boolean, codingRegion: GenomeRegion, record: SAMRecord, includeSoftClips: Boolean = true, includeIndels: Boolean = true): SAMCodingRecord {
 
             val softClipStart = record.softClipStart()
             val softClipEnd = record.softClipEnd()
@@ -105,7 +106,7 @@ data class SAMCodingRecord(
             val softClippedEnd = max(0, positionEnd - alignmentEnd)
             val indels = if (includeIndels) indels(positionStart, positionEnd, record) else listOf()
 
-            return SAMCodingRecord(record.readName, softClippedStart, softClippedEnd, indels, positionStart, positionEnd, readIndexStart, readIndexEnd, record)
+            return SAMCodingRecord(record.readName, softClippedStart, softClippedEnd, indels, positionStart, positionEnd, readIndexStart, readIndexEnd, record, reverseStrand)
         }
 
         private fun indels(startPosition: Int, endPosition: Int, record: SAMRecord): List<Indel> {

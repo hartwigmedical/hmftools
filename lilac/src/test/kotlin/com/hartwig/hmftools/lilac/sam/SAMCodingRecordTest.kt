@@ -14,70 +14,70 @@ class SAMCodingRecordTest {
     @Test
     fun testCodingRegionContainsMatchedRecord() {
         val samRecord = buildSamRecord(1100, "150M", 150)
-        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        val victim = SAMCodingRecord.create(false, longCodingRegion, samRecord)
         assertIntersect(victim, 0, 0, 0, 0, 1100, 1249, 0, 149)
     }
 
     @Test
     fun testLeftSoftClipWithin() {
         val samRecord = buildSamRecord(1100, "10S140M", 150)
-        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        val victim = SAMCodingRecord.create(false, longCodingRegion, samRecord)
         assertIntersect(victim, 10, 0, 0, 0, 1090, 1239, 0, 149)
     }
 
     @Test
     fun testRightSoftClipWithin() {
         val samRecord = buildSamRecord(1100, "140M10S", 150)
-        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        val victim = SAMCodingRecord.create(false, longCodingRegion, samRecord)
         assertIntersect(victim, 0, 10, 0, 0, 1100, 1249, 0, 149)
     }
 
     @Test
     fun testRecordIsLeft() {
         val samRecord = buildSamRecord(900, "10S140M", 150)
-        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        val victim = SAMCodingRecord.create(false, longCodingRegion, samRecord)
         assertIntersect(victim, 0, 0, 0, 0, 1000, 1039, 110, 149)
     }
 
     @Test
     fun testRecordIsLeftWithSomeRightSoftClip() {
         val samRecord = buildSamRecord(900, "10S130M10S", 150)
-        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        val victim = SAMCodingRecord.create(false, longCodingRegion, samRecord)
         assertIntersect(victim, 0, 10, 0, 0, 1000, 1039, 110, 149)
     }
 
     @Test
     fun testRecordIsRight() {
         val samRecord = buildSamRecord(1900, "140M10S", 150)
-        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        val victim = SAMCodingRecord.create(false, longCodingRegion, samRecord)
         assertIntersect(victim, 0, 0, 0, 0, 1900, 2000, 0, 100)
     }
 
     @Test
     fun testRecordIsRightWithSomeLeftSoftClip() {
         val samRecord = buildSamRecord(1910, "10S130M10S", 150)
-        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        val victim = SAMCodingRecord.create(false, longCodingRegion, samRecord)
         assertIntersect(victim, 10, 0, 0, 0, 1900, 2000, 0, 100)
     }
 
     @Test
     fun testInsert() {
         val samRecord = buildSamRecord(1100, "50M3I50M", 103)
-        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        val victim = SAMCodingRecord.create(false, longCodingRegion, samRecord)
         assertIntersect(victim, 0, 0, 0, 3, 1100, 1199, 0, 102)
     }
 
     @Test
     fun testInsertOutsideCodingRegion() {
         val samRecord = buildSamRecord(1990, "50M3I50M", 103)
-        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        val victim = SAMCodingRecord.create(false, longCodingRegion, samRecord)
         assertIntersect(victim, 0, 0, 0, 0, 1990, 2000, 0, 10)
     }
 
     @Test
     fun testDelete() {
         val samRecord = buildSamRecord(1100, "50M3D50M", 100)
-        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        val victim = SAMCodingRecord.create(false, longCodingRegion, samRecord)
         assertIntersect(victim, 0, 0, -3, 0, 1100, 1202, 0, 99)
         assertTrue(victim.containsIndel())
     }
@@ -85,7 +85,7 @@ class SAMCodingRecordTest {
     @Test
     fun testOppositeIndelsDoNotCancelOut() {
         val samRecord = buildSamRecord(1100, "50M3D1M3I50M", 100)
-        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        val victim = SAMCodingRecord.create(false, longCodingRegion, samRecord)
         assertEquals(2, victim.indels.size)
         assertTrue(victim.containsIndel())
     }
@@ -93,7 +93,7 @@ class SAMCodingRecordTest {
     @Test
     fun testMultipleIndels() {
         val samRecord = buildSamRecord(1100, "50M3D1M4I50M", 100)
-        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        val victim = SAMCodingRecord.create(false, longCodingRegion, samRecord)
         assertEquals(2, victim.indels.size)
         assertTrue(victim.containsIndel())
     }
@@ -101,14 +101,14 @@ class SAMCodingRecordTest {
     @Test
     fun testDeleteOutsideCodingRange() {
         val samRecord = buildSamRecord(1990, "50M3D50M", 100)
-        val victim = SAMCodingRecord.create(longCodingRegion, samRecord)
+        val victim = SAMCodingRecord.create(false, longCodingRegion, samRecord)
         assertIntersect(victim, 0, 0, 0, 0, 1990, 2000, 0, 10)
     }
 
     @Test
     fun testShortRegion() {
         val samRecord = buildSamRecord(900, "150M", 150)
-        val victim = SAMCodingRecord.create(shortCodingRegion, samRecord)
+        val victim = SAMCodingRecord.create(false, shortCodingRegion, samRecord)
         assertIntersect(victim, 0, 0, 0, 0, 1000, 1020, 100, 120)
     }
 

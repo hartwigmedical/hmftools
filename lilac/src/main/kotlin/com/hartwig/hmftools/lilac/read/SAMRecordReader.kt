@@ -62,11 +62,11 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
             var hlaCodingRegionOffset = 0
             for (codingRegion in codingRegions) {
                 if (codingRegion.contains(variantPosition) || abs(codingRegion.start() - variant.position()) <= 5 || abs(codingRegion.end() - variant.position()) <= 5) {
-                    val codingRecords = query(variantPosition, codingRegion, bamFile)
+                    val codingRecords = query(reverseStrand, variantPosition, codingRegion, bamFile)
                             .filter { recordContainsVariant(variant, it) }
 
                     val nucleotideFragments = codingRecords
-                            .mapNotNull { factory.createAlignmentFragments(it, reverseStrand, codingRegion) }
+                            .mapNotNull { factory.createAlignmentFragments(it, codingRegion) }
 
                     return nucleotideFragments
                 }
@@ -108,10 +108,8 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
         val codingRegions = if (reverseStrand) codingRegions(transcript).reversed() else codingRegions(transcript)
 
         val realignedRegions = mutableListOf<NucleotideFragment>()
-        var length = 0
         for (codingRegion in codingRegions) {
             realignedRegions.addAll(realign(codingRegion, reverseStrand, bamFile))
-            length += codingRegion.bases().toInt()
         }
 
         return realignedRegions
@@ -132,13 +130,13 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
         }
     }
 
-    private fun query(variantRegion: GenomePosition, nearestCodingRegion: NamedBed, bamFileName: String): List<SAMCodingRecord> {
+    private fun query(reverseStrand: Boolean, variantRegion: GenomePosition, nearestCodingRegion: NamedBed, bamFileName: String): List<SAMCodingRecord> {
         val slicer = SAMSlicer(1)
         val result = mutableListOf<SAMCodingRecord>()
         samReaderFactory().open(File(bamFileName)).use { samReader ->
             val consumer = Consumer<SAMRecord> { samRecord ->
                 if (samRecord.bothEndsInRangeOfCodingTranscripts()) {
-                    result.add(SAMCodingRecord.create(nearestCodingRegion, samRecord))
+                    result.add(SAMCodingRecord.create(reverseStrand, nearestCodingRegion, samRecord))
 
                 } else {
                     alignmentFiltered++
@@ -150,13 +148,13 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
         return result
     }
 
-    private fun query(codingRegion: NamedBed, bamFileName: String): List<SAMCodingRecord> {
+    private fun query(reverseStrand: Boolean, codingRegion: NamedBed, bamFileName: String): List<SAMCodingRecord> {
         val slicer = SAMSlicer(1)
         val result = mutableListOf<SAMCodingRecord>()
         samReaderFactory().open(File(bamFileName)).use { samReader ->
             val consumer = Consumer<SAMRecord> { samRecord ->
                 if (samRecord.bothEndsInRangeOfCodingTranscripts()) {
-                    result.add(SAMCodingRecord.create(codingRegion, samRecord))
+                    result.add(SAMCodingRecord.create(reverseStrand, codingRegion, samRecord))
 
                 } else {
                     alignmentFiltered++
@@ -170,8 +168,8 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
 
     private fun realign(codingRegion: NamedBed, reverseStrand: Boolean, bamFileName: String): List<NucleotideFragment> {
         val result = mutableListOf<NucleotideFragment>()
-        for (codingRecord in query(codingRegion, bamFileName)) {
-            val fragment = factory.createFragment(codingRecord, reverseStrand, codingRegion)
+        for (codingRecord in query(reverseStrand, codingRegion, bamFileName)) {
+            val fragment = factory.createFragment(codingRecord, codingRegion)
             if (fragment != null) {
                 result.add(fragment)
             } else {
