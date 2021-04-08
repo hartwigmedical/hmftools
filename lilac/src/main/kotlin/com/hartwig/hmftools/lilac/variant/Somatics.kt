@@ -61,13 +61,17 @@ class Somatics {
 
         logger.info("Reading somatic vcf: ${config.somaticVcf}")
         val result = mutableListOf<VariantContextDecorator>()
-        val fileReader = VCFFileReader(File(config.somaticVcf),  true)
-        for (variantContext in fileReader.query(contig, minPosition.toInt(), maxPosition.toInt())) {
+        val fileReader = VCFFileReader(File(config.somaticVcf),  false)
+        val iterator = if (fileReader.isQueryable) {fileReader.query(contig, minPosition.toInt(), maxPosition.toInt())} else (fileReader.iterator())
+
+        for (variantContext in iterator) {
             val enriched = VariantContextDecorator(variantContext)
             if (enriched.gene() in LilacApplication.HLA_GENES && enriched.impact() != DriverImpact.UNKNOWN && enriched.isPass) {
                 result.add(enriched)
             }
         }
+
+        fileReader.close()
 
         logger.info("    found ${result.size} HLA variants")
         return result
