@@ -6,7 +6,6 @@ import com.hartwig.hmftools.lilac.LilacApplication
 import com.hartwig.hmftools.lilac.LilacConfig
 import com.hartwig.hmftools.lilac.LociPosition
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage
-import com.hartwig.hmftools.lilac.read.AminoAcidIndices
 import com.hartwig.hmftools.lilac.read.FragmentAlleles
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
@@ -27,8 +26,8 @@ class Somatics {
         val variants = readSomatics(config)
         val variantLoci = variants
                 .map { lociPosition.nucelotideLoci(it.position().toInt()) }
-                .filter { it > 0 }
-                .map { AminoAcidIndices.indices(it, it).first }
+                .filter { it >= 0 }
+                .map {it / 3 }
 
         val hetLociSansVariants = hetLoci subtract variantLoci
         for (variant in variants) {
