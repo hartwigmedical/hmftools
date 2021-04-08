@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.lilac.evidence
 
+import com.hartwig.hmftools.lilac.LilacConfig
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.nuc.ExpectedAlleles
 
 class ExtendEvidence(
-        private val minFragmentsPerAllele: Int,
-        private val minFragmentsToRemoveSingles: Int,
+        private val config: LilacConfig,
         private val heterozygousLoci: List<Int>,
         private val aminoAcidFragments: List<AminoAcidFragment>,
         private val expectedAlleles: ExpectedAlleles) {
@@ -21,7 +21,7 @@ class ExtendEvidence(
 
                 val left = PhasedEvidence.evidence(aminoAcidFragments, indices[0])
                 val right = PhasedEvidence.evidence(aminoAcidFragments, indices[1])
-                val combinedEvidence = PhasedEvidence.evidence(aminoAcidFragments, *indices.toIntArray()).removeSingles(minFragmentsToRemoveSingles)
+                val combinedEvidence = PhasedEvidence.evidence(aminoAcidFragments, *indices.toIntArray()).removeSingles(config.minFragmentsToRemoveSingle)
                 if (combinedEvidence.totalEvidence() >= minTotalFragments && CombineEvidence.canCombine(left, combinedEvidence, right)) {
                     result.add(combinedEvidence)
                 } else {
@@ -78,7 +78,7 @@ class ExtendEvidence(
 
 
     private fun minTotalFragments(indices: List<Int>): Int {
-        return expectedAlleles.expectedAlleles(indices) * minFragmentsPerAllele
+        return expectedAlleles.expectedAlleles(indices) * config.minFragmentsPerAllele
     }
 
     private fun merge(current: PhasedEvidence, left: PhasedEvidence, right: PhasedEvidence): Pair<PhasedEvidence, Set<PhasedEvidence>> {
@@ -90,7 +90,7 @@ class ExtendEvidence(
         val filteredFragments = aminoAcidFragments.filter { it.containsAll(mergeIndices) }
         if (filteredFragments.isNotEmpty()) {
             val minTotalFragments = minTotalFragments(mergeIndices)
-            val mergeEvidence = PhasedEvidence.evidence(filteredFragments, *mergeIndices.toIntArray()).removeSingles(minFragmentsToRemoveSingles)
+            val mergeEvidence = PhasedEvidence.evidence(filteredFragments, *mergeIndices.toIntArray()).removeSingles(config.minFragmentsToRemoveSingle)
             if (CombineEvidence.canCombine(left, mergeEvidence, right)) {
                 val combined = CombineEvidence.combine(left, mergeEvidence, right)
                 if (combined.totalEvidence() >= minTotalFragments) {

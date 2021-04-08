@@ -26,6 +26,7 @@ const val EXPECTED_ALLELES = "expected_alleles"
 const val GENE_COPY_NUMBER = "gene_copy_number"
 const val SOMATIC_VCF = "somatic_vcf"
 const val MAX_DISTANCE_FROM_TOP_SCORE = "max_distance_from_top_score"
+const val DEBUG_PHASING = "debug_phasing"
 
 data class LilacConfig(
         val sample: String,
@@ -43,6 +44,7 @@ data class LilacConfig(
         val maxDistanceFromTopScore: Int,
         val geneCopyNumberFile: String,
         val somaticVcf: String,
+        val debugPhasing: Boolean,
         val expectedAlleles: List<HlaAllele>,
         val commonAlleles: List<HlaAllele>
 ) {
@@ -64,6 +66,7 @@ data class LilacConfig(
             val outputDir = cmd.requiredDir(OUTPUT_DIR_OPTION)
             val defaultConfig = default()
 
+            val debugPhasing = cmd.hasOption(DEBUG_PHASING)
             val refGenome = cmd.optionalFile(REF_GENOME_OPTION, "")
             val minBaseQual = Configs.defaultIntValue(cmd, MIN_BASE_QUAL, defaultConfig.minBaseQual)
             val minEvidence = Configs.defaultIntValue(cmd, MIN_EVIDENCE, defaultConfig.minEvidence)
@@ -95,6 +98,7 @@ data class LilacConfig(
                     maxDistanceFromTopScore,
                     geneCopyNumberFile,
                     somaticVcf,
+                    debugPhasing,
                     expectedAlleles,
                     commonAlleles)
         }
@@ -116,6 +120,7 @@ data class LilacConfig(
                     3,
                     "",
                     "",
+                    false,
                     listOf(),
                     listOf())
         }
@@ -138,6 +143,7 @@ data class LilacConfig(
             options.addOption(optional(EXPECTED_ALLELES, "Comma separated expected alleles"))
             options.addOption(optional(GENE_COPY_NUMBER, "Path to gene copy number file"))
             options.addOption(optional(SOMATIC_VCF, "Path to somatic VCF"))
+            options.addOption(Option(DEBUG_PHASING, false, "More detailed logging of phasing"))
             return options
         }
 

@@ -158,7 +158,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val allUnphasedCandidates = (aUnphasedCandidates + bUnphasedCandidates + cUnphasedCandidates)
 
         // Phasing
-        val phasedEvidenceFactory = PhasedEvidenceFactory(minFragmentsPerAllele, config.minFragmentsToRemoveSingle, config.minEvidence)
+        val phasedEvidenceFactory = PhasedEvidenceFactory(config)
         val aPhasedEvidence = phasedEvidenceFactory.evidence(hlaAContext, aCandidateFragments)
         val bPhasedEvidence = phasedEvidenceFactory.evidence(hlaBContext, bCandidateFragments)
         val cPhasedEvidence = phasedEvidenceFactory.evidence(hlaCContext, cCandidateFragments)

@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.lilac.evidence
 
+import com.hartwig.hmftools.lilac.LilacConfig
 import com.hartwig.hmftools.lilac.SequenceCount
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.hla.HlaContext
 import com.hartwig.hmftools.lilac.nuc.ExpectedAlleles
 import org.apache.logging.log4j.LogManager
 
-class PhasedEvidenceFactory(private val minFragmentsPerAllele: Int, private val minFragmentsToRemoveSingles: Int, private val minEvidence: Int) {
+class PhasedEvidenceFactory(private val config: LilacConfig) {
 
     companion object {
         val logger = LogManager.getLogger(this::class.java)
@@ -24,11 +25,11 @@ class PhasedEvidenceFactory(private val minFragmentsPerAllele: Int, private val 
     }
 
     fun evidence(expectedAlleles: ExpectedAlleles, aminoAcidAminoAcidFragments: List<AminoAcidFragment>): List<PhasedEvidence> {
-        val aminoAcidCounts = SequenceCount.aminoAcids(minEvidence, aminoAcidAminoAcidFragments)
+        val aminoAcidCounts = SequenceCount.aminoAcids(config.minEvidence, aminoAcidAminoAcidFragments)
         val heterozygousIndices = aminoAcidCounts.heterozygousLoci()
 //        println(heterozygousIndices)
 
-        val heterozygousEvidence = ExtendEvidence(minFragmentsPerAllele, minFragmentsToRemoveSingles, heterozygousIndices, aminoAcidAminoAcidFragments, expectedAlleles)
+        val heterozygousEvidence = ExtendEvidence(config, heterozygousIndices, aminoAcidAminoAcidFragments, expectedAlleles)
 
         val finalisedEvidence = mutableSetOf<PhasedEvidence>()
         val unprocessedEvidence = mutableListOf<PhasedEvidence>()
