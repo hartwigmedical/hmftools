@@ -43,9 +43,9 @@ class Somatics {
             val coverage = HlaAlleleCoverage.proteinCoverage(variantFragmentAlleles)
             logger.info("    $variant -> $coverage")
 
-            for (variantFragmentAllele in variantFragmentAlleles) {
+//            for (variantFragmentAllele in variantFragmentAlleles) {
 //                println("${variantFragmentAllele.fragment.id} F:${variantFragmentAllele.full} P:${variantFragmentAllele.partial}")
-            }
+//            }
         }
 
     }

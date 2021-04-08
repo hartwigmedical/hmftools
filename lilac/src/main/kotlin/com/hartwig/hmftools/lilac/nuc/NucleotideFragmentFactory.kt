@@ -27,10 +27,6 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
 
     fun createAlignmentFragments(samCoding: SAMCodingRecord, codingRegion: NamedBed): NucleotideFragment? {
 
-//        if (samCoding.record.readName == "A00624:133:HGJLMDSXY:3:2320:5647:34976") {
-//            println("dsf")
-//        }
-
         val all = samCoding.alignmentsOnly().mapNotNull { createFragment(it, codingRegion) }
         if (all.isEmpty()) {
             return null

@@ -34,10 +34,6 @@ class FragmentAlleles(val fragment: AminoAcidFragment, val full: Collection<HlaA
                            aminoAcidLoci: Collection<Int>, aminoAcidSequences: Collection<HlaSequenceLoci>,
                            nucleotideLoci: Collection<Int>, nucleotideSequences: Collection<HlaSequenceLoci>): FragmentAlleles {
 
-            if (aminoAcidFragment.id == "A00624:133:HGJLMDSXY:3:2320:5647:34976") {
-                println("dsf")
-            }
-
             val fragmentNucleotideLoci = (aminoAcidFragment.nucleotideLoci() intersect nucleotideLoci).sorted().toIntArray()
             val fragmentNucleotides = aminoAcidFragment.nucleotides(*fragmentNucleotideLoci)
             val matchingNucleotideSequences = nucleotideSequences

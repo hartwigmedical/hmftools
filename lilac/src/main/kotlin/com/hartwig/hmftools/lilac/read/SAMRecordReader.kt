@@ -23,6 +23,7 @@ import kotlin.math.abs
 class SAMRecordReader(private val bamFile: String, private val refGenome: String, private val transcripts: List<HmfTranscriptRegion>, private val factory: NucleotideFragmentFactory) {
 
     companion object {
+        const val MIN_MAPPING_QUALITY = 1
         const val MAX_DISTANCE = 1000
         val logger = LogManager.getLogger(this::class.java)
         val indelPon = SAMRecordReader::class.java.getResource("/pon/indels.txt")
@@ -64,11 +65,17 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
                 if (codingRegion.contains(variantPosition) || abs(codingRegion.start() - variant.position()) <= 5 || abs(codingRegion.end() - variant.position()) <= 5) {
                     val codingRecords = query(reverseStrand, variantPosition, codingRegion, bamFile)
                             .filter { recordContainsVariant(variant, it) }
+                            .distinct()
 
                     val nucleotideFragments = codingRecords
                             .mapNotNull { factory.createAlignmentFragments(it, codingRegion) }
 
-                    return nucleotideFragments
+                    val mateFragments = queryMateFragments(transcript, codingRecords)
+
+                    return (nucleotideFragments + mateFragments)
+                            .groupBy { it.id }
+                            .map { it.value.reduce { x, y -> NucleotideFragment.merge(x, y) } }
+
                 }
                 hlaCodingRegionOffset += codingRegion.bases().toInt()
             }
@@ -130,8 +137,29 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
         }
     }
 
+    private fun queryMateFragments(transcript: HmfTranscriptRegion, codingRecords: List<SAMCodingRecord>): List<NucleotideFragment> {
+        val slicer = SAMSlicer(MIN_MAPPING_QUALITY)
+        val samRecords = codingRecords.map { it.record }.distinct()
+        val mates = samReaderFactory().open(File(bamFile)).use { reader -> slicer.queryMates(reader, samRecords) }
+        val result = mutableListOf<NucleotideFragment>()
+
+        val reverseStrand = transcript.strand() == Strand.REVERSE
+        val codingRegions = if (reverseStrand) codingRegions(transcript).reversed() else codingRegions(transcript)
+
+        for (codingRegion in codingRegions) {
+            mates
+                    .filter { it.alignmentStart <= codingRegion.end() && it.alignmentEnd >= codingRegion.start() }
+                    .map { SAMCodingRecord.create(reverseStrand, codingRegion, it) }
+                    .mapNotNull { factory.createAlignmentFragments(it, codingRegion) }
+                    .forEach { result.add(it)}
+        }
+
+        return result
+    }
+
+
     private fun query(reverseStrand: Boolean, variantRegion: GenomePosition, nearestCodingRegion: NamedBed, bamFileName: String): List<SAMCodingRecord> {
-        val slicer = SAMSlicer(1)
+        val slicer = SAMSlicer(MIN_MAPPING_QUALITY)
         val result = mutableListOf<SAMCodingRecord>()
         samReaderFactory().open(File(bamFileName)).use { samReader ->
             val consumer = Consumer<SAMRecord> { samRecord ->
@@ -149,7 +177,7 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
     }
 
     private fun query(reverseStrand: Boolean, codingRegion: NamedBed, bamFileName: String): List<SAMCodingRecord> {
-        val slicer = SAMSlicer(1)
+        val slicer = SAMSlicer(MIN_MAPPING_QUALITY)
         val result = mutableListOf<SAMCodingRecord>()
         samReaderFactory().open(File(bamFileName)).use { samReader ->
             val consumer = Consumer<SAMRecord> { samRecord ->
