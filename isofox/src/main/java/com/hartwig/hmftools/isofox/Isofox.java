@@ -261,12 +261,14 @@ public class Isofox
             applyGcAdjustments(chrTasks, callableList, nonEnrichedGcRatioCounts);
         }
 
-        final RnaStatistics summaryStats = createSummaryStats(
-                totalCounts, enrichedGeneFragCount,
-                medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength);
-
         if(mConfig.runFunction(IsofoxFunction.TRANSCRIPT_COUNTS))
+        {
+            final RnaStatistics summaryStats = createSummaryStats(
+                    totalCounts, enrichedGeneFragCount,
+                    medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength);
+
             mResultsWriter.writeSummaryStats(summaryStats);
+        }
 
         if (mConfig.WriteGcData)
         {
