@@ -44,11 +44,12 @@ class ActionableEvidenceFactory {
         DIRECTIONS_TO_IGNORE.add("no benefit");
         DIRECTIONS_TO_IGNORE.add("not predictive");
 
-        // Determine first what they mean with below direction
+        // TODO: Determine first what they mean with below direction
         DIRECTIONS_TO_IGNORE.add("decreased response");
 
         EVIDENCE_TYPE.add("Actionable");
 
+        // TODO: Determine if all those are ignored
         EVIDENCE_TYPE_TO_IGNORE.add("Prognostic");
         EVIDENCE_TYPE_TO_IGNORE.add("Emerging");
         EVIDENCE_TYPE_TO_IGNORE.add("Risk Factor");
