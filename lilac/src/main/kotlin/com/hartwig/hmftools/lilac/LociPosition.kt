@@ -5,8 +5,6 @@ import com.hartwig.hmftools.common.genome.region.Strand
 
 class LociPosition(private val transcripts: List<HmfTranscriptRegion>) {
 
-
-
     fun nucelotideLoci(position: Int): Int {
         for (transcript in transcripts) {
             if (position >= transcript.start() && position <= transcript.end()) {

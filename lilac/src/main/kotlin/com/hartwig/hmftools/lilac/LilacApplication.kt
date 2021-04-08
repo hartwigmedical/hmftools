@@ -77,12 +77,13 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         val ALL_PROTEIN_EXON_BOUNDARIES = (A_EXON_BOUNDARIES + B_EXON_BOUNDARIES + C_EXON_BOUNDARIES)
         val ALL_NUCLEOTIDE_EXON_BOUNDARIES = ALL_PROTEIN_EXON_BOUNDARIES.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
+
+        private val transcripts = HmfGenePanelSupplier.allGenesMap37()
+        val HLA_TRANSCRIPTS = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
+        val LOCI_POSITION = LociPosition(HLA_TRANSCRIPTS)
     }
 
     private val startTime = System.currentTimeMillis()
-    private val transcripts = HmfGenePanelSupplier.allGenesMap37()
-    private val hlaTranscripts = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
-
     private val sample = config.sample
     private val minBaseQual = config.minBaseQual
     private val minEvidence = config.minEvidence
@@ -125,9 +126,9 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val aminoAcidSequencesWithDeletes = aminoAcidSequences.filter { it.containsDeletes() }
 
         logger.info("Querying records from reference bam ${config.referenceBam}")
-        val nucleotideFragmentFactory = NucleotideFragmentFactory(config.minBaseQual, aminoAcidSequencesWithInserts, aminoAcidSequencesWithDeletes)
-        val tumorBamReader = SAMRecordReader(config.tumorBam, config.refGenome, hlaTranscripts, nucleotideFragmentFactory)
-        val referenceBamReader = SAMRecordReader(config.referenceBam, config.refGenome, hlaTranscripts, nucleotideFragmentFactory)
+        val nucleotideFragmentFactory = NucleotideFragmentFactory(config.minBaseQual, aminoAcidSequencesWithInserts, aminoAcidSequencesWithDeletes, LOCI_POSITION)
+        val tumorBamReader = SAMRecordReader(config.tumorBam, config.refGenome, HLA_TRANSCRIPTS, nucleotideFragmentFactory)
+        val referenceBamReader = SAMRecordReader(config.referenceBam, config.refGenome, HLA_TRANSCRIPTS, nucleotideFragmentFactory)
         val referenceNucleotideFragments = referenceBamReader.readFromBam().enrichGenes()
 
         val tumorNucleotideFragments = if (config.tumorBam.isNotEmpty()) {
@@ -264,7 +265,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         referenceNucleotideCounts.writeVertically("$outputDir/$sample.nucleotides.count.txt")
 
 
-        Somatics().doStuff(config, tumorBamReader, winningSequences, LociPosition(hlaTranscripts))
+        Somatics().doStuff(config, tumorBamReader, winningSequences, referenceAminoAcidHeterozygousLoci, LOCI_POSITION)
 
     }
 

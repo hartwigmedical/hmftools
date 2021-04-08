@@ -19,7 +19,7 @@ class Somatics {
     val logger = LogManager.getLogger(this::class.java)
 
 
-    fun doStuff(config: LilacConfig, reader: SAMRecordReader, winners: List<HlaSequenceLoci>, lociPosition: LociPosition) {
+    fun doStuff(config: LilacConfig, reader: SAMRecordReader, winners: List<HlaSequenceLoci>, hetLoci: Collection<Int>, lociPosition: LociPosition) {
         if (config.tumorBam.isEmpty() || config.somaticVcf.isEmpty()) {
             return
         }
@@ -30,21 +30,22 @@ class Somatics {
                 .filter { it > 0 }
                 .map { AminoAcidIndices.indices(it, it).first }
 
+        val hetLociSansVariants = hetLoci subtract variantLoci
         for (variant in variants) {
-            val alleleCount = winners.map { Pair(it.allele,0) }.toMap().toMutableMap()
             val variantFragments = reader
                     .readFromBam(variant)
                     .map { it.qualityFilter(config.minBaseQual) }
                     .filter { it.isNotEmpty() }
                     .map { it.toAminoAcidFragment() }
 
-            val variantFragmentAlleles = variantFragments.flatMap {
-                val loci = (it.aminoAcidLoci() subtract variantLoci).sorted()
-                FragmentAlleles.create(listOf(it), loci, winners, listOf(), listOf())
-            }
 
+            val variantFragmentAlleles = FragmentAlleles.create(variantFragments, hetLociSansVariants, winners, listOf(), listOf())
             val coverage = HlaAlleleCoverage.proteinCoverage(variantFragmentAlleles)
             logger.info("    $variant -> $coverage")
+
+            for (variantFragmentAllele in variantFragmentAlleles) {
+//                println("${variantFragmentAllele.fragment.id} F:${variantFragmentAllele.full} P:${variantFragmentAllele.partial}")
+            }
         }
 
     }
@@ -54,11 +55,14 @@ class Somatics {
         if (config.somaticVcf.isEmpty()) {
             return listOf()
         }
+        val contig = LilacApplication.HLA_TRANSCRIPTS.map { it.chromosome() }.first()
+        val minPosition = LilacApplication.HLA_TRANSCRIPTS.map { it.start() }.min()!!
+        val maxPosition = LilacApplication.HLA_TRANSCRIPTS.map { it.start() }.max()!!
 
         logger.info("Reading somatic vcf: ${config.somaticVcf}")
         val result = mutableListOf<VariantContextDecorator>()
-        val fileReader = VCFFileReader(File(config.somaticVcf), false)
-        for (variantContext in fileReader) {
+        val fileReader = VCFFileReader(File(config.somaticVcf),  true)
+        for (variantContext in fileReader.query(contig, minPosition.toInt(), maxPosition.toInt())) {
             val enriched = VariantContextDecorator(variantContext)
             if (enriched.gene() in LilacApplication.HLA_GENES && enriched.impact() != DriverImpact.UNKNOWN && enriched.isPass) {
                 result.add(enriched)

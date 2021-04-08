@@ -66,7 +66,7 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
                             .filter { recordContainsVariant(variant, it) }
 
                     val nucleotideFragments = codingRecords
-                            .mapNotNull { factory.createAlignmentFragments(it, reverseStrand, hlaCodingRegionOffset, codingRegion) }
+                            .mapNotNull { factory.createAlignmentFragments(it, reverseStrand, codingRegion) }
 
                     return nucleotideFragments
                 }
@@ -110,7 +110,7 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
         val realignedRegions = mutableListOf<NucleotideFragment>()
         var length = 0
         for (codingRegion in codingRegions) {
-            realignedRegions.addAll(realign(length, codingRegion, reverseStrand, bamFile))
+            realignedRegions.addAll(realign(codingRegion, reverseStrand, bamFile))
             length += codingRegion.bases().toInt()
         }
 
@@ -168,10 +168,10 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
         return result
     }
 
-    private fun realign(hlaCodingRegionOffset: Int, codingRegion: NamedBed, reverseStrand: Boolean, bamFileName: String): List<NucleotideFragment> {
+    private fun realign(codingRegion: NamedBed, reverseStrand: Boolean, bamFileName: String): List<NucleotideFragment> {
         val result = mutableListOf<NucleotideFragment>()
         for (codingRecord in query(codingRegion, bamFileName)) {
-            val fragment = factory.createFragment(codingRecord, reverseStrand, hlaCodingRegionOffset, codingRegion)
+            val fragment = factory.createFragment(codingRecord, reverseStrand, codingRegion)
             if (fragment != null) {
                 result.add(fragment)
             } else {
