@@ -104,6 +104,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
     override fun run() {
         logger.info("Starting LILAC with parameters:")
+        logger.info("    sample = ${config.sample}")
         logger.info("    minBaseQual = $minBaseQual")
         logger.info("    minEvidence = $minEvidence")
         logger.info("    minUniqueCoverage = $minConfirmedUniqueCoverage")
