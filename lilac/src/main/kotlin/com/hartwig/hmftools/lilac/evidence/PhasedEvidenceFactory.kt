@@ -17,6 +17,11 @@ class PhasedEvidenceFactory(private val config: LilacConfig) {
     fun evidence(context: HlaContext, fragments: List<AminoAcidFragment>): List<PhasedEvidence> {
         logger.info("Phasing HLA-${context.gene} records:")
         val result =  evidence(context.expectedAlleles, fragments)
+
+        if (config.debugPhasing) {
+            logger.info("    Consolidating evidence")
+        }
+
         for (phasedEvidence in result) {
             logger.info("    $phasedEvidence")
         }
@@ -27,7 +32,9 @@ class PhasedEvidenceFactory(private val config: LilacConfig) {
     fun evidence(expectedAlleles: ExpectedAlleles, aminoAcidAminoAcidFragments: List<AminoAcidFragment>): List<PhasedEvidence> {
         val aminoAcidCounts = SequenceCount.aminoAcids(config.minEvidence, aminoAcidAminoAcidFragments)
         val heterozygousIndices = aminoAcidCounts.heterozygousLoci()
-//        println(heterozygousIndices)
+        if (config.debugPhasing) {
+            logger.info("    Heterozygous Indices: $heterozygousIndices")
+        }
 
         val heterozygousEvidence = ExtendEvidence(config, heterozygousIndices, aminoAcidAminoAcidFragments, expectedAlleles)
 
@@ -35,15 +42,24 @@ class PhasedEvidenceFactory(private val config: LilacConfig) {
         val unprocessedEvidence = mutableListOf<PhasedEvidence>()
         unprocessedEvidence.addAll(heterozygousEvidence.pairedEvidence())
 
+        if (config.debugPhasing) {
+            logger.info("    Extending paired evidence")
+        }
+
 
         while (unprocessedEvidence.isNotEmpty()) {
             val top = unprocessedEvidence.removeAt(0)
-//            println("Processing: $top")
+            if (config.debugPhasing) {
+                logger.info("    Processing top: $top")
+            }
 
             val (parent, children) = heterozygousEvidence.merge(top, finalisedEvidence + unprocessedEvidence)
 
             if (children.isNotEmpty()) {
-//                println("Produced:   $parent")
+                if (config.debugPhasing) {
+                    logger.info("    Produced child: $parent")
+                }
+
                 finalisedEvidence.removeAll(children)
                 unprocessedEvidence.removeAll(children)
                 unprocessedEvidence.add(parent)

@@ -13,6 +13,10 @@ class ExtendEvidence(
     fun pairedEvidence(): List<PhasedEvidence> {
         val result = mutableListOf<PhasedEvidence>()
 
+        if (config.debugPhasing) {
+            PhasedEvidenceFactory.logger.info("    Producing paired evidence")
+        }
+
         for (i in 0..(heterozygousLoci.size - 2)) {
             val indices = listOf(heterozygousLoci[i], heterozygousLoci[i + 1])
             val filteredFragments = aminoAcidFragments.filter { it.containsAll(indices) }
@@ -24,8 +28,15 @@ class ExtendEvidence(
                 val combinedEvidence = PhasedEvidence.evidence(aminoAcidFragments, *indices.toIntArray()).removeSingles(config.minFragmentsToRemoveSingle)
                 if (combinedEvidence.totalEvidence() >= minTotalFragments && CombineEvidence.canCombine(left, combinedEvidence, right)) {
                     result.add(combinedEvidence)
+
+                    if (config.debugPhasing) {
+                        PhasedEvidenceFactory.logger.info("    Paired Evidence: $combinedEvidence")
+                    }
+
                 } else {
-//                    println("FAIL:$combinedEvidence")
+                    if (config.debugPhasing) {
+                        PhasedEvidenceFactory.logger.info("    FAILED Paired Evidence: $combinedEvidence")
+                    }
                 }
             }
         }
