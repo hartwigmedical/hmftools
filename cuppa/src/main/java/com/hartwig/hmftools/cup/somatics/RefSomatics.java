@@ -26,6 +26,9 @@ import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.extractTrinucl
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
+import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
+import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
+import static com.hartwig.hmftools.cup.somatics.SomaticSigs.populateReportableSignatures;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -71,8 +74,6 @@ public class RefSomatics implements RefClassifier
     public static final String REF_SIG_TYPE_SNV_COUNT = "SnvCount";
     private static final String MATRIX_TYPE_SNV_96 = "SNV_96";
     private static final String MATRIX_TYPE_GEN_POS = "GEN_POS";
-
-    public static final Map<String,String> REPORTABLE_SIGS = Maps.newHashMap();
 
     public RefSomatics(final RefDataConfig config, final SampleDataCache sampleDataCache)
     {
@@ -427,9 +428,18 @@ public class RefSomatics implements RefClassifier
                 mCancerSigContribs.put(cancerType, sigDataMap);
             }
 
-            for(String sigName : REPORTABLE_SIGS.keySet())
+            for(String sigName : SomaticSigs.REPORTABLE_SIGS.keySet())
             {
                 double sigContrib = sigAllocations.containsKey(sigName) ? sigAllocations.get(sigName) : 0;
+
+                // combine 2 & 13
+                if(sigName.equalsIgnoreCase(SIG_NAME_13))
+                    continue;
+
+                if(sigName.equalsIgnoreCase(SIG_NAME_2))
+                {
+                    sigContrib += sigAllocations.containsKey(SIG_NAME_13) ? sigAllocations.get(SIG_NAME_13) : 0;
+                }
 
                 List<Double> sigContribs = sigDataMap.get(sigName);
 
@@ -742,7 +752,7 @@ public class RefSomatics implements RefClassifier
                 {
                     final String sigName = sigEntry.getKey();
 
-                    if(REPORTABLE_SIGS.keySet().contains(sigName))
+                    if(SomaticSigs.REPORTABLE_SIGS.keySet().contains(sigName))
                     {
                         writer.write(String.format("%s,%s,%s", sampleId, sigName, sigEntry.getValue()));
                         writer.newLine();
@@ -756,19 +766,6 @@ public class RefSomatics implements RefClassifier
         {
             CUP_LOGGER.error("failed to write signature allocation cohort data output: {}", e.toString());
         }
-    }
-
-    public static void populateReportableSignatures()
-    {
-        REPORTABLE_SIGS.clear();
-        REPORTABLE_SIGS.put("Sig1", "SIG_1");
-        REPORTABLE_SIGS.put("Sig2", "SIG_2_13_AID_APOBEC");
-        REPORTABLE_SIGS.put("Sig4", "SIG_4_SMOKING");
-        REPORTABLE_SIGS.put("Sig6", "SIG_6_MMR");
-        REPORTABLE_SIGS.put("Sig7", "SIG_7_UV");
-        REPORTABLE_SIGS.put("Sig10", "SIG_10_POLE");
-        REPORTABLE_SIGS.put("Sig11", "SIG_11");
-        REPORTABLE_SIGS.put("Sig17", "SIG_17");
     }
 
 }

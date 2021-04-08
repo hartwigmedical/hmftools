@@ -165,15 +165,14 @@ public class FeatureDataLoader
     }
 
     public static boolean loadFeaturesFromDatabase(
-            final DatabaseAccess dbAccess, final List<String> sampleIds,
-            final Map<String,List<SampleFeatureData>> sampleFeaturesMap, boolean skipZeroDriverLikelihood)
+            final DatabaseAccess dbAccess, final List<String> sampleIds, final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
     {
         if(dbAccess == null)
             return false;
 
         final String specificSampleId = sampleIds.size() == 1 ? sampleIds.get(0) : null;
 
-        final Map<String,List<DriverCatalog>> sampleDriverMap = getAllDrivers(dbAccess, skipZeroDriverLikelihood, specificSampleId);
+        final Map<String,List<DriverCatalog>> sampleDriverMap = getAllDrivers(dbAccess, specificSampleId);
 
         final Map<String,List<LinxFusion>> sampleFusionMap = getAllFusions(dbAccess, specificSampleId);
 
@@ -393,8 +392,7 @@ public class FeatureDataLoader
         return mutations;
     }
 
-    private static final Map<String,List<DriverCatalog>> getAllDrivers(
-            final DatabaseAccess dbAccess, boolean skipZeroDriverLikelihood, final String specificSampleId)
+    private static final Map<String,List<DriverCatalog>> getAllDrivers(final DatabaseAccess dbAccess, final String specificSampleId)
     {
         final Map<String,List<DriverCatalog>> sampleDriverMap = Maps.newHashMap();
 
@@ -423,9 +421,6 @@ public class FeatureDataLoader
                     .minCopyNumber(record.getValue(DRIVERCATALOG.MINCOPYNUMBER))
                     .maxCopyNumber(record.getValue(DRIVERCATALOG.MAXCOPYNUMBER))
                     .build();
-
-            if(skipZeroDriverLikelihood && driverCatalog.driverLikelihood() <= 0)
-                continue;
 
             // ignore germline drivers
             if(driverCatalog.driver() == GERMLINE)

@@ -24,6 +24,7 @@ import static com.hartwig.hmftools.cup.feature.FeatureType.INDEL;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -154,11 +155,15 @@ public class FeatureClassifier implements CuppaClassifier
     private void calcCancerTypeProbability(
             final SampleData sample, final List<SampleFeatureData> allSampleFeatures, final List<SampleResult> results)
     {
+        // skip any zero-likelihood features so they aren't given a minimum probability
+        final List<SampleFeatureData> zeroLikelihoods = allSampleFeatures.stream().filter(x -> x.Likelihood == 0).collect(Collectors.toList());
+        zeroLikelihoods.forEach(x -> allSampleFeatures.remove(x));
+
         // taking the set of drivers as a group, report on the combined probability for each cancer type
         final Map<String, Double> cancerProbTotals = Maps.newHashMap();
 
         final Set<String> allFeatureNames = Sets.newHashSet();
-        allSampleFeatures.forEach(x -> allFeatureNames.add(x.Name));
+        allSampleFeatures.stream().filter(x -> x.Likelihood > 0).forEach(x -> allFeatureNames.add(x.Name));
 
         for(Map.Entry<String, List<FeaturePrevData>> entry : mCancerFeaturePrevalence.entrySet())
         {
@@ -171,7 +176,7 @@ public class FeatureClassifier implements CuppaClassifier
 
             final List<FeaturePrevData> samplePrevs = entry.getValue();
 
-            // only count at most one AMP or DEL per chromosome to avoid the effects of a single event impacting more than 1 gene
+            // only count at most one driver to avoid the effects of a single event impacting more than 1 gene
             final List<SampleFeatureData> sampleFeatures = allSampleFeatures;
 
             final Set<String> featureNames = Sets.newHashSet();
@@ -251,7 +256,7 @@ public class FeatureClassifier implements CuppaClassifier
         else if(mConfig.DbAccess != null)
         {
             CUP_LOGGER.info("loading sample features from database");
-            return loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleFeatures, false);
+            return loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.SampleIds, mSampleFeatures);
         }
 
         for(SampleData sample : mSampleDataCache.SampleDataList)

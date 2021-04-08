@@ -32,7 +32,6 @@ import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
 import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
 import static com.hartwig.hmftools.cup.somatics.RefSomatics.convertSignatureName;
-import static com.hartwig.hmftools.cup.somatics.RefSomatics.populateReportableSignatures;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.convertSomaticVariantsToPosFrequencies;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.convertSomaticVariantsToSnvCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
@@ -42,6 +41,10 @@ import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSamplePosF
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromDatabase;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
+import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
+import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
+import static com.hartwig.hmftools.cup.somatics.SomaticSigs.populateReportableSignatures;
+import static com.hartwig.hmftools.cup.somatics.SomaticSigs.signatureDisplayName;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -626,15 +629,6 @@ public class SomaticClassifier implements CuppaClassifier
         similarities.addAll(topMatches);
     }
 
-    private static final String SIG_NAME_2 = "Sig2";
-    private static final String SIG_NAME_13 = "Sig13";
-
-    private static final String signatureDisplayName(final String sigName)
-    {
-        final String displayName = RefSomatics.REPORTABLE_SIGS.get(sigName);
-        return displayName != null ? displayName : "UNKNOWN";
-    }
-
     private void addSigContributionResults(final SampleData sample, final List<SampleResult> results)
     {
         final Map<String,Double> sampleSigContribs = mSampleSigContributions.get(sample.Id);
@@ -647,16 +641,14 @@ public class SomaticClassifier implements CuppaClassifier
 
         // report on every one of the designated set
 
-        for(final String sigName : RefSomatics.REPORTABLE_SIGS.keySet())
+        for(final String sigName : SomaticSigs.REPORTABLE_SIGS.keySet())
         {
             double sampleSigContrib = sampleSigContribs.containsKey(sigName) ? sampleSigContribs.get(sigName) : 0;
 
             // report the AID/APOBEC sigs 2 & 13 together
             if(sigName.equalsIgnoreCase(SIG_NAME_2))
             {
-                Double otherAlloc = sampleSigContribs.get(SIG_NAME_13);
-                if(otherAlloc != null)
-                    sampleSigContrib += otherAlloc;
+                sampleSigContrib += sampleSigContribs.containsKey(SIG_NAME_13) ? sampleSigContribs.get(SIG_NAME_13) : 0;
             }
             else if(sigName.equalsIgnoreCase(SIG_NAME_13))
             {

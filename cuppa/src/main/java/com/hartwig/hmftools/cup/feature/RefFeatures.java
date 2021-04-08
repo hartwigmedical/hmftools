@@ -96,7 +96,7 @@ public class RefFeatures implements RefClassifier
         }
         else
         {
-            loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleFeaturesMap, true);
+            loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleFeaturesMap);
         }
     }
 
@@ -118,6 +118,9 @@ public class RefFeatures implements RefClassifier
 
             for(SampleFeatureData feature : sampleEntry.getValue())
             {
+                if(feature.Likelihood == 0)
+                    continue;
+
                 if(feature.Type == DRIVER)
                     driverTotal += feature.Likelihood;
 
@@ -256,7 +259,12 @@ public class RefFeatures implements RefClassifier
             }
 
             double driverTotal = panCancerDriversPerSample.stream().mapToDouble(x -> x).sum();
-            double avgDrivers = driverTotal / panCancerDriversPerSample.size();
+
+            long knownRefSampleCount = mSampleDataCache.RefSampleDataList.stream().filter(x -> isKnownCancerType(x.cancerType())).count();
+            double avgDrivers = driverTotal / knownRefSampleCount;
+
+            CUP_LOGGER.debug("pan-cancer driverTotal({}) avgPerSample({}) knownRefSampleCount({})",
+                    String.format("%.2f", driverTotal), String.format("%.4f", avgDrivers, knownRefSampleCount));
 
             writer.write(String.format("ALL,%.2f", avgDrivers));
             writer.newLine();
@@ -308,5 +316,4 @@ public class RefFeatures implements RefClassifier
             CUP_LOGGER.error("failed to write feature cohort data output: {}", e.toString());
         }
     }
-
 }
