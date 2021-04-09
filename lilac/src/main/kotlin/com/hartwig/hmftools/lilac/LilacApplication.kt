@@ -3,6 +3,7 @@ package com.hartwig.hmftools.lilac
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier
 import com.hartwig.hmftools.common.utils.version.VersionInfo
+import com.hartwig.hmftools.common.variant.VariantContextDecorator
 import com.hartwig.hmftools.lilac.LilacApplication.Companion.logger
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragmentPipeline
 import com.hartwig.hmftools.lilac.candidates.Candidates
@@ -28,7 +29,11 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToFourDigit
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToSixDigit
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLociFile
-import com.hartwig.hmftools.lilac.variant.Somatics
+import com.hartwig.hmftools.lilac.variant.LilacVCF
+import com.hartwig.hmftools.lilac.variant.SomaticAlleleCoverage
+import com.hartwig.hmftools.lilac.variant.SomaticCodingCount
+import com.hartwig.hmftools.lilac.variant.SomaticCodingCount.Companion.addVariant
+import com.hartwig.hmftools.lilac.variant.SomaticVariants
 import org.apache.commons.cli.*
 import org.apache.logging.log4j.LogManager
 import java.io.IOException
@@ -231,6 +236,45 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         logger.info("${config.sample} - REF - ${referenceRankedComplexes.size} CANDIDATES, WINNING ALLELES: ${winningReferenceCoverage.alleleCoverage.map { it.allele }}")
 
+        val winningTumorCoverage: HlaComplexCoverage
+        val winningTumorCopyNumber: HlaCopyNumber
+        val somaticVariants: List<VariantContextDecorator>
+        var somaticCodingCount = SomaticCodingCount.create(winningAlleles)
+
+        if (config.tumorBam.isNotEmpty()) {
+            logger.info("Calculating tumor coverage of winning alleles")
+            val tumorFragmentAlleles = FragmentAlleles.create(aminoAcidPipeline.tumorCoverageFragments(),
+                    referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences, referenceNucleotideHeterozygousLoci, candidateNucleotideSequences)
+            winningTumorCoverage = HlaComplexCoverageFactory.proteinCoverage(tumorFragmentAlleles, winningAlleles).expandToSixAlleles()
+
+            logger.info("Calculating tumor copy number of winning alleles")
+            winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(config.geneCopyNumberFile, winningTumorCoverage)
+
+            // SOMATIC VARIANTS
+            somaticVariants = SomaticVariants(config).readSomaticVariants()
+            if (somaticVariants.isNotEmpty()) {
+                logger.info("Calculating somatic variant allele coverage")
+                val lilacVCF = LilacVCF("${config.outputFilePrefix}.lilac.somatic.vcf.gz", config.somaticVcf).writeHeader()
+
+                val somaticCoverageFactory = SomaticAlleleCoverage(config, referenceAminoAcidHeterozygousLoci, LOCI_POSITION, somaticVariants, winningSequences)
+                for (variant in somaticVariants) {
+                    val variantCoverage = somaticCoverageFactory.alleleCoverage(variant, tumorBamReader)
+                    val variantAlleles = variantCoverage.alleles()
+                    logger.info("    $variant -> $variantCoverage")
+                    lilacVCF.writeVariant(variant.context(), variantAlleles)
+                    somaticCodingCount = somaticCodingCount.addVariant(variant.canonicalCodingEffect(), variantCoverage.map { it.allele })
+                }
+            }
+        } else {
+            winningTumorCoverage = HlaComplexCoverage.create(listOf())
+            winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(config.geneCopyNumberFile, winningTumorCoverage)
+            somaticVariants = listOf()
+        }
+
+        val output = HlaOut(winningReferenceCoverage, winningTumorCoverage, winningTumorCopyNumber)
+        output.write("$outputDir/$sample.lilac.txt")
+
+        // QC
         val aminoAcidQC = AminoAcidQC.create(winningSequences, referenceAminoAcidCounts)
         val haplotypeQC = HaplotypeQC.create(3, winningSequences, aPhasedEvidence + bPhasedEvidence + cPhasedEvidence, referenceAminoAcidCounts)
         val bamQC = BamQC.create(referenceBamReader)
@@ -244,26 +288,6 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         lilacQC.writefile("$outputDir/$sample.qc.txt")
 
 
-        val winningTumorCoverage: HlaComplexCoverage
-        val winningTumorCopyNumber: HlaCopyNumber
-
-        if (config.tumorBam.isNotEmpty()) {
-            logger.info("Calculating tumor coverage of winning alleles")
-
-            val tumorFragmentAlleles = FragmentAlleles.create(aminoAcidPipeline.tumorCoverageFragments(),
-                    referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences, referenceNucleotideHeterozygousLoci, candidateNucleotideSequences)
-            winningTumorCoverage = HlaComplexCoverageFactory.proteinCoverage(tumorFragmentAlleles, winningAlleles).expandToSixAlleles()
-
-            logger.info("Calculating tumor copy number of winning alleles")
-            winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(config.geneCopyNumberFile, winningTumorCoverage)
-        } else {
-            winningTumorCoverage = HlaComplexCoverage.create(listOf())
-            winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(config.geneCopyNumberFile, winningTumorCoverage)
-        }
-
-        val output = HlaOut(winningReferenceCoverage, winningTumorCoverage, winningTumorCopyNumber)
-        output.write("$outputDir/$sample.lilac.txt")
-
         logger.info("Writing output to $outputDir")
         val deflatedSequenceTemplate = aminoAcidSequences.first { it.allele == DEFLATE_TEMPLATE }
         val candidateToWrite = (candidateSequences + expectedSequences + deflatedSequenceTemplate).distinct().sortedBy { it.allele }
@@ -273,7 +297,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         referenceNucleotideCounts.writeVertically("$outputDir/$sample.nucleotides.count.txt")
 
 
-        Somatics().process(config, tumorBamReader, winningSequences, referenceAminoAcidHeterozygousLoci, LOCI_POSITION)
+//        SomaticVariants().process(config, tumorBamReader, winningSequences, referenceAminoAcidHeterozygousLoci, LOCI_POSITION)
 
     }
 
