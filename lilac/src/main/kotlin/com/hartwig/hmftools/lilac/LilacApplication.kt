@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier
+import com.hartwig.hmftools.common.utils.version.VersionInfo
 import com.hartwig.hmftools.lilac.LilacApplication.Companion.logger
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragmentPipeline
 import com.hartwig.hmftools.lilac.candidates.Candidates
@@ -67,6 +68,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         const val HLA_B = "HLA-B"
         const val HLA_C = "HLA-C"
         val HLA_GENES = setOf(HLA_A, HLA_B, HLA_C)
+        val VERSION = VersionInfo("lilac.version")
 
         val DEFLATE_TEMPLATE = HlaAllele("A*01:01")
         val EXCLUDED_ALLELES = setOf(
@@ -271,7 +273,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         referenceNucleotideCounts.writeVertically("$outputDir/$sample.nucleotides.count.txt")
 
 
-        Somatics().doStuff(config, tumorBamReader, winningSequences, referenceAminoAcidHeterozygousLoci, LOCI_POSITION)
+        Somatics().process(config, tumorBamReader, winningSequences, referenceAminoAcidHeterozygousLoci, LOCI_POSITION)
 
     }
 
