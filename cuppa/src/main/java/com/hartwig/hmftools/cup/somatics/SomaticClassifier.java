@@ -60,7 +60,6 @@ import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
@@ -98,7 +97,7 @@ public class SomaticClassifier implements CuppaClassifier
     private Matrix mSamplePosFrequencies;
     private final Map<String,Integer> mSamplePosFreqIndex;
 
-    private final SomaticSigs mSomaticFigs;
+    private final SomaticSigs mSomaticSigs;
 
     private boolean mIsValid;
     private BufferedWriter mCssWriter;
@@ -145,7 +144,7 @@ public class SomaticClassifier implements CuppaClassifier
         mIsValid = true;
         mCssWriter = null;
 
-        mSomaticFigs = new SomaticSigs(mConfig.RefSnvSignaturesFile);
+        mSomaticSigs = new SomaticSigs(mConfig.RefSnvSignaturesFile);
 
         if(mConfig.RefSnvCountsFile.isEmpty() && mConfig.RefSigContributionFile.isEmpty() && mConfig.RefSnvCancerPosFreqFile.isEmpty())
             return;
@@ -302,16 +301,24 @@ public class SomaticClassifier implements CuppaClassifier
                 return false;
             }
         }
-        else if(mSomaticFigs.hasValidData() && mSampleSnvCounts != null)
+        else if(mSomaticSigs.hasValidData() && mSampleSnvCounts != null)
         {
-            final double[] sigAllocations = mSomaticFigs.fitSampleCounts(mSampleSnvCounts.getCol(0));
+            CUP_LOGGER.debug("sample({}) running SNV signatures", sampleId);
+
+            final double[] sigAllocations = mSomaticSigs.fitSampleCounts(mSampleSnvCounts.getCol(0));
+
+            if(sigAllocations == null)
+            {
+                CUP_LOGGER.error("sample({}) failed signature fit", sampleId);
+                return false;
+            }
 
             final Map<String, Double> sigContribs = Maps.newHashMap();
             mSampleSigContributions.put(sampleId, sigContribs);
 
             for(int i = 0; i < sigAllocations.length; ++i)
             {
-                final String sigName = mSomaticFigs.getSigName(i);
+                final String sigName = mSomaticSigs.getSigName(i);
                 sigContribs.put(sigName, sigAllocations[i]);
             }
         }
@@ -640,7 +647,6 @@ public class SomaticClassifier implements CuppaClassifier
         }
 
         // report on every one of the designated set
-
         for(final String sigName : SomaticSigs.REPORTABLE_SIGS.keySet())
         {
             double sampleSigContrib = sampleSigContribs.containsKey(sigName) ? sampleSigContribs.get(sigName) : 0;

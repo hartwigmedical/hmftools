@@ -102,17 +102,15 @@ public class FeatureDataLoader
             final String sampleId, final String sampleDataDir, final String sampleVcfFile,
             final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
     {
+        // extract features from standard pipeline output files and fail if any cannot be loaded
         try
         {
             String viralInsertFilename = LinxViralInsertion.generateFilename(sampleDataDir, sampleId);
-
-            final List<LinxViralInsertion> viralInserts = Files.exists(Paths.get(viralInsertFilename)) ?
-                    LinxViralInsertion.read(viralInsertFilename) : Lists.newArrayList();
+            final List<LinxViralInsertion> viralInserts = LinxViralInsertion.read(viralInsertFilename);
 
             final String fusionsFilename = LinxFusion.generateFilename(sampleDataDir, sampleId);
 
-            final List<LinxFusion> fusions = Files.exists(Paths.get(fusionsFilename)) ?
-                    LinxFusion.read(fusionsFilename) : Lists.newArrayList();
+            final List<LinxFusion> fusions = LinxFusion.read(fusionsFilename);
 
             // load linx drivers if available, otherwise the purple somatic drivers
             final List<DriverCatalog> drivers = Lists.newArrayList();
@@ -121,9 +119,18 @@ public class FeatureDataLoader
             final String purpleDriverCatalogFilename = DriverCatalogFile.generateSomaticFilenameForReading(sampleDataDir, sampleId);
 
             if(Files.exists(Paths.get(linxDriverCatalogFilename)))
+            {
                 drivers.addAll(DriverCatalogFile.read(linxDriverCatalogFilename));
+            }
             else if(Files.exists(Paths.get(purpleDriverCatalogFilename)))
+            {
                 drivers.addAll(DriverCatalogFile.read(purpleDriverCatalogFilename));
+            }
+            else
+            {
+                CUP_LOGGER.error("sample({}) failed to load drivers", sampleId);
+                return false;
+            }
 
             boolean checkIndels = checkIndels(sampleId, sampleDataDir, null);
             final List<String> indelGenes = loadSpecificMutations(sampleId, sampleVcfFile, checkIndels);
@@ -132,7 +139,7 @@ public class FeatureDataLoader
         }
         catch(IOException e)
         {
-            CUP_LOGGER.error("failed to load drivers, fusion and virus data files: {}", e.toString());
+            CUP_LOGGER.error("sample({}) failed to load drivers, fusion and virus data files: {}", sampleId, e.toString());
             return false;
         }
 

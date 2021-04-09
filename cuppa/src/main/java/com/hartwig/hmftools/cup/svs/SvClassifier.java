@@ -74,24 +74,34 @@ public class SvClassifier implements CuppaClassifier
             return;
 
         boolean loadDbData = false;
-        if(mSampleSvData.isEmpty())
+
+        if(mConfig.DbAccess != null)
+        {
+            if(!loadSvDataFromDatabase(mConfig.DbAccess, Lists.newArrayList(sample.Id), mSampleSvData))
+            {
+                mIsValid = false;
+                return;
+            }
+
+            loadDbData = true;
+        }
+        else if(mSampleSvData.isEmpty())
         {
             if(!loadSampleSvData(sample.Id))
             {
-                if(mConfig.DbAccess == null)
-                    return;
-
-                if(!loadSvDataFromDatabase(mConfig.DbAccess, Lists.newArrayList(sample.Id), mSampleSvData))
-                    return;
-
-                loadDbData = true;
+                mIsValid = false;
+                return;
             }
         }
 
         final SvData svData = mSampleSvData.get(sample.Id);
 
         if(svData == null)
+        {
+            CUP_LOGGER.error("sample({}) sv data not loaded", sample.Id);
+            mIsValid = false;
             return;
+        }
 
         for(Map.Entry<SvDataType, Map<String, double[]>> entry : mRefSvTypePercentiles.entrySet())
         {
