@@ -68,7 +68,7 @@ public class CkbExtractorTestApp {
             driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.38.tsv";
             knownFusionFilePath = "/data/common/dbs/fusions/known_fusion_data.38_v3.csv";
             fastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh38.no.alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna";
-            proteinResolver = ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, fastaFile, allGenesMap);
+            proteinResolver = ProteinResolverFactory.dummy();
             refSeqMatch = "/data/common/dbs/serve/static_sources/refseq/refseq_to_canonicalTranscript.tsv";
         } else {
             ckbDir = System.getProperty("user.home") + "/hmf/projects/serve/ckb";
@@ -84,7 +84,7 @@ public class CkbExtractorTestApp {
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
         List<CkbEntry> allCkbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-        List<CkbEntry> filteredAndcurateCkbEntries = CkbReader.filterAndCurateRelevantEntries(allCkbEntries, 10);
+        List<CkbEntry> filteredAndcurateCkbEntries = CkbReader.filterAndCurateRelevantEntries(allCkbEntries, 1000);
 
         DoidLookup doidLookup = DoidLookupFactory.buildFromConfigTsv(missingDoidMappingTsv);
 

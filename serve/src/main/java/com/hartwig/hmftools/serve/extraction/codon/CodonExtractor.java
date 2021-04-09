@@ -38,7 +38,7 @@ public class CodonExtractor {
     @Nullable
     public List<CodonAnnotation> extract(@NotNull String gene, @Nullable String transcriptId, @NotNull EventType type,
             @NotNull String event) {
-        if (type == EventType.CODON && geneChecker.isValidGene(gene)) {
+        if (type == EventType.CODON && geneChecker.isValidGene(gene, type)) {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(gene);
             assert canonicalTranscript != null;
 

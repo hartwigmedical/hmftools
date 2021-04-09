@@ -6,6 +6,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
+import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.common.refseq.RefSeq;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
@@ -79,11 +80,28 @@ public class CkbExtractor {
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
         for (CkbEntry entry : ckbEntries) {
             if (entry.variants().size() == 1) {
+                Variant variant = entry.variants().get(0);
+                String event;
+                String geneSymbol;
 
-                eventExtractions.add(eventExtractor.extract(entry.variants().get(0).gene().geneSymbol(),
+                if (variant.variant().equals("fusion") && variant.impact() != null && variant.impact().equals("fusion")) {
+                    event = "fusion promiscuous";
+                    geneSymbol = variant.gene().geneSymbol();
+                } else if (variant.impact() != null && variant.impact().equals("fusion")) {
+                    event = variant.variant().replaceAll("\\s+", "");
+                    geneSymbol = variant.fullName();
+                } else if (variant.variant().contains("exon")) {
+                    event = variant.variant().replace("exon", "exon ");
+                    geneSymbol = variant.gene().geneSymbol();
+                } else {
+                    event = variant.variant();
+                    geneSymbol = variant.gene().geneSymbol();
+                }
+
+                eventExtractions.add(eventExtractor.extract(geneSymbol,
                         extractCanonicalTranscript(entry.variants().get(0).gene().canonicalTranscript(), refSeqMatchFile),
                         entry.type(),
-                        entry.variants().get(0).variant()));
+                        event));
                 Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry);
 
                 extractions.add(toExtractionResult(actionableEvents, eventExtractions));
