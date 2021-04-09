@@ -2,8 +2,8 @@ package com.hartwig.hmftools.sig_analyser;
 
 import static junit.framework.TestCase.assertEquals;
 
-import com.hartwig.hmftools.sig_analyser.buckets.BucketGroup;
-import com.hartwig.hmftools.sig_analyser.buckets.SampleData;
+import com.hartwig.hmftools.sigs.buckets.BucketGroup;
+import com.hartwig.hmftools.sigs.buckets.SampleData;
 
 import org.junit.Test;
 

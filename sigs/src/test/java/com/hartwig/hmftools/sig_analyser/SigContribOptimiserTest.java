@@ -12,9 +12,9 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
 import com.hartwig.hmftools.common.utils.Matrix;
-import com.hartwig.hmftools.sig_analyser.buckets.SampleData;
-import com.hartwig.hmftools.sig_analyser.buckets.SampleSigContribOptimiser;
-import com.hartwig.hmftools.sig_analyser.fitter.ConstrainedFitter;
+import com.hartwig.hmftools.sigs.buckets.SampleData;
+import com.hartwig.hmftools.sigs.buckets.SampleSigContribOptimiser;
+import com.hartwig.hmftools.sigs.fitter.ConstrainedFitter;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;

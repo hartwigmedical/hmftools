@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.sig_analyser;
 
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MAX_NOISE_ALLOC_PERCENT;
+import static com.hartwig.hmftools.sigs.buckets.BaConfig.MAX_NOISE_ALLOC_PERCENT;
 
 import static junit.framework.TestCase.assertEquals;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.buckets.SampleData;
+import com.hartwig.hmftools.sigs.buckets.SampleData;
 
 import org.junit.Test;
 
