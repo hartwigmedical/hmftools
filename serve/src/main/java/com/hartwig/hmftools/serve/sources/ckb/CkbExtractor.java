@@ -184,7 +184,7 @@ public class CkbExtractor {
     }
 
     @NotNull
-    private static ExtractionResult toExtractionResult(@NotNull Set<ActionableEvent> actionableTrials,
+    private static ExtractionResult toExtractionResult(@NotNull Set<ActionableEvent> actionableEvents,
             @NotNull List<EventExtractorOutput> eventExtractions) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
@@ -192,26 +192,26 @@ public class CkbExtractor {
         Set<ActionableFusion> actionableFusions = Sets.newHashSet();
         Set<ActionableCharacteristic> actionableCharacteristics = Sets.newHashSet();
 
-        for (ActionableEvent trial : actionableTrials) {
+        for (ActionableEvent event : actionableEvents) {
             for (EventExtractorOutput extraction : eventExtractions) {
-                actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(trial, extraction.hotspots()));
-                actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, extraction.codons()));
-                actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, extraction.exons()));
+                actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(event, extraction.hotspots()));
+                actionableRanges.addAll(ActionableEventFactory.toActionableRanges(event, extraction.codons()));
+                actionableRanges.addAll(ActionableEventFactory.toActionableRanges(event, extraction.exons()));
 
                 if (extraction.geneLevelEvent() != null) {
-                    actionableGenes.add(ActionableEventFactory.geneLevelEventToActionableGene(trial, extraction.geneLevelEvent()));
+                    actionableGenes.add(ActionableEventFactory.geneLevelEventToActionableGene(event, extraction.geneLevelEvent()));
                 }
 
                 if (extraction.knownCopyNumber() != null) {
-                    actionableGenes.add(ActionableEventFactory.copyNumberToActionableGene(trial, extraction.knownCopyNumber()));
+                    actionableGenes.add(ActionableEventFactory.copyNumberToActionableGene(event, extraction.knownCopyNumber()));
                 }
 
                 if (extraction.knownFusionPair() != null) {
-                    actionableFusions.add(ActionableEventFactory.toActionableFusion(trial, extraction.knownFusionPair()));
+                    actionableFusions.add(ActionableEventFactory.toActionableFusion(event, extraction.knownFusionPair()));
                 }
 
                 if (extraction.characteristic() != null) {
-                    actionableCharacteristics.add(ActionableEventFactory.toActionableCharacteristic(trial, extraction.characteristic()));
+                    actionableCharacteristics.add(ActionableEventFactory.toActionableCharacteristic(event, extraction.characteristic()));
                 }
             }
         }
