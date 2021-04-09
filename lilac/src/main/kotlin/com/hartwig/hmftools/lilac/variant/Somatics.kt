@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.lilac.variant
 
-import com.hartwig.hmftools.common.drivercatalog.DriverImpact
+import com.hartwig.hmftools.common.variant.CodingEffect
 import com.hartwig.hmftools.common.variant.VariantContextDecorator
 import com.hartwig.hmftools.lilac.LilacApplication
 import com.hartwig.hmftools.lilac.LilacConfig
@@ -15,7 +15,11 @@ import java.io.File
 
 class Somatics {
 
-    val logger = LogManager.getLogger(this::class.java)
+    private val logger = LogManager.getLogger(this::class.java)
+
+    companion object {
+        val UNKNOWN_CODING_EFFECT = setOf(CodingEffect.NONE, CodingEffect.UNDEFINED)
+    }
 
 
     fun doStuff(config: LilacConfig, reader: SAMRecordReader, winners: List<HlaSequenceLoci>, hetLoci: Collection<Int>, lociPosition: LociPosition) {
@@ -65,7 +69,7 @@ class Somatics {
 
         for (variantContext in iterator) {
             val enriched = VariantContextDecorator(variantContext)
-            if (enriched.gene() in LilacApplication.HLA_GENES && enriched.impact() != DriverImpact.UNKNOWN && enriched.isPass) {
+            if (enriched.gene() in LilacApplication.HLA_GENES && enriched.canonicalCodingEffect() !in UNKNOWN_CODING_EFFECT  && enriched.isPass) {
                 result.add(enriched)
             }
         }
