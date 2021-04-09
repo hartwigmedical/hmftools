@@ -49,8 +49,8 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -216,7 +216,7 @@ public class FusionLikelihood
             int endLength = Integer.parseInt(startEnds[1]);
 
             // add a bucket from the min to the first specified length
-            bucketLengths.add((int)MIN_BUCKET_LENGTH);
+            bucketLengths.add(MIN_BUCKET_LENGTH);
 
             int bucketLength = startLength;
             while(bucketLength <= endLength)
@@ -324,7 +324,7 @@ public class FusionLikelihood
 
                 for (Map.Entry<String,Map<Integer,Long>> entry : genePairCounts.entrySet())
                 {
-                    final String genePair[] = entry.getKey().split(GENE_PAIR_DELIM);
+                    final String[] genePair = entry.getKey().split(GENE_PAIR_DELIM);
                     final String geneIdLower = genePair[0];
                     final String geneIdUpper = genePair[1];
 
@@ -434,7 +434,7 @@ public class FusionLikelihood
 
             for(int i = 0; i < bucketLengths; ++i)
             {
-                int blockSize = (int)(mProximateBucketLengths.get(i) / DEFAULT_BUCKET_REGION_RATIO);
+                int blockSize = mProximateBucketLengths.get(i) / DEFAULT_BUCKET_REGION_RATIO;
                 blockSize = max(blockSize, MIN_BLOCK_SIZE);
                 regionAllocators[i] = new RegionAllocator(blockSize);
             }
@@ -648,7 +648,7 @@ public class FusionLikelihood
 
         FusionLikelihood fusionLikelihood = new FusionLikelihood();
 
-        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.RG_37);
+        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.V37);
 
         fusionLikelihood.initialise(cmd, ensemblDataCache);
 

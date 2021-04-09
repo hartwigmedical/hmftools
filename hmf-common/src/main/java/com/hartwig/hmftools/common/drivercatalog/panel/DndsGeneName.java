@@ -4,6 +4,10 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+
+import org.jetbrains.annotations.NotNull;
+
 class DndsGeneName {
 
     private final DndsGeneNameMap dndsGeneNameMap;
@@ -11,19 +15,19 @@ class DndsGeneName {
     private final Function<DriverGene, String> dndsGeneFunction;
     private final Set<String> dndsGenes;
 
-    public DndsGeneName(final DriverGenePanelAssembly assembly, final Set<String> dndsGenes) {
+    public DndsGeneName(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final Set<String> dndsGenes) {
         this.dndsGenes = dndsGenes;
-        dndsGeneNameMap = new DndsGeneNameMap();
-        if (assembly == DriverGenePanelAssembly.HG19) {
-            alignmentMapPredicate = aDriverGene -> dndsGeneNameMap.isValidHg19Gene(aDriverGene.gene());
+        this.dndsGeneNameMap = new DndsGeneNameMap();
+        if (refGenomeVersion == RefGenomeVersion.V37) {
+            alignmentMapPredicate = aDriverGene -> dndsGeneNameMap.isValidV37Gene(aDriverGene.gene());
             dndsGeneFunction = DriverGene::gene;
         } else {
-            alignmentMapPredicate = aDriverGene -> dndsGeneNameMap.isValidHg38Gene(aDriverGene.gene());
-            dndsGeneFunction = aDriverGene -> dndsGeneNameMap.hg19Gene(aDriverGene.gene());
+            alignmentMapPredicate = aDriverGene -> dndsGeneNameMap.isValidV38Gene(aDriverGene.gene());
+            dndsGeneFunction = aDriverGene -> dndsGeneNameMap.v37Gene(aDriverGene.gene());
         }
     }
 
-    public boolean isValid(DriverGene driverGene) {
+    public boolean isValid(@NotNull DriverGene driverGene) {
         if (!alignmentMapPredicate.test(driverGene)) {
             return false;
         }
@@ -32,7 +36,7 @@ class DndsGeneName {
         return dndsGenes.contains(dndsGeneName);
     }
 
-    public String dndsGeneName(DriverGene driverGene) {
+    public String dndsGeneName(@NotNull DriverGene driverGene) {
         return dndsGeneFunction.apply(driverGene);
     }
 }

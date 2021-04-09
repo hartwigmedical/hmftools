@@ -17,6 +17,10 @@ public final class DndsMutationalLoadFile {
 
     private static final String DELIMITER = "\t";
 
+    private DndsMutationalLoadFile() {
+    }
+
+    @NotNull
     public static List<DndsMutationalLoad> read(@NotNull final String filename) throws IOException {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
@@ -50,7 +54,7 @@ public final class DndsMutationalLoadFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("sample")
+        return new StringJoiner(DELIMITER).add("sample")
                 .add("snvBiallelic")
                 .add("snvNonBiallelic")
                 .add("indelBiallelic")

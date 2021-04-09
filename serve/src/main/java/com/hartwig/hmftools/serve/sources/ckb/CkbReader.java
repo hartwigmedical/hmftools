@@ -10,18 +10,24 @@ import com.hartwig.hmftools.serve.sources.vicc.ViccReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class CkbReader {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccReader.class);
 
     private CkbReader(){
+    }
 
+    @NotNull
+    public static List<CkbEntry> filterAndCurateRelevantEntries(@NotNull List<CkbEntry> ckbEntries, @Nullable Integer maxFilesToReadPerType) {
+        List<CkbEntry> ckbEntriesPart = ckbEntries.subList(0, maxFilesToReadPerType);
+
+        return filter(curate(ckbEntriesPart));
     }
 
     @NotNull
     public static List<CkbEntry> filterAndCurateRelevantEntries(@NotNull List<CkbEntry> ckbEntries) {
-
         return filter(curate(ckbEntries));
     }
 
@@ -54,5 +60,4 @@ public final class CkbReader {
 
         return filteredEntries;
     }
-
 }

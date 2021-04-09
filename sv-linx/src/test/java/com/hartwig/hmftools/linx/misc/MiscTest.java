@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.linx.misc;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_19;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_37;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_38;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.findCentromereBreakendIndex;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
@@ -12,23 +10,17 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createIns;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.findCentromereBreakendIndex;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.junit.Test;
-
 import com.hartwig.hmftools.linx.utils.LinxTester;
+
+import org.junit.Test;
 
 public class MiscTest
 {
@@ -53,31 +45,6 @@ public class MiscTest
 
         final SvVarData sgl = createSgl(1, "1", 100, 1);
         assertEquals(calcConsistency(sgl), 1);
-    }
-
-    @Test
-    public void testChromosomeConversion()
-    {
-        String chr37 = "10";
-        String chr19 = "chr10";
-        String chr38 = "chr10";
-
-        RefGenomeVersion version = RG_37;
-        assertEquals(chr37, refGenomeChromosome(chr37, version));
-
-        version = RG_38;
-        assertEquals(chr38, refGenomeChromosome(chr37, version));
-
-        version = RG_19;
-        assertEquals(chr19, refGenomeChromosome(chr37, version));
-
-        assertEquals(chr38, refGenomeChromosome(chr38, version));
-
-        version = RG_37;
-        assertEquals(chr37, refGenomeChromosome(chr19, version));
-
-        version = RG_37;
-        assertEquals(chr37, refGenomeChromosome(chr38, version));
     }
 
     @Test

@@ -15,7 +15,7 @@ public class AmberBAFFileTest {
 
     private static final String OLD_AMBER_BAF_PATH = Resources.getResource("amber/old.amber.baf").getPath();
     private static final String NEW_AMBER_BAF_PATH = Resources.getResource("amber/new.amber.baf.tsv").getPath();
-    private static final String HG38_PATH = Resources.getResource("amber/hg38.amber.baf.tsv").getPath();
+    private static final String V38_PATH = Resources.getResource("amber/amber.baf.38.tsv").getPath();
 
     private static final double EPSILON = 1e-4;
 
@@ -38,8 +38,8 @@ public class AmberBAFFileTest {
     }
 
     @Test
-    public void testHG38Compatibility() throws IOException {
-        final List<AmberBAF> hg38 = Lists.newArrayList(AmberBAFFile.read(HG38_PATH).get(HumanChromosome._1));
-        assertEquals(6, hg38.size());
+    public void testV38Compatibility() throws IOException {
+        final List<AmberBAF> v38 = Lists.newArrayList(AmberBAFFile.read(V38_PATH).get(HumanChromosome._1));
+        assertEquals(6, v38.size());
     }
 }

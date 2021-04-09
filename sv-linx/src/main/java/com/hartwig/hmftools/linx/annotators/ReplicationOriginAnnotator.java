@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.linx.annotators;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 
@@ -44,7 +43,7 @@ public class ReplicationOriginAnnotator
 
             for (final BEDFeature bedFeature : reader.iterator())
             {
-                final String chromosome = refGenomeChromosome(bedFeature.getContig(), RG_VERSION);
+                final String chromosome = RG_VERSION.versionedChromosome(bedFeature.getContig());
 
                 if (!chromosome.equals(currentChr))
                 {

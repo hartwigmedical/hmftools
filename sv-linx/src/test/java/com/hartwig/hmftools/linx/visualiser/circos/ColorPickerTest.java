@@ -14,11 +14,10 @@ public class ColorPickerTest
         Color chr1Color = ColorPicker.contigColour("1");
         assertNotEquals(Color.black, chr1Color);
 
-        Color chr1ColorHg38 = ColorPicker.contigColour("chr1");
-        assertEquals(chr1Color, chr1ColorHg38);
+        Color chr1ColorV38 = ColorPicker.contigColour("chr1");
+        assertEquals(chr1Color, chr1ColorV38);
 
         Color unknownColor = ColorPicker.contigColour("MT");
         assertEquals(Color.black, unknownColor);
     }
-
 }

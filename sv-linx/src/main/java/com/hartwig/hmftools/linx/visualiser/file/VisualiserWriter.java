@@ -29,7 +29,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.LinkedPair;
@@ -515,12 +514,12 @@ public class VisualiserWriter
             return false;
 
         /*
-            hg19
+            v37
             @IGH:    1;14;106032614;107288051
             @IGK:   -1;2;89890568;90274235
             @IGL:	1;22;22380474;23265085
 
-            hg38
+            v38
             @IGH:    1;14;105586437;106879844
             @IGK:   -1;2;88857361;90235368
             @IGL:	1;22;22026076;22922913
@@ -531,18 +530,18 @@ public class VisualiserWriter
 
         if(geneData.TransName.equals("@IGH"))
         {
-            posStart = RefGenomeVersion.is37(RG_VERSION) ? 106032614 : 105586437;
-            posEnd = RefGenomeVersion.is37(RG_VERSION) ? 107288051 : 106879844;
+            posStart = RG_VERSION.is37() ? 106032614 : 105586437;
+            posEnd = RG_VERSION.is37() ? 107288051 : 106879844;
         }
         else if(geneData.TransName.equals("@IGK"))
         {
-            posStart = RefGenomeVersion.is37(RG_VERSION) ? 89890568 : 88857361;
-            posEnd = RefGenomeVersion.is37(RG_VERSION) ? 90274235 : 90235368;
+            posStart = RG_VERSION.is37() ? 89890568 : 88857361;
+            posEnd = RG_VERSION.is37() ? 90274235 : 90235368;
         }
         else if(geneData.TransName.equals("@IGL"))
         {
-            posStart = RefGenomeVersion.is37(RG_VERSION) ? 22380474 : 22026076;
-            posEnd = RefGenomeVersion.is37(RG_VERSION) ? 23265085 : 22922913;
+            posStart = RG_VERSION.is37() ? 22380474 : 22026076;
+            posEnd = RG_VERSION.is37() ? 23265085 : 22922913;
         }
 
         geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.TransName, geneData.TransName,

@@ -65,7 +65,7 @@ public class SpliceSiteCache
 
         if(config.EnsemblDataCache != null)
         {
-            mGeneTransCache = new EnsemblDataCache(config.EnsemblDataCache, RefGenomeVersion.RG_37);
+            mGeneTransCache = new EnsemblDataCache(config.EnsemblDataCache, RefGenomeVersion.V37);
             mGeneTransCache.setRequiredData(false, false, false, false);
             mGeneTransCache.setRestrictedGeneIdList(config.RestrictedGeneIds);
             mGeneTransCache.load(true); // only need  genes, not transcript data
@@ -132,7 +132,7 @@ public class SpliceSiteCache
         writePercentiles();
     }
 
-    public static final Map<String,Map<Integer,int[]>> loadSpliceSiteFile(final Path filename, final Map<String,Integer> fieldsIndexMap)
+    public static Map<String,Map<Integer,int[]>> loadSpliceSiteFile(final Path filename, final Map<String,Integer> fieldsIndexMap)
     {
         final Map<String,Map<Integer,int[]>> spliceSiteMap = Maps.newHashMap();
 

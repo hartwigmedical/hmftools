@@ -6,7 +6,7 @@ import java.io.FileNotFoundException;
 
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.serve.RefGenomeVersion;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.junit.Test;
 

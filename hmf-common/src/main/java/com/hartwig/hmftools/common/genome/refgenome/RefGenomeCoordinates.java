@@ -13,10 +13,9 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum RefGenomeCoordinates
-{
-    COORDS_37(fromResource("hg19_len.tsv"), fromResource("hg19_centromere.tsv")),
-    COORDS_38(fromResource("hg38_len.tsv"), fromResource("hg38_centromere.tsv"));
+public enum RefGenomeCoordinates {
+    COORDS_37(fromResource("lengths.37.tsv"), fromResource("centromeres.37.tsv")),
+    COORDS_38(fromResource("lengths.38.tsv"), fromResource("centromeres.38.tsv"));
 
     @NotNull
     private final Map<Chromosome, Long> lengths;

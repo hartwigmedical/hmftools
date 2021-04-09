@@ -31,7 +31,7 @@ public class IsofoxConstants
 
     public static void populateEnrichedGeneIds(final List<String> geneIds, final RefGenomeVersion version)
     {
-        if(version == RefGenomeVersion.RG_38)
+        if(version == RefGenomeVersion.V38)
         {
             geneIds.add("ENSG00000276168");
             geneIds.add("ENSG00000274012");

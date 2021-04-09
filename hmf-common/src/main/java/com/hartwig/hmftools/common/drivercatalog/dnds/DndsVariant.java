@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.drivercatalog.dnds;
 
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 
 import org.immutables.value.Value;
@@ -8,15 +9,10 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface DndsVariant {
+public interface DndsVariant extends GenomePosition {
 
     @NotNull
     String sampleId();
-
-    @NotNull
-    String chromosome();
-
-    long position();
 
     @NotNull
     String ref();

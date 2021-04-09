@@ -141,9 +141,9 @@ class CircosCharts {
         writeConfig(gender, "circos");
         writeConfig(gender, "input");
         if (isHg38) {
-            copyResourceToCircos("gaps_hg38.txt", "gaps.txt");
+            copyResourceToCircos("gaps.38.txt", "gaps.txt");
         } else {
-            copyResourceToCircos("gaps_hg19.txt", "gaps.txt");
+            copyResourceToCircos("gaps.37.txt", "gaps.txt");
         }
     }
 

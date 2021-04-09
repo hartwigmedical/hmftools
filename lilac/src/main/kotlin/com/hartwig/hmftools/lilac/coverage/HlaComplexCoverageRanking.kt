@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.coverage
 
+import com.hartwig.hmftools.lilac.hla.HlaAllele
 import kotlin.math.min
 
 /**
@@ -7,9 +8,11 @@ import kotlin.math.min
  * These are then ranked by:
  * - first prioritising solutions with the lowest number of wildcard matches,
  * - then choosing solutions with the most homozygous alleles,
- * - then choosing the solution with the highest allele population frequency.
+ * - then choosing solution with the most common alleles,
+ * - then choosing solution with the least recovered alleles
+ * - finally choosing the solution with the lowest number.
  */
-class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int) {
+class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int, private val common: List<HlaAllele>, private val recovered: List<HlaAllele>) {
 
     fun candidateRanking(complexes: List<HlaComplexCoverage>): List<HlaComplexCoverage> {
         require(complexes.isNotEmpty())
@@ -35,6 +38,20 @@ class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int) {
             return -homozygousCompare
         }
 
+        val o1CommonCount = o1.commonCount()
+        val o2CommonCount = o2.commonCount()
+        val commonCountCompare = o1CommonCount.compareTo(o2CommonCount)
+        if (commonCountCompare != 0) {
+            return -commonCountCompare
+        }
+
+        val o1RecoveredCount = o1.recoveredCount()
+        val o2RecoveredCount = o2.recoveredCount()
+        val recoveredCountCompare = o1RecoveredCount.compareTo(o2RecoveredCount)
+        if (recoveredCountCompare != 0) {
+            return recoveredCountCompare
+        }
+
         for (i in 0 until min(o1.alleleCoverage.size, o2.alleleCoverage.size)) {
             val o1Allele = o1.alleleCoverage[i].allele
             val o2Allele = o2.alleleCoverage[i].allele
@@ -45,6 +62,14 @@ class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int) {
         }
 
         throw UnsupportedOperationException("Should not be able to make it to here")
+    }
+
+    private fun HlaComplexCoverage.commonCount(): Int {
+        return this.alleleCoverage.map { it.allele }.filter { it in common }.count()
+    }
+
+    private fun HlaComplexCoverage.recoveredCount(): Int {
+        return this.alleleCoverage.map { it.allele }.filter { it in recovered }.count()
     }
 
 }

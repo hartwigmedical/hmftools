@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.extraction.util;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -7,10 +9,13 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class GenerateAltBase {
 
     @NotNull
-    private final IndexedFastaSequenceFile fastaSequenceFile;
+    private final RefGenomeVersion refGenomeVersion;
+    @NotNull
+    private final IndexedFastaSequenceFile refGenomeFasta;
 
-    public GenerateAltBase(@NotNull final IndexedFastaSequenceFile fastaSequenceFile) {
-        this.fastaSequenceFile = fastaSequenceFile;
+    public GenerateAltBase(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final IndexedFastaSequenceFile refGenomeFasta) {
+        this.refGenomeVersion = refGenomeVersion;
+        this.refGenomeFasta = refGenomeFasta;
     }
 
     @NotNull
@@ -33,6 +38,7 @@ public class GenerateAltBase {
 
     @NotNull
     public String extractRefBaseAtGenomicPosition(@NotNull String chromosome, long position) {
-        return fastaSequenceFile.getSubsequenceAt(chromosome, position, position).getBaseString();
+        String versionedChromosome = refGenomeVersion.versionedChromosome(chromosome);
+        return refGenomeFasta.getSubsequenceAt(versionedChromosome, position, position).getBaseString();
     }
 }

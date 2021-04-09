@@ -14,7 +14,7 @@ When using paired reference/tumor data, AMBER is also able to:
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
 
-HG19 and HG38 versions of the likely heterozygous sites are available to download from [HMFTools-Resources > Amber](https://resources.hartwigmedicalfoundation.nl/).
+Ref genome versions 37 and 38 of the likely heterozygous sites are available to download from [HMFTools-Resources > Amber](https://resources.hartwigmedicalfoundation.nl/).
 
 The Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package is required for segmentation.
 After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.com/), the copy number package can be added with the following R commands:
@@ -39,9 +39,9 @@ tumor_bam | Path to indexed tumor BAM file
 output_dir | Path to the output directory. This directory will be created if it does not already exist.
 loci | Path to vcf file containing likely heterozygous sites (see below). Gz files supported.  
 
-The vcf file used by HMF (GermlineHetPon.hg19.vcf.gz) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
+The vcf file used by HMF (GermlineHetPon.37.vcf.gz) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
 The sites were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples. 
-The 1.3 million sites provided in this file typically result in 450k+ BAF points. A HG38 equivalent is also available.
+The 1.3 million sites provided in this file typically result in 450k+ BAF points. A 38 equivalent is also available.
 
 Approximately 1000 sites scattered evenly through the VCF have been tagged with a SNPCHECK flag. 
 The allelic frequency of these sites in the reference bam are written to the `REFERENCE.amber.snp.vcf.gz` file without any filtering to be used downstream for sample matching. 
@@ -70,7 +70,7 @@ java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
    -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
    -output_dir /run_dir/amber/ \
    -threads 16 \
-   -loci /path/to/GermlineHetPon.hg19.vcf.gz 
+   -loci /path/to/GermlineHetPon.37.vcf.gz 
 ```
 
 ## Tumor Only Mode
@@ -111,7 +111,7 @@ java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
    -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
    -output_dir /run_dir/amber/ \
    -threads 16 \
-   -loci /path/to/GermlineHetPon.hg19.vcf.gz 
+   -loci /path/to/GermlineHetPon.37.vcf.gz 
 ```
 
 
@@ -164,13 +164,13 @@ A sample can be loaded with the following command:
 java -cp amber.jar com.hartwig.hmftools.patientdb.LoadAmberData \
     -sample TUMOR \
     -amber_snp_vcf /path/to/REFERENCE.amber.snp.vcf.gz \
-    -snpcheck_vcf /path/to/GermlineHetPon.hg19.snpcheck.vcf.gz \
+    -snpcheck_vcf /path/to/Amber.snpcheck.37.vcf \
     -db_user username \
     -db_pass password \
     -db_url mysql://localhost:3306/hmfpatients?serverTimezone=UTC
 ```
 
-The GermlineHetPon.hg19.snpcheck.vcf.gz (and hg38 equivalent) are available to download from [HMFTools-Resources > Amber](https://resources.hartwigmedicalfoundation.nl/).
+The Amber.snpcheck.37.vcf (and 38 equivalent) are available to download from [HMFTools-Resources > Amber](https://resources.hartwigmedicalfoundation.nl/).
 
 An example query to check if a sample is one of many for a patient is:
 ```

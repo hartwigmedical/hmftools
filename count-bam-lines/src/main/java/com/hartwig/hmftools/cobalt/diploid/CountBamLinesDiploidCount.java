@@ -32,10 +32,11 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class CountBamLinesDiploidCount implements AutoCloseable {
+
     private static final Logger LOGGER = LogManager.getLogger(CountBamLinesDiploidCount.class);
+
     private static final double MIN_DIPLOID = 0.85;
     private static final double MAX_DIPLOID = 1.15;
-
 
     public static void main(String[] args) throws ParseException {
         final Options options = createOptions();
@@ -80,7 +81,6 @@ public class CountBamLinesDiploidCount implements AutoCloseable {
             return;
         }
 
-
         Collection<CobaltChromosome> selectedChromosomes;
         if (chromosomes.contains("Y")) {
             selectedChromosomes = Collections.singleton(chromosomes.get("Y"));
@@ -107,28 +107,24 @@ public class CountBamLinesDiploidCount implements AutoCloseable {
         LOGGER.info("Writing output: {}", outputFile);
         Files.write(new File(outputFile).toPath(),
                 diploidCountMap.values().stream().sorted().map(DiploidCount::toString).collect(Collectors.toList()));
-
     }
 
-    public boolean isDiploid(final CobaltChromosome chromosome, CobaltRatio ratio) {
+    private static boolean isDiploid(final CobaltChromosome chromosome, CobaltRatio ratio) {
         double value = ratio.referenceGCDiploidRatio();
         return (Doubles.greaterOrEqual(value, MIN_DIPLOID * chromosome.actualRatio()) && Doubles.lessOrEqual(value,
                 MAX_DIPLOID * chromosome.actualRatio()));
     }
-
 
     @Override
     public void close() {
         LOGGER.info("Complete in {} seconds", (System.currentTimeMillis() - timestamp) / 1000);
     }
 
-
     @NotNull
-    static Options createOptions() {
+    private static Options createOptions() {
         final Options options = new Options();
         options.addOption("in", true, "Input ratios");
         options.addOption("out", true, "Output count");
         return options;
     }
-
 }

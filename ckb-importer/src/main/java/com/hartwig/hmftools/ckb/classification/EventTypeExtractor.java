@@ -21,17 +21,8 @@ public final class EventTypeExtractor {
         if (entry.variants().size() > 1) {
             return EventType.COMBINED;
         } else {
-            String event;
             Variant variant = entry.variants().get(0);
-            if (variant.variant().equals("fusion") && variant.impact() != null && variant.impact().equals("fusion")) {
-                event = "fusion promiscuous";
-            } else if (variant.impact() != null && variant.impact().equals("fusion")) {
-                event = variant.variant().replaceAll("\\s+", "") + " fusion";
-            } else if (variant.variant().contains("exon")) {
-                event = variant.variant().replace("exon", "exon ");
-            } else {
-                event = variant.variant();
-            }
+            String event = EventExtractorCuration.extractEventDetail(entry);
 
             return CLASSIFIER.determineType(variant.gene().geneSymbol(), event);
         }

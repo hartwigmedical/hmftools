@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodonFile;
@@ -39,7 +40,7 @@ public class CodonAnnotationToVCFConverter {
 
         String knownCodonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownCodons.SERVE.37.tsv";
         String outputFile = System.getProperty("user.home") + "/hmf/tmp/codons.vcf.gz";
-        GenerateAltBase altBaseGenerator = new GenerateAltBase(new IndexedFastaSequenceFile(new File(
+        GenerateAltBase altBaseGenerator = new GenerateAltBase(RefGenomeVersion.V37, new IndexedFastaSequenceFile(new File(
                 System.getProperty("user.home") + "/hmf/refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina.fasta")));
 
         List<KnownCodon> codons = KnownCodonFile.read(knownCodonsTsv);

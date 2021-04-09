@@ -15,7 +15,7 @@ class AminoAcidFragmentPipeline(private val config: LilacConfig, private val ref
     private val nucleotideQualEnrichment = NucleotideQualEnrichment(minBaseQuality, minEvidence)
     private val highQualityTumorFragments = qualFiltered(minBaseQuality, tumorFragments)
 
-    fun referenceCandidateFragments(context: HlaContext): List<AminoAcidFragment> {
+    fun referencePhasingFragments(context: HlaContext): List<AminoAcidFragment> {
         val gene = "HLA-${context.gene}"
         val geneReferenceFragments = referenceFragments.filter { it.genes.contains(gene) }
         val referenceAminoAcids = process(context.aminoAcidBoundaries, geneReferenceFragments)

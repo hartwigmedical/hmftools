@@ -4,6 +4,7 @@ import com.hartwig.hmftools.lilac.LilacConfig
 import com.hartwig.hmftools.lilac.SequenceCount
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragment
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence
+import com.hartwig.hmftools.lilac.hla.HlaAllele
 import com.hartwig.hmftools.lilac.hla.HlaContext
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 import org.apache.logging.log4j.LogManager
@@ -16,11 +17,11 @@ class Candidates(private val config: LilacConfig,
         val logger = LogManager.getLogger(this::class.java)
     }
 
-    fun candidates(context: HlaContext, fragments: List<AminoAcidFragment>, phasedEvidence: List<PhasedEvidence>): List<HlaSequenceLoci> {
+    fun unphasedCandidates(context: HlaContext, fragments: List<AminoAcidFragment>): List<HlaAllele> {
         val gene = context.gene
         val aminoAcidBoundary = context.aminoAcidBoundaries
 
-        logger.info("Determining initial candidate set for gene HLA-$gene")
+        logger.info("Determining un-phased candidate set for gene HLA-$gene")
         val aminoAcidCounts = SequenceCount.aminoAcids(config.minEvidence, fragments)
         val nucleotideCounts = SequenceCount.nucleotides(config.minEvidence, fragments)
         aminoAcidCounts.writeVertically("${config.outputFilePrefix}.aminoacids.${gene}.count.txt")
@@ -42,17 +43,23 @@ class Candidates(private val config: LilacConfig,
                 .filter { it.allele.asFourDigit() in aminoAcidSpecificAllelesCandidate }
         val nucleotideSpecificAllelesCandidate = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(nucleotideCandidatesAfterAminoAcidFiltering, fragments)
                 .map { it.allele.asFourDigit() }
-                .toSet()
+                .distinct()
 
-        val nucleotideCandidates = aminoAcidCandidates.filter { it.allele.asFourDigit() in nucleotideSpecificAllelesCandidate }
-        logger.info("    ${nucleotideCandidates.size} candidates after exon boundary filtering")
+        logger.info("    ${nucleotideSpecificAllelesCandidate.size} candidates after exon boundary filtering")
+        return nucleotideSpecificAllelesCandidate
+    }
 
-        val phasedCandidates = filterCandidates(nucleotideCandidates, phasedEvidence)
+    fun phasedCandidates(context: HlaContext, unphasedCandidateAlleles: List<HlaAllele>, phasedEvidence: List<PhasedEvidence>): List<HlaAllele> {
+        val gene = context.gene
+        logger.info("Determining phased candidate set for gene HLA-$gene")
+
+        val unphasedCandidates = aminoAcidSequences.filter { it.allele.asFourDigit() in unphasedCandidateAlleles }
+        val phasedCandidates = filterCandidates(unphasedCandidates, phasedEvidence)
         logger.info("    ${phasedCandidates.size} candidates after phasing: " + phasedCandidates.map { it.allele }.joinToString(", "))
 
-        return phasedCandidates
-
+        return phasedCandidates.map { it.allele }
     }
+
 
     private fun filterCandidates(initialCandidates: List<HlaSequenceLoci>, evidence: List<PhasedEvidence>): List<HlaSequenceLoci> {
         var candidates = initialCandidates

@@ -9,9 +9,9 @@ import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.cli.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelAssembly;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 
@@ -72,9 +72,9 @@ public interface DriverCatalogConfig {
             }
 
             final List<DriverGene> driverGenes = DriverGenePanelConfig.driverGenes(cmd);
-            final DriverGenePanelAssembly driverGenePanelAssembly =
-                    refGenomeData.isHg38() ? DriverGenePanelAssembly.HG38 : DriverGenePanelAssembly.HG19;
-            genePanel = DriverGenePanelFactory.create(driverGenePanelAssembly, driverGenes);
+            final RefGenomeVersion driverGeneRefGenomeVersion =
+                    refGenomeData.isHg38() ? RefGenomeVersion.V38 : RefGenomeVersion.V37;
+            genePanel = DriverGenePanelFactory.create(driverGeneRefGenomeVersion, driverGenes);
 
             if (germlineConfig.enabled()) {
                 if (germlineHotspotVcf.isEmpty()) {

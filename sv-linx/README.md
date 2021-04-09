@@ -198,8 +198,8 @@ junctionCopyNumberMin | Minimum bound JCN estimate for breakjunction
 junctionCopyNumberMax | Maximum bound JCN estimate for breakjunction
 geneStart | Gene(s) overlapping start breakend of SV
 geneEnd | Gene(s) overlapping end breakend of SV
-replicationTimingStart | Start breakend of break junction is in a known fragile site (based on HeLa replication timing,  hg19 only)
-replicationTimingEnd | End breakend of break junction is in a known fragile site (based on HeLa replication timing,  hg19 only)
+replicationTimingStart | Start breakend of break junction is in a known fragile site (based on HeLa replication timing, ref genome 37 only)
+replicationTimingEnd | End breakend of break junction is in a known fragile site (based on HeLa replication timing, ref genome 37 only)
 localTopologyIdStart | Id for group of proximate breakends to the start breakend of break junction within an extending 5kb window 
 localTopologyIdEnd | Id for group of proximate breakends to the end breakend of break junction within an extending 5kb window 
 localTopologyStart | Local breakend topology type at site of start breakend.  One of ('ISOLATED_BE','DSB','TI_ONLY','SIMPLE_DUP','FOLDBACK', 'FOLDBACK_DSB','SAME_ORIENT','COMPLEX_FOLDBACK','COMPLEX_LINE','COMPLEX_OTHER')
@@ -838,7 +838,7 @@ The post processing steps of GRIDSS annotate the best alignments for the insert 
 
 ##### Special gene specific cases
 LINX also has special rules to support unusual biology for a handful of known pathogenic fusions:
-- For CIC_DUX4 and IGH_DUX4, the DUX4 end may map to a number of different chromosomal regions, including the telomeric ends of both chromosomes 10q and 4q and the hg19 alt contig GL000228.1.
+- For CIC_DUX4 and IGH_DUX4, the DUX4 end may map to a number of different chromosomal regions, including the telomeric ends of both chromosomes 10q and 4q and the 37 alt contig GL000228.1.
 - For RP11-356O9.1_ETV1 fusion (pathogenic in Prostate cancer) the breakend on the 5’ side breakend is permitted to be up to 20kb downstream of RP11-356O9.1.
 - In the case of IGH-BCL2 (common in Folicular Lymphomas) & IGH-MYC, LINX also looks for fusions in the 3’UTR region and up to 50k bases downstream of BCL2 (and 500k bases downstream of MYC) facing in the upstream orientation towards the gene  [ref: http://atlasgeneticsoncology.org/Genes/BCL2ID49.html ].
 
@@ -959,7 +959,7 @@ Shown below is an example of a SS18-SSX1 fusion:
 
 1.9
 - check validity of all input files and paths
-- removed 'chr' from chromosome name for HG38 support
+- removed 'chr' from chromosome name for ref genome 38 support
 
 1.8
 - Visualiser - when specifying a gene to display, this can now be referenced in the Ensembl data cache rather than the more limited internal gene panel by providing a path to the data cache with config: 'gene_transcripts_dir'

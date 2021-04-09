@@ -3,13 +3,13 @@ package com.hartwig.hmftools.lilac.nuc
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.genome.bed.NamedBed
 import com.hartwig.hmftools.common.utils.SuffixTree
+import com.hartwig.hmftools.lilac.LociPosition
 import com.hartwig.hmftools.lilac.read.AminoAcidIndices
 import com.hartwig.hmftools.lilac.sam.SAMCodingRecord
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
-import htsjdk.samtools.SAMRecord
 
 
-class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<HlaSequenceLoci>, deletes: List<HlaSequenceLoci>) {
+class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<HlaSequenceLoci>, deletes: List<HlaSequenceLoci>, private val lociPosition: LociPosition) {
 
     companion object {
         fun createNucleotidesFromAminoAcid(aminoAcid: String): List<String> {
@@ -24,24 +24,24 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
     private val insertSuffixTrees = inserts.map { Pair(it, SuffixTree(it.sequence())) }.toMap()
     private val deleteSuffixTrees = deletes.map { Pair(it, SuffixTree(it.sequence())) }.toMap()
 
-    fun createFragment(record: SAMRecord, reverseStrand: Boolean, codingRegionLoci: Int, codingRegion: NamedBed): NucleotideFragment? {
-        val samCoding = SAMCodingRecord.create(codingRegion, record)
-        return createFragment(samCoding, reverseStrand, codingRegionLoci, codingRegion)
+
+    fun createAlignmentFragments(samCoding: SAMCodingRecord, codingRegion: NamedBed): NucleotideFragment? {
+
+        val all = samCoding.alignmentsOnly().mapNotNull { createFragment(it, codingRegion) }
+        if (all.isEmpty()) {
+            return null
+        }
+
+        return all.reduce {x,y -> NucleotideFragment.merge(x,y)}
     }
 
-
-    fun createFragment(samCoding: SAMCodingRecord, reverseStrand: Boolean, codingRegionLoci: Int, codingRegion: NamedBed): NucleotideFragment? {
-        val samCodingLength = samCoding.positionEnd - samCoding.positionStart + 1
-        val samCodingStartLoci = if (reverseStrand) {
-            codingRegionLoci + codingRegion.end().toInt() - samCoding.positionEnd
-        } else {
-            codingRegionLoci + samCoding.positionStart - codingRegion.start().toInt()
-        }
-        val samCodingEndLoci = samCodingStartLoci + samCodingLength - 1
+    fun createFragment(samCoding: SAMCodingRecord, codingRegion: NamedBed): NucleotideFragment? {
+        val reverseStrand = samCoding.reverseStrand
+        val samCodingStartLoci = if (reverseStrand) lociPosition.nucelotideLoci(samCoding.positionEnd) else lociPosition.nucelotideLoci(samCoding.positionStart)
+        val samCodingEndLoci = if (reverseStrand) lociPosition.nucelotideLoci(samCoding.positionStart) else lociPosition.nucelotideLoci(samCoding.positionEnd)
 
         val codingRegionRead = samCoding.codingRegionRead(reverseStrand)
         val codingRegionQuality = samCoding.codingRegionQuality(reverseStrand)
-
 
         if (samCoding.containsIndel() || samCoding.containsSoftClip()) {
             val aminoAcidIndices = AminoAcidIndices.indices(samCodingStartLoci, samCodingEndLoci)

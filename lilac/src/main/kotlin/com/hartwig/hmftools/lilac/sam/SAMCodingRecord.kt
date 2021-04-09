@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.sam
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
+import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import com.hartwig.hmftools.common.samtools.CigarHandler
 import com.hartwig.hmftools.common.samtools.CigarTraversal
 import htsjdk.samtools.CigarElement
@@ -16,7 +17,8 @@ data class SAMCodingRecord(
         val indels: List<Indel>,
         val positionStart: Int, val positionEnd: Int,
         val readStart: Int, val readEnd: Int,
-        val record: SAMRecord) {
+        val record: SAMRecord,
+        val reverseStrand: Boolean) {
 
     fun maxIndelSize(): Int {
         return indels.map { abs(it.length) }.max() ?: 0
@@ -52,11 +54,22 @@ data class SAMCodingRecord(
         return (readStart..readEnd).map { record.baseQualities[it].toInt() }.toIntArray()
     }
 
+    fun alignmentsOnly(): List<SAMCodingRecord> {
+        val outerRegion = GenomeRegions.create(record.contig, positionStart.toLong(), positionEnd.toLong())
+        val result = record.alignmentBlocks
+                .map { GenomeRegions.create(record.contig, it.referenceStart.toLong(), it.referenceStart.toLong() + it.length - 1) }
+                .filter { outerRegion.overlaps(it) }
+                .map { GenomeRegions.create(record.contig, max(it.start(), outerRegion.start()), min(it.end(), outerRegion.end())) }
+                .map { create(this.reverseStrand, it, record, false, false) }
+
+        return result
+
+    }
+
     companion object {
-        fun create(codingRegion: GenomeRegion, record: SAMRecord): SAMCodingRecord {
-            if (record.readName == "ST-E00287:199:HM7JMCCXY:7:1206:25185:31582") {
-                println("Sdf")
-            }
+
+
+        fun create(reverseStrand: Boolean, codingRegion: GenomeRegion, record: SAMRecord, includeSoftClips: Boolean = true, includeIndels: Boolean = true): SAMCodingRecord {
 
             val softClipStart = record.softClipStart()
             val softClipEnd = record.softClipEnd()
@@ -76,14 +89,14 @@ data class SAMCodingRecord(
             positionEnd = record.getReferencePositionAtReadPosition(readIndexEnd + 1)
 
             // Add soft clip start
-            if (positionStart == alignmentStart && softClipStart > 0) {
+            if (positionStart == alignmentStart && softClipStart > 0 && includeSoftClips) {
                 val earliestStart = max(codingRegion.start().toInt(), recordStart)
                 readIndexStart = readIndexStart - positionStart + earliestStart
                 positionStart = earliestStart
             }
 
             // Add soft clip end
-            if (positionEnd == alignmentEnd && softClipEnd > 0) {
+            if (positionEnd == alignmentEnd && softClipEnd > 0 && includeSoftClips) {
                 val latestEnd = min(codingRegion.end().toInt(), recordEnd)
                 readIndexEnd = readIndexEnd + latestEnd - positionEnd
                 positionEnd = latestEnd
@@ -91,9 +104,9 @@ data class SAMCodingRecord(
 
             val softClippedStart = max(alignmentStart - positionStart, 0)
             val softClippedEnd = max(0, positionEnd - alignmentEnd)
-            val indels = indels(positionStart, positionEnd, record)
+            val indels = if (includeIndels) indels(positionStart, positionEnd, record) else listOf()
 
-            return SAMCodingRecord(record.readName, softClippedStart, softClippedEnd, indels, positionStart, positionEnd, readIndexStart, readIndexEnd, record)
+            return SAMCodingRecord(record.readName, softClippedStart, softClippedEnd, indels, positionStart, positionEnd, readIndexStart, readIndexEnd, record, reverseStrand)
         }
 
         private fun indels(startPosition: Int, endPosition: Int, record: SAMRecord): List<Indel> {

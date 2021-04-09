@@ -18,16 +18,16 @@ class DiploidCount implements Comparable<DiploidCount> {
     private static final String DELIMITER = "\t";
 
     @NotNull
-    public static Map<GenomePosition, DiploidCount> readDiploidCountAsMap(final String outputFile) throws IOException {
-        return Files.readAllLines(new File(outputFile).toPath())
+    public static Map<GenomePosition, DiploidCount> readDiploidCountAsMap(final String inputFile) throws IOException {
+        return Files.readAllLines(new File(inputFile).toPath())
                 .stream()
                 .map(DiploidCount::new)
                 .collect(Collectors.toMap(x -> x.position, x -> x));
     }
 
     @NotNull
-    public static List<DiploidCount> readDiploidCountAsList(final String outputFile) throws IOException {
-        return Files.readAllLines(new File(outputFile).toPath()).stream().map(DiploidCount::new).collect(Collectors.toList());
+    public static List<DiploidCount> readDiploidCountAsList(final String inputFile) throws IOException {
+        return Files.readAllLines(new File(inputFile).toPath()).stream().map(DiploidCount::new).collect(Collectors.toList());
     }
 
     private final GenomePosition position;

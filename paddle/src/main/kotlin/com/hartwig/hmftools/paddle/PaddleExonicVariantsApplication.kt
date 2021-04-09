@@ -2,12 +2,11 @@ package com.hartwig.hmftools.paddle
 
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoadFile
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariantFile
+import com.hartwig.hmftools.paddle.PaddleExonicVariantsApplication.Companion.HPC_TSV
+import com.hartwig.hmftools.paddle.PaddleExonicVariantsApplication.Companion.OUTPUT_DIR
 import com.hartwig.hmftools.paddle.cohort.HighestPuritySample
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess
-import org.apache.commons.cli.CommandLine
-import org.apache.commons.cli.DefaultParser
-import org.apache.commons.cli.Options
-import org.apache.commons.cli.ParseException
+import org.apache.commons.cli.*
 import org.apache.logging.log4j.LogManager
 import java.io.File
 
@@ -16,6 +15,15 @@ fun main(args: Array<String>) {
     fun createBasicOptions(): Options {
         val options = Options()
         DatabaseAccess.addDatabaseCmdLineArgs(options)
+
+        val outputDirOption = Option(OUTPUT_DIR, true, "Directory in which to write the output")
+        outputDirOption.isRequired = true
+        options.addOption(outputDirOption)
+
+        val hpcTsvOption = Option(HPC_TSV, true, "TSV file which contains the HPC samples")
+        hpcTsvOption.isRequired = true
+        options.addOption(hpcTsvOption)
+
         return options
     }
 
@@ -38,21 +46,28 @@ class PaddleExonicVariantsApplication(cmd: CommandLine) : AutoCloseable, Runnabl
 
     companion object {
         val logger = LogManager.getLogger(this::class.java)
-        val MAX_REPEAT_COUNT = 7
+        const val MAX_REPEAT_COUNT = 7
+        const val OUTPUT_DIR = "output_dir"
+        const val HPC_TSV = "hpc_tsv"
     }
 
     private val startTime = System.currentTimeMillis()
     private val dbAccess = DatabaseAccess.databaseAccess(cmd)
+    private val outputDir = cmd.getOptionValue(OUTPUT_DIR)
+    private val cohortFile = cmd.getOptionValue(HPC_TSV)
 
     override fun run() {
-        val cohortFile = "/Users/jon/hmf/analysis/dnds5441/hpc.5441.tsv"
-        val cohortMutationalLoadFile = "/Users/jon/hmf/analysis/dnds5441/mutationalLoad.tsv"
-        fun somaticFilename(x:String) = "/Users/jon/hmf/analysis/dnds5441/somatics/${x}.exonic.somatics.tsv"
+        val cohortMutationalLoadFile = "$outputDir/mutationalLoad.tsv"
+        val somaticsDir = "$outputDir/somatics"
 
+        File(somaticsDir).mkdirs()
+
+        fun somaticFilename(x:String) = "${somaticsDir}/${x}.exonic.somatics.tsv"
 
         if (!File(cohortMutationalLoadFile).exists()) {
             DndsMutationalLoadFile.writeHeader(cohortMutationalLoadFile)
         }
+
         val oldCohortMutationalLoad = DndsMutationalLoadFile.read(cohortMutationalLoadFile).associateBy { x -> x.sampleId() }
 
         val highestPurityCohort = HighestPuritySample.readFile(cohortFile)

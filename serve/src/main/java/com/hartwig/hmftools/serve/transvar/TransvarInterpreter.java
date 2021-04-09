@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -34,15 +35,19 @@ class TransvarInterpreter {
     private static final List<String> BASES = Lists.newArrayList("G", "A", "T", "C");
 
     @NotNull
-    private final IndexedFastaSequenceFile refGenome;
+    private final RefGenomeVersion refGenomeVersion;
+    @NotNull
+    private final IndexedFastaSequenceFile refGenomeFasta;
 
     @NotNull
-    static TransvarInterpreter fromRefGenomeFastaFile(@NotNull String refGenomeFastaFile) throws FileNotFoundException {
-        return new TransvarInterpreter(new IndexedFastaSequenceFile(new File(refGenomeFastaFile)));
+    static TransvarInterpreter withRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile)
+            throws FileNotFoundException {
+        return new TransvarInterpreter(refGenomeVersion, new IndexedFastaSequenceFile(new File(refGenomeFastaFile)));
     }
 
-    private TransvarInterpreter(@NotNull IndexedFastaSequenceFile refGenome) {
-        this.refGenome = refGenome;
+    private TransvarInterpreter(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final IndexedFastaSequenceFile refGenomeFasta) {
+        this.refGenomeVersion = refGenomeVersion;
+        this.refGenomeFasta = refGenomeFasta;
     }
 
     @NotNull
@@ -162,10 +167,8 @@ class TransvarInterpreter {
         if (!record.variantSpanMultipleExons()) {
             // Dups don't have ref and alt information so need to look it up in ref genome.
             long position = record.gdnaPosition() - 1;
-            String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
-
-            String dupBases =
-                    refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + dup.duplicatedBaseCount()).getBaseString();
+            String preMutatedSequence = refSequence(record.chromosome(), position, position);
+            String dupBases = refSequence(record.chromosome(), position + 1, position + dup.duplicatedBaseCount());
 
             hotspots.add(ImmutableVariantHotspotImpl.builder()
                     .chromosome(record.chromosome())
@@ -186,7 +189,7 @@ class TransvarInterpreter {
         List<VariantHotspot> hotspots = Lists.newArrayList();
 
         long position = record.gdnaPosition();
-        String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
+        String preMutatedSequence = refSequence(record.chromosome(), position, position);
 
         ImmutableVariantHotspotImpl.Builder hotspotBuilder =
                 ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome()).position(position).ref(preMutatedSequence);
@@ -211,11 +214,9 @@ class TransvarInterpreter {
             ImmutableVariantHotspotImpl.Builder hotspotBuilder = ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome());
             for (long start = deletion.leftAlignedGDNAPosition(); start <= record.gdnaPosition(); start++) {
                 long adjustedPosition = start - 1;
-                String preMutatedSequence =
-                        refGenome.getSubsequenceAt(record.chromosome(), adjustedPosition, adjustedPosition).getBaseString();
-                String deletedSequence = refGenome.getSubsequenceAt(record.chromosome(),
-                        adjustedPosition + 1,
-                        adjustedPosition + deletion.deletedBaseCount()).getBaseString();
+                String preMutatedSequence = refSequence(record.chromosome(), adjustedPosition, adjustedPosition);
+                String deletedSequence =
+                        refSequence(record.chromosome(), adjustedPosition + 1, adjustedPosition + deletion.deletedBaseCount());
 
                 hotspots.add(hotspotBuilder.position(adjustedPosition)
                         .ref(preMutatedSequence + deletedSequence)
@@ -235,8 +236,7 @@ class TransvarInterpreter {
         List<VariantHotspot> hotspots = Lists.newArrayList();
         if (!record.variantSpanMultipleExons()) {
             long position = record.gdnaPosition();
-            String deletedBases =
-                    refGenome.getSubsequenceAt(record.chromosome(), position, position + insDel.deletedBaseCount() - 1).getBaseString();
+            String deletedBases = refSequence(record.chromosome(), position, position + insDel.deletedBaseCount() - 1);
 
             ImmutableVariantHotspotImpl.Builder hotspotBuilder =
                     ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome()).position(position).ref(deletedBases);
@@ -299,8 +299,7 @@ class TransvarInterpreter {
             if (frameshift.isFrameshiftInsideStartCodon()) {
                 posPriorToCodon = strand == Strand.FORWARD ? posPriorToCodon - 1 : posPriorToCodon + 1;
             }
-            String referenceCodon =
-                    refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon + 1, posPriorToCodon + 3).getBaseString();
+            String referenceCodon = refSequence(record.chromosome(), posPriorToCodon + 1, posPriorToCodon + 3);
             String refAminoAcid =
                     AminoAcidFunctions.findAminoAcidForCodon(strand == Strand.FORWARD ? referenceCodon : reverseAndFlip(referenceCodon));
 
@@ -332,15 +331,13 @@ class TransvarInterpreter {
             // For reverse strand we need to move the position up by 1 for inserts
             int strandCorrection = strand == Strand.FORWARD ? 0 : 1;
             long pos = posPriorToCodon + i + strandCorrection;
-            String ref = refGenome.getSubsequenceAt(record.chromosome(), pos, pos).getBaseString();
+            String ref = refSequence(record.chromosome(), pos, pos);
             builder.position(pos).ref(ref);
 
-            String refBase1 = refGenome.getSubsequenceAt(record.chromosome(),
-                    posPriorToCodon + 1 + strandCorrection,
-                    posPriorToCodon + 1 + strandCorrection).getBaseString();
-            String refBase2 = refGenome.getSubsequenceAt(record.chromosome(),
-                    posPriorToCodon + 2 + strandCorrection,
-                    posPriorToCodon + 2 + strandCorrection).getBaseString();
+            String refBase1 =
+                    refSequence(record.chromosome(), posPriorToCodon + 1 + strandCorrection, posPriorToCodon + 1 + strandCorrection);
+            String refBase2 =
+                    refSequence(record.chromosome(), posPriorToCodon + 2 + strandCorrection, posPriorToCodon + 2 + strandCorrection);
             for (String base : BASES) {
                 String newRefCodon;
                 if (i == 0) {
@@ -372,23 +369,29 @@ class TransvarInterpreter {
             String newRefCodon;
             if (strand == Strand.FORWARD) {
                 if (i == 0) {
-                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon + 2, posPriorToCodon + 4).getBaseString();
+                    newRefCodon = refSequence(record.chromosome(), posPriorToCodon + 2, posPriorToCodon + 4);
                 } else if (i == 1) {
-                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon + 1, posPriorToCodon + 1).getBaseString()
-                            + refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon + 3, posPriorToCodon + 4).getBaseString();
+                    newRefCodon =
+                            refSequence(record.chromosome(), posPriorToCodon + 1, posPriorToCodon + 1) + refSequence(record.chromosome(),
+                                    posPriorToCodon + 3,
+                                    posPriorToCodon + 4);
                 } else {
-                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon + 1, posPriorToCodon + 2).getBaseString()
-                            + refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon + 4, posPriorToCodon + 4).getBaseString();
+                    newRefCodon =
+                            refSequence(record.chromosome(), posPriorToCodon + 1, posPriorToCodon + 2) + refSequence(record.chromosome(),
+                                    posPriorToCodon + 4,
+                                    posPriorToCodon + 4);
                 }
             } else {
                 if (i == 0) {
-                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon, posPriorToCodon).getBaseString()
-                            + refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon + 2, posPriorToCodon + 3).getBaseString();
+                    newRefCodon = refSequence(record.chromosome(), posPriorToCodon, posPriorToCodon) + refSequence(record.chromosome(),
+                            posPriorToCodon + 2,
+                            posPriorToCodon + 3);
                 } else if (i == 1) {
-                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon, posPriorToCodon + 1).getBaseString()
-                            + refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon + 3, posPriorToCodon + 3).getBaseString();
+                    newRefCodon = refSequence(record.chromosome(), posPriorToCodon, posPriorToCodon + 1) + refSequence(record.chromosome(),
+                            posPriorToCodon + 3,
+                            posPriorToCodon + 3);
                 } else {
-                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon, posPriorToCodon + 2).getBaseString();
+                    newRefCodon = refSequence(record.chromosome(), posPriorToCodon, posPriorToCodon + 2);
                 }
             }
             String newAminoAcid =
@@ -396,8 +399,8 @@ class TransvarInterpreter {
 
             if (newAminoAcid != null && !newAminoAcid.equals(refAminoAcid)) {
                 long pos = posPriorToCodon + i;
-                String ref = refGenome.getSubsequenceAt(record.chromosome(), pos, pos + 1).getBaseString();
-                String alt = refGenome.getSubsequenceAt(record.chromosome(), pos, pos).getBaseString();
+                String ref = refSequence(record.chromosome(), pos, pos + 1);
+                String alt = refSequence(record.chromosome(), pos, pos);
 
                 hotspots.add(builder.position(pos).ref(ref).alt(alt).build());
             }
@@ -416,17 +419,20 @@ class TransvarInterpreter {
             String newRefCodon;
             if (strand == Strand.FORWARD) {
                 if (i == 0) {
-                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon + 3, posPriorToCodon + 5).getBaseString();
+                    newRefCodon = refSequence(record.chromosome(), posPriorToCodon + 3, posPriorToCodon + 5);
                 } else {
-                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon + 1, posPriorToCodon + 1).getBaseString()
-                            + refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon + 4, posPriorToCodon + 5).getBaseString();
+                    newRefCodon =
+                            refSequence(record.chromosome(), posPriorToCodon + 1, posPriorToCodon + 1) + refSequence(record.chromosome(),
+                                    posPriorToCodon + 4,
+                                    posPriorToCodon + 5);
                 }
             } else {
                 if (i == 0) {
-                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon - 1, posPriorToCodon).getBaseString()
-                            + refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon + 3, posPriorToCodon + 3).getBaseString();
+                    newRefCodon = refSequence(record.chromosome(), posPriorToCodon - 1, posPriorToCodon) + refSequence(record.chromosome(),
+                            posPriorToCodon + 3,
+                            posPriorToCodon + 3);
                 } else {
-                    newRefCodon = refGenome.getSubsequenceAt(record.chromosome(), posPriorToCodon - 1, posPriorToCodon + 1).getBaseString();
+                    newRefCodon = refSequence(record.chromosome(), posPriorToCodon - 1, posPriorToCodon + 1);
                 }
             }
 
@@ -435,12 +441,18 @@ class TransvarInterpreter {
 
             if (newAminoAcid != null && !newAminoAcid.equals(refAminoAcid)) {
                 long pos = posPriorToCodon + i;
-                String ref = refGenome.getSubsequenceAt(record.chromosome(), pos, pos + 2).getBaseString();
-                String alt = refGenome.getSubsequenceAt(record.chromosome(), pos, pos).getBaseString();
+                String ref = refSequence(record.chromosome(), pos, pos + 2);
+                String alt = refSequence(record.chromosome(), pos, pos);
 
                 hotspots.add(builder.position(pos).ref(ref).alt(alt).build());
             }
         }
         return hotspots;
+    }
+
+    @NotNull
+    private String refSequence(@NotNull String chromosome, long start, long end) {
+        String versionedChromosome = refGenomeVersion.versionedChromosome(chromosome);
+        return refGenomeFasta.getSubsequenceAt(versionedChromosome, start, end).getBaseString();
     }
 }

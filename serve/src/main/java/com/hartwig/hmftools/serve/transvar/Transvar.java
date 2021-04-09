@@ -9,8 +9,8 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.serve.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.extraction.util.KeyFormatter;
@@ -38,7 +38,7 @@ public class Transvar implements ProteinResolver {
     public static Transvar withRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile,
             @NotNull Map<String, HmfTranscriptRegion> transcriptsPerGeneMap) throws FileNotFoundException {
         return new Transvar(new TransvarProcessImpl(refGenomeVersion, refGenomeFastaFile),
-                TransvarInterpreter.fromRefGenomeFastaFile(refGenomeFastaFile),
+                TransvarInterpreter.withRefGenome(refGenomeVersion, refGenomeFastaFile),
                 transcriptsPerGeneMap);
     }
 

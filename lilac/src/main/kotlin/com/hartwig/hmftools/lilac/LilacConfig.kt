@@ -24,7 +24,9 @@ const val MIN_FRAGMENTS_TO_REMOVE_SINGLE = "min_fragments_to_remove_single"
 const val MIN_CONFIRMED_UNIQUE_COVERAGE = "min_confirmed_unique_coverage"
 const val EXPECTED_ALLELES = "expected_alleles"
 const val GENE_COPY_NUMBER = "gene_copy_number"
+const val SOMATIC_VCF = "somatic_vcf"
 const val MAX_DISTANCE_FROM_TOP_SCORE = "max_distance_from_top_score"
+const val DEBUG_PHASING = "debug_phasing"
 
 data class LilacConfig(
         val sample: String,
@@ -41,7 +43,10 @@ data class LilacConfig(
         val threads: Int,
         val maxDistanceFromTopScore: Int,
         val geneCopyNumberFile: String,
-        val expectedAlleles: List<HlaAllele>
+        val somaticVcf: String,
+        val debugPhasing: Boolean,
+        val expectedAlleles: List<HlaAllele>,
+        val commonAlleles: List<HlaAllele>
 ) {
 
     val outputFilePrefix = "${outputDir}/$sample"
@@ -56,10 +61,12 @@ data class LilacConfig(
             val referenceBam = cmd.requiredFile(REFERENCE_BAM_OPTION)
             val tumorBam = cmd.optionalFile(TUMOR_BAM_OPTION, "")
             val geneCopyNumberFile = cmd.optionalFile(GENE_COPY_NUMBER, "")
+            val somaticVcf = cmd.optionalFile(SOMATIC_VCF, "")
             val resourceDir = cmd.requiredDir(RESOURCE_DIR_OPTION)
             val outputDir = cmd.requiredDir(OUTPUT_DIR_OPTION)
             val defaultConfig = default()
 
+            val debugPhasing = cmd.hasOption(DEBUG_PHASING)
             val refGenome = cmd.optionalFile(REF_GENOME_OPTION, "")
             val minBaseQual = Configs.defaultIntValue(cmd, MIN_BASE_QUAL, defaultConfig.minBaseQual)
             val minEvidence = Configs.defaultIntValue(cmd, MIN_EVIDENCE, defaultConfig.minEvidence)
@@ -69,6 +76,11 @@ data class LilacConfig(
             val threads = Configs.defaultIntValue(cmd, THREADS, defaultConfig.threads)
             val maxDistanceFromTopScore = Configs.defaultIntValue(cmd, MAX_DISTANCE_FROM_TOP_SCORE, defaultConfig.maxDistanceFromTopScore)
             val expectedAlleles = cmd.expectedAlleles(EXPECTED_ALLELES);
+            val commonAlleles = LilacConfig::class.java.getResource("/alleles/common.txt")
+                    .readText()
+                    .split("\n")
+                    .map { HlaAllele(it) }
+                    .map { it.asFourDigit() }
 
             return LilacConfig(
                     sample,
@@ -85,7 +97,10 @@ data class LilacConfig(
                     threads,
                     maxDistanceFromTopScore,
                     geneCopyNumberFile,
-                    expectedAlleles)
+                    somaticVcf,
+                    debugPhasing,
+                    expectedAlleles,
+                    commonAlleles)
         }
 
         private fun default(): LilacConfig {
@@ -97,13 +112,16 @@ data class LilacConfig(
                     "",
                     "",
                     30,
-                    3,
+                    2,
                     6,
                     40,
                     10,
                     1,
                     3,
                     "",
+                    "",
+                    false,
+                    listOf(),
                     listOf())
         }
 
@@ -124,6 +142,8 @@ data class LilacConfig(
             options.addOption(optional(THREADS, "Number of threads"))
             options.addOption(optional(EXPECTED_ALLELES, "Comma separated expected alleles"))
             options.addOption(optional(GENE_COPY_NUMBER, "Path to gene copy number file"))
+            options.addOption(optional(SOMATIC_VCF, "Path to somatic VCF"))
+            options.addOption(Option(DEBUG_PHASING, false, "More detailed logging of phasing"))
             return options
         }
 

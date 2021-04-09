@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.linx.gene;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_19;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_37;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_38;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 
@@ -49,7 +48,7 @@ public class EnsemblDAO
 
     public EnsemblDAO(final CommandLine cmd)
     {
-        mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(RG_37)));
+        mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(V37)));
         mGeneIds = Sets.newHashSet();
         mTranscriptIds = Sets.newHashSet();
 
@@ -65,7 +64,7 @@ public class EnsemblDAO
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - HG19 (default) or HG38");
+        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - 37 (default) or 38");
         options.addOption(DB_PASS, true, "Ensembl DB password");
         options.addOption(DB_URL, true, "Ensembl DB URL");
         options.addOption(DB_USER, true, "Ensembl DB username");
@@ -76,7 +75,7 @@ public class EnsemblDAO
 
     private boolean ignoreTranscript(final String transName)
     {
-        if(mRefGenomeVersion == RG_38)
+        if(mRefGenomeVersion == V38)
             return false;
 
         return transName.equals("ENST00000467125"); // GOPC processed transcript which matches a ROS1 splice site
@@ -111,7 +110,7 @@ public class EnsemblDAO
 
     private int findCoordSystemId()
     {
-        final String version = RefGenomeVersion.is37(mRefGenomeVersion) ? "GRCh37" : "GRCh38";
+        final String version = mRefGenomeVersion.is37() ? "GRCh37" : "GRCh38";
 
         final String queryStr = "select coord_system_id from coord_system"
                 + " where version = '" + version + "'"
@@ -188,7 +187,7 @@ public class EnsemblDAO
                 }
 
                 EnsemblGeneData geneData = new EnsemblGeneData(
-                        geneId, geneName, chromosome, strand.byteValue(), geneStart.intValue(), geneEnd.intValue(),
+                        geneId, geneName, chromosome, strand, geneStart.intValue(), geneEnd.intValue(),
                         record.get("KaryotypeBand").toString());
 
                 geneData.addSynonyms(record.get("Synonyms").toString());

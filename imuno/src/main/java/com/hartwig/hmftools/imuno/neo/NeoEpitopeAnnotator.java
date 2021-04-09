@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.neo.AminoAcidConverter.AA_SELENOCYSTEINE;
+import static com.hartwig.hmftools.common.neo.AminoAcidConverter.STOP_SYMBOL;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.NE_FUSION_COHORT_FILE;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.generateFilename;
@@ -23,7 +24,6 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FIL
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.DOWNSTREAM_PRE_GENE_DISTANCE;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.LOG_DEBUG;
-import static com.hartwig.hmftools.common.neo.AminoAcidConverter.STOP_SYMBOL;
 import static com.hartwig.hmftools.imuno.neo.CohortTpmData.CANCER_VALUE;
 import static com.hartwig.hmftools.imuno.neo.CohortTpmData.COHORT_VALUE;
 import static com.hartwig.hmftools.imuno.neo.NeoConfig.CANCER_TPM_FILE;
@@ -91,7 +91,7 @@ public class NeoEpitopeAnnotator
 
         mSampleFusionMap = Maps.newHashMap();
 
-        mGeneTransCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.RG_37);
+        mGeneTransCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.V37);
         mGeneTransCache.setRequiredData(true, false, false, false);
         mGeneTransCache.setRestrictedGeneIdList(mConfig.RestrictedGeneIds);
         mGeneTransCache.load(false);

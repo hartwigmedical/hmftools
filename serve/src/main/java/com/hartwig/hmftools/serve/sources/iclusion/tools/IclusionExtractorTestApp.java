@@ -12,8 +12,8 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.serve.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.iclusion.classification.IclusionClassificationConfig;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
@@ -59,7 +59,7 @@ public class IclusionExtractorTestApp {
 
         if (hostname.toLowerCase().contains("datastore")) {
             iclusionTrialTsv = "/data/common/dbs/iclusion/iclusion_trials_prod.tsv";
-            driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.hg19.tsv";
+            driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.37.tsv";
             knownFusionFilePath = "/data/common/dbs/fusions/known_fusion_data.csv";
             missingDoidMappingTsv = "/data/common/dbs/serve/curation/missing_doids_mapping.tsv";
             outputDir = System.getProperty("user.home") + "/tmp";
@@ -67,7 +67,7 @@ public class IclusionExtractorTestApp {
             proteinResolver = ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, fastaFile, allGenesMap);
         } else {
             iclusionTrialTsv = System.getProperty("user.home") + "/hmf/projects/serve/iclusion/iclusion_trials_prod.tsv";
-            driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.hg19.tsv";
+            driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.37.tsv";
             knownFusionFilePath = System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.csv";
             missingDoidMappingTsv = System.getProperty("user.home") + "/hmf/projects/serve/curation/missing_doids_mapping.tsv";
             outputDir = System.getProperty("user.home") + "/hmf/tmp/serve";

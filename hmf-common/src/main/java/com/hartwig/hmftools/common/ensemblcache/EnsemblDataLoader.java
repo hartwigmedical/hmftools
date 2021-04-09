@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.ensemblcache;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
 
 import java.io.BufferedReader;
@@ -86,7 +85,7 @@ public final class EnsemblDataLoader
                     continue;
                 }
 
-                final String chromosome = refGenomeChromosome(items[chromosomeIndex], version);
+                final String chromosome = version.versionedChromosome(items[chromosomeIndex]);
 
                 EnsemblGeneData geneData = new EnsemblGeneData(
                         geneId, items[geneNameIndex], chromosome, Byte.parseByte(items[strandIndex]),

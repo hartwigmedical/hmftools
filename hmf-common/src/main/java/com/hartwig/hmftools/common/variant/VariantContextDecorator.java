@@ -262,4 +262,9 @@ public class VariantContextDecorator implements GenomePosition {
             return 0;
         }
     };
+
+    @Override
+    public String toString() {
+        return chromosome() + ":" + position() + " " + ref + '>' + alt ;
+    }
 }

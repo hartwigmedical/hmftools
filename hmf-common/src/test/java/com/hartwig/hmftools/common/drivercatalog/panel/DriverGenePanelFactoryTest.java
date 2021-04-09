@@ -10,11 +10,17 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class DriverGenePanelFactoryTest {
+
+    @NotNull
+    public static DriverGenePanel testGenePanel() {
+        return DriverGenePanelFactory.create(RefGenomeVersion.V37, builtIn());
+    }
 
     @NotNull
     private static List<DriverGene> builtIn() {
@@ -25,14 +31,8 @@ public class DriverGenePanelFactoryTest {
                 .collect(Collectors.toList());
     }
 
-    @NotNull
-    public static DriverGenePanel testGenePanel() {
-        return DriverGenePanelFactory.create(DriverGenePanelAssembly.HG19, builtIn());
-    }
-
-
     @Test
-    public void testReadOncoGenes() {
+    public void canReadOncoGenes() {
         DriverGenePanel genePanel = testGenePanel();
         DndsDriverImpactLikelihood missense = genePanel.oncoLikelihood().get("ABL1").missense();
 
@@ -41,7 +41,7 @@ public class DriverGenePanelFactoryTest {
     }
 
     @Test
-    public void testReadTSGGenes() {
+    public void canReadTSGGenes() {
         DriverGenePanel genePanel = testGenePanel();
         DndsDriverGeneLikelihood gene = genePanel.tsgLikelihood().get("ACVR1B");
         DndsDriverImpactLikelihood missense = gene.missense();
@@ -50,5 +50,4 @@ public class DriverGenePanelFactoryTest {
         assertEquals(0.003, missense.driversPerSample(), 0.001);
         assertEquals(2e-07, missense.passengersPerMutation(), 1e-7);
     }
-
 }

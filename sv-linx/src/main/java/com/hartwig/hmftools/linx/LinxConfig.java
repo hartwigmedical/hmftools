@@ -2,7 +2,7 @@ package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.cli.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.RG_37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
@@ -77,7 +77,7 @@ public class LinxConfig
     private static final String CHAINING_SV_LIMIT = "chaining_sv_limit";
     private static final String REQUIRED_ANNOTATIONS = "annotations";
 
-    public static RefGenomeVersion RG_VERSION = RG_37;
+    public static RefGenomeVersion RG_VERSION = V37;
 
     private static final String INDEL_ANNOTATIONS = "indel_annotation";
 
@@ -300,7 +300,7 @@ public class LinxConfig
     public LinxConfig(int proximityDistance)
     {
         ProximityDistance = proximityDistance;
-        RG_VERSION = RG_37;
+        RG_VERSION = V37;
         PurpleDataPath = "";
         OutputDataPath = "";
         SampleDataPath = "";
@@ -358,7 +358,7 @@ public class LinxConfig
         options.addOption(SAMPLE_DATA_DIR, true, "Optional: directory for per-sample SV data, default is to use output_dir");
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
         options.addOption(UPLOAD_TO_DB, true, "Upload all LINX data to DB (true/false), single-sample default=true, batch-mode default=false");
-        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts HG37 (default), HG19 or HG38");
+        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default), or 38");
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, "Driver gene panel file");
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 5000");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file");

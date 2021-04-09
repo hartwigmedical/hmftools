@@ -13,17 +13,18 @@ import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator;
 
 import org.junit.Test;
@@ -33,7 +34,7 @@ public class RnaFusionTest
     @Test
     public void testRnaMatching()
     {
-        EnsemblDataCache geneTransCache = new EnsemblDataCache("", RefGenomeVersion.RG_37);
+        EnsemblDataCache geneTransCache = new EnsemblDataCache("", RefGenomeVersion.V37);
 
         String geneName = "GENE1";
         String geneId = "ENSG0001";
@@ -86,7 +87,7 @@ public class RnaFusionTest
 
         BreakendTransData trans = createBreakendTranscriptData(transData, geneAnnot1.position(), geneAnnot1);
 
-        assertTrue(trans != null);
+        assertNotNull(trans);
 
         // test upstream scenarios
         int rnaPosition = 12600;
@@ -160,7 +161,7 @@ public class RnaFusionTest
 
         BreakendTransData trans2 = createBreakendTranscriptData(transData, geneAnnot2.position(), geneAnnot2);
 
-        assertTrue(trans2 != null);
+        assertNotNull(trans2);
 
         // upstream
 

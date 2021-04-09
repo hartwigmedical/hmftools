@@ -4,26 +4,23 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
-import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
-import com.hartwig.hmftools.serve.sources.vicc.ViccUtil;
-import com.hartwig.hmftools.vicc.datamodel.Feature;
-import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class CkbUtils {
+public final class CkbUtils {
 
     private static final Logger LOGGER = LogManager.getLogger(CkbUtils.class);
     private static final String FIELD_DELIMITER = "\t";
+
+    private CkbUtils() {
+    }
 
     public static void printExtractionResults(@NotNull ExtractionResult result) {
         LOGGER.info("Analysis performed on CKB extraction result");

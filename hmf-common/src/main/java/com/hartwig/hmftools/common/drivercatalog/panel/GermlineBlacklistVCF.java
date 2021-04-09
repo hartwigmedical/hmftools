@@ -16,8 +16,10 @@ final class GermlineBlacklistVCF {
 
     static final String BLACKLIST_FLAG = "BLACKLIST";
 
+    private GermlineBlacklistVCF() {
+    }
+
     public static void process(@NotNull String outputFile, @NotNull List<VariantContext> variants) {
-        // WRITE
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputFile)
                 .modifyOption(Options.INDEX_ON_THE_FLY, true)
                 .modifyOption(Options.USE_ASYNC_IO, false)

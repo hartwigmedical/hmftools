@@ -44,11 +44,12 @@ class ActionableEvidenceFactory {
         DIRECTIONS_TO_IGNORE.add("no benefit");
         DIRECTIONS_TO_IGNORE.add("not predictive");
 
-        // Determine first what they mean with below direction
+        // TODO: Determine first what they mean with below direction
         DIRECTIONS_TO_IGNORE.add("decreased response");
 
         EVIDENCE_TYPE.add("Actionable");
 
+        // TODO: Determine if all those are ignored
         EVIDENCE_TYPE_TO_IGNORE.add("Prognostic");
         EVIDENCE_TYPE_TO_IGNORE.add("Emerging");
         EVIDENCE_TYPE_TO_IGNORE.add("Risk Factor");
@@ -82,10 +83,15 @@ class ActionableEvidenceFactory {
                 EvidenceLevel level = resolveLevel(evidence.ampCapAscoEvidenceLevel());
                 EvidenceDirection direction = resolveDirection(evidence.responseType());
                 String cancerType = evidence.indication().name();
-                String doid = evidence.indication().termId();
                 Set<String> urls = Sets.newHashSet();
 
-                Map<String, Set<String>> cancerTypeToDoidsMap = buildCancerTypeToDoidsMap(cancerType, extractDoid(doid));
+                Set<String> doids;
+                String doid = evidence.indication().termId();
+                if (doid != null) {
+                    doids = Sets.newHashSet(doid);
+                } else {
+                    doids = lookupDoids(cancerType);
+                }
 
                 for (Reference reference : evidence.references()) {
                     if (reference.url() != null) {
@@ -96,13 +102,17 @@ class ActionableEvidenceFactory {
                 // TODO: Determine if curation of drugs and evidence is needed
 
                 if (therapyName != null && level != null && direction != null) {
-                    ImmutableActionableEvidence.Builder builder =
-                            ImmutableActionableEvidence.builder().source(Knowledgebase.CKB).level(level).direction(direction).urls(urls);
-                    for (Map.Entry<String, Set<String>> cancerTypeEntry : cancerTypeToDoidsMap.entrySet()) {
-                        for (String doidSet : cancerTypeEntry.getValue()) {
-                            actionableEvents.add(builder.cancerType(cancerType).doid(doidSet).treatment(therapyName).build());
-                        }
+                    ImmutableActionableEvidence.Builder builder = ImmutableActionableEvidence.builder()
+                            .source(Knowledgebase.CKB)
+                            .level(level)
+                            .direction(direction)
+                            .treatment(therapyName)
+                            .cancerType(cancerType)
+                            .urls(urls);
+                    for (String doidSet : doids) {
+                        actionableEvents.add(builder.doid(doidSet).build());
                     }
+
                 }
             }
         }
@@ -146,19 +156,6 @@ class ActionableEvidenceFactory {
             LOGGER.warn("Could not resolve doids for CKB cancer type '{}'", cancerType);
             return Sets.newHashSet();
         }
-    }
-
-    @NotNull
-    private Map<String, Set<String>> buildCancerTypeToDoidsMap(@Nullable String cancerType, @Nullable String doid) {
-        Map<String, Set<String>> cancerTypeToDoidsMap = Maps.newHashMap();
-        if (cancerType != null) {
-            if (doid != null) {
-                cancerTypeToDoidsMap.put(cancerType, Sets.newHashSet(doid));
-            } else {
-                cancerTypeToDoidsMap.put(cancerType, lookupDoids(cancerType));
-            }
-        }
-        return cancerTypeToDoidsMap;
     }
 
     public void evaluateCuration() {

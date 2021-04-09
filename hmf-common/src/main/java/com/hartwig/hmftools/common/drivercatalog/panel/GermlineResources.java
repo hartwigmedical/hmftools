@@ -12,27 +12,36 @@ import htsjdk.variant.vcf.VCFCodec;
 
 final class GermlineResources {
 
-    static List<VariantContext> grch37Whitelist() throws IOException {
-        return getResource(getResourceURL("/drivercatalog/GermlineHotspots.whitelist.hg19.vcf"));
+    private GermlineResources() {
     }
 
-    static List<VariantContext> grch38Whitelist() throws IOException {
-        return getResource(getResourceURL("/drivercatalog/GermlineHotspots.whitelist.hg38.vcf"));
+    @NotNull
+    static List<VariantContext> whitelist37() throws IOException {
+        return resource(resourceURL("/drivercatalog/GermlineHotspots.whitelist.37.vcf"));
     }
 
-    static List<VariantContext> grch37Blacklist() throws IOException {
-        return getResource(getResourceURL("/drivercatalog/GermlineHotspots.blacklist.hg19.vcf"));
+    @NotNull
+    static List<VariantContext> whitelist38() throws IOException {
+        return resource(resourceURL("/drivercatalog/GermlineHotspots.whitelist.38.vcf"));
     }
 
-    static List<VariantContext> grch38Blacklist() throws IOException {
-        return getResource(getResourceURL("/drivercatalog/GermlineHotspots.blacklist.hg38.vcf"));
+    @NotNull
+    static List<VariantContext> blacklist37() throws IOException {
+        return resource(resourceURL("/drivercatalog/GermlineHotspots.blacklist.37.vcf"));
     }
 
-    private static List<VariantContext> getResource(@NotNull final String file) throws IOException {
+    @NotNull
+    static List<VariantContext> blacklist38() throws IOException {
+        return resource(resourceURL("/drivercatalog/GermlineHotspots.blacklist.38.vcf"));
+    }
+
+    @NotNull
+    private static List<VariantContext> resource(@NotNull final String file) throws IOException {
         return getFeatureReader(file, new VCFCodec(), false).iterator().toList();
     }
 
-    private static String getResourceURL(@NotNull String location) {
+    @NotNull
+    private static String resourceURL(@NotNull String location) {
         return DriverGenePanelConversion.class.getResource(location).toString();
     }
 }

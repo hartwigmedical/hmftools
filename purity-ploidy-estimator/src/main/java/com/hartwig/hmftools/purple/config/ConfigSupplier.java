@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ConfigSupplier {
 
-    private static final Logger LOGGER = LogManager.getLogger(CommonConfig.class);
+    private static final Logger LOGGER = LogManager.getLogger(ConfigSupplier.class);
 
     private static final String REF_SAMPLE = "reference";
     private static final String TUMOR_SAMPLE = "tumor";

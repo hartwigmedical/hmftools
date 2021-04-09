@@ -14,13 +14,19 @@ class SAMSlicer(private val minMappingQuality: Int) {
     fun slice(contig: String, start: Int, end: Int, samReader: SamReader, consumer: Consumer<SAMRecord>) {
         val iterator = samReader.query(contig, start, end, false)
         for (samRecord in iterator) {
-            if (samRecord.samRecordMeetsQualityRequirements()) {
+            if (samRecord.meetsQualityRequirements()) {
                 consumer.accept(samRecord)
             }
         }
     }
 
-    private fun SAMRecord.samRecordMeetsQualityRequirements(): Boolean {
+    fun queryMates(samReader: SamReader, records: List<SAMRecord>): List<SAMRecord> {
+        return records
+                .mapNotNull { samReader.queryMate(it) }
+                .filter { it.meetsQualityRequirements() }
+    }
+
+    private fun SAMRecord.meetsQualityRequirements(): Boolean {
         return this.mappingQuality >= minMappingQuality
                 && !this.readUnmappedFlag
                 && !this.duplicateReadFlag

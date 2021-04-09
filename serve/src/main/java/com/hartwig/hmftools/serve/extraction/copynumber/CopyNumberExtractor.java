@@ -32,7 +32,7 @@ public class CopyNumberExtractor {
 
     @Nullable
     public KnownCopyNumber extract(@NotNull String gene, @NotNull EventType type) {
-        if (COPY_NUMBER_EVENTS.contains(type) && geneChecker.isValidGene(gene)) {
+        if (COPY_NUMBER_EVENTS.contains(type) && geneChecker.isValidGene(gene, type)) {
             DriverCategory driverCategory = findByGene(driverGenes, gene);
             if (driverCategory != null) {
                 if ((driverCategory == DriverCategory.TSG && type == EventType.AMPLIFICATION) || (driverCategory == DriverCategory.ONCO

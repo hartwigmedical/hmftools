@@ -12,24 +12,24 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import org.junit.Test;
 
 public class MedianRatioFactoryTest {
+
     @Test
-    public void testHg19() {
-        ReadRatio hg19Ratio = ImmutableReadRatio.builder().chromosome("1").position(1).ratio(1).build();
+    public void testV37() {
+        ReadRatio v37Ratio = ImmutableReadRatio.builder().chromosome("1").position(1).ratio(1).build();
         Multimap<Chromosome, ReadRatio> map = ArrayListMultimap.create();
-        map.put(HumanChromosome._1, hg19Ratio);
+        map.put(HumanChromosome._1, v37Ratio);
         List<MedianRatio> victim = MedianRatioFactory.createFromReadRatio(map);
         assertEquals(1, victim.size());
         assertEquals("1", victim.get(0).chromosome());
     }
 
     @Test
-    public void testHg38() {
-        ReadRatio hg19Ratio = ImmutableReadRatio.builder().chromosome("chr1").position(1).ratio(1).build();
+    public void testV38() {
+        ReadRatio v38Ratio = ImmutableReadRatio.builder().chromosome("chr1").position(1).ratio(1).build();
         Multimap<Chromosome, ReadRatio> map = ArrayListMultimap.create();
-        map.put(HumanChromosome._1, hg19Ratio);
+        map.put(HumanChromosome._1, v38Ratio);
         List<MedianRatio> victim = MedianRatioFactory.createFromReadRatio(map);
         assertEquals(1, victim.size());
         assertEquals("chr1", victim.get(0).chromosome());
     }
-
 }

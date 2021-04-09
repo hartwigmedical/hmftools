@@ -11,6 +11,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface ServeConfig {
 
+    Logger LOGGER = LogManager.getLogger(ServeConfig.class);
     String NOT_APPLICABLE = "N/A";
 
     // Input sources to SERVE
@@ -36,6 +39,8 @@ public interface ServeConfig {
     String HARTWIG_COHORT_TSV = "hartwig_cohort_tsv";
     String USE_HARTWIG_CURATED = "use_hartwig_curated";
     String HARTWIG_CURATED_TSV = "hartwig_curated_tsv";
+
+    String REFSEQ_TSV = "refseq_tsv";
 
     // Config for curation of evidence
     String MISSING_DOIDS_MAPPING_TSV = "missing_doids_mapping_tsv";
@@ -76,6 +81,8 @@ public interface ServeConfig {
         options.addOption(HARTWIG_CURATED_TSV, true, "Path to the Hartwig Curated input TSV");
 
         options.addOption(MISSING_DOIDS_MAPPING_TSV, true, "Path to the mapping TSV containing entries for missing DOIDs");
+
+        options.addOption(REFSEQ_TSV, true, "Path to the refseq TSV containing mapping refseq to transcript ID");
 
         options.addOption(REF_GENOME_37_FASTA_FILE, true, "Path to the V37 ref genome fasta file");
         options.addOption(REF_GENOME_38_FASTA_FILE, true, "Path to the V38 ref genome fasta file");
@@ -131,6 +138,9 @@ public interface ServeConfig {
     String missingDoidsMappingTsv();
 
     @NotNull
+    String refSeqTsv();
+
+    @NotNull
     String refGenome37FastaFile();
 
     @NotNull
@@ -163,6 +173,7 @@ public interface ServeConfig {
     static ServeConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
+            LOGGER.debug("Switched root level logging to DEBUG");
         }
 
         boolean useVicc = cmd.hasOption(USE_VICC);
@@ -187,6 +198,7 @@ public interface ServeConfig {
                 .useHartwigCurated(useHartwigCurated)
                 .hartwigCuratedTsv(useHartwigCurated ? nonOptionalFile(cmd, HARTWIG_CURATED_TSV) : NOT_APPLICABLE)
                 .missingDoidsMappingTsv(nonOptionalFile(cmd, MISSING_DOIDS_MAPPING_TSV))
+                .refSeqTsv(nonOptionalFile(cmd, REFSEQ_TSV))
                 .refGenome37FastaFile(nonOptionalFile(cmd, REF_GENOME_37_FASTA_FILE))
                 .refGenome38FastaFile(nonOptionalFile(cmd, REF_GENOME_38_FASTA_FILE))
                 .refGenome37To38Chain(nonOptionalFile(cmd, REF_GENOME_37_TO_38_CHAIN))

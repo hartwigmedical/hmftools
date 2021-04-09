@@ -12,37 +12,37 @@ public class DndsGeneNameMapTest {
 
     @Test
     public void testPRAMEF11() {
-        assertTrue(victim.isValidHg19Gene("PRAMEF11"));
-        assertTrue(victim.isValidHg19Gene("WI2-3308P17.2"));
-        assertTrue(victim.isValidHg38Gene("PRAMEF11"));
+        assertTrue(victim.isValidV37Gene("PRAMEF11"));
+        assertTrue(victim.isValidV37Gene("WI2-3308P17.2"));
+        assertTrue(victim.isValidV38Gene("PRAMEF11"));
 
-        assertFalse(victim.isValidHg38Gene("WI2-3308P17.2"));
-        assertEquals("WI2-3308P17.2", victim.hg19Gene("PRAMEF11"));
+        assertFalse(victim.isValidV38Gene("WI2-3308P17.2"));
+        assertEquals("WI2-3308P17.2", victim.v37Gene("PRAMEF11"));
     }
 
     @Test
     public void testPERM1() {
-        assertTrue(victim.isValidHg19Gene("C1orf170"));
-        assertFalse(victim.isValidHg19Gene("PERM1"));
+        assertTrue(victim.isValidV37Gene("C1orf170"));
+        assertFalse(victim.isValidV37Gene("PERM1"));
 
-        assertTrue(victim.isValidHg38Gene("PERM1"));
-        assertFalse(victim.isValidHg38Gene("C1orf170"));
+        assertTrue(victim.isValidV38Gene("PERM1"));
+        assertFalse(victim.isValidV38Gene("C1orf170"));
 
-        assertEquals("C1orf170", victim.hg19Gene("PERM1"));
+        assertEquals("C1orf170", victim.v37Gene("PERM1"));
     }
 
     @Test
     public void testPOTE() {
-        assertTrue(victim.isValidHg19Gene("POTEM"));
-        assertTrue(victim.isValidHg19Gene("POTEG"));
-        assertTrue(victim.isValidHg19Gene("POTEH"));
+        assertTrue(victim.isValidV37Gene("POTEM"));
+        assertTrue(victim.isValidV37Gene("POTEG"));
+        assertTrue(victim.isValidV37Gene("POTEH"));
 
-        assertTrue(victim.isValidHg38Gene("POTEM"));
-        assertTrue(victim.isValidHg38Gene("POTEG"));
-        assertTrue(victim.isValidHg38Gene("POTEH"));
+        assertTrue(victim.isValidV38Gene("POTEM"));
+        assertTrue(victim.isValidV38Gene("POTEG"));
+        assertTrue(victim.isValidV38Gene("POTEH"));
 
-        assertEquals("POTEM", victim.hg19Gene("POTEG"));
-        assertEquals("POTEG", victim.hg19Gene("POTEM"));
-        assertEquals("POTEH", victim.hg19Gene("POTEH"));
+        assertEquals("POTEM", victim.v37Gene("POTEG"));
+        assertEquals("POTEG", victim.v37Gene("POTEM"));
+        assertEquals("POTEH", victim.v37Gene("POTEH"));
     }
 }

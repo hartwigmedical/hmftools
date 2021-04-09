@@ -18,8 +18,8 @@ public class GermlineLowTumorVCNEnrichment implements VariantContextEnrichment {
     public static final String LOW_TUMOR_VCN_FILTER = "LOW_TUMOR_VCN";
 
     static final double MIN_TUMOR_VCN = 0.5;
-    static final double MIN_QUAL_HOTSPOT = 200;
-    static final double MIN_QUAL_OTHER = 120;
+    static final double MIN_QUAL_HOTSPOT = 120;
+    static final double MIN_QUAL_OTHER = 200;
 
     private final Consumer<VariantContext> consumer;
 

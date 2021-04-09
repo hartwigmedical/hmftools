@@ -3,8 +3,8 @@ package com.hartwig.hmftools.serve.refgenome;
 import java.util.Map;
 import java.util.Set;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.RefGenomeVersion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -39,10 +39,10 @@ public class FusionExtractor {
                 pair = fromStandardFusionPairEvent(event);
             }
         } else if (type == EventType.FUSION_PAIR_AND_EXON) {
-            pair = validate(fromExonicDelDup(gene, event));
+            pair = validate(fromExonicDelDup(gene, event), type);
         }
 
-        return validate(pair);
+        return validate(pair, type);
     }
 
     @Nullable
@@ -132,7 +132,7 @@ public class FusionExtractor {
             return null;
         }
 
-        return ImmutableKnownFusionPair.builder().geneUp(geneUp).geneDown(geneDown).build();
+        return ImmutableKnownFusionPair.builder().geneUp(geneUp.replaceAll("\\s+", "")).geneDown(geneDown.replaceAll("\\s+", "")).build();
     }
 
     private static boolean isInteger(@NotNull String string) {
@@ -156,12 +156,12 @@ public class FusionExtractor {
     }
 
     @Nullable
-    private KnownFusionPair validate(@Nullable KnownFusionPair pair) {
+    private KnownFusionPair validate(@Nullable KnownFusionPair pair, @NotNull EventType type) {
         if (pair == null) {
             return null;
         }
 
-        if (geneChecker.isValidGene(pair.geneUp()) && geneChecker.isValidGene(pair.geneDown())) {
+        if (geneChecker.isValidGene(pair.geneUp(), type) && geneChecker.isValidGene(pair.geneDown(), type)) {
             if (!isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
                 LOGGER.warn("Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
             }
