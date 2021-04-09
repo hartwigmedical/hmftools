@@ -6,7 +6,6 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
-import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.common.refseq.RefSeq;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
@@ -40,6 +39,7 @@ import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
+import com.hartwig.hmftools.ckb.classification.EventExtractorCuration;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
 
@@ -80,23 +80,8 @@ public class CkbExtractor {
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
         for (CkbEntry entry : ckbEntries) {
             if (entry.variants().size() == 1) {
-                Variant variant = entry.variants().get(0);
-                String event;
-                String geneSymbol;
-
-                if (variant.variant().equals("fusion") && variant.impact() != null && variant.impact().equals("fusion")) {
-                    event = "fusion promiscuous";
-                    geneSymbol = variant.gene().geneSymbol();
-                } else if (variant.impact() != null && variant.impact().equals("fusion")) {
-                    event = variant.variant().replaceAll("\\s+", "");
-                    geneSymbol = variant.fullName();
-                } else if (variant.variant().contains("exon")) {
-                    event = variant.variant().replace("exon", "exon ");
-                    geneSymbol = variant.gene().geneSymbol();
-                } else {
-                    event = variant.variant();
-                    geneSymbol = variant.gene().geneSymbol();
-                }
+                String geneSymbol = EventExtractorCuration.extractGene(entry);
+                String event = EventExtractorCuration.extractEvent(entry);
 
                 eventExtractions.add(eventExtractor.extract(geneSymbol,
                         extractCanonicalTranscript(entry.variants().get(0).gene().canonicalTranscript(), refSeqMatchFile),
