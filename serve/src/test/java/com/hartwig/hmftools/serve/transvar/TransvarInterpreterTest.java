@@ -20,7 +20,6 @@ import com.hartwig.hmftools.serve.transvar.datamodel.ImmutableTransvarSnvMnv;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TransvarInterpreterTest {
@@ -256,7 +255,6 @@ public class TransvarInterpreterTest {
     }
 
     @Test
-    @Ignore
     public void canConvertDuplicationToHotspot38() {
         TransvarRecord record =
                 baseRecord().gdnaPosition(5).annotation(ImmutableTransvarDuplication.builder().duplicatedBaseCount(3).build()).build();
