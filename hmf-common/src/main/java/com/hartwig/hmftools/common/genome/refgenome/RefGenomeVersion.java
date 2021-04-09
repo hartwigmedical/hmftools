@@ -47,6 +47,18 @@ public enum RefGenomeVersion {
     }
 
     @NotNull
+    public String versionedChromosome(@NotNull String chromosome) {
+        if ((this == V38 || this == HG19) && !chromosome.startsWith(RefGenomeFunctions.CHR_PREFIX)) {
+            return RefGenomeFunctions.CHR_PREFIX + chromosome;
+        } else if (this == V37) {
+            return RefGenomeFunctions.stripChromosome(chromosome);
+        } else {
+            LOGGER.warn("Unrecognized ref genome version for making chromosome ref genome specific: {}", this);
+            return chromosome;
+        }
+    }
+
+    @NotNull
     public String addVersionToFilePath(@NotNull String filePath) {
         String modifiedFilePath = filePath;
         if (filePath.endsWith(GZIP_EXTENSION)) {

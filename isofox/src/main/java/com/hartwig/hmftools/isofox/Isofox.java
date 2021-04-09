@@ -37,7 +37,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
@@ -182,15 +181,15 @@ public class Isofox
         final List<String> chromosomes = Lists.newArrayList();
 
         // process any enriched genes first, then add the rest in order of decreasing length
-        chromosomes.add(RefGenomeFunctions.refGenomeChromosome("14", mConfig.RefGenVersion));
-        chromosomes.add(RefGenomeFunctions.refGenomeChromosome("3", mConfig.RefGenVersion));
-        chromosomes.add(RefGenomeFunctions.refGenomeChromosome("6", mConfig.RefGenVersion));
-        chromosomes.add(RefGenomeFunctions.refGenomeChromosome("9", mConfig.RefGenVersion));
+        chromosomes.add(mConfig.RefGenVersion.versionedChromosome("14"));
+        chromosomes.add(mConfig.RefGenVersion.versionedChromosome("3"));
+        chromosomes.add(mConfig.RefGenVersion.versionedChromosome("6"));
+        chromosomes.add(mConfig.RefGenVersion.versionedChromosome("9"));
 
         Arrays.stream(HumanChromosome.values())
-                .map(x -> RefGenomeFunctions.refGenomeChromosome(x.toString(), mConfig.RefGenVersion))
-                .filter(x -> !chromosomes.contains(x))
-                .forEach(x -> chromosomes.add(x));
+                .map(chromosome -> mConfig.RefGenVersion.versionedChromosome(chromosome.toString()))
+                .filter(chromosome -> !chromosomes.contains(chromosome))
+                .forEach(chromosome -> chromosomes.add(chromosome));
 
         for(String chromosome : chromosomes)
         {

@@ -1,10 +1,33 @@
 package com.hartwig.hmftools.common.genome.refgenome;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 public class RefGenomeVersionTest {
+
+    @Test
+    public void canVersionChromosomes() {
+        String chr37 = "10";
+        String chr19 = "chr10";
+        String chr38 = "chr10";
+
+        assertEquals(chr37, V37.versionedChromosome(chr19));
+        assertEquals(chr37, V37.versionedChromosome(chr37));
+        assertEquals(chr37, V37.versionedChromosome(chr38));
+
+        assertEquals(chr19, HG19.versionedChromosome(chr19));
+        assertEquals(chr19, HG19.versionedChromosome(chr37));
+        assertEquals(chr19, HG19.versionedChromosome(chr38));
+
+        assertEquals(chr38, V38.versionedChromosome(chr19));
+        assertEquals(chr38, V38.versionedChromosome(chr37));
+        assertEquals(chr38, V38.versionedChromosome(chr38));
+    }
 
     @Test
     public void canVersionFilePaths() {

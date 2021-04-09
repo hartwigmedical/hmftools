@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -49,7 +48,7 @@ public class FragileSiteAnnotator
                     continue;
 
                 final BaseRegion genomeRegion = new BaseRegion(
-                        RefGenomeFunctions.refGenomeChromosome(items[FS_COL_CHR], RG_VERSION),
+                        RG_VERSION.versionedChromosome(items[FS_COL_CHR]),
                         Integer.parseInt(items[FS_COL_POS_START]),
                         Integer.parseInt(items[FS_COL_POS_END]));
 

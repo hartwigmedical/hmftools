@@ -11,7 +11,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.genome.region.ReplicationOriginRegion;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 
@@ -44,7 +43,7 @@ public class ReplicationOriginAnnotator
 
             for (final BEDFeature bedFeature : reader.iterator())
             {
-                final String chromosome = RefGenomeFunctions.refGenomeChromosome(bedFeature.getContig(), RG_VERSION);
+                final String chromosome = RG_VERSION.versionedChromosome(bedFeature.getContig());
 
                 if (!chromosome.equals(currentChr))
                 {

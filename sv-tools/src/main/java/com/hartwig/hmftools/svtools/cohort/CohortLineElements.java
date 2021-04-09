@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import org.apache.commons.cli.CommandLine;
@@ -174,7 +173,7 @@ public class CohortLineElements
                 String[] items = line.split(",");
 
                 final BaseRegion lineRegion = new BaseRegion(
-                        RefGenomeFunctions.refGenomeChromosome(items[fieldsIndexMap.get("Chromosome")], RG_VERSION),
+                        RG_VERSION.versionedChromosome(items[fieldsIndexMap.get("Chromosome")]),
                         Integer.parseInt(items[fieldsIndexMap.get("PosStart")]),
                         Integer.parseInt(items[fieldsIndexMap.get("PosEnd")]));
 
@@ -211,8 +210,8 @@ public class CohortLineElements
                 int pos2 = Integer.parseInt(items[fieldsIndexMap.get("NegativePosition")]);
 
                 final BaseRegion lineRegion = new BaseRegion(
-                        RefGenomeFunctions.refGenomeChromosome(items[fieldsIndexMap.get("Chromosome")], RG_VERSION),
-                        pos1 < pos2 ? pos1 : pos2, pos1 < pos2 ? pos2 : pos1);
+                        RG_VERSION.versionedChromosome(items[fieldsIndexMap.get("Chromosome")]),
+                        Math.min(pos1, pos2), Math.max(pos1, pos2));
 
                 mPolymorphicLineElements.add(lineRegion);
             }

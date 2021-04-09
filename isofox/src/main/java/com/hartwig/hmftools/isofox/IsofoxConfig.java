@@ -2,7 +2,6 @@ package com.hartwig.hmftools.isofox;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
@@ -35,6 +34,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
@@ -470,7 +470,7 @@ public class IsofoxConfig
         if(samReader == null)
             return null;
 
-        if(samReader.getFileHeader().getSequenceDictionary().getSequences().stream().anyMatch(x -> x.getSequenceName().contains(CHR_PREFIX)))
+        if(RefGenomeFunctions.samReaderUsesChrInContigs(samReader))
             return HG19;
 
         return V37;

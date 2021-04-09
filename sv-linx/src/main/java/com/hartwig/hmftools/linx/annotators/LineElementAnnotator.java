@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -86,7 +85,7 @@ public class LineElementAnnotator {
                     continue;
 
                 final BaseRegion lineRegion = new BaseRegion(
-                        RefGenomeFunctions.refGenomeChromosome(items[LE_COL_CHR], RG_VERSION),
+                        RG_VERSION.versionedChromosome(items[LE_COL_CHR]),
                         Integer.parseInt(items[LE_COL_POS_START]),
                         Integer.parseInt(items[LE_COL_POS_END]));
 

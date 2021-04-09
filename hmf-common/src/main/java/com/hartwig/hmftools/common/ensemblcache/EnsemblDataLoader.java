@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.logging.log4j.LogManager;
@@ -86,7 +85,7 @@ public final class EnsemblDataLoader
                     continue;
                 }
 
-                final String chromosome = RefGenomeFunctions.refGenomeChromosome(items[chromosomeIndex], version);
+                final String chromosome = version.versionedChromosome(items[chromosomeIndex]);
 
                 EnsemblGeneData geneData = new EnsemblGeneData(
                         geneId, items[geneNameIndex], chromosome, Byte.parseByte(items[strandIndex]),

@@ -38,7 +38,7 @@ public class Transvar implements ProteinResolver {
     public static Transvar withRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile,
             @NotNull Map<String, HmfTranscriptRegion> transcriptsPerGeneMap) throws FileNotFoundException {
         return new Transvar(new TransvarProcessImpl(refGenomeVersion, refGenomeFastaFile),
-                TransvarInterpreter.fromRefGenomeFastaFile(refGenomeFastaFile),
+                TransvarInterpreter.withRefGenome(refGenomeVersion, refGenomeFastaFile),
                 transcriptsPerGeneMap);
     }
 
