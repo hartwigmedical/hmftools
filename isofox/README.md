@@ -51,6 +51,7 @@ sample | Name of sample, used to name output files
 output_dir | Directory for Isofox output files
 bam_file | Input BAM file - must be sorted, preferably with duplicates marked and requires a corresponding index file
 ref_genome | Reference genome fasta file
+ref_genome_version | 37 (default) or 38
 gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation or access below.
 functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;NOVEL_LOCATIONS;FUSIONS'. Other values: EXPECTED_GC_COUNTS, EXPECTED_TRANS_COUNTS, STATISTICS and READ_COUNTS.
 

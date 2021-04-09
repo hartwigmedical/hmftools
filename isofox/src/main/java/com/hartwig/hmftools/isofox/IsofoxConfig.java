@@ -546,7 +546,7 @@ public class IsofoxConfig
         options.addOption(LOG_LEVEL, true, "Logging: INFO(default), DEBUG or TRACE (verbose)");
         options.addOption(GENE_READ_LIMIT, true, "Per-gene limit on max reads processed (default=0, not applied)");
         options.addOption(REF_GENOME, true, "Ref genome file location");
-        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts HG37 or HG38 (default = HG37)");
+        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default) or 38");
         options.addOption(LONG_FRAGMENT_LIMIT, true, "Max RNA fragment size");
         options.addOption(DROP_DUPLICATES, false, "Include duplicate fragments in expression calculations");
         options.addOption(MARK_DUPLICATES, false, "Manually identify duplicate fragments");
