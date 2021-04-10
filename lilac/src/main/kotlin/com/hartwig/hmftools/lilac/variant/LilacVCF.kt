@@ -8,9 +8,6 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
 import htsjdk.variant.vcf.*
 import java.io.File
 
-const val HLA = "HLA"
-
-
 class LilacVCF(outputVCF: String, templateVCF: String) : AutoCloseable {
     companion object {
         const val HLA = "HLA"
@@ -31,7 +28,7 @@ class LilacVCF(outputVCF: String, templateVCF: String) : AutoCloseable {
         return this
     }
 
-    fun writeVariant(context: VariantContext, alleles: List<HlaAllele>) {
+    fun writeVariant(context: VariantContext, alleles: Set<HlaAllele>) {
         val hlaLabel = if (alleles.isEmpty()) {
             listOf("UNKNOWN")
         } else {

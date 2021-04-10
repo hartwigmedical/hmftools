@@ -28,7 +28,7 @@ data class HaplotypeQC(val unusedHaplotypes: Int, val unusedHaplotypeMaxSupport:
             return PON_HAPLOTYPES.any { it.contains(this) }
         }
 
-        fun create(minEvidence: Int, winners: List<HlaSequenceLoci>, evidence: List<PhasedEvidence>, aminoAcidCount: SequenceCount): HaplotypeQC {
+        fun create(minEvidence: Int, winners: Set<HlaSequenceLoci>, evidence: List<PhasedEvidence>, aminoAcidCount: SequenceCount): HaplotypeQC {
             val allUnmatched = evidence
                     .flatMap { it.unmatchedHaplotype(minEvidence, winners, aminoAcidCount) }
                     .sortedByDescending { it.supportingFragments }

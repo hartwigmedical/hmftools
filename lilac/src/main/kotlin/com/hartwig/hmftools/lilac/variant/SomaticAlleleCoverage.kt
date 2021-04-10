@@ -8,7 +8,7 @@ import com.hartwig.hmftools.lilac.read.FragmentAlleles
 import com.hartwig.hmftools.lilac.read.SAMRecordReader
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 
-class SomaticAlleleCoverage(private val config: LilacConfig, hetLoci: Collection<Int>, lociPosition: LociPosition, variants: List<VariantContextDecorator>, private val winners: List<HlaSequenceLoci>) {
+class SomaticAlleleCoverage(private val config: LilacConfig, hetLoci: Collection<Int>, lociPosition: LociPosition, variants: List<VariantContextDecorator>, private val winners: Set<HlaSequenceLoci>) {
 
     private val variantLoci = variants
             .map { lociPosition.nucelotideLoci(it.position().toInt()) }

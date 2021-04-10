@@ -18,7 +18,7 @@ data class AminoAcidQC(val unusedAminoAcids: Int, val unusedAminoAcidMaxSupport:
     companion object {
         val logger = LogManager.getLogger(this::class.java)
 
-        fun create(winners: List<HlaSequenceLoci>, aminoAcidCount: SequenceCount): AminoAcidQC {
+        fun create(winners: Set<HlaSequenceLoci>, aminoAcidCount: SequenceCount): AminoAcidQC {
 
             var unused = 0
             var largest = 0

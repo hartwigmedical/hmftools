@@ -227,7 +227,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         val winningReferenceCoverage = referenceRankedComplexes[0].expandToSixAlleles()
         val winningAlleles = winningReferenceCoverage.alleleCoverage.alleles()
-        val winningSequences = candidateSequences.filter { candidate -> candidate.allele in winningAlleles }
+        val winningSequences = candidateSequences.filter { candidate -> candidate.allele in winningAlleles }.toSet()
 
         logger.info(HlaComplexCoverage.header())
         for (rankedComplex in referenceRankedComplexes) {
@@ -259,10 +259,10 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
                 val somaticCoverageFactory = SomaticAlleleCoverage(config, referenceAminoAcidHeterozygousLoci, LOCI_POSITION, somaticVariants, winningSequences)
                 for (variant in somaticVariants) {
                     val variantCoverage = somaticCoverageFactory.alleleCoverage(variant, tumorBamReader)
-                    val variantAlleles = variantCoverage.alleles()
+                    val variantAlleles = variantCoverage.alleles().toSet()
                     logger.info("    $variant -> $variantCoverage")
                     lilacVCF.writeVariant(variant.context(), variantAlleles)
-                    somaticCodingCount = somaticCodingCount.addVariant(variant.canonicalCodingEffect(), variantCoverage.map { it.allele })
+                    somaticCodingCount = somaticCodingCount.addVariant(variant.canonicalCodingEffect(), variantAlleles)
                 }
             }
         } else {
