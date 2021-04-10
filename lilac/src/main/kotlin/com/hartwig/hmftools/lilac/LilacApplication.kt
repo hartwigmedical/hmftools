@@ -275,6 +275,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         output.write("$outputDir/$sample.lilac.txt")
 
         // QC
+        logger.info("Calculating QC Statistics")
         val somaticVariantQC = SomaticVariantQC.create(somaticVariants.size, somaticCodingCount)
         val aminoAcidQC = AminoAcidQC.create(winningSequences, referenceAminoAcidCounts)
         val haplotypeQC = HaplotypeQC.create(3, winningSequences, aPhasedEvidence + bPhasedEvidence + cPhasedEvidence, referenceAminoAcidCounts)

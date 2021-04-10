@@ -16,6 +16,7 @@ data class AminoAcidQC(val unusedAminoAcids: Int, val unusedAminoAcidMaxSupport:
     }
 
     companion object {
+        const val MIN_COUNT = 2;
         val logger = LogManager.getLogger(this::class.java)
 
         fun create(winners: Set<HlaSequenceLoci>, aminoAcidCount: SequenceCount): AminoAcidQC {
@@ -27,10 +28,10 @@ data class AminoAcidQC(val unusedAminoAcids: Int, val unusedAminoAcidMaxSupport:
                 val expected = aminoAcidCount[locus]
                 val actual = winners.filter { locus < it.sequences.size }.map { it.sequence(locus) }.toSet()
                 for ((sequence, count) in expected) {
-                    if (sequence !in actual) {
+                    if (count >= MIN_COUNT && sequence !in actual) {
                         unused++
                         largest = max(largest, count)
-                        logger.warn("UNMATCHED_AMINO_ACID - amino acid '$sequence' with $count support at locus $locus not in winning solution")
+                        logger.warn("    UNMATCHED_AMINO_ACID - amino acid '$sequence' with $count support at locus $locus not in winning solution")
                     }
                 }
             }
