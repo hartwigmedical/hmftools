@@ -16,8 +16,8 @@ data class AminoAcidQC(val unusedAminoAcids: Int, val unusedAminoAcidMaxSupport:
     }
 
     companion object {
-        const val MIN_COUNT = 2;
-        val logger = LogManager.getLogger(this::class.java)
+        private const val MIN_COUNT = 3
+        private val logger = LogManager.getLogger(this::class.java)
 
         fun create(winners: Set<HlaSequenceLoci>, aminoAcidCount: SequenceCount): AminoAcidQC {
 

@@ -43,12 +43,13 @@ data class HaplotypeQC(val unusedHaplotypes: Int, val unusedHaplotypeMaxSupport:
 
                 if (unmatched.inPon()) {
                     pon++
+                    logger.info("    UNMATCHED_PON_HAPLTOYPE - $unmatched")
                 } else {
                     maxSupport = max(maxSupport, unmatched.supportingFragments)
                     maxLength = max(maxLength, unmatched.haplotype.length)
                     unusedCount++
 
-                    logger.warn("UNMATCHED_HAPLTOYPE - $unmatched")
+                    logger.warn("    UNMATCHED_HAPLTOYPE - $unmatched")
                 }
             }
 
