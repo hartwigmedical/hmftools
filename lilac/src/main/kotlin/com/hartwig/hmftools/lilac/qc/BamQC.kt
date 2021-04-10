@@ -14,14 +14,20 @@ data class BamQC(val discardedAlignmentFragments: Int, val discardedIndelFragmen
     }
 
     companion object {
-        val logger = LogManager.getLogger(this::class.java)
+        private const val MIN_COUNT = 2
+        private val logger = LogManager.getLogger(this::class.java)
 
         fun create(reader: SAMRecordReader): BamQC {
-            val fragmentsWithUnmatchedPonIndel = reader.unmatchedPonIndels(0)
-            val fragmentsWithUnmatchedIndel = reader.unmatchedIndels(2)
+            val fragmentsWithUnmatchedPonIndel = reader.unmatchedPonIndels(MIN_COUNT)
+            val fragmentsWithUnmatchedIndel = reader.unmatchedIndels(MIN_COUNT)
             for ((indel, count) in fragmentsWithUnmatchedIndel) {
-                logger.warn("UNMATCHED_INDEL - $count fragments excluded with unmatched indel $indel")
+                logger.warn("    UNMATCHED_INDEL - $count fragments excluded with unmatched indel $indel")
             }
+
+            for ((indel, count) in fragmentsWithUnmatchedPonIndel) {
+                logger.info("    UNMATCHED_PON_INDEL - $count fragments excluded with unmatched PON indel $indel")
+            }
+
             return BamQC(reader.alignmentFiltered(),
                     fragmentsWithUnmatchedIndel.size, fragmentsWithUnmatchedIndel.values.max() ?: 0,
                     fragmentsWithUnmatchedPonIndel.size, fragmentsWithUnmatchedPonIndel.values.max() ?: 0)
