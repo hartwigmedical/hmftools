@@ -8,8 +8,7 @@ data class SomaticCodingCount(val allele: HlaAllele, val missense: Double, val n
 
     companion object {
         fun create(winners: List<HlaAllele>): List<SomaticCodingCount> {
-            val result = winners.map { SomaticCodingCount(it, 0.0, 0.0, 0.0, 0.0) }
-            return result
+            return winners.sorted().map { SomaticCodingCount(it, 0.0, 0.0, 0.0, 0.0) }
         }
 
         fun List<SomaticCodingCount>.addVariant(variantEffect: CodingEffect, variantAlleles: Set<HlaAllele>): List<SomaticCodingCount> {
@@ -21,7 +20,7 @@ data class SomaticCodingCount(val allele: HlaAllele, val missense: Double, val n
                 val counts = this.filter { it.allele == variantAllele }.sortedBy { it.total }
 
                 // Split between them
-//                result.addAll(counts.map { it.addVariant(variantEffect, contribution / counts.size) })
+                // result.addAll(counts.map { it.addVariant(variantEffect, contribution / counts.size) })
 
                 // Alternative, give only to first to first
                 if (counts.isNotEmpty()) {

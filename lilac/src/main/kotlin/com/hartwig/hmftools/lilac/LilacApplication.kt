@@ -237,7 +237,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         logger.info("${config.sample} - REF - ${referenceRankedComplexes.size} CANDIDATES, WINNING ALLELES: ${winningReferenceCoverage.alleleCoverage.map { it.allele }}")
 
         val winningTumorCoverage: HlaComplexCoverage
-        val winningTumorCopyNumber: HlaCopyNumber
+        val winningTumorCopyNumber: List<HlaCopyNumber>
         val somaticVariants: List<VariantContextDecorator>
         var somaticCodingCount = SomaticCodingCount.create(winningAlleles)
 
@@ -248,7 +248,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             winningTumorCoverage = HlaComplexCoverageFactory.proteinCoverage(tumorFragmentAlleles, winningAlleles).expandToSixAlleles()
 
             logger.info("Calculating tumor copy number of winning alleles")
-            winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(config.geneCopyNumberFile, winningTumorCoverage)
+            winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(winningAlleles, config.geneCopyNumberFile, winningTumorCoverage)
 
             // SOMATIC VARIANTS
             somaticVariants = SomaticVariants(config).readSomaticVariants()
@@ -267,12 +267,11 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
             }
         } else {
             winningTumorCoverage = HlaComplexCoverage.create(listOf())
-            winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(config.geneCopyNumberFile, winningTumorCoverage)
+            winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(winningAlleles)
             somaticVariants = listOf()
         }
 
-        val output = HlaOut(winningReferenceCoverage, winningTumorCoverage, winningTumorCopyNumber)
-        output.write("$outputDir/$sample.lilac.txt")
+        val output = HlaOut.create(winningReferenceCoverage, winningTumorCoverage, winningTumorCopyNumber, somaticCodingCount)
 
         // QC
         logger.info("Calculating QC Statistics")
@@ -287,10 +286,11 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         logger.info("    ${lilacQC.header().joinToString(",")}")
         logger.info("    ${lilacQC.body().joinToString(",")}")
 
-        lilacQC.writefile("$outputDir/$sample.qc.txt")
 
 
         logger.info("Writing output to $outputDir")
+        output.write("$outputDir/$sample.lilac.txt")
+        lilacQC.writefile("$outputDir/$sample.lilac.qc.txt")
         val deflatedSequenceTemplate = aminoAcidSequences.first { it.allele == DEFLATE_TEMPLATE }
         val candidateToWrite = (candidateSequences + expectedSequences + deflatedSequenceTemplate).distinct().sortedBy { it.allele }
         HlaSequenceLociFile.write("$outputDir/$sample.candidates.sequences.txt", A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES, candidateToWrite)
