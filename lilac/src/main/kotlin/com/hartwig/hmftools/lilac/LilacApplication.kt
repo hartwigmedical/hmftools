@@ -289,14 +289,14 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
 
         logger.info("Writing output to $outputDir")
-        output.write("$outputDir/$sample.lilac.txt")
-        lilacQC.writefile("$outputDir/$sample.lilac.qc.txt")
+        output.write("${config.outputFilePrefix}.lilac.txt")
+        lilacQC.writefile("${config.outputFilePrefix}.lilac.qc.txt")
         val deflatedSequenceTemplate = aminoAcidSequences.first { it.allele == DEFLATE_TEMPLATE }
         val candidateToWrite = (candidateSequences + expectedSequences + deflatedSequenceTemplate).distinct().sortedBy { it.allele }
         HlaSequenceLociFile.write("$outputDir/$sample.candidates.sequences.txt", A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES, candidateToWrite)
         referenceRankedComplexes.writeToFile("$outputDir/$sample.candidates.coverage.txt")
-        referenceAminoAcidCounts.writeVertically("$outputDir/$sample.aminoacids.count.txt")
-        referenceNucleotideCounts.writeVertically("$outputDir/$sample.nucleotides.count.txt")
+        referenceAminoAcidCounts.writeVertically("$outputDir/$sample.candidates.aminoacids.txt")
+        referenceNucleotideCounts.writeVertically("$outputDir/$sample.candidates.nucleotides.txt")
 
     }
 

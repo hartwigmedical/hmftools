@@ -23,10 +23,6 @@ class Candidates(private val config: LilacConfig,
 
         logger.info("Determining un-phased candidate set for gene HLA-$gene")
         val aminoAcidCounts = SequenceCount.aminoAcids(config.minEvidence, fragments)
-        val nucleotideCounts = SequenceCount.nucleotides(config.minEvidence, fragments)
-        aminoAcidCounts.writeVertically("${config.outputFilePrefix}.aminoacids.${gene}.count.txt")
-        nucleotideCounts.writeVertically("${config.outputFilePrefix}.nucleotides.${gene}.count.txt")
-
         val geneCandidates = aminoAcidSequences.filter { it.allele.gene == gene }
         logger.info("    ${geneCandidates.size} candidates before filtering")
 

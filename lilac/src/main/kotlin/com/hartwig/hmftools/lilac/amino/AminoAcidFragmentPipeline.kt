@@ -21,8 +21,8 @@ class AminoAcidFragmentPipeline(private val config: LilacConfig, private val ref
         val referenceAminoAcids = process(context.aminoAcidBoundaries, geneReferenceFragments)
         val referenceNucleotideCounts = SequenceCount.nucleotides(minEvidence, referenceAminoAcids)
         val referenceAminoAcidCounts = SequenceCount.aminoAcids(minEvidence, referenceAminoAcids)
-        referenceAminoAcidCounts.writeVertically("${config.outputFilePrefix}.reference.aminoacids.${gene}.count.txt")
-        referenceNucleotideCounts.writeVertically("${config.outputFilePrefix}.reference.nucleotides.${gene}.count.txt")
+        referenceAminoAcidCounts.writeVertically("${config.outputFilePrefix}.${gene}.aminoacids.txt")
+        referenceNucleotideCounts.writeVertically("${config.outputFilePrefix}.${gene}.nucleotides.txt")
 
         return referenceAminoAcids
     }
