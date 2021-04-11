@@ -281,7 +281,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         val haplotypeQC = HaplotypeQC.create(3, winningSequences, aPhasedEvidence + bPhasedEvidence + cPhasedEvidence, referenceAminoAcidCounts)
         val bamQC = BamQC.create(referenceBamReader)
         val coverageQC = CoverageQC.create(referenceNucleotideFragments.size, winningReferenceCoverage)
-        val lilacQC = LilacQC(aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC)
+        val lilacQC = LilacQC.create(aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC)
 
         logger.info("QC Stats:")
         logger.info("    ${lilacQC.header().joinToString(",")}")
@@ -297,9 +297,6 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         referenceRankedComplexes.writeToFile("$outputDir/$sample.candidates.coverage.txt")
         referenceAminoAcidCounts.writeVertically("$outputDir/$sample.aminoacids.count.txt")
         referenceNucleotideCounts.writeVertically("$outputDir/$sample.nucleotides.count.txt")
-
-
-//        SomaticVariants().process(config, tumorBamReader, winningSequences, referenceAminoAcidHeterozygousLoci, LOCI_POSITION)
 
     }
 

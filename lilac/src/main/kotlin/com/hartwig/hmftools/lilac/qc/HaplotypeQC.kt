@@ -9,15 +9,8 @@ import kotlin.math.min
 
 data class HaplotypeQC(val unusedHaplotypes: Int, val unusedHaplotypeMaxSupport: Int, val unusedHaplotypeMaxLength: Int, val unusedHaplotypesPon: Int) {
 
-    fun header(): List<String> {
-        return listOf("unusedHaplotypes", "unusedHaplotypeMaxSupport", "unusedHaplotypeMaxLength", "unusedHaplotypesPon")
-    }
-
-    fun body(): List<String> {
-        return listOf(unusedHaplotypes.toString(), unusedHaplotypeMaxSupport.toString(), unusedHaplotypeMaxLength.toString(), unusedHaplotypesPon.toString())
-    }
-
     companion object {
+        private const val MIN_SUPPORT = 1
         private val logger = LogManager.getLogger(this::class.java)
         private val PON_HAPLOTYPES = HaplotypeQC::class.java.getResource("/pon/haplotypes.txt")
                 .readText()
@@ -41,15 +34,17 @@ data class HaplotypeQC(val unusedHaplotypes: Int, val unusedHaplotypeMaxSupport:
             var maxLength = 0
             for (unmatched in allUnmatched) {
 
-                if (unmatched.inPon()) {
-                    pon++
-                    logger.info("    UNMATCHED_PON_HAPLTOYPE - $unmatched")
-                } else {
-                    maxSupport = max(maxSupport, unmatched.supportingFragments)
-                    maxLength = max(maxLength, unmatched.haplotype.length)
-                    unusedCount++
+                if (unmatched.supportingFragments >= MIN_SUPPORT) {
+                    if (unmatched.inPon()) {
+                        pon++
+                        logger.info("    UNMATCHED_PON_HAPLTOYPE - $unmatched")
+                    } else {
+                        maxSupport = max(maxSupport, unmatched.supportingFragments)
+                        maxLength = max(maxLength, unmatched.haplotype.length)
+                        unusedCount++
 
-                    logger.warn("    UNMATCHED_HAPLTOYPE - $unmatched")
+                        logger.warn("    UNMATCHED_HAPLTOYPE - $unmatched")
+                    }
                 }
             }
 
@@ -72,6 +67,15 @@ data class HaplotypeQC(val unusedHaplotypes: Int, val unusedHaplotypeMaxSupport:
             return unmatched.map { Pair(it.key, it.value) }.map { Haplotype.create(this.aminoAcidIndices, it, aminoAcidCount) }
         }
     }
+
+    fun header(): List<String> {
+        return listOf("unusedHaplotypes", "unusedHaplotypeMaxSupport", "unusedHaplotypeMaxLength", "unusedHaplotypesPon")
+    }
+
+    fun body(): List<String> {
+        return listOf(unusedHaplotypes.toString(), unusedHaplotypeMaxSupport.toString(), unusedHaplotypeMaxLength.toString(), unusedHaplotypesPon.toString())
+    }
+
 }
 
 
