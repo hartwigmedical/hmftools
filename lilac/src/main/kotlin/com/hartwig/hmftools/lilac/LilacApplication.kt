@@ -264,7 +264,7 @@ class LilacApplication(private val cmd: CommandLine, private val config: LilacCo
                     val variantAlleles = variantCoverage.alleles().toSet()
                     logger.info("    $variant -> $variantCoverage")
                     lilacVCF.writeVariant(variant.context(), variantAlleles)
-                    somaticCodingCount = somaticCodingCount.addVariant(variant.canonicalCodingEffect(), variantAlleles)
+                    somaticCodingCount = somaticCodingCount.addVariant(variant, variantAlleles)
                 }
             }
         } else {

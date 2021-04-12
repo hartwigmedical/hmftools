@@ -48,6 +48,7 @@ data class HlaOut(val referenceCoverage: HlaComplexCoverage, val tumorCoverage: 
                 .add("SomaticNonsenseOrFrameshift")
                 .add("SomaticSplice")
                 .add("SomaticSynonymous")
+                .add("SomaticInframeIndel")
 
 
         return header.toString()
@@ -76,6 +77,7 @@ data class HlaOut(val referenceCoverage: HlaComplexCoverage, val tumorCoverage: 
                 .add(codingCount.nonsense.format(2))
                 .add(codingCount.splice.format(2))
                 .add(codingCount.synonymous.format(2))
+                .add(codingCount.inframeIndel.format(2))
 
         return header.toString()
     }
