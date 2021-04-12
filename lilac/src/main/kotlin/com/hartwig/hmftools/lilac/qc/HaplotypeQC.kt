@@ -10,7 +10,7 @@ import kotlin.math.min
 data class HaplotypeQC(val unusedHaplotypes: Int, val unusedHaplotypeMaxSupport: Int, val unusedHaplotypeMaxLength: Int, val unusedHaplotypesPon: Int) {
 
     companion object {
-        private const val MIN_SUPPORT = 1
+        private const val MIN_SUPPORT = 7
         private val logger = LogManager.getLogger(this::class.java)
         private val PON_HAPLOTYPES = HaplotypeQC::class.java.getResource("/pon/haplotypes.txt")
                 .readText()
