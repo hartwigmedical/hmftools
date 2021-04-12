@@ -122,7 +122,7 @@ public final class PrimaryTumorDataWriter {
 
     private static void writePatientTumorCurationStatesToTSV(@NotNull String outputTsv,
             @NotNull Map<String, PatientTumorCurationStatus> patientTumorCurationStatusMap) throws IOException {
-        PatientTumorCurationStatusFile.writeTumorCurationStatusFile(outputTsv, patientTumorCurationStatusMap);
+        PatientTumorCurationStatusFile.write(outputTsv, patientTumorCurationStatusMap);
         LOGGER.info(" Written {} patient tumor curation states to {}", patientTumorCurationStatusMap.size(), outputTsv);
     }
 

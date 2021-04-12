@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.apache.commons.compress.utils.Lists;
@@ -25,8 +24,11 @@ import htsjdk.tribble.readers.LineIterator;
 
 public final class NamedBedFile {
 
-    private static final Logger LOGGER = LogManager.getLogger(BEDFileLoader.class);
+    private static final Logger LOGGER = LogManager.getLogger(NamedBedFile.class);
     private static final String DELIMITER = "\t";
+
+    private NamedBedFile() {
+    }
 
     public static void writeUnnamedBedFile(@NotNull final String filename, @NotNull final List<GenomeRegion> regions) throws IOException {
         List<String> strings = regions.stream().map(NamedBedFile::asBed).collect(Collectors.toList());

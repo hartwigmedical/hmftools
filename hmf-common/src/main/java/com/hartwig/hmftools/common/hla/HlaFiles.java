@@ -8,13 +8,18 @@ import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 
-public class HlaFiles {
+public final class HlaFiles {
 
+    private HlaFiles() {
+    }
+
+    @NotNull
     public static List<HlaTypeDetails> typeDetails(@NotNull final String lilacFile) throws IOException {
         return Files.readAllLines(new File(lilacFile).toPath()).stream().skip(1).map(x -> fromString(x)).collect(Collectors.toList());
     }
 
-    public static HlaTypeDetails fromString(String line) {
+    @NotNull
+    private static HlaTypeDetails fromString(String line) {
         String[] split = line.split("\t");
         return ImmutableHlaTypeDetails.builder()
                 .type(split[0])
@@ -30,14 +35,13 @@ public class HlaFiles {
                 .somaticSplice(Double.parseDouble(split[12]))
                 .somaticSynonymous(Double.parseDouble(split[13]))
                 .build();
-
     }
 
     @NotNull
     public static HlaType type(@NotNull final String lilacFile, @NotNull final String lilacQc) throws IOException {
         String[] qcLines = Files.readAllLines(new File(lilacQc).toPath()).get(1).split("\t");
         String qcStatus = qcLines[0];
-        int qcVariants = Integer.valueOf(qcLines[18]);
+        int qcVariants = Integer.parseInt(qcLines[18]);
 
         List<String> alleles =
                 Files.readAllLines(new File(lilacFile).toPath()).stream().skip(1).map(x -> x.split("\t")[0]).collect(Collectors.toList());
@@ -55,7 +59,5 @@ public class HlaFiles {
                 .somaticVariants(qcVariants)
                 .status(qcStatus)
                 .build();
-
     }
-
 }

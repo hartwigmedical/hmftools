@@ -9,12 +9,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class HospitalChecker {
+public final class HospitalChecker {
 
     private static final Logger LOGGER = LogManager.getLogger(HospitalChecker.class);
 
     private HospitalChecker() {
-
     }
 
     @VisibleForTesting

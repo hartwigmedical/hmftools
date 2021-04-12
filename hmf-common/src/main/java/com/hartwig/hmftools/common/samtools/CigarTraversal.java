@@ -6,7 +6,10 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
-public class CigarTraversal {
+public final class CigarTraversal {
+
+    private CigarTraversal() {
+    }
 
     public static void traverseCigar(@NotNull final SAMRecord record, @NotNull final CigarHandler handler) {
         final Cigar cigar = record.getCigar();

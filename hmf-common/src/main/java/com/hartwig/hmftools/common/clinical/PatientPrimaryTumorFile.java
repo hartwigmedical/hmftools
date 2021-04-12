@@ -11,7 +11,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PatientPrimaryTumorFile {
+public final class PatientPrimaryTumorFile {
 
     private static final String TAB_DELIMITER = "\t";
     private static final String STRING_DELIMITER = ";";
@@ -22,6 +22,10 @@ public class PatientPrimaryTumorFile {
     @NotNull
     public static List<PatientPrimaryTumor> read(@NotNull String filePath) throws IOException {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
+    }
+
+    public static void write(@NotNull String filePath, @NotNull List<PatientPrimaryTumor> patientPrimaryTumors) throws IOException {
+        Files.write(new File(filePath).toPath(), toLines(patientPrimaryTumors));
     }
 
     @NotNull
@@ -45,10 +49,6 @@ public class PatientPrimaryTumorFile {
         }
 
         return patientPrimaryTumors;
-    }
-
-    public static void write(@NotNull String outputPath, @NotNull List<PatientPrimaryTumor> patientPrimaryTumors) throws IOException {
-        Files.write(new File(outputPath).toPath(), toLines(patientPrimaryTumors));
     }
 
     @NotNull

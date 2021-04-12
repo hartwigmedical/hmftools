@@ -23,5 +23,4 @@ public interface StructuralVariantLegCopyNumber extends StructuralVariantLeg {
             return rightCopyNumber().orElse(0D);
         }
     }
-
 }

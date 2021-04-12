@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import org.jetbrains.annotations.NotNull;
 
 public class CobaltChromosomes {
+
     static final int MIN_Y_COUNT = 1000;
     static final double TWO_X_CUTOFF = 0.65;
     static final double TWO_Y_CUTOFF = 0.75;

@@ -18,8 +18,8 @@ public final class PatientTumorCurationStatusFile {
     private PatientTumorCurationStatusFile() {
     }
 
-    public static void writeTumorCurationStatusFile(@NotNull String outputPath,
-            @NotNull Map<String, PatientTumorCurationStatus> patientTumorCurationStatusMap) throws IOException {
+    public static void write(@NotNull String outputPath, @NotNull Map<String, PatientTumorCurationStatus> patientTumorCurationStatusMap)
+            throws IOException {
         Files.write(new File(outputPath).toPath(), toLines(patientTumorCurationStatusMap));
     }
 

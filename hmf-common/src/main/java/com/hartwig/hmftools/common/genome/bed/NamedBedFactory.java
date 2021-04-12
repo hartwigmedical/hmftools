@@ -14,6 +14,9 @@ public final class NamedBedFactory {
 
     private static final int SPLICE_SIZE = 10;
 
+    private NamedBedFactory() {
+    }
+
     @NotNull
     public static List<NamedBed> codingRegions(boolean includeUTR, @NotNull final HmfTranscriptRegion transcript) {
         final long startPosition = includeUTR ? transcript.start() : transcript.codingStart();

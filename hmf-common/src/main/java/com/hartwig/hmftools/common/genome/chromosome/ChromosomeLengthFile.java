@@ -16,6 +16,9 @@ public final class ChromosomeLengthFile {
     private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".chr.len";
 
+    private ChromosomeLengthFile() {
+    }
+
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + EXTENSION;
