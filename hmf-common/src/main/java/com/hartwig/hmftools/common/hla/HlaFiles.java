@@ -15,7 +15,7 @@ public final class HlaFiles {
 
     @NotNull
     public static List<HlaTypeDetails> typeDetails(@NotNull final String lilacFile) throws IOException {
-        return Files.readAllLines(new File(lilacFile).toPath()).stream().skip(1).map(x -> fromString(x)).collect(Collectors.toList());
+        return Files.readAllLines(new File(lilacFile).toPath()).stream().skip(1).map(HlaFiles::fromString).collect(Collectors.toList());
     }
 
     @NotNull
@@ -34,6 +34,7 @@ public final class HlaFiles {
                 .somaticNonsenseOrFrameshift(Double.parseDouble(split[11]))
                 .somaticSplice(Double.parseDouble(split[12]))
                 .somaticSynonymous(Double.parseDouble(split[13]))
+                .somaticInframeIndel(Double.parseDouble(split[14]))
                 .build();
     }
 

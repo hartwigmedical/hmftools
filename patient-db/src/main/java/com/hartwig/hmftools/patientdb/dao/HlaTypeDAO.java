@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.hla.HlaTypeDetails;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep14;
+import org.jooq.InsertValuesStep15;
 
 class HlaTypeDAO {
 
@@ -55,7 +55,7 @@ class HlaTypeDAO {
         context.delete(HLATYPEDETAILS).where(HLATYPEDETAILS.SAMPLEID.eq(sample)).execute();
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
-        InsertValuesStep14 inserter = context.insertInto(HLATYPEDETAILS,
+        InsertValuesStep15 inserter = context.insertInto(HLATYPEDETAILS,
                 HLATYPEDETAILS.MODIFIED,
                 HLATYPEDETAILS.SAMPLEID,
                 HLATYPEDETAILS.TYPE,
@@ -69,7 +69,8 @@ class HlaTypeDAO {
                 HLATYPEDETAILS.SOMATICMISSENSE,
                 HLATYPEDETAILS.SOMATICNONSENSEORFRAMESHIFT,
                 HLATYPEDETAILS.SOMATICSPLICE,
-                HLATYPEDETAILS.SOMATICSYNONYMOUS);
+                HLATYPEDETAILS.SOMATICSYNONYMOUS,
+                HLATYPEDETAILS.SOMATICINFRAMEINDEL                );
         for (HlaTypeDetails type : typeDetails) {
             inserter.values(timestamp,
                     sample,
@@ -84,7 +85,9 @@ class HlaTypeDAO {
                     type.somaticMissense(),
                     type.somaticNonsenseOrFrameshift(),
                     type.somaticSplice(),
-                    type.somaticSynonymous());
+                    type.somaticSynonymous(),
+                    type.somaticInframeIndel()
+                    );
         }
         inserter.execute();
     }

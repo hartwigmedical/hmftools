@@ -32,4 +32,6 @@ public interface HlaTypeDetails {
     double somaticSplice();
 
     double somaticSynonymous();
+
+    double somaticInframeIndel();
 }
