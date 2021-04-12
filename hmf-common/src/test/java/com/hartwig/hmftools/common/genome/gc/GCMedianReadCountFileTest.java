@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.genome.gc;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
@@ -12,17 +11,17 @@ import org.junit.Test;
 
 public class GCMedianReadCountFileTest {
 
-    private static final String BASE_PATH = Resources.getResource("gc").getPath() + File.separator;
+    private static final String GC_MEDIAN_PATH = Resources.getResource("gc/EXAMPLE.purple.gc.median").getPath();
 
     @Test
     public void canLoadWithoutExtendingRegion() throws IOException {
-        final GCMedianReadCount readCount = GCMedianReadCountFile.read(false, BASE_PATH + "EXAMPLE.purple.gc.median");
+        final GCMedianReadCount readCount = GCMedianReadCountFile.read(false, GC_MEDIAN_PATH);
         testMinMax(readCount, -1, -1);
     }
 
     @Test
     public void canLoadAndExtendRegion() throws IOException {
-        final GCMedianReadCount readCount = GCMedianReadCountFile.read(true, BASE_PATH + "EXAMPLE.purple.gc.median");
+        final GCMedianReadCount readCount = GCMedianReadCountFile.read(true, GC_MEDIAN_PATH);
         testMinMax(readCount, 1144, 880);
     }
 
