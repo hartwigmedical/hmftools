@@ -1,11 +1,9 @@
-package com.hartwig.hmftools.sig_analyser;
+package com.hartwig.hmftools.common.sigs;
 
 import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcPoissonRangeGivenProb;
 
 import static org.junit.Assert.assertEquals;
 
-import org.apache.commons.math3.distribution.ChiSquaredDistribution;
-import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.junit.Test;
 
 public class PoissonNoiseTest

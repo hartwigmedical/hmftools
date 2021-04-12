@@ -1,10 +1,9 @@
-package com.hartwig.hmftools.sig_analyser;
+package com.hartwig.hmftools.sigs.buckets;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.greaterThan;
 import static com.hartwig.hmftools.common.sigs.DataUtils.lessOrEqual;
 
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
@@ -12,8 +11,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
 import com.hartwig.hmftools.common.utils.Matrix;
-import com.hartwig.hmftools.sigs.buckets.SampleData;
-import com.hartwig.hmftools.sigs.buckets.SampleSigContribOptimiser;
 import com.hartwig.hmftools.sigs.fitter.ConstrainedFitter;
 
 import org.apache.logging.log4j.Level;

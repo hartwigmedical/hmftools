@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sig_analyser;
+package com.hartwig.hmftools.sigs.buckets;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -126,7 +126,7 @@ public class SigOptimiserTest
     }
 
     @Test
-    public void testSigRecontruction()
+    public void testSigReconstruction()
     {
         /*
         String sigsFile = "/Users/charlesshale/dev/nmf/snv_ba_predefined_sigs.csv";

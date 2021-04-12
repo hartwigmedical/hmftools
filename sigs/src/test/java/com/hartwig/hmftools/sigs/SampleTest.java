@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sig_analyser;
+package com.hartwig.hmftools.sigs;
 
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.MAX_NOISE_ALLOC_PERCENT;

@@ -1,8 +1,4 @@
-package com.hartwig.hmftools.sig_analyser;
-
-import static org.junit.Assert.assertTrue;
-
-import com.hartwig.hmftools.common.utils.Matrix;
+package com.hartwig.hmftools.common.utils;
 
 import org.junit.Test;
 

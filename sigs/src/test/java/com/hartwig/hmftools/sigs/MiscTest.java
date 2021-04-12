@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sig_analyser;
+package com.hartwig.hmftools.sigs;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.round;
 
