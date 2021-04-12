@@ -18,13 +18,13 @@ public final class HmfGenePanelSupplier {
 
     @NotNull
     public static List<HmfTranscriptRegion> allGeneList37() {
-        InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/genepanel/all_genes.37.tsv");
+        InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/ensembl/all_genes.37.tsv");
         return HmfGenomeFileLoader.fromInputStream(inputStream);
     }
 
     @NotNull
     public static List<HmfTranscriptRegion> allGeneList38() {
-        InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/genepanel/all_genes.38.tsv");
+        InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/ensembl/all_genes.38.tsv");
         return HmfGenomeFileLoader.fromInputStream(inputStream);
     }
 

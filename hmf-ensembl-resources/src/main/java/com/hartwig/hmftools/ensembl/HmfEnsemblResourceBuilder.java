@@ -37,7 +37,7 @@ public class HmfEnsemblResourceBuilder {
     private static final Logger LOGGER = LogManager.getLogger(HmfEnsemblResourceBuilder.class);
 
     private static final String GENE_TSV = "gene_tsv";
-    private static final String REFSEQ_TSV = "refseq_tsv";
+    private static final String REFSEQ_MAPPING_TSV = "refseq_mapping_tsv";
 
     private static final String ENSEMBL_DB_URL_37 = "jdbc:mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_89_37";
     private static final String ENSEMBL_DB_URL_38 = "jdbc:mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_89_38";
@@ -49,7 +49,7 @@ public class HmfEnsemblResourceBuilder {
 
         final RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(RefGenomeVersion.REF_GENOME_VERSION));
         final String geneTsv = cmd.getOptionValue(GENE_TSV);
-        final String refseqToEnsemblTsv = cmd.getOptionValue(REFSEQ_TSV);
+        final String refseqToEnsemblTsv = cmd.getOptionValue(REFSEQ_MAPPING_TSV);
 
         if (geneTsv == null || refseqToEnsemblTsv == null) {
             final HelpFormatter formatter = new HelpFormatter();
@@ -64,7 +64,7 @@ public class HmfEnsemblResourceBuilder {
         LOGGER.info(" Connected to {}", database);
 
         generateGenes(context, geneTsv, refGenomeVersion);
-        generateRefSeqs(context, refseqToEnsemblTsv);
+        generateRefSeqMapping(context, refseqToEnsemblTsv);
 
         LOGGER.info("Complete");
     }
@@ -91,12 +91,12 @@ public class HmfEnsemblResourceBuilder {
         }
     }
 
-    private static void generateRefSeqs(@NotNull final DSLContext context, @NotNull final String outputTsv) throws IOException {
-        final Result<Record> refseqResult = context.fetch(read(Resources.getResource("sql/ensembl_refseq_query.sql")));
-        LOGGER.info(" RefSeq query returned {} entries", refseqResult.size());
+    private static void generateRefSeqMapping(@NotNull final DSLContext context, @NotNull final String outputTsv) throws IOException {
+        final Result<Record> refseqMappingResult = context.fetch(read(Resources.getResource("sql/ensembl_refseq_mapping_query.sql")));
+        LOGGER.info(" RefSeq mapping query returned {} entries", refseqMappingResult.size());
 
-        writeAsTsv(outputTsv, refseqResult);
-        LOGGER.info(" Written RefSeq output to {}", outputTsv);
+        writeAsTsv(outputTsv, refseqMappingResult);
+        LOGGER.info(" Written RefSeq mapping output to {}", outputTsv);
     }
 
     @NotNull
@@ -104,7 +104,7 @@ public class HmfEnsemblResourceBuilder {
         final Options options = new Options();
         options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to generate files for");
         options.addOption(GENE_TSV, true, "Path towards the gene tsv output file.");
-        options.addOption(REFSEQ_TSV, true, "Path towards the refseq tsv output file.");
+        options.addOption(REFSEQ_MAPPING_TSV, true, "Path towards the refseq tsv output file.");
         return options;
     }
 
