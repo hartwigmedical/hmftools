@@ -25,11 +25,11 @@ public interface HlaTypeDetails {
 
     double tumorCopyNumber();
 
-    int somaticMissense();
+    double somaticMissense();
 
-    int somaticNonsenseOrFrameshift();
+    double somaticNonsenseOrFrameshift();
 
-    int somaticSplice();
+    double somaticSplice();
 
-    int somaticSynonymous();
+    double somaticSynonymous();
 }

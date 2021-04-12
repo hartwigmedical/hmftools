@@ -30,6 +30,7 @@ class HlaTypeDAO {
         context.insertInto(HLATYPE,
                 HLATYPE.MODIFIED,
                 HLATYPE.SAMPLEID,
+                HLATYPE.STATUS,
                 HLATYPE.TYPEA1,
                 HLATYPE.TYPEA2,
                 HLATYPE.TYPEB1,
@@ -39,6 +40,7 @@ class HlaTypeDAO {
                 HLATYPE.SOMATICVARIANTS)
                 .values(timestamp,
                         sample,
+                        type.status(),
                         type.typeA1(),
                         type.typeA2(),
                         type.typeB1(),

@@ -9,6 +9,9 @@ import org.jetbrains.annotations.Nullable;
 public interface HlaType {
 
     @NotNull
+    String status();
+
+    @NotNull
     String typeA1();
 
     @NotNull

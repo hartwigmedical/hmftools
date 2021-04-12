@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier
+import com.hartwig.hmftools.common.hla.HlaFiles
 import com.hartwig.hmftools.common.utils.version.VersionInfo
 import com.hartwig.hmftools.common.variant.VariantContextDecorator
 import com.hartwig.hmftools.lilac.LilacApplication.Companion.logger
@@ -34,6 +35,7 @@ import com.hartwig.hmftools.lilac.variant.SomaticAlleleCoverage
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount.Companion.addVariant
 import com.hartwig.hmftools.lilac.variant.SomaticVariants
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess
 import org.apache.commons.cli.*
 import org.apache.logging.log4j.LogManager
 import java.io.IOException
@@ -52,7 +54,7 @@ fun main(args: Array<String>) {
     try {
         val cmd = createCommandLine(args, options)
         val config = LilacConfig.createConfig(cmd)
-        LilacApplication(config).use { x -> x.run() }
+        LilacApplication(cmd, config).use { x -> x.run() }
     } catch (e: IOException) {
         logger.warn(e)
         exitProcess(1)
@@ -66,7 +68,7 @@ fun main(args: Array<String>) {
 }
 
 
-class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnable {
+class LilacApplication(private val cmd: CommandLine, private val config: LilacConfig) : AutoCloseable, Runnable {
     companion object {
         val logger = LogManager.getLogger(this::class.java)
         const val HLA_A = "HLA-A"
@@ -286,11 +288,12 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         logger.info("    ${lilacQC.header().joinToString(",")}")
         logger.info("    ${lilacQC.body().joinToString(",")}")
 
-
-
         logger.info("Writing output to $outputDir")
-        output.write("${config.outputFilePrefix}.lilac.txt")
-        lilacQC.writefile("${config.outputFilePrefix}.lilac.qc.txt")
+        val outputFile = "${config.outputFilePrefix}.lilac.txt"
+        val outputQCFile = "${config.outputFilePrefix}.lilac.qc.txt"
+
+        output.write(outputFile)
+        lilacQC.writefile(outputQCFile)
         val deflatedSequenceTemplate = aminoAcidSequences.first { it.allele == DEFLATE_TEMPLATE }
         val candidateToWrite = (candidateSequences + expectedSequences + deflatedSequenceTemplate).distinct().sortedBy { it.allele }
         HlaSequenceLociFile.write("$outputDir/$sample.candidates.sequences.txt", A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES, candidateToWrite)
@@ -298,8 +301,14 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
         referenceAminoAcidCounts.writeVertically("$outputDir/$sample.candidates.aminoacids.txt")
         referenceNucleotideCounts.writeVertically("$outputDir/$sample.candidates.nucleotides.txt")
 
+        if (DatabaseAccess.hasDatabaseConfig(cmd)) {
+            logger.info("Writing output to DB")
+            val dbAccess = DatabaseAccess.databaseAccess(cmd, true)
+            val type = HlaFiles.type(outputFile, outputQCFile);
+            val typeDetails = HlaFiles.typeDetails(outputFile)
+            dbAccess.writeHla(sample, type, typeDetails)
+        }
     }
-
 
     private fun nucleotideLoci(inputFilename: String): List<HlaSequenceLoci> {
         val sequences = HlaSequenceFile.readFile(inputFilename)
@@ -310,7 +319,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
     }
 
 
-    private fun createSynonmous(template: HlaSequenceLoci): HlaSequenceLoci {
+    private fun createSynonymous(template: HlaSequenceLoci): HlaSequenceLoci {
         val modSequences = template.sequences.toMutableList()
         modSequences[1011] = "A"
         modSequences[1012] = "G"

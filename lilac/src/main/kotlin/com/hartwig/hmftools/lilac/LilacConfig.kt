@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac
 
 import com.hartwig.hmftools.common.cli.Configs
 import com.hartwig.hmftools.lilac.hla.HlaAllele
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess
 import org.apache.commons.cli.CommandLine
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
@@ -144,6 +145,7 @@ data class LilacConfig(
             options.addOption(optional(GENE_COPY_NUMBER, "Path to gene copy number file"))
             options.addOption(optional(SOMATIC_VCF, "Path to somatic VCF"))
             options.addOption(Option(DEBUG_PHASING, false, "More detailed logging of phasing"))
+            DatabaseAccess.addDatabaseCmdLineArgs(options)
             return options
         }
 

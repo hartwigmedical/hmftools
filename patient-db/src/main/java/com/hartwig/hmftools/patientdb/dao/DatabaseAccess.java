@@ -18,6 +18,8 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
+import com.hartwig.hmftools.common.hla.HlaType;
+import com.hartwig.hmftools.common.hla.HlaTypeDetails;
 import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXCalls;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotype;
@@ -470,6 +472,11 @@ public class DatabaseAccess implements AutoCloseable {
     public void clearClinicalTables() {
         validationFindingsDAO.clear();
         clinicalDAO.clear();
+    }
+
+    public void writeHla(@NotNull final String sample, @NotNull final HlaType type, @NotNull final List<HlaTypeDetails> details) {
+        hlaTypeDAO.writeType(sample, type);
+        hlaTypeDAO.writeTypeDetails(sample, details);
     }
 
     public void writeFullClinicalData(@NotNull Patient patient, boolean blacklisted) {
