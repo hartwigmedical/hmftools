@@ -49,9 +49,9 @@ public class HmfEnsemblResourceBuilder {
 
         final RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(RefGenomeVersion.REF_GENOME_VERSION));
         final String geneTsv = cmd.getOptionValue(GENE_TSV);
-        final String refseqToEnsemblTsv = cmd.getOptionValue(REFSEQ_MAPPING_TSV);
+        final String refseqMappingTsv = cmd.getOptionValue(REFSEQ_MAPPING_TSV);
 
-        if (geneTsv == null || refseqToEnsemblTsv == null) {
+        if (geneTsv == null || refseqMappingTsv == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("HmfEnsemblResourceBuilder", options);
             System.exit(1);
@@ -64,7 +64,7 @@ public class HmfEnsemblResourceBuilder {
         LOGGER.info(" Connected to {}", database);
 
         generateGenes(context, geneTsv, refGenomeVersion);
-        generateRefSeqMapping(context, refseqToEnsemblTsv);
+        generateRefSeqMapping(context, refseqMappingTsv);
 
         LOGGER.info("Complete");
     }
@@ -104,7 +104,7 @@ public class HmfEnsemblResourceBuilder {
         final Options options = new Options();
         options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to generate files for");
         options.addOption(GENE_TSV, true, "Path towards the gene tsv output file.");
-        options.addOption(REFSEQ_MAPPING_TSV, true, "Path towards the refseq tsv output file.");
+        options.addOption(REFSEQ_MAPPING_TSV, true, "Path towards the refseq mapping tsv output file.");
         return options;
     }
 
