@@ -49,8 +49,9 @@ public final class EventExtractorFactory {
                         config.inactivatingGeneLevelKeyPhrases()),
                 new CopyNumberExtractor(exomeGeneChecker, refGenomeResource.driverGenes()),
                 new FusionExtractor(fusionGeneChecker, refGenomeResource.knownFusionCache()),
-                new TumorCharacteristicExtractor(config.microsatelliteUnstableEvents(),
+                new TumorCharacteristicExtractor(config.microsatelliteUnstableEvents(), config.microsatelliteStableEvents(),
                         config.highTumorMutationalLoadEvents(),
+                        config.lowTumorMutationalLoadEvents(),
                         config.hrDeficiencyEvents(),
                         config.hpvPositiveEvents(),
                         config.ebvPositiveEvents()));
