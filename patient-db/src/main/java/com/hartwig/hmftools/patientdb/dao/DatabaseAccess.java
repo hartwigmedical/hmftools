@@ -527,6 +527,7 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting germline variant data for sample: {}", sample);
         context.delete(Tables.GERMLINEVARIANT).where(Tables.GERMLINEVARIANT.SAMPLEID.eq(sample)).execute();
+        germlineVariantDAO.deleteGermlineVariantsForSample(sample);
 
         LOGGER.info("Deleting structural variant annotation data for sample: {}", sample);
         structuralVariantFusionDAO.deleteAnnotationsForSample(sample);

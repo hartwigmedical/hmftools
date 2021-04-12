@@ -32,7 +32,7 @@ public class GermlineVariantDAO {
         BufferedWriterConsumer<VariantContext> consumer = new BufferedWriterConsumer<VariantContext>() {
             @Override
             public void initialise() {
-                context.delete(GERMLINEVARIANT2).where(GERMLINEVARIANT2.SAMPLEID.eq(tumorSample)).execute();
+                deleteGermlineVariantsForSample(tumorSample);
             }
 
             @Override
@@ -49,6 +49,10 @@ public class GermlineVariantDAO {
         final InsertValuesStepN inserter = createInserter();
         variants.forEach(variant -> addRecord(timestamp, inserter, tumorSample, referenceSample, rnaSample, variant));
         inserter.execute();
+    }
+
+    void deleteGermlineVariantsForSample(@NotNull String sampleId) {
+        context.delete(GERMLINEVARIANT2).where(GERMLINEVARIANT2.SAMPLEID.eq(sampleId)).execute();
     }
 
     @NotNull
