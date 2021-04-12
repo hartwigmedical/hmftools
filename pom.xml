@@ -10,9 +10,9 @@
 
     <modules>
         <module>hmf-common</module>
-        <module>patient-db</module>
-        <module>hmf-extensions</module>
         <module>hmf-gene-panel-builder</module>
+        <module>hmf-extensions</module>
+        <module>patient-db</module>
         <module>hmf-id-generator</module>
         <module>gripss</module>
         <module>lilac</module>

@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.genepanel;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -15,7 +15,6 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -36,8 +35,9 @@ public class HmfGenePanelBuilder {
     private static final Logger LOGGER = LogManager.getLogger(HmfGenePanelBuilder.class);
     private static final Set<String> VERSIONS = Sets.newHashSet("37", "38");
 
-    private static final String OUT_PATH = "out";
     private static final String ENSEMBL_VERSION = "ensembl";
+    private static final String GENE_TSV = "gene_tsv";
+    private static final String REFSEQ_TO_ENSEMBL_TSV = "refseq_to_ensembl_tsv";
 
     private static final String ENSEMBLDB_URL_37 = "jdbc:mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_89_37";
     private static final String ENSEMBLDB_URL_38 = "jdbc:mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_89_38";
@@ -45,12 +45,13 @@ public class HmfGenePanelBuilder {
 
     public static void main(String[] args) throws ParseException, IOException, SQLException {
         final Options options = createOptions();
-        final CommandLine cmd = createCommandLine(args, options);
+        final CommandLine cmd = new DefaultParser().parse(options, args);
 
-        final String outputFilePath = cmd.getOptionValue(OUT_PATH);
         final String ensemblVersion = cmd.getOptionValue(ENSEMBL_VERSION);
+        final String geneTsv = cmd.getOptionValue(GENE_TSV);
+        final String refseqToEnsemblTsv = cmd.getOptionValue(REFSEQ_TO_ENSEMBL_TSV);
 
-        if (outputFilePath == null || !VERSIONS.contains(ensemblVersion)) {
+        if (!VERSIONS.contains(ensemblVersion) || geneTsv == null || refseqToEnsemblTsv == null) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("HmfGenePanelBuilder", options);
             System.exit(1);
@@ -58,44 +59,50 @@ public class HmfGenePanelBuilder {
 
         final String database = ensemblVersion.equals("37") ? ENSEMBLDB_URL_37 : ENSEMBLDB_URL_38;
 
-        LOGGER.info("Querying " + database);
-        final Result<Record> queryResults = queryEnsembldb(database);
-        writeFile(cmd, queryResults);
-        LOGGER.info("Written output to " + new File(outputFilePath).getAbsolutePath());
+        LOGGER.info("Running hmf-gene-panel-builder with version {}", ensemblVersion);
+        final DSLContext context = connectEnsemblDb(database);
+        LOGGER.info(" Connected to {}", database);
+
+        final Result<Record> geneResult = context.fetch(read(Resources.getResource("sql/ensembl_gene_query.sql")));
+        LOGGER.info(" Gene query returned {} entries", geneResult.size());
+
+        writeAsTsv(geneTsv, geneResult);
+        LOGGER.info(" Written gene output to {}", geneTsv);
+
+        final Result<Record> refseqToEnsemblResult = context.fetch(read(Resources.getResource("sql/refseq_to_ensembl_transcripts.sql")));
+        LOGGER.info(" RefSeq to Ensembl query returned {} entries", refseqToEnsemblResult.size());
+
+        writeAsTsv(refseqToEnsemblTsv, refseqToEnsemblResult);
+        LOGGER.info(" Written RefSeq to Ensembl output to {}", refseqToEnsemblTsv);
+
+        LOGGER.info("Complete");
     }
 
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(OUT_PATH, true, "Path towards the tsv output file.");
         options.addOption(ENSEMBL_VERSION, true, "Ensembl version to use. Must be either 37 or 38.");
+        options.addOption(GENE_TSV, true, "Path towards the gene tsv output file.");
+        options.addOption(REFSEQ_TO_ENSEMBL_TSV, true, "Path towards the refseq to ensembl tsv output file.");
         return options;
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
-    @NotNull
-    private static String readEnsemblQuery() throws IOException {
-        final List<String> lines = Resources.readLines(Resources.getResource("ensembl_query.sql"), Charset.defaultCharset());
-        return StringUtils.join(lines.toArray(), "\n");
-    }
-
-    @NotNull
-    private static Result<Record> queryEnsembldb(@NotNull final String database) throws SQLException, IOException {
+    private static DSLContext connectEnsemblDb(@NotNull final String database) throws SQLException {
         // Disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
         final Connection conn = DriverManager.getConnection(database, DB_USER, "");
-        final DSLContext context = DSL.using(conn, SQLDialect.MYSQL);
-        final String query = readEnsemblQuery();
-        return context.fetch(query);
+        return DSL.using(conn, SQLDialect.MYSQL);
     }
 
-    private static void writeFile(@NotNull final CommandLine cmd, @NotNull final Result<Record> records) throws IOException {
-        final BufferedWriter writer = new BufferedWriter(new FileWriter(cmd.getOptionValue(OUT_PATH), false));
+    @NotNull
+    private static String read(@NotNull final URL queryResource) throws IOException {
+        final List<String> lines = Resources.readLines(queryResource, Charset.defaultCharset());
+        return StringUtils.join(lines.toArray(), "\n");
+    }
+
+    private static void writeAsTsv(@NotNull final String tsv, @NotNull final Result<Record> records) throws IOException {
+        final BufferedWriter writer = new BufferedWriter(new FileWriter(tsv, false));
         // Format as tsv without header containing column names
         final CSVFormat format = new CSVFormat().header(false).delimiter('\t').nullString("").quoteString("");
         writer.write(records.formatCSV(format));
