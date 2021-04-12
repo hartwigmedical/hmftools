@@ -226,8 +226,8 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>sig-analyser</artifactId>
-                <version>${sig-analyser.version}</version>
+                <artifactId>sigs</artifactId>
+                <version>${sigs.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
