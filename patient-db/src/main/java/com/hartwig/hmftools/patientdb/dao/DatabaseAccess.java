@@ -116,6 +116,8 @@ public class DatabaseAccess implements AutoCloseable {
     private final DriverGenePanelDAO driverGenePanelDAO;
     @NotNull
     private final GermlineVariantDAO germlineVariantDAO;
+    @NotNull
+    private final HlaTypeDAO hlaTypeDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // Disable annoying jooq self-ad message
@@ -146,6 +148,7 @@ public class DatabaseAccess implements AutoCloseable {
         chordDAO = new ChordDAO(context);
         driverGenePanelDAO = new DriverGenePanelDAO(context);
         germlineVariantDAO = new GermlineVariantDAO(context);
+        hlaTypeDAO = new HlaTypeDAO(context);
     }
 
     public static void addDatabaseCmdLineArgs(@NotNull Options options) {
@@ -549,6 +552,9 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting pgx data for sample: {}", sample);
         pgxDAO.deletePgxForSample(sample);
+
+        LOGGER.info("Deleting hla data for sample: {}", sample);
+        hlaTypeDAO.deleteHlaFprSample(sample);
 
         LOGGER.info("All data for sample '{}' has been deleted", sample);
     }
