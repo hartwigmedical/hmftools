@@ -6,7 +6,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class PoissonNoiseTest
+public class NoiseCalcsTest
 {
     @Test
     public void testPoissonRange()
