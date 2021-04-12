@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.genepanel;
+package com.hartwig.hmftools.ensembl;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -32,16 +32,16 @@ import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import org.jooq.tools.StringUtils;
 
-public class HmfGenePanelBuilder {
+public class HmfEnsemblResourceBuilder {
 
-    private static final Logger LOGGER = LogManager.getLogger(HmfGenePanelBuilder.class);
+    private static final Logger LOGGER = LogManager.getLogger(HmfEnsemblResourceBuilder.class);
 
     private static final String GENE_TSV = "gene_tsv";
-    private static final String REFSEQ_TO_ENSEMBL_TSV = "refseq_to_ensembl_tsv";
+    private static final String REFSEQ_TSV = "refseq_tsv";
 
-    private static final String ENSEMBLDB_URL_37 = "jdbc:mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_89_37";
-    private static final String ENSEMBLDB_URL_38 = "jdbc:mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_89_38";
-    private static final String DB_USER = "anonymous";
+    private static final String ENSEMBL_DB_URL_37 = "jdbc:mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_89_37";
+    private static final String ENSEMBL_DB_URL_38 = "jdbc:mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_89_38";
+    private static final String ENSEMBL_DB_USER = "anonymous";
 
     public static void main(String[] args) throws ParseException, IOException, SQLException {
         final Options options = createOptions();
@@ -49,22 +49,22 @@ public class HmfGenePanelBuilder {
 
         final RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(RefGenomeVersion.REF_GENOME_VERSION));
         final String geneTsv = cmd.getOptionValue(GENE_TSV);
-        final String refseqToEnsemblTsv = cmd.getOptionValue(REFSEQ_TO_ENSEMBL_TSV);
+        final String refseqToEnsemblTsv = cmd.getOptionValue(REFSEQ_TSV);
 
         if (geneTsv == null || refseqToEnsemblTsv == null) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("HmfGenePanelBuilder", options);
+            formatter.printHelp("HmfEnsemblResourceBuilder", options);
             System.exit(1);
         }
 
-        final String database = refGenomeVersion.is37() ? ENSEMBLDB_URL_37 : ENSEMBLDB_URL_38;
+        final String database = refGenomeVersion.is37() ? ENSEMBL_DB_URL_37 : ENSEMBL_DB_URL_38;
 
-        LOGGER.info("Running hmf-gene-panel-builder with version {}", refGenomeVersion);
+        LOGGER.info("Running hmf-ensembl-resource-builder with version {}", refGenomeVersion);
         final DSLContext context = connectEnsemblDb(database);
         LOGGER.info(" Connected to {}", database);
 
         generateGenes(context, geneTsv, refGenomeVersion);
-        generateRefSeqToEnsembl(context, refseqToEnsemblTsv);
+        generateRefSeqs(context, refseqToEnsemblTsv);
 
         LOGGER.info("Complete");
     }
@@ -91,12 +91,12 @@ public class HmfGenePanelBuilder {
         }
     }
 
-    private static void generateRefSeqToEnsembl(@NotNull final DSLContext context, @NotNull final String outputTsv) throws IOException {
-        final Result<Record> refseqToEnsemblResult = context.fetch(read(Resources.getResource("sql/refseq_to_ensembl_transcripts.sql")));
-        LOGGER.info(" RefSeq to Ensembl query returned {} entries", refseqToEnsemblResult.size());
+    private static void generateRefSeqs(@NotNull final DSLContext context, @NotNull final String outputTsv) throws IOException {
+        final Result<Record> refseqResult = context.fetch(read(Resources.getResource("sql/ensembl_refseq_query.sql")));
+        LOGGER.info(" RefSeq query returned {} entries", refseqResult.size());
 
-        writeAsTsv(outputTsv, refseqToEnsemblResult);
-        LOGGER.info(" Written RefSeq to Ensembl output to {}", outputTsv);
+        writeAsTsv(outputTsv, refseqResult);
+        LOGGER.info(" Written RefSeq output to {}", outputTsv);
     }
 
     @NotNull
@@ -104,7 +104,7 @@ public class HmfGenePanelBuilder {
         final Options options = new Options();
         options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to generate files for");
         options.addOption(GENE_TSV, true, "Path towards the gene tsv output file.");
-        options.addOption(REFSEQ_TO_ENSEMBL_TSV, true, "Path towards the refseq to ensembl tsv output file.");
+        options.addOption(REFSEQ_TSV, true, "Path towards the refseq tsv output file.");
         return options;
     }
 
@@ -112,7 +112,7 @@ public class HmfGenePanelBuilder {
     private static DSLContext connectEnsemblDb(@NotNull final String database) throws SQLException {
         // Disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
-        final Connection conn = DriverManager.getConnection(database, DB_USER, "");
+        final Connection conn = DriverManager.getConnection(database, ENSEMBL_DB_USER, "");
         return DSL.using(conn, SQLDialect.MYSQL);
     }
 
