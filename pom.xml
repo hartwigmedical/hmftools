@@ -10,7 +10,7 @@
 
     <modules>
         <module>hmf-common</module>
-        <module>hmf-gene-panel-builder</module>
+        <module>hmf-ensembl-resources</module>
         <module>hmf-extensions</module>
         <module>patient-db</module>
         <module>hmf-id-generator</module>

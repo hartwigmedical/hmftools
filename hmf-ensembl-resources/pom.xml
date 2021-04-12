@@ -8,9 +8,9 @@
         <version>local-SNAPSHOT</version>
     </parent>
 
-    <artifactId>hmf-gene-panel-builder</artifactId>
+    <artifactId>hmf-ensembl-resources</artifactId>
     <packaging>jar</packaging>
-    <name>HMF Tools - HMF Gene Panel Builder</name>
+    <name>HMF Tools - HMF Ensembl Resources</name>
 
     <dependencies>
         <dependency>
