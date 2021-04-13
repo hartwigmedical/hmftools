@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.liftover;
+package com.hartwig.hmftools.serve.refgenome.liftover;
 
 import java.io.File;
 import java.net.InetAddress;
