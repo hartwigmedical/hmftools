@@ -10,9 +10,9 @@ import static com.hartwig.hmftools.common.variant.VariantHeader.REPORTED_FLAG;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -60,22 +60,26 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
     }
 
     public void flush() {
-        final Map<String, Long> germlineGeneHits = buffer.stream().filter(x -> driverGeneMap.containsKey(x.gene())).filter(x -> {
+
+        final List<VariantContextDecorator> germlineHits = buffer.stream().filter(x -> driverGeneMap.containsKey(x.gene())).filter(x -> {
             DriverGene driverGene = driverGeneMap.get(x.gene());
             return report(x,
                     downgradeWildType(driverGene.reportGermlineHotspot()),
                     downgradeWildType(driverGene.reportGermlineVariant()),
                     Collections.emptySet());
-        }).map(VariantContextDecorator::gene).collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-
-        final Set<String> multipleGermlineGeneHits =
-                germlineGeneHits.entrySet().stream().filter(x -> x.getValue() > 1).map(Map.Entry::getKey).collect(Collectors.toSet());
-
-        final Set<String> genesWithMultipleHits = Sets.newHashSet();
-        genesWithMultipleHits.addAll(multipleGermlineGeneHits);
-        genesWithMultipleHits.addAll(somaticKnockouts);
+        }).collect(Collectors.toList());
 
         for (VariantContextDecorator variant : buffer) {
+            final Set<String> otherGermlineHits = germlineHits.stream()
+                    .filter(x -> !x.equals(variant))
+                    .filter(x -> x.gene().equals(variant.gene()))
+                    .filter(x -> variant.localPhaseSet() == null || x.localPhaseSet() == null || !Objects.equals(variant.localPhaseSet(), x.localPhaseSet()))
+                    .map(VariantContextDecorator::gene)
+                    .collect(Collectors.toSet());
+            final Set<String> genesWithMultipleHits = Sets.newHashSet();
+            genesWithMultipleHits.addAll(somaticKnockouts);
+            genesWithMultipleHits.addAll(otherGermlineHits);
+
             if (report(variant, genesWithMultipleHits)) {
                 variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
             }
