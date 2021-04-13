@@ -3,7 +3,6 @@ package com.hartwig.hmftools.serve.sources.ckb;
 import java.util.List;
 
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
-import com.hartwig.hmftools.serve.sources.ckb.curation.CkbCurator;
 import com.hartwig.hmftools.serve.sources.ckb.filter.CkbFilter;
 
 import org.apache.logging.log4j.LogManager;
@@ -19,23 +18,9 @@ public final class CkbReader {
 
     @NotNull
     public static List<CkbEntry> filterAndCurate(@NotNull List<CkbEntry> ckbEntries) {
-        return filter(curate(ckbEntries));
+        return filter(ckbEntries);
     }
 
-    @NotNull
-    private static List<CkbEntry> curate(@NotNull List<CkbEntry> ckbEntries) {
-        CkbCurator curator = new CkbCurator();
-
-        LOGGER.info("Curating {} CKB entries", ckbEntries.size());
-        List<CkbEntry> curatedEntries = curator.run(ckbEntries);
-        LOGGER.info(" Finished CKB curation. {} entries remaining, {} entries have been removed",
-                curatedEntries.size(),
-                ckbEntries.size() - curatedEntries.size());
-
-        curator.reportUnusedCurationEntries();
-
-        return curatedEntries;
-    }
 
     @NotNull
     private static List<CkbEntry> filter(@NotNull List<CkbEntry> entries) {

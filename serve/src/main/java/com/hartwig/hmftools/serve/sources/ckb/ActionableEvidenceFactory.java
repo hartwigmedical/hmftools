@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.serve.sources.ckb;
 
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.evidence.Evidence;
@@ -14,8 +12,6 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
-import com.hartwig.hmftools.serve.sources.ckb.curation.DrugCurator;
-import com.hartwig.hmftools.serve.sources.ckb.curation.EvidenceLevelCurator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -59,16 +55,10 @@ class ActionableEvidenceFactory {
 
     @NotNull
     private final DoidLookup missingDoidLookup;
-    @NotNull
-    private final DrugCurator drugCurator;
-    @NotNull
-    private final EvidenceLevelCurator evidenceLevelCurator;
 
-    ActionableEvidenceFactory(@NotNull final DoidLookup missingDoidLookup, @NotNull final DrugCurator drugCurator,
-            @NotNull final EvidenceLevelCurator evidenceLevelCurator) {
+
+    ActionableEvidenceFactory(@NotNull final DoidLookup missingDoidLookup) {
         this.missingDoidLookup = missingDoidLookup;
-        this.drugCurator = drugCurator;
-        this.evidenceLevelCurator = evidenceLevelCurator;
     }
 
     @NotNull
@@ -156,11 +146,6 @@ class ActionableEvidenceFactory {
             LOGGER.warn("Could not resolve doids for CKB cancer type '{}'", cancerType);
             return Sets.newHashSet();
         }
-    }
-
-    public void evaluateCuration() {
-        drugCurator.reportUnusedCurationKeys();
-        evidenceLevelCurator.reportUnusedCurationKeys();
     }
 
     private static boolean resolveEvidenceType(@NotNull String evidenceType) {

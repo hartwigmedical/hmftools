@@ -96,8 +96,6 @@ public class CkbExtractor {
             tracker.update();
         }
 
-        actionableEvidenceFactory.evaluateCuration();
-
         return ExtractionFunctions.merge(extractions);
     }
 
