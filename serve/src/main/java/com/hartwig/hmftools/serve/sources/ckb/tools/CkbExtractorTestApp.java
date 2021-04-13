@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.serve.sources.ckb.tools;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -73,7 +76,7 @@ public class CkbExtractorTestApp {
             refSeqMatch = "/data/common/dbs/serve/static_sources/refseq/refseq_to_canonicalTranscript.tsv";
         } else {
             ckbDir = System.getProperty("user.home") + "/hmf/projects/serve/ckb";
-            outputDir = System.getProperty("user.home") + "/tmp/serve_ckb";
+            outputDir = System.getProperty("user.home") + "/hmf/tmp/serve_ckb";
             eventsTsv = outputDir + "/CkbEvents.tsv";
             missingDoidMappingTsv = System.getProperty("user.home") + "/hmf/projects/serve/curation/missing_doids_mapping.tsv";
             driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driver_gene_panel/DriverGenePanel.38.tsv";
@@ -83,11 +86,11 @@ public class CkbExtractorTestApp {
             refSeqMatch = System.getProperty("user.home") + "/hmf/projects/serve/static_sources/refseq/refseq_to_canonicalTranscript.tsv";
         }
 
-        CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
-        List<CkbEntry> allCkbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-        List<CkbEntry> downsampled = allCkbEntries.subList(0, 1000);
-
-        List<CkbEntry> curatedEntries = CkbReader.filterAndCurate(downsampled);
+        Path outputPath = new File(outputDir).toPath();
+        if (!Files.exists(outputPath)) {
+            LOGGER.debug("Creating {} directory for writing SERVE CKB output", outputPath.toString());
+            Files.createDirectory(outputPath);
+        }
 
         DoidLookup doidLookup = DoidLookupFactory.buildFromConfigTsv(missingDoidMappingTsv);
 
@@ -113,6 +116,12 @@ public class CkbExtractorTestApp {
 
         LOGGER.info("Reading ref seq matching to transcript");
         List<RefSeq> refSeqMatchFile = RefSeqFile.readingRefSeq(refSeqMatch);
+
+        CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
+        List<CkbEntry> allCkbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
+        List<CkbEntry> downsampled = allCkbEntries.subList(0, 1000);
+
+        List<CkbEntry> curatedEntries = CkbReader.filterAndCurate(downsampled);
 
         ExtractionResult result = extractor.extract(curatedEntries, refSeqMatchFile);
 
