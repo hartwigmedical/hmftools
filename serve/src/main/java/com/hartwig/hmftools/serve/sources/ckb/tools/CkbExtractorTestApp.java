@@ -75,7 +75,7 @@ public class CkbExtractorTestApp {
             outputDir = System.getProperty("user.home") + "/tmp/serve_ckb";
             eventsTsv = outputDir + "/CkbEvents.tsv";
             missingDoidMappingTsv = System.getProperty("user.home") + "/hmf/projects/serve/curation/missing_doids_mapping.tsv";
-            driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.38.tsv";
+            driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driver_gene_panel/DriverGenePanel.38.tsv";
             knownFusionFilePath = System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.38_v3.csv";
             fastaFile = Strings.EMPTY;
             proteinResolver = ProteinResolverFactory.dummy();

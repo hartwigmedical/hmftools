@@ -38,7 +38,7 @@ public final class EventMatcherFactory {
                 new DeletionMatcher(config.deletionBlacklistKeyPhrases(), config.deletionKeywords(), config.deletionKeyPhrases());
 
         CharacteristicMatcher characteristicMatcher = new CharacteristicMatcher(allCharacteristicEvents(config));
-        ComplexMatcher complexMatcher = new ComplexMatcher(config.complexEventsPerGene());
+        ComplexMatcher complexMatcher = new ComplexMatcher(hotspotMatcher, config.complexEventsPerGene());
         CombinedMatcher combinedMatcher =
                 new CombinedMatcher(config.combinedEventsPerGene(), hotspotMatcher, fusionPairMatcher, amplificationMatcher);
 

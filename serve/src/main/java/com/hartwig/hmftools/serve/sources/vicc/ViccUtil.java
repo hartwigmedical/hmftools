@@ -111,7 +111,7 @@ public final class ViccUtil {
         if (!featuresWithoutGenomicEvents.isEmpty()) {
             LOGGER.warn("No genomic events derived for {} features!", featuresWithoutGenomicEvents.size());
             for (Feature feature : featuresWithoutGenomicEvents) {
-                LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
+                LOGGER.warn(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
             }
         }
 

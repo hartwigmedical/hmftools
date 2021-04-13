@@ -38,6 +38,13 @@ public class HotspotMatcher implements EventMatcher {
         return false;
     }
 
+    boolean isComplexMatch(@NotNull String gene, @NotNull String event) {
+        String processedEvent = proteinAnnotationExtractor.apply(event);
+
+        // Complex matches are hotspots which don't pass "match"
+        return isProteinAnnotationWithMaxLength(processedEvent, null) && !(isHotspotOnFusionGene(gene, event)) && (!matches(gene, event));
+    }
+
     private static boolean isProteinAnnotationWithMaxLength(@NotNull String event, @Nullable Integer maxLength) {
         if (isValidFrameshift(event)) {
             return true;
