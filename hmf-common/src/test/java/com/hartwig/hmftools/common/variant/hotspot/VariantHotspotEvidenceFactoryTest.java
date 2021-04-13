@@ -227,7 +227,6 @@ public class VariantHotspotEvidenceFactoryTest {
         assertTrue(isVariantPartOfLargerMNV(98, MNV_REF_SEQUENCE, MNV, buildSamRecord(98, "7M", "GGTACAA")));
         assertTrue(isVariantPartOfLargerMNV(98, MNV_REF_SEQUENCE, MNV, buildSamRecord(98, "7M", "GATACAG")));
         assertTrue(isVariantPartOfLargerMNV(98, MNV_REF_SEQUENCE, MNV, buildSamRecord(98, "7M", "GATACGA")));
-
     }
 
     @NotNull

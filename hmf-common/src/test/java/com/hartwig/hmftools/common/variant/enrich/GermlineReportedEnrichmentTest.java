@@ -216,7 +216,7 @@ public class GermlineReportedEnrichmentTest {
 
     @NotNull
     private static VariantContext createGermline(@NotNull String filter, @NotNull String gene, boolean biallelic, boolean isHotspot,
-            @NotNull String clinSig, @NotNull CodingEffect codingEffect, final double variantCopyNumber) {
+            @NotNull String clinSig, @NotNull CodingEffect codingEffect, double variantCopyNumber) {
         final String hotspotFlag = isHotspot ? HOTSPOT_FLAG : NEAR_HOTSPOT_FLAG;
         final String line =
                 "11\t1000\tCOSM123;COSM456\tG\tA\t100\t" + filter + "\t" + PURPLE_BIALLELIC_FLAG + "=" + biallelic + ";" + hotspotFlag
@@ -227,12 +227,13 @@ public class GermlineReportedEnrichmentTest {
 
     @NotNull
     private static VariantContext createGermline(@NotNull String filter, @NotNull String gene, boolean biallelic, boolean isHotspot,
-            @NotNull String clinSig, @NotNull CodingEffect codingEffect, final double variantCopyNumber, final int localPhaseSet) {
+            @NotNull String clinSig, @NotNull CodingEffect codingEffect, double variantCopyNumber, int localPhaseSet) {
         final String hotspotFlag = isHotspot ? HOTSPOT_FLAG : NEAR_HOTSPOT_FLAG;
         final String line =
                 "11\t1000\tCOSM123;COSM456\tG\tA\t100\t" + filter + "\t" + PURPLE_BIALLELIC_FLAG + "=" + biallelic + ";" + hotspotFlag
                         + ";SEC=" + gene + ",ENST00000393562,UTR_variant," + codingEffect.toString() + ",c.-275T>G,;CLNSIG=" + clinSig + ";"
-                        + PURPLE_VARIANT_CN_INFO + "=" + variantCopyNumber + ";" + SageMetaData.LOCAL_PHASE_SET + "=" + localPhaseSet + "\tGT:AD:DP\t0/1:73,17:91";
+                        + PURPLE_VARIANT_CN_INFO + "=" + variantCopyNumber + ";" + SageMetaData.LOCAL_PHASE_SET + "=" + localPhaseSet
+                        + "\tGT:AD:DP\t0/1:73,17:91";
         return VariantContextFromString.decode(line);
     }
 

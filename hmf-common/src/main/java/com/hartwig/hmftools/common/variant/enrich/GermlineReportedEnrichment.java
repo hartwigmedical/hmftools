@@ -60,7 +60,6 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
     }
 
     public void flush() {
-
         final List<VariantContextDecorator> germlineHits = buffer.stream().filter(x -> driverGeneMap.containsKey(x.gene())).filter(x -> {
             DriverGene driverGene = driverGeneMap.get(x.gene());
             return report(x,
@@ -73,14 +72,15 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
             final Set<String> otherGermlineHits = germlineHits.stream()
                     .filter(x -> !x.equals(variant))
                     .filter(x -> x.gene().equals(variant.gene()))
-                    .filter(x -> variant.localPhaseSet() == null || x.localPhaseSet() == null || !Objects.equals(variant.localPhaseSet(), x.localPhaseSet()))
+                    .filter(x -> variant.localPhaseSet() == null || x.localPhaseSet() == null || !Objects.equals(variant.localPhaseSet(),
+                            x.localPhaseSet()))
                     .map(VariantContextDecorator::gene)
                     .collect(Collectors.toSet());
-            final Set<String> genesWithMultipleHits = Sets.newHashSet();
-            genesWithMultipleHits.addAll(somaticKnockouts);
-            genesWithMultipleHits.addAll(otherGermlineHits);
+            final Set<String> genesWithMultipleUnphasedHits = Sets.newHashSet();
+            genesWithMultipleUnphasedHits.addAll(somaticKnockouts);
+            genesWithMultipleUnphasedHits.addAll(otherGermlineHits);
 
-            if (report(variant, genesWithMultipleHits)) {
+            if (report(variant, genesWithMultipleUnphasedHits)) {
                 variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
             }
             consumer.accept(variant.context());
@@ -94,7 +94,7 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
         return reporting == WILDTYPE_LOST ? VARIANT_NOT_LOST : reporting;
     }
 
-    private boolean report(@NotNull VariantContextDecorator variant, @NotNull Set<String> genesWithMultipleHits) {
+    private boolean report(@NotNull VariantContextDecorator variant, @NotNull Set<String> genesWithMultipleUnphasedHits) {
         if (variant.gene().isEmpty()) {
             return false;
         }
@@ -104,11 +104,11 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
         }
 
         final DriverGene driverGene = driverGeneMap.get(variant.gene());
-        return report(variant, driverGene.reportGermlineHotspot(), driverGene.reportGermlineVariant(), genesWithMultipleHits);
+        return report(variant, driverGene.reportGermlineHotspot(), driverGene.reportGermlineVariant(), genesWithMultipleUnphasedHits);
     }
 
     private boolean report(@NotNull VariantContextDecorator variant, @NotNull DriverGeneGermlineReporting hotspotReporting,
-            @NotNull DriverGeneGermlineReporting variantReporting, @NotNull Set<String> genesWithMultipleHits) {
+            @NotNull DriverGeneGermlineReporting variantReporting, @NotNull Set<String> genesWithMultipleUnphasedHits) {
         if (!variant.isPass()) {
             return false;
         }
@@ -135,13 +135,13 @@ public class GermlineReportedEnrichment implements VariantContextEnrichment {
         }
 
         if (reporting == WILDTYPE_LOST) {
-            return variant.biallelic() || genesWithMultipleHits.contains(variant.gene());
+            return variant.biallelic() || genesWithMultipleUnphasedHits.contains(variant.gene());
         }
 
         return false;
     }
 
-    public boolean isVariantLost(VariantContextDecorator variant, double minVariantCopyNumber) {
+    private static boolean isVariantLost(@NotNull VariantContextDecorator variant, double minVariantCopyNumber) {
         return Doubles.lessThan(variant.variantCopyNumber(), minVariantCopyNumber);
     }
 }

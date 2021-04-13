@@ -76,7 +76,8 @@ public class GermlinePurityEnrichment implements VariantContextEnrichment {
         consumer.accept(variant);
     }
 
-    private double vaf(final GenotypeStatus germlineGenotype, PurpleCopyNumber purpleCopyNumber, AllelicDepth tumorDepth) {
+    private double vaf(@NotNull final GenotypeStatus germlineGenotype, @NotNull PurpleCopyNumber purpleCopyNumber,
+            @NotNull AllelicDepth tumorDepth) {
         if (tumorDepth.totalReadCount() == 0 || tumorDepth.alleleReadCount() == 0) {
             return 0;
         }
@@ -84,7 +85,6 @@ public class GermlinePurityEnrichment implements VariantContextEnrichment {
         if (Doubles.lessOrEqual(purpleCopyNumber.averageTumorCopyNumber(), 0.001)) {
             return 0;
         }
-
 
         double rawAF = tumorDepth.alleleFrequency();
         double constrainedCopyNumber = Math.max(0.001, purpleCopyNumber.averageTumorCopyNumber());
@@ -94,12 +94,10 @@ public class GermlinePurityEnrichment implements VariantContextEnrichment {
         } else {
             return purityAdjuster.purityAdjustedVAFWithHomozygousNormal(purpleCopyNumber.chromosome(), constrainedCopyNumber, rawAF);
         }
-
     }
 
     @Override
     public void flush() {
-
     }
 
     @NotNull

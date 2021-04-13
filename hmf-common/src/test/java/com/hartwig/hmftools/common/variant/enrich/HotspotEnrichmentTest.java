@@ -60,7 +60,8 @@ public class HotspotEnrichmentTest {
         assertEquals(Hotspot.NON_HOTSPOT, HotspotEnrichment.fromVariant(nonHotspot));
     }
 
-    private void assertOverlap(@NotNull Hotspot expected, @NotNull VariantHotspot hotspot, int variantStart, @NotNull String variantRef) {
+    private static void assertOverlap(@NotNull Hotspot expected, @NotNull VariantHotspot hotspot, int variantStart,
+            @NotNull String variantRef) {
         final List<VariantContext> result = Lists.newArrayList();
 
         final VariantHotspotEnrichment enrichment =

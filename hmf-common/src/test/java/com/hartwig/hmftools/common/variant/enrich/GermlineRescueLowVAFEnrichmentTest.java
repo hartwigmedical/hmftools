@@ -36,5 +36,4 @@ public class GermlineRescueLowVAFEnrichmentTest {
                         + variantCopyNumber + ";NEAR_HOTSPOT\tGT:AD:DP\t0/1:73," + alleleReadCount + ":91";
         return VariantContextFromString.decode(line);
     }
-
 }

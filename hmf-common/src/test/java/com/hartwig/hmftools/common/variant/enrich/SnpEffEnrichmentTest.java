@@ -172,5 +172,4 @@ public class SnpEffEnrichmentTest {
         assertEquals(CodingEffect.NONSENSE_OR_FRAMESHIFT, summary1.canonicalCodingEffect());
         assertEquals(CodingEffect.MISSENSE, summary2.canonicalCodingEffect());
     }
-
 }
