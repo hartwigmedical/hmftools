@@ -47,7 +47,7 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
     }
 
     fun unmatchedPonIndels(minCount: Int): Map<Indel, Int> {
-        return unmatchedIndels.filter { it.value >= minCount }
+        return unmatchedPONIndels.filter { it.value >= minCount }
     }
 
     fun readFromBam(): List<NucleotideFragment> {
