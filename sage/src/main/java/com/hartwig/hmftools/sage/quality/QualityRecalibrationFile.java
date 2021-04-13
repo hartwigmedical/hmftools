@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class QualityRecalibrationFile {
+public final class QualityRecalibrationFile {
 
     private static final String DELIMITER = "\t";
     private static final DecimalFormat FORMAT = new DecimalFormat("0.00");

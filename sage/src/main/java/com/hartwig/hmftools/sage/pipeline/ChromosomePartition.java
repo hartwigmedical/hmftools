@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class ChromosomePartition {
+
     private final SageConfig config;
     private final ReferenceSequenceFile refGenome;
 

@@ -25,7 +25,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class SageQualityRecalibrationBedApplication implements AutoCloseable {
 
-    private static final Logger LOGGER = LogManager.getLogger(SageApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(SageQualityRecalibrationBedApplication.class);
 
     private static final String BQR_SAMPLE_SIZE = "bqr_sample_size";
     private static final String REF_GENOME = "ref_genome";

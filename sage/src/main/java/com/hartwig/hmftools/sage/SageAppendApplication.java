@@ -51,6 +51,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
 
 public class SageAppendApplication implements AutoCloseable {
+
     private static final Logger LOGGER = LogManager.getLogger(SageAppendApplication.class);
     private static final double MIN_PRIOR_VERSION = 2.4;
 

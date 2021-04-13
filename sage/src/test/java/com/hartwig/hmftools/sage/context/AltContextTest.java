@@ -144,7 +144,6 @@ public class AltContextTest {
         assertEquals("TAAACATCCCG", new String(finalCandidate.readContext().readBases()));
         assertEquals(2,  finalCandidate.minNumberOfEvents());
         assertEquals(4,  finalCandidate.fullMatch());
-
     }
 
     @NotNull
@@ -152,7 +151,6 @@ public class AltContextTest {
         assert (core.length() == 3);
         return ReadContextTest.create(POS, 1, leftFlank, core, rightFlank, 1);
     }
-
 
     @NotNull
     public static ReadContext simpleSnv(@NotNull final String leftFlank, @NotNull final String core, @NotNull final String rightFlank) {

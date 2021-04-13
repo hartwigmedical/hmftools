@@ -26,7 +26,8 @@ public class SageVariantFactory {
     }
 
     @NotNull
-    public SageVariant create(@NotNull final Candidate candidate, @NotNull final List<ReadContextCounter> normal, @NotNull final List<ReadContextCounter> tumor) {
+    public SageVariant create(@NotNull final Candidate candidate, @NotNull final List<ReadContextCounter> normal,
+            @NotNull final List<ReadContextCounter> tumor) {
         assert (!tumor.isEmpty());
         final Set<String> filters = Sets.newHashSet();
         final boolean isNormalEmpty = normal.isEmpty();

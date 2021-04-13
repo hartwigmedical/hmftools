@@ -42,7 +42,6 @@ public class AdditionalReferencePipeline {
         this.refGenome = refGenome;
         this.evidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap);
         this.executor = executor;
-
     }
 
     @NotNull

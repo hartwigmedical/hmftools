@@ -13,6 +13,7 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.jetbrains.annotations.NotNull;
 
 public class GeneCoverage implements Consumer<GenomeRegion> {
+    
     private static final int MAX_BUCKET = 37;
 
     private final String chromosome;

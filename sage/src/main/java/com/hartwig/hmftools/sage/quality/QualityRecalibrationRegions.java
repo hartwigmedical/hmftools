@@ -11,6 +11,7 @@ import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class QualityRecalibrationRegions {
+
     private final IndexedFastaSequenceFile refGenome;
 
     public QualityRecalibrationRegions(final IndexedFastaSequenceFile refGenome) {

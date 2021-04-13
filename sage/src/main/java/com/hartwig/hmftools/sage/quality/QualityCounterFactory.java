@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.concurrent.CompletionException;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.sage.SageApplication;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
@@ -21,7 +20,7 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 class QualityCounterFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(SageApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(QualityCounterFactory.class);
 
     private final String bamFile;
     private final ReferenceSequenceFile refGenome;
