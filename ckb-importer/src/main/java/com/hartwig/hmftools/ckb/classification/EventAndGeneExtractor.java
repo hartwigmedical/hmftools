@@ -12,7 +12,7 @@ public final class EventAndGeneExtractor {
     @NotNull
     public static String extractGene(@NotNull Variant variant) {
         if (isFusion(variant) && !isPromiscuousFusion(variant)) {
-            return removeAllSpaces(variant.variant());
+            return variant.fullName();
         } else {
             return variant.gene().geneSymbol();
         }
