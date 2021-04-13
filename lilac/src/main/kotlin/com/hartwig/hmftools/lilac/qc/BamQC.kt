@@ -6,7 +6,7 @@ import org.apache.logging.log4j.LogManager
 data class BamQC(val discardedAlignmentFragments: Int, val discardedIndelFragments: Int, val discardedIndelMaxCount: Int, val discardedPonIndelFragments: Int, val discardedPonIndelMaxCount: Int) {
 
     companion object {
-        private const val MIN_SUPPORT = 2
+        private const val MIN_SUPPORT = 3
         private val logger = LogManager.getLogger(this::class.java)
 
         fun create(reader: SAMRecordReader): BamQC {
