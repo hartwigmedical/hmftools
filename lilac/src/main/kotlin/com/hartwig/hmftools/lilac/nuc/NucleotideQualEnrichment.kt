@@ -3,7 +3,7 @@ package com.hartwig.hmftools.lilac.nuc
 import com.hartwig.hmftools.lilac.SequenceCount
 
 /**
- * Only permit high quality nucleotide values, ie, nucleotides that have at least [minEvidence] instances with quality > [minBaseQuality] in aggregate
+ * Only permit high quality nucleotide values, ie, nucleotides that have at least 1 high quality (> [minBaseQuality]) and at least [minEvidence] instances in aggregate
  */
 class NucleotideQualEnrichment(private val minBaseQuality: Int, private val minEvidence: Int) {
 
