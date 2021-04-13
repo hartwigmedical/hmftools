@@ -14,51 +14,47 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class CkbFilter {
+public class CkbFilter {
 
     private static final Logger LOGGER = LogManager.getLogger(CkbFilter.class);
 
     @NotNull
-    private final Set<String> filteredMutations = Sets.newHashSet();
+    private final Set<String> usedFilterKeys = Sets.newHashSet();
 
     public CkbFilter() {
     }
 
     @NotNull
     public List<CkbEntry> run(@NotNull List<CkbEntry> ckbEntries) {
-
         List<CkbEntry> filteredCkbEntries = Lists.newArrayList();
         for (CkbEntry ckbEntry : ckbEntries) {
+            // Do not filter variants when in combination event.
             if (ckbEntry.variants().size() == 1) {
-                List<Variant> filteredMutations = Lists.newArrayList();
+                List<Variant> filteredVariants = Lists.newArrayList();
 
-                if (include(ckbEntry.variants().get(0))) {
-                    filteredMutations.add(ckbEntry.variants().get(0));
+                Variant variant = ckbEntry.variants().get(0);
+                if (include(variant)) {
+                    filteredVariants.add(variant);
                 } else {
-                    LOGGER.info("Filtering feature '{}' on '{}'",
-                            ckbEntry.variants().get(0).variant(),
-                            ckbEntry.variants().get(0).gene().geneSymbol());
+                    LOGGER.info("Filtering variant '{}' on '{}'", variant.variant(), variant.gene().geneSymbol());
                 }
 
-                if (!filteredMutations.isEmpty()) {
-                    filteredCkbEntries.add(ImmutableCkbEntry.builder().from(ckbEntry).variants(filteredMutations).build());
+                if (!filteredVariants.isEmpty()) {
+                    filteredCkbEntries.add(ImmutableCkbEntry.builder().from(ckbEntry).variants(filteredVariants).build());
                 }
 
             } else {
-                filteredCkbEntries.add(ImmutableCkbEntry.builder().from(ckbEntry).build());
-
+                filteredCkbEntries.add(ckbEntry);
             }
-
         }
 
         return filteredCkbEntries;
-
     }
 
     public void reportUnusedFilterEntries() {
         int unusedKeywordCount = 0;
-        for (String keyword : FilterFactory.PROFILE_NAME_TO_FILTER) {
-            if (!filteredMutations.contains(keyword)) {
+        for (String keyword : FilterFactory.VARIANT_KEYWORDS_TO_FILTER) {
+            if (!usedFilterKeys.contains(keyword)) {
                 unusedKeywordCount++;
                 LOGGER.debug("Keyword '{}' hasn't been used for CKB filtering", keyword);
             }
@@ -69,10 +65,9 @@ public final class CkbFilter {
 
     @VisibleForTesting
     boolean include(@NotNull Variant variant) {
-        String profileName = variant.variant();
-        for (String keywordToFilter : FilterFactory.PROFILE_NAME_TO_FILTER) {
-            if (profileName.contains(keywordToFilter)) {
-                filteredMutations.add(keywordToFilter);
+        for (String keywordToFilter : FilterFactory.VARIANT_KEYWORDS_TO_FILTER) {
+            if (variant.variant().contains(keywordToFilter)) {
+                usedFilterKeys.add(keywordToFilter);
                 return false;
             }
         }

@@ -119,9 +119,8 @@ public class CkbExtractorTestApp {
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
         List<CkbEntry> allCkbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-        List<CkbEntry> downsampled = allCkbEntries.subList(0, 1000);
 
-        List<CkbEntry> curatedEntries = CkbReader.filterAndCurate(downsampled);
+        List<CkbEntry> curatedEntries = CkbReader.filterAndCurate(allCkbEntries);
 
         ExtractionResult result = extractor.extract(curatedEntries, refSeqMatchFile);
 
