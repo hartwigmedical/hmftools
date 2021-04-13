@@ -15,7 +15,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.enrich.SubclonalLikelihoodEnrichment;
-import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
+import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
 
@@ -51,7 +51,7 @@ public class SomaticVariantFactory implements VariantContextFilter {
     public SomaticVariantFactory(@NotNull final VariantContextFilter... filters) {
         this.filter = new CompoundFilter(true);
         this.filter.addAll(Arrays.asList(filters));
-        this.filter.add(new ChromosomeFilter());
+        this.filter.add(new HumanChromosomeFilter());
         this.filter.add(new NTFilter());
     }
 
