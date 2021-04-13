@@ -5,7 +5,6 @@ import java.util.List;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.serve.sources.ckb.curation.CkbCurator;
 import com.hartwig.hmftools.serve.sources.ckb.filter.CkbFilter;
-import com.hartwig.hmftools.serve.sources.vicc.ViccReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class CkbReader {
 
-    private static final Logger LOGGER = LogManager.getLogger(ViccReader.class);
+    private static final Logger LOGGER = LogManager.getLogger(CkbReader.class);
 
     private CkbReader(){
     }
