@@ -5,7 +5,9 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.ckb.classification.EventAndGeneExtractor;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
+import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.common.refseq.RefSeq;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
@@ -17,12 +19,10 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.extraction.ActionableEventFactory;
-import com.hartwig.hmftools.serve.extraction.EventExtractor;
 import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
-import com.hartwig.hmftools.ckb.classification.EventExtractorCuration;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.CodonFunctions;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
@@ -53,23 +53,14 @@ public class CkbExtractor {
     private static final Logger LOGGER = LogManager.getLogger(CkbExtractor.class);
 
     @NotNull
-    private final EventExtractor eventExtractor;
+    private final com.hartwig.hmftools.serve.extraction.EventExtractor eventExtractor;
     @NotNull
     private final ActionableEvidenceFactory actionableEvidenceFactory;
 
-    public CkbExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableEvidenceFactory actionableEvidenceFactory) {
+    public CkbExtractor(@NotNull final com.hartwig.hmftools.serve.extraction.EventExtractor eventExtractor,
+            @NotNull final ActionableEvidenceFactory actionableEvidenceFactory) {
         this.eventExtractor = eventExtractor;
         this.actionableEvidenceFactory = actionableEvidenceFactory;
-    }
-
-    @Nullable
-    public String extractCanonicalTranscript(@NotNull String refseqToMatch, @NotNull List<RefSeq> refSeqMatchFile) {
-        for (RefSeq refSeq : refSeqMatchFile) {
-            if (refSeq.dbPrimaryAcc().equals(refseqToMatch)) {
-                return refSeq.transcriptId();
-            }
-        }
-        return null;
     }
 
     @NotNull
@@ -79,13 +70,12 @@ public class CkbExtractor {
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
         for (CkbEntry entry : ckbEntries) {
             if (entry.variants().size() == 1) {
-                String geneSymbol = EventExtractorCuration.extractGene(entry);
-                String event = EventExtractorCuration.extractEvent(entry);
+                Variant variant = entry.variants().get(0);
+                String gene = EventAndGeneExtractor.extractGene(variant);
+                String event = EventAndGeneExtractor.extractEvent(variant);
+                String canonicalTranscript = extractCanonicalTranscript(variant.gene().canonicalTranscript(), refSeqMatchFile);
 
-                EventExtractorOutput eventExtractorOutput = eventExtractor.extract(geneSymbol,
-                        extractCanonicalTranscript(entry.variants().get(0).gene().canonicalTranscript(), refSeqMatchFile),
-                        entry.type(),
-                        event);
+                EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, canonicalTranscript, entry.type(), event);
                 Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry);
 
                 CkbExtractorResult ckbExtractorResult = toResult(eventExtractorOutput, actionableEvents);
@@ -100,9 +90,7 @@ public class CkbExtractor {
                         .build());
 
                 if (entry.type() == EventType.UNKNOWN) {
-                    LOGGER.warn("No event type known for '{}' on '{}'",
-                            entry.variants().get(0).variant(),
-                            entry.variants().get(0).gene().geneSymbol());
+                    LOGGER.warn("No event type known for '{}' on '{}'", variant.variant(), variant.gene().geneSymbol());
                 }
             }
             tracker.update();
@@ -111,6 +99,16 @@ public class CkbExtractor {
         actionableEvidenceFactory.evaluateCuration();
 
         return ExtractionFunctions.merge(extractions);
+    }
+
+    @Nullable
+    private static String extractCanonicalTranscript(@NotNull String refseqToMatch, @NotNull List<RefSeq> refSeqMatchFile) {
+        for (RefSeq refSeq : refSeqMatchFile) {
+            if (refSeq.dbPrimaryAcc().equals(refseqToMatch)) {
+                return refSeq.transcriptId();
+            }
+        }
+        return null;
     }
 
     @NotNull
@@ -181,9 +179,8 @@ public class CkbExtractor {
     }
 
     @NotNull
-    private CkbExtractorResult toResult(@NotNull EventExtractorOutput eventExtractorOutput,
+    private static CkbExtractorResult toResult(@NotNull EventExtractorOutput eventExtractorOutput,
             @NotNull Set<ActionableEvent> actionableEvents) {
-
         return ImmutableCkbExtractorResult.builder()
                 .hotspots(eventExtractorOutput.hotspots())
                 .codons(eventExtractorOutput.codons())
@@ -206,7 +203,6 @@ public class CkbExtractor {
         Set<ActionableCharacteristic> actionableCharacteristics = Sets.newHashSet();
 
         for (ActionableEvent event : actionableEvents) {
-
             actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(event, ckbExtractorResult.hotspots()));
             actionableRanges.addAll(ActionableEventFactory.toActionableRanges(event, ckbExtractorResult.codons()));
             actionableRanges.addAll(ActionableEventFactory.toActionableRanges(event, ckbExtractorResult.exons()));

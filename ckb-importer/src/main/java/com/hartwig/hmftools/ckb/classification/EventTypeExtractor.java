@@ -22,9 +22,11 @@ public final class EventTypeExtractor {
             return EventType.COMBINED;
         } else {
             Variant variant = entry.variants().get(0);
-            String event = EventExtractorCuration.extractEvent(entry);
 
-            return CLASSIFIER.determineType(variant.gene().geneSymbol(), event);
+            String gene = EventAndGeneExtractor.extractGene(variant);
+            String event = EventAndGeneExtractor.extractEvent(variant);
+
+            return CLASSIFIER.determineType(gene, event);
         }
     }
 }
