@@ -97,6 +97,7 @@ public class CkbClassificationConfig {
         Map<String, Set<String>> map = Maps.newHashMap();
         map.put("KIT", Sets.newHashSet("exon  11 del", "exon 11"));
         map.put("MET", Sets.newHashSet("del exon 14", "exon 14"));
+        map.put("EGFR", Sets.newHashSet("del exon 28", "exon 28"));
 
         return map;
     }
@@ -117,7 +118,6 @@ public class CkbClassificationConfig {
     private static Set<String> activatingGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add("act mut");
-        set.add("positive");
         return set;
     }
 

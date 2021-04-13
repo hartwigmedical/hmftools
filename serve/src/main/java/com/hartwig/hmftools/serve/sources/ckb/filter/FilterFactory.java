@@ -23,6 +23,9 @@ public class FilterFactory {
         // Is not clear what profile it is
         PROFILE_NAME_TO_FILTER.add("unknown");
 
+        // "Expression" is not observed on DNA leve
+        PROFILE_NAME_TO_FILTER.add("Positive");
+
     }
 
 
