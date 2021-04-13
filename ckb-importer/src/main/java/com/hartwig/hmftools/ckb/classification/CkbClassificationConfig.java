@@ -117,7 +117,6 @@ public class CkbClassificationConfig {
     private static Set<String> activatingGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add("act mut");
-        set.add("positive");
         return set;
     }
 
