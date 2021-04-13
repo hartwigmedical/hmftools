@@ -99,8 +99,10 @@ public class TumorCharacteristicExtractorTest {
 
     @NotNull
     private static TumorCharacteristicExtractor buildTestExtractor() {
-        return new TumorCharacteristicExtractor(Sets.newHashSet(MSI), Sets.newHashSet(MSS),
-                Sets.newHashSet(HIGH_TMB),Sets.newHashSet(LOW_TMB),
+        return new TumorCharacteristicExtractor(Sets.newHashSet(MSI),
+                Sets.newHashSet(MSS),
+                Sets.newHashSet(HIGH_TMB),
+                Sets.newHashSet(LOW_TMB),
                 Sets.newHashSet(HRD),
                 Sets.newHashSet(HPV),
                 Sets.newHashSet(EBV));
