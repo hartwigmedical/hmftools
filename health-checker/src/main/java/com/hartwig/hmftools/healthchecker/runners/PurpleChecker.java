@@ -39,8 +39,8 @@ public class PurpleChecker implements HealthChecker {
             throw new IOException("Unable to parse purple QC file correctly");
         }
 
-        return Lists.newArrayList(ImmutableQCValue.of(QCValueType.PURPLE_QC_STATUS, qcStatus),
-                ImmutableQCValue.of(QCValueType.PURPLE_CONTAMINATION, contamination));
+        return Lists.newArrayList(ImmutableQCValue.builder().type(QCValueType.PURPLE_QC_STATUS).value(qcStatus).build(),
+                ImmutableQCValue.builder().type(QCValueType.PURPLE_CONTAMINATION).value(contamination).build());
     }
 
     @Nullable

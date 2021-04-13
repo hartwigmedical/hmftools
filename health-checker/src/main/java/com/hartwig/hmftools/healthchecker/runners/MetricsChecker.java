@@ -31,15 +31,27 @@ public class MetricsChecker implements HealthChecker {
         WGSMetrics metrics = extractMetrics();
 
         List<QCValue> qcValues = Lists.newArrayList();
-        qcValues.add(ImmutableQCValue.of(QCValueType.REF_COVERAGE_10X, String.valueOf(metrics.ref10xCoveragePercentage())));
-        qcValues.add(ImmutableQCValue.of(QCValueType.REF_COVERAGE_20X, String.valueOf(metrics.ref20xCoveragePercentage())));
+        qcValues.add(ImmutableQCValue.builder()
+                .type(QCValueType.REF_COVERAGE_10X)
+                .value(String.valueOf(metrics.ref10xCoveragePercentage()))
+                .build());
+        qcValues.add(ImmutableQCValue.builder()
+                .type(QCValueType.REF_COVERAGE_20X)
+                .value(String.valueOf(metrics.ref20xCoveragePercentage()))
+                .build());
 
         if (tumWgsMetricsFile != null) {
             assert metrics.tumor30xCoveragePercentage() != null;
             assert metrics.tumor60xCoveragePercentage() != null;
 
-            qcValues.add(ImmutableQCValue.of(QCValueType.TUM_COVERAGE_30X, String.valueOf(metrics.tumor30xCoveragePercentage())));
-            qcValues.add(ImmutableQCValue.of(QCValueType.TUM_COVERAGE_60X, String.valueOf(metrics.tumor60xCoveragePercentage())));
+            qcValues.add(ImmutableQCValue.builder()
+                    .type(QCValueType.TUM_COVERAGE_30X)
+                    .value(String.valueOf(metrics.tumor30xCoveragePercentage()))
+                    .build());
+            qcValues.add(ImmutableQCValue.builder()
+                    .type(QCValueType.TUM_COVERAGE_60X)
+                    .value(String.valueOf(metrics.tumor60xCoveragePercentage()))
+                    .build());
         }
 
         return qcValues;
