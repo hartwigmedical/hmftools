@@ -33,8 +33,10 @@ import com.hartwig.hmftools.vicc.annotation.ViccClassificationConfig;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.util.Strings;
 
 public class ViccExtractorTestApp {
@@ -46,7 +48,7 @@ public class ViccExtractorTestApp {
     private static final Integer MAX_VICC_ENTRIES = null;
 
     public static void main(String[] args) throws IOException {
-//        Configurator.setRootLevel(Level.DEBUG);
+        Configurator.setRootLevel(Level.DEBUG);
 
         String hostname = InetAddress.getLocalHost().getHostName();
         LOGGER.debug("Running on '{}'", hostname);

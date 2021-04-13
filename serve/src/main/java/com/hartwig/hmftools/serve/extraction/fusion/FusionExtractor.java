@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.extraction.fusion;
 import static com.hartwig.hmftools.serve.extraction.fusion.FusionAnnotationConfig.EXONIC_FUSIONS_MAP;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
@@ -23,10 +24,14 @@ public class FusionExtractor {
     private final GeneChecker geneChecker;
     @NotNull
     private final KnownFusionCache knownFusionCache;
+    @NotNull
+    private final Set<String> exonicDelDupFusionKeyPhrases;
 
-    public FusionExtractor(@NotNull final GeneChecker geneChecker, @NotNull final KnownFusionCache knownFusionCache) {
+    public FusionExtractor(@NotNull final GeneChecker geneChecker, @NotNull final KnownFusionCache knownFusionCache,
+            @NotNull final Set<String> exonicDelDupFusionKeyPhrases) {
         this.geneChecker = geneChecker;
         this.knownFusionCache = knownFusionCache;
+        this.exonicDelDupFusionKeyPhrases = exonicDelDupFusionKeyPhrases;
     }
 
     @Nullable
@@ -35,14 +40,26 @@ public class FusionExtractor {
         if (type == EventType.FUSION_PAIR) {
             if (EXONIC_FUSIONS_MAP.containsKey(event)) {
                 pair = fromConfiguredPair(EXONIC_FUSIONS_MAP.get(event), gene);
+            } else if (hasExonicDelDupKeyPhrase(event)) {
+                pair = fromExonicDelDup(gene, event);
             } else {
                 pair = fromStandardFusionPairEvent(event);
             }
         } else if (type == EventType.FUSION_PAIR_AND_EXON) {
-            pair = validate(fromExonicDelDup(gene, event), type);
+            pair = fromExonicDelDup(gene, event);
         }
 
         return validate(pair, type);
+    }
+
+    private boolean hasExonicDelDupKeyPhrase(@NotNull String event) {
+        for (String keyPhrase : exonicDelDupFusionKeyPhrases) {
+            if (event.contains(keyPhrase)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Nullable

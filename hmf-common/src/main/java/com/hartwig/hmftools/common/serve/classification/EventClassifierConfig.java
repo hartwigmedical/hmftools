@@ -21,6 +21,9 @@ public abstract class EventClassifierConfig {
     public abstract Set<String> exonKeywords();
 
     @NotNull
+    public abstract Set<String> exonBlacklistKeyPhrases();
+
+    @NotNull
     public abstract Set<String> specificExonEvents();
 
     @NotNull
@@ -52,6 +55,9 @@ public abstract class EventClassifierConfig {
 
     @NotNull
     public abstract Set<String> deletionKeyPhrases();
+
+    @NotNull
+    public abstract Set<String> exonicDelDupFusionKeyPhrases();
 
     @NotNull
     public abstract Set<String> exonicDelDupFusionEvents();

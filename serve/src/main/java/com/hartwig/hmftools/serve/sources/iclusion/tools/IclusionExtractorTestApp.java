@@ -68,7 +68,7 @@ public class IclusionExtractorTestApp {
         } else {
             iclusionTrialTsv = System.getProperty("user.home") + "/hmf/projects/serve/iclusion/iclusion_trials_prod.tsv";
             driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driver_gene_panel/DriverGenePanel.37.tsv";
-            knownFusionFilePath = System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.v37_v3.csv";
+            knownFusionFilePath = System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.37_v3.csv";
             missingDoidMappingTsv = System.getProperty("user.home") + "/hmf/projects/serve/curation/missing_doids_mapping.tsv";
             outputDir = System.getProperty("user.home") + "/hmf/tmp/serve";
             fastaFile = Strings.EMPTY;

@@ -40,6 +40,6 @@ public class ComplexMatcherTest {
 
     @NotNull
     private static HotspotMatcher testHotspotMatcher() {
-        return new HotspotMatcher(event -> event, new FusionPairMatcher(Sets.newHashSet(), Sets.newHashSet()));
+        return new HotspotMatcher(event -> event, new FusionPairMatcher(Sets.newHashSet(), Sets.newHashSet(), Sets.newHashSet()));
     }
 }

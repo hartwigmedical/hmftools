@@ -14,6 +14,7 @@ public final class ViccClassificationConfig {
 
     private static final Set<String> EXON_IDENTIFIERS = exonIdentifiers();
     private static final Set<String> EXON_KEYWORDS = exonKeywords();
+    private static final Set<String> EXON_BLACKLIST_KEY_PHRASES = exonBlacklistKeyPhrases();
     private static final Set<String> SPECIFIC_EXON_EVENTS = specificExonEvents();
     private static final Map<String, Set<String>> FUSION_PAIR_AND_EXONS_PER_GENE = fusionPairAndExonsPerGene();
     private static final Set<String> GENE_LEVEL_BLACKLIST_KEY_PHRASES = geneLevelBlacklistKeyPhrases();
@@ -25,6 +26,7 @@ public final class ViccClassificationConfig {
     private static final Set<String> DELETION_BLACKLIST_KEY_PHRASES = deletionBlacklistKeyPhrases();
     private static final Set<String> DELETION_KEYWORDS = deletionKeywords();
     private static final Set<String> DELETION_KEY_PHRASES = deletionKeyPhrases();
+    private static final Set<String> EXONIC_DEL_DUP_FUSION_KEY_PHRASES = exonicDelDupFusionKeyPhrases();
     private static final Set<String> EXONIC_DEL_DUP_FUSION_EVENTS = exonicDelDupFusionEvents();
     private static final Set<String> FUSION_PAIR_EVENTS_TO_SKIP = fusionPairEventsToSkip();
     private static final Set<String> PROMISCUOUS_FUSION_KEY_PHRASES = promiscuousFusionKeyPhrases();
@@ -47,6 +49,7 @@ public final class ViccClassificationConfig {
                 .proteinAnnotationExtractor(new ProteinAnnotationExtractor())
                 .exonIdentifiers(EXON_IDENTIFIERS)
                 .exonKeywords(EXON_KEYWORDS)
+                .exonBlacklistKeyPhrases(EXON_BLACKLIST_KEY_PHRASES)
                 .specificExonEvents(SPECIFIC_EXON_EVENTS)
                 .fusionPairAndExonsPerGene(FUSION_PAIR_AND_EXONS_PER_GENE)
                 .geneLevelBlacklistKeyPhrases(GENE_LEVEL_BLACKLIST_KEY_PHRASES)
@@ -58,6 +61,7 @@ public final class ViccClassificationConfig {
                 .deletionBlacklistKeyPhrases(DELETION_BLACKLIST_KEY_PHRASES)
                 .deletionKeywords(DELETION_KEYWORDS)
                 .deletionKeyPhrases(DELETION_KEY_PHRASES)
+                .exonicDelDupFusionKeyPhrases(EXONIC_DEL_DUP_FUSION_KEY_PHRASES)
                 .exonicDelDupFusionEvents(EXONIC_DEL_DUP_FUSION_EVENTS)
                 .fusionPairEventsToSkip(FUSION_PAIR_EVENTS_TO_SKIP)
                 .promiscuousFusionKeyPhrases(PROMISCUOUS_FUSION_KEY_PHRASES)
@@ -99,6 +103,11 @@ public final class ViccClassificationConfig {
         set.add("FRAMESHIFT");
         set.add("proximal");
         return set;
+    }
+
+    @NotNull
+    private static Set<String> exonBlacklistKeyPhrases() {
+        return Sets.newHashSet();
     }
 
     @NotNull
@@ -222,6 +231,11 @@ public final class ViccClassificationConfig {
         set.add("dec exp");
         set.add("Copy Number Loss");
         return set;
+    }
+
+    @NotNull
+    private static Set<String> exonicDelDupFusionKeyPhrases() {
+        return Sets.newHashSet();
     }
 
     @NotNull

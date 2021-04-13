@@ -42,7 +42,7 @@ public class CombinedMatcherTest {
 
     @NotNull
     private static EventMatcher buildCombinedMatcher() {
-        FusionPairMatcher fusionPairMatcher = new FusionPairMatcher(Sets.newHashSet(), Sets.newHashSet());
+        FusionPairMatcher fusionPairMatcher = new FusionPairMatcher(Sets.newHashSet(), Sets.newHashSet(), Sets.newHashSet());
         HotspotMatcher hotspotMatcher = new HotspotMatcher(event -> event, fusionPairMatcher);
 
         return new CombinedMatcher(COMBINED_EVENTS_PER_GENE,
