@@ -1073,6 +1073,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 ## Version History and Download Links
 - Upcoming
+  - Germline VAF = 0 for negative copy numbers
   - Fix logic for acceptor +3 splice variant to consider strand
   - Fix bug in LOW_TUMOR_VCN logic
 - [2.53](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.53) 
