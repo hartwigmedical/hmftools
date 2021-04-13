@@ -44,6 +44,7 @@ public class CkbExtractorTestApp {
 
     public static void main(String[] args) throws IOException {
         Configurator.setRootLevel(Level.DEBUG);
+
         String hostname = InetAddress.getLocalHost().getHostName();
         LOGGER.debug("Running on '{}'", hostname);
 
@@ -84,7 +85,9 @@ public class CkbExtractorTestApp {
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
         List<CkbEntry> allCkbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-        List<CkbEntry> filteredAndcurateCkbEntries = CkbReader.filterAndCurateRelevantEntries(allCkbEntries, 1000);
+        List<CkbEntry> downsampled = allCkbEntries.subList(0, 1000);
+
+        List<CkbEntry> curatedEntries = CkbReader.filterAndCurate(downsampled);
 
         DoidLookup doidLookup = DoidLookupFactory.buildFromConfigTsv(missingDoidMappingTsv);
 
@@ -111,9 +114,9 @@ public class CkbExtractorTestApp {
         LOGGER.info("Reading ref seq matching to transcript");
         List<RefSeq> refSeqMatchFile = RefSeqFile.readingRefSeq(refSeqMatch);
 
-        ExtractionResult result = extractor.extract(filteredAndcurateCkbEntries, refSeqMatchFile);
+        ExtractionResult result = extractor.extract(curatedEntries, refSeqMatchFile);
 
-        CkbUtils.writeEventsToTsv(eventsTsv, filteredAndcurateCkbEntries);
+        CkbUtils.writeEventsToTsv(eventsTsv, curatedEntries);
         CkbUtils.printExtractionResults(result);
 
         new ExtractionResultWriter(outputDir, refGenomeVersion).write(result);

@@ -31,17 +31,20 @@ public final class CkbUtils {
         LOGGER.info(" {} actionable tumor characteristics records generated", result.actionableCharacteristics().size());
     }
 
-    public static void writeEventsToTsv(@NotNull String eventTsv, List<CkbEntry> filteredAndcurateCkbEntries) throws IOException {
+    public static void writeEventsToTsv(@NotNull String eventTsv, List<CkbEntry> entries) throws IOException {
         List<String> lines = Lists.newArrayList();
         String header = new StringJoiner(FIELD_DELIMITER).add("profileName").add("gene").add("event").add("type").toString();
         lines.add(header);
 
-        for (CkbEntry entry : filteredAndcurateCkbEntries) {
-            lines.add(new StringJoiner(FIELD_DELIMITER).add(entry.profileName()).add(entry.variants().get(0).gene().geneSymbol())
-                    .add(entry.variants().get(0).variant()).add(entry.type().toString()).toString());
+        for (CkbEntry entry : entries) {
+            lines.add(new StringJoiner(FIELD_DELIMITER).add(entry.profileName())
+                    .add(entry.variants().get(0).gene().geneSymbol())
+                    .add(entry.variants().get(0).variant())
+                    .add(entry.type().toString())
+                    .toString());
         }
 
-       LOGGER.info("Writing {} unique CKB features to {}", lines.size() - 1, eventTsv);
+        LOGGER.info("Writing {} unique CKB features to {}", lines.size() - 1, eventTsv);
         Files.write(new File(eventTsv).toPath(), lines);
     }
 }

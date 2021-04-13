@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.refseq.RefSeq;
 import com.hartwig.hmftools.common.refseq.RefSeqFile;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
-import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.iclusion.classification.IclusionClassificationConfig;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
@@ -126,7 +125,7 @@ public class ServeAlgo {
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
         List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-        List<CkbEntry> curateCKBEntries = CkbReader.filterAndCurateRelevantEntries(ckbEntries);
+        List<CkbEntry> curateCKBEntries = CkbReader.filterAndCurate(ckbEntries);
 
         EventClassifierConfig config = CkbClassificationConfig.build();
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config,

@@ -7,26 +7,27 @@ import com.google.common.annotations.VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 
 class CurationEntry {
-    @NotNull
-    private final String gene;
-    @NotNull
-    private final String name;
 
-    public CurationEntry(@NotNull final String gene, @NotNull final String name) {
-        this.gene = gene;
-        this.name = name;
+    @NotNull
+    private final String geneSymbol;
+    @NotNull
+    private final String variant;
+
+    public CurationEntry(@NotNull final String geneSymbol, @NotNull final String variant) {
+        this.geneSymbol = geneSymbol;
+        this.variant = variant;
     }
 
     @NotNull
     @VisibleForTesting
-    String gene() {
-        return gene;
+    String geneSymbol() {
+        return geneSymbol;
     }
 
     @NotNull
     @VisibleForTesting
-    String name() {
-        return name;
+    String variant() {
+        return variant;
     }
 
     @Override
@@ -38,16 +39,16 @@ class CurationEntry {
             return false;
         }
         final CurationEntry that = (CurationEntry) o;
-        return gene.equals(that.gene) && name.equals(that.name);
+        return geneSymbol.equals(that.geneSymbol) && variant.equals(that.variant);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(gene, name);
+        return Objects.hash(geneSymbol, variant);
     }
 
     @Override
     public String toString() {
-        return "CurationEntry{" + "gene='" + gene + '\'' + ", name='" + name + '\'' + '}';
+        return "CurationEntry{" + "geneSymbol='" + geneSymbol + '\'' + ", variant='" + variant + '\'' + '}';
     }
 }
