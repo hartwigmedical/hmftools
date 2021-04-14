@@ -119,7 +119,6 @@ public class ServeAlgo {
 
     @NotNull
     private ExtractionResult extractCKBKnowledge(@NotNull String ckbDir, @NotNull String refseqTsv) throws IOException {
-
         LOGGER.info("Reading ref seq matching to transcript");
         List<RefSeq> refSeqMatchFile = RefSeqFile.readingRefSeq(refseqTsv);
 
@@ -128,9 +127,8 @@ public class ServeAlgo {
         List<CkbEntry> curateCKBEntries = CkbReader.filterAndCurate(ckbEntries);
 
         EventClassifierConfig config = CkbClassificationConfig.build();
-        CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config,
-                refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB),
-                missingDoidLookup);
+        CkbExtractor extractor =
+                CkbExtractorFactory.buildCkbExtractor(config, refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB));
 
         LOGGER.info("Running CKB knowledge extraction");
         return extractor.extract(curateCKBEntries, refSeqMatchFile);

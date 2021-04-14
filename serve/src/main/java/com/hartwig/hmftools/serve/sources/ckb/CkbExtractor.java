@@ -58,42 +58,41 @@ public class CkbExtractor {
     @NotNull
     private final ActionableEvidenceFactory actionableEvidenceFactory;
 
-    public CkbExtractor(@NotNull final EventExtractor eventExtractor,
-            @NotNull final ActionableEvidenceFactory actionableEvidenceFactory) {
+    public CkbExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableEvidenceFactory actionableEvidenceFactory) {
         this.eventExtractor = eventExtractor;
         this.actionableEvidenceFactory = actionableEvidenceFactory;
     }
 
     @NotNull
-    public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries, @NotNull List<RefSeq> refSeqMatchFile) {
+    public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries, @NotNull List<RefSeq> refSeqMapping) {
         List<ExtractionResult> extractions = Lists.newArrayList();
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
         for (CkbEntry entry : ckbEntries) {
-            if (entry.variants().size() == 1) {
-                Variant variant = entry.variants().get(0);
-                String gene = EventAndGeneExtractor.extractGene(variant);
-                String event = EventAndGeneExtractor.extractEvent(variant);
-                String canonicalTranscript = extractCanonicalTranscript(variant.gene().canonicalTranscript(), refSeqMatchFile);
+            Variant variant = entry.variants().get(0);
 
-                EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, canonicalTranscript, entry.type(), event);
-                Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry);
-
-                CkbExtractorResult ckbExtractorResult = toResult(eventExtractorOutput, actionableEvents);
-
-                extractions.add(toExtractionResult(actionableEvents, ckbExtractorResult));
-                extractions.add(ImmutableExtractionResult.builder()
-                        .knownHotspots(convertToHotspots(ckbExtractorResult, entry))
-                        .knownCodons(convertToCodons(ckbExtractorResult))
-                        .knownExons(convertToExons(ckbExtractorResult))
-                        .knownCopyNumbers(convertToKnownAmpsDels(ckbExtractorResult))
-                        .knownFusionPairs(convertToKnownFusions(ckbExtractorResult))
-                        .build());
-
-                if (entry.type() == EventType.UNKNOWN) {
-                    LOGGER.warn("No event type known for '{}' on '{}'", variant.variant(), variant.gene().geneSymbol());
-                }
+            if (entry.type() == EventType.UNKNOWN) {
+                LOGGER.warn("No event type known for '{}' on '{}'", variant.variant(), variant.gene().geneSymbol());
             }
+
+            String gene = EventAndGeneExtractor.extractGene(variant);
+            String event = EventAndGeneExtractor.extractEvent(variant);
+            String ensemblTranscript = mapToEnsemblTranscript(variant.gene().canonicalTranscript(), refSeqMapping);
+
+            EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, ensemblTranscript, entry.type(), event);
+            Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry);
+
+            CkbExtractorResult ckbExtractorResult = toResult(eventExtractorOutput, actionableEvents);
+
+            extractions.add(toExtractionResult(actionableEvents, ckbExtractorResult));
+            extractions.add(ImmutableExtractionResult.builder()
+                    .knownHotspots(convertToHotspots(ckbExtractorResult, entry))
+                    .knownCodons(convertToCodons(ckbExtractorResult))
+                    .knownExons(convertToExons(ckbExtractorResult))
+                    .knownCopyNumbers(convertToKnownAmpsDels(ckbExtractorResult))
+                    .knownFusionPairs(convertToKnownFusions(ckbExtractorResult))
+                    .build());
+
             tracker.update();
         }
 
@@ -101,8 +100,8 @@ public class CkbExtractor {
     }
 
     @Nullable
-    private static String extractCanonicalTranscript(@NotNull String refseqToMatch, @NotNull List<RefSeq> refSeqMatchFile) {
-        for (RefSeq refSeq : refSeqMatchFile) {
+    private static String mapToEnsemblTranscript(@NotNull String refseqToMatch, @NotNull List<RefSeq> refSeqMappings) {
+        for (RefSeq refSeq : refSeqMappings) {
             if (refSeq.dbPrimaryAcc().equals(refseqToMatch)) {
                 return refSeq.transcriptId();
             }

@@ -20,8 +20,6 @@ import com.hartwig.hmftools.common.refseq.RefSeq;
 import com.hartwig.hmftools.common.refseq.RefSeqFile;
 import com.hartwig.hmftools.serve.ServeConfig;
 import com.hartwig.hmftools.serve.ServeLocalConfigProvider;
-import com.hartwig.hmftools.serve.curation.DoidLookup;
-import com.hartwig.hmftools.serve.curation.DoidLookupFactory;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ExtractionResultWriter;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolverFactory;
@@ -53,13 +51,10 @@ public class CkbExtractorTestApp {
             Files.createDirectory(outputPath);
         }
 
-        DoidLookup doidLookup = DoidLookupFactory.buildFromMappingTsv(config.missingDoidsMappingTsv());
-
         LOGGER.info("Reading ref seq matching to transcript from {}", config.refSeqTsv());
         List<RefSeq> refSeqMatchFile = RefSeqFile.readingRefSeq(config.refSeqTsv());
 
-        CkbExtractor extractor =
-                CkbExtractorFactory.buildCkbExtractor(CkbClassificationConfig.build(), buildRefGenomeResource(config), doidLookup);
+        CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(CkbClassificationConfig.build(), buildRefGenomeResource(config));
 
         CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(config.ckbDir());
         List<CkbEntry> allCkbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
