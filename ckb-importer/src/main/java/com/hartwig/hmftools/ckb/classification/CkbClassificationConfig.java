@@ -106,9 +106,7 @@ public class CkbClassificationConfig {
     @NotNull
     private static Map<String, Set<String>> fusionPairAndExonsPerGene() {
         Map<String, Set<String>> map = Maps.newHashMap();
-        map.put("KIT", Sets.newHashSet("exon  11 del", "exon 11"));
-        map.put("MET", Sets.newHashSet("del exon 14", "exon 14"));
-        map.put("EGFR", Sets.newHashSet("del exon 28"));
+        map.put("KIT", Sets.newHashSet("exon 11 del", "exon 11"));
 
         return map;
     }
@@ -137,7 +135,6 @@ public class CkbClassificationConfig {
         Set<String> set = Sets.newHashSet();
         set.add("inact mut");
         set.add("negative");
-        set.add("LOH");
         return set;
     }
 
