@@ -23,8 +23,8 @@ public class CkbJsonReaderTestApp {
         String ckbDir;
         Integer maxFilesToReadPerType = 10;
 
-        if (hostname.toLowerCase().contains("datastore")) {
-            ckbDir = "/data/common/dbs/ckb/210129_flex_dump";
+        if (hostname.toLowerCase().equals("datastore")) {
+            ckbDir = "/data/common/dbs/ckb/210402_flex_dump";
         } else {
             ckbDir = System.getProperty("user.home") + "/hmf/projects/serve/ckb";
         }
