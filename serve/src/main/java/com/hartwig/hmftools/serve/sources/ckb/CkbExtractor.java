@@ -19,6 +19,7 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.extraction.ActionableEventFactory;
+import com.hartwig.hmftools.serve.extraction.EventExtractor;
 import com.hartwig.hmftools.serve.extraction.EventExtractorOutput;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
@@ -53,11 +54,11 @@ public class CkbExtractor {
     private static final Logger LOGGER = LogManager.getLogger(CkbExtractor.class);
 
     @NotNull
-    private final com.hartwig.hmftools.serve.extraction.EventExtractor eventExtractor;
+    private final EventExtractor eventExtractor;
     @NotNull
     private final ActionableEvidenceFactory actionableEvidenceFactory;
 
-    public CkbExtractor(@NotNull final com.hartwig.hmftools.serve.extraction.EventExtractor eventExtractor,
+    public CkbExtractor(@NotNull final EventExtractor eventExtractor,
             @NotNull final ActionableEvidenceFactory actionableEvidenceFactory) {
         this.eventExtractor = eventExtractor;
         this.actionableEvidenceFactory = actionableEvidenceFactory;

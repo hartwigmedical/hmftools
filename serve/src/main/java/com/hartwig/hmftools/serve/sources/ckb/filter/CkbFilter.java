@@ -28,7 +28,7 @@ public class CkbFilter {
     public List<CkbEntry> run(@NotNull List<CkbEntry> ckbEntries) {
         List<CkbEntry> filteredCkbEntries = Lists.newArrayList();
         for (CkbEntry ckbEntry : ckbEntries) {
-            // Do not filter variants when in combination event.
+            // Do not filter variants when in combination event, since this might make them a non-combined event.
             if (ckbEntry.variants().size() == 1) {
                 List<Variant> filteredVariants = Lists.newArrayList();
 
@@ -36,7 +36,7 @@ public class CkbFilter {
                 if (include(variant)) {
                     filteredVariants.add(variant);
                 } else {
-                    LOGGER.info("Filtering variant '{}' on '{}'", variant.variant(), variant.gene().geneSymbol());
+                    LOGGER.debug("Filtering variant '{}' on '{}'", variant.variant(), variant.gene().geneSymbol());
                 }
 
                 if (!filteredVariants.isEmpty()) {

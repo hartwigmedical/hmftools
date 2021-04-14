@@ -19,11 +19,14 @@ public final class FilterFactory {
         // We cannot determine methylation with WGS/WTS
         VARIANT_KEYWORDS_TO_FILTER.add("hypermethylation");
 
-        // Is not clear what profile it is
+        // This is a variant which serves as a placeholder for evidence not related to any variant.
         VARIANT_KEYWORDS_TO_FILTER.add("unknown");
 
         // "Expression" is not observed on DNA level
         VARIANT_KEYWORDS_TO_FILTER.add("positive");
+
+        // We don't consider LOH a driver on its own
+        VARIANT_KEYWORDS_TO_FILTER.add("LOH");
     }
 
     private FilterFactory() {
