@@ -21,7 +21,7 @@ public final class DoidLookupFactory {
     }
 
     @NotNull
-    public static DoidLookup buildFromConfigTsv(@NotNull String configTsvPath) throws IOException {
+    public static DoidLookup buildFromMappingTsv(@NotNull String configTsvPath) throws IOException {
         Map<String, Set<String>> cancerTypeToDoidsMapping = Maps.newHashMap();
 
         List<String> lines = Files.readAllLines(new File(configTsvPath).toPath());

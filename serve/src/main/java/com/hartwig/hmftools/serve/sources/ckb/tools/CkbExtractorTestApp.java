@@ -53,7 +53,7 @@ public class CkbExtractorTestApp {
             Files.createDirectory(outputPath);
         }
 
-        DoidLookup doidLookup = DoidLookupFactory.buildFromConfigTsv(config.missingDoidsMappingTsv());
+        DoidLookup doidLookup = DoidLookupFactory.buildFromMappingTsv(config.missingDoidsMappingTsv());
 
         LOGGER.info("Reading ref seq matching to transcript from {}", config.refSeqTsv());
         List<RefSeq> refSeqMatchFile = RefSeqFile.readingRefSeq(config.refSeqTsv());

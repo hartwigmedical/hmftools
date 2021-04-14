@@ -48,7 +48,7 @@ public class IclusionExtractorTestApp {
             Files.createDirectory(outputPath);
         }
 
-        DoidLookup doidLookup = DoidLookupFactory.buildFromConfigTsv(config.missingDoidsMappingTsv());
+        DoidLookup doidLookup = DoidLookupFactory.buildFromMappingTsv(config.missingDoidsMappingTsv());
 
         IclusionExtractor extractor = IclusionExtractorFactory.buildIclusionExtractor(IclusionClassificationConfig.build(),
                 buildRefGenomeResource(config),

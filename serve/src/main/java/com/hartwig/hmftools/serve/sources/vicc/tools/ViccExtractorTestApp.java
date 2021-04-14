@@ -55,7 +55,7 @@ public class ViccExtractorTestApp {
             Files.createDirectory(outputPath);
         }
 
-        DoidLookup doidLookup = DoidLookupFactory.buildFromConfigTsv(config.missingDoidsMappingTsv());
+        DoidLookup doidLookup = DoidLookupFactory.buildFromMappingTsv(config.missingDoidsMappingTsv());
         ViccExtractor viccExtractor =
                 ViccExtractorFactory.buildViccExtractor(ViccClassificationConfig.build(), buildRefGenomeResource(config), doidLookup);
 

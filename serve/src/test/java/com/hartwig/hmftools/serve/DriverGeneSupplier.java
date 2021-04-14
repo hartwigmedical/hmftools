@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.drivercatalog;
+package com.hartwig.hmftools.serve;
 
 import java.util.List;
 
@@ -10,7 +10,10 @@ import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DriverGeneSupplier {
+public final class DriverGeneSupplier {
+
+    private DriverGeneSupplier() {
+    }
 
     @NotNull
     public static List<DriverGene> createDriverGenes(@NotNull String geneTsg, @NotNull String geneOnco) {

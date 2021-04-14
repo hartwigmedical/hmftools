@@ -15,7 +15,7 @@ public class DoidLookupFactoryTest {
 
     @Test
     public void canCreateFromTestResource() throws IOException {
-        DoidLookup doidLookup = DoidLookupFactory.buildFromConfigTsv(EXAMPLE_TSV);
+        DoidLookup doidLookup = DoidLookupFactory.buildFromMappingTsv(EXAMPLE_TSV);
 
         assertEquals(2, doidLookup.cancerTypeToDoidsMapping().size());
         assertEquals(Sets.newHashSet("0123", "0124"), doidLookup.cancerTypeToDoidsMapping().get("cancerA"));
