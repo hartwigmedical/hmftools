@@ -5,6 +5,7 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed
 import com.hartwig.hmftools.common.utils.SuffixTree
 import com.hartwig.hmftools.lilac.LociPosition
 import com.hartwig.hmftools.lilac.read.AminoAcidIndices
+import com.hartwig.hmftools.lilac.sam.Indel
 import com.hartwig.hmftools.lilac.sam.SAMCodingRecord
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 
@@ -19,6 +20,8 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
             val codons = Codons.codons(aminoAcid);
             return listOf(codons[0].toString(), codons[1].toString(), codons.substring(2))
         }
+
+        val STOP_LOSS_ON_C = Indel("6", 31237115, "CN", "C")
     }
 
     private val insertSuffixTrees = inserts.map { Pair(it, SuffixTree(it.sequence())) }.toMap()
@@ -32,7 +35,7 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
             return null
         }
 
-        return all.reduce {x,y -> NucleotideFragment.merge(x,y)}
+        return all.reduce { x, y -> NucleotideFragment.merge(x, y) }
     }
 
     fun createFragment(samCoding: SAMCodingRecord, codingRegion: NamedBed): NucleotideFragment? {
@@ -58,9 +61,7 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
                 if (matchingInserts.isNotEmpty()) {
                     val best = matchingInserts[0]
                     val result = createNucleotideSequence(samCoding.id, codingRegion, best.second[0], aminoAcids, best.first)
-                    if (result.containsIndel()) {
-                        return result
-                    }
+                    return result
                 }
 
                 val matchingDeletes = deleteSuffixTrees
@@ -70,9 +71,7 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
                 if (matchingDeletes.isNotEmpty()) {
                     val best = matchingDeletes[0]
                     val result = createNucleotideSequence(samCoding.id, codingRegion, best.second[0], aminoAcids, best.first)
-                    if (result.containsIndel()) {
-                        return result
-                    }
+                    return result
                 }
             }
 
