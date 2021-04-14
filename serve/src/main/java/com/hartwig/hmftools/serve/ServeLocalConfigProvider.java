@@ -49,7 +49,6 @@ public final class ServeLocalConfigProvider {
             builder.refGenome38FastaFile(
                     "/data/common/refgenomes/Homo_sapiens.GRCh38.no.alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
             builder.refSeqTsv("/data/common/dbs/serve/static_sources/refseq/refseq_to_canonicalTranscript.tsv");
-
         } else {
             builder.viccJson(System.getProperty("user.home") + "/hmf/projects/serve/static_sources/vicc/all.json");
             builder.ckbDir(System.getProperty("user.home") + "/hmf/projects/serve/ckb");
