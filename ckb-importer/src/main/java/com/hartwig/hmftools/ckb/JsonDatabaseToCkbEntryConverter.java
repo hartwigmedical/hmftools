@@ -15,7 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class JsonDatabaseToCkbEntryConverter {
+final class JsonDatabaseToCkbEntryConverter {
 
     private static final Logger LOGGER = LogManager.getLogger(JsonDatabaseToCkbEntryConverter.class);
 

@@ -6,11 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.JsonDatabaseToCkbEntryConverter;
 import com.hartwig.hmftools.ckb.classification.CkbClassificationConfig;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
-import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
-import com.hartwig.hmftools.ckb.json.CkbJsonReader;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
@@ -52,18 +49,16 @@ public class CkbExtractorTestApp {
         }
 
         LOGGER.info("Reading ref seq matching to transcript from {}", config.refSeqTsv());
-        List<RefSeq> refSeqMatchFile = RefSeqFile.readingRefSeq(config.refSeqTsv());
+        List<RefSeq> refSeqMappings = RefSeqFile.readingRefSeq(config.refSeqTsv());
 
-        CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(CkbClassificationConfig.build(), buildRefGenomeResource(config));
+        CkbExtractor extractor =
+                CkbExtractorFactory.buildCkbExtractor(CkbClassificationConfig.build(), buildRefGenomeResource(config), refSeqMappings);
 
-        CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(config.ckbDir());
-        List<CkbEntry> allCkbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-
-        List<CkbEntry> curatedEntries = CkbReader.filterAndCurate(allCkbEntries);
-        ExtractionResult result = extractor.extract(curatedEntries, refSeqMatchFile);
+        List<CkbEntry> entries = CkbReader.readAndCurate(config.ckbDir());
+        ExtractionResult result = extractor.extract(entries);
 
         String eventsTsv = config.outputDir() + File.separator + "CkbEvents.tsv";
-        CkbUtils.writeEventsToTsv(eventsTsv, curatedEntries);
+        CkbUtils.writeEventsToTsv(eventsTsv, entries);
         CkbUtils.printExtractionResults(result);
 
         new ExtractionResultWriter(config.outputDir(), RefGenomeVersion.V38).write(result);

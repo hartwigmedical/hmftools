@@ -5,11 +5,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.JsonDatabaseToCkbEntryConverter;
 import com.hartwig.hmftools.ckb.classification.CkbClassificationConfig;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
-import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
-import com.hartwig.hmftools.ckb.json.CkbJsonReader;
 import com.hartwig.hmftools.common.refseq.RefSeq;
 import com.hartwig.hmftools.common.refseq.RefSeqFile;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
@@ -69,7 +66,7 @@ public class ServeAlgo {
         }
 
         if (config.useCkb()) {
-            extractions.add(extractCKBKnowledge(config.ckbDir(), config.refSeqTsv()));
+            extractions.add(extractCkbKnowledge(config.ckbDir(), config.refSeqTsv()));
         }
 
         if (config.useDocm()) {
@@ -118,20 +115,19 @@ public class ServeAlgo {
     }
 
     @NotNull
-    private ExtractionResult extractCKBKnowledge(@NotNull String ckbDir, @NotNull String refseqTsv) throws IOException {
+    private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir, @NotNull String refseqTsv) throws IOException {
         LOGGER.info("Reading ref seq matching to transcript");
-        List<RefSeq> refSeqMatchFile = RefSeqFile.readingRefSeq(refseqTsv);
+        List<RefSeq> refSeqMappings = RefSeqFile.readingRefSeq(refseqTsv);
 
-        CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
-        List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-        List<CkbEntry> curateCKBEntries = CkbReader.filterAndCurate(ckbEntries);
+        List<CkbEntry> ckbEntries = CkbReader.readAndCurate(ckbDir);
 
         EventClassifierConfig config = CkbClassificationConfig.build();
-        CkbExtractor extractor =
-                CkbExtractorFactory.buildCkbExtractor(config, refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB));
+        CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config,
+                refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB),
+                refSeqMappings);
 
         LOGGER.info("Running CKB knowledge extraction");
-        return extractor.extract(curateCKBEntries, refSeqMatchFile);
+        return extractor.extract(ckbEntries);
     }
 
     @NotNull

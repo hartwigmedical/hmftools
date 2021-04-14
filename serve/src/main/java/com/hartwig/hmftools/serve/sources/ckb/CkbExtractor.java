@@ -57,14 +57,18 @@ public class CkbExtractor {
     private final EventExtractor eventExtractor;
     @NotNull
     private final ActionableEvidenceFactory actionableEvidenceFactory;
+    @NotNull
+    private final List<RefSeq> refSeqMappings;
 
-    public CkbExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableEvidenceFactory actionableEvidenceFactory) {
+    public CkbExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableEvidenceFactory actionableEvidenceFactory,
+            @NotNull final List<RefSeq> refSeqMappings) {
         this.eventExtractor = eventExtractor;
         this.actionableEvidenceFactory = actionableEvidenceFactory;
+        this.refSeqMappings = refSeqMappings;
     }
 
     @NotNull
-    public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries, @NotNull List<RefSeq> refSeqMapping) {
+    public ExtractionResult extract(@NotNull List<CkbEntry> ckbEntries) {
         List<ExtractionResult> extractions = Lists.newArrayList();
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
@@ -77,7 +81,7 @@ public class CkbExtractor {
 
             String gene = EventAndGeneExtractor.extractGene(variant);
             String event = EventAndGeneExtractor.extractEvent(variant);
-            String transcript = mapToEnsemblTranscript(variant.gene().canonicalTranscript(), refSeqMapping);
+            String transcript = mapToEnsemblTranscript(variant.gene().canonicalTranscript());
 
             EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event);
             Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry);
@@ -91,7 +95,7 @@ public class CkbExtractor {
     }
 
     @Nullable
-    private static String mapToEnsemblTranscript(@Nullable String refseqToMatch, @NotNull List<RefSeq> refSeqMappings) {
+    private String mapToEnsemblTranscript(@Nullable String refseqToMatch) {
         if (refseqToMatch == null) {
             return null;
         }

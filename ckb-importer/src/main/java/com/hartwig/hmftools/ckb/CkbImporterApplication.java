@@ -6,8 +6,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.ckb.dao.CkbDAO;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
-import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
-import com.hartwig.hmftools.ckb.json.CkbJsonReader;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -36,8 +34,7 @@ public class CkbImporterApplication {
             System.exit(1);
         }
 
-        CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(config.cbkDir());
-        List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
+        List<CkbEntry> ckbEntries = CkbEntryReader.read(config.cbkDir());
 
         updateCkbSqlDatabase(config, ckbEntries);
 

@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.serve.sources.ckb;
 
+import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.ckb.CkbEntryReader;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.serve.sources.ckb.curation.CkbCurator;
 import com.hartwig.hmftools.serve.sources.ckb.filter.CkbFilter;
@@ -18,7 +20,8 @@ public final class CkbReader {
     }
 
     @NotNull
-    public static List<CkbEntry> filterAndCurate(@NotNull List<CkbEntry> ckbEntries) {
+    public static List<CkbEntry> readAndCurate(@NotNull String ckbDir) throws IOException {
+        List<CkbEntry> ckbEntries = CkbEntryReader.read(ckbDir);
         return filter(curate(ckbEntries));
     }
 

@@ -23,7 +23,6 @@ public interface CkbImporterConfig {
     String DB_URL = "db_url";
 
     String SKIP_DATABASE_WRITING = "skip_database_writing";
-
     String LOG_DEBUG = "log_debug";
 
     @NotNull
@@ -37,7 +36,7 @@ public interface CkbImporterConfig {
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
 
-        options.addOption(SKIP_DATABASE_WRITING, false, "If this flag is set to true, we skip the writing to the database");
+        options.addOption(SKIP_DATABASE_WRITING, false, "If this flag is set, we skip writing to the database");
 
         return options;
     }
