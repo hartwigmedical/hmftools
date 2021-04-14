@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.refseq.RefSeq;
-import com.hartwig.hmftools.common.refseq.RefSeqFile;
 import com.hartwig.hmftools.serve.ServeConfig;
 import com.hartwig.hmftools.serve.ServeLocalConfigProvider;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
@@ -27,6 +26,7 @@ import com.hartwig.hmftools.serve.sources.ckb.CkbExtractorFactory;
 import com.hartwig.hmftools.serve.sources.ckb.CkbReader;
 import com.hartwig.hmftools.serve.sources.ckb.CkbUtils;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,8 +48,10 @@ public class CkbExtractorTestApp {
             Files.createDirectory(outputPath);
         }
 
-        LOGGER.info("Reading ref seq matching to transcript from {}", config.refSeqTsv());
-        List<RefSeq> refSeqMappings = RefSeqFile.readingRefSeq(config.refSeqTsv());
+        // TODO Replace by reading from resource
+        // LOGGER.info("Reading ref seq matching to transcript from {}", config.refSeqTsv());
+        // List<RefSeq> refSeqMappings = RefSeqFile.readingRefSeq(config.refSeqTsv());
+        List<RefSeq> refSeqMappings = Lists.newArrayList();
 
         CkbExtractor extractor =
                 CkbExtractorFactory.buildCkbExtractor(CkbClassificationConfig.build(), buildRefGenomeResource(config), refSeqMappings);

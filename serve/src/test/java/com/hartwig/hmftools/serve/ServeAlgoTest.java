@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.serve;
 
-import static org.junit.Assert.assertNotNull;
-
 import java.io.IOException;
 
 import com.google.common.io.Resources;
@@ -48,7 +46,6 @@ public class ServeAlgoTest {
                 .hartwigCohortTsv(HARTWIG_COHORT_TSV)
                 .useHartwigCurated(true)
                 .hartwigCuratedTsv(HARTWIG_CURATED_TSV)
-                .refSeqTsv("") //TODO: generatore file
                 .refGenome37FastaFile(REF_GENOME_37_FASTA_FILE)
                 .refGenome38FastaFile(REF_GENOME_38_FASTA_FILE)
                 .refGenome37To38Chain(REF_GENOME_37_TO_38_CHAIN)

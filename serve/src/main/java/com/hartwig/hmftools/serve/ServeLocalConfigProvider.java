@@ -49,7 +49,6 @@ public final class ServeLocalConfigProvider {
                     "/data/common/refgenomes/Homo_sapiens.GRCh38.no.alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
             builder.refGenome37To38Chain("/data/common/refgenomes/liftover/hg19ToHg38.over.chain");
             builder.refGenome38To37Chain("/data/common/refgenomes/liftover/hg38ToHg19.over.chain");
-            builder.refSeqTsv("/data/common/dbs/serve/static_sources/refseq/refseq_to_canonicalTranscript.tsv");
         } else {
             // Assume we run on local machine with fixed paths
             builder.viccJson(System.getProperty("user.home") + "/hmf/projects/serve/static_sources/vicc/all.json");
@@ -68,8 +67,6 @@ public final class ServeLocalConfigProvider {
                     System.getProperty("user.home") + "/hmf/refgenomes/grch38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
             builder.refGenome37To38Chain(System.getProperty("user.home") + "/hmf/refgenomes/liftover/hg19ToHg38.over.chain");
             builder.refGenome38To37Chain(System.getProperty("user.home") + "/hmf/refgenomes/liftover/hg38ToHg19.over.chain");
-            builder.refSeqTsv(
-                    System.getProperty("user.home") + "/hmf/projects/serve/static_sources/refseq/refseq_to_canonicalTranscript.tsv");
         }
 
         return builder.build();

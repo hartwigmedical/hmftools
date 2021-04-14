@@ -40,8 +40,6 @@ public interface ServeConfig {
     String USE_HARTWIG_CURATED = "use_hartwig_curated";
     String HARTWIG_CURATED_TSV = "hartwig_curated_tsv";
 
-    String REFSEQ_TSV = "refseq_tsv";
-
     // Config for curation of evidence
     String MISSING_DOIDS_MAPPING_TSV = "missing_doids_mapping_tsv";
 
@@ -81,8 +79,6 @@ public interface ServeConfig {
         options.addOption(HARTWIG_CURATED_TSV, true, "Path to the Hartwig Curated input TSV");
 
         options.addOption(MISSING_DOIDS_MAPPING_TSV, true, "Path to the mapping TSV containing entries for missing DOIDs");
-
-        options.addOption(REFSEQ_TSV, true, "Path to the refseq TSV containing mapping refseq to transcript ID");
 
         options.addOption(REF_GENOME_37_FASTA_FILE, true, "Path to the V37 ref genome fasta file");
         options.addOption(REF_GENOME_38_FASTA_FILE, true, "Path to the V38 ref genome fasta file");
@@ -138,9 +134,6 @@ public interface ServeConfig {
     String missingDoidsMappingTsv();
 
     @NotNull
-    String refSeqTsv();
-
-    @NotNull
     String refGenome37FastaFile();
 
     @NotNull
@@ -178,7 +171,7 @@ public interface ServeConfig {
 
         boolean useVicc = cmd.hasOption(USE_VICC);
         boolean useIclusion = cmd.hasOption(USE_ICLUSION);
-        boolean useCKB = cmd.hasOption(USE_CKB);
+        boolean useCkb = cmd.hasOption(USE_CKB);
         boolean useDocm = cmd.hasOption(USE_DOCM);
         boolean useHartwigCohort = cmd.hasOption(USE_HARTWIG_COHORT);
         boolean useHartwigCurated = cmd.hasOption(USE_HARTWIG_CURATED);
@@ -189,8 +182,8 @@ public interface ServeConfig {
                 .viccSources(useVicc ? readViccSources(cmd) : Sets.newHashSet())
                 .useIclusion(useIclusion)
                 .iClusionTrialTsv(useIclusion ? nonOptionalFile(cmd, ICLUSION_TRIAL_TSV) : NOT_APPLICABLE)
-                .useCkb(useCKB)
-                .ckbDir(useCKB ? nonOptionalDir(cmd, CKB_DIR) : NOT_APPLICABLE)
+                .useCkb(useCkb)
+                .ckbDir(useCkb ? nonOptionalDir(cmd, CKB_DIR) : NOT_APPLICABLE)
                 .useDocm(useDocm)
                 .docmTsv(useDocm ? nonOptionalFile(cmd, DOCM_TSV) : NOT_APPLICABLE)
                 .useHartwigCohort(useHartwigCohort)
@@ -198,7 +191,6 @@ public interface ServeConfig {
                 .useHartwigCurated(useHartwigCurated)
                 .hartwigCuratedTsv(useHartwigCurated ? nonOptionalFile(cmd, HARTWIG_CURATED_TSV) : NOT_APPLICABLE)
                 .missingDoidsMappingTsv(nonOptionalFile(cmd, MISSING_DOIDS_MAPPING_TSV))
-                .refSeqTsv(nonOptionalFile(cmd, REFSEQ_TSV))
                 .refGenome37FastaFile(nonOptionalFile(cmd, REF_GENOME_37_FASTA_FILE))
                 .refGenome38FastaFile(nonOptionalFile(cmd, REF_GENOME_38_FASTA_FILE))
                 .refGenome37To38Chain(nonOptionalFile(cmd, REF_GENOME_37_TO_38_CHAIN))
