@@ -35,7 +35,7 @@ public final class ServeLocalConfigProvider {
                 .skipHotspotResolving(true);
 
         if (hostname.toLowerCase().contains("datastore")) {
-            builder.viccJson("/data/common/dbs/serve/vicc/all.json");
+            builder.viccJson("/data/common/dbs/serve/static_sources/vicc/all.json");
             builder.ckbDir("/data/common/dbs/ckb/210402_flex_dump");
             builder.iClusionTrialTsv("/data/common/dbs/iclusion/iclusion_trials_prod.tsv");
 
