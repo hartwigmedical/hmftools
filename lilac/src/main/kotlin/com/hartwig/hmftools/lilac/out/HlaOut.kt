@@ -16,7 +16,6 @@ data class HlaOut(val referenceCoverage: HlaComplexCoverage, val tumorCoverage: 
             val sortedCodingCount = somaticCodingCount.sortedBy { it.allele }
 
             require(sortedCopyNumber.size == somaticCodingCount.size)
-            require(referenceCoverage.alleleCoverage.size == tumorCoverage.alleleCoverage.size)
             require(referenceCoverage.alleleCoverage.size == sortedCopyNumber.size)
 
             return HlaOut(referenceCoverage, tumorCoverage, sortedCopyNumber, sortedCodingCount)
