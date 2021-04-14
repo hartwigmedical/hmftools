@@ -30,8 +30,6 @@ public final class ServeLocalConfigProvider {
                 .hartwigCuratedTsv(Strings.EMPTY)
                 .useHartwigCohort(false)
                 .hartwigCohortTsv(Strings.EMPTY)
-                .refGenome37To38Chain(Strings.EMPTY)
-                .refGenome38To37Chain(Strings.EMPTY)
                 .skipHotspotResolving(true);
 
         // Datastore is a shared vm with fixed paths.
@@ -49,6 +47,8 @@ public final class ServeLocalConfigProvider {
             builder.refGenome37FastaFile("/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta");
             builder.refGenome38FastaFile(
                     "/data/common/refgenomes/Homo_sapiens.GRCh38.no.alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
+            builder.refGenome37To38Chain("/data/common/refgenomes/liftover/hg19ToHg38.over.chain");
+            builder.refGenome38To37Chain("/data/common/refgenomes/liftover/hg38ToHg19.over.chain");
             builder.refSeqTsv("/data/common/dbs/serve/static_sources/refseq/refseq_to_canonicalTranscript.tsv");
         } else {
             // Assume we run on local machine with fixed paths
@@ -62,8 +62,12 @@ public final class ServeLocalConfigProvider {
             builder.driverGene38Tsv(System.getProperty("user.home") + "/hmf/projects/driver_gene_panel/DriverGenePanel.38.tsv");
             builder.knownFusion37File(System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.37_v3.csv");
             builder.knownFusion38File(System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.38_v3.csv");
-            builder.refGenome37FastaFile(Strings.EMPTY);
-            builder.refGenome38FastaFile(Strings.EMPTY);
+            builder.refGenome37FastaFile(System.getProperty("user.home")
+                    + "/hmf/refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta");
+            builder.refGenome38FastaFile(
+                    System.getProperty("user.home") + "/hmf/refgenomes/grch38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
+            builder.refGenome37To38Chain(System.getProperty("user.home") + "/hmf/refgenomes/liftover/hg19ToHg38.over.chain");
+            builder.refGenome38To37Chain(System.getProperty("user.home") + "/hmf/refgenomes/liftover/hg38ToHg19.over.chain");
             builder.refSeqTsv(
                     System.getProperty("user.home") + "/hmf/projects/serve/static_sources/refseq/refseq_to_canonicalTranscript.tsv");
         }
