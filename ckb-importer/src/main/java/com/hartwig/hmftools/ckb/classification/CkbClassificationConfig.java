@@ -213,7 +213,7 @@ public class CkbClassificationConfig {
     private static Set<String> microsatelliteStableEvents() {
         Set<String> set = Sets.newHashSet();
         set.add("MSI low");
-        set.add("MSI negative");
+        set.add("MSI neg");
         return set;
     }
 

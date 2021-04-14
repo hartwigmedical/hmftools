@@ -14,7 +14,7 @@ public class CurationFactory {
     static {
         VARIANT_MAPPINGS.put(new CurationEntry("MSI", "high"), new CurationEntry("-", "MSI high"));
         VARIANT_MAPPINGS.put(new CurationEntry("MSI", "low"), new CurationEntry("-", "MSI low"));
-        VARIANT_MAPPINGS.put(new CurationEntry("MSI", "negative"), new CurationEntry("-", "MSI negative"));
+        VARIANT_MAPPINGS.put(new CurationEntry("MSI", "negative"), new CurationEntry("-", "MSI neg"));
         VARIANT_MAPPINGS.put(new CurationEntry("TMB", "high"), new CurationEntry("-", "TMB high"));
         VARIANT_MAPPINGS.put(new CurationEntry("TMB", "low"), new CurationEntry("-", "TMB low"));
     }
