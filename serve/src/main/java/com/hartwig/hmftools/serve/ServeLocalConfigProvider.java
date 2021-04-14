@@ -34,7 +34,8 @@ public final class ServeLocalConfigProvider {
                 .refGenome38To37Chain(Strings.EMPTY)
                 .skipHotspotResolving(true);
 
-        if (hostname.toLowerCase().contains("datastore")) {
+        // Datastore is a shared vm with fixed paths.
+        if (hostname.toLowerCase().equals("datastore")) {
             builder.viccJson("/data/common/dbs/serve/static_sources/vicc/all.json");
             builder.ckbDir("/data/common/dbs/ckb/210402_flex_dump");
             builder.iClusionTrialTsv("/data/common/dbs/iclusion/iclusion_trials_prod.tsv");
@@ -50,6 +51,7 @@ public final class ServeLocalConfigProvider {
                     "/data/common/refgenomes/Homo_sapiens.GRCh38.no.alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
             builder.refSeqTsv("/data/common/dbs/serve/static_sources/refseq/refseq_to_canonicalTranscript.tsv");
         } else {
+            // Assume we run on local machine with fixed paths
             builder.viccJson(System.getProperty("user.home") + "/hmf/projects/serve/static_sources/vicc/all.json");
             builder.ckbDir(System.getProperty("user.home") + "/hmf/projects/serve/ckb");
             builder.iClusionTrialTsv(System.getProperty("user.home") + "/hmf/projects/serve/iclusion/iclusion_trials_prod.tsv");
