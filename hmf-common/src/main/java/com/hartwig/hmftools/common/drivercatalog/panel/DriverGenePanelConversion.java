@@ -93,19 +93,23 @@ public class DriverGenePanelConversion {
     }
 
     public void process(@NotNull RefGenomeVersion refGenomeVersion, @NotNull List<DriverGene> driverGenes) throws IOException {
+
+        final String genePanelDir = outputDir + "/gene_panel/" + (refGenomeVersion.is37() ? "37/" : "38/");
+        final String sageDir = outputDir + "/sage/" + (refGenomeVersion.is37() ? "37/" : "38/");
+
         String qualityBedFile = getResourceURL(refGenomeVersion.addVersionToFilePath("/drivercatalog/QualityRecalibration.bed"));
         Collection<GenomeRegion> qualityRecalibrationRegions = BEDFileLoader.fromBedFile(qualityBedFile).values();
 
         String clinvarFile = refGenomeVersion == RefGenomeVersion.V37 ? clinvar37Vcf : clinvar38Vcf;
         LOGGER.info(" Located clinvar file for {} at {}", refGenomeVersion, clinvarFile);
 
-        String driverGeneFile = refGenomeVersion.addVersionToFilePath(outputDir + "/DriverGenePanel.tsv");
-        String somaticCodingWithoutUtr = refGenomeVersion.addVersionToFilePath(outputDir + "/ActionableCodingPanel.somatic.bed");
-        String germlineCodingWithUtr = refGenomeVersion.addVersionToFilePath(outputDir + "/ActionableCodingPanel.germline.bed");
-        String germlineCodingWithoutUtr = refGenomeVersion.addVersionToFilePath(outputDir + "/CoverageCodingPanel.germline.bed");
-        String germlineHotspotFile = refGenomeVersion.addVersionToFilePath(outputDir + "/KnownHotspots.germline.vcf.gz");
-        String germlineSliceFile = refGenomeVersion.addVersionToFilePath(outputDir + "/SlicePanel.germline.bed");
-        String germlineBlacklistFile = refGenomeVersion.addVersionToFilePath(outputDir + "/KnownBlacklist.germline.vcf.gz");
+        String driverGeneFile = refGenomeVersion.addVersionToFilePath(genePanelDir + "/DriverGenePanel.tsv");
+        String somaticCodingWithoutUtr = refGenomeVersion.addVersionToFilePath(sageDir + "/ActionableCodingPanel.somatic.bed.gz");
+        String germlineCodingWithUtr = refGenomeVersion.addVersionToFilePath(sageDir + "/ActionableCodingPanel.germline.bed.gz");
+        String germlineCodingWithoutUtr = refGenomeVersion.addVersionToFilePath(sageDir + "/CoverageCodingPanel.germline.bed.gz");
+        String germlineHotspotFile = refGenomeVersion.addVersionToFilePath(sageDir + "/KnownHotspots.germline.vcf.gz");
+        String germlineSliceFile = refGenomeVersion.addVersionToFilePath(sageDir + "/SlicePanel.germline.bed.gz");
+        String germlineBlacklistFile = refGenomeVersion.addVersionToFilePath(sageDir + "/KnownBlacklist.germline.vcf.gz");
 
         Collections.sort(driverGenes);
 
