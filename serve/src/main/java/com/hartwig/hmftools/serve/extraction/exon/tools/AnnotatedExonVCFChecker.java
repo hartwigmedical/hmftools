@@ -50,7 +50,7 @@ public class AnnotatedExonVCFChecker {
             int inputExonId = Integer.parseInt(inputParts[2]);
 
             List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
-            if (determineMatch(inputGene, inputTranscript, inputExonId, annotations)) {
+            if (isMatch(inputGene, inputTranscript, inputExonId, annotations)) {
                 matchCount++;
             } else {
                 diffCount++;
@@ -70,7 +70,7 @@ public class AnnotatedExonVCFChecker {
         return null;
     }
 
-    private static boolean determineMatch(@NotNull String inputGene, @Nullable String inputTranscript, int inputExonId,
+    private static boolean isMatch(@NotNull String inputGene, @Nullable String inputTranscript, int inputExonId,
             @NotNull List<SnpEffAnnotation> annotations) {
         if (inputTranscript != null) {
             SnpEffAnnotation annotation = annotationForTranscript(annotations, inputTranscript);

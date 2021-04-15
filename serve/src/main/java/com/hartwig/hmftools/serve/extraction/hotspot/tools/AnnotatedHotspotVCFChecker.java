@@ -298,8 +298,6 @@ public class AnnotatedHotspotVCFChecker {
         return map;
     }
 
-
-
     @NotNull
     private static Map<String, List<String>> createNOTCH1Map() {
         Map<String, List<String>> map = Maps.newHashMap();
