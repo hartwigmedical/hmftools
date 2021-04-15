@@ -8,9 +8,10 @@ In addition, SERVE generates output containing all genomic events that are impli
 
 * [Which knowledgebases are supported?](#supported-input-knowledgebases)
 * [What is generated as final SERVE output?](#outputs)
-* [How are genomic events extracted from the source knowledgebases?](#Extraction of genomic events and characteristics from knowledgebases)
+* [How are genomic events extracted from the source knowledgebases?](#extraction-of-genomic-events-and-characteristics-from-knowledgebases)
 * [What is done in terms of curation and harmonization?](#curation-and-harmonization-of-individual-knowledgebases)
 * [How does everything come together?](#overview-of-the-serve-algorithm)
+* [Version history and download links](#version-history-and-download-links)
 
 ## Supported input knowledgebases
 
@@ -247,3 +248,16 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   [SAGE](../sage/README.md) as the definition of the highest tier of calling.
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
+## Version History and Download Links
+Upcoming
+  - Always pick the same transcript for hotspot annotation in case multiple transcripts imply the same hotspot.
+  - Extend splice sites from 5 bases to 10 bases beyond exon boundaries.
+  - Add support for evidence for actionable viral presence (starting with EBV and HPV presence)
+  - Add support for evidence of absence of high TMB and MSI
+  - Renamed actionable signatures to actionable characteristics.
+- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.1) 
+  - Ability to switch every resource on/off independently
+  - More predictable sorting of knowledge to ensure identical output on identical input
+  - Ability to curate VICC evidence levels in case they are suspicious
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.0)
+ - Initial release
