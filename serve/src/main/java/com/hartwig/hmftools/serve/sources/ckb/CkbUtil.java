@@ -19,12 +19,12 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class CkbUtils {
+public final class CkbUtil {
 
-    private static final Logger LOGGER = LogManager.getLogger(CkbUtils.class);
+    private static final Logger LOGGER = LogManager.getLogger(CkbUtil.class);
     private static final String FIELD_DELIMITER = "\t";
 
-    private CkbUtils() {
+    private CkbUtil() {
     }
 
     public static void printExtractionResults(@NotNull ExtractionResult result) {

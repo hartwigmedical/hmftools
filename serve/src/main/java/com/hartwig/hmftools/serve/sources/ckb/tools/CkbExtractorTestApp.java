@@ -24,7 +24,7 @@ import com.hartwig.hmftools.serve.refgenome.RefGenomeResource;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractor;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractorFactory;
 import com.hartwig.hmftools.serve.sources.ckb.CkbReader;
-import com.hartwig.hmftools.serve.sources.ckb.CkbUtils;
+import com.hartwig.hmftools.serve.sources.ckb.CkbUtil;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.Level;
@@ -60,8 +60,8 @@ public class CkbExtractorTestApp {
         ExtractionResult result = extractor.extract(entries);
 
         String eventsTsv = config.outputDir() + File.separator + "CkbEvents.tsv";
-        CkbUtils.writeEventsToTsv(eventsTsv, entries);
-        CkbUtils.printExtractionResults(result);
+        CkbUtil.writeEventsToTsv(eventsTsv, entries);
+        CkbUtil.printExtractionResults(result);
 
         new ExtractionResultWriter(config.outputDir(), RefGenomeVersion.V38).write(result);
     }
