@@ -9,6 +9,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.protect.germline.GermlineReportingEntry;
+import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -19,34 +21,47 @@ public final class ReportableVariantFactory {
 
     @NotNull
     public static List<ReportableVariant> reportableGermlineVariants(@NotNull List<SomaticVariant> variants,
-            @NotNull List<DriverCatalog> germlineDriverCatalog) {
-        return reportableVariants(variants, germlineDriverCatalog, ReportableVariantSource.GERMLINE);
+            @NotNull List<DriverCatalog> germlineDriverCatalog, @NotNull GermlineReportingModel germlineReportingModel) {
+        return reportableVariants(variants, germlineDriverCatalog, ReportableVariantSource.GERMLINE, germlineReportingModel);
     }
 
     @NotNull
     public static List<ReportableVariant> reportableSomaticVariants(@NotNull List<SomaticVariant> variants,
-            @NotNull List<DriverCatalog> somaticDriverCatalog) {
+            @NotNull List<DriverCatalog> somaticDriverCatalog, @NotNull GermlineReportingModel germlineReportingModel) {
         List<DriverCatalog> somaticMutationCatalog =
                 somaticDriverCatalog.stream().filter(x -> x.driver() == DriverType.MUTATION).collect(Collectors.toList());
-        return reportableVariants(variants, somaticMutationCatalog, ReportableVariantSource.SOMATIC);
+        return reportableVariants(variants, somaticMutationCatalog, ReportableVariantSource.SOMATIC, germlineReportingModel);
     }
 
     @NotNull
     private static List<ReportableVariant> reportableVariants(@NotNull List<SomaticVariant> variants,
-            @NotNull List<DriverCatalog> driverCatalog, @NotNull ReportableVariantSource source) {
+            @NotNull List<DriverCatalog> driverCatalog, @NotNull ReportableVariantSource source, @NotNull GermlineReportingModel germlineReportingModel) {
         Map<String, DriverCatalog> geneDriverMap = driverCatalog.stream().collect(Collectors.toMap(DriverCatalog::gene, x -> x));
 
         List<ReportableVariant> result = Lists.newArrayList();
         for (SomaticVariant variant : variants) {
             if (variant.reported()) {
-                DriverCatalog geneDriver = geneDriverMap.get(variant.gene());
-
-                if (geneDriver == null) {
-                    throw new IllegalStateException("Could not find driver entry for variant on gene '" + variant.gene() + "'");
+                boolean includeVariant = true;
+                if (source == ReportableVariantSource.GERMLINE) {
+                    GermlineReportingEntry reportingEntry = germlineReportingModel.entryForGene(variant.gene());
+                    if (reportingEntry != null) {
+                        String exclusiveHgvsProteinFilter = reportingEntry.exclusiveHgvsProteinFilter();
+                        if (exclusiveHgvsProteinFilter != null) {
+                            includeVariant = variant.canonicalHgvsProteinImpact().equals(exclusiveHgvsProteinFilter);
+                        }
+                    }
                 }
 
-                ReportableVariant reportable = fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood()).build();
-                result.add(reportable);
+                if (includeVariant) {
+                    DriverCatalog geneDriver = geneDriverMap.get(variant.gene());
+
+                    if (geneDriver == null) {
+                        throw new IllegalStateException("Could not find driver entry for variant on gene '" + variant.gene() + "'");
+                    }
+
+                    ReportableVariant reportable = fromVariant(variant, source).driverLikelihood(geneDriver.driverLikelihood()).build();
+                    result.add(reportable);
+                }
             }
         }
 

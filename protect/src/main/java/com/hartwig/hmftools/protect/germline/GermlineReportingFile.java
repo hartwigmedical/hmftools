@@ -29,7 +29,6 @@ public final class GermlineReportingFile {
             germlineReportingEntries.add(ImmutableGermlineReportingEntry.builder()
                     .gene(parts[0])
                     .notifyClinicalGeneticist(Boolean.parseBoolean(parts[1]))
-                    .reportBiallelicOnly(parts[2].equalsIgnoreCase("Biallelic"))
                     .exclusiveHgvsProteinFilter(parts.length > 3 ? parts[3] : null)
                     .build());
         }

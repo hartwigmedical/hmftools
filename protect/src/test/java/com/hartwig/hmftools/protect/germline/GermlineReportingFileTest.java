@@ -24,7 +24,6 @@ public class GermlineReportingFileTest {
         GermlineReportingEntry apc = germlineReportingModel.entryForGene("APC");
         assertNotNull(apc);
         assertTrue(apc.notifyClinicalGeneticist());
-        assertTrue(apc.reportBiallelicOnly());
         assertNull(apc.exclusiveHgvsProteinFilter());
     }
 }

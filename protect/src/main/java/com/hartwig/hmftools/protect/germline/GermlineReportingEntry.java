@@ -14,8 +14,6 @@ public abstract class GermlineReportingEntry {
 
     public abstract boolean notifyClinicalGeneticist();
 
-    public abstract boolean reportBiallelicOnly();
-
     @Nullable
     public abstract String exclusiveHgvsProteinFilter();
 }
