@@ -1,8 +1,8 @@
 # Search External Resources for Variant Evidence
 
-SERVE harmonizes various sources of evidence into a single unified model that can be readily used in genomic analyses.  
-The model provides a mapping from genomic events to clinical evidence. 
-In addition, SERVE generates output containing all genomic events that are implied to be able to driver cancer.  
+SERVE harmonizes various sources of evidence into a single unified model that can be readily used in genomic analyses:  
+ - A model is generated which allows mapping of genomic events to clinical evidence. 
+ - An overview of mutations that are implied to be potential cancer drivers is generated.  
 
 ## Contents
 
@@ -45,7 +45,7 @@ they are compliant with the usage of the data itself.
 
 SERVE generates clinical evidence in the following datamodel:
  - Treatment (name of trial or drug(s))
- - Cancer type (including DOID) for which the treatment is on-label.
+ - Cancer type (annotated with DOID) for which the treatment is considered on-label.
  - Tier / Evidence level of the treatment
  - Direction (Responsive for the treatment or resistant to the treatment)
  - A set of URLs with extra information about the evidence (could be a publication, or a general website)
@@ -66,9 +66,7 @@ genomic events implied to be able to driver cancer:
  - Known amplifications and deletions
  - Known hotspots (specific mutations on specific loci)
  - Known codons (codons for which generic mutations are implied to be pathogenic)
- - Known exons (exons for which specific mutations are applied to be pathogenic)
-
-SERVE can be configured to generate its output either for reference genome version 37 or version 38.  
+ - Known exons (exons for which specific mutations are implied to be pathogenic)  
 
 ## Extraction of genomic events and characteristics from knowledgebases
  
@@ -83,9 +81,9 @@ For fusions, genes are permitted that can exist in the context of a fusion pair 
  
 Evidence on SNVs and small INDELs generally come in their protein annotated form (e.g. BRAF V600E). 
 SERVE uses [transvar](https://github.com/zwdzwd/transvar) to resolve these annotations into genomic coordinates (referred to as hotspots) 
-for the reference genome version that is configured to be used.
+for the reference genome version that is used by the input knowledgebase.
  
-The first step is to choose what transcript to use for converting protein annotation back to genomic coordinates:
+The first step is to choose what ensembl transcript to use for converting protein annotation back to genomic coordinates:
  1. If the knowledgebase configured a transcript for a mutation, that transcript is used exclusively.
  1. If no transcript is configured, SERVE uses the typical transcript used by Hartwig which is generally the canonical 
  transcript defined by ensembl.
@@ -130,7 +128,7 @@ First off, evidence on codons and exons are assumed to be defined with respect t
   this evidence could potentially lead to wrong matching.  
   - If no transcript is configured in the knowledgebase, it is assumed the canonical transcript is implied. 
  
-For ranges that represent exons, the range is extended by 5 bases on both sides of the exon to be able to capture splice variants affecting 
+For ranges that represent exons, the range is extended by 10 bases on both sides of the exon to be able to capture splice variants affecting 
 the exon. 
 
 In addition to resolving coordinates, every codon and exon range is annotated with a filter indicating which type(s) of mutations are valid 
@@ -177,8 +175,12 @@ is derived from the knowledgebase event.
 Genome wide event  | Description
 ---|---
 MICROSATELLITE_UNSTABLE  | Evidence is applicable when the genome has a MSI status
+MICROSATELLITE_STABLE  | Evidence is applicable when the genome dopes not have a MSI status
 HIGH_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome has a high tumor mutational load status
+LOW_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome does not have a high tumor mutational load status
 HOMOLOGOUS_RECOMBINATION_DEFICIENT | Evidence is applicable when the genome has a HRD status
+HPV_POSITIVE | Evidence is applicable when viral presence of some form of HPV has been found
+EBV_POSITIVE | Evidence is applicable when viral presence of some form of HPV has been found 
 
 ## Curation and harmonization of individual knowledgebases
 
