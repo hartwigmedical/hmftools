@@ -34,5 +34,4 @@ public class EventAndGeneExtractorTest {
     private static void assertEvent(@NotNull String expected, @NotNull Variant variant) {
         assertEquals(expected, EventAndGeneExtractor.extractEvent(variant));
     }
-
 }
