@@ -38,7 +38,7 @@ public class GenomicAnalyzer {
     @NotNull
     public GenomicAnalysis run(@NotNull String tumorSampleId, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
-            @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String bachelorTsv,
+            @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf,
             @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
             @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String protectEvidenceTsv) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
@@ -51,10 +51,9 @@ public class GenomicAnalyzer {
 
         LinxData linxData = LinxDataLoader.load(linxFusionTsv, linxBreakendTsv, linxViralInsertionTsv, linxDriversTsv);
 
-        BachelorData bachelorData = BachelorDataLoader.load(bachelorTsv, purpleData, linxData, germlineReportingModel);
 
         List<ReportableVariant> reportableVariants =
-                ReportableVariantFactory.mergeVariantLists(bachelorData.germlineVariants(), purpleData.somaticVariants());
+                ReportableVariantFactory.mergeVariantLists(purpleData.germlineVariants(), purpleData.somaticVariants());
 
         ChordAnalysis chordAnalysis = ChordDataLoader.load(chordPredictionTxt);
 

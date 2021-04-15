@@ -105,7 +105,6 @@ public class PatientReporterApplication {
                 config.purpleDriverCatalogGermlineTsv(),
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineVariantVcf(),
-                config.bachelorTsv(),
                 config.linxFusionTsv(),
                 config.linxBreakendTsv(),
                 config.linxViralInsertionTsv(),

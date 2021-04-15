@@ -39,7 +39,6 @@ public interface ProtectConfig {
     String PURPLE_GERMLINE_DRIVERS_TSV = "purple_driver_catalog_germline_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
-    String BACHELOR_TSV = "bachelor_tsv";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
     String LINX_VIRAL_INSERTION_TSV = "linx_viral_insertion_tsv";
@@ -67,7 +66,6 @@ public interface ProtectConfig {
         options.addOption(PURPLE_SOMATIC_DRIVERS_TSV, true, "Path towards the purple somatic driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
-        options.addOption(BACHELOR_TSV, true, "Path towards the bachelor germline TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the LINX fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the LINX breakend TSV.");
         options.addOption(LINX_VIRAL_INSERTION_TSV, true, "Path towards the LINX viral insertion TSV.");
@@ -116,9 +114,6 @@ public interface ProtectConfig {
     String purpleGermlineVariantVcf();
 
     @NotNull
-    String bachelorTsv();
-
-    @NotNull
     String linxFusionTsv();
 
     @NotNull
@@ -152,7 +147,6 @@ public interface ProtectConfig {
                 .purpleGermlineDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVERS_TSV))
                 .purpleSomaticVariantVcf(nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF))
                 .purpleGermlineVariantVcf(nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF))
-                .bachelorTsv(nonOptionalFile(cmd, BACHELOR_TSV))
                 .linxFusionTsv(nonOptionalFile(cmd, LINX_FUSION_TSV))
                 .linxBreakendTsv(nonOptionalFile(cmd, LINX_BREAKEND_TSV))
                 .linxViralInsertionTsv(nonOptionalFile(cmd, LINX_VIRAL_INSERTION_TSV))

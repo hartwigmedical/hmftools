@@ -35,7 +35,7 @@ public final class BachelorDataLoader {
             throws IOException {
         GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(config.germlineReportingTsv());
 
-        return load(config.bachelorTsv(), purpleData, linxData, germlineReportingModel);
+        return load("", purpleData, linxData, germlineReportingModel);
     }
 
     @NotNull

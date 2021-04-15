@@ -41,7 +41,7 @@ public class AnalysedPatientReporter {
     @NotNull
     public AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
-            @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String bachelorTsv,
+            @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf,
             @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
             @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile,
             @NotNull String protectEvidenceTsv, @Nullable String comments, boolean correctedReport, @NotNull String pipelineVersionFile)
@@ -61,7 +61,6 @@ public class AnalysedPatientReporter {
                 purpleDriverCatalogGermlineTsv,
                 purpleSomaticVariantVcf,
                 purpleGermlineVariantVcf,
-                bachelorTsv,
                 linxFusionTsv,
                 linxBreakendTsv,
                 linxViralInsertionTsv,
