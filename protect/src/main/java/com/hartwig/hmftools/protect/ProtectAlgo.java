@@ -8,8 +8,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.protect.bachelor.BachelorData;
-import com.hartwig.hmftools.protect.bachelor.BachelorDataLoader;
 import com.hartwig.hmftools.protect.chord.ChordDataLoader;
 import com.hartwig.hmftools.protect.evidence.ChordEvidence;
 import com.hartwig.hmftools.protect.evidence.CopyNumberEvidence;

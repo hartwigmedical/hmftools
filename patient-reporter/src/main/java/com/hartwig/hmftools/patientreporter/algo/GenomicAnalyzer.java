@@ -9,8 +9,6 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
-import com.hartwig.hmftools.protect.bachelor.BachelorData;
-import com.hartwig.hmftools.protect.bachelor.BachelorDataLoader;
 import com.hartwig.hmftools.protect.chord.ChordDataLoader;
 import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.linx.LinxData;
@@ -47,7 +45,7 @@ public class GenomicAnalyzer {
                 purpleDriverCatalogSomaticTsv,
                 purpleSomaticVariantVcf,
                 purpleDriverCatalogGermlineTsv,
-                purpleGermlineVariantVcf);
+                purpleGermlineVariantVcf, germlineReportingModel);
 
         LinxData linxData = LinxDataLoader.load(linxFusionTsv, linxBreakendTsv, linxViralInsertionTsv, linxDriversTsv);
 

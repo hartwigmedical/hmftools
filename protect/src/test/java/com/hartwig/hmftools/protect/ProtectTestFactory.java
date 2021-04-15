@@ -54,7 +54,6 @@ public final class ProtectTestFactory {
         return new GermlineReportingModel(Lists.newArrayList(ImmutableGermlineReportingEntry.builder()
                 .gene(gene)
                 .notifyClinicalGeneticist(false)
-                .reportBiallelicOnly(reportBiallelicOnly)
                 .exclusiveHgvsProteinFilter(exclusiveHgvsProteinFilter)
                 .build()));
     }

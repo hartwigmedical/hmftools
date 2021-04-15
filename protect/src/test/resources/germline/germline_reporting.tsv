@@ -1,4 +1,4 @@
-Gene	Notify	Condition	Variant
-APC	TRUE	Biallelic	
-ATM	TRUE	Biallelic
-MITF	TRUE	Monoallelic	p.Glu987Lys
+Gene	Notify	Variant
+APC	TRUE
+ATM	TRUE
+MITF	TRUE	p.Glu987Lys

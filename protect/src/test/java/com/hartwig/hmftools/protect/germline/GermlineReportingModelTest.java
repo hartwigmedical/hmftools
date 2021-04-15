@@ -23,14 +23,12 @@ public class GermlineReportingModelTest {
         GermlineReportingEntry germlineReportingTrue = ImmutableGermlineReportingEntry.builder()
                 .gene(notifyGene)
                 .notifyClinicalGeneticist(true)
-                .reportBiallelicOnly(true)
                 .exclusiveHgvsProteinFilter(null)
                 .build();
 
         GermlineReportingEntry germlineReportingFalse = ImmutableGermlineReportingEntry.builder()
                 .gene(reportGene)
                 .notifyClinicalGeneticist(false)
-                .reportBiallelicOnly(false)
                 .exclusiveHgvsProteinFilter(null)
                 .build();
 
