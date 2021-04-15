@@ -178,7 +178,7 @@ public class FusionExtractor {
             return null;
         }
 
-        if (geneChecker.isValidGene(pair.geneUp(), type) && geneChecker.isValidGene(pair.geneDown(), type)) {
+        if (geneChecker.isValidGene(pair.geneUp()) && geneChecker.isValidGene(pair.geneDown())) {
             if (!isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
                 LOGGER.warn("Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
             }

@@ -2,8 +2,6 @@ package com.hartwig.hmftools.serve.extraction.util;
 
 import java.util.Set;
 
-import com.hartwig.hmftools.common.serve.classification.EventType;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -20,12 +18,12 @@ public class GeneChecker {
         this.allValidGenes = allValidGenes;
     }
 
-    public boolean isValidGene(@Nullable String gene, @NotNull EventType type) {
+    public boolean isValidGene(@Nullable String gene) {
         if (allValidGenes.contains(gene)) {
             return true;
         } else {
             if (gene != null) {
-                LOGGER.warn("Gene '{}' is not present in the full gene list used of type '{}'!", gene, type);
+                LOGGER.warn("Gene '{}' is not present in the full gene list used!", gene);
             }
             return false;
         }

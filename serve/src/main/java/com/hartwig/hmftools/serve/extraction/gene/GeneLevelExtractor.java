@@ -45,10 +45,10 @@ public class GeneLevelExtractor {
 
     @Nullable
     public GeneLevelAnnotation extract(@NotNull String gene, @NotNull EventType type, @NotNull String event) {
-        if (type == EventType.GENE_LEVEL && exomeGeneChecker.isValidGene(gene, type)) {
+        if (type == EventType.GENE_LEVEL && exomeGeneChecker.isValidGene(gene)) {
             GeneLevelEvent geneLevelEvent = extractGeneLevelEvent(gene, event);
             return ImmutableGeneLevelAnnotation.builder().gene(gene).event(geneLevelEvent).build();
-        } else if (type == EventType.PROMISCUOUS_FUSION && fusionGeneChecker.isValidGene(gene, type)) {
+        } else if (type == EventType.PROMISCUOUS_FUSION && fusionGeneChecker.isValidGene(gene)) {
             if (!geneIsPresentInFusionCache(gene)) {
                 LOGGER.warn("Promiscuous fusion '{}' is not present in the known fusion cache", gene);
             }

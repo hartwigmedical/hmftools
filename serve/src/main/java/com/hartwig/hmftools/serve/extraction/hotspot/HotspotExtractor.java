@@ -29,7 +29,7 @@ public class HotspotExtractor {
     @Nullable
     public List<VariantHotspot> extract(@NotNull String gene, @Nullable String transcriptId, @NotNull EventType type,
             @NotNull String event) {
-        if (type == EventType.HOTSPOT && geneChecker.isValidGene(gene, type)) {
+        if (type == EventType.HOTSPOT && geneChecker.isValidGene(gene)) {
             return proteinResolver.resolve(gene, transcriptId, proteinAnnotationExtractor.apply(event));
         }
 
