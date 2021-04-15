@@ -118,6 +118,6 @@ public class FusionExtractorTest {
 
     @NotNull
     private static FusionExtractor buildTestFusionExtractor(@NotNull GeneChecker geneChecker, @NotNull Set<String> exonicDelDupKeyPhrases) {
-        return new FusionExtractor(geneChecker, new KnownFusionCache(), exonicDelDupKeyPhrases);
+        return new FusionExtractor(geneChecker, new KnownFusionCache(), exonicDelDupKeyPhrases, true);
     }
 }

@@ -11,12 +11,17 @@ import org.jetbrains.annotations.NotNull;
 
 public class CkbExtractorFactory {
 
+    // For CKB we want to ignore driver inconsistencies for now (their gene panel is larger than hmf driver panel to start with)
+    private static final boolean REPORT_DRIVER_INCONSISTENCIES = false;
+
     private CkbExtractorFactory() {
     }
 
     @NotNull
     public static CkbExtractor buildCkbExtractor(@NotNull EventClassifierConfig config, @NotNull RefGenomeResource refGenomeResource,
             @NotNull List<RefSeq> refSeqMappings) {
-        return new CkbExtractor(EventExtractorFactory.create(config, refGenomeResource), new ActionableEvidenceFactory(), refSeqMappings);
+        return new CkbExtractor(EventExtractorFactory.create(config, refGenomeResource, REPORT_DRIVER_INCONSISTENCIES),
+                new ActionableEvidenceFactory(),
+                refSeqMappings);
     }
 }

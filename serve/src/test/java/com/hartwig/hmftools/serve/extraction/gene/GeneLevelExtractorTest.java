@@ -110,6 +110,7 @@ public class GeneLevelExtractorTest {
                 driverGenes,
                 new KnownFusionCache(),
                 Sets.newHashSet("positive", "activating mutation", "act mut"),
-                Sets.newHashSet("negative", "LOSS-OF-FUNCTION", "inact mut"));
+                Sets.newHashSet("negative", "LOSS-OF-FUNCTION", "inact mut"),
+                true);
     }
 }

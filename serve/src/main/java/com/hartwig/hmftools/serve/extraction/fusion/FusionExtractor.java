@@ -26,12 +26,14 @@ public class FusionExtractor {
     private final KnownFusionCache knownFusionCache;
     @NotNull
     private final Set<String> exonicDelDupFusionKeyPhrases;
+    private final boolean reportOnDriverInconsistencies;
 
     public FusionExtractor(@NotNull final GeneChecker geneChecker, @NotNull final KnownFusionCache knownFusionCache,
-            @NotNull final Set<String> exonicDelDupFusionKeyPhrases) {
+            @NotNull final Set<String> exonicDelDupFusionKeyPhrases, final boolean reportOnDriverInconsistencies) {
         this.geneChecker = geneChecker;
         this.knownFusionCache = knownFusionCache;
         this.exonicDelDupFusionKeyPhrases = exonicDelDupFusionKeyPhrases;
+        this.reportOnDriverInconsistencies = reportOnDriverInconsistencies;
     }
 
     @Nullable
@@ -179,7 +181,7 @@ public class FusionExtractor {
         }
 
         if (geneChecker.isValidGene(pair.geneUp()) && geneChecker.isValidGene(pair.geneDown())) {
-            if (!isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
+            if (reportOnDriverInconsistencies && !isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
                 LOGGER.warn("Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
             }
             return pair;

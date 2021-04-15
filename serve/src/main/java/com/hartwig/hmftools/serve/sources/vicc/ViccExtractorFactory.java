@@ -11,13 +11,16 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ViccExtractorFactory {
 
+    // For VICC we want to deal with any driver inconsistency!
+    private static final boolean REPORT_DRIVER_INCONSISTENCIES = true;
+
     private ViccExtractorFactory() {
     }
 
     @NotNull
     public static ViccExtractor buildViccExtractor(@NotNull EventClassifierConfig config, @NotNull RefGenomeResource refGenomeResource,
             @NotNull DoidLookup missingDoidLookup) {
-        return new ViccExtractor(EventExtractorFactory.create(config, refGenomeResource),
+        return new ViccExtractor(EventExtractorFactory.create(config, refGenomeResource, REPORT_DRIVER_INCONSISTENCIES),
                 new ActionableEvidenceFactory(missingDoidLookup, new DrugCurator(), new EvidenceLevelCurator()));
     }
 }
