@@ -249,7 +249,7 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
-Upcoming
+- Upcoming
   - Always pick the same transcript for hotspot annotation in case multiple transcripts imply the same hotspot.
   - Extend splice sites from 5 bases to 10 bases beyond exon boundaries.
   - Add support for evidence for actionable viral presence (starting with EBV and HPV presence)
@@ -260,4 +260,4 @@ Upcoming
   - More predictable sorting of knowledge to ensure identical output on identical input
   - Ability to curate VICC evidence levels in case they are suspicious
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.0)
- - Initial release
+  - Initial release
