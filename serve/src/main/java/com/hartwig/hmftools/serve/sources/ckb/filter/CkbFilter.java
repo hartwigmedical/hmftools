@@ -28,8 +28,13 @@ public class CkbFilter {
     public List<CkbEntry> run(@NotNull List<CkbEntry> ckbEntries) {
         List<CkbEntry> filteredCkbEntries = Lists.newArrayList();
         for (CkbEntry entry : ckbEntries) {
-            // Do not filter variants when in combination event, since this might make them a non-combined event.
-            if (entry.variants().size() == 1) {
+            if (entry.variants().size() > 1) {
+                // Do not filter variants when in combination event, since this might make them a non-combined event.
+                filteredCkbEntries.add(entry);
+            } else if (entry.variants().size() == 0) {
+                // Always filter entries with no variants. Should never happen in practice!
+                LOGGER.warn("Filtering '{}' because no variants have been defined for this entry!", entry);
+            } else {
                 List<Variant> filteredVariants = Lists.newArrayList();
 
                 Variant variant = entry.variants().get(0);
@@ -42,11 +47,6 @@ public class CkbFilter {
                 if (!filteredVariants.isEmpty()) {
                     filteredCkbEntries.add(ImmutableCkbEntry.builder().from(entry).variants(filteredVariants).build());
                 }
-
-            } else if (entry.variants().size() > 1) {
-                filteredCkbEntries.add(entry);
-            } else {
-                LOGGER.debug("Filtering '{}' because no variants have been defined for this entry", entry);
             }
         }
 
