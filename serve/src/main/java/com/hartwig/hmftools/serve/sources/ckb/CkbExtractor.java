@@ -73,6 +73,9 @@ public class CkbExtractor {
 
         ProgressTracker tracker = new ProgressTracker("CKB", ckbEntries.size());
         for (CkbEntry entry : ckbEntries) {
+            // Assume entries without variants are filtered out prior to extraction
+            assert !entry.variants().isEmpty();
+
             Variant variant = entry.variants().get(0);
 
             if (entry.type() == EventType.UNKNOWN) {

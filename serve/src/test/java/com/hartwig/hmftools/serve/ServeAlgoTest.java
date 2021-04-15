@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.io.IOException;
 
 import com.google.common.io.Resources;
@@ -58,8 +60,7 @@ public class ServeAlgoTest {
 
         ServeAlgo algo = new ServeAlgo(RefGenomeManagerFactory.createFromServeConfig(config), DoidLookupTestFactory.dummy());
 
-        //TODO: Fix test for CKB
-//        assertNotNull(algo.run(config));
+        assertNotNull(algo.run(config));
     }
 
     @NotNull
