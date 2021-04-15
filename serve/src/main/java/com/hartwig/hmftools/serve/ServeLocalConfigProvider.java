@@ -18,7 +18,7 @@ public final class ServeLocalConfigProvider {
     @NotNull
     public static ServeConfig create() throws IOException {
         String hostname = InetAddress.getLocalHost().getHostName();
-        LOGGER.debug("Generating config for '{}'", hostname);
+        LOGGER.info("Generating config for '{}'", hostname);
 
         ImmutableServeConfig.Builder builder = ImmutableServeConfig.builder()
                 .useVicc(false)

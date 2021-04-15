@@ -44,7 +44,7 @@ public class CkbExtractorTestApp {
 
         Path outputPath = new File(config.outputDir()).toPath();
         if (!Files.exists(outputPath)) {
-            LOGGER.debug("Creating {} directory for writing SERVE output", outputPath.toString());
+            LOGGER.info("Creating {} directory for writing SERVE output", outputPath.toString());
             Files.createDirectory(outputPath);
         }
 
@@ -68,16 +68,16 @@ public class CkbExtractorTestApp {
 
     @NotNull
     private static RefGenomeResource buildRefGenomeResource(@NotNull ServeConfig config) throws IOException {
-        LOGGER.debug("Reading driver genes from {}", config.driverGene38Tsv());
+        LOGGER.info("Reading driver genes from {}", config.driverGene38Tsv());
         List<DriverGene> driverGenes = DriverGeneFile.read(config.driverGene38Tsv());
-        LOGGER.debug(" Read {} driver genes", driverGenes.size());
+        LOGGER.info(" Read {} driver genes", driverGenes.size());
 
-        LOGGER.debug("Reading known fusions from {}", config.knownFusion38File());
+        LOGGER.info("Reading known fusions from {}", config.knownFusion38File());
         KnownFusionCache fusionCache = new KnownFusionCache();
         if (!fusionCache.loadFile(config.knownFusion38File())) {
             throw new IllegalStateException("Could not load known fusion cache from " + config.knownFusion38File());
         }
-        LOGGER.debug(" Read {} known fusions", fusionCache.getData().size());
+        LOGGER.info(" Read {} known fusions", fusionCache.getData().size());
 
         return ImmutableRefGenomeResource.builder()
                 .fastaFile(config.refGenome38FastaFile())

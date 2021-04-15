@@ -21,7 +21,10 @@ public final class CkbReader {
 
     @NotNull
     public static List<CkbEntry> readAndCurate(@NotNull String ckbDir) throws IOException {
+        LOGGER.info("Reading CKB database from {}", ckbDir);
         List<CkbEntry> ckbEntries = CkbEntryReader.read(ckbDir);
+        LOGGER.info(" Read {} entries", ckbEntries.size());
+
         return filter(curate(ckbEntries));
     }
 

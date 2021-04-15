@@ -45,11 +45,11 @@ public class CkbCurator {
         for (CurationEntry entry : CurationFactory.VARIANT_MAPPINGS.keySet()) {
             if (!evaluatedCurationEntries.contains(entry)) {
                 unusedEntryCount++;
-                LOGGER.warn("Entry '{}' hasn't been used during CKB curation", entry);
+                LOGGER.warn(" Entry '{}' hasn't been used during CKB curation", entry);
             }
         }
 
-        LOGGER.info("Found {} unused CKB curation entries. {} keys have been requested against {} curation entries",
+        LOGGER.debug(" Found {} unused CKB curation entries. {} keys have been requested against {} curation entries",
                 unusedEntryCount,
                 evaluatedCurationEntries.size(),
                 CurationFactory.VARIANT_MAPPINGS.size());

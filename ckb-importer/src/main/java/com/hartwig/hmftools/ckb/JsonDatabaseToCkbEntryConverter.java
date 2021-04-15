@@ -27,7 +27,7 @@ final class JsonDatabaseToCkbEntryConverter {
         List<CkbEntry> ckbEntries = Lists.newArrayList();
 
         int profileCount = ckbJsonDatabase.molecularProfiles().size();
-        LOGGER.info("Converting {} CKB molecular profiles to interpreted CKB entries", profileCount);
+        LOGGER.debug(" Converting {} CKB molecular profiles to interpreted CKB entries", profileCount);
 
         int current = 0;
         int report = (int) Math.round(profileCount / 10D);
@@ -46,7 +46,7 @@ final class JsonDatabaseToCkbEntryConverter {
 
             if (current > 1) {
                 if (current % report == 0) {
-                    LOGGER.debug(" Processed {} of {} molecular profiles", current, profileCount);
+                    LOGGER.debug("  Processed {} of {} molecular profiles", current, profileCount);
                 }
             }
         }

@@ -58,11 +58,11 @@ public class CkbFilter {
         for (String keyword : FilterFactory.VARIANT_KEYWORDS_TO_FILTER) {
             if (!usedFilterKeys.contains(keyword)) {
                 unusedKeywordCount++;
-                LOGGER.debug("Keyword '{}' hasn't been used for CKB filtering", keyword);
+                LOGGER.warn(" Keyword '{}' hasn't been used for CKB filtering", keyword);
             }
         }
 
-        LOGGER.debug("Found {} unused keywords during CKB filtering", unusedKeywordCount);
+        LOGGER.debug(" Found {} unused keywords during CKB filtering", unusedKeywordCount);
     }
 
     @VisibleForTesting

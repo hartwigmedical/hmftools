@@ -34,7 +34,9 @@ public class CkbImporterApplication {
             System.exit(1);
         }
 
+        LOGGER.info("Reading CKB database from {}", config.cbkDir());
         List<CkbEntry> ckbEntries = CkbEntryReader.read(config.cbkDir());
+        LOGGER.info(" Read {} entries", ckbEntries.size());
 
         updateCkbSqlDatabase(config, ckbEntries);
 
@@ -43,7 +45,7 @@ public class CkbImporterApplication {
 
     private static void updateCkbSqlDatabase(@NotNull CkbImporterConfig config, @NotNull List<CkbEntry> ckbEntries) throws SQLException {
         if (config.skipDatabaseWriting()) {
-            LOGGER.info("Skipping DB writing.");
+            LOGGER.info("Skipping DB writing");
         } else {
             CkbDAO ckbDAO = CkbDAO.connectToCkbDAO(config.dbUser(), config.dbPass(), "jdbc:" + config.dbUrl());
 

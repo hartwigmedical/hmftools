@@ -9,7 +9,7 @@ import com.hartwig.hmftools.serve.refgenome.RefGenomeResource;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CkbExtractorFactory {
+public final class CkbExtractorFactory {
 
     // For CKB we want to ignore driver inconsistencies for now (their gene panel is larger than hmf driver panel to start with)
     private static final boolean REPORT_DRIVER_INCONSISTENCIES = false;
