@@ -44,6 +44,13 @@ public class GermlineReportingModel {
             return false;
         }
 
-        return reportingLevel == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION && entry.notifyClinicalGeneticist();
+        return reportingLevel == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION && checkGermlineCondition(entry);
+    }
+
+    public boolean checkGermlineCondition(@NotNull GermlineReportingEntry entry) {
+        assert entry != null;
+        if (entry.notifyClinicalGeneticist() == GermlineCondition.ALWAYS || entry.notifyClinicalGeneticist() == GermlineCondition.ONLY_GERMLINE_HOM
+                || entry.notifyClinicalGeneticist() == GermlineCondition.ONLY_SPECIFIC_VARIANT);
+        return true;
     }
 }

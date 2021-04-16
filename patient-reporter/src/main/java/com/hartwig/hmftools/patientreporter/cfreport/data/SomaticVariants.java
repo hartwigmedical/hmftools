@@ -9,6 +9,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
+import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.purple.DriverInterpretation;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -63,8 +65,28 @@ public final class SomaticVariants {
 
     private static boolean notifyAboutVariant(@NotNull ReportableVariant variant, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
-        return variant.source() == ReportableVariantSource.GERMLINE && germlineReportingModel.notifyAboutGene(variant.gene(),
-                germlineReportingLevel);
+        boolean includeVariant = false;
+        if (variant.source() == ReportableVariantSource.GERMLINE) {
+            GermlineReportingEntry reportingEntry = germlineReportingModel.entryForGene(variant.gene());
+            if (reportingEntry != null) {
+                if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ONLY_GERMLINE_HOM) {
+                    String conditionFilter = reportingEntry.conditionFilter();
+                    if (conditionFilter != null) {
+                        includeVariant = "".equals(conditionFilter);
+                    }
+
+                } else if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ONLY_SPECIFIC_VARIANT) {
+                    String conditionFilter = reportingEntry.conditionFilter();
+                    if (conditionFilter != null) {
+                        includeVariant = variant.canonicalHgvsProteinImpact().equals(conditionFilter);
+                    }
+                } else if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ALWAYS) {
+                    includeVariant = true;
+                }
+            }
+        }
+
+        return includeVariant && germlineReportingModel.notifyAboutGene(variant.gene(), germlineReportingLevel);
     }
 
     @VisibleForTesting

@@ -22,14 +22,14 @@ public class GermlineReportingModelTest {
 
         GermlineReportingEntry germlineReportingTrue = ImmutableGermlineReportingEntry.builder()
                 .gene(notifyGene)
-                .notifyClinicalGeneticist(true)
-                .exclusiveHgvsProteinFilter(null)
+                .notifyClinicalGeneticist(GermlineCondition.ALWAYS)
+                .conditionFilter(null)
                 .build();
 
         GermlineReportingEntry germlineReportingFalse = ImmutableGermlineReportingEntry.builder()
                 .gene(reportGene)
-                .notifyClinicalGeneticist(false)
-                .exclusiveHgvsProteinFilter(null)
+                .notifyClinicalGeneticist(GermlineCondition.NEVER)
+                .conditionFilter(null)
                 .build();
 
         GermlineReportingModel victim = new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
@@ -41,7 +41,7 @@ public class GermlineReportingModelTest {
         assertFalse(victim.notifyAboutGene(notifyGene, REPORT_WITHOUT_NOTIFICATION));
         assertFalse(victim.notifyAboutGene(notifyGene, NO_REPORTING));
 
-        assertFalse(victim.notifyAboutGene(reportGene, REPORT_WITH_NOTIFICATION));
+        assertFalse(victim.notifyAboutGene(reportGene, REPORT_WITHOUT_NOTIFICATION));
         assertFalse(victim.notifyAboutGene(reportGene, REPORT_WITHOUT_NOTIFICATION));
         assertFalse(victim.notifyAboutGene(reportGene, NO_REPORTING));
 

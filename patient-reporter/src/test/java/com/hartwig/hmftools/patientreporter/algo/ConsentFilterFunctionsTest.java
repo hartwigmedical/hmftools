@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineReportingEntry;
@@ -36,14 +37,14 @@ public class ConsentFilterFunctionsTest {
 
         GermlineReportingEntry germlineReportingTrue = ImmutableGermlineReportingEntry.builder()
                 .gene(notifyGene)
-                .notifyClinicalGeneticist(true)
-                .exclusiveHgvsProteinFilter(null)
+                .notifyClinicalGeneticist(GermlineCondition.ALWAYS)
+                .conditionFilter(null)
                 .build();
 
         GermlineReportingEntry germlineReportingFalse = ImmutableGermlineReportingEntry.builder()
                 .gene(reportGene)
-                .notifyClinicalGeneticist(false)
-                .exclusiveHgvsProteinFilter(null)
+                .notifyClinicalGeneticist(GermlineCondition.NEVER)
+                .conditionFilter(null)
                 .build();
         GermlineReportingModel victim = new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
 
@@ -51,12 +52,12 @@ public class ConsentFilterFunctionsTest {
         assertEquals(2,
                 ConsentFilterFunctions.filterAndOverruleVariants(Lists.newArrayList(somaticVariant, germlineVariant),
                         LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
-                        true, victim).size());
+                        true).size());
 
         assertEquals(1,
                 ConsentFilterFunctions.filterAndOverruleVariants(Lists.newArrayList(somaticVariant, germlineVariant),
                         LimsGermlineReportingLevel.NO_REPORTING,
-                        true, victim).size());
+                        true).size());
     }
 
     @Test

@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.linx.ViralInsertion;
@@ -19,11 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ConsentFilterFunctions {
 
-    @NotNull
-    private final GermlineReportingModel germlineReportingModel;
-
-    public ConsentFilterFunctions(@NotNull final GermlineReportingModel germlineReportingModel) {
-        this.germlineReportingModel = germlineReportingModel;
+    public ConsentFilterFunctions() {
     }
 
     // TODO Split up the filtering functions from the overruling functions.
@@ -33,8 +30,7 @@ public final class ConsentFilterFunctions {
             @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralInsertions) {
         List<ReportableVariant> filteredVariants = filterAndOverruleVariants(genomicAnalysis.reportableVariants(),
                 germlineReportingLevel,
-                genomicAnalysis.hasReliablePurity(),
-                germlineReportingModel);
+                genomicAnalysis.hasReliablePurity());
 
         List<ViralInsertion> filteredViralInsertions = reportViralInsertions ? genomicAnalysis.viralInsertions() : Lists.newArrayList();
 
@@ -60,32 +56,7 @@ public final class ConsentFilterFunctions {
     @NotNull
     @$VisibleForTesting
     static List<ReportableVariant> filterAndOverruleVariants(@NotNull List<ReportableVariant> variants,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean hasReliablePurity,
-            @NotNull final GermlineReportingModel germlineReportingModel) {
-
-        //TODO filtering on germline model config
-        List<ReportableVariant> allVariants = Lists.newArrayList();
-
-        for (ReportableVariant variant : variants) {
-            boolean includeVariant = true;
-            if (variant.source() == ReportableVariantSource.GERMLINE) {
-                GermlineReportingEntry reportingEntry = germlineReportingModel.entryForGene(variant.gene());
-                if (reportingEntry != null) {
-                    String exclusiveHgvsProteinFilter = reportingEntry.exclusiveHgvsProteinFilter();
-                    if (exclusiveHgvsProteinFilter != null) {
-                        includeVariant = variant.canonicalHgvsProteinImpact().equals(exclusiveHgvsProteinFilter);
-                    }
-                }
-            }
-
-            if (includeVariant) {
-
-                allVariants.add(ImmutableReportableVariant.builder().from(variant).source(ReportableVariantSource.GERMLINE).build());
-            } else {
-                allVariants.add(ImmutableReportableVariant.builder().from(variant).source(ReportableVariantSource.SOMATIC).build());
-            }
-
-        }
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean hasReliablePurity) {
 
         List<ReportableVariant> filteredVariants = Lists.newArrayList();
         for (ReportableVariant variant : variants) {

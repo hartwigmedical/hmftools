@@ -67,7 +67,7 @@ public class AnalysedPatientReporter {
                 chordPredictionTxt,
                 protectEvidenceTsv);
 
-        ConsentFilterFunctions consentFilterFunctions = new ConsentFilterFunctions(reportData.germlineReportingModel());
+        ConsentFilterFunctions consentFilterFunctions = new ConsentFilterFunctions();
 
         GenomicAnalysis filteredAnalysis = consentFilterFunctions.filterAndOverruleForConsent(genomicAnalysis,
                 sampleReport.germlineReportingLevel(),

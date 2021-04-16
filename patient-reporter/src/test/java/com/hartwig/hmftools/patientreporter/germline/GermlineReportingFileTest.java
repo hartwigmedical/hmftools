@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.germline;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
@@ -23,7 +22,7 @@ public class GermlineReportingFileTest {
 
         GermlineReportingEntry apc = germlineReportingModel.entryForGene("APC");
         assertNotNull(apc);
-        assertTrue(apc.notifyClinicalGeneticist());
-        assertNull(apc.exclusiveHgvsProteinFilter());
+        assertEquals(apc.notifyClinicalGeneticist(), GermlineCondition.ALWAYS);
+        assertNull(apc.conditionFilter());
     }
 }

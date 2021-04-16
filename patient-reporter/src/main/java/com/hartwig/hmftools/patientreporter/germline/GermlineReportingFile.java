@@ -28,8 +28,8 @@ public final class GermlineReportingFile {
 
             germlineReportingEntries.add(ImmutableGermlineReportingEntry.builder()
                     .gene(parts[0])
-                    .notifyClinicalGeneticist(Boolean.parseBoolean(parts[1]))
-                    .exclusiveHgvsProteinFilter(parts.length > 3 ? parts[3] : null)
+                    .notifyClinicalGeneticist(GermlineCondition.extractGermlineCondition(parts[1]))
+                    .conditionFilter(parts.length > 3 ? parts[2] : null)
                     .build());
         }
 
