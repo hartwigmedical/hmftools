@@ -8,7 +8,7 @@ SERVE harmonizes various sources of evidence into a single unified model that ca
 
 * [Which knowledgebases are supported?](#supported-input-knowledgebases)
 * [What is generated as final SERVE output?](#outputs)
-* [How are genomic events extracted from the source knowledgebases?](#extraction-of-genomic-events-and-characteristics-from-knowledgebases)
+* [How are genomic events extracted from the source knowledgebases?](#extraction-of-genomic-events-and-tumor-characteristics-from-knowledgebases)
 * [What is done in terms of curation and harmonization?](#curation-and-harmonization-of-individual-knowledgebases)
 * [How does everything come together?](#overview-of-the-serve-algorithm)
 * [Version history and download links](#version-history-and-download-links)
@@ -68,7 +68,7 @@ genomic events implied to be able to driver cancer:
  - Known codons (codons for which generic mutations are implied to be pathogenic)
  - Known exons (exons for which specific mutations are implied to be pathogenic)  
 
-## Extraction of genomic events and characteristics from knowledgebases
+## Extraction of genomic events and tumor characteristics from knowledgebases
  
 ### Gene checking
 
@@ -167,7 +167,7 @@ This is to support evidence on fusions like EGFRvII.
 
 Evidence on fusion pairs where these restrictions are missing can be assumed to be valid for any fusion between the two genes specified. 
 
-### Genome wide events
+### Genome wide tumor characteristics
 
 For evidence that is applicable when a genome wide event has happened, the type of event required to match evidence to the event 
 is derived from the knowledgebase event.
@@ -180,7 +180,7 @@ HIGH_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome has a high t
 LOW_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome does not have a high tumor mutational load status
 HOMOLOGOUS_RECOMBINATION_DEFICIENT | Evidence is applicable when the genome has a HRD status
 HPV_POSITIVE | Evidence is applicable when viral presence of some form of HPV has been found
-EBV_POSITIVE | Evidence is applicable when viral presence of some form of HPV has been found 
+EBV_POSITIVE | Evidence is applicable when viral presence of some form of EBV has been found 
 
 ## Curation and harmonization of individual knowledgebases
 
