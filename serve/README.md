@@ -29,7 +29,7 @@ SERVE supports the ingestion of the following knowledgebases:
 Support for the following knowledgebases is under development:
  - [CBG Compassionate Use](https://www.cbg-meb.nl/onderwerpen/hv-compassionate-use-programma/overzicht-goedgekeurde-cup) - 
     a database of approved compassionate use programs in the Netherlands
- - [CKB FLEX](https://ckb.jax.org) - The complete CKB clinical database. 
+ - [CKB FLEX](https://ckbhome.jax.org) - The complete CKB clinical database. 
  
 A number of other Hartwig modules support the ingestion (and analysis) of these knowledgebases:
  - [VICC Importer](../vicc-importer/README.md): A module supporting the ingestion of any knowledgebase ingested into VICC.
