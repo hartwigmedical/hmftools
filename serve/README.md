@@ -252,7 +252,7 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   
 ## Version History and Download Links
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.2) 
-  - AConsistently pick a specific transcript for hotspot annotation in case multiple transcripts imply the same hotspot.
+  - Consistently pick a specific transcript for hotspot annotation in case multiple transcripts imply the same hotspot.
   - Extend splice sites from 5 bases to 10 bases beyond exon boundaries.
   - Add support for evidence for actionable viral presence (starting with EBV and HPV presence)
   - Add support for evidence of absence of high TMB and MSI
