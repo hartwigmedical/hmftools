@@ -88,7 +88,7 @@ The first step is to choose what ensembl transcript to use for converting protei
  1. If no transcript is configured, SERVE uses the typical transcript used by Hartwig which is generally the canonical 
  transcript defined by ensembl.
  1. If a protein annotation does not exist on the canonical transcript and has no transcript configured in the knowledgebase, 
- any random transcript for which the protein annotation does exist is picked.
+ a consistently specific transcript is picked for protein annotation in case multiple transcript imply the same hotspot.
  
 If a protein annotated form does not exist on any transcript for a specific gene, the evidence is ignored 
 (see also [curation](#curation-and-harmonization-of-individual-knowledgebases)). 
