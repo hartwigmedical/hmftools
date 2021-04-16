@@ -4,11 +4,8 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
-import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class GenomicAnalyzerTest {

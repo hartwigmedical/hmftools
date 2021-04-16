@@ -41,11 +41,10 @@ public class AnalysedPatientReporter {
     @NotNull
     public AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
-            @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf,
-            @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
-            @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile,
-            @NotNull String protectEvidenceTsv, @Nullable String comments, boolean correctedReport, @NotNull String pipelineVersionFile)
-            throws IOException {
+            @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String linxFusionTsv,
+            @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv,
+            @NotNull String chordPredictionTxt, @NotNull String circosFile, @NotNull String protectEvidenceTsv, @Nullable String comments,
+            boolean correctedReport, @NotNull String pipelineVersionFile) throws IOException {
         // TODO Specific COLO handling doesn't belong in patient reporter!
         String patientId = sampleMetadata.patientId().startsWith("COLO829") ? "COLO829" : sampleMetadata.patientId();
         PatientPrimaryTumor patientPrimaryTumor =
@@ -68,7 +67,9 @@ public class AnalysedPatientReporter {
                 chordPredictionTxt,
                 protectEvidenceTsv);
 
-        GenomicAnalysis filteredAnalysis = ConsentFilterFunctions.filterAndOverruleForConsent(genomicAnalysis,
+        ConsentFilterFunctions consentFilterFunctions = new ConsentFilterFunctions(reportData.germlineReportingModel());
+
+        GenomicAnalysis filteredAnalysis = consentFilterFunctions.filterAndOverruleForConsent(genomicAnalysis,
                 sampleReport.germlineReportingLevel(),
                 sampleReport.reportViralInsertions());
 

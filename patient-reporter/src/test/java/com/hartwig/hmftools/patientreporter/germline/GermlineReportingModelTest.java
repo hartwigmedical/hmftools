@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.germline;
+package com.hartwig.hmftools.patientreporter.germline;
 
 import static com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel.NO_REPORTING;
 import static com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION;

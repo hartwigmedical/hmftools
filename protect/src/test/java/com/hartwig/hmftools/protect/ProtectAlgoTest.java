@@ -15,7 +15,6 @@ import org.junit.Test;
 
 public class ProtectAlgoTest {
 
-    private static final String GERMLINE_REPORTING_TSV = Resources.getResource("germline/germline_reporting.tsv").getPath();
     private static final String DOID_JSON = Resources.getResource("doid/example_doid.json").getPath();
 
     private static final String SERVE_DIR = Resources.getResource("serve").getPath();
@@ -41,7 +40,6 @@ public class ProtectAlgoTest {
                 .outputDir(Strings.EMPTY)
                 .serveActionabilityDir(SERVE_DIR)
                 .doidJsonFile(DOID_JSON)
-                .germlineReportingTsv(GERMLINE_REPORTING_TSV)
                 .purplePurityTsv(PURPLE_PURITY_TSV)
                 .purpleQcFile(PURPLE_QC_FILE)
                 .purpleSomaticDriverCatalogTsv(PURPLE_SOMATIC_DRIVER_CATALOG_TSV)

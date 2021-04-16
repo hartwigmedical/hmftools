@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.germline;
+package com.hartwig.hmftools.patientreporter.germline;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

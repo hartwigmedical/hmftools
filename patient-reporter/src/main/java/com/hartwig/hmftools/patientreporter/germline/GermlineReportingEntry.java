@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.germline;
+package com.hartwig.hmftools.patientreporter.germline;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
