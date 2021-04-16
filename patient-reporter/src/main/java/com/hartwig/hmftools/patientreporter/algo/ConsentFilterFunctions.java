@@ -54,6 +54,8 @@ public final class ConsentFilterFunctions {
     @$VisibleForTesting
     static List<ReportableVariant> filterAndOverruleVariants(@NotNull List<ReportableVariant> variants,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean hasReliablePurity) {
+
+        //TODO filtering on germline model config
         List<ReportableVariant> filteredVariants = Lists.newArrayList();
         for (ReportableVariant variant : variants) {
             if (germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING || variant.source() == ReportableVariantSource.SOMATIC) {

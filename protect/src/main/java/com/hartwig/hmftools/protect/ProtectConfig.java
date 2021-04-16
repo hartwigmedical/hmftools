@@ -30,7 +30,6 @@ public interface ProtectConfig {
     // Input files used by the algorithm
     String SERVE_ACTIONABILITY_DIRECTORY = "serve_actionability_dir";
     String DOID_JSON = "doid_json";
-    String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
 
     // Files containing the actual genomic results for this sample.
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
@@ -58,7 +57,6 @@ public interface ProtectConfig {
 
         options.addOption(SERVE_ACTIONABILITY_DIRECTORY, true, "Path towards the SERVE actionability directory.");
         options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
-        options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
@@ -91,9 +89,6 @@ public interface ProtectConfig {
 
     @NotNull
     String doidJsonFile();
-
-    @NotNull
-    String germlineReportingTsv();
 
     @NotNull
     String purplePurityTsv();
@@ -140,7 +135,6 @@ public interface ProtectConfig {
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
-                .germlineReportingTsv(nonOptionalFile(cmd, GERMLINE_REPORTING_TSV))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
                 .purpleSomaticDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVERS_TSV))

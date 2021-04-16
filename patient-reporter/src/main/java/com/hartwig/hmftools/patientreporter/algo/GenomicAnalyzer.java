@@ -10,7 +10,6 @@ import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.protect.chord.ChordDataLoader;
-import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.linx.LinxData;
 import com.hartwig.hmftools.protect.linx.LinxDataLoader;
 import com.hartwig.hmftools.protect.purple.PurpleData;
@@ -26,11 +25,7 @@ public class GenomicAnalyzer {
 
     private static final Logger LOGGER = LogManager.getLogger(GenomicAnalyzer.class);
 
-    @NotNull
-    private final GermlineReportingModel germlineReportingModel;
-
-    public GenomicAnalyzer(@NotNull final GermlineReportingModel germlineReportingModel) {
-        this.germlineReportingModel = germlineReportingModel;
+    public GenomicAnalyzer() {
     }
 
     @NotNull
@@ -45,10 +40,9 @@ public class GenomicAnalyzer {
                 purpleDriverCatalogSomaticTsv,
                 purpleSomaticVariantVcf,
                 purpleDriverCatalogGermlineTsv,
-                purpleGermlineVariantVcf, germlineReportingModel);
+                purpleGermlineVariantVcf);
 
         LinxData linxData = LinxDataLoader.load(linxFusionTsv, linxBreakendTsv, linxViralInsertionTsv, linxDriversTsv);
-
 
         List<ReportableVariant> reportableVariants =
                 ReportableVariantFactory.mergeVariantLists(purpleData.germlineVariants(), purpleData.somaticVariants());

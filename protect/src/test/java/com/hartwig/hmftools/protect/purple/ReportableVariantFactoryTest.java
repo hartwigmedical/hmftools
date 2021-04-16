@@ -14,9 +14,6 @@ import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
-import com.hartwig.hmftools.protect.germline.GermlineReportingEntry;
-import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
-import com.hartwig.hmftools.protect.germline.ImmutableGermlineReportingEntry;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -35,24 +32,9 @@ public class ReportableVariantFactoryTest {
 
         double likelihood = 0.6;
         DriverCatalog driverGene1 = createMutationEntryForGene(gene1, likelihood);
-        String notifyGene = "Notify";
-        String reportGene = "Report";
-
-        GermlineReportingEntry germlineReportingTrue = ImmutableGermlineReportingEntry.builder()
-                .gene(notifyGene)
-                .notifyClinicalGeneticist(true)
-                .exclusiveHgvsProteinFilter(null)
-                .build();
-
-        GermlineReportingEntry germlineReportingFalse = ImmutableGermlineReportingEntry.builder()
-                .gene(reportGene)
-                .notifyClinicalGeneticist(false)
-                .exclusiveHgvsProteinFilter(null)
-                .build();
-        GermlineReportingModel victim = new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
 
         List<ReportableVariant> reportable =
-                reportableSomaticVariants(Lists.newArrayList(variant1, variant2), Lists.newArrayList(driverGene1), victim);
+                reportableSomaticVariants(Lists.newArrayList(variant1, variant2), Lists.newArrayList(driverGene1));
 
         assertEquals(1, reportable.size());
         assertEquals(likelihood, reportable.get(0).driverLikelihood(), EPSILON);

@@ -34,7 +34,6 @@ public final class PurpleDataLoader {
 
     @NotNull
     public static PurpleData load(@NotNull ProtectConfig config) throws IOException {
-        GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(config.germlineReportingTsv());
 
         return load(config.tumorSampleId(),
                 config.purpleQcFile(),
@@ -42,13 +41,13 @@ public final class PurpleDataLoader {
                 config.purpleSomaticDriverCatalogTsv(),
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineDriverCatalogTsv(),
-                config.purpleGermlineVariantVcf(), germlineReportingModel);
+                config.purpleGermlineVariantVcf());
     }
 
     @NotNull
     public static PurpleData load(@NotNull String sample, @NotNull String qcFile, @NotNull String purityTsv,
             @NotNull String driverCatalogSomaticTsv, @NotNull String somaticVcf, @NotNull String driverCatalogGermlineTsv,
-            @NotNull String germlineVcf, @NotNull GermlineReportingModel germlineReportingModel) throws IOException {
+            @NotNull String germlineVcf) throws IOException {
         LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
 
         PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
@@ -74,12 +73,12 @@ public final class PurpleDataLoader {
 
         List<SomaticVariant> germlineVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, germlineVcf);
         List<ReportableVariant> reportableGermlineVariants =
-                ReportableVariantFactory.reportableGermlineVariants(germlineVariants, germlineDriverCatalog, germlineReportingModel);
+                ReportableVariantFactory.reportableGermlineVariants(germlineVariants, germlineDriverCatalog);
         LOGGER.info(" Loaded {} reportable germline variants from {}", reportableGermlineVariants.size(), germlineVcf);
 
         List<SomaticVariant> somaticVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVcf);
         List<ReportableVariant> reportableSomaticVariants =
-                ReportableVariantFactory.reportableSomaticVariants(somaticVariants, somaticDriverCatalog, germlineReportingModel);
+                ReportableVariantFactory.reportableSomaticVariants(somaticVariants, somaticDriverCatalog);
         LOGGER.info(" Loaded {} reportable somatic variants from {}", reportableSomaticVariants.size(), somaticVcf);
 
         return ImmutablePurpleData.builder()

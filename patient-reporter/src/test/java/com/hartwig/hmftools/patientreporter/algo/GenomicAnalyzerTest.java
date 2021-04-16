@@ -29,7 +29,7 @@ public class GenomicAnalyzerTest {
 
     @Test
     public void canRunOnTestRun() throws IOException {
-        GenomicAnalyzer analyzer = new GenomicAnalyzer(createEmptyGermlineReportingModel());
+        GenomicAnalyzer analyzer = new GenomicAnalyzer();
 
         assertNotNull(analyzer.run("sample",
                 PURPLE_PURITY_TSV,
@@ -44,10 +44,5 @@ public class GenomicAnalyzerTest {
                 LINX_DRIVERS_TSV,
                 CHORD_PREDICTION_TXT,
                 PROTECT_EVIDENCE_TSV));
-    }
-
-    @NotNull
-    private static GermlineReportingModel createEmptyGermlineReportingModel() {
-        return new GermlineReportingModel(Lists.newArrayList());
     }
 }

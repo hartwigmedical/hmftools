@@ -53,7 +53,7 @@ public class AnalysedPatientReporter {
 
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
-        GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.germlineReportingModel());
+        GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer();
         GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
                 purplePurityTsv,
                 purpleQCFile,
