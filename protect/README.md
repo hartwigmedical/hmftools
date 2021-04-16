@@ -103,7 +103,7 @@ urls | A list of urls with additional information about the evidence | https://p
   - Switch from BACHELOR germline variants to SAGE/PURPLE germline variants
   - Renamed linx file from linx driver to linx driver catalog 
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.2)
-  - Split amplification into partial amplification and full amplification
+  - Treat partial amplifications and full amplifications identically
   - Removing specific evidence filtering, because this is already applied into SERVE
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.1) 
   - Split up database loading from running PROTECT 
