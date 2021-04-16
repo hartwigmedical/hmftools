@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -96,6 +97,7 @@ public class ConsentFilterFunctionsTest {
                 .type(VariantType.SNP)
                 .source(ReportableVariantSource.SOMATIC)
                 .gene(Strings.EMPTY)
+                .genotypeStatus(GenotypeStatus.UNKNOWN)
                 .chromosome(Strings.EMPTY)
                 .position(0)
                 .ref(Strings.EMPTY)

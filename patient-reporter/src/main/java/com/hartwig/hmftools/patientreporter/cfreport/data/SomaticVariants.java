@@ -72,7 +72,7 @@ public final class SomaticVariants {
                 if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ONLY_GERMLINE_HOM) {
                     String conditionFilter = reportingEntry.conditionFilter();
                     if (conditionFilter != null) {
-                        includeVariant = "".equals(conditionFilter);
+                        includeVariant = variant.genotypeStatus().simplifiedDisplay().equals(conditionFilter);
                     }
 
                 } else if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ONLY_SPECIFIC_VARIANT) {

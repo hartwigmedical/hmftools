@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.protect.purple;
 
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -97,4 +98,7 @@ public abstract class ReportableVariant implements Variant {
 
     @Nullable
     public abstract Boolean biallelic();
+
+    @NotNull
+    public abstract GenotypeStatus genotypeStatus();
 }

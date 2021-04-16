@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 
 import org.jetbrains.annotations.NotNull;
@@ -56,6 +57,9 @@ public interface SomaticVariant extends Variant {
     boolean biallelic();
 
     boolean reported();
+
+    @NotNull
+    GenotypeStatus genotypeStatus();
 
     @NotNull
     GermlineStatus germlineStatus();

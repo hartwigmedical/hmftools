@@ -91,6 +91,7 @@ public final class ReportableVariantFactory {
                 .type(variant.type())
                 .source(source)
                 .gene(variant.gene())
+                .genotypeStatus(variant.genotypeStatus())
                 .chromosome(variant.chromosome())
                 .position(variant.position())
                 .ref(variant.ref())

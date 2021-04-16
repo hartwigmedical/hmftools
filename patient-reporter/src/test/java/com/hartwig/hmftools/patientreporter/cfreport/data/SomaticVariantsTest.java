@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -47,6 +48,7 @@ public class SomaticVariantsTest {
         return ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene(Strings.EMPTY)
+                .genotypeStatus(GenotypeStatus.UNKNOWN)
                 .chromosome(Strings.EMPTY)
                 .position(0)
                 .ref(Strings.EMPTY)

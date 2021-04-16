@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 
 import org.apache.logging.log4j.util.Strings;
@@ -23,6 +24,7 @@ public final class SomaticVariantTestBuilderFactory {
                 .totalReadCount(0)
                 .alleleReadCount(0)
                 .gene(Strings.EMPTY)
+                .genotypeStatus(GenotypeStatus.UNKNOWN)
                 .genesAffected(0)
                 .worstEffect(Strings.EMPTY)
                 .worstCodingEffect(CodingEffect.NONE)
