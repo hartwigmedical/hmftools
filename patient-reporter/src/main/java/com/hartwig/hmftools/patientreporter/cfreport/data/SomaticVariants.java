@@ -65,28 +65,28 @@ public final class SomaticVariants {
 
     private static boolean notifyAboutVariant(@NotNull ReportableVariant variant, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
-        boolean includeVariant = false;
+        boolean notifyVariant = false;
         if (variant.source() == ReportableVariantSource.GERMLINE) {
             GermlineReportingEntry reportingEntry = germlineReportingModel.entryForGene(variant.gene());
             if (reportingEntry != null) {
                 if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ONLY_GERMLINE_HOM) {
                     String conditionFilter = reportingEntry.conditionFilter();
                     if (conditionFilter != null) {
-                        includeVariant = variant.genotypeStatus().simplifiedDisplay().equals(conditionFilter);
+                        notifyVariant = variant.genotypeStatus().simplifiedDisplay().equals(conditionFilter);
                     }
 
                 } else if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ONLY_SPECIFIC_VARIANT) {
                     String conditionFilter = reportingEntry.conditionFilter();
                     if (conditionFilter != null) {
-                        includeVariant = variant.canonicalHgvsProteinImpact().equals(conditionFilter);
+                        notifyVariant = variant.canonicalHgvsProteinImpact().equals(conditionFilter);
                     }
                 } else if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ALWAYS) {
-                    includeVariant = true;
+                    notifyVariant = true;
                 }
             }
         }
 
-        return includeVariant && germlineReportingModel.notifyAboutGene(variant.gene(), germlineReportingLevel);
+        return notifyVariant && germlineReportingModel.notifyAboutGene(variant.gene(), germlineReportingLevel);
     }
 
     @VisibleForTesting
