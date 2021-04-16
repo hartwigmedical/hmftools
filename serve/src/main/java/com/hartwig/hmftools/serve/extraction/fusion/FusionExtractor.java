@@ -51,7 +51,7 @@ public class FusionExtractor {
             pair = fromExonicDelDup(gene, event);
         }
 
-        return validate(pair, type);
+        return validate(pair);
     }
 
     private boolean hasExonicDelDupKeyPhrase(@NotNull String event) {
@@ -175,7 +175,7 @@ public class FusionExtractor {
     }
 
     @Nullable
-    private KnownFusionPair validate(@Nullable KnownFusionPair pair, @NotNull EventType type) {
+    private KnownFusionPair validate(@Nullable KnownFusionPair pair) {
         if (pair == null) {
             return null;
         }
