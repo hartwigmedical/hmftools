@@ -9,14 +9,10 @@ import com.hartwig.hmftools.serve.extraction.fusion.FusionExtractor;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelExtractor;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotExtractor;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class EventExtractor {
-
-    private static final Logger LOGGER = LogManager.getLogger(EventExtractor.class);
 
     @NotNull
     private final HotspotExtractor hotspotExtractor;

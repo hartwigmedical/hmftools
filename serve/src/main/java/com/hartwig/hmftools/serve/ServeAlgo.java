@@ -5,16 +5,11 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.ckb.JsonDatabaseToCkbEntryConverter;
 import com.hartwig.hmftools.ckb.classification.CkbClassificationConfig;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
-import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
-import com.hartwig.hmftools.ckb.json.CkbJsonReader;
 import com.hartwig.hmftools.common.refseq.RefSeq;
-import com.hartwig.hmftools.common.refseq.RefSeqFile;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
-import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.iclusion.classification.IclusionClassificationConfig;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
@@ -70,7 +65,7 @@ public class ServeAlgo {
         }
 
         if (config.useCkb()) {
-            extractions.add(extractCKBKnowledge(config.ckbDir(), config.refSeqTsv()));
+            extractions.add(extractCkbKnowledge(config.ckbDir()));
         }
 
         if (config.useDocm()) {
@@ -119,22 +114,21 @@ public class ServeAlgo {
     }
 
     @NotNull
-    private ExtractionResult extractCKBKnowledge(@NotNull String ckbDir, @NotNull String refseqTsv) throws IOException {
+    private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir) throws IOException {
+        // TODO Read RefSeq mapping from a resource file rather than from an external file
+//        LOGGER.info("Reading ref seq matching to transcript");
+//        List<RefSeq> refSeqMappings = RefSeqFile.readingRefSeq(refseqTsv);
+        List<RefSeq> refSeqMappings = Lists.newArrayList();
 
-        LOGGER.info("Reading ref seq matching to transcript");
-        List<RefSeq> refSeqMatchFile = RefSeqFile.readingRefSeq(refseqTsv);
-
-        CkbJsonDatabase ckbJsonDatabase = CkbJsonReader.read(ckbDir);
-        List<CkbEntry> ckbEntries = JsonDatabaseToCkbEntryConverter.convert(ckbJsonDatabase);
-        List<CkbEntry> curateCKBEntries = CkbReader.filterAndCurateRelevantEntries(ckbEntries);
+        List<CkbEntry> ckbEntries = CkbReader.readAndCurate(ckbDir);
 
         EventClassifierConfig config = CkbClassificationConfig.build();
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config,
                 refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB),
-                missingDoidLookup);
+                refSeqMappings);
 
         LOGGER.info("Running CKB knowledge extraction");
-        return extractor.extract(curateCKBEntries, refSeqMatchFile);
+        return extractor.extract(ckbEntries);
     }
 
     @NotNull

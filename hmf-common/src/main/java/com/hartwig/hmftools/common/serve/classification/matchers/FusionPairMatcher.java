@@ -7,11 +7,15 @@ import org.jetbrains.annotations.NotNull;
 class FusionPairMatcher implements EventMatcher {
 
     @NotNull
+    private final Set<String> exonicDelDupFusionKeyPhrases;
+    @NotNull
     private final Set<String> exonicDelDupFusionEvents;
     @NotNull
     private final Set<String> fusionEventsToSkip;
 
-    FusionPairMatcher(@NotNull final Set<String> exonicDelDupFusionEvents, @NotNull final Set<String> fusionEventsToSkip) {
+    public FusionPairMatcher(@NotNull final Set<String> exonicDelDupFusionKeyPhrases, @NotNull final Set<String> exonicDelDupFusionEvents,
+            @NotNull final Set<String> fusionEventsToSkip) {
+        this.exonicDelDupFusionKeyPhrases = exonicDelDupFusionKeyPhrases;
         this.exonicDelDupFusionEvents = exonicDelDupFusionEvents;
         this.fusionEventsToSkip = fusionEventsToSkip;
     }
@@ -24,6 +28,12 @@ class FusionPairMatcher implements EventMatcher {
 
         if (exonicDelDupFusionEvents.contains(event)) {
             return true;
+        }
+
+        for (String keyPhrase : exonicDelDupFusionKeyPhrases) {
+            if (event.contains(keyPhrase)) {
+                return true;
+            }
         }
 
         String trimmedEvent = event.trim();

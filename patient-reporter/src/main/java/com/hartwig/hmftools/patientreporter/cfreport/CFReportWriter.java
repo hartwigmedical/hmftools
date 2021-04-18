@@ -22,7 +22,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChap
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChapterOnLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TumorCharacteristicsChapter;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
-import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
+import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;

@@ -46,8 +46,8 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
             val cOnlyComplexes = gene("C", confirmedGroups.alleles(), confirmedProtein.alleles(), candidatesAfterConfirmedProteins)
 
             val complexes: List<HlaComplex>
-            val simpleComplexCount = aOnlyComplexes.size * bOnlyComplexes.size * cOnlyComplexes.size
-            complexes = if (simpleComplexCount > 100_000) {
+            val simpleComplexCount = aOnlyComplexes.size.toLong() * bOnlyComplexes.size * cOnlyComplexes.size
+            complexes = if (simpleComplexCount > 100_000 || simpleComplexCount < 0) {
                 logger.info("Candidate permutations exceeds maximum complexity")
                 val groupRankedCoverageFactory = HlaComplexCoverageFactory(config)
                 val aTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, aOnlyComplexes)
@@ -55,7 +55,7 @@ data class HlaComplex(val alleles: List<HlaAllele>) {
                 val cTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, cOnlyComplexes)
                 val topCandidates  = aTopCandidates + bTopCandidates + cTopCandidates
                 val rejected = candidatesAfterConfirmedProteins subtract topCandidates
-                logger.info("    discarding unlikely candidates: " + rejected.joinToString(", "))
+                logger.info("    discarding ${rejected.size} unlikely candidates: " + rejected.joinToString(", "))
                 complexes(confirmedGroups.alleles(), confirmedProtein.alleles(), topCandidates)
             } else {
                 complexes(confirmedGroups.alleles(), confirmedProtein.alleles(), candidatesAfterConfirmedProteins)

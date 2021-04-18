@@ -21,7 +21,6 @@ public enum EvidenceLevel {
             case "D":
                 return EvidenceLevel.D;
             case "NA":
-                return null;
             default:
                 return null;
         }

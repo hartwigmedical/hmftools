@@ -140,6 +140,11 @@ public class VariantContextDecorator implements GenomePosition {
         return impact;
     }
 
+    @NotNull
+    public CodingEffect canonicalCodingEffect() {
+        return snpEffSummary().canonicalCodingEffect();
+    }
+
     public double qual() {
         return context.getPhredScaledQual();
     }

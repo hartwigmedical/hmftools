@@ -9,6 +9,7 @@ import java.util.Set;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ComplexMatcherTest {
@@ -21,7 +22,7 @@ public class ComplexMatcherTest {
 
     @Test
     public void canAssessWhetherEventIsComplexEvent() {
-        EventMatcher matcher = new ComplexMatcher(COMPLEX_EVENTS_PER_GENE);
+        EventMatcher matcher = new ComplexMatcher(testHotspotMatcher(), COMPLEX_EVENTS_PER_GENE);
 
         assertTrue(matcher.matches("VHL", "Splicing alteration (c.464-2A>G)"));
         assertTrue(matcher.matches("KRAS", "KRAS ."));
@@ -31,8 +32,14 @@ public class ComplexMatcherTest {
         assertFalse(matcher.matches("APC", "APC p.I1557fs"));
 
         assertTrue(matcher.matches("ERBB2", "S310F/Y"));
+        assertTrue(matcher.matches("ERBB2", "L698_S1037dup"));
         assertFalse(matcher.matches("EGFR", "Exon 19 deletion/insertion"));
 
         assertFalse(matcher.matches("BRCA1", "BRCA1 L631QFS"));
+    }
+
+    @NotNull
+    private static HotspotMatcher testHotspotMatcher() {
+        return new HotspotMatcher(event -> event, new FusionPairMatcher(Sets.newHashSet(), Sets.newHashSet(), Sets.newHashSet()));
     }
 }

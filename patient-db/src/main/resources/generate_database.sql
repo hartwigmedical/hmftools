@@ -1174,4 +1174,44 @@ CREATE TABLE rnaFusion
     INDEX(name)
 );
 
+DROP TABLE IF EXISTS hlaType;
+CREATE TABLE hlaType
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    status varchar(255) NOT NULL,
+    typeA1 varchar(255) NOT NULL,
+    typeA2 varchar(255) NOT NULL,
+    typeB1 varchar(255) NOT NULL,
+    typeB2 varchar(255) NOT NULL,
+    typeC1 varchar(255) NOT NULL,
+    typeC2 varchar(255) NOT NULL,
+    somaticVariants int NOT NULL,
+    PRIMARY KEY (id),
+    KEY(sampleId)
+);
+
+DROP TABLE IF EXISTS hlaTypeDetails;
+CREATE TABLE hlaTypeDetails
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    type varchar(255) NOT NULL,
+    refUniqueCoverage INT NOT NULL,
+    refSharedCoverage INT NOT NULL,
+    refWildcardCoverage INT NOT NULL,
+    tumorUniqueCoverage INT NOT NULL,
+    tumorSharedCoverage INT NOT NULL,
+    tumorWildcardCoverage INT NOT NULL,
+    tumorCopyNumber DOUBLE PRECISION NOT NULL,
+    somaticInframeIndel DOUBLE PRECISION NOT NULL,
+    somaticNonsenseOrFrameshift DOUBLE PRECISION NOT NULL,
+    somaticMissense DOUBLE PRECISION NOT NULL,
+    somaticSplice DOUBLE PRECISION NOT NULL,
+    somaticSynonymous DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY (id),
+    KEY(sampleId, type)
+);
+
+
 SET FOREIGN_KEY_CHECKS = 1;

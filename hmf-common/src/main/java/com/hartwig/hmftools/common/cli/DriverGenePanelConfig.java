@@ -16,6 +16,9 @@ public final class DriverGenePanelConfig {
     public static final String DRIVER_GENE_PANEL_OPTION = "driver_gene_panel";
     public static final String DRIVER_GENE_PANEL_OPTION_DESC = "Path to driver gene panel";
 
+    private DriverGenePanelConfig() {
+    }
+
     public static void addGenePanelOption(boolean isRequired, final Options options) {
         Option genePanelOption = new Option(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
         genePanelOption.setRequired(isRequired);

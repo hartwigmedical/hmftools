@@ -8,7 +8,7 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.SequenceUtil;
 
-public class NumberEvents {
+public final class NumberEvents {
 
     public static int numberOfEvents(@NotNull final SAMRecord record, @NotNull final RefSequence refGenome) {
         int nm = rawNM(record, refGenome);

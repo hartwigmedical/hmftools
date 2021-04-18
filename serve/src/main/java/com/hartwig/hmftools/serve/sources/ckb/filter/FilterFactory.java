@@ -4,27 +4,30 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 
-public class FilterFactory {
+public final class FilterFactory {
 
-    static final Set<String> PROFILE_NAME_TO_FILTER = Sets.newHashSet();
+    static final Set<String> VARIANT_KEYWORDS_TO_FILTER = Sets.newHashSet();
 
     static {
         populateMutationToFilter();
     }
 
     private static void populateMutationToFilter() {
-
         // We don't consider wild-type events yet.
-        PROFILE_NAME_TO_FILTER.add("wild-type");
+        VARIANT_KEYWORDS_TO_FILTER.add("wild-type");
 
         // We cannot determine methylation with WGS/WTS
-        PROFILE_NAME_TO_FILTER.add("hypermethylation");
+        VARIANT_KEYWORDS_TO_FILTER.add("hypermethylation");
 
-        // Is not clear what profile it is
-        PROFILE_NAME_TO_FILTER.add("unknown");
+        // This is a variant which serves as a placeholder for evidence not related to any variant.
+        VARIANT_KEYWORDS_TO_FILTER.add("unknown");
 
+        // "Expression" is not observed on DNA level
+        VARIANT_KEYWORDS_TO_FILTER.add("positive");
+
+        // We don't consider LOH a driver on its own
+        VARIANT_KEYWORDS_TO_FILTER.add("LOH");
     }
-
 
     private FilterFactory() {
     }

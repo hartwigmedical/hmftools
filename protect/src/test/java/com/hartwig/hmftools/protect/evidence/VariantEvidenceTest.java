@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -154,6 +155,7 @@ public class VariantEvidenceTest {
                 .type(VariantType.SNP)
                 .source(ReportableVariantSource.SOMATIC)
                 .gene(Strings.EMPTY)
+                .genotypeStatus(GenotypeStatus.UNKNOWN)
                 .chromosome(Strings.EMPTY)
                 .position(0)
                 .ref(Strings.EMPTY)

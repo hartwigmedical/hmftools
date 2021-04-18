@@ -2,6 +2,9 @@ package com.hartwig.hmftools.lilac
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier
+import com.hartwig.hmftools.common.hla.HlaFiles
+import com.hartwig.hmftools.common.utils.version.VersionInfo
+import com.hartwig.hmftools.common.variant.VariantContextDecorator
 import com.hartwig.hmftools.lilac.LilacApplication.Companion.logger
 import com.hartwig.hmftools.lilac.amino.AminoAcidFragmentPipeline
 import com.hartwig.hmftools.lilac.candidates.Candidates
@@ -27,7 +30,12 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToFourDigit
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToSixDigit
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLociFile
-import com.hartwig.hmftools.lilac.variant.Somatics
+import com.hartwig.hmftools.lilac.variant.LilacVCF
+import com.hartwig.hmftools.lilac.variant.SomaticAlleleCoverage
+import com.hartwig.hmftools.lilac.variant.SomaticCodingCount
+import com.hartwig.hmftools.lilac.variant.SomaticCodingCount.Companion.addVariant
+import com.hartwig.hmftools.lilac.variant.SomaticVariants
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess
 import org.apache.commons.cli.*
 import org.apache.logging.log4j.LogManager
 import java.io.IOException
@@ -46,7 +54,7 @@ fun main(args: Array<String>) {
     try {
         val cmd = createCommandLine(args, options)
         val config = LilacConfig.createConfig(cmd)
-        LilacApplication(config).use { x -> x.run() }
+        LilacApplication(cmd, config).use { x -> x.run() }
     } catch (e: IOException) {
         logger.warn(e)
         exitProcess(1)
@@ -60,13 +68,14 @@ fun main(args: Array<String>) {
 }
 
 
-class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnable {
+class LilacApplication(private val cmd: CommandLine, private val config: LilacConfig) : AutoCloseable, Runnable {
     companion object {
         val logger = LogManager.getLogger(this::class.java)
         const val HLA_A = "HLA-A"
         const val HLA_B = "HLA-B"
         const val HLA_C = "HLA-C"
         val HLA_GENES = setOf(HLA_A, HLA_B, HLA_C)
+        val VERSION = VersionInfo("lilac.version")
 
         val DEFLATE_TEMPLATE = HlaAllele("A*01:01")
         val EXCLUDED_ALLELES = setOf(
@@ -220,7 +229,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         val winningReferenceCoverage = referenceRankedComplexes[0].expandToSixAlleles()
         val winningAlleles = winningReferenceCoverage.alleleCoverage.alleles()
-        val winningSequences = candidateSequences.filter { candidate -> candidate.allele in winningAlleles }
+        val winningSequences = candidateSequences.filter { candidate -> candidate.allele in winningAlleles }.toSet()
 
         logger.info(HlaComplexCoverage.header())
         for (rankedComplex in referenceRankedComplexes) {
@@ -229,52 +238,77 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
 
         logger.info("${config.sample} - REF - ${referenceRankedComplexes.size} CANDIDATES, WINNING ALLELES: ${winningReferenceCoverage.alleleCoverage.map { it.allele }}")
 
-        val aminoAcidQC = AminoAcidQC.create(winningSequences, referenceAminoAcidCounts)
-        val haplotypeQC = HaplotypeQC.create(3, winningSequences, aPhasedEvidence + bPhasedEvidence + cPhasedEvidence, referenceAminoAcidCounts)
-        val bamQC = BamQC.create(referenceBamReader)
-        val coverageQC = CoverageQC.create(referenceNucleotideFragments.size, winningReferenceCoverage)
-        val lilacQC = LilacQC(aminoAcidQC, bamQC, coverageQC, haplotypeQC)
-
-        logger.info("QC Stats:")
-        logger.info("    ${lilacQC.header().joinToString(",")}")
-        logger.info("    ${lilacQC.body().joinToString(",")}")
-
-        lilacQC.writefile("$outputDir/$sample.qc.txt")
-
-
         val winningTumorCoverage: HlaComplexCoverage
-        val winningTumorCopyNumber: HlaCopyNumber
+        val winningTumorCopyNumber: List<HlaCopyNumber>
+        val somaticVariants: List<VariantContextDecorator>
+        var somaticCodingCount = SomaticCodingCount.create(winningAlleles)
 
         if (config.tumorBam.isNotEmpty()) {
             logger.info("Calculating tumor coverage of winning alleles")
-
             val tumorFragmentAlleles = FragmentAlleles.create(aminoAcidPipeline.tumorCoverageFragments(),
                     referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences, referenceNucleotideHeterozygousLoci, candidateNucleotideSequences)
             winningTumorCoverage = HlaComplexCoverageFactory.proteinCoverage(tumorFragmentAlleles, winningAlleles).expandToSixAlleles()
 
             logger.info("Calculating tumor copy number of winning alleles")
-            winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(config.geneCopyNumberFile, winningTumorCoverage)
+            winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(winningAlleles, config.geneCopyNumberFile, winningTumorCoverage)
+
+            // SOMATIC VARIANTS
+            somaticVariants = SomaticVariants(config).readSomaticVariants()
+            if (somaticVariants.isNotEmpty()) {
+                logger.info("Calculating somatic variant allele coverage")
+                val lilacVCF = LilacVCF("${config.outputFilePrefix}.lilac.somatic.vcf.gz", config.somaticVcf).writeHeader()
+
+                val somaticCoverageFactory = SomaticAlleleCoverage(config, referenceAminoAcidHeterozygousLoci, LOCI_POSITION, somaticVariants, winningSequences)
+                for (variant in somaticVariants) {
+                    val variantCoverage = somaticCoverageFactory.alleleCoverage(variant, tumorBamReader)
+                    val variantAlleles = variantCoverage.alleles().toSet()
+                    logger.info("    $variant -> $variantCoverage")
+                    lilacVCF.writeVariant(variant.context(), variantAlleles)
+                    somaticCodingCount = somaticCodingCount.addVariant(variant, variantAlleles)
+                }
+            }
         } else {
             winningTumorCoverage = HlaComplexCoverage.create(listOf())
-            winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(config.geneCopyNumberFile, winningTumorCoverage)
+            winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(winningAlleles)
+            somaticVariants = listOf()
         }
 
-        val output = HlaOut(winningReferenceCoverage, winningTumorCoverage, winningTumorCopyNumber)
-        output.write("$outputDir/$sample.lilac.txt")
+        val output = HlaOut.create(winningReferenceCoverage, winningTumorCoverage, winningTumorCopyNumber, somaticCodingCount)
+
+        // QC
+        logger.info("Calculating QC Statistics")
+        val somaticVariantQC = SomaticVariantQC.create(somaticVariants.size, somaticCodingCount)
+        val aminoAcidQC = AminoAcidQC.create(winningSequences, referenceAminoAcidCounts)
+        val haplotypeQC = HaplotypeQC.create(3, winningSequences, aPhasedEvidence + bPhasedEvidence + cPhasedEvidence, referenceAminoAcidCounts)
+        val bamQC = BamQC.create(referenceBamReader)
+        val coverageQC = CoverageQC.create(referenceNucleotideFragments.size, winningReferenceCoverage)
+        val lilacQC = LilacQC.create(aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC)
+
+        logger.info("QC Stats:")
+        logger.info("    ${lilacQC.header().joinToString(",")}")
+        logger.info("    ${lilacQC.body().joinToString(",")}")
 
         logger.info("Writing output to $outputDir")
+        val outputFile = "${config.outputFilePrefix}.lilac.txt"
+        val outputQCFile = "${config.outputFilePrefix}.lilac.qc.txt"
+
+        output.write(outputFile)
+        lilacQC.writefile(outputQCFile)
         val deflatedSequenceTemplate = aminoAcidSequences.first { it.allele == DEFLATE_TEMPLATE }
         val candidateToWrite = (candidateSequences + expectedSequences + deflatedSequenceTemplate).distinct().sortedBy { it.allele }
         HlaSequenceLociFile.write("$outputDir/$sample.candidates.sequences.txt", A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES, candidateToWrite)
         referenceRankedComplexes.writeToFile("$outputDir/$sample.candidates.coverage.txt")
-        referenceAminoAcidCounts.writeVertically("$outputDir/$sample.aminoacids.count.txt")
-        referenceNucleotideCounts.writeVertically("$outputDir/$sample.nucleotides.count.txt")
+        referenceAminoAcidCounts.writeVertically("$outputDir/$sample.candidates.aminoacids.txt")
+        referenceNucleotideCounts.writeVertically("$outputDir/$sample.candidates.nucleotides.txt")
 
-
-        Somatics().doStuff(config, tumorBamReader, winningSequences, referenceAminoAcidHeterozygousLoci, LOCI_POSITION)
-
+        if (DatabaseAccess.hasDatabaseConfig(cmd)) {
+            logger.info("Writing output to DB")
+            val dbAccess = DatabaseAccess.databaseAccess(cmd, true)
+            val type = HlaFiles.type(outputFile, outputQCFile);
+            val typeDetails = HlaFiles.typeDetails(outputFile)
+            dbAccess.writeHla(sample, type, typeDetails)
+        }
     }
-
 
     private fun nucleotideLoci(inputFilename: String): List<HlaSequenceLoci> {
         val sequences = HlaSequenceFile.readFile(inputFilename)
@@ -285,7 +319,7 @@ class LilacApplication(private val config: LilacConfig) : AutoCloseable, Runnabl
     }
 
 
-    private fun createSynonmous(template: HlaSequenceLoci): HlaSequenceLoci {
+    private fun createSynonymous(template: HlaSequenceLoci): HlaSequenceLoci {
         val modSequences = template.sequences.toMutableList()
         modSequences[1011] = "A"
         modSequences[1012] = "G"

@@ -32,7 +32,6 @@ public final class ViccUtil {
     private static final Logger LOGGER = LogManager.getLogger(ViccUtil.class);
 
     private static final String FIELD_DELIMITER = "\t";
-    private static final String SUB_FIELD_DELIMITER = ",";
 
     private ViccUtil() {
     }
@@ -111,7 +110,7 @@ public final class ViccUtil {
         if (!featuresWithoutGenomicEvents.isEmpty()) {
             LOGGER.warn("No genomic events derived for {} features!", featuresWithoutGenomicEvents.size());
             for (Feature feature : featuresWithoutGenomicEvents) {
-                LOGGER.debug(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
+                LOGGER.warn(" No genomic events derived from '{}' in '{}'", feature.name(), feature.geneSymbol());
             }
         }
 

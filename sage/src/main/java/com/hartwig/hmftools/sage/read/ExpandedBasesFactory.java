@@ -24,7 +24,6 @@ public class ExpandedBasesFactory {
 
     @NotNull
     public IndexedBases expand(int position, int readIndex, SAMRecord record) {
-
         final byte[] src = record.getReadBases();
         final AtomicInteger indexAdjustment = new AtomicInteger(0);
         final List<Integer> indexes = Lists.newArrayList();

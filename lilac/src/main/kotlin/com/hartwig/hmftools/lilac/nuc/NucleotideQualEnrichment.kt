@@ -3,18 +3,19 @@ package com.hartwig.hmftools.lilac.nuc
 import com.hartwig.hmftools.lilac.SequenceCount
 
 /**
- * Only permit high quality nucleotide values, ie, nucleotides that have at least [minEvidence] instances with quality > [minBaseQuality] in aggregate
+ * Only permit high quality nucleotide values, ie, nucleotides that have at least 1 high quality (> [minBaseQuality]) and at least [minEvidence] instances in aggregate
  */
 class NucleotideQualEnrichment(private val minBaseQuality: Int, private val minEvidence: Int) {
 
     fun enrich(nucleotideFragments: List<NucleotideFragment>): List<NucleotideFragment> {
-        val qualityFilteredFragments = nucleotideFragments.map { it.qualityFilter(minBaseQuality) }.filter { it.isNotEmpty() }
-        val counts = SequenceCount.nucleotides(minEvidence, qualityFilteredFragments)
-        val result = nucleotideFragments.map { enrich(it, counts) }
+        val highQualityFragments = nucleotideFragments.map { it.qualityFilter(minBaseQuality) }.filter { it.isNotEmpty() }
+        val highQualityCounts = SequenceCount.nucleotides(1, highQualityFragments)
+        val rawCounts = SequenceCount.nucleotides(minEvidence, nucleotideFragments)
+        val result = nucleotideFragments.map { enrich(it, highQualityCounts, rawCounts) }
         return result
     }
 
-    private fun enrich(fragment: NucleotideFragment, count: SequenceCount): NucleotideFragment {
+    private fun enrich(fragment: NucleotideFragment, highQualityCount: SequenceCount, rawCount: SequenceCount): NucleotideFragment {
         val nucleotideLoci = mutableListOf<Int>()
         val nucleotideQuality = mutableListOf<Int>()
         val nucleotides = mutableListOf<String>()
@@ -24,9 +25,11 @@ class NucleotideQualEnrichment(private val minBaseQuality: Int, private val minE
 
             val currentQuality = fragment.nucleotideQuality()[i]
             val fragmentNucleotide = fragment.nucleotides()[i]
-            val countNucleotides = count.sequenceAt(loci)
+            val highQualitySequences = highQualityCount.sequenceAt(loci)
+            val rawSequences = rawCount.sequenceAt(loci)
+            val allowedSequences = rawSequences intersect highQualitySequences
 
-            if (fragmentNucleotide in countNucleotides) {
+            if (fragmentNucleotide in allowedSequences) {
                 nucleotideLoci.add(loci)
                 nucleotideQuality.add(currentQuality)
                 nucleotides.add(fragmentNucleotide)

@@ -26,7 +26,7 @@ public class AnnotatedCodonVCFChecker {
     private static final boolean LOG_DEBUG = true;
 
     public static void main(String[] args) throws IOException {
-        LOGGER.info("Running SERVE codon VCF checker");
+        LOGGER.info("Running SERVE Codon VCF checker");
 
         if (LOG_DEBUG) {
             Configurator.setRootLevel(Level.DEBUG);
@@ -50,7 +50,7 @@ public class AnnotatedCodonVCFChecker {
             int inputCodon = Integer.parseInt(inputParts[2]);
 
             List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
-            if (determineMatch(inputGene, inputTranscript, inputCodon, annotations)) {
+            if (isMatch(inputGene, inputTranscript, inputCodon, annotations)) {
                 matchCount++;
             } else {
                 diffCount++;
@@ -70,7 +70,7 @@ public class AnnotatedCodonVCFChecker {
         return null;
     }
 
-    private static boolean determineMatch(@NotNull String inputGene, @Nullable String inputTranscript, int inputCodon,
+    private static boolean isMatch(@NotNull String inputGene, @Nullable String inputTranscript, int inputCodon,
             @NotNull List<SnpEffAnnotation> annotations) {
         if (inputTranscript != null) {
             SnpEffAnnotation annotation = annotationForTranscript(annotations, inputTranscript);
@@ -78,16 +78,10 @@ public class AnnotatedCodonVCFChecker {
             if (annotation != null) {
                 int snpEffCodon = extractCodon(annotation.hgvsProtein());
                 if (inputCodon == snpEffCodon) {
-                    LOGGER.debug("Identical on gene '{}': SERVE input codon '{}' vs SnpEff codon '{}'",
-                            inputGene,
-                            inputCodon,
-                            snpEffCodon);
+                    LOGGER.debug("Identical on gene '{}': SERVE input codon '{}' vs SnpEff codon '{}'", inputGene, inputCodon, snpEffCodon);
                     return true;
                 } else {
-                    LOGGER.warn("Difference on gene '{}': SERVE input codon '{}' vs SnpEff codon '{}'",
-                            inputGene,
-                            inputCodon,
-                            snpEffCodon);
+                    LOGGER.warn("Difference on gene '{}': SERVE input codon '{}' vs SnpEff codon '{}'", inputGene, inputCodon, snpEffCodon);
                     return false;
                 }
             } else {

@@ -46,12 +46,12 @@ public class ServeApplication {
 
         new ExtractionResultWriter(config.outputDir(), RefGenomeVersion.V37).write(result);
 
-        LOGGER.info("Done!");
+        LOGGER.info("Complete!");
     }
 
     @NotNull
     private static DoidLookup buildDoidLookup(@NotNull String missingDoidsMappingTsv) throws IOException {
         LOGGER.info("Creating missing doid lookup mapping from {}", missingDoidsMappingTsv);
-        return DoidLookupFactory.buildFromConfigTsv(missingDoidsMappingTsv);
+        return DoidLookupFactory.buildFromMappingTsv(missingDoidsMappingTsv);
     }
 }

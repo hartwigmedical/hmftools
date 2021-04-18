@@ -6,6 +6,9 @@ public final class ExpectedBAF {
 
     private static final double DEFAULT_PERCENT = 0.8;
 
+    private ExpectedBAF() {
+    }
+
     public static double expectedBAF(int averageDepth) {
         return expectedBAF(averageDepth, DEFAULT_PERCENT);
     }

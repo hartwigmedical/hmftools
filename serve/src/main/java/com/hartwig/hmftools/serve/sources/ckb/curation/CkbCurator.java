@@ -20,12 +20,9 @@ public class CkbCurator {
     private static final Logger LOGGER = LogManager.getLogger(CkbCurator.class);
 
     @NotNull
-    private final Set<String> evaluatedGenes = Sets.newHashSet();
-    @NotNull
     private final Set<CurationEntry> evaluatedCurationEntries = Sets.newHashSet();
 
     public CkbCurator() {
-
     }
 
     @NotNull
@@ -34,14 +31,10 @@ public class CkbCurator {
 
         for (CkbEntry ckbEntry : ckbEntries) {
             List<Variant> curatedVariants = Lists.newArrayList();
-            if (ckbEntry.variants().size() == 1) {
-                curatedVariants.add(curate(ckbEntry.variants()));
-
-                curatedCkbEntries.add(ImmutableCkbEntry.builder().from(ckbEntry).variants(curatedVariants).build());
-            } else {
-                curatedCkbEntries.add(ImmutableCkbEntry.builder().from(ckbEntry).build());
-
+            for (Variant variant : ckbEntry.variants()) {
+                curatedVariants.add(curate(variant));
             }
+            curatedCkbEntries.add(ImmutableCkbEntry.builder().from(ckbEntry).variants(curatedVariants).build());
         }
 
         return curatedCkbEntries;
@@ -49,60 +42,39 @@ public class CkbCurator {
 
     public void reportUnusedCurationEntries() {
         int unusedEntryCount = 0;
-        for (CurationEntry entry : CurationFactory.MUTATION_MAPPINGS.keySet()) {
+        for (CurationEntry entry : CurationFactory.VARIANT_MAPPINGS.keySet()) {
             if (!evaluatedCurationEntries.contains(entry)) {
                 unusedEntryCount++;
-                LOGGER.warn("Entry '{}' hasn't been used during CKB curation", entry);
+                LOGGER.warn(" Entry '{}' hasn't been used during CKB curation", entry);
             }
         }
 
-        LOGGER.info("Found {} unused CKB curation entries. {} keys have been requested against {} curation entries",
+        LOGGER.debug(" Found {} unused CKB curation entries. {} keys have been requested against {} curation entries",
                 unusedEntryCount,
                 evaluatedCurationEntries.size(),
-                CurationFactory.MUTATION_MAPPINGS.size());
-
-        int unusedGeneCount = 0;
-        for (String gene : CurationFactory.GENE_MAPPINGS.keySet()) {
-            if (!evaluatedGenes.contains(gene)) {
-                unusedEntryCount++;
-                LOGGER.warn("Gene '{}' hasn't been used during CKB curation", gene);
-            }
-        }
-
-        LOGGER.info("Found {} unused CKB curation genes. {} genes have been requested against {} curation genes",
-                unusedGeneCount,
-                evaluatedGenes.size(),
-                CurationFactory.GENE_MAPPINGS.size());
+                CurationFactory.VARIANT_MAPPINGS.size());
     }
 
     @NotNull
-    private Variant curate(@NotNull List<Variant> variants) {
-        Variant variant = variants.get(0);
+    private Variant curate(@NotNull Variant variant) {
         CurationEntry entry = new CurationEntry(variant.gene().geneSymbol(), variant.variant());
         evaluatedCurationEntries.add(entry);
 
-        String gene = variant.gene().geneSymbol();
-        evaluatedGenes.add(gene);
-
         Variant curatedMutation = variant;
-        if (CurationFactory.MUTATION_MAPPINGS.containsKey(entry)) {
-            String mappedName = CurationFactory.MUTATION_MAPPINGS.get(entry).name();
-            String mappedGene = CurationFactory.MUTATION_MAPPINGS.get(entry).gene();
+        if (CurationFactory.VARIANT_MAPPINGS.containsKey(entry)) {
+            String mappedVariant = CurationFactory.VARIANT_MAPPINGS.get(entry).variant();
+            String mappedGeneSymbol = CurationFactory.VARIANT_MAPPINGS.get(entry).geneSymbol();
 
-            LOGGER.debug("Mapping mutation '{}' on '{}' to '{}' on '{}'", entry.name(), entry.gene(), mappedName, mappedGene);
+            LOGGER.debug("Mapping mutation '{}' on '{}' to '{}' on '{}'",
+                    entry.variant(),
+                    entry.geneSymbol(),
+                    mappedVariant,
+                    mappedGeneSymbol);
+
             curatedMutation = ImmutableVariant.builder()
                     .from(curatedMutation)
-                    .gene(ImmutableGene.builder().from(variant.gene()).geneSymbol(mappedGene).build())
-                    .variant(mappedName)
-                    .build();
-        }
-
-        if (CurationFactory.GENE_MAPPINGS.containsKey(gene)) {
-            String mappedGene = CurationFactory.GENE_MAPPINGS.get(gene);
-            LOGGER.debug("Mapping mutation '{}' on '{}' to '{}' on '{}'", entry.name(), entry.gene(), entry.name(), mappedGene);
-            curatedMutation = ImmutableVariant.builder()
-                    .from(curatedMutation)
-                    .gene(ImmutableGene.builder().from(variant.gene()).geneSymbol(mappedGene).build())
+                    .gene(ImmutableGene.builder().from(variant.gene()).geneSymbol(mappedGeneSymbol).build())
+                    .variant(mappedVariant)
                     .build();
         }
 

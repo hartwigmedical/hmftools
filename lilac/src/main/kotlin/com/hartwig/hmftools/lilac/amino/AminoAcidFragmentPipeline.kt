@@ -6,7 +6,6 @@ import com.hartwig.hmftools.lilac.SequenceCountDiff
 import com.hartwig.hmftools.lilac.hla.HlaContext
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.nuc.NucleotideQualEnrichment
-import com.hartwig.hmftools.lilac.nuc.NucleotideSpliceEnrichment
 
 class AminoAcidFragmentPipeline(private val config: LilacConfig, private val referenceFragments: List<NucleotideFragment>, tumorFragments: List<NucleotideFragment>) {
     private val minBaseQuality = config.minBaseQual
@@ -21,8 +20,8 @@ class AminoAcidFragmentPipeline(private val config: LilacConfig, private val ref
         val referenceAminoAcids = process(context.aminoAcidBoundaries, geneReferenceFragments)
         val referenceNucleotideCounts = SequenceCount.nucleotides(minEvidence, referenceAminoAcids)
         val referenceAminoAcidCounts = SequenceCount.aminoAcids(minEvidence, referenceAminoAcids)
-        referenceAminoAcidCounts.writeVertically("${config.outputFilePrefix}.reference.aminoacids.${gene}.count.txt")
-        referenceNucleotideCounts.writeVertically("${config.outputFilePrefix}.reference.nucleotides.${gene}.count.txt")
+        referenceAminoAcidCounts.writeVertically("${config.outputFilePrefix}.${gene}.aminoacids.txt")
+        referenceNucleotideCounts.writeVertically("${config.outputFilePrefix}.${gene}.nucleotides.txt")
 
         return referenceAminoAcids
     }
@@ -72,11 +71,11 @@ class AminoAcidFragmentPipeline(private val config: LilacConfig, private val ref
             return listOf()
         }
 
-        val spliceEnricher = NucleotideSpliceEnrichment(minBaseQuality, minEvidence, boundaries)
 
         val qualEnriched = nucleotideQualEnrichment.enrich(fragments)
-        val spliceEnriched = spliceEnricher.enrich(qualEnriched)
-        val result = aminoAcidEnricher.enrich(spliceEnriched)
+//        val spliceEnricher = NucleotideSpliceEnrichment(minBaseQuality, minEvidence, boundaries)
+//        val spliceEnriched = spliceEnricher.enrich(qualEnriched)
+        val result = aminoAcidEnricher.enrich(qualEnriched)
 
         return result
     }

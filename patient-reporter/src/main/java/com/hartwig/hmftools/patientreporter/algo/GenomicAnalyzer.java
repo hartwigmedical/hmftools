@@ -9,10 +9,7 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
-import com.hartwig.hmftools.protect.bachelor.BachelorData;
-import com.hartwig.hmftools.protect.bachelor.BachelorDataLoader;
 import com.hartwig.hmftools.protect.chord.ChordDataLoader;
-import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.linx.LinxData;
 import com.hartwig.hmftools.protect.linx.LinxDataLoader;
 import com.hartwig.hmftools.protect.purple.PurpleData;
@@ -28,17 +25,13 @@ public class GenomicAnalyzer {
 
     private static final Logger LOGGER = LogManager.getLogger(GenomicAnalyzer.class);
 
-    @NotNull
-    private final GermlineReportingModel germlineReportingModel;
-
-    public GenomicAnalyzer(@NotNull final GermlineReportingModel germlineReportingModel) {
-        this.germlineReportingModel = germlineReportingModel;
+    public GenomicAnalyzer() {
     }
 
     @NotNull
     public GenomicAnalysis run(@NotNull String tumorSampleId, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
-            @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String bachelorTsv,
+            @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf,
             @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
             @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String protectEvidenceTsv) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
@@ -51,10 +44,8 @@ public class GenomicAnalyzer {
 
         LinxData linxData = LinxDataLoader.load(linxFusionTsv, linxBreakendTsv, linxViralInsertionTsv, linxDriversTsv);
 
-        BachelorData bachelorData = BachelorDataLoader.load(bachelorTsv, purpleData, linxData, germlineReportingModel);
-
         List<ReportableVariant> reportableVariants =
-                ReportableVariantFactory.mergeVariantLists(bachelorData.germlineVariants(), purpleData.somaticVariants());
+                ReportableVariantFactory.mergeVariantLists(purpleData.germlineVariants(), purpleData.somaticVariants());
 
         ChordAnalysis chordAnalysis = ChordDataLoader.load(chordPredictionTxt);
 

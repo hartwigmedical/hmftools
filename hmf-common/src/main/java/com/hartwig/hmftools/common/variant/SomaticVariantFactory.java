@@ -12,10 +12,11 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.enrich.SubclonalLikelihoodEnrichment;
-import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
+import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
 
@@ -51,7 +52,7 @@ public class SomaticVariantFactory implements VariantContextFilter {
     public SomaticVariantFactory(@NotNull final VariantContextFilter... filters) {
         this.filter = new CompoundFilter(true);
         this.filter.addAll(Arrays.asList(filters));
-        this.filter.add(new ChromosomeFilter());
+        this.filter.add(new HumanChromosomeFilter());
         this.filter.add(new NTFilter());
     }
 
@@ -105,6 +106,7 @@ public class SomaticVariantFactory implements VariantContextFilter {
     public Optional<SomaticVariant> createVariant(@NotNull final String sample, @Nullable final String reference,
             @Nullable final String rna, @NotNull final VariantContext context) {
         final Genotype genotype = context.getGenotype(sample);
+        GenotypeStatus genotypeStatus = genotype != null ? GenotypeStatus.fromGenotype(genotype) : GenotypeStatus.UNKNOWN;
 
         if (filter.test(context) && AllelicDepth.containsAllelicDepth(genotype)) {
             final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
@@ -120,7 +122,7 @@ public class SomaticVariantFactory implements VariantContextFilter {
                     .map(AllelicDepth::fromGenotype);
 
             if (tumorDepth.totalReadCount() > 0) {
-                return Optional.of(createVariantBuilder(tumorDepth, context))
+                return Optional.of(createVariantBuilder(tumorDepth, context).genotypeStatus(genotypeStatus))
                         .map(x -> x.rnaDepth(rnaDepth.orElse(null)))
                         .map(x -> x.referenceDepth(referenceDepth.orElse(null)))
                         .map(ImmutableSomaticVariantImpl.Builder::build);

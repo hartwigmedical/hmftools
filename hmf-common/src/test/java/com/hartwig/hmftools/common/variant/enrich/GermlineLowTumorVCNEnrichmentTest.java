@@ -54,5 +54,4 @@ public class GermlineLowTumorVCNEnrichmentTest {
                 + hotspotFlag + "\tGT:AD:DP\t0/1:73,17:91";
         return VariantContextFromString.decode(line);
     }
-
 }

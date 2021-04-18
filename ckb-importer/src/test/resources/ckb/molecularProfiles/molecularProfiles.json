@@ -1,0 +1,37 @@
+{
+  "id": 0,
+  "profileName": "",
+  "geneVariants": [
+  ],
+  "profileTreatmentApproaches": [
+
+  ],
+  "createDate": "01/01/1900",
+  "updateDate": "01/01/1900",
+  "complexMolecularProfileEvidence": {
+    "totalCount": 0,
+    "complexMolecularProfileEvidence": [
+
+    ]
+  },
+  "treatmentApproachEvidence": {
+    "totalCount": 0,
+    "treatmentApproachEvidence": [
+
+    ]
+  },
+  "variantAssociatedClinicalTrials": [
+
+  ],
+  "variantLevelEvidence": {
+    "totalCount": 0,
+    "variantLevelEvidences": [
+    ]
+  },
+  "extendedEvidence": {
+    "totalCount": 0,
+    "extendedEvidence": [
+
+    ]
+  }
+}

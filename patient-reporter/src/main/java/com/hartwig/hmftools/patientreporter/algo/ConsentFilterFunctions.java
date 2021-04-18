@@ -7,6 +7,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
+import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
+import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.linx.ViralInsertion;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -17,13 +20,13 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ConsentFilterFunctions {
 
-    private ConsentFilterFunctions() {
+    public ConsentFilterFunctions() {
     }
 
     // TODO Split up the filtering functions from the overruling functions.
     // TODO Extend overruling functions to make json and pdf more consistent.
     @NotNull
-    public static GenomicAnalysis filterAndOverruleForConsent(@NotNull GenomicAnalysis genomicAnalysis,
+    public GenomicAnalysis filterAndOverruleForConsent(@NotNull GenomicAnalysis genomicAnalysis,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralInsertions) {
         List<ReportableVariant> filteredVariants = filterAndOverruleVariants(genomicAnalysis.reportableVariants(),
                 germlineReportingLevel,
@@ -54,6 +57,7 @@ public final class ConsentFilterFunctions {
     @$VisibleForTesting
     static List<ReportableVariant> filterAndOverruleVariants(@NotNull List<ReportableVariant> variants,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean hasReliablePurity) {
+
         List<ReportableVariant> filteredVariants = Lists.newArrayList();
         for (ReportableVariant variant : variants) {
             if (germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING || variant.source() == ReportableVariantSource.SOMATIC) {

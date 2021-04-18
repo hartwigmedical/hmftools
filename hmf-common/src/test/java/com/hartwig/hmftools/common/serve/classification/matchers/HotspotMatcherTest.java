@@ -6,13 +6,14 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.Sets;
 
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class HotspotMatcherTest {
 
     @Test
     public void canAssessWhetherEventIsHotspot() {
-        EventMatcher matcher = new HotspotMatcher(event -> event, new FusionPairMatcher(Sets.newHashSet(), Sets.newHashSet()));
+        EventMatcher matcher = testHotspotMatcher();
 
         assertTrue(matcher.matches("any", "K5N"));
         assertTrue(matcher.matches("any", "L2230V"));
@@ -63,5 +64,23 @@ public class HotspotMatcherTest {
 
         // Ignore hotspots on fusion genes.
         assertFalse(matcher.matches("any", "EML4-ALK L1123R"));
+    }
+
+    @Test
+    public void canDetermineComplexMatches() {
+        HotspotMatcher matcher = testHotspotMatcher();
+
+        assertFalse(matcher.isComplexMatch("any", "V600E"));
+        assertFalse(matcher.isComplexMatch("any", "G10fs*"));
+        assertFalse(matcher.isComplexMatch("any", "L755_T759del"));
+        assertFalse(matcher.isComplexMatch("any", "EML4-ALK L1123R"));
+
+        assertTrue(matcher.isComplexMatch("any", "L698_S1037dup"));
+        assertTrue(matcher.isComplexMatch("any", "L4_T40del"));
+    }
+
+    @NotNull
+    private static HotspotMatcher testHotspotMatcher() {
+        return new HotspotMatcher(event -> event, new FusionPairMatcher(Sets.newHashSet(), Sets.newHashSet(), Sets.newHashSet()));
     }
 }

@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
-public class Rearrangement {
+public final class Rearrangement {
 
     private static final int MAX_MNV_LENGTH = 2;
 

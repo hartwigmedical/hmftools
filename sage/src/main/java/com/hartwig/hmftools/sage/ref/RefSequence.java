@@ -12,6 +12,7 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 public class RefSequence {
 
     private static final int BUFFER = 1000;
+    
     private final int end;
     private final int start;
     private final ReferenceSequence sequence;

@@ -24,23 +24,28 @@ public class CopyNumberExtractor {
     private final GeneChecker geneChecker;
     @NotNull
     private final List<DriverGene> driverGenes;
+    private final boolean reportOnDriverInconsistencies;
 
-    public CopyNumberExtractor(@NotNull final GeneChecker geneChecker, @NotNull final List<DriverGene> driverGenes) {
+    public CopyNumberExtractor(@NotNull final GeneChecker geneChecker, @NotNull final List<DriverGene> driverGenes,
+            final boolean reportOnDriverInconsistencies) {
         this.geneChecker = geneChecker;
         this.driverGenes = driverGenes;
+        this.reportOnDriverInconsistencies = reportOnDriverInconsistencies;
     }
 
     @Nullable
     public KnownCopyNumber extract(@NotNull String gene, @NotNull EventType type) {
-        if (COPY_NUMBER_EVENTS.contains(type) && geneChecker.isValidGene(gene, type)) {
-            DriverCategory driverCategory = findByGene(driverGenes, gene);
-            if (driverCategory != null) {
-                if ((driverCategory == DriverCategory.TSG && type == EventType.AMPLIFICATION) || (driverCategory == DriverCategory.ONCO
-                        && type == EventType.DELETION)) {
-                    LOGGER.warn("Mismatch for {} in driver category {} vs event type {}", gene, driverCategory, type);
+        if (COPY_NUMBER_EVENTS.contains(type) && geneChecker.isValidGene(gene)) {
+            if (reportOnDriverInconsistencies) {
+                DriverCategory driverCategory = findByGene(driverGenes, gene);
+                if (driverCategory != null) {
+                    if ((driverCategory == DriverCategory.TSG && type == EventType.AMPLIFICATION) || (driverCategory == DriverCategory.ONCO
+                            && type == EventType.DELETION)) {
+                        LOGGER.warn("Mismatch for {} in driver category {} vs event type {}", gene, driverCategory, type);
+                    }
+                } else {
+                    LOGGER.warn("{} on {} is not included in driver catalog and won't ever be reported.", type, gene);
                 }
-            } else {
-                LOGGER.debug("{} on {} is not included in driver catalog and won't ever be reported.", type, gene);
             }
             return ImmutableKnownCopyNumber.builder().gene(gene).type(toCopyNumberType(type)).build();
         }

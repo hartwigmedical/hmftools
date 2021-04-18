@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.extraction.util;
 
-import static com.hartwig.hmftools.serve.drivercatalog.DriverGeneSupplier.createDriverGenes;
+import static com.hartwig.hmftools.serve.DriverGeneSupplier.createDriverGenes;
 
 import static org.junit.Assert.assertEquals;
 

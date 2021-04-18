@@ -18,6 +18,9 @@ public final class SageMetaData {
     private static final String PHASE_DESCRIPTION = "Local Phase Set";
     private static final String REALIGN_DESCRIPTION = "Local Realignment Set";
 
+    private SageMetaData() {
+    }
+
     @NotNull
     public static VCFHeader addSageMetaData(@NotNull final VCFHeader header) {
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));

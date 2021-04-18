@@ -1,16 +1,17 @@
 # Search External Resources for Variant Evidence
 
-SERVE harmonizes various sources of evidence into a single unified model that can be readily used in genomic analyses.  
-The model provides a mapping from genomic events to clinical evidence. 
-In addition, SERVE generates output containing all genomic events that are implied to be able to driver cancer.  
+SERVE harmonizes various sources of evidence into a single unified model that can be readily used in genomic analyses:  
+ - A model is generated which allows mapping of genomic events to clinical evidence. 
+ - An overview of mutations that are implied to be potential cancer drivers is generated.  
 
 ## Contents
 
 * [Which knowledgebases are supported?](#supported-input-knowledgebases)
 * [What is generated as final SERVE output?](#outputs)
-* [How are genomic events extracted from the source knowledgebases?](#Extraction of genomic events and characteristics from knowledgebases)
+* [How are genomic events extracted from the source knowledgebases?](#extraction-of-genomic-events-and-tumor-characteristics-from-knowledgebases)
 * [What is done in terms of curation and harmonization?](#curation-and-harmonization-of-individual-knowledgebases)
 * [How does everything come together?](#overview-of-the-serve-algorithm)
+* [Version history and download links](#version-history-and-download-links)
 
 ## Supported input knowledgebases
 
@@ -28,7 +29,7 @@ SERVE supports the ingestion of the following knowledgebases:
 Support for the following knowledgebases is under development:
  - [CBG Compassionate Use](https://www.cbg-meb.nl/onderwerpen/hv-compassionate-use-programma/overzicht-goedgekeurde-cup) - 
     a database of approved compassionate use programs in the Netherlands
- - [CKB FLEX](https://ckb.jax.org) - The complete CKB clinical database. 
+ - [CKB FLEX](https://ckbhome.jax.org) - The complete CKB clinical database. 
  
 A number of other Hartwig modules support the ingestion (and analysis) of these knowledgebases:
  - [VICC Importer](../vicc-importer/README.md): A module supporting the ingestion of any knowledgebase ingested into VICC.
@@ -44,7 +45,7 @@ they are compliant with the usage of the data itself.
 
 SERVE generates clinical evidence in the following datamodel:
  - Treatment (name of trial or drug(s))
- - Cancer type (including DOID) for which the treatment is on-label.
+ - Cancer type (annotated with DOID) for which the treatment is considered on-label.
  - Tier / Evidence level of the treatment
  - Direction (Responsive for the treatment or resistant to the treatment)
  - A set of URLs with extra information about the evidence (could be a publication, or a general website)
@@ -65,11 +66,9 @@ genomic events implied to be able to driver cancer:
  - Known amplifications and deletions
  - Known hotspots (specific mutations on specific loci)
  - Known codons (codons for which generic mutations are implied to be pathogenic)
- - Known exons (exons for which specific mutations are applied to be pathogenic)
+ - Known exons (exons for which specific mutations are implied to be pathogenic)  
 
-SERVE can be configured to generate its output either for reference genome version 37 or version 38.  
-
-## Extraction of genomic events and characteristics from knowledgebases
+## Extraction of genomic events and tumor characteristics from knowledgebases
  
 ### Gene checking
 
@@ -82,14 +81,14 @@ For fusions, genes are permitted that can exist in the context of a fusion pair 
  
 Evidence on SNVs and small INDELs generally come in their protein annotated form (e.g. BRAF V600E). 
 SERVE uses [transvar](https://github.com/zwdzwd/transvar) to resolve these annotations into genomic coordinates (referred to as hotspots) 
-for the reference genome version that is configured to be used.
+for the reference genome version that is used by the input knowledgebase.
  
-The first step is to choose what transcript to use for converting protein annotation back to genomic coordinates:
+The first step is to choose what ensembl transcript to use for converting protein annotation back to genomic coordinates:
  1. If the knowledgebase configured a transcript for a mutation, that transcript is used exclusively.
  1. If no transcript is configured, SERVE uses the typical transcript used by Hartwig which is generally the canonical 
  transcript defined by ensembl.
  1. If a protein annotation does not exist on the canonical transcript and has no transcript configured in the knowledgebase, 
- any random transcript for which the protein annotation does exist is picked.
+ a consistently specific transcript is picked for protein annotation in case multiple transcript imply the same hotspot.
  
 If a protein annotated form does not exist on any transcript for a specific gene, the evidence is ignored 
 (see also [curation](#curation-and-harmonization-of-individual-knowledgebases)). 
@@ -129,7 +128,7 @@ First off, evidence on codons and exons are assumed to be defined with respect t
   this evidence could potentially lead to wrong matching.  
   - If no transcript is configured in the knowledgebase, it is assumed the canonical transcript is implied. 
  
-For ranges that represent exons, the range is extended by 5 bases on both sides of the exon to be able to capture splice variants affecting 
+For ranges that represent exons, the range is extended by 10 bases on both sides of the exon to be able to capture splice variants affecting 
 the exon. 
 
 In addition to resolving coordinates, every codon and exon range is annotated with a filter indicating which type(s) of mutations are valid 
@@ -168,7 +167,7 @@ This is to support evidence on fusions like EGFRvII.
 
 Evidence on fusion pairs where these restrictions are missing can be assumed to be valid for any fusion between the two genes specified. 
 
-### Genome wide events
+### Genome wide tumor characteristics
 
 For evidence that is applicable when a genome wide event has happened, the type of event required to match evidence to the event 
 is derived from the knowledgebase event.
@@ -176,8 +175,12 @@ is derived from the knowledgebase event.
 Genome wide event  | Description
 ---|---
 MICROSATELLITE_UNSTABLE  | Evidence is applicable when the genome has a MSI status
+MICROSATELLITE_STABLE  | Evidence is applicable when the genome dopes not have a MSI status
 HIGH_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome has a high tumor mutational load status
+LOW_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome does not have a high tumor mutational load status
 HOMOLOGOUS_RECOMBINATION_DEFICIENT | Evidence is applicable when the genome has a HRD status
+HPV_POSITIVE | Evidence is applicable when viral presence of some form of HPV has been found
+EBV_POSITIVE | Evidence is applicable when viral presence of some form of EBV has been found 
 
 ## Curation and harmonization of individual knowledgebases
 
@@ -247,3 +250,16 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   [SAGE](../sage/README.md) as the definition of the highest tier of calling.
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
+## Version History and Download Links
+- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.2) 
+  - Consistently pick a specific transcript for hotspot annotation in case multiple transcripts imply the same hotspot.
+  - Extend splice sites from 5 bases to 10 bases beyond exon boundaries.
+  - Add support for evidence for actionable viral presence (starting with EBV and HPV presence)
+  - Add support for evidence of absence of high TMB and MSI
+  - Renamed actionable signatures to actionable characteristics.
+- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.1) 
+  - Ability to switch every resource on/off independently
+  - More predictable sorting of knowledge to ensure identical output on identical input
+  - Ability to curate VICC evidence levels in case they are suspicious
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.0)
+  - Initial release

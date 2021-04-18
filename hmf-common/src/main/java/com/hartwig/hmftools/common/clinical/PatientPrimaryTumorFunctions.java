@@ -15,13 +15,6 @@ public final class PatientPrimaryTumorFunctions {
     private PatientPrimaryTumorFunctions() {
     }
 
-    @Deprecated
-    @Nullable
-    public static PatientPrimaryTumor findPrimaryTumorForSample(@NotNull List<PatientPrimaryTumor> patientPrimaryTumors,
-            @NotNull String sample) {
-        return findPrimaryTumorForPatient(patientPrimaryTumors, toPatientIdentifier(sample));
-    }
-
     @Nullable
     public static PatientPrimaryTumor findPrimaryTumorForPatient(@NotNull List<PatientPrimaryTumor> patientPrimaryTumors,
             @NotNull String patientIdentifier) {
@@ -38,17 +31,5 @@ public final class PatientPrimaryTumorFunctions {
             LOGGER.warn("Could not find patient '{}' in list of primary tumors!", patientIdentifier);
             return null;
         }
-    }
-
-    @NotNull
-    private static String toPatientIdentifier(@NotNull String sample) {
-        if (sample.length() >= 12) {
-            return sample.substring(0, 12);
-        } else if (sample.toUpperCase().startsWith("COLO829")) {
-            return "COLO829";
-        }
-
-        // If we want to fetch the primary tumor for a sample we cannot derive patient of, we assume sample and patient are equal.
-        return sample;
     }
 }

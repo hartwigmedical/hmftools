@@ -42,8 +42,7 @@ public class GermlineGenotypeEnrichmentTest {
         assertStatus(HOM_ALT, 14, 15);
     }
 
-    private static void assertStatus(@NotNull GermlineGenotypeStatus expected, int alleleReadCount,
-            int totalReadCount) {
+    private static void assertStatus(@NotNull GermlineGenotypeStatus expected, int alleleReadCount, int totalReadCount) {
         AllelicDepth depth = ImmutableAllelicDepthImpl.builder().alleleReadCount(alleleReadCount).totalReadCount(totalReadCount).build();
         assertEquals(expected, GermlineGenotypeEnrichment.status(depth));
     }

@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
@@ -798,6 +799,7 @@ public final class ExampleAnalysisTestFactory {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("BRAF")
+                .genotypeStatus(GenotypeStatus.HET)
                 .chromosome("7")
                 .position(140453136)
                 .ref("T")
@@ -820,6 +822,7 @@ public final class ExampleAnalysisTestFactory {
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .source(forceCDKN2AVariantToBeGermline ? ReportableVariantSource.GERMLINE : ReportableVariantSource.SOMATIC)
                 .gene("CDKN2A")
+                .genotypeStatus(GenotypeStatus.HET)
                 .chromosome("9")
                 .position(21971153)
                 .ref("CCG")
@@ -842,6 +845,7 @@ public final class ExampleAnalysisTestFactory {
         ReportableVariant variant3 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("TERT")
+                .genotypeStatus(GenotypeStatus.HET)
                 .chromosome("5")
                 .position(1295228)
                 .ref("GG")
@@ -864,6 +868,7 @@ public final class ExampleAnalysisTestFactory {
         ReportableVariant variant4 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("SF3B1")
+                .genotypeStatus(GenotypeStatus.HET)
                 .chromosome("2")
                 .position(198266779)
                 .ref("C")
@@ -886,6 +891,7 @@ public final class ExampleAnalysisTestFactory {
         ReportableVariant variant5 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("TP63")
+                .genotypeStatus(GenotypeStatus.HET)
                 .chromosome("3")
                 .position(189604330)
                 .ref("G")
@@ -913,6 +919,7 @@ public final class ExampleAnalysisTestFactory {
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("TP63")
+                .genotypeStatus(GenotypeStatus.HET)
                 .chromosome("3")
                 .position(189604330)
                 .ref("G")
@@ -935,6 +942,7 @@ public final class ExampleAnalysisTestFactory {
         ReportableVariant variant2 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("KIT")
+                .genotypeStatus(GenotypeStatus.HET)
                 .chromosome("3")
                 .position(81627197)
                 .ref("G")

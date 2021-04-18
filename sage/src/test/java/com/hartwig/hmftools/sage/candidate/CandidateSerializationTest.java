@@ -42,7 +42,6 @@ public class CandidateSerializationTest {
 
     @Test
     public void testSerialization() {
-
         final SageVariantTier expectedTier = SageVariantTier.HOTSPOT;
         final String expectedRepeat = "AT";
         final int expectedRepeatCount = 2;

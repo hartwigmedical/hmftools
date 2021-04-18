@@ -8,9 +8,12 @@ import org.jetbrains.annotations.NotNull;
 class ComplexMatcher implements EventMatcher {
 
     @NotNull
+    private final HotspotMatcher hotspotMatcher;
+    @NotNull
     private final Map<String, Set<String>> complexEventsPerGene;
 
-    ComplexMatcher(@NotNull final Map<String, Set<String>> complexEventsPerGene) {
+    ComplexMatcher(@NotNull final HotspotMatcher hotspotMatcher, @NotNull final Map<String, Set<String>> complexEventsPerGene) {
+        this.hotspotMatcher = hotspotMatcher;
         this.complexEventsPerGene = complexEventsPerGene;
     }
 
@@ -28,6 +31,9 @@ class ComplexMatcher implements EventMatcher {
         } else if (event.contains("/")) {
             // Some hotspots appear as V600E/K
             return !event.toLowerCase().contains("exon");
+        } else if (hotspotMatcher.isComplexMatch(gene, event)) {
+            // Some hotspots are real hotspots but considered complex by hotspot matcher.
+            return true;
         } else {
             // Some frameshifts also change the amino acid itself in the position of the frameshift.
             int fsLocation = event.indexOf("fs");

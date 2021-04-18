@@ -1,0 +1,43 @@
+{
+  "id": 0,
+  "fullName": "",
+  "impact": "",
+  "proteinEffect": "",
+  "geneVariantDescriptions": [
+  ],
+  "type": null,
+  "gene": {
+    "id": 0,
+    "geneSymbol": "",
+    "terms": [
+    ]
+  },
+  "variant": "",
+  "createDate": "01/01/1900",
+  "updateDate": "01/01/1900",
+  "referenceTranscriptCoordinates": {
+    "id": 0,
+    "transcript": "",
+    "gDna": "",
+    "cDna": "",
+    "protein": "",
+    "sourceDb": "",
+    "refGenomeBuild": ""
+  },
+  "partnerGenes": [
+
+  ],
+  "categoryVariantPaths": [
+  ],
+  "evidence": [
+  ],
+  "extendedEvidence": [
+
+  ],
+  "molecularProfiles": [
+  ],
+  "allTranscriptCoordinates": [
+  ],
+  "memberVariants": [
+  ]
+}

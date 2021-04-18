@@ -2,11 +2,9 @@ package com.hartwig.hmftools.serve.sources.vicc.tools;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -15,13 +13,12 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
+import com.hartwig.hmftools.serve.ServeConfig;
+import com.hartwig.hmftools.serve.ServeLocalConfigProvider;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.curation.DoidLookupFactory;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ExtractionResultWriter;
-import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolverFactory;
 import com.hartwig.hmftools.serve.refgenome.ImmutableRefGenomeResource;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeResource;
@@ -37,7 +34,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 
 public class ViccExtractorTestApp {
 
@@ -50,77 +47,46 @@ public class ViccExtractorTestApp {
     public static void main(String[] args) throws IOException {
         Configurator.setRootLevel(Level.DEBUG);
 
-        String hostname = InetAddress.getLocalHost().getHostName();
-        LOGGER.debug("Running on '{}'", hostname);
+        ServeConfig config = ServeLocalConfigProvider.create();
 
-        RefGenomeVersion refGenomeVersion = RefGenomeVersion.V37;
-        String viccJsonPath;
-        String driverGeneTsvPath;
-        String knownFusionFilePath;
-        String missingDoidMappingTsv;
-        String outputDir;
-        String fastaFile;
-        ProteinResolver proteinResolver;
-
-        Map<String, HmfTranscriptRegion> allGenesMap = HmfGenePanelSupplier.allGenesMap37();
-        if (hostname.toLowerCase().contains("datastore")) {
-            viccJsonPath = "/data/common/dbs/serve/vicc/all.json";
-            driverGeneTsvPath = "/data/common/dbs/driver_gene_panel/DriverGenePanel.37.tsv";
-            knownFusionFilePath = "/data/common/dbs/fusions/known_fusion_data.csv";
-            missingDoidMappingTsv = "/data/common/dbs/serve/curation/missing_doids_mapping.tsv";
-            outputDir = System.getProperty("user.home") + "/tmp";
-            fastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
-            proteinResolver = ProteinResolverFactory.transvarWithRefGenome(refGenomeVersion, fastaFile, allGenesMap);
-        } else {
-            viccJsonPath = System.getProperty("user.home") + "/hmf/projects/serve/static_sources/vicc/all.json";
-            driverGeneTsvPath = System.getProperty("user.home") + "/hmf/projects/driverGenePanel/DriverGenePanel.37.tsv";
-            knownFusionFilePath = System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.csv";
-            missingDoidMappingTsv = System.getProperty("user.home") + "/hmf/projects/serve/curation/missing_doids_mapping.tsv";
-            outputDir = System.getProperty("user.home") + "/hmf/tmp/serve";
-            fastaFile = Strings.EMPTY;
-            proteinResolver = ProteinResolverFactory.dummy();
-        }
-
-        Path outputPath = new File(outputDir).toPath();
+        Path outputPath = new File(config.outputDir()).toPath();
         if (!Files.exists(outputPath)) {
-            LOGGER.debug("Creating {} directory for writing SERVE output", outputPath.toString());
+            LOGGER.info("Creating {} directory for writing SERVE output", outputPath.toString());
             Files.createDirectory(outputPath);
         }
 
-        String featureTsv = outputDir + "/ViccFeatures.tsv";
+        DoidLookup doidLookup = DoidLookupFactory.buildFromMappingTsv(config.missingDoidsMappingTsv());
+        ViccExtractor viccExtractor =
+                ViccExtractorFactory.buildViccExtractor(ViccClassificationConfig.build(), buildRefGenomeResource(config), doidLookup);
 
-        LOGGER.debug("Configured '{}' as the VICC json path", viccJsonPath);
-        LOGGER.debug("Configured '{}' as the VICC feature output TSV path", featureTsv);
-        LOGGER.debug("Configured '{}' as the driver gene TSV path", driverGeneTsvPath);
-        LOGGER.debug("Configured '{}' as the known fusion file path", knownFusionFilePath);
-        LOGGER.debug("Configured '{}' as the missing DOID mapping TSV path", missingDoidMappingTsv);
-
-        List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneTsvPath);
-        LOGGER.debug(" Read {} driver genes from {}", driverGenes.size(), driverGeneTsvPath);
-
-        KnownFusionCache fusionCache = new KnownFusionCache();
-        if (!fusionCache.loadFile(knownFusionFilePath)) {
-            throw new IllegalStateException("Could not load known fusion cache from " + knownFusionFilePath);
-        }
-        LOGGER.debug(" Read {} known fusions from {}", fusionCache.getData().size(), knownFusionFilePath);
-
-        RefGenomeResource refGenomeResource = ImmutableRefGenomeResource.builder()
-                .fastaFile(fastaFile)
-                .driverGenes(driverGenes)
-                .knownFusionCache(fusionCache)
-                .canonicalTranscriptPerGeneMap(allGenesMap)
-                .proteinResolver(proteinResolver)
-                .build();
-        DoidLookup doidLookup = DoidLookupFactory.buildFromConfigTsv(missingDoidMappingTsv);
-
-        List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(viccJsonPath, VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
-        EventClassifierConfig config = ViccClassificationConfig.build();
-        ViccExtractor viccExtractor = ViccExtractorFactory.buildViccExtractor(config, refGenomeResource, doidLookup);
-
+        List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(config.viccJson(), VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ExtractionResult result = viccExtractor.extract(entries);
 
+        String featureTsv = config.outputDir() + File.separator + "ViccFeatures.tsv";
         ViccUtil.writeFeaturesToTsv(featureTsv, entries);
 
-        new ExtractionResultWriter(outputDir, refGenomeVersion).write(result);
+        new ExtractionResultWriter(config.outputDir(), RefGenomeVersion.V37).write(result);
+    }
+
+    @NotNull
+    private static RefGenomeResource buildRefGenomeResource(@NotNull ServeConfig config) throws IOException {
+        LOGGER.info("Reading driver genes from {}", config.driverGene37Tsv());
+        List<DriverGene> driverGenes = DriverGeneFile.read(config.driverGene37Tsv());
+        LOGGER.info(" Read {} driver genes", driverGenes.size());
+
+        LOGGER.info("Reading known fusions from {}", config.knownFusion37File());
+        KnownFusionCache fusionCache = new KnownFusionCache();
+        if (!fusionCache.loadFile(config.knownFusion37File())) {
+            throw new IllegalStateException("Could not load known fusion cache from " + config.knownFusion37File());
+        }
+        LOGGER.info(" Read {} known fusions", fusionCache.getData().size());
+
+        return ImmutableRefGenomeResource.builder()
+                .fastaFile(config.refGenome37FastaFile())
+                .driverGenes(driverGenes)
+                .knownFusionCache(fusionCache)
+                .canonicalTranscriptPerGeneMap(HmfGenePanelSupplier.allGenesMap37())
+                .proteinResolver(ProteinResolverFactory.dummy())
+                .build();
     }
 }

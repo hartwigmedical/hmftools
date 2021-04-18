@@ -28,11 +28,10 @@ public class LocalPhaseSetTest {
         assertPhased(false, candidate2, candidate3);
     }
 
-    private void assertPhased(boolean expectedPhased, Candidate candidate1, Candidate candidate2) {
+    private static void assertPhased(boolean expectedPhased, Candidate candidate1, Candidate candidate2) {
         int offset = LocalPhaseSet.adjustedOffset(candidate1.variant(), candidate2.variant());
         assertEquals(expectedPhased, candidate1.readContext().phased(offset, candidate2.readContext()));
     }
-
 
     @Test
     public void testRightInLeftDel() {

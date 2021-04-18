@@ -17,8 +17,6 @@ import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.samtools.NumberEvents;
 
 import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,8 +24,6 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class RefContextConsumer implements Consumer<SAMRecord> {
-
-    private static final Logger LOGGER = LogManager.getLogger(RefContextConsumer.class);
 
     private final SageConfig config;
     private final GenomeRegion bounds;

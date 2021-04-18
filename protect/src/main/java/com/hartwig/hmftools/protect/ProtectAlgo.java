@@ -8,8 +8,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.protect.bachelor.BachelorData;
-import com.hartwig.hmftools.protect.bachelor.BachelorDataLoader;
 import com.hartwig.hmftools.protect.chord.ChordDataLoader;
 import com.hartwig.hmftools.protect.evidence.ChordEvidence;
 import com.hartwig.hmftools.protect.evidence.CopyNumberEvidence;
@@ -85,18 +83,17 @@ public class ProtectAlgo {
     public List<ProtectEvidence> run(@NotNull ProtectConfig config) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(config);
         LinxData linxData = LinxDataLoader.load(config);
-        BachelorData bachelorData = BachelorDataLoader.load(config, purpleData, linxData);
         ChordAnalysis chordAnalysis = ChordDataLoader.load(config);
 
-        return determineEvidence(purpleData, linxData, bachelorData, chordAnalysis);
+        return determineEvidence(purpleData, linxData, chordAnalysis);
     }
 
     @NotNull
     private List<ProtectEvidence> determineEvidence(@NotNull PurpleData purpleData, @NotNull LinxData linxData,
-            @NotNull BachelorData bachelorData, @NotNull ChordAnalysis chordAnalysis) {
+            @NotNull ChordAnalysis chordAnalysis) {
         LOGGER.info("Evidence extraction started");
         List<ProtectEvidence> variantEvidence =
-                variantEvidenceFactory.evidence(bachelorData.germlineVariants(), purpleData.somaticVariants());
+                variantEvidenceFactory.evidence(purpleData.germlineVariants(), purpleData.somaticVariants());
         printExtraction("somatic and germline variants", variantEvidence);
         List<ProtectEvidence> copyNumberEvidence = copyNumberEvidenceFactory.evidence(purpleData.copyNumberAlterations());
         printExtraction("amplifications and deletions", copyNumberEvidence);

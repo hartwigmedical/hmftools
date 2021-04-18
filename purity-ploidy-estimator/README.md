@@ -1072,9 +1072,12 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
-- Upcoming
+- [2.54](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.54) 
+  - Germline VAF = 0 for negative copy numbers
   - Fix logic for acceptor +3 splice variant to consider strand
   - Fix bug in LOW_TUMOR_VCN logic
+  - WILDTYPE_LOST logic only applies if multiple germline variants do not share same LPS
+  - Stop loading MT variants. It causes lots of unexpected headaches.
 - [2.53](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.53) 
   - Added LOW_TUMOR_VCN filter to germline variants
   - Fixed bug with incorrect driver category in copy number drivers.

@@ -2,12 +2,9 @@ package com.hartwig.hmftools.common.serve.classification.matchers;
 
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 class CompositeEventMatcher implements EventMatcher {
-    private static final Logger LOGGER = LogManager.getLogger(CompositeEventMatcher.class);
 
     @NotNull
     private final List<EventMatcher> noMatchEventMatchers;

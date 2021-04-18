@@ -17,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 public class ReadContextCounterFactory {
 
     private static final Set<SageVariantTier> HIGH_COVERAGE = EnumSet.of(SageVariantTier.HOTSPOT, SageVariantTier.PANEL);
+
     private final SageConfig config;
     private final Map<String, QualityRecalibrationMap> qualityRecalibrationMap;
 

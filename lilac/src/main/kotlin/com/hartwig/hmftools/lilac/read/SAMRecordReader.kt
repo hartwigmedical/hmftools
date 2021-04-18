@@ -47,7 +47,7 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
     }
 
     fun unmatchedPonIndels(minCount: Int): Map<Indel, Int> {
-        return unmatchedIndels.filter { it.value >= minCount }
+        return unmatchedPONIndels.filter { it.value >= minCount }
     }
 
     fun readFromBam(): List<NucleotideFragment> {
@@ -87,7 +87,7 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
     private fun recordContainsVariant(variant: VariantContextDecorator, record: SAMCodingRecord): Boolean {
         if (variant.alt().length != variant.ref().length) {
             val expectedIndel = Indel(variant.chromosome(), variant.position().toInt(), variant.ref(), variant.alt())
-            return record.indels.contains(expectedIndel)
+            return record.indels.any {it.match(expectedIndel)}
         }
 
         for (i in variant.alt().indices) {

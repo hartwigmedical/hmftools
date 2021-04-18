@@ -29,7 +29,7 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-public class CandidateSerialization {
+public final class CandidateSerialization {
 
     @NotNull
     public static VariantHotspot toVariantHotspot(@NotNull final VariantContext context) {

@@ -14,6 +14,7 @@ public final class ViccClassificationConfig {
 
     private static final Set<String> EXON_IDENTIFIERS = exonIdentifiers();
     private static final Set<String> EXON_KEYWORDS = exonKeywords();
+    private static final Set<String> EXON_BLACKLIST_KEY_PHRASES = exonBlacklistKeyPhrases();
     private static final Set<String> SPECIFIC_EXON_EVENTS = specificExonEvents();
     private static final Map<String, Set<String>> FUSION_PAIR_AND_EXONS_PER_GENE = fusionPairAndExonsPerGene();
     private static final Set<String> GENE_LEVEL_BLACKLIST_KEY_PHRASES = geneLevelBlacklistKeyPhrases();
@@ -25,6 +26,7 @@ public final class ViccClassificationConfig {
     private static final Set<String> DELETION_BLACKLIST_KEY_PHRASES = deletionBlacklistKeyPhrases();
     private static final Set<String> DELETION_KEYWORDS = deletionKeywords();
     private static final Set<String> DELETION_KEY_PHRASES = deletionKeyPhrases();
+    private static final Set<String> EXONIC_DEL_DUP_FUSION_KEY_PHRASES = exonicDelDupFusionKeyPhrases();
     private static final Set<String> EXONIC_DEL_DUP_FUSION_EVENTS = exonicDelDupFusionEvents();
     private static final Set<String> FUSION_PAIR_EVENTS_TO_SKIP = fusionPairEventsToSkip();
     private static final Set<String> PROMISCUOUS_FUSION_KEY_PHRASES = promiscuousFusionKeyPhrases();
@@ -47,6 +49,7 @@ public final class ViccClassificationConfig {
                 .proteinAnnotationExtractor(new ProteinAnnotationExtractor())
                 .exonIdentifiers(EXON_IDENTIFIERS)
                 .exonKeywords(EXON_KEYWORDS)
+                .exonBlacklistKeyPhrases(EXON_BLACKLIST_KEY_PHRASES)
                 .specificExonEvents(SPECIFIC_EXON_EVENTS)
                 .fusionPairAndExonsPerGene(FUSION_PAIR_AND_EXONS_PER_GENE)
                 .geneLevelBlacklistKeyPhrases(GENE_LEVEL_BLACKLIST_KEY_PHRASES)
@@ -58,6 +61,7 @@ public final class ViccClassificationConfig {
                 .deletionBlacklistKeyPhrases(DELETION_BLACKLIST_KEY_PHRASES)
                 .deletionKeywords(DELETION_KEYWORDS)
                 .deletionKeyPhrases(DELETION_KEY_PHRASES)
+                .exonicDelDupFusionKeyPhrases(EXONIC_DEL_DUP_FUSION_KEY_PHRASES)
                 .exonicDelDupFusionEvents(EXONIC_DEL_DUP_FUSION_EVENTS)
                 .fusionPairEventsToSkip(FUSION_PAIR_EVENTS_TO_SKIP)
                 .promiscuousFusionKeyPhrases(PROMISCUOUS_FUSION_KEY_PHRASES)
@@ -99,6 +103,11 @@ public final class ViccClassificationConfig {
         set.add("FRAMESHIFT");
         set.add("proximal");
         return set;
+    }
+
+    @NotNull
+    private static Set<String> exonBlacklistKeyPhrases() {
+        return Sets.newHashSet();
     }
 
     @NotNull
@@ -225,6 +234,11 @@ public final class ViccClassificationConfig {
     }
 
     @NotNull
+    private static Set<String> exonicDelDupFusionKeyPhrases() {
+        return Sets.newHashSet();
+    }
+
+    @NotNull
     private static Set<String> exonicDelDupFusionEvents() {
         Set<String> set = Sets.newHashSet();
         set.add("EGFRvII");
@@ -281,7 +295,6 @@ public final class ViccClassificationConfig {
         return Sets.newHashSet();
     }
 
-
     @NotNull
     private static Set<String> hrDeficiencyEvents() {
         return Sets.newHashSet();
@@ -323,10 +336,6 @@ public final class ViccClassificationConfig {
         Set<String> brca1Set = Sets.newHashSet("Alu insertion");
         map.put("BRCA1", brca1Set);
 
-        Set<String> brca2Set =
-                Sets.newHashSet("V1790_A1996del", "T1815_Y1894del", "S1834_G1892del", "V1839_E1901del", "A1847_M1890del", "S1871_C1893del");
-        map.put("BRCA2", brca2Set);
-
         Set<String> casp8Set = Sets.newHashSet("CASP8L");
         map.put("CASP8", casp8Set);
 
@@ -348,13 +357,9 @@ public final class ViccClassificationConfig {
         Set<String> dpydSet = Sets.newHashSet("DPYD splice donor variant", "DPYD*13 HOMOZYGOSITY", "DPYD*2A HOMOZYGOSITY");
         map.put("DPYD", dpydSet);
 
-        Set<String> egfrSet = Sets.newHashSet("EGFR L698_S1037dup",
-                "EGFR inframe deletion (30-336)",
+        Set<String> egfrSet = Sets.newHashSet("EGFR inframe deletion (30-336)",
                 "EGFR inframe insertion (769-770)",
                 "EGFR inframe deletion (6-273)",
-                "T34_A289del",
-                "EGFR T34_A289del",
-                "G983_A1210del",
                 "EGFR CTD");
         map.put("EGFR", egfrSet);
 
@@ -382,18 +387,8 @@ public final class ViccClassificationConfig {
         Set<String> jak2Set = Sets.newHashSet("F547 SPLICE SITE MUTATION");
         map.put("JAK2", jak2Set);
 
-        Set<String> kdm5cSet = Sets.newHashSet("M1_E165DEL");
-        map.put("KDM5C", kdm5cSet);
-
-        Set<String> kitSet = Sets.newHashSet("INTERNAL DUPLICATION",
-                "3' UTR MUTATION",
-                "E554_I571del",
-                "V555_L576del",
-                "K550_G592del",
-                "KIT V560_Y578del",
-                "KIT V560_L576del",
-                "KIT inframe deletion (577-579)",
-                "KIT inframe deletion (V560)");
+        Set<String> kitSet =
+                Sets.newHashSet("INTERNAL DUPLICATION", "3' UTR MUTATION", "KIT inframe deletion (577-579)", "KIT inframe deletion (V560)");
         map.put("KIT", kitSet);
 
         Set<String> krasSet = Sets.newHashSet("LCS6-variant");
@@ -429,7 +424,7 @@ public final class ViccClassificationConfig {
         Set<String> ntrk1Set = Sets.newHashSet("TRKAIII Splice Variant");
         map.put("NTRK1", ntrk1Set);
 
-        Set<String> pdgfraSet = Sets.newHashSet("PDGFRA inframe deletion (I843)", "C456_R481del", "Y375_K455del");
+        Set<String> pdgfraSet = Sets.newHashSet("PDGFRA inframe deletion (I843)");
         map.put("PDGFRA", pdgfraSet);
 
         Set<String> pik3r1Set = Sets.newHashSet("X582_splice", "X475_splice", "X434_splice");

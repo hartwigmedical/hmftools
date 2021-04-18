@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.extraction.gene;
 
-import static com.hartwig.hmftools.serve.drivercatalog.DriverGeneSupplier.createDriverGenes;
+import static com.hartwig.hmftools.serve.DriverGeneSupplier.createDriverGenes;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -110,6 +110,7 @@ public class GeneLevelExtractorTest {
                 driverGenes,
                 new KnownFusionCache(),
                 Sets.newHashSet("positive", "activating mutation", "act mut"),
-                Sets.newHashSet("negative", "LOSS-OF-FUNCTION", "inact mut"));
+                Sets.newHashSet("negative", "LOSS-OF-FUNCTION", "inact mut"),
+                true);
     }
 }

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.extraction.fusion;
 import static com.hartwig.hmftools.serve.extraction.fusion.FusionAnnotationConfig.EXONIC_FUSIONS_MAP;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
@@ -23,10 +24,16 @@ public class FusionExtractor {
     private final GeneChecker geneChecker;
     @NotNull
     private final KnownFusionCache knownFusionCache;
+    @NotNull
+    private final Set<String> exonicDelDupFusionKeyPhrases;
+    private final boolean reportOnDriverInconsistencies;
 
-    public FusionExtractor(@NotNull final GeneChecker geneChecker, @NotNull final KnownFusionCache knownFusionCache) {
+    public FusionExtractor(@NotNull final GeneChecker geneChecker, @NotNull final KnownFusionCache knownFusionCache,
+            @NotNull final Set<String> exonicDelDupFusionKeyPhrases, final boolean reportOnDriverInconsistencies) {
         this.geneChecker = geneChecker;
         this.knownFusionCache = knownFusionCache;
+        this.exonicDelDupFusionKeyPhrases = exonicDelDupFusionKeyPhrases;
+        this.reportOnDriverInconsistencies = reportOnDriverInconsistencies;
     }
 
     @Nullable
@@ -35,14 +42,26 @@ public class FusionExtractor {
         if (type == EventType.FUSION_PAIR) {
             if (EXONIC_FUSIONS_MAP.containsKey(event)) {
                 pair = fromConfiguredPair(EXONIC_FUSIONS_MAP.get(event), gene);
+            } else if (hasExonicDelDupKeyPhrase(event)) {
+                pair = fromExonicDelDup(gene, event);
             } else {
                 pair = fromStandardFusionPairEvent(event);
             }
         } else if (type == EventType.FUSION_PAIR_AND_EXON) {
-            pair = validate(fromExonicDelDup(gene, event), type);
+            pair = fromExonicDelDup(gene, event);
         }
 
-        return validate(pair, type);
+        return validate(pair);
+    }
+
+    private boolean hasExonicDelDupKeyPhrase(@NotNull String event) {
+        for (String keyPhrase : exonicDelDupFusionKeyPhrases) {
+            if (event.contains(keyPhrase)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Nullable
@@ -156,13 +175,13 @@ public class FusionExtractor {
     }
 
     @Nullable
-    private KnownFusionPair validate(@Nullable KnownFusionPair pair, @NotNull EventType type) {
+    private KnownFusionPair validate(@Nullable KnownFusionPair pair) {
         if (pair == null) {
             return null;
         }
 
-        if (geneChecker.isValidGene(pair.geneUp(), type) && geneChecker.isValidGene(pair.geneDown(), type)) {
-            if (!isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
+        if (geneChecker.isValidGene(pair.geneUp()) && geneChecker.isValidGene(pair.geneDown())) {
+            if (reportOnDriverInconsistencies && !isIncludedSomewhereInFusionCache(pair.geneUp(), pair.geneDown())) {
                 LOGGER.warn("Fusion '{}-{}' is not part of the known fusion cache", pair.geneUp(), pair.geneDown());
             }
             return pair;

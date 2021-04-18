@@ -11,12 +11,15 @@ class ExonMatcher implements EventMatcher {
     @NotNull
     private final Set<String> exonKeywords;
     @NotNull
+    private final Set<String> exonBlacklistKeyPhrases;
+    @NotNull
     private final Set<String> specificExonEvents;
 
     public ExonMatcher(@NotNull final Set<String> exonIdentifiers, @NotNull final Set<String> exonKeywords,
-            @NotNull final Set<String> specificExonEvents) {
+            @NotNull final Set<String> exonBlacklistKeyPhrases, @NotNull final Set<String> specificExonEvents) {
         this.exonIdentifiers = exonIdentifiers;
         this.exonKeywords = exonKeywords;
+        this.exonBlacklistKeyPhrases = exonBlacklistKeyPhrases;
         this.specificExonEvents = specificExonEvents;
     }
 
@@ -24,6 +27,12 @@ class ExonMatcher implements EventMatcher {
     public boolean matches(@NotNull String gene, @NotNull String event) {
         if (specificExonEvents.contains(event)) {
             return true;
+        }
+
+        for (String blacklistPhrase : exonBlacklistKeyPhrases) {
+            if (event.contains(blacklistPhrase)) {
+                return false;
+            }
         }
 
         // At least one exon identifier needs to be found.

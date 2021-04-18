@@ -14,65 +14,62 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class CkbFilter {
+public class CkbFilter {
 
     private static final Logger LOGGER = LogManager.getLogger(CkbFilter.class);
 
     @NotNull
-    private final Set<String> filteredMutations = Sets.newHashSet();
+    private final Set<String> usedFilterKeys = Sets.newHashSet();
 
     public CkbFilter() {
     }
 
     @NotNull
     public List<CkbEntry> run(@NotNull List<CkbEntry> ckbEntries) {
-
         List<CkbEntry> filteredCkbEntries = Lists.newArrayList();
-        for (CkbEntry ckbEntry : ckbEntries) {
-            if (ckbEntry.variants().size() == 1) {
-                List<Variant> filteredMutations = Lists.newArrayList();
-
-                if (include(ckbEntry.variants().get(0))) {
-                    filteredMutations.add(ckbEntry.variants().get(0));
-                } else {
-                    LOGGER.info("Filtering feature '{}' on '{}'",
-                            ckbEntry.variants().get(0).variant(),
-                            ckbEntry.variants().get(0).gene().geneSymbol());
-                }
-
-                if (!filteredMutations.isEmpty()) {
-                    filteredCkbEntries.add(ImmutableCkbEntry.builder().from(ckbEntry).variants(filteredMutations).build());
-                }
-
+        for (CkbEntry entry : ckbEntries) {
+            if (entry.variants().size() > 1) {
+                // Do not filter variants when in combination event, since this might make them a non-combined event.
+                filteredCkbEntries.add(entry);
+            } else if (entry.variants().size() == 0) {
+                // Always filter entries with no variants. Should never happen in practice!
+                LOGGER.warn("Filtering '{}' because no variants have been defined for this entry!", entry);
             } else {
-                filteredCkbEntries.add(ImmutableCkbEntry.builder().from(ckbEntry).build());
+                List<Variant> filteredVariants = Lists.newArrayList();
 
+                Variant variant = entry.variants().get(0);
+                if (include(variant)) {
+                    filteredVariants.add(variant);
+                } else {
+                    LOGGER.debug("Filtering variant '{}' on '{}'", variant.variant(), variant.gene().geneSymbol());
+                }
+
+                if (!filteredVariants.isEmpty()) {
+                    filteredCkbEntries.add(ImmutableCkbEntry.builder().from(entry).variants(filteredVariants).build());
+                }
             }
-
         }
 
         return filteredCkbEntries;
-
     }
 
     public void reportUnusedFilterEntries() {
         int unusedKeywordCount = 0;
-        for (String keyword : FilterFactory.PROFILE_NAME_TO_FILTER) {
-            if (!filteredMutations.contains(keyword)) {
+        for (String keyword : FilterFactory.VARIANT_KEYWORDS_TO_FILTER) {
+            if (!usedFilterKeys.contains(keyword)) {
                 unusedKeywordCount++;
-                LOGGER.debug("Keyword '{}' hasn't been used for CKB filtering", keyword);
+                LOGGER.warn(" Keyword '{}' hasn't been used for CKB filtering", keyword);
             }
         }
 
-        LOGGER.debug("Found {} unused keywords during CKB filtering", unusedKeywordCount);
+        LOGGER.debug(" Found {} unused keywords during CKB filtering", unusedKeywordCount);
     }
 
     @VisibleForTesting
     boolean include(@NotNull Variant variant) {
-        String profileName = variant.variant();
-        for (String keywordToFilter : FilterFactory.PROFILE_NAME_TO_FILTER) {
-            if (profileName.contains(keywordToFilter)) {
-                filteredMutations.add(keywordToFilter);
+        for (String keywordToFilter : FilterFactory.VARIANT_KEYWORDS_TO_FILTER) {
+            if (variant.variant().contains(keywordToFilter)) {
+                usedFilterKeys.add(keywordToFilter);
                 return false;
             }
         }

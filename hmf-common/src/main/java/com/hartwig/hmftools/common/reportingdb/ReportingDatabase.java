@@ -10,14 +10,14 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ReportingDatabase {
+public final class ReportingDatabase {
 
-    private ReportingDatabase() {
-
-    }
     private static final String DELIMITER = "\t";
 
-        @NotNull
+    private ReportingDatabase() {
+    }
+
+    @NotNull
     @VisibleForTesting
     public static List<ReportingEntry> read(@NotNull String reportingDbTsv) throws IOException {
         List<String> linesReportDates = Files.readAllLines(new File(reportingDbTsv).toPath());

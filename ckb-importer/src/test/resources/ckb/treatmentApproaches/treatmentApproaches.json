@@ -1,0 +1,14 @@
+{
+  "id": 1,
+  "name": "",
+  "profileName": "",
+  "drugClass": {
+    "id": 0,
+    "drugClass": ""
+  },
+  "therapy": null,
+  "references": [
+  ],
+  "createDate": "01/01/1900",
+  "updateDate": "01/01/1900"
+}

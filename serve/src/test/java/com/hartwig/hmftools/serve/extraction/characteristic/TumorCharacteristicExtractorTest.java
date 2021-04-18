@@ -13,7 +13,9 @@ import org.junit.Test;
 public class TumorCharacteristicExtractorTest {
 
     private static final String MSI = "msi";
-    private static final String TMB = "tmb";
+    private static final String MSS = "mss";
+    private static final String HIGH_TMB = "high_tmb";
+    private static final String LOW_TMB = "low_tmb";
     private static final String HRD = "hrd";
     private static final String HPV = "hpv";
     private static final String EBV = "ebv";
@@ -28,12 +30,30 @@ public class TumorCharacteristicExtractorTest {
     }
 
     @Test
+    public void canExtractMicrosatelliteStableCharacteristic() {
+        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, MSS);
+
+        assertNotNull(characteristic);
+        assertEquals(TumorCharacteristic.MICROSATELLITE_STABLE, characteristic);
+    }
+
+    @Test
     public void canExtractHighTumorMutationalLoadCharacteristic() {
         TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
-        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, TMB);
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, HIGH_TMB);
 
         assertNotNull(characteristic);
         assertEquals(TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD, characteristic);
+    }
+
+    @Test
+    public void canExtractLowTumorMutationalLoadCharacteristic() {
+        TumorCharacteristicExtractor tumorCharacteristicExtractor = buildTestExtractor();
+        TumorCharacteristic characteristic = tumorCharacteristicExtractor.extract(EventType.CHARACTERISTIC, LOW_TMB);
+
+        assertNotNull(characteristic);
+        assertEquals(TumorCharacteristic.LOW_TUMOR_MUTATIONAL_LOAD, characteristic);
     }
 
     @Test
@@ -80,7 +100,9 @@ public class TumorCharacteristicExtractorTest {
     @NotNull
     private static TumorCharacteristicExtractor buildTestExtractor() {
         return new TumorCharacteristicExtractor(Sets.newHashSet(MSI),
-                Sets.newHashSet(TMB),
+                Sets.newHashSet(MSS),
+                Sets.newHashSet(HIGH_TMB),
+                Sets.newHashSet(LOW_TMB),
                 Sets.newHashSet(HRD),
                 Sets.newHashSet(HPV),
                 Sets.newHashSet(EBV));

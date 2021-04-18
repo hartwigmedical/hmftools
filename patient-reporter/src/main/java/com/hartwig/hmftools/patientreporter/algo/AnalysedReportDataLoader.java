@@ -5,8 +5,8 @@ import java.io.IOException;
 import com.hartwig.hmftools.patientreporter.ReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
-import com.hartwig.hmftools.protect.germline.GermlineReportingFile;
-import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
+import com.hartwig.hmftools.patientreporter.germline.GermlineReportingFile;
+import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 
 import org.jetbrains.annotations.NotNull;
 

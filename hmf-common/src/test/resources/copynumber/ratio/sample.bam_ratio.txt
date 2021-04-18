@@ -1,2 +1,0 @@
-Chromosome	Start	Ratio	MedianRatio	CopyNumber	BAF	estimatedBAF	Genotype	UncertaintyOfGT
-X	1	1	0.9	2	-1	2	-	-1

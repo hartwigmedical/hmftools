@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -39,6 +40,7 @@ public class PatientReporterApplicationTest {
         return ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene(Strings.EMPTY)
+                .genotypeStatus(GenotypeStatus.UNKNOWN)
                 .chromosome(Strings.EMPTY)
                 .position(1)
                 .ref(Strings.EMPTY)

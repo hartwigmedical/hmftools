@@ -26,7 +26,8 @@ public final class EventExtractorFactory {
     }
 
     @NotNull
-    public static EventExtractor create(@NotNull EventClassifierConfig config, @NotNull RefGenomeResource refGenomeResource) {
+    public static EventExtractor create(@NotNull EventClassifierConfig config, @NotNull RefGenomeResource refGenomeResource,
+            boolean reportOnDriverInconsistencies) {
         Set<String> genesInExome = refGenomeResource.canonicalTranscriptPerGeneMap().keySet();
         GeneChecker exomeGeneChecker = new GeneChecker(genesInExome);
 
@@ -46,11 +47,17 @@ public final class EventExtractorFactory {
                         refGenomeResource.driverGenes(),
                         refGenomeResource.knownFusionCache(),
                         config.activatingGeneLevelKeyPhrases(),
-                        config.inactivatingGeneLevelKeyPhrases()),
-                new CopyNumberExtractor(exomeGeneChecker, refGenomeResource.driverGenes()),
-                new FusionExtractor(fusionGeneChecker, refGenomeResource.knownFusionCache()),
+                        config.inactivatingGeneLevelKeyPhrases(),
+                        reportOnDriverInconsistencies),
+                new CopyNumberExtractor(exomeGeneChecker, refGenomeResource.driverGenes(), reportOnDriverInconsistencies),
+                new FusionExtractor(fusionGeneChecker,
+                        refGenomeResource.knownFusionCache(),
+                        config.exonicDelDupFusionKeyPhrases(),
+                        reportOnDriverInconsistencies),
                 new TumorCharacteristicExtractor(config.microsatelliteUnstableEvents(),
+                        config.microsatelliteStableEvents(),
                         config.highTumorMutationalLoadEvents(),
+                        config.lowTumorMutationalLoadEvents(),
                         config.hrDeficiencyEvents(),
                         config.hpvPositiveEvents(),
                         config.ebvPositiveEvents()));

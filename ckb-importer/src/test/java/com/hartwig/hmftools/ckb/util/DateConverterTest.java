@@ -14,4 +14,9 @@ public class DateConverterTest {
 
         assertNull(DateConverter.toDate(null));
     }
+
+    @Test (expected = IllegalStateException.class)
+    public void wrongDateLeadsToException() {
+        DateConverter.toDate("not a date");
+    }
 }

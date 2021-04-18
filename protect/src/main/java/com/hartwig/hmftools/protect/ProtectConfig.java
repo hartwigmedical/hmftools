@@ -30,7 +30,6 @@ public interface ProtectConfig {
     // Input files used by the algorithm
     String SERVE_ACTIONABILITY_DIRECTORY = "serve_actionability_dir";
     String DOID_JSON = "doid_json";
-    String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
 
     // Files containing the actual genomic results for this sample.
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
@@ -39,7 +38,6 @@ public interface ProtectConfig {
     String PURPLE_GERMLINE_DRIVERS_TSV = "purple_driver_catalog_germline_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
-    String BACHELOR_TSV = "bachelor_tsv";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
     String LINX_VIRAL_INSERTION_TSV = "linx_viral_insertion_tsv";
@@ -59,7 +57,6 @@ public interface ProtectConfig {
 
         options.addOption(SERVE_ACTIONABILITY_DIRECTORY, true, "Path towards the SERVE actionability directory.");
         options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
-        options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
@@ -67,7 +64,6 @@ public interface ProtectConfig {
         options.addOption(PURPLE_SOMATIC_DRIVERS_TSV, true, "Path towards the purple somatic driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
-        options.addOption(BACHELOR_TSV, true, "Path towards the bachelor germline TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the LINX fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the LINX breakend TSV.");
         options.addOption(LINX_VIRAL_INSERTION_TSV, true, "Path towards the LINX viral insertion TSV.");
@@ -95,9 +91,6 @@ public interface ProtectConfig {
     String doidJsonFile();
 
     @NotNull
-    String germlineReportingTsv();
-
-    @NotNull
     String purplePurityTsv();
 
     @NotNull
@@ -114,9 +107,6 @@ public interface ProtectConfig {
 
     @NotNull
     String purpleGermlineVariantVcf();
-
-    @NotNull
-    String bachelorTsv();
 
     @NotNull
     String linxFusionTsv();
@@ -145,14 +135,12 @@ public interface ProtectConfig {
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
-                .germlineReportingTsv(nonOptionalFile(cmd, GERMLINE_REPORTING_TSV))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
                 .purpleSomaticDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVERS_TSV))
                 .purpleGermlineDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVERS_TSV))
                 .purpleSomaticVariantVcf(nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF))
                 .purpleGermlineVariantVcf(nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF))
-                .bachelorTsv(nonOptionalFile(cmd, BACHELOR_TSV))
                 .linxFusionTsv(nonOptionalFile(cmd, LINX_FUSION_TSV))
                 .linxBreakendTsv(nonOptionalFile(cmd, LINX_BREAKEND_TSV))
                 .linxViralInsertionTsv(nonOptionalFile(cmd, LINX_VIRAL_INSERTION_TSV))

@@ -32,6 +32,7 @@ public final class PurpleDataLoader {
 
     @NotNull
     public static PurpleData load(@NotNull ProtectConfig config) throws IOException {
+
         return load(config.tumorSampleId(),
                 config.purpleQcFile(),
                 config.purplePurityTsv(),

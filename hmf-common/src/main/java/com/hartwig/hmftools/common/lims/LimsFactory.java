@@ -217,13 +217,16 @@ public final class LimsFactory {
 
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR, 5);
+            String sampleBarcode = parts[0];
             if (parts.length == 5) {
-                shallowSeqPerSampleBarcode.put(parts[0],
-                        ImmutableLimsShallowSeqData.of(parts[0],
-                                parts[1],
-                                parts[2],
-                                Boolean.parseBoolean(parts[3]),
-                                Boolean.parseBoolean(parts[4])));
+                shallowSeqPerSampleBarcode.put(sampleBarcode,
+                        ImmutableLimsShallowSeqData.builder()
+                                .sampleBarcode(sampleBarcode)
+                                .sampleId(parts[1])
+                                .purityShallowSeq(parts[2])
+                                .hasReliableQuality(Boolean.parseBoolean(parts[3]))
+                                .hasReliablePurity(Boolean.parseBoolean(parts[4]))
+                                .build());
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line in shallow seq csv: {}", line);
             }

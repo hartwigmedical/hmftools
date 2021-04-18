@@ -58,8 +58,6 @@ public final class CkbJsonReader {
 
     @NotNull
     public static CkbJsonDatabase read(@NotNull String ckbDir, @Nullable Integer maxFilesToReadPerType) throws IOException {
-        LOGGER.info("Reading all CKB json files from {}", ckbDir);
-
         List<JsonMolecularProfile> molecularProfiles =
                 new MolecularProfileReader(maxFilesToReadPerType).read(ckbDir + File.separator + MOLECULAR_PROFILES_DIR);
         List<JsonVariant> variants = new VariantReader(maxFilesToReadPerType).read(ckbDir + File.separator + VARIANTS_DIR);
@@ -76,8 +74,6 @@ public final class CkbJsonReader {
                 new GlobalTherapyApprovalStatusReader(maxFilesToReadPerType).read(
                         ckbDir + File.separator + GLOBAL_THERAPY_APPROVAL_STATUSES_DIR);
         List<JsonReference> references = new ReferenceReader(maxFilesToReadPerType).read(ckbDir + File.separator + REFERENCES_DIR);
-
-        LOGGER.info(" Json file reading completed");
 
         return ImmutableCkbJsonDatabase.builder()
                 .molecularProfiles(molecularProfiles)

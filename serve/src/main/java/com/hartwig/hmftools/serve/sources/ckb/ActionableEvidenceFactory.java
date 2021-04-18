@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.serve.sources.ckb;
 
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.evidence.Evidence;
@@ -13,9 +11,6 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
-import com.hartwig.hmftools.serve.curation.DoidLookup;
-import com.hartwig.hmftools.serve.sources.ckb.curation.DrugCurator;
-import com.hartwig.hmftools.serve.sources.ckb.curation.EvidenceLevelCurator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,13 +18,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 class ActionableEvidenceFactory {
+
     private static final Logger LOGGER = LogManager.getLogger(ActionableEvidenceFactory.class);
 
     private static final Set<String> RESPONSIVE_DIRECTIONS = Sets.newHashSet();
     private static final Set<String> RESISTANT_DIRECTIONS = Sets.newHashSet();
     private static final Set<String> DIRECTIONS_TO_IGNORE = Sets.newHashSet();
-    private static final Set<String> EVIDENCE_TYPE = Sets.newHashSet();
-    private static final Set<String> EVIDENCE_TYPE_TO_IGNORE = Sets.newHashSet();
+
+    private static final Set<String> USABLE_EVIDENCE_TYPES = Sets.newHashSet();
+    private static final Set<String> EVIDENCE_TYPES_TO_IGNORE = Sets.newHashSet();
 
     static {
         RESPONSIVE_DIRECTIONS.add("sensitive");
@@ -47,28 +44,16 @@ class ActionableEvidenceFactory {
         // TODO: Determine first what they mean with below direction
         DIRECTIONS_TO_IGNORE.add("decreased response");
 
-        EVIDENCE_TYPE.add("Actionable");
+        USABLE_EVIDENCE_TYPES.add("Actionable");
 
-        // TODO: Determine if all those are ignored
-        EVIDENCE_TYPE_TO_IGNORE.add("Prognostic");
-        EVIDENCE_TYPE_TO_IGNORE.add("Emerging");
-        EVIDENCE_TYPE_TO_IGNORE.add("Risk Factor");
-        EVIDENCE_TYPE_TO_IGNORE.add("Diagnostic");
-
+        // TODO: Determine if all those can be ignored
+        EVIDENCE_TYPES_TO_IGNORE.add("Prognostic");
+        EVIDENCE_TYPES_TO_IGNORE.add("Emerging");
+        EVIDENCE_TYPES_TO_IGNORE.add("Risk Factor");
+        EVIDENCE_TYPES_TO_IGNORE.add("Diagnostic");
     }
 
-    @NotNull
-    private final DoidLookup missingDoidLookup;
-    @NotNull
-    private final DrugCurator drugCurator;
-    @NotNull
-    private final EvidenceLevelCurator evidenceLevelCurator;
-
-    ActionableEvidenceFactory(@NotNull final DoidLookup missingDoidLookup, @NotNull final DrugCurator drugCurator,
-            @NotNull final EvidenceLevelCurator evidenceLevelCurator) {
-        this.missingDoidLookup = missingDoidLookup;
-        this.drugCurator = drugCurator;
-        this.evidenceLevelCurator = evidenceLevelCurator;
+    ActionableEvidenceFactory() {
     }
 
     @NotNull
@@ -76,30 +61,26 @@ class ActionableEvidenceFactory {
         Set<ActionableEvent> actionableEvents = Sets.newHashSet();
 
         for (Evidence evidence : entry.evidences()) {
-
-            if (resolveEvidenceType(evidence.evidenceType())) {
+            if (hasUsableEvidenceType(evidence)) {
                 String therapyName = evidence.therapy().therapyName();
 
                 EvidenceLevel level = resolveLevel(evidence.ampCapAscoEvidenceLevel());
                 EvidenceDirection direction = resolveDirection(evidence.responseType());
                 String cancerType = evidence.indication().name();
-                Set<String> urls = Sets.newHashSet();
 
-                Set<String> doids;
-                String doid = evidence.indication().termId();
-                if (doid != null) {
-                    doids = Sets.newHashSet(doid);
-                } else {
-                    doids = lookupDoids(cancerType);
+                // TODO Convert to proper DOID part
+                Set<String> doids = Sets.newHashSet();
+                String evidenceDoid = evidence.indication().termId();
+                if (evidenceDoid != null) {
+                    doids.add(evidenceDoid);
                 }
 
+                Set<String> urls = Sets.newHashSet();
                 for (Reference reference : evidence.references()) {
                     if (reference.url() != null) {
                         urls.add(reference.url());
                     }
                 }
-
-                // TODO: Determine if curation of drugs and evidence is needed
 
                 if (therapyName != null && level != null && direction != null) {
                     ImmutableActionableEvidence.Builder builder = ImmutableActionableEvidence.builder()
@@ -109,10 +90,9 @@ class ActionableEvidenceFactory {
                             .treatment(therapyName)
                             .cancerType(cancerType)
                             .urls(urls);
-                    for (String doidSet : doids) {
-                        actionableEvents.add(builder.doid(doidSet).build());
+                    for (String doid : doids) {
+                        actionableEvents.add(builder.doid(doid).build());
                     }
-
                 }
             }
         }
@@ -147,41 +127,27 @@ class ActionableEvidenceFactory {
         }
     }
 
-    @NotNull
-    private Set<String> lookupDoids(@NotNull String cancerType) {
-        Set<String> doids = missingDoidLookup.lookupDoidsForCancerType(cancerType);
-        if (doids != null) {
-            return doids;
+    private static boolean hasUsableEvidenceType(@NotNull Evidence evidence) {
+        String evidenceType = evidence.evidenceType();
+        if (USABLE_EVIDENCE_TYPES.contains(evidenceType)) {
+            return true;
+        } else if (EVIDENCE_TYPES_TO_IGNORE.contains(evidenceType)) {
+            return false;
         } else {
-            LOGGER.warn("Could not resolve doids for CKB cancer type '{}'", cancerType);
-            return Sets.newHashSet();
+            LOGGER.warn("Unrecognized CKB evidence type '{}'", evidenceType);
+            return false;
         }
-    }
-
-    public void evaluateCuration() {
-        drugCurator.reportUnusedCurationKeys();
-        evidenceLevelCurator.reportUnusedCurationKeys();
-    }
-
-    private static boolean resolveEvidenceType(@NotNull String evidenceType) {
-        boolean usableEvidence = false;
-        if (EVIDENCE_TYPE.contains(evidenceType)) {
-            usableEvidence = true;
-        } else if (EVIDENCE_TYPE_TO_IGNORE.contains(evidenceType)) {
-            usableEvidence = false;
-        }
-        return usableEvidence;
     }
 
     @Nullable
     static EvidenceLevel resolveLevel(@Nullable String evidenceLabel) {
-        if (evidenceLabel == null) {
+        if (evidenceLabel == null || evidenceLabel.equals("NA")) {
             return null;
         }
 
         EvidenceLevel level = EvidenceLevel.fromString(evidenceLabel);
         if (level == null) {
-            LOGGER.warn("Could not resolve evidence level '{}'", evidenceLabel);
+            LOGGER.warn("Could not resolve CKB evidence level '{}'", evidenceLabel);
         }
         return level;
     }

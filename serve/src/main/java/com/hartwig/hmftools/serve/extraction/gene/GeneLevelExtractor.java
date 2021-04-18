@@ -31,25 +31,28 @@ public class GeneLevelExtractor {
     private final Set<String> activationKeyPhrases;
     @NotNull
     private final Set<String> inactivationKeyPhrases;
+    private final boolean reportOnDriverInconsistencies;
 
     public GeneLevelExtractor(@NotNull final GeneChecker exomeGeneChecker, @NotNull final GeneChecker fusionGeneChecker,
             @NotNull final List<DriverGene> driverGenes, @NotNull final KnownFusionCache knownFusionCache,
-            @NotNull final Set<String> activationKeyPhrases, @NotNull final Set<String> inactivationKeyPhrases) {
+            @NotNull final Set<String> activationKeyPhrases, @NotNull final Set<String> inactivationKeyPhrases,
+            final boolean reportOnDriverInconsistencies) {
         this.exomeGeneChecker = exomeGeneChecker;
         this.fusionGeneChecker = fusionGeneChecker;
         this.driverGenes = driverGenes;
         this.knownFusionCache = knownFusionCache;
         this.activationKeyPhrases = activationKeyPhrases;
         this.inactivationKeyPhrases = inactivationKeyPhrases;
+        this.reportOnDriverInconsistencies = reportOnDriverInconsistencies;
     }
 
     @Nullable
     public GeneLevelAnnotation extract(@NotNull String gene, @NotNull EventType type, @NotNull String event) {
-        if (type == EventType.GENE_LEVEL && exomeGeneChecker.isValidGene(gene, type)) {
+        if (type == EventType.GENE_LEVEL && exomeGeneChecker.isValidGene(gene)) {
             GeneLevelEvent geneLevelEvent = extractGeneLevelEvent(gene, event);
             return ImmutableGeneLevelAnnotation.builder().gene(gene).event(geneLevelEvent).build();
-        } else if (type == EventType.PROMISCUOUS_FUSION && fusionGeneChecker.isValidGene(gene, type)) {
-            if (!geneIsPresentInFusionCache(gene)) {
+        } else if (type == EventType.PROMISCUOUS_FUSION && fusionGeneChecker.isValidGene(gene)) {
+            if (reportOnDriverInconsistencies && !geneIsPresentInFusionCache(gene)) {
                 LOGGER.warn("Promiscuous fusion '{}' is not present in the known fusion cache", gene);
             }
             return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.FUSION).build();
@@ -82,7 +85,7 @@ public class GeneLevelExtractor {
             GeneLevelEvent geneLevelEvent = longestActivationMatchLength >= longestInactivatingMatchLength
                     ? GeneLevelEvent.ACTIVATION
                     : GeneLevelEvent.INACTIVATION;
-            if (geneLevelEvent != driverBasedEvent && driverBasedEvent != GeneLevelEvent.ANY_MUTATION) {
+            if (reportOnDriverInconsistencies && geneLevelEvent != driverBasedEvent && driverBasedEvent != GeneLevelEvent.ANY_MUTATION) {
                 LOGGER.warn("Mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
                         gene,
                         geneLevelEvent,

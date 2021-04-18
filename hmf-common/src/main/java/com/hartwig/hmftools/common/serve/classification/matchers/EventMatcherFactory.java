@@ -19,13 +19,18 @@ public final class EventMatcherFactory {
 
     @NotNull
     public static Map<EventType, EventMatcher> buildMatcherMap(@NotNull EventClassifierConfig config) {
-        FusionPairMatcher fusionPairMatcher = new FusionPairMatcher(config.exonicDelDupFusionEvents(), config.fusionPairEventsToSkip());
+        FusionPairMatcher fusionPairMatcher = new FusionPairMatcher(config.exonicDelDupFusionKeyPhrases(),
+                config.exonicDelDupFusionEvents(),
+                config.fusionPairEventsToSkip());
         PromiscuousFusionMatcher promiscuousFusionMatcher =
                 new PromiscuousFusionMatcher(config.promiscuousFusionKeyPhrases(), fusionPairMatcher);
 
         HotspotMatcher hotspotMatcher = new HotspotMatcher(config.proteinAnnotationExtractor(), fusionPairMatcher);
         CodonMatcher codonMatcher = new CodonMatcher(config.proteinAnnotationExtractor());
-        ExonMatcher exonMatcher = new ExonMatcher(config.exonIdentifiers(), config.exonKeywords(), config.specificExonEvents());
+        ExonMatcher exonMatcher = new ExonMatcher(config.exonIdentifiers(),
+                config.exonKeywords(),
+                config.exonBlacklistKeyPhrases(),
+                config.specificExonEvents());
         GeneLevelMatcher geneLevelMatcher = new GeneLevelMatcher(config.geneLevelBlacklistKeyPhrases(),
                 config.genericGeneLevelKeyPhrases(),
                 config.activatingGeneLevelKeyPhrases(),
@@ -38,7 +43,7 @@ public final class EventMatcherFactory {
                 new DeletionMatcher(config.deletionBlacklistKeyPhrases(), config.deletionKeywords(), config.deletionKeyPhrases());
 
         CharacteristicMatcher characteristicMatcher = new CharacteristicMatcher(allCharacteristicEvents(config));
-        ComplexMatcher complexMatcher = new ComplexMatcher(config.complexEventsPerGene());
+        ComplexMatcher complexMatcher = new ComplexMatcher(hotspotMatcher, config.complexEventsPerGene());
         CombinedMatcher combinedMatcher =
                 new CombinedMatcher(config.combinedEventsPerGene(), hotspotMatcher, fusionPairMatcher, amplificationMatcher);
 

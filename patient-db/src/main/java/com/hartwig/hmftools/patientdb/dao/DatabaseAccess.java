@@ -18,6 +18,8 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
+import com.hartwig.hmftools.common.hla.HlaType;
+import com.hartwig.hmftools.common.hla.HlaTypeDetails;
 import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXCalls;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotype;
@@ -116,6 +118,8 @@ public class DatabaseAccess implements AutoCloseable {
     private final DriverGenePanelDAO driverGenePanelDAO;
     @NotNull
     private final GermlineVariantDAO germlineVariantDAO;
+    @NotNull
+    private final HlaTypeDAO hlaTypeDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // Disable annoying jooq self-ad message
@@ -146,6 +150,7 @@ public class DatabaseAccess implements AutoCloseable {
         chordDAO = new ChordDAO(context);
         driverGenePanelDAO = new DriverGenePanelDAO(context);
         germlineVariantDAO = new GermlineVariantDAO(context);
+        hlaTypeDAO = new HlaTypeDAO(context);
     }
 
     public static void addDatabaseCmdLineArgs(@NotNull Options options) {
@@ -469,6 +474,11 @@ public class DatabaseAccess implements AutoCloseable {
         clinicalDAO.clear();
     }
 
+    public void writeHla(@NotNull final String sample, @NotNull final HlaType type, @NotNull final List<HlaTypeDetails> details) {
+        hlaTypeDAO.writeType(sample, type);
+        hlaTypeDAO.writeTypeDetails(sample, details);
+    }
+
     public void writeFullClinicalData(@NotNull Patient patient, boolean blacklisted) {
         clinicalDAO.writeFullClinicalData(patient, blacklisted);
     }
@@ -527,6 +537,7 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting germline variant data for sample: {}", sample);
         context.delete(Tables.GERMLINEVARIANT).where(Tables.GERMLINEVARIANT.SAMPLEID.eq(sample)).execute();
+        germlineVariantDAO.deleteGermlineVariantsForSample(sample);
 
         LOGGER.info("Deleting structural variant annotation data for sample: {}", sample);
         structuralVariantFusionDAO.deleteAnnotationsForSample(sample);
@@ -548,6 +559,9 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting pgx data for sample: {}", sample);
         pgxDAO.deletePgxForSample(sample);
+
+        LOGGER.info("Deleting hla data for sample: {}", sample);
+        hlaTypeDAO.deleteHlaFprSample(sample);
 
         LOGGER.info("All data for sample '{}' has been deleted", sample);
     }

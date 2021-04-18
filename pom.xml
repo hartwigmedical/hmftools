@@ -10,9 +10,9 @@
 
     <modules>
         <module>hmf-common</module>
-        <module>patient-db</module>
+        <module>hmf-ensembl-resources</module>
         <module>hmf-extensions</module>
-        <module>hmf-gene-panel-builder</module>
+        <module>patient-db</module>
         <module>hmf-id-generator</module>
         <module>gripss</module>
         <module>lilac</module>
@@ -58,10 +58,10 @@
 
         <patient-db.version>3.59</patient-db.version>
         <id-generator.version>2.7</id-generator.version>
-        <sage.version>2.7</sage.version>
+        <sage.version>2.8</sage.version>
         <amber.version>3.5</amber.version>
         <cobalt.version>1.11</cobalt.version>
-        <purple.version>2.53</purple.version>
+        <purple.version>2.54</purple.version>
         <bachelor.version>1.12</bachelor.version>
         <gripss.version>1.11</gripss.version>
         <lilac.version>0.1</lilac.version>
@@ -77,7 +77,7 @@
         <vicc-importer.version>1.1</vicc-importer.version>
         <iclusion-importer.version>1.3</iclusion-importer.version>
         <ckb-importer.version>1.1</ckb-importer.version>
-        <serve.version>1.1</serve.version>
+        <serve.version>1.2</serve.version>
         <protect.version>1.2</protect.version>
         <patient-reporter.version>7.22</patient-reporter.version>
 
@@ -226,8 +226,8 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>sig-analyser</artifactId>
-                <version>${sig-analyser.version}</version>
+                <artifactId>sigs</artifactId>
+                <version>${sigs.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>

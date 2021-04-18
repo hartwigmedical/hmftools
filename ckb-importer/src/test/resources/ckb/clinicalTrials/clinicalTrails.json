@@ -1,0 +1,29 @@
+{
+  "nctId": "",
+  "title": "",
+  "phase": "",
+  "recruitment": "",
+  "therapies": [
+    {
+      "id": 0,
+      "therapyName": "",
+      "synonyms": null
+    }
+  ],
+  "ageGroups": [
+  ],
+  "gender": "",
+  "variantRequirements": "",
+  "sponsors": "",
+  "updateDate": "01/01/1900",
+  "indications": [
+  ],
+  "variantRequirementDetails": [
+
+  ],
+  "clinicalTrialLocations": [
+  ],
+  "coveredCountries": [
+    ""
+  ]
+}

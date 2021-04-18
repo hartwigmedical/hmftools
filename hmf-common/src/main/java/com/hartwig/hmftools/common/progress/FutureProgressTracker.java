@@ -73,6 +73,5 @@ public class FutureProgressTracker {
 
         return "  [" + Strings.repeat("#", hashCount) + Strings.repeat(" ", gapCount) + "] " + roundedPercent + "% complete";
     }
-
 }
 

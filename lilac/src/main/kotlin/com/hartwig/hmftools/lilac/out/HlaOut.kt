@@ -3,11 +3,24 @@ package com.hartwig.hmftools.lilac.out
 import com.hartwig.hmftools.lilac.cna.HlaCopyNumber
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage
 import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage
+import com.hartwig.hmftools.lilac.variant.SomaticCodingCount
 import java.io.File
 import java.util.*
 import kotlin.math.round
 
-data class HlaOut(val referenceCoverage: HlaComplexCoverage, val tumorCoverage: HlaComplexCoverage, val tumorCopyNumber: HlaCopyNumber) {
+data class HlaOut(val referenceCoverage: HlaComplexCoverage, val tumorCoverage: HlaComplexCoverage, val tumorCopyNumber: List<HlaCopyNumber>, val somaticCodingCount: List<SomaticCodingCount>) {
+
+    companion object {
+        fun create(referenceCoverage: HlaComplexCoverage, tumorCoverage: HlaComplexCoverage, tumorCopyNumber: List<HlaCopyNumber>, somaticCodingCount: List<SomaticCodingCount>): HlaOut {
+            val sortedCopyNumber = tumorCopyNumber.sortedBy { it.allele }
+            val sortedCodingCount = somaticCodingCount.sortedBy { it.allele }
+
+            require(sortedCopyNumber.size == somaticCodingCount.size)
+            require(referenceCoverage.alleleCoverage.size == sortedCopyNumber.size)
+
+            return HlaOut(referenceCoverage, tumorCoverage, sortedCopyNumber, sortedCodingCount)
+        }
+    }
 
     fun write(fileName: String) {
         val file = File(fileName)
@@ -30,14 +43,23 @@ data class HlaOut(val referenceCoverage: HlaComplexCoverage, val tumorCoverage: 
                 .add("TumorShared")
                 .add("TumorWild")
                 .add("TumorCopyNumber")
+                .add("SomaticMissense")
+                .add("SomaticNonsenseOrFrameshift")
+                .add("SomaticSplice")
+                .add("SomaticSynonymous")
+                .add("SomaticInframeIndel")
+
 
         return header.toString()
     }
 
     private fun generateAlleleBody(index: Int): String {
+        fun Double.format(digits: Int) = "%.${digits}f".format(this)
+
         val ref = referenceCoverage.alleleCoverage[index]
         val tumor = if (tumorCoverage.alleleCoverage.isNotEmpty()) tumorCoverage.alleleCoverage[index] else HlaAlleleCoverage(ref.allele, 0, 0.0, 0.0)
-        val copyNumber = if (tumorCopyNumber.copyNumbers.isNotEmpty()) tumorCopyNumber.copyNumbers[index] else 0.0
+        val copyNumber = tumorCopyNumber[index].copyNumber
+        val codingCount = somaticCodingCount[index]
 
         val header = StringJoiner("\t")
                 .add(ref.allele.asFourDigit().toString())
@@ -49,7 +71,12 @@ data class HlaOut(val referenceCoverage: HlaComplexCoverage, val tumorCoverage: 
                 .add(tumor.uniqueCoverage.toString())
                 .add(round(tumor.sharedCoverage).toInt().toString())
                 .add(round(tumor.wildCoverage).toInt().toString())
-                .add(copyNumber.toString())
+                .add(copyNumber.format(2))
+                .add(codingCount.missense.format(2))
+                .add(codingCount.nonsense.format(2))
+                .add(codingCount.splice.format(2))
+                .add(codingCount.synonymous.format(2))
+                .add(codingCount.inframeIndel.format(2))
 
         return header.toString()
     }

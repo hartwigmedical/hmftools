@@ -2,14 +2,17 @@ package com.hartwig.hmftools.common.genome.bed;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
-import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPOutputStream;
 
-import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.apache.commons.compress.utils.Lists;
@@ -25,17 +28,33 @@ import htsjdk.tribble.readers.LineIterator;
 
 public final class NamedBedFile {
 
-    private static final Logger LOGGER = LogManager.getLogger(BEDFileLoader.class);
+    private static final Logger LOGGER = LogManager.getLogger(NamedBedFile.class);
     private static final String DELIMITER = "\t";
+
+    private NamedBedFile() {
+    }
 
     public static void writeUnnamedBedFile(@NotNull final String filename, @NotNull final List<GenomeRegion> regions) throws IOException {
         List<String> strings = regions.stream().map(NamedBedFile::asBed).collect(Collectors.toList());
-        Files.write(new File(filename).toPath(), strings);
+        write(filename, strings);
     }
 
     public static void writeBedFile(@NotNull final String filename, @NotNull final List<NamedBed> regions) throws IOException {
         List<String> strings = regions.stream().map(NamedBedFile::asBed).collect(Collectors.toList());
-        Files.write(new File(filename).toPath(), strings);
+        write(filename, strings);
+    }
+
+    public static void write(@NotNull final String filename, @NotNull final List<String> lines) throws IOException {
+        try (FileOutputStream output = new FileOutputStream(filename)) {
+            OutputStream transformedOutput = filename.endsWith(".gz") ? new GZIPOutputStream(output) : output;
+            try (Writer writer = new OutputStreamWriter(transformedOutput, StandardCharsets.UTF_8)) {
+                for (CharSequence line : lines) {
+                    writer.append(line);
+                    writer.append("\n");
+                }
+
+            }
+        }
     }
 
     @NotNull

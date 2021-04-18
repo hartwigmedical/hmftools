@@ -32,10 +32,8 @@ public class DriverGenePanelConversion {
 
     private static final Logger LOGGER = LogManager.getLogger(DriverGenePanelConversion.class);
 
-    private static final String DRIVER_GENE_PANEL_37_TSV = "driver_gene_panel_37_tsv";
-    private static final String CLINVAR_37_VCF = "clinvar_37_vcf";
-    private static final String CLINVAR_38_VCF = "clinvar_38_vcf";
-    private static final String OUTPUT_DIR = "output_dir";
+    private static final String NEW_DRIVER_GENE_PANEL_37_TSV = "new_driver_gene_panel_37_tsv";
+    private static final String RESOURCE_REPO_DIR = "resource_repo_dir";
 
     public static void main(String[] args) throws IOException, ParseException {
         // See also https://github.com/hartwigmedical/scratchpad/tree/master/genePanel
@@ -44,34 +42,24 @@ public class DriverGenePanelConversion {
 
         LOGGER.info("Starting driver gene panel generation");
 
-        new DriverGenePanelConversion(cmd.getOptionValue(DRIVER_GENE_PANEL_37_TSV),
-                cmd.getOptionValue(CLINVAR_37_VCF),
-                cmd.getOptionValue(CLINVAR_38_VCF),
-                cmd.getOptionValue(OUTPUT_DIR)).run();
+        new DriverGenePanelConversion(cmd.getOptionValue(NEW_DRIVER_GENE_PANEL_37_TSV), cmd.getOptionValue(RESOURCE_REPO_DIR)).run();
 
         LOGGER.info("Complete");
     }
 
     @NotNull
-    private final String driverGenePanel37Tsv;
+    private final String newDriverGenePanel37Tsv;
     @NotNull
-    private final String clinvar37Vcf;
-    @NotNull
-    private final String clinvar38Vcf;
-    @NotNull
-    private final String outputDir;
+    private final String resourceRepoDir;
 
-    public DriverGenePanelConversion(@NotNull final String driverGenePanel37Tsv, @NotNull final String clinvar37Vcf,
-            @NotNull final String clinvar38Vcf, @NotNull final String outputDir) {
-        this.driverGenePanel37Tsv = driverGenePanel37Tsv;
-        this.clinvar37Vcf = clinvar37Vcf;
-        this.clinvar38Vcf = clinvar38Vcf;
-        this.outputDir = outputDir;
+    public DriverGenePanelConversion(@NotNull final String newDriverGenePanel37Tsv, @NotNull final String resourceRepoDir) {
+        this.newDriverGenePanel37Tsv = newDriverGenePanel37Tsv;
+        this.resourceRepoDir = resourceRepoDir;
     }
 
     public void run() throws IOException {
-        List<DriverGene> v37DriverGenes = DriverGeneFile.read(driverGenePanel37Tsv);
-        LOGGER.info(" Loaded {} driver genes from {}", v37DriverGenes.size(), driverGenePanel37Tsv);
+        List<DriverGene> v37DriverGenes = DriverGeneFile.read(newDriverGenePanel37Tsv);
+        LOGGER.info(" Loaded {} driver genes from {}", v37DriverGenes.size(), newDriverGenePanel37Tsv);
 
         DndsGeneNameMap geneNameMap = new DndsGeneNameMap();
         List<DriverGene> v38DriverGenes = Lists.newArrayList();
@@ -93,19 +81,24 @@ public class DriverGenePanelConversion {
     }
 
     public void process(@NotNull RefGenomeVersion refGenomeVersion, @NotNull List<DriverGene> driverGenes) throws IOException {
+        String genePanelDir = resourceRepoDir + "/gene_panel/" + (refGenomeVersion.is37() ? "37" : "38");
+        String sageDir = resourceRepoDir + "/sage/" + (refGenomeVersion.is37() ? "37" : "38");
+
         String qualityBedFile = getResourceURL(refGenomeVersion.addVersionToFilePath("/drivercatalog/QualityRecalibration.bed"));
         Collection<GenomeRegion> qualityRecalibrationRegions = BEDFileLoader.fromBedFile(qualityBedFile).values();
 
-        String clinvarFile = refGenomeVersion == RefGenomeVersion.V37 ? clinvar37Vcf : clinvar38Vcf;
+        String clinvarFile = refGenomeVersion == RefGenomeVersion.V37
+                ? resourceRepoDir + "/sage/37/clinvar.37.vcf.gz"
+                : resourceRepoDir + "/sage/38/clinvar.38.vcf.gz";
         LOGGER.info(" Located clinvar file for {} at {}", refGenomeVersion, clinvarFile);
 
-        String driverGeneFile = refGenomeVersion.addVersionToFilePath(outputDir + "/DriverGenePanel.tsv");
-        String somaticCodingWithoutUtr = refGenomeVersion.addVersionToFilePath(outputDir + "/ActionableCodingPanel.somatic.bed");
-        String germlineCodingWithUtr = refGenomeVersion.addVersionToFilePath(outputDir + "/ActionableCodingPanel.germline.bed");
-        String germlineCodingWithoutUtr = refGenomeVersion.addVersionToFilePath(outputDir + "/CoverageCodingPanel.germline.bed");
-        String germlineHotspotFile = refGenomeVersion.addVersionToFilePath(outputDir + "/KnownHotspots.germline.vcf.gz");
-        String germlineSliceFile = refGenomeVersion.addVersionToFilePath(outputDir + "/SlicePanel.germline.bed");
-        String germlineBlacklistFile = refGenomeVersion.addVersionToFilePath(outputDir + "/KnownBlacklist.germline.vcf.gz");
+        String driverGeneFile = refGenomeVersion.addVersionToFilePath(genePanelDir + "/DriverGenePanel.tsv");
+        String somaticCodingWithoutUtr = refGenomeVersion.addVersionToFilePath(sageDir + "/ActionableCodingPanel.somatic.bed.gz");
+        String germlineCodingWithUtr = refGenomeVersion.addVersionToFilePath(sageDir + "/ActionableCodingPanel.germline.bed.gz");
+        String germlineCodingWithoutUtr = refGenomeVersion.addVersionToFilePath(sageDir + "/CoverageCodingPanel.germline.bed.gz");
+        String germlineHotspotFile = refGenomeVersion.addVersionToFilePath(sageDir + "/KnownHotspots.germline.vcf.gz");
+        String germlineSliceFile = refGenomeVersion.addVersionToFilePath(sageDir + "/SlicePanel.germline.bed.gz");
+        String germlineBlacklistFile = refGenomeVersion.addVersionToFilePath(sageDir + "/KnownBlacklist.germline.vcf.gz");
 
         Collections.sort(driverGenes);
 
@@ -221,10 +214,8 @@ public class DriverGenePanelConversion {
     private static Options createOptions() {
         Options options = new Options();
 
-        options.addOption(DRIVER_GENE_PANEL_37_TSV, true, "File containing the driver gene panel for 37");
-        options.addOption(CLINVAR_37_VCF, true, "The clinvar vcf for ref genome version 37");
-        options.addOption(CLINVAR_38_VCF, true, "The clinvar vcf for ref genome version 38");
-        options.addOption(OUTPUT_DIR, true, "The directory where output will be written to");
+        options.addOption(NEW_DRIVER_GENE_PANEL_37_TSV, true, "File containing the driver gene panel for 37");
+        options.addOption(RESOURCE_REPO_DIR, true, "The directory holding the public hmf resources repo");
 
         return options;
     }

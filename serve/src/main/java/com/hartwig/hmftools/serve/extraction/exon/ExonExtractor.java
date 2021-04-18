@@ -44,7 +44,7 @@ public class ExonExtractor {
     @Nullable
     public List<ExonAnnotation> extract(@NotNull String gene, @Nullable String transcriptId, @NotNull EventType type,
             @NotNull String event) {
-        if (EXON_EVENTS.contains(type) && geneChecker.isValidGene(gene, type)) {
+        if (EXON_EVENTS.contains(type) && geneChecker.isValidGene(gene)) {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(gene);
             assert canonicalTranscript != null;
 

@@ -32,6 +32,7 @@ public class ReportableVariantFactoryTest {
 
         double likelihood = 0.6;
         DriverCatalog driverGene1 = createMutationEntryForGene(gene1, likelihood);
+
         List<ReportableVariant> reportable =
                 reportableSomaticVariants(Lists.newArrayList(variant1, variant2), Lists.newArrayList(driverGene1));
 

@@ -1,19 +1,15 @@
 package com.hartwig.hmftools.protect;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.protect.evidence.PersonalizedEvidenceFactory;
-import com.hartwig.hmftools.protect.germline.GermlineReportingModel;
-import com.hartwig.hmftools.protect.germline.ImmutableGermlineReportingEntry;
 import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ProtectTestFactory {
 
@@ -46,21 +42,5 @@ public final class ProtectTestFactory {
                 .onLabel(false)
                 .level(com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE);
-    }
-
-    @NotNull
-    public static GermlineReportingModel createTestGermlineModel(@NotNull String gene, boolean reportBiallelicOnly,
-            @Nullable String exclusiveHgvsProteinFilter) {
-        return new GermlineReportingModel(Lists.newArrayList(ImmutableGermlineReportingEntry.builder()
-                .gene(gene)
-                .notifyClinicalGeneticist(false)
-                .reportBiallelicOnly(reportBiallelicOnly)
-                .exclusiveHgvsProteinFilter(exclusiveHgvsProteinFilter)
-                .build()));
-    }
-
-    @NotNull
-    public static GermlineReportingModel createEmptyGermlineReportingModel() {
-        return new GermlineReportingModel(Lists.newArrayList());
     }
 }
