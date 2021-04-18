@@ -11,8 +11,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ViccExtractorFactory {
 
-    // For VICC we want to deal with any driver inconsistency!
-    private static final boolean REPORT_DRIVER_INCONSISTENCIES = true;
+    // For the current VICC release we have dealt with all driver inconsistencies we want to deal with, so want to ignore remaining.
+    private static final boolean REPORT_DRIVER_INCONSISTENCIES = false;
 
     private ViccExtractorFactory() {
     }
