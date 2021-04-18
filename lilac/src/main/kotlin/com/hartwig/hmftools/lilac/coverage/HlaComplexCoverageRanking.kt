@@ -6,7 +6,7 @@ import kotlin.math.min
 /**
  * Complexes within [maxDistanceFromTopScore] fragments of the highest aligned fragment count are considered as possible solutions.
  * These are then ranked by:
- * - first prioritising solutions with the lowest number of wildcard matches,
+ * - first prioritising solutions with the fewest alleles with wildcard matches,
  * - then choosing solutions with the most homozygous alleles,
  * - then choosing solution with the most common alleles,
  * - then choosing solution with the least recovered alleles
@@ -28,9 +28,9 @@ class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int, privat
     }
 
     private fun compare(o1: HlaComplexCoverage, o2: HlaComplexCoverage): Int {
-        val wildCoverageCompare = o1.wildCoverage.compareTo(o2.wildCoverage)
-        if (wildCoverageCompare != 0) {
-            return wildCoverageCompare
+        val wildcardCount = o1.wildcardCount().compareTo(o2.wildcardCount())
+        if (wildcardCount != 0) {
+            return wildcardCount
         }
 
         val homozygousCompare = o1.homozygousAlleles().compareTo(o2.homozygousAlleles())
@@ -62,6 +62,10 @@ class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int, privat
         }
 
         throw UnsupportedOperationException("Should not be able to make it to here")
+    }
+
+    private fun HlaComplexCoverage.wildcardCount(): Int {
+        return this.alleleCoverage.filter { it.wildCoverage > 0 }.count()
     }
 
     private fun HlaComplexCoverage.commonCount(): Int {
