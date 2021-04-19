@@ -69,4 +69,4 @@ The outputs of this step are:
  - DndsDriverLikelihoodOnco.tsv
  - DndsDriverLikelihoodTsg.tsv
   
-These files are ingested into hmf-common resources and are used to calculate driver likelihood of individual mutations of individual samples.
+These files are ingested into hmf-common resources (hmf-common/src/main/resources/dnds) and are used to calculate driver likelihood of individual mutations of individual samples.
