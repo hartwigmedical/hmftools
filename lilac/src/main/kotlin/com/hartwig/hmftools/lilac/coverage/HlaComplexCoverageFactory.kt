@@ -43,7 +43,7 @@ class HlaComplexCoverageFactory(private val config: LilacConfig) {
     }
 
     fun rankedComplexCoverage(executorService: ExecutorService, fragmentAlleles: List<FragmentAlleles>, complexes: List<HlaComplex>,  recovered: List<HlaAllele>): List<HlaComplexCoverage> {
-        val ranking = HlaComplexCoverageRanking(config.maxDistanceFromTopScore, config.commonAlleles, recovered)
+        val ranking = HlaComplexCoverageRanking(config.maxDistanceFromTopScore, config.commonAlleles, recovered, config.stopLossRecoveryAlleles)
 
         val list = mutableListOf<Future<HlaComplexCoverage>>()
         for (complex in complexes) {

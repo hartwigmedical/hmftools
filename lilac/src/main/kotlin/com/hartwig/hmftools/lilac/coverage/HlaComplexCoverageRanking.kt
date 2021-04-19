@@ -12,7 +12,7 @@ import kotlin.math.min
  * - then choosing solution with the least recovered alleles
  * - finally choosing the solution with the lowest number.
  */
-class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int, private val common: List<HlaAllele>, private val recovered: List<HlaAllele>) {
+class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int, private val common: List<HlaAllele>, private val recovered: List<HlaAllele>, private val favourites: List<HlaAllele>) {
 
     fun candidateRanking(complexes: List<HlaComplexCoverage>): List<HlaComplexCoverage> {
         require(complexes.isNotEmpty())
@@ -28,6 +28,11 @@ class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int, privat
     }
 
     private fun compare(o1: HlaComplexCoverage, o2: HlaComplexCoverage): Int {
+        val favouritesCount = o1.favourites().compareTo(o2.favourites())
+        if (favouritesCount != 0) {
+            return -favouritesCount
+        }
+
         val wildcardCount = o1.wildcardCount().compareTo(o2.wildcardCount())
         if (wildcardCount != 0) {
             return wildcardCount
@@ -64,6 +69,10 @@ class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int, privat
         throw UnsupportedOperationException("Should not be able to make it to here")
     }
 
+    private fun HlaComplexCoverage.favourites(): Int {
+        return this.alleleCoverage.map { it.allele }.filter { it in favourites }.count()
+    }
+
     private fun HlaComplexCoverage.wildcardCount(): Int {
         return this.alleleCoverage.filter { it.wildCoverage > 0 }.count()
     }
@@ -74,6 +83,7 @@ class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int, privat
 
     private fun HlaComplexCoverage.recoveredCount(): Int {
         return this.alleleCoverage.map { it.allele }.filter { it in recovered }.count()
+
     }
 
 }
