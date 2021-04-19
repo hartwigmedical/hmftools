@@ -7,27 +7,27 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-class WeightedPloidyHistogram {
+public class WeightedPloidyHistogram {
 
     private final double maxPloidy;
     private final double binWidth;
     private final double offset;
 
-    WeightedPloidyHistogram(final double maxPloidy, final double binWidth) {
+    public WeightedPloidyHistogram(final double maxPloidy, final double binWidth) {
         this(maxPloidy, binWidth, 0);
     }
 
-    WeightedPloidyHistogram(final double maxPloidy, final double binWidth, final double offset) {
+    public WeightedPloidyHistogram(final double maxPloidy, final double binWidth, final double offset) {
         this.maxPloidy = maxPloidy;
         this.binWidth = binWidth;
         this.offset = offset;
     }
 
-    int bucket(double ploidy) {
+    public int bucket(double ploidy) {
         return (int) Math.round((ploidy - offset) / binWidth);
     }
 
-    double ploidy(int bucket) {
+    public double ploidy(int bucket) {
         return bucket * binWidth + offset;
     }
 
@@ -37,7 +37,7 @@ class WeightedPloidyHistogram {
     }
 
     @NotNull
-    double[] modelHistogram(@NotNull final Collection<? extends PeakModel> model) {
+    public double[] modelHistogram(@NotNull final Collection<? extends PeakModel> model) {
         return histogram(model, PeakModel::bucket, PeakModel::bucketWeight);
     }
 
@@ -57,7 +57,7 @@ class WeightedPloidyHistogram {
         return result;
     }
 
-    double peakPloidy(int peakBinCount, @NotNull final Collection<? extends WeightedPloidy> ploidies) {
+    public double peakPloidy(int peakBinCount, @NotNull final Collection<? extends WeightedPloidy> ploidies) {
         return peakPloidy(peakBinCount, histogram(ploidies));
     }
 

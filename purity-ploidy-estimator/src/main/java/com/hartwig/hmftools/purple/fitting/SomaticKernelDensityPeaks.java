@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.purity;
+package com.hartwig.hmftools.purple.fitting;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -6,6 +6,8 @@ import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.purity.ImmutableSomaticPeak;
+import com.hartwig.hmftools.common.purple.purity.SomaticPeak;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.kde.KernelEstimator;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
@@ -14,9 +16,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-final class SomaticPeakFactory {
+final class SomaticKernelDensityPeaks
+{
 
-    private static final Logger LOGGER = LogManager.getLogger(SomaticPeakFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(SomaticKernelDensityPeaks.class);
     private static final double KERNEL_BANDWIDTH = 0.03;
 
     @NotNull

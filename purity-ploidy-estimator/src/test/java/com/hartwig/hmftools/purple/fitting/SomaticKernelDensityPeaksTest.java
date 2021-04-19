@@ -1,15 +1,17 @@
-package com.hartwig.hmftools.common.purple.purity;
+package com.hartwig.hmftools.purple.fitting;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.purity.SomaticPeak;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class SomaticPeakFactoryTest {
+public class SomaticKernelDensityPeaksTest
+{
 
     private static final double EPSILON = 1e-10;
 
@@ -26,7 +28,7 @@ public class SomaticPeakFactoryTest {
             sample.add(0.6);
         }
 
-        final List<SomaticPeak> peaks = SomaticPeakFactory.findPeaks(sample);
+        final List<SomaticPeak> peaks = SomaticKernelDensityPeaks.findPeaks(sample);
         assertEquals(2, peaks.size());
         assertPeak(peaks.get(0), 0.2, 13);
         assertPeak(peaks.get(1), 0.4, 13);

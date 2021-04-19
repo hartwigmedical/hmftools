@@ -28,6 +28,7 @@ public interface SomaticFitConfig {
     String SOMATIC_MIN_PURITY_SPREAD = "somatic_min_purity_spread";
     String SOMATIC_PENALTY_WEIGHT = "somatic_penalty_weight";
     String HIGHLY_DIPLOID_PERCENTAGE = "highly_diploid_percentage";
+    String FORCE_SOMATIC_FIT = "force_somatic_fit";
 
     double SOMATIC_MIN_PURITY_DEFAULT = 0.17;
     double SOMATIC_MIN_PURITY_SPREAD_DEFAULT = 0.15;
@@ -47,6 +48,7 @@ public interface SomaticFitConfig {
         options.addOption(SOMATIC_VARIANTS, true, "Optional location of somatic variant vcf to assist fitting in highly-diploid samples.");
         options.addOption(SOMATIC_PENALTY_WEIGHT, true, "Proportion of somatic deviation to include in fitted purity score. Default " + SOMATIC_PENALTY_WEIGHT_DEFAULT);
         options.addOption(HIGHLY_DIPLOID_PERCENTAGE, true, "Proportion of genome that must be diploid before using somatic fit. Default " + HIGHLY_DIPLOID_PERCENTAGE_DEFAULT);
+        options.addOption(FORCE_SOMATIC_FIT, false, "Fit from somatic VAFs only");
     }
 
     Optional<File> file();
@@ -87,7 +89,7 @@ public interface SomaticFitConfig {
 
     int maxSomaticTotalReadCount();
 
-
+    boolean forceSomaticFit();
 
     @NotNull
     static SomaticFitConfig createSomaticConfig(@NotNull CommandLine cmd, @NotNull final AmberData amberData) throws ParseException {
@@ -114,6 +116,7 @@ public interface SomaticFitConfig {
                 .minSomaticPuritySpread(defaultValue(cmd, SOMATIC_MIN_PURITY_SPREAD, SOMATIC_MIN_PURITY_SPREAD_DEFAULT))
                 .somaticPenaltyWeight(defaultValue(cmd, SOMATIC_PENALTY_WEIGHT, SOMATIC_PENALTY_WEIGHT_DEFAULT))
                 .highlyDiploidPercentage(defaultValue(cmd, HIGHLY_DIPLOID_PERCENTAGE, HIGHLY_DIPLOID_PERCENTAGE_DEFAULT))
+                .forceSomaticFit(cmd.hasOption(FORCE_SOMATIC_FIT))
                 .build();
     }
 }

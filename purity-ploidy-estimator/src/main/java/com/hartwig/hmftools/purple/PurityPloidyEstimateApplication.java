@@ -37,7 +37,8 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.BestFit;
-import com.hartwig.hmftools.common.purple.purity.BestFitFactory;
+import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
+import com.hartwig.hmftools.purple.fitting.BestFitFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityRangeFile;
@@ -80,8 +81,10 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -94,6 +97,7 @@ public class PurityPloidyEstimateApplication {
     private static final int THREADS_DEFAULT = 2;
     private static final String THREADS = "threads";
     private static final String VERSION = "version";
+    private static final String LOG_DEBUG = "log_debug";
 
     public static void main(final String... args) throws IOException, SQLException, ExecutionException, InterruptedException {
         final Options options = createOptions();
@@ -109,10 +113,16 @@ public class PurityPloidyEstimateApplication {
 
     private PurityPloidyEstimateApplication(final Options options, final String... args)
             throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
+
         final VersionInfo version = new VersionInfo("purple.version");
         LOGGER.info("PURPLE version: {}", version.version());
 
         final CommandLine cmd = createCommandLine(options, args);
+
+        if (cmd.hasOption(LOG_DEBUG)) {
+            Configurator.setRootLevel(Level.DEBUG);
+        }
+
         if (cmd.hasOption(VERSION)) {
             System.exit(0);
         }
@@ -333,20 +343,40 @@ public class PurityPloidyEstimateApplication {
             throws ExecutionException, InterruptedException {
         final FittingConfig fittingConfig = configSupplier.fittingConfig();
         final SomaticFitConfig somaticFitConfig = configSupplier.somaticConfig();
-        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
-                cobaltChromosomes,
-                fittingConfig.minPurity(),
-                fittingConfig.maxPurity(),
-                fittingConfig.purityIncrement(),
-                fittingConfig.minPloidy(),
-                fittingConfig.maxPloidy(),
-                somaticFitConfig.somaticPenaltyWeight(),
-                configSupplier.commonConfig().tumorOnly(),
-                fittedRegionFactory,
-                observedRegions,
-                snpSomatics);
 
-        final BestFitFactory bestFitFactory = new BestFitFactory(somaticFitConfig.enabled(),
+        final List<FittedPurity> fitCandidates = Lists.newArrayList();
+
+        if(!configSupplier.somaticConfig().forceSomaticFit())
+        {
+            final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
+                    cobaltChromosomes,
+                    fittingConfig.minPurity(),
+                    fittingConfig.maxPurity(),
+                    fittingConfig.purityIncrement(),
+                    fittingConfig.minPloidy(),
+                    fittingConfig.maxPloidy(),
+                    somaticFitConfig.somaticPenaltyWeight(),
+                    configSupplier.commonConfig().tumorOnly(),
+                    fittedRegionFactory,
+                    observedRegions,
+                    snpSomatics);
+
+            fitCandidates.addAll(fittedPurityFactory.all());
+        }
+        else
+        {
+            fitCandidates.add(ImmutableFittedPurity.builder()
+                    .score(1)
+                    .diploidProportion(1)
+                    .normFactor(1)
+                    .purity(0) // to be determined
+                    .somaticPenalty(1)
+                    .ploidy(2)
+                    .build());
+        }
+
+        final BestFitFactory bestFitFactory = new BestFitFactory(configSupplier,
+                somaticFitConfig.enabled(),
                 somaticFitConfig.minSomaticTotalReadCount(),
                 somaticFitConfig.maxSomaticTotalReadCount(),
                 fittingConfig.minPurity(),
@@ -358,7 +388,7 @@ public class PurityPloidyEstimateApplication {
                 somaticFitConfig.minSomaticPuritySpread(),
                 somaticFitConfig.minTotalSvFragmentCount(),
                 somaticFitConfig.minTotalSomaticVariantAlleleReadCount(),
-                fittedPurityFactory.all(),
+                fitCandidates,
                 snpSomatics,
                 structuralVariants);
         return bestFitFactory.bestFit();
@@ -429,6 +459,7 @@ public class PurityPloidyEstimateApplication {
         final Options options = new Options();
         ConfigSupplier.addOptions(options);
 
+        options.addOption(LOG_DEBUG, false, "Log verbose");
         options.addOption(THREADS, true, "Number of threads (default 2)");
         options.addOption(VERSION, false, "Exit after displaying version info.");
 
