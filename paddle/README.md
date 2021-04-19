@@ -2,31 +2,19 @@
 
 Uses dNdS values to calculate expected driver and passenger mutation rates.
 
-There are 4 steps required to refresh dNdS values
-1. Create a cohort
-2. Gather variants of cohort
-3. Run dNdS
+There are 4 steps required to generate dNdS values
+1. [Define the cohort to run on](#define-the-cohort-to-run-on)
+2. [Gather variants of cohort](#collecting-exonic-variants-for-all-samples-in-the-cohort)
+3. [Run dNdScv](#run-dndscv)
 4. Update driver catalog values
 
-While the first step is fairly polished the remaining 3 steps require some manual intervention for setting parameters etc.
+## Define the cohort to run on 
 
-## Highest Purity Cohort
-
-First step is to create the highest purity cohort. 
-This is a list of no more than one sample per patient favouring highest purity when multiple samples are present.
-Only samples that have passed QC with a detectable tumor are included. 
-By default, there is a minimum purity of 0.2 but this can be overwritten.
-
-```
-java -cp paddle.jar com.hartwig.hmftools.paddle.PaddleCohortApplicationKt \
-    -db_user username
-    -db_pass password
-    -db_url mysql://localhost:3307/hmfpatients?serverTimezone=UTC
-    -out ~/hmf/analysis/paddle/hpc.tsv
-    -min_purity 0.2
-```  
-
-This will produce a very simple tab delimited file as follows:
+First step is to create the cohort to run dNdS on. The cohort should not contain more than one sample for any specific patient.
+To update the driver catalog values used by Hartwig, the cohort needs to be defined as the Highest Purity Cohort which is the 
+best sample for every patient that passes QC. Any smaller cohort could be picked for more specific analyses. 
+ 
+The output from this step should be a tab delimited file as follows:
 
 ```
 sampleId	purity
@@ -36,49 +24,38 @@ SAMPLE090003T	0.55
 SAMPLE090004T	0.42
 ```
 
-You can trivially change the cohort to only be for a specific cancer by adding the primary tumor location to the call in DatabaseAccess.readSamplePurityPassingQC().
+## Collecting exonic variants for all samples in the cohort
 
-If you are trying to run locally against datastore don't forget to create an ssh tunnel with a command like:
-
-```
-ssh -L 3307:localhost:3306 jon@hmf-datastore
-```
-
-## HPC Exonic Variants
-
-Step 2 is to download the exonic somatic variants for each of the samples in the highest purity cohort and summarise these variants to get the mutational load for each sample.
+Step 2 is to download the exonic somatic variants for each of the samples in the cohort and summarise these variants to get the mutational load for each sample.
 
 This is done by running the PaddleExonicVariantsApplicationKt application:
 
 ```
-java -cp paddle.jar com.hartwig.hmftools.paddle.PaddleExonicVariantsApplicationKt
+java -cp paddle.jar com.hartwig.hmftools.paddle.PaddleExonicVariantsApplicationKt \
+    -output_dir /path/to/outputDir \
+    -cohort_tsv /path/to/cohort_tsv_generated_by_step1.tsv \
+    -db_user ${user} -db_pass ${pass} -db_url ${url}
 ```  
-This application does not currently accept arguments. You must overwrite the following lines in PaddleExonicVariantsApplication.kt:
 
-```kotlin
-val somaticsDir = "/Users/jon/hmf/analysis/paddle/somatics/"
-val cohortFile = "/Users/jon/hmf/analysis/paddle/hpc.head.tsv"
-val cohortMutationalLoadFile = "/Users/jon/hmf/analysis/paddle/mutationalLoad.tsv"
-```
+This step assumes all samples are present in an HMF patient database that the application can connect to with the credentials provided.
 
-As this can be a lengthy process, the application is designed to fail (and resume) gracefully. 
-It should just be able to pick up where it left off it it gets interrupted.
+The outputs are:
+ - mutationalLoad.tsv: One line per sample describing various mutational loads
+ - somatics: A directory containing one file per sample holding all somatic mutations in exonic domain
 
-As with the cohort, a ssh tunnel might be required to connect to the database.
+## Run dNdScv
 
+The next step is to run dNdScv on the data collected by step 2. This requires a modified version of the dndscv tool defined [here](https://github.com/im3sanger/dndscv).
+In addition, this step requires a custom HmfRefCDS.RData. Both are available upon request.
 
-## Run dNdS
+To actually run the modified version of dndscv, use the dnds.R script provided alongside the PADDLE jar,
+and pass a working dir that is the directory containing the output of step 2.
 
-This is where things get a little complicated. 
-
-We run a customised older version of dNds that you will need to download and install. You can check the git log to see what changes I made if you ever need/want to use a newer version of dNdS.
-I have put it on datastore for you under /data/common/repos/dndscv or there is a tgz file you can download /data/common/repos/dndscv.tgz
-
-We also use a custom HmfRefCDS.RData that I have uploaded to datastore: /data/common/dbs/dnds/HmfRefCDS.RData 
-
-Do not lose these files. They are not easy to replace.
-
-With all the resources downloaded you need to update the (6-ish) file locations in [dnds.R](./src/main/resources/r/dnds.R) and run it. Good luck.
+The outputs are:
+ - allSomatics.RData
+ - DndsMutations.tsv
+ - HmfRefCDSCv.RData
+ - HmfRefCDSCv.tsv
 
 ## Update driver catalog values
 
@@ -86,18 +63,12 @@ Final step is to take the dNdS values and transform them into something useable 
 
 This is done by running the PaddleDndsApplicationKt application:
 ```
-java -cp paddle.jar com.hartwig.hmftools.paddle.PaddleDndsApplicationKt
+java -cp paddle.jar com.hartwig.hmftools.paddle.PaddleDndsApplicationKt \
+    -work_dir /path/to/work_dir
 ```  
 
-This application does not currently accept arguments. You must overwrite the following lines in PaddleDndsApplication.kt:
-
-```kotlin
-val path = "/Users/jon/hmf/analysis/paddle" // "dnds4305" || "dnds5441"
-val cohortFile = "${path}/mutationalLoad.tsv"
-val dndsCVFile = "${path}/HmfRefCDSCv.tsv"
-val mutationsFile = "${path}/DndsMutations.tsv"
-val hmfToolsRepo="/Users/jon/hmf/repos/hmftools"
-```
-
-Note that the output files are designed to be checked into the hmftools repository.
-
+The outputs of this step are:
+ - DndsDriverLikelihoodOnco.tsv
+ - DndsDriverLikelihoodTsg.tsv
+  
+These files are ingested into hmf-common resources and are used to calculate driver likelihood of individual mutations of individual samples.
