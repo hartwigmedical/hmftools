@@ -6,7 +6,7 @@ There are 4 steps required to generate dNdS values
 1. [Define the cohort to run on](#define-the-cohort-to-run-on)
 2. [Gather variants of cohort](#collecting-exonic-variants-for-all-samples-in-the-cohort)
 3. [Run dNdScv](#run-dndscv)
-4. Update driver catalog values
+4. [Update driver catalog values](#update-driver-catalog-values)
 
 ## Define the cohort to run on 
 
@@ -26,13 +26,13 @@ SAMPLE090004T	0.42
 
 ## Collecting exonic variants for all samples in the cohort
 
-Step 2 is to download the exonic somatic variants for each of the samples in the cohort and summarise these variants to get the mutational load for each sample.
+Second step is to download the exonic somatic variants for each of the samples in the cohort and summarise these variants to get the mutational load for each sample.
 
 This is done by running the PaddleExonicVariantsApplicationKt application:
 
 ```
 java -cp paddle.jar com.hartwig.hmftools.paddle.PaddleExonicVariantsApplicationKt \
-    -output_dir /path/to/outputDir \
+    -output_dir /path/to/output_dir \
     -cohort_tsv /path/to/cohort_tsv_generated_by_step1.tsv \
     -db_user ${user} -db_pass ${pass} -db_url ${url}
 ```  
@@ -45,13 +45,13 @@ The outputs are:
 
 ## Run dNdScv
 
-The next step is to run dNdScv on the data collected by step 2. This requires a modified version of the dndscv tool defined [here](https://github.com/im3sanger/dndscv).
-In addition, this step requires a custom HmfRefCDS.RData. Both are available upon request.
+The next step is to run dNdScv on the data collected by step 2. This requires a modified version of the [original dndscv tool](https://github.com/im3sanger/dndscv).
+In addition, this step requires a custom HmfRefCDS.RData. Both the modified tool as well as the HMF ref data are installed/present on datastore (Hartwig internal server).
 
-To actually run the modified version of dndscv, use the dnds.R script provided alongside the PADDLE jar,
+To actually run the modified version of dndscv, use the dnds.R script provided alongside the paddle jar,
 and pass a working dir that is the directory containing the output of step 2.
 
-The outputs are:
+The outputs of this step are:
  - allSomatics.RData
  - DndsMutations.tsv
  - HmfRefCDSCv.RData
@@ -59,11 +59,11 @@ The outputs are:
 
 ## Update driver catalog values
 
-Final step is to take the dNdS values and transform them into something useable by the driver catalog. 
+Final step is to take the dNdS values from previous step and transform them into something useable by the driver catalog. 
 
-This is done by running the PaddleDndsApplicationKt application:
+This is done by running the PaddleDriverApplicationKt application:
 ```
-java -cp paddle.jar com.hartwig.hmftools.paddle.PaddleDndsApplicationKt \
+java -cp paddle.jar com.hartwig.hmftools.paddle.PaddleDriverApplicationKt \
     -work_dir /path/to/work_dir
 ```  
 

@@ -89,7 +89,7 @@ class PaddleExonicVariantsApplication(cmd: CommandLine) : AutoCloseable, Runnabl
 
     override fun close() {
         dbAccess.close()
-        PaddleDndsApplication.logger.info("Finished in ${(System.currentTimeMillis() - startTime) / 1000} seconds")
+        logger.info("Finished in ${(System.currentTimeMillis() - startTime) / 1000} seconds")
     }
 }
 

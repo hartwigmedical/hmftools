@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.paddle
 
-import com.hartwig.hmftools.paddle.PaddleDndsApplication.Companion.WORK_DIR
+import com.hartwig.hmftools.paddle.PaddleDriverApplication.Companion.WORK_DIR
 import com.hartwig.hmftools.paddle.cohort.CohortLoad
 import com.hartwig.hmftools.paddle.dnds.DndsCvGene
 import com.hartwig.hmftools.paddle.dnds.DndsMutation
@@ -14,7 +14,7 @@ fun main(args: Array<String>) {
     fun createBasicOptions(): Options {
         val options = Options()
 
-        val outputDirOption = Option(WORK_DIR, true, "Directory where to find all the inputs fro Dnds")
+        val outputDirOption = Option(WORK_DIR, true, "Directory where to find all the inputs for generating the driver files")
         outputDirOption.isRequired = true
         options.addOption(outputDirOption)
 
@@ -30,13 +30,13 @@ fun main(args: Array<String>) {
         val options = createBasicOptions()
         val cmd = createCommandLine(args, options)
 
-        PaddleDndsApplication(cmd).use { x -> x.run() }
+        PaddleDriverApplication(cmd).use { x -> x.run() }
     } catch (e: Exception) {
         println(e)
     }
 }
 
-class PaddleDndsApplication(cmd: CommandLine) : AutoCloseable, Runnable {
+class PaddleDriverApplication(cmd: CommandLine) : AutoCloseable, Runnable {
 
     companion object {
         val logger = LogManager.getLogger(this::class.java)
