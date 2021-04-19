@@ -101,8 +101,9 @@ public class BreakendGeneData
     public List<BreakendTransData> transcripts() { return mTranscripts; }
 
     @Nullable
-    public BreakendTransData canonical() {
-        return mTranscripts.stream().filter(BreakendTransData::isCanonical).findFirst().orElse(null);
+    public BreakendTransData canonical()
+    {
+         return mTranscripts.stream().filter(BreakendTransData::isCanonical).findFirst().orElse(null);
     }
 
     public String karyotypeBand() { return mKaryotypeBand; }

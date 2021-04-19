@@ -259,12 +259,16 @@ public class DeletionDrivers
                         // both the SVs involved in the deletion must be disruptive, ie cannot be simple intronic DELs
                         final SvBreakend otherBreakend = dbLink.getOtherBreakend(breakend);
 
-                        final BreakendTransData matchingTrans = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
+                        final BreakendGeneData matchingGene = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
                                 .filter(x -> x.StableId.equals(gene.StableId))
-                                .map(x -> x.canonical())
                                 .findFirst().orElse(null);
 
-                        if(matchingTrans == null || !matchingTrans.isDisruptive())
+                        if(matchingGene == null || matchingGene.canonical() == null)
+                            continue;
+
+                        final BreakendTransData matchingTrans = matchingGene.canonical();
+
+                        if(!matchingTrans.isDisruptive())
                             continue;
 
                         delDriverGeneIds.add(gene.StableId);
