@@ -6,6 +6,7 @@ import com.hartwig.hmftools.lilac.SequenceCountDiff
 import com.hartwig.hmftools.lilac.hla.HlaContext
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.nuc.NucleotideQualEnrichment
+import com.hartwig.hmftools.lilac.nuc.NucleotideSpliceEnrichment
 
 class AminoAcidFragmentPipeline(private val config: LilacConfig, private val referenceFragments: List<NucleotideFragment>, tumorFragments: List<NucleotideFragment>) {
     private val minBaseQuality = config.minBaseQual
@@ -13,6 +14,11 @@ class AminoAcidFragmentPipeline(private val config: LilacConfig, private val ref
     private val aminoAcidEnricher = AminoAcidQualEnrichment(minEvidence)
     private val nucleotideQualEnrichment = NucleotideQualEnrichment(minBaseQuality, minEvidence)
     private val highQualityTumorFragments = qualFiltered(minBaseQuality, tumorFragments)
+
+    companion object {
+        const val MAX_AMINO_ACID_BOUNDARY = 298
+    }
+
 
     fun referencePhasingFragments(context: HlaContext): List<AminoAcidFragment> {
         val gene = "HLA-${context.gene}"
@@ -71,11 +77,10 @@ class AminoAcidFragmentPipeline(private val config: LilacConfig, private val ref
             return listOf()
         }
 
-
         val qualEnriched = nucleotideQualEnrichment.enrich(fragments)
-//        val spliceEnricher = NucleotideSpliceEnrichment(minBaseQuality, minEvidence, boundaries)
-//        val spliceEnriched = spliceEnricher.enrich(qualEnriched)
-        val result = aminoAcidEnricher.enrich(qualEnriched)
+        val spliceEnricher = NucleotideSpliceEnrichment(minBaseQuality, minEvidence, boundaries.filter { it <= MAX_AMINO_ACID_BOUNDARY }.toSet())
+        val spliceEnriched = spliceEnricher.enrich(qualEnriched)
+        val result = aminoAcidEnricher.enrich(spliceEnriched)
 
         return result
     }
