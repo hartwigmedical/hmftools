@@ -7,7 +7,7 @@ import org.junit.Test
 
 class HlaComplexCoverageRankingTest {
 
-    val victim = HlaComplexCoverageRanking(3, listOf(), listOf())
+    val victim = HlaComplexCoverageRanking(3, listOf(), listOf(), listOf())
 
     val a1 = HlaAlleleCoverage(HlaAllele("A*01:01"), 10, 0.0, 0.0)
     val a2 = HlaAlleleCoverage(HlaAllele("A*01:02"), 10, 0.0, 0.0)
@@ -31,7 +31,7 @@ class HlaComplexCoverageRankingTest {
 
         for (lower in lessCommon) {
             val complexes = mutableListOf(common, lower).shuffled()
-            val winner = HlaComplexCoverageRanking(3, listOf(a3.allele, b3.allele, c3.allele), listOf()).candidateRanking(complexes)[0]
+            val winner = HlaComplexCoverageRanking(3, listOf(a3.allele, b3.allele, c3.allele), listOf(), listOf()).candidateRanking(complexes)[0]
             assertEquals(common, winner)
         }
     }
@@ -46,7 +46,7 @@ class HlaComplexCoverageRankingTest {
         val victim3 = HlaComplexCoverage.create(listOf(a2, a3, b1, b2, c1, c2))
         val complexes = listOf(victim1, victim2, victim3).shuffled()
 
-        val ranked = HlaComplexCoverageRanking(3, common, recovered).candidateRanking(complexes)
+        val ranked = HlaComplexCoverageRanking(3, common, recovered, listOf()).candidateRanking(complexes)
         val winner = ranked[0]
         assertEquals(victim3, winner)
     }
@@ -94,11 +94,16 @@ class HlaComplexCoverageRankingTest {
     @Test
     fun testWildCoverage() {
         val het = HlaComplexCoverage.create(listOf(a1, a2, b1, b2, c1, c2))
-        val homWithoutWild = HlaComplexCoverage.create(listOf(a1, a1, b1, b1, c1, c1))
-        val homWithWild = HlaComplexCoverage.create(listOf(a1, a1, b1, b1, c1, c1.copy(uniqueCoverage = 9, wildCoverage = 1.0)))
+        val hetWithOneWild = HlaComplexCoverage.create(listOf(a1, a2, b1, b2, c1, c2.copy(uniqueCoverage = 9, wildCoverage = 1.0)))
 
-        assertEquals(homWithoutWild, victim.candidateRanking(mutableListOf(het, homWithoutWild).shuffled())[0])
-        assertEquals(het, victim.candidateRanking(mutableListOf(het, homWithWild).shuffled())[0])
+        val hom = HlaComplexCoverage.create(listOf(a1, a1, b1, b1, c1, c1))
+        val homWithOneWild = HlaComplexCoverage.create(listOf(a1, a1, b1, b1, c1, c1.copy(uniqueCoverage = 9, wildCoverage = 1.0)))
+        val homWithTwoWild = HlaComplexCoverage.create(listOf(a1, a1, b1, b1.copy(uniqueCoverage = 9, wildCoverage = 1.0), c1, c1.copy(uniqueCoverage = 9, wildCoverage = 1.0)))
+
+        assertEquals(hom, victim.candidateRanking(mutableListOf(het, hom).shuffled())[0])
+        assertEquals(het, victim.candidateRanking(mutableListOf(het, homWithOneWild).shuffled())[0])
+        assertEquals(homWithOneWild, victim.candidateRanking(mutableListOf(homWithOneWild, hetWithOneWild).shuffled())[0])
+        assertEquals(hetWithOneWild, victim.candidateRanking(mutableListOf(homWithTwoWild, hetWithOneWild).shuffled())[0])
     }
 
 

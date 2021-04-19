@@ -83,6 +83,8 @@ class LilacApplication(private val cmd: CommandLine, private val config: LilacCo
                 HlaAllele("A*01:237"),
                 HlaAllele("A*33:191"),
                 HlaAllele("A*11:353"),
+                HlaAllele("A*30:95"),
+                HlaAllele("A*30:136"),
                 HlaAllele("A*31:135"))
 
         val A_EXON_BOUNDARIES = setOf(24, 114, 206, 298, 337, 348, 364)
@@ -93,13 +95,16 @@ class LilacApplication(private val cmd: CommandLine, private val config: LilacCo
         val ALL_NUCLEOTIDE_EXON_BOUNDARIES = ALL_PROTEIN_EXON_BOUNDARIES.flatMap { listOf(3 * it, 3 * it + 1, 3 * it + 2) }
 
         private val transcripts = HmfGenePanelSupplier.allGenesMap37()
-        val HLA_TRANSCRIPTS = listOf(transcripts[HLA_A]!!, transcripts[HLA_B]!!, transcripts[HLA_C]!!)
+        val HLA_TRANSCRIPTS = listOf(
+                transcripts[HLA_A]!!,
+                transcripts[HLA_B]!!,
+                transcripts[HLA_C]!!
+        )
         val LOCI_POSITION = LociPosition(HLA_TRANSCRIPTS)
     }
 
     private val startTime = System.currentTimeMillis()
     private val sample = config.sample
-    private val minBaseQual = config.minBaseQual
     private val minEvidence = config.minEvidence
     private val minFragmentsPerAllele = config.minFragmentsPerAllele
     private val minFragmentsToRemoveSingle = config.minFragmentsToRemoveSingle
@@ -114,7 +119,7 @@ class LilacApplication(private val cmd: CommandLine, private val config: LilacCo
     override fun run() {
         logger.info("Starting LILAC with parameters:")
         logger.info("    sample = ${config.sample}")
-        logger.info("    minBaseQual = $minBaseQual")
+        logger.info("    minBaseQual = ${config.minBaseQual}")
         logger.info("    minEvidence = $minEvidence")
         logger.info("    minUniqueCoverage = $minConfirmedUniqueCoverage")
         logger.info("    minFragmentsPerAllele = $minFragmentsPerAllele")
@@ -184,10 +189,18 @@ class LilacApplication(private val cmd: CommandLine, private val config: LilacCo
         val cCandidates = candidateFactory.phasedCandidates(hlaCContext, cUnphasedCandidates, cPhasedEvidence)
         val phasedCandidateAlleles = (aCandidates + bCandidates + cCandidates)
 
+        val missingStopLossAlleles = config.stopLossRecoveryAlleles.filter { it !in phasedCandidateAlleles }
+        val stopLossRecovery = if (nucleotideFragmentFactory.containsStopLossHlaC() && missingStopLossAlleles.isNotEmpty()) {
+            logger.info("Recovering stop loss candidate: " + missingStopLossAlleles.joinToString(","))
+            missingStopLossAlleles
+        } else {
+            listOf()
+        }
+
         // Common Candidate Recovery
         logger.info("Recovering common un-phased candidates:")
         val recoveredAlleles = config.commonAlleles
-                .filter { it !in phasedCandidateAlleles && it in allUnphasedCandidates }
+                .filter { it !in phasedCandidateAlleles && it in allUnphasedCandidates } + stopLossRecovery
 
         val candidateAlleles = phasedCandidateAlleles + recoveredAlleles
         val candidateSequences = aminoAcidSequences.filter { it.allele in candidateAlleles }

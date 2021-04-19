@@ -1,15 +1,15 @@
 package com.hartwig.hmftools.paddle.dnds
 
 import com.hartwig.hmftools.paddle.Impact
-import junit.framework.Assert.assertEquals
 import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class DndsMutationTest {
 
     companion object {
 
-        val GENE = "AR"
+        const val GENE = "AR"
 
         fun dndsMutation(gene: String, hotspot: Boolean, biallelic: Boolean, repeatCount: Int, impact: Impact): DndsMutation {
             val biallelicString = biallelic.toString()
@@ -30,7 +30,7 @@ class DndsMutationTest {
             }
 
             val result = DndsMutation.fromString("SAMPLE\tX\t66766353\tT\tTGGTGGCGGC\t${canonicalCodingEffectString}\t${canonicalCodingEffectString}\t${repeatCount}\t${biallelicString}\t${hotspotString}\t${gene}\t${dndImpactString}")
-            Assert.assertEquals(impact, result.impact)
+            assertEquals(impact, result.impact)
             return result
         }
     }
@@ -93,7 +93,6 @@ class DndsMutationTest {
         assertEquals(Impact.FRAMESHIFT, list[0].impact)
         assertEquals(Impact.NONSENSE, list[1].impact)
         assertEquals(Impact.INFRAME, list[2].impact)
-
     }
 
     @Test
@@ -145,6 +144,4 @@ class DndsMutationTest {
         Assert.assertTrue(dndsMutation(GENE, false, false, 7, Impact.INFRAME).isKnownOncoDriver)
         Assert.assertFalse(dndsMutation(GENE, false, false, 7, Impact.FRAMESHIFT).isKnownOncoDriver)
     }
-
-
 }

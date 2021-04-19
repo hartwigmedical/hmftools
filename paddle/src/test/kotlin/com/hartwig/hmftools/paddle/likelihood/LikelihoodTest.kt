@@ -38,5 +38,4 @@ class LikelihoodTest {
         assertEquals(8.45257, victim.vusDriversPerSample * 1e3, epsilon)
         assertEquals(3.35983, victim.passengersPerMutation * 1e7, epsilon)
     }
-
 }

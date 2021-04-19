@@ -47,7 +47,8 @@ data class LilacConfig(
         val somaticVcf: String,
         val debugPhasing: Boolean,
         val expectedAlleles: List<HlaAllele>,
-        val commonAlleles: List<HlaAllele>
+        val commonAlleles: List<HlaAllele>,
+        val stopLossRecoveryAlleles: List<HlaAllele>
 ) {
 
     val outputFilePrefix = "${outputDir}/$sample"
@@ -83,6 +84,8 @@ data class LilacConfig(
                     .map { HlaAllele(it) }
                     .map { it.asFourDigit() }
 
+            val stopLossRecoveryAlleles = listOf(HlaAllele("C*04:09N"))
+
             return LilacConfig(
                     sample,
                     referenceBam,
@@ -101,7 +104,8 @@ data class LilacConfig(
                     somaticVcf,
                     debugPhasing,
                     expectedAlleles,
-                    commonAlleles)
+                    commonAlleles,
+                    stopLossRecoveryAlleles)
         }
 
         private fun default(): LilacConfig {
@@ -122,6 +126,7 @@ data class LilacConfig(
                     "",
                     "",
                     false,
+                    listOf(),
                     listOf(),
                     listOf())
         }

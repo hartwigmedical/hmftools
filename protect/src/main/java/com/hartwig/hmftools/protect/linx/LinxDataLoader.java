@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
@@ -14,6 +15,7 @@ import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class LinxDataLoader {
 
@@ -24,11 +26,11 @@ public final class LinxDataLoader {
 
     @NotNull
     public static LinxData load(ProtectConfig config) throws IOException {
-        return load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxViralInsertionTsv(), config.linxDriverCatalogTsv());
+        return load(config.linxFusionTsv(), config.linxBreakendTsv(), null, config.linxDriverCatalogTsv());
     }
 
     @NotNull
-    public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv,
+    public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @Nullable String linxViralInsertionTsv,
             @NotNull String linxDriversTsv) throws IOException {
         LOGGER.info("Loading LINX data from {}", new File(linxFusionTsv).getParent());
         List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv).stream().filter(LinxFusion::reported).collect(Collectors.toList());
@@ -39,8 +41,12 @@ public final class LinxDataLoader {
         List<ReportableGeneDisruption> reportableGeneDisruptions = ReportableGeneDisruptionFactory.convert(linxBreakends);
         LOGGER.info(" Loaded {} reportable disruptions from {}", reportableGeneDisruptions.size(), linxBreakendTsv);
 
-        List<LinxViralInsertion> viralInsertionList = LinxViralInsertion.read(linxViralInsertionTsv);
-        List<ViralInsertion> reportableViralInsertions = ViralInsertionAnalyzer.analyzeViralInsertions(viralInsertionList);
+        // viral insertion is nullable in protect, and notnull in patient reporter
+        List<ViralInsertion> reportableViralInsertions = Lists.newArrayList();
+        if (linxViralInsertionTsv != null) {
+            List<LinxViralInsertion> viralInsertionList = LinxViralInsertion.read(linxViralInsertionTsv);
+            reportableViralInsertions = ViralInsertionAnalyzer.analyzeViralInsertions(viralInsertionList);
+        }
         LOGGER.info(" Loaded {} reportable viral insertions from {}", reportableViralInsertions.size(), linxViralInsertionTsv);
 
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions =

@@ -1,36 +1,56 @@
 package com.hartwig.hmftools.paddle
 
+import com.hartwig.hmftools.paddle.PaddleDriverApplication.Companion.WORK_DIR
 import com.hartwig.hmftools.paddle.cohort.CohortLoad
 import com.hartwig.hmftools.paddle.dnds.DndsCvGene
 import com.hartwig.hmftools.paddle.dnds.DndsMutation
 import com.hartwig.hmftools.paddle.likelihood.LikelihoodGene
 import com.hartwig.hmftools.paddle.mutation.MutationsGene
+import org.apache.commons.cli.*
 import org.apache.logging.log4j.LogManager
 
 fun main(args: Array<String>) {
 
+    fun createBasicOptions(): Options {
+        val options = Options()
+
+        val outputDirOption = Option(WORK_DIR, true, "Directory where to find all the inputs for generating the driver files")
+        outputDirOption.isRequired = true
+        options.addOption(outputDirOption)
+
+        return options
+    }
+
+    @Throws(ParseException::class)
+    fun createCommandLine(args: Array<String>, options: Options): CommandLine {
+        return DefaultParser().parse(options, args)
+    }
+
     try {
-        PaddleDndsApplication().use { x -> x.run() }
+        val options = createBasicOptions()
+        val cmd = createCommandLine(args, options)
+
+        PaddleDriverApplication(cmd).use { x -> x.run() }
     } catch (e: Exception) {
         println(e)
     }
 }
 
-class PaddleDndsApplication : AutoCloseable, Runnable {
+class PaddleDriverApplication(cmd: CommandLine) : AutoCloseable, Runnable {
 
     companion object {
         val logger = LogManager.getLogger(this::class.java)
+
+        const val WORK_DIR = "work_dir"
     }
 
     private val startTime = System.currentTimeMillis()
-
+    private val workDir = cmd.getOptionValue(WORK_DIR)
 
     override fun run() {
-        val path = "/Users/jon/hmf/analysis/dnds5441" // "dnds4305" || "dnds5441"
-        val cohortFile = "${path}/mutationalLoad.tsv"
-        val dndsCVFile = "${path}/HmfRefCDSCv.tsv"
-        val mutationsFile = "${path}/DndsMutations.tsv"
-        val hmfToolsRepo="/Users/jon/hmf/repos/hmftools"
+        val cohortFile = "${workDir}/mutationalLoad.tsv"
+        val dndsCVFile = "${workDir}/HmfRefCDSCv.tsv"
+        val mutationsFile = "${workDir}/DndsMutations.tsv"
 
         logger.info("Loading dNdScv values: $dndsCVFile")
         val dndsCv = DndsCvGene.fromFile(dndsCVFile).associateBy { x -> x.gene }
@@ -48,8 +68,8 @@ class PaddleDndsApplication : AutoCloseable, Runnable {
         val oncoLikelihood = LikelihoodGene(cohortLoad, dndsCv, oncoGeneMutations)
         val tsgLikelihood = LikelihoodGene(cohortLoad, dndsCv, tsgGeneMutations)
 
-        LikelihoodGene.writeFile(false, "${hmfToolsRepo}/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodOnco.tsv", oncoLikelihood.values)
-        LikelihoodGene.writeFile(false, "${hmfToolsRepo}/hmf-common/src/main/resources/dnds/DndsDriverLikelihoodTsg.tsv", tsgLikelihood.values)
+        LikelihoodGene.writeFile(false, "${workDir}/DndsDriverLikelihoodOnco.tsv", oncoLikelihood.values)
+        LikelihoodGene.writeFile(false, "${workDir}/DndsDriverLikelihoodTsg.tsv", tsgLikelihood.values)
     }
 
     override fun close() {

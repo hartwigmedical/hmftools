@@ -33,6 +33,7 @@ data class LikelihoodGene(
         val nonsense: Likelihood,
         val splice: Likelihood,
         val indel: Likelihood) {
+
     companion object {
 
         operator fun invoke(load: CohortLoad, dndsMap: Map<Gene, DndsCvGene>, mutationsMap: Map<Gene, MutationsGene>): Map<Gene, LikelihoodGene> {
@@ -63,7 +64,6 @@ data class LikelihoodGene(
             Files.write(File(filename).toPath(), toLines(missenseOnly, likelihoods))
         }
 
-
         private fun toLines(missenseOnly: Boolean, likelihoods: Collection<LikelihoodGene>): List<String> {
             val lines: MutableList<String> = Lists.newArrayList()
             lines.add(headerString(missenseOnly))
@@ -75,6 +75,7 @@ data class LikelihoodGene(
             fun headerString(prefix: String): String {
                 return "${prefix}VusDriversPerSample\t${prefix}PassengersPerMutation"
             }
+
             val missenseHeader = "gene\t${headerString("missense")}"
             return if (missenseOnly) missenseHeader else "$missenseHeader\t${headerString("nonsense")}\t${headerString("splice")}\t${headerString("indel")}"
         }
