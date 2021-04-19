@@ -27,7 +27,8 @@ public class IsofoxConstants
 
     // LINC00486
     public static final BaseRegion EXCLUDED_REGION_1_REF_37 = new BaseRegion("2", 33141260, 33141700);
-    public static final BaseRegion EXCLUDED_REGION_1_REF_38 = new BaseRegion("2", 32916190, 32916630);
+    public static final BaseRegion EXCLUDED_REGION_1_REF_19 = new BaseRegion("chr2", 33141260, 33141700);
+    public static final BaseRegion EXCLUDED_REGION_1_REF_38 = new BaseRegion("chr2", 32916190, 32916630);
 
     public static void populateEnrichedGeneIds(final List<String> geneIds, final RefGenomeVersion version)
     {

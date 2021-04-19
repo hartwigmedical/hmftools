@@ -51,7 +51,8 @@ public enum RefGenomeVersion
         this.mIs37 = is37;
     }
 
-    public boolean is37() {
+    public boolean is37()
+    {
         return mIs37;
     }
 

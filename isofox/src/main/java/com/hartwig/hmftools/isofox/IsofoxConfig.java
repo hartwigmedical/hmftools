@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MI
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MAX_FRAGMENT_SIZE;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_SINGLE_MAP_QUALITY;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.EXCLUDED_REGION_1_REF_19;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.EXCLUDED_REGION_1_REF_37;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.EXCLUDED_REGION_1_REF_38;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_GC_COUNTS;
@@ -241,7 +242,8 @@ public class IsofoxConfig
             ISF_LOGGER.info("file({}) loaded {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
 
-        ExcludedRegion = RefGenVersion.is37() ? EXCLUDED_REGION_1_REF_37 : EXCLUDED_REGION_1_REF_38;
+        ExcludedRegion = RefGenVersion.is37() ? EXCLUDED_REGION_1_REF_37 :
+                (RefGenVersion == HG19 ? EXCLUDED_REGION_1_REF_19 : EXCLUDED_REGION_1_REF_38 );
 
         GeneReadLimit = Integer.parseInt(cmd.getOptionValue(GENE_READ_LIMIT, "0"));
 
