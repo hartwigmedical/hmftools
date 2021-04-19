@@ -51,10 +51,8 @@ In addition, this step requires a custom HmfRefCDS.RData. Both the modified tool
 To actually run the modified version of dndscv, use the dnds.R script provided alongside the paddle jar,
 and pass a working dir that is the directory containing the output of step 2.
 
-The outputs of this step are:
- - allSomatics.RData
+The relevant outputs of this step are:
  - DndsMutations.tsv
- - HmfRefCDSCv.RData
  - HmfRefCDSCv.tsv
 
 ## Update driver catalog values
