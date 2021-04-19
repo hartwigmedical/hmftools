@@ -22,15 +22,13 @@ data class DndsMutation(
         val gene: Gene,
         val dndsImpact: String) {
 
-
-
     val impact = impact(dndsImpact, canonicalCodingEffect, worstCodingEffect)
     val isBiallelic = biallelic && impact !in EXCLUDE_BIALLELIC
     val isHotspot = hotspot && impact !in EXCLUDE_HOTSPOT
     val isKnownOncoDriver = isHotspot || impact == Impact.INFRAME && repeatCount < 8
     val isKnownTsgDriver = isHotspot || isBiallelic
 
-    fun impact(dndsImpact: String, canonicalCodingEffect: String, worstCodingEffect: String): Impact {
+    private fun impact(dndsImpact: String, canonicalCodingEffect: String, worstCodingEffect: String): Impact {
         if (dndsImpact == "no-SNV" || dndsImpact == "NA") {
             when (canonicalCodingEffect) {
                 "MISSENSE" -> return Impact.INFRAME

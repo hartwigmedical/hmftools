@@ -11,7 +11,6 @@ import org.junit.Test
 
 class OncoMutationTest {
 
-
     @Test
     fun testSingleUnknownMissense() {
         val missense = mutation(false, Impact.MISSENSE)
@@ -71,6 +70,4 @@ class OncoMutationTest {
         assertEmpty(victim.inframe)
         assertEmpty(victim.frameshift)
     }
-
-
 }

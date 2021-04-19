@@ -52,5 +52,4 @@ class TsgMutationTest {
         MutationsTest.assertEmpty(victim.inframe)
         MutationsTest.assertEmpty(victim.frameshift)
     }
-
 }

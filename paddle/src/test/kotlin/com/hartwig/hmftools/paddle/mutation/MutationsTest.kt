@@ -8,7 +8,6 @@ import org.junit.Assert
 
 object MutationsTest {
 
-
     fun mutation(known: Boolean, impact: Impact): DndsMutation {
         return DndsMutationTest.dndsMutation(GENE, known, false, 0, impact)
     }
@@ -31,5 +30,4 @@ object MutationsTest {
         Assert.assertEquals(expectedUnknown, victim.unknown)
         Assert.assertEquals(expectedKnown + expectedUnknown, victim.total)
     }
-
 }

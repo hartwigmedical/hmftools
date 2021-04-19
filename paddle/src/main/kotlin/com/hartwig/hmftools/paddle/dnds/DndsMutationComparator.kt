@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.paddle.dnds
 
 class DndsMutationComparator(private val knownFunction: (DndsMutation) -> Boolean) : Comparator<DndsMutation> {
+
     override fun compare(o1: DndsMutation, o2: DndsMutation): Int {
         fun Boolean.toInt() = if (this) 1 else 0
 
@@ -16,5 +17,4 @@ class DndsMutationComparator(private val knownFunction: (DndsMutation) -> Boolea
 
         return o1.impact.ordinal - o2.impact.ordinal
     }
-
 }

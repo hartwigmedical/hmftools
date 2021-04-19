@@ -3,7 +3,6 @@ package com.hartwig.hmftools.paddle.mutation
 import com.hartwig.hmftools.paddle.Impact
 import com.hartwig.hmftools.paddle.dnds.DndsMutation
 import com.hartwig.hmftools.paddle.dnds.DndsMutationComparator
-import org.apache.logging.log4j.LogManager
 
 data class Mutations(val known: Int, val unknown: Int) {
     val total = known + unknown
@@ -16,7 +15,6 @@ data class Mutations(val known: Int, val unknown: Int) {
 data class MutationsGene(
         val gene: String, val synonymous: Int, val redundant: Int,
         val missense: Mutations, val nonsense: Mutations, val splice: Mutations, val inframe: Mutations, val frameshift: Mutations) {
-
 
     fun add(impact: Impact, known: Int, unknown: Int): MutationsGene {
         val additional = Mutations(known, unknown)
@@ -41,7 +39,6 @@ data class MutationsGene(
     }
 
     companion object {
-        val logger = LogManager.getLogger(this::class.java)
 
         private val tsgComparator = DndsMutationComparator { x -> x.isKnownOncoDriver }
         private val oncoComparator = DndsMutationComparator { x -> x.isKnownTsgDriver }
@@ -112,7 +109,6 @@ data class MutationsGene(
             var result = empty.copy(gene = gene)
 
             for (sampleMutations in geneMutations.sortedPartition { x -> x.sample }) {
-                val sample = sampleMutations[0].sample
                 result += sampleSummary(gene, sampleMutations)
             }
 
@@ -143,5 +139,4 @@ data class MutationsGene(
             return result
         }
     }
-
 }
