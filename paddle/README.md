@@ -6,7 +6,7 @@ There are 4 steps required to generate dNdS values
 1. [Define the cohort to run on](#define-the-cohort-to-run-on)
 2. [Gather variants of cohort](#collecting-exonic-variants-for-all-samples-in-the-cohort)
 3. [Run dNdScv](#run-dndscv)
-4. [Update driver catalog values](#update-driver-catalog-values)
+4. [Generate driver catalog values](#generate-driver-catalog-values)
 
 ## Define the cohort to run on 
 
@@ -55,7 +55,7 @@ The relevant outputs of this step are:
  - DndsMutations.tsv
  - HmfRefCDSCv.tsv
 
-## Update driver catalog values
+## Generate driver catalog values
 
 Final step is to take the dNdS values from previous step and transform them into something useable by the driver catalog. 
 
