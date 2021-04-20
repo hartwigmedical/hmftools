@@ -24,7 +24,6 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
 
     private val insertSuffixTrees = inserts.map { Pair(it, SuffixTree(it.sequence())) }.toMap()
     private val deleteSuffixTrees = deletes.map { Pair(it, SuffixTree(it.sequence())) }.toMap()
-    private var containsStopLost: Boolean = false
 
     fun createAlignmentFragments(samCoding: SAMCodingRecord, codingRegion: NamedBed): NucleotideFragment? {
 
@@ -76,6 +75,10 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
             if (samCoding.containsIndel()) {
                 return null
             }
+        }
+
+        if (samCodingStartLoci < 0 || samCodingEndLoci < 0) {
+            return null
         }
 
         // NORMAL CASE
