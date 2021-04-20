@@ -50,7 +50,7 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
             val sequence = codingRegionRead.joinToString("")
             val aminoAcids = Codons.aminoAcids(sequence.substring(nucleotideStartLoci - samCodingStartLoci))
             if (aminoAcids.isNotEmpty()) {
-                val matchRangeAllowed = (aminoAcidIndices.first - samCoding.softClippedStart / 3 - samCoding.maxIndelSize())..(aminoAcidIndices.first + samCoding.maxIndelSize())
+                val matchRangeAllowed = (aminoAcidIndices.first - samCoding.softClippedStart / 3 - samCoding.maxIndelSize())..(aminoAcidIndices.first + samCoding.maxIndelSize() + samCoding.softClippedEnd / 3)
                 val matchingInserts = insertSuffixTrees
                         .map { Pair(it.key, it.value.indices(aminoAcids)) }
                         .map { Pair(it.first, it.second.filter { i -> matchRangeAllowed.contains(i) }) }
