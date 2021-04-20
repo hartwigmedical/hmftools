@@ -147,6 +147,8 @@ class SomaticPurityFitter
         return diploidCandidates.stream().filter(x -> Doubles.equal(x.purity(), purity)).findFirst();
     }
 
+    private static final int MAX_HOTSPOT_SNV_COUNT = 1000;
+
     private double findPurityPeak(final List<SomaticVariant> variants)
     {
         final List<ModifiableWeightedPloidy> weightedVAFs = newArrayList();
@@ -181,27 +183,30 @@ class SomaticPurityFitter
         if(maxPurity <= 0)
             return 0;
 
-        double upperPeak = calcProbabilityUpperBound(weightedVAFs.size(), maxPurity);
-
-        // look for any hotspot with a VAF higher than this bound
-        SomaticVariant topPurityVar = null;
-
-        for(SomaticVariant var : hotspotVariants)
+        if(weightedVAFs.size() <= MAX_HOTSPOT_SNV_COUNT)
         {
-            if(var.alleleFrequency() >= upperPeak)
+            double upperPeak = calcProbabilityUpperBound(weightedVAFs.size(), maxPurity);
+
+            // look for any hotspot with a VAF higher than this bound
+            SomaticVariant topPurityVar = null;
+
+            for(SomaticVariant var : hotspotVariants)
             {
+                if(var.alleleFrequency() < upperPeak || var.alleleFrequency() > 0.5)
+                    continue;
+
                 if(topPurityVar == null || var.alleleFrequency() > topPurityVar.alleleFrequency())
                     topPurityVar = var;
             }
-        }
 
-        if(topPurityVar != null)
-        {
-            PPL_LOGGER.info("purity({}) set from hotspot({}:{}) vs peak({} upper={})",
-                    formatDbl.format(topPurityVar.alleleFrequency()), topPurityVar.chromosome(), topPurityVar.position(),
-                    formatDbl.format(maxPurity), format("%.4f", upperPeak));
+            if(topPurityVar != null)
+            {
+                PPL_LOGGER.info("purity({}) set from hotspot({}:{}) vs peak({} upper={})",
+                        formatDbl.format(topPurityVar.alleleFrequency()), topPurityVar.chromosome(), topPurityVar.position(),
+                        formatDbl.format(maxPurity), format("%.4f", upperPeak));
 
-            maxPurity = topPurityVar.alleleFrequency();
+                maxPurity = topPurityVar.alleleFrequency();
+            }
         }
 
         return maxPurity;
