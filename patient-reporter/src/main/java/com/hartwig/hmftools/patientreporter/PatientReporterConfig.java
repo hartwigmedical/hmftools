@@ -47,8 +47,8 @@ public interface PatientReporterConfig {
     // Params specific for actual patient reports
     String PURPLE_PURITY_TSV = "purple_purity_tsv"; // Also used for certain QC fail reports in case deep WGS is available.
     String PURPLE_QC_FILE = "purple_qc_file";
-    String PURPLE_DRIVER_CATALOG_SOMATIC_TSV = "purple_driver_catalog_somatic_tsv";
-    String PURPLE_DRIVER_CATALOG_GERMLINE_TSV = "purple_driver_catalog_germline_tsv";
+    String PURPLE_SOMATIC_DRIVER_CATALOG_TSV = "purple_somatic_driver_catalog_tsv";
+    String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = "purple_somatic_driver_catalog_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
@@ -97,8 +97,8 @@ public interface PatientReporterConfig {
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
-        options.addOption(PURPLE_DRIVER_CATALOG_SOMATIC_TSV, true, "Path towards the purple somatic driver catalog TSV.");
-        options.addOption(PURPLE_DRIVER_CATALOG_GERMLINE_TSV, true, "Path towards the purple germline driver catalog TSV.");
+        options.addOption(PURPLE_SOMATIC_DRIVER_CATALOG_TSV, true, "Path towards the purple somatic driver catalog TSV.");
+        options.addOption(PURPLE_GERMLINE_DRIVER_CATALOG_TSV, true, "Path towards the purple germline driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
@@ -255,8 +255,8 @@ public interface PatientReporterConfig {
         } else if (!isQCFail) {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
             purpleQCFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
-            purpleDriverCatalogSomaticTsv = nonOptionalFile(cmd, PURPLE_DRIVER_CATALOG_SOMATIC_TSV);
-            purpleDriverCatalogGermlineTsv = nonOptionalFile(cmd, PURPLE_DRIVER_CATALOG_GERMLINE_TSV);
+            purpleDriverCatalogSomaticTsv = nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVER_CATALOG_TSV);
+            purpleDriverCatalogGermlineTsv = nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV);
             purpleSomaticVariantVcf = nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF);
             purpleGermlineVariantVcf = nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF);
             linxFusionTsv = nonOptionalFile(cmd, LINX_FUSION_TSV);
