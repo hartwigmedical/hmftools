@@ -31,7 +31,7 @@ public final class LinxDataLoader {
 
     @NotNull
     public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @Nullable String linxViralInsertionTsv,
-            @NotNull String linxDriversTsv) throws IOException {
+            @NotNull String linxDriverCatalogTsv) throws IOException {
         LOGGER.info("Loading LINX data from {}", new File(linxFusionTsv).getParent());
         List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv).stream().filter(LinxFusion::reported).collect(Collectors.toList());
         LOGGER.info(" Loaded {} reportable fusions from {}", linxFusions.size(), linxFusionTsv);
@@ -46,12 +46,14 @@ public final class LinxDataLoader {
         if (linxViralInsertionTsv != null) {
             List<LinxViralInsertion> viralInsertionList = LinxViralInsertion.read(linxViralInsertionTsv);
             reportableViralInsertions = ViralInsertionAnalyzer.analyzeViralInsertions(viralInsertionList);
+            LOGGER.info(" Loaded {} reportable viral insertions from {}", reportableViralInsertions.size(), linxViralInsertionTsv);
+        } else {
+            LOGGER.info(" Skipped loading of viral insertions since no input was provided");
         }
-        LOGGER.info(" Loaded {} reportable viral insertions from {}", reportableViralInsertions.size(), linxViralInsertionTsv);
 
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions =
-                ReportableHomozygousDisruptionFactory.extractFromLinxDriversTsv(linxDriversTsv);
-        LOGGER.info(" Loaded {} reportable homozygous disruptions from {}", reportableHomozygousDisruptions.size(), linxDriversTsv);
+                ReportableHomozygousDisruptionFactory.extractFromLinxDriverCatalogTsv(linxDriverCatalogTsv);
+        LOGGER.info(" Loaded {} reportable homozygous disruptions from {}", reportableHomozygousDisruptions.size(), linxDriverCatalogTsv);
 
         return ImmutableLinxData.builder()
                 .addAllFusions(linxFusions)

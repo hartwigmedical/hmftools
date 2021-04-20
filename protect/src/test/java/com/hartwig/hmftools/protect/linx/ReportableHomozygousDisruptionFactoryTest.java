@@ -16,7 +16,7 @@ public class ReportableHomozygousDisruptionFactoryTest {
     @Test
     public void canExtractHomozygousDisruptions() throws IOException {
         List<ReportableHomozygousDisruption> homozygousDisruptions =
-                ReportableHomozygousDisruptionFactory.extractFromLinxDriversTsv(LINX_DRIVERS_CATALOG_TSV);
+                ReportableHomozygousDisruptionFactory.extractFromLinxDriverCatalogTsv(LINX_DRIVERS_CATALOG_TSV);
 
         assertEquals(1, homozygousDisruptions.size());
 
