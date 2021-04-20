@@ -52,6 +52,20 @@ class HlaComplexCoverageRankingTest {
     }
 
     @Test
+    fun testLeastUniqiue() {
+        val common =  listOf<HlaAllele>()
+        val recovered = listOf<HlaAllele>()
+
+        val victim1 = HlaComplexCoverage.create(listOf(a1, a2, b1, b2, c1, c2))
+        val victim2 = HlaComplexCoverage.create(listOf(a1, a3.copy(uniqueCoverage = 9, sharedCoverage = 1.0), b1, b2, c1, c2))
+        val complexes = listOf(victim1, victim2).shuffled()
+
+        val ranked = HlaComplexCoverageRanking(3, common, recovered, listOf()).candidateRanking(complexes)
+        val winner = ranked[0]
+        assertEquals(victim2, winner)
+    }
+
+    @Test
     fun testHighestAllele() {
         val highest = HlaComplexCoverage.create(listOf(a1, a2, b1, b2, c1, c2))
         val lowerList = mutableListOf<HlaComplexCoverage>()
