@@ -10,6 +10,7 @@ import kotlin.math.min
  * - then choosing solutions with the most homozygous alleles,
  * - then choosing solution with the most common alleles,
  * - then choosing solution with the least recovered alleles
+ * - then choosing solution with the least unique coverage
  * - finally choosing the solution with the lowest number.
  */
 class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int, private val common: List<HlaAllele>, private val recovered: List<HlaAllele>, private val favourites: List<HlaAllele>) {
@@ -55,6 +56,11 @@ class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int, privat
         val recoveredCountCompare = o1RecoveredCount.compareTo(o2RecoveredCount)
         if (recoveredCountCompare != 0) {
             return recoveredCountCompare
+        }
+
+        val uniqueCoverageCompare = o1.uniqueCoverage.compareTo(o2.uniqueCoverage)
+        if (uniqueCoverageCompare != 0) {
+            return uniqueCoverageCompare
         }
 
         for (i in 0 until min(o1.alleleCoverage.size, o2.alleleCoverage.size)) {

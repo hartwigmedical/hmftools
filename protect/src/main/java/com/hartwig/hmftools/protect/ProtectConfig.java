@@ -22,7 +22,7 @@ public interface ProtectConfig {
 
     String DOID_SEPARATOR = ";";
 
-    // General params needed for every report
+    // General params needed for every analysis
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
     String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
     String OUTPUT_DIRECTORY = "output_dir";
@@ -34,8 +34,8 @@ public interface ProtectConfig {
     // Files containing the actual genomic results for this sample.
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
     String PURPLE_QC_FILE = "purple_qc_file";
-    String PURPLE_SOMATIC_DRIVERS_TSV = "purple_driver_catalog_somatic_tsv";
-    String PURPLE_GERMLINE_DRIVERS_TSV = "purple_driver_catalog_germline_tsv";
+    String PURPLE_SOMATIC_DRIVER_CATALOG_TSV = "purple_somatic_driver_catalog_tsv";
+    String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = "purple_germline_driver_catalog_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
@@ -59,8 +59,8 @@ public interface ProtectConfig {
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
-        options.addOption(PURPLE_GERMLINE_DRIVERS_TSV, true, "Path towards the purple germline driver catalog TSV.");
-        options.addOption(PURPLE_SOMATIC_DRIVERS_TSV, true, "Path towards the purple somatic driver catalog TSV.");
+        options.addOption(PURPLE_SOMATIC_DRIVER_CATALOG_TSV, true, "Path towards the purple somatic driver catalog TSV.");
+        options.addOption(PURPLE_GERMLINE_DRIVER_CATALOG_TSV, true, "Path towards the purple germline driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the LINX fusion TSV.");
@@ -132,8 +132,8 @@ public interface ProtectConfig {
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
-                .purpleSomaticDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVERS_TSV))
-                .purpleGermlineDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVERS_TSV))
+                .purpleSomaticDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVER_CATALOG_TSV))
+                .purpleGermlineDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV))
                 .purpleSomaticVariantVcf(nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF))
                 .purpleGermlineVariantVcf(nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF))
                 .linxFusionTsv(nonOptionalFile(cmd, LINX_FUSION_TSV))

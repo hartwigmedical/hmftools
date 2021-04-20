@@ -5,7 +5,6 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed
 import com.hartwig.hmftools.common.utils.SuffixTree
 import com.hartwig.hmftools.lilac.LociPosition
 import com.hartwig.hmftools.lilac.read.AminoAcidIndices
-import com.hartwig.hmftools.lilac.sam.Indel
 import com.hartwig.hmftools.lilac.sam.SAMCodingRecord
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci
 
@@ -21,17 +20,10 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
             return listOf(codons[0].toString(), codons[1].toString(), codons.substring(2))
         }
 
-        val STOP_LOSS_ON_C = Indel("6", 31237115, "CN", "C")
     }
 
     private val insertSuffixTrees = inserts.map { Pair(it, SuffixTree(it.sequence())) }.toMap()
     private val deleteSuffixTrees = deletes.map { Pair(it, SuffixTree(it.sequence())) }.toMap()
-    private var containsStopLost: Boolean = false
-
-    fun containsStopLossHlaC(): Boolean {
-        return containsStopLost
-    }
-
 
     fun createAlignmentFragments(samCoding: SAMCodingRecord, codingRegion: NamedBed): NucleotideFragment? {
 
@@ -52,17 +44,13 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
         val codingRegionQuality = samCoding.codingRegionQuality(reverseStrand)
 
         if (samCoding.containsIndel() || samCoding.containsSoftClip()) {
-            if (samCoding.indels.contains(STOP_LOSS_ON_C)) {
-                containsStopLost = true
-            }
-
             val aminoAcidIndices = AminoAcidIndices.indices(samCodingStartLoci, samCodingEndLoci)
             val nucleotideStartLoci = aminoAcidIndices.first * 3
 
             val sequence = codingRegionRead.joinToString("")
             val aminoAcids = Codons.aminoAcids(sequence.substring(nucleotideStartLoci - samCodingStartLoci))
             if (aminoAcids.isNotEmpty()) {
-                val matchRangeAllowed = (aminoAcidIndices.first - samCoding.softClippedStart / 3 - samCoding.maxIndelSize())..(aminoAcidIndices.first + samCoding.maxIndelSize())
+                val matchRangeAllowed = (aminoAcidIndices.first - samCoding.softClippedStart / 3 - samCoding.maxIndelSize())..(aminoAcidIndices.first + samCoding.maxIndelSize() + samCoding.softClippedEnd / 3)
                 val matchingInserts = insertSuffixTrees
                         .map { Pair(it.key, it.value.indices(aminoAcids)) }
                         .map { Pair(it.first, it.second.filter { i -> matchRangeAllowed.contains(i) }) }
@@ -87,6 +75,10 @@ class NucleotideFragmentFactory(private val minBaseQuality: Int, inserts: List<H
             if (samCoding.containsIndel()) {
                 return null
             }
+        }
+
+        if (samCodingStartLoci < 0 || samCodingEndLoci < 0) {
+            return null
         }
 
         // NORMAL CASE

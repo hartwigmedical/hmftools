@@ -31,8 +31,6 @@ To run SAGE in germline mode we use the following parameters:
 -tumor_bam REFERENCE_BAM
 -reference TUMOR_SAMPLE
 -reference_bam TUMOR_BAM
--panel_only
--panel_coverage true
 -hotspot_min_tumor_qual 50
 -panel_min_tumor_qual 75
 -hotspot_max_germline_vaf 100
@@ -40,6 +38,15 @@ To run SAGE in germline mode we use the following parameters:
 -panel_max_germline_vaf 100
 -panel_max_germline_rel_raw_base_qual 100
 -mnv_filter_enabled false
+-panel_only
+-panel_bed /opt/resources/sage/37/ActionableCodingPanel.germline.37.bed.gz
+-coverage_bed /opt/resources/sage/37/CoverageCodingPanel.germline.37.bed.gz 
+-high_confidence_bed /opt/resources/giab_high_conf/37/HighConfidence.37.bed.gz 
+-hotspots /opt/resources/sage/37/KnownHotspots.germline.37.vcf.gz 
+-ref_genome /opt/resources/reference_genome/37/Homo_sapiens.GRCh37.GATK.illumina.fasta
+-assembly hg19 
+-threads 8 
+-out /data/output/TUMOR_SAMPLE.sage.germline.vcf.gz 
 ``` 
 
 Note that the tumor and reference labels/bams are switched. 

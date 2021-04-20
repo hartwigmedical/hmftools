@@ -31,6 +31,11 @@ class Candidates(private val config: LilacConfig,
         val aminoAcidCandidates = aminoAcidFilter.aminoAcidCandidates(geneCandidates, aminoAcidCounts)
         val aminoAcidCandidateAlleles = aminoAcidCandidates.map { it.allele }.toSet()
         val aminoAcidSpecificAllelesCandidate = aminoAcidCandidateAlleles.map { it.asFourDigit() }.toSet()
+        if (aminoAcidSpecificAllelesCandidate.isEmpty()) {
+            logger.warn("    0 candidates after amino acid filtering - reverting to all gene candidates")
+            return geneCandidates.map { it.allele }
+        }
+
         logger.info("    ${aminoAcidCandidates.size} candidates after amino acid filtering")
 
         // Nucleotide filtering
@@ -40,6 +45,11 @@ class Candidates(private val config: LilacConfig,
         val nucleotideSpecificAllelesCandidate = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(nucleotideCandidatesAfterAminoAcidFiltering, fragments)
                 .map { it.allele.asFourDigit() }
                 .distinct()
+
+        if (nucleotideSpecificAllelesCandidate.isEmpty()) {
+            logger.warn("    0 candidates after exon boundary filtering - reverting to amino acid candidates")
+            return aminoAcidCandidateAlleles.toList()
+        }
 
         logger.info("    ${nucleotideSpecificAllelesCandidate.size} candidates after exon boundary filtering")
         return nucleotideSpecificAllelesCandidate

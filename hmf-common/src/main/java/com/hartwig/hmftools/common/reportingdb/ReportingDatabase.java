@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +17,6 @@ public final class ReportingDatabase {
     }
 
     @NotNull
-    @VisibleForTesting
     public static List<ReportingEntry> read(@NotNull String reportingDbTsv) throws IOException {
         List<String> linesReportDates = Files.readAllLines(new File(reportingDbTsv).toPath());
         List<ReportingEntry> reportingEntryList = Lists.newArrayList();

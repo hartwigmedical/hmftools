@@ -31,15 +31,22 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
                 .split("\n")
                 .map { Indel.fromString(it) }
                 .toSet()
+
+        val STOP_LOSS_ON_C = Indel("6", 31237115, "CN", "C")
     }
 
     private val codingRegions = transcripts.map { GenomeRegions.create(it.chromosome(), it.codingStart() - MAX_DISTANCE, it.codingEnd() + MAX_DISTANCE) }
+    private val stopLossOnC = mutableMapOf<Indel, Int>()
     private val unmatchedIndels = mutableMapOf<Indel, Int>()
     private val unmatchedPONIndels = mutableMapOf<Indel, Int>()
     private var alignmentFiltered = 0
 
     fun alignmentFiltered(): Int {
         return alignmentFiltered
+    }
+
+    fun stopLossOnCIndels(): Int {
+        return stopLossOnC[STOP_LOSS_ON_C] ?: 0
     }
 
     fun unmatchedIndels(minCount: Int): Map<Indel, Int> {
@@ -87,7 +94,7 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
     private fun recordContainsVariant(variant: VariantContextDecorator, record: SAMCodingRecord): Boolean {
         if (variant.alt().length != variant.ref().length) {
             val expectedIndel = Indel(variant.chromosome(), variant.position().toInt(), variant.ref(), variant.alt())
-            return record.indels.any {it.match(expectedIndel)}
+            return record.indels.any { it.match(expectedIndel) }
         }
 
         for (i in variant.alt().indices) {
@@ -151,7 +158,7 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
                     .filter { it.alignmentStart <= codingRegion.end() && it.alignmentEnd >= codingRegion.start() }
                     .map { SAMCodingRecord.create(reverseStrand, codingRegion, it) }
                     .mapNotNull { factory.createAlignmentFragments(it, codingRegion) }
-                    .forEach { result.add(it)}
+                    .forEach { result.add(it) }
         }
 
         return result
@@ -197,6 +204,10 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
     private fun realign(codingRegion: NamedBed, reverseStrand: Boolean, bamFileName: String): List<NucleotideFragment> {
         val result = mutableListOf<NucleotideFragment>()
         for (codingRecord in query(reverseStrand, codingRegion, bamFileName)) {
+            if (codingRecord.indels.contains(STOP_LOSS_ON_C)) {
+                stopLossOnC.compute(STOP_LOSS_ON_C) { _, u -> (u ?: 0) + 1 }
+            }
+
             val fragment = factory.createFragment(codingRecord, codingRegion)
             if (fragment != null) {
                 result.add(fragment)
