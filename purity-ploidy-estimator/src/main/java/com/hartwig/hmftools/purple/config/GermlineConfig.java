@@ -14,33 +14,43 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface GermlineConfig {
+public interface GermlineConfig
+{
 
     Logger LOGGER = LogManager.getLogger(GermlineConfig.class);
 
     String GERMLINE_VARIANTS = "germline_vcf";
 
-    static void addOptions(@NotNull Options options) {
+    static void addOptions(@NotNull Options options)
+    {
         options.addOption(GERMLINE_VARIANTS, true, "Optional location of germline variants to enrich and process in driver catalog.");
     }
 
     Optional<File> file();
 
-    default boolean enabled() {
+    default boolean enabled()
+    {
         return file().isPresent();
     }
 
     @NotNull
-    static GermlineConfig createGermlineConfig(@NotNull CommandLine cmd) throws ParseException {
+    static GermlineConfig createGermlineConfig(@NotNull CommandLine cmd, final CommonConfig commonConfig) throws ParseException
+    {
         final Optional<File> file;
-        if (cmd.hasOption(GERMLINE_VARIANTS)) {
-            final String somaticFilename = cmd.getOptionValue(GERMLINE_VARIANTS);
+        if(cmd.hasOption(GERMLINE_VARIANTS) || !commonConfig.sampleDirectory().isEmpty())
+        {
+            final String somaticFilename = cmd.getOptionValue(GERMLINE_VARIANTS,
+                    commonConfig.sampleDirectory() + commonConfig.tumorSample() + ".sage.germline.filtered.vcf.gz");
+
             final File somaticFile = new File(somaticFilename);
-            if (!somaticFile.exists()) {
+            if(!somaticFile.exists())
+            {
                 throw new ParseException("Unable to read germline variants from: " + somaticFilename);
             }
             file = Optional.of(somaticFile);
-        } else {
+        }
+        else
+        {
             file = Optional.empty();
             LOGGER.info("No germline vcf supplied");
         }

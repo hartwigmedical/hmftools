@@ -17,7 +17,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface SomaticFitConfig {
+public interface SomaticFitConfig
+{
 
     Logger LOGGER = LogManager.getLogger(SomaticFitConfig.class);
 
@@ -40,28 +41,39 @@ public interface SomaticFitConfig {
     double MIN_SOMATIC_TOTAL_READ_COUNT_PROPORTION = 0.6;
     double MAX_SOMATIC_TOTAL_READ_COUNT_PROPORTION = 1.4;
 
-    static void addOptions(@NotNull Options options) {
-        options.addOption(SOMATIC_MIN_PEAK, true, "Minimum number of somatic variants to consider a peak. Default " + SOMATIC_MIN_PEAK_DEFAULT);
-        options.addOption(SOMATIC_MIN_TOTAL, true, "Minimum number of somatic variants required to assist highly diploid fits. Default " + SOMATIC_MIN_VARIANTS_DEFAULT );
-        options.addOption(SOMATIC_MIN_PURITY, true, "Somatic fit will not be used if both somatic and fitted purities are less than this value. Default " + SOMATIC_MIN_PURITY_DEFAULT );
-        options.addOption(SOMATIC_MIN_PURITY_SPREAD, true, "Minimum spread within candidate purities before somatics can be used. Default " + SOMATIC_MIN_PURITY_SPREAD_DEFAULT );
+    static void addOptions(@NotNull Options options)
+    {
+        options.addOption(SOMATIC_MIN_PEAK, true,
+                "Minimum number of somatic variants to consider a peak. Default " + SOMATIC_MIN_PEAK_DEFAULT);
+        options.addOption(SOMATIC_MIN_TOTAL, true,
+                "Minimum number of somatic variants required to assist highly diploid fits. Default " + SOMATIC_MIN_VARIANTS_DEFAULT);
+        options.addOption(SOMATIC_MIN_PURITY, true,
+                "Somatic fit will not be used if both somatic and fitted purities are less than this value. Default "
+                        + SOMATIC_MIN_PURITY_DEFAULT);
+        options.addOption(SOMATIC_MIN_PURITY_SPREAD, true,
+                "Minimum spread within candidate purities before somatics can be used. Default " + SOMATIC_MIN_PURITY_SPREAD_DEFAULT);
         options.addOption(SOMATIC_VARIANTS, true, "Optional location of somatic variant vcf to assist fitting in highly-diploid samples.");
-        options.addOption(SOMATIC_PENALTY_WEIGHT, true, "Proportion of somatic deviation to include in fitted purity score. Default " + SOMATIC_PENALTY_WEIGHT_DEFAULT);
-        options.addOption(HIGHLY_DIPLOID_PERCENTAGE, true, "Proportion of genome that must be diploid before using somatic fit. Default " + HIGHLY_DIPLOID_PERCENTAGE_DEFAULT);
+        options.addOption(SOMATIC_PENALTY_WEIGHT, true,
+                "Proportion of somatic deviation to include in fitted purity score. Default " + SOMATIC_PENALTY_WEIGHT_DEFAULT);
+        options.addOption(HIGHLY_DIPLOID_PERCENTAGE, true,
+                "Proportion of genome that must be diploid before using somatic fit. Default " + HIGHLY_DIPLOID_PERCENTAGE_DEFAULT);
         options.addOption(FORCE_SOMATIC_FIT, false, "Fit from somatic VAFs only");
     }
 
     Optional<File> file();
 
-    default boolean enabled() {
+    default boolean enabled()
+    {
         return file().isPresent();
     }
 
-    default int minTotalSomaticVariantAlleleReadCount() {
+    default int minTotalSomaticVariantAlleleReadCount()
+    {
         return 5000;
     }
 
-    default int minTotalSvFragmentCount() {
+    default int minTotalSvFragmentCount()
+    {
         return 1000;
     }
 
@@ -77,11 +89,13 @@ public interface SomaticFitConfig {
 
     double highlyDiploidPercentage();
 
-    default double clonalityMaxPloidy() {
+    default double clonalityMaxPloidy()
+    {
         return 10;
     }
 
-    default double clonalityBinWidth() {
+    default double clonalityBinWidth()
+    {
         return 0.05;
     }
 
@@ -92,16 +106,24 @@ public interface SomaticFitConfig {
     boolean forceSomaticFit();
 
     @NotNull
-    static SomaticFitConfig createSomaticConfig(@NotNull CommandLine cmd, @NotNull final AmberData amberData) throws ParseException {
+    static SomaticFitConfig createSomaticConfig(
+            @NotNull CommandLine cmd, final CommonConfig commonConfig, @NotNull final AmberData amberData) throws ParseException
+    {
         final Optional<File> file;
-        if (cmd.hasOption(SOMATIC_VARIANTS)) {
-            final String somaticFilename = cmd.getOptionValue(SOMATIC_VARIANTS);
+        if(cmd.hasOption(SOMATIC_VARIANTS) || !commonConfig.sampleDirectory().isEmpty())
+        {
+            final String somaticFilename = cmd.getOptionValue(SOMATIC_VARIANTS,
+                    commonConfig.sampleDirectory() + commonConfig.tumorSample() + ".sage.somatic.filtered.vcf.gz");
+
             final File somaticFile = new File(somaticFilename);
-            if (!somaticFile.exists()) {
+            if(!somaticFile.exists())
+            {
                 throw new ParseException("Unable to read somatic variants from: " + somaticFilename);
             }
             file = Optional.of(somaticFile);
-        } else {
+        }
+        else
+        {
             file = Optional.empty();
             LOGGER.info("No somatic vcf supplied");
         }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.config;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.purple.CommandLineUtil.defaultIntValue;
 import static com.hartwig.hmftools.purple.config.StructuralVariantConfig.createStructuralVariantConfig;
 
@@ -16,12 +17,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class ConfigSupplier {
+public class ConfigSupplier
+{
 
     private static final Logger LOGGER = LogManager.getLogger(ConfigSupplier.class);
 
     private static final String REF_SAMPLE = "reference";
     private static final String TUMOR_SAMPLE = "tumor";
+    public static final String SAMPLE_DIR = "sample_dir";
     private static final String OUTPUT_DIRECTORY = "output_dir";
     private static final String GC_PROFILE = "gc_profile";
     private static final String AMBER = "amber";
@@ -34,7 +37,8 @@ public class ConfigSupplier {
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE = "min_diploid_tumor_ratio_count_centromere";
     private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT = 150;
 
-    public static void addOptions(@NotNull Options options) {
+    public static void addOptions(@NotNull Options options)
+    {
         options.addOption(TUMOR_ONLY, false, "Tumor only mode. Disables somatic fitting.");
         options.addOption(REF_SAMPLE, true, "Name of the reference sample. This should correspond to the value used in AMBER and COBALT.");
         options.addOption(TUMOR_SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in AMBER and COBALT.");
@@ -52,9 +56,15 @@ public class ConfigSupplier {
         options.addOption(OUTPUT_DIRECTORY,
                 true,
                 "Path to the output directory. Required if <run_dir> not set, otherwise defaults to run_dir/purple/");
+
+        options.addOption(SAMPLE_DIR,
+                true,
+                "Path to the sample's directory where expect to find cobalt, amber, gridss etc directories");
+
         options.addOption(COBALT,
                 true,
                 "Path to COBALT output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/cobalt.");
+
         options.addOption(AMBER,
                 true,
                 "Path to AMBER output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
@@ -86,33 +96,60 @@ public class ConfigSupplier {
     private final AmberData amberData;
 
     public ConfigSupplier(@NotNull final String version, @NotNull CommandLine cmd, @NotNull Options opt)
-            throws ParseException, IOException {
+            throws ParseException, IOException
+    {
         final boolean isTumorOnly = cmd.hasOption(TUMOR_ONLY);
 
         final StringJoiner missingJoiner = new StringJoiner(", ");
         final String gcProfile = parameter(cmd, GC_PROFILE, missingJoiner);
         final String refSample;
-        if (isTumorOnly) {
-            if (cmd.hasOption(REF_SAMPLE)) {
+        if(isTumorOnly)
+        {
+            if(cmd.hasOption(REF_SAMPLE))
+            {
                 throw new ParseException(REF_SAMPLE + " not supported in tumor only mode");
-            } else {
+            }
+            else
+            {
                 refSample = CobaltRatioFile.TUMOR_ONLY_REFERENCE_SAMPLE;
             }
-        } else {
+        }
+        else
+        {
             refSample = parameter(cmd, REF_SAMPLE, missingJoiner);
         }
+
         final String tumorSample = parameter(cmd, TUMOR_SAMPLE, missingJoiner);
-        final String outputDirectory = parameter(cmd, OUTPUT_DIRECTORY, missingJoiner);
-        final String amberDirectory = parameter(cmd, AMBER, missingJoiner);
-        final String cobaltDirectory = parameter(cmd, COBALT, missingJoiner);
+
+        String sampleDir = "";
+        String outputDirectory;
+        String amberDirectory;
+        String cobaltDirectory;
+
+        if(cmd.hasOption(SAMPLE_DIR))
+        {
+            sampleDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DIR));
+            outputDirectory = checkAddDirSeparator(sampleDir + cmd.getOptionValue(OUTPUT_DIRECTORY, ""));
+            amberDirectory = sampleDir + "amber/";
+            cobaltDirectory = sampleDir + "cobalt/";
+        }
+        else
+        {
+            outputDirectory = parameter(cmd, OUTPUT_DIRECTORY, missingJoiner);
+            amberDirectory = parameter(cmd, AMBER, missingJoiner);
+            cobaltDirectory = parameter(cmd, COBALT, missingJoiner);
+        }
+
         final String missing = missingJoiner.toString();
 
-        if (!missing.isEmpty()) {
+        if(!missing.isEmpty())
+        {
             throw new ParseException("Missing the following parameters: " + missing);
         }
 
         final File outputDir = new File(outputDirectory);
-        if (!outputDir.exists() && !outputDir.mkdirs()) {
+        if(!outputDir.exists() && !outputDir.mkdirs())
+        {
             throw new IOException("Unable to write directory " + outputDirectory);
         }
 
@@ -120,6 +157,7 @@ public class ConfigSupplier {
                 .version(version)
                 .refSample(refSample)
                 .tumorSample(tumorSample)
+                .sampleDirectory(sampleDir)
                 .outputDirectory(outputDirectory)
                 .amberDirectory(amberDirectory)
                 .cobaltDirectory(cobaltDirectory)
@@ -127,9 +165,12 @@ public class ConfigSupplier {
                 .tumorOnly(isTumorOnly)
                 .build();
 
-        if (isTumorOnly) {
+        if(isTumorOnly)
+        {
             LOGGER.info("Tumor Sample: {}", commonConfig.tumorSample());
-        } else {
+        }
+        else
+        {
             LOGGER.info("Reference Sample: {}, Tumor Sample: {}", commonConfig.refSample(), commonConfig.tumorSample());
         }
         LOGGER.info("Output Directory: {}", commonConfig.outputDirectory());
@@ -145,85 +186,100 @@ public class ConfigSupplier {
         dbConfig = DBConfig.createConfig(cmd);
         fittingConfig = FittingConfig.createConfig(cmd);
         fitScoreConfig = FitScoreConfig.createConfig(cmd);
-        structuralVariantConfig = createStructuralVariantConfig(cmd, opt);
+        structuralVariantConfig = createStructuralVariantConfig(cmd, opt, commonConfig);
         refGenomeData = RefGenomeData.createRefGenomeConfig(cmd);
 
         amberData = AmberData.createAmberData(commonConfig);
         cobaltData = CobaltData.createCobaltData(commonConfig, amberData.gender());
-        somaticFitConfig = SomaticFitConfig.createSomaticConfig(cmd, amberData);
-        germlineConfig = GermlineConfig.createGermlineConfig(cmd);
+        somaticFitConfig = SomaticFitConfig.createSomaticConfig(cmd, commonConfig, amberData);
+        germlineConfig = GermlineConfig.createGermlineConfig(cmd, commonConfig);
         driverCatalogConfig = DriverCatalogConfig.createConfig(cmd, refGenomeData, germlineConfig);
     }
 
     @NotNull
-    public CobaltData cobaltData() {
+    public CobaltData cobaltData()
+    {
         return cobaltData;
     }
 
     @NotNull
-    public AmberData amberData() {
+    public AmberData amberData()
+    {
         return amberData;
     }
 
     @NotNull
-    public RefGenomeData refGenomeConfig() {
+    public RefGenomeData refGenomeConfig()
+    {
         return refGenomeData;
     }
 
     @NotNull
-    public FitScoreConfig fitScoreConfig() {
+    public FitScoreConfig fitScoreConfig()
+    {
         return fitScoreConfig;
     }
 
     @NotNull
-    public CommonConfig commonConfig() {
+    public CommonConfig commonConfig()
+    {
         return commonConfig;
     }
 
     @NotNull
-    public SomaticFitConfig somaticConfig() {
+    public SomaticFitConfig somaticConfig()
+    {
         return somaticFitConfig;
     }
 
     @NotNull
-    public StructuralVariantConfig structuralVariantConfig() {
+    public StructuralVariantConfig structuralVariantConfig()
+    {
         return structuralVariantConfig;
     }
 
     @NotNull
-    public ChartConfig chartConfig() {
+    public ChartConfig chartConfig()
+    {
         return chartConfig;
     }
 
     @NotNull
-    public DBConfig dbConfig() {
+    public DBConfig dbConfig()
+    {
         return dbConfig;
     }
 
     @NotNull
-    public FittingConfig fittingConfig() {
+    public FittingConfig fittingConfig()
+    {
         return fittingConfig;
     }
 
     @NotNull
-    public SmoothingConfig smoothingConfig() {
+    public SmoothingConfig smoothingConfig()
+    {
         return smoothingConfig;
     }
 
     @NotNull
-    public DriverCatalogConfig driverCatalogConfig() {
+    public DriverCatalogConfig driverCatalogConfig()
+    {
         return driverCatalogConfig;
     }
 
     @NotNull
-    public GermlineConfig germlineConfig() {
+    public GermlineConfig germlineConfig()
+    {
         return germlineConfig;
     }
 
     @NotNull
-    static String parameter(@NotNull final CommandLine cmd, @NotNull final String parameter, @NotNull final StringJoiner missing) {
+    static String parameter(@NotNull final CommandLine cmd, @NotNull final String parameter, @NotNull final StringJoiner missing)
+    {
         final String value = cmd.getOptionValue(parameter);
-        if (value == null) {
+        if(value == null)
+        {
             missing.add(parameter);
             return "";
         }

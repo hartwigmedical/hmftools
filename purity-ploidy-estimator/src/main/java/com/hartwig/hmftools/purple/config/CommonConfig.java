@@ -20,6 +20,9 @@ public interface CommonConfig {
     String outputDirectory();
 
     @NotNull
+    String sampleDirectory();
+
+    @NotNull
     String amberDirectory();
 
     @NotNull
