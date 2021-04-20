@@ -190,8 +190,9 @@ class LilacApplication(private val cmd: CommandLine, private val config: LilacCo
         val phasedCandidateAlleles = (aCandidates + bCandidates + cCandidates)
 
         val missingStopLossAlleles = config.stopLossRecoveryAlleles.filter { it !in phasedCandidateAlleles }
-        val stopLossRecovery = if (nucleotideFragmentFactory.containsStopLossHlaC() && missingStopLossAlleles.isNotEmpty()) {
-            logger.info("Recovering stop loss candidate: " + missingStopLossAlleles.joinToString(","))
+        val stopLossRecovery = if (referenceBamReader.stopLossOnCIndels() > 0 && missingStopLossAlleles.isNotEmpty()) {
+            logger.info("Identified ${referenceBamReader.stopLossOnCIndels()} stop loss fragments")
+            logger.info("    recovered stop loss candidates: " + missingStopLossAlleles.joinToString(","))
             missingStopLossAlleles
         } else {
             listOf()
