@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class ReportableHomozygousDisruptionFactoryTest {
 
-    private static final String LINX_DRIVERS_CATALOG_TSV = Resources.getResource("test_run/linx/sample.drivers.catalog.tsv").getPath();
+    private static final String LINX_DRIVERS_CATALOG_TSV = Resources.getResource("test_run/linx/sample.linx.driver.catalog.tsv").getPath();
 
     @Test
     public void canExtractHomozygousDisruptions() throws IOException {
