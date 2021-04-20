@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.purple.fitting;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.round;
+
 import static com.hartwig.hmftools.purple.PurpleCommon.formatDbl;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
@@ -24,63 +27,66 @@ import org.jetbrains.annotations.NotNull;
 
 public class SomaticHistogramPeaks
 {
-    private static final int PEAK_BIN_COUNT = 10;
     private static final double PEAK_BIN_WIDTH = 0.01;
 
-    private static final double MIN_AVERAGE_WEIGHT = 0.4;
-    private static final double CLONAL_PLOIDY = 0.85;
     private static final int MAX_ITERATIONS = 10;
-
     private static final double MAX_UNEXPLAINED_WEIGHT_PERCENT = 0.01;
 
-    private final double mMaxPloidy;
+    private final double mMaxVaf;
     private final double mModelWidth;
+    private final int mPeakWidth;
 
     private final WeightedPloidyHistogram mHistogram;
     private final Map<String, BinomialDistribution> mBinomialDistributionMap;
 
-    public SomaticHistogramPeaks(final double maxPloidy, final double modelWidth)
+    public SomaticHistogramPeaks(final double maxVaf, final double modelWidth, final int peakWidth)
     {
         mModelWidth = modelWidth;
-        mMaxPloidy = maxPloidy;
-        mHistogram = new WeightedPloidyHistogram(maxPloidy, PEAK_BIN_WIDTH);
+        mMaxVaf = maxVaf;
+        mPeakWidth = peakWidth;
+        mHistogram = new WeightedPloidyHistogram(maxVaf, PEAK_BIN_WIDTH);
         mBinomialDistributionMap = Maps.newHashMap();
     }
 
-    @NotNull
-    public List<SomaticPeak> model(@NotNull final List<ModifiableWeightedPloidy> weightedPloidies)
+    public static double findVafPeak(double maxVaf, double binWidth, int peakWidth, final List<ModifiableWeightedPloidy> weightedVariants)
     {
-        final WeightedPloidyHistogram residualHistogram = new WeightedPloidyHistogram(mMaxPloidy, mModelWidth);
-        double[] residualHistogramActual = residualHistogram.histogram(weightedPloidies);
+        WeightedPloidyHistogram histogram = new WeightedPloidyHistogram(maxVaf, binWidth);
+        return histogram.peakPloidy(peakWidth, weightedVariants);
+    }
 
-        //final List<ModifiablePeakModel> peakModel = Lists.newArrayList();
+    public List<SomaticPeak> model(final List<ModifiableWeightedPloidy> weightedVariants)
+    {
+        final WeightedPloidyHistogram residualHistogram = new WeightedPloidyHistogram(mMaxVaf, mModelWidth);
+
         final List<SomaticPeak> somaticPeaks = Lists.newArrayList();
-        double initialWeight = positiveWeight(weightedPloidies);
+        double initialWeight = positiveWeight(weightedVariants);
+        int varCount = weightedVariants.size();
 
         for(int i = 0; i < MAX_ITERATIONS; i++)
         {
             // Calculate peak
-            double peak = mHistogram.peakPloidy(PEAK_BIN_COUNT, weightedPloidies);
+            double peak = mHistogram.peakPloidy(mPeakWidth, weightedVariants);
 
             if(peak <= 0)
                 break;
 
             double offset = offset(peak);
-            final WeightedPloidyHistogram peakHistogramFactory = new WeightedPloidyHistogram(mMaxPloidy, mModelWidth, offset);
-            final List<WeightedPloidy> peakPloidies = peakPloidies(peak, weightedPloidies);
+            final WeightedPloidyHistogram peakHistogramFactory = new WeightedPloidyHistogram(mMaxVaf, mModelWidth, offset);
+            final List<WeightedPloidy> peakPloidies = peakPloidies(peak, weightedVariants);
             double peakAverageWeight = averageWeight(peakPloidies);
             double[] peakHistogram = modelPeakHistogram(peak, peakPloidies);
 
             // Subtract modelled weight
-            double[] currentHistogram = peakHistogramFactory.histogram(weightedPloidies);
-            for(final ModifiableWeightedPloidy ploidy : weightedPloidies)
+            double[] currentHistogram = peakHistogramFactory.histogram(weightedVariants);
+            
+            for(final ModifiableWeightedPloidy variant : weightedVariants)
             {
-                int bucket = peakHistogramFactory.bucket(ploidy.ploidy());
-                double currentWeight = ploidy.weight();
+                int bucket = peakHistogramFactory.bucket(variant.ploidy());
+                double currentWeight = variant.weight();
                 double bucketWeight = currentHistogram[bucket];
                 double peakWeight = peakHistogram[bucket];
-                double newWeight = Doubles.isZero(bucketWeight) ? 0 : currentWeight - Math.abs(peakWeight / bucketWeight);
-                ploidy.setWeight(newWeight);
+                double newWeight = Doubles.isZero(bucketWeight) ? 0 : currentWeight - abs(peakWeight / bucketWeight);
+                variant.setWeight(newWeight);
             }
 
             somaticPeaks.add(ImmutableSomaticPeak.builder()
@@ -88,25 +94,8 @@ public class SomaticHistogramPeaks
                     .count(currentHistogram.length)
                     .build());
 
-            /*
-            // Add results
-            boolean isValidPeak = Doubles.greaterOrEqual(peakAverageWeight, MIN_AVERAGE_WEIGHT) && Doubles.greaterThan(peak, 0);
-            for(int bucket = 0; bucket < peakHistogram.length; bucket++)
-            {
-                final ModifiablePeakModel model = ModifiablePeakModel.create()
-                        .setBucket(bucket * mModelWidth)
-                        .setPeak(peak)
-                        .setBucketWeight(peakHistogram[bucket])
-                        .setPeakAvgWeight(peakAverageWeight)
-                        .setIsSubclonal(isSubclonal)
-                        .setIsValid(isValidPeak);
-                peakModel.add(model);
-            }
-            */
-
-
             // Decide if we should do another round
-            double remainingWeight = positiveWeight(weightedPloidies);
+            double remainingWeight = positiveWeight(weightedVariants);
             double unexplainedWeight = remainingWeight / initialWeight;
 
             PPL_LOGGER.debug("Peak: {}, Offset: {}, PeakAvgWeight: {}, Unexplained: {}",
@@ -120,62 +109,6 @@ public class SomaticHistogramPeaks
         }
 
         return somaticPeaks;
-
-        /*
-        // Scale results
-        double totalModelWeight = peakModel.stream().filter(PeakModel::isValid).mapToDouble(PeakModel::bucketWeight).sum();
-        double weightScalingFactor = initialWeight / totalModelWeight;
-        PPL_LOGGER.debug("Weight scaling factor {}", weightScalingFactor);
-
-        final List<PeakModel> all = peakModel.stream().map(x -> x.setBucketWeight(x.bucketWeight() * 1)).collect(Collectors.toList());
-        if(hasValidSubclonalPeaks)
-        {
-            return all;
-        }
-
-        // Find residual
-        final List<PeakModel> validOnly = all.stream().filter(PeakModel::isValid).collect(Collectors.toList());
-        final double[] residualHistogramModel = residualHistogram.modelHistogram(validOnly);
-        all.addAll(residuals(residualHistogramActual, residualHistogramModel));
-
-        return all;
-         */
-
-    }
-
-    @NotNull
-    private List<PeakModel> residuals(double[] residualHistogramActual, double[] residualHistogramModel)
-    {
-        List<PeakModel> result = Lists.newArrayList();
-
-        for(int i = 0; i < residualHistogramActual.length; i++)
-        {
-            double actualWeight = residualHistogramActual[i];
-            double modelWeight = residualHistogramModel[i];
-
-            final double residualPercent;
-            if(Doubles.isZero(actualWeight))
-            {
-                residualPercent = 1;
-            }
-            else
-            {
-                residualPercent = (actualWeight - modelWeight) / actualWeight;
-            }
-
-            if(Doubles.greaterThan(residualPercent, 0))
-            {
-                result.add(ModifiablePeakModel.create()
-                        .setBucket(i * mModelWidth)
-                        .setPeak(0)
-                        .setBucketWeight(residualPercent)
-                        .setPeakAvgWeight(1)
-                        .setIsSubclonal(true)
-                        .setIsValid(true));
-            }
-        }
-
-        return result;
     }
 
     private double positiveWeight(@NotNull final List<? extends WeightedPloidy> weightedPloidies)
@@ -185,7 +118,7 @@ public class SomaticHistogramPeaks
 
     double offset(double peak)
     {
-        return peak - Math.round(peak / mModelWidth) * mModelWidth;
+        return peak - round(peak / mModelWidth) * mModelWidth;
     }
 
     @NotNull
@@ -202,7 +135,7 @@ public class SomaticHistogramPeaks
     {
         double offset = offset(peak);
 
-        int maxBucket = bucket(mMaxPloidy);
+        int maxBucket = bucket(mMaxVaf);
         double[] result = new double[maxBucket + 1];
         double[] weight = scalingFactor(peak, peakPloidies);
 
@@ -264,11 +197,11 @@ public class SomaticHistogramPeaks
                 s -> new BinomialDistribution(weighted.totalReadCount(), weighted.alleleFrequency()));
 
         double lowerBoundAlleleReadCount = Math.max(0, ploidy - mModelWidth / 2d) / weighted.ploidy() * weighted.alleleReadCount();
-        int lowerBoundAlleleReadCountRounded = (int) Math.round(lowerBoundAlleleReadCount);
+        int lowerBoundAlleleReadCountRounded = (int) round(lowerBoundAlleleReadCount);
         double lowerBoundAddition = lowerBoundAlleleReadCountRounded + 0.5 - lowerBoundAlleleReadCount;
 
         double upperBoundAlleleReadCount = Math.max(0, ploidy + mModelWidth / 2d) / weighted.ploidy() * weighted.alleleReadCount();
-        int upperBoundAlleleReadCountRounded = (int) Math.round(upperBoundAlleleReadCount);
+        int upperBoundAlleleReadCountRounded = (int) round(upperBoundAlleleReadCount);
         double upperBoundSubtraction = upperBoundAlleleReadCountRounded + 0.5 - upperBoundAlleleReadCount;
 
         double rawResult =
@@ -277,12 +210,12 @@ public class SomaticHistogramPeaks
                         lowerBoundAlleleReadCountRounded) - upperBoundSubtraction * binomialDistribution.probability(
                         upperBoundAlleleReadCountRounded);
 
-        return Math.round(rawResult * 100) / 100d;
+        return round(rawResult * 100) / 100d;
     }
 
     private int bucket(double ploidy)
     {
-        return (int) Math.round(ploidy / mModelWidth);
+        return (int) round(ploidy / mModelWidth);
     }
 
     private static double averageWeight(@NotNull final List<WeightedPloidy> ploidies)
@@ -294,5 +227,51 @@ public class SomaticHistogramPeaks
         }
 
         return ploidies.stream().mapToDouble(WeightedPloidy::weight).sum() / count;
+    }
+
+    private static final double UPPER_PEAK_PROB = 0.95;
+
+    public static double calcProbabilityUpperBound(int varCount, double peak)
+    {
+        final BinomialDistribution binomialDistribution = new BinomialDistribution(varCount, peak);
+
+        // find the level above the peak with a probability of 95%
+        int iterations = 0;
+
+        int expCount = (int)round(peak * varCount);
+        int lowerBound = expCount;
+        int upperBound = (int)round(0.5 * varCount);
+        int currentCount = (int)round((lowerBound + upperBound) * 0.5);
+
+        while(iterations < 20)
+        {
+            double prob = binomialDistribution.cumulativeProbability(currentCount);
+
+            if(abs(prob - UPPER_PEAK_PROB) < 0.005)
+                break;
+
+            if(prob < UPPER_PEAK_PROB)
+            {
+                // raise the count estimate
+                if(currentCount >= upperBound - 1)
+                    break;
+
+                lowerBound = currentCount;
+                currentCount = (int)round((currentCount + upperBound) * 0.5);
+            }
+            else
+            {
+                // lower the count
+                if(currentCount <= lowerBound + 1)
+                    break;
+
+                upperBound = currentCount;
+                currentCount = (int)round((currentCount + lowerBound) * 0.5);
+            }
+
+            ++iterations;
+        }
+
+        return currentCount / (double)varCount;
     }
 }

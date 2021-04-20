@@ -84,16 +84,31 @@ public class BestFitFactory {
 
         final ImmutableBestFit.Builder builder = ImmutableBestFit.builder().score(score).allFits(allCandidates);
 
-        boolean useSomatics = allCandidates.size() == 1
-                || (somaticFitEnabled && Doubles.greaterOrEqual(score.puritySpread(), minSomaticPuritySpread) && isHighlyDiploid(score));
+        boolean useSomatics;
 
-        if (!useSomatics)
+        if(config.commonConfig().tumorOnly())
         {
-            return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
+            useSomatics = false;
+        }
+        else if(config.somaticConfig().forceSomaticFit())
+        {
+            useSomatics = true;
+
+            LOGGER.info("forcing somatic fit");
+        }
+        else
+        {
+            useSomatics = Doubles.greaterOrEqual(score.puritySpread(), minSomaticPuritySpread) && isHighlyDiploid(score);
+
+            if(useSomatics)
+            {
+                LOGGER.info("Sample is highly diploid [{}] with large purity range [{}:{}]",
+                        FORMAT.format(score.maxDiploidProportion()), FORMAT.format(score.minPurity()), FORMAT.format(score.maxPurity()));
+            }
         }
 
-        LOGGER.info("Sample is highly diploid [{}] with large purity range [{}:{}]",
-                FORMAT.format(score.maxDiploidProportion()), FORMAT.format(score.minPurity()), FORMAT.format(score.maxPurity()));
+        if (!useSomatics)
+            return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
 
         final List<FittedPurity> diploidCandidates = BestFit.mostDiploidPerPurity(allCandidates);
 

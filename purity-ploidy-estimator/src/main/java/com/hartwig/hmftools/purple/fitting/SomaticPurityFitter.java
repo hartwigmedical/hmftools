@@ -1,12 +1,16 @@
 package com.hartwig.hmftools.purple.fitting;
 
+import static java.lang.String.format;
+
 import static com.google.common.collect.Lists.newArrayList;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleCommon.formatDbl;
+import static com.hartwig.hmftools.purple.fitting.SomaticHistogramPeaks.calcProbabilityUpperBound;
 
 import java.util.List;
 import java.util.Optional;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
@@ -14,8 +18,8 @@ import com.hartwig.hmftools.common.purple.purity.SomaticPeak;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.clonality.ModifiableWeightedPloidy;
-import com.hartwig.hmftools.common.variant.clonality.PeakModel;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
 
 import org.jetbrains.annotations.NotNull;
@@ -51,15 +55,13 @@ class SomaticPurityFitter
 
         Optional<FittedPurity> kdFit = fitPurityFromKernelDensity(allCandidates, variants);
 
-        final List<SomaticPeak> modelPeaks = findPeaks(variants);
+        double maxPurity = findPurityPeak(variants);
 
-        if(modelPeaks.isEmpty())
+        if(maxPurity <= 0)
         {
             PPL_LOGGER.info("Somatic purity from VAFs failed");
             return Optional.empty();
         }
-
-        double maxPurity = modelPeaks.stream().mapToDouble(x -> x.alleleFrequency()).max().orElse(0);
 
         maxPurity *= 2; // since a diploid sample
 
@@ -73,7 +75,7 @@ class SomaticPurityFitter
                 .build();
 
         PPL_LOGGER.info("somatic purity fit: peakModel({}) kernelDensity({})",
-                maxPurity, kdFit.isPresent() ? formatDbl.format(kdFit.get().purity()) : 0);
+                formatDbl.format(maxPurity), kdFit.isPresent() ? formatDbl.format(kdFit.get().purity()) : 0);
 
         return Optional.of(fittedPurity);
     }
@@ -96,7 +98,7 @@ class SomaticPurityFitter
                     Optional<FittedPurity> diploid = diploid(impliedPurity, allCandidates);
                     if(diploid.isPresent())
                     {
-                        PPL_LOGGER.info("Somatic implied purity: {}", impliedPurity);
+                        PPL_LOGGER.debug("Somatic implied purity: {}", impliedPurity);
                         return diploid;
                     }
                     else
@@ -120,7 +122,7 @@ class SomaticPurityFitter
                     Optional<FittedPurity> diploid = diploid(impliedPurity, allCandidates);
                     if(diploid.isPresent())
                     {
-                        PPL_LOGGER.info("Somatic implied purity: {}", impliedPurity);
+                        PPL_LOGGER.debug("Somatic implied purity: {}", impliedPurity);
                         return diploid;
                     }
                     else
@@ -131,7 +133,7 @@ class SomaticPurityFitter
             }
         }
 
-        PPL_LOGGER.info("Unable to determine somatic implied purity.");
+        PPL_LOGGER.debug("Unable to determine somatic implied purity.");
         return Optional.empty();
     }
 
@@ -145,30 +147,63 @@ class SomaticPurityFitter
         return diploidCandidates.stream().filter(x -> Doubles.equal(x.purity(), purity)).findFirst();
     }
 
-    private List<SomaticPeak> findPeaks(final List<SomaticVariant> variants)
+    private double findPurityPeak(final List<SomaticVariant> variants)
     {
-        final List<ModifiableWeightedPloidy> weightedPloidies = newArrayList();
+        final List<ModifiableWeightedPloidy> weightedVAFs = newArrayList();
 
-        double clonalityMaxPloidy = mConfig.somaticConfig().clonalityMaxPloidy();
+        final List<SomaticVariant> hotspotVariants = Lists.newArrayList();
 
         for(SomaticVariant variant : variants)
         {
-            if(Doubles.lessThan(variant.variantCopyNumber(), clonalityMaxPloidy)
-                    && variant.filter().equals(SomaticVariantFactory.PASS_FILTER)
-                    && HumanChromosome.contains(variant.chromosome()) && HumanChromosome.fromString(variant.chromosome()).isAutosome())
-            {
-                // AllelicDepth depth = variant.adjustedVAF().allelicDepth(mConfig.commonConfig().tumorSample());
+            if(!variant.filter().equals(SomaticVariantFactory.PASS_FILTER))
+                continue;
 
-                weightedPloidies.add(ModifiableWeightedPloidy.create()
-                        .setPloidy(variant.alleleFrequency())
-                        .setAlleleReadCount(variant.alleleReadCount())
-                        .setTotalReadCount(variant.totalReadCount())
-                        .setWeight(1));
+            if(variant.type() != VariantType.SNP)
+                continue;
+
+            if(!HumanChromosome.contains(variant.chromosome()) || !HumanChromosome.fromString(variant.chromosome()).isAutosome())
+                continue;
+
+            double varWeight = 1; // variant.isHotspot() ? HOTSPOT_WEIGHT : 1;
+
+            weightedVAFs.add(ModifiableWeightedPloidy.create()
+                    .setPloidy(variant.alleleFrequency())
+                    .setAlleleReadCount(variant.alleleReadCount())
+                    .setTotalReadCount(variant.totalReadCount())
+                    .setWeight(varWeight));
+
+            if(variant.isHotspot())
+                hotspotVariants.add(variant);
+        }
+
+        double maxPurity = SomaticHistogramPeaks.findVafPeak(2, 0.005, 2, weightedVAFs);
+
+        if(maxPurity <= 0)
+            return 0;
+
+        double upperPeak = calcProbabilityUpperBound(weightedVAFs.size(), maxPurity);
+
+        // look for any hotspot with a VAF higher than this bound
+        SomaticVariant topPurityVar = null;
+
+        for(SomaticVariant var : hotspotVariants)
+        {
+            if(var.alleleFrequency() >= upperPeak)
+            {
+                if(topPurityVar == null || var.alleleFrequency() > topPurityVar.alleleFrequency())
+                    topPurityVar = var;
             }
         }
 
-        final SomaticHistogramPeaks somaticHistogramPeaks = new SomaticHistogramPeaks(10, 0.05);
+        if(topPurityVar != null)
+        {
+            PPL_LOGGER.info("purity({}) set from hotspot({}:{}) vs peak({} upper={})",
+                    formatDbl.format(topPurityVar.alleleFrequency()), topPurityVar.chromosome(), topPurityVar.position(),
+                    formatDbl.format(maxPurity), format("%.4f", upperPeak));
 
-        return somaticHistogramPeaks.model(weightedPloidies);
+            maxPurity = topPurityVar.alleleFrequency();
+        }
+
+        return maxPurity;
     }
 }

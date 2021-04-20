@@ -74,6 +74,7 @@ public class WeightedPloidyHistogram {
             if (Doubles.greaterThan(histogram[i], 0)) {
 
                 double bucketWeight = 0;
+
                 for (int j = Math.max(0, i - bucketBuffer); j <= Math.min(histogram.length - 1, i + bucketBuffer); j++) {
                     bucketWeight += histogram[j];
                 }
