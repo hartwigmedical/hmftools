@@ -1,4 +1,4 @@
-gene	event	source	treatment	cancerType	doid	level	direction	url
+gene	event	source	treatment	cancerType	doid	level	direction	urls
 ALK	FUSION	VICC_CGI	Crizotinib	Lung Adenocarcinoma	X	A	RESPONSIVE	http
 BRCA1	INACTIVATION	ICLUSION	DRUP	Solid Tumors	X	B	RESPONSIVE	http
 ERBB2	AMPLIFICATION	VICC_CIVIC	Trastuzumab	Breast Cancer	X	A	RESPONSIVE	http
