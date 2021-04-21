@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.refgenome;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,6 +16,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.liftover.LiftOver;
+
 public class RefGenomeManager {
 
     private static final Logger LOGGER = LogManager.getLogger(RefGenomeManager.class);
@@ -24,20 +27,6 @@ public class RefGenomeManager {
 
     RefGenomeManager(@NotNull final Map<RefGenomeVersion, RefGenomeResource> refGenomeResourceMap) {
         this.refGenomeResourceMap = refGenomeResourceMap;
-    }
-
-    @NotNull
-    public Set<RefGenomeVersion> versions() {
-        return refGenomeResourceMap.keySet();
-    }
-
-    @NotNull
-    public RefGenomeResource pickResourceForVersion(@NotNull RefGenomeVersion version) {
-        RefGenomeResource resource = refGenomeResourceMap.get(version);
-        if (resource == null) {
-            throw new IllegalStateException("No ref genome resource found for version " + version);
-        }
-        return resource;
     }
 
     @NotNull
@@ -74,11 +63,7 @@ public class RefGenomeManager {
             LOGGER.info("Creating extraction results for ref genome version {}", version);
             List<ExtractionResult> targetExtractions = Lists.newArrayList();
             for (ExtractionResult extraction : extractions) {
-//                if (extraction.refGenomeVersion() == version) {
-//                    targetExtractions.add(extraction);
-//                } else {
-                    targetExtractions.add(convert(extraction, version));
-//                }
+                targetExtractions.add(convert(extraction, version));
             }
             versionedExtractionMap.put(version, targetExtractions);
         }
@@ -88,13 +73,29 @@ public class RefGenomeManager {
 
     @NotNull
     private ExtractionResult convert(@NotNull ExtractionResult extraction, @NotNull RefGenomeVersion targetVersion) {
-        // TODO: Convert hotspots: position, chromosome, gene. Check if ref is identical.
-        // TODO: Convert codons: gene, chromosome, start, end.
-        // TODO: Convert exons: gene, chromosome, start, end
-        // TODO: Convert known copy numbers: gene
-        // TODO: Convert known fusions: geneUp, geneDown
-        // TODO: Actionable follows known
+        if (extraction.refGenomeVersion() == targetVersion) {
+            return extraction;
+        }
 
-        return ImmutableExtractionResult.builder().from(extraction).refGenomeVersion(RefGenomeVersion.V37).build();
+        RefGenomeResource sourceResource = refGenomeResourceMap.get(extraction.refGenomeVersion());
+
+        RefGenomeConverter converter =
+                new RefGenomeConverter(new LiftOver(new File(sourceResource.chainToOtherRefGenomeMap().get(targetVersion))),
+                        Maps.newHashMap(),
+                        Maps.newHashMap());
+
+        return ImmutableExtractionResult.builder()
+                .refGenomeVersion(targetVersion)
+                .knownHotspots(converter.convertKnownHotspots(extraction.knownHotspots()))
+                .knownCodons(converter.convertKnownCodons(extraction.knownCodons()))
+                .knownExons(converter.convertKnownExons(extraction.knownExons()))
+                .knownCopyNumbers(converter.convertKnownCopyNumbers(extraction.knownCopyNumbers()))
+                .knownFusionPairs(converter.convertKnownFusionPairs(extraction.knownFusionPairs()))
+                .actionableHotspots(converter.convertActionableHotspots(extraction.actionableHotspots()))
+                .actionableRanges(converter.convertActionableRanges(extraction.actionableRanges()))
+                .actionableGenes(converter.convertActionableGenes(extraction.actionableGenes()))
+                .actionableFusions(converter.convertActionableFusion(extraction.actionableFusions()))
+                .actionableCharacteristics(extraction.actionableCharacteristics())
+                .build();
     }
 }

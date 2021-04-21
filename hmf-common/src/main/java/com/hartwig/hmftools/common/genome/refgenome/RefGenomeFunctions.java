@@ -6,7 +6,7 @@ import htsjdk.samtools.SamReader;
 
 public final class RefGenomeFunctions {
 
-    static final String CHR_PREFIX = "chr";
+    private static final String CHR_PREFIX = "chr";
 
     private RefGenomeFunctions() {
     }
@@ -23,6 +23,15 @@ public final class RefGenomeFunctions {
     public static String stripChromosome(@NotNull final String chromosome) {
         if (chromosome.startsWith(CHR_PREFIX)) {
             return chromosome.substring(CHR_PREFIX.length());
+        }
+
+        return chromosome;
+    }
+
+    @NotNull
+    public static String enforceChromosome(@NotNull final String chromosome) {
+        if (!chromosome.startsWith(CHR_PREFIX)) {
+            return CHR_PREFIX + chromosome;
         }
 
         return chromosome;
