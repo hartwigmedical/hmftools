@@ -28,8 +28,13 @@ public class RangeCompareTest {
         RangeAnnotation annotation3 =
                 ImmutableExonAnnotation.builder().from(annotation1).gene("a other gene").build();
 
+        RangeAnnotation annotation4 =
+                ImmutableExonAnnotation.builder().from(annotation1).start(2).build();
+
         assertTrue(RangeCompare.compare(annotation1, annotation2) < 0);
         assertTrue(RangeCompare.compare(annotation1, annotation3) > 0);
+        assertTrue(RangeCompare.compare(annotation4, annotation1) > 0);
+
         assertEquals(0, RangeCompare.compare(annotation1, annotation1));
     }
 }
