@@ -58,10 +58,6 @@ class HlaComplexCoverageRanking(private val maxDistanceFromTopScore: Int, privat
             return recoveredCountCompare
         }
 
-        val uniqueCoverageCompare = o1.uniqueCoverage.compareTo(o2.uniqueCoverage)
-        if (uniqueCoverageCompare != 0) {
-            return uniqueCoverageCompare
-        }
 
         for (i in 0 until min(o1.alleleCoverage.size, o2.alleleCoverage.size)) {
             val o1Allele = o1.alleleCoverage[i].allele
