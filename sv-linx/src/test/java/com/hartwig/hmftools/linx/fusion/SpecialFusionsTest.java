@@ -28,6 +28,7 @@ import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addTestGenes;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addTestTranscripts;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInf;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 
 import static org.junit.Assert.assertEquals;
@@ -47,6 +48,8 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 public class SpecialFusionsTest
@@ -467,6 +470,57 @@ public class SpecialFusionsTest
     }
 
     @Test
+    public void testSglMappedInfFusions()
+    {
+        LinxTester tester = new LinxTester();
+
+        EnsemblDataCache geneTransCache = createGeneDataCache();
+
+        tester.initialiseFusions(geneTransCache);
+
+        addTestGenes(geneTransCache);
+        addTestTranscripts(geneTransCache);
+
+        Configurator.setRootLevel(Level.DEBUG);
+
+        KnownFusionData kfData = new KnownFusionData(KNOWN_PAIR, GENE_NAME_1, GENE_NAME_2, "", "");
+        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
+
+        int varId = 1;
+
+        SvVarData sgl = createSgl(varId++, CHR_1, 1150, POS_ORIENT);
+        SvVarData inf = createInf(varId++, CHR_2, 100050, NEG_ORIENT);
+
+        final String altMapping = CHR_2 + ":" + String.valueOf(100000) + "|" + String.valueOf(NEG_ORIENT) + "|" + "10M" + "|19";
+        sgl.getSglMappings().add(SglMapping.from(altMapping, POS_ORIENT));
+
+        SvVarData bnd = createBnd(varId++, CHR_1, 10020, NEG_ORIENT, CHR_2, 100200, POS_ORIENT);
+
+        tester.AllVariants.add(sgl);
+        tester.AllVariants.add(inf);
+        tester.AllVariants.add(bnd);
+
+        tester.preClusteringInit();
+
+        assertEquals(4, tester.AllVariants.size());
+        SvVarData sglInf = tester.AllVariants.get(3);
+
+        tester.Analyser.clusterAndAnalyse();
+
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
+
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
+                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+
+        assertEquals(1, tester.FusionAnalyser.getFusions().size());
+
+        GeneFusion fusion = tester.FusionAnalyser.getFusions().get(0);
+        assertEquals(sglInf.id(), fusion.upstreamTrans().gene().id());
+        assertEquals(bnd.id(), fusion.downstreamTrans().gene().id());
+    }
+
+        @Test
     public void testKnownUnmappableFusions()
     {
         LinxTester tester = new LinxTester();

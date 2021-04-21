@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_TEMPLATED_INSERT
 import static com.hartwig.hmftools.linx.types.ResolvedType.DUP_BE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LOW_VAF;
 import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_INF;
+import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_MAPPED_INF;
 
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,7 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-public class SvFilters
+public class SvFiltering
 {
     private Map<SvVarData,ResolvedType> mExcludedSVs; // SV and exclusion reason eg duplicate breakends
 
@@ -38,7 +39,7 @@ public class SvFilters
 
     private final ClusteringState mState;
 
-    public SvFilters(final ClusteringState state)
+    public SvFiltering(final ClusteringState state)
     {
         mState = state;
         mExcludedSVs = Maps.newHashMap();
@@ -84,6 +85,14 @@ public class SvFilters
             {
                 final SvBreakend breakend = breakendList.get(i);
                 final SvVarData var = breakend.getSV();
+
+                // filter out merged SGL-INF pairs
+                if(var.isSglBreakend() && var.getLinkedSVs() != null)
+                {
+                    mExcludedSVs.put(var, SGL_MAPPED_INF);
+                    removalList.add(breakend);
+                    continue;
+                }
 
                 // first check for SGLs already marked for removal
                 if(var.type() == SGL && isSingleDuplicateBreakend(breakendList.get(i).getSV()))

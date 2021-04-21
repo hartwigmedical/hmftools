@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotatio
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.annotateNearestSvData;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.associateBreakendCnEvents;
+import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.linkSglMappedInferreds;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.populateChromosomeBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.setSimpleVariantLengths;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.checkClusterDuplicates;
@@ -42,7 +43,7 @@ public class ClusterAnalyser {
     private final LinxConfig mConfig;
     private final ClusteringState mState;
 
-    private final SvFilters mFilters;
+    private final SvFiltering mFilters;
     private final SimpleClustering mSimpleClustering;
     private final ComplexClustering mComplexClustering;
 
@@ -69,7 +70,7 @@ public class ClusterAnalyser {
         mState = new ClusteringState();
         mClusters = Lists.newArrayList();
 
-        mFilters = new SvFilters(mState);
+        mFilters = new SvFiltering(mState);
         mSimpleClustering = new SimpleClustering(mState, mConfig);
         mComplexClustering = new ComplexClustering(mState, mClusters, mSimpleClustering);
 

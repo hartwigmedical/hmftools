@@ -5,12 +5,16 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.analysis.ClusteringReason.SGL_MAPPING_INF;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.linx.cn.LohEvent.CN_DATA_NO_SV;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
@@ -19,16 +23,24 @@ import static com.hartwig.hmftools.linx.types.LinxConstants.MAX_SIMPLE_DUP_DEL_C
 import static com.hartwig.hmftools.linx.types.LinxConstants.MIN_SIMPLE_DUP_DEL_CUTOFF;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_OVERLAP;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.valueNotNull;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.cn.LohEvent;
+import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
+import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
 public class ClusteringPrep
 {
@@ -51,6 +63,143 @@ public class ClusteringPrep
                 breakendList.get(i).setChrPosIndex(i);
             }
         }
+    }
+
+    public static void linkSglMappedInferreds(final List<SvVarData> allVariants)
+    {
+        final List<SvVarData> sgls = allVariants.stream()
+                .filter(x -> x.type() == SGL)
+                .filter(x -> !x.getSglMappings().isEmpty())
+                .collect(Collectors.toList());
+
+        List<SvVarData> infs = allVariants.stream()
+                .filter(x -> x.type() == INF)
+                .collect(Collectors.toList());
+
+        int nextSvId = allVariants.stream().mapToInt(x -> x.id()).max().orElse(0);
+
+        for(SvVarData sgl : sgls)
+        {
+            boolean matched = false;
+
+            for(SglMapping mapping : sgl.getSglMappings())
+            {
+                for(SvVarData inf : infs)
+                {
+                    if(!mapping.Chromosome.equals(inf.chromosome(true)))
+                        continue;
+
+                    if(mapping.Orientation != inf.orientation(true))
+                        continue;
+
+                    if(abs(mapping.Position - inf.position(true)) > 1000)
+                        continue;
+
+                    // a link has been found
+                    final SvVarData newVar = mergeSglMappedInferred(sgl, inf, mapping, ++nextSvId);
+
+                    LNX_LOGGER.debug("new SV({}) from sgl({}) with mapping to inf({})", newVar.toString(), sgl.posId(), inf.posId());
+
+                    allVariants.add(newVar);
+                    newVar.setLinkedSVs(sgl, inf);
+
+                    newVar.addClusterReason(SGL_MAPPING_INF, sgl.id());
+                    newVar.addClusterReason(SGL_MAPPING_INF, inf.id(), true);
+
+                    sgl.setLinkedSVs(newVar, inf);
+                    inf.setLinkedSVs(newVar, sgl);
+                    matched = true;
+                    break;
+                }
+
+                if(matched)
+                    break;
+            }
+        }
+
+
+    }
+
+    public static SvVarData mergeSglMappedInferred(final SvVarData sgl, final SvVarData inf, final SglMapping mapping, final int svId)
+    {
+        final StructuralVariantData sglSvData = sgl.getSvData();
+        final StructuralVariantData infSvData = inf.getSvData();
+
+        StructuralVariantType newType;
+
+        if(sglSvData.startChromosome().equals(infSvData.startChromosome()))
+        {
+            if(sglSvData.startOrientation() == infSvData.startOrientation())
+            {
+                newType = INV;
+            }
+            else
+            {
+                newType = sglSvData.startOrientation() == POS_ORIENT ? DEL : DUP;
+            }
+        }
+        else
+        {
+            newType = BND;
+        }
+
+        StructuralVariantData newSvData = ImmutableStructuralVariantData.builder()
+                .id(svId)
+                .vcfId(valueNotNull(sglSvData.vcfId()))
+                .startChromosome(sglSvData.startChromosome())
+                .endChromosome(infSvData.startChromosome())
+                .startPosition(sglSvData.startPosition())
+                .endPosition(mapping.Position)
+                .startOrientation(sglSvData.startOrientation())
+                .endOrientation(mapping.Orientation)
+                .startHomologySequence(sglSvData.startHomologySequence())
+                .endHomologySequence(infSvData.startHomologySequence())
+                .junctionCopyNumber(sglSvData.junctionCopyNumber())
+                .startAF(sglSvData.startAF())
+                .endAF(infSvData.startAF())
+                .adjustedStartAF(sglSvData.adjustedStartAF())
+                .adjustedEndAF(infSvData.adjustedStartAF())
+                .adjustedStartCopyNumber(sglSvData.adjustedStartCopyNumber())
+                .adjustedEndCopyNumber(infSvData.adjustedStartCopyNumber())
+                .adjustedStartCopyNumberChange(sglSvData.adjustedStartCopyNumberChange())
+                .adjustedEndCopyNumberChange(infSvData.adjustedStartCopyNumberChange())
+                .insertSequence(sglSvData.insertSequence())
+                .type(newType)
+                .filter(sglSvData.filter())
+                .imprecise(sglSvData.imprecise())
+                .qualityScore(sglSvData.qualityScore())
+                .event(sglSvData.event())
+                .startTumorVariantFragmentCount(sglSvData.startTumorVariantFragmentCount())
+                .startTumorReferenceFragmentCount(sglSvData.startTumorReferenceFragmentCount())
+                .startNormalVariantFragmentCount(sglSvData.startNormalVariantFragmentCount())
+                .startNormalReferenceFragmentCount(sglSvData.startNormalReferenceFragmentCount())
+                .endTumorVariantFragmentCount(infSvData.startTumorVariantFragmentCount())
+                .endTumorReferenceFragmentCount(infSvData.startTumorReferenceFragmentCount())
+                .endNormalVariantFragmentCount(infSvData.startNormalVariantFragmentCount())
+                .endNormalReferenceFragmentCount(infSvData.startNormalReferenceFragmentCount())
+                .startIntervalOffsetStart(sglSvData.startIntervalOffsetStart())
+                .startIntervalOffsetEnd(sglSvData.startIntervalOffsetEnd())
+                .endIntervalOffsetStart(infSvData.startIntervalOffsetStart())
+                .endIntervalOffsetEnd(infSvData.startIntervalOffsetEnd())
+                .inexactHomologyOffsetStart(sglSvData.inexactHomologyOffsetStart())
+                .inexactHomologyOffsetEnd(infSvData.inexactHomologyOffsetStart())
+                .startLinkedBy(sglSvData.startLinkedBy())
+                .endLinkedBy(infSvData.startLinkedBy())
+                .startRefContext(sglSvData.startRefContext())
+                .endRefContext(infSvData.startRefContext())
+                .recovered(sglSvData.recovered())
+                .recoveryMethod((sglSvData.recoveryMethod()))
+                .recoveryFilter(sglSvData.recoveryFilter())
+                .insertSequenceAlignments(sglSvData.insertSequenceAlignments())
+                .insertSequenceRepeatClass(sglSvData.insertSequenceRepeatClass())
+                .insertSequenceRepeatType(sglSvData.insertSequenceRepeatType())
+                .insertSequenceRepeatOrientation(sglSvData.insertSequenceRepeatOrientation())
+                .insertSequenceRepeatCoverage(sglSvData.insertSequenceRepeatCoverage())
+                .startAnchoringSupportDistance(sglSvData.startAnchoringSupportDistance())
+                .endAnchoringSupportDistance(infSvData.startAnchoringSupportDistance())
+                .build();
+
+        return new SvVarData(newSvData);
     }
 
     public static void setSimpleVariantLengths(ClusteringState state)

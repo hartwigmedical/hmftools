@@ -80,6 +80,7 @@ public class SvVarData
     private SvCNData mCnDataPostEnd;
 
     private final List<SglMapping> mSglMappings;
+    private SvVarData[] mLinkedSVs;
     private List<String> mAnnotationList;
 
     public static final String NONE_SEGMENT_INFERRED = "INFERRED";
@@ -149,6 +150,7 @@ public class SvVarData
             mSglMappings = null;
         }
 
+        mLinkedSVs = null;
         mAnnotationList = null;
     }
 
@@ -223,7 +225,12 @@ public class SvVarData
 
     public void addClusterReason(final ClusteringReason reason, final int otherId)
     {
-        if(mClusterReason.contains(reason.toString()))
+        addClusterReason(reason, otherId, false);
+    }
+
+    public void addClusterReason(final ClusteringReason reason, final int otherId, boolean allowRepeats)
+    {
+        if(!allowRepeats && mClusterReason.contains(reason.toString()))
             return;
 
         mClusterReason = appendStr(mClusterReason, reason.toString(), ITEM_DELIM_CHR);
@@ -452,6 +459,13 @@ public class SvVarData
     }
 
     public final List<SglMapping> getSglMappings() { return mSglMappings; }
+
+    public void setLinkedSVs(final SvVarData var1, final SvVarData var2)
+    {
+        mLinkedSVs = new SvVarData[] {var1, var2};
+    }
+
+    public final SvVarData[] getLinkedSVs() { return mLinkedSVs; }
 
     public final List<BreakendGeneData> getGenesList(boolean isStart) { return mGenes.get(isStart); }
 

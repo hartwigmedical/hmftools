@@ -186,7 +186,6 @@ public class SvTestUtils
         var.setJcnRecalcData(var.getSvData().junctionCopyNumber(), var.getSvData().junctionCopyNumber());
     }
 
-
     public static GeneCopyNumber createGeneCopyNumber(final String gene, final String chromosome,
             double minCopyNumber, int posStart, int posEnd)
     {

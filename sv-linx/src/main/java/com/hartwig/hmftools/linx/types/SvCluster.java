@@ -475,10 +475,7 @@ public class SvCluster
         return mTypeCounts[typeAsInt(SGL)] + mTypeCounts[typeAsInt(INF)];
     }
 
-    public int getTypeCount(StructuralVariantType type)
-    {
-        return mTypeCounts[typeAsInt(type)];
-    }
+    public int getTypeCount(StructuralVariantType type) { return mTypeCounts[typeAsInt(type)]; }
 
     public final List<SvVarData> getLongDelDups() { return mLongDelDups; }
     public final List<SvVarData> getFoldbacks() { return mFoldbacks; }

@@ -8,6 +8,7 @@ public enum ResolvedType
     DUP_BE,
     LOW_VAF,
     PAIR_INF,
+    SGL_MAPPED_INF,
 
     // simple types including synthetic instances
     DEL,

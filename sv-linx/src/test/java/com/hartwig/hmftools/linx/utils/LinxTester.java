@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.linx.utils;
 
 import static com.hartwig.hmftools.common.purple.gender.Gender.MALE;
+import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.linkSglMappedInferreds;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.populateChromosomeBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.SampleAnalyser.setSvCopyNumberData;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.initialiseSV;
 
 import java.util.List;
 
@@ -99,6 +101,9 @@ public class LinxTester
     {
         // have to manually trigger breakend map creation since the CN data creation uses it
         Analyser.getState().reset();
+        linkSglMappedInferreds(AllVariants);
+        AllVariants.stream().filter(x -> x.getLinkedSVs() != null).filter(x -> !x.isSglBreakend()).forEach(x -> initialiseSV(x));
+
         populateChromosomeBreakendMap(AllVariants, Analyser.getState());
 
         populateCopyNumberData(includePloidyCalcs);

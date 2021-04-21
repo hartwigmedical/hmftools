@@ -26,6 +26,7 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.LOW_VAF;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_INF;
 import static com.hartwig.hmftools.linx.types.ResolvedType.PAIR_OTHER;
+import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_MAPPED_INF;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_DEL;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_DUP;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SGL_PAIR_INS;
@@ -125,7 +126,7 @@ public class ClusterClassification
 
     public static boolean isFilteredResolvedType(final ResolvedType resolvedType)
     {
-        return resolvedType == DUP_BE || resolvedType == LOW_VAF || resolvedType == PAIR_INF;
+        return resolvedType == DUP_BE || resolvedType == LOW_VAF || resolvedType == PAIR_INF || resolvedType == SGL_MAPPED_INF;
     }
 
     public static void setClusterResolvedState(
