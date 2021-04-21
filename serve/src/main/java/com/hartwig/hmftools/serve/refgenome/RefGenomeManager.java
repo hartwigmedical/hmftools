@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.GeneNameMapping;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
@@ -24,6 +25,8 @@ public class RefGenomeManager {
 
     @NotNull
     private final Map<RefGenomeVersion, RefGenomeResource> refGenomeResourceMap;
+    @NotNull
+    private final GeneNameMapping geneNameMapping = new GeneNameMapping();
 
     RefGenomeManager(@NotNull final Map<RefGenomeVersion, RefGenomeResource> refGenomeResourceMap) {
         this.refGenomeResourceMap = refGenomeResourceMap;
@@ -73,16 +76,15 @@ public class RefGenomeManager {
 
     @NotNull
     private ExtractionResult convert(@NotNull ExtractionResult extraction, @NotNull RefGenomeVersion targetVersion) {
-        if (extraction.refGenomeVersion() == targetVersion) {
+        RefGenomeVersion sourceVersion = extraction.refGenomeVersion();
+        if (sourceVersion == targetVersion) {
             return extraction;
         }
 
-        RefGenomeResource sourceResource = refGenomeResourceMap.get(extraction.refGenomeVersion());
+        RefGenomeResource sourceResource = refGenomeResourceMap.get(sourceVersion);
 
-        RefGenomeConverter converter =
-                new RefGenomeConverter(new LiftOver(new File(sourceResource.chainToOtherRefGenomeMap().get(targetVersion))),
-                        Maps.newHashMap(),
-                        Maps.newHashMap());
+        LiftOver liftOverToTarget = new LiftOver(new File(sourceResource.chainToOtherRefGenomeMap().get(targetVersion)));
+        RefGenomeConverter converter = new RefGenomeConverter(sourceVersion, targetVersion, liftOverToTarget, geneNameMapping);
 
         return ImmutableExtractionResult.builder()
                 .refGenomeVersion(targetVersion)

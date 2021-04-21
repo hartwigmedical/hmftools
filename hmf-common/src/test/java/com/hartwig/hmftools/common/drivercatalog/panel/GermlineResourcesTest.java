@@ -19,7 +19,7 @@ public class GermlineResourcesTest {
     }
 
     @Test
-    public void testWhiteConsistency() throws IOException {
+    public void testWhitelistConsistency() throws IOException {
         testConsistency(GermlineResources.whitelist37(), GermlineResources.whitelist38());
     }
 
@@ -38,7 +38,6 @@ public class GermlineResourcesTest {
                 assertEquals(v37.getReference().getBaseString(), v38.getReference().getBaseString());
                 assertEquals(v37.getAlternateAllele(0).getBaseString(), v38.getAlternateAllele(0).getBaseString());
             }
-
 
             assertEquals(v37.getContig(), v38.getContig().replace("chr", ""));
             assertTrue(v38.getContig().contains("chr"));
