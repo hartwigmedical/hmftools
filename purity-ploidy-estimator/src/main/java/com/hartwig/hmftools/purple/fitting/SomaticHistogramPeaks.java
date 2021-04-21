@@ -6,6 +6,7 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.purple.PurpleCommon.formatDbl;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,9 +17,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.purity.ImmutableSomaticPeak;
 import com.hartwig.hmftools.common.purple.purity.SomaticPeak;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.variant.clonality.ModifiablePeakModel;
 import com.hartwig.hmftools.common.variant.clonality.ModifiableWeightedPloidy;
-import com.hartwig.hmftools.common.variant.clonality.PeakModel;
 import com.hartwig.hmftools.common.variant.clonality.WeightedPloidy;
 import com.hartwig.hmftools.common.variant.clonality.WeightedPloidyHistogram;
 
@@ -27,40 +26,35 @@ import org.jetbrains.annotations.NotNull;
 
 public class SomaticHistogramPeaks
 {
-    private static final double PEAK_BIN_WIDTH = 0.01;
-
     private static final int MAX_ITERATIONS = 10;
     private static final double MAX_UNEXPLAINED_WEIGHT_PERCENT = 0.01;
 
     private final double mMaxVaf;
-    private final double mModelWidth;
+    private final double mBinWidth;
+    private final double mMinPeakWeight;
     private final int mPeakWidth;
 
     private final WeightedPloidyHistogram mHistogram;
     private final Map<String, BinomialDistribution> mBinomialDistributionMap;
 
-    public SomaticHistogramPeaks(final double maxVaf, final double modelWidth, final int peakWidth)
+    public SomaticHistogramPeaks(final double maxVaf, double binWidth, int peakWidth, double minPeakWeight)
     {
-        mModelWidth = modelWidth;
+        mBinWidth = binWidth;
         mMaxVaf = maxVaf;
         mPeakWidth = peakWidth;
-        mHistogram = new WeightedPloidyHistogram(maxVaf, PEAK_BIN_WIDTH);
+        mMinPeakWeight = minPeakWeight;
+
+        mHistogram = new WeightedPloidyHistogram(mMaxVaf, mBinWidth);
         mBinomialDistributionMap = Maps.newHashMap();
     }
 
-    public static double findVafPeak(double maxVaf, double binWidth, int peakWidth, final List<ModifiableWeightedPloidy> weightedVariants)
+    public double findVafPeak(final List<ModifiableWeightedPloidy> weightedVariants)
     {
-        WeightedPloidyHistogram histogram = new WeightedPloidyHistogram(maxVaf, binWidth);
-        return histogram.peakPloidy(peakWidth, weightedVariants);
-    }
-
-    public List<SomaticPeak> model(final List<ModifiableWeightedPloidy> weightedVariants)
-    {
-        final WeightedPloidyHistogram residualHistogram = new WeightedPloidyHistogram(mMaxVaf, mModelWidth);
+        // find the highest VAF peak
+        WeightedPloidyHistogram histogram = new WeightedPloidyHistogram(mMaxVaf, mBinWidth);
 
         final List<SomaticPeak> somaticPeaks = Lists.newArrayList();
         double initialWeight = positiveWeight(weightedVariants);
-        int varCount = weightedVariants.size();
 
         for(int i = 0; i < MAX_ITERATIONS; i++)
         {
@@ -71,44 +65,54 @@ public class SomaticHistogramPeaks
                 break;
 
             double offset = offset(peak);
-            final WeightedPloidyHistogram peakHistogramFactory = new WeightedPloidyHistogram(mMaxVaf, mModelWidth, offset);
+            final WeightedPloidyHistogram peakHistogramFactory = new WeightedPloidyHistogram(mMaxVaf, mBinWidth, offset);
             final List<WeightedPloidy> peakPloidies = peakPloidies(peak, weightedVariants);
             double peakAverageWeight = averageWeight(peakPloidies);
             double[] peakHistogram = modelPeakHistogram(peak, peakPloidies);
 
-            // Subtract modelled weight
+            // sum and subtract modelled weight
             double[] currentHistogram = peakHistogramFactory.histogram(weightedVariants);
-            
+            double peakTotalWeight = Arrays.stream(currentHistogram).filter(x -> x > 0).sum();
+
             for(final ModifiableWeightedPloidy variant : weightedVariants)
             {
                 int bucket = peakHistogramFactory.bucket(variant.ploidy());
                 double currentWeight = variant.weight();
                 double bucketWeight = currentHistogram[bucket];
                 double peakWeight = peakHistogram[bucket];
-                double newWeight = Doubles.isZero(bucketWeight) ? 0 : currentWeight - abs(peakWeight / bucketWeight);
-                variant.setWeight(newWeight);
+
+                if(!Doubles.isZero(bucketWeight))
+                {
+                    double assignedWeight = abs(peakWeight / bucketWeight);
+                    // peakTotalWeight += assignedWeight;
+                    double newWeight = Doubles.isZero(bucketWeight) ? 0 : currentWeight - assignedWeight;
+                    variant.setWeight(newWeight);
+                }
             }
+
+            if(peakTotalWeight < mMinPeakWeight)
+                break;
 
             somaticPeaks.add(ImmutableSomaticPeak.builder()
                     .alleleFrequency(peak)
-                    .count(currentHistogram.length)
+                    .count((int)round(peakTotalWeight))
                     .build());
 
             // Decide if we should do another round
             double remainingWeight = positiveWeight(weightedVariants);
             double unexplainedWeight = remainingWeight / initialWeight;
 
-            PPL_LOGGER.debug("Peak: {}, Offset: {}, PeakAvgWeight: {}, Unexplained: {}",
-                    new Object[] { formatDbl.format(peak), formatDbl.format(offset), formatDbl.format(peakAverageWeight),
-                            formatDbl.format(unexplainedWeight) });
+            PPL_LOGGER.info(String.format("somatic peak(%.3f) weight(%.3f avg=%.3f) remaining(%.3f pct=%.3f%%)",
+                    peak, peakTotalWeight, peakAverageWeight, remainingWeight, unexplainedWeight));
 
             if(Doubles.lessThan(unexplainedWeight, MAX_UNEXPLAINED_WEIGHT_PERCENT))
-            {
                 break;
-            }
         }
 
-        return somaticPeaks;
+        // return the highest VAF peak
+        double maxVafPeak = somaticPeaks.stream().mapToDouble(x -> x.alleleFrequency()).max().orElse(0);
+
+        return maxVafPeak;
     }
 
     private double positiveWeight(@NotNull final List<? extends WeightedPloidy> weightedPloidies)
@@ -118,15 +122,15 @@ public class SomaticHistogramPeaks
 
     double offset(double peak)
     {
-        return peak - round(peak / mModelWidth) * mModelWidth;
+        return peak - round(peak / mBinWidth) * mBinWidth;
     }
 
     @NotNull
     private List<WeightedPloidy> peakPloidies(double peak, @NotNull final List<? extends WeightedPloidy> allPloidies)
     {
         return allPloidies.stream()
-                .filter(x -> Doubles.greaterThan(x.ploidy(), peak - mModelWidth / 2) && Doubles.lessThan(x.ploidy(),
-                        peak + mModelWidth / 2))
+                .filter(x -> Doubles.greaterThan(x.ploidy(), peak - mBinWidth / 2) && Doubles.lessThan(x.ploidy(),
+                        peak + mBinWidth / 2))
                 .collect(Collectors.toList());
     }
 
@@ -144,7 +148,7 @@ public class SomaticHistogramPeaks
         // Forwards until unlikely...
         for(int i = startBucket; i <= maxBucket; i++)
         {
-            double ploidy = i * mModelWidth + offset;
+            double ploidy = i * mBinWidth + offset;
             double likelihood = likelihood(ploidy, weight, peakPloidies);
             result[i] = likelihood;
             if(Doubles.isZero(likelihood))
@@ -156,7 +160,7 @@ public class SomaticHistogramPeaks
         // Backwards until unlikely...
         for(int i = startBucket - 1; i >= 0; i--)
         {
-            double ploidy = i * mModelWidth + offset;
+            double ploidy = i * mBinWidth + offset;
             double likelihood = likelihood(ploidy, weight, peakPloidies);
             result[i] = likelihood;
             if(Doubles.isZero(likelihood))
@@ -196,11 +200,11 @@ public class SomaticHistogramPeaks
         final BinomialDistribution binomialDistribution = mBinomialDistributionMap.computeIfAbsent(binomialKey,
                 s -> new BinomialDistribution(weighted.totalReadCount(), weighted.alleleFrequency()));
 
-        double lowerBoundAlleleReadCount = Math.max(0, ploidy - mModelWidth / 2d) / weighted.ploidy() * weighted.alleleReadCount();
+        double lowerBoundAlleleReadCount = Math.max(0, ploidy - mBinWidth / 2d) / weighted.ploidy() * weighted.alleleReadCount();
         int lowerBoundAlleleReadCountRounded = (int) round(lowerBoundAlleleReadCount);
         double lowerBoundAddition = lowerBoundAlleleReadCountRounded + 0.5 - lowerBoundAlleleReadCount;
 
-        double upperBoundAlleleReadCount = Math.max(0, ploidy + mModelWidth / 2d) / weighted.ploidy() * weighted.alleleReadCount();
+        double upperBoundAlleleReadCount = Math.max(0, ploidy + mBinWidth / 2d) / weighted.ploidy() * weighted.alleleReadCount();
         int upperBoundAlleleReadCountRounded = (int) round(upperBoundAlleleReadCount);
         double upperBoundSubtraction = upperBoundAlleleReadCountRounded + 0.5 - upperBoundAlleleReadCount;
 
@@ -215,7 +219,7 @@ public class SomaticHistogramPeaks
 
     private int bucket(double ploidy)
     {
-        return (int) round(ploidy / mModelWidth);
+        return (int) round(ploidy / mBinWidth);
     }
 
     private static double averageWeight(@NotNull final List<WeightedPloidy> ploidies)

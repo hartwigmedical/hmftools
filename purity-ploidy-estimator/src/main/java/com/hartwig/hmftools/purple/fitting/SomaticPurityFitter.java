@@ -178,7 +178,8 @@ class SomaticPurityFitter
                 hotspotVariants.add(variant);
         }
 
-        double maxPurity = SomaticHistogramPeaks.findVafPeak(2, 0.005, 2, weightedVAFs);
+        SomaticHistogramPeaks somaticHistogram = new SomaticHistogramPeaks(2, 0.005, 2, 10);
+        double maxPurity = somaticHistogram.findVafPeak(weightedVAFs);
 
         if(maxPurity <= 0)
             return 0;

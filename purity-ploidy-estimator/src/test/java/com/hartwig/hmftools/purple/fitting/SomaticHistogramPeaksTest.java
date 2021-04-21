@@ -35,7 +35,8 @@ public class SomaticHistogramPeaksTest
         addVafEntry(weightedVAFs, 0.15, 1, 2);
         addVafEntry(weightedVAFs, 0.16, 1, 1);
 
-        double maxPurity = SomaticHistogramPeaks.findVafPeak(2, 0.01, 1, weightedVAFs);
+        SomaticHistogramPeaks somaticHistogram = new SomaticHistogramPeaks(2, 0.01, 1, 12);
+        double maxPurity = somaticHistogram.findVafPeak(weightedVAFs);
         assertEquals(0.07, maxPurity, 0.001);
     }
 
