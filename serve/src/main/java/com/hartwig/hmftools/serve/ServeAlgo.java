@@ -18,7 +18,6 @@ import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
-import com.hartwig.hmftools.serve.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeManager;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractor;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractorFactory;
@@ -87,12 +86,11 @@ public class ServeAlgo {
         refGenomeManager.evaluateProteinResolving();
         missingDoidLookup.evaluateMappingUsage();
 
+        Map<RefGenomeVersion, List<ExtractionResult>> versionedMap = refGenomeManager.makeVersioned(extractions);
+
         Map<RefGenomeVersion, ExtractionResult> refDependentExtractionMap = Maps.newHashMap();
-        for (RefGenomeVersion version : refGenomeManager.versions()) {
-            LOGGER.info("Creating extraction result for ref genome version {}", version);
-            List<ExtractionResult> refDependentExtractions =
-                    RefGenomeFunctions.makeRefDependent(extractions, version, refGenomeManager.pickResourceForVersion(version));
-            refDependentExtractionMap.put(version, ExtractionFunctions.merge(refDependentExtractions));
+        for (Map.Entry<RefGenomeVersion, List<ExtractionResult>> entry : versionedMap.entrySet()) {
+            refDependentExtractionMap.put(entry.getKey(), ExtractionFunctions.merge(entry.getValue()));
         }
 
         return refDependentExtractionMap;
