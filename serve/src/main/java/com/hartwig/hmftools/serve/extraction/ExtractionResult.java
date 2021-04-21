@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.extraction;
 
 import java.util.Set;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
@@ -21,6 +22,9 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ExtractionResult {
+
+    @NotNull
+    public abstract RefGenomeVersion refGenomeVersion();
 
     @NotNull
     public abstract Set<KnownHotspot> knownHotspots();

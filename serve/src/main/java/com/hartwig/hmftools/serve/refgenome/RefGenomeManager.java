@@ -22,6 +22,20 @@ public class RefGenomeManager {
     }
 
     @NotNull
+    public Set<RefGenomeVersion> versions() {
+        return refGenomeResourceMap.keySet();
+    }
+
+    @NotNull
+    public RefGenomeResource pickResourceForVersion(@NotNull RefGenomeVersion version) {
+        RefGenomeResource resource = refGenomeResourceMap.get(version);
+        if (resource == null) {
+            throw new IllegalStateException("No ref genome resource found for version " + version);
+        }
+        return resource;
+    }
+
+    @NotNull
     public RefGenomeResource pickResourceForKnowledgebase(@NotNull Knowledgebase knowledgebase) {
         RefGenomeResource resource = refGenomeResourceMap.get(knowledgebase.refGenomeVersion());
         if (resource == null) {

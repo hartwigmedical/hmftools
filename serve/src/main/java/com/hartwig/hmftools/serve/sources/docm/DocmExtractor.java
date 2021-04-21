@@ -46,6 +46,9 @@ public class DocmExtractor {
         }
 
         // Hotspots appear multiple times in DoCM on different transcripts. We need to consolidate even though there is only one source.
-        return ImmutableExtractionResult.builder().knownHotspots(HotspotFunctions.consolidate(knownHotspots)).build();
+        return ImmutableExtractionResult.builder()
+                .refGenomeVersion(Knowledgebase.DOCM.refGenomeVersion())
+                .knownHotspots(HotspotFunctions.consolidate(knownHotspots))
+                .build();
     }
 }
