@@ -183,10 +183,10 @@ public class SimpleClustering
                             }
                         }
 
-                        if (var.getClusterReason().isEmpty())
+                        if (!var.hasClusterReason(PROXIMITY))
                             var.addClusterReason(PROXIMITY, nextVar.id());
 
-                        if (nextVar.getClusterReason().isEmpty())
+                        if (!nextVar.hasClusterReason(PROXIMITY))
                             nextVar.addClusterReason(PROXIMITY, var.id());
 
                         // checkClusteringClonalDiscrepancy(var, nextVar, PROXIMITY);

@@ -225,12 +225,7 @@ public class SvVarData
 
     public void addClusterReason(final ClusteringReason reason, final int otherId)
     {
-        addClusterReason(reason, otherId, false);
-    }
-
-    public void addClusterReason(final ClusteringReason reason, final int otherId, boolean allowRepeats)
-    {
-        if(!allowRepeats && mClusterReason.contains(reason.toString()))
+        if(mClusterReason.contains(reason.toString()))
             return;
 
         mClusterReason = appendStr(mClusterReason, reason.toString(), ITEM_DELIM_CHR);

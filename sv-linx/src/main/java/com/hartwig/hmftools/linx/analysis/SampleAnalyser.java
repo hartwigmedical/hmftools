@@ -514,6 +514,10 @@ public class SampleAnalyser
 
             final ArmCluster armClusterEnd = !var.isSglBreakend() ? cluster.findArmCluster(var.getBreakend(false)) : null;
 
+            // suppress SGL-INF artificial SVs, but use their details in place of the SGL
+            if(var.getLinkedSVs() != null && var.isSglBreakend())
+                continue;
+
             linxSvData.add(ImmutableLinxSvAnnotation.builder()
                     .vcfId(var.getSvData().vcfId())
                     .svId(var.id())

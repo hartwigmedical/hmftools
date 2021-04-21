@@ -481,8 +481,6 @@ public class SpecialFusionsTest
         addTestGenes(geneTransCache);
         addTestTranscripts(geneTransCache);
 
-        Configurator.setRootLevel(Level.DEBUG);
-
         KnownFusionData kfData = new KnownFusionData(KNOWN_PAIR, GENE_NAME_1, GENE_NAME_2, "", "");
         tester.FusionAnalyser.getFusionFinder().getKnownFusionCache().addData(kfData);
 

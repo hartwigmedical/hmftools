@@ -96,15 +96,14 @@ public class ClusteringPrep
                         continue;
 
                     // a link has been found
-                    final SvVarData newVar = mergeSglMappedInferred(sgl, inf, mapping, ++nextSvId);
+                    final SvVarData newVar = mergeSglMappedInferred(sgl, inf, mapping, sgl.id()); // ++nextSvId
 
                     LNX_LOGGER.debug("new SV({}) from sgl({}) with mapping to inf({})", newVar.toString(), sgl.posId(), inf.posId());
 
                     allVariants.add(newVar);
                     newVar.setLinkedSVs(sgl, inf);
 
-                    newVar.addClusterReason(SGL_MAPPING_INF, sgl.id());
-                    newVar.addClusterReason(SGL_MAPPING_INF, inf.id(), true);
+                    newVar.addClusterReason(SGL_MAPPING_INF, inf.id());
 
                     sgl.setLinkedSVs(newVar, inf);
                     inf.setLinkedSVs(newVar, sgl);
