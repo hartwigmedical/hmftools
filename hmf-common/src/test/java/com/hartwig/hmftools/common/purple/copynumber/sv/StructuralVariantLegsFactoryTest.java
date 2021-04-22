@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple.copynumber.sv;
 
+import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createStartLeg;
 import static com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegsFactory.reduce;
 import static com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantPloidyTest.CHROMOSOME;
 
@@ -12,6 +13,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -141,17 +143,17 @@ public class StructuralVariantLegsFactoryTest {
 
     @NotNull
     private static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF) {
-        return PurpleDatamodelTest.createStructuralVariant(CHROMOSOME, start, CHROMOSOME, end, type, startAF, endAF).build();
+        return PurpleTestUtils.createStructuralVariant(CHROMOSOME, start, CHROMOSOME, end, type, startAF, endAF).build();
     }
 
     @NotNull
     private static StructuralVariant breakend(long start, double startAF) {
-        return PurpleDatamodelTest.createStructuralVariantSingleBreakend(CHROMOSOME, start, startAF).build();
+        return PurpleTestUtils.createStructuralVariantSingleBreakend(CHROMOSOME, start, startAF).build();
     }
 
     @NotNull
     static StructuralVariantLeg createLeg(long position, int orientation, double vaf) {
-        return PurpleDatamodelTest.createStartLeg(CHROMOSOME, position, StructuralVariantType.DEL)
+        return createStartLeg(CHROMOSOME, position, StructuralVariantType.DEL)
                 .orientation((byte) orientation)
                 .alleleFrequency(vaf)
                 .build();
@@ -159,7 +161,7 @@ public class StructuralVariantLegsFactoryTest {
 
     @NotNull
     static StructuralVariantLeg createLeg(long position, int orientation, double vaf, int tumorVariantFragmentCount) {
-        return PurpleDatamodelTest.createStartLeg(CHROMOSOME, position, StructuralVariantType.DEL)
+        return createStartLeg(CHROMOSOME, position, StructuralVariantType.DEL)
                 .orientation((byte) orientation)
                 .alleleFrequency(vaf)
                 .tumorVariantFragmentCount(tumorVariantFragmentCount)

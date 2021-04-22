@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.purple.region.GermlineStatus.UNKNOWN;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
-import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
+import com.hartwig.hmftools.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.segment;
+package com.hartwig.hmftools.purple.segment;
 
 import java.util.List;
 import java.util.stream.Collectors;

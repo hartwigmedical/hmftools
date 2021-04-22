@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.segment;
+package com.hartwig.hmftools.purple.segment;
 
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.BND;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
@@ -14,6 +14,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.pcf.ImmutablePCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;

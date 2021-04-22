@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.gene;
+package com.hartwig.hmftools.purple.gene;
 
 import static org.junit.Assert.assertEquals;
 
@@ -9,9 +9,9 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.ImmutableHmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.ImmutableHmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
-import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;

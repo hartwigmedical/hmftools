@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -192,6 +193,6 @@ public class CopyNumberChangeTest {
 
     @NotNull
     private static StructuralVariantLegPloidy svPloidy(int orientation, double ploidy, double leftCopyNumber, double rightCopyNumber) {
-        return PurpleDatamodelTest.svLegPloidy(orientation, Optional.of(leftCopyNumber), Optional.of(rightCopyNumber), ploidy).build();
+        return PurpleTestUtils.svLegPloidy(orientation, Optional.of(leftCopyNumber), Optional.of(rightCopyNumber), ploidy).build();
     }
 }

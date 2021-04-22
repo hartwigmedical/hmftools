@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
+import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createDefaultFittedRegion;
+
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
@@ -32,14 +34,14 @@ public class CombinedRegionTest {
 
     @Test
     public void testDepthWindowCountSummationOnlyAppliesToSomatic() {
-        final FittedRegion somaticRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 2001, 3000)
+        final FittedRegion somaticRegion = createDefaultFittedRegion("1", 2001, 3000)
                 .depthWindowCount(2)
                 .status(GermlineStatus.DIPLOID)
                 .build();
         final CombinedRegion region = new CombinedRegionImpl(somaticRegion);
         assertEquals(2, region.region().depthWindowCount());
 
-        final FittedRegion amplificationRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000)
+        final FittedRegion amplificationRegion = createDefaultFittedRegion("1", 1, 1000)
                 .depthWindowCount(2)
                 .status(GermlineStatus.AMPLIFICATION)
                 .build();
@@ -47,7 +49,7 @@ public class CombinedRegionTest {
         region.extend(amplificationRegion);
         assertEquals(2, region.region().depthWindowCount());
 
-        final FittedRegion germlineRegion = PurpleDatamodelTest.createDefaultFittedRegion("1", 1001, 2000)
+        final FittedRegion germlineRegion = createDefaultFittedRegion("1", 1001, 2000)
                 .depthWindowCount(2)
                 .status(GermlineStatus.AMPLIFICATION)
                 .build();
@@ -100,7 +102,7 @@ public class CombinedRegionTest {
 
     @NotNull
     private static FittedRegion create(@NotNull String chromosome, long start, long end, int bafCount, double baf, double tumorCopyNumber) {
-        return PurpleDatamodelTest.createDefaultFittedRegion(chromosome, start, end)
+        return createDefaultFittedRegion(chromosome, start, end)
                 .bafCount(bafCount)
                 .observedBAF(baf)
                 .tumorCopyNumber(tumorCopyNumber)

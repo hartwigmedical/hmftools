@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
+import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createDefaultFittedRegion;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -137,7 +139,7 @@ public class ExtendLongArmTest {
     @NotNull
     private static CombinedRegion createCombinedRegion(String chromosome, long start, long end, double copyNumber, double baf,
             SegmentSupport support) {
-        final FittedRegion region = PurpleDatamodelTest.createDefaultFittedRegion(chromosome, start, end)
+        final FittedRegion region = createDefaultFittedRegion(chromosome, start, end)
                 .tumorCopyNumber(copyNumber)
                 .tumorBAF(baf)
                 .support(support)

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.qc;
+package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
 
@@ -11,6 +11,8 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.BestFit;
+import com.hartwig.hmftools.common.purple.qc.ImmutablePurpleQC;
+import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.purple.copynumber.tolerance;
 
+import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createDefaultFittedRegion;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -59,7 +61,7 @@ public class AlleleToleranceTest {
     }
 
     private static FittedRegion createBafRegion(int bafCount, double tumorBaf, double observedBaf) {
-        return PurpleDatamodelTest.createDefaultFittedRegion("1", 100, 200)
+        return createDefaultFittedRegion("1", 100, 200)
                 .bafCount(bafCount)
                 .tumorBAF(tumorBaf)
                 .observedBAF(observedBaf)
@@ -70,7 +72,7 @@ public class AlleleToleranceTest {
     }
 
     private static FittedRegion createCopyNumberRegion(int depthWindowCount, double copyNumber, double refCopyNumber) {
-        return PurpleDatamodelTest.createDefaultFittedRegion("1", 100, 200)
+        return createDefaultFittedRegion("1", 100, 200)
                 .bafCount(0)
                 .tumorCopyNumber(copyNumber)
                 .refNormalisedCopyNumber(refCopyNumber)

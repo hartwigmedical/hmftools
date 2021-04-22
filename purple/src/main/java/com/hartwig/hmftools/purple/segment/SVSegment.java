@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.segment;
+package com.hartwig.hmftools.purple.segment;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;

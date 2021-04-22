@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.genome.window.Window;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.region.ModifiableEnrichedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
-import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
+import com.hartwig.hmftools.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 

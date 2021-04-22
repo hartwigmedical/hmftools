@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.segment;
+package com.hartwig.hmftools.purple.segment;
 
 import static org.junit.Assert.assertEquals;
 
@@ -7,7 +7,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.utils.pcf.ImmutablePCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;

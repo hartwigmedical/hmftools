@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.segment;
+package com.hartwig.hmftools.purple.segment;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -13,6 +13,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;

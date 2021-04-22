@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
+import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createDefaultFittedRegion;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -173,7 +175,7 @@ public class ExtendDiploidBAFTest {
 
     @NotNull
     private static CombinedRegion create(long start, long end, SegmentSupport support, int bafCount) {
-        return new CombinedRegionImpl(PurpleDatamodelTest.createDefaultFittedRegion("1", start, end)
+        return new CombinedRegionImpl(createDefaultFittedRegion("1", start, end)
                 .support(support)
                 .bafCount(bafCount)
                 .build());
@@ -181,7 +183,7 @@ public class ExtendDiploidBAFTest {
 
     @NotNull
     private static CombinedRegion create(long start, long end, SegmentSupport support, int bafCount, double baf, double copyNumber) {
-        return new CombinedRegionImpl(PurpleDatamodelTest.createDefaultFittedRegion("1", start, end)
+        return new CombinedRegionImpl(createDefaultFittedRegion("1", start, end)
                 .support(support)
                 .bafCount(bafCount)
                 .tumorBAF(baf)
@@ -194,6 +196,6 @@ public class ExtendDiploidBAFTest {
         double copyNumber = minorAllele + majorAllele;
         double baf = majorAllele / copyNumber;
 
-        return PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000).tumorBAF(baf).tumorCopyNumber(copyNumber).build();
+        return createDefaultFittedRegion("1", 1, 1000).tumorBAF(baf).tumorCopyNumber(copyNumber).build();
     }
 }

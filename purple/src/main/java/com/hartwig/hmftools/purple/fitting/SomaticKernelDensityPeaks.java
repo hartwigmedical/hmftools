@@ -6,8 +6,6 @@ import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.purity.ImmutableSomaticPeak;
-import com.hartwig.hmftools.common.purple.purity.SomaticPeak;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.kde.KernelEstimator;
 import com.hartwig.hmftools.common.variant.AllelicDepth;

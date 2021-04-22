@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
+import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createDefaultFittedRegion;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -180,7 +182,7 @@ public class ExtendDiploidTest {
 
     @NotNull
     private static FittedRegion createValidSomatic(long start, long end, double copyNumber, int bafCount, SegmentSupport support) {
-        return PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
+        return createDefaultFittedRegion(CHROMOSOME, start, end)
                 .status(GermlineStatus.DIPLOID)
                 .tumorCopyNumber(copyNumber)
                 .refNormalisedCopyNumber(copyNumber)
@@ -204,7 +206,7 @@ public class ExtendDiploidTest {
     @NotNull
     private static FittedRegion createRegion(long start, long end, double copyNumber, int ratioCount, int bafCount,
             SegmentSupport support) {
-        return PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
+        return createDefaultFittedRegion(CHROMOSOME, start, end)
                 .status(GermlineStatus.DIPLOID)
                 .tumorCopyNumber(copyNumber)
                 .refNormalisedCopyNumber(copyNumber)
@@ -218,7 +220,7 @@ public class ExtendDiploidTest {
     @NotNull
     private static FittedRegion createFittedRegion(long start, long end, double tumorCopyNumber, double observedNormalRatio,
             GermlineStatus status, SegmentSupport support) {
-        return PurpleDatamodelTest.createDefaultFittedRegion(CHROMOSOME, start, end)
+        return createDefaultFittedRegion(CHROMOSOME, start, end)
                 .status(status)
                 .tumorCopyNumber(tumorCopyNumber)
                 .refNormalisedCopyNumber(tumorCopyNumber)

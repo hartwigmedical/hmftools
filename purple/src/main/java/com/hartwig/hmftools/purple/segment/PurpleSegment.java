@@ -1,6 +1,7 @@
-package com.hartwig.hmftools.common.purple.segment;
+package com.hartwig.hmftools.purple.segment;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

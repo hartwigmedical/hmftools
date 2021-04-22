@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurityAdjusterAbnormalChromosome;
-import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
+import com.hartwig.hmftools.purple.segment.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;

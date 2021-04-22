@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
+import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createDefaultFittedRegion;
+
 import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;
 
@@ -14,6 +16,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
@@ -118,12 +121,12 @@ public class StructuralVariantImpliedTest {
 
     @NotNull
     private static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF) {
-        return PurpleDatamodelTest.createStructuralVariant(CONTIG, start, CONTIG, end, type, startAF, endAF).build();
+        return PurpleTestUtils.createStructuralVariant(CONTIG, start, CONTIG, end, type, startAF, endAF).build();
     }
 
     @NotNull
     private static CombinedRegion copyNumber(long start, long end, double copyNumber, SegmentSupport support) {
-        final FittedRegion region = PurpleDatamodelTest.createDefaultFittedRegion(CONTIG, start, end)
+        final FittedRegion region = createDefaultFittedRegion(CONTIG, start, end)
                 .tumorCopyNumber(copyNumber)
                 .tumorBAF(0.5)
                 .support(support)
@@ -147,6 +150,6 @@ public class StructuralVariantImpliedTest {
     @NotNull
     private static StructuralVariantLegPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber,
             @NotNull final Optional<Double> rightCopyNumber) {
-        return PurpleDatamodelTest.svLegPloidy(orientation, leftCopyNumber, rightCopyNumber, PLOIDY).chromosome(CONTIG).build();
+        return PurpleTestUtils.svLegPloidy(orientation, leftCopyNumber, rightCopyNumber, PLOIDY).chromosome(CONTIG).build();
     }
 }

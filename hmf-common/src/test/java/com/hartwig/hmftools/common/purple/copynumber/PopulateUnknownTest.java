@@ -7,7 +7,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.CobaltTestUtils;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
-import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomesTest;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.junit.Test;

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.purple.purity.FittedPurityScoreFactory.polyclonalProportion;
-import static com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication.wholeGenomeDuplication;
+import static com.hartwig.hmftools.purple.fitting.WholeGenomeDuplication.wholeGenomeDuplication;
 import static com.hartwig.hmftools.patientdb.LoadPurpleData.persistToDatabase;
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
 
@@ -34,7 +34,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFactory;
+import com.hartwig.hmftools.purple.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.BestFit;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
@@ -46,7 +46,6 @@ import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCFactory;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.purple.region.FittedRegionFactoryV2;
@@ -91,9 +90,10 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.vcf.VCFFileReader;
 
-public class PurityPloidyEstimateApplication {
+public class PurpleApplication
+{
 
-    private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(PurpleApplication.class);
     private static final int THREADS_DEFAULT = 2;
     private static final String THREADS = "threads";
     private static final String VERSION = "version";
@@ -102,7 +102,7 @@ public class PurityPloidyEstimateApplication {
     public static void main(final String... args) throws IOException, SQLException, ExecutionException, InterruptedException {
         final Options options = createOptions();
         try {
-            new PurityPloidyEstimateApplication(options, args);
+            new PurpleApplication(options, args);
         } catch (ParseException e) {
             LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
@@ -111,7 +111,7 @@ public class PurityPloidyEstimateApplication {
         }
     }
 
-    private PurityPloidyEstimateApplication(final Options options, final String... args)
+    private PurpleApplication(final Options options, final String... args)
             throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
 
         final VersionInfo version = new VersionInfo("purple.version");

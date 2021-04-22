@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.baf;
+package com.hartwig.hmftools.purple.segment;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 

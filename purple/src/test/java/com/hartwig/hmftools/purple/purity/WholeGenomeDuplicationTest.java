@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.purple.purity;
 
 import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createCopyNumber;
-import static com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication.MIN_AVERAGE_PLOIDY;
-import static com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication.MIN_DUPLICATED_AUTOSOMES;
-import static com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication.averageMajorAlleleCopyNumber;
-import static com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication.wholeGenomeDuplication;
+import static com.hartwig.hmftools.purple.fitting.WholeGenomeDuplication.MIN_AVERAGE_PLOIDY;
+import static com.hartwig.hmftools.purple.fitting.WholeGenomeDuplication.MIN_DUPLICATED_AUTOSOMES;
+import static com.hartwig.hmftools.purple.fitting.WholeGenomeDuplication.averageMajorAlleleCopyNumber;
+import static com.hartwig.hmftools.purple.fitting.WholeGenomeDuplication.wholeGenomeDuplication;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -14,7 +14,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication;
+import com.hartwig.hmftools.purple.fitting.WholeGenomeDuplication;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
+import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createDefaultFittedRegion;
 import static com.hartwig.hmftools.common.purple.copynumber.ExtendLongArmTest.assertCombinedRegion;
 import static com.hartwig.hmftools.common.purple.copynumber.ExtendLongArmTest.createCombinedRegion;
 
@@ -101,7 +102,7 @@ public class ExtendNonDiploidTest {
 
     @NotNull
     private static FittedRegion createFittedRegion(GermlineStatus status, SegmentSupport support) {
-        return PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000)
+        return createDefaultFittedRegion("1", 1, 1000)
                 .depthWindowCount(1)
                 .observedNormalRatio(1)
                 .observedTumorRatio(1.1)

@@ -122,12 +122,12 @@ public class RecoverStructuralVariantsTest {
 
     @NotNull
     private static StructuralVariant createSingle(final long startPosition) {
-        return PurpleDatamodelTest.createStructuralVariantSingleBreakend("1", startPosition, 0.9).build();
+        return PurpleTestUtils.createStructuralVariantSingleBreakend("1", startPosition, 0.9).build();
     }
 
     @NotNull
     private static StructuralVariant createDel() {
-        return PurpleDatamodelTest.createStructuralVariant("1", 10000, "1", 20000, StructuralVariantType.DEL, 0.9, 0.9).build();
+        return PurpleTestUtils.createStructuralVariant("1", 10000, "1", 20000, StructuralVariantType.DEL, 0.9, 0.9).build();
     }
 
     @NotNull

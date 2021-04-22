@@ -2,14 +2,10 @@ package com.hartwig.hmftools.purple.fitting;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.round;
-import static java.lang.Math.sin;
 
-import static com.google.common.collect.Lists.newArrayList;
-import static com.hartwig.hmftools.purple.PurpleCommon.formatDbl;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,8 +13,6 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.purple.purity.ImmutableSomaticPeak;
-import com.hartwig.hmftools.common.purple.purity.SomaticPeak;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.clonality.ModifiableWeightedPloidy;
 import com.hartwig.hmftools.common.variant.clonality.WeightedPloidy;

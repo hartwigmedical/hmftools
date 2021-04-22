@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.purity;
+package com.hartwig.hmftools.purple.fitting;
 
 import org.immutables.value.Value;
 

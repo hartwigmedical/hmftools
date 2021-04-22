@@ -14,7 +14,6 @@ import java.util.Random;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
