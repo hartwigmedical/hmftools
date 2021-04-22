@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristicFile;
+import com.hartwig.hmftools.serve.actionability.characteristic.ActionableSignatureFile;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionFile;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGeneFile;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspotFile;
@@ -70,6 +71,11 @@ public class ExtractionResultWriter {
         String actionableFusionTsv = ActionableFusionFile.actionableFusionTsvPath(outputDir, refGenomeVersion);
         LOGGER.info(" Writing {} actionable fusions to {}", result.actionableFusions().size(), actionableFusionTsv);
         ActionableFusionFile.write(actionableFusionTsv, result.actionableFusions());
+
+        // TODO: Can be removed once PROTECT reads actionable characteristics
+        String actionableSignatureTsv = ActionableSignatureFile.actionableSignatureTsvPath(outputDir, refGenomeVersion);
+        LOGGER.info(" Writing {} actionable signatures to {}", result.actionableCharacteristics().size(), actionableSignatureTsv);
+        ActionableSignatureFile.write(actionableSignatureTsv, result.actionableCharacteristics());
 
         String actionableCharacteristicTsv = ActionableCharacteristicFile.actionableCharacteristicTsvPath(outputDir, refGenomeVersion);
         LOGGER.info(" Writing {} actionable tumor characteristics to {}",
