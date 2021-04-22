@@ -219,7 +219,8 @@ public class PurityPloidyEstimateApplication {
                     cobaltGender,
                     copyNumbers,
                     geneCopyNumbers,
-                    cobaltChromosomes.germlineAberrations());
+                    cobaltChromosomes.germlineAberrations(),
+                    averageTumorDepth);
 
             LOGGER.info("Modelling somatic peaks");
             final SomaticPeakStream somaticPeakStream = new SomaticPeakStream(configSupplier);

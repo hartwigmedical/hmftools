@@ -95,6 +95,7 @@ public class PurpleQCTest {
                 .amberGender(Gender.MALE)
                 .cobaltGender(Gender.MALE)
                 .deletedGenes(0)
-                .method(FittedPurityMethod.NORMAL);
+                .method(FittedPurityMethod.NORMAL)
+                .amberMeanDepth(91);
     }
 }

@@ -13,8 +13,8 @@ import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.extraction.hotspot.HotspotFunctions;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
-import com.hartwig.hmftools.serve.extraction.util.KeyFormatter;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
+import com.hartwig.hmftools.serve.extraction.util.KeyFormatter;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
@@ -76,7 +76,10 @@ public class HartwigExtractor {
         }
 
         // Even for Hartwig sources the extractor may generate duplicate hotspots, so we need to consolidate them.
-        return ImmutableExtractionResult.builder().knownHotspots(HotspotFunctions.consolidate(knownHotspots)).build();
+        return ImmutableExtractionResult.builder()
+                .refGenomeVersion(source.refGenomeVersion())
+                .knownHotspots(HotspotFunctions.consolidate(knownHotspots))
+                .build();
     }
 
     @NotNull

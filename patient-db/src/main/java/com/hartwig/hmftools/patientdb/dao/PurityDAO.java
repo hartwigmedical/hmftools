@@ -126,6 +126,7 @@ class PurityDAO {
                 .contamination(result.getValue(PURITY.CONTAMINATION))
                 .method(method)
                 .addAllGermlineAberrations(GermlineAberration.fromString(result.getValue(PURITY.GERMLINEABERRATION)))
+                .amberMeanDepth(0) //TODO: Add to database
                 .build();
 
         return ImmutablePurityContext.builder()

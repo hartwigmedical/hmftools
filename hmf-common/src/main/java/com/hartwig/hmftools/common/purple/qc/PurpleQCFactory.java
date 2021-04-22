@@ -22,7 +22,7 @@ public final class PurpleQCFactory {
     @NotNull
     public static PurpleQC create(double contamination, @NotNull BestFit bestFit, @NotNull Gender amberGender, @NotNull Gender cobaltGender,
             @NotNull List<PurpleCopyNumber> copyNumbers, @NotNull List<GeneCopyNumber> geneCopyNumbers,
-            @NotNull final Set<GermlineAberration> aberrations) {
+            @NotNull final Set<GermlineAberration> aberrations, int amberMeanDepth) {
         boolean containsAnySvSupport = copyNumbers.stream().anyMatch(PurpleCopyNumber::svSupport);
 
         int unsupportedCopyNumberSegments = containsAnySvSupport ? (int) copyNumbers.stream()
@@ -40,6 +40,7 @@ public final class PurpleQCFactory {
                 .unsupportedCopyNumberSegments(unsupportedCopyNumberSegments)
                 .deletedGenes(deletedGenes)
                 .germlineAberrations(aberrations)
+                .amberMeanDepth(amberMeanDepth)
                 .build();
     }
 }

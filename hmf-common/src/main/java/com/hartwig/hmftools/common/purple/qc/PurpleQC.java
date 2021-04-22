@@ -78,6 +78,8 @@ public abstract class PurpleQC {
 
     public abstract double contamination();
 
+    public abstract int amberMeanDepth();
+
     @NotNull
     public abstract Gender cobaltGender();
 

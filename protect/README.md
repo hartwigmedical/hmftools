@@ -98,7 +98,7 @@ sources | A list of sources from where the evidence has been extracted | cgi,civ
 urls | A list of urls with additional information about the evidence | https://pubmed.ncbi.nlm.nih.gov
 
 ## Version History and Download Links
-- [1.3]
+- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.3)
   - Renamed actionable signatures to actionable characteristics
   - Switch from BACHELOR germline variants to SAGE/PURPLE germline variants
   - Renamed linx file from linx driver to linx driver catalog 

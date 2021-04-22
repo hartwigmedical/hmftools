@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.serve;
 
 import java.io.IOException;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
@@ -42,9 +43,11 @@ public class ServeApplication {
 
         ServeAlgo algo = new ServeAlgo(refGenomeManager, buildDoidLookup(config.missingDoidsMappingTsv()));
 
-        ExtractionResult result = algo.run(config);
+        Map<RefGenomeVersion, ExtractionResult> resultMap = algo.run(config);
 
-        new ExtractionResultWriter(config.outputDir(), RefGenomeVersion.V37).write(result);
+        for (Map.Entry<RefGenomeVersion, ExtractionResult> entry : resultMap.entrySet()) {
+            new ExtractionResultWriter(config.outputDir(), entry.getKey()).write(entry.getValue());
+        }
 
         LOGGER.info("Complete!");
     }

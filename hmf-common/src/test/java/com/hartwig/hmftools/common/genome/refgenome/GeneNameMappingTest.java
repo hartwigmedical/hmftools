@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.drivercatalog.panel;
+package com.hartwig.hmftools.common.genome.refgenome;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -6,9 +6,9 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-public class DndsGeneNameMapTest {
+public class GeneNameMappingTest {
 
-    private final DndsGeneNameMap victim = new DndsGeneNameMap();
+    private final GeneNameMapping victim = new GeneNameMapping();
 
     @Test
     public void testPRAMEF11() {

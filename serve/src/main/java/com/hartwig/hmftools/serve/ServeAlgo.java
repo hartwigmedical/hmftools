@@ -2,11 +2,14 @@ package com.hartwig.hmftools.serve;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.ckb.classification.CkbClassificationConfig;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.refseq.RefSeq;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
@@ -54,7 +57,7 @@ public class ServeAlgo {
     }
 
     @NotNull
-    public ExtractionResult run(@NotNull ServeConfig config) throws IOException {
+    public Map<RefGenomeVersion, ExtractionResult> run(@NotNull ServeConfig config) throws IOException {
         List<ExtractionResult> extractions = Lists.newArrayList();
         if (config.useVicc()) {
             extractions.add(extractViccKnowledge(config.viccJson(), config.viccSources()));
@@ -83,7 +86,14 @@ public class ServeAlgo {
         refGenomeManager.evaluateProteinResolving();
         missingDoidLookup.evaluateMappingUsage();
 
-        return ExtractionFunctions.merge(extractions);
+        Map<RefGenomeVersion, List<ExtractionResult>> versionedMap = refGenomeManager.makeVersioned(extractions);
+
+        Map<RefGenomeVersion, ExtractionResult> refDependentExtractionMap = Maps.newHashMap();
+        for (Map.Entry<RefGenomeVersion, List<ExtractionResult>> entry : versionedMap.entrySet()) {
+            refDependentExtractionMap.put(entry.getKey(), ExtractionFunctions.merge(entry.getValue()));
+        }
+
+        return refDependentExtractionMap;
     }
 
     @NotNull
@@ -116,8 +126,8 @@ public class ServeAlgo {
     @NotNull
     private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir) throws IOException {
         // TODO Read RefSeq mapping from a resource file rather than from an external file
-//        LOGGER.info("Reading ref seq matching to transcript");
-//        List<RefSeq> refSeqMappings = RefSeqFile.readingRefSeq(refseqTsv);
+        //        LOGGER.info("Reading ref seq matching to transcript");
+        //        List<RefSeq> refSeqMappings = RefSeqFile.readingRefSeq(refseqTsv);
         List<RefSeq> refSeqMappings = Lists.newArrayList();
 
         List<CkbEntry> ckbEntries = CkbReader.readAndCurate(ckbDir);

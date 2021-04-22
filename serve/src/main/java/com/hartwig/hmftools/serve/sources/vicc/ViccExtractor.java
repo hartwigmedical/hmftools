@@ -78,7 +78,9 @@ public final class ViccExtractor {
 
         ViccUtil.printExtractionResults(resultsPerEntry);
 
+        // Assume all VICC knowledgebases are on the same ref genome version
         ImmutableExtractionResult.Builder outputBuilder = ImmutableExtractionResult.builder()
+                .refGenomeVersion(Knowledgebase.VICC_CGI.refGenomeVersion())
                 .knownHotspots(convertToHotspots(resultsPerEntry))
                 .knownCodons(convertToCodons(resultsPerEntry))
                 .knownExons(convertToExons(resultsPerEntry))

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.drivercatalog.panel;
+package com.hartwig.hmftools.common.genome.refgenome;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -9,15 +9,15 @@ import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DndsGeneNameMap {
+public class GeneNameMapping {
 
     private final Map<String, String> v38Map = Maps.newHashMap();
     private final Map<String, String> v37Map = Maps.newHashMap();
 
-    public DndsGeneNameMap() {
-        final InputStream inputStream = DriverGenePanel.class.getResourceAsStream("/drivercatalog/DndsGeneNameMap.tsv");
-        new BufferedReader(new InputStreamReader(inputStream)).lines()
-                .filter(x -> !x.startsWith("v37"))
+    public GeneNameMapping() {
+        final InputStream inputStream = GeneNameMapping.class.getResourceAsStream("/refgenome/gene_name_mapping.tsv");
+        // Skip header
+        new BufferedReader(new InputStreamReader(inputStream)).lines().skip(1)
                 .map(x -> x.split("\t"))
                 .forEach(strings -> {
                     String v37 = strings[0];
@@ -38,7 +38,7 @@ public class DndsGeneNameMap {
     }
 
     @NotNull
-    String v37Gene(@NotNull final String v38GeneId) {
+    public String v37Gene(@NotNull final String v38GeneId) {
         String result = v38Map.get(v38GeneId);
         if (result == null || result.equals("NA")) {
             throw new IllegalArgumentException("Invalid v38 gene " + v38GeneId);
@@ -47,7 +47,7 @@ public class DndsGeneNameMap {
     }
 
     @NotNull
-    String v38Gene(@NotNull final String v37GeneId) {
+    public String v38Gene(@NotNull final String v37GeneId) {
         String result = v37Map.get(v37GeneId);
         if (result == null ) {
             return "NA";

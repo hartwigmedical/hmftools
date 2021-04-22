@@ -40,7 +40,7 @@ import org.jetbrains.annotations.NotNull;
 
     @NotNull
     static PurpleQC fromLines(@NotNull final List<String> lines) {
-        final ImmutablePurpleQC.Builder builder = ImmutablePurpleQC.builder();
+        final ImmutablePurpleQC.Builder builder = ImmutablePurpleQC.builder().amberMeanDepth(0);
 
         if (lines.get(1).startsWith("SegmentPass")) {
             // PURPLE 2.47
@@ -62,6 +62,10 @@ import org.jetbrains.annotations.NotNull;
                     .deletedGenes(Integer.parseInt(getValue(lines.get(7))))
                     .contamination(Double.parseDouble(getValue(lines.get(8))))
                     .germlineAberrations(GermlineAberration.fromString(getValue(lines.get(9))));
+        }
+
+        if (lines.size() > 10) {
+            builder.amberMeanDepth(Integer.parseInt(getValue(lines.get(10))));
         }
 
         return builder.build();
@@ -87,6 +91,7 @@ import org.jetbrains.annotations.NotNull;
         result.add("DeletedGenes" + DELIMITER + check.deletedGenes());
         result.add("Contamination" + DELIMITER + check.contamination());
         result.add("GermlineAberrations" + DELIMITER + GermlineAberration.toString(check.germlineAberrations()));
+        result.add("AmberMeanDepth" + DELIMITER + check.amberMeanDepth());
         return result;
     }
 }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.purple.purity;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -29,6 +30,18 @@ public class PurpleQCFileTest {
         PurpleQCFile.fromLines(Resources.readLines(Resources.getResource("purple/v2-47.purple.qc"), Charset.defaultCharset()));
     }
 
+    @Test
+    public void testCompatibilityWith2_54() throws IOException {
+        PurpleQC purpleQC = PurpleQCFile.fromLines(Resources.readLines(Resources.getResource("purple/v2-54.purple.qc"), Charset.defaultCharset()));
+        assertEquals(0, purpleQC.amberMeanDepth());
+    }
+
+    @Test
+    public void testCompatibilityWith2_55() throws IOException {
+        PurpleQC purpleQC = PurpleQCFile.fromLines(Resources.readLines(Resources.getResource("purple/v2-55.purple.qc"), Charset.defaultCharset()));
+        assertTrue(purpleQC.amberMeanDepth() > 0);
+    }
+
     @NotNull
     public static PurpleQC create(@NotNull final Random random) {
         return ImmutablePurpleQC.builder()
@@ -42,6 +55,7 @@ public class PurpleQCFileTest {
                 .method(FittedPurityMethod.values()[random.nextInt(FittedPurityMethod.values().length)])
                 .addGermlineAberrations(GermlineAberration.values()[random.nextInt(GermlineAberration.values().length)])
                 .addGermlineAberrations(GermlineAberration.values()[random.nextInt(GermlineAberration.values().length)])
+                .amberMeanDepth(random.nextInt(100))
                 .build();
     }
 }
