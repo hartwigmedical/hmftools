@@ -1,7 +1,7 @@
 '''USAGE:  prepare_data.py -sample {sampleId} -sample_data {path}/{sampleId}.cup.data.csv -output_dir {path}/{output_dir}'''
 
 try:
-    ## import relevant packages ##
+    # import relevant packages ##
     import pandas as pd
     import matplotlib
     matplotlib.use('Agg')
@@ -12,8 +12,8 @@ try:
     import sys
     from datetime import datetime
     import os
-    import main.prepare_data
-    import main.create_chart
+    import main.prepare_data as prepare_data
+    import main.create_chart as create_chart
 except:
     print('[ERROR] Dependencies of CUPPA-chart not existing. Please check your environment. CUPPA-chart can not run.')
     exit()
@@ -33,30 +33,30 @@ def main(sample, sample_data, output_dir):
 
     ## prepare data ##
     print(datetime.now().strftime("%Y/%m/%d %H:%M:%S") + " - [DEBUG] - preparing sample data for " + sample)
-    df_spider, df_bars = prepare_data(sample, sample_data)
+    df_spider, df_bars = prepare_data.read_prep_data(sample, sample_data)
 
     ## create base chart ##
-    fig, gs = create_base_chart()
+    fig, gs = create_chart.create_base_chart()
 
     ## add spider plot ##
     print(datetime.now().strftime("%Y/%m/%d %H:%M:%S") + " - [DEBUG] - creating the basis of the chart (spider plot)")
-    fig, gs = add_spider_plot(df_spider, fig, gs)
+    fig, gs = create_chart.add_spider_plot(df_spider, fig, gs)
 
     ## add barchart(s) ##
     print(datetime.now().strftime("%Y/%m/%d %H:%M:%S") + " - [DEBUG] - adding the relevant barcharts to the chart")
-    fig, gs = add_barcharts(df_bars, df_spider, fig, gs)
+    fig, gs = create_chart.add_barcharts(df_bars, df_spider, fig, gs)
 
     ## add conclusion to figure ##
     print(datetime.now().strftime("%Y/%m/%d %H:%M:%S") + " - [DEBUG] - adding the final conclusion to the chart")
-    fig, gs = add_conclusion(df_spider, df_bars, fig, gs)
+    fig, gs = create_chart.add_conclusion(df_spider, df_bars, fig, gs)
 
     ## create & save conclusion file ##
     print(datetime.now().strftime("%Y/%m/%d %H:%M:%S") + " - [DEBUG] - creating the 1st output (file with final conclusion): " + output_dir + sample + ".cuppa.conclusion.txt")
-    create_conclusion_file(sample, df_spider, df_bars, output_dir)
+    create_chart.create_conclusion_file(sample, df_spider, df_bars, output_dir)
 
     ## create & save chart file ##
     print(datetime.now().strftime("%Y/%m/%d %H:%M:%S") + " - [DEBUG] - creating the 2nd output (chart): " + output_dir + sample + ".cuppa.chart.png")
-    create_chart_file(sample, df_spider, df_bars, output_dir, fig, gs)
+    create_chart.create_chart_file(sample, df_spider, df_bars, output_dir, fig, gs)
 
     ## CUPPA-chart complete ##
     print(datetime.now().strftime("%Y/%m/%d %H:%M:%S") + " - [INFO] - CUPPA chart and conclusion generation for " + sample + " complete.")
