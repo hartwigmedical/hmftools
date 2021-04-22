@@ -230,9 +230,9 @@ To ensure that we only capture heterozygous points, we filter the panel to only 
 Furthermore, we filter any loci with a mapping quality < 1 or base quality < 13. 
 This typically yields 500k-540k heterozygous germline variants per patient. 
 
-As part of a contamination check, AMBER also finds sites in the tumor that are homologous in the reference sample using the same panel as above. 
+As part of a contamination check, AMBER also finds sites in the tumor that are homozygous in the reference sample using the same panel as above. 
 A sample is considered contaminated if at least 2000 of these sites contain 3 or more reads supporting an alt in the tumor. 
-In this case we model the expected number of non-homologous sites using a poisson distribution and estimate a contamination percent. 
+In this case we model the expected number of non-homozygous sites using a poisson distribution and estimate a contamination percent. 
 The result of this is included in the amber QC output file.
 
 

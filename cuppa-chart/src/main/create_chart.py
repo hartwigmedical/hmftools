@@ -1,111 +1,25 @@
-'''USAGE:  cuppa-chart.py -sample {sampleId} -sample_data {path}/{sampleId}.cup.data.csv -output_dir {path}/{output_dir}'''
 
-try:
-    ## import relevant packages ##
-    import pandas as pd
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    import numpy as np
-    from math import pi
-    import seaborn as sns
-    import sys
-    from datetime import datetime
-    import os
-    ## set figure settings ##
-    SMALL_SIZE = 11
-    MEDIUM_SIZE = 11
-    BIGGER_SIZE = 12
-    plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
-    plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
-    plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
-    plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-    plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-    plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
-    plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
-except:
-    print('[ERROR] Dependencies of CUPPA-chart not existing. Please check your environment. CUPPA-chart can not run.')
-    exit()
+## import relevant packages ##
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import numpy as np
+from math import pi
+import seaborn as sns
+import sys
+import os
 
-
-def main(sample, sample_data, output_dir):
-
-    ## start CUPPA-chart ##
-    print("CUPPA chart and conclusion generation for " + sample)
-    print("Sample input: " + sample_data)
-    print("Sample output: " + output_dir)
-    if not os.path.exists(output_dir):
-        try:
-            os.makedirs(output_dir)
-        except:
-            sys.exit('[ERROR] Output_dir does not exist but can also not be made. No output files generated. CUPPA-chart will end.')
-
-    ## prepare data ##
-    print(datetime.now().strftime("%Y/%m/%d %H:%M:%S") + " - [DEBUG] - preparing sample data for " + sample)
-    df_spider, df_bars = prepare_data(sample, sample_data)
-
-    ## create base chart ##
-    fig, gs = create_base_chart()
-
-    ## add spider plot ##
-    print(datetime.now().strftime("%Y/%m/%d %H:%M:%S") + " - [DEBUG] - creating the basis of the chart (spider plot)")
-    fig, gs = add_spider_plot(df_spider, fig, gs)
-
-    ## add barchart(s) ##
-    print(datetime.now().strftime("%Y/%m/%d %H:%M:%S") + " - [DEBUG] - adding the relevant barcharts to the chart")
-    fig, gs = add_barcharts(df_bars, df_spider, fig, gs)
-
-    ## add conclusion to figure ##
-    print(datetime.now().strftime("%Y/%m/%d %H:%M:%S") + " - [DEBUG] - adding the final conclusion to the chart")
-    fig, gs = add_conclusion(df_spider, df_bars, fig, gs)
-
-    ## create & save conclusion file ##
-    print(datetime.now().strftime("%Y/%m/%d %H:%M:%S") + " - [DEBUG] - creating the 1st output (file with final conclusion): " + output_dir + sample + ".cuppa.conclusion.txt")
-    create_conclusion_file(sample, df_spider, df_bars, output_dir)
-
-    ## create & save chart file ##
-    print(datetime.now().strftime("%Y/%m/%d %H:%M:%S") + " - [DEBUG] - creating the 2nd output (chart): " + output_dir + sample + ".cuppa.chart.png")
-    create_chart_file(sample, df_spider, df_bars, output_dir, fig, gs)
-
-    ## CUPPA-chart complete ##
-    print(datetime.now().strftime("%Y/%m/%d %H:%M:%S") + " - [INFO] - CUPPA chart and conclusion generation for " + sample + " complete.")
-
-
-def prepare_data(sample, sample_data):
-    try:
-        df = pd.read_table(sample_data, sep=',', header=0)
-        df = df.loc[((df['Category']=='CLASSIFIER') |  (df['Category']=='COMBINED')) & (df['DataType']!='GENDER')]
-        df.loc[df['DataType']=='SNV_96_PAIRWISE_SIMILARITY', 'DataType'] = 'SNV signatures'
-        df.loc[df['DataType']=='GENOMIC_POSITION_SIMILARITY', 'DataType'] = 'somatic mutation pattern'
-        df.loc[df['DataType']=='FEATURE', 'DataType'] = 'oncogenic drivers and \n features'
-        df.loc[df['DataType']=='DNA_COMBINED', 'DataType'] =  'combined classifier'
-        df.loc[df['RefCancerType']=='Uterus: Endometrium','RefCancerType'] = 'Endometrium'
-        df.loc[df['RefCancerType']=='Colorectum/Appendix/SmallIntestine','RefCancerType'] = 'Lower GI tract'
-        df['RefValue'] = df['RefValue']*100
-        df = df[['DataType','RefCancerType','RefValue']].reset_index(drop=True)
-        #
-        df_spider = df.sort_values(['RefCancerType','DataType'],ascending= True).reset_index(drop=True)
-        df_spider = df_spider[df_spider['DataType']=='combined classifier'][['RefCancerType','RefValue']]
-        df_spider['reference'] = 80
-        #
-        df_sample_selection = df.loc[df['DataType']=='combined classifier']
-        df_sample_selection = df_sample_selection.sort_values('RefValue',ascending= False).head(3).reset_index(drop=True)
-        df_sample_selection = df_sample_selection[df_sample_selection['RefValue']>10]
-        df_sample_selection['RefValue']= df_sample_selection['RefValue'].round(1)
-        df_sample_selection = df_sample_selection.reset_index()
-        df_sample_selection["index"] = df_sample_selection["index"]+1
-        df_sample_selection["index"] = df_sample_selection["index"].astype(str)+" - "+df_sample_selection["RefCancerType"]
-        df_sample_selection['index'] = df_sample_selection['index'].astype(str) + ' (likelihood=' + df_sample_selection['RefValue'].astype(str) + '%)'
-        df_sample_selection = df_sample_selection[['index','RefCancerType']].reset_index(drop=True)
-        df_bars = df_sample_selection.merge(df, on='RefCancerType', how='inner').sort_values(['index','DataType'],ascending= True).reset_index(drop=True)
-        df_bars['RefCancerType']=df_bars['index']
-        df_bars = df_bars.loc[df_bars['DataType']!='combined classifier'][['RefCancerType','DataType','RefValue']]
-        #
-        df = None
-        df_sample_selection = None
-        return df_spider, df_bars
-    except:
-        sys.exit('[ERROR] the sample data provided is not existing / is not in the correct format. No output files generated. CUPPA-chart will end.')
+## set figure settings ##
+SMALL_SIZE = 11
+MEDIUM_SIZE = 11
+BIGGER_SIZE = 12
+plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 
 def create_base_chart():
@@ -260,23 +174,4 @@ def create_chart_file(sample, df_spider, df_bars, output_dir, fig, gs):
         sys.exit('[ERROR] the final chart could not be saved as a file. No output files generated. CUPPA-chart will end.')
 
 
-if __name__ == "__main__":
-    # read inputs
-    in_arr = sys.argv
-    if '-sample' not in in_arr  or '-sample_data' not in in_arr  or '-output_dir' not in in_arr:
-        print (__doc__)
-        sys.exit('[ERROR] INPUT INCORRECT - not all inputs | inputs are wrongly provided. Please check USAGE above.')
-    else:
-        sample = in_arr[in_arr.index('-sample') + 1]
-        sample_data = in_arr[in_arr.index('-sample_data') + 1]
-        output_dir = in_arr[in_arr.index('-output_dir') + 1]
-        if output_dir.endswith('/'):
-            output_dir = output_dir
-        else:
-            output_dir = output_dir + '/'
 
-    if sample not in sample_data:
-        print (__doc__)
-        sys.exit('[ERROR] INPUT INCORRECT - the sample name is different from the name on the sample data provided. Please check USAGE above.')
-    # start main function
-    main(sample, sample_data, output_dir)
