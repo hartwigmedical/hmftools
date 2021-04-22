@@ -8,6 +8,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.utils.pcf.ImmutablePCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
@@ -165,7 +166,7 @@ public class ClusterFactoryTest {
 
     @NotNull
     private static CobaltRatio ratio(long position, double ratio) {
-        return PurpleDatamodelTest.cobalt(CHROM, position, ratio).build();
+        return PurpleTestUtils.cobalt(CHROM, position, ratio).build();
     }
 
     @NotNull

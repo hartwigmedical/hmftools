@@ -1,5 +1,6 @@
-package com.hartwig.hmftools.common.purple.purity;
+package com.hartwig.hmftools.purple.purity;
 
+import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createCopyNumber;
 import static com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication.MIN_AVERAGE_PLOIDY;
 import static com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication.MIN_DUPLICATED_AUTOSOMES;
 import static com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication.averageMajorAlleleCopyNumber;
@@ -12,8 +13,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.purity.WholeGenomeDuplication;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -60,6 +61,6 @@ public class WholeGenomeDuplicationTest {
 
     @NotNull
     private static PurpleCopyNumber create(@NotNull String chromosome, double majorAllelePloidy, int bafCount) {
-        return PurpleDatamodelTest.createCopyNumber(chromosome, 1, 1, majorAllelePloidy).averageActualBAF(1).bafCount(bafCount).build();
+        return createCopyNumber(chromosome, 1, 1, majorAllelePloidy).averageActualBAF(1).bafCount(bafCount).build();
     }
 }

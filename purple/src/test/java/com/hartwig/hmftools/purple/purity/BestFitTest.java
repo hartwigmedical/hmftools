@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.common.purple.purity;
+package com.hartwig.hmftools.purple.purity;
 
-import static com.hartwig.hmftools.common.purple.purity.PurityContextFileTest.createRandomPurityBuilder;
+import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createRandomPurityBuilder;
 
 import static org.junit.Assert.assertEquals;
 
@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.purity.BestFit;
+import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -51,7 +53,9 @@ public class BestFitTest {
     }
 
     @NotNull
-    private FittedPurity createRandomPurity(double purity, double score, double ploidy) {
+    private FittedPurity createRandomPurity(double purity, double score, double ploidy)
+    {
         return createRandomPurityBuilder(random).purity(purity).score(score).ploidy(ploidy).build();
     }
+
 }

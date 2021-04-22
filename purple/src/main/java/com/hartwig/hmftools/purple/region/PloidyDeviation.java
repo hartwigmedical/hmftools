@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.region;
+package com.hartwig.hmftools.purple.region;
 
 import com.hartwig.hmftools.common.utils.Doubles;
 

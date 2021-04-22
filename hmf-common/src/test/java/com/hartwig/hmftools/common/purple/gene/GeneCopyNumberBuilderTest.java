@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.genome.region.ImmutableHmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.ImmutableHmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
@@ -104,7 +105,7 @@ public class GeneCopyNumberBuilderTest {
 
     @NotNull
     private static PurpleCopyNumber createCopyNumber(long start, long end, double copyNumber) {
-        return PurpleDatamodelTest.createCopyNumber(CHROMOSOME, start, end, copyNumber).build();
+        return PurpleTestUtils.createCopyNumber(CHROMOSOME, start, end, copyNumber).build();
     }
 
     @NotNull

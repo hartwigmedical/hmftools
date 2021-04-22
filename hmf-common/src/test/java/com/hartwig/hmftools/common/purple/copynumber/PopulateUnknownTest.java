@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cobalt.CobaltTestUtils;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomesTest;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
@@ -15,7 +16,7 @@ public class PopulateUnknownTest {
 
     @Test
     public void testJoinUnknownRegions() {
-        final CobaltChromosomes female = CobaltChromosomesTest.female();
+        final CobaltChromosomes female = CobaltTestUtils.female();
 
         final CombinedRegion region1 = ExtendLongArmTest.createCombinedRegion(1, 1000, 0, 0, SegmentSupport.NONE);
         final CombinedRegion region2 = ExtendLongArmTest.createCombinedRegion(1001, 2000, 0, 0, SegmentSupport.NONE);

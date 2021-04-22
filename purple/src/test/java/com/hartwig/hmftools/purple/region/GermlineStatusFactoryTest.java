@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.region;
+package com.hartwig.hmftools.purple.region;
 
 import static com.hartwig.hmftools.common.purple.region.GermlineStatus.AMPLIFICATION;
 import static com.hartwig.hmftools.common.purple.region.GermlineStatus.DIPLOID;
@@ -9,15 +9,16 @@ import static com.hartwig.hmftools.common.purple.region.GermlineStatus.UNKNOWN;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomesTest;
+import com.hartwig.hmftools.common.cobalt.CobaltTestUtils;
+import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class GermlineStatusFactoryTest {
 
-    private final GermlineStatusFactory maleVictim = new GermlineStatusFactory(CobaltChromosomesTest.male());
-    private final GermlineStatusFactory femaleVictim = new GermlineStatusFactory(CobaltChromosomesTest.female());
+    private final GermlineStatusFactory maleVictim = new GermlineStatusFactory(CobaltTestUtils.male());
+    private final GermlineStatusFactory femaleVictim = new GermlineStatusFactory(CobaltTestUtils.female());
 
     @Test
     public void testAutosome() {

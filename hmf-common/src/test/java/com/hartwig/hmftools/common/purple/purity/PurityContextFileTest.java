@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.purple.purity;
 
 import static com.hartwig.hmftools.common.purple.purity.PurityContextFile.toLines;
+import static com.hartwig.hmftools.common.purple.PurpleTestUtils.nextDouble;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -13,6 +14,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
@@ -95,21 +97,7 @@ public class PurityContextFileTest {
 
     @NotNull
     private static FittedPurity createRandomPurity(@NotNull Random random) {
-        return createRandomPurityBuilder(random).build();
+        return PurpleTestUtils.createRandomPurityBuilder(random).build();
     }
 
-    @NotNull
-    static ImmutableFittedPurity.Builder createRandomPurityBuilder(@NotNull Random random) {
-        return ImmutableFittedPurity.builder()
-                .purity(nextDouble(random))
-                .normFactor(nextDouble(random))
-                .score(nextDouble(random))
-                .diploidProportion(nextDouble(random))
-                .ploidy(nextDouble(random))
-                .somaticPenalty(nextDouble(random));
-    }
-
-    private static double nextDouble(@NotNull final Random random) {
-        return Math.round(random.nextDouble() * 10000D) / 10000D;
-    }
 }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
+import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createCopyNumber;
 import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile.fromLines;
 import static com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile.toLines;
 
@@ -63,7 +64,7 @@ public class PurpleCopyNumberFileTest {
 
     @NotNull
     private static PurpleCopyNumber createRandom(@NotNull Random random) {
-        return PurpleDatamodelTest.createCopyNumber(random.nextInt(22) + "", random.nextLong(), random.nextLong(), nextDouble(random))
+        return createCopyNumber(random.nextInt(22) + "", random.nextLong(), random.nextLong(), nextDouble(random))
                 .bafCount(random.nextInt())
                 .averageObservedBAF(nextDouble(random))
                 .averageActualBAF(nextDouble(random))

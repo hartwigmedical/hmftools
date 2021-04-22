@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.purity;
+package com.hartwig.hmftools.purple.purity;
 
 import static com.hartwig.hmftools.common.utils.Doubles.greaterThan;
 
@@ -7,6 +7,9 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
+import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
 
 import org.jetbrains.annotations.NotNull;
 

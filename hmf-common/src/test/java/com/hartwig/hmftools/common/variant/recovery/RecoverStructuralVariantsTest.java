@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -131,6 +132,6 @@ public class RecoverStructuralVariantsTest {
 
     @NotNull
     private static PurpleCopyNumber create(final long start, final long end, final double copyNumber, int depthWindowCount) {
-        return PurpleDatamodelTest.createCopyNumber("1", start, end, copyNumber).depthWindowCount(depthWindowCount).build();
+        return PurpleTestUtils.createCopyNumber("1", start, end, copyNumber).depthWindowCount(depthWindowCount).build();
     }
 }

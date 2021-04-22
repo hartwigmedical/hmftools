@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.region;
+package com.hartwig.hmftools.purple.region;
 
 import static org.junit.Assert.assertEquals;
 
@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
+import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -55,6 +55,6 @@ public class CobaltAccumulatorTest {
 
     @NotNull
     private static CobaltRatio ratio(long position) {
-        return PurpleDatamodelTest.cobalt(CHROMOSOME, position, 1).build();
+        return PurpleTestUtils.cobalt(CHROMOSOME, position, 1).build();
     }
 }

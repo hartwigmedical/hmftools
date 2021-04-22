@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.genome.chromosome;
 
+import static com.hartwig.hmftools.common.cobalt.CobaltTestUtils.female;
+import static com.hartwig.hmftools.common.cobalt.CobaltTestUtils.male;
+import static com.hartwig.hmftools.common.cobalt.CobaltTestUtils.create;
 import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.MIN_Y_COUNT;
 import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.MOSIAC_X_CUTOFF;
 import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.TRISOMY_CUTOFF;
@@ -14,39 +17,14 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
-import com.hartwig.hmftools.common.cobalt.ImmutableMedianRatio;
+import com.hartwig.hmftools.common.cobalt.CobaltTestUtils;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.utils.Doubles;
 
-import org.apache.commons.compress.utils.Lists;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class CobaltChromosomesTest {
-
-    @NotNull
-    public static CobaltChromosomes female() {
-        List<MedianRatio> ratios = Lists.newArrayList();
-        for (int i = 0; i < 22; i++) {
-            ratios.add(create(String.valueOf(i), 1, 1));
-        }
-
-        ratios.add(create("X", 1, 1));
-        return new CobaltChromosomes(ratios);
-    }
-
-    @NotNull
-    public static CobaltChromosomes male() {
-        List<MedianRatio> ratios = Lists.newArrayList();
-        for (int i = 0; i < 22; i++) {
-            ratios.add(create(String.valueOf(i), 1, 1));
-        }
-
-        ratios.add(create("X", 0.5, 1));
-        ratios.add(create("Y", 0.5, MIN_Y_COUNT));
-        return new CobaltChromosomes(ratios);
-    }
 
     @Test
     public void testDefault() {
@@ -209,15 +187,5 @@ public class CobaltChromosomesTest {
         assertEquals(1.5, victim.get("21").actualRatio(), 0.01);
         assertEquals(1, victim.get("22").actualRatio(), 0.01);
         assertEquals(1.5, victim.get("X").actualRatio(), 0.01);
-    }
-
-    @NotNull
-    private static MedianRatio create(@NotNull String contig, double ratio) {
-        return create(contig, ratio, MIN_Y_COUNT);
-    }
-
-    @NotNull
-    private static MedianRatio create(@NotNull String contig, double ratio, int count) {
-        return ImmutableMedianRatio.builder().count(count).chromosome(contig).medianRatio(ratio).build();
     }
 }

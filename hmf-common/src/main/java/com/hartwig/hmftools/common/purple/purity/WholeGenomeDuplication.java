@@ -12,8 +12,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class WholeGenomeDuplication {
 
-    static final double MIN_AVERAGE_PLOIDY = 1.5;
-    static final int MIN_DUPLICATED_AUTOSOMES = 11;
+    public static final double MIN_AVERAGE_PLOIDY = 1.5;
+    public static final int MIN_DUPLICATED_AUTOSOMES = 11;
 
     public static boolean wholeGenomeDuplication(@NotNull final List<PurpleCopyNumber> copyNumbers) {
         return duplicatedAutosomes(copyNumbers) >= MIN_DUPLICATED_AUTOSOMES;
@@ -34,7 +34,7 @@ public final class WholeGenomeDuplication {
         return duplicatedAutosomes;
     }
 
-    static double averageMajorAlleleCopyNumber(@NotNull final List<PurpleCopyNumber> copyNumbers) {
+    public static double averageMajorAlleleCopyNumber(@NotNull final List<PurpleCopyNumber> copyNumbers) {
         double weightedMajorAllelePloidy = 0;
         long totalBafCount = 0;
 
