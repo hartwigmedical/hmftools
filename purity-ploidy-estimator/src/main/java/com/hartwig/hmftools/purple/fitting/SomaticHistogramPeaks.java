@@ -2,11 +2,14 @@ package com.hartwig.hmftools.purple.fitting;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.round;
+import static java.lang.Math.sin;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static com.hartwig.hmftools.purple.PurpleCommon.formatDbl;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,29 +35,40 @@ public class SomaticHistogramPeaks
     private final double mMaxVaf;
     private final double mBinWidth;
     private final double mMinPeakWeight;
+    private final double mMinPeakPerc;
     private final int mPeakWidth;
 
     private final WeightedPloidyHistogram mHistogram;
     private final Map<String, BinomialDistribution> mBinomialDistributionMap;
 
-    public SomaticHistogramPeaks(final double maxVaf, double binWidth, int peakWidth, double minPeakWeight)
+    public SomaticHistogramPeaks(final double maxVaf, double binWidth, int peakWidth, double minPeakWeight, double minPeakPerc)
     {
         mBinWidth = binWidth;
         mMaxVaf = maxVaf;
         mPeakWidth = peakWidth;
         mMinPeakWeight = minPeakWeight;
+        mMinPeakPerc = minPeakPerc;
 
         mHistogram = new WeightedPloidyHistogram(mMaxVaf, mBinWidth);
         mBinomialDistributionMap = Maps.newHashMap();
     }
 
-    public double findVafPeak(final List<ModifiableWeightedPloidy> weightedVariants)
+    public double findVafPeak(final List<WeightedPloidy> weightedVAFs)
     {
         // find the highest VAF peak
-        WeightedPloidyHistogram histogram = new WeightedPloidyHistogram(mMaxVaf, mBinWidth);
+        final List<ModifiableWeightedPloidy> weightedVariants = weightedVAFs.stream()
+                .map(x -> ModifiableWeightedPloidy.create()
+                        .setTotalReadCount(x.totalReadCount())
+                        .setAlleleReadCount(x.alleleReadCount())
+                        .setPloidy(x.ploidy())
+                        .setWeight(x.weight()))
+                .collect(Collectors.toList());
 
         final List<SomaticPeak> somaticPeaks = Lists.newArrayList();
         double initialWeight = positiveWeight(weightedVariants);
+
+        double maxWeightPeak = 0;
+        double maxWeightPeakWeight = 0;
 
         for(int i = 0; i < MAX_ITERATIONS; i++)
         {
@@ -72,7 +86,13 @@ public class SomaticHistogramPeaks
 
             // sum and subtract modelled weight
             double[] currentHistogram = peakHistogramFactory.histogram(weightedVariants);
-            double peakTotalWeight = Arrays.stream(currentHistogram).filter(x -> x > 0).sum();
+            double peakTotalWeight = Arrays.stream(peakHistogram).filter(x -> x > 0).sum();
+
+            if(peakTotalWeight > maxWeightPeakWeight)
+            {
+                maxWeightPeakWeight = peakTotalWeight;
+                maxWeightPeak = peak;
+            }
 
             for(final ModifiableWeightedPloidy variant : weightedVariants)
             {
@@ -84,13 +104,12 @@ public class SomaticHistogramPeaks
                 if(!Doubles.isZero(bucketWeight))
                 {
                     double assignedWeight = abs(peakWeight / bucketWeight);
-                    // peakTotalWeight += assignedWeight;
                     double newWeight = Doubles.isZero(bucketWeight) ? 0 : currentWeight - assignedWeight;
                     variant.setWeight(newWeight);
                 }
             }
 
-            if(peakTotalWeight < mMinPeakWeight)
+            if(peakTotalWeight < mMinPeakWeight || peakTotalWeight / initialWeight < mMinPeakPerc)
                 break;
 
             somaticPeaks.add(ImmutableSomaticPeak.builder()
@@ -102,15 +121,25 @@ public class SomaticHistogramPeaks
             double remainingWeight = positiveWeight(weightedVariants);
             double unexplainedWeight = remainingWeight / initialWeight;
 
-            PPL_LOGGER.info(String.format("somatic peak(%.3f) weight(%.3f avg=%.3f) remaining(%.3f pct=%.3f%%)",
+            PPL_LOGGER.info(String.format("somatic peak(%.3f) weight(%.3f avg=%.3f) remaining(%.3f pct=%.3f)",
                     peak, peakTotalWeight, peakAverageWeight, remainingWeight, unexplainedWeight));
 
             if(Doubles.lessThan(unexplainedWeight, MAX_UNEXPLAINED_WEIGHT_PERCENT))
                 break;
         }
 
+        if(somaticPeaks.isEmpty())
+        {
+            PPL_LOGGER.info(String.format("using max somatic peak(%.3f weight=%.3f) not meeting criteria",
+                    maxWeightPeak, maxWeightPeakWeight));
+            return maxWeightPeak;
+        }
+
         // return the highest VAF peak
-        double maxVafPeak = somaticPeaks.stream().mapToDouble(x -> x.alleleFrequency()).max().orElse(0);
+        double maxVafPeak = somaticPeaks.stream()
+                .filter(x -> x.alleleFrequency() <= 0.5)
+                .mapToDouble(x -> x.alleleFrequency())
+                .max().orElse(0);
 
         return maxVafPeak;
     }

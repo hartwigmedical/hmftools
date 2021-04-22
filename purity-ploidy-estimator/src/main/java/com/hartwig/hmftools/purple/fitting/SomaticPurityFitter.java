@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.purple.fitting.SomaticHistogramPeaks.calcProb
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -20,6 +21,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.clonality.ModifiableWeightedPloidy;
+import com.hartwig.hmftools.common.variant.clonality.WeightedPloidy;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
 
 import org.jetbrains.annotations.NotNull;
@@ -148,10 +150,16 @@ class SomaticPurityFitter
     }
 
     private static final int MAX_HOTSPOT_SNV_COUNT = 1000;
+    private static final double UPPER_DEPTH_BOUND_PERC = 1.25;
+    private static final double LOWER_DEPTH_BOUND_PERC = 0.75;
+    private static final double BIN_WIDTH = 0.005;
+    private static final int PEAK_WIDTH = 2; // 2 either side of the peak's bucket
+    private static final double MIN_PEAK_WEIGHT = 20; // 2 either side of the peak's bucket
+    private static final double MIN_PEAK_PERC = 0.03;
 
     private double findPurityPeak(final List<SomaticVariant> variants)
     {
-        final List<ModifiableWeightedPloidy> weightedVAFs = newArrayList();
+        final List<WeightedPloidy> weightedVAFs = newArrayList();
 
         final List<SomaticVariant> hotspotVariants = Lists.newArrayList();
 
@@ -178,8 +186,17 @@ class SomaticPurityFitter
                 hotspotVariants.add(variant);
         }
 
-        SomaticHistogramPeaks somaticHistogram = new SomaticHistogramPeaks(2, 0.005, 2, 10);
-        double maxPurity = somaticHistogram.findVafPeak(weightedVAFs);
+        double medianTotalReadCount = calcMedianDepth(weightedVAFs);
+        double lowerReadCount = medianTotalReadCount * LOWER_DEPTH_BOUND_PERC;
+        double upperReadCount = medianTotalReadCount * UPPER_DEPTH_BOUND_PERC;
+
+        final List<WeightedPloidy> validVAFs = weightedVAFs.stream()
+                .filter(x -> x.totalReadCount() >= lowerReadCount)
+                .filter(x -> x.totalReadCount() <= upperReadCount)
+                .collect(Collectors.toList());
+
+        SomaticHistogramPeaks somaticHistogram = new SomaticHistogramPeaks(2, BIN_WIDTH, PEAK_WIDTH, MIN_PEAK_WEIGHT, MIN_PEAK_PERC);
+        double maxPurity = somaticHistogram.findVafPeak(validVAFs);
 
         if(maxPurity <= 0)
             return 0;
@@ -212,4 +229,30 @@ class SomaticPurityFitter
 
         return maxPurity;
     }
+
+    private double calcMedianDepth(final List<WeightedPloidy> weightedVariants)
+    {
+        final List<Integer> totalReadCounts = Lists.newArrayList();
+
+        for(WeightedPloidy var : weightedVariants)
+        {
+            int index = 0;
+            while(index < totalReadCounts.size())
+            {
+                if(var.totalReadCount() < totalReadCounts.get(index))
+                    break;
+
+                ++index;
+            }
+
+            totalReadCounts.add(index, var.totalReadCount());
+        }
+
+        int midIndex = totalReadCounts.size() / 2;
+        if((totalReadCounts.size() % 2) == 0)
+            return (totalReadCounts.get(midIndex - 1) + totalReadCounts.get(midIndex)) * 0.5;
+        else
+            return totalReadCounts.get(midIndex - 1);
+    }
+
 }

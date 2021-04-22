@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.purple.purity.SomaticPeak;
 import com.hartwig.hmftools.common.variant.clonality.ModifiableWeightedPloidy;
+import com.hartwig.hmftools.common.variant.clonality.WeightedPloidy;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.junit.Test;
@@ -19,7 +20,7 @@ public class SomaticHistogramPeaksTest
     @Test
     public void testFindPeaks()
     {
-        final List<ModifiableWeightedPloidy> weightedVAFs = newArrayList();
+        final List<WeightedPloidy> weightedVAFs = newArrayList();
 
         addVafEntry(weightedVAFs, 0.04, 1, 3);
         addVafEntry(weightedVAFs, 0.05, 1, 6);
@@ -35,12 +36,22 @@ public class SomaticHistogramPeaksTest
         addVafEntry(weightedVAFs, 0.15, 1, 2);
         addVafEntry(weightedVAFs, 0.16, 1, 1);
 
-        SomaticHistogramPeaks somaticHistogram = new SomaticHistogramPeaks(2, 0.01, 1, 12);
+        SomaticHistogramPeaks somaticHistogram = new SomaticHistogramPeaks(2, 0.01, 1, 12, 0.1);
         double maxPurity = somaticHistogram.findVafPeak(weightedVAFs);
+        assertEquals(0.07, maxPurity, 0.001);
+
+        // relax the conditions to select a higher peak
+        somaticHistogram = new SomaticHistogramPeaks(2, 0.01, 1, 5, 0.05);
+        maxPurity = somaticHistogram.findVafPeak(weightedVAFs);
+        assertEquals(0.15, maxPurity, 0.001);
+
+        // threshold too high so use the max-weighted peak
+        somaticHistogram = new SomaticHistogramPeaks(2, 0.01, 1, 50, 0.05);
+        maxPurity = somaticHistogram.findVafPeak(weightedVAFs);
         assertEquals(0.07, maxPurity, 0.001);
     }
 
-    private static void addVafEntry(final List<ModifiableWeightedPloidy> weightedPloidies, double vaf, double weight, int multiples)
+    private static void addVafEntry(final List<WeightedPloidy> weightedPloidies, double vaf, double weight, int multiples)
     {
         int totalReadCount = 100;
         int alleleReadCount = (int)round(vaf * totalReadCount);
