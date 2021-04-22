@@ -915,6 +915,8 @@ Shown below is an example of a SS18-SSX1 fusion:
 
 ## Version History
 
+- [1.15](https://github.com/hartwigmedical/hmftools/releases/tag/sv-linx-v1.15)
+
 - [1.14](https://github.com/hartwigmedical/hmftools/releases/tag/sv-linx-v1.14)
 
 - [1.13](https://github.com/hartwigmedical/hmftools/releases/tag/sv-linx-v1.13) 
@@ -925,43 +927,10 @@ Shown below is an example of a SS18-SSX1 fusion:
 
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/sv-linx-v1.10) 
 
-1.10
-- Functional:
-    - LINE - see documentation for Suspect line element identification and cluster classification
-        - lone-SGL cannot have significant CN change, and suspect BND+SGL must include a poly A-T tail
-        - poly A-T tail motif uses orientation and only looks in the last 20 bases for 16+ or 11 consecutive As or Ts
-        - chain SGLs with mapped alignments if other links assembled or only possible link
-    - Fusions - see documentation for full details
-        - call IG fusions, set IG breakend and fusion overrides
-        - new known fusion type for exon DELs and DUPs
-        - upstream fusion partner allowed to skip from exonic and coding to 3' pre-coding
-        - short (<1M) unphased KnownPair fusions not reportable
-        - KnownPairs now require protein domains lost and kept
-        - transcripts disruptive for all upstream breakends
-        - known fusion file types expanded and merged into single source
-    - Double Minutes
-        - allow lower JCN DM candidates if > 25% if max JCN
-        - show DM chains in red even if not closed
-        - DM close any sub-chains
-    - driver DEL analysis skipped for germline deletions
-    - added high facing JCN merge rule
-    - zero-base INF links require JCN greater than adjacent major allele JCN
-    - allow 0-1 base INF links inside anchor distance, added last during chaining
-    - handle hom-loss events for male X & Y chromosomes
 
-- Technical:
-    - allow zero length DBs involving INFs
-    - write line chain cohort file
-    - write driver catalog and linx files even if no driver annotations found
-    - use GRIPSS transitive marker for links
-    - renamed DB ploidy fields to junctionCopyNumber	
-        - DB fields: SV ploidy -> junctionCopyNumber, svAnnotation ploidyMin, ploidyMax, svLink ploidy, ploidyUncertainty
-
-1.9
+1.9 -> 1.5
 - check validity of all input files and paths
 - removed 'chr' from chromosome name for ref genome 38 support
-
-1.8
 - Visualiser - when specifying a gene to display, this can now be referenced in the Ensembl data cache rather than the more limited internal gene panel by providing a path to the data cache with config: 'gene_transcripts_dir'
 - cluster 3 or more overlapping DELs and DUPs with matching copy number and forming potential links
 - added INDEL annotation for shattering analysis with config: 'indel_annotation' and 'indel_input_file'
@@ -973,8 +942,6 @@ Shown below is an example of a SS18-SSX1 fusion:
     - allow closed DM loops to amplify centromere
     - check all arms in cluster for telo/centro CN vs DM ploidy or require 50x sample ploidy 
 - fail if fusion reference files aren't found, DEV-1121
-
-1.7
  - new fusion prioritisation: 1. inframe, 2. chain not terminated for known fusions, 3. 3’ partner biotype is protein_coding then 4. No exons skipped
  - require 5' gene to have specific biotypes: protein_coding,retained_intron,processed_transcript,nonsense_mediated_decay,lincRNA
  - RNA fusion matching use homology length to adjust position instead of interval offset
@@ -982,14 +949,6 @@ Shown below is an example of a SS18-SSX1 fusion:
  - germline SV parsing and filtering from GRIDSS VCF - annotate assembly and gene overlaps or disruptions
  - write fusion priority value to verbose output file
  - optionally write all possible fusion combinations to verbose output, including for single-sample run
-
-1.6
-- log filename and item count for all input reference files at INFO
-- log and write version file
-- exonic-exonic fusion were incorrectly calculating exact base phase
-- skip fusions which duplicate the first exon since has no splice acceptor
-
-1.5
 - Fusion likelihood calcs - implemented gene-pairs, skip non-coding same-gene fusions
 - known fusions don't require upstream transcript to be disruptive but will still fail on chain termination
 - TIs limited by min of anchor distances now less sum of breakend homologies
