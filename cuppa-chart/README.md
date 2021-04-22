@@ -36,7 +36,7 @@ Remember to source the virtualenv before running `cuppa-chart.py` (see Installat
 
 #### Example Usage
 ```
-(venv) $ python src/main/cuppa-chart.py \
+(venv) $ python src/cuppa-chart.py \
     -sample ${sampleId} \
     -sample_data ${path}/{sampleId}.cup.data.csv \
     -output_dir ${output_dir}
@@ -45,7 +45,7 @@ Remember to source the virtualenv before running `cuppa-chart.py` (see Installat
 ### Mandatory Arguments
 Argument | Description
 ---|---
-sampleId | The tumor sample ID of the run. Used for names of output files.
+sample | The tumor sample ID of the run. Used for names of output files.
 sample_data | Path to sample data csv created by the CUPPA tool ({sampleId}.cup.data.csv).
 output_dir | Directory to write the output to.
 
