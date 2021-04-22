@@ -40,9 +40,9 @@ import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.tribble.readers.LineIterator;
 
-public class CountBamLinesApplication implements AutoCloseable {
+public class CobaltApplication implements AutoCloseable {
 
-    private static final Logger LOGGER = LogManager.getLogger(CountBamLinesApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(CobaltApplication.class);
 
     private final CobaltConfig config;
     private final VersionInfo versionInfo;
@@ -50,7 +50,7 @@ public class CountBamLinesApplication implements AutoCloseable {
 
     public static void main(final String... args) throws IOException, ExecutionException, InterruptedException {
         final Options options = CobaltConfig.createOptions();
-        try (final CountBamLinesApplication application = new CountBamLinesApplication(options, args)) {
+        try (final CobaltApplication application = new CobaltApplication(options, args)) {
             application.run();
         } catch (ParseException e) {
             LOGGER.warn(e);
@@ -60,7 +60,7 @@ public class CountBamLinesApplication implements AutoCloseable {
         }
     }
 
-    private CountBamLinesApplication(final Options options, final String... args) throws ParseException, IOException {
+    private CobaltApplication(final Options options, final String... args) throws ParseException, IOException {
         versionInfo = new VersionInfo("cobalt.version");
         LOGGER.info("COBALT version: {}", versionInfo.version());
 

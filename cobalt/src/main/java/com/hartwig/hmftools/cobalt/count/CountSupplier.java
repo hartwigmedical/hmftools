@@ -11,7 +11,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.cobalt.CountBamLinesApplication;
+import com.hartwig.hmftools.cobalt.CobaltApplication;
 import com.hartwig.hmftools.common.cobalt.CobaltCount;
 import com.hartwig.hmftools.common.cobalt.CobaltCountFactory;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
@@ -29,7 +29,7 @@ import htsjdk.samtools.SamReaderFactory;
 
 public class CountSupplier {
 
-    private static final Logger LOGGER = LogManager.getLogger(CountBamLinesApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(CobaltApplication.class);
 
     private final String tumor;
     private final String outputDirectory;

@@ -8,7 +8,7 @@
         <version>local-SNAPSHOT</version>
     </parent>
 
-    <artifactId>count-bam-lines</artifactId>
+    <artifactId>cobalt</artifactId>
     <packaging>jar</packaging>
     <version>${cobalt.version}</version>
     <name>HMF Tools - COBALT</name>
@@ -54,7 +54,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.cobalt.CountBamLinesApplication
+                            <mainClass>com.hartwig.hmftools.cobalt.CobaltApplication
                             </mainClass>
                         </manifest>
                     </archive>

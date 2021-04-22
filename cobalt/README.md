@@ -47,7 +47,7 @@ After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.co
 COBALT requires Java 1.8+ and can be run with the minimum set of arguments as follows:
 
 ```
-java -cp -Xmx8G cobalt.jar com.hartwig.hmftools.cobalt.CountBamLinesApplication \
+java -cp -Xmx8G cobalt.jar com.hartwig.hmftools.cobalt.CobaltApplication \
     -reference COLO829R -reference_bam /run_dir/COLO829R.bam \ 
     -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
     -output_dir /run_dir/cobalt \ 
