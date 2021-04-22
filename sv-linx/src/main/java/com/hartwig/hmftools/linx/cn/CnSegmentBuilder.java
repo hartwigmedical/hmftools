@@ -410,6 +410,7 @@ public class CnSegmentBuilder
                 .copyNumberSegments(0)
                 .unsupportedCopyNumberSegments(0)
                 .method(NORMAL)
+                .amberMeanDepth(0)
                 .build();
 
         PurityContext purityContext = ImmutablePurityContext.builder()
