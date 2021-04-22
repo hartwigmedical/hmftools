@@ -26,17 +26,17 @@ It creates two output files:
 If you want to run CUPPA-chart, please generate a local Python 3 venv and install the requirements:
 
 ```bash
-$ python3 -m venv [path/to/new/virtual/environment, for example: ./cuppa-chart]
-$ source [path/to/new/venv, for example: ./cuppa-chart/bin/activate]
-(cuppa-chart) $ pip install -r requirements.txt 
+$ python3 -m venv [path/to/new/virtual/environment, for example: ./venv]
+$ source [path/to/new/venv/+bin/activate, for example: ./venv/bin/activate]
+(venv) $ pip install -r requirements.txt 
 ```
 
 ## Arguments
-Remember to source the virtualenv before running `cuppa-chart.py`.
+Remember to source the virtualenv before running `cuppa-chart.py` (see Installation).
 
 #### Example Usage
 ```
-(cuppa-chart) $ python cuppa-chart.py \
+(venv) $ python src/main/cuppa-chart.py \
     -sample ${sampleId} \
     -sample_data ${path}/{sampleId}.cup.data.csv \
     -output_dir ${output_dir}
