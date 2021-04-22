@@ -318,7 +318,7 @@ Reproduction of the driver catalog produced by PURPLE with homozygous disruption
 
 Generated file: sample_id.driver.catalog.tsv
 
-For more details about this file see:   https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator#driver-catalog-file
+For more details about this file see:   https://github.com/hartwigmedical/hmftools/tree/master/purple#driver-catalog-file
 
 ### Drivers
 

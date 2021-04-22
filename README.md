@@ -9,7 +9,7 @@ More detailed descriptions of the following algorithms are available from the li
  - [AMBER](./amber/README.md)
  - [COBALT](./count-bam-lines/README.md)
  - [GRIPSS](./gripss/README.md)
- - [PURPLE](./purity-ploidy-estimator/README.md)
+ - [PURPLE](./purple/README.md)
  - [LINX](./sv-linx/README.md)
  - [ISOFOX](./isofox/README.md)
  - [SERVE](./serve/README.md)

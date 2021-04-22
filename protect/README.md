@@ -17,7 +17,7 @@ Genomic events are categorized in five categories and evidence is matched for ev
 
 #### SNVs and (small) INDELs
 
-For small variants (SNVs and INDELs) that are considered reportable by [PURPLE](../purity-ploidy-estimator/README.md) the following matching 
+For small variants (SNVs and INDELs) that are considered reportable by [PURPLE](../purple/README.md) the following matching 
 is performed:
  - If the evidence is defined on the exact variant (hotspot) then evidence is always considered applicable
  - If the variant falls within the range in which the evidence is applicable then the evidence is applicable if the variant mutation type
@@ -31,7 +31,7 @@ present in the germline already or has been acquired by the tumor somatically.
 #### Copy numbers
 
 Evidence on amplifications and deletions is considered applicable in case a gene has been classified as amplified or deleted by 
-[PURPLE](../purity-ploidy-estimator/README.md). In addition, a deletion is assumed to inactivate a gene and hence evidence on 
+[PURPLE](../purple/README.md). In addition, a deletion is assumed to inactivate a gene and hence evidence on 
 gene inactivation is considered applicable in case of a deletion. 
 
 #### Homozygous disruptions

@@ -80,7 +80,7 @@ pDeviationPenalty = ggplot(df) +
     ylim(0,3.2)
 pDeviationPenalty
 
-save_plot("~/hmf/repos/hmftools/purity-ploidy-estimator/src/main/resources/readme/FittedPurityDeviationPenalty.png", pDeviationPenalty, base_width = 8, base_height = 4)
+save_plot("~/hmf/repos/hmftools/purple/src/main/resources/readme/FittedPurityDeviationPenalty.png", pDeviationPenalty, base_width = 8, base_height = 4)
 
 
 purityMatrix <- function(purity, ploidy) {

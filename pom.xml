@@ -22,7 +22,7 @@
         <module>compar</module>
         <module>amber</module>
         <module>count-bam-lines</module>
-        <module>purity-ploidy-estimator</module>
+        <module>purple</module>
         <module>sage</module>
         <module>bachelor</module>
         <module>sv-linx</module>

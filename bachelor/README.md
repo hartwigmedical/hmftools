@@ -14,7 +14,7 @@ The steps in the routine are as follows:
 5. Write final set of germline variant data to DB (germlineVariant table) and a TSV output file.
 
 ## Annotation
-In addition to standard PURPLE annotations (https://github.com/hartwigmedical/hmftools/tree/master/purity-ploidy-estimator#10-somatic-enrichment), Bachelor also annotates the following information:
+In addition to standard PURPLE annotations (https://github.com/hartwigmedical/hmftools/tree/master/purple#10-somatic-enrichment), Bachelor also annotates the following information:
 
 ### Pathogenicity
 Pathogenicity is determined primarily from ClinVar, or may be set or overridden via a configured blacklist or whitelist.  

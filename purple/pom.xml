@@ -8,7 +8,7 @@
         <version>local-SNAPSHOT</version>
     </parent>
 
-    <artifactId>purity-ploidy-estimator</artifactId>
+    <artifactId>purple</artifactId>
     <packaging>jar</packaging>
     <version>${purple.version}</version>
     <name>HMF Tools - Purity Ploidy Estimator</name>
