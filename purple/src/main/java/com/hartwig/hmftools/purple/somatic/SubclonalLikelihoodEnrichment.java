@@ -19,39 +19,41 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class SubclonalLikelihoodEnrichment implements VariantContextEnrichment
 {
-
     private static final String SUBCLONAL_LIKELIHOOD_FLAG_DESCRIPTION = "Non-zero subclonal likelihood";
 
-    private final Consumer<VariantContext> consumer;
-    private final SubclonalLikelihood likelihoodFactory;
+    private final Consumer<VariantContext> mConsumer;
+    private final SubclonalLikelihood mSubclonalLikelihood;
 
-    SubclonalLikelihoodEnrichment(double binWidth, final List<PeakModel> peakModel, @NotNull final Consumer<VariantContext> consumer) {
-        this.consumer = consumer;
-        likelihoodFactory = new SubclonalLikelihood(binWidth, peakModel);
+    SubclonalLikelihoodEnrichment(double binWidth, final List<PeakModel> peakModel, @NotNull final Consumer<VariantContext> consumer)
+    {
+        mConsumer = consumer;
+        mSubclonalLikelihood = new SubclonalLikelihood(binWidth, peakModel);
     }
 
     @Override
-    public void accept(@NotNull final VariantContext context) {
+    public void accept(@NotNull final VariantContext context)
+    {
         VariantContextDecorator decorator = new VariantContextDecorator(context);
-        double subclonalLikelihood = Math.round(likelihoodFactory.subclonalLikelihood(decorator.variantCopyNumber()) * 1000d) / 1000d;
+            double subclonalLikelihood = Math.round(mSubclonalLikelihood.subclonalLikelihood(decorator.variantCopyNumber()) * 1000d) / 1000d;
 
-        if (!Doubles.isZero(subclonalLikelihood)) {
+        if(!Doubles.isZero(subclonalLikelihood))
+        {
             context.getCommonInfo().putAttribute(SUBCLONAL_LIKELIHOOD_FLAG, subclonalLikelihood);
         }
-        consumer.accept(context);
+        mConsumer.accept(context);
     }
 
     @Override
-    public void flush() {
+    public void flush()
+    {
     }
 
     @NotNull
     @Override
-    public VCFHeader enrichHeader(@NotNull final VCFHeader template) {
-        template.addMetaDataLine(new VCFInfoHeaderLine(SUBCLONAL_LIKELIHOOD_FLAG,
-                1,
-                VCFHeaderLineType.Float,
-                SUBCLONAL_LIKELIHOOD_FLAG_DESCRIPTION));
+    public VCFHeader enrichHeader(@NotNull final VCFHeader template)
+    {
+        template.addMetaDataLine(
+                new VCFInfoHeaderLine(SUBCLONAL_LIKELIHOOD_FLAG,1, VCFHeaderLineType.Float, SUBCLONAL_LIKELIHOOD_FLAG_DESCRIPTION));
 
         return template;
     }

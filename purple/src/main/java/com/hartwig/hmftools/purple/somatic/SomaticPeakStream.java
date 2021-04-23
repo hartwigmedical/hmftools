@@ -30,88 +30,83 @@ import htsjdk.variant.vcf.VCFFileReader;
 
 public class SomaticPeakStream
 {
+    private final SomaticFitConfig mSomaticFitConfig;
+    private final CommonConfig mCommonConfig;
+    private final String mSomaticVcf;
+    private final boolean mEnabled;
 
-    private final SomaticFitConfig somaticFitConfig;
-    private final CommonConfig commonConfig;
-    private final String inputVCF;
-    private final boolean enabled;
-
-    private int indelCount;
-    private int snpCount;
+    private int mIndelCount;
+    private int mSnpCount;
 
     public SomaticPeakStream(final ConfigSupplier configSupplier)
     {
-        this.somaticFitConfig = configSupplier.somaticConfig();
-        this.commonConfig = configSupplier.commonConfig();
-        this.enabled = somaticFitConfig.file().isPresent();
-        this.inputVCF = enabled ? somaticFitConfig.file().get().toString() : "";
+        mSomaticFitConfig = configSupplier.somaticConfig();
+        mCommonConfig = configSupplier.commonConfig();
+        mEnabled = mSomaticFitConfig.file().isPresent();
+        mSomaticVcf = mEnabled ? mSomaticFitConfig.file().get().toString() : "";
     }
 
     public int indelCount()
     {
-        return indelCount;
+        return mIndelCount;
     }
 
     public int snpCount()
     {
-        return snpCount;
+        return mSnpCount;
     }
 
-    public List<PeakModel> somaticPeakModel(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
+    public List<PeakModel> somaticPeakModel(
+            @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
             @NotNull final List<FittedRegion> fittedRegions)
     {
+        if(!mEnabled)
+            return Lists.newArrayList();
 
-        if(enabled)
+        try (VCFFileReader vcfReader = new VCFFileReader(new File(mSomaticVcf), false))
         {
-            try (VCFFileReader vcfReader = new VCFFileReader(new File(inputVCF), false))
+            // gather up passing variants less then max ploidy
+            final List<ModifiableWeightedPloidy> weightedPloidies = newArrayList();
+
+            final Consumer<VariantContext> consumer = context ->
             {
+                VariantContextDecorator decorator = new VariantContextDecorator(context);
 
-                final List<ModifiableWeightedPloidy> weightedPloidies = newArrayList();
-                final Consumer<VariantContext> consumer = context ->
+                if(Doubles.lessThan(decorator.variantCopyNumber(), mSomaticFitConfig.clonalityMaxPloidy())
+                && decorator.isPass()
+                && HumanChromosome.contains(decorator.chromosome()) && HumanChromosome.fromString(decorator.chromosome()).isAutosome())
                 {
-                    VariantContextDecorator decorator = new VariantContextDecorator(context);
-                    if(Doubles.lessThan(decorator.variantCopyNumber(), somaticFitConfig.clonalityMaxPloidy()) && decorator.isPass()
-                            && HumanChromosome.contains(decorator.chromosome()) && HumanChromosome.fromString(decorator.chromosome())
-                            .isAutosome())
-                    {
-                        AllelicDepth depth = decorator.allelicDepth(commonConfig.tumorSample());
-                        weightedPloidies.add(ModifiableWeightedPloidy.create()
-                                .from(depth)
-                                .setPloidy(decorator.variantCopyNumber())
-                                .setWeight(1));
-                    }
-
-                    if(decorator.isPass())
-                    {
-                        if(decorator.type() == VariantType.INDEL)
-                        {
-                            indelCount++;
-                        }
-                        else
-                        {
-                            snpCount++;
-                        }
-                    }
-                };
-
-                final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(commonConfig.version(),
-                        commonConfig.tumorSample(),
-                        purityAdjuster,
-                        copyNumbers,
-                        fittedRegions,
-                        consumer);
-
-                for(VariantContext context : vcfReader)
-                {
-                    somaticPurityEnrichment.accept(context);
+                    AllelicDepth depth = decorator.allelicDepth(mCommonConfig.tumorSample());
+                    weightedPloidies.add(ModifiableWeightedPloidy.create()
+                            .from(depth)
+                            .setPloidy(decorator.variantCopyNumber())
+                            .setWeight(1));
                 }
 
-                return new PeakModelFactory(somaticFitConfig.clonalityMaxPloidy(), somaticFitConfig.clonalityBinWidth()).model(
-                        weightedPloidies);
+                if(decorator.isPass())
+                {
+                    if(decorator.type() == VariantType.INDEL)
+                    {
+                        mIndelCount++;
+                    }
+                    else
+                    {
+                        mSnpCount++;
+                    }
+                }
+            };
+
+            final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(
+                    mCommonConfig.version(), mCommonConfig.tumorSample(),
+                    purityAdjuster, copyNumbers, fittedRegions, consumer);
+
+            for(VariantContext context : vcfReader)
+            {
+                somaticPurityEnrichment.accept(context);
             }
+
+            return new PeakModelFactory(
+                    mSomaticFitConfig.clonalityMaxPloidy(), mSomaticFitConfig.clonalityBinWidth()).model(weightedPloidies);
         }
-
-        return Lists.newArrayList();
-
     }
 }

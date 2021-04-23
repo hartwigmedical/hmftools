@@ -92,7 +92,6 @@ import htsjdk.variant.vcf.VCFFileReader;
 
 public class PurpleApplication
 {
-
     private static final Logger LOGGER = LogManager.getLogger(PurpleApplication.class);
     private static final int THREADS_DEFAULT = 2;
     private static final String THREADS = "threads";
@@ -229,6 +228,7 @@ public class PurpleApplication
             LOGGER.info("Enriching somatic variants");
             final SomaticStream somaticStream = new SomaticStream(configSupplier, somaticPeakStream.snpCount(), somaticPeakStream.indelCount(), somaticPeaks);
             somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions);
+
             final Set<String> reportedGenes = somaticStream.reportedGenes();
 
             GermlineVariants germlineVariants = new GermlineVariants(configSupplier);

@@ -118,6 +118,9 @@ class SomaticPurityFitter
         Optional<FittedPurity> kdFit = SomaticKernelDensityPeaks.fitPurity(
                 allCandidates, variants, mKdMinSomatics, mKdMinPeak, mMinPurity, mMaxPurity);
 
+        return kdFit;
+
+        /*
         double maxPurity = findPurityPeak(variants);
 
         if(maxPurity <= 0)
@@ -141,6 +144,7 @@ class SomaticPurityFitter
                 formatDbl.format(maxPurity), kdFit.isPresent() ? formatDbl.format(kdFit.get().purity()) : 0);
 
         return Optional.of(fittedPurity);
+        */
     }
 
     private double findPurityPeak(final List<SomaticVariant> variants)
