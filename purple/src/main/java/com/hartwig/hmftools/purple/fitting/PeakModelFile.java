@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.clonality;
+package com.hartwig.hmftools.purple.fitting;
 
 import java.io.File;
 import java.io.IOException;

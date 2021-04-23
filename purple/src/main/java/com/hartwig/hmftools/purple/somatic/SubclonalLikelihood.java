@@ -1,10 +1,12 @@
-package com.hartwig.hmftools.common.variant.clonality;
+package com.hartwig.hmftools.purple.somatic;
 
 import static java.util.stream.Collectors.toList;
 
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.purple.fitting.PeakModel;
+import com.hartwig.hmftools.purple.fitting.WeightedPloidyHistogram;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant;
 
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.enrich.Subclonality.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.KataegisEnrichment.KATAEGIS_FLAG;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
@@ -15,7 +16,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.sage.SageMetaData;
-import com.hartwig.hmftools.common.variant.enrich.SubclonalLikelihoodEnrichment;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
@@ -177,7 +177,7 @@ public class SomaticVariantFactory implements VariantContextFilter {
                 .canonicalHgvsProteinImpact(snpEffSummary.canonicalHgvsProteinImpact())
                 .gene(snpEffSummary.gene())
                 .genesAffected(snpEffSummary.genesAffected())
-                .subclonalLikelihood(context.getAttributeAsDouble(SubclonalLikelihoodEnrichment.SUBCLONAL_LIKELIHOOD_FLAG, 0))
+                .subclonalLikelihood(context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
                 .germlineStatus(GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, "UNKNOWN")))
                 .kataegis(context.getAttributeAsString(KATAEGIS_FLAG, Strings.EMPTY))
                 .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false));

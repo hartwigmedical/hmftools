@@ -21,7 +21,7 @@ public class KataegisEnrichment implements VariantContextEnrichment {
     private final KataegisQueue forwardDetector;
     private final KataegisQueue reverseDetector;
 
-    KataegisEnrichment(@NotNull final Consumer<VariantContext> consumer) {
+    public KataegisEnrichment(@NotNull final Consumer<VariantContext> consumer) {
         reverseDetector = new KataegisQueue("REV", KataegisEnrichment::isReverseCandidate, consumer);
         forwardDetector = new KataegisQueue("FWD", KataegisEnrichment::isForwardCandidate, reverseDetector::accept);
     }

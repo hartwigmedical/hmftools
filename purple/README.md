@@ -431,7 +431,7 @@ When somatic mode is triggered, PURPLE checks first for the presence of TUMOR.  
 - SNV sum(allele read count) > 5000
 - SV sum(startTumorVariantFragmentSupport) > 1000 (excluding SGL breakends)
 
-If a tumor is detected, then PURPLE fits somatic peaks in VAF space. First PURPLE groups all somatic SNV by VAF with 0.6 x AverageTumorDepth < totalReadCount < 1.4x AverageTumorDepth.     A kernel density estimator is used to find peaks in the VAF range [min_purity-min(0.5,max_purity)], and the somatic fitted purity is set to 2* the highest VAF peak with weight > max(10,3% SNV count in depth range).   If no peak meets this criteria but the sample has at least 10 SNV within the depth range in total choose 2 * VAF peak with the greatest count, else set the purity to min_purity [0.08]
+If a tumor is detected, then PURPLE fits somatic peaks in VAF space. First PURPLE groups all somatic SNV by VAF with 0.6 x AverageTumorDepth < totalReadCount < 1.4x AverageTumorDepth. A kernel density estimator is used to find peaks in the VAF range [min_purity-min(0.5,max_purity)], and the somatic fitted purity is set to 2* the highest VAF peak with weight > max(10,3% SNV count in depth range).   If no peak meets this criteria but the sample has at least 10 SNV within the depth range in total choose 2 * VAF peak with the greatest count, else set the purity to min_purity [0.08]
 
 If (somatic fitted purity and the copy number fitted purity are both < 0.17 AND the somatic purity > copy number purity) OR if there are no SNV that meet the VAF criteria, then use the copy number fit and set fitMethod = NORMAL.   Otherwise use the somatic fitted purity, set ploidy =2 and set fit method = SOMATIC.
 

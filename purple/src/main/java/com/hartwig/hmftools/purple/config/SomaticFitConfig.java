@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.purple.CommandLineUtil.defaultIntValue;
 import static com.hartwig.hmftools.purple.CommandLineUtil.defaultValue;
+import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.io.File;
 import java.util.Optional;
@@ -19,9 +20,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface SomaticFitConfig
 {
-
-    Logger LOGGER = LogManager.getLogger(SomaticFitConfig.class);
-
     String SOMATIC_VARIANTS = "somatic_vcf";
     String SOMATIC_MIN_PEAK = "somatic_min_peak";
     String SOMATIC_MIN_TOTAL = "somatic_min_variants";
@@ -31,10 +29,10 @@ public interface SomaticFitConfig
     String HIGHLY_DIPLOID_PERCENTAGE = "highly_diploid_percentage";
     String FORCE_SOMATIC_FIT = "force_somatic_fit";
 
-    double SOMATIC_MIN_PURITY_DEFAULT = 0.17;
-    double SOMATIC_MIN_PURITY_SPREAD_DEFAULT = 0.15;
-    int SOMATIC_MIN_PEAK_DEFAULT = 10;
-    int SOMATIC_MIN_VARIANTS_DEFAULT = 10;
+    public double SOMATIC_MIN_PURITY_DEFAULT = 0.17;
+    public double SOMATIC_MIN_PURITY_SPREAD_DEFAULT = 0.15;
+    public int SOMATIC_MIN_PEAK_DEFAULT = 10;
+    public int SOMATIC_MIN_VARIANTS_DEFAULT = 10;
     double SOMATIC_PENALTY_WEIGHT_DEFAULT = 1;
     double HIGHLY_DIPLOID_PERCENTAGE_DEFAULT = 0.97;
 
@@ -125,7 +123,7 @@ public interface SomaticFitConfig
         else
         {
             file = Optional.empty();
-            LOGGER.info("No somatic vcf supplied");
+            PPL_LOGGER.info("No somatic vcf supplied");
         }
 
         return ImmutableSomaticFitConfig.builder()

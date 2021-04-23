@@ -1,12 +1,14 @@
-package com.hartwig.hmftools.common.variant.enrich;
+package com.hartwig.hmftools.purple.somatic;
+
+import static com.hartwig.hmftools.common.variant.enrich.Subclonality.SUBCLONAL_LIKELIHOOD_FLAG;
 
 import java.util.List;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
-import com.hartwig.hmftools.common.variant.clonality.PeakModel;
-import com.hartwig.hmftools.common.variant.clonality.SubclonalLikelihood;
+import com.hartwig.hmftools.purple.fitting.PeakModel;
+import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -15,9 +17,9 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class SubclonalLikelihoodEnrichment implements VariantContextEnrichment {
+public class SubclonalLikelihoodEnrichment implements VariantContextEnrichment
+{
 
-    public static final String SUBCLONAL_LIKELIHOOD_FLAG = "SUBCL";
     private static final String SUBCLONAL_LIKELIHOOD_FLAG_DESCRIPTION = "Non-zero subclonal likelihood";
 
     private final Consumer<VariantContext> consumer;

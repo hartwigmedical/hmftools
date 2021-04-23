@@ -15,9 +15,9 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.variant.clonality.ModifiableWeightedPloidy;
-import com.hartwig.hmftools.common.variant.clonality.PeakModel;
-import com.hartwig.hmftools.common.variant.clonality.PeakModelFactory;
+import com.hartwig.hmftools.purple.fitting.ModifiableWeightedPloidy;
+import com.hartwig.hmftools.purple.fitting.PeakModel;
+import com.hartwig.hmftools.purple.fitting.PeakModelFactory;
 import com.hartwig.hmftools.common.variant.enrich.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
@@ -28,7 +28,8 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
-public class SomaticPeakStream {
+public class SomaticPeakStream
+{
 
     private final SomaticFitConfig somaticFitConfig;
     private final CommonConfig commonConfig;
@@ -38,33 +39,41 @@ public class SomaticPeakStream {
     private int indelCount;
     private int snpCount;
 
-    public SomaticPeakStream(final ConfigSupplier configSupplier) {
+    public SomaticPeakStream(final ConfigSupplier configSupplier)
+    {
         this.somaticFitConfig = configSupplier.somaticConfig();
         this.commonConfig = configSupplier.commonConfig();
         this.enabled = somaticFitConfig.file().isPresent();
         this.inputVCF = enabled ? somaticFitConfig.file().get().toString() : "";
     }
 
-    public int indelCount() {
+    public int indelCount()
+    {
         return indelCount;
     }
 
-    public int snpCount() {
+    public int snpCount()
+    {
         return snpCount;
     }
 
     public List<PeakModel> somaticPeakModel(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
-            @NotNull final List<FittedRegion> fittedRegions) {
+            @NotNull final List<FittedRegion> fittedRegions)
+    {
 
-        if (enabled) {
-            try (VCFFileReader vcfReader = new VCFFileReader(new File(inputVCF), false)) {
+        if(enabled)
+        {
+            try (VCFFileReader vcfReader = new VCFFileReader(new File(inputVCF), false))
+            {
 
                 final List<ModifiableWeightedPloidy> weightedPloidies = newArrayList();
-                final Consumer<VariantContext> consumer = context -> {
+                final Consumer<VariantContext> consumer = context ->
+                {
                     VariantContextDecorator decorator = new VariantContextDecorator(context);
-                    if (Doubles.lessThan(decorator.variantCopyNumber(), somaticFitConfig.clonalityMaxPloidy()) && decorator.isPass()
+                    if(Doubles.lessThan(decorator.variantCopyNumber(), somaticFitConfig.clonalityMaxPloidy()) && decorator.isPass()
                             && HumanChromosome.contains(decorator.chromosome()) && HumanChromosome.fromString(decorator.chromosome())
-                            .isAutosome()) {
+                            .isAutosome())
+                    {
                         AllelicDepth depth = decorator.allelicDepth(commonConfig.tumorSample());
                         weightedPloidies.add(ModifiableWeightedPloidy.create()
                                 .from(depth)
@@ -72,10 +81,14 @@ public class SomaticPeakStream {
                                 .setWeight(1));
                     }
 
-                    if (decorator.isPass()) {
-                        if (decorator.type() == VariantType.INDEL) {
+                    if(decorator.isPass())
+                    {
+                        if(decorator.type() == VariantType.INDEL)
+                        {
                             indelCount++;
-                        } else {
+                        }
+                        else
+                        {
                             snpCount++;
                         }
                     }
@@ -88,7 +101,8 @@ public class SomaticPeakStream {
                         fittedRegions,
                         consumer);
 
-                for (VariantContext context : vcfReader) {
+                for(VariantContext context : vcfReader)
+                {
                     somaticPurityEnrichment.accept(context);
                 }
 

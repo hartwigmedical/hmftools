@@ -21,112 +21,137 @@ package com.hartwig.hmftools.common.utils.kde;
  *    Copyright (C) 1999 University of Waikato, Hamilton, New Zealand
  *
  */
-public class KernelEstimator   {
-    private double[] m_Values = new double[50];
-    private double[] m_Weights = new double[50];
-    private int m_NumValues = 0;
-    private double m_SumOfWeights = 0.0D;
-    private final double m_StandardDev;
-    private double m_Precision;
+public class KernelEstimator
+{
+    private double[] mValues = new double[50];
+    private double[] mWeights = new double[50];
+    private int mNumValues = 0;
+    private double mSumOfWeights = 0.0D;
+    private final double mStandardDev;
+    private double mPrecision;
+
     private static final double MAX_ERROR = 0.01D;
 
-    public KernelEstimator(double precision, double bandwidth) {
-        this.m_Precision = precision;
-        this.m_StandardDev = bandwidth;
+    public KernelEstimator(double precision, double bandwidth)
+    {
+        mPrecision = precision;
+        mStandardDev = bandwidth;
     }
 
-    public void addValue(double data, double weight) {
-        if(weight != 0.0D) {
+    public void addValue(double data, double weight)
+    {
+        if(weight != 0.0D)
+        {
             data = this.round(data);
             int insertIndex = this.findNearestValue(data);
-            if(this.m_NumValues > insertIndex && this.m_Values[insertIndex] == data) {
-                this.m_Weights[insertIndex] += weight;
-            } else {
-                if(this.m_NumValues < this.m_Values.length) {
-                    int left = this.m_NumValues - insertIndex;
-                    System.arraycopy(this.m_Values, insertIndex, this.m_Values, insertIndex + 1, left);
-                    System.arraycopy(this.m_Weights, insertIndex, this.m_Weights, insertIndex + 1, left);
-                    this.m_Values[insertIndex] = data;
-                    this.m_Weights[insertIndex] = weight;
-                    ++this.m_NumValues;
-                } else {
-                    double[] newValues = new double[this.m_Values.length * 2];
-                    double[] newWeights = new double[this.m_Values.length * 2];
-                    int left = this.m_NumValues - insertIndex;
-                    System.arraycopy(this.m_Values, 0, newValues, 0, insertIndex);
-                    System.arraycopy(this.m_Weights, 0, newWeights, 0, insertIndex);
+            if(this.mNumValues > insertIndex && this.mValues[insertIndex] == data)
+            {
+                this.mWeights[insertIndex] += weight;
+            }
+            else
+            {
+                if(this.mNumValues < this.mValues.length)
+                {
+                    int left = this.mNumValues - insertIndex;
+                    System.arraycopy(this.mValues, insertIndex, this.mValues, insertIndex + 1, left);
+                    System.arraycopy(this.mWeights, insertIndex, this.mWeights, insertIndex + 1, left);
+                    this.mValues[insertIndex] = data;
+                    this.mWeights[insertIndex] = weight;
+                    ++this.mNumValues;
+                }
+                else
+                {
+                    double[] newValues = new double[this.mValues.length * 2];
+                    double[] newWeights = new double[this.mValues.length * 2];
+                    int left = this.mNumValues - insertIndex;
+                    System.arraycopy(this.mValues, 0, newValues, 0, insertIndex);
+                    System.arraycopy(this.mWeights, 0, newWeights, 0, insertIndex);
                     newValues[insertIndex] = data;
                     newWeights[insertIndex] = weight;
-                    System.arraycopy(this.m_Values, insertIndex, newValues, insertIndex + 1, left);
-                    System.arraycopy(this.m_Weights, insertIndex, newWeights, insertIndex + 1, left);
-                    ++this.m_NumValues;
-                    this.m_Values = newValues;
-                    this.m_Weights = newWeights;
+                    System.arraycopy(this.mValues, insertIndex, newValues, insertIndex + 1, left);
+                    System.arraycopy(this.mWeights, insertIndex, newWeights, insertIndex + 1, left);
+                    ++this.mNumValues;
+                    this.mValues = newValues;
+                    this.mWeights = newWeights;
                 }
 
             }
 
-            this.m_SumOfWeights += weight;
+            this.mSumOfWeights += weight;
         }
     }
 
-    public double getProbability(double data) {
+    public double getProbability(double data)
+    {
         double delta;
         double sum = 0.0D;
         double currentProb;
         double zLower;
         double zUpper;
-        if(this.m_NumValues == 0) {
-            zLower = (data - this.m_Precision / 2.0D) / this.m_StandardDev;
-            zUpper = (data + this.m_Precision / 2.0D) / this.m_StandardDev;
+        if(this.mNumValues == 0)
+        {
+            zLower = (data - this.mPrecision / 2.0D) / this.mStandardDev;
+            zUpper = (data + this.mPrecision / 2.0D) / this.mStandardDev;
             return Statistics.normalProbability(zUpper) - Statistics.normalProbability(zLower);
-        } else {
+        }
+        else
+        {
             double weightSum = 0.0D;
             int start = this.findNearestValue(data);
 
             int i;
-            for(i = start; i < this.m_NumValues; ++i) {
-                delta = this.m_Values[i] - data;
-                zLower = (delta - this.m_Precision / 2.0D) / this.m_StandardDev;
-                zUpper = (delta + this.m_Precision / 2.0D) / this.m_StandardDev;
+            for(i = start; i < this.mNumValues; ++i)
+            {
+                delta = this.mValues[i] - data;
+                zLower = (delta - this.mPrecision / 2.0D) / this.mStandardDev;
+                zUpper = (delta + this.mPrecision / 2.0D) / this.mStandardDev;
                 currentProb = Statistics.normalProbability(zUpper) - Statistics.normalProbability(zLower);
-                sum += currentProb * this.m_Weights[i];
-                weightSum += this.m_Weights[i];
-                if(currentProb * (this.m_SumOfWeights - weightSum) < sum * MAX_ERROR) {
+                sum += currentProb * this.mWeights[i];
+                weightSum += this.mWeights[i];
+                if(currentProb * (this.mSumOfWeights - weightSum) < sum * MAX_ERROR)
+                {
                     break;
                 }
             }
 
-            for(i = start - 1; i >= 0; --i) {
-                delta = this.m_Values[i] - data;
-                zLower = (delta - this.m_Precision / 2.0D) / this.m_StandardDev;
-                zUpper = (delta + this.m_Precision / 2.0D) / this.m_StandardDev;
+            for(i = start - 1; i >= 0; --i)
+            {
+                delta = this.mValues[i] - data;
+                zLower = (delta - this.mPrecision / 2.0D) / this.mStandardDev;
+                zUpper = (delta + this.mPrecision / 2.0D) / this.mStandardDev;
                 currentProb = Statistics.normalProbability(zUpper) - Statistics.normalProbability(zLower);
-                sum += currentProb * this.m_Weights[i];
-                weightSum += this.m_Weights[i];
-                if(currentProb * (this.m_SumOfWeights - weightSum) < sum * MAX_ERROR) {
+                sum += currentProb * this.mWeights[i];
+                weightSum += this.mWeights[i];
+                if(currentProb * (this.mSumOfWeights - weightSum) < sum * MAX_ERROR)
+                {
                     break;
                 }
             }
 
-            return sum / this.m_SumOfWeights;
+            return sum / this.mSumOfWeights;
         }
     }
 
-    private int findNearestValue(double key) {
+    private int findNearestValue(double key)
+    {
         int low = 0;
-        int high = this.m_NumValues;
+        int high = this.mNumValues;
 
-        while(low < high) {
+        while(low < high)
+        {
             int middle = (low + high) / 2;
-            double current = this.m_Values[middle];
-            if(current == key) {
+            double current = this.mValues[middle];
+            if(current == key)
+            {
                 return middle;
             }
 
-            if(current > key) {
+            if(current > key)
+            {
                 high = middle;
-            } else if(current < key) {
+            }
+            else if(current < key)
+            {
                 low = middle + 1;
             }
         }
@@ -134,7 +159,8 @@ public class KernelEstimator   {
         return low;
     }
 
-    private double round(double data) {
-        return Math.rint(data / this.m_Precision) * this.m_Precision;
+    private double round(double data)
+    {
+        return Math.rint(data / this.mPrecision) * this.mPrecision;
     }
 }

@@ -8,9 +8,6 @@ import static junit.framework.TestCase.assertEquals;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.variant.clonality.ModifiableWeightedPloidy;
-import com.hartwig.hmftools.common.variant.clonality.WeightedPloidy;
-
 import org.junit.Test;
 
 public class SomaticHistogramPeaksTest

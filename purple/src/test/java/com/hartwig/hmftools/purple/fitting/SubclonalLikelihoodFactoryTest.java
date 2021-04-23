@@ -1,10 +1,11 @@
-package com.hartwig.hmftools.common.variant.clonality;
+package com.hartwig.hmftools.purple.fitting;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.purple.somatic.SubclonalLikelihood;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

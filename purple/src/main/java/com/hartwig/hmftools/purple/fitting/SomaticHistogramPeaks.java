@@ -14,9 +14,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.variant.clonality.ModifiableWeightedPloidy;
-import com.hartwig.hmftools.common.variant.clonality.WeightedPloidy;
-import com.hartwig.hmftools.common.variant.clonality.WeightedPloidyHistogram;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.jetbrains.annotations.NotNull;

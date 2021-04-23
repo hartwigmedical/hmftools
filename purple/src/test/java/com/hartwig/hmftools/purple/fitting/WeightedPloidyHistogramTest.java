@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.clonality;
+package com.hartwig.hmftools.purple.fitting;
 
 import static org.junit.Assert.assertEquals;
 
@@ -20,7 +20,7 @@ public class WeightedPloidyHistogramTest {
     public void testMaxBucket() {
         final double max = 5;
         final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(max, 0.01);
-        victim.histogram(Lists.newArrayList(create(max, 20, 40)));
+        victim.histogram(Lists.newArrayList(WeightedPloidy.create(max, 20, 40)));
     }
 
     @Test
@@ -95,16 +95,9 @@ public class WeightedPloidyHistogramTest {
         assertEquals(1,  WeightedPloidyHistogram.peakBucket(2, new double[]{10, 11, 0, 18, 8}));
     }
 
-    @Test
-    public void testPeakLikelihood() {
-        final PeakModelFactory victim = new PeakModelFactory(10, 0.05);
-        final WeightedPloidy ploidy = create(2, 35, 50);
-        assertEquals(0.06, victim.ploidyLikelihood(1.8, ploidy), 0.001);
-    }
-
     @NotNull
-    static List<ModifiableWeightedPloidy> readResource(@NotNull final String file) {
-        final InputStream inputStream = WeightedPloidyHistogramTest.class.getResourceAsStream("/clonality/" + file);
+    public static List<ModifiableWeightedPloidy> readResource(@NotNull final String file) {
+        final InputStream inputStream = WeightedPloidyHistogramTest.class.getResourceAsStream("/fitting/" + file);
         final List<String> lines = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList());
 
         final List<ModifiableWeightedPloidy> result = Lists.newArrayList();
@@ -125,12 +118,4 @@ public class WeightedPloidyHistogramTest {
         return result;
     }
 
-    @NotNull
-    static WeightedPloidy create(double ploidy, int alleleReadCount, int totalReadCount) {
-        return ModifiableWeightedPloidy.create()
-                .setPloidy(ploidy)
-                .setWeight(1)
-                .setAlleleReadCount(alleleReadCount)
-                .setTotalReadCount(totalReadCount);
-    }
 }

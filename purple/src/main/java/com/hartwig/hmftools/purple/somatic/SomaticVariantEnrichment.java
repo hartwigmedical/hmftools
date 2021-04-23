@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.enrich;
+package com.hartwig.hmftools.purple.somatic;
 
 import java.util.List;
 import java.util.Set;
@@ -13,7 +13,14 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.variant.clonality.PeakModel;
+import com.hartwig.hmftools.purple.fitting.PeakModel;
+import com.hartwig.hmftools.common.variant.enrich.KataegisEnrichment;
+import com.hartwig.hmftools.common.variant.enrich.SnpEffEnrichment;
+import com.hartwig.hmftools.common.variant.enrich.SomaticPurityEnrichment;
+import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
+import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
+import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentFactory;
+import com.hartwig.hmftools.common.variant.enrich.VariantHotspotEnrichment;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +29,8 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class SomaticVariantEnrichment implements VariantContextEnrichment {
+public class SomaticVariantEnrichment implements VariantContextEnrichment
+{
 
     private final VariantContextEnrichment purityEnrichment;
     private final VariantContextEnrichment hotspotEnrichment;

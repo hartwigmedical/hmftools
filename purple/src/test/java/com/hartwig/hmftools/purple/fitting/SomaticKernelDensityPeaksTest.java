@@ -15,13 +15,16 @@ public class SomaticKernelDensityPeaksTest
     private static final double EPSILON = 1e-10;
 
     @Test
-    public void testFindPeaks() {
+    public void testFindPeaks()
+    {
         List<Double> sample = Lists.newArrayList();
-        for (int i = 0; i < 100; i++) {
+        for(int i = 0; i < 100; i++)
+        {
             sample.add(i / 100d);
         }
 
-        for (int i = 0; i < 10; i++) {
+        for(int i = 0; i < 10; i++)
+        {
             sample.add(0.2);
             sample.add(0.4);
             sample.add(0.6);
@@ -33,7 +36,8 @@ public class SomaticKernelDensityPeaksTest
         assertPeak(peaks.get(1), 0.4, 13);
     }
 
-    private static void assertPeak(@NotNull SomaticPeak victim, double vaf, int count) {
+    private static void assertPeak(@NotNull SomaticPeak victim, double vaf, int count)
+    {
         assertEquals(vaf, victim.alleleFrequency(), EPSILON);
         assertEquals(count, victim.count());
     }
