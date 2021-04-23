@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.imuno.neo_predict;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.LOG_DEBUG;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.loadSampleDataFile;

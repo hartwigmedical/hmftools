@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cup.svs;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;

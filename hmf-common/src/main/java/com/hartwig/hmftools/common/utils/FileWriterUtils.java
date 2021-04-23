@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.utils.io;
+package com.hartwig.hmftools.common.utils;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -93,7 +93,5 @@ public final class FileWriterUtils
 
         return fieldsIndexMap;
     }
-
-
 
 }

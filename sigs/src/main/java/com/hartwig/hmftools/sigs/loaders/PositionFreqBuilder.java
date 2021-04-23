@@ -7,10 +7,10 @@ import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getBucketInde
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getChromosomeFromIndex;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getPositionFromIndex;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.initialisePositionCache;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;

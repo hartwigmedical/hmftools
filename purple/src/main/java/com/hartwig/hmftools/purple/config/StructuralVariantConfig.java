@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.purple.config;
 
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.purple.config.ConfigSupplier.SAMPLE_DIR;
-
 import java.io.File;
 import java.util.Optional;
 

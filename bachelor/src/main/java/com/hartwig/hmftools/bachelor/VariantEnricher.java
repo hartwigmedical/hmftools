@@ -3,7 +3,7 @@ package com.hartwig.hmftools.bachelor;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BACH_LOGGER;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.REF_GENOME;
 import static com.hartwig.hmftools.bachelor.types.PathogenicType.BLACK_LIST;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_CN_INFO;

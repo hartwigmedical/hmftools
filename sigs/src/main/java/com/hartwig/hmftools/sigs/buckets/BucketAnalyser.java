@@ -20,8 +20,8 @@ import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndice
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_STRING;
 import static com.hartwig.hmftools.common.utils.GenericDataLoader.DEFAULT_DELIM;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.BA_EXT_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.BA_PREDEFINED_SIGS;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.CANCER_TYPE_OTHER;

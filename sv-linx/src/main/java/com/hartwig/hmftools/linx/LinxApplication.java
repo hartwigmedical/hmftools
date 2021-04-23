@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx;
 
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.checkCreateOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.variant.structural.linx;
 
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType.NA;
 import static com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType.INFRAME;
 import static com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType.OUT_OF_FRAME;

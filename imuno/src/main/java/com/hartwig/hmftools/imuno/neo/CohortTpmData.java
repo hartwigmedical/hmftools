@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.imuno.neo;
 
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.imuno.common.ImunoCommon.IM_LOGGER;
 
 import java.io.BufferedReader;

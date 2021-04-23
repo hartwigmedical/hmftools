@@ -3,7 +3,7 @@ package com.hartwig.hmftools.isofox.expression;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.BamFragmentAllocator.calcFragmentLength;

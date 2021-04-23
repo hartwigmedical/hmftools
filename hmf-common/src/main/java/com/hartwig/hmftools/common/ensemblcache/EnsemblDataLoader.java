@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.ensemblcache;
 
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

@@ -5,7 +5,7 @@ import static java.lang.Math.floor;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.SU_LOGGER;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.compar;
 
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.compar.Category.ALL_CATEGORIES;
 import static com.hartwig.hmftools.compar.CommonUtils.DATA_DELIM;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;

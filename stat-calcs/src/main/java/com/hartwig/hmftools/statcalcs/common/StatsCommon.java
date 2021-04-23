@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.statcalcs.common;
 
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
