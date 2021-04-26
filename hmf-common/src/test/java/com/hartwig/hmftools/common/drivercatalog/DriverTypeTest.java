@@ -8,7 +8,6 @@ public class DriverTypeTest {
 
     @Test
     public void testDriverCatalogTypesAllSet() {
-
         for (DriverType value : DriverType.values()) {
             int count = 0;
             if (DriverType.DRIVERS_COPY_NUMBER.contains(value)) {
@@ -20,7 +19,6 @@ public class DriverTypeTest {
             if (DriverType.DRIVERS_LINX.contains(value)) {
                 count++;
             }
-
             if (DriverType.DRIVERS_MUTATION.contains(value)) {
                 count++;
             }
@@ -28,5 +26,4 @@ public class DriverTypeTest {
             assertEquals(1, count);
         }
     }
-
 }

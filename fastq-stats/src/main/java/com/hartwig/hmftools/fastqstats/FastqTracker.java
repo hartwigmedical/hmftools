@@ -12,6 +12,7 @@ import com.google.common.collect.Ordering;
 import org.jetbrains.annotations.NotNull;
 
 class FastqTracker {
+
     @NotNull
     private final Map<String, Map<String, FastqData>> samples;
 

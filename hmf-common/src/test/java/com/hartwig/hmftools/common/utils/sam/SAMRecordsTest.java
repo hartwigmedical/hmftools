@@ -59,5 +59,4 @@ public class SAMRecordsTest {
         record.setReadUnmappedFlag(false);
         return record;
     }
-
 }

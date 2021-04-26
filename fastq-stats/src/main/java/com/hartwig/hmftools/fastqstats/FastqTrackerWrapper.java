@@ -3,6 +3,7 @@ package com.hartwig.hmftools.fastqstats;
 import org.jetbrains.annotations.NotNull;
 
 class FastqTrackerWrapper {
+
     @NotNull
     private FastqTracker tracker;
 

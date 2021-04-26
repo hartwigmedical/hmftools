@@ -84,7 +84,13 @@ public abstract class SnpEffAnnotation implements TranscriptAnnotation {
     @Override
     @NotNull
     public String transcript() {
-        return featureID();
+        String transcript = featureID();
+        // In case transcripts appear with their version (eg ENST001.1) we strip the version part out.
+        if (transcript.contains(".")) {
+            return transcript.substring(0, transcript.indexOf("."));
+        } else {
+            return transcript;
+        }
     }
 
     public boolean isTranscriptFeature() {

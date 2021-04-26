@@ -7,6 +7,7 @@ import java.io.InputStream;
 import org.jetbrains.annotations.NotNull;
 
 class FastqReader {
+
     @NotNull
     private final BufferedInputStream reader;
     private final int size;

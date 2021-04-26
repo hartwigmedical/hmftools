@@ -22,7 +22,6 @@ public class TumorContaminationFileTest {
 
     @NotNull
     private static TumorContamination create(@NotNull Random random) {
-
         final BaseDepth template = createRandom(random);
 
         final BaseDepth normalDepth = ModifiableBaseDepth.create()
@@ -55,5 +54,4 @@ public class TumorContaminationFileTest {
                 .setAltSupport(random.nextInt())
                 .setIndelCount(0);
     }
-
 }

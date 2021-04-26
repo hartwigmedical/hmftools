@@ -21,7 +21,6 @@ public class ReportablePredicateTest {
 
     @Test
     public void testIgnoreIndelsWithLargeRepeatCount() {
-
         final SomaticVariant variant = SomaticVariantTestBuilderFactory.create()
                 .gene("AR")
                 .repeatCount(MAX_ONCO_REPEAT_COUNT)
@@ -37,5 +36,4 @@ public class ReportablePredicateTest {
         assertTrue(oncoPredicate.test(variant));
         assertFalse(oncoPredicate.test(variantLargeRepeatCount));
     }
-
 }

@@ -31,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.Document;
 
 public final class FastqStatsRunner {
+
     private static final Logger LOGGER = LogManager.getLogger(FastqStatsRunner.class);
 
     private static final String FASTQ_FILE = "file";

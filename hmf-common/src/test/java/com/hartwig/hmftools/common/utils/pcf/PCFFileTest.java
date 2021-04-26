@@ -17,7 +17,7 @@ import org.junit.Test;
 public class PCFFileTest {
 
     private static final int WINDOW = 1000;
-    private static final String BASE_PATH = Resources.getResource("pcf").getPath() + File.separator;
+    private static final String BASE_PATH = Resources.getResource("pcf").getPath();
 
     @Test
     public void testBafFile() throws IOException {

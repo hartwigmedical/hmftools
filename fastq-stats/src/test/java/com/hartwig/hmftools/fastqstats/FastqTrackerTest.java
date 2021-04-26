@@ -11,6 +11,7 @@ import com.google.common.io.Resources;
 import org.junit.Test;
 
 public class FastqTrackerTest {
+
     private static final String BASE_PATH = Resources.getResource("fastq").getPath();
 
     @Test

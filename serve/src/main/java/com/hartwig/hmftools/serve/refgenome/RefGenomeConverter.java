@@ -55,17 +55,23 @@ class RefGenomeConverter {
                     (int) hotspot.position(),
                     (int) hotspot.position());
             Interval lifted = liftOver.liftOver(interval);
-            if (!sourceVersion.versionedChromosome(lifted.getContig()).equals(hotspot.chromosome())) {
-                LOGGER.warn("Liftover moved chromosome from '{}' to '{}' on {}", lifted.getContig(), hotspot.chromosome(), hotspot);
-            }
 
-            // TODO: Check if ref is the same.
-            convertedHotspots.add(ImmutableKnownHotspot.builder()
-                    .from(hotspot)
-                    .gene(mapGene(hotspot.gene(), sourceVersion, targetVersion))
-                    .chromosome(targetVersion.versionedChromosome(hotspot.chromosome()))
-                    .position(lifted.getStart())
-                    .build());
+            if (lifted == null || lifted.getContig() == null) {
+                LOGGER.warn("Liftover of '{}' led to non-interpretable '{}'", hotspot, lifted);
+            }
+            else {
+                if (!sourceVersion.versionedChromosome(lifted.getContig()).equals(hotspot.chromosome())) {
+                    LOGGER.warn("Liftover moved chromosome from '{}' to '{}' on {}", lifted.getContig(), hotspot.chromosome(), hotspot);
+                }
+
+                // TODO: Check if ref is the same.
+                convertedHotspots.add(ImmutableKnownHotspot.builder()
+                        .from(hotspot)
+                        .gene(mapGene(hotspot.gene(), sourceVersion, targetVersion))
+                        .chromosome(targetVersion.versionedChromosome(hotspot.chromosome()))
+                        .position(lifted.getStart())
+                        .build());
+            }
         }
         return convertedHotspots;
     }
