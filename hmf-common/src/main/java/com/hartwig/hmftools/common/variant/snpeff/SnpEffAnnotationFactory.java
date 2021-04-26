@@ -79,7 +79,6 @@ public final class SnpEffAnnotationFactory {
 
     @NotNull
     private static SnpEffAnnotation fromParts(@NotNull VariantContext context, @NotNull String[] parts) {
-        String hgvsCoding = parts[9];
         String effects = effect(context, parts);
 
         return ImmutableSnpEffAnnotation.builder()
@@ -93,7 +92,7 @@ public final class SnpEffAnnotationFactory {
                 .featureID(parts[6])
                 .transcriptBioType(parts[7])
                 .rank(parts[8])
-                .hgvsCoding(hgvsCoding)
+                .hgvsCoding(parts[9])
                 .hgvsProtein(parts[10])
                 .cDNAPosAndLength(parts[11])
                 .cdsPosAndLength(parts[12])
