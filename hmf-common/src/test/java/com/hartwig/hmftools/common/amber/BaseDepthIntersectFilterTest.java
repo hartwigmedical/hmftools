@@ -34,7 +34,6 @@ public class BaseDepthIntersectFilterTest {
         depth.put(HumanChromosome._1, first);
         depth.put(HumanChromosome._2, second);
         depth.put(HumanChromosome._3, third);
-
     }
 
     @Test
@@ -65,5 +64,4 @@ public class BaseDepthIntersectFilterTest {
         assertFalse(victim.test(second));
         assertFalse(victim.test(third));
     }
-
 }

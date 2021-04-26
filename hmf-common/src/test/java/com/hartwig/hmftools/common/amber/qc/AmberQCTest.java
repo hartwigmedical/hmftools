@@ -41,5 +41,4 @@ public class AmberQCTest {
     private static AmberQC createWithContamination(double contamination) {
         return ImmutableAmberQC.builder().meanBAF(0.5).contamination(contamination).build();
     }
-
 }

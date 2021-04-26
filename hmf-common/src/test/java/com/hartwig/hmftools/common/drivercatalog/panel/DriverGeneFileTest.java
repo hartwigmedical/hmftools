@@ -23,12 +23,11 @@ public class DriverGeneFileTest {
     }
 
     @NotNull
-    private static List<DriverGene> resourceFile(String resource) {
+    private static List<DriverGene> resourceFile(@NotNull String resource) {
         final InputStream inputStream = DriverGenePanelFactoryTest.class.getResourceAsStream(resource);
         return new BufferedReader(new InputStreamReader(inputStream)).lines()
                 .filter(x -> !x.startsWith("gene") && !x.startsWith("HG"))
                 .map(DriverGeneFile::fromString)
                 .collect(Collectors.toList());
     }
-
 }

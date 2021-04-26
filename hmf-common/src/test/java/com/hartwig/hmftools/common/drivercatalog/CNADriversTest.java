@@ -32,7 +32,6 @@ public class CNADriversTest {
                 .findFirst()
                 .get();
 
-
         GeneCopyNumber oncoAmp = createTestCopyNumberBuilder(onco.gene()).minCopyNumber(7).maxCopyNumber(7).build();
 
         List<DriverCatalog> drivers =

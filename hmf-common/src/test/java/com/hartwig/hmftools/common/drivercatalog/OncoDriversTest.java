@@ -23,8 +23,6 @@ public class OncoDriversTest {
     private static final int INDEL_SAMPLE_COUNT = 1000;
     private static final double PASSENGERS_PER_MUTATION = 9.26e-08;
 
-    private static final double UNADJUSTED_LIKELIHOOD = 0.5;
-
     private SomaticVariant frameshiftHotspot;
     private SomaticVariant frameshiftNearHotspot;
     private SomaticVariant inframe;
@@ -74,28 +72,40 @@ public class OncoDriversTest {
 
     @Test
     public void favourHighest() {
-        DriverCatalog victim = OncoDrivers.geneDriver(SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT, "Gene", likelihood, Lists.newArrayList(frameshift, missense), null);
+        DriverCatalog victim = OncoDrivers.geneDriver(SNV_SAMPLE_COUNT,
+                INDEL_SAMPLE_COUNT,
+                "Gene",
+                likelihood,
+                Lists.newArrayList(frameshift, missense),
+                null);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertLikelihood(0.001, INDEL_SAMPLE_COUNT, victim.driverLikelihood());
     }
 
     @Test
     public void ignoreFrameshiftAndInvalidInframe() {
-        DriverCatalog victim = OncoDrivers.geneDriver(SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT, "Gene", likelihood, Lists.newArrayList(unKnownInframe), null);
+        DriverCatalog victim =
+                OncoDrivers.geneDriver(SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT, "Gene", likelihood, Lists.newArrayList(unKnownInframe), null);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertLikelihood(0.001, INDEL_SAMPLE_COUNT, victim.driverLikelihood());
     }
 
     @Test
     public void singleMissense() {
-        DriverCatalog victim = OncoDrivers.geneDriver(SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT, "Gene", likelihood, Lists.newArrayList(missense), null);
+        DriverCatalog victim =
+                OncoDrivers.geneDriver(SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT, "Gene", likelihood, Lists.newArrayList(missense), null);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertLikelihood(0.002, SNV_SAMPLE_COUNT, victim.driverLikelihood());
     }
 
     @Test
     public void multiMissense() {
-        DriverCatalog victim = OncoDrivers.geneDriver(SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT, "Gene", likelihood, Lists.newArrayList(missense, missense), null);
+        DriverCatalog victim = OncoDrivers.geneDriver(SNV_SAMPLE_COUNT,
+                INDEL_SAMPLE_COUNT,
+                "Gene",
+                likelihood,
+                Lists.newArrayList(missense, missense),
+                null);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertLikelihood(0.002, SNV_SAMPLE_COUNT, victim.driverLikelihood());
     }
@@ -103,7 +113,7 @@ public class OncoDriversTest {
     @NotNull
     private static DndsDriverImpactLikelihood createLikelihood(double pDriver) {
         return ImmutableDndsDriverImpactLikelihood.builder()
-                .dndsLikelihood(UNADJUSTED_LIKELIHOOD)
+                .dndsLikelihood(0D)
                 .driversPerSample(pDriver)
                 .passengersPerMutation(PASSENGERS_PER_MUTATION)
                 .build();
@@ -121,11 +131,6 @@ public class OncoDriversTest {
                 .build();
     }
 
-    public void assertLikelihood(double expectedProbability, int sampleCount, double value) {
-        double expectedLikelihood = DriverCatalogFactory.probabilityDriverVariant(sampleCount, createLikelihood(expectedProbability));
-        assertEquals(expectedLikelihood, value, 1e-10);
-    }
-
     @NotNull
     private static ModifiableDndsDriverGeneLikelihood createGeneLikelihood(double missense, double nonsense, double splice, double indel) {
         final DndsDriverImpactLikelihood missenseLikelihood = createLikelihood(missense);
@@ -135,5 +140,10 @@ public class OncoDriversTest {
                 .setNonsense(createLikelihood(nonsense))
                 .setSplice(createLikelihood(splice))
                 .setIndel(createLikelihood(indel));
+    }
+
+    private static void assertLikelihood(double expectedProbability, int sampleCount, double value) {
+        double expectedLikelihood = DriverCatalogFactory.probabilityDriverVariant(sampleCount, createLikelihood(expectedProbability));
+        assertEquals(expectedLikelihood, value, 1e-10);
     }
 }

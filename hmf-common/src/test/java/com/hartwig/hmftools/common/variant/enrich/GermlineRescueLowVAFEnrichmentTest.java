@@ -21,7 +21,7 @@ public class GermlineRescueLowVAFEnrichmentTest {
         assertFiltered(false, createVariant(0.5, 3));
     }
 
-    private void assertFiltered(boolean expectedFiltered, VariantContext victim) {
+    private static void assertFiltered(boolean expectedFiltered, VariantContext victim) {
         VariantContext updated = GermlineRescueLowVAFEnrichment.process(VariantContextFromString.SAMPLE, victim);
         assertEquals(expectedFiltered, updated.isFiltered());
         if (expectedFiltered) {
