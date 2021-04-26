@@ -4,10 +4,9 @@ This repository contains various algorithms for analyzing genomic sequencing dat
 Resources used by the HMF algorithms can be downloaded from https://resources.hartwigmedicalfoundation.nl
 
 More detailed descriptions of the following algorithms are available from the links below:
- - [BACHELOR](./bachelor/README.md)
  - [SAGE](./sage/README.md)
  - [AMBER](./amber/README.md)
- - [COBALT](./count-bam-lines/README.md)
+ - [COBALT](./cobalt/README.md)
  - [GRIPSS](./gripss/README.md)
  - [PURPLE](./purple/README.md)
  - [LINX](./sv-linx/README.md)
