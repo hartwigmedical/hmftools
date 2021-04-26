@@ -5,6 +5,7 @@ import com.hartwig.hmftools.extensions.cli.options.validators.OptionValidator
 import org.apache.commons.cli.CommandLine
 
 data class EnumValidator<T : Enum<T>>(private val enumClass: Class<T>) : OptionValidator {
+
     override fun validate(option: HmfOption, cmd: CommandLine): String? {
         if (!cmd.hasOption(option.name)) return null
         val optionValue = cmd.getOptionValue(option.name).toLowerCase()

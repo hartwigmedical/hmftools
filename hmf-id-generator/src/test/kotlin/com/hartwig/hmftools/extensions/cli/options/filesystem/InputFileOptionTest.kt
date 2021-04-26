@@ -10,7 +10,7 @@ import java.io.IOException
 
 class InputFileOptionTest : StringSpec() {
 
-    private val TEST_FILE_PATH = Resources.getResource("testFile.txt").path
+    private val TEST_FILE_PATH = Resources.getResource("cli/testFile.txt").path
     private val TEST_FILE_OPTION = "test_file"
 
     init {

@@ -42,12 +42,6 @@ object CsvReader {
         return parser.asSequence().map { clazz.read(it.toMap()) }.toList()
     }
 
-    inline fun <reified T : CsvData> readTSVByName(fileLocation: String, nullString: String? = DEFAULT_NULL_STRING): List<T> =
-            readTSVByName(File(fileLocation).inputStream(), nullString)
-
-    inline fun <reified T : CsvData> readTSVByName(inputStream: InputStream, nullString: String? = DEFAULT_NULL_STRING): List<T> =
-            readByName(T::class, inputStream, DEFAULT_TSV_FORMAT.withNullString(nullString).withFirstRecordAsHeader())
-
     inline fun <reified T : CsvData> readCSVByName(fileLocation: String, nullString: String? = DEFAULT_NULL_STRING): List<T> =
             readCSVByName(File(fileLocation).inputStream(), nullString)
 

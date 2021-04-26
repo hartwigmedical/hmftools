@@ -6,6 +6,7 @@ import com.hartwig.hmftools.extensions.cli.options.validators.primitives.EnumVal
 import org.apache.commons.cli.Option
 
 data class RequiredEnumOption<T : Enum<T>>(override val name: String, private val enumClass: Class<T>) : HmfOption {
+
     override val description = "Expected values (case insensitive): ${enumClass.enumConstants.joinToString(", ") { it.name }}"
     override val option: Option = Option.builder(name).desc(description).hasArg().required().build()
     override val validators: List<OptionValidator> = listOf(EnumValidator(enumClass))

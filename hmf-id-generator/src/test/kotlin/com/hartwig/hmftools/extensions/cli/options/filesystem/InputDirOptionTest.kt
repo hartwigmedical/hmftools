@@ -10,7 +10,7 @@ import java.io.IOException
 
 class InputDirOptionTest : StringSpec() {
 
-    private val TEST_FILE_PATH = Resources.getResource("testFile.txt").path
+    private val TEST_FILE_PATH = Resources.getResource("cli/testFile.txt").path
     private val TEST_DIR_PATH = Resources.getResource("").path
     private val TEST_DIR_OPTION = "test_dir"
 

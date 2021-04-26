@@ -6,6 +6,7 @@ import com.hartwig.hmftools.extensions.cli.options.validators.primitives.Command
 import org.apache.commons.cli.Option
 
 data class CommandOption(override val name: String, override val description: String) : HmfOption {
+
     override val option: Option = Option.builder(name).desc(description).hasArg().build()
     override val validators: List<OptionValidator> = listOf(CommandValidator)
 }

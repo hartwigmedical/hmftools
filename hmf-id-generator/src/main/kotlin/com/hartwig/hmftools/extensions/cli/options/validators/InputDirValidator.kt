@@ -6,6 +6,7 @@ import com.hartwig.hmftools.extensions.cli.options.validators.primitives.IsDirec
 import org.apache.commons.cli.CommandLine
 
 object InputDirValidator : OptionValidator {
+
     override fun validate(option: HmfOption, cmd: CommandLine): String? {
         return FileSystemExistsValidator.validate(option, cmd) ?: IsDirectoryValidator.validate(option, cmd)
     }

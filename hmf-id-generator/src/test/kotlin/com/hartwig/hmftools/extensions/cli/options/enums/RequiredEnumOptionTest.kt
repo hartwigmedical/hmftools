@@ -12,7 +12,8 @@ class RequiredEnumOptionTest : StringSpec() {
     private val MODE = "mode"
 
     enum class Modes {
-        Mode1, Mode2
+        Mode1, @Suppress("unused")
+        Mode2
     }
 
     init {

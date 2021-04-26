@@ -8,7 +8,7 @@ import java.io.File
 
 class CsvExtensionsTest : StringSpec() {
 
-    private val fileLocation = Resources.getResource("test.csv").path
+    private val fileLocation = Resources.getResource("csv/test.csv").path
 
     data class SimpleDataClass(val value: String) : CsvData
     data class SimpleDataClassNull(val value: String?) : CsvData

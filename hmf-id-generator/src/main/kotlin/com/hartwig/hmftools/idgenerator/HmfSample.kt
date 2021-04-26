@@ -5,6 +5,7 @@ import com.hartwig.hmftools.common.amber.ImmutableAmberAnonymous
 import com.hartwig.hmftools.extensions.csv.CsvData
 
 data class HmfSample(val patientId: Int, val sampleId: Int, val deleted: Boolean, val sample: String) : Comparable<HmfSample> {
+
     val hmfSample = hmfSample()
 
     companion object {

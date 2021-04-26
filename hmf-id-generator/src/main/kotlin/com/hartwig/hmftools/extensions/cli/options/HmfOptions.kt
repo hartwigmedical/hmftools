@@ -6,6 +6,7 @@ import org.apache.commons.cli.Options
 import java.io.IOException
 
 class HmfOptions {
+
     val options = Options()
     private val optionsMap = mutableMapOf<Option, HmfOption>()
 

@@ -6,6 +6,7 @@ import org.apache.commons.cli.CommandLine
 import org.openqa.selenium.os.ExecutableFinder
 
 object CommandValidator : OptionValidator {
+
     override fun validate(option: HmfOption, cmd: CommandLine): String? {
         if (!cmd.hasOption(option.name)) return null
         val command = cmd.getOptionValue(option.name)

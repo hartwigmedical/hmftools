@@ -6,6 +6,7 @@ import com.hartwig.hmftools.extensions.cli.options.validators.primitives.IsFileV
 import org.apache.commons.cli.CommandLine
 
 object InputFileValidator : OptionValidator {
+
     override fun validate(option: HmfOption, cmd: CommandLine): String? {
         return FileSystemExistsValidator.validate(option, cmd) ?: IsFileValidator.validate(option, cmd)
     }

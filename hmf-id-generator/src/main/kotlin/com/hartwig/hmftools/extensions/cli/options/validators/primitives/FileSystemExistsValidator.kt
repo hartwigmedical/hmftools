@@ -6,6 +6,7 @@ import org.apache.commons.cli.CommandLine
 import java.io.File
 
 object FileSystemExistsValidator : OptionValidator {
+
     override fun validate(option: HmfOption, cmd: CommandLine): String? {
         if (!cmd.hasOption(option.name)) return null
         val file = File(cmd.getOptionValue(option.name))

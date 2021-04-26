@@ -20,15 +20,6 @@ fun Options.createCommandLine(cmdName: String, args: Array<String>): CommandLine
     }
 }
 
-fun Options.createRunModeCommandLine(cmdName: String, args: Array<String>): CommandLine {
-    val parser = DefaultParser()
-    return try {
-        parser.parse(this, args, true)
-    } catch (parseException: ParseException) {
-        this.printHelpAndExit(cmdName, "\n$parseException\n")
-    }
-}
-
 fun HmfOptions.createCommandLine(cmdName: String, args: Array<String>): CommandLine {
     val commandLine = this.options.createCommandLine(cmdName, args)
     return try {

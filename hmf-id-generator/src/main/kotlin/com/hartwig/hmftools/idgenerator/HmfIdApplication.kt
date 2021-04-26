@@ -17,6 +17,7 @@ import kotlin.system.exitProcess
 private val logger = LogManager.getLogger("HmfIdApplication")
 
 fun main(args: Array<String>) {
+
     logger.info("Running id-generator using AMBER database tables")
 
     val hmfOptions = HmfOptions()
@@ -33,7 +34,6 @@ fun main(args: Array<String>) {
     } else {
         run(cmd)
     }
-
 }
 
 private fun run(cmd: CommandLine) {
@@ -82,7 +82,6 @@ private fun run(cmd: CommandLine) {
     logger.info("Complete")
 }
 
-
 private fun validAmberPatients(currentDatabase: List<HmfSample>, patients: List<AmberPatient>): Boolean {
     val actualSamples = patients.map { x -> x.sample() }.toSet()
     val expectedSamples = currentDatabase.filter { x -> !x.deleted }.map { x -> x.sample }
@@ -103,7 +102,6 @@ private fun validAmberPatients(currentDatabase: List<HmfSample>, patients: List<
 
     return true
 }
-
 
 private fun databaseAndFileInSync(currentDatabaseCsv: Set<HmfSampleCsv>, currentFileCsv: Set<HmfSampleCsv>): Boolean {
     // Ignore deleted flag for moment
@@ -130,7 +128,6 @@ private fun databaseAndFileInSync(currentDatabaseCsv: Set<HmfSampleCsv>, current
 
     return true
 }
-
 
 private fun restoreFromFile(cmd: CommandLine) {
     val oldPassword = cmd.getOptionValue(PASSWORD)
