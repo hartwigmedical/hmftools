@@ -130,6 +130,7 @@ public class AnnotatedHotspotVCFChecker {
             }
         } else {
             // In case input transcript is missing or can't be found, we try to match against any transcript.
+            // This could be tricky in case a variant was generated from 37 and is now being evaluated on 38 with different transcript IDs.
             boolean matchFound = false;
             for (SnpEffAnnotation annotation : annotations) {
                 if (annotation.isTranscriptFeature()) {
