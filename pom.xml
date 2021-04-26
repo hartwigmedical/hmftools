@@ -10,9 +10,8 @@
 
     <modules>
         <module>hmf-common</module>
-        <module>hmf-ensembl-resources</module>
-        <module>hmf-extensions</module>
         <module>patient-db</module>
+        <module>hmf-ensembl-resources</module>
         <module>hmf-id-generator</module>
         <module>gripss</module>
         <module>lilac</module>
@@ -54,10 +53,9 @@
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
-        <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
 
         <patient-db.version>3.59</patient-db.version>
-        <id-generator.version>2.7</id-generator.version>
+        <hmf-id-generator.version>2.7</hmf-id-generator.version>
         <sage.version>2.8</sage.version>
         <amber.version>3.5</amber.version>
         <cobalt.version>1.12</cobalt.version>
@@ -193,16 +191,6 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>hmf-common</artifactId>
                 <version>${hmf-common.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>hmf-extensions-cli</artifactId>
-                <version>${hmf-extensions.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>hmf-extensions-csv</artifactId>
-                <version>${hmf-extensions.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>

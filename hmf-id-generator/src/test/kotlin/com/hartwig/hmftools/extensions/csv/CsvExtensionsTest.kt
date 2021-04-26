@@ -7,6 +7,7 @@ import io.kotlintest.specs.StringSpec
 import java.io.File
 
 class CsvExtensionsTest : StringSpec() {
+
     private val fileLocation = Resources.getResource("test.csv").path
 
     data class SimpleDataClass(val value: String) : CsvData

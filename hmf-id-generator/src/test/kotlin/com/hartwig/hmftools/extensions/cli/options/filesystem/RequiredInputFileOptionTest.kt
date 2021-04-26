@@ -9,6 +9,7 @@ import io.kotlintest.specs.StringSpec
 import java.io.IOException
 
 class RequiredInputFileOptionTest : StringSpec() {
+
     private val TEST_FILE_PATH = Resources.getResource("testFile.txt").path
     private val TEST_FILE_OPTION = "test_file"
 

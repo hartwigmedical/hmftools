@@ -8,6 +8,7 @@ import io.kotlintest.specs.StringSpec
 import java.io.IOException
 
 class CommandOptionTest : StringSpec() {
+
     private val COMMAND = "cd"
     private val MISSING_COMMAND = "this_should_be_missing"
     private val CMD_OPTION = "cmd"
