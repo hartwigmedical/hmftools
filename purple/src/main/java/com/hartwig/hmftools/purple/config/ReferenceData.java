@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.GermlineConfig.GERMLINE_VARIANTS;
+import static com.hartwig.hmftools.purple.config.SampleDataFiles.GERMLINE_VARIANTS;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,11 +62,14 @@ public class ReferenceData
 
     public final ListMultimap<Chromosome, VariantHotspot> GermlineHotspots;
 
+    public final String GcProfileFilename;
+
     private boolean mIsValid;
 
     private static final String REF_GENOME = "ref_genome";
     private static final String SOMATIC_HOTSPOT = "somatic_hotspots";
     private static final String GERMLINE_HOTSPOT = "germline_hotspots";
+    private static final String GC_PROFILE = "gc_profile";
 
     // rename to driver enabled or always true anyway?
     public static String DRIVER_ENABLED = "driver_catalog";
@@ -78,6 +81,7 @@ public class ReferenceData
 
         options.addOption(SOMATIC_HOTSPOT, true, "Path to somatic hotspot VCF");
         options.addOption(GERMLINE_HOTSPOT, true, "Path to germline hotspot VCF");
+        options.addOption(GC_PROFILE, true, "Path to GC profile.");
 
         DriverGenePanelConfig.addGenePanelOption(false, options);
     }
@@ -93,6 +97,7 @@ public class ReferenceData
         }
 
         final String refGenomePath = cmd.getOptionValue(REF_GENOME);
+        GcProfileFilename = cmd.getOptionValue(GC_PROFILE);
 
         final Map<Chromosome, GenomePosition> lengthPositions = Maps.newHashMap();
 

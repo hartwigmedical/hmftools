@@ -79,8 +79,8 @@ public class BestFitFactory
         mVariantsInReadCountRange = Lists.newArrayList();
 
         mSomaticPurityFitter = new SomaticPurityFitter(
-                config.somaticConfig().minPeakVariants(), config.somaticConfig().minTotalVariants(),
-                config.fittingConfig().minPurity(), config.fittingConfig().maxPurity());
+                config.SomaticFitting.MinPeakVariants, config.SomaticFitting.MinTotalVariants,
+                config.Fitting.MinPurity, config.Fitting.MaxPurity);
 
         mBestFit = determineBestFit(allCandidates, somatics, structuralVariants, observedRegions);
     }
@@ -145,23 +145,14 @@ public class BestFitFactory
 
     private boolean useSomatics(final FittedPurityScore score)
     {
-        if(mConfig.commonConfig().tumorOnly())
-        {
+        if(mConfig.TumorOnlyMode)
             return false;
-        }
-        else if(mConfig.somaticConfig().forceSomaticFit())
+
+        if(Doubles.greaterOrEqual(score.puritySpread(), mConfig.SomaticFitting.MinSomaticPuritySpread) && isHighlyDiploid(score))
         {
-            PPL_LOGGER.info("forcing somatic fit");
+            PPL_LOGGER.info("Sample is highly diploid({}) with large purity range([{} - {}]",
+                    formatPurity(score.maxDiploidProportion()), formatPurity(score.minPurity()), formatPurity(score.maxPurity()));
             return true;
-        }
-        else
-        {
-            if(Doubles.greaterOrEqual(score.puritySpread(), mConfig.somaticConfig().minSomaticPuritySpread()) && isHighlyDiploid(score))
-            {
-                PPL_LOGGER.info("Sample is highly diploid({}) with large purity range([{} - {}]",
-                        formatPurity(score.maxDiploidProportion()), formatPurity(score.minPurity()), formatPurity(score.maxPurity()));
-                return true;
-            }
         }
 
         return false;
@@ -169,10 +160,10 @@ public class BestFitFactory
 
     private boolean hasTumor(final List<ObservedRegion> observedRegions)
     {
-        if(mSomaticHotspotCount > 0 || mAlleleReadCountTotal >= mConfig.somaticConfig().minTotalSomaticVariantAlleleReadCount())
+        if(mSomaticHotspotCount > 0 || mAlleleReadCountTotal >= mConfig.SomaticFitting.minTotalSomaticVariantAlleleReadCount())
             return true;
 
-        if(mSvHotspotCount > 0 || mSvFragmentReadCount >= mConfig.somaticConfig().minTotalSvFragmentCount())
+        if(mSvHotspotCount > 0 || mSvFragmentReadCount >= mConfig.SomaticFitting.minTotalSvFragmentCount())
             return true;
 
         int tumorEvidenceBafCountTotal = observedRegions.stream()
@@ -192,15 +183,15 @@ public class BestFitFactory
         double lowestPurity = lowestScore.purity();
         double somaticPurity = somaticFit.purity();
 
-        return Doubles.lessThan(lowestPurity, mConfig.somaticConfig().minSomaticPurity())
-            && Doubles.lessThan(somaticPurity, mConfig.somaticConfig().minSomaticPurity()) && Doubles.greaterThan(
+        return Doubles.lessThan(lowestPurity, mConfig.SomaticFitting.MinSomaticPurity)
+            && Doubles.lessThan(somaticPurity, mConfig.SomaticFitting.MinSomaticPurity) && Doubles.greaterThan(
                 somaticPurity,
                 lowestPurity);
     }
 
     private boolean isHighlyDiploid(@NotNull final FittedPurityScore score)
     {
-        return Doubles.greaterOrEqual(score.maxDiploidProportion(), mConfig.somaticConfig().highlyDiploidPercentage());
+        return Doubles.greaterOrEqual(score.maxDiploidProportion(), mConfig.SomaticFitting.HighlyDiploidPercentage);
     }
 
     private static List<FittedPurity> inRangeOfLowest(double lowestScore, @NotNull final List<FittedPurity> purities)

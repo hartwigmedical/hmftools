@@ -5,16 +5,9 @@ import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.utils.pcf.ImmutablePCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
-import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 import com.hartwig.hmftools.purple.config.AmberData;
 import com.hartwig.hmftools.purple.config.CobaltData;
-import com.hartwig.hmftools.purple.config.CommonConfig;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class PCFPositionsSupplier

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.config;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.io.File;
@@ -17,8 +18,12 @@ public class SampleDataFiles
     public final String RecoveredSvVcfFile;
     public final String SomaticVcfFile;
     public final String GermlineVcfFile;
+    public final String AmberDirectory;
+    public final String CobaltDirectory;
 
     public static final String SAMPLE_DIR = "sample_dir";
+    private static final String AMBER = "amber";
+    private static final String COBALT = "cobalt";
     private static String STRUCTURAL_VARIANTS = "structural_vcf";
     private static String STRUCTURAL_VARIANT_RECOVERY = "sv_recovery_vcf";
     public static String GERMLINE_VARIANTS = "germline_vcf";
@@ -27,6 +32,13 @@ public class SampleDataFiles
     static void addOptions(final Options options)
     {
         options.addOption(SAMPLE_DIR, true,"Path to the sample's directory where expect to find cobalt, amber, gridss etc directories");
+
+        options.addOption(COBALT,true,
+                "Path to COBALT output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/cobalt.");
+
+        options.addOption(AMBER, true,
+                "Path to AMBER output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
+
         options.addOption(STRUCTURAL_VARIANTS, true, "Optional location of structural variant vcf for more accurate segmentation");
         options.addOption(STRUCTURAL_VARIANT_RECOVERY, true, "Optional location of failing structural variants that may be recovered");
         options.addOption(GERMLINE_VARIANTS, true, "Optional location of germline variants to enrich and process in driver catalog.");
@@ -35,7 +47,18 @@ public class SampleDataFiles
 
     public SampleDataFiles(final CommandLine cmd, final String sampleId) throws ParseException
     {
-        SampleDataDir = cmd.getOptionValue(SAMPLE_DIR);
+        SampleDataDir = cmd.hasOption(SAMPLE_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DIR)) : null;
+
+        if(SampleDataDir != null)
+        {
+            AmberDirectory = SampleDataDir + "amber/";
+            CobaltDirectory = SampleDataDir + "cobalt/";
+        }
+        else
+        {
+            AmberDirectory = cmd.getOptionValue(AMBER);
+            CobaltDirectory = cmd.getOptionValue(COBALT);
+        }
 
         SvVcfFile = getFilename(cmd, STRUCTURAL_VARIANTS, SampleDataDir, sampleId, ".gripss.somatic.filtered.vcf.gz", true);
         RecoveredSvVcfFile = getFilename(cmd, STRUCTURAL_VARIANT_RECOVERY, SampleDataDir, sampleId, ".gripss.somatic.vcf.gz", false);

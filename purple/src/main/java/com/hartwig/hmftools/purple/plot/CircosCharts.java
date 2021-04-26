@@ -55,7 +55,7 @@ public class CircosCharts
 
     public CircosCharts(final PurpleConfig configSupplier, final ExecutorService executorService, boolean isHg38)
     {
-        mConfig = configSupplier.chartConfig();
+        mConfig = configSupplier.Charting;
         mExecutorService = executorService;
         mIsHg38 = isHg38;
     }
@@ -68,8 +68,8 @@ public class CircosCharts
     {
         mCurrentReferenceId = referenceId;
         mCurrentSampleId = sampleId;
-        mBaseCircosTumorSample = mConfig.circosDirectory() + File.separator + mCurrentSampleId;
-        mBaseCircosReferenceSample = mConfig.circosDirectory() + File.separator + mCurrentReferenceId;
+        mBaseCircosTumorSample = mConfig.CircosDirectory + File.separator + mCurrentSampleId;
+        mBaseCircosReferenceSample = mConfig.CircosDirectory + File.separator + mCurrentReferenceId;
 
         final List<VariantContextDecorator> somatics = somaticVariants.stream()
                 .map(VariantContextDecorator::new)
@@ -89,7 +89,7 @@ public class CircosCharts
     public List<Future<Integer>> chartFutures()
     {
         final List<Future<Integer>> futures = Lists.newArrayList();
-        final Optional<String> circosBinary = mConfig.circosBinary();
+        final Optional<String> circosBinary = mConfig.CircosBinary;
         if(circosBinary.isPresent())
         {
             futures.add(mExecutorService.submit(() -> generateCircos(circosBinary.get(), "input")));
@@ -105,10 +105,10 @@ public class CircosCharts
         CircosExecution execution = new CircosExecution(executable);
 
         final String inputConfig = confFile(type);
-        final String outputPath = mConfig.plotDirectory();
+        final String outputPath = mConfig.PlotDirectory;
         final String outputFile = mCurrentSampleId + "." + type + ".png";
 
-        return execution.generateCircos(inputConfig, outputPath, outputFile, mConfig.circosDirectory());
+        return execution.generateCircos(inputConfig, outputPath, outputFile, mConfig.CircosDirectory);
     }
 
     @NotNull
@@ -181,7 +181,7 @@ public class CircosCharts
     {
         Charset charset = StandardCharsets.UTF_8;
         final String content = readResource("/circos/" + inputName);
-        final String outputFilename = mConfig.circosDirectory() + File.separator + outputName;
+        final String outputFilename = mConfig.CircosDirectory + File.separator + outputName;
         Files.write(new File(outputFilename).toPath(), content.getBytes(charset));
     }
 

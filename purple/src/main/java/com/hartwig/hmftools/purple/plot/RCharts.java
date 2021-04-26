@@ -19,9 +19,9 @@ public class RCharts
 
     public RCharts(final PurpleConfig config, final ExecutorService executorService)
     {
-        mChartConfig = config.chartConfig();
+        mChartConfig = config.Charting;
         mExecutorService = executorService;
-        mOutputDir = config.commonConfig().outputDirectory();
+        mOutputDir = config.OutputDir;
     }
 
     @NotNull
@@ -32,14 +32,14 @@ public class RCharts
         result.add(mExecutorService.submit(() -> RExecutor.executeFromClasspath("r/copyNumberPlots.R",
                 sampleId,
                 mOutputDir,
-                mChartConfig.plotDirectory())));
+                mChartConfig.PlotDirectory)));
 
         if(plotSomatics) // configSupplier.somaticConfig().file().isPresent()
         {
             result.add(mExecutorService.submit(() -> RExecutor.executeFromClasspath("r/somaticVariantPlots.R",
                     sampleId,
                     mOutputDir,
-                    mChartConfig.plotDirectory())));
+                    mChartConfig.PlotDirectory)));
         }
 
         return result;

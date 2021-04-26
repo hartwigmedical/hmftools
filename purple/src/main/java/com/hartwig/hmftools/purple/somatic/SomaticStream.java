@@ -26,14 +26,11 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteIndels;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalLoad;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
-import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
-import com.hartwig.hmftools.purple.config.SomaticFitConfig;
 import com.hartwig.hmftools.purple.plot.RChartData;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
@@ -47,8 +44,6 @@ public class SomaticStream
     private final ReferenceData mReferenceData;
     private final PurpleConfig mConfig;
 
-    private final SomaticFitConfig somaticFitConfig;
-    private final CommonConfig commonConfig;
     private final String inputVCF;
     private boolean mEnabled;
     private final String outputVCF;
@@ -78,17 +73,15 @@ public class SomaticStream
         this.indelMod = indelCount <= MAX_DOWNSAMPLE ? 1 : indelCount / MAX_DOWNSAMPLE;
 
         this.genePanel = referenceData.GenePanel;
-        this.somaticFitConfig = config.somaticConfig();
-        this.commonConfig = config.commonConfig();
         this.peakModel = peakModel;
-        this.outputVCF = commonConfig.outputDirectory() + File.separator + commonConfig.tumorSample() + ".purple.somatic.vcf.gz";
+        this.outputVCF = config.OutputDir + config.TumorId + ".purple.somatic.vcf.gz";
         this.mEnabled = !somaticVcfFilename.isEmpty();
         this.inputVCF = somaticVcfFilename;
         this.tumorMutationalLoad = new TumorMutationalLoad();
         this.microsatelliteIndels = new MicrosatelliteIndels();
         this.drivers = new SomaticVariantDrivers(genePanel);
         this.somaticVariantFactory = SomaticVariantFactory.passOnlyInstance();
-        this.rChartData = new RChartData(commonConfig.outputDirectory(), commonConfig.tumorSample());
+        this.rChartData = new RChartData(config.OutputDir, config.TumorId);
     }
 
     public double microsatelliteIndelsPerMb()
@@ -172,7 +165,7 @@ public class SomaticStream
         };
 
         final Consumer<VariantContext> driverConsumer =
-                x -> somaticVariantFactory.createVariant(commonConfig.tumorSample(), x).ifPresent(somatic ->
+                x -> somaticVariantFactory.createVariant(mConfig.TumorId, x).ifPresent(somatic ->
                 {
                     boolean reported = drivers.add(somatic);
                     if(reported)
@@ -190,7 +183,6 @@ public class SomaticStream
                             .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                             .build())
             {
-
                 final Consumer<VariantContext> consumer = tumorMutationalLoad.andThen(microsatelliteIndels)
                         .andThen(driverConsumer)
                         .andThen(writer::add)
@@ -199,9 +191,9 @@ public class SomaticStream
 
                 final SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(
                         mConfig.DriverEnabled,
-                        somaticFitConfig.clonalityBinWidth(),
-                        commonConfig.version(),
-                        commonConfig.tumorSample(),
+                        mConfig.SomaticFitting.clonalityBinWidth(),
+                        mConfig.Version,
+                        mConfig.TumorId,
                         mReferenceData.RefGenome,
                         purityAdjuster,
                         genePanel,

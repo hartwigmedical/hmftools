@@ -1,41 +1,63 @@
 package com.hartwig.hmftools.purple.config;
 
-import static com.hartwig.hmftools.purple.CommandLineUtil.defaultIntValue;
-import static com.hartwig.hmftools.purple.CommandLineUtil.defaultValue;
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
-
-import java.io.File;
-import java.util.Optional;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface SomaticFitConfig
+public class SomaticFitConfig
 {
-    String SOMATIC_MIN_PEAK = "somatic_min_peak";
-    String SOMATIC_MIN_TOTAL = "somatic_min_variants";
-    String SOMATIC_MIN_PURITY = "somatic_min_purity";
-    String SOMATIC_MIN_PURITY_SPREAD = "somatic_min_purity_spread";
-    String SOMATIC_PENALTY_WEIGHT = "somatic_penalty_weight";
-    String HIGHLY_DIPLOID_PERCENTAGE = "highly_diploid_percentage";
-    String FORCE_SOMATIC_FIT = "force_somatic_fit";
+    public static final String SOMATIC_MIN_PEAK = "somatic_min_peak";
+    public static final String SOMATIC_MIN_TOTAL = "somatic_min_variants";
+    public static final String SOMATIC_MIN_PURITY = "somatic_min_purity";
+    public static final String SOMATIC_MIN_PURITY_SPREAD = "somatic_min_purity_spread";
+    public static final String SOMATIC_PENALTY_WEIGHT = "somatic_penalty_weight";
+    public static final String HIGHLY_DIPLOID_PERCENTAGE = "highly_diploid_percentage";
 
-    public double SOMATIC_MIN_PURITY_DEFAULT = 0.17;
-    public double SOMATIC_MIN_PURITY_SPREAD_DEFAULT = 0.15;
-    public int SOMATIC_MIN_PEAK_DEFAULT = 10;
-    public int SOMATIC_MIN_VARIANTS_DEFAULT = 10;
-    double SOMATIC_PENALTY_WEIGHT_DEFAULT = 1;
-    double HIGHLY_DIPLOID_PERCENTAGE_DEFAULT = 0.97;
+    public static final double SOMATIC_MIN_PURITY_DEFAULT = 0.17;
+    public static final double SOMATIC_MIN_PURITY_SPREAD_DEFAULT = 0.15;
+    public static final int SOMATIC_MIN_PEAK_DEFAULT = 10;
+    public static final int SOMATIC_MIN_VARIANTS_DEFAULT = 10;
+    public static final double SOMATIC_PENALTY_WEIGHT_DEFAULT = 1;
+    public static final double HIGHLY_DIPLOID_PERCENTAGE_DEFAULT = 0.97;
 
-    static void addOptions(@NotNull Options options)
+    public int MinTotalVariants;
+    public int MinPeakVariants;
+    public double MinSomaticPurity;
+    public double MinSomaticPuritySpread;
+    public double SomaticPenaltyWeight;
+    public double HighlyDiploidPercentage;
+
+    public int minTotalSomaticVariantAlleleReadCount()
+    {
+        return 5000;
+    }
+    public int minTotalSvFragmentCount()
+    {
+        return 1000;
+    }
+    public double clonalityMaxPloidy()
+    {
+        return 10;
+    }
+    public double clonalityBinWidth()
+    {
+        return 0.05;
+    }
+
+    public SomaticFitConfig(@NotNull CommandLine cmd)
+    {
+        MinTotalVariants = getConfigValue(cmd, SOMATIC_MIN_TOTAL, SOMATIC_MIN_VARIANTS_DEFAULT);
+        MinPeakVariants = getConfigValue(cmd, SOMATIC_MIN_PEAK, SOMATIC_MIN_PEAK_DEFAULT);
+        MinSomaticPurity = getConfigValue(cmd, SOMATIC_MIN_PURITY, SOMATIC_MIN_PURITY_DEFAULT);
+        MinSomaticPuritySpread = getConfigValue(cmd, SOMATIC_MIN_PURITY_SPREAD, SOMATIC_MIN_PURITY_SPREAD_DEFAULT);
+        SomaticPenaltyWeight = getConfigValue(cmd, SOMATIC_PENALTY_WEIGHT, SOMATIC_PENALTY_WEIGHT_DEFAULT);
+        HighlyDiploidPercentage = getConfigValue(cmd, HIGHLY_DIPLOID_PERCENTAGE, HIGHLY_DIPLOID_PERCENTAGE_DEFAULT);
+    }
+
+
+    public static void addOptions(@NotNull Options options)
     {
         options.addOption(SOMATIC_MIN_PEAK, true,
                 "Minimum number of somatic variants to consider a peak. Default " + SOMATIC_MIN_PEAK_DEFAULT);
@@ -50,54 +72,5 @@ public interface SomaticFitConfig
                 "Proportion of somatic deviation to include in fitted purity score. Default " + SOMATIC_PENALTY_WEIGHT_DEFAULT);
         options.addOption(HIGHLY_DIPLOID_PERCENTAGE, true,
                 "Proportion of genome that must be diploid before using somatic fit. Default " + HIGHLY_DIPLOID_PERCENTAGE_DEFAULT);
-        options.addOption(FORCE_SOMATIC_FIT, false, "Fit from somatic VAFs only");
-    }
-
-    default int minTotalSomaticVariantAlleleReadCount()
-    {
-        return 5000;
-    }
-
-    default int minTotalSvFragmentCount()
-    {
-        return 1000;
-    }
-
-    int minTotalVariants();
-
-    int minPeakVariants();
-
-    double minSomaticPurity();
-
-    double minSomaticPuritySpread();
-
-    double somaticPenaltyWeight();
-
-    double highlyDiploidPercentage();
-
-    default double clonalityMaxPloidy()
-    {
-        return 10;
-    }
-
-    default double clonalityBinWidth()
-    {
-        return 0.05;
-    }
-
-    boolean forceSomaticFit();
-
-    @NotNull
-    static SomaticFitConfig createSomaticConfig(@NotNull CommandLine cmd, final CommonConfig commonConfig)
-    {
-        return ImmutableSomaticFitConfig.builder()
-                .minTotalVariants(defaultIntValue(cmd, SOMATIC_MIN_TOTAL, SOMATIC_MIN_VARIANTS_DEFAULT))
-                .minPeakVariants(defaultIntValue(cmd, SOMATIC_MIN_PEAK, SOMATIC_MIN_PEAK_DEFAULT))
-                .minSomaticPurity(defaultValue(cmd, SOMATIC_MIN_PURITY, SOMATIC_MIN_PURITY_DEFAULT))
-                .minSomaticPuritySpread(defaultValue(cmd, SOMATIC_MIN_PURITY_SPREAD, SOMATIC_MIN_PURITY_SPREAD_DEFAULT))
-                .somaticPenaltyWeight(defaultValue(cmd, SOMATIC_PENALTY_WEIGHT, SOMATIC_PENALTY_WEIGHT_DEFAULT))
-                .highlyDiploidPercentage(defaultValue(cmd, HIGHLY_DIPLOID_PERCENTAGE, HIGHLY_DIPLOID_PERCENTAGE_DEFAULT))
-                .forceSomaticFit(cmd.hasOption(FORCE_SOMATIC_FIT))
-                .build();
     }
 }

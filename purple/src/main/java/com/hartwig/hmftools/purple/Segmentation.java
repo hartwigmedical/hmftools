@@ -1,14 +1,12 @@
 package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
 
 import java.io.IOException;
 import java.util.List;
 
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.amber.AmberBAF;
-import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
@@ -21,7 +19,6 @@ import com.hartwig.hmftools.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.segment.PCFPositionsSupplier;
 
@@ -36,10 +33,10 @@ class Segmentation
     public Segmentation(@NotNull final PurpleConfig config, final ReferenceData referenceData) throws IOException
     {
         mReferenceData = referenceData;
-        mWindowSize = config.commonConfig().windowSize();
+        mWindowSize = WINDOW_SIZE;
 
-        PPL_LOGGER.info("Reading GC Profiles from {}", config.commonConfig().gcProfile());
-        mGcProfiles = GCProfileFactory.loadGCContent(mWindowSize, config.commonConfig().gcProfile());
+        PPL_LOGGER.info("Reading GC Profiles from {}", referenceData.GcProfileFilename);
+        mGcProfiles = GCProfileFactory.loadGCContent(mWindowSize, referenceData.GcProfileFilename);
     }
 
     @NotNull

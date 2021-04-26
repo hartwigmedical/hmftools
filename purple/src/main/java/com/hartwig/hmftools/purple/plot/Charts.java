@@ -17,8 +17,6 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.purple.config.ChartConfig;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -26,8 +24,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class Charts
 {
     private final RCharts mRCharts;
-    private final PurpleConfig configSupplier;
-    private final ExecutorService executorService;
+    private final PurpleConfig mConfig;
     private final CircosCharts mCircosCharts;
 
     public Charts(final PurpleConfig config, final ExecutorService executorService, boolean isHg38) throws IOException
@@ -35,19 +32,18 @@ public class Charts
         mRCharts = new RCharts(config, executorService);
         mCircosCharts = new CircosCharts(config, executorService, isHg38);
 
-        this.configSupplier = config;
-        this.executorService = executorService;
+        mConfig = config;
 
-        ChartConfig chartConfig = config.chartConfig();
+        ChartConfig chartConfig = config.Charting;
 
-        if(chartConfig.circosBinary().isPresent())
+        if(chartConfig.CircosBinary.isPresent())
         {
-            createDirectory(chartConfig.circosDirectory());
+            createDirectory(chartConfig.CircosDirectory);
         }
 
-        if(chartConfig.enabled() || chartConfig.circosBinary().isPresent())
+        if(chartConfig.Enabled || chartConfig.CircosBinary.isPresent())
         {
-            createDirectory(config.chartConfig().plotDirectory());
+            createDirectory(chartConfig.PlotDirectory);
         }
     }
 
@@ -58,12 +54,12 @@ public class Charts
             @NotNull final List<FittedRegion> regions, @NotNull final List<AmberBAF> bafs)
             throws InterruptedException, ExecutionException, IOException
     {
-        final ChartConfig chartConfig = configSupplier.chartConfig();
+        final ChartConfig chartConfig = mConfig.Charting;
 
         mCircosCharts.write(referenceId, sampleId, gender, copyNumbers, somaticVariants, structuralVariants, regions, bafs);
         final List<Future<Integer>> futures = mCircosCharts.chartFutures();
 
-        if(chartConfig.enabled())
+        if(chartConfig.Enabled)
         {
             futures.addAll(mRCharts.chartFutures(sampleId, plotSomatics));
         }

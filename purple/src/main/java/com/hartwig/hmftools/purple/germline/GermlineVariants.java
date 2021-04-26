@@ -56,7 +56,7 @@ public class GermlineVariants
         if(germlineVcf.isEmpty())
             return;
 
-        final String outputVCF = mConfig.commonConfig().outputDirectory() + File.separator + tumorSample + ".purple.germline.vcf.gz";
+        final String outputVCF = mConfig.OutputDir + File.separator + tumorSample + ".purple.germline.vcf.gz";
 
         PPL_LOGGER.info("Loading germline variants from {}", germlineVcf);
         PPL_LOGGER.info("Enriching germline variants");

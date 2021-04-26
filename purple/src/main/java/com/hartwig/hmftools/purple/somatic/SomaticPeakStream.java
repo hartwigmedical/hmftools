@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static com.hartwig.hmftools.common.variant.SomaticVariant.FILTER_PASS;
 
 import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -21,7 +19,6 @@ import com.hartwig.hmftools.purple.fitting.ModifiableWeightedPloidy;
 import com.hartwig.hmftools.purple.fitting.PeakModel;
 import com.hartwig.hmftools.purple.fitting.PeakModelFactory;
 import com.hartwig.hmftools.common.variant.enrich.SomaticPurityEnrichment;
-import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.SomaticFitConfig;
 
@@ -33,15 +30,15 @@ import htsjdk.variant.vcf.VCFFileReader;
 public class SomaticPeakStream
 {
     private final SomaticFitConfig mSomaticFitConfig;
-    private final CommonConfig mCommonConfig;
+    private final PurpleConfig mConfig;
 
     private int mIndelCount;
     private int mSnpCount;
 
     public SomaticPeakStream(final PurpleConfig config)
     {
-        mSomaticFitConfig = config.somaticConfig();
-        mCommonConfig = config.commonConfig();
+        mSomaticFitConfig = config.SomaticFitting;
+        mConfig = config;
     }
 
     public int indelCount()
@@ -109,7 +106,7 @@ public class SomaticPeakStream
                 && decorator.isPass()
                 && HumanChromosome.contains(decorator.chromosome()) && HumanChromosome.fromString(decorator.chromosome()).isAutosome())
                 {
-                    AllelicDepth depth = decorator.allelicDepth(mCommonConfig.tumorSample());
+                    AllelicDepth depth = decorator.allelicDepth(mConfig.TumorId);
                     weightedPloidies.add(ModifiableWeightedPloidy.create()
                             .from(depth)
                             .setPloidy(decorator.variantCopyNumber())
@@ -130,7 +127,7 @@ public class SomaticPeakStream
             };
 
             final SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(
-                    mCommonConfig.version(), mCommonConfig.tumorSample(),
+                    mConfig.Version, mConfig.TumorId,
                     purityAdjuster, copyNumbers, fittedRegions, consumer);
 
             for(VariantContext context : vcfReader)

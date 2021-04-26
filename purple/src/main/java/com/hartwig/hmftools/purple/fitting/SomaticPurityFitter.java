@@ -119,7 +119,7 @@ class SomaticPurityFitter
 
         return kdFit;
 
-        /*
+        /* Binomial distribution was experimental but not currently used
         double maxPurity = findPurityPeak(variants);
 
         if(maxPurity <= 0)

@@ -33,8 +33,6 @@ final class SomaticKernelDensityPeaks
             return Optional.empty();
         }
 
-        PPL_LOGGER.info("Looking for peak somatic allelic frequencies");
-
         final List<SomaticPeak> peaks = SomaticKernelDensityPeaks.findSomaticPeaks(variants);
 
         // First try and get the largest implied purity where peak count > minPeak

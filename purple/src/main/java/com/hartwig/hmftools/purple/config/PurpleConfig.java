@@ -2,57 +2,129 @@ package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
-import static com.hartwig.hmftools.purple.CommandLineUtil.defaultIntValue;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.ReferenceData.DRIVER_ENABLED;
-import static com.hartwig.hmftools.purple.config.StructuralVariantConfig.createStructuralVariantConfig;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
-import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class PurpleConfig
 {
+    public final String ReferenceId;
+    public final String TumorId;
+
+    public final String Version;
+    public final String OutputDir;
+
+    public final boolean TumorOnlyMode;
+    public final boolean DriverEnabled;
+
+    public final FittingConfig Fitting;
+    public final SomaticFitConfig SomaticFitting;
+    public final ChartConfig Charting;
+
+    private boolean mIsValid;
+
     private static final String REF_SAMPLE = "reference";
     private static final String TUMOR_SAMPLE = "tumor";
     public static final String SAMPLE_DIR = "sample_dir";
     private static final String OUTPUT_DIRECTORY = "output_dir";
-    private static final String GC_PROFILE = "gc_profile";
     private static final String AMBER = "amber";
     private static final String COBALT = "cobalt";
     private static final String TUMOR_ONLY = "tumor_only";
 
-    private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT = "min_diploid_tumor_ratio_count";
-    private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 30;
+    public PurpleConfig(final String version, final CommandLine cmd)
+    {
+        Version = version;
+        mIsValid = true;
 
-    private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE = "min_diploid_tumor_ratio_count_centromere";
-    private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT = 150;
+        final boolean isTumorOnly = cmd.hasOption(TUMOR_ONLY);
+
+        final StringJoiner missingJoiner = new StringJoiner(", ");
+
+        String refSample = "";
+        if(isTumorOnly)
+        {
+            if(cmd.hasOption(REF_SAMPLE))
+            {
+                mIsValid = false;
+                PPL_LOGGER.error(REF_SAMPLE + " not supported in tumor only mode");
+            }
+            else
+            {
+                refSample = CobaltRatioFile.TUMOR_ONLY_REFERENCE_SAMPLE;
+            }
+        }
+        else
+        {
+            refSample = parameter(cmd, REF_SAMPLE, missingJoiner);
+        }
+
+        TumorOnlyMode = cmd.hasOption(TUMOR_ONLY);
+        DriverEnabled = cmd.hasOption(DRIVER_ENABLED);
+
+        TumorId = parameter(cmd, TUMOR_SAMPLE, missingJoiner);
+        ReferenceId = refSample;
+
+        String sampleDir = "";
+        String outputDirectory;
+        String amberDirectory;
+        String cobaltDirectory;
+
+        if(cmd.hasOption(SAMPLE_DIR))
+        {
+            sampleDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DIR));
+            OutputDir = checkAddDirSeparator(sampleDir + cmd.getOptionValue(OUTPUT_DIRECTORY, ""));
+        }
+        else
+        {
+            OutputDir = parameter(cmd, OUTPUT_DIRECTORY, missingJoiner);
+        }
+
+        final String missing = missingJoiner.toString();
+
+        if(!missing.isEmpty())
+        {
+            mIsValid = false;
+            PPL_LOGGER.error("Missing the following parameters: " + missing);
+        }
+
+        final File outputDir = new File(OutputDir);
+        if(!outputDir.exists() && !outputDir.mkdirs())
+        {
+            mIsValid = false;
+            PPL_LOGGER.error("Unable to write directory " + OutputDir);
+        }
+
+        if(isTumorOnly)
+        {
+            PPL_LOGGER.info("Tumor Sample: {}", TumorId);
+        }
+        else
+        {
+            PPL_LOGGER.info("Reference Sample: {}, Tumor Sample: {}", ReferenceId, TumorId);
+        }
+
+        PPL_LOGGER.info("Output Directory: {}", OutputDir);
+
+        Charting = new ChartConfig(cmd, OutputDir);
+        Fitting = new FittingConfig(cmd);
+        SomaticFitting = new SomaticFitConfig(cmd);
+    }
+
+    public boolean isValid() { return mIsValid; }
 
     public static void addOptions(@NotNull Options options)
     {
         options.addOption(TUMOR_ONLY, false, "Tumor only mode. Disables somatic fitting.");
         options.addOption(REF_SAMPLE, true, "Name of the reference sample. This should correspond to the value used in AMBER and COBALT.");
         options.addOption(TUMOR_SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in AMBER and COBALT.");
-
-        options.addOption(GC_PROFILE, true, "Path to GC profile.");
-
-        options.addOption(MIN_DIPLOID_TUMOR_RATIO_COUNT,
-                true,
-                "Minimum ratio count while smoothing before diploid regions become suspect.");
-
-        options.addOption(MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE,
-                true,
-                "Minimum ratio count while smoothing before diploid regions become suspect while approaching centromere.");
 
         options.addOption(OUTPUT_DIRECTORY,
                 true,
@@ -74,163 +146,10 @@ public class PurpleConfig
 
         addDatabaseCmdLineArgs(options);
         FittingConfig.addOptions(options);
-        FitScoreConfig.addOptions(options);
         SomaticFitConfig.addOptions(options);
         ReferenceData.addOptions(options);
-        // StructuralVariantConfig.addOptions(options);
-        // RefGenomeData.addOptions(options);
         ChartConfig.addOptions(options);
-        // DriverCatalogConfig.addOptions(options);
-        // GermlineConfig.addOptions(options);
         SampleDataFiles.addOptions(options);
-    }
-
-    private final CommonConfig commonConfig;
-    private final SomaticFitConfig somaticFitConfig;
-    private final ChartConfig chartConfig;
-    private final FittingConfig fittingConfig;
-    private final SmoothingConfig smoothingConfig;
-    private final FitScoreConfig fitScoreConfig;
-
-    public final boolean DriverEnabled;
-
-    private boolean mIsValid;
-
-    public PurpleConfig(@NotNull final String version, @NotNull CommandLine cmd)
-    {
-        mIsValid = true;
-
-        final boolean isTumorOnly = cmd.hasOption(TUMOR_ONLY);
-        DriverEnabled = cmd.hasOption(DRIVER_ENABLED);
-
-        final StringJoiner missingJoiner = new StringJoiner(", ");
-        final String gcProfile = parameter(cmd, GC_PROFILE, missingJoiner);
-        String refSample = "";
-        if(isTumorOnly)
-        {
-            if(cmd.hasOption(REF_SAMPLE))
-            {
-                mIsValid = false;
-                PPL_LOGGER.error(REF_SAMPLE + " not supported in tumor only mode");
-            }
-            else
-            {
-                refSample = CobaltRatioFile.TUMOR_ONLY_REFERENCE_SAMPLE;
-            }
-        }
-        else
-        {
-            refSample = parameter(cmd, REF_SAMPLE, missingJoiner);
-        }
-
-        final String tumorSample = parameter(cmd, TUMOR_SAMPLE, missingJoiner);
-
-        String sampleDir = "";
-        String outputDirectory;
-        String amberDirectory;
-        String cobaltDirectory;
-
-        if(cmd.hasOption(SAMPLE_DIR))
-        {
-            sampleDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DIR));
-            outputDirectory = checkAddDirSeparator(sampleDir + cmd.getOptionValue(OUTPUT_DIRECTORY, ""));
-            amberDirectory = sampleDir + "amber/";
-            cobaltDirectory = sampleDir + "cobalt/";
-        }
-        else
-        {
-            outputDirectory = parameter(cmd, OUTPUT_DIRECTORY, missingJoiner);
-            amberDirectory = parameter(cmd, AMBER, missingJoiner);
-            cobaltDirectory = parameter(cmd, COBALT, missingJoiner);
-        }
-
-        final String missing = missingJoiner.toString();
-
-        if(!missing.isEmpty())
-        {
-            mIsValid = false;
-            PPL_LOGGER.error("Missing the following parameters: " + missing);
-        }
-
-        final File outputDir = new File(outputDirectory);
-        if(!outputDir.exists() && !outputDir.mkdirs())
-        {
-            mIsValid = false;
-            PPL_LOGGER.error("Unable to write directory " + outputDirectory);
-        }
-
-        commonConfig = ImmutableCommonConfig.builder()
-                .version(version)
-                .refSample(refSample)
-                .tumorSample(tumorSample)
-                .sampleDirectory(sampleDir)
-                .outputDirectory(outputDirectory)
-                .amberDirectory(amberDirectory)
-                .cobaltDirectory(cobaltDirectory)
-                .gcProfile(gcProfile)
-                .tumorOnly(isTumorOnly)
-                .build();
-
-        if(isTumorOnly)
-        {
-            PPL_LOGGER.info("Tumor Sample: {}", commonConfig.tumorSample());
-        }
-        else
-        {
-            PPL_LOGGER.info("Reference Sample: {}, Tumor Sample: {}", commonConfig.refSample(), commonConfig.tumorSample());
-        }
-
-        PPL_LOGGER.info("Output Directory: {}", commonConfig.outputDirectory());
-
-        smoothingConfig = ImmutableSmoothingConfig.builder()
-                .minDiploidTumorRatioCount(defaultIntValue(cmd, MIN_DIPLOID_TUMOR_RATIO_COUNT, MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT))
-                .minDiploidTumorRatioCountAtCentromere(defaultIntValue(cmd,
-                        MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE,
-                        MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT))
-                .build();
-
-        chartConfig = ChartConfig.createCircosConfig(cmd, commonConfig);
-        fittingConfig = FittingConfig.createConfig(cmd);
-        fitScoreConfig = FitScoreConfig.createConfig(cmd);
-        somaticFitConfig = SomaticFitConfig.createSomaticConfig(cmd, commonConfig);
-    }
-
-    public boolean isValid() { return mIsValid; }
-
-    @NotNull
-    public FitScoreConfig fitScoreConfig()
-    {
-        return fitScoreConfig;
-    }
-
-    @NotNull
-    public CommonConfig commonConfig()
-    {
-        return commonConfig;
-    }
-
-    @NotNull
-    public SomaticFitConfig somaticConfig()
-    {
-        return somaticFitConfig;
-    }
-
-    @NotNull
-    public ChartConfig chartConfig()
-    {
-        return chartConfig;
-    }
-
-    @NotNull
-    public FittingConfig fittingConfig()
-    {
-        return fittingConfig;
-    }
-
-    @NotNull
-    public SmoothingConfig smoothingConfig()
-    {
-        return smoothingConfig;
     }
 
     @NotNull
