@@ -68,8 +68,8 @@ public class StructuralVariantCache
         mRefGenomeFile = null;
     }
 
-    public StructuralVariantCache(@NotNull final String version, @NotNull final String templateVCF, @NotNull final String outputVCF,
-            final ReferenceData referenceData)
+    public StructuralVariantCache(
+            @NotNull final String version, @NotNull final String templateVCF, @NotNull final String outputVCF, final ReferenceData referenceData)
     {
         final VCFFileReader vcfReader = new VCFFileReader(new File(templateVCF), false);
         mOutputVcfFilename = outputVCF;
@@ -144,19 +144,22 @@ public class StructuralVariantCache
     {
         if(mVcfHeader.isPresent())
         {
-            final VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(mOutputVcfFilename)
-                    .setReferenceDictionary(mVcfHeader.get().getSequenceDictionary())
-                    .setIndexCreator(new TabixIndexCreator(mVcfHeader.get().getSequenceDictionary(), new TabixFormat()))
-                    .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
-                    .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
-                    .build();
+            try (
+                final VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(mOutputVcfFilename)
+                        .setReferenceDictionary(mVcfHeader.get().getSequenceDictionary())
+                        .setIndexCreator(new TabixIndexCreator(mVcfHeader.get().getSequenceDictionary(), new TabixFormat()))
+                        .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
+                        .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
+                        .build())
+            {
 
-            final StructuralRefContextEnrichment refEnricher =
-                    new StructuralRefContextEnrichment(mRefGenomeFile, writer::add);
-            writer.writeHeader(refEnricher.enrichHeader(mVcfHeader.get()));
+                final StructuralRefContextEnrichment refEnricher =
+                        new StructuralRefContextEnrichment(mRefGenomeFile, writer::add);
+                writer.writeHeader(refEnricher.enrichHeader(mVcfHeader.get()));
 
-            enriched(purityAdjuster, copyNumbers).forEach(refEnricher);
-            refEnricher.flush();
+                enriched(purityAdjuster, copyNumbers).forEach(refEnricher);
+                refEnricher.flush();
+            }
         }
     }
 
@@ -241,10 +244,7 @@ public class StructuralVariantCache
     }
 
     @NotNull
-    List<StructuralVariant> variants()
-    {
-        return mVariants.segmentationVariants();
-    }
+    public List<StructuralVariant> variants() { return mVariants.segmentationVariants(); }
 
     int passingBnd()
     {

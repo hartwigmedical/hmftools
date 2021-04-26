@@ -11,4 +11,6 @@ public class PurpleCommon
 
     public static final DecimalFormat formatDbl = new DecimalFormat("0.00");
 
+    public static String formatPurity(double purity) { return String.format("%.3f", purity); }
+
 }

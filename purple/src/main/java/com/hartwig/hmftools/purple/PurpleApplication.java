@@ -155,16 +155,10 @@ public class PurpleApplication
         PPL_LOGGER.info("Complete");
     }
 
-    private void processSample(final String referenceId, final String tumorSample)
+    private SampleData loadSampleData(final String referenceId, final String tumorSample, final SampleDataFiles sampleDataFiles)
     {
-        PPL_LOGGER.info("processing sample(ref={} tumor={})", referenceId, tumorSample);
-
-        final String outputDir = checkAddDirSeparator(mConfig.commonConfig().outputDirectory());
-
         try
         {
-            final SampleDataFiles sampleDataFiles = new SampleDataFiles(mCmdLineArgs, tumorSample);
-
             // load amber and cobalt sample data
             final AmberData amberData = new AmberData(tumorSample, mConfig.commonConfig().amberDirectory());
 
@@ -178,6 +172,34 @@ public class PurpleApplication
             SampleData sampleData = new SampleData(referenceId, tumorSample, amberData, cobaltData, svCache);
 
             sampleData.loadSomatics(sampleDataFiles.SomaticVcfFile, mReferenceData, mConfig.commonConfig().tumorOnly());
+
+            return sampleData;
+        }
+        catch(Exception e)
+        {
+            PPL_LOGGER.error("failed processing sample({}): {}", tumorSample, e.toString());
+            return null;
+        }
+    }
+
+    private void processSample(final String referenceId, final String tumorSample)
+    {
+        PPL_LOGGER.info("Processing sample(ref={} tumor={})", referenceId, tumorSample);
+
+        final String outputDir = checkAddDirSeparator(mConfig.commonConfig().outputDirectory());
+
+        try
+        {
+            final SampleDataFiles sampleDataFiles = new SampleDataFiles(mCmdLineArgs, tumorSample);
+
+            final SampleData sampleData = loadSampleData(referenceId, tumorSample, sampleDataFiles);
+
+            if(sampleData == null)
+                return;
+
+            final AmberData amberData = sampleData.Amber;
+            final CobaltData cobaltData = sampleData.Cobalt;
+            final List<StructuralVariant> svList = sampleData.SvCache.variants();
 
             final Gender amberGender = amberData.PatientGender;
             final Gender cobaltGender = cobaltData.gender();
@@ -193,7 +215,7 @@ public class PurpleApplication
             }
 
             PPL_LOGGER.info("Applying segmentation");
-            final List<ObservedRegion> observedRegions = mSegmentation.createSegments(svCache.variants(), amberData, cobaltData);
+            final List<ObservedRegion> observedRegions = mSegmentation.createSegments(svList, amberData, cobaltData);
 
             PPL_LOGGER.info("Fitting purity");
             final FitScoreConfig fitScoreConfig = mConfig.fitScoreConfig();
@@ -201,7 +223,7 @@ public class PurpleApplication
             final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(
                     amberData.AverageTumorDepth, cobaltChromosomes, fitScoreConfig);
 
-            final BestFit bestFit = fitPurity(sampleData, observedRegions, fittedRegionFactory, svCache.variants());
+            final BestFit bestFit = fitPurity(sampleData, observedRegions, fittedRegionFactory, svList);
 
             final FittedPurity fittedPurity = bestFit.fit();
             final PurityAdjuster purityAdjuster =
@@ -219,22 +241,22 @@ public class PurpleApplication
             PPL_LOGGER.info("Calculating copy number");
             List<FittedRegion> fittedRegions =
                     fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions);
-            copyNumberFactory.invoke(fittedRegions, svCache.variants());
+            copyNumberFactory.invoke(fittedRegions, svList);
 
             final int recoveredSVCount = recoverStructuralVariants(sampleData, sampleDataFiles, purityAdjuster, copyNumberFactory.copyNumbers());
 
             if(recoveredSVCount > 0)
             {
                 PPL_LOGGER.info("Reapplying segmentation with {} recovered structural variants", recoveredSVCount);
-                final List<ObservedRegion> recoveredObservedRegions = mSegmentation.createSegments(svCache.variants(), amberData, cobaltData);
+                final List<ObservedRegion> recoveredObservedRegions = mSegmentation.createSegments(svList, amberData, cobaltData);
 
                 PPL_LOGGER.info("Recalculating copy number");
                 fittedRegions = fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions);
-                copyNumberFactory.invoke(fittedRegions, svCache.variants());
+                copyNumberFactory.invoke(fittedRegions, svList);
             }
 
             final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
-            svCache.inferMissingVariant(copyNumbers);
+            sampleData.SvCache.inferMissingVariant(copyNumbers);
 
             final List<PurpleCopyNumber> germlineDeletions = copyNumberFactory.germlineDeletions();
             final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
@@ -286,7 +308,7 @@ public class PurpleApplication
                     .tumorMutationalLoadStatus(somaticStream.tumorMutationalLoadStatus())
                     .tumorMutationalBurdenPerMb(somaticStream.tumorMutationalBurdenPerMb())
                     .tumorMutationalBurdenStatus(somaticStream.tumorMutationalBurdenPerMbStatus())
-                    .svTumorMutationalBurden(svCache.passingBnd())
+                    .svTumorMutationalBurden(sampleData.SvCache.passingBnd())
                     .qc(qcChecks)
                     .build();
 
@@ -322,7 +344,7 @@ public class PurpleApplication
                     germlineDeletions);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(outputDir, tumorSample), geneCopyNumbers);
             SegmentFile.write(SegmentFile.generateFilename(outputDir, tumorSample), fittedRegions);
-            svCache.write(purityAdjuster, copyNumbers);
+            sampleData.SvCache.write(purityAdjuster, copyNumbers);
             PeakModelFile.write(PeakModelFile.generateFilename(outputDir, tumorSample), somaticPeaks);
 
             if(hasDatabaseConfig(mCmdLineArgs))
@@ -349,12 +371,13 @@ public class PurpleApplication
                 mCharts.write(
                         referenceId, tumorSample, !sampleDataFiles.SomaticVcfFile.isEmpty(),
                         cobaltGender, copyNumbers, somaticStream.downsampledVariants(),
-                        svCache.variants(), fittedRegions, Lists.newArrayList(amberData.ChromosomeBafs.values()));
+                        svList, fittedRegions, Lists.newArrayList(amberData.ChromosomeBafs.values()));
             }
         }
         catch(Exception e)
         {
-            PPL_LOGGER.error("failed processing samnple({}): {}", tumorSample, e.toString());
+            PPL_LOGGER.error("failed processing sample({}): {}", tumorSample, e.toString());
+            e.printStackTrace();
         }
     }
 
@@ -414,21 +437,12 @@ public class PurpleApplication
         }
 
         final BestFitFactory bestFitFactory = new BestFitFactory(mConfig,
-                !sampleData.SomaticVariants.isEmpty(),
                 sampleData.Amber.minSomaticTotalReadCount(),
                 sampleData.Amber.maxSomaticTotalReadCount(),
-                fittingConfig.minPurity(),
-                fittingConfig.maxPurity(),
-                somaticFitConfig.minTotalVariants(),
-                somaticFitConfig.minPeakVariants(),
-                somaticFitConfig.highlyDiploidPercentage(),
-                somaticFitConfig.minSomaticPurity(),
-                somaticFitConfig.minSomaticPuritySpread(),
-                somaticFitConfig.minTotalSvFragmentCount(),
-                somaticFitConfig.minTotalSomaticVariantAlleleReadCount(),
                 fitCandidates,
                 snpSomatics,
-                structuralVariants);
+                structuralVariants,
+                observedRegions);
 
         return bestFitFactory.bestFit();
     }
