@@ -3,6 +3,7 @@ package com.hartwig.hmftools.fastqstats;
 import org.jetbrains.annotations.NotNull;
 
 class FastqData {
+
     private final long yield;
     private final long q30;
 

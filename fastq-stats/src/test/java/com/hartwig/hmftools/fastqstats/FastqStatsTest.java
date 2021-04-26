@@ -17,6 +17,7 @@ import com.google.common.io.Resources;
 import org.junit.Test;
 
 public class FastqStatsTest {
+
     // 100% of baseCalls have a quality score >30
     @Test
     public void computesCorrectStatsFor100PercentDir() throws IOException, InterruptedException {
