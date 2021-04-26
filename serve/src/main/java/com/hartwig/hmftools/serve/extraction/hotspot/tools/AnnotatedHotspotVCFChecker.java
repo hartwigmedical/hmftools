@@ -105,37 +105,31 @@ public class AnnotatedHotspotVCFChecker {
     @NotNull
     private MatchType determineMatch(@NotNull String inputGene, @Nullable String inputTranscript, @NotNull String inputProteinAnnotation,
             @NotNull List<SnpEffAnnotation> annotations, @NotNull String formattedHotspot) {
-        if (inputTranscript != null) {
-            SnpEffAnnotation annotation = annotationForTranscript(annotations, inputTranscript);
-
-            if (annotation != null) {
-                String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
-                if (!isSameAnnotation(inputTranscript, inputProteinAnnotation, snpeffProteinAnnotation)) {
-                    LOGGER.warn("Difference on gene '{}-{}' - {} : SERVE input protein '{}' vs SnpEff protein '{}'",
+        SnpEffAnnotation specificAnnotation = annotationForTranscript(annotations, inputTranscript);
+        if (specificAnnotation != null) {
+            String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(specificAnnotation.hgvsProtein());
+            if (!isSameAnnotation(inputTranscript, inputProteinAnnotation, snpeffProteinAnnotation)) {
+                LOGGER.warn("Difference on gene '{}-{}' - {} : SERVE input protein '{}' vs SnpEff protein '{}'",
+                        inputGene,
+                        inputTranscript,
+                        formattedHotspot,
+                        inputProteinAnnotation,
+                        snpeffProteinAnnotation);
+                return MatchType.NO_MATCH;
+            } else {
+                if (snpeffProteinAnnotation.equals(inputProteinAnnotation)) {
+                    LOGGER.debug("Identical match found on {} for '{}'", inputGene, inputProteinAnnotation);
+                    return MatchType.IDENTICAL;
+                } else {
+                    LOGGER.debug("Match found on {}. '{}' and '{}' are considered identical",
                             inputGene,
-                            inputTranscript,
-                            formattedHotspot,
                             inputProteinAnnotation,
                             snpeffProteinAnnotation);
-                    return MatchType.NO_MATCH;
-                } else {
-                    if (snpeffProteinAnnotation.equals(inputProteinAnnotation)) {
-                        LOGGER.debug("Identical match found on {} for '{}'", inputGene, inputProteinAnnotation);
-                        return MatchType.IDENTICAL;
-                    } else {
-                        LOGGER.debug("Match found on {}. '{}' and '{}' are considered identical",
-                                inputGene,
-                                inputProteinAnnotation,
-                                snpeffProteinAnnotation);
-                        return MatchType.WHITE_LIST;
-                    }
+                    return MatchType.WHITE_LIST;
                 }
-            } else {
-                LOGGER.warn("Could not find snpeff annotation for '{}' on '{}'!", inputTranscript, inputGene);
-                return MatchType.NO_MATCH;
             }
         } else {
-            // In case input transcript is missing we try to match against any transcript.
+            // In case input transcript is missing or can't be found, we try to match against any transcript.
             boolean matchFound = false;
             for (SnpEffAnnotation annotation : annotations) {
                 if (annotation.isTranscriptFeature()) {
@@ -157,7 +151,7 @@ public class AnnotatedHotspotVCFChecker {
     }
 
     @Nullable
-    private static SnpEffAnnotation annotationForTranscript(@NotNull List<SnpEffAnnotation> annotations, @NotNull String transcript) {
+    private static SnpEffAnnotation annotationForTranscript(@NotNull List<SnpEffAnnotation> annotations, @Nullable String transcript) {
         for (SnpEffAnnotation annotation : annotations) {
             if (annotation.isTranscriptFeature() && annotation.transcript().equals(transcript)) {
                 return annotation;
