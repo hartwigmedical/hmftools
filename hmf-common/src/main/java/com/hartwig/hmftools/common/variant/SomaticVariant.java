@@ -8,6 +8,8 @@ import org.jetbrains.annotations.Nullable;
 
 public interface SomaticVariant extends Variant {
 
+    public static String FILTER_PASS = "PASS";
+
     double qual();
 
     @NotNull

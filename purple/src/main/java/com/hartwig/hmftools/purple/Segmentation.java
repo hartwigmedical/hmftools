@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple;
 
+import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -11,51 +13,49 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
+import com.hartwig.hmftools.purple.config.AmberData;
+import com.hartwig.hmftools.purple.config.CobaltData;
+import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.region.ObservedRegionFactory;
 import com.hartwig.hmftools.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.purple.config.CommonConfig;
-import com.hartwig.hmftools.purple.config.ConfigSupplier;
+import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.segment.PCFPositionsSupplier;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class Segmentation {
+class Segmentation
+{
+    private final Multimap<Chromosome, GCProfile> mGcProfiles;
+    private final ReferenceData mReferenceData;
+    private final int mWindowSize;
 
-    private static final Logger LOGGER = LogManager.getLogger(Segmentation.class);
+    public Segmentation(@NotNull final PurpleConfig config, final ReferenceData referenceData) throws IOException
+    {
+        mReferenceData = referenceData;
+        mWindowSize = config.commonConfig().windowSize();
 
-    private final CommonConfig config;
-    private final Multimap<Chromosome, AmberBAF> bafs;
-    private final Multimap<Chromosome, PCFPosition> pcfPositions;
-    private final Multimap<Chromosome, GCProfile> gcProfiles;
-    private final ListMultimap<Chromosome, CobaltRatio> ratios;
-    private final ConfigSupplier configSupplier;
-
-    public Segmentation(@NotNull final ConfigSupplier configSupplier) throws IOException {
-        this.config = configSupplier.commonConfig();
-        this.ratios = configSupplier.cobaltData().ratios();
-        this.bafs = configSupplier.amberData().bafs();
-        this.pcfPositions = PCFPositionsSupplier.createPositions(configSupplier);
-        this.configSupplier = configSupplier;
-
-        LOGGER.info("Reading GC Profiles from {}", config.gcProfile());
-        this.gcProfiles = GCProfileFactory.loadGCContent(config.windowSize(), config.gcProfile());
+        PPL_LOGGER.info("Reading GC Profiles from {}", config.commonConfig().gcProfile());
+        mGcProfiles = GCProfileFactory.loadGCContent(mWindowSize, config.commonConfig().gcProfile());
     }
 
     @NotNull
-    public List<ObservedRegion> createSegments(@NotNull final List<StructuralVariant> structuralVariants) {
-        final PurpleSegmentFactory factory = new PurpleSegmentFactory(config.windowSize(),
-                configSupplier.refGenomeConfig().centromere(),
-                configSupplier.refGenomeConfig().length());
+    public List<ObservedRegion> createSegments(
+            final List<StructuralVariant> structuralVariants, final AmberData amberData, final CobaltData cobaltData)
+    {
+        final Multimap<Chromosome, PCFPosition> pcfPositions = PCFPositionsSupplier.createPositions(amberData, cobaltData);
 
-        final List<PurpleSegment> segments = factory.segment(structuralVariants, pcfPositions, ratios);
+        final PurpleSegmentFactory factory = new PurpleSegmentFactory(mWindowSize,
+                mReferenceData.Centromeres, mReferenceData.ChromosomeLengths);
+
+        final List<PurpleSegment> segments = factory.segment(structuralVariants, pcfPositions, cobaltData.Ratios);
 
         final ObservedRegionFactory observedRegionFactory =
-                new ObservedRegionFactory(config.windowSize(), configSupplier.cobaltData().cobaltChromosomes());
-        return observedRegionFactory.combine(segments, bafs, ratios, gcProfiles);
+                new ObservedRegionFactory(mWindowSize, cobaltData.CobaltChromosomes);
+
+        return observedRegionFactory.combine(segments, amberData.ChromosomeBafs, cobaltData.Ratios, mGcProfiles);
     }
 }

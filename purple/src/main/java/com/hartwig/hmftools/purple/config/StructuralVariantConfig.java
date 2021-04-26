@@ -24,8 +24,8 @@ public interface StructuralVariantConfig
 
     static void addOptions(@NotNull Options options)
     {
-        options.addOption(STRUCTURAL_VARIANTS, true, "Optional location of structural variant vcf for more accurate segmentation.");
-        options.addOption(STRUCTURAL_VARIANT_RECOVERY, true, "Optional location of failing structural variants that may be recovered.");
+        options.addOption(STRUCTURAL_VARIANTS, true, "Optional location of structural variant vcf for more accurate segmentation");
+        options.addOption(STRUCTURAL_VARIANT_RECOVERY, true, "Optional location of failing structural variants that may be recovered");
     }
 
     Optional<File> file();

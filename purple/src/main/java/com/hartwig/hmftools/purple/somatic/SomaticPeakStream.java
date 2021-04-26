@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.hartwig.hmftools.common.variant.SomaticVariant.FILTER_PASS;
 
 import java.io.File;
 import java.util.List;
@@ -13,6 +14,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.fitting.ModifiableWeightedPloidy;
@@ -20,7 +22,7 @@ import com.hartwig.hmftools.purple.fitting.PeakModel;
 import com.hartwig.hmftools.purple.fitting.PeakModelFactory;
 import com.hartwig.hmftools.common.variant.enrich.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.config.CommonConfig;
-import com.hartwig.hmftools.purple.config.ConfigSupplier;
+import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.SomaticFitConfig;
 
 import org.jetbrains.annotations.NotNull;
@@ -32,18 +34,14 @@ public class SomaticPeakStream
 {
     private final SomaticFitConfig mSomaticFitConfig;
     private final CommonConfig mCommonConfig;
-    private final String mSomaticVcf;
-    private final boolean mEnabled;
 
     private int mIndelCount;
     private int mSnpCount;
 
-    public SomaticPeakStream(final ConfigSupplier configSupplier)
+    public SomaticPeakStream(final PurpleConfig config)
     {
-        mSomaticFitConfig = configSupplier.somaticConfig();
-        mCommonConfig = configSupplier.commonConfig();
-        mEnabled = mSomaticFitConfig.file().isPresent();
-        mSomaticVcf = mEnabled ? mSomaticFitConfig.file().get().toString() : "";
+        mSomaticFitConfig = config.somaticConfig();
+        mCommonConfig = config.commonConfig();
     }
 
     public int indelCount()
@@ -58,12 +56,47 @@ public class SomaticPeakStream
 
     public List<PeakModel> somaticPeakModel(
             @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
-            @NotNull final List<FittedRegion> fittedRegions)
+            @NotNull final List<FittedRegion> fittedRegions, final List<SomaticVariant> somaticVariants, final String somaticVcfFile)
     {
-        if(!mEnabled)
+        mIndelCount = 0;
+        mSnpCount = 0;
+
+        /*
+        if(somaticVariants.isEmpty())
             return Lists.newArrayList();
 
-        try (VCFFileReader vcfReader = new VCFFileReader(new File(mSomaticVcf), false))
+        // gather up passing variants less then max ploidy
+        final List<ModifiableWeightedPloidy> weightedPloidies = newArrayList();
+
+        for(final SomaticVariant variant : somaticVariants)
+        {
+            if(Doubles.lessThan(variant.variantCopyNumber(), mSomaticFitConfig.clonalityMaxPloidy())
+                    && variant.filter().equals(FILTER_PASS)
+                    && HumanChromosome.contains(variant.chromosome()) && HumanChromosome.fromString(variant.chromosome()).isAutosome())
+            {
+                weightedPloidies.add(ModifiableWeightedPloidy.create()
+                        .totalReadCount(variant.totalReadCount())
+                        .alleleReadCount(variant.alleleReadCount())
+                        .setPloidy(variant.variantCopyNumber())
+                        .setWeight(1));
+            }
+
+            if(variant.filter().equals(FILTER_PASS))
+            {
+                if(variant.type() == VariantType.INDEL)
+                {
+                    mIndelCount++;
+                }
+                else
+                {
+                    mSnpCount++;
+                }
+            }
+
+        }
+         */
+
+        try (VCFFileReader vcfReader = new VCFFileReader(new File(somaticVcfFile), false))
         {
             // gather up passing variants less then max ploidy
             final List<ModifiableWeightedPloidy> weightedPloidies = newArrayList();

@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.purple.config;
 
+import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
+
 import java.io.File;
 import java.io.IOException;
-import java.text.DecimalFormat;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
@@ -16,79 +18,74 @@ import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface AmberData {
+public class AmberData
+{
+    private static int DEFAULT_READ_DEPTH = 100;
 
-    Logger LOGGER = LogManager.getLogger(AmberData.class);
-    int DEFAULT_READ_DEPTH = 100;
+    public final Gender PatientGender;
 
-    @NotNull
-    Gender gender();
+    public final Multimap<Chromosome, AmberBAF> ChromosomeBafs;
 
-    @NotNull
-    Multimap<Chromosome, AmberBAF> bafs();
+    public final Multimap<Chromosome, PCFPosition> TumorSegments;
 
-    @NotNull
-    Multimap<Chromosome, PCFPosition> tumorSegments();
+    public final int AverageTumorDepth;
 
-    int averageTumorDepth();
+    public double Contamination;
 
-    double contamination();
+    private static final double MAX_SOMATIC_TOTAL_READ_COUNT_PROPORTION = 1.4;
+    private static final double MIN_SOMATIC_TOTAL_READ_COUNT_PROPORTION = 0.6;
 
-    @NotNull
-    static AmberData createAmberData(@NotNull final CommonConfig commonConfig)
-            throws ParseException, IOException {
-        final String amberDirectory = commonConfig.amberDirectory();
-        final String amberFilename = AmberBAFFile.generateAmberFilenameForReading(amberDirectory, commonConfig.tumorSample());
-        if (!new File(amberFilename).exists()) {
+    public int minSomaticTotalReadCount()
+    {
+        return (int) Math.floor(MIN_SOMATIC_TOTAL_READ_COUNT_PROPORTION * AverageTumorDepth);
+    }
+
+    public int maxSomaticTotalReadCount()
+    {
+        return (int) Math.ceil(MAX_SOMATIC_TOTAL_READ_COUNT_PROPORTION * AverageTumorDepth);
+    }
+
+    public AmberData(final String sampleId, final String amberDirectory) throws ParseException, IOException
+    {
+        final String amberFilename = AmberBAFFile.generateAmberFilenameForReading(amberDirectory, sampleId);
+        if(!new File(amberFilename).exists())
+        {
             throw new ParseException("Unable to open amber baf file: " + amberFilename);
         }
 
-        final String pcfFilename = PCFFile.generateBAFFilename(amberDirectory, commonConfig.tumorSample());
-        if (!new File(pcfFilename).exists()) {
+        final String pcfFilename = PCFFile.generateBAFFilename(amberDirectory, sampleId);
+        if(!new File(pcfFilename).exists())
+        {
             throw new ParseException("Unable to open amber pcf file: " + pcfFilename);
         }
 
-        final String qcFile = AmberQCFile.generateFilename(amberDirectory, commonConfig.tumorSample());
-        if (!new File(qcFile).exists()) {
+        final String qcFile = AmberQCFile.generateFilename(amberDirectory, sampleId);
+        if(!new File(qcFile).exists())
+        {
             throw new ParseException("Unable to open amber qc file: " + qcFile);
         }
 
-        LOGGER.info("Reading amber QC from {}", qcFile);
-        final double contamination = AmberQCFile.read(qcFile).contamination();
+        PPL_LOGGER.info("Reading amber QC from {}", qcFile);
+        Contamination = AmberQCFile.read(qcFile).contamination();
 
-        LOGGER.info("Reading amber bafs from {}", amberFilename);
-        final Multimap<Chromosome, AmberBAF> bafs = AmberBAFFile.read(amberFilename);
+        PPL_LOGGER.info("Reading amber bafs from {}", amberFilename);
+        ChromosomeBafs = AmberBAFFile.read(amberFilename);
 
-        LOGGER.info("Reading amber pcfs from {}", pcfFilename);
-        final Multimap<Chromosome, PCFPosition> tumorSegments =
-                PCFFile.readPositions(commonConfig.windowSize(), PCFSource.TUMOR_BAF, pcfFilename);
+        PPL_LOGGER.info("Reading amber pcfs from {}", pcfFilename);
 
-        int averageTumorDepth = (int) Math.round(bafs.values()
+        TumorSegments = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_BAF, pcfFilename);
+
+        AverageTumorDepth = (int) Math.round(ChromosomeBafs.values()
                 .stream()
                 .mapToInt(AmberBAF::tumorDepth)
                 .filter(x -> x > 0)
                 .average()
                 .orElse(DEFAULT_READ_DEPTH));
-        LOGGER.info("Average amber tumor depth is {} reads implying an ambiguous BAF of {}",
-                averageTumorDepth,
-                new DecimalFormat("0.000").format(ExpectedBAF.expectedBAF(averageTumorDepth)));
 
-        final Gender gender = Gender.fromAmber(bafs);
+        PPL_LOGGER.info("Average amber tumor depth is {} reads implying an ambiguous BAF of {}",
+                AverageTumorDepth, String.format("%.3f", ExpectedBAF.expectedBAF(AverageTumorDepth)));
 
-        return ImmutableAmberData.builder()
-                .contamination(contamination)
-                .averageTumorDepth(averageTumorDepth)
-                .bafs(bafs)
-                .tumorSegments(tumorSegments)
-                .gender(gender)
-                .build();
+        PatientGender = Gender.fromAmber(ChromosomeBafs);
     }
 }

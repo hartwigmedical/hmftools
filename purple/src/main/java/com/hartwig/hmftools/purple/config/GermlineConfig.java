@@ -19,7 +19,7 @@ public interface GermlineConfig
 
     Logger LOGGER = LogManager.getLogger(GermlineConfig.class);
 
-    String GERMLINE_VARIANTS = "germline_vcf";
+    public static String GERMLINE_VARIANTS = "germline_vcf";
 
     static void addOptions(@NotNull Options options)
     {

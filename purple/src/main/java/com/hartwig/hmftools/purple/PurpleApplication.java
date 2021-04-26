@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.purple;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
+import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.config.DriverCatalogConfig.DRIVER_ENABLED;
 import static com.hartwig.hmftools.purple.purity.FittedPurityScoreFactory.polyclonalProportion;
 import static com.hartwig.hmftools.purple.fitting.WholeGenomeDuplication.wholeGenomeDuplication;
 import static com.hartwig.hmftools.patientdb.LoadPurpleData.persistToDatabase;
@@ -9,23 +15,17 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.GermlineDrivers;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurityAdjusterAbnormalChromosome;
@@ -34,6 +34,11 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.purple.config.AmberData;
+import com.hartwig.hmftools.purple.config.CobaltData;
+import com.hartwig.hmftools.purple.config.ReferenceData;
+import com.hartwig.hmftools.purple.config.SampleData;
+import com.hartwig.hmftools.purple.config.SampleDataFiles;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.BestFit;
@@ -53,22 +58,16 @@ import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.SegmentFile;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.purple.fitting.PeakModel;
 import com.hartwig.hmftools.purple.fitting.PeakModelFile;
-import com.hartwig.hmftools.common.variant.enrich.VariantHotspotEnrichment;
-import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.common.variant.recovery.RecoverStructuralVariants;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.purple.config.CommonConfig;
-import com.hartwig.hmftools.purple.config.ConfigSupplier;
-import com.hartwig.hmftools.purple.config.DBConfig;
+import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.FitScoreConfig;
 import com.hartwig.hmftools.purple.config.FittingConfig;
 import com.hartwig.hmftools.purple.config.SmoothingConfig;
 import com.hartwig.hmftools.purple.config.SomaticFitConfig;
-import com.hartwig.hmftools.purple.config.StructuralVariantConfig;
 import com.hartwig.hmftools.purple.germline.GermlineVariants;
 import com.hartwig.hmftools.purple.plot.Charts;
 import com.hartwig.hmftools.purple.somatic.SomaticPeakStream;
@@ -81,163 +80,200 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
-import htsjdk.variant.vcf.VCFFileReader;
 
 public class PurpleApplication
 {
-    private static final Logger LOGGER = LogManager.getLogger(PurpleApplication.class);
+    private final VersionInfo mPurpleVersion;
+    private final ExecutorService mExecutorService;
+    private final ReferenceData mReferenceData;
+    private final CommandLine mCmdLineArgs;
+    private final PurpleConfig mConfig;
+
+    private final GermlineVariants mGermlineVariants;
+    private final Segmentation mSegmentation;
+    private final Charts mCharts;
+
     private static final int THREADS_DEFAULT = 2;
     private static final String THREADS = "threads";
     private static final String VERSION = "version";
     private static final String LOG_DEBUG = "log_debug";
 
-    public static void main(final String... args) throws IOException, SQLException, ExecutionException, InterruptedException {
-        final Options options = createOptions();
-        try {
-            new PurpleApplication(options, args);
-        } catch (ParseException e) {
-            LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("PurityPloidyEstimateApplication", options);
+    private PurpleApplication(final Options options, final String... args)
+            throws ParseException, IOException, SQLException, ExecutionException, InterruptedException
+    {
+        mPurpleVersion = new VersionInfo("purple.version");
+        PPL_LOGGER.info("PURPLE version: {}", mPurpleVersion.version());
+
+        mCmdLineArgs = createCommandLine(options, args);
+
+        if(mCmdLineArgs.hasOption(VERSION))
+            System.exit(0);
+
+        if(mCmdLineArgs.hasOption(LOG_DEBUG))
+            Configurator.setRootLevel(Level.DEBUG);
+
+        final int threads = mCmdLineArgs.hasOption(THREADS) ? Integer.parseInt(mCmdLineArgs.getOptionValue(THREADS)) : THREADS_DEFAULT;
+
+        mExecutorService = Executors.newFixedThreadPool(threads);
+
+        // load config
+        mConfig = new PurpleConfig(mPurpleVersion.version(), mCmdLineArgs);
+
+        // and common reference data
+        mReferenceData = new ReferenceData(mCmdLineArgs);
+
+        mGermlineVariants = new GermlineVariants(mConfig, mReferenceData, mPurpleVersion.version());
+
+        mSegmentation = new Segmentation(mConfig, mReferenceData);
+
+        mCharts = new Charts(mConfig, mExecutorService, mReferenceData.RefGenVersion.is38());
+
+        if(!mConfig.isValid() || !mReferenceData.isValid())
+        {
+            PPL_LOGGER.error("initialisation error, exiting");
+            mExecutorService.shutdown();
             System.exit(1);
         }
     }
 
-    private PurpleApplication(final Options options, final String... args)
-            throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
+    public void run()
+    {
+        try
+        {
+            processSample(mConfig.commonConfig().refSample(), mConfig.commonConfig().tumorSample());
 
-        final VersionInfo version = new VersionInfo("purple.version");
-        LOGGER.info("PURPLE version: {}", version.version());
-
-        final CommandLine cmd = createCommandLine(options, args);
-
-        if (cmd.hasOption(LOG_DEBUG)) {
-            Configurator.setRootLevel(Level.DEBUG);
+        }
+        finally
+        {
+            mExecutorService.shutdown();
         }
 
-        if (cmd.hasOption(VERSION)) {
-            System.exit(0);
-        }
+        PPL_LOGGER.info("Complete");
+    }
 
-        final int threads = cmd.hasOption(THREADS) ? Integer.parseInt(cmd.getOptionValue(THREADS)) : THREADS_DEFAULT;
-        final ExecutorService executorService = Executors.newFixedThreadPool(threads);
-        try {
-            // Get common config
-            final ConfigSupplier configSupplier = new ConfigSupplier(version.version(), cmd, options);
-            final CommonConfig config = configSupplier.commonConfig();
-            final String outputDirectory = config.outputDirectory();
-            final String tumorSample = config.tumorSample();
+    private void processSample(final String referenceId, final String tumorSample)
+    {
+        PPL_LOGGER.info("processing sample(ref={} tumor={})", referenceId, tumorSample);
 
-            // Load Amber Data
-            final Gender amberGender = configSupplier.amberData().gender();
-            final Multimap<Chromosome, AmberBAF> bafs = configSupplier.amberData().bafs();
-            int averageTumorDepth = configSupplier.amberData().averageTumorDepth();
+        final String outputDir = checkAddDirSeparator(mConfig.commonConfig().outputDirectory());
 
-            // Load Cobalt Data
-            final Gender cobaltGender = configSupplier.cobaltData().gender();
-            final CobaltChromosomes cobaltChromosomes = configSupplier.cobaltData().cobaltChromosomes();
+        try
+        {
+            final SampleDataFiles sampleDataFiles = new SampleDataFiles(mCmdLineArgs, tumorSample);
 
-            // Gender
-            if (cobaltGender.equals(amberGender)) {
-                LOGGER.info("Sample gender is {}", cobaltGender.toString().toLowerCase());
-            } else {
-                LOGGER.warn("COBALT gender {} does not match AMBER gender {}", cobaltGender, amberGender);
+            // load amber and cobalt sample data
+            final AmberData amberData = new AmberData(tumorSample, mConfig.commonConfig().amberDirectory());
+
+            final CobaltData cobaltData = new CobaltData(
+                    referenceId, tumorSample, mConfig.commonConfig().cobaltDirectory(),
+                    amberData.PatientGender, mConfig.commonConfig().tumorOnly());
+
+            // load structural and somatic variants
+            final StructuralVariantCache svCache = createStructuralVariantCache(tumorSample, sampleDataFiles);
+
+            SampleData sampleData = new SampleData(referenceId, tumorSample, amberData, cobaltData, svCache);
+
+            sampleData.loadSomatics(sampleDataFiles.SomaticVcfFile, mReferenceData, mConfig.commonConfig().tumorOnly());
+
+            final Gender amberGender = amberData.PatientGender;
+            final Gender cobaltGender = cobaltData.gender();
+            final CobaltChromosomes cobaltChromosomes = cobaltData.CobaltChromosomes;
+
+            if(cobaltGender.equals(amberGender))
+            {
+                PPL_LOGGER.info("Sample gender is {}", cobaltGender.toString().toLowerCase());
+            }
+            else
+            {
+                PPL_LOGGER.warn("COBALT gender {} does not match AMBER gender {}", cobaltGender, amberGender);
             }
 
-            // Load structural and somatic variants
-            final PurpleStructuralVariantSupplier structuralVariants = structuralVariants(configSupplier);
-            final List<SomaticVariant> allSomatics = somaticVariants(configSupplier);
-            final List<SomaticVariant> fittingSomatics = config.tumorOnly()
-                    ? Collections.emptyList()
-                    : allSomatics.stream().filter(SomaticVariant::isSnp).collect(Collectors.toList());
+            PPL_LOGGER.info("Applying segmentation");
+            final List<ObservedRegion> observedRegions = mSegmentation.createSegments(svCache.variants(), amberData, cobaltData);
 
-            LOGGER.info("Applying segmentation");
-            final Segmentation segmentation = new Segmentation(configSupplier);
-            final List<ObservedRegion> observedRegions = segmentation.createSegments(structuralVariants.variants());
+            PPL_LOGGER.info("Fitting purity");
+            final FitScoreConfig fitScoreConfig = mConfig.fitScoreConfig();
 
-            LOGGER.info("Fitting purity");
-            final FitScoreConfig fitScoreConfig = configSupplier.fitScoreConfig();
-            final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(averageTumorDepth, cobaltChromosomes, fitScoreConfig);
-            final BestFit bestFit = fitPurity(executorService,
-                    configSupplier,
-                    cobaltChromosomes,
-                    fittingSomatics,
-                    observedRegions,
-                    fittedRegionFactory,
-                    structuralVariants.variants());
+            final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(
+                    amberData.AverageTumorDepth, cobaltChromosomes, fitScoreConfig);
+
+            final BestFit bestFit = fitPurity(sampleData, observedRegions, fittedRegionFactory, svCache.variants());
+
             final FittedPurity fittedPurity = bestFit.fit();
             final PurityAdjuster purityAdjuster =
                     new PurityAdjusterAbnormalChromosome(fittedPurity.purity(), fittedPurity.normFactor(), cobaltChromosomes.chromosomes());
 
-            final SmoothingConfig smoothingConfig = configSupplier.smoothingConfig();
+            final SmoothingConfig smoothingConfig = mConfig.smoothingConfig();
+
             final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(smoothingConfig.minDiploidTumorRatioCount(),
                     smoothingConfig.minDiploidTumorRatioCountAtCentromere(),
-                    configSupplier.amberData().averageTumorDepth(),
+                    amberData.AverageTumorDepth,
                     fittedPurity.ploidy(),
                     purityAdjuster,
-                    configSupplier.cobaltData().cobaltChromosomes());
+                    cobaltData.CobaltChromosomes);
 
-            LOGGER.info("Calculating copy number");
+            PPL_LOGGER.info("Calculating copy number");
             List<FittedRegion> fittedRegions =
                     fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions);
-            copyNumberFactory.invoke(fittedRegions, structuralVariants.variants());
+            copyNumberFactory.invoke(fittedRegions, svCache.variants());
 
-            final int recoveredSVCount = recoverStructuralVariants(configSupplier.structuralVariantConfig(),
-                    structuralVariants,
-                    purityAdjuster,
-                    copyNumberFactory.copyNumbers());
-            if (recoveredSVCount > 0) {
-                LOGGER.info("Reapplying segmentation with {} recovered structural variants", recoveredSVCount);
-                final List<ObservedRegion> recoveredObservedRegions = segmentation.createSegments(structuralVariants.variants());
+            final int recoveredSVCount = recoverStructuralVariants(sampleData, sampleDataFiles, purityAdjuster, copyNumberFactory.copyNumbers());
 
-                LOGGER.info("Recalculating copy number");
+            if(recoveredSVCount > 0)
+            {
+                PPL_LOGGER.info("Reapplying segmentation with {} recovered structural variants", recoveredSVCount);
+                final List<ObservedRegion> recoveredObservedRegions = mSegmentation.createSegments(svCache.variants(), amberData, cobaltData);
+
+                PPL_LOGGER.info("Recalculating copy number");
                 fittedRegions = fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions);
-                copyNumberFactory.invoke(fittedRegions, structuralVariants.variants());
+                copyNumberFactory.invoke(fittedRegions, svCache.variants());
             }
 
             final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
-            structuralVariants.inferMissingVariant(copyNumbers);
+            svCache.inferMissingVariant(copyNumbers);
 
             final List<PurpleCopyNumber> germlineDeletions = copyNumberFactory.germlineDeletions();
             final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
 
             final List<GeneCopyNumber> geneCopyNumbers =
-                    GeneCopyNumberFactory.geneCopyNumbers(configSupplier.refGenomeConfig().hmfTranscripts(), copyNumbers, germlineDeletions);
+                    GeneCopyNumberFactory.geneCopyNumbers(mReferenceData.TranscriptRegions, copyNumbers, germlineDeletions);
 
-            LOGGER.info("Generating QC Stats");
-            final PurpleQC qcChecks = PurpleQCFactory.create(configSupplier.amberData().contamination(),
+            PPL_LOGGER.info("Generating QC Stats");
+            final PurpleQC qcChecks = PurpleQCFactory.create(amberData.Contamination,
                     bestFit,
                     amberGender,
                     cobaltGender,
                     copyNumbers,
                     geneCopyNumbers,
                     cobaltChromosomes.germlineAberrations(),
-                    averageTumorDepth);
+                    amberData.AverageTumorDepth);
 
-            LOGGER.info("Modelling somatic peaks");
-            final SomaticPeakStream somaticPeakStream = new SomaticPeakStream(configSupplier);
-            final List<PeakModel> somaticPeaks = somaticPeakStream.somaticPeakModel(purityAdjuster, copyNumbers, enrichedFittedRegions);
+            PPL_LOGGER.info("Modelling somatic peaks");
+            final SomaticPeakStream somaticPeakStream = new SomaticPeakStream(mConfig);
+            final List<PeakModel> somaticPeaks = somaticPeakStream.somaticPeakModel(
+                    purityAdjuster, copyNumbers, enrichedFittedRegions, sampleData.SomaticVariants, sampleDataFiles.SomaticVcfFile);
 
-            LOGGER.info("Enriching somatic variants");
-            final SomaticStream somaticStream = new SomaticStream(configSupplier, somaticPeakStream.snpCount(), somaticPeakStream.indelCount(), somaticPeaks);
+            PPL_LOGGER.info("Enriching somatic variants");
+
+            final SomaticStream somaticStream =
+                    new SomaticStream(mConfig, mReferenceData, somaticPeakStream.snpCount(), somaticPeakStream.indelCount(),
+                            somaticPeaks, sampleDataFiles.SomaticVcfFile);
+
             somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions);
 
             final Set<String> reportedGenes = somaticStream.reportedGenes();
 
-            GermlineVariants germlineVariants = new GermlineVariants(configSupplier);
-            if (configSupplier.germlineConfig().enabled()) {
-                germlineVariants.processAndWrite(purityAdjuster, copyNumbers, reportedGenes);
+            if(!sampleDataFiles.GermlineVcfFile.isEmpty())
+            {
+                mGermlineVariants.processAndWrite(referenceId, tumorSample, sampleDataFiles.GermlineVcfFile, purityAdjuster, copyNumbers, reportedGenes);
             }
 
             final PurityContext purityContext = ImmutablePurityContext.builder()
-                    .version(version.version())
+                    .version(mPurpleVersion.version())
                     .bestFit(bestFit.fit())
                     .method(bestFit.method())
                     .gender(cobaltGender)
@@ -250,49 +286,50 @@ public class PurpleApplication
                     .tumorMutationalLoadStatus(somaticStream.tumorMutationalLoadStatus())
                     .tumorMutationalBurdenPerMb(somaticStream.tumorMutationalBurdenPerMb())
                     .tumorMutationalBurdenStatus(somaticStream.tumorMutationalBurdenPerMbStatus())
-                    .svTumorMutationalBurden(structuralVariants.passingBnd())
+                    .svTumorMutationalBurden(svCache.passingBnd())
                     .qc(qcChecks)
                     .build();
 
             final List<DriverCatalog> somaticDriverCatalog = Lists.newArrayList();
             final List<DriverCatalog> germlineDriverCatalog = Lists.newArrayList();
-            if (configSupplier.driverCatalogConfig().enabled()) {
-                LOGGER.info("Generating driver catalog");
+
+            if(mConfig.DriverEnabled)
+            {
+                PPL_LOGGER.info("Generating driver catalog");
                 somaticDriverCatalog.addAll(somaticStream.drivers(geneCopyNumbers));
 
-                final CNADrivers cnaDrivers = new CNADrivers(qcChecks.status(), configSupplier.driverCatalogConfig().genePanel());
+                final CNADrivers cnaDrivers = new CNADrivers(qcChecks.status(), mReferenceData.GenePanel);
                 somaticDriverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
                 somaticDriverCatalog.addAll(cnaDrivers.amplifications(fittedPurity.ploidy(), geneCopyNumbers));
 
-                final GermlineDrivers germlineDrivers = new GermlineDrivers(configSupplier.driverCatalogConfig().genePanel().driverGenes());
-                germlineDriverCatalog.addAll(germlineDrivers.drivers(germlineVariants.reportableVariants(), geneCopyNumbers));
+                final GermlineDrivers germlineDrivers = new GermlineDrivers(mReferenceData.GenePanel.driverGenes());
+                germlineDriverCatalog.addAll(germlineDrivers.drivers(mGermlineVariants.reportableVariants(), geneCopyNumbers));
 
-                DriverCatalogFile.write(DriverCatalogFile.generateSomaticFilenameForWriting(outputDirectory, tumorSample),
-                        somaticDriverCatalog);
+                DriverCatalogFile.write(DriverCatalogFile.generateSomaticFilenameForWriting(outputDir, tumorSample), somaticDriverCatalog);
 
-                if (configSupplier.germlineConfig().enabled()) {
-                    DriverCatalogFile.write(DriverCatalogFile.generateGermlineFilename(outputDirectory, tumorSample),
-                            germlineDriverCatalog);
+                if(!sampleDataFiles.GermlineVcfFile.isEmpty())
+                {
+                    DriverCatalogFile.write(DriverCatalogFile.generateGermlineFilename(outputDir, tumorSample), germlineDriverCatalog);
                 }
             }
 
-            LOGGER.info("Writing purple data to directory: {}", outputDirectory);
-            version.write(outputDirectory);
-            PurityContextFile.write(outputDirectory, tumorSample, purityContext);
-            FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.allFits());
-            FittedPurityRangeFile.write(outputDirectory, tumorSample, bestFit.allFits());
-            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(outputDirectory, tumorSample), copyNumbers);
-            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilenameForWriting(outputDirectory, tumorSample),
+            PPL_LOGGER.info("Writing purple data to directory: {}", outputDir);
+            mPurpleVersion.write(outputDir);
+            PurityContextFile.write(outputDir, tumorSample, purityContext);
+            FittedPurityRangeFile.write(outputDir, tumorSample, bestFit.allFits());
+            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(outputDir, tumorSample), copyNumbers);
+            PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilenameForWriting(outputDir, tumorSample),
                     germlineDeletions);
-            GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(outputDirectory, tumorSample), geneCopyNumbers);
-            SegmentFile.write(SegmentFile.generateFilename(outputDirectory, tumorSample), fittedRegions);
-            structuralVariants.write(purityAdjuster, copyNumbers);
-            PeakModelFile.write(PeakModelFile.generateFilename(outputDirectory, tumorSample), somaticPeaks);
+            GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(outputDir, tumorSample), geneCopyNumbers);
+            SegmentFile.write(SegmentFile.generateFilename(outputDir, tumorSample), fittedRegions);
+            svCache.write(purityAdjuster, copyNumbers);
+            PeakModelFile.write(PeakModelFile.generateFilename(outputDir, tumorSample), somaticPeaks);
 
-            final DBConfig dbConfig = configSupplier.dbConfig();
-            if (dbConfig.enabled()) {
-                LOGGER.info("Writing purple data to database: {}", dbConfig.url());
-                final DatabaseAccess dbAccess = databaseAccess(dbConfig);
+            if(hasDatabaseConfig(mCmdLineArgs))
+            {
+                final DatabaseAccess dbAccess = databaseAccess(mCmdLineArgs);
+                PPL_LOGGER.info("Writing purple data to database: {}", mCmdLineArgs.getOptionValue(DB_URL));
+
                 persistToDatabase(dbAccess,
                         tumorSample,
                         bestFit.bestFitPerPurity(),
@@ -305,62 +342,62 @@ public class PurpleApplication
                         germlineDriverCatalog);
             }
 
-            LOGGER.info("Generating charts");
-            new Charts(configSupplier, executorService).write(cobaltGender,
-                    copyNumbers,
-                    somaticStream.downsampledVariants(),
-                    structuralVariants.variants(),
-                    fittedRegions,
-                    Lists.newArrayList(bafs.values()));
+            if(mConfig.chartConfig().enabled() || mConfig.chartConfig().circosBinary().isPresent())
+            {
+                PPL_LOGGER.info("Generating charts");
 
-        } finally {
-            executorService.shutdown();
+                mCharts.write(
+                        referenceId, tumorSample, !sampleDataFiles.SomaticVcfFile.isEmpty(),
+                        cobaltGender, copyNumbers, somaticStream.downsampledVariants(),
+                        svCache.variants(), fittedRegions, Lists.newArrayList(amberData.ChromosomeBafs.values()));
+            }
         }
-        LOGGER.info("Complete");
+        catch(Exception e)
+        {
+            PPL_LOGGER.error("failed processing samnple({}): {}", tumorSample, e.toString());
+        }
     }
 
-    private int recoverStructuralVariants(@NotNull final StructuralVariantConfig svConfig,
-            @NotNull final PurpleStructuralVariantSupplier structuralVariants, @NotNull final PurityAdjuster purityAdjuster,
-            @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
-        if (!svConfig.recoveryFile().isPresent()) {
+    private int recoverStructuralVariants(final SampleData sampleData, final SampleDataFiles sampleDataFiles,
+            final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException
+    {
+        if(sampleDataFiles.RecoveredSvVcfFile.isEmpty())
             return 0;
-        }
 
-        final String vcfRecoveryFile = svConfig.recoveryFile().get().toString();
-        LOGGER.info("Loading recovery candidates from {}", vcfRecoveryFile);
-        try (final RecoverStructuralVariants recovery = new RecoverStructuralVariants(purityAdjuster, vcfRecoveryFile, copyNumbers)) {
-            final Collection<VariantContext> recoveredVariants = recovery.recoverVariants(structuralVariants.variants());
-            if (!recoveredVariants.isEmpty()) {
-                recoveredVariants.forEach(structuralVariants::addVariant);
+        PPL_LOGGER.info("Loading recovery candidates from {}", sampleDataFiles.RecoveredSvVcfFile);
+
+        try (final RecoverStructuralVariants recovery = new RecoverStructuralVariants(purityAdjuster, sampleDataFiles.RecoveredSvVcfFile, copyNumbers))
+        {
+            final Collection<VariantContext> recoveredVariants = recovery.recoverVariants(sampleData.SvCache.variants());
+            if(!recoveredVariants.isEmpty())
+            {
+                recoveredVariants.forEach(x -> sampleData.SvCache.addVariant(x));
             }
             return recoveredVariants.size();
         }
     }
 
     @NotNull
-    private BestFit fitPurity(final ExecutorService executorService, final ConfigSupplier configSupplier,
-            final CobaltChromosomes cobaltChromosomes, final List<SomaticVariant> snpSomatics, final List<ObservedRegion> observedRegions,
+    private BestFit fitPurity(
+            final SampleData sampleData, final List<ObservedRegion> observedRegions,
             final FittedRegionFactory fittedRegionFactory, final List<StructuralVariant> structuralVariants)
-            throws ExecutionException, InterruptedException {
-        final FittingConfig fittingConfig = configSupplier.fittingConfig();
-        final SomaticFitConfig somaticFitConfig = configSupplier.somaticConfig();
+            throws ExecutionException, InterruptedException
+    {
+        final FittingConfig fittingConfig = mConfig.fittingConfig();
+        final SomaticFitConfig somaticFitConfig = mConfig.somaticConfig();
 
         final List<FittedPurity> fitCandidates = Lists.newArrayList();
 
-        if(!configSupplier.somaticConfig().forceSomaticFit())
+        final CobaltChromosomes cobaltChromosomes = sampleData.Cobalt.CobaltChromosomes;
+        final List<SomaticVariant> snpSomatics = sampleData.FittingSomaticVariants;
+
+        if(!mConfig.somaticConfig().forceSomaticFit())
         {
-            final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(executorService,
-                    cobaltChromosomes,
-                    fittingConfig.minPurity(),
-                    fittingConfig.maxPurity(),
-                    fittingConfig.purityIncrement(),
-                    fittingConfig.minPloidy(),
-                    fittingConfig.maxPloidy(),
-                    somaticFitConfig.somaticPenaltyWeight(),
-                    configSupplier.commonConfig().tumorOnly(),
-                    fittedRegionFactory,
-                    observedRegions,
-                    snpSomatics);
+            final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(
+                    mExecutorService, cobaltChromosomes,
+                    fittingConfig.minPurity(), fittingConfig.maxPurity(), fittingConfig.purityIncrement(), fittingConfig.minPloidy(),
+                    fittingConfig.maxPloidy(), somaticFitConfig.somaticPenaltyWeight(),
+                    mConfig.commonConfig().tumorOnly(), fittedRegionFactory, observedRegions, snpSomatics);
 
             fitCandidates.addAll(fittedPurityFactory.all());
         }
@@ -376,10 +413,10 @@ public class PurpleApplication
                     .build());
         }
 
-        final BestFitFactory bestFitFactory = new BestFitFactory(configSupplier,
-                somaticFitConfig.enabled(),
-                somaticFitConfig.minSomaticTotalReadCount(),
-                somaticFitConfig.maxSomaticTotalReadCount(),
+        final BestFitFactory bestFitFactory = new BestFitFactory(mConfig,
+                !sampleData.SomaticVariants.isEmpty(),
+                sampleData.Amber.minSomaticTotalReadCount(),
+                sampleData.Amber.maxSomaticTotalReadCount(),
                 fittingConfig.minPurity(),
                 fittingConfig.maxPurity(),
                 somaticFitConfig.minTotalVariants(),
@@ -392,12 +429,14 @@ public class PurpleApplication
                 fitCandidates,
                 snpSomatics,
                 structuralVariants);
+
         return bestFitFactory.bestFit();
     }
 
     @NotNull
     private FittedRegionFactory createFittedRegionFactory(final int averageTumorDepth, final CobaltChromosomes cobaltChromosomes,
-            final FitScoreConfig fitScoreConfig) {
+            final FitScoreConfig fitScoreConfig)
+    {
         return new FittedRegionFactoryV2(cobaltChromosomes,
                 averageTumorDepth,
                 fitScoreConfig.ploidyPenaltyFactor(),
@@ -409,56 +448,41 @@ public class PurpleApplication
     }
 
     @NotNull
-    private static PurpleStructuralVariantSupplier structuralVariants(@NotNull final ConfigSupplier configSupplier) {
-        final CommonConfig commonConfig = configSupplier.commonConfig();
-        final StructuralVariantConfig svConfig = configSupplier.structuralVariantConfig();
-        if (svConfig.file().isPresent()) {
-            final String filePath = svConfig.file().get().toString();
-            final String outputPath = commonConfig.outputDirectory() + File.separator + commonConfig.tumorSample() + ".purple.sv.vcf.gz";
+    private StructuralVariantCache createStructuralVariantCache(final String tumorSample, final SampleDataFiles sampleDataFiles)
+    {
+        if(sampleDataFiles.SvVcfFile.isEmpty())
+            return new StructuralVariantCache();
 
-            LOGGER.info("Loading structural variants from {}", filePath);
-            return new PurpleStructuralVariantSupplier(commonConfig.version(),
-                    filePath,
-                    outputPath,
-                    configSupplier.refGenomeConfig().refGenome());
-        } else {
-            return new PurpleStructuralVariantSupplier();
+        PPL_LOGGER.info("Loading structural variants from {}", sampleDataFiles.SvVcfFile);
+
+        final String outputVcf = mConfig.commonConfig().outputDirectory() + File.separator + tumorSample + ".purple.sv.vcf.gz";
+
+        return new StructuralVariantCache(mPurpleVersion.version(), sampleDataFiles.SvVcfFile, outputVcf, mReferenceData);
+    }
+
+    public static void main(final String... args) throws IOException, SQLException, ExecutionException, InterruptedException
+    {
+        final Options options = createOptions();
+
+        try
+        {
+            PurpleApplication purpleApplication = new PurpleApplication(options, args);
+            purpleApplication.run();
+        }
+        catch (ParseException e)
+        {
+            PPL_LOGGER.warn(e);
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("PurpleApplication", options);
+            System.exit(1);
         }
     }
 
     @NotNull
-    private static List<SomaticVariant> somaticVariants(@NotNull final ConfigSupplier configSupplier) {
-        final String sample = configSupplier.commonConfig().tumorSample();
-        final SomaticFitConfig somaticConfig = configSupplier.somaticConfig();
-        if (somaticConfig.file().isPresent()) {
-            final List<SomaticVariant> result = Lists.newArrayList();
-
-            final SomaticVariantFactory factory = new SomaticVariantFactory(new PassingVariantFilter(), new SGTFilter());
-            final Consumer<VariantContext> convertThenSave = context -> factory.createVariant(sample, context).ifPresent(result::add);
-            final VariantHotspotEnrichment enrich =
-                    new VariantHotspotEnrichment(configSupplier.driverCatalogConfig().somaticHotspots(), convertThenSave);
-
-            LOGGER.info("Loading somatic variants from {}", somaticConfig.file().get().toString());
-            try (VCFFileReader vcfReader = new VCFFileReader(somaticConfig.file().get(), false)) {
-                for (VariantContext variantContext : vcfReader) {
-                    if (factory.test(variantContext)) {
-                        enrich.accept(variantContext);
-                    }
-                }
-            }
-
-            enrich.flush();
-            return result;
-        } else {
-            LOGGER.info("Somatic variants support disabled.");
-            return Collections.emptyList();
-        }
-    }
-
-    @NotNull
-    private static Options createOptions() {
+    private static Options createOptions()
+    {
         final Options options = new Options();
-        ConfigSupplier.addOptions(options);
+        PurpleConfig.addOptions(options);
 
         options.addOption(LOG_DEBUG, false, "Log verbose");
         options.addOption(THREADS, true, "Number of threads (default 2)");
@@ -468,13 +492,9 @@ public class PurpleApplication
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
+    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException
+    {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
-    }
-
-    @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final DBConfig dbConfig) throws SQLException {
-        return new DatabaseAccess(dbConfig.user(), dbConfig.password(), dbConfig.url());
     }
 }

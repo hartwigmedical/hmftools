@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.purple.CommandLineUtil.defaultIntValue;
+import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.config.ReferenceData.DRIVER_ENABLED;
 import static com.hartwig.hmftools.purple.config.StructuralVariantConfig.createStructuralVariantConfig;
 
 import java.io.File;
@@ -9,6 +12,7 @@ import java.io.IOException;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
+import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -17,11 +21,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class ConfigSupplier
+public class PurpleConfig
 {
-
-    private static final Logger LOGGER = LogManager.getLogger(ConfigSupplier.class);
-
     private static final String REF_SAMPLE = "reference";
     private static final String TUMOR_SAMPLE = "tumor";
     public static final String SAMPLE_DIR = "sample_dir";
@@ -69,46 +70,48 @@ public class ConfigSupplier
                 true,
                 "Path to AMBER output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
 
-        DBConfig.addOptions(options);
+        options.addOption(DRIVER_ENABLED, false, "Persist data to DB");
+
+        addDatabaseCmdLineArgs(options);
         FittingConfig.addOptions(options);
         FitScoreConfig.addOptions(options);
         SomaticFitConfig.addOptions(options);
-        StructuralVariantConfig.addOptions(options);
-        RefGenomeData.addOptions(options);
+        ReferenceData.addOptions(options);
+        // StructuralVariantConfig.addOptions(options);
+        // RefGenomeData.addOptions(options);
         ChartConfig.addOptions(options);
-        DriverCatalogConfig.addOptions(options);
-        GermlineConfig.addOptions(options);
+        // DriverCatalogConfig.addOptions(options);
+        // GermlineConfig.addOptions(options);
+        SampleDataFiles.addOptions(options);
     }
 
     private final CommonConfig commonConfig;
     private final SomaticFitConfig somaticFitConfig;
-    private final StructuralVariantConfig structuralVariantConfig;
     private final ChartConfig chartConfig;
-    private final DBConfig dbConfig;
     private final FittingConfig fittingConfig;
     private final SmoothingConfig smoothingConfig;
     private final FitScoreConfig fitScoreConfig;
-    private final RefGenomeData refGenomeData;
-    private final DriverCatalogConfig driverCatalogConfig;
-    private final GermlineConfig germlineConfig;
 
-    private final CobaltData cobaltData;
-    private final AmberData amberData;
+    public final boolean DriverEnabled;
 
+    private boolean mIsValid;
 
-    public ConfigSupplier(@NotNull final String version, @NotNull CommandLine cmd, @NotNull Options opt)
-            throws ParseException, IOException
+    public PurpleConfig(@NotNull final String version, @NotNull CommandLine cmd)
     {
+        mIsValid = true;
+
         final boolean isTumorOnly = cmd.hasOption(TUMOR_ONLY);
+        DriverEnabled = cmd.hasOption(DRIVER_ENABLED);
 
         final StringJoiner missingJoiner = new StringJoiner(", ");
         final String gcProfile = parameter(cmd, GC_PROFILE, missingJoiner);
-        final String refSample;
+        String refSample = "";
         if(isTumorOnly)
         {
             if(cmd.hasOption(REF_SAMPLE))
             {
-                throw new ParseException(REF_SAMPLE + " not supported in tumor only mode");
+                mIsValid = false;
+                PPL_LOGGER.error(REF_SAMPLE + " not supported in tumor only mode");
             }
             else
             {
@@ -145,13 +148,15 @@ public class ConfigSupplier
 
         if(!missing.isEmpty())
         {
-            throw new ParseException("Missing the following parameters: " + missing);
+            mIsValid = false;
+            PPL_LOGGER.error("Missing the following parameters: " + missing);
         }
 
         final File outputDir = new File(outputDirectory);
         if(!outputDir.exists() && !outputDir.mkdirs())
         {
-            throw new IOException("Unable to write directory " + outputDirectory);
+            mIsValid = false;
+            PPL_LOGGER.error("Unable to write directory " + outputDirectory);
         }
 
         commonConfig = ImmutableCommonConfig.builder()
@@ -168,13 +173,14 @@ public class ConfigSupplier
 
         if(isTumorOnly)
         {
-            LOGGER.info("Tumor Sample: {}", commonConfig.tumorSample());
+            PPL_LOGGER.info("Tumor Sample: {}", commonConfig.tumorSample());
         }
         else
         {
-            LOGGER.info("Reference Sample: {}, Tumor Sample: {}", commonConfig.refSample(), commonConfig.tumorSample());
+            PPL_LOGGER.info("Reference Sample: {}, Tumor Sample: {}", commonConfig.refSample(), commonConfig.tumorSample());
         }
-        LOGGER.info("Output Directory: {}", commonConfig.outputDirectory());
+
+        PPL_LOGGER.info("Output Directory: {}", commonConfig.outputDirectory());
 
         smoothingConfig = ImmutableSmoothingConfig.builder()
                 .minDiploidTumorRatioCount(defaultIntValue(cmd, MIN_DIPLOID_TUMOR_RATIO_COUNT, MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT))
@@ -184,36 +190,12 @@ public class ConfigSupplier
                 .build();
 
         chartConfig = ChartConfig.createCircosConfig(cmd, commonConfig);
-        dbConfig = DBConfig.createConfig(cmd);
         fittingConfig = FittingConfig.createConfig(cmd);
         fitScoreConfig = FitScoreConfig.createConfig(cmd);
-        structuralVariantConfig = createStructuralVariantConfig(cmd, opt, commonConfig);
-        refGenomeData = RefGenomeData.createRefGenomeConfig(cmd);
-
-        amberData = AmberData.createAmberData(commonConfig);
-        cobaltData = CobaltData.createCobaltData(commonConfig, amberData.gender());
-        somaticFitConfig = SomaticFitConfig.createSomaticConfig(cmd, commonConfig, amberData);
-        germlineConfig = GermlineConfig.createGermlineConfig(cmd, commonConfig);
-        driverCatalogConfig = DriverCatalogConfig.createConfig(cmd, refGenomeData, germlineConfig);
+        somaticFitConfig = SomaticFitConfig.createSomaticConfig(cmd, commonConfig);
     }
 
-    @NotNull
-    public CobaltData cobaltData()
-    {
-        return cobaltData;
-    }
-
-    @NotNull
-    public AmberData amberData()
-    {
-        return amberData;
-    }
-
-    @NotNull
-    public RefGenomeData refGenomeConfig()
-    {
-        return refGenomeData;
-    }
+    public boolean isValid() { return mIsValid; }
 
     @NotNull
     public FitScoreConfig fitScoreConfig()
@@ -234,21 +216,9 @@ public class ConfigSupplier
     }
 
     @NotNull
-    public StructuralVariantConfig structuralVariantConfig()
-    {
-        return structuralVariantConfig;
-    }
-
-    @NotNull
     public ChartConfig chartConfig()
     {
         return chartConfig;
-    }
-
-    @NotNull
-    public DBConfig dbConfig()
-    {
-        return dbConfig;
     }
 
     @NotNull
@@ -261,18 +231,6 @@ public class ConfigSupplier
     public SmoothingConfig smoothingConfig()
     {
         return smoothingConfig;
-    }
-
-    @NotNull
-    public DriverCatalogConfig driverCatalogConfig()
-    {
-        return driverCatalogConfig;
-    }
-
-    @NotNull
-    public GermlineConfig germlineConfig()
-    {
-        return germlineConfig;
     }
 
     @NotNull

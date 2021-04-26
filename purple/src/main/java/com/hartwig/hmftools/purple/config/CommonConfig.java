@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.config;
 
+import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -7,8 +9,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface CommonConfig {
-
-    int WINDOW_SIZE = 1000;
 
     @NotNull
     String refSample();

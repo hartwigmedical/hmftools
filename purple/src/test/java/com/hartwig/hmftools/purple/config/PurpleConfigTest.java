@@ -4,7 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class ConfigSupplierTest {
+public class PurpleConfigTest
+{
 
     private static final double EPSILON = 1e-10;
 

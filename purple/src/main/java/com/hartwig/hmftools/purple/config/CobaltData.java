@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.purple.config;
 
+import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -18,75 +21,54 @@ import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface CobaltData {
+public class CobaltData
+{
+    public final CobaltChromosomes CobaltChromosomes;
 
-    Logger LOGGER = LogManager.getLogger(CobaltData.class);
+    public final ListMultimap<Chromosome, CobaltRatio> Ratios;
 
-    @NotNull
-    CobaltChromosomes cobaltChromosomes();
+    public final Multimap<Chromosome, PCFPosition> TumorSegments;
 
-    @NotNull
-    ListMultimap<Chromosome, CobaltRatio> ratios();
+    public final Multimap<Chromosome, PCFPosition> ReferenceSegments;
 
-    @NotNull
-    Multimap<Chromosome, PCFPosition> tumorSegments();
+    public final Gender gender() { return CobaltChromosomes.gender(); }
 
-    @NotNull
-    Multimap<Chromosome, PCFPosition> referenceSegments();
-
-    @NotNull
-    default Gender gender() {
-        return cobaltChromosomes().gender();
-    }
-
-    @NotNull
-    static CobaltData createCobaltData(@NotNull final CommonConfig commonConfig, @NotNull final Gender amberGender)
-            throws ParseException, IOException {
-        final String cobaltDirectory = commonConfig.cobaltDirectory();
-        final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(cobaltDirectory, commonConfig.tumorSample());
-        if (!new File(cobaltFilename).exists()) {
+    public CobaltData(
+            final String referenceId, final String tumorSample, final String cobaltDirectory,
+            final Gender amberGender, final boolean tumorOnlyMode)
+            throws ParseException, IOException
+    {
+        final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(cobaltDirectory, tumorSample);
+        if(!new File(cobaltFilename).exists())
+        {
             throw new ParseException("Unable to open cobalt ratio file: " + cobaltFilename);
         }
 
-        final String referenceSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, commonConfig.refSample());
-        if (!new File(referenceSegmentFile).exists()) {
+        final String referenceSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, referenceId);
+        if(!new File(referenceSegmentFile).exists())
+        {
             throw new ParseException("Unable to open cobalt reference pcf file: " + referenceSegmentFile);
         }
 
-        final String tumorSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, commonConfig.tumorSample());
-        if (!new File(tumorSegmentFile).exists()) {
+        final String tumorSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, tumorSample);
+        if(!new File(tumorSegmentFile).exists())
+        {
             throw new ParseException("Unable to open cobalt tumor pcf file: " + tumorSegmentFile);
         }
 
-        LOGGER.info("Reading cobalt ratios from {}", cobaltFilename);
-        final ListMultimap<Chromosome, CobaltRatio> ratios = commonConfig.tumorOnly()
+        PPL_LOGGER.info("Reading cobalt ratios from {}", cobaltFilename);
+        Ratios = tumorOnlyMode
                 ? CobaltRatioFile.readTumorOnly(cobaltFilename, amberGender)
                 : CobaltRatioFile.read(cobaltFilename);
 
-        LOGGER.info("Reading cobalt reference segments from {}", referenceSegmentFile);
-        final Multimap<Chromosome, PCFPosition> referenceSegments =
-                PCFFile.readPositions(commonConfig.windowSize(), PCFSource.REFERENCE_RATIO, referenceSegmentFile);
+        PPL_LOGGER.info("Reading cobalt reference segments from {}", referenceSegmentFile);
+        ReferenceSegments = PCFFile.readPositions(WINDOW_SIZE, PCFSource.REFERENCE_RATIO, referenceSegmentFile);
 
-        LOGGER.info("Reading cobalt tumor segments from {}", tumorSegmentFile);
-        final Multimap<Chromosome, PCFPosition> tumorSegments =
-                PCFFile.readPositions(commonConfig.windowSize(), PCFSource.TUMOR_RATIO, tumorSegmentFile);
+        PPL_LOGGER.info("Reading cobalt tumor segments from {}", tumorSegmentFile);
+        TumorSegments = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_RATIO, tumorSegmentFile);
 
-        final List<MedianRatio> medianRatios = MedianRatioFactory.create(ratios);
-        final CobaltChromosomes cobaltChromosomes = new CobaltChromosomes(medianRatios);
-
-        return ImmutableCobaltData.builder()
-                .ratios(ratios)
-                .cobaltChromosomes(cobaltChromosomes)
-                .tumorSegments(tumorSegments)
-                .referenceSegments(referenceSegments)
-                .build();
+        final List<MedianRatio> medianRatios = MedianRatioFactory.create(Ratios);
+        CobaltChromosomes = new CobaltChromosomes(medianRatios);
     }
 }

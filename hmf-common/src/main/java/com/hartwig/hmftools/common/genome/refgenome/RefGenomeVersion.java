@@ -51,10 +51,8 @@ public enum RefGenomeVersion
         this.mIs37 = is37;
     }
 
-    public boolean is37()
-    {
-        return mIs37;
-    }
+    public boolean is37() { return mIs37; }
+    public boolean is38 () { return !mIs37; }
 
     @NotNull
     public String versionedChromosome(@NotNull String chromosome)

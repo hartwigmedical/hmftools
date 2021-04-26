@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.purple.purity.ImmutableBestFit;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.purple.config.ConfigSupplier;
+import com.hartwig.hmftools.purple.config.PurpleConfig;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
@@ -36,7 +36,7 @@ public class BestFitFactory
     private static final double PERCENT_RANGE = 0.1;
     private static final double ABS_RANGE = 0.0005;
 
-    private final ConfigSupplier config;
+    private final PurpleConfig config;
 
     private final int minReadCount;
     private final int maxReadCount;
@@ -54,7 +54,7 @@ public class BestFitFactory
     @NotNull
     private final BestFit bestFit;
 
-    public BestFitFactory(final ConfigSupplier configSupplier,
+    public BestFitFactory(final PurpleConfig configSupplier,
             boolean somaticFitEnabled, int minReadCount, int maxReadCount, double minPurity, double maxPurity,
             int minVariants, int minPeak, double highlyDiploidPercentage, double minSomaticPurity, double minSomaticPuritySpread,
             int minTotalSvFragmentCount, int minTotalSomaticVariantAlleleReadCount, @NotNull final List<FittedPurity> allCandidates,
