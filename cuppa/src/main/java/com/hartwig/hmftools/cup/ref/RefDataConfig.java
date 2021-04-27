@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.cup.rna.RefGeneExpression;
+import com.hartwig.hmftools.cup.somatics.RefSomatics;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -101,6 +102,7 @@ public class RefDataConfig
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
 
         RefGeneExpression.addCmdLineArgs(options);
+        RefSomatics.addCmdLineArgs(options);
     }
 
 }

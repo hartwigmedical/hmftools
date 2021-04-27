@@ -46,7 +46,7 @@ public class RefDataBuilder
             mClassifiers.add(new RefSampleTraits(mConfig, mSampleDataCache, cmd));
 
         if(RefSomatics.requiresBuild(mConfig))
-            mClassifiers.add(new RefSomatics(mConfig, mSampleDataCache));
+            mClassifiers.add(new RefSomatics(mConfig, mSampleDataCache, cmd));
 
         if(RefSvData.requiresBuild(mConfig))
             mClassifiers.add(new RefSvData(mConfig, mSampleDataCache));

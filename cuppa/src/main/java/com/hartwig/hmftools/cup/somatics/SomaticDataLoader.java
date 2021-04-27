@@ -264,10 +264,10 @@ public class SomaticDataLoader
     }
 
     public static Matrix convertSomaticVariantsToPosFrequencies(
+            final PositionFrequencies posFrequency,
             final String sampleId, final List<SomaticVariant> variants, final Map<String,Integer> samplePosFreqIndex)
     {
-        PositionFrequencies posFrequency = new PositionFrequencies(POS_FREQ_BUCKET_SIZE, POS_FREQ_MAX_SAMPLE_COUNT);
-
+        posFrequency.clear();
         extractPositionFrequencyCounts(variants, posFrequency);
 
         final Matrix matrix = new Matrix(posFrequency.getCounts().length, 1);

@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
 import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
+import static com.hartwig.hmftools.cup.somatics.SomaticClassifier.SNV_POS_FREQ_POS_SIZE;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.extractPositionFrequencyCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.extractTrinucleotideCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
@@ -51,6 +52,10 @@ import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
 import com.hartwig.hmftools.cup.traits.SampleTraitsData;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+import org.jetbrains.annotations.NotNull;
+
 public class RefSomatics implements RefClassifier
 {
     private final RefDataConfig mConfig;
@@ -75,7 +80,7 @@ public class RefSomatics implements RefClassifier
     private static final String MATRIX_TYPE_SNV_96 = "SNV_96";
     private static final String MATRIX_TYPE_GEN_POS = "GEN_POS";
 
-    public RefSomatics(final RefDataConfig config, final SampleDataCache sampleDataCache)
+    public RefSomatics(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -93,7 +98,10 @@ public class RefSomatics implements RefClassifier
         mPosFreqCountsIndex = Maps.newHashMap();
         mWritePosFreqMatrixData = false;
 
-        mPositionFrequencies = new PositionFrequencies(POS_FREQ_BUCKET_SIZE, POS_FREQ_MAX_SAMPLE_COUNT);
+        int posFreqBucketSize = cmd.hasOption(SNV_POS_FREQ_POS_SIZE) ?
+                Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE)) : POS_FREQ_BUCKET_SIZE;
+
+        mPositionFrequencies = new PositionFrequencies(posFreqBucketSize, POS_FREQ_MAX_SAMPLE_COUNT);
 
         populateReportableSignatures();
     }
@@ -103,6 +111,11 @@ public class RefSomatics implements RefClassifier
     public static boolean requiresBuild(final RefDataConfig config)
     {
         return config.DbAccess != null || !config.RefSigContribsFile.isEmpty() && !config.RefSnvCountsFile.isEmpty();
+    }
+
+    public static void addCmdLineArgs(@NotNull Options options)
+    {
+        options.addOption(SNV_POS_FREQ_POS_SIZE, true, "Genomic position bucket size (default: 20000)");
     }
 
     public void buildRefDataSets()

@@ -22,6 +22,8 @@ import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
 import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
 import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
+import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_BUCKET_SIZE;
+import static com.hartwig.hmftools.cup.common.CupConstants.POS_FREQ_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_CSS_THRESHOLD;
@@ -56,6 +58,7 @@ import java.util.Map;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.utils.Matrix;
@@ -98,6 +101,7 @@ public class SomaticClassifier implements CuppaClassifier
     private final Map<String,Integer> mSamplePosFreqIndex;
 
     private final SomaticSigs mSomaticSigs;
+    private final PositionFrequencies mPosFrequencyBuilder;
 
     private boolean mIsValid;
     private BufferedWriter mCssWriter;
@@ -106,14 +110,14 @@ public class SomaticClassifier implements CuppaClassifier
     private final double mMaxCssAdjustFactorGenPos;
     private final double mCssExponentSnv;
     private final double mCssExponentGenPos;
-    private static final int SNV_POS_FREQ_SNV_TOTAL_THRESHOLD = 20000;
 
-    //private static final double MAX_CSS_ADJUST_FACTOR = 4;
     public static final String MAX_CSS_ADJUST_FACTOR_SNV = "css_max_factor_snv";
     public static final String MAX_CSS_ADJUST_FACTOR_GEN_POS = "css_max_factor_gen_pos";
 
     public static final String CSS_EXPONENT_SNV = "css_exponent_snv";
     public static final String CSS_EXPONENT_GEN_POS = "css_exponent_gen_pos";
+
+    public static final String SNV_POS_FREQ_POS_SIZE = "pos_freq_bucket_size";
 
     public static final String WRITE_GEN_POS_CSS = "write_gen_pos_css";
 
@@ -146,6 +150,11 @@ public class SomaticClassifier implements CuppaClassifier
 
         mSomaticSigs = new SomaticSigs(mConfig.RefSnvSignaturesFile);
 
+        int posFreqBucketSize = cmd.hasOption(SNV_POS_FREQ_POS_SIZE) ?
+                Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE)) : POS_FREQ_BUCKET_SIZE;
+
+        mPosFrequencyBuilder = new PositionFrequencies(posFreqBucketSize, POS_FREQ_MAX_SAMPLE_COUNT);
+
         if(mConfig.RefSnvCountsFile.isEmpty() && mConfig.RefSigContributionFile.isEmpty() && mConfig.RefSnvCancerPosFreqFile.isEmpty())
             return;
 
@@ -173,6 +182,7 @@ public class SomaticClassifier implements CuppaClassifier
         options.addOption(MAX_CSS_ADJUST_FACTOR_GEN_POS, true, "Max CSS adustment factor for genomic pos frequency");
         options.addOption(CSS_EXPONENT_SNV, true, "Max CSS adustment factor for SNV 96");
         options.addOption(CSS_EXPONENT_GEN_POS, true, "Max CSS adustment factor for SNV 96");
+        options.addOption(SNV_POS_FREQ_POS_SIZE, true, "Genomic position bucket size (default: 20000)");
         options.addOption(WRITE_GEN_POS_CSS, false, "Write gen-pos CSS to file");
     }
 
@@ -206,7 +216,7 @@ public class SomaticClassifier implements CuppaClassifier
                 }
 
                 mSampleSnvCounts = convertSomaticVariantsToSnvCounts(sampleId, somaticVariants, mSampleSnvCountsIndex);
-                mSamplePosFrequencies = convertSomaticVariantsToPosFrequencies(sampleId, somaticVariants, mSamplePosFreqIndex);
+                mSamplePosFrequencies = convertSomaticVariantsToPosFrequencies(mPosFrequencyBuilder, sampleId, somaticVariants, mSamplePosFreqIndex);
             }
             else
             {
@@ -526,7 +536,7 @@ public class SomaticClassifier implements CuppaClassifier
 
             boolean matchesCancerType = sample.cancerType().equals(refCancerType);
 
-            double adjustMultiplier = sampleTotal > SNV_POS_FREQ_SNV_TOTAL_THRESHOLD ? SNV_POS_FREQ_SNV_TOTAL_THRESHOLD / sampleTotal : 1;
+            double adjustMultiplier = sampleTotal > POS_FREQ_MAX_SAMPLE_COUNT ? POS_FREQ_MAX_SAMPLE_COUNT / sampleTotal : 1;
 
             final double[] refPosFreqs = sample.isRefSample() && matchesCancerType ?
                     adjustRefCounts(mRefCancerSnvPosFrequencies.getCol(i), sampleCounts, adjustMultiplier) : mRefCancerSnvPosFrequencies.getCol(i);
