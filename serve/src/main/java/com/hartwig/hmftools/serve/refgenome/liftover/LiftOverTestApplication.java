@@ -23,6 +23,7 @@ public class LiftOverTestApplication {
 
         ServeConfig config = ServeLocalConfigProvider.create();
 
+        // X:1314965 is a hotspot in 37 on CRLF2 that can't be lifted over to 38.
         Interval original = new Interval("chrX", 1314965, 1314965);
         LOGGER.debug("Starting interval 37 is {}", original);
 
