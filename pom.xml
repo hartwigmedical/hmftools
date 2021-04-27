@@ -112,8 +112,6 @@
         <junit.version>4.13.1</junit.version>
         <jmockit.version>1.38</jmockit.version>
 
-        <ensembl.version>89</ensembl.version>
-
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>

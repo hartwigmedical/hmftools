@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.List;
+import java.util.Locale;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -14,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class DriverCatalogFile {
 
-    static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
+    static final DecimalFormat FORMAT = new DecimalFormat("0.0000", new DecimalFormatSymbols(Locale.ENGLISH));
     private static final String DELIMITER = "\t";
     private static final String OLD_DRIVER_CATALOG_EXTENSION = ".driver.catalog.tsv";
     private static final String DRIVER_CATALOG_EXTENSION = ".driver.catalog.somatic.tsv";
