@@ -122,7 +122,7 @@ public class CupAnalyser
         if(!mConfig.isValid() || !mSampleDataCache.isValid())
         {
             CUP_LOGGER.error("invalid config");
-            return;
+            System.exit(1);
         }
 
         if(mSampleDataCache.SampleIds.isEmpty())
@@ -132,7 +132,10 @@ public class CupAnalyser
         }
 
         if(!allClassifiersValid())
+        {
+            System.exit(1);
             return;
+        }
 
         initialiseOutputFiles();
 
@@ -169,7 +172,13 @@ public class CupAnalyser
 
         mClassifiers.forEach(x -> x.close());
 
-        CUP_LOGGER.info("CUP analysis complete {}", !allClassifiersValid() ? "with errors" : "");
+        if(!allClassifiersValid())
+        {
+            CUP_LOGGER.info("CUP exiting with errors");
+            System.exit(1);
+        }
+
+        CUP_LOGGER.info("CUP analysis complete");
     }
 
     private boolean allClassifiersValid()

@@ -15,6 +15,7 @@ import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -39,7 +40,7 @@ public class SomaticDataLoader
 {
     public static Matrix loadSampleCountsFromFile(final String filename, final Map<String,Integer> sampleCountsIndex)
     {
-        if(filename.isEmpty())
+        if(filename.isEmpty() || !Files.exists(Paths.get(filename)))
             return null;
 
         Matrix sampleCounts = loadMatrixDataFile(filename, sampleCountsIndex, Lists.newArrayList("BucketName"));
@@ -50,7 +51,7 @@ public class SomaticDataLoader
 
     public static Matrix loadSamplePosFreqFromFile(final String filename, final Map<String,Integer> sampleCountsIndex)
     {
-        if(filename.isEmpty())
+        if(filename.isEmpty() || !Files.exists(Paths.get(filename)))
             return null;
 
         Matrix sampleCounts = loadMatrixDataFile(filename, sampleCountsIndex, null);
@@ -98,7 +99,7 @@ public class SomaticDataLoader
 
     public static Matrix loadRefSampleCounts(final String filename, final List<String> refSampleNames, final List<String> ignoreCols)
     {
-        if(filename.isEmpty())
+        if(filename.isEmpty() || !Files.exists(Paths.get(filename)))
             return null;
 
         Matrix refSampleCounts = loadMatrixDataFile(filename, refSampleNames, ignoreCols);

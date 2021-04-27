@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.cup.feature;
 
 import static java.lang.Math.max;
-import static java.util.function.Predicate.isEqual;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.variant.SomaticVariant.FILTER_PASS;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
@@ -387,7 +385,7 @@ public class FeatureDataLoader
 
         for(SomaticVariant variant : variants)
         {
-            if(!variant.filter().equals(FILTER_PASS))
+            if(variant.isFiltered())
                 continue;
 
             if((checkIndels && isKnownIndel(variant.gene(), variant.repeatCount(), variant.type()))
