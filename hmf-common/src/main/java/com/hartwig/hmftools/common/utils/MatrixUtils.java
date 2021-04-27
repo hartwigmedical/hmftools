@@ -170,7 +170,6 @@ public class MatrixUtils
 
             writer.newLine();
         }
-
     }
 
     public static void writeMatrixData(final BufferedWriter writer, final Matrix matrix, boolean asInt) throws IOException
