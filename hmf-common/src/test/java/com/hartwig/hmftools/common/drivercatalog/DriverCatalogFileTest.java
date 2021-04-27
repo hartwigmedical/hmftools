@@ -16,12 +16,23 @@ import org.junit.Test;
 
 public class DriverCatalogFileTest {
 
-    private static final String DRIVER_CATALOG_TSV = Resources.getResource("drivercatalog/sample.drivers.catalog.tsv").getPath();
+    private static final String DRIVER_CATALOG_TSV_WITH_DNDS =
+            Resources.getResource("drivercatalog/sample.driver.catalog_with_dnds.tsv").getPath();
+    private static final String DRIVER_CATALOG_TSV_WITHOUT_DNDS =
+            Resources.getResource("drivercatalog/sample.driver.catalog_without_dnds.tsv").getPath();
     private static final double EPSILON = 1.0e-10;
 
     @Test
-    public void canReadDriverCatalogFile() throws IOException {
-        List<DriverCatalog> driverCatalogs = DriverCatalogFile.read(DRIVER_CATALOG_TSV);
+    public void canReadDriverCatalogFileWithDnds() throws IOException {
+        assertDriverCatalog(DriverCatalogFile.read(DRIVER_CATALOG_TSV_WITH_DNDS));
+    }
+
+    @Test
+    public void canReadDriverCatalogFileWithoutDnds() throws IOException {
+        assertDriverCatalog(DriverCatalogFile.read(DRIVER_CATALOG_TSV_WITHOUT_DNDS));
+    }
+
+    private static void assertDriverCatalog(@NotNull List<DriverCatalog> driverCatalogs) {
         assertEquals(3, driverCatalogs.size());
 
         DriverCatalog catalog1 = driverCatalogs.get(0);
@@ -77,7 +88,7 @@ public class DriverCatalogFileTest {
     }
 
     @Test
-    public void testInputAndOutput() {
+    public void canSerializeDriverCatalogToStringAndBack() {
         final Random random = new Random();
         final DriverCatalog input = createRandomScore(random);
 

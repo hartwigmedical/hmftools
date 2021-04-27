@@ -24,7 +24,7 @@ public class DriverGenePanelFactoryTest {
 
     @NotNull
     private static List<DriverGene> builtIn() {
-        final InputStream inputStream = DriverGenePanelFactoryTest.class.getResourceAsStream("/drivercatalog/sample.driver.gene.panel.tsv");
+        final InputStream inputStream = DriverGenePanelFactoryTest.class.getResourceAsStream("/drivercatalog/driver.gene.panel.tsv");
         return new BufferedReader(new InputStreamReader(inputStream)).lines()
                 .filter(x -> !x.startsWith("gene"))
                 .map(DriverGeneFile::fromString)
