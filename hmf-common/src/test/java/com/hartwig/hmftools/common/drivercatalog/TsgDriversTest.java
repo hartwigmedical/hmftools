@@ -111,7 +111,6 @@ public class TsgDriversTest {
     @NotNull
     static DndsDriverImpactLikelihood createLikelihood(double pDriver, double pVariantNonDriver) {
         return ImmutableDndsDriverImpactLikelihood.builder()
-                .dndsLikelihood(0)
                 .driversPerSample(pDriver)
                 .passengersPerMutation(pVariantNonDriver)
                 .build();

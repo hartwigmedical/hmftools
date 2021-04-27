@@ -8,9 +8,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class DndsDriverImpactLikelihood {
 
-    @Deprecated
-    public abstract double dndsLikelihood();
-
     public abstract double driversPerSample();
 
     public abstract double passengersPerMutation();

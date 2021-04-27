@@ -61,7 +61,7 @@ public final class DriverCatalogFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("chromosome")
+        return new StringJoiner(DELIMITER).add("chromosome")
                 .add("chromosomeBand")
                 .add("gene")
                 .add("driver")
@@ -81,23 +81,23 @@ public final class DriverCatalogFile {
     }
 
     @NotNull
-    private static String toString(@NotNull final DriverCatalog ratio) {
-        return new StringJoiner(DELIMITER).add(ratio.chromosome())
-                .add(ratio.chromosomeBand())
-                .add(ratio.gene())
-                .add(String.valueOf(ratio.driver()))
-                .add(String.valueOf(ratio.category()))
-                .add(String.valueOf(ratio.likelihoodMethod()))
-                .add(FORMAT.format(ratio.driverLikelihood()))
+    private static String toString(@NotNull final DriverCatalog driverCatalog) {
+        return new StringJoiner(DELIMITER).add(driverCatalog.chromosome())
+                .add(driverCatalog.chromosomeBand())
+                .add(driverCatalog.gene())
+                .add(String.valueOf(driverCatalog.driver()))
+                .add(String.valueOf(driverCatalog.category()))
+                .add(String.valueOf(driverCatalog.likelihoodMethod()))
+                .add(FORMAT.format(driverCatalog.driverLikelihood()))
                 .add("0")
-                .add(String.valueOf(ratio.missense()))
-                .add(String.valueOf(ratio.nonsense()))
-                .add(String.valueOf(ratio.splice()))
-                .add(String.valueOf(ratio.inframe()))
-                .add(String.valueOf(ratio.frameshift()))
-                .add(String.valueOf(ratio.biallelic()))
-                .add(FORMAT.format(ratio.minCopyNumber()))
-                .add(FORMAT.format(ratio.maxCopyNumber()))
+                .add(String.valueOf(driverCatalog.missense()))
+                .add(String.valueOf(driverCatalog.nonsense()))
+                .add(String.valueOf(driverCatalog.splice()))
+                .add(String.valueOf(driverCatalog.inframe()))
+                .add(String.valueOf(driverCatalog.frameshift()))
+                .add(String.valueOf(driverCatalog.biallelic()))
+                .add(FORMAT.format(driverCatalog.minCopyNumber()))
+                .add(FORMAT.format(driverCatalog.maxCopyNumber()))
                 .toString();
     }
 
