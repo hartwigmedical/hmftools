@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.fitting;
 
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.google.common.collect.Lists.newArrayList;
@@ -8,6 +9,9 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleCommon.formatDbl;
+import static com.hartwig.hmftools.purple.PurpleCommon.formatPurity;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_HOTSPOT_MAX_SNV_COUNT;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_HOTSPOT_VAF_PROBABILITY;
 import static com.hartwig.hmftools.purple.config.SomaticFitConfig.SOMATIC_MIN_PEAK_DEFAULT;
 import static com.hartwig.hmftools.purple.config.SomaticFitConfig.SOMATIC_MIN_VARIANTS_DEFAULT;
 import static com.hartwig.hmftools.purple.fitting.SomaticHistogramPeaks.calcProbabilityUpperBound;
@@ -19,12 +23,14 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
+import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.jetbrains.annotations.NotNull;
 
 class SomaticPurityFitter
@@ -43,7 +49,7 @@ class SomaticPurityFitter
 
     // stand-alone analysis
     private final String mSomaticVariantFile;
-    private final String mOututDir;
+    private final String mOutputDir;
 
     // config string
     private static final String BIN_WIDTH = "som_fit_bin_width";
@@ -53,7 +59,6 @@ class SomaticPurityFitter
 
     private static final String SOM_VARIANT_VCF = "somatic_vcf_file";
 
-    private static final int MAX_HOTSPOT_SNV_COUNT = 1000;
     private static final double UPPER_DEPTH_BOUND_PERC = 1.25;
     private static final double LOWER_DEPTH_BOUND_PERC = 0.75;
     private static final double BIN_WIDTH_DEFAULT = 0.005;
@@ -73,7 +78,7 @@ class SomaticPurityFitter
         mMinPurity = 0.08;
         mMaxPurity = 1.0;
 
-        mOututDir = parseOutputDir(cmd);
+        mOutputDir = parseOutputDir(cmd);
         mSomaticVariantFile = cmd.getOptionValue(SOM_VARIANT_VCF);
     }
 
@@ -100,7 +105,7 @@ class SomaticPurityFitter
         mMinPurity = minPurity;
         mMaxPurity = maxPurity;
 
-        mOututDir = null;
+        mOutputDir = null;
         mSomaticVariantFile = null;
     }
 
@@ -117,33 +122,65 @@ class SomaticPurityFitter
         Optional<FittedPurity> kdFit = SomaticKernelDensityPeaks.fitPurity(
                 allCandidates, variants, mKdMinSomatics, mKdMinPeak, mMinPurity, mMaxPurity);
 
-        return kdFit;
+        if(!kdFit.isPresent())
+            return kdFit;
 
-        /* Binomial distribution was experimental but not currently used
-        double maxPurity = findPurityPeak(variants);
+        double peakPurity = kdFit.get().purity();
 
-        if(maxPurity <= 0)
+        PPL_LOGGER.info("Peak somatic purity({})", formatPurity(peakPurity));
+
+        // check for a hotspot variant with a higher VAF
+        int snvCount = (int)variants.stream().filter(x -> !x.isFiltered()).count();
+
+        if(snvCount > SOMATIC_HOTSPOT_MAX_SNV_COUNT)
+            return kdFit;
+
+        double maxHotspotVaf = 0;
+
+        for(SomaticVariant variant : variants)
         {
-            PPL_LOGGER.info("Somatic purity from VAFs failed");
-            return Optional.empty();
+            if(variant.isFiltered() || !variant.isHotspot())
+                continue;
+
+            if(!HumanChromosome.contains(variant.chromosome()) || !HumanChromosome.fromString(variant.chromosome()).isAutosome())
+                continue;
+
+            if(variant.alleleFrequency() * 2 <= peakPurity)
+                continue;
+
+            // test this variants allele read count vs what's expected from the somatic peak
+            double expectedAlleleReadCount = peakPurity * 0.5 * variant.totalReadCount();
+
+            PoissonDistribution poissonDist = new PoissonDistribution(expectedAlleleReadCount);
+            double poissonProb = 1 - poissonDist.cumulativeProbability(variant.alleleReadCount() - 1);
+
+            if(poissonProb < SOMATIC_HOTSPOT_VAF_PROBABILITY)
+            {
+                PPL_LOGGER.info(String.format("hotspot(%s:%d) vaf(%.3f %d/%d) probability(%.4g)",
+                        variant.chromosome(), variant.position(),
+                        variant.alleleFrequency(), variant.alleleReadCount(), variant.totalReadCount(), poissonProb));
+
+                maxHotspotVaf = max(variant.alleleFrequency(), maxHotspotVaf);
+            }
         }
 
-        maxPurity *= 2; // since a diploid sample
+        maxHotspotVaf *= 2;
 
-        FittedPurity fittedPurity = ImmutableFittedPurity.builder()
-                .score(1)
-                .diploidProportion(1)
-                .normFactor(1)
-                .purity(maxPurity)
-                .somaticPenalty(1)
-                .ploidy(2)
-                .build();
-
-        PPL_LOGGER.info("somatic purity fit: peakModel({}) kernelDensity({})",
-                formatDbl.format(maxPurity), kdFit.isPresent() ? formatDbl.format(kdFit.get().purity()) : 0);
-
-        return Optional.of(fittedPurity);
-        */
+        if(maxHotspotVaf > peakPurity)
+        {
+            return Optional.of(ImmutableFittedPurity.builder()
+                    .score(1)
+                    .diploidProportion(1)
+                    .normFactor(1)
+                    .purity(maxHotspotVaf)
+                    .somaticPenalty(1)
+                    .ploidy(2)
+                    .build());
+        }
+        else
+        {
+            return kdFit;
+        }
     }
 
     private double findPurityPeak(final List<SomaticVariant> variants)
@@ -192,7 +229,7 @@ class SomaticPurityFitter
         if(maxPurity <= 0)
             return 0;
 
-        if(weightedVAFs.size() <= MAX_HOTSPOT_SNV_COUNT)
+        if(weightedVAFs.size() <= SOMATIC_HOTSPOT_MAX_SNV_COUNT)
         {
             double upperPeak = calcProbabilityUpperBound(weightedVAFs.size(), maxPurity);
 

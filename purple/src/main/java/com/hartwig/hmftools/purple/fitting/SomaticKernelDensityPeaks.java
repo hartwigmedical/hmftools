@@ -25,9 +25,9 @@ final class SomaticKernelDensityPeaks
 
     public static Optional<FittedPurity> fitPurity(
             @NotNull final List<FittedPurity> allCandidates, @NotNull final List<SomaticVariant> variants,
-            int mimVariants, double minPeak, double minPurity, double maxPurity)
+            int minVariants, double minPeak, double minPurity, double maxPurity)
     {
-        if(variants.size() < mimVariants)
+        if(variants.size() < minVariants)
         {
             PPL_LOGGER.info("somatic variants count({}) too low for somatic fit", variants.size());
             return Optional.empty();

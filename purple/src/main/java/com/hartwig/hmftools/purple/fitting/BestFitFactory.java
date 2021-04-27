@@ -150,7 +150,7 @@ public class BestFitFactory
 
         if(Doubles.greaterOrEqual(score.puritySpread(), mConfig.SomaticFitting.MinSomaticPuritySpread) && isHighlyDiploid(score))
         {
-            PPL_LOGGER.info("Sample is highly diploid({}) with large purity range([{} - {}]",
+            PPL_LOGGER.info("Sample is highly diploid({}) with large purity range({} - {})",
                     formatPurity(score.maxDiploidProportion()), formatPurity(score.minPurity()), formatPurity(score.maxPurity()));
             return true;
         }
@@ -161,10 +161,18 @@ public class BestFitFactory
     private boolean hasTumor(final List<ObservedRegion> observedRegions)
     {
         if(mSomaticHotspotCount > 0 || mAlleleReadCountTotal >= mConfig.SomaticFitting.minTotalSomaticVariantAlleleReadCount())
+        {
+            PPL_LOGGER.info("Tumor evidence: somaticHotspotCount({}) alleleReadCountTotal({})",
+                    mSomaticHotspotCount, mAlleleReadCountTotal);
             return true;
+        }
 
         if(mSvHotspotCount > 0 || mSvFragmentReadCount >= mConfig.SomaticFitting.minTotalSvFragmentCount())
+        {
+            PPL_LOGGER.info("Tumor evidence: svHotspotCount({}) svFragmentReadCount({})",
+                    mSvHotspotCount, mSvFragmentReadCount);
             return true;
+        }
 
         int tumorEvidenceBafCountTotal = observedRegions.stream()
                 .filter(x -> x.status() == DIPLOID)
@@ -173,7 +181,10 @@ public class BestFitFactory
                 .sum();
 
         if(tumorEvidenceBafCountTotal >= TUMOR_EVIDENCE_BAF_TOTAL)
+        {
+            PPL_LOGGER.info("Tumor evidence: tumorEvidenceBafCountTotal({})", tumorEvidenceBafCountTotal);
             return true;
+        }
 
         return false;
     }
