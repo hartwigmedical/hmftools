@@ -45,7 +45,6 @@ public class PositionFreqBuilder
     private final Map<String,Integer> mChromosomePosIndex;
     private final int mBucketSize;
     private int mPositionCacheSize;
-    private int mMaxSampleCount;
     private final String mOutputDir;
     private final String mOutputFileId;
     private final String mSamplePosCountsFile;

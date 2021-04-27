@@ -150,7 +150,7 @@ public class SomaticClassifier implements CuppaClassifier
 
         mSomaticSigs = new SomaticSigs(mConfig.RefSnvSignaturesFile);
 
-        int posFreqBucketSize = cmd.hasOption(SNV_POS_FREQ_POS_SIZE) ?
+        int posFreqBucketSize = cmd != null && cmd.hasOption(SNV_POS_FREQ_POS_SIZE) ?
                 Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE)) : POS_FREQ_BUCKET_SIZE;
 
         mPosFrequencyBuilder = new PositionFrequencies(posFreqBucketSize, POS_FREQ_MAX_SAMPLE_COUNT);
