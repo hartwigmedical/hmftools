@@ -55,8 +55,6 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import org.jooq.Record;
 import org.jooq.Result;
 
-import htsjdk.variant.variantcontext.VariantContext;
-
 public class FeatureDataLoader
 {
     public static boolean loadFeaturesFromCohortFile(final String filename, final Map<String,List<SampleFeatureData>> sampleDrivers)
@@ -115,7 +113,7 @@ public class FeatureDataLoader
             final List<DriverCatalog> drivers = Lists.newArrayList();
 
             final String linxDriverCatalogFilename = LinxDriver.generateCatalogFilenameForReading(sampleDataDir, sampleId);
-            final String purpleDriverCatalogFilename = DriverCatalogFile.generateSomaticFilenameForReading(sampleDataDir, sampleId);
+            final String purpleDriverCatalogFilename = DriverCatalogFile.generateSomaticFilename(sampleDataDir, sampleId);
 
             if(Files.exists(Paths.get(linxDriverCatalogFilename)))
             {

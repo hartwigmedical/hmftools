@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverImpactL
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTest;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,22 +53,18 @@ public class DriverCatalogFactoryTest {
 
     @Test
     public void testMultipleZeroNonDriver() {
-        DndsDriverImpactLikelihood indelLikelihood =
-                ImmutableDndsDriverImpactLikelihood.builder().dndsLikelihood(1).driversPerSample(0.01).passengersPerMutation(0).build();
+        DndsDriverImpactLikelihood indelLikelihood = testBuilder().driversPerSample(0.01).passengersPerMutation(0).build();
         double value = DriverCatalogFactory.probabilityDriverVariant(1000, 1000, indelLikelihood, indelLikelihood);
         assertEquals(0, value, EPSILON);
     }
 
     @Test
     public void testFallBackOnSingleProbabilityIfMultiFailsDueToZeroValues() {
-        DndsDriverImpactLikelihood nonsense =
-                ImmutableDndsDriverImpactLikelihood.builder().dndsLikelihood(0.7).driversPerSample(2E-4).passengersPerMutation(4E-9).build();
+        DndsDriverImpactLikelihood nonsense = testBuilder().driversPerSample(2E-4).passengersPerMutation(4E-9).build();
         double singleNonsenseLikelihood = DriverCatalogFactory.probabilityDriverVariant(1, nonsense);
-        assertTrue(singleNonsenseLikelihood - 0.1 > nonsense.dndsLikelihood());
+        assertTrue(singleNonsenseLikelihood > 0.1);
 
-        DndsDriverImpactLikelihood splice =
-                ImmutableDndsDriverImpactLikelihood.builder().dndsLikelihood(0).driversPerSample(0).passengersPerMutation(0).build();
-        assertEquals(0, splice.dndsLikelihood(), EPSILON);
+        DndsDriverImpactLikelihood splice = testBuilder().driversPerSample(0).passengersPerMutation(0).build();
         assertEquals(0, DriverCatalogFactory.probabilityDriverVariant(1, splice), EPSILON);
 
         double victim = DriverCatalogFactory.probabilityDriverVariant(1, 1, nonsense, splice);
@@ -79,13 +76,16 @@ public class DriverCatalogFactoryTest {
 
     @Test
     public void testZeroNonDriverWithStandard() {
-        DndsDriverImpactLikelihood indelLikelihood =
-                ImmutableDndsDriverImpactLikelihood.builder().dndsLikelihood(1).driversPerSample(0.01).passengersPerMutation(0).build();
-        DndsDriverImpactLikelihood missenseLikelihood =
-                ImmutableDndsDriverImpactLikelihood.builder().dndsLikelihood(0.87).driversPerSample(0.01).passengersPerMutation(10e-8).build();
+        DndsDriverImpactLikelihood indelLikelihood = testBuilder().driversPerSample(0.01).passengersPerMutation(0).build();
+        DndsDriverImpactLikelihood missenseLikelihood = testBuilder().driversPerSample(0.01).passengersPerMutation(10E-8).build();
 
         double expectedMissense = DriverCatalogFactory.probabilityDriverVariant(10000, missenseLikelihood);
         double value = DriverCatalogFactory.probabilityDriverVariant(10000, 1000, missenseLikelihood, indelLikelihood);
         assertEquals(expectedMissense, value, EPSILON);
+    }
+
+    @NotNull
+    private static ImmutableDndsDriverImpactLikelihood.Builder testBuilder() {
+        return ImmutableDndsDriverImpactLikelihood.builder();
     }
 }

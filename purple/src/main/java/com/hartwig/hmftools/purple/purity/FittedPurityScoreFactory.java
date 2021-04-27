@@ -13,12 +13,14 @@ import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class FittedPurityScoreFactory {
+public final class FittedPurityScoreFactory
+{
 
     private static final double POLYCLONAL_DISTANCE = 0.25;
 
     @NotNull
-    public static FittedPurityScore score(@NotNull final List<FittedPurity> purities) {
+    public static FittedPurityScore score(@NotNull final List<FittedPurity> purities)
+    {
         ImmutableFittedPurityScore.Builder builder = ImmutableFittedPurityScore.builder()
                 .minPloidy(0)
                 .minPurity(0)
@@ -41,13 +43,16 @@ public final class FittedPurityScoreFactory {
         return builder.build();
     }
 
-    public static double polyclonalProportion(@NotNull final Collection<PurpleCopyNumber> regions) {
+    public static double polyclonalProportion(@NotNull final Collection<PurpleCopyNumber> regions)
+    {
         int polyclonalCount = 0;
         int totalCount = 0;
 
-        for (final PurpleCopyNumber region : regions) {
+        for(final PurpleCopyNumber region : regions)
+        {
             totalCount += region.bafCount();
-            if (isPolyclonal(region.averageTumorCopyNumber())) {
+            if(isPolyclonal(region.averageTumorCopyNumber()))
+            {
                 polyclonalCount += region.bafCount();
             }
         }
@@ -55,20 +60,24 @@ public final class FittedPurityScoreFactory {
         return totalCount == 0 ? 0 : 1d * polyclonalCount / totalCount;
     }
 
-    private static int comparePurity(@NotNull final FittedPurity o1, @NotNull final FittedPurity o2) {
+    private static int comparePurity(@NotNull final FittedPurity o1, @NotNull final FittedPurity o2)
+    {
         return Double.compare(o1.purity(), o2.purity());
     }
 
-    private static int comparePloidy(@NotNull final FittedPurity o1, @NotNull final FittedPurity o2) {
+    private static int comparePloidy(@NotNull final FittedPurity o1, @NotNull final FittedPurity o2)
+    {
         return Double.compare(o1.ploidy(), o2.ploidy());
     }
 
-    private static int compareDiploidProportion(@NotNull final FittedPurity o1, @NotNull final FittedPurity o2) {
+    private static int compareDiploidProportion(@NotNull final FittedPurity o1, @NotNull final FittedPurity o2)
+    {
         return Double.compare(o1.diploidProportion(), o2.diploidProportion());
     }
 
     @VisibleForTesting
-    static boolean isPolyclonal(final double copyNumber) {
+    static boolean isPolyclonal(final double copyNumber)
+    {
         double remainder = Math.abs(copyNumber - Math.round(copyNumber));
         return greaterThan(remainder, POLYCLONAL_DISTANCE);
     }

@@ -16,7 +16,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public enum SomaticDeviation implements RemovalListener<Double, Integer> {
+public enum SomaticDeviation implements RemovalListener<Double, Integer>
+{
     INSTANCE;
 
     private static final int TRIALS = 10_000;
@@ -24,12 +25,15 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer> {
     private final LoadingCache<Double, Integer> maxConceivableCache;
     private boolean errorLogged = false;
 
-    SomaticDeviation() {
+    SomaticDeviation()
+    {
         this.maxConceivableCache =
-                CacheBuilder.newBuilder().maximumSize(50000).removalListener(this).build(new CacheLoader<Double, Integer>() {
+                CacheBuilder.newBuilder().maximumSize(50000).removalListener(this).build(new CacheLoader<Double, Integer>()
+                {
 
                     @Override
-                    public Integer load(@NotNull final Double p) {
+                    public Integer load(@NotNull final Double p)
+                    {
                         final BinomialDistribution dist = new BinomialDistribution(TRIALS, Math.min(1, p));
                         return dist.inverseCumulativeProbability(0.999);
                     }
@@ -37,7 +41,8 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer> {
     }
 
     public double deviationFromMax(@NotNull final PurityAdjuster purityAdjuster, @NotNull final FittedRegion region,
-            @NotNull final SomaticVariant variant) {
+            @NotNull final SomaticVariant variant)
+    {
         double normalCopyNumber = purityAdjuster.germlineCopyNumber(region.chromosome());
         double constrainedMajorAllelePloidy = Math.max(0, region.majorAlleleCopyNumber());
         double constrainedTumorCopyNumber = Math.max(0, region.tumorCopyNumber());
@@ -47,7 +52,8 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer> {
 
     @VisibleForTesting
     double deviationFromMax(@NotNull final PurityAdjuster purityAdjuster, double normalCopyNumber, @NotNull final AllelicDepth depth,
-            double tumorCopyNumber, double tumorMajorAllelePloidy) {
+            double tumorCopyNumber, double tumorMajorAllelePloidy)
+    {
         double maxConceivablePloidy =
                 maxConceivablePloidy(purityAdjuster, normalCopyNumber, depth, tumorCopyNumber, tumorMajorAllelePloidy);
         double somaticPloidy = purityAdjuster.purityAdjustedPloidy(normalCopyNumber, 0, tumorCopyNumber, depth.alleleFrequency());
@@ -57,7 +63,8 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer> {
 
     @VisibleForTesting
     double maxConceivablePloidy(@NotNull final PurityAdjuster purityAdjuster, double normalCopyNumber, @NotNull final AllelicDepth depth,
-            double tumorCopyNumber, double tumorMajorAllelePloidy) {
+            double tumorCopyNumber, double tumorMajorAllelePloidy)
+    {
         final int maxConceivableReads =
                 maxConceivableReads(purityAdjuster, normalCopyNumber, depth, tumorCopyNumber, tumorMajorAllelePloidy);
         final double maxConceivableVAF = 1d * maxConceivableReads / depth.totalReadCount();
@@ -67,15 +74,18 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer> {
 
     @VisibleForTesting
     int maxConceivableReads(@NotNull final PurityAdjuster purityAdjuster, double normalCopyNumber, @NotNull final AllelicDepth depth,
-            double tumorCopyNumber, double tumorMajorAllelePloidy) {
+            double tumorCopyNumber, double tumorMajorAllelePloidy)
+    {
         double expectedVAF = purityAdjuster.expectedFrequency(normalCopyNumber, 0, tumorCopyNumber, tumorMajorAllelePloidy);
         double p = 1d * Math.round(expectedVAF * depth.totalReadCount() * 100) / 100 / TRIALS;
         return maxConceivableCache.getUnchecked(p);
     }
 
     @Override
-    public void onRemoval(@NotNull final RemovalNotification<Double, Integer> removalNotification) {
-        if (!errorLogged) {
+    public void onRemoval(@NotNull final RemovalNotification<Double, Integer> removalNotification)
+    {
+        if(!errorLogged)
+        {
             errorLogged = true;
             LOGGER.warn("Somatic deviation cache limit exceeded. This indicates a potential performance issue but will otherwise not effect any calculations.");
         }

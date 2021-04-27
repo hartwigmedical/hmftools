@@ -71,7 +71,7 @@
         <cuppa.version>1.4</cuppa.version>
         <compar.version>1.0</compar.version>
         <isofox.version>1.3</isofox.version>
-        <paddle.version>0.1</paddle.version>
+        <paddle.version>1.0</paddle.version>
         <vicc-importer.version>1.1</vicc-importer.version>
         <iclusion-importer.version>1.3</iclusion-importer.version>
         <ckb-importer.version>1.1</ckb-importer.version>
@@ -111,8 +111,6 @@
         <kotlintest.version>2.0.7</kotlintest.version>
         <junit.version>4.13.1</junit.version>
         <jmockit.version>1.38</jmockit.version>
-
-        <ensembl.version>89</ensembl.version>
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -199,7 +197,7 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>count-bam-lines</artifactId>
+                <artifactId>cobalt</artifactId>
                 <version>${cobalt.version}</version>
             </dependency>
             <dependency>

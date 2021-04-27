@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.patientdb.LoadPurpleData.persistToDatabase;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.purity.FittedPurityScoreFactory.polyclonalProportion;
-import static com.hartwig.hmftools.purple.fitting.WholeGenomeDuplication.wholeGenomeDuplication;
-import static com.hartwig.hmftools.patientdb.LoadPurpleData.persistToDatabase;
 import static com.hartwig.hmftools.purple.PurpleRegionZipper.updateRegionsWithCopyNumbers;
+import static com.hartwig.hmftools.purple.fitting.WholeGenomeDuplication.wholeGenomeDuplication;
+import static com.hartwig.hmftools.purple.purity.FittedPurityScoreFactory.polyclonalProportion;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,24 +34,15 @@ import com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.purple.config.AmberData;
-import com.hartwig.hmftools.purple.config.CobaltData;
-import com.hartwig.hmftools.purple.config.ReferenceData;
-import com.hartwig.hmftools.purple.config.SampleData;
-import com.hartwig.hmftools.purple.config.SampleDataFiles;
-import com.hartwig.hmftools.purple.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.BestFit;
 import com.hartwig.hmftools.purple.fitting.BestFitFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.purple.purity.FittedPurityFactory;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.purple.region.FittedRegionFactory;
-import com.hartwig.hmftools.purple.region.FittedRegionFactoryV2;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.SegmentFile;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -61,11 +52,23 @@ import com.hartwig.hmftools.purple.fitting.PeakModelFile;
 import com.hartwig.hmftools.purple.recovery.RecoverStructuralVariants;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
+import com.hartwig.hmftools.purple.config.AmberData;
+import com.hartwig.hmftools.purple.config.CobaltData;
 import com.hartwig.hmftools.purple.config.FittingConfig;
+import com.hartwig.hmftools.purple.config.PurpleConfig;
+import com.hartwig.hmftools.purple.config.ReferenceData;
+import com.hartwig.hmftools.purple.config.SampleData;
+import com.hartwig.hmftools.purple.config.SampleDataFiles;
 import com.hartwig.hmftools.purple.config.SomaticFitConfig;
+import com.hartwig.hmftools.purple.fitting.BestFitFactory;
+import com.hartwig.hmftools.purple.fitting.PeakModel;
+import com.hartwig.hmftools.purple.fitting.PeakModelFile;
+import com.hartwig.hmftools.purple.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.purple.germline.GermlineVariants;
 import com.hartwig.hmftools.purple.plot.Charts;
+import com.hartwig.hmftools.purple.purity.FittedPurityFactory;
+import com.hartwig.hmftools.purple.region.FittedRegionFactory;
+import com.hartwig.hmftools.purple.region.FittedRegionFactoryV2;
 import com.hartwig.hmftools.purple.somatic.SomaticPeakStream;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
 
@@ -99,7 +102,7 @@ public class PurpleApplication
     private static final String LOG_DEBUG = "log_debug";
 
     private PurpleApplication(final Options options, final String... args)
-            throws ParseException, IOException, SQLException, ExecutionException, InterruptedException
+            throws ParseException, IOException
     {
         mPurpleVersion = new VersionInfo("purple.version");
         PPL_LOGGER.info("PURPLE version: {}", mPurpleVersion.version());
@@ -320,7 +323,7 @@ public class PurpleApplication
                 final GermlineDrivers germlineDrivers = new GermlineDrivers(mReferenceData.GenePanel.driverGenes());
                 germlineDriverCatalog.addAll(germlineDrivers.drivers(mGermlineVariants.reportableVariants(), geneCopyNumbers));
 
-                DriverCatalogFile.write(DriverCatalogFile.generateSomaticFilenameForWriting(outputDir, tumorSample), somaticDriverCatalog);
+                DriverCatalogFile.write(DriverCatalogFile.generateSomaticFilename(outputDir, tumorSample), somaticDriverCatalog);
 
                 if(!sampleDataFiles.GermlineVcfFile.isEmpty())
                 {

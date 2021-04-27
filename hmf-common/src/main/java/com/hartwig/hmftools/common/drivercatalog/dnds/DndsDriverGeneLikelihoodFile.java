@@ -31,10 +31,10 @@ public final class DndsDriverGeneLikelihoodFile {
 
     @NotNull
     private static DndsDriverImpactLikelihood fromString(int offset, @NotNull final String[] values) {
+        int current = offset;
         return ImmutableDndsDriverImpactLikelihood.builder()
-                .dndsLikelihood(0.0)
-                .driversPerSample(Double.parseDouble(values[offset++]))
-                .passengersPerMutation(Double.parseDouble(values[offset]))
+                .driversPerSample(Double.parseDouble(values[current++]))
+                .passengersPerMutation(Double.parseDouble(values[current]))
                 .build();
     }
 

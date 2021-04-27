@@ -55,7 +55,7 @@ public class LoadPurpleData {
                 PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateGermlineFilenameForReading(purpleDir, sample));
 
         List<DriverCatalog> somaticDriverCatalog =
-                DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilenameForReading(purpleDir, sample));
+                DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purpleDir, sample));
         List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(DriverCatalogFile.generateGermlineFilename(purpleDir, sample));
 
         LOGGER.info("Persisting purple data to db for {}", sample);

@@ -127,7 +127,7 @@ public class DriverDataCache
             final PurityContext purityContext = PurityContextFile.read(purpleDataPath, mSampleId);
             setSamplePurityData(purityContext.bestFit().ploidy(), isMaleSample(purityContext));
 
-            mDriverCatalog.addAll(DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilenameForReading(purpleDataPath, mSampleId)));
+            mDriverCatalog.addAll(DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purpleDataPath, mSampleId)));
 
             mGeneCopyNumberData.addAll(
                     GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(purpleDataPath, mSampleId)));
@@ -146,7 +146,7 @@ public class DriverDataCache
 
     public DriverGeneData createDriverData(final BreakendGeneData gene)
     {
-        GeneCopyNumber gcnData = null;
+        GeneCopyNumber gcnData;
 
         if(mDbAccess != null)
         {
@@ -182,7 +182,7 @@ public class DriverDataCache
 
         if (geneData == null)
         {
-            LNX_LOGGER.warn("gene({}:{}) no Ensembl gene data found", gene.GeneName);
+            LNX_LOGGER.warn("gene({}) no Ensembl gene data found", gene.GeneName);
             return null;
         }
 
