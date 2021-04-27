@@ -14,9 +14,10 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DriverCatalogFile {
+public final class DriverCatalogFile {
 
     static final DecimalFormat FORMAT = new DecimalFormat("0.0000", new DecimalFormatSymbols(Locale.ENGLISH));
+
     private static final String DELIMITER = "\t";
     private static final String OLD_DRIVER_CATALOG_EXTENSION = ".driver.catalog.tsv";
     private static final String DRIVER_CATALOG_EXTENSION = ".driver.catalog.somatic.tsv";

@@ -47,7 +47,6 @@ public class GermlineDrivers {
             if (category != null) {
                 driverCatalog.add(germlineDriver(category, gene, geneVariants, geneCopyNumber));
             }
-
         }
 
         return new ArrayList<>(driverCatalog);
