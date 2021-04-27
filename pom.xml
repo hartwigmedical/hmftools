@@ -199,7 +199,7 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>count-bam-lines</artifactId>
+                <artifactId>cobalt</artifactId>
                 <version>${cobalt.version}</version>
             </dependency>
             <dependency>

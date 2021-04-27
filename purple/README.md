@@ -4,7 +4,7 @@
 
 PURPLE is a **pur**ity **pl**oidy **e**stimator for whole genome sequenced (WGS) data. 
 
-It combines B-allele frequency (BAF) from [AMBER](../amber), read depth ratios from [COBALT](../count-bam-lines), somatic variants and structural variants to estimate the purity and copy number profile of a tumor sample.
+It combines B-allele frequency (BAF) from [AMBER](../amber), read depth ratios from [COBALT](../cobalt), somatic variants and structural variants to estimate the purity and copy number profile of a tumor sample.
 
 PURPLE supports both grch 37 and 38 reference assemblies. 
 
@@ -200,7 +200,7 @@ Note that generating the driver catalog for SNVs assumes that the VCF has been a
 
 ## Input
 
-The PURPLE algorithm relies on the BAF and read depth ratio output from [AMBER](https://github.com/hartwigmedical/hmftools/tree/master/amber) and [COBALT](https://github.com/hartwigmedical/hmftools/tree/master/count-bam-lines) respectively.
+The PURPLE algorithm relies on the BAF and read depth ratio output from [AMBER](https://github.com/hartwigmedical/hmftools/tree/master/amber) and [COBALT](https://github.com/hartwigmedical/hmftools/tree/master/cobalt) respectively.
 They should both be run before running PURPLE. 
 
 It is also strongly recommended to run PURPLE with a high quality set of somatic SNV and INDEL calls and somatic structural variant calls.  
@@ -218,7 +218,7 @@ We divide the read count of each window by the median read count of all windows 
 Finally, the reference sample ratios have a further ‘diploid’ normalization applied to them to remove megabase scale GC biases. 
 This normalization assumes that the median ratio of each 10Mb window (minimum 1Mb readable) should be diploid for autosomes and haploid for sex chromosomes in males in the germline sample.
 
-For more information on how to run COBALT please refer to the [readme](https://github.com/hartwigmedical/hmftools/tree/master/count-bam-lines).
+For more information on how to run COBALT please refer to the [readme](https://github.com/hartwigmedical/hmftools/tree/master/cobalt).
 
 
 ### AMBER
@@ -297,7 +297,7 @@ While these steps are specific to Strelka, these principles can be applied to ot
 Whilst PURPLE is primarily designed to be run with paired normal / tumor data, it is possible to run with tumor data only by including the `tumor_only` flag. 
 It is important to first run AMBER and COBALT in tumor only mode. 
 
-[AMBER]((../amber#tumor-only-mode)) and [COBALT](../count-bam-lines#tumor-only-mode) have native support for tumor only as described in their respective readme files.
+[AMBER](../amber#tumor-only-mode) and [COBALT](../cobalt#tumor-only-mode) have native support for tumor only as described in their respective readme files.
 
 Tumor only mode impacts PURPLE in the following ways:
   - Somatic variants are excluded from fitting
