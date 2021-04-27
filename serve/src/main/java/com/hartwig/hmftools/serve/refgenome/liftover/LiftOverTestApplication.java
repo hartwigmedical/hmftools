@@ -23,7 +23,7 @@ public class LiftOverTestApplication {
 
         ServeConfig config = ServeLocalConfigProvider.create();
 
-        Interval original = new Interval("chr17", 41197710, 41197710);
+        Interval original = new Interval("chrX", 1314965, 1314965);
         LOGGER.debug("Starting interval 37 is {}", original);
 
         LiftOver liftOver37To38 = new LiftOver(new File(config.refGenome37To38Chain()));
@@ -31,7 +31,9 @@ public class LiftOverTestApplication {
         LOGGER.debug("Interval lifted from 37 to 38 is {}", result);
 
         LiftOver liftOver38to37 = new LiftOver(new File(config.refGenome38To37Chain()));
-        Interval backToOriginal = liftOver38to37.liftOver(result);
-        LOGGER.debug("Interval lifted back to 37 is {}", backToOriginal);
+        if (result != null) {
+            Interval backToOriginal = liftOver38to37.liftOver(result);
+            LOGGER.debug("Interval lifted back to 37 is {}", backToOriginal);
+        }
     }
 }
