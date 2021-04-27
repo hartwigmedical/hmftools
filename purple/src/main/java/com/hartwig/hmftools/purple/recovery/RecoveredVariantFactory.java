@@ -23,8 +23,8 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.gripss.GripssFilters;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
+import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
+import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
@@ -48,7 +48,8 @@ class RecoveredVariantFactory implements AutoCloseable
     private static final double MIN_PLOIDY_AS_PERCENTAGE_OF_COPY_NUMBER_CHANGE = 0.5;
 
     private static final int MIN_MATE_UNCERTAINTY = 150;
-    static final Set<String> DO_NOT_RESCUE =
+
+    public static final Set<String> DO_NOT_RESCUE =
             Sets.newHashSet("af", "qual", GripssFilters.DEDUP, GripssFilters.MIN_QUAL, GripssFilters.MIN_TUMOR_AF);
 
     private static final Comparator<RecoveredVariant> QUALITY_COMPARATOR = comparingDouble(x -> x.context().getPhredScaledQual());

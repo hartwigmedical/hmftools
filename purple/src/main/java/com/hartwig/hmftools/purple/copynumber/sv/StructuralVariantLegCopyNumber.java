@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.copynumber.sv;
+package com.hartwig.hmftools.purple.copynumber.sv;
 
 import java.util.Optional;
 

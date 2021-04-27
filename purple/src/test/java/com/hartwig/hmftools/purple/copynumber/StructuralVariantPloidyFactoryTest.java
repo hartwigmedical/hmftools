@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.common.purple.copynumber.sv;
+package com.hartwig.hmftools.purple.copynumber;
 
 import static java.util.Collections.singleton;
 
-import static com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegsFactoryTest.createLeg;
-import static com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantPloidyTest.CHROMOSOME;
-import static com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantPloidyTest.PURE;
+import static com.hartwig.hmftools.purple.copynumber.StructuralVariantLegsFactoryTest.createLeg;
+import static com.hartwig.hmftools.purple.copynumber.StructuralVariantPloidyTest.CHROMOSOME;
+import static com.hartwig.hmftools.purple.copynumber.StructuralVariantPloidyTest.PURE;
 
 import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;
@@ -28,6 +28,12 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
+import com.hartwig.hmftools.purple.copynumber.sv.ImmutableStructuralVariantLegPloidy;
+import com.hartwig.hmftools.purple.copynumber.sv.ImmutableStructuralVariantLegs;
+import com.hartwig.hmftools.purple.copynumber.sv.ModifiableStructuralVariantLegPloidy;
+import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
+import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
+import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegs;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -37,6 +43,25 @@ public class StructuralVariantPloidyFactoryTest {
 
     private static final int AVERAGE_READ_DEPTH = 100;
     private static final double AVERAGE_COPY_NUMBER = 2;
+
+    @NotNull
+    public static ImmutableStructuralVariantLegPloidy.Builder svLegPloidy(int orientation, @NotNull final Optional<Double> leftCopyNumber,
+            @NotNull final Optional<Double> rightCopyNumber, double ploidy) {
+        return ImmutableStructuralVariantLegPloidy.builder()
+                .chromosome(CHROMOSOME)
+                .position(1)
+                .orientation((byte) orientation)
+                .observedVaf(0.5)
+                .adjustedVaf(0.5)
+                .alleleFrequency(0.5)
+                .homology("")
+                .anchoringSupportDistance(0)
+                .weight(1)
+                .averageImpliedPloidy(ploidy)
+                .unweightedImpliedPloidy(ploidy)
+                .leftCopyNumber(leftCopyNumber)
+                .rightCopyNumber(rightCopyNumber);
+    }
 
     private static final StructuralVariantLegPloidyFactory<PurpleCopyNumber> PURE_PLOIDY_FACTORY = new StructuralVariantLegPloidyFactory<>(
             AVERAGE_READ_DEPTH,

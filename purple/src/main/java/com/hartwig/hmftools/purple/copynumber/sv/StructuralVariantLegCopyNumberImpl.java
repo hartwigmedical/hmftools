@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.copynumber.sv;
+package com.hartwig.hmftools.purple.copynumber.sv;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

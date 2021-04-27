@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.copynumber.sv;
+package com.hartwig.hmftools.purple.copynumber;
 
 import static org.junit.Assert.assertEquals;
 
@@ -6,8 +6,9 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
+import com.hartwig.hmftools.purple.copynumber.sv.CopyNumberChange;
+import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -193,6 +194,6 @@ public class CopyNumberChangeTest {
 
     @NotNull
     private static StructuralVariantLegPloidy svPloidy(int orientation, double ploidy, double leftCopyNumber, double rightCopyNumber) {
-        return PurpleTestUtils.svLegPloidy(orientation, Optional.of(leftCopyNumber), Optional.of(rightCopyNumber), ploidy).build();
+        return StructuralVariantPloidyFactoryTest.svLegPloidy(orientation, Optional.of(leftCopyNumber), Optional.of(rightCopyNumber), ploidy).build();
     }
 }

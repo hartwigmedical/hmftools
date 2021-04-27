@@ -27,9 +27,9 @@ import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegCopyNumberChangeFactory;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
+import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegCopyNumberChangeFactory;
+import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
+import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
@@ -69,8 +69,8 @@ public class RecoverStructuralVariants implements Closeable
     RecoverStructuralVariants(@NotNull final PurityAdjuster purityAdjuster, @NotNull final RecoveredVariantFactory factory,
             @NotNull final List<PurpleCopyNumber> allCopyNumbers)
     {
-        this.mPurityAdjuster = purityAdjuster;
-        this.mAllCopyNumbers = Multimaps.fromRegions(allCopyNumbers);
+        mPurityAdjuster = purityAdjuster;
+        mAllCopyNumbers = Multimaps.fromRegions(allCopyNumbers);
         mPloidyFactory = new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
         mRecoveredVariantFactory = factory;
     }
@@ -88,7 +88,8 @@ public class RecoverStructuralVariants implements Closeable
 
     @VisibleForTesting
     @NotNull
-    List<VariantContext> recoverFromUnbalancedVariants(@NotNull final List<StructuralVariant> currentVariants,
+    List<VariantContext> recoverFromUnbalancedVariants(
+            @NotNull final List<StructuralVariant> currentVariants,
             @NotNull final Collection<VariantContext> recovered) throws IOException
     {
         final StructuralVariantLegCopyNumberChangeFactory changeFactory =
@@ -97,7 +98,6 @@ public class RecoverStructuralVariants implements Closeable
         final List<VariantContext> result = Lists.newArrayList();
         for(final StructuralVariant variant : currentVariants)
         {
-
             int recoverCount = 0;
             boolean attemptRecovery = false;
             boolean unbalancedStart = false;
@@ -168,7 +168,7 @@ public class RecoverStructuralVariants implements Closeable
         for(VariantContext other : recovered)
         {
             if(legPloidy.chromosome().equals(other.getContig())
-                    && Math.abs(legPloidy.position() - other.getStart()) <= UNBALANCED_MIN_DEPTH_WINDOW_COUNT * 1000)
+            && Math.abs(legPloidy.position() - other.getStart()) <= UNBALANCED_MIN_DEPTH_WINDOW_COUNT * 1000)
             {
                 return true;
             }
@@ -276,8 +276,8 @@ public class RecoverStructuralVariants implements Closeable
     }
 
     @NotNull
-    private static VariantContext addRecoveryDetails(@NotNull final VariantContext context, @NotNull final String recoveryMethod,
-            @NotNull final List<String> recoveryFilters)
+    private static VariantContext addRecoveryDetails(
+            @NotNull final VariantContext context, @NotNull final String recoveryMethod, @NotNull final List<String> recoveryFilters)
     {
         return new VariantContextBuilder(context).unfiltered()
                 .attribute(RECOVERED, true)

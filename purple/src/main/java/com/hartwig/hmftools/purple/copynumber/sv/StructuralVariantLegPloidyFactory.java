@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.copynumber.sv;
+package com.hartwig.hmftools.purple.copynumber.sv;
 
 import java.util.Collections;
 import java.util.List;
@@ -74,9 +74,8 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
         return result;
     }
 
-    @VisibleForTesting
     @NotNull
-    List<StructuralVariantLegPloidy> create(@NotNull final StructuralVariantLegs legs, @NotNull final Multimap<Chromosome, T> copyNumbers) {
+    public List<StructuralVariantLegPloidy> create(@NotNull final StructuralVariantLegs legs, @NotNull final Multimap<Chromosome, T> copyNumbers) {
         final Optional<ModifiableStructuralVariantLegPloidy> start =
                 legs.start().flatMap(x -> create(x, GenomeRegionSelectorFactory.createImproved(copyNumbers)));
 
@@ -106,9 +105,8 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
         return result;
     }
 
-    @VisibleForTesting
     @NotNull
-    Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg,
+    public Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg,
             @NotNull final GenomeRegionSelector<T> selector) {
         final StructuralVariantLegCopyNumber legCopyNumber = copyNumberFactory.create(leg, selector);
         return create(leg, legCopyNumber.leftCopyNumber(), legCopyNumber.rightCopyNumber());

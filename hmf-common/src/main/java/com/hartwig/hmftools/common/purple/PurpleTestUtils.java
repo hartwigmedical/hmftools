@@ -8,7 +8,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.copynumber.sv.ImmutableStructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.region.ImmutableEnrichedRegion;
@@ -148,25 +147,6 @@ public class PurpleTestUtils
                 .start(createStartLeg(startChromosome, startPosition, StructuralVariantType.BND).alleleFrequency(startVaf).build())
                 .startContext(dummyContext())
                 .imprecise(false);
-    }
-
-    @NotNull
-    public static ImmutableStructuralVariantLegPloidy.Builder svLegPloidy(int orientation, @NotNull final Optional<Double> leftCopyNumber,
-            @NotNull final Optional<Double> rightCopyNumber, double ploidy) {
-        return ImmutableStructuralVariantLegPloidy.builder()
-                .chromosome(CHROMOSOME)
-                .position(1)
-                .orientation((byte) orientation)
-                .observedVaf(0.5)
-                .adjustedVaf(0.5)
-                .alleleFrequency(0.5)
-                .homology("")
-                .anchoringSupportDistance(0)
-                .weight(1)
-                .averageImpliedPloidy(ploidy)
-                .unweightedImpliedPloidy(ploidy)
-                .leftCopyNumber(leftCopyNumber)
-                .rightCopyNumber(rightCopyNumber);
     }
 
     @NotNull

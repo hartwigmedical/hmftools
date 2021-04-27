@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.copynumber.sv;
+package com.hartwig.hmftools.purple.copynumber.sv;
 
 import java.util.List;
 
@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-class CopyNumberChange {
+public class CopyNumberChange {
 
     private final double downScale;
     private final double upScale;
@@ -15,7 +15,7 @@ class CopyNumberChange {
     private final double downOffset;
     private final double upOffset;
 
-    CopyNumberChange(@NotNull final List<StructuralVariantLegPloidy> structuralVariants) {
+    public CopyNumberChange(@NotNull final List<StructuralVariantLegPloidy> structuralVariants) {
         assert (!structuralVariants.isEmpty());
 
         final StructuralVariantLegPloidy template = structuralVariants.get(0);
@@ -64,8 +64,7 @@ class CopyNumberChange {
         }
     }
 
-    @VisibleForTesting
-    double copyNumberChange(@NotNull final StructuralVariantLegPloidy leg) {
+    public double copyNumberChange(@NotNull final StructuralVariantLegPloidy leg) {
         return isPositive(leg) ? downOffset + downScale * ploidy(leg) : upOffset + upScale * ploidy(leg);
     }
 

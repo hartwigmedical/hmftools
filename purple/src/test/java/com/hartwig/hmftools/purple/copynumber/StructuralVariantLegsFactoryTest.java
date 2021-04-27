@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.common.purple.copynumber.sv;
+package com.hartwig.hmftools.purple.copynumber;
 
 import static com.hartwig.hmftools.common.purple.PurpleTestUtils.createStartLeg;
-import static com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegsFactory.reduce;
-import static com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantPloidyTest.CHROMOSOME;
+import static com.hartwig.hmftools.purple.copynumber.StructuralVariantPloidyTest.CHROMOSOME;
+import static com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegsFactory.reduce;
 
 import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;
@@ -12,11 +12,12 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegs;
+import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegsFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.copynumber.sv;
+package com.hartwig.hmftools.purple.copynumber.sv;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -21,16 +21,16 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 
-final class StructuralVariantLegsFactory {
+public final class StructuralVariantLegsFactory {
 
     @NotNull
-    static List<StructuralVariantLegs> create(@NotNull final StructuralVariant variants) {
+    public static List<StructuralVariantLegs> create(@NotNull final StructuralVariant variants) {
         final List<ModifiableStructuralVariantLegs> legs = createLegs(true, Collections.singletonList(variants));
         return legs.stream().map(x -> (StructuralVariantLegs) x).collect(Collectors.toList());
     }
 
     @NotNull
-    static List<StructuralVariantLegs> create(@NotNull final List<StructuralVariant> variants) {
+    public static List<StructuralVariantLegs> create(@NotNull final List<StructuralVariant> variants) {
         final List<ModifiableStructuralVariantLegs> result = createLegs(false, variants);
         final Set<GenomePosition> duplicatePositions = findDuplicatePositions(result);
         for (GenomePosition duplicatePosition : duplicatePositions) {
@@ -90,8 +90,7 @@ final class StructuralVariantLegsFactory {
     }
 
     @NotNull
-    @VisibleForTesting
-    static StructuralVariantLeg reduce(@NotNull final GenomePosition cnaPosition, @NotNull final List<StructuralVariantLeg> legs) {
+    public static StructuralVariantLeg reduce(@NotNull final GenomePosition cnaPosition, @NotNull final List<StructuralVariantLeg> legs) {
         double maxPositive = 0;
         double maxNegative = 0;
 

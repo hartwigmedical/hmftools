@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple.copynumber.sv;
+package com.hartwig.hmftools.purple.copynumber.sv;
 
 import java.util.Optional;
 
@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Modifiable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-abstract class StructuralVariantLegs {
+public abstract class StructuralVariantLegs {
 
     public abstract Optional<StructuralVariantLeg> start();
 

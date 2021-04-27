@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.enrich.StructuralRefContextEnrichment;
-import com.hartwig.hmftools.common.variant.structural.CopyNumberEnrichedStructuralVariantFactory;
+import com.hartwig.hmftools.purple.copynumber.CopyNumberEnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;

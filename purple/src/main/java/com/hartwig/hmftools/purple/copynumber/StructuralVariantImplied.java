@@ -15,8 +15,8 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
+import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
+import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;

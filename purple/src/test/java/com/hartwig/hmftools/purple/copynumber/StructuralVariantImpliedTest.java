@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurityAdjusterTypicalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
-import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
+import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
@@ -150,6 +150,6 @@ public class StructuralVariantImpliedTest {
     @NotNull
     private static StructuralVariantLegPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber,
             @NotNull final Optional<Double> rightCopyNumber) {
-        return PurpleTestUtils.svLegPloidy(orientation, leftCopyNumber, rightCopyNumber, PLOIDY).chromosome(CONTIG).build();
+        return StructuralVariantPloidyFactoryTest.svLegPloidy(orientation, leftCopyNumber, rightCopyNumber, PLOIDY).chromosome(CONTIG).build();
     }
 }
