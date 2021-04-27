@@ -6,8 +6,8 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface StructuralVariantLegCopyNumber extends StructuralVariantLeg {
-
+public interface StructuralVariantLegCopyNumber extends StructuralVariantLeg
+{
     byte orientation();
 
     @NotNull
@@ -16,10 +16,14 @@ public interface StructuralVariantLegCopyNumber extends StructuralVariantLeg {
     @NotNull
     Optional<Double> rightCopyNumber();
 
-    default double adjustedCopyNumber() {
-        if (orientation() == 1) {
+    default double adjustedCopyNumber()
+    {
+        if(orientation() == 1)
+        {
             return leftCopyNumber().orElse(0D);
-        } else {
+        }
+        else
+        {
             return rightCopyNumber().orElse(0D);
         }
     }

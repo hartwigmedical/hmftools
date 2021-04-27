@@ -14,30 +14,33 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 
 import org.jetbrains.annotations.NotNull;
 
-public class StructuralVariantLegCopyNumberFactory<T extends GenomeRegion> {
-
+public class StructuralVariantLegCopyNumberFactory<T extends GenomeRegion>
+{
     @NotNull
-    private final Function<T, Double> copyNumberExtractor;
+    private final Function<T, Double> mCopyNumberExtractor;
 
-    public StructuralVariantLegCopyNumberFactory(@NotNull final Function<T, Double> copyNumberExtractor) {
-        this.copyNumberExtractor = copyNumberExtractor;
+    public StructuralVariantLegCopyNumberFactory(@NotNull final Function<T, Double> copyNumberExtractor)
+    {
+        this.mCopyNumberExtractor = copyNumberExtractor;
     }
 
     @NotNull
     public StructuralVariantLegCopyNumber create(@NotNull final StructuralVariantLeg leg,
-            @NotNull final Multimap<Chromosome, T> copyNumbers) {
+            @NotNull final Multimap<Chromosome, T> copyNumbers)
+    {
         return create(leg, GenomeRegionSelectorFactory.createImproved(copyNumbers));
 
     }
 
     @NotNull
-    public StructuralVariantLegCopyNumber create(@NotNull final StructuralVariantLeg leg, @NotNull final GenomeRegionSelector<T> selector) {
+    public StructuralVariantLegCopyNumber create(@NotNull final StructuralVariantLeg leg, @NotNull final GenomeRegionSelector<T> selector)
+    {
         final GenomePosition svPositionLeft = GenomePositions.create(leg.chromosome(), leg.cnaPosition() - 1);
         final GenomePosition svPositionRight = GenomePositions.create(leg.chromosome(), leg.cnaPosition());
         final Optional<Double> left =
-                selector.select(svPositionLeft).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).map(x -> Math.max(0, x));
+                selector.select(svPositionLeft).flatMap(x -> Optional.ofNullable(mCopyNumberExtractor.apply(x))).map(x -> Math.max(0, x));
         final Optional<Double> right =
-                selector.select(svPositionRight).flatMap(x -> Optional.ofNullable(copyNumberExtractor.apply(x))).map(x -> Math.max(0, x));
+                selector.select(svPositionRight).flatMap(x -> Optional.ofNullable(mCopyNumberExtractor.apply(x))).map(x -> Math.max(0, x));
 
         return ImmutableStructuralVariantLegCopyNumberImpl.builder()
                 .from(leg)

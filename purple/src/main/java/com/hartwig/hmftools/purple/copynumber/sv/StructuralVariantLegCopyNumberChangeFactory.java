@@ -21,28 +21,33 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class StructuralVariantLegCopyNumberChangeFactory {
-
-    private final Map<GenomePosition, CopyNumberChange> copyNumberChangeMap;
+public class StructuralVariantLegCopyNumberChangeFactory
+{
+    private final Map<GenomePosition, CopyNumberChange> mCopyNumberChangeMap;
 
     public StructuralVariantLegCopyNumberChangeFactory(@NotNull final PurityAdjuster purityAdjuster,
-            @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers, @NotNull final Collection<StructuralVariant> variants) {
-        copyNumberChangeMap = copyNumberChangeMap(purityAdjuster, copyNumbers, variants);
+            @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers, @NotNull final Collection<StructuralVariant> variants)
+    {
+        mCopyNumberChangeMap = copyNumberChangeMap(purityAdjuster, copyNumbers, variants);
     }
 
-    public double copyNumberChange(@NotNull final StructuralVariantLegPloidy leg) {
+    public double copyNumberChange(@NotNull final StructuralVariantLegPloidy leg)
+    {
         GenomePosition cnaPosition = GenomePositions.create(leg.chromosome(), leg.cnaPosition());
 
-        if (!copyNumberChangeMap.containsKey(cnaPosition)) {
+        if(!mCopyNumberChangeMap.containsKey(cnaPosition))
+        {
             return CopyNumberChange.copyNumberChangeSimple(leg);
         }
 
-        return copyNumberChangeMap.get(cnaPosition).copyNumberChange(leg);
+        return mCopyNumberChangeMap.get(cnaPosition).copyNumberChange(leg);
     }
 
     @Nullable
-    public Double copyNumberChange(@NotNull final StructuralVariantLegCopyNumber copyNumber) {
-        if (!copyNumberChangeMap.containsKey(GenomePositions.create(copyNumber.chromosome(), copyNumber.cnaPosition()))) {
+    public Double copyNumberChange(@NotNull final StructuralVariantLegCopyNumber copyNumber)
+    {
+        if(!mCopyNumberChangeMap.containsKey(GenomePositions.create(copyNumber.chromosome(), copyNumber.cnaPosition())))
+        {
             return CopyNumberChange.copyNumberChangeSimple(copyNumber);
         }
 
@@ -51,23 +56,28 @@ public class StructuralVariantLegCopyNumberChangeFactory {
 
     @NotNull
     private static Map<GenomePosition, CopyNumberChange> copyNumberChangeMap(@NotNull final PurityAdjuster purityAdjuster,
-            @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers, @NotNull final Collection<StructuralVariant> variants) {
+            @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers, @NotNull final Collection<StructuralVariant> variants)
+    {
 
         final StructuralVariantLegPloidyFactory<PurpleCopyNumber> ploidyFactory =
                 new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
 
         final ListMultimap<GenomePosition, StructuralVariantLegPloidy> ploidyMap = ArrayListMultimap.create();
-        for (final StructuralVariant variant : variantsAtDuplicateLocations(variants)) {
+        for(final StructuralVariant variant : variantsAtDuplicateLocations(variants))
+        {
             List<StructuralVariantLegPloidy> ploidies = ploidyFactory.create(variant, copyNumbers);
-            for (StructuralVariantLegPloidy ploidy : ploidies) {
+            for(StructuralVariantLegPloidy ploidy : ploidies)
+            {
                 ploidyMap.put(GenomePositions.create(ploidy.chromosome(), ploidy.cnaPosition()), ploidy);
             }
         }
 
         Map<GenomePosition, CopyNumberChange> copyNumberChangeMap = Maps.newHashMap();
-        for (GenomePosition genomePosition : ploidyMap.keySet()) {
+        for(GenomePosition genomePosition : ploidyMap.keySet())
+        {
             final List<StructuralVariantLegPloidy> legs = ploidyMap.get(genomePosition);
-            if (legs.size() > 1) {
+            if(legs.size() > 1)
+            {
                 copyNumberChangeMap.put(genomePosition, new CopyNumberChange(legs));
             }
         }
@@ -76,12 +86,15 @@ public class StructuralVariantLegCopyNumberChangeFactory {
     }
 
     @NotNull
-    private static Set<StructuralVariant> variantsAtDuplicateLocations(@NotNull final Collection<StructuralVariant> variants) {
+    private static Set<StructuralVariant> variantsAtDuplicateLocations(@NotNull final Collection<StructuralVariant> variants)
+    {
         Set<StructuralVariant> result = Sets.newHashSet();
         Multimap<GenomePosition, StructuralVariant> cnaMap = cnaMap(variants);
-        for (GenomePosition genomePosition : cnaMap.keySet()) {
+        for(GenomePosition genomePosition : cnaMap.keySet())
+        {
             final Collection<StructuralVariant> variantsAtLocation = cnaMap.get(genomePosition);
-            if (variantsAtLocation.size() > 1) {
+            if(variantsAtLocation.size() > 1)
+            {
                 result.addAll(variantsAtLocation);
             }
 
@@ -90,15 +103,18 @@ public class StructuralVariantLegCopyNumberChangeFactory {
     }
 
     @NotNull
-    private static ListMultimap<GenomePosition, StructuralVariant> cnaMap(@NotNull final Collection<StructuralVariant> variants) {
+    private static ListMultimap<GenomePosition, StructuralVariant> cnaMap(@NotNull final Collection<StructuralVariant> variants)
+    {
         final ListMultimap<GenomePosition, StructuralVariant> result = ArrayListMultimap.create();
-        for (final StructuralVariant variant : variants) {
+        for(final StructuralVariant variant : variants)
+        {
             final StructuralVariantLeg start = variant.start();
             result.put(GenomePositions.create(start.chromosome(), start.cnaPosition()), variant);
 
             @Nullable
             final StructuralVariantLeg end = variant.end();
-            if (end != null) {
+            if(end != null)
+            {
                 result.put(GenomePositions.create(end.chromosome(), end.cnaPosition()), variant);
             }
         }

@@ -12,8 +12,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Modifiable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg, StructuralVariantLegCopyNumber {
-
+public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg, StructuralVariantLegCopyNumber
+{
     public abstract double observedVaf();
 
     public abstract double adjustedVaf();
@@ -24,39 +24,44 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
 
     public abstract double unweightedImpliedPloidy();
 
-    public double impliedRightCopyNumberWeight() {
+    public double impliedRightCopyNumberWeight()
+    {
         return canInferRight() ? weight() : 0;
     }
 
-    public double impliedRightCopyNumber() {
-        if (isDecreasingFromZero(1, leftCopyNumber())) {
+    public double impliedRightCopyNumber()
+    {
+        if(isDecreasingFromZero(1, leftCopyNumber()))
             return 0;
-        }
 
         return leftCopyNumber().map(x -> x - orientation() * averageImpliedPloidy()).orElse(0D);
     }
 
-    public double impliedLeftCopyNumber() {
-        if (isDecreasingFromZero(-1, rightCopyNumber())) {
+    public double impliedLeftCopyNumber()
+    {
+        if(isDecreasingFromZero(-1, rightCopyNumber()))
             return 0;
-        }
 
         return rightCopyNumber().map(x -> x + orientation() * averageImpliedPloidy()).orElse(0D);
     }
 
-    public double impliedLeftCopyNumberWeight() {
+    public double impliedLeftCopyNumberWeight()
+    {
         return canInferLeft() ? weight() : 0;
     }
 
-    private boolean canInferRight() {
+    private boolean canInferRight()
+    {
         return isDecreasingFromZero(1, leftCopyNumber()) || leftCopyNumber().isPresent();
     }
 
-    private boolean canInferLeft() {
+    private boolean canInferLeft()
+    {
         return isDecreasingFromZero(-1, rightCopyNumber()) || rightCopyNumber().isPresent();
     }
 
-    private boolean isDecreasingFromZero(int orientation, @NotNull final Optional<Double> copyNumber) {
+    private boolean isDecreasingFromZero(int orientation, @NotNull final Optional<Double> copyNumber)
+    {
         return orientation() == orientation && copyNumber.filter(Doubles::isZero).isPresent();
     }
 }

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -20,39 +19,39 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
-
+public class StructuralVariantLegPloidyFactory<T extends GenomeRegion>
+{
     private static final double VAF_TO_USE_READ_DEPTH = 0.75;
     private static final double RECIPROCAL_VAF_TO_USE_READ_DEPTH = reciprocalVAF(VAF_TO_USE_READ_DEPTH);
 
-    private final double averageCopyNumber;
-    private final int averageReadDepth;
+    private final double mAverageCopyNumber;
+    private final int mAverageReadDepth;
 
-    @NotNull
-    private final PurityAdjuster purityAdjuster;
-    @NotNull
-    private final StructuralVariantLegCopyNumberFactory<T> copyNumberFactory;
+    private final PurityAdjuster mPurityAdjuster;
+    private final StructuralVariantLegCopyNumberFactory<T> mCopyNumberFactory;
 
-    public StructuralVariantLegPloidyFactory(@NotNull final PurityAdjuster purityAdjuster,
-            @NotNull final Function<T, Double> copyNumberExtractor) {
+    public StructuralVariantLegPloidyFactory(final PurityAdjuster purityAdjuster, final Function<T, Double> copyNumberExtractor)
+    {
         this(0, 0, purityAdjuster, copyNumberExtractor);
     }
 
     public StructuralVariantLegPloidyFactory(int averageReadDepth, double averageCopyNumber, @NotNull final PurityAdjuster purityAdjuster,
-            @NotNull final Function<T, Double> copyNumberExtractor) {
-        this.averageCopyNumber = averageCopyNumber;
-        this.averageReadDepth = averageReadDepth;
-        this.purityAdjuster = purityAdjuster;
-        this.copyNumberFactory = new StructuralVariantLegCopyNumberFactory<>(copyNumberExtractor);
+            @NotNull final Function<T, Double> copyNumberExtractor)
+    {
+        mAverageCopyNumber = averageCopyNumber;
+        mAverageReadDepth = averageReadDepth;
+        mPurityAdjuster = purityAdjuster;
+        mCopyNumberFactory = new StructuralVariantLegCopyNumberFactory<>(copyNumberExtractor);
     }
 
     @NotNull
-    public List<StructuralVariantLegPloidy> create(@NotNull final StructuralVariant variant,
-            @NotNull final Multimap<Chromosome, T> copyNumbers) {
+    public List<StructuralVariantLegPloidy> create(@NotNull final StructuralVariant variant, @NotNull final Multimap<Chromosome, T> copyNumbers)
+    {
         final List<StructuralVariantLegPloidy> result = Lists.newArrayList();
         final List<StructuralVariantLegs> allLegs = StructuralVariantLegsFactory.create(variant);
 
-        for (StructuralVariantLegs leg : allLegs) {
+        for(StructuralVariantLegs leg : allLegs)
+        {
             result.addAll(create(leg, copyNumbers));
         }
 
@@ -62,11 +61,13 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
 
     @NotNull
     public List<StructuralVariantLegPloidy> create(@NotNull final List<StructuralVariant> variants,
-            @NotNull final Multimap<Chromosome, T> copyNumbers) {
+            @NotNull final Multimap<Chromosome, T> copyNumbers)
+    {
         final List<StructuralVariantLegPloidy> result = Lists.newArrayList();
         final List<StructuralVariantLegs> allLegs = StructuralVariantLegsFactory.create(variants);
 
-        for (StructuralVariantLegs leg : allLegs) {
+        for(StructuralVariantLegs leg : allLegs)
+        {
             result.addAll(create(leg, copyNumbers));
         }
 
@@ -75,14 +76,17 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
     }
 
     @NotNull
-    public List<StructuralVariantLegPloidy> create(@NotNull final StructuralVariantLegs legs, @NotNull final Multimap<Chromosome, T> copyNumbers) {
+    public List<StructuralVariantLegPloidy> create(@NotNull final StructuralVariantLegs legs,
+            @NotNull final Multimap<Chromosome, T> copyNumbers)
+    {
         final Optional<ModifiableStructuralVariantLegPloidy> start =
                 legs.start().flatMap(x -> create(x, GenomeRegionSelectorFactory.createImproved(copyNumbers)));
 
         final Optional<ModifiableStructuralVariantLegPloidy> end =
                 legs.end().flatMap(x -> create(x, GenomeRegionSelectorFactory.createImproved(copyNumbers)));
 
-        if (!start.isPresent() && !end.isPresent()) {
+        if(!start.isPresent() && !end.isPresent())
+        {
             return Collections.emptyList();
         }
 
@@ -107,14 +111,16 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
 
     @NotNull
     public Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg,
-            @NotNull final GenomeRegionSelector<T> selector) {
-        final StructuralVariantLegCopyNumber legCopyNumber = copyNumberFactory.create(leg, selector);
+            @NotNull final GenomeRegionSelector<T> selector)
+    {
+        final StructuralVariantLegCopyNumber legCopyNumber = mCopyNumberFactory.create(leg, selector);
         return create(leg, legCopyNumber.leftCopyNumber(), legCopyNumber.rightCopyNumber());
     }
 
     @NotNull
     public Optional<StructuralVariantLegPloidy> singleLegPloidy(@NotNull final StructuralVariantLeg leg, double leftCopyNumber,
-            double rightCopyNumber) {
+            double rightCopyNumber)
+    {
         Optional<ModifiableStructuralVariantLegPloidy> modifiable = create(leg, Optional.of(leftCopyNumber), Optional.of(rightCopyNumber));
         modifiable.ifPresent(x -> x.setAverageImpliedPloidy(x.unweightedImpliedPloidy()));
         return modifiable.map(x -> x);
@@ -122,23 +128,29 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
 
     @NotNull
     private Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg,
-            @NotNull Optional<Double> leftCopyNumber, Optional<Double> rightCopyNumber) {
+            @NotNull Optional<Double> leftCopyNumber, Optional<Double> rightCopyNumber)
+    {
         final Optional<Double> largerCopyNumber;
         final Optional<Double> smallerCopyNumber;
-        if (leg.orientation() == 1) {
+        if(leg.orientation() == 1)
+        {
             largerCopyNumber = leftCopyNumber;
             smallerCopyNumber = rightCopyNumber;
-        } else {
+        }
+        else
+        {
             largerCopyNumber = rightCopyNumber;
             smallerCopyNumber = leftCopyNumber;
         }
 
-        if (!largerCopyNumber.isPresent() && !smallerCopyNumber.isPresent()) {
+        if(!largerCopyNumber.isPresent() && !smallerCopyNumber.isPresent())
+        {
             return Optional.empty();
         }
 
         final Double observedVaf = leg.alleleFrequency();
-        if (observedVaf == null) {
+        if(observedVaf == null)
+        {
             return Optional.empty();
         }
 
@@ -146,28 +158,39 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
         final double ploidy;
         final double weight;
 
-        if (largerCopyNumber.isPresent()) {
+        if(largerCopyNumber.isPresent())
+        {
             double copyNumber = largerCopyNumber.get();
-            adjustedVaf = purityAdjuster.purityAdjustedVAF(leg.chromosome(), Math.max(0.001, copyNumber), observedVaf);
+            adjustedVaf = mPurityAdjuster.purityAdjustedVAF(leg.chromosome(), Math.max(0.001, copyNumber), observedVaf);
             ploidy = adjustedVaf * copyNumber;
             weight = 1;
-        } else {
+        }
+        else
+        {
             double copyNumber = smallerCopyNumber.get();
             double reciprocalVAF = reciprocalVAF(observedVaf);
-            adjustedVaf = purityAdjuster.purityAdjustedVAF(leg.chromosome(), Math.max(0.001, copyNumber), reciprocalVAF);
+            adjustedVaf = mPurityAdjuster.purityAdjustedVAF(leg.chromosome(), Math.max(0.001, copyNumber), reciprocalVAF);
 
-            if (averageReadDepth > 0 && (Double.isInfinite(adjustedVaf) || Doubles.greaterThan(adjustedVaf,
-                    RECIPROCAL_VAF_TO_USE_READ_DEPTH))) {
+            if(mAverageReadDepth > 0 && (Double.isInfinite(adjustedVaf) || Doubles.greaterThan(adjustedVaf,
+                    RECIPROCAL_VAF_TO_USE_READ_DEPTH)))
+            {
                 final Integer tumorVariantFragmentCount = leg.tumorVariantFragmentCount();
-                if (tumorVariantFragmentCount != null && tumorVariantFragmentCount > 0) {
+                if(tumorVariantFragmentCount != null && tumorVariantFragmentCount > 0)
+                {
                     ploidy = readDepthImpliedPloidy(tumorVariantFragmentCount);
-                } else {
+                }
+                else
+                {
                     return Optional.empty();
                 }
 
-            } else if (!Double.isFinite(reciprocalVAF)) {
+            }
+            else if(!Double.isFinite(reciprocalVAF))
+            {
                 return Optional.empty();
-            } else {
+            }
+            else
+            {
                 ploidy = adjustedVaf * copyNumber;
             }
 
@@ -185,11 +208,13 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
                 .setWeight(weight));
     }
 
-    private static double reciprocalVAF(double vaf) {
+    private static double reciprocalVAF(double vaf)
+    {
         return vaf / (1 - vaf);
     }
 
-    private double readDepthImpliedPloidy(int tumorVariantFragmentCount) {
-        return averageCopyNumber * tumorVariantFragmentCount / averageReadDepth;
+    private double readDepthImpliedPloidy(int tumorVariantFragmentCount)
+    {
+        return mAverageCopyNumber * tumorVariantFragmentCount / mAverageReadDepth;
     }
 }

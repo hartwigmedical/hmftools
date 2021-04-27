@@ -66,8 +66,8 @@ public class RecoverStructuralVariants implements Closeable
         this(purityAdjuster, new RecoveredVariantFactory(purityAdjuster, recoveryVCF), allCopyNumbers);
     }
 
-    RecoverStructuralVariants(@NotNull final PurityAdjuster purityAdjuster, @NotNull final RecoveredVariantFactory factory,
-            @NotNull final List<PurpleCopyNumber> allCopyNumbers)
+    RecoverStructuralVariants(
+            final PurityAdjuster purityAdjuster, final RecoveredVariantFactory factory, final List<PurpleCopyNumber> allCopyNumbers)
     {
         mPurityAdjuster = purityAdjuster;
         mAllCopyNumbers = Multimaps.fromRegions(allCopyNumbers);

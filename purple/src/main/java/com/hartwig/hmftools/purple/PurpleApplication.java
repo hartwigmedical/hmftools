@@ -388,10 +388,10 @@ public class PurpleApplication
         try (final RecoverStructuralVariants recovery = new RecoverStructuralVariants(purityAdjuster, sampleDataFiles.RecoveredSvVcfFile, copyNumbers))
         {
             final Collection<VariantContext> recoveredVariants = recovery.recoverVariants(sampleData.SvCache.variants());
+
             if(!recoveredVariants.isEmpty())
-            {
                 recoveredVariants.forEach(x -> sampleData.SvCache.addVariant(x));
-            }
+
             return recoveredVariants.size();
         }
     }
