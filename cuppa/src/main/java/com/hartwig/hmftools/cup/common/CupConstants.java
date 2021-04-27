@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cup.common;
 
-import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.Gender;
 
 public class CupConstants
 {

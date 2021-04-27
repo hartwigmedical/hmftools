@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.genome.chromosome;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.Gender;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -5,25 +5,29 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
-class GCAccumulator implements Consumer<GCProfile> {
+class GCAccumulator implements Consumer<GCProfile>
+{
+    private final GenomeRegion mRegion;
+    private double mTotalContent;
+    private int mCount;
 
-    private final GenomeRegion region;
-    private double totalContent;
-    private int count;
-
-    GCAccumulator(final GenomeRegion region) {
-        this.region = region;
+    GCAccumulator(final GenomeRegion region)
+    {
+        this.mRegion = region;
     }
 
-    double averageGCContent() {
-        return count == 0 ? 0 : totalContent / count;
+    double averageGCContent()
+    {
+        return mCount == 0 ? 0 : mTotalContent / mCount;
     }
 
     @Override
-    public void accept(final GCProfile gcProfile) {
-        if (gcProfile.isMappable() && gcProfile.start() >= region.start() && gcProfile.end() <= region.end()) {
-            count++;
-            totalContent += gcProfile.gcContent();
+    public void accept(final GCProfile gcProfile)
+    {
+        if(gcProfile.isMappable() && gcProfile.start() >= mRegion.start() && gcProfile.end() <= mRegion.end())
+        {
+            mCount++;
+            mTotalContent += gcProfile.gcContent();
         }
     }
 }

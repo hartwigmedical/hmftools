@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.common.purple.purity.FittedPurityMethod.NO_TUMOR;
-import static com.hartwig.hmftools.common.purple.qc.PurpleQCStatus.PASS;
+import static com.hartwig.hmftools.common.purple.PurpleQCStatus.PASS;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITY;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITYRANGE;
 
@@ -11,7 +11,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
-import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
@@ -21,8 +22,7 @@ import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.ImmutableSamplePurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.SamplePurity;
-import com.hartwig.hmftools.common.purple.qc.ImmutablePurpleQC;
-import com.hartwig.hmftools.common.purple.qc.PurpleQC;
+import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 

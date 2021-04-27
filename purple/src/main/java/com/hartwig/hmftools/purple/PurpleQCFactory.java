@@ -7,24 +7,26 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
+import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.BestFit;
-import com.hartwig.hmftools.common.purple.qc.ImmutablePurpleQC;
-import com.hartwig.hmftools.common.purple.qc.PurpleQC;
+import com.hartwig.hmftools.common.purple.PurpleQC;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class PurpleQCFactory {
-
-    private PurpleQCFactory() {
+public final class PurpleQCFactory
+{
+    private PurpleQCFactory()
+    {
     }
 
     @NotNull
     public static PurpleQC create(double contamination, @NotNull BestFit bestFit, @NotNull Gender amberGender, @NotNull Gender cobaltGender,
             @NotNull List<PurpleCopyNumber> copyNumbers, @NotNull List<GeneCopyNumber> geneCopyNumbers,
-            @NotNull final Set<GermlineAberration> aberrations, int amberMeanDepth) {
+            @NotNull final Set<GermlineAberration> aberrations, int amberMeanDepth)
+    {
         boolean containsAnySvSupport = copyNumbers.stream().anyMatch(PurpleCopyNumber::svSupport);
 
         int unsupportedCopyNumberSegments = containsAnySvSupport ? (int) copyNumbers.stream()

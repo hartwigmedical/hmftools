@@ -29,32 +29,35 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ObservedRegionFactory {
-
-    private final int windowSize;
+public class ObservedRegionFactory
+{
+    private final int mWindowSize;
     @NotNull
-    private final CobaltChromosomes cobaltChromosomes;
+    private final CobaltChromosomes mCobaltChromosomes;
     @NotNull
-    private final GermlineStatusFactory statusFactory;
+    private final GermlineStatusFactory mStatusFactory;
 
-    public ObservedRegionFactory(final int windowSize, @NotNull final CobaltChromosomes cobaltChromosomes) {
-        this.windowSize = windowSize;
-        this.cobaltChromosomes = cobaltChromosomes;
-        this.statusFactory = new GermlineStatusFactory(cobaltChromosomes);
+    public ObservedRegionFactory(final int windowSize, @NotNull final CobaltChromosomes cobaltChromosomes)
+    {
+        mWindowSize = windowSize;
+        mCobaltChromosomes = cobaltChromosomes;
+        mStatusFactory = new GermlineStatusFactory(cobaltChromosomes);
     }
 
     @NotNull
     public List<ObservedRegion> combine(@NotNull final List<PurpleSegment> regions, @NotNull final Multimap<Chromosome, AmberBAF> bafs,
-            @NotNull final Multimap<Chromosome, CobaltRatio> ratios, @NotNull final Multimap<Chromosome, GCProfile> gcProfiles) {
+            @NotNull final Multimap<Chromosome, CobaltRatio> ratios, @NotNull final Multimap<Chromosome, GCProfile> gcProfiles)
+    {
         final List<ModifiableEnrichedRegion> result = Lists.newArrayList();
 
         final GenomePositionSelector<CobaltRatio> cobaltSelector = GenomePositionSelectorFactory.create(ratios);
         final GenomePositionSelector<AmberBAF> bafSelector = GenomePositionSelectorFactory.create(bafs);
         final GenomeRegionSelector<GCProfile> gcSelector = GenomeRegionSelectorFactory.createImproved(gcProfiles);
 
-        for (final PurpleSegment region : regions) {
+        for(final PurpleSegment region : regions)
+        {
             final BAFAccumulator baf = new BAFAccumulator();
-            final CobaltAccumulator cobalt = new CobaltAccumulator(windowSize, region);
+            final CobaltAccumulator cobalt = new CobaltAccumulator(mWindowSize, region);
             final GCAccumulator gc = new GCAccumulator(region);
 
             bafSelector.select(region, baf);
@@ -74,7 +77,7 @@ public class ObservedRegionFactory {
                     .setSupport(region.support())
                     .setDepthWindowCount(cobalt.tumorCount())
                     .setGcContent(gc.averageGCContent())
-                    .setStatus(statusFactory.status(region, normalRatio, tumorRatio))
+                    .setStatus(mStatusFactory.status(region, normalRatio, tumorRatio))
                     .setSvCluster(region.svCluster())
                     .setMinStart(region.minStart())
                     .setMaxStart(region.maxStart());
@@ -86,19 +89,25 @@ public class ObservedRegionFactory {
     }
 
     @NotNull
-    static List<ObservedRegion> extendMinSupport(@NotNull final List<ModifiableEnrichedRegion> modifiables) {
-        for (int i = 0; i < modifiables.size(); i++) {
+    static List<ObservedRegion> extendMinSupport(@NotNull final List<ModifiableEnrichedRegion> modifiables)
+    {
+        for(int i = 0; i < modifiables.size(); i++)
+        {
             final ModifiableEnrichedRegion target = modifiables.get(i);
-            if (target.support() == SegmentSupport.NONE && target.status() == GermlineStatus.DIPLOID) {
-                for (int j = i - 1; j >= 0; j--) {
+            if(target.support() == SegmentSupport.NONE && target.status() == GermlineStatus.DIPLOID)
+            {
+                for(int j = i - 1; j >= 0; j--)
+                {
                     final ModifiableEnrichedRegion prior = modifiables.get(j);
-                    if (prior.status() == GermlineStatus.DIPLOID) {
+                    if(prior.status() == GermlineStatus.DIPLOID)
+                    {
                         break;
                     }
 
                     target.setMinStart(Math.min(target.minStart(), prior.start()));
 
-                    if (prior.support() != SegmentSupport.NONE) {
+                    if(prior.support() != SegmentSupport.NONE)
+                    {
                         break;
                     }
                 }
@@ -107,27 +116,34 @@ public class ObservedRegionFactory {
         return new ArrayList<>(modifiables);
     }
 
-    private class BAFAccumulator implements Consumer<AmberBAF> {
+    private class BAFAccumulator implements Consumer<AmberBAF>
+    {
         private int count;
         final private List<Double> bafs = Lists.newArrayList();
 
         @Override
-        public void accept(final AmberBAF baf) {
-            if (cobaltChromosomes.contains(baf.chromosome())) {
-                CobaltChromosome cobaltChromosome = cobaltChromosomes.get(baf.chromosome());
-                if (cobaltChromosome.isNormal() && cobaltChromosome.isDiploid() && !Double.isNaN(baf.tumorModifiedBAF())) {
+        public void accept(final AmberBAF baf)
+        {
+            if(mCobaltChromosomes.contains(baf.chromosome()))
+            {
+                CobaltChromosome cobaltChromosome = mCobaltChromosomes.get(baf.chromosome());
+                if(cobaltChromosome.isNormal() && cobaltChromosome.isDiploid() && !Double.isNaN(baf.tumorModifiedBAF()))
+                {
                     count++;
                     bafs.add(baf.tumorModifiedBAF());
                 }
             }
         }
 
-        private int count() {
+        private int count()
+        {
             return count;
         }
 
-        private double medianBaf() {
-            if (count > 0) {
+        private double medianBaf()
+        {
+            if(count > 0)
+            {
                 Collections.sort(bafs);
                 return bafs.size() % 2 == 0 ? (bafs.get(count / 2) + bafs.get(count / 2 - 1)) / 2 : bafs.get(count / 2);
             }
@@ -136,7 +152,8 @@ public class ObservedRegionFactory {
     }
 
     @VisibleForTesting
-    static class CobaltAccumulator implements Consumer<CobaltRatio> {
+    static class CobaltAccumulator implements Consumer<CobaltRatio>
+    {
 
         private final Window window;
         private final GenomeRegion region;
@@ -145,30 +162,37 @@ public class ObservedRegionFactory {
         private final RatioAccumulator unnormalisedReferenceAccumulator = new RatioAccumulator();
         private final RatioAccumulator tumorAccumulator = new RatioAccumulator();
 
-        CobaltAccumulator(final int windowSize, final GenomeRegion region) {
+        CobaltAccumulator(final int windowSize, final GenomeRegion region)
+        {
             this.window = new Window(windowSize);
             this.region = region;
         }
 
-        double referenceMeanRatio() {
+        double referenceMeanRatio()
+        {
             return referenceAccumulator.meanRatio();
         }
 
-        double unnormalisedReferenceMeanRatio() {
+        double unnormalisedReferenceMeanRatio()
+        {
             return unnormalisedReferenceAccumulator.meanRatio();
         }
 
-        double tumorMeanRatio() {
+        double tumorMeanRatio()
+        {
             return tumorAccumulator.meanRatio();
         }
 
-        int tumorCount() {
+        int tumorCount()
+        {
             return tumorAccumulator.count();
         }
 
         @Override
-        public void accept(final CobaltRatio ratio) {
-            if (window.end(ratio.position()) <= region.end()) {
+        public void accept(final CobaltRatio ratio)
+        {
+            if(window.end(ratio.position()) <= region.end())
+            {
                 referenceAccumulator.accept(ratio.referenceGCDiploidRatio());
                 unnormalisedReferenceAccumulator.accept(ratio.referenceGCRatio());
                 tumorAccumulator.accept(ratio.tumorGCRatio());
@@ -176,21 +200,26 @@ public class ObservedRegionFactory {
         }
     }
 
-    static private class RatioAccumulator implements Consumer<Double> {
+    static private class RatioAccumulator implements Consumer<Double>
+    {
         private double sumRatio;
         private int count;
 
-        private double meanRatio() {
+        private double meanRatio()
+        {
             return count > 0 ? sumRatio / count : 0;
         }
 
-        private int count() {
+        private int count()
+        {
             return count;
         }
 
         @Override
-        public void accept(final Double ratio) {
-            if (Doubles.greaterThan(ratio, -1)) {
+        public void accept(final Double ratio)
+        {
+            if(Doubles.greaterThan(ratio, -1))
+            {
                 count++;
                 sumRatio += ratio;
             }

@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.FLD_SAMPLE_ID;
 import java.util.Map;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 
 public class SampleTraitsData

@@ -13,51 +13,60 @@ import com.hartwig.hmftools.common.utils.zipper.RegionZipperHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, FittedRegion> {
-
-    @NotNull
-    private final BiFunction<PurpleCopyNumber, FittedRegion, FittedRegion> transform;
-    private final List<FittedRegion> result = Lists.newArrayList();
+class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, FittedRegion>
+{
+    private final BiFunction<PurpleCopyNumber, FittedRegion, FittedRegion> mTransform;
+    private final List<FittedRegion> mResult = Lists.newArrayList();
 
     @Nullable
-    private PurpleCopyNumber consolidatedRegion;
+    private PurpleCopyNumber mConsolidatedRegion;
 
-    private PurpleRegionZipper(@NotNull final BiFunction<PurpleCopyNumber, FittedRegion, FittedRegion> transform) {
-        this.transform = transform;
+    private PurpleRegionZipper(@NotNull final BiFunction<PurpleCopyNumber, FittedRegion, FittedRegion> transform)
+    {
+        mTransform = transform;
     }
 
     @NotNull
-    private List<FittedRegion> result() {
-        return result;
+    private List<FittedRegion> result()
+    {
+        return mResult;
     }
 
     @Override
-    public void enterChromosome(@NotNull final String chromosome) {
+    public void enterChromosome(@NotNull final String chromosome)
+    {
         // Empty
     }
 
     @Override
-    public void primary(@NotNull final PurpleCopyNumber region) {
-        consolidatedRegion = region;
+    public void primary(@NotNull final PurpleCopyNumber region)
+    {
+        mConsolidatedRegion = region;
     }
 
     @Override
-    public void secondary(@NotNull final FittedRegion copyNumber) {
-        if (consolidatedRegion != null && consolidatedRegion.overlaps(copyNumber)) {
-            result.add(transform.apply(consolidatedRegion, copyNumber));
-        } else {
-            result.add(copyNumber);
+    public void secondary(@NotNull final FittedRegion copyNumber)
+    {
+        if(mConsolidatedRegion != null && mConsolidatedRegion.overlaps(copyNumber))
+        {
+            mResult.add(mTransform.apply(mConsolidatedRegion, copyNumber));
+        }
+        else
+        {
+            mResult.add(copyNumber);
         }
     }
 
     static List<FittedRegion> updateRegionsWithCopyNumbers(@NotNull final List<FittedRegion> fittedRegions,
-            @NotNull final List<PurpleCopyNumber> smoothRegions) {
+            @NotNull final List<PurpleCopyNumber> smoothRegions)
+    {
         return insertSmoothRegions(smoothRegions, fittedRegions);
     }
 
     @NotNull
     private static List<FittedRegion> insertSmoothRegions(@NotNull final List<PurpleCopyNumber> smoothRegions,
-            @NotNull final List<FittedRegion> fittedRegions) {
+            @NotNull final List<FittedRegion> fittedRegions)
+    {
         BiFunction<PurpleCopyNumber, FittedRegion, FittedRegion> transform =
                 (consolidatedRegion, copyNumber) -> ImmutableFittedRegion.builder()
                         .from(copyNumber)

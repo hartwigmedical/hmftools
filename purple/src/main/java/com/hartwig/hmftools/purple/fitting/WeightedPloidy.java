@@ -8,14 +8,15 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Modifiable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface WeightedPloidy extends AllelicDepth {
-
+public interface WeightedPloidy extends AllelicDepth
+{
     double ploidy();
 
     double weight();
 
     @NotNull
-    static WeightedPloidy create(double ploidy, int alleleReadCount, int totalReadCount) {
+    static WeightedPloidy create(double ploidy, int alleleReadCount, int totalReadCount)
+    {
         return ModifiableWeightedPloidy.create()
                 .setPloidy(ploidy)
                 .setWeight(1)

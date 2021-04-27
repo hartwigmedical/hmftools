@@ -11,7 +11,7 @@ import java.util.concurrent.Future;
 
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.purple.config.ChartConfig;

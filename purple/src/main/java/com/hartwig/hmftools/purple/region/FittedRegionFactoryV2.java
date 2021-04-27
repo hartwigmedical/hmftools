@@ -19,43 +19,47 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FittedRegionFactoryV2 implements FittedRegionFactory {
-
-    private final double ambiguousBaf;
-    private final double ploidyPenaltyFactor;
-    private final PloidyDeviation ploidyDeviation;
-    private final CobaltChromosomes cobaltChromosomes;
+public class FittedRegionFactoryV2 implements FittedRegionFactory
+{
+    private final double mAmbiguousBaf;
+    private final double mPloidyPenaltyFactor;
+    private final PloidyDeviation mPloidyDeviation;
+    private final CobaltChromosomes mCobaltChromosomes;
 
     public FittedRegionFactoryV2(final CobaltChromosomes cobaltChromosomes, final int averageReadDepth, double ploidyPenaltyFactor,
             double ploidyPenaltyStandardDeviation, double ploidyPenaltyMinStandardDeviationPerPloidy,
             final double majorAlleleSubOnePenaltyMultiplier, final double majorAlleleSubOneAdditionalPenalty,
-            final double baselineDeviation) {
-        this.cobaltChromosomes = cobaltChromosomes;
-        this.ploidyPenaltyFactor = ploidyPenaltyFactor;
-        ploidyDeviation = new PloidyDeviation(ploidyPenaltyStandardDeviation,
+            final double baselineDeviation)
+    {
+        this.mCobaltChromosomes = cobaltChromosomes;
+        this.mPloidyPenaltyFactor = ploidyPenaltyFactor;
+        mPloidyDeviation = new PloidyDeviation(ploidyPenaltyStandardDeviation,
                 ploidyPenaltyMinStandardDeviationPerPloidy,
                 majorAlleleSubOnePenaltyMultiplier,
                 majorAlleleSubOneAdditionalPenalty,
                 baselineDeviation);
-        ambiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth);
+        mAmbiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth);
     }
 
     @Override
     @NotNull
-    public List<FittedRegion> fitRegion(double purity, double normFactor, @NotNull final Collection<ObservedRegion> observedRegions) {
-        final Predicate<ObservedRegion> valid = observedRegion -> isAllowedRegion(cobaltChromosomes, observedRegion);
+    public List<FittedRegion> fitRegion(double purity, double normFactor, @NotNull final Collection<ObservedRegion> observedRegions)
+    {
+        final Predicate<ObservedRegion> valid = observedRegion -> isAllowedRegion(mCobaltChromosomes, observedRegion);
         return observedRegions.stream().filter(valid).map(x -> fitRegion(purity, normFactor, x)).collect(Collectors.toList());
     }
 
     @VisibleForTesting
-    static boolean isAllowedRegion(@NotNull final CobaltChromosomes cobaltChromosomes, @NotNull final GenomeRegion region) {
+    static boolean isAllowedRegion(@NotNull final CobaltChromosomes cobaltChromosomes, @NotNull final GenomeRegion region)
+    {
         return cobaltChromosomes.contains(region.chromosome());
     }
 
     @Override
     @NotNull
-    public FittedRegion fitRegion(final double purity, final double normFactor, final @NotNull ObservedRegion observedRegion) {
-        final PurityAdjuster purityAdjuster = new PurityAdjusterAbnormalChromosome(purity, normFactor, cobaltChromosomes.chromosomes());
+    public FittedRegion fitRegion(final double purity, final double normFactor, final @NotNull ObservedRegion observedRegion)
+    {
+        final PurityAdjuster purityAdjuster = new PurityAdjusterAbnormalChromosome(purity, normFactor, mCobaltChromosomes.chromosomes());
 
         double observedTumorRatio = observedRegion.observedTumorRatio();
         double impliedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);
@@ -67,10 +71,10 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
         double majorAllelePloidy = impliedBAF * impliedCopyNumber;
         double minorAllelePloidy = impliedCopyNumber - majorAllelePloidy;
 
-        double majorAllelePloidyDeviation = ploidyDeviation.majorAlleleDeviation(purity, normFactor, majorAllelePloidy);
-        double minorAllelePloidyDeviation = ploidyDeviation.minorAlleleDeviation(purity, normFactor, minorAllelePloidy);
+        double majorAllelePloidyDeviation = mPloidyDeviation.majorAlleleDeviation(purity, normFactor, majorAllelePloidy);
+        double minorAllelePloidyDeviation = mPloidyDeviation.minorAlleleDeviation(purity, normFactor, minorAllelePloidy);
 
-        final double eventPenalty = EventPenalty.penalty(ploidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
+        final double eventPenalty = EventPenalty.penalty(mPloidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
         final double deviationPenalty = (minorAllelePloidyDeviation + majorAllelePloidyDeviation) * observedBAF;
 
         ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
@@ -89,24 +93,28 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
     }
 
     private double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, final double copyNumber,
-            final double observedBAF) {
-        if (!cobaltChromosomes.contains(chromosome)) {
+            final double observedBAF)
+    {
+        if(!mCobaltChromosomes.contains(chromosome))
+        {
             return 1;
         }
 
-        CobaltChromosome cobaltChromosome = cobaltChromosomes.get(chromosome);
-        if (!cobaltChromosome.isNormal() || !cobaltChromosome.isDiploid()  || Doubles.lessOrEqual(copyNumber, 1)) {
+        CobaltChromosome cobaltChromosome = mCobaltChromosomes.get(chromosome);
+        if(!cobaltChromosome.isNormal() || !cobaltChromosome.isDiploid() || Doubles.lessOrEqual(copyNumber, 1))
+        {
             return 1;
         }
 
-        return Doubles.lessOrEqual(observedBAF, ambiguousBaf)
+        return Doubles.lessOrEqual(observedBAF, mAmbiguousBaf)
                 ? bafToMinimiseDeviation(purityAdjuster, chromosome, copyNumber)
                 : purityAdjuster.purityAdjustedBAFSimple(chromosome, copyNumber, observedBAF);
     }
 
-    private double bafToMinimiseDeviation(final PurityAdjuster purityAdjuster, final String chromosome, double impliedCopyNumber) {
+    private double bafToMinimiseDeviation(final PurityAdjuster purityAdjuster, final String chromosome, double impliedCopyNumber)
+    {
         final double minBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, 0.5)));
-        final double maxBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, ambiguousBaf)));
+        final double maxBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, mAmbiguousBaf)));
 
         // Major Ploidy
         final double minBAFMajorAllelePloidy = minBAF * impliedCopyNumber;
@@ -114,8 +122,9 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
 
         // Major Ploidy crosses whole number?
         final double minBAFMajorAllelePloidyCeil = Math.ceil(minBAFMajorAllelePloidy);
-        if (!Doubles.equal(Math.signum(minBAFMajorAllelePloidyCeil - minBAFMajorAllelePloidy),
-                Math.signum(minBAFMajorAllelePloidyCeil - maxBAFMajorAllelePloidy))) {
+        if(!Doubles.equal(Math.signum(minBAFMajorAllelePloidyCeil - minBAFMajorAllelePloidy),
+                Math.signum(minBAFMajorAllelePloidyCeil - maxBAFMajorAllelePloidy)))
+        {
             return minBAFMajorAllelePloidyCeil / impliedCopyNumber;
         }
 
@@ -125,8 +134,9 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
 
         // Minor Ploidy crosses whole number?
         final double maxBAFMinorAllelePloidyCeil = Math.ceil(maxBAFMinorAllelePloidy);
-        if (!Doubles.equal(Math.signum(maxBAFMinorAllelePloidyCeil - minBAFMinorAllelePloidy),
-                Math.signum(maxBAFMinorAllelePloidyCeil - maxBAFMinorAllelePloidy))) {
+        if(!Doubles.equal(Math.signum(maxBAFMinorAllelePloidyCeil - minBAFMinorAllelePloidy),
+                Math.signum(maxBAFMinorAllelePloidyCeil - maxBAFMinorAllelePloidy)))
+        {
             return 1 - maxBAFMinorAllelePloidyCeil / impliedCopyNumber;
         }
 
@@ -135,15 +145,15 @@ public class FittedRegionFactoryV2 implements FittedRegionFactory {
 
         // Minimise
         final double minBAFTotalDeviation =
-                ploidyDeviation.majorAlleleDeviation(purity, normFactor, minBAFMajorAllelePloidy) + ploidyDeviation.minorAlleleDeviation(
+                mPloidyDeviation.majorAlleleDeviation(purity, normFactor, minBAFMajorAllelePloidy) + mPloidyDeviation.minorAlleleDeviation(
                         purity,
                         normFactor,
                         minBAFMinorAllelePloidy);
         final double maxBAFTotalDeviation =
-                ploidyDeviation.majorAlleleDeviation(purity, normFactor, maxBAFMajorAllelePloidy) + ploidyDeviation.minorAlleleDeviation(
+                mPloidyDeviation.majorAlleleDeviation(purity, normFactor, maxBAFMajorAllelePloidy) + mPloidyDeviation.minorAlleleDeviation(
                         purity,
                         normFactor,
                         maxBAFMinorAllelePloidy);
-        return Doubles.lessThan(minBAFTotalDeviation, maxBAFTotalDeviation) ? 0.5 : ambiguousBaf;
+        return Doubles.lessThan(minBAFTotalDeviation, maxBAFTotalDeviation) ? 0.5 : mAmbiguousBaf;
     }
 }

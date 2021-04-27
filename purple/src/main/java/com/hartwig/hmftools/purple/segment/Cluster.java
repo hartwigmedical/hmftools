@@ -15,8 +15,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Modifiable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-abstract class Cluster implements GenomeRegion {
-
+abstract class Cluster implements GenomeRegion
+{
     @NotNull
     public abstract List<PCFPosition> pcfPositions();
 
@@ -24,7 +24,8 @@ abstract class Cluster implements GenomeRegion {
     public abstract List<SVSegment> variants();
 
     @NotNull
-    public List<GenomePosition> ratios() {
+    public List<GenomePosition> ratios()
+    {
         return pcfPositions().stream().filter(x -> !x.source().equals(PCFSource.TUMOR_BAF)).collect(Collectors.toList());
     }
 

@@ -6,7 +6,7 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurityAdjusterTypicalChromosome;
-import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.Gender;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

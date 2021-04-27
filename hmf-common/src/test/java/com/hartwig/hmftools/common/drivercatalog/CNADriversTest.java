@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTes
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;

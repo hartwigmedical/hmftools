@@ -62,7 +62,7 @@ public final class PurpleCopyNumberFile {
 
     @VisibleForTesting
     @NotNull
-    static List<String> toLines(@NotNull final List<PurpleCopyNumber> copyNumbers) {
+    public static List<String> toLines(@NotNull final List<PurpleCopyNumber> copyNumbers) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         copyNumbers.stream().map(PurpleCopyNumberFile::toString).forEach(lines::add);
@@ -71,7 +71,7 @@ public final class PurpleCopyNumberFile {
 
     @VisibleForTesting
     @NotNull
-    static List<PurpleCopyNumber> fromLines(@NotNull List<String> lines) {
+    public static List<PurpleCopyNumber> fromLines(@NotNull List<String> lines) {
         return lines.stream()
                 .skip(1)
                 .map(PurpleCopyNumberFile::fromString)

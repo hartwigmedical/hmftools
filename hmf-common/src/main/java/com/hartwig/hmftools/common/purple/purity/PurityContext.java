@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple.purity;
 
-import com.hartwig.hmftools.common.purple.gender.Gender;
-import com.hartwig.hmftools.common.purple.qc.PurpleQC;
+import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 

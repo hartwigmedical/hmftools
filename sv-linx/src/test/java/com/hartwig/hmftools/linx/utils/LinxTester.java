@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.utils;
 
-import static com.hartwig.hmftools.common.purple.gender.Gender.MALE;
+import static com.hartwig.hmftools.common.purple.Gender.MALE;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.linkSglMappedInferreds;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.populateChromosomeBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.SampleAnalyser.setSvCopyNumberData;
@@ -24,8 +24,6 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 
 public class LinxTester

@@ -9,9 +9,9 @@ import java.util.Random;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
-import com.hartwig.hmftools.common.purple.gender.Gender;
-import com.hartwig.hmftools.common.purple.qc.ImmutablePurpleQC;
-import com.hartwig.hmftools.common.purple.qc.PurpleQC;
+import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
+import com.hartwig.hmftools.common.purple.PurpleQC;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

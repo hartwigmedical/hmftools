@@ -17,9 +17,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
-import com.hartwig.hmftools.common.cobalt.CobaltTestUtils;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
-import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.junit.Test;

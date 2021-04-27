@@ -2,8 +2,6 @@ package com.hartwig.hmftools.common.purple;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.purple.gender.Gender;
-
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 

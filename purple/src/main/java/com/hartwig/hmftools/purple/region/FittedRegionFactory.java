@@ -8,8 +8,8 @@ import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface FittedRegionFactory {
-
+public interface FittedRegionFactory
+{
     @NotNull
     FittedRegion fitRegion(final double purity, final double normFactor, final @NotNull ObservedRegion observedRegion);
 

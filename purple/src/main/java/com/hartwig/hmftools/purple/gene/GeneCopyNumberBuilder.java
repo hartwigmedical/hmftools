@@ -13,8 +13,8 @@ import com.hartwig.hmftools.common.utils.zipper.RegionZipperHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, HmfExonRegion> {
-
+class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, HmfExonRegion>
+{
     private final ImmutableGeneCopyNumber.Builder builder;
 
     private double minCopyNumber = Double.MAX_VALUE;
@@ -38,7 +38,8 @@ class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, Hmf
     private SegmentSupport minRegionEndSupport = SegmentSupport.NONE;
     private CopyNumberMethod minRegionMethod = CopyNumberMethod.UNKNOWN;
 
-    GeneCopyNumberBuilder(@NotNull final HmfTranscriptRegion gene) {
+    GeneCopyNumberBuilder(@NotNull final HmfTranscriptRegion gene)
+    {
         builder = ImmutableGeneCopyNumber.builder()
                 .from(gene)
                 .minRegionStart(gene.start())
@@ -49,36 +50,45 @@ class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, Hmf
     }
 
     @Override
-    public void enterChromosome(@NotNull final String chromosome) {
+    public void enterChromosome(@NotNull final String chromosome)
+    {
         // IGNORE
     }
 
     @Override
-    public void primary(@NotNull final PurpleCopyNumber copyNumber) {
+    public void primary(@NotNull final PurpleCopyNumber copyNumber)
+    {
         this.copyNumber = copyNumber;
-        if (exon != null) {
+        if(exon != null)
+        {
             addOverlap(exon, this.copyNumber);
         }
     }
 
     @Override
-    public void secondary(@NotNull final HmfExonRegion exon) {
+    public void secondary(@NotNull final HmfExonRegion exon)
+    {
         this.exon = exon;
-        if (copyNumber != null) {
+        if(copyNumber != null)
+        {
             addOverlap(this.exon, copyNumber);
         }
     }
 
-    private void addOverlap(@NotNull final HmfExonRegion exon, @NotNull final PurpleCopyNumber copyNumber) {
+    private void addOverlap(@NotNull final HmfExonRegion exon, @NotNull final PurpleCopyNumber copyNumber)
+    {
         long overlap = exon.overlappingBases(copyNumber);
-        if (overlap > 0) {
+        if(overlap > 0)
+        {
             double currentCopyNumber = copyNumber.averageTumorCopyNumber();
 
             maxCopyNumber = Math.max(maxCopyNumber, currentCopyNumber);
             minMinorAllelePloidy = Math.min(minMinorAllelePloidy, copyNumber.minorAlleleCopyNumber());
 
-            if (!Doubles.equal(currentCopyNumber, previousCopyNumber)) {
-                switch (copyNumber.method()) {
+            if(!Doubles.equal(currentCopyNumber, previousCopyNumber))
+            {
+                switch(copyNumber.method())
+                {
                     case GERMLINE_HOM_DELETION:
                         homCount++;
                         break;
@@ -90,8 +100,10 @@ class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, Hmf
                 }
             }
 
-            if (isUnprocessedCopyNumberRegion(copyNumber)) {
-                if (Doubles.lessThan(currentCopyNumber, minCopyNumber)) {
+            if(isUnprocessedCopyNumberRegion(copyNumber))
+            {
+                if(Doubles.lessThan(currentCopyNumber, minCopyNumber))
+                {
                     minRegions = 1;
                     minCopyNumber = currentCopyNumber;
                     minRegionStart = copyNumber.start();
@@ -100,12 +112,15 @@ class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, Hmf
                     minRegionEndSupport = copyNumber.segmentEndSupport();
                     minRegionMethod = copyNumber.method();
 
-                } else if (Doubles.equal(currentCopyNumber, minCopyNumber)) {
+                }
+                else if(Doubles.equal(currentCopyNumber, minCopyNumber))
+                {
                     minRegionEnd = copyNumber.end();
                     minRegionEndSupport = copyNumber.segmentEndSupport();
                     minRegionMethod = copyNumber.method();
 
-                    if (!Doubles.equal(currentCopyNumber, previousCopyNumber)) {
+                    if(!Doubles.equal(currentCopyNumber, previousCopyNumber))
+                    {
                         minRegions++;
                     }
                 }
@@ -116,12 +131,14 @@ class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, Hmf
         }
     }
 
-    private boolean isUnprocessedCopyNumberRegion(@NotNull final PurpleCopyNumber copyNumber) {
+    private boolean isUnprocessedCopyNumberRegion(@NotNull final PurpleCopyNumber copyNumber)
+    {
         return previous == null || !previous.equals(copyNumber);
     }
 
     @NotNull
-    public GeneCopyNumber build() {
+    public GeneCopyNumber build()
+    {
         return builder.maxCopyNumber(maxCopyNumber)
                 .minRegionStartSupport(minRegionStartSupport)
                 .minRegionEndSupport(minRegionEndSupport)

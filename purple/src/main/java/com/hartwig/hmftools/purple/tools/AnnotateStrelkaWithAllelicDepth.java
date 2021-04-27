@@ -23,8 +23,8 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
-public class AnnotateStrelkaWithAllelicDepth implements AutoCloseable {
-
+public class AnnotateStrelkaWithAllelicDepth implements AutoCloseable
+{
     private static final Logger LOGGER = LogManager.getLogger(AnnotateStrelkaWithAllelicDepth.class);
 
     private static final String VCF_IN = "in";
@@ -36,11 +36,14 @@ public class AnnotateStrelkaWithAllelicDepth implements AutoCloseable {
     private final VCFFileReader vcfReader;
     private final VariantContextWriter vcfWriter;
 
-    public static void main(final String... args) {
+    public static void main(final String... args)
+    {
         final Options options = createOptions();
-        try (final AnnotateStrelkaWithAllelicDepth application = new AnnotateStrelkaWithAllelicDepth(options, args)) {
+        try (final AnnotateStrelkaWithAllelicDepth application = new AnnotateStrelkaWithAllelicDepth(options, args))
+        {
             application.addAllelicDepthField();
-        } catch (ParseException e) {
+        } catch (ParseException e)
+        {
             LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("AnnotateStrelkaWithAllelicDepth", options);
@@ -48,13 +51,16 @@ public class AnnotateStrelkaWithAllelicDepth implements AutoCloseable {
         }
     }
 
-    private AnnotateStrelkaWithAllelicDepth(final Options options, final String... args) throws ParseException {
+    private AnnotateStrelkaWithAllelicDepth(final Options options, final String... args) throws ParseException
+    {
         final CommandLine cmd = createCommandLine(args, options);
-        if (!cmd.hasOption(VCF_IN)) {
+        if(!cmd.hasOption(VCF_IN))
+        {
             throw new ParseException(VCF_IN + " is a mandatory argument");
         }
 
-        if (!cmd.hasOption(VCF_OUT)) {
+        if(!cmd.hasOption(VCF_OUT))
+        {
             throw new ParseException(VCF_OUT + " is a mandatory argument");
         }
 
@@ -70,30 +76,35 @@ public class AnnotateStrelkaWithAllelicDepth implements AutoCloseable {
                 .build();
     }
 
-    private void addAllelicDepthField() {
+    private void addAllelicDepthField()
+    {
         LOGGER.info("Reading input VCF: {}", inputVCF);
         vcfWriter.writeHeader(header);
-        for (final VariantContext variant : vcfReader) {
+        for(final VariantContext variant : vcfReader)
+        {
             vcfWriter.add(StrelkaAllelicDepth.enrich(variant));
         }
         LOGGER.info("Writing output VCF: {}", outputVCF);
     }
 
     @NotNull
-    private VCFHeader generateOutputHeader(@NotNull final VCFHeader template) {
+    private VCFHeader generateOutputHeader(@NotNull final VCFHeader template)
+    {
         final VCFHeader outputVCFHeader = new VCFHeader(template.getMetaDataInInputOrder(), template.getGenotypeSamples());
         outputVCFHeader.addMetaDataLine(VCFStandardHeaderLines.getFormatLine("AD"));
         return outputVCFHeader;
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
+    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException
+    {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 
     @NotNull
-    private static Options createOptions() {
+    private static Options createOptions()
+    {
         final Options options = new Options();
         options.addOption(VCF_IN, true, "Input strelka VCF (.gz supported)");
         options.addOption(VCF_OUT, true, "Output VCF with AD field (.gz supported)");
@@ -101,7 +112,8 @@ public class AnnotateStrelkaWithAllelicDepth implements AutoCloseable {
     }
 
     @Override
-    public void close() {
+    public void close()
+    {
         vcfReader.close();
         vcfWriter.close();
         LOGGER.info("Complete");

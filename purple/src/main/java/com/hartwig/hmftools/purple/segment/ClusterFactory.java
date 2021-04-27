@@ -20,28 +20,32 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-class ClusterFactory {
+class ClusterFactory
+{
+    private final long mWindowSize;
+    private final Window mWindow;
 
-    private final long windowSize;
-    private final Window window;
-
-    ClusterFactory(final int windowSize) {
-        this.windowSize = windowSize;
-        this.window = new Window(windowSize);
+    ClusterFactory(final int windowSize)
+    {
+        mWindowSize = windowSize;
+        mWindow = new Window(windowSize);
     }
 
     @NotNull
     public ListMultimap<Chromosome, Cluster> cluster(@NotNull final List<StructuralVariant> variants,
-            @NotNull final Multimap<Chromosome, PCFPosition> pcfPositions, @NotNull ListMultimap<Chromosome, CobaltRatio> ratios) {
+            @NotNull final Multimap<Chromosome, PCFPosition> pcfPositions, @NotNull ListMultimap<Chromosome, CobaltRatio> ratios)
+    {
         final Multimap<Chromosome, SVSegment> positions = Multimaps.fromPositions(SVSegmentFactory.create(variants));
         return cluster(positions, pcfPositions, ratios);
     }
 
     @NotNull
     private ListMultimap<Chromosome, Cluster> cluster(@NotNull final Multimap<Chromosome, SVSegment> variantPositions,
-            @NotNull final Multimap<Chromosome, PCFPosition> pcfPositions, @NotNull final ListMultimap<Chromosome, CobaltRatio> ratios) {
+            @NotNull final Multimap<Chromosome, PCFPosition> pcfPositions, @NotNull final ListMultimap<Chromosome, CobaltRatio> ratios)
+    {
         ListMultimap<Chromosome, Cluster> clusters = ArrayListMultimap.create();
-        for (Chromosome chromosome : pcfPositions.keySet()) {
+        for(Chromosome chromosome : pcfPositions.keySet())
+        {
             final Collection<PCFPosition> chromosomePcfPositions = pcfPositions.get(chromosome);
             final List<CobaltRatio> chromosomeRatios = ratios.containsKey(chromosome) ? ratios.get(chromosome) : Lists.newArrayList();
             final Collection<SVSegment> chromosomeVariants =
@@ -55,7 +59,8 @@ class ClusterFactory {
     @NotNull
     @VisibleForTesting
     List<Cluster> cluster(@NotNull final Collection<SVSegment> variantPositions,
-            @NotNull final Collection<PCFPosition> pcfPositions, @NotNull final List<CobaltRatio> cobaltRatios) {
+            @NotNull final Collection<PCFPosition> pcfPositions, @NotNull final List<CobaltRatio> cobaltRatios)
+    {
         final List<GenomePosition> allPositions = Lists.newArrayList();
         allPositions.addAll(variantPositions);
         allPositions.addAll(pcfPositions);
@@ -65,19 +70,24 @@ class ClusterFactory {
 
         int cobaltIndex = 0;
         ModifiableCluster segment = null;
-        for (GenomePosition position : allPositions) {
-            if (position.position() == 1) {
+        for(GenomePosition position : allPositions)
+        {
+            if(position.position() == 1)
+            {
                 continue;
             }
 
-            while (cobaltIndex < cobaltRatios.size() - 1 && cobaltRatios.get(cobaltIndex).position() < position.position()) {
+            while(cobaltIndex < cobaltRatios.size() - 1 && cobaltRatios.get(cobaltIndex).position() < position.position())
+            {
                 cobaltIndex++;
             }
 
             final long earliestDetectableCopyNumberChangePosition =
                     earliestDetectableCopyNumberChangePosition(position.position(), cobaltIndex, cobaltRatios);
-            if (segment == null || earliestDetectableCopyNumberChangePosition > segment.end()) {
-                if (segment != null) {
+            if(segment == null || earliestDetectableCopyNumberChangePosition > segment.end())
+            {
+                if(segment != null)
+                {
                     result.add(segment);
                 }
                 segment = ModifiableCluster.create()
@@ -87,13 +97,17 @@ class ClusterFactory {
 
             segment.setEnd(position.position());
 
-            if (position instanceof SVSegment) {
+            if(position instanceof SVSegment)
+            {
                 segment.addVariants((SVSegment) position);
-            } else {
+            }
+            else
+            {
                 segment.addPcfPositions((PCFPosition) position);
             }
         }
-        if (segment != null) {
+        if(segment != null)
+        {
             result.add(segment);
         }
 
@@ -101,13 +115,17 @@ class ClusterFactory {
     }
 
     @VisibleForTesting
-    long earliestDetectableCopyNumberChangePosition(long position, int index, @NotNull final List<CobaltRatio> ratios) {
+    long earliestDetectableCopyNumberChangePosition(long position, int index, @NotNull final List<CobaltRatio> ratios)
+    {
         assert (index <= ratios.size());
-        final long min = window.start(position) - windowSize + 1;
-        if (!ratios.isEmpty()) {
-            for (int i = index; i >= 0; i--) {
+        final long min = mWindow.start(position) - mWindowSize + 1;
+        if(!ratios.isEmpty())
+        {
+            for(int i = index; i >= 0; i--)
+            {
                 final CobaltRatio ratio = ratios.get(i);
-                if (ratio.position() <= min && Doubles.greaterThan(ratio.tumorGCRatio(), -1)) {
+                if(ratio.position() <= min && Doubles.greaterThan(ratio.tumorGCRatio(), -1))
+                {
                     return ratio.position() + 1;
                 }
             }

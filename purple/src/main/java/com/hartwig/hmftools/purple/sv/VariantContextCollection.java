@@ -9,8 +9,8 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public interface VariantContextCollection extends Iterable<VariantContext> {
-
+public interface VariantContextCollection extends Iterable<VariantContext>
+{
     void add(@NotNull final VariantContext variantContext);
 
     int remove(@NotNull final Predicate<VariantContext> removePredicate);

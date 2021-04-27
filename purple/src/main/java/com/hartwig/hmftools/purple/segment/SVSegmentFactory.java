@@ -11,15 +11,18 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 
-final class SVSegmentFactory {
-
+final class SVSegmentFactory
+{
     @NotNull
-    public static List<SVSegment> create(@NotNull final List<StructuralVariant> variants) {
+    public static List<SVSegment> create(@NotNull final List<StructuralVariant> variants)
+    {
         final List<SVSegment> positions = Lists.newArrayList();
-        for (StructuralVariant variant : variants) {
+        for(StructuralVariant variant : variants)
+        {
 
-            if (variant.type() != StructuralVariantType.INS) {
-                positions.add(create(variant.type(),  variant.start()));
+            if(variant.type() != StructuralVariantType.INS)
+            {
+                positions.add(create(variant.type(), variant.start()));
                 Optional.ofNullable(variant.end()).map(x -> create(variant.type(), x)).ifPresent(positions::add);
             }
         }
@@ -29,7 +32,8 @@ final class SVSegmentFactory {
     }
 
     @NotNull
-    private static SVSegment create(@NotNull final StructuralVariantType type, @NotNull final StructuralVariantLeg leg) {
+    private static SVSegment create(@NotNull final StructuralVariantType type, @NotNull final StructuralVariantLeg leg)
+    {
         return ImmutableSVSegment.builder().chromosome(leg.chromosome()).position(leg.cnaPosition()).type(type).build();
     }
 }
