@@ -32,8 +32,11 @@ public class AnnotatedHotspotVCFChecker {
 
     private static final String NO_INPUT_PROTEIN = "-";
 
+    private static final Set<String> RETIRED_TRANSCRIPTS = createRetiredTranscriptWhitelist();
+    private static final Set<String> CHANGED_TRANSCRIPTS = createChangedTranscriptWhitelist();
     private static final Map<String, Map<String, List<String>>> SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT = createMappings();
 
+    private final Set<String> curatedTranscripts = Sets.newHashSet();
     private final Map<String, Set<String>> annotationsRequestedForMappingPerTranscript = Maps.newHashMap();
 
     public static void main(String[] args) throws IOException {
@@ -144,6 +147,13 @@ public class AnnotatedHotspotVCFChecker {
             if (matchFound) {
                 LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{}", inputProteinAnnotation, inputGene);
                 return MatchType.IDENTICAL;
+            } else if (inputTranscript != null && RETIRED_TRANSCRIPTS.contains(inputTranscript)) {
+                LOGGER.debug("Transcript '{}' has retired. Whitelisting entry '{}' on '{}'",
+                        inputTranscript,
+                        inputProteinAnnotation,
+                        inputGene);
+                curatedTranscripts.add(inputTranscript);
+                return MatchType.WHITE_LIST;
             } else {
                 LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'", inputProteinAnnotation, inputGene);
                 return MatchType.NO_MATCH;
@@ -182,6 +192,20 @@ public class AnnotatedHotspotVCFChecker {
             }
         }
 
+        if (RETIRED_TRANSCRIPTS.contains(transcript) && snpeffAnnotation.isEmpty()) {
+            // In case we know a transcript has been retired from coding duty in certain ref genomes we accept the diff when empty.
+            curatedTranscripts.add(transcript);
+            return true;
+        }
+
+        if (CHANGED_TRANSCRIPTS.contains(transcript)) {
+            // In case transcripts have different versions across ref genomes we assume the AA change is the same, just a different position
+            // Eg p.PxxS should match for any xx
+            curatedTranscripts.add(transcript);
+            return inputAnnotation.substring(0, 3).equals(snpeffAnnotation.substring(0, 3))
+                    && inputAnnotation.substring(inputAnnotation.length()).equals(snpeffAnnotation.substring(snpeffAnnotation.length()));
+        }
+
         return false;
     }
 
@@ -203,6 +227,58 @@ public class AnnotatedHotspotVCFChecker {
         }
 
         LOGGER.info("Analyzed usage of mapping configuration. Found {} unused mappings.", unusedMappingCount);
+
+        int unusedTranscriptCurationCount = 0;
+        for (String transcript : RETIRED_TRANSCRIPTS) {
+            if (!curatedTranscripts.contains(transcript)) {
+                LOGGER.warn("Transcript '{}' labeled as 'retired' has not been used in curation", transcript);
+                unusedTranscriptCurationCount++;
+            }
+        }
+
+        for (String transcript : CHANGED_TRANSCRIPTS) {
+            if (!curatedTranscripts.contains(transcript)) {
+                LOGGER.warn("Transcript '{}' labeled as 'changed' has not been used in curation", transcript);
+                unusedTranscriptCurationCount++;
+            }
+        }
+
+        LOGGER.info("Analyzed usage of transcript curation. Found {} unused curation keys.", unusedTranscriptCurationCount);
+    }
+
+    @NotNull
+    private static Set<String> createRetiredTranscriptWhitelist() {
+        Set<String> transcripts = Sets.newHashSet();
+
+        // This transcript on RHOA is coding in v37 but non-coding in v38
+        transcripts.add("ENST00000431929");
+
+        // This transcript on CDKN2A has retired in v38
+        transcripts.add("ENST00000361570");
+
+        // This transcript on BCL2L12 has completely changed in 38 and can't match anymore.
+        transcripts.add("ENST00000246784");
+
+        return transcripts;
+    }
+
+    @NotNull
+    private static Set<String> createChangedTranscriptWhitelist() {
+        Set<String> transcripts = Sets.newHashSet();
+
+        // This MYC transcript is v2 in 37 and v6 in 38 and they differ by 15 AA.
+        transcripts.add("ENST00000377970");
+
+        // This TCF7L2 transcript in v1 in 37 and v5 in 38 and they differ by 5 AA.
+        transcripts.add("ENST00000543371");
+
+        // This FGFR2 transcript is v6 in 37 and v10 in 38 and they differ by 36 AA (spread across transcript).
+        transcripts.add("ENST00000351936");
+
+        // This MED12 transcript is v6 in 37 and v10 in 38 and they differ with 53 AA (spread across transcript)
+        transcripts.add("ENST00000333646");
+
+        return transcripts;
     }
 
     @NotNull
@@ -274,9 +350,9 @@ public class AnnotatedHotspotVCFChecker {
         }
     }
 
-    private enum MatchType {
-        IDENTICAL,
-        WHITE_LIST,
-        NO_MATCH
-    }
+private enum MatchType {
+    IDENTICAL,
+    WHITE_LIST,
+    NO_MATCH
+}
 }
