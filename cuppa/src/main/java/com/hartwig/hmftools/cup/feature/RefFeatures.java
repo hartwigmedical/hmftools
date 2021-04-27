@@ -264,7 +264,7 @@ public class RefFeatures implements RefClassifier
             double avgDrivers = driverTotal / knownRefSampleCount;
 
             CUP_LOGGER.debug("pan-cancer driverTotal({}) avgPerSample({}) knownRefSampleCount({})",
-                    String.format("%.2f", driverTotal), String.format("%.4f", avgDrivers, knownRefSampleCount));
+                    String.format("%.2f", driverTotal), String.format("%.4f", avgDrivers), knownRefSampleCount);
 
             writer.write(String.format("ALL,%.2f", avgDrivers));
             writer.newLine();
