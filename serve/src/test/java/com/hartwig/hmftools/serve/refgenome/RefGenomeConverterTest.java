@@ -30,12 +30,15 @@ public class RefGenomeConverterTest {
     private static final RefGenomeConverter DUMMY_CONVERTER = build37To38DummyConverter();
     private static final RefGenomeConverter NULL_CONVERTER = build37To38NullConverter();
 
+    private static final String TEST_GENE = "BRAF";
+    private static final String TEST_CHROMOSOME = "chr1";
+
     @Test
     public void canConvertKnownHotspots() {
         KnownHotspot hotspot = ImmutableKnownHotspot.builder()
                 .from(ServeTestFactory.createTestKnownHotspot())
-                .gene("BRAF")
-                .chromosome("chr1")
+                .gene(TEST_GENE)
+                .chromosome(TEST_CHROMOSOME)
                 .position(1)
                 .ref("G")
                 .alt("T")
@@ -53,8 +56,8 @@ public class RefGenomeConverterTest {
                 .from(ServeTestFactory.createTestKnownCodon())
                 .annotation(ImmutableCodonAnnotation.builder()
                         .from(ServeTestFactory.createTestCodonAnnotation())
-                        .gene("BRAF")
-                        .chromosome("1")
+                        .gene(TEST_GENE)
+                        .chromosome(TEST_CHROMOSOME)
                         .start(1)
                         .end(3)
                         .build())
@@ -70,8 +73,8 @@ public class RefGenomeConverterTest {
                 .from(ServeTestFactory.createTestKnownCodon())
                 .annotation(ImmutableCodonAnnotation.builder()
                         .from(ServeTestFactory.createTestCodonAnnotation())
-                        .gene("BRAF")
-                        .chromosome("1")
+                        .gene(TEST_GENE)
+                        .chromosome(TEST_CHROMOSOME)
                         .start(1)
                         .end(2)
                         .build())
@@ -86,8 +89,8 @@ public class RefGenomeConverterTest {
                 .from(ServeTestFactory.createTestKnownExon())
                 .annotation(ImmutableExonAnnotation.builder()
                         .from(ServeTestFactory.createTestExonAnnotation())
-                        .gene("BRAF")
-                        .chromosome("1")
+                        .gene(TEST_GENE)
+                        .chromosome(TEST_CHROMOSOME)
                         .start(1)
                         .end(7)
                         .build())

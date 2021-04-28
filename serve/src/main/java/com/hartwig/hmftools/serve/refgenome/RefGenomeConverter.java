@@ -91,7 +91,7 @@ class RefGenomeConverter {
             RangeAnnotation liftedAnnotation = liftOverRange(codon.annotation());
             if (liftedAnnotation != null) {
                 if (liftedAnnotation.end() - liftedAnnotation.start() != 2) {
-                    LOGGER.warn("Skipping liftover: Lifted range '{}' is no longer 3 bases long. Lifted range: '{}'",
+                    LOGGER.warn("Skipping liftover: Lifted codon '{}' is no longer 3 bases long. Lifted codon: '{}'",
                             codon.annotation(),
                             liftedAnnotation);
                 } else {
@@ -117,11 +117,7 @@ class RefGenomeConverter {
             if (liftedAnnotation != null) {
                 // We blank out the transcript and exon index since we are unsure to what extend the transcript maps to the new ref genome.
                 convertedExons.add(ImmutableKnownExon.builder()
-                        .annotation(ImmutableExonAnnotation.builder()
-                                .from(liftedAnnotation)
-                                .transcript(Strings.EMPTY)
-                                .exonIndex(0)
-                                .build())
+                        .annotation(ImmutableExonAnnotation.builder().from(liftedAnnotation).transcript(Strings.EMPTY).exonIndex(0).build())
                         .build());
             }
         }
@@ -169,6 +165,11 @@ class RefGenomeConverter {
             @Override
             public long end() {
                 return liftedEnd.position();
+            }
+
+            @Override
+            public String toString() {
+                return chromosome() + ":" + start() + "-" + end();
             }
         };
     }
