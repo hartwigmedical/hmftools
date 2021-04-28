@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.refgenome.liftover;
+package com.hartwig.hmftools.serve.refgenome.liftover.tools;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,8 +31,8 @@ public class LiftOverTestApplication {
         Interval result = liftOver37To38.liftOver(original);
         LOGGER.debug("Interval lifted from 37 to 38 is {}", result);
 
-        LiftOver liftOver38to37 = new LiftOver(new File(config.refGenome38To37Chain()));
         if (result != null) {
+            LiftOver liftOver38to37 = new LiftOver(new File(config.refGenome38To37Chain()));
             Interval backToOriginal = liftOver38to37.liftOver(result);
             LOGGER.debug("Interval lifted back to 37 is {}", backToOriginal);
         }

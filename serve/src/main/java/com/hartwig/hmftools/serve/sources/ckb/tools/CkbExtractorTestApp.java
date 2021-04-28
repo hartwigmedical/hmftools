@@ -33,6 +33,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
 public class CkbExtractorTestApp {
 
     private static final Logger LOGGER = LogManager.getLogger(CkbExtractorTestApp.class);
@@ -80,7 +82,7 @@ public class CkbExtractorTestApp {
         LOGGER.info(" Read {} known fusions", fusionCache.getData().size());
 
         return ImmutableRefGenomeResource.builder()
-                .fastaFile(config.refGenome38FastaFile())
+                .refSequence(new IndexedFastaSequenceFile(new File(config.refGenome38FastaFile())))
                 .driverGenes(driverGenes)
                 .knownFusionCache(fusionCache)
                 .canonicalTranscriptPerGeneMap(HmfGenePanelSupplier.allGenesMap38())

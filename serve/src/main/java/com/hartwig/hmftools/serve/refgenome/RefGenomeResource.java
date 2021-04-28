@@ -13,13 +13,15 @@ import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class RefGenomeResource {
 
     @NotNull
-    public abstract String fastaFile();
+    public abstract IndexedFastaSequenceFile refSequence();
 
     @NotNull
     public abstract List<DriverGene> driverGenes();

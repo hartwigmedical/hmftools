@@ -10,6 +10,7 @@ SERVE harmonizes various sources of evidence into a single unified model that ca
 * [What is generated as final SERVE output?](#outputs)
 * [How are genomic events extracted from the source knowledgebases?](#extraction-of-genomic-events-and-tumor-characteristics-from-knowledgebases)
 * [What is done in terms of curation and harmonization?](#curation-and-harmonization-of-individual-knowledgebases)
+* [How does SERVE deal with multiple reference genome versions?](#handling-of-multiple-reference-genome-versions)
 * [How does everything come together?](#overview-of-the-serve-algorithm)
 * [Version history and download links](#version-history-and-download-links)
 
@@ -226,19 +227,32 @@ SERVE only considers trials with one or more molecular inclusion criterium, and 
  
 Finally, similar to VICC, cancer types for which no DOIDs have been specified get a DOID assigned by SERVE. 
  
+## Handling of multiple reference genome versions
+ 
+External knowledgebases generally define their knowledge for one specific reference genome version (v37 or v38). SERVE can merge knowledgebases 
+defined in differing reference genome versions. In addition SERVE generates its output for both reference genome v37 and v38.
+
+### Ref-genome dependent knowledge extraction
+
+TODO
+
+### Ref-genome dependent output
+
+TODO
+ 
 ## Overview of the SERVE algorithm
 
 Every knowledgebase can be enabled or disabled through configuration.
 SERVE starts with reading the various knowledgebases which are enabled. Knowledge is extracted after applying filtering and curation.
 A knowledgebase can contribute to known and/or actionable events. Current configuration as follows:
       
-Knowledgebase  | Contributes to known events? | Contributes to actionable events?
----|---|---
-DoCM | Yes | No 
-Hartwig Cohort | Yes | No
-Hartwig Curated | Yes | No
-iClusion | No | Yes
-VICC | Yes | Yes
+Knowledgebase  | Ref genome version | Contributes to known events? | Contributes to actionable events?
+---|---|---|---
+DoCM | 37 | Yes | No 
+Hartwig Cohort | 37 | Yes | No
+Hartwig Curated | 37 | Yes | No
+iClusion | 37 | No | Yes
+VICC | 37 | Yes | Yes
 
 Knowledge extraction is performed on a per-knowledgebase level after which all events are consolidated as follows:
  - All known events are aggregated on a per-event level where every event has a set of knowledgebases in which the event has been defined as pathogenic.
@@ -251,6 +265,11 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
+- Upcoming
+  - Support for merging sources that differ in ref genome version (37 vs 38)
+  - Support for generating output for both ref genome version 37 and 38
+  - Driver catalog warnings are disabled for VICC
+  - KnownExons and KnownCodons are sorted more explicitly to make sure files don't change upon identical input. 
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.2) 
   - Consistently pick a specific transcript for hotspot annotation in case multiple transcripts imply the same hotspot.
   - Extend splice sites from 5 bases to 10 bases beyond exon boundaries.

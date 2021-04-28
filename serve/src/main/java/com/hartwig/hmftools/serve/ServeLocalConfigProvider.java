@@ -61,8 +61,8 @@ public final class ServeLocalConfigProvider {
             builder.driverGene38Tsv(System.getProperty("user.home") + "/hmf/projects/driver_gene_panel/DriverGenePanel.38.tsv");
             builder.knownFusion37File(System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.37_v3.csv");
             builder.knownFusion38File(System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.38_v3.csv");
-            builder.refGenome37FastaFile(System.getProperty("user.home")
-                    + "/hmf/refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta");
+            builder.refGenome37FastaFile(
+                    System.getProperty("user.home") + "/hmf/refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina.fasta");
             builder.refGenome38FastaFile(
                     System.getProperty("user.home") + "/hmf/refgenomes/grch38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
             builder.refGenome37To38Chain(System.getProperty("user.home") + "/hmf/refgenomes/liftover/hg19ToHg38.over.chain");

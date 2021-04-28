@@ -100,7 +100,7 @@ public class SvVarData
         mSVData = svData;
 
         mArm = new ChromosomeArm[SE_PAIR];
-        mChr = new String[] { RefGenomeFunctions.stripChromosome(chromosome(true)), RefGenomeFunctions.stripChromosome(chromosome(false)) };
+        mChr = new String[] { RefGenomeFunctions.stripChrPrefix(chromosome(true)), RefGenomeFunctions.stripChrPrefix(chromosome(false)) };
 
         mFragileSite = new boolean[SE_PAIR];
         mLineElements = new StartEndPair<>(Sets.newHashSet(), Sets.newHashSet());
@@ -508,10 +508,10 @@ public class SvVarData
             {
                 String[] assemblyList = mAssemblyData[se].split(";");
 
-                for(int i = 0; i < assemblyList.length; ++i)
+                for (String assembly : assemblyList)
                 {
-                    if(assemblyList[i].contains(ASSEMBLY_TYPE_TI) || assemblyList[i].contains(TRANSITIVE_TYPE_TI))
-                        mTIAssemblies.get(se).add(assemblyList[i]);
+                    if (assembly.contains(ASSEMBLY_TYPE_TI) || assembly.contains(TRANSITIVE_TYPE_TI))
+                        mTIAssemblies.get(se).add(assembly);
                 }
             }
         }

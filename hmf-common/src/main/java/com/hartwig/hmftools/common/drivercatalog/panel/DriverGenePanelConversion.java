@@ -62,11 +62,11 @@ public class DriverGenePanelConversion {
         List<DriverGene> v37DriverGenes = DriverGeneFile.read(newDriverGenePanel37Tsv);
         LOGGER.info(" Loaded {} driver genes from {}", v37DriverGenes.size(), newDriverGenePanel37Tsv);
 
-        GeneNameMapping geneNameMap = new GeneNameMapping();
+        GeneNameMapping geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
         List<DriverGene> v38DriverGenes = Lists.newArrayList();
         for (DriverGene input : v37DriverGenes) {
             String v37Gene = input.gene();
-            String v38Gene = geneNameMap.v38Gene(input.gene());
+            String v38Gene = geneNameMapping.v38Gene(input.gene());
             if (v37Gene.equals("LINC00290") || v37Gene.equals("LINC01001")) {
                 v38DriverGenes.add(input);
             } else if (v38Gene.equals("NA")) {
