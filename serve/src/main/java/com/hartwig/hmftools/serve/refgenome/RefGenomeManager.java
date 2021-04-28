@@ -27,7 +27,7 @@ public class RefGenomeManager {
     @NotNull
     private final Map<RefGenomeVersion, RefGenomeResource> refGenomeResourceMap;
     @NotNull
-    private final GeneNameMapping geneNameMapping = new GeneNameMapping();
+    private final GeneNameMapping geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
 
     RefGenomeManager(@NotNull final Map<RefGenomeVersion, RefGenomeResource> refGenomeResourceMap) {
         this.refGenomeResourceMap = refGenomeResourceMap;

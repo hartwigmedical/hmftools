@@ -8,7 +8,7 @@ import org.junit.Test;
 
 public class GeneNameMappingTest {
 
-    private final GeneNameMapping victim = new GeneNameMapping();
+    private final GeneNameMapping victim = GeneNameMapping.loadFromEmbeddedResource();
 
     @Test
     public void testPRAMEF11() {

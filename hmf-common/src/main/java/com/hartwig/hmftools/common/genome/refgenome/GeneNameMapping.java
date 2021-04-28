@@ -11,11 +11,17 @@ import org.jetbrains.annotations.NotNull;
 
 public class GeneNameMapping {
 
-    private final Map<String, String> v38Map = Maps.newHashMap();
-    private final Map<String, String> v37Map = Maps.newHashMap();
+    @NotNull
+    private final Map<String, String> v37Map;
+    @NotNull
+    private final Map<String, String> v38Map;
 
-    public GeneNameMapping() {
+    @NotNull
+    public static GeneNameMapping loadFromEmbeddedResource() {
+        final Map<String, String> v37Map = Maps.newHashMap();
+        final Map<String, String> v38Map = Maps.newHashMap();
         final InputStream inputStream = GeneNameMapping.class.getResourceAsStream("/refgenome/gene_name_mapping.tsv");
+
         // Skip header
         new BufferedReader(new InputStreamReader(inputStream)).lines().skip(1)
                 .map(x -> x.split("\t"))
@@ -27,6 +33,13 @@ public class GeneNameMapping {
                     }
                     v37Map.put(v37, v38);
                 });
+
+        return new GeneNameMapping(v37Map, v38Map);
+    }
+
+    private GeneNameMapping(@NotNull final Map<String, String> v37Map, @NotNull final Map<String, String> v38Map) {
+        this.v37Map = v37Map;
+        this.v38Map = v38Map;
     }
 
     public boolean isValidV38Gene(@NotNull final String v38GeneId) {

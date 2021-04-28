@@ -19,12 +19,14 @@ import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
+import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberType;
 import com.hartwig.hmftools.serve.extraction.copynumber.ImmutableKnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.exon.ImmutableExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.exon.ImmutableKnownExon;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
@@ -62,6 +64,11 @@ public final class ServeTestFactory {
 
     @NotNull
     public static KnownHotspot createTestKnownHotspotForSource(@NotNull Knowledgebase source) {
+        return ImmutableKnownHotspot.builder().from(createTestKnownHotspot()).addSources(source).build();
+    }
+
+    @NotNull
+    public static KnownHotspot createTestKnownHotspot() {
         return ImmutableKnownHotspot.builder()
                 .gene(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)
@@ -69,39 +76,54 @@ public final class ServeTestFactory {
                 .ref(Strings.EMPTY)
                 .alt(Strings.EMPTY)
                 .proteinAnnotation(Strings.EMPTY)
-                .addSources(source)
                 .build();
     }
 
     @NotNull
     public static KnownCodon createTestKnownCodonForSource(@NotNull Knowledgebase source) {
+        return ImmutableKnownCodon.builder().from(createTestKnownCodon()).addSources(source).build();
+    }
+
+    @NotNull
+    public static KnownCodon createTestKnownCodon() {
         return ImmutableKnownCodon.builder()
-                .annotation(ImmutableCodonAnnotation.builder()
-                        .gene(Strings.EMPTY)
-                        .transcript(Strings.EMPTY)
-                        .chromosome(Strings.EMPTY)
-                        .start(0)
-                        .end(0)
-                        .mutationType(MutationTypeFilter.ANY)
-                        .codonIndex(0)
-                        .build())
-                .addSources(source)
+                .annotation(ImmutableCodonAnnotation.builder().from(createTestCodonAnnotation()).build())
+                .build();
+    }
+
+    @NotNull
+    public static CodonAnnotation createTestCodonAnnotation() {
+        return ImmutableCodonAnnotation.builder()
+                .gene(Strings.EMPTY)
+                .transcript(Strings.EMPTY)
+                .chromosome(Strings.EMPTY)
+                .start(0)
+                .end(0)
+                .mutationType(MutationTypeFilter.ANY)
+                .codonIndex(0)
                 .build();
     }
 
     @NotNull
     public static KnownExon createTestKnownExonForSource(@NotNull Knowledgebase source) {
-        return ImmutableKnownExon.builder()
-                .annotation(ImmutableExonAnnotation.builder()
-                        .gene(Strings.EMPTY)
-                        .transcript(Strings.EMPTY)
-                        .chromosome(Strings.EMPTY)
-                        .start(0)
-                        .end(0)
-                        .mutationType(MutationTypeFilter.ANY)
-                        .exonIndex(0)
-                        .build())
-                .addSources(source)
+        return ImmutableKnownExon.builder().from(createTestKnownExon()).addSources(source).build();
+    }
+
+    @NotNull
+    public static KnownExon createTestKnownExon() {
+        return ImmutableKnownExon.builder().annotation(ImmutableExonAnnotation.builder().from(createTestExonAnnotation()).build()).build();
+    }
+
+    @NotNull
+    public static ExonAnnotation createTestExonAnnotation() {
+        return ImmutableExonAnnotation.builder()
+                .gene(Strings.EMPTY)
+                .transcript(Strings.EMPTY)
+                .chromosome(Strings.EMPTY)
+                .start(0)
+                .end(0)
+                .mutationType(MutationTypeFilter.ANY)
+                .exonIndex(0)
                 .build();
     }
 

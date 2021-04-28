@@ -21,7 +21,7 @@ public class ViccExtractorTest {
     public void canExtractFromViccEntries() {
         EventClassifierConfig config = ViccClassificationConfig.build();
         ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(config,
-                RefGenomeResourceTestFactory.buildTest37(),
+                RefGenomeResourceTestFactory.buildTestResource37(),
                 DoidLookupTestFactory.dummy());
 
         Association association =
