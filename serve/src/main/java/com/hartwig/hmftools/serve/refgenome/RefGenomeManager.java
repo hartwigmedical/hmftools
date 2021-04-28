@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.liftover.LiftOver;
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class RefGenomeManager {
 
@@ -82,9 +83,11 @@ public class RefGenomeManager {
         }
 
         RefGenomeResource sourceResource = refGenomeResourceMap.get(sourceVersion);
+        IndexedFastaSequenceFile targetSequence = refGenomeResourceMap.get(targetVersion).refSequence();
 
         LiftOver liftOverToTarget = new LiftOver(new File(sourceResource.chainToOtherRefGenomeMap().get(targetVersion)));
-        RefGenomeConverter converter = new RefGenomeConverter(sourceVersion, targetVersion, liftOverToTarget, geneNameMapping);
+        RefGenomeConverter converter =
+                new RefGenomeConverter(sourceVersion, targetVersion, targetSequence, liftOverToTarget, geneNameMapping);
 
         return ImmutableExtractionResult.builder()
                 .refGenomeVersion(targetVersion)

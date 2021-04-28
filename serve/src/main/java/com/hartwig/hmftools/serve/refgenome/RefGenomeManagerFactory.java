@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.refgenome;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,8 @@ import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolverFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public final class RefGenomeManagerFactory {
 
@@ -44,7 +47,7 @@ public final class RefGenomeManagerFactory {
                 : ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.V37, fastaFile37, transcriptMap37);
 
         return ImmutableRefGenomeResource.builder()
-                .fastaFile(fastaFile37)
+                .refSequence(new IndexedFastaSequenceFile(new File(fastaFile37)))
                 .driverGenes(readDriverGenesFromFile(config.driverGene37Tsv()))
                 .knownFusionCache(buildKnownFusionCacheFromFile(config.knownFusion37File()))
                 .canonicalTranscriptPerGeneMap(transcriptMap37)
@@ -63,7 +66,7 @@ public final class RefGenomeManagerFactory {
                 : ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.V38, fastaFile38, transcriptMap38);
 
         return ImmutableRefGenomeResource.builder()
-                .fastaFile(fastaFile38)
+                .refSequence(new IndexedFastaSequenceFile(new File(fastaFile38)))
                 .driverGenes(readDriverGenesFromFile(config.driverGene38Tsv()))
                 .knownFusionCache(buildKnownFusionCacheFromFile(config.knownFusion38File()))
                 .canonicalTranscriptPerGeneMap(transcriptMap38)

@@ -1,29 +1,42 @@
 package com.hartwig.hmftools.serve.refgenome;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
 public final class RefGenomeResourceTestFactory {
+
+    private static final String REF_GENOME_37_FASTA_FILE = Resources.getResource("refgenome/v37/ref.fasta").getPath();
 
     private RefGenomeResourceTestFactory() {
     }
 
     @NotNull
     public static RefGenomeResource buildTest37() {
+        IndexedFastaSequenceFile refSequence;
+        try {
+            refSequence = new IndexedFastaSequenceFile(new File(REF_GENOME_37_FASTA_FILE));
+        } catch (FileNotFoundException e) {
+            throw new IllegalStateException("Could not create ref sequence from " + REF_GENOME_37_FASTA_FILE);
+        }
+
         return ImmutableRefGenomeResource.builder()
-                .fastaFile(Strings.EMPTY)
+                .refSequence(refSequence)
                 .driverGenes(Lists.newArrayList())
                 .knownFusionCache(new KnownFusionCache())
                 .canonicalTranscriptPerGeneMap(HmfGenePanelSupplier.allGenesMap37())

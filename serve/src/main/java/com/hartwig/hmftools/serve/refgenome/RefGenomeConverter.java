@@ -22,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.liftover.LiftOver;
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.util.Interval;
 
 class RefGenomeConverter {
@@ -33,16 +34,18 @@ class RefGenomeConverter {
     @NotNull
     private final RefGenomeVersion targetVersion;
     @NotNull
+    private final IndexedFastaSequenceFile targetSequence;
+    @NotNull
     private final LiftOver liftOver;
     @NotNull
     private final GeneNameMapping geneNameMapping;
 
     public RefGenomeConverter(@NotNull final RefGenomeVersion sourceVersion, @NotNull final RefGenomeVersion targetVersion,
-            @NotNull final LiftOver liftOver, @NotNull final GeneNameMapping geneNameMapping) {
-        assert sourceVersion != targetVersion;
-
+            @NotNull final IndexedFastaSequenceFile targetSequence, @NotNull final LiftOver liftOver,
+            @NotNull final GeneNameMapping geneNameMapping) {
         this.sourceVersion = sourceVersion;
         this.targetVersion = targetVersion;
+        this.targetSequence = targetSequence;
         this.liftOver = liftOver;
         this.geneNameMapping = geneNameMapping;
     }
@@ -56,21 +59,27 @@ class RefGenomeConverter {
                     (int) hotspot.position());
             Interval lifted = liftOver.liftOver(interval);
 
-            if (lifted == null || lifted.getContig() == null) {
-                LOGGER.warn("Liftover of '{}' led to non-interpretable '{}'", hotspot, lifted);
-            }
-            else {
-                if (!sourceVersion.versionedChromosome(lifted.getContig()).equals(hotspot.chromosome())) {
-                    LOGGER.warn("Liftover moved chromosome from '{}' to '{}' on {}", lifted.getContig(), hotspot.chromosome(), hotspot);
+            if (lifted == null) {
+                LOGGER.warn("Liftover could not be performed for '{}' on '{}'", hotspot.proteinAnnotation(), hotspot.gene());
+            } else {
+                String versionedOldChromosome = targetVersion.versionedChromosome(hotspot.chromosome());
+                if (!lifted.getContig().equals(versionedOldChromosome)) {
+                    LOGGER.warn("Liftover moved chromosome from '{}' to '{}' on {}", versionedOldChromosome, lifted.getContig(), hotspot);
                 }
 
-                // TODO: Check if ref is the same.
-                convertedHotspots.add(ImmutableKnownHotspot.builder()
-                        .from(hotspot)
-                        .gene(mapGene(hotspot.gene(), sourceVersion, targetVersion))
-                        .chromosome(targetVersion.versionedChromosome(hotspot.chromosome()))
-                        .position(lifted.getStart())
-                        .build());
+                String newRef = targetSequence.getSubsequenceAt(lifted.getContig(),
+                        lifted.getStart(),
+                        lifted.getStart() + hotspot.ref().length() - 1).getBaseString();
+                if (!newRef.equals(hotspot.ref())) {
+                    LOGGER.warn("Skipping liftover: Ref changed from '{}' to '{}' on {}", hotspot.ref(), newRef, hotspot);
+                } else {
+                    convertedHotspots.add(ImmutableKnownHotspot.builder()
+                            .from(hotspot)
+                            .gene(mapGene(hotspot.gene(), sourceVersion, targetVersion))
+                            .chromosome(lifted.getContig())
+                            .position(lifted.getStart())
+                            .build());
+                }
             }
         }
         return convertedHotspots;
@@ -126,14 +135,21 @@ class RefGenomeConverter {
 
     @NotNull
     private String mapGene(@NotNull String gene, @NotNull RefGenomeVersion sourceVersion, @NotNull RefGenomeVersion targetVersion) {
+        String mappedGene;
         if (sourceVersion == targetVersion) {
-            return gene;
+            mappedGene = gene;
         } else if (sourceVersion == RefGenomeVersion.V37 && targetVersion == RefGenomeVersion.V38) {
-            return geneNameMapping.v38Gene(gene);
+            mappedGene = geneNameMapping.v38Gene(gene);
         } else if (sourceVersion == RefGenomeVersion.V38 && targetVersion == RefGenomeVersion.V37) {
-            return geneNameMapping.v37Gene(gene);
+            mappedGene = geneNameMapping.v37Gene(gene);
         } else {
             throw new IllegalStateException("Cannot map genes from ref genome version " + sourceVersion + " to " + targetVersion);
         }
+
+        if (!mappedGene.equals(gene)) {
+            LOGGER.info("Mapped gene '{}' for {} to '{}' on {}", gene, sourceVersion, mappedGene, targetVersion);
+        }
+
+        return mappedGene;
     }
 }
