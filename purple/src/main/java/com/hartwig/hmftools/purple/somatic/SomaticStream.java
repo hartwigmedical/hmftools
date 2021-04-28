@@ -46,21 +46,21 @@ public class SomaticStream
 
     private final String inputVCF;
     private boolean mEnabled;
-    private final String outputVCF;
-    private final TumorMutationalLoad tumorMutationalLoad;
-    private final MicrosatelliteIndels microsatelliteIndels;
-    private final SomaticVariantDrivers drivers;
-    private final SomaticVariantFactory somaticVariantFactory;
-    private final RChartData rChartData;
-    private final DriverGenePanel genePanel;
-    private final List<PeakModel> peakModel;
-    private final Set<String> reportedGenes = Sets.newHashSet();
-    private final List<VariantContext> downsampledSnp = Lists.newArrayList();
-    private final List<VariantContext> downsampledIndel = Lists.newArrayList();
-    private final int snpMod;
-    private final int indelMod;
-    private int snpCount;
-    private int indelCount;
+    private final String mOutputVCF;
+    private final TumorMutationalLoad mTumorMutationalLoad;
+    private final MicrosatelliteIndels mMicrosatelliteIndels;
+    private final SomaticVariantDrivers mDrivers;
+    private final SomaticVariantFactory mSomaticVariantFactory;
+    private final RChartData mRChartData;
+    private final DriverGenePanel mGenePanel;
+    private final List<PeakModel> mPeakModel;
+    private final Set<String> mReportedGenes;
+    private final List<VariantContext> mDownsampledSnp;
+    private final List<VariantContext> mDownsampledIndel;
+    private final int mSnpMod;
+    private final int mIndelMod;
+    private int mSnpCount;
+    private int mIndelCount;
 
     public SomaticStream(
             final PurpleConfig config, final ReferenceData referenceData,
@@ -69,24 +69,28 @@ public class SomaticStream
         mReferenceData = referenceData;
         mConfig = config;
 
-        this.snpMod = snpCount <= MAX_DOWNSAMPLE ? 1 : snpCount / MAX_DOWNSAMPLE;
-        this.indelMod = indelCount <= MAX_DOWNSAMPLE ? 1 : indelCount / MAX_DOWNSAMPLE;
+        mSnpMod = snpCount <= MAX_DOWNSAMPLE ? 1 : snpCount / MAX_DOWNSAMPLE;
+        mIndelMod = indelCount <= MAX_DOWNSAMPLE ? 1 : indelCount / MAX_DOWNSAMPLE;
 
-        this.genePanel = referenceData.GenePanel;
-        this.peakModel = peakModel;
-        this.outputVCF = config.OutputDir + config.TumorId + ".purple.somatic.vcf.gz";
-        this.mEnabled = !somaticVcfFilename.isEmpty();
-        this.inputVCF = somaticVcfFilename;
-        this.tumorMutationalLoad = new TumorMutationalLoad();
-        this.microsatelliteIndels = new MicrosatelliteIndels();
-        this.drivers = new SomaticVariantDrivers(genePanel);
-        this.somaticVariantFactory = SomaticVariantFactory.passOnlyInstance();
-        this.rChartData = new RChartData(config.OutputDir, config.TumorId);
+        mGenePanel = referenceData.GenePanel;
+        mPeakModel = peakModel;
+        mOutputVCF = config.OutputDir + config.TumorId + ".purple.somatic.vcf.gz";
+        mEnabled = !somaticVcfFilename.isEmpty();
+        inputVCF = somaticVcfFilename;
+        mTumorMutationalLoad = new TumorMutationalLoad();
+        mMicrosatelliteIndels = new MicrosatelliteIndels();
+        mDrivers = new SomaticVariantDrivers(mGenePanel);
+        mSomaticVariantFactory = SomaticVariantFactory.passOnlyInstance();
+        mRChartData = new RChartData(config.OutputDir, config.TumorId);
+
+        mReportedGenes = Sets.newHashSet();
+        mDownsampledSnp = Lists.newArrayList();
+        mDownsampledIndel = Lists.newArrayList();
     }
 
     public double microsatelliteIndelsPerMb()
     {
-        return microsatelliteIndels.microsatelliteIndelsPerMb();
+        return mMicrosatelliteIndels.microsatelliteIndelsPerMb();
     }
 
     @NotNull
@@ -97,12 +101,12 @@ public class SomaticStream
 
     public double tumorMutationalBurdenPerMb()
     {
-        return tumorMutationalLoad.burdenPerMb();
+        return mTumorMutationalLoad.burdenPerMb();
     }
 
     public int tumorMutationalLoad()
     {
-        return tumorMutationalLoad.load();
+        return mTumorMutationalLoad.load();
     }
 
     @NotNull
@@ -120,21 +124,21 @@ public class SomaticStream
     @NotNull
     public List<DriverCatalog> drivers(@NotNull final List<GeneCopyNumber> geneCopyNumbers)
     {
-        return drivers.build(geneCopyNumbers);
+        return mDrivers.build(geneCopyNumbers);
     }
 
     @NotNull
     public Set<String> reportedGenes()
     {
-        return reportedGenes;
+        return mReportedGenes;
     }
 
     @NotNull
     public List<VariantContext> downsampledVariants()
     {
         List<VariantContext> result = Lists.newArrayList();
-        result.addAll(downsampledIndel);
-        result.addAll(downsampledSnp);
+        result.addAll(mDownsampledIndel);
+        result.addAll(mDownsampledSnp);
 
         return result;
     }
@@ -142,36 +146,35 @@ public class SomaticStream
     public void processAndWrite(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
             @NotNull final List<FittedRegion> fittedRegions) throws IOException
     {
-
         final Consumer<VariantContext> downsampleConsumer = context ->
         {
             VariantContextDecorator variant = new VariantContextDecorator(context);
             if(variant.type() == VariantType.INDEL)
             {
-                indelCount++;
-                if(indelCount % indelMod == 0)
+                mIndelCount++;
+                if(mIndelCount % mIndelMod == 0)
                 {
-                    downsampledIndel.add(context);
+                    mDownsampledIndel.add(context);
                 }
             }
             else
             {
-                snpCount++;
-                if(snpCount % snpMod == 0)
+                mSnpCount++;
+                if(mSnpCount % mSnpMod == 0)
                 {
-                    downsampledSnp.add(context);
+                    mDownsampledSnp.add(context);
                 }
             }
         };
 
         final Consumer<VariantContext> driverConsumer =
-                x -> somaticVariantFactory.createVariant(mConfig.TumorId, x).ifPresent(somatic ->
+                x -> mSomaticVariantFactory.createVariant(mConfig.TumorId, x).ifPresent(somatic ->
                 {
-                    boolean reported = drivers.add(somatic);
+                    boolean reported = mDrivers.add(somatic);
                     if(reported)
                     {
                         x.getCommonInfo().putAttribute(REPORTED_FLAG, true);
-                        reportedGenes.add(new VariantContextDecorator(x).gene());
+                        mReportedGenes.add(new VariantContextDecorator(x).gene());
                     }
                 });
 
@@ -179,14 +182,14 @@ public class SomaticStream
         {
             try (
                     VCFFileReader vcfReader = new VCFFileReader(new File(inputVCF), false);
-                    VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
+                    VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(mOutputVCF)
                             .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                             .build())
             {
-                final Consumer<VariantContext> consumer = tumorMutationalLoad.andThen(microsatelliteIndels)
+                final Consumer<VariantContext> consumer = mTumorMutationalLoad.andThen(mMicrosatelliteIndels)
                         .andThen(driverConsumer)
                         .andThen(writer::add)
-                        .andThen(rChartData)
+                        .andThen(mRChartData)
                         .andThen(downsampleConsumer);
 
                 final SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(
@@ -196,12 +199,12 @@ public class SomaticStream
                         mConfig.TumorId,
                         mReferenceData.RefGenome,
                         purityAdjuster,
-                        genePanel,
+                        mGenePanel,
                         copyNumbers,
                         fittedRegions,
                         mReferenceData.SomaticHotspots,
                         mReferenceData.TranscriptRegions,
-                        peakModel,
+                        mPeakModel,
                         consumer);
 
                 final VCFHeader header = enricher.enrichHeader(vcfReader.getFileHeader());
@@ -213,7 +216,7 @@ public class SomaticStream
                 }
 
                 enricher.flush();
-                rChartData.write();
+                mRChartData.write();
             }
         }
 

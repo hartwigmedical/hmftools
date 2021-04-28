@@ -42,8 +42,9 @@ public class PurpleConfig
 
     public PurpleConfig(final String version, final CommandLine cmd)
     {
-        Version = version;
         mIsValid = true;
+
+        Version = version;
 
         final boolean isTumorOnly = cmd.hasOption(TUMOR_ONLY);
 
@@ -55,7 +56,7 @@ public class PurpleConfig
             if(cmd.hasOption(REF_SAMPLE))
             {
                 mIsValid = false;
-                PPL_LOGGER.error(REF_SAMPLE + " not supported in tumor only mode");
+                PPL_LOGGER.error(REF_SAMPLE + " not supported in tumor-only mode");
             }
             else
             {
@@ -74,9 +75,6 @@ public class PurpleConfig
         ReferenceId = refSample;
 
         String sampleDir = "";
-        String outputDirectory;
-        String amberDirectory;
-        String cobaltDirectory;
 
         if(cmd.hasOption(SAMPLE_DIR))
         {
@@ -85,7 +83,7 @@ public class PurpleConfig
         }
         else
         {
-            OutputDir = parameter(cmd, OUTPUT_DIRECTORY, missingJoiner);
+            OutputDir = checkAddDirSeparator(parameter(cmd, OUTPUT_DIRECTORY, missingJoiner));
         }
 
         final String missing = missingJoiner.toString();

@@ -508,7 +508,7 @@ public class SvVarData
             {
                 String[] assemblyList = mAssemblyData[se].split(";");
 
-                for (String assembly : assemblyList)
+                for(String assembly : assemblyList)
                 {
                     if (assembly.contains(ASSEMBLY_TYPE_TI) || assembly.contains(TRANSITIVE_TYPE_TI))
                         mTIAssemblies.get(se).add(assembly);

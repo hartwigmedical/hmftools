@@ -53,17 +53,6 @@ public class BestFitFactory
 
     public BestFitFactory(
             final PurpleConfig config, int minReadCount, int maxReadCount,
-            /*
-            double minPurity, = fittingConfig.minPurity()
-            double maxPurity, fittingConfig.maxPurity(),
-            int minVariants, somaticFitConfig.minTotalVariants(),
-            int minPeak, somaticFitConfig.minPeakVariants(),
-            double highlyDiploidPercentage, somaticFitConfig.highlyDiploidPercentage(),
-            double minSomaticPurity, somaticFitConfig.minSomaticPurity(),
-            double minSomaticPuritySpread, somaticFitConfig.minSomaticPuritySpread(),
-            int minTotalSvFragmentCount, somaticFitConfig.minTotalSvFragmentCount(),
-            int minTotalSomaticVariantAlleleReadCount, somaticFitConfig.minTotalSomaticVariantAlleleReadCount(),
-             */
             @NotNull final List<FittedPurity> allCandidates, final List<SomaticVariant> somatics,
             final List<StructuralVariant> structuralVariants, final List<ObservedRegion> observedRegions)
     {
