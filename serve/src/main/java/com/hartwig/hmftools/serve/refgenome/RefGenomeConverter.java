@@ -5,6 +5,8 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.GeneNameMapping;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
@@ -12,10 +14,12 @@ import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
+import com.hartwig.hmftools.serve.extraction.copynumber.ImmutableKnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.exon.ImmutableExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.exon.ImmutableKnownExon;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
+import com.hartwig.hmftools.serve.extraction.fusion.ImmutableKnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
@@ -61,26 +65,18 @@ class RefGenomeConverter {
     public Set<KnownHotspot> convertKnownHotspots(@NotNull Set<KnownHotspot> hotspots) {
         Set<KnownHotspot> convertedHotspots = Sets.newHashSet();
         for (KnownHotspot hotspot : hotspots) {
-            LiftOverResult lifted = liftOverAlgo.liftOver(hotspot.chromosome(), hotspot.position());
+            VariantHotspot lifted = liftOverHotspot(hotspot);
 
-            if (lifted == null) {
-                LOGGER.warn("Liftover could not be performed on '{}'", hotspot);
-            } else {
-                verifyNoChromosomeChange(hotspot.chromosome(), lifted, hotspot);
-
-                String newRef = sequence(lifted.chromosome(), lifted.position(), hotspot.ref().length());
-                if (!newRef.equals(hotspot.ref())) {
-                    LOGGER.warn("Skipping liftover: Ref changed from '{}' to '{}' on {}", hotspot.ref(), newRef, hotspot);
-                } else {
-                    convertedHotspots.add(ImmutableKnownHotspot.builder()
-                            .from(hotspot)
-                            .gene(mapGene(hotspot.gene()))
-                            .chromosome(lifted.chromosome())
-                            .position(lifted.position())
-                            .build());
-                }
+            if (lifted != null) {
+                convertedHotspots.add(ImmutableKnownHotspot.builder()
+                        .from(hotspot)
+                        .gene(mapGene(hotspot.gene()))
+                        .chromosome(lifted.chromosome())
+                        .position(lifted.position())
+                        .build());
             }
         }
+
         return convertedHotspots;
     }
 
@@ -97,6 +93,7 @@ class RefGenomeConverter {
                 } else {
                     // We blank out the transcript and codon index since we are unsure to what extend the transcript maps to the new ref genome.
                     convertedCodons.add(ImmutableKnownCodon.builder()
+                            .from(codon)
                             .annotation(ImmutableCodonAnnotation.builder()
                                     .from(liftedAnnotation)
                                     .transcript(Strings.EMPTY)
@@ -106,6 +103,7 @@ class RefGenomeConverter {
                 }
             }
         }
+
         return convertedCodons;
     }
 
@@ -117,11 +115,84 @@ class RefGenomeConverter {
             if (liftedAnnotation != null) {
                 // We blank out the transcript and exon index since we are unsure to what extend the transcript maps to the new ref genome.
                 convertedExons.add(ImmutableKnownExon.builder()
+                        .from(exon)
                         .annotation(ImmutableExonAnnotation.builder().from(liftedAnnotation).transcript(Strings.EMPTY).exonIndex(0).build())
                         .build());
             }
         }
+
         return convertedExons;
+    }
+
+    @NotNull
+    public Set<KnownCopyNumber> convertKnownCopyNumbers(@NotNull Set<KnownCopyNumber> copyNumbers) {
+        Set<KnownCopyNumber> convertedCopyNumbers = Sets.newHashSet();
+        for (KnownCopyNumber copyNumber : copyNumbers) {
+            convertedCopyNumbers.add(ImmutableKnownCopyNumber.builder().from(copyNumber).gene(mapGene(copyNumber.gene())).build());
+        }
+
+        return convertedCopyNumbers;
+    }
+
+    @NotNull
+    public Set<KnownFusionPair> convertKnownFusionPairs(@NotNull Set<KnownFusionPair> fusionPairs) {
+        Set<KnownFusionPair> convertedFusionPairs = Sets.newHashSet();
+        for (KnownFusionPair fusionPair : fusionPairs) {
+            convertedFusionPairs.add(ImmutableKnownFusionPair.builder()
+                    .from(fusionPair)
+                    .geneUp(mapGene(fusionPair.geneUp()))
+                    .geneDown(mapGene(fusionPair.geneDown()))
+                    .build());
+        }
+
+        return convertedFusionPairs;
+    }
+
+    @NotNull
+    public Set<ActionableHotspot> convertActionableHotspots(@NotNull Set<ActionableHotspot> actionableHotspots) {
+        Set<ActionableHotspot> convertedActionableHotspots = Sets.newHashSet();
+        for (ActionableHotspot actionableHotspot : actionableHotspots) {
+
+        }
+        return actionableHotspots;
+    }
+
+    @NotNull
+    public Set<ActionableRange> convertActionableRanges(@NotNull Set<ActionableRange> actionableRanges) {
+        // TODO Implement
+        return actionableRanges;
+    }
+
+    @NotNull
+    public Set<ActionableGene> convertActionableGenes(@NotNull Set<ActionableGene> actionableGenes) {
+        // TODO Implement
+        return actionableGenes;
+    }
+
+    @NotNull
+    public Set<ActionableFusion> convertActionableFusion(@NotNull Set<ActionableFusion> actionableFusions) {
+        // TODO Implement
+        return actionableFusions;
+    }
+
+    @Nullable
+    private VariantHotspot liftOverHotspot(@NotNull VariantHotspot hotspot) {
+        LiftOverResult lifted = liftOverAlgo.liftOver(hotspot.chromosome(), hotspot.position());
+
+        if (lifted == null) {
+            LOGGER.warn("Liftover could not be performed on '{}'", hotspot);
+            return null;
+        }
+
+        verifyNoChromosomeChange(hotspot.chromosome(), lifted, hotspot);
+
+        String newRef = sequence(lifted.chromosome(), lifted.position(), hotspot.ref().length());
+        if (!newRef.equals(hotspot.ref())) {
+            LOGGER.warn("Skipping liftover: Ref changed from '{}' to '{}' on {}", hotspot.ref(), newRef, hotspot);
+            return null;
+        }
+
+        return ImmutableVariantHotspotImpl.builder().from(hotspot).chromosome(lifted.chromosome()).position(lifted.position()).build();
     }
 
     @Nullable
@@ -172,42 +243,6 @@ class RefGenomeConverter {
                 return chromosome() + ":" + start() + "-" + end();
             }
         };
-    }
-
-    @NotNull
-    public Set<KnownCopyNumber> convertKnownCopyNumbers(@NotNull Set<KnownCopyNumber> copyNumbers) {
-        // TODO Implement
-        return copyNumbers;
-    }
-
-    @NotNull
-    public Set<KnownFusionPair> convertKnownFusionPairs(@NotNull Set<KnownFusionPair> knownFusionPairs) {
-        // TODO Implement
-        return knownFusionPairs;
-    }
-
-    @NotNull
-    public Set<ActionableHotspot> convertActionableHotspots(@NotNull Set<ActionableHotspot> actionableHotspots) {
-        // TODO Implement
-        return actionableHotspots;
-    }
-
-    @NotNull
-    public Set<ActionableRange> convertActionableRanges(@NotNull Set<ActionableRange> actionableRanges) {
-        // TODO Implement
-        return actionableRanges;
-    }
-
-    @NotNull
-    public Set<ActionableGene> convertActionableGenes(@NotNull Set<ActionableGene> actionableGenes) {
-        // TODO Implement
-        return actionableGenes;
-    }
-
-    @NotNull
-    public Set<ActionableFusion> convertActionableFusion(@NotNull Set<ActionableFusion> actionableFusions) {
-        // TODO Implement
-        return actionableFusions;
     }
 
     private void verifyNoChromosomeChange(@NotNull String prevChromosome, @NotNull LiftOverResult lifted, @NotNull Object object) {

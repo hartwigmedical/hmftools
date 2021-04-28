@@ -129,12 +129,22 @@ public final class ServeTestFactory {
 
     @NotNull
     public static KnownCopyNumber createTestKnownCopyNumberForSource(@NotNull Knowledgebase source) {
-        return ImmutableKnownCopyNumber.builder().gene(Strings.EMPTY).type(CopyNumberType.AMPLIFICATION).addSources(source).build();
+        return ImmutableKnownCopyNumber.builder().from(createTestKnownCopyNumber()).addSources(source).build();
+    }
+
+    @NotNull
+    public static KnownCopyNumber createTestKnownCopyNumber() {
+        return ImmutableKnownCopyNumber.builder().gene(Strings.EMPTY).type(CopyNumberType.AMPLIFICATION).build();
     }
 
     @NotNull
     public static KnownFusionPair createTestKnownFusionPairForSource(@NotNull Knowledgebase source) {
-        return ImmutableKnownFusionPair.builder().geneUp(Strings.EMPTY).geneDown(Strings.EMPTY).addSources(source).build();
+        return ImmutableKnownFusionPair.builder().from(createTestKnownFusionPair()).addSources(source).build();
+    }
+
+    @NotNull
+    public static KnownFusionPair createTestKnownFusionPair() {
+        return ImmutableKnownFusionPair.builder().geneUp(Strings.EMPTY).geneDown(Strings.EMPTY).build();
     }
 
     @NotNull
