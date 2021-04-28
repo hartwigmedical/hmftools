@@ -1,7 +1,7 @@
 ##fileformat=VCFv4.2
 ##INFO=<ID=WHITELIST,Number=0,Type=Flag,Description="Whitelisted hotspot">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
-chr1    45332088	.	T	C   .   .   WHITELIST
+chr1	45332088	.	T	C	.	.	WHITELIST
 chr1	97579893	.	G	C	.	.	WHITELIST
 chr2	233760233	.	CAT	C	.	.	WHITELIST
 chr2	233760233	.	C	CAT	.	.	WHITELIST
