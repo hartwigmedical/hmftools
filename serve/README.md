@@ -247,7 +247,7 @@ SERVE starts with reading the various knowledgebases which are enabled. Knowledg
 A knowledgebase can contribute to known and/or actionable events. Current configuration as follows:
       
 Knowledgebase  | Ref genome version | Contributes to known events? | Contributes to actionable events?
----|---|---
+---|---|---|---
 DoCM | 37 | Yes | No 
 Hartwig Cohort | 37 | Yes | No
 Hartwig Curated | 37 | Yes | No
