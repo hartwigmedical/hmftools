@@ -15,13 +15,15 @@ import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class GermlineStatusFactoryTest {
+public class GermlineStatusFactoryTest
+{
 
     private final GermlineStatusFactory maleVictim = new GermlineStatusFactory(CobaltTestUtils.male());
     private final GermlineStatusFactory femaleVictim = new GermlineStatusFactory(CobaltTestUtils.female());
 
     @Test
-    public void testAutosome() {
+    public void testAutosome()
+    {
         assertStatus("1", 0.00, UNKNOWN);
         assertStatus("1", 0.09, HOM_DELETION);
         assertStatus("1", 0.10, HET_DELETION);
@@ -34,7 +36,8 @@ public class GermlineStatusFactoryTest {
     }
 
     @Test
-    public void testX() {
+    public void testX()
+    {
         assertStatus("X", 0.00, UNKNOWN);
 
         assertStatus("X", 0.049, HOM_DELETION, HOM_DELETION);
@@ -61,7 +64,8 @@ public class GermlineStatusFactoryTest {
     }
 
     @Test
-    public void testY() {
+    public void testY()
+    {
         assertStatus("Y", 0.00, UNKNOWN);
         assertStatus("Y", 0.049, HOM_DELETION);
         assertStatus("Y", 0.05, HET_DELETION);
@@ -73,17 +77,22 @@ public class GermlineStatusFactoryTest {
         assertStatus("Y", 1.11, NOISE);
     }
 
-    private void assertStatus(@NotNull final String chromosome, final double ratio, @NotNull final GermlineStatus expected) {
+    private void assertStatus(@NotNull final String chromosome, final double ratio, @NotNull final GermlineStatus expected)
+    {
         assertEquals(expected, maleVictim.fromRatio(chromosome, ratio, 0.01));
-        if (chromosome.equals("Y")) {
+        if(chromosome.equals("Y"))
+        {
             assertEquals(UNKNOWN, femaleVictim.fromRatio(chromosome, ratio, 0.01));
-        } else {
+        }
+        else
+        {
             assertEquals(expected, femaleVictim.fromRatio(chromosome, ratio, 0.01));
         }
     }
 
     private void assertStatus(@NotNull final String chromosome, final double ratio, @NotNull final GermlineStatus expectedMale,
-            @NotNull final GermlineStatus expectedFemale) {
+            @NotNull final GermlineStatus expectedFemale)
+    {
         assertEquals(expectedMale, maleVictim.fromRatio(chromosome, ratio, 0.01));
         assertEquals(expectedFemale, femaleVictim.fromRatio(chromosome, ratio, 0.01));
     }

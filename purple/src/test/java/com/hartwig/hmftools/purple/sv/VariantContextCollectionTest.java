@@ -13,19 +13,22 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
 
-public class VariantContextCollectionTest {
+public class VariantContextCollectionTest
+{
 
     private static final String SAMPLE = "sample";
 
     private VCFCodec codec;
 
     @Before
-    public void setup() {
+    public void setup()
+    {
         codec = createTestCodec();
     }
 
     @Test
-    public void testAddSetsModifiedFlag() {
+    public void testAddSetsModifiedFlag()
+    {
         final VariantContextCollection victim = new VariantContextCollectionImpl(Lists.newArrayList("1"));
         assertEquals(0, victim.segmentationVariants().size());
 
@@ -34,7 +37,8 @@ public class VariantContextCollectionTest {
     }
 
     @NotNull
-    private static VCFCodec createTestCodec() {
+    private static VCFCodec createTestCodec()
+    {
         VCFCodec codec = new VCFCodec();
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet(SAMPLE));
         codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);

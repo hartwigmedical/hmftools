@@ -6,11 +6,10 @@ import static com.hartwig.hmftools.common.purple.region.GermlineStatus.DIPLOID;
 import static com.hartwig.hmftools.common.utils.Doubles.lessOrEqual;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleCommon.formatPurity;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.TUMOR_EVIDENCE_BAF_TOTAL;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.TUMOR_EVIDENCE_DEPTH_RATIO_MAX;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.TUMOR_EVIDENCE_DEPTH_RATIO_MIN;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_BAF_TOTAL;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_DEPTH_RATIO_MAX;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.NO_TUMOR_DEPTH_RATIO_MIN;
 
-import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -176,11 +175,11 @@ public class BestFitFactory
 
         int tumorEvidenceBafCountTotal = observedRegions.stream()
                 .filter(x -> x.status() == DIPLOID)
-                .filter(x -> x.observedTumorRatio() < TUMOR_EVIDENCE_DEPTH_RATIO_MIN || x.observedTumorRatio() > TUMOR_EVIDENCE_DEPTH_RATIO_MAX)
+                .filter(x -> x.observedTumorRatio() < NO_TUMOR_DEPTH_RATIO_MIN || x.observedTumorRatio() > NO_TUMOR_DEPTH_RATIO_MAX)
                 .mapToInt(x -> x.bafCount())
                 .sum();
 
-        if(tumorEvidenceBafCountTotal >= TUMOR_EVIDENCE_BAF_TOTAL)
+        if(tumorEvidenceBafCountTotal >= NO_TUMOR_BAF_TOTAL)
         {
             PPL_LOGGER.info("Tumor evidence: tumorEvidenceBafCountTotal({})", tumorEvidenceBafCountTotal);
             return true;

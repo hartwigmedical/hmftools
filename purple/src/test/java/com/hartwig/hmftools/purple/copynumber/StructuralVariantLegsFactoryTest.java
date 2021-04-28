@@ -22,10 +22,12 @@ import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegsFactory;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class StructuralVariantLegsFactoryTest {
+public class StructuralVariantLegsFactoryTest
+{
 
     @Test
-    public void testReduce() {
+    public void testReduce()
+    {
         final StructuralVariantLeg largePositive = createLeg(1, 0.9);
         final StructuralVariantLeg smallPositive = createLeg(1, 0.1);
         final StructuralVariantLeg largeNegative = createLeg(-1, 0.8);
@@ -42,7 +44,8 @@ public class StructuralVariantLegsFactoryTest {
     }
 
     @Test
-    public void testIgnoreInserts() {
+    public void testIgnoreInserts()
+    {
         final StructuralVariant first = sv(100, 200, StructuralVariantType.INS, 0.25, 0.25);
         final StructuralVariant second = sv(300, 400, StructuralVariantType.INS, 0.25, 0.25);
         final List<StructuralVariant> variants = Lists.newArrayList(first, second);
@@ -52,7 +55,8 @@ public class StructuralVariantLegsFactoryTest {
     }
 
     @Test
-    public void testDuplicateLeg() {
+    public void testDuplicateLeg()
+    {
         final StructuralVariant first = sv(100, 100, StructuralVariantType.INV, 0.25, 0.25);
 
         final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(Lists.newArrayList(first));
@@ -62,7 +66,8 @@ public class StructuralVariantLegsFactoryTest {
     }
 
     @Test
-    public void testSameVAF() {
+    public void testSameVAF()
+    {
         final StructuralVariant first = sv(100, 200, StructuralVariantType.INV, 0.25, 0.25);
         final StructuralVariant second = sv(200, 300, StructuralVariantType.BND, 0.25, 0.25);
         final List<StructuralVariant> variants = Lists.newArrayList(first, second);
@@ -81,7 +86,8 @@ public class StructuralVariantLegsFactoryTest {
     }
 
     @Test
-    public void testMaxPositive() {
+    public void testMaxPositive()
+    {
         final StructuralVariant first = sv(100, 200, StructuralVariantType.INV, 0.25, 0.25);
         final StructuralVariant second = sv(200, 300, StructuralVariantType.BND, 0.4, 0.25);
         final List<StructuralVariant> variants = Lists.newArrayList(first, second);
@@ -98,7 +104,8 @@ public class StructuralVariantLegsFactoryTest {
     }
 
     @Test
-    public void testOpposingSign() {
+    public void testOpposingSign()
+    {
         final StructuralVariant first = sv(100, 200, StructuralVariantType.DEL, 0.25, 0.4);
         final StructuralVariant second = sv(199, 300, StructuralVariantType.BND, 0.25, 0.25);
         final List<StructuralVariant> variants = Lists.newArrayList(first, second);
@@ -117,7 +124,8 @@ public class StructuralVariantLegsFactoryTest {
     }
 
     @Test
-    public void testSingleBreakend() {
+    public void testSingleBreakend()
+    {
         final StructuralVariant first = breakend(100, 0.25);
 
         final List<StructuralVariantLegs> legs = StructuralVariantLegsFactory.create(Lists.newArrayList(first));
@@ -126,34 +134,40 @@ public class StructuralVariantLegsFactoryTest {
         assertFalse(legs.get(0).end().isPresent());
     }
 
-    private void assertLeg(int orientation, double vaf, @NotNull final StructuralVariantLeg victim) {
+    private void assertLeg(int orientation, double vaf, @NotNull final StructuralVariantLeg victim)
+    {
         assertEquals(vaf, victim.alleleFrequency(), EPSILON);
         assertEquals(orientation, victim.orientation());
     }
 
-    private void assertReduce(@NotNull final StructuralVariantLeg expected, @NotNull final List<StructuralVariantLeg> legs) {
+    private void assertReduce(@NotNull final StructuralVariantLeg expected, @NotNull final List<StructuralVariantLeg> legs)
+    {
         final StructuralVariantLeg result = reduce(expected, legs);
         assertEquals(expected.alleleFrequency(), result.alleleFrequency(), EPSILON);
         assertEquals(expected.orientation(), result.orientation());
     }
 
     @NotNull
-    private static StructuralVariantLeg createLeg(int orientation, double vaf) {
+    private static StructuralVariantLeg createLeg(int orientation, double vaf)
+    {
         return createLeg(1, orientation, vaf);
     }
 
     @NotNull
-    private static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF) {
+    private static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF)
+    {
         return PurpleTestUtils.createStructuralVariant(CHROMOSOME, start, CHROMOSOME, end, type, startAF, endAF).build();
     }
 
     @NotNull
-    private static StructuralVariant breakend(long start, double startAF) {
+    private static StructuralVariant breakend(long start, double startAF)
+    {
         return PurpleTestUtils.createStructuralVariantSingleBreakend(CHROMOSOME, start, startAF).build();
     }
 
     @NotNull
-    static StructuralVariantLeg createLeg(long position, int orientation, double vaf) {
+    static StructuralVariantLeg createLeg(long position, int orientation, double vaf)
+    {
         return createStartLeg(CHROMOSOME, position, StructuralVariantType.DEL)
                 .orientation((byte) orientation)
                 .alleleFrequency(vaf)
@@ -161,7 +175,8 @@ public class StructuralVariantLegsFactoryTest {
     }
 
     @NotNull
-    static StructuralVariantLeg createLeg(long position, int orientation, double vaf, int tumorVariantFragmentCount) {
+    static StructuralVariantLeg createLeg(long position, int orientation, double vaf, int tumorVariantFragmentCount)
+    {
         return createStartLeg(CHROMOSOME, position, StructuralVariantType.DEL)
                 .orientation((byte) orientation)
                 .alleleFrequency(vaf)

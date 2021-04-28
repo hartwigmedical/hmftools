@@ -5,6 +5,9 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFa
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.RECOVERY_FILTER;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.RECOVERY_METHOD;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.SVTYPE;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_UNBALANCED_MIN_DEPTH_WINDOW_COUNT;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE_PERC;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -27,6 +30,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.purple.config.MiscConfig;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegCopyNumberChangeFactory;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
@@ -49,10 +53,6 @@ public class RecoverStructuralVariants implements Closeable
     private static final Allele INCREASING_ALLELE = Allele.create(".N", false);
     private static final Allele DECREASING_ALLELE = Allele.create("N.", false);
 
-    static final int UNBALANCED_MIN_DEPTH_WINDOW_COUNT = 5;
-    private static final double UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE = 0.6;
-    private static final double UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE_AS_PERCENT_OF_COPY_NUMBER = 0.2;
-
     private final PurityAdjuster mPurityAdjuster;
     private final ListMultimap<Chromosome, PurpleCopyNumber> mAllCopyNumbers;
     private final StructuralVariantLegPloidyFactory<PurpleCopyNumber> mPloidyFactory;
@@ -60,10 +60,12 @@ public class RecoverStructuralVariants implements Closeable
 
     private int mCounter = 0;
 
-    public RecoverStructuralVariants(@NotNull final PurityAdjuster purityAdjuster, @NotNull final String recoveryVCF,
-            @NotNull final List<PurpleCopyNumber> allCopyNumbers)
+    public RecoverStructuralVariants(
+            final MiscConfig config, final PurityAdjuster purityAdjuster, final String recoveryVCF, final List<PurpleCopyNumber> allCopyNumbers)
     {
-        this(purityAdjuster, new RecoveredVariantFactory(purityAdjuster, recoveryVCF), allCopyNumbers);
+        this(purityAdjuster,
+                new RecoveredVariantFactory(purityAdjuster, recoveryVCF, config.RecoveryMinMateQualScore, config.RecoveryMinSglQualScore),
+                allCopyNumbers);
     }
 
     RecoverStructuralVariants(
@@ -168,7 +170,7 @@ public class RecoverStructuralVariants implements Closeable
         for(VariantContext other : recovered)
         {
             if(legPloidy.chromosome().equals(other.getContig())
-            && Math.abs(legPloidy.position() - other.getStart()) <= UNBALANCED_MIN_DEPTH_WINDOW_COUNT * 1000)
+            && Math.abs(legPloidy.position() - other.getStart()) <= RECOVERY_UNBALANCED_MIN_DEPTH_WINDOW_COUNT * 1000)
             {
                 return true;
             }
@@ -177,8 +179,9 @@ public class RecoverStructuralVariants implements Closeable
         return false;
     }
 
+    @VisibleForTesting
     @NotNull
-    private List<VariantContext> recoverFromUnexplainedSegments() throws IOException
+    List<VariantContext> recoverFromUnexplainedSegments() throws IOException
     {
         final List<VariantContext> result = Lists.newArrayList();
 
@@ -197,10 +200,8 @@ public class RecoverStructuralVariants implements Closeable
                     int expectedOrientation = Doubles.greaterThan(current.averageTumorCopyNumber(), prev.averageTumorCopyNumber()) ? -1 : 1;
 
                     final Optional<RecoveredVariant> optionalRecoveredVariant = mRecoveredVariantFactory.recoverVariantAtIndex(
-                            expectedOrientation,
-                            unexplainedCopyNumberChange,
-                            index,
-                            chromosomeCopyNumbers);
+                            expectedOrientation, unexplainedCopyNumberChange, index, chromosomeCopyNumbers);
+
                     optionalRecoveredVariant.ifPresent(recoveredVariant -> result.addAll(toContext(recoveredVariant,
                             "UNSUPPORTED_BREAKEND")));
                 }
@@ -216,9 +217,7 @@ public class RecoverStructuralVariants implements Closeable
         for(int i = 0; i < regions.size(); i++)
         {
             if(regions.get(i).start() == cnaPosition)
-            {
                 return i;
-            }
         }
 
         return -1;
@@ -241,7 +240,6 @@ public class RecoverStructuralVariants implements Closeable
 
             recoveryMethod = partialMethod + (contextIsStart ? "_START" : "_END");
             result.add(addRecoveryDetails(mate, recoveryMethod, recoveryFilterSet.stream().sorted().collect(Collectors.toList())));
-
         }
         else
         {
@@ -289,15 +287,14 @@ public class RecoverStructuralVariants implements Closeable
     private static boolean isUnbalanced(double unexplainedCopyNumberChange, double copyNumber)
     {
         return Doubles.greaterOrEqual(unexplainedCopyNumberChange,
-                UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE_AS_PERCENT_OF_COPY_NUMBER * copyNumber) && Doubles.greaterOrEqual(
-                unexplainedCopyNumberChange,
-                UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE);
+                RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE_PERC * copyNumber)
+                && Doubles.greaterOrEqual(unexplainedCopyNumberChange, RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE);
     }
 
     private static boolean isSupportedByDepthWindowCounts(@NotNull final PurpleCopyNumber prev, @Nullable final PurpleCopyNumber next)
     {
-        return prev.depthWindowCount() >= UNBALANCED_MIN_DEPTH_WINDOW_COUNT && (next == null
-                || next.depthWindowCount() >= UNBALANCED_MIN_DEPTH_WINDOW_COUNT);
+        return prev.depthWindowCount() >= RECOVERY_UNBALANCED_MIN_DEPTH_WINDOW_COUNT
+                && (next == null || next.depthWindowCount() >= RECOVERY_UNBALANCED_MIN_DEPTH_WINDOW_COUNT);
     }
 
     @Override

@@ -28,7 +28,8 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class StructuralVariantImpliedTest {
+public class StructuralVariantImpliedTest
+{
 
     private static final String CONTIG = "1";
     private static final Chromosome CHROMOSOME = HumanChromosome.fromString(CONTIG);
@@ -36,7 +37,8 @@ public class StructuralVariantImpliedTest {
     private static final PurityAdjuster PURE = new PurityAdjusterTypicalChromosome(Gender.FEMALE, 1, 1);
 
     @Test
-    public void testNonSymmetricMultiPass() {
+    public void testNonSymmetricMultiPass()
+    {
         final StructuralVariant firstSV = sv(1000, 4001, StructuralVariantType.DEL, 0.25, 0.25);
         final StructuralVariant secondSV = sv(2000, 3001, StructuralVariantType.DEL, 1 / 3d, 1 / 3d);
 
@@ -60,7 +62,8 @@ public class StructuralVariantImpliedTest {
     }
 
     @Test
-    public void testSVSmoothing() {
+    public void testSVSmoothing()
+    {
         final StructuralVariant firstSV = sv(1000, 4001, StructuralVariantType.DEL, 0.25, 0.25);
         final StructuralVariant secondSV = sv(2000, 3001, StructuralVariantType.DEL, 1 / 3d, 1 / 3d);
 
@@ -84,7 +87,8 @@ public class StructuralVariantImpliedTest {
     }
 
     @Test
-    public void testImpliedCopyNumber() {
+    public void testImpliedCopyNumber()
+    {
         final StructuralVariantLegPloidy left = create(1, Optional.of(4d), Optional.empty());
         final StructuralVariantLegPloidy right = create(-1, Optional.empty(), Optional.of(5d));
 
@@ -102,7 +106,8 @@ public class StructuralVariantImpliedTest {
     }
 
     @Test
-    public void testImpliedCopyNumberCappedAtZero() {
+    public void testImpliedCopyNumberCappedAtZero()
+    {
         final StructuralVariantLegPloidy left = create(1, Optional.of(0.5d), Optional.empty());
         final StructuralVariantLegPloidy right = create(-1, Optional.empty(), Optional.of(0.9d));
 
@@ -120,12 +125,14 @@ public class StructuralVariantImpliedTest {
     }
 
     @NotNull
-    private static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF) {
+    private static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF)
+    {
         return PurpleTestUtils.createStructuralVariant(CONTIG, start, CONTIG, end, type, startAF, endAF).build();
     }
 
     @NotNull
-    private static CombinedRegion copyNumber(long start, long end, double copyNumber, SegmentSupport support) {
+    private static CombinedRegion copyNumber(long start, long end, double copyNumber, SegmentSupport support)
+    {
         final FittedRegion region = createDefaultFittedRegion(CONTIG, start, end)
                 .tumorCopyNumber(copyNumber)
                 .tumorBAF(0.5)
@@ -133,7 +140,8 @@ public class StructuralVariantImpliedTest {
                 .build();
 
         final CombinedRegion result = new CombinedRegionImpl(region);
-        if (Doubles.positive(copyNumber)) {
+        if(Doubles.positive(copyNumber))
+        {
             result.setCopyNumberMethod(CopyNumberMethod.BAF_WEIGHTED);
         }
 
@@ -141,7 +149,8 @@ public class StructuralVariantImpliedTest {
     }
 
     @NotNull
-    private static ListMultimap<Chromosome, CombinedRegion> copyNumbers(CombinedRegion... copyNumbers) {
+    private static ListMultimap<Chromosome, CombinedRegion> copyNumbers(CombinedRegion... copyNumbers)
+    {
         final ListMultimap<Chromosome, CombinedRegion> result = ArrayListMultimap.create();
         result.putAll(CHROMOSOME, Lists.newArrayList(copyNumbers));
         return result;
@@ -149,7 +158,10 @@ public class StructuralVariantImpliedTest {
 
     @NotNull
     private static StructuralVariantLegPloidy create(int orientation, @NotNull final Optional<Double> leftCopyNumber,
-            @NotNull final Optional<Double> rightCopyNumber) {
-        return StructuralVariantPloidyFactoryTest.svLegPloidy(orientation, leftCopyNumber, rightCopyNumber, PLOIDY).chromosome(CONTIG).build();
+            @NotNull final Optional<Double> rightCopyNumber)
+    {
+        return StructuralVariantPloidyFactoryTest.svLegPloidy(orientation, leftCopyNumber, rightCopyNumber, PLOIDY)
+                .chromosome(CONTIG)
+                .build();
     }
 }

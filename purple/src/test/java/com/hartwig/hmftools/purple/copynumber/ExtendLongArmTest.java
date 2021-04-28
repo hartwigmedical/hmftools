@@ -14,13 +14,15 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ExtendLongArmTest {
+public class ExtendLongArmTest
+{
 
     private static final String CHROMOSOME = "13";
     private static final double EPSILON = 1e-10;
 
     @Test
-    public void testCentromereToTelomere() {
+    public void testCentromereToTelomere()
+    {
         final CombinedRegion first = createCombinedRegion(1, 5000, 3, 0.3, SegmentSupport.NONE);
         final CombinedRegion centromere = createCombinedRegion(5001, 20000, 2, 0.5, SegmentSupport.CENTROMERE);
 
@@ -32,7 +34,8 @@ public class ExtendLongArmTest {
     }
 
     @Test
-    public void testIneligibleChromosome() {
+    public void testIneligibleChromosome()
+    {
         final CombinedRegion first = createCombinedRegion("1", 1, 5000, 3, 0.3, SegmentSupport.NONE);
         final CombinedRegion centromere = createCombinedRegion("1", 5001, 20000, 2, 0.5, SegmentSupport.CENTROMERE);
 
@@ -44,7 +47,8 @@ public class ExtendLongArmTest {
     }
 
     @Test
-    public void testExtendThroughStructuralVariantButKeepBreakIntact() {
+    public void testExtendThroughStructuralVariantButKeepBreakIntact()
+    {
 
         final CombinedRegion first = createCombinedRegion(1, 1000, 3, 0.3, SegmentSupport.NONE);
         final CombinedRegion second = createCombinedRegion(1001, 2000, 3, 0.3, SegmentSupport.NONE);
@@ -60,7 +64,8 @@ public class ExtendLongArmTest {
     }
 
     @Test
-    public void testDoesNotExtendRight() {
+    public void testDoesNotExtendRight()
+    {
         final CombinedRegion centromere = createCombinedRegion(10001, 20000, 2, 0.5, SegmentSupport.CENTROMERE);
         final CombinedRegion unprocessedRight = createCombinedRegion(20001, 30000, 3, 0.3, SegmentSupport.NONE);
 
@@ -72,7 +77,8 @@ public class ExtendLongArmTest {
     }
 
     @Test
-    public void extendsToStart() {
+    public void extendsToStart()
+    {
         final CombinedRegion first = createCombinedRegion(1, 5000, 3, 0.3, SegmentSupport.NONE);
         final CombinedRegion second = createCombinedRegion(5001, 10000, 3, 0.3, SegmentSupport.NONE);
         final CombinedRegion centromere = createCombinedRegion(10001, 20000, 2, 0.5, SegmentSupport.CENTROMERE);
@@ -85,7 +91,8 @@ public class ExtendLongArmTest {
     }
 
     @Test
-    public void extendsThroughUnprocessed() {
+    public void extendsThroughUnprocessed()
+    {
         final CombinedRegion first = createCombinedRegion(1, 5000, 3, 0.3, SegmentSupport.NONE);
         final CombinedRegion second = createCombinedRegion(5001, 10000, 3, 0.3, SegmentSupport.NONE);
         final CombinedRegion centromere = createCombinedRegion(10001, 20000, 2, 0.5, SegmentSupport.CENTROMERE);
@@ -100,7 +107,8 @@ public class ExtendLongArmTest {
     }
 
     @Test
-    public void extendsStopsAtProcessed() {
+    public void extendsStopsAtProcessed()
+    {
         final CombinedRegion first = createCombinedRegion(1, 5000, 3, 0.3, SegmentSupport.NONE);
         final CombinedRegion second = createCombinedRegion(5001, 10000, 3, 0.3, SegmentSupport.NONE);
         final CombinedRegion centromere = createCombinedRegion(10001, 20000, 2, 0.5, SegmentSupport.CENTROMERE);
@@ -115,7 +123,8 @@ public class ExtendLongArmTest {
     }
 
     @Test
-    public void extendsThroughProcessedOnChromosome21() {
+    public void extendsThroughProcessedOnChromosome21()
+    {
         final CombinedRegion first = createCombinedRegion("21", 1, 5000, 3, 0.3, SegmentSupport.NONE);
         final CombinedRegion second = createCombinedRegion("21", 5001, 10000, 3, 0.3, SegmentSupport.NONE);
         final CombinedRegion centromere = createCombinedRegion("21", 10001, 20000, 2, 0.5, SegmentSupport.CENTROMERE);
@@ -129,7 +138,8 @@ public class ExtendLongArmTest {
     }
 
     static void assertCombinedRegion(long start, long end, double expectedCopyNumber, CopyNumberMethod expectedMethod,
-            CombinedRegion victim) {
+            CombinedRegion victim)
+    {
         assertEquals(expectedCopyNumber, victim.tumorCopyNumber(), EPSILON);
         assertEquals(expectedMethod, victim.copyNumberMethod());
         assertEquals(start, victim.start());
@@ -138,7 +148,8 @@ public class ExtendLongArmTest {
 
     @NotNull
     private static CombinedRegion createCombinedRegion(String chromosome, long start, long end, double copyNumber, double baf,
-            SegmentSupport support) {
+            SegmentSupport support)
+    {
         final FittedRegion region = createDefaultFittedRegion(chromosome, start, end)
                 .tumorCopyNumber(copyNumber)
                 .tumorBAF(baf)
@@ -149,7 +160,8 @@ public class ExtendLongArmTest {
     }
 
     @NotNull
-    static CombinedRegion createCombinedRegion(long start, long end, double copyNumber, double baf, SegmentSupport support) {
+    static CombinedRegion createCombinedRegion(long start, long end, double copyNumber, double baf, SegmentSupport support)
+    {
         return createCombinedRegion(CHROMOSOME, start, end, copyNumber, baf, support);
     }
 }

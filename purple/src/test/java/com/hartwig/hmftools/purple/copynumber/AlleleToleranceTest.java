@@ -14,17 +14,19 @@ import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import org.junit.Before;
 import org.junit.Test;
 
-public class AlleleToleranceTest {
-
+public class AlleleToleranceTest
+{
     private AlleleTolerance victim;
 
     @Before
-    public void setup() {
+    public void setup()
+    {
         victim = new AlleleTolerance(new PurityAdjusterTypicalChromosome(Gender.FEMALE, 1, 1));
     }
 
     @Test
-    public void testMinObservedBafDeviation() {
+    public void testMinObservedBafDeviation()
+    {
         FittedRegion left = createBafRegion(1000, 1, 0);
         FittedRegion right = createBafRegion(1000, 0.5, 0);
         assertTrue(victim.inTolerance(left, right));
@@ -34,7 +36,8 @@ public class AlleleToleranceTest {
     }
 
     @Test
-    public void testMinBafCount() {
+    public void testMinBafCount()
+    {
         FittedRegion left = createBafRegion(0, 1, 0.031);
         FittedRegion right = createBafRegion(1000, 0.5, 0);
         assertTrue(victim.inTolerance(left, right));
@@ -44,7 +47,8 @@ public class AlleleToleranceTest {
     }
 
     @Test
-    public void testRelativeChange() {
+    public void testRelativeChange()
+    {
         FittedRegion left = createCopyNumberRegion(1000, 10, 10);
         FittedRegion right = createCopyNumberRegion(1000, 9.1, 9.1);
         assertTrue(victim.inTolerance(left, right));
@@ -55,11 +59,13 @@ public class AlleleToleranceTest {
     }
 
     @Test
-    public void testRelativeChangeToNegativeCopyNumber() {
+    public void testRelativeChangeToNegativeCopyNumber()
+    {
         assertEquals(6, AlleleTolerance.relativeCopyNumberChange(2.5, -0.5), 0.01);
     }
 
-    private static FittedRegion createBafRegion(int bafCount, double tumorBaf, double observedBaf) {
+    private static FittedRegion createBafRegion(int bafCount, double tumorBaf, double observedBaf)
+    {
         return createDefaultFittedRegion("1", 100, 200)
                 .bafCount(bafCount)
                 .tumorBAF(tumorBaf)
@@ -70,7 +76,8 @@ public class AlleleToleranceTest {
                 .build();
     }
 
-    private static FittedRegion createCopyNumberRegion(int depthWindowCount, double copyNumber, double refCopyNumber) {
+    private static FittedRegion createCopyNumberRegion(int depthWindowCount, double copyNumber, double refCopyNumber)
+    {
         return createDefaultFittedRegion("1", 100, 200)
                 .bafCount(0)
                 .tumorCopyNumber(copyNumber)

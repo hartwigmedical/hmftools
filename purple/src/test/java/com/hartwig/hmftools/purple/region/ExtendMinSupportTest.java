@@ -10,10 +10,12 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ExtendMinSupportTest {
+public class ExtendMinSupportTest
+{
 
     @Test
-    public void testDefault() {
+    public void testDefault()
+    {
         final ModifiableEnrichedRegion prior = create(1000, GermlineStatus.NOISE, SegmentSupport.NONE);
         final ModifiableEnrichedRegion target = create(2000, GermlineStatus.DIPLOID, SegmentSupport.NONE);
 
@@ -23,7 +25,8 @@ public class ExtendMinSupportTest {
     }
 
     @Test
-    public void testExtendOnlyDiploid() {
+    public void testExtendOnlyDiploid()
+    {
         final ModifiableEnrichedRegion prior = create(1000, GermlineStatus.NOISE, SegmentSupport.NONE);
         final ModifiableEnrichedRegion target = create(2000, GermlineStatus.NOISE, SegmentSupport.NONE);
 
@@ -33,7 +36,8 @@ public class ExtendMinSupportTest {
     }
 
     @Test
-    public void testExtendOnlyNoSVSupport() {
+    public void testExtendOnlyNoSVSupport()
+    {
         final ModifiableEnrichedRegion prior = create(1000, GermlineStatus.NOISE, SegmentSupport.NONE);
         final ModifiableEnrichedRegion target = create(2000, GermlineStatus.DIPLOID, SegmentSupport.BND);
 
@@ -43,7 +47,8 @@ public class ExtendMinSupportTest {
     }
 
     @Test
-    public void testKeepExtending() {
+    public void testKeepExtending()
+    {
         final ModifiableEnrichedRegion prior1 = create(500, GermlineStatus.NOISE, SegmentSupport.NONE);
         final ModifiableEnrichedRegion prior2 = create(1000, GermlineStatus.NOISE, SegmentSupport.NONE);
         final ModifiableEnrichedRegion target = create(2000, GermlineStatus.DIPLOID, SegmentSupport.NONE);
@@ -54,7 +59,8 @@ public class ExtendMinSupportTest {
     }
 
     @Test
-    public void testStopExtendingAtSV() {
+    public void testStopExtendingAtSV()
+    {
         final ModifiableEnrichedRegion prior1 = create(500, GermlineStatus.NOISE, SegmentSupport.NONE);
         final ModifiableEnrichedRegion prior2 = create(1000, GermlineStatus.NOISE, SegmentSupport.INS);
         final ModifiableEnrichedRegion target = create(2000, GermlineStatus.DIPLOID, SegmentSupport.NONE);
@@ -65,7 +71,8 @@ public class ExtendMinSupportTest {
     }
 
     @NotNull
-    private ModifiableEnrichedRegion create(long start, @NotNull final GermlineStatus status, @NotNull final SegmentSupport support) {
+    private ModifiableEnrichedRegion create(long start, @NotNull final GermlineStatus status, @NotNull final SegmentSupport support)
+    {
         return ModifiableEnrichedRegion.create().setStart(start).setMinStart(start).setStatus(status).setSupport(support);
     }
 }

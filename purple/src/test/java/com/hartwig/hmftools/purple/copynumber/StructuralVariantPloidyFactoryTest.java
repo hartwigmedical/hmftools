@@ -39,14 +39,16 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class StructuralVariantPloidyFactoryTest {
+public class StructuralVariantPloidyFactoryTest
+{
 
     private static final int AVERAGE_READ_DEPTH = 100;
     private static final double AVERAGE_COPY_NUMBER = 2;
 
     @NotNull
     public static ImmutableStructuralVariantLegPloidy.Builder svLegPloidy(int orientation, @NotNull final Optional<Double> leftCopyNumber,
-            @NotNull final Optional<Double> rightCopyNumber, double ploidy) {
+            @NotNull final Optional<Double> rightCopyNumber, double ploidy)
+    {
         return ImmutableStructuralVariantLegPloidy.builder()
                 .chromosome(CHROMOSOME)
                 .position(1)
@@ -70,7 +72,8 @@ public class StructuralVariantPloidyFactoryTest {
             PurpleCopyNumber::averageTumorCopyNumber);
 
     @Test
-    public void testSingleValidLeg() {
+    public void testSingleValidLeg()
+    {
         final StructuralVariantLeg start = createLeg(1000, 1, 0.25);
 
         final PurpleCopyNumber left = copyNumber(1, 1000, 4);
@@ -81,14 +84,16 @@ public class StructuralVariantPloidyFactoryTest {
         final ListMultimap<Chromosome, PurpleCopyNumber> copyNumbers = copyNumbers(left, middle, right);
         final List<StructuralVariantLegPloidy> ploidies = PURE_PLOIDY_FACTORY.create(legs, copyNumbers);
         assertEquals(1, ploidies.size());
-        for (StructuralVariantLegPloidy ploidy : ploidies) {
+        for(StructuralVariantLegPloidy ploidy : ploidies)
+        {
             assertEquals(1d, ploidy.averageImpliedPloidy(), EPSILON);
             assertEquals(1d, ploidy.weight(), EPSILON);
         }
     }
 
     @Test
-    public void testBothLegsValid() {
+    public void testBothLegsValid()
+    {
         final StructuralVariantLeg start = createLeg(999, 1, 0.25);
         final StructuralVariantLeg end = createLeg(2001, -1, 0.25);
 
@@ -100,14 +105,16 @@ public class StructuralVariantPloidyFactoryTest {
         final ListMultimap<Chromosome, PurpleCopyNumber> copyNumbers = copyNumbers(left, middle, right);
         final List<StructuralVariantLegPloidy> ploidies = PURE_PLOIDY_FACTORY.create(legs, copyNumbers);
         assertEquals(2, ploidies.size());
-        for (StructuralVariantLegPloidy ploidy : ploidies) {
+        for(StructuralVariantLegPloidy ploidy : ploidies)
+        {
             assertEquals(1d, ploidy.averageImpliedPloidy(), EPSILON);
             assertEquals(2d, ploidy.weight(), EPSILON);
         }
     }
 
     @Test
-    public void testIncludeNegativeAndZeroCopyNumbersCappedAtZero() {
+    public void testIncludeNegativeAndZeroCopyNumbersCappedAtZero()
+    {
         final StructuralVariantLeg positiveLeg = createLeg(1000, 1, 0.25);
         final StructuralVariantLeg negativeLeg = createLeg(2001, -1, 0.25);
         final PurpleCopyNumber left = copyNumber(1001, 2000, -0.03);
@@ -126,7 +133,8 @@ public class StructuralVariantPloidyFactoryTest {
     }
 
     @Test
-    public void testExcludeInfiniteVAF() {
+    public void testExcludeInfiniteVAF()
+    {
         final StructuralVariantLeg leg = createLeg(1001, -1, 1);
         final PurpleCopyNumber left = copyNumber(1, 1000, 3);
 
@@ -134,7 +142,8 @@ public class StructuralVariantPloidyFactoryTest {
     }
 
     @Test
-    public void testInferPloidyFromReadDepth() {
+    public void testInferPloidyFromReadDepth()
+    {
         int multiplier = 3;
 
         final StructuralVariantLeg leg = createLeg(1001, -1, 3.5 / 4, AVERAGE_READ_DEPTH * multiplier);
@@ -145,7 +154,8 @@ public class StructuralVariantPloidyFactoryTest {
     }
 
     @Test
-    public void testSelectCorrectOrAlternativeCopyNumberForLeg() {
+    public void testSelectCorrectOrAlternativeCopyNumberForLeg()
+    {
         final StructuralVariantLeg positiveLeg = createLeg(1000, 1, 0.25);
         final StructuralVariantLeg negativeLeg = createLeg(2001, -1, 0.25);
         final PurpleCopyNumber left = copyNumber(1, 1000, 4);
@@ -160,7 +170,8 @@ public class StructuralVariantPloidyFactoryTest {
     }
 
     @Test
-    public void testPurityAdjustedPloidy() {
+    public void testPurityAdjustedPloidy()
+    {
         final StructuralVariantLeg leg = createLeg(1000, 1, 0.5);
         final List<PurpleCopyNumber> copyNumbers = Lists.newArrayList(copyNumber(1, 1000, 2), copyNumber(1001, 200, 1));
 
@@ -183,27 +194,34 @@ public class StructuralVariantPloidyFactoryTest {
         assertPloidy(1.125d, malePloidy);
     }
 
-    private void assertPloidy(double expected, @NotNull final Optional<ModifiableStructuralVariantLegPloidy> ploidy) {
+    private void assertPloidy(double expected, @NotNull final Optional<ModifiableStructuralVariantLegPloidy> ploidy)
+    {
         assertEquals(expected, ploidy.map(ModifiableStructuralVariantLegPloidy::unweightedImpliedPloidy).orElse(0D), EPSILON);
     }
 
     private void assertPloidy(double expectedPloidy, boolean alternate,
-            @NotNull final Optional<ModifiableStructuralVariantLegPloidy> ploidy) {
+            @NotNull final Optional<ModifiableStructuralVariantLegPloidy> ploidy)
+    {
         assertEquals(expectedPloidy, ploidy.map(ModifiableStructuralVariantLegPloidy::unweightedImpliedPloidy).orElse(0D), EPSILON);
-        if (alternate) {
+        if(alternate)
+        {
             assertNotEquals(1d, ploidy.map(ModifiableStructuralVariantLegPloidy::weight).orElse(0D), EPSILON);
-        } else {
+        }
+        else
+        {
             assertEquals(1d, ploidy.map(ModifiableStructuralVariantLegPloidy::weight).orElse(0D), EPSILON);
         }
     }
 
     @NotNull
-    private static PurpleCopyNumber copyNumber(long start, long end, double copyNumber) {
+    private static PurpleCopyNumber copyNumber(long start, long end, double copyNumber)
+    {
         return PurpleTestUtils.createCopyNumber(CHROMOSOME, start, end, copyNumber).build();
     }
 
     @NotNull
-    private static ListMultimap<Chromosome, PurpleCopyNumber> copyNumbers(@NotNull PurpleCopyNumber... copyNumbers) {
+    private static ListMultimap<Chromosome, PurpleCopyNumber> copyNumbers(@NotNull PurpleCopyNumber... copyNumbers)
+    {
         final ListMultimap<Chromosome, PurpleCopyNumber> result = ArrayListMultimap.create();
         result.putAll(HumanChromosome.fromString(CHROMOSOME), Lists.newArrayList(copyNumbers));
         return result;

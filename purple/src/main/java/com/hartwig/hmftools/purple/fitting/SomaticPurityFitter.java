@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleCommon.formatDbl;
 import static com.hartwig.hmftools.purple.PurpleCommon.formatPurity;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_HOTSPOT_MAX_SNV_COUNT;
-import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_HOTSPOT_VAF_PROBABILITY;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_MAX_SNV_COUNT;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_VAF_PROBABILITY;
 import static com.hartwig.hmftools.purple.config.SomaticFitConfig.SOMATIC_MIN_PEAK_DEFAULT;
 import static com.hartwig.hmftools.purple.config.SomaticFitConfig.SOMATIC_MIN_VARIANTS_DEFAULT;
 import static com.hartwig.hmftools.purple.fitting.SomaticHistogramPeaks.calcProbabilityUpperBound;
@@ -132,7 +132,7 @@ class SomaticPurityFitter
         // check for a hotspot variant with a higher VAF
         int snvCount = (int)variants.stream().filter(x -> !x.isFiltered()).count();
 
-        if(snvCount > SOMATIC_HOTSPOT_MAX_SNV_COUNT)
+        if(snvCount > SNV_HOTSPOT_MAX_SNV_COUNT)
             return kdFit;
 
         double maxHotspotVaf = 0;
@@ -154,7 +154,7 @@ class SomaticPurityFitter
             PoissonDistribution poissonDist = new PoissonDistribution(expectedAlleleReadCount);
             double poissonProb = 1 - poissonDist.cumulativeProbability(variant.alleleReadCount() - 1);
 
-            if(poissonProb < SOMATIC_HOTSPOT_VAF_PROBABILITY)
+            if(poissonProb < SNV_HOTSPOT_VAF_PROBABILITY)
             {
                 PPL_LOGGER.info(String.format("hotspot(%s:%d) vaf(%.3f %d/%d) probability(%.4g)",
                         variant.chromosome(), variant.position(),
@@ -229,7 +229,7 @@ class SomaticPurityFitter
         if(maxPurity <= 0)
             return 0;
 
-        if(weightedVAFs.size() <= SOMATIC_HOTSPOT_MAX_SNV_COUNT)
+        if(weightedVAFs.size() <= SNV_HOTSPOT_MAX_SNV_COUNT)
         {
             double upperPeak = calcProbabilityUpperBound(weightedVAFs.size(), maxPurity);
 

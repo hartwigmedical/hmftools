@@ -14,10 +14,12 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ExtendStructuralVariantTest {
+public class ExtendStructuralVariantTest
+{
 
     @Test
-    public void testSingleSVExtendLeft() {
+    public void testSingleSVExtendLeft()
+    {
         final CombinedRegion leftMost = createCombinedRegion(2001, 3000, 3, 0.5, SegmentSupport.BND);
         final CombinedRegion middle1 = createCombinedRegion(3001, 4000, 4, 0.6, SegmentSupport.NONE);
         final CombinedRegion middle2 = createCombinedRegion(4001, 5000, 4, 0.6, SegmentSupport.NONE);
@@ -33,7 +35,8 @@ public class ExtendStructuralVariantTest {
     }
 
     @Test
-    public void testSingleSVExtendRight() {
+    public void testSingleSVExtendRight()
+    {
         final CombinedRegion leftMost = createCombinedRegion(2001, 3000, 3, 0.5, SegmentSupport.BND);
         final CombinedRegion middle1 = createSVImplied(3001, 4000, 4, 0.6, SegmentSupport.NONE);
         final CombinedRegion middle2 = createCombinedRegion(4001, 5000, 4, 0.6, SegmentSupport.NONE);
@@ -49,7 +52,8 @@ public class ExtendStructuralVariantTest {
     }
 
     @Test
-    public void testTwoSVsExtendBetween() {
+    public void testTwoSVsExtendBetween()
+    {
         final CombinedRegion leftMost = createSVImplied(2001, 3000, 3, 0.5, SegmentSupport.BND);
         final CombinedRegion middle1 = createCombinedRegion(3001, 4000, 4, 0.6, SegmentSupport.NONE);
         final CombinedRegion middle2 = createCombinedRegion(4001, 5000, 4, 0.6, SegmentSupport.NONE);
@@ -65,7 +69,8 @@ public class ExtendStructuralVariantTest {
     }
 
     @NotNull
-    private static CombinedRegion createSVImplied(long start, long end, double copyNumber, double baf, SegmentSupport support) {
+    private static CombinedRegion createSVImplied(long start, long end, double copyNumber, double baf, SegmentSupport support)
+    {
         final CombinedRegion region = createCombinedRegion(start, end, copyNumber, baf, support);
         region.setCopyNumberMethod(CopyNumberMethod.STRUCTURAL_VARIANT);
         return region;

@@ -9,10 +9,12 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 import org.junit.Test;
 
-public class StructuralVariantPositionFactoryTest {
+public class StructuralVariantPositionFactoryTest
+{
 
     @Test
-    public void excludeInserts() {
+    public void excludeInserts()
+    {
         final StructuralVariant variant =
                 PurpleTestUtils.createStructuralVariant("1", 1001, "1", 1001, StructuralVariantType.INS).build();
 

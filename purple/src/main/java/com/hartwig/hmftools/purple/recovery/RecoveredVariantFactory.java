@@ -5,6 +5,10 @@ import static java.util.Comparator.comparingDouble;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.create;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.createSingleBreakend;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.mateId;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_LENGTH;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_MATE_UNCERTAINTY;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_PLOIDY;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_PLOIDY_PERC;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -40,27 +44,24 @@ import htsjdk.variant.vcf.VCFCodec;
 
 class RecoveredVariantFactory implements AutoCloseable
 {
-    private static final double MIN_LENGTH = 1000;
-    private static final double MIN_MATE_QUAL_SCORE = 350;
-    private static final double MIN_SINGLE_QUAL_SCORE = 1000;
-
-    private static final double MIN_PLOIDY = 0.5;
-    private static final double MIN_PLOIDY_AS_PERCENTAGE_OF_COPY_NUMBER_CHANGE = 0.5;
-
-    private static final int MIN_MATE_UNCERTAINTY = 150;
-
     public static final Set<String> DO_NOT_RESCUE =
-            Sets.newHashSet("af", "qual", GripssFilters.DEDUP, GripssFilters.MIN_QUAL, GripssFilters.MIN_TUMOR_AF);
+            Sets.newHashSet("af", "qual", GripssFilters.DEDUP, GripssFilters.MIN_TUMOR_AF);
 
     private static final Comparator<RecoveredVariant> QUALITY_COMPARATOR = comparingDouble(x -> x.context().getPhredScaledQual());
 
     private final AbstractFeatureReader<VariantContext, LineIterator> mReader;
     private final StructuralVariantLegPloidyFactory<PurpleCopyNumber> mPloidyFactory;
+    private final int mMinMateQual;
+    private final int mMinSglQual;
 
-    RecoveredVariantFactory(@NotNull final PurityAdjuster purityAdjuster, @NotNull final String recoveryVCF)
+    RecoveredVariantFactory(
+            final PurityAdjuster purityAdjuster, final String recoveryVCF,
+            final int minMateQual, final int minSglQual)
     {
         mReader = getFeatureReader(recoveryVCF, new VCFCodec(), true);
         mPloidyFactory = new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
+        mMinMateQual = minMateQual;
+        mMinSglQual = minSglQual;
     }
 
     @NotNull
@@ -73,8 +74,25 @@ class RecoveredVariantFactory implements AutoCloseable
         }
 
         final List<RecoveredVariant> all = recoverAllVariantAtIndex(expectedOrientation, unexplainedCopyNumberChange, index, copyNumbers);
-        all.sort(QUALITY_COMPARATOR.reversed());
-        return all.isEmpty() ? Optional.empty() : Optional.of(all.get(0));
+
+        if(all.isEmpty())
+            return Optional.empty();
+
+        // all.sort(QUALITY_COMPARATOR.reversed());
+
+        RecoveredVariant topVariant = null;
+
+        for(RecoveredVariant variant : all)
+        {
+            if(topVariant == null)
+                topVariant = variant;
+            else if(topVariant.mate() == null && variant.mate() != null)
+                topVariant = variant;
+            else if(variant.context().getPhredScaledQual() > topVariant.context().getPhredScaledQual())
+                topVariant = variant;
+        }
+
+        return Optional.of(topVariant);
     }
 
     @NotNull
@@ -117,10 +135,11 @@ class RecoveredVariantFactory implements AutoCloseable
 
             if(structuralVariantLegPloidy.isPresent())
             {
-                final double ploidy = structuralVariantLegPloidy.get().averageImpliedPloidy();
+                double ploidy = structuralVariantLegPloidy.get().averageImpliedPloidy();
 
-                if(sv.start().orientation() == expectedOrientation && sufficientPloidy(ploidy, unexplainedCopyNumberChange)
-                        && hasPotential(sv, copyNumbers))
+                if(sv.start().orientation() == expectedOrientation
+                && sufficientPloidy(ploidy, unexplainedCopyNumberChange)
+                && hasPotential(sv, copyNumbers))
                 {
                     result.add(ImmutableRecoveredVariant.builder()
                             .context(potentialVariant)
@@ -138,8 +157,8 @@ class RecoveredVariantFactory implements AutoCloseable
 
     private boolean sufficientPloidy(double ploidy, double unexplainedCopyNumberChange)
     {
-        return Doubles.greaterOrEqual(ploidy, unexplainedCopyNumberChange * MIN_PLOIDY_AS_PERCENTAGE_OF_COPY_NUMBER_CHANGE)
-                && Doubles.greaterOrEqual(ploidy, MIN_PLOIDY);
+        return Doubles.greaterOrEqual(ploidy, unexplainedCopyNumberChange * RECOVERY_MIN_PLOIDY_PERC)
+                && Doubles.greaterOrEqual(ploidy, RECOVERY_MIN_PLOIDY);
     }
 
     private int uncertainty(@NotNull final VariantContext context)
@@ -151,7 +170,7 @@ class RecoveredVariantFactory implements AutoCloseable
 
     private int cipos(@NotNull final VariantContext context)
     {
-        int max = MIN_MATE_UNCERTAINTY;
+        int max = RECOVERY_MIN_MATE_UNCERTAINTY;
         if(context.hasAttribute("IMPRECISE"))
         {
 
@@ -180,19 +199,13 @@ class RecoveredVariantFactory implements AutoCloseable
 
         // This should never actually occur because we are searching within this area
         if(!isInRangeOfCopyNumberSegment(start, copyNumbers))
-        {
             return false;
-        }
 
         if(end == null)
-        {
-            return variant.qualityScore() >= MIN_SINGLE_QUAL_SCORE;
-        }
+            return variant.qualityScore() >= mMinSglQual;
 
-        if(variant.qualityScore() < MIN_MATE_QUAL_SCORE)
-        {
+        if(variant.qualityScore() < mMinMateQual)
             return false;
-        }
 
         long endPosition = end.position();
         StructuralVariantType type = variant.type();
@@ -201,7 +214,7 @@ class RecoveredVariantFactory implements AutoCloseable
             assert (variant.end() != null);
 
             long length = Math.abs(endPosition - variant.start().position());
-            return length >= MIN_LENGTH;
+            return length >= RECOVERY_MIN_LENGTH;
         }
 
         return true;

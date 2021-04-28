@@ -4,12 +4,14 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class PloidyDeviationTest {
+public class PloidyDeviationTest
+{
 
     private static final double EPSILON = 1e-3;
 
     @Test
-    public void testLowPurity() {
+    public void testLowPurity()
+    {
         final PloidyDeviation victim = new PloidyDeviation(0.03, 0, 1, 1, 0);
         assertEquals(0.326, victim.minorAlleleDeviation(0.4, 0.63, 0.1), EPSILON);
         assertEquals(0.599, victim.minorAlleleDeviation(0.4, 0.63, 0.2), EPSILON);
@@ -25,7 +27,8 @@ public class PloidyDeviationTest {
     }
 
     @Test
-    public void testMinDeviation() {
+    public void testMinDeviation()
+    {
         double minDeviation = 0.4;
         final PloidyDeviation victim = new PloidyDeviation(0.03, 0, 1, 1, minDeviation);
         assertEquals(Math.max(minDeviation, 0.326), victim.minorAlleleDeviation(0.4, 0.63, 0.1), EPSILON);
@@ -42,7 +45,8 @@ public class PloidyDeviationTest {
     }
 
     @Test
-    public void testHighPurity() {
+    public void testHighPurity()
+    {
         final PloidyDeviation victim = new PloidyDeviation(0.03, 0, 1, 1, 0);
         assertEquals(0.706, victim.minorAlleleDeviation(1, 0.63, 0.1), EPSILON);
         assertEquals(0.964, victim.minorAlleleDeviation(1, 0.63, 0.2), EPSILON);

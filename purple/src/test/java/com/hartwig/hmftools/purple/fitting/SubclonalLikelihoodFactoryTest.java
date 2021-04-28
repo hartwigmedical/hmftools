@@ -10,10 +10,12 @@ import com.hartwig.hmftools.purple.somatic.SubclonalLikelihood;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class SubclonalLikelihoodFactoryTest {
+public class SubclonalLikelihoodFactoryTest
+{
 
     @Test
-    public void testSubclonalLikelihood() {
+    public void testSubclonalLikelihood()
+    {
         final List<PeakModel> model = Lists.newArrayList(
                 createModel(true, true, 0.0, 1),
                 createModel(true, true, 0.05, 2),
@@ -30,24 +32,27 @@ public class SubclonalLikelihoodFactoryTest {
     }
 
     @Test
-    public void testIgnoreInvalid() {
+    public void testIgnoreInvalid()
+    {
         final List<PeakModel> model = Lists.newArrayList(
                 createModel(true, true, 0.05, 2),
                 createModel(false, false, 0.05, 1),
                 createModel(false, true, 0.05, 1));
 
         final SubclonalLikelihood victim = new SubclonalLikelihood(0.05, model);
-        assertEquals(2d/3d, victim.subclonalLikelihood(0.05), 0.01);
+        assertEquals(2d / 3d, victim.subclonalLikelihood(0.05), 0.01);
     }
 
     @Test
-    public void testOutsideRange() {
+    public void testOutsideRange()
+    {
         final SubclonalLikelihood victim = new SubclonalLikelihood(0.05, Lists.newArrayList());
         assertEquals(0, victim.subclonalLikelihood(0.05), 0.01);
     }
 
     @NotNull
-    private static PeakModel createModel(boolean subclonal, boolean isValid, double bucket, double bucketWeight) {
+    private static PeakModel createModel(boolean subclonal, boolean isValid, double bucket, double bucketWeight)
+    {
         return ModifiablePeakModel.create().setBucket(bucket).setBucketWeight(bucketWeight).setIsSubclonal(subclonal).setIsValid(isValid);
     }
 }

@@ -18,7 +18,8 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ClusterFactoryTest {
+public class ClusterFactoryTest
+{
 
     private static final String CHROM = "1";
 
@@ -26,12 +27,14 @@ public class ClusterFactoryTest {
     private static final int WINDOW = 1000;
 
     @Before
-    public void setup() {
+    public void setup()
+    {
         victim = new ClusterFactory(WINDOW);
     }
 
     @Test
-    public void testBoundaries() {
+    public void testBoundaries()
+    {
         final List<SVSegment> sv = variants(37383599, 37387153);
         final List<PCFPosition> ratios = createRatioBreaks(36965001, 37381001, 37382001, 37384001, 37387001, 37389001);
         final List<CobaltRatio> cobalt = cobalt(37380001, true, false, true, true, true, true, true);
@@ -45,7 +48,8 @@ public class ClusterFactoryTest {
     }
 
     @Test
-    public void testWindowStartWithRatios() {
+    public void testWindowStartWithRatios()
+    {
         final List<CobaltRatio> cobalt = cobalt(37380001, true, false, true, true, true, true, true);
 
         assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37381001, 6, cobalt));
@@ -65,7 +69,8 @@ public class ClusterFactoryTest {
     }
 
     @Test
-    public void testWindowStartWithoutRatios() {
+    public void testWindowStartWithoutRatios()
+    {
         final List<CobaltRatio> cobalt = Lists.newArrayList();
 
         assertEquals(37380002, victim.earliestDetectableCopyNumberChangePosition(37381001, -1, cobalt));
@@ -85,7 +90,8 @@ public class ClusterFactoryTest {
     }
 
     @Test
-    public void testDefaultClusterBounds() {
+    public void testDefaultClusterBounds()
+    {
         final SVSegment sv = createSVPosition(15532);
         final List<Cluster> clusters = victim.cluster(Lists.newArrayList(sv), Collections.emptyList(), Collections.emptyList());
         assertEquals(1, clusters.size());
@@ -93,7 +99,8 @@ public class ClusterFactoryTest {
     }
 
     @Test
-    public void testClusterBoundsWithRatios() {
+    public void testClusterBoundsWithRatios()
+    {
         final List<SVSegment> sv = variants(15532);
         final List<CobaltRatio> ratios = createRatios();
         final List<Cluster> clusters = victim.cluster(sv, Collections.emptyList(), ratios);
@@ -102,7 +109,8 @@ public class ClusterFactoryTest {
     }
 
     @Test
-    public void testTwoSVInsideCluster() {
+    public void testTwoSVInsideCluster()
+    {
         final List<SVSegment> sv = variants(15532, 16771);
         final List<Cluster> clusters = victim.cluster(sv, Collections.emptyList(), Collections.emptyList());
         assertEquals(1, clusters.size());
@@ -110,7 +118,8 @@ public class ClusterFactoryTest {
     }
 
     @Test
-    public void testTwoSVOutsideCluster() {
+    public void testTwoSVOutsideCluster()
+    {
         final List<SVSegment> sv = variants(15532, 17881);
         final List<Cluster> clusters = victim.cluster(sv, Collections.emptyList(), Collections.emptyList());
         assertEquals(2, clusters.size());
@@ -119,7 +128,8 @@ public class ClusterFactoryTest {
     }
 
     @Test
-    public void testTwoSVInsideClusterWithRatio() {
+    public void testTwoSVInsideClusterWithRatio()
+    {
         final List<SVSegment> sv = variants(15532, 18881);
         final List<CobaltRatio> ratios = createRatios();
         final List<Cluster> clusters = victim.cluster(sv, Collections.emptyList(), ratios);
@@ -127,24 +137,29 @@ public class ClusterFactoryTest {
         assertVariantsInCluster(clusters.get(0), 12002, 15532, 18881);
     }
 
-    private static void assertRatioInCluster(final Cluster cluster, long start, long position) {
+    private static void assertRatioInCluster(final Cluster cluster, long start, long position)
+    {
         assertCluster(cluster, start, null, null, position, position);
     }
 
-    private static void assertRatioInCluster(final Cluster cluster, long start, long firstPosition, long finalPosition) {
+    private static void assertRatioInCluster(final Cluster cluster, long start, long firstPosition, long finalPosition)
+    {
         assertCluster(cluster, start, null, null, firstPosition, finalPosition);
     }
 
-    private static void assertVariantInCluster(final Cluster cluster, long start, long position) {
+    private static void assertVariantInCluster(final Cluster cluster, long start, long position)
+    {
         assertCluster(cluster, start, position, position, null, null);
     }
 
-    private static void assertVariantsInCluster(final Cluster cluster, long start, long firstPosition, long finalPosition) {
+    private static void assertVariantsInCluster(final Cluster cluster, long start, long firstPosition, long finalPosition)
+    {
         assertCluster(cluster, start, firstPosition, finalPosition, null, null);
     }
 
     private static void assertCluster(@NotNull final Cluster cluster, long start, @Nullable Long firstVariant, @Nullable Long finalVariant,
-            @Nullable Long firstRatio, @Nullable Long finalRatio) {
+            @Nullable Long firstRatio, @Nullable Long finalRatio)
+    {
         assertEquals(start, cluster.start());
         assertEquals(Math.max(finalVariant == null ? 0 : finalVariant, finalRatio == null ? 0 : finalRatio), cluster.end());
         assertEquals(firstVariant, firstVariant(cluster));
@@ -154,30 +169,36 @@ public class ClusterFactoryTest {
     }
 
     @NotNull
-    private static List<CobaltRatio> createRatios() {
+    private static List<CobaltRatio> createRatios()
+    {
         return cobalt(11001, true, true, false, false, true, false, false, true);
     }
 
     @NotNull
-    private static CobaltRatio cobalt(long position, boolean useable) {
+    private static CobaltRatio cobalt(long position, boolean useable)
+    {
         return ratio(position, useable ? 1 : -1);
     }
 
     @NotNull
-    private static CobaltRatio ratio(long position, double ratio) {
+    private static CobaltRatio ratio(long position, double ratio)
+    {
         return PurpleTestUtils.cobalt(CHROM, position, ratio).build();
     }
 
     @NotNull
-    private static SVSegment createSVPosition(long position) {
+    private static SVSegment createSVPosition(long position)
+    {
         return ImmutableSVSegment.builder().chromosome(CHROM).position(position).type(StructuralVariantType.BND).build();
     }
 
     @NotNull
-    private static List<CobaltRatio> cobalt(long startPosition, boolean... usable) {
+    private static List<CobaltRatio> cobalt(long startPosition, boolean... usable)
+    {
         final List<CobaltRatio> result = Lists.newArrayList();
         int offset = 0;
-        for (boolean isUsable : usable) {
+        for(boolean isUsable : usable)
+        {
             result.add(cobalt(startPosition + offset, isUsable));
             offset += WINDOW;
         }
@@ -185,9 +206,11 @@ public class ClusterFactoryTest {
     }
 
     @NotNull
-    private static List<SVSegment> variants(long... positions) {
+    private static List<SVSegment> variants(long... positions)
+    {
         final List<SVSegment> result = Lists.newArrayList();
-        for (long position : positions) {
+        for(long position : positions)
+        {
             result.add(createSVPosition(position));
         }
 
@@ -195,9 +218,11 @@ public class ClusterFactoryTest {
     }
 
     @NotNull
-    private static List<PCFPosition> createRatioBreaks(long... positions) {
+    private static List<PCFPosition> createRatioBreaks(long... positions)
+    {
         final List<PCFPosition> result = Lists.newArrayList();
-        for (long position : positions) {
+        for(long position : positions)
+        {
             result.add(ratio(position));
         }
 
@@ -205,7 +230,8 @@ public class ClusterFactoryTest {
     }
 
     @NotNull
-    private static PCFPosition ratio(long position) {
+    private static PCFPosition ratio(long position)
+    {
         return ImmutablePCFPosition.builder()
                 .chromosome(CHROM)
                 .position(position)
@@ -216,22 +242,26 @@ public class ClusterFactoryTest {
     }
 
     @Nullable
-    private static Long firstVariant(@NotNull Cluster cluster) {
+    private static Long firstVariant(@NotNull Cluster cluster)
+    {
         return cluster.variants().isEmpty() ? null : cluster.variants().get(0).position();
     }
 
     @Nullable
-    private static Long finalVariant(@NotNull Cluster cluster) {
+    private static Long finalVariant(@NotNull Cluster cluster)
+    {
         return cluster.variants().isEmpty() ? null : cluster.variants().get(cluster.variants().size() - 1).position();
     }
 
     @Nullable
-    private static Long firstRatio(@NotNull Cluster cluster) {
+    private static Long firstRatio(@NotNull Cluster cluster)
+    {
         return cluster.ratios().isEmpty() ? null : cluster.ratios().get(0).position();
     }
 
     @Nullable
-    private static Long finalRatio(@NotNull Cluster cluster) {
+    private static Long finalRatio(@NotNull Cluster cluster)
+    {
         return cluster.ratios().isEmpty() ? null : cluster.ratios().get(cluster.ratios().size() - 1).position();
     }
 }

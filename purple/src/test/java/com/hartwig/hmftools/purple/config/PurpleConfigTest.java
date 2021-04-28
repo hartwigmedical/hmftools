@@ -10,7 +10,8 @@ public class PurpleConfigTest
     private static final double EPSILON = 1e-10;
 
     @Test
-    public void testDefaultValues() {
+    public void testDefaultValues()
+    {
         assertEquals(0.08, FittingConfig.MIN_PURITY_DEFAULT, EPSILON);
         assertEquals(1.0, FittingConfig.MAX_PURITY_DEFAULT, EPSILON);
         assertEquals(1, FittingConfig.MIN_PLOIDY_DEFAULT, EPSILON);

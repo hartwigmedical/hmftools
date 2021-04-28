@@ -27,6 +27,7 @@ public class PurpleConfig
 
     public final FittingConfig Fitting;
     public final SomaticFitConfig SomaticFitting;
+    public final MiscConfig Misc;
     public final ChartConfig Charting;
 
     private boolean mIsValid;
@@ -116,6 +117,7 @@ public class PurpleConfig
         Charting = new ChartConfig(cmd, OutputDir);
         Fitting = new FittingConfig(cmd);
         SomaticFitting = new SomaticFitConfig(cmd);
+        Misc = new MiscConfig(cmd);
     }
 
     public boolean isValid() { return mIsValid; }
@@ -147,6 +149,7 @@ public class PurpleConfig
         addDatabaseCmdLineArgs(options);
         FittingConfig.addOptions(options);
         SomaticFitConfig.addOptions(options);
+        MiscConfig.addOptions(options);
         ReferenceData.addOptions(options);
         ChartConfig.addOptions(options);
         SampleDataFiles.addOptions(options);

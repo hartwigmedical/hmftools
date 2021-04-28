@@ -18,12 +18,14 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ExtendDiploidBAFTest {
+public class ExtendDiploidBAFTest
+{
 
     private static final double EPSILON = 1e-10;
 
     @Test
-    public void testDUPWithLOH() {
+    public void testDUPWithLOH()
+    {
         final Map<Long, Long> dupMap = Maps.newHashMap();
         dupMap.put(1001L, 2001L);
         final ExtendDiploidBAF victim = new ExtendDiploidBAF(dupMap);
@@ -41,7 +43,8 @@ public class ExtendDiploidBAFTest {
     }
 
     @Test
-    public void testTargetAllele() {
+    public void testTargetAllele()
+    {
         assertAlleleTarget(1, 0.5, 0.5, 0);
         assertAlleleTarget(1, 1, 1, 0);
         assertAlleleTarget(1, 2, 1, 1);
@@ -49,7 +52,8 @@ public class ExtendDiploidBAFTest {
         assertAlleleTarget(1, 3, 2, 1);
     }
 
-    private void assertAlleleTarget(double majorTarget, double copyNumber, double expectedMajor, double expectedMinor) {
+    private void assertAlleleTarget(double majorTarget, double copyNumber, double expectedMajor, double expectedMinor)
+    {
         double baf = ExtendDiploidBAF.bafForTargetAllele(majorTarget, copyNumber);
         double actualMajor = baf * copyNumber;
         double actualMinor = (1 - baf) * copyNumber;
@@ -58,7 +62,8 @@ public class ExtendDiploidBAFTest {
     }
 
     @Test
-    public void testShortArm() {
+    public void testShortArm()
+    {
         CombinedRegion cr1 = create(1, 1000, SegmentSupport.NONE, 0);
         CombinedRegion cr2 = create(1001, 2000, SegmentSupport.NONE, 0);
         CombinedRegion cr3 = create(2001, 3000, SegmentSupport.CENTROMERE, 100);
@@ -71,7 +76,8 @@ public class ExtendDiploidBAFTest {
     }
 
     @Test
-    public void testTinyArmWithMultipleSources() {
+    public void testTinyArmWithMultipleSources()
+    {
         CombinedRegion cr1 = create(1, 1000, SegmentSupport.NONE, 1000, 1, 1.9);
         CombinedRegion cr2 = create(1001, 1030, SegmentSupport.NONE, 0, 0, 2.2);
         CombinedRegion cr2a = create(1001, 1031, SegmentSupport.NONE, 0, 0, 2.2);
@@ -87,7 +93,8 @@ public class ExtendDiploidBAFTest {
     }
 
     @Test
-    public void testSmallRegionWithinLargeLOHRegion() {
+    public void testSmallRegionWithinLargeLOHRegion()
+    {
         CombinedRegion cr1 = create(80_000_000, 100_000_000, SegmentSupport.NONE, 1000, 0.66, 3);
         CombinedRegion cr2 = create(100_000_001, 101_000_000, SegmentSupport.NONE, 1000, 1, 2.0);
         CombinedRegion cr3 = create(101_000_001, 101_001_000, SegmentSupport.NONE, 0, 0, 3.0);
@@ -98,7 +105,8 @@ public class ExtendDiploidBAFTest {
     }
 
     @Test
-    public void testSmallRegionWithinLargeLOHRegionAfter() {
+    public void testSmallRegionWithinLargeLOHRegionAfter()
+    {
         CombinedRegion cr1 = create(100_000_001, 101_000_000, SegmentSupport.NONE, 1000, 1, 2.0);
         CombinedRegion cr2 = create(101_000_001, 101_001_000, SegmentSupport.NONE, 0, 0, 3.0);
         CombinedRegion cr3 = create(101_001_001, 102_001_000, SegmentSupport.NONE, 1000, 1, 2.0);
@@ -109,7 +117,8 @@ public class ExtendDiploidBAFTest {
     }
 
     @Test
-    public void testMinorOrMajorMovedTargetPloidyWithCommonMinor() {
+    public void testMinorOrMajorMovedTargetPloidyWithCommonMinor()
+    {
         final FittedRegion left = create(1.01, 2.01);
         final FittedRegion right = create(1.02, 3.02);
         final FittedRegion sourceLikeLeft = create(1.03, 2.03);
@@ -123,7 +132,8 @@ public class ExtendDiploidBAFTest {
     }
 
     @Test
-    public void testMinorOrMajorMovedTargetPloidyWithCommonMajor() {
+    public void testMinorOrMajorMovedTargetPloidyWithCommonMajor()
+    {
         final FittedRegion left = create(1.01, 2.01);
         final FittedRegion right = create(0.02, 2.02);
         final FittedRegion sourceLikeLeft = create(1.03, 2.03);
@@ -137,7 +147,8 @@ public class ExtendDiploidBAFTest {
     }
 
     @Test
-    public void testMinorOrMajorMovedTargetPloidyWithMajorMinorCross() {
+    public void testMinorOrMajorMovedTargetPloidyWithMajorMinorCross()
+    {
         final FittedRegion left = create(1.01, 2.01);
         final FittedRegion right = create(2.02, 3.02);
         final FittedRegion sourceLikeLeft = create(1.03, 2.03);
@@ -151,7 +162,8 @@ public class ExtendDiploidBAFTest {
     }
 
     @Test
-    public void testMinorOrMajorMovedTargetPloidyWithMinorMajorCross() {
+    public void testMinorOrMajorMovedTargetPloidyWithMinorMajorCross()
+    {
         final FittedRegion left = create(1.01, 2.01);
         final FittedRegion right = create(0.02, 1.02);
         final FittedRegion sourceLikeLeft = create(0.03, 1.03);
@@ -165,7 +177,8 @@ public class ExtendDiploidBAFTest {
     }
 
     private void assertInferRegion(@NotNull final ExtendDiploidBAF.InferRegion victim, int expectedLeftSource, int expectedLeftTarget,
-            int expectedRightTarget, int expectedRightSource) {
+            int expectedRightTarget, int expectedRightSource)
+    {
         assertEquals(expectedLeftSource, victim.leftSourceIndex);
         assertEquals(expectedLeftTarget, victim.leftTargetIndex);
         assertEquals(expectedRightTarget, victim.rightTargetIndex);
@@ -173,7 +186,8 @@ public class ExtendDiploidBAFTest {
     }
 
     @NotNull
-    private static CombinedRegion create(long start, long end, SegmentSupport support, int bafCount) {
+    private static CombinedRegion create(long start, long end, SegmentSupport support, int bafCount)
+    {
         return new CombinedRegionImpl(createDefaultFittedRegion("1", start, end)
                 .support(support)
                 .bafCount(bafCount)
@@ -181,7 +195,8 @@ public class ExtendDiploidBAFTest {
     }
 
     @NotNull
-    private static CombinedRegion create(long start, long end, SegmentSupport support, int bafCount, double baf, double copyNumber) {
+    private static CombinedRegion create(long start, long end, SegmentSupport support, int bafCount, double baf, double copyNumber)
+    {
         return new CombinedRegionImpl(createDefaultFittedRegion("1", start, end)
                 .support(support)
                 .bafCount(bafCount)
@@ -191,7 +206,8 @@ public class ExtendDiploidBAFTest {
     }
 
     @NotNull
-    private static FittedRegion create(double minorAllele, double majorAllele) {
+    private static FittedRegion create(double minorAllele, double majorAllele)
+    {
         double copyNumber = minorAllele + majorAllele;
         double baf = majorAllele / copyNumber;
 

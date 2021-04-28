@@ -12,14 +12,15 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class StructuralVariantCacheTest
 {
-
     @Test
-    public void testDummySupplierInstantiatesSuccessfully() {
+    public void testDummySupplierInstantiatesSuccessfully()
+    {
         new StructuralVariantCache();
     }
 
     @Test
-    public void testHeaderSamplesAreNotSorted() {
+    public void testHeaderSamplesAreNotSorted()
+    {
         final VCFHeader outOfOrderHeader = new VCFHeader(Collections.emptySet(), Lists.newArrayList("BBBBB", "AAAAA"));
         final VCFHeader victim = StructuralVariantCache.generateOutputHeader("2.23", outOfOrderHeader);
         assertEquals(2, victim.getGenotypeSamples().size());

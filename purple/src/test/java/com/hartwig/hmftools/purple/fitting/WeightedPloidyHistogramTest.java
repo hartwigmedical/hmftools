@@ -14,17 +14,20 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class WeightedPloidyHistogramTest {
+public class WeightedPloidyHistogramTest
+{
 
     @Test
-    public void testMaxBucket() {
+    public void testMaxBucket()
+    {
         final double max = 5;
         final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(max, 0.01);
         victim.histogram(Lists.newArrayList(WeightedPloidy.create(max, 20, 40)));
     }
 
     @Test
-    public void testBucketWithOffset() {
+    public void testBucketWithOffset()
+    {
         final WeightedPloidyHistogram negativeOffset = new WeightedPloidyHistogram(10, 0.05, -0.02);
         assertEquals(1, negativeOffset.bucket(0.05));
         assertEquals(2, negativeOffset.bucket(0.06));
@@ -41,7 +44,8 @@ public class WeightedPloidyHistogramTest {
     }
 
     @Test
-    public void testBucketNoOffset() {
+    public void testBucketNoOffset()
+    {
         final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(10, 0.01);
         assertEquals(0, victim.bucket(0.00499));
         assertEquals(1, victim.bucket(0.00500));
@@ -54,7 +58,8 @@ public class WeightedPloidyHistogramTest {
     }
 
     @Test
-    public void testHistogramConstruction() {
+    public void testHistogramConstruction()
+    {
         final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(10, 0.01);
         final List<ModifiableWeightedPloidy> ploidies = readResource("ploidies.tsv");
         double[] histogram = victim.histogram(ploidies);
@@ -66,7 +71,8 @@ public class WeightedPloidyHistogramTest {
     }
 
     @Test
-    public void testHistogramConstructionWithNoOffset() {
+    public void testHistogramConstructionWithNoOffset()
+    {
         final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(10, 0.05);
         final List<ModifiableWeightedPloidy> ploidies = readResource("ploidies.tsv");
         double[] histogram = victim.histogram(ploidies);
@@ -77,7 +83,8 @@ public class WeightedPloidyHistogramTest {
     }
 
     @Test
-    public void testHistogramConstructionWithOffset() {
+    public void testHistogramConstructionWithOffset()
+    {
         final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(10, 0.05, 0.02);
         final List<ModifiableWeightedPloidy> ploidies = readResource("ploidies.tsv");
         double[] histogram = victim.histogram(ploidies);
@@ -88,20 +95,23 @@ public class WeightedPloidyHistogramTest {
     }
 
     @Test
-    public void testHistogramPeak() {
-        assertEquals(2,  WeightedPloidyHistogram.peakBucket(1, new double[]{10, 11, 1, 18, 8}));
-        assertEquals(3,  WeightedPloidyHistogram.peakBucket(1, new double[]{10, 11, 0, 18, 8}));
+    public void testHistogramPeak()
+    {
+        assertEquals(2, WeightedPloidyHistogram.peakBucket(1, new double[] { 10, 11, 1, 18, 8 }));
+        assertEquals(3, WeightedPloidyHistogram.peakBucket(1, new double[] { 10, 11, 0, 18, 8 }));
 
-        assertEquals(1,  WeightedPloidyHistogram.peakBucket(2, new double[]{10, 11, 0, 18, 8}));
+        assertEquals(1, WeightedPloidyHistogram.peakBucket(2, new double[] { 10, 11, 0, 18, 8 }));
     }
 
     @NotNull
-    public static List<ModifiableWeightedPloidy> readResource(@NotNull final String file) {
+    public static List<ModifiableWeightedPloidy> readResource(@NotNull final String file)
+    {
         final InputStream inputStream = WeightedPloidyHistogramTest.class.getResourceAsStream("/fitting/" + file);
         final List<String> lines = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList());
 
         final List<ModifiableWeightedPloidy> result = Lists.newArrayList();
-        for (String line : lines) {
+        for(String line : lines)
+        {
             String[] values = line.split("\t");
 
             ModifiableWeightedPloidy ploidy = ModifiableWeightedPloidy.create()
@@ -110,7 +120,8 @@ public class WeightedPloidyHistogramTest {
                     .setTotalReadCount(Integer.parseInt(values[2]))
                     .setWeight(1);
 
-            if (Doubles.lessThan(Double.parseDouble(values[0]), 10)) {
+            if(Doubles.lessThan(Double.parseDouble(values[0]), 10))
+            {
                 result.add(ploidy);
             }
         }

@@ -11,30 +11,34 @@ import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class SomaticDeviationTest {
+public class SomaticDeviationTest
+{
 
     @Test
-    public void testMaxPloidy() {
+    public void testMaxPloidy()
+    {
         PurityAdjuster purityAdjuster = new PurityAdjusterTypicalChromosome(Gender.FEMALE, 0.12, 0.98);
-        int maxReads = SomaticDeviation.INSTANCE.maxConceivableReads(purityAdjuster, 2, depth(18, 55),  3.0965, 2.2021);
+        int maxReads = SomaticDeviation.INSTANCE.maxConceivableReads(purityAdjuster, 2, depth(18, 55), 3.0965, 2.2021);
         assertEquals(16, maxReads);
 
-        double maxPloidy = SomaticDeviation.INSTANCE.maxConceivablePloidy(purityAdjuster, 2, depth(18, 55),  3.0965, 2.2021);
+        double maxPloidy = SomaticDeviation.INSTANCE.maxConceivablePloidy(purityAdjuster, 2, depth(18, 55), 3.0965, 2.2021);
         assertEquals(5.16, maxPloidy, 0.01);
 
-        double deviationFromMax = SomaticDeviation.INSTANCE.deviationFromMax(purityAdjuster, 2, depth(18, 55),  3.0965, 2.2021);
+        double deviationFromMax = SomaticDeviation.INSTANCE.deviationFromMax(purityAdjuster, 2, depth(18, 55), 3.0965, 2.2021);
         assertEquals(0.65, deviationFromMax, 0.01);
     }
 
     @Test
-    public void testMaxConceivableReadsIsZeroWithNegativeTumorCopyNumber() {
+    public void testMaxConceivableReadsIsZeroWithNegativeTumorCopyNumber()
+    {
         PurityAdjuster purityAdjuster = new PurityAdjusterTypicalChromosome(Gender.FEMALE, 0.12, 0.98);
-        int maxReads = SomaticDeviation.INSTANCE.maxConceivableReads(purityAdjuster, 2, depth(18, 55),  -0.1, -0.1);
+        int maxReads = SomaticDeviation.INSTANCE.maxConceivableReads(purityAdjuster, 2, depth(18, 55), -0.1, -0.1);
         assertEquals(0, maxReads);
     }
 
     @NotNull
-    private static AllelicDepth depth(int alleleReadCount, int totalReadCount) {
+    private static AllelicDepth depth(int alleleReadCount, int totalReadCount)
+    {
         return ImmutableAllelicDepthImpl.builder().alleleReadCount(alleleReadCount).totalReadCount(totalReadCount).build();
     }
 }

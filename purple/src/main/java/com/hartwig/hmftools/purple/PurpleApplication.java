@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurityAdjusterAbnormalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.purple.config.MiscConfig;
 import com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.Gender;
@@ -60,9 +61,6 @@ import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.config.SampleData;
 import com.hartwig.hmftools.purple.config.SampleDataFiles;
 import com.hartwig.hmftools.purple.config.SomaticFitConfig;
-import com.hartwig.hmftools.purple.fitting.BestFitFactory;
-import com.hartwig.hmftools.purple.fitting.PeakModel;
-import com.hartwig.hmftools.purple.fitting.PeakModelFile;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.purple.germline.GermlineVariants;
 import com.hartwig.hmftools.purple.plot.Charts;
@@ -385,7 +383,8 @@ public class PurpleApplication
 
         PPL_LOGGER.info("Loading recovery candidates from {}", sampleDataFiles.RecoveredSvVcfFile);
 
-        try (final RecoverStructuralVariants recovery = new RecoverStructuralVariants(purityAdjuster, sampleDataFiles.RecoveredSvVcfFile, copyNumbers))
+        try (final RecoverStructuralVariants recovery = new RecoverStructuralVariants(
+                mConfig.Misc, purityAdjuster, sampleDataFiles.RecoveredSvVcfFile, copyNumbers))
         {
             final Collection<VariantContext> recoveredVariants = recovery.recoverVariants(sampleData.SvCache.variants());
 

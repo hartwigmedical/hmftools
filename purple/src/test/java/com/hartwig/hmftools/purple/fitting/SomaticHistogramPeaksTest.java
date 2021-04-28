@@ -49,7 +49,7 @@ public class SomaticHistogramPeaksTest
     private static void addVafEntry(final List<WeightedPloidy> weightedPloidies, double vaf, double weight, int multiples)
     {
         int totalReadCount = 100;
-        int alleleReadCount = (int)round(vaf * totalReadCount);
+        int alleleReadCount = (int) round(vaf * totalReadCount);
 
         for(int i = 0; i < multiples; ++i)
         {

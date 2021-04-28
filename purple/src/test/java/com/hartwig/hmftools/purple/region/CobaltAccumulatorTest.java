@@ -15,27 +15,32 @@ import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class CobaltAccumulatorTest {
+public class CobaltAccumulatorTest
+{
 
     private static final String CHROMOSOME = "1";
     private static final int WINDOW_SIZE = 1000;
 
     @Test
-    public void testIncludeInside() {
+    public void testIncludeInside()
+    {
         assertTumorCount(2, 5001, 10000, 4001, 5001, 9001, 10001);
     }
 
     @Test
-    public void testExcludePartialBefore() {
+    public void testExcludePartialBefore()
+    {
         assertTumorCount(1, 5301, 10000, 4001, 5001, 9001, 10001);
     }
 
     @Test
-    public void testExcludePartialAfter() {
+    public void testExcludePartialAfter()
+    {
         assertTumorCount(1, 5001, 9999, 4001, 5001, 9001, 10001);
     }
 
-    private void assertTumorCount(int expectedCount, long regionStart, long regionEnd, long... ratios) {
+    private void assertTumorCount(int expectedCount, long regionStart, long regionEnd, long... ratios)
+    {
         final GenomeRegion region = GenomeRegions.create(CHROMOSOME, regionStart, regionEnd);
         final ObservedRegionFactory.CobaltAccumulator accumulator = new ObservedRegionFactory.CobaltAccumulator(WINDOW_SIZE, region);
         final GenomePositionSelector<CobaltRatio> selector = createSelector(ratios);
@@ -44,9 +49,11 @@ public class CobaltAccumulatorTest {
     }
 
     @NotNull
-    private static GenomePositionSelector<CobaltRatio> createSelector(long... ratioPositions) {
+    private static GenomePositionSelector<CobaltRatio> createSelector(long... ratioPositions)
+    {
         List<CobaltRatio> ratios = Lists.newArrayList();
-        for (long ratioPosition : ratioPositions) {
+        for(long ratioPosition : ratioPositions)
+        {
             ratios.add(ratio(ratioPosition));
         }
 
@@ -54,7 +61,8 @@ public class CobaltAccumulatorTest {
     }
 
     @NotNull
-    private static CobaltRatio ratio(long position) {
+    private static CobaltRatio ratio(long position)
+    {
         return PurpleTestUtils.cobalt(CHROMOSOME, position, 1).build();
     }
 }

@@ -5,12 +5,14 @@ import static org.junit.Assert.assertEquals;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class EventPenaltyTest {
+public class EventPenaltyTest
+{
 
     private static final double EPSILON = 1e-10;
 
     @Test
-    public void testNew() {
+    public void testNew()
+    {
         assertNew(2.0, "A");
         assertNew(1.0, "AB");
         assertNew(3.0, "AA");
@@ -22,7 +24,8 @@ public class EventPenaltyTest {
         assertNew(4.0, "AAABBB");
     }
 
-    private static void assertNew(double expectedResult, @NotNull final String descriptiveBAF) {
+    private static void assertNew(double expectedResult, @NotNull final String descriptiveBAF)
+    {
         int major = (int) descriptiveBAF.chars().filter(x -> x == 'A').count();
         int minor = (int) descriptiveBAF.chars().filter(x -> x == 'B').count();
         assertEquals(expectedResult, EventPenalty.penalty(1, minor, major), EPSILON);

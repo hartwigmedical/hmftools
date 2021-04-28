@@ -12,10 +12,12 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.junit.Test;
 
-public class PopulateUnknownTest {
+public class PopulateUnknownTest
+{
 
     @Test
-    public void testJoinUnknownRegions() {
+    public void testJoinUnknownRegions()
+    {
         final CobaltChromosomes female = CobaltTestUtils.female();
 
         final CombinedRegion region1 = ExtendLongArmTest.createCombinedRegion(1, 1000, 0, 0, SegmentSupport.NONE);

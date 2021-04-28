@@ -15,12 +15,13 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class BestFitTest {
-
+public class BestFitTest
+{
     private final Random random = new Random();
 
     @Test
-    public void testBestFitPerPurity() {
+    public void testBestFitPerPurity()
+    {
         final FittedPurity fp1 = createRandomPurity(0.3, 0.3, 1.9);
         final FittedPurity fp2 = createRandomPurity(0.3, 0.2, 2.3);
         final FittedPurity fp3 = createRandomPurity(0.4, 0.4, 2);
@@ -36,7 +37,8 @@ public class BestFitTest {
     }
 
     @Test
-    public void testMostDiploidPurity() {
+    public void testMostDiploidPurity()
+    {
         final FittedPurity fp1 = createRandomPurity(0.3, 0.3, 2.3);
         final FittedPurity fp2 = createRandomPurity(0.3, 0.2, 1.9);
         final FittedPurity fp3 = createRandomPurity(0.4, 0.4, 1.8);

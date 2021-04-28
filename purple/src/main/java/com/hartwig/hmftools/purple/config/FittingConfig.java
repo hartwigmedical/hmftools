@@ -84,7 +84,7 @@ public class FittingConfig
         PloidyPenaltyBaselineDeviation = getConfigValue(cmd, PLOIDY_PENALTY_MIN, PLOIDY_PENALTY_MIN_DEFAULT);
     }
 
-    static void addOptions(@NotNull Options options)
+    public static void addOptions(@NotNull Options options)
     {
         options.addOption(MIN_PURITY, true, "Minimum purity (default " + MIN_PURITY_DEFAULT + ")");
         options.addOption(MAX_PURITY, true, "Maximum purity (default " + MAX_PURITY_DEFAULT + ")");

@@ -19,14 +19,17 @@ import com.hartwig.hmftools.purple.fitting.WholeGenomeDuplication;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class WholeGenomeDuplicationTest {
+public class WholeGenomeDuplicationTest
+{
 
     private static final double EPSILON = 1e-10;
 
     @Test
-    public void testKeySet() {
+    public void testKeySet()
+    {
         final List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
-        for (int i = 1; i <= 22; i++) {
+        for(int i = 1; i <= 22; i++)
+        {
             copyNumbers.add(create("1", 3, 1000));
             copyNumbers.add(create(String.valueOf(i), 1, 1000));
         }
@@ -35,7 +38,8 @@ public class WholeGenomeDuplicationTest {
     }
 
     @Test
-    public void testAverageMajorAlleleCopyNumberIsBafCountWeighted() {
+    public void testAverageMajorAlleleCopyNumberIsBafCountWeighted()
+    {
         PurpleCopyNumber one = create("1", 1, 1000);
         PurpleCopyNumber two = create("1", 2, 3000);
         PurpleCopyNumber three = create("1", 3, 0);
@@ -44,9 +48,11 @@ public class WholeGenomeDuplicationTest {
     }
 
     @Test
-    public void testSexChromosomesExcluded() {
+    public void testSexChromosomesExcluded()
+    {
         final List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
-        for (int i = 1; i < MIN_DUPLICATED_AUTOSOMES; i++) {
+        for(int i = 1; i < MIN_DUPLICATED_AUTOSOMES; i++)
+        {
             copyNumbers.add(create(String.valueOf(i), MIN_AVERAGE_PLOIDY, 1));
         }
         assertFalse(wholeGenomeDuplication(copyNumbers));
@@ -60,7 +66,8 @@ public class WholeGenomeDuplicationTest {
     }
 
     @NotNull
-    private static PurpleCopyNumber create(@NotNull String chromosome, double majorAllelePloidy, int bafCount) {
+    private static PurpleCopyNumber create(@NotNull String chromosome, double majorAllelePloidy, int bafCount)
+    {
         return createCopyNumber(chromosome, 1, 1, majorAllelePloidy).averageActualBAF(1).bafCount(bafCount).build();
     }
 }

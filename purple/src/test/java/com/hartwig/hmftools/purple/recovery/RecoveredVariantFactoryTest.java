@@ -14,25 +14,29 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
 
-public class RecoveredVariantFactoryTest {
+public class RecoveredVariantFactoryTest
+{
 
     private static final String SAMPLE = "sample";
 
     private VCFCodec codec;
 
     @Before
-    public void setup() {
+    public void setup()
+    {
         codec = createTestCodec();
     }
 
     @Test
-    public void testMateLocation() {
+    public void testMateLocation()
+    {
         assertEquals("17:59493156", RecoveredVariantFactory.mateLocation("C[17:59493156["));
         assertEquals("17:59493156", RecoveredVariantFactory.mateLocation("]17:59493156]C"));
     }
 
     @Test
-    public void testFilterFilter() {
+    public void testFilterFilter()
+    {
         final String eligible =
                 "16	33040204	gridss81_16816h	G	]16:33040203]GGCGGCGGGGCAA	343.95	BPI.Filter.SRSupportZero;someFilter	SVTYPE=BND	GT\t./.";
         final String passing =
@@ -44,14 +48,16 @@ public class RecoveredVariantFactoryTest {
         assertFalse(RecoveredVariantFactory.isAppropriatelyFiltered(codec.decode(passing)));
 
         assertTrue(RecoveredVariantFactory.isAppropriatelyFiltered(codec.decode(ponFiltered)));
-        for (String filter : RecoveredVariantFactory.DO_NOT_RESCUE) {
+        for(String filter : RecoveredVariantFactory.DO_NOT_RESCUE)
+        {
             final String ineligible = ponFiltered.replace("PON", filter);
             assertFalse(RecoveredVariantFactory.isAppropriatelyFiltered(codec.decode(ineligible)));
         }
     }
 
     @NotNull
-    private static VCFCodec createTestCodec() {
+    private static VCFCodec createTestCodec()
+    {
         VCFCodec codec = new VCFCodec();
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet(SAMPLE));
         codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);

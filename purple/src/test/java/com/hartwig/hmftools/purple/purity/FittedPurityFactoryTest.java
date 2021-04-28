@@ -6,12 +6,14 @@ import java.util.List;
 
 import org.junit.Test;
 
-public class FittedPurityFactoryTest {
+public class FittedPurityFactoryTest
+{
 
     private static final double EPSILON = 1e-10;
 
     @Test
-    public void testPloidyRange() {
+    public void testPloidyRange()
+    {
         final List<Double> oneToThree = FittedPurityFactory.ploidyRange(1, 3);
         assertEquals(101, oneToThree.size());
         assertEquals(1d, oneToThree.get(0), EPSILON);
@@ -36,7 +38,8 @@ public class FittedPurityFactoryTest {
     }
 
     @Test
-    public void testFixedPloidyRange() {
+    public void testFixedPloidyRange()
+    {
         double fixedPloidy = 0.3456;
         final List<Double> fixed = FittedPurityFactory.ploidyRange(fixedPloidy, fixedPloidy);
         assertEquals(1, fixed.size());
