@@ -27,7 +27,7 @@ public final class VCFWriterFactory {
 
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Lists.newArrayList());
         header.addMetaDataLine(new VCFInfoHeaderLine("input", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "input"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("source", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "sources"));
+        header.addMetaDataLine(new VCFInfoHeaderLine("sources", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "sources"));
 
         writer.writeHeader(header);
         return writer;
