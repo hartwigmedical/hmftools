@@ -99,7 +99,7 @@ public class RefGenomeManager {
                 .actionableHotspots(converter.convertActionableHotspots(extraction.actionableHotspots()))
                 .actionableRanges(converter.convertActionableRanges(extraction.actionableRanges()))
                 .actionableGenes(converter.convertActionableGenes(extraction.actionableGenes()))
-                .actionableFusions(converter.convertActionableFusion(extraction.actionableFusions()))
+                .actionableFusions(converter.convertActionableFusions(extraction.actionableFusions()))
                 .actionableCharacteristics(extraction.actionableCharacteristics())
                 .build();
     }

@@ -37,7 +37,7 @@ public class GeneNameMapping {
         return new GeneNameMapping(v37Map, v38Map);
     }
 
-    private GeneNameMapping(@NotNull final Map<String, String> v37Map, @NotNull final Map<String, String> v38Map) {
+    public GeneNameMapping(@NotNull final Map<String, String> v37Map, @NotNull final Map<String, String> v38Map) {
         this.v37Map = v37Map;
         this.v38Map = v38Map;
     }

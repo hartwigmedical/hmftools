@@ -8,9 +8,13 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
+import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
+import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
+import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
+import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
@@ -152,27 +156,59 @@ class RefGenomeConverter {
     public Set<ActionableHotspot> convertActionableHotspots(@NotNull Set<ActionableHotspot> actionableHotspots) {
         Set<ActionableHotspot> convertedActionableHotspots = Sets.newHashSet();
         for (ActionableHotspot actionableHotspot : actionableHotspots) {
-
+            VariantHotspot lifted = liftOverHotspot(actionableHotspot);
+            if (lifted != null) {
+                convertedActionableHotspots.add(ImmutableActionableHotspot.builder()
+                        .from(actionableHotspot)
+                        .chromosome(lifted.chromosome())
+                        .position(lifted.position())
+                        .build());
+            }
         }
-        return actionableHotspots;
+        return convertedActionableHotspots;
     }
 
     @NotNull
     public Set<ActionableRange> convertActionableRanges(@NotNull Set<ActionableRange> actionableRanges) {
-        // TODO Implement
-        return actionableRanges;
+        Set<ActionableRange> convertedActionableRanges = Sets.newHashSet();
+        for (ActionableRange actionableRange : actionableRanges) {
+            RangeAnnotation lifted = liftOverRange(actionableRange);
+            if (lifted != null) {
+                convertedActionableRanges.add(ImmutableActionableRange.builder()
+                        .from(actionableRange)
+                        .gene(lifted.gene())
+                        .chromosome(lifted.chromosome())
+                        .start(lifted.start())
+                        .end(lifted.end())
+                        .build());
+            }
+        }
+        return convertedActionableRanges;
     }
 
     @NotNull
     public Set<ActionableGene> convertActionableGenes(@NotNull Set<ActionableGene> actionableGenes) {
-        // TODO Implement
-        return actionableGenes;
+        Set<ActionableGene> convertedActionableGenes = Sets.newHashSet();
+        for (ActionableGene actionableGene : actionableGenes) {
+            convertedActionableGenes.add(ImmutableActionableGene.builder()
+                    .from(actionableGene)
+                    .gene(mapGene(actionableGene.gene()))
+                    .build());
+        }
+        return convertedActionableGenes;
     }
 
     @NotNull
-    public Set<ActionableFusion> convertActionableFusion(@NotNull Set<ActionableFusion> actionableFusions) {
-        // TODO Implement
-        return actionableFusions;
+    public Set<ActionableFusion> convertActionableFusions(@NotNull Set<ActionableFusion> actionableFusions) {
+        Set<ActionableFusion> convertedActionableFusions = Sets.newHashSet();
+        for (ActionableFusion actionableFusion : actionableFusions) {
+            convertedActionableFusions.add(ImmutableActionableFusion.builder()
+                    .from(actionableFusion)
+                    .geneUp(mapGene(actionableFusion.geneUp()))
+                    .geneDown(mapGene(actionableFusion.geneDown()))
+                    .build());
+        }
+        return convertedActionableFusions;
     }
 
     @Nullable
