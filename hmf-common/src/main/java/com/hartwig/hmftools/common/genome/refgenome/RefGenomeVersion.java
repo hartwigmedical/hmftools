@@ -59,11 +59,11 @@ public enum RefGenomeVersion
     {
         if (this == V38 || this == HG19)
         {
-            return RefGenomeFunctions.enforceChromosome(chromosome);
+            return RefGenomeFunctions.enforceChrPrefix(chromosome);
         }
         else if (this == V37)
         {
-            return RefGenomeFunctions.stripChromosome(chromosome);
+            return RefGenomeFunctions.stripChrPrefix(chromosome);
         }
         else
         {

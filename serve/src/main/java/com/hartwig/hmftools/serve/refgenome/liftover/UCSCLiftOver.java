@@ -28,7 +28,7 @@ public class UCSCLiftOver implements LiftOverAlgo {
     @Override
     public LiftOverResult liftOver(@NotNull final String chromosome, final long position) {
         // UCSC expects hg19 format in case v37 is used.
-        String ucscChromosome = RefGenomeFunctions.enforceChromosome(chromosome);
+        String ucscChromosome = RefGenomeFunctions.enforceChrPrefix(chromosome);
         Interval interval = new Interval(ucscChromosome, (int) position, (int) position);
         Interval lifted = liftOver.liftOver(interval);
         if (lifted == null) {

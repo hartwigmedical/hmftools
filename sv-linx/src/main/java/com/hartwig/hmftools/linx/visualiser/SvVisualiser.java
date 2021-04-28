@@ -146,7 +146,7 @@ public class SvVisualiser implements AutoCloseable
 
         final String chromosomesStr = chromosomes.size() >= 23
                 ? "All"
-                : chromosomes.stream().map(RefGenomeFunctions::stripChromosome).collect(Collectors.joining("-"));
+                : chromosomes.stream().map(RefGenomeFunctions::stripChrPrefix).collect(Collectors.joining("-"));
 
         final Predicate<Link> linePredicate = x -> !x.isLineElement() || config.includeLineElements();
         final Predicate<Link> chromosomePredicate = x -> chromosomes.contains(x.startChromosome()) || chromosomes.contains(x.endChromosome());

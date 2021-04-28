@@ -20,7 +20,7 @@ public final class RefGenomeFunctions {
     }
 
     @NotNull
-    public static String stripChromosome(@NotNull final String chromosome) {
+    public static String stripChrPrefix(@NotNull final String chromosome) {
         if (chromosome.startsWith(CHR_PREFIX)) {
             return chromosome.substring(CHR_PREFIX.length());
         }
@@ -29,7 +29,7 @@ public final class RefGenomeFunctions {
     }
 
     @NotNull
-    public static String enforceChromosome(@NotNull final String chromosome) {
+    public static String enforceChrPrefix(@NotNull final String chromosome) {
         if (!chromosome.startsWith(CHR_PREFIX)) {
             return CHR_PREFIX + chromosome;
         }
