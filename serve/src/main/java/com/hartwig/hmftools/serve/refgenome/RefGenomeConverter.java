@@ -99,12 +99,8 @@ class RefGenomeConverter {
                     convertedCodons.add(ImmutableKnownCodon.builder()
                             .annotation(ImmutableCodonAnnotation.builder()
                                     .from(liftedAnnotation)
-                                    .gene(liftedAnnotation.gene())
                                     .transcript(Strings.EMPTY)
                                     .codonIndex(0)
-                                    .chromosome(liftedAnnotation.chromosome())
-                                    .start(liftedAnnotation.start())
-                                    .end(liftedAnnotation.end())
                                     .build())
                             .build());
                 }
@@ -123,12 +119,8 @@ class RefGenomeConverter {
                 convertedExons.add(ImmutableKnownExon.builder()
                         .annotation(ImmutableExonAnnotation.builder()
                                 .from(liftedAnnotation)
-                                .gene(liftedAnnotation.gene())
                                 .transcript(Strings.EMPTY)
                                 .exonIndex(0)
-                                .chromosome(liftedAnnotation.chromosome())
-                                .start(liftedAnnotation.start())
-                                .end(liftedAnnotation.end())
                                 .build())
                         .build());
             }
