@@ -4,26 +4,29 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.GeneNameMapping;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
+import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
+import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;
+import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
+import com.hartwig.hmftools.serve.refgenome.liftover.LiftOverAlgo;
+import com.hartwig.hmftools.serve.refgenome.liftover.LiftOverResult;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.liftover.LiftOver;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.samtools.util.Interval;
 
 class RefGenomeConverter {
 
@@ -36,17 +39,17 @@ class RefGenomeConverter {
     @NotNull
     private final IndexedFastaSequenceFile targetSequence;
     @NotNull
-    private final LiftOver liftOver;
+    private final LiftOverAlgo liftOverAlgo;
     @NotNull
     private final GeneNameMapping geneNameMapping;
 
     public RefGenomeConverter(@NotNull final RefGenomeVersion sourceVersion, @NotNull final RefGenomeVersion targetVersion,
-            @NotNull final IndexedFastaSequenceFile targetSequence, @NotNull final LiftOver liftOver,
+            @NotNull final IndexedFastaSequenceFile targetSequence, @NotNull final LiftOverAlgo liftOverAlgo,
             @NotNull final GeneNameMapping geneNameMapping) {
         this.sourceVersion = sourceVersion;
         this.targetVersion = targetVersion;
         this.targetSequence = targetSequence;
-        this.liftOver = liftOver;
+        this.liftOverAlgo = liftOverAlgo;
         this.geneNameMapping = geneNameMapping;
     }
 
@@ -54,41 +57,64 @@ class RefGenomeConverter {
     public Set<KnownHotspot> convertKnownHotspots(@NotNull Set<KnownHotspot> hotspots) {
         Set<KnownHotspot> convertedHotspots = Sets.newHashSet();
         for (KnownHotspot hotspot : hotspots) {
-            Interval interval = new Interval(RefGenomeFunctions.enforceChromosome(hotspot.chromosome()),
-                    (int) hotspot.position(),
-                    (int) hotspot.position());
-            Interval lifted = liftOver.liftOver(interval);
+            LiftOverResult lifted = liftOverAlgo.liftOver(hotspot.chromosome(), hotspot.position());
 
             if (lifted == null) {
-                LOGGER.warn("Liftover could not be performed for '{}' on '{}'", hotspot.proteinAnnotation(), hotspot.gene());
+                LOGGER.warn("Liftover could not be performed on '{}'", hotspot);
             } else {
-                String versionedOldChromosome = targetVersion.versionedChromosome(hotspot.chromosome());
-                if (!lifted.getContig().equals(versionedOldChromosome)) {
-                    LOGGER.warn("Liftover moved chromosome from '{}' to '{}' on {}", versionedOldChromosome, lifted.getContig(), hotspot);
-                }
+                verifyNoChromosomeChange(hotspot.chromosome(), lifted, hotspot);
 
-                String newRef = targetSequence.getSubsequenceAt(lifted.getContig(),
-                        lifted.getStart(),
-                        lifted.getStart() + hotspot.ref().length() - 1).getBaseString();
+                String newRef = sequence(lifted.chromosome(), lifted.position(), hotspot.ref().length());
                 if (!newRef.equals(hotspot.ref())) {
                     LOGGER.warn("Skipping liftover: Ref changed from '{}' to '{}' on {}", hotspot.ref(), newRef, hotspot);
                 } else {
                     convertedHotspots.add(ImmutableKnownHotspot.builder()
                             .from(hotspot)
-                            .gene(mapGene(hotspot.gene(), sourceVersion, targetVersion))
-                            .chromosome(lifted.getContig())
-                            .position(lifted.getStart())
+                            .gene(mapGene(hotspot.gene()))
+                            .chromosome(lifted.chromosome())
+                            .position(lifted.position())
                             .build());
                 }
             }
-        }
-        return convertedHotspots;
+        } return convertedHotspots;
     }
 
     @NotNull
     public Set<KnownCodon> convertKnownCodons(@NotNull Set<KnownCodon> codons) {
-        // TODO Implement
-        return codons;
+        Set<KnownCodon> convertedCodons = Sets.newHashSet();
+        for (KnownCodon codon : codons) {
+            CodonAnnotation annotation = codon.annotation();
+            LiftOverResult liftedStart = liftOverAlgo.liftOver(annotation.chromosome(), annotation.start());
+            LiftOverResult liftedEnd = liftOverAlgo.liftOver(annotation.chromosome(), annotation.end());
+
+            if (liftedStart == null || liftedEnd == null) {
+                LOGGER.warn("Liftover could not be performed on '{}'", codon);
+            } else {
+                verifyNoChromosomeChange(annotation.chromosome(), liftedStart, codon);
+                verifyNoChromosomeChange(annotation.chromosome(), liftedEnd, codon);
+
+                if (liftedEnd.position() - liftedStart.position() != 2) {
+                    LOGGER.warn("Skipping liftover: Lifted codon '{}' is no longer 3 bases long. Liftover runs from {} to {}",
+                            codon,
+                            liftedStart.position(),
+                            liftedEnd.position());
+                } else {
+                    assert liftedStart.chromosome().equals(liftedEnd.chromosome());
+                    // We blank out the transcript since we are unsure to what extend the transcript maps to the new ref genome.
+                    convertedCodons.add(ImmutableKnownCodon.builder()
+                            .annotation(ImmutableCodonAnnotation.builder()
+                                    .from(annotation)
+                                    .gene(mapGene(annotation.gene()))
+                                    .transcript(Strings.EMPTY)
+                                    .chromosome(liftedStart.chromosome())
+                                    .start(liftedStart.position())
+                                    .end(liftedEnd.position())
+                                    .build())
+                            .build());
+                }
+            }
+        }
+        return convertedCodons;
     }
 
     @NotNull
@@ -133,8 +159,15 @@ class RefGenomeConverter {
         return actionableFusions;
     }
 
+    private void verifyNoChromosomeChange(@NotNull String prevChromosome, @NotNull LiftOverResult lifted, @NotNull Object object) {
+        String versionedChromosome = targetVersion.versionedChromosome(prevChromosome);
+        if (!lifted.chromosome().equals(versionedChromosome)) {
+            LOGGER.warn("Liftover moved chromosome from '{}' to '{}' on {}", versionedChromosome, lifted.chromosome(), object);
+        }
+    }
+
     @NotNull
-    private String mapGene(@NotNull String gene, @NotNull RefGenomeVersion sourceVersion, @NotNull RefGenomeVersion targetVersion) {
+    private String mapGene(@NotNull String gene) {
         String mappedGene;
         if (sourceVersion == targetVersion) {
             mappedGene = gene;
@@ -151,5 +184,11 @@ class RefGenomeConverter {
         }
 
         return mappedGene;
+    }
+
+    @NotNull
+    private String sequence(@NotNull String chromosome, long start, long length) {
+        String targetChromosome = targetVersion.versionedChromosome(chromosome);
+        return targetSequence.getSubsequenceAt(targetChromosome, start, start + length - 1).getBaseString();
     }
 }

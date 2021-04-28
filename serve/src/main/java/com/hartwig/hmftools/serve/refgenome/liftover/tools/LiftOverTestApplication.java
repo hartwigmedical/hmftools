@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.serve.refgenome.liftover;
+package com.hartwig.hmftools.serve.refgenome.liftover.tools;
 
 import java.io.File;
 import java.io.IOException;

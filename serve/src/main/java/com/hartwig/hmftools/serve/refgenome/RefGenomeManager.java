@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.serve.refgenome;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,13 +10,14 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
+import com.hartwig.hmftools.serve.refgenome.liftover.LiftOverAlgo;
+import com.hartwig.hmftools.serve.refgenome.liftover.UCSCLiftOver;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.liftover.LiftOver;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class RefGenomeManager {
@@ -84,10 +84,10 @@ public class RefGenomeManager {
 
         RefGenomeResource sourceResource = refGenomeResourceMap.get(sourceVersion);
         IndexedFastaSequenceFile targetSequence = refGenomeResourceMap.get(targetVersion).refSequence();
+        String chainFromSourceToTarget = sourceResource.chainToOtherRefGenomeMap().get(targetVersion);
 
-        LiftOver liftOverToTarget = new LiftOver(new File(sourceResource.chainToOtherRefGenomeMap().get(targetVersion)));
-        RefGenomeConverter converter =
-                new RefGenomeConverter(sourceVersion, targetVersion, targetSequence, liftOverToTarget, geneNameMapping);
+        LiftOverAlgo liftOverAlgo = UCSCLiftOver.fromChainFile(chainFromSourceToTarget);
+        RefGenomeConverter converter = new RefGenomeConverter(sourceVersion, targetVersion, targetSequence, liftOverAlgo, geneNameMapping);
 
         return ImmutableExtractionResult.builder()
                 .refGenomeVersion(targetVersion)
