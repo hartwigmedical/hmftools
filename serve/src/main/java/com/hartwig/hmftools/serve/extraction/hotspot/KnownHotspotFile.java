@@ -37,7 +37,7 @@ public final class KnownHotspotFile {
     }
 
     public static void write(@NotNull String hotspotVcf, @NotNull Iterable<KnownHotspot> hotspots) {
-        VariantContextWriter writer = VCFWriterFactory.generateVCFWriterWithInputAndSources(hotspotVcf, uniqueSourcesString(hotspots));
+        VariantContextWriter writer = VCFWriterFactory.openVCFWriterWithInputAndSources(hotspotVcf, uniqueSourcesString(hotspots));
 
         for (KnownHotspot hotspot : sort(hotspots)) {
             List<Allele> hotspotAlleles = buildAlleles(hotspot);

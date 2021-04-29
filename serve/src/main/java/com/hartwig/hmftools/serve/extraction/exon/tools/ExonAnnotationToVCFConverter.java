@@ -52,7 +52,7 @@ public class ExonAnnotationToVCFConverter {
         List<KnownExon> exons = KnownExonFile.read(knownExonsTsv);
         LOGGER.info("The number of known exons in the known exon file is {}", exons.size());
 
-        VariantContextWriter writer = VCFWriterFactory.generateVCFWriterWithInputAndSources(outputVcf, uniqueSourcesString(exons));
+        VariantContextWriter writer = VCFWriterFactory.openVCFWriterWithInputAndSources(outputVcf, uniqueSourcesString(exons));
 
         for (KnownExon exon : exons) {
             String chromosome = exon.annotation().chromosome();

@@ -22,7 +22,7 @@ public final class VCFWriterFactory {
     }
 
     @NotNull
-    public static VariantContextWriter generateVCFWriterWithInputAndSources(@NotNull String outputFile, @NotNull String sources) {
+    public static VariantContextWriter openVCFWriterWithInputAndSources(@NotNull String outputFile, @NotNull String sources) {
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputFile)
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
                 .modifyOption(Options.INDEX_ON_THE_FLY, false)

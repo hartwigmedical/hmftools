@@ -53,7 +53,7 @@ public class CodonAnnotationToVCFConverter {
 
         LOGGER.info("The number of codons in known codon file is {}", codons.size());
 
-        VariantContextWriter writer = VCFWriterFactory.generateVCFWriterWithInputAndSources(outputVcf, uniqueSourcesString(codons));
+        VariantContextWriter writer = VCFWriterFactory.openVCFWriterWithInputAndSources(outputVcf, uniqueSourcesString(codons));
 
         for (KnownCodon codon : codons) {
             long start = codon.annotation().start();
