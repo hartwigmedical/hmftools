@@ -234,11 +234,40 @@ defined in differing reference genome versions. In addition SERVE generates its 
 
 ### Ref-genome dependent knowledge extraction
 
-TODO
+Knowledge is extracted from any knowledgebase with respect to the ref genome version of that knowledgebase. The following internal resources
+are used in a ref-dependent manner during knowledge extraction:
+ - The reference genome itself
+ - The definition of Hartwig driver genes
+ - The definition of Hartwig known fusions
+ - The map of gene to canonical transcript 
 
-### Ref-genome dependent output
+ ## Ref-genome dependent output
 
-TODO
+After per-knowledgebase extraction is done, the extraction results are merged into a v37 and v38 version.
+Any extraction for a v37 knowledgebase is taken over unchanged in the v37 output, and the same holds for any v38 knowledgebase into the v38 
+output.
+
+### Genomic position lift-over
+
+Hotspots and ranges are lifted over using HTSJDK's implementation of UCSC LiftOver (see also https://gatk.broadinstitute.org/hc/en-us/articles/360037060932-LiftoverVcf-Picard-).
+In case lift-over could not be performed a warning is raised unless the position is known to not exist in the target ref genome. 
+In addition, any lift-over that lifts a position towards a different chromosome is raised as a warning but is accepted nonetheless.
+
+There are a few additional checks for specific types of knowledge:
+ - A hotspot lift-over is only accepted in case the reference at the lifted position has remained unchanged.
+ - A codon lift-over is only accepted in case the lifted range has a length of 3 bases.
+ - Transcripts and codon/exon indices are removed from known codons and exons since they can't be trusted anymore after lift-over
+
+### Gene lift-over
+
+Genes are lifted between reference genome using Hartwig's internal gene mapping. This impacts the following types of events:
+ - Known and actionable ranges
+ - Known and actionable copy numbers
+ - Actionable gene events
+ - Known and actionable fusion pairs
+ 
+Do note that for fusion pairs, additional annotation remains unchanged assuming exonic ranges relevant for known and actionable fusions 
+remain identical between ref genome versions.
  
 ## Overview of the SERVE algorithm
 
