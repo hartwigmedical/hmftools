@@ -65,7 +65,8 @@ def add_spider_plot(df_spider, fig, gs):
         ax1.fill(angles, values, color='#0059b3', alpha=0.3)
         return fig, gs
     except:
-        sys.exit('[ERROR] the basis of the chart could not be made. No output files generated. CUPPA-chart will end.')
+        print('[ERROR] the basis of the chart could not be made. No output files generated. CUPPA-chart will end.')
+        sys.exit(1)
 
 
 
@@ -139,7 +140,8 @@ def add_barcharts(df_bars, df_spider, fig, gs):
                 ax4.set_yticklabels('')
         return fig, gs
     except:
-        sys.exit('[ERROR] the barcharts could not be added to the chart. No output files generated. CUPPA-chart will end.')
+        print('[ERROR] the barcharts could not be added to the chart. No output files generated. CUPPA-chart will end.')
+        sys.exit(1)
 
 
 
@@ -151,7 +153,8 @@ def add_conclusion(df_spider, df_bars, fig, gs):
             fig.suptitle('Molecular tissue of origin - results inconclusive', fontsize=16, horizontalalignment='center')
         return fig, gs
     except:
-        sys.exit('[ERROR] the final conclusion could not be added to the chart. No output files generated. CUPPA-chart will end.')
+        print('[ERROR] the final conclusion could not be added to the chart. No output files generated. CUPPA-chart will end.')
+        sys.exit(1)
 
 
 def create_conclusion_file(sample, df_spider, df_bars, output_dir):
@@ -163,7 +166,8 @@ def create_conclusion_file(sample, df_spider, df_bars, output_dir):
             conclusion_file.write('Molecular tissue of origin - results inconclusive')
         conclusion_file.close()
     except:
-        sys.exit('[ERROR] the final conclusion could not be written to a file. No output files generated. CUPPA-chart will end.')
+        print('[ERROR] the final conclusion could not be written to a file. No output files generated. CUPPA-chart will end.')
+        sys.exit(1)
 
 
 def create_chart_file(sample, df_spider, df_bars, output_dir, fig, gs):
@@ -171,7 +175,8 @@ def create_chart_file(sample, df_spider, df_bars, output_dir, fig, gs):
         fig.savefig(output_dir + sample + '.cuppa.chart.png', format='png', dpi=1200, bbox_inches='tight')
     except:
         os.remove(output_dir + sample + '.cuppa.conclusion.txt')
-        sys.exit('[ERROR] the final chart could not be saved as a file. No output files generated. CUPPA-chart will end.')
+        print('[ERROR] the final chart could not be saved as a file. No output files generated. CUPPA-chart will end.')
+        sys.exit(1)
 
 
 

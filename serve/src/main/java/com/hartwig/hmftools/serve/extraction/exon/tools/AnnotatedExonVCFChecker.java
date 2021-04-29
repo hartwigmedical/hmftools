@@ -6,6 +6,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 import com.hartwig.hmftools.serve.extraction.codon.tools.AnnotatedCodonVCFChecker;
+import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -44,7 +45,7 @@ public class AnnotatedExonVCFChecker {
         for (VariantContext variant : reader.iterator()) {
             totalCount++;
 
-            String[] inputParts = variant.getAttributeAsString("input", Strings.EMPTY).split("\\|");
+            String[] inputParts = variant.getAttributeAsString(VCFWriterFactory.INPUT_FIELD, Strings.EMPTY).split("\\|");
             String inputGene = inputParts[0];
             String inputTranscript = inputParts[1].equals("null") ? null : inputParts[1];
             int inputExonId = Integer.parseInt(inputParts[2]);

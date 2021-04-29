@@ -11,17 +11,17 @@ public class GeneNameMappingTest {
     private final GeneNameMapping victim = GeneNameMapping.loadFromEmbeddedResource();
 
     @Test
-    public void testPRAMEF11() {
+    public void mappingWorksForPRAMEF11() {
         assertTrue(victim.isValidV37Gene("PRAMEF11"));
-        assertTrue(victim.isValidV37Gene("WI2-3308P17.2"));
         assertTrue(victim.isValidV38Gene("PRAMEF11"));
 
+        assertTrue(victim.isValidV37Gene("WI2-3308P17.2"));
         assertFalse(victim.isValidV38Gene("WI2-3308P17.2"));
         assertEquals("WI2-3308P17.2", victim.v37Gene("PRAMEF11"));
     }
 
     @Test
-    public void testPERM1() {
+    public void mappingWorksForPERM1() {
         assertTrue(victim.isValidV37Gene("C1orf170"));
         assertFalse(victim.isValidV37Gene("PERM1"));
 
@@ -32,7 +32,7 @@ public class GeneNameMappingTest {
     }
 
     @Test
-    public void testPOTE() {
+    public void mappingWorksForPOTE() {
         assertTrue(victim.isValidV37Gene("POTEM"));
         assertTrue(victim.isValidV37Gene("POTEG"));
         assertTrue(victim.isValidV37Gene("POTEH"));
@@ -44,5 +44,16 @@ public class GeneNameMappingTest {
         assertEquals("POTEM", victim.v37Gene("POTEG"));
         assertEquals("POTEG", victim.v37Gene("POTEM"));
         assertEquals("POTEH", victim.v37Gene("POTEH"));
+    }
+
+    @Test
+    public void promiscuousIGGenesAreRetained() {
+        for (String igGene : GeneNameMapping.IG_GENES) {
+            assertTrue(victim.isValidV37Gene(igGene));
+            assertTrue(victim.isValidV38Gene(igGene));
+
+            assertEquals(igGene, victim.v37Gene(igGene));
+            assertEquals(igGene, victim.v38Gene(igGene));
+        }
     }
 }

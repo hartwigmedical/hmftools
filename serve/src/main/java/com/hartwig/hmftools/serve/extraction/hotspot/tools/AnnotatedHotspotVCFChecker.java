@@ -10,6 +10,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
+import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 import com.hartwig.hmftools.serve.util.AminoAcidFunctions;
 
 import org.apache.logging.log4j.Level;
@@ -60,7 +61,7 @@ public class AnnotatedHotspotVCFChecker {
         for (VariantContext variant : reader.iterator()) {
             totalCount++;
 
-            String[] inputParts = variant.getAttributeAsString("input", Strings.EMPTY).split("\\|");
+            String[] inputParts = variant.getAttributeAsString(VCFWriterFactory.INPUT_FIELD, Strings.EMPTY).split("\\|");
             String inputGene = inputParts[0];
             String inputTranscript = inputParts[1].equals("null") ? null : inputParts[1];
             String inputProteinAnnotation = inputParts[2];

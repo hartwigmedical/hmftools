@@ -6,8 +6,12 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.serve.ServeConfig;
+import com.hartwig.hmftools.serve.ServeLocalConfigProvider;
+import com.hartwig.hmftools.serve.extraction.KnownEvent;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodon;
 import com.hartwig.hmftools.serve.extraction.codon.KnownCodonFile;
 import com.hartwig.hmftools.serve.extraction.util.GenerateAltBase;
@@ -38,26 +42,27 @@ public class CodonAnnotationToVCFConverter {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
+        ServeConfig config = ServeLocalConfigProvider.create();
+        IndexedFastaSequenceFile refSequence37 = new IndexedFastaSequenceFile(new File(config.refGenome37FastaFile()));
+
         String knownCodonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownCodons.SERVE.37.tsv";
-        String outputFile = System.getProperty("user.home") + "/hmf/tmp/codons.vcf.gz";
-        GenerateAltBase altBaseGenerator = new GenerateAltBase(RefGenomeVersion.V37,
-                new IndexedFastaSequenceFile(new File(
-                        System.getProperty("user.home") + "/hmf/refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina.fasta")));
+        String outputVcf = System.getProperty("user.home") + "/hmf/tmp/codons.vcf.gz";
+        GenerateAltBase altBaseGenerator = new GenerateAltBase(RefGenomeVersion.V37, refSequence37);
 
         List<KnownCodon> codons = KnownCodonFile.read(knownCodonsTsv);
 
-        LOGGER.info("The number of codons in known codon file is '{}'", codons.size());
+        LOGGER.info("The number of codons in known codon file is {}", codons.size());
 
-        VariantContextWriter writer = VCFWriterFactory.generateVCFWriterWithInputAndSources(outputFile);
+        VariantContextWriter writer = VCFWriterFactory.openVCFWriter(outputVcf, uniqueSourcesString(codons));
 
         for (KnownCodon codon : codons) {
             long start = codon.annotation().start();
             long end = codon.annotation().end();
             long middle = start + 1;
-            List<Long> genomicPositions = Lists.newArrayList(start, middle, end);
+            List<Long> positions = Lists.newArrayList(start, middle, end);
 
             String chromosome = codon.annotation().chromosome();
-            for (long position : genomicPositions) {
+            for (long position : positions) {
                 String refBaseOfPosition = altBaseGenerator.extractRefBaseAtGenomicPosition(chromosome, position);
                 String randomAltBase = altBaseGenerator.createAltForRefBase(chromosome, position);
 
@@ -75,7 +80,7 @@ public class CodonAnnotationToVCFConverter {
 
         writer.close();
 
-        LOGGER.info("All known codons are converted and written to VCF file!");
+        LOGGER.info("All known codons are converted and written to '{}'", outputVcf);
     }
 
     private static void writeVariantToVCF(@NotNull VariantContextWriter writer, @NotNull String chromosome, long position,
@@ -83,17 +88,26 @@ public class CodonAnnotationToVCFConverter {
             @NotNull String transcript, int codonIndex) {
         List<Allele> alleles = Lists.newArrayList(Allele.create(ref, true), Allele.create(alt, false));
 
-        VariantContext variantContext = new VariantContextBuilder().noGenotypes()
+        VariantContext variant = new VariantContextBuilder().noGenotypes()
                 .source("CodonChecker")
                 .chr(chromosome)
                 .start(position)
                 .alleles(alleles)
                 .computeEndFromAlleles(alleles, new Long(position).intValue())
-                .attribute("source", Knowledgebase.toCommaSeparatedSourceString(knowledgebases))
-                .attribute("input", KeyFormatter.toCodonKey(gene, transcript, codonIndex))
+                .attribute(VCFWriterFactory.INPUT_FIELD, KeyFormatter.toCodonKey(gene, transcript, codonIndex))
+                .attribute(VCFWriterFactory.SOURCES_FIELD, Knowledgebase.toCommaSeparatedSourceString(knowledgebases))
                 .make();
 
-        LOGGER.debug(" Writing variant to VCF file'{}'", variantContext);
-        writer.add(variantContext);
+        LOGGER.debug(" Writing '{}' to VCF file", variant);
+        writer.add(variant);
+    }
+
+    @NotNull
+    private static String uniqueSourcesString(@NotNull Iterable<? extends KnownEvent> events) {
+        Set<Knowledgebase> sources = Sets.newHashSet();
+        for (KnownEvent event : events) {
+            sources.addAll(event.sources());
+        }
+        return Knowledgebase.toCommaSeparatedSourceString(sources);
     }
 }

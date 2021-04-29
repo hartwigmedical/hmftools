@@ -58,6 +58,8 @@ public interface PatientReporterConfig {
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     String CIRCOS_FILE = "circos_file";
     String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
+    String MOLECULAR_TISSUE_ORIGIN_TXT = "molecular_tissue_origin_txt";
+    String MOLECULAR_TISSUE_ORIGIN_PLOT = "molecular_tissue_origin_plot";
 
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
     String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
@@ -108,6 +110,8 @@ public interface PatientReporterConfig {
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
         options.addOption(CIRCOS_FILE, true, "Path towards the circos file.");
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
+        options.addOption(MOLECULAR_TISSUE_ORIGIN_TXT, true, "Path towards the molecular tissue origin TXT.");
+        options.addOption(MOLECULAR_TISSUE_ORIGIN_PLOT, true, "Path towards the molecular tissue origin plot.");
 
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
@@ -204,6 +208,12 @@ public interface PatientReporterConfig {
     String protectEvidenceTsv();
 
     @NotNull
+    String molecularTissueOriginTxt();
+
+    @NotNull
+    String molecularTissueOriginPlot();
+
+    @NotNull
     String germlineReportingTsv();
 
     @NotNull
@@ -245,6 +255,9 @@ public interface PatientReporterConfig {
         String chordPredictionTxt = Strings.EMPTY;
         String circosFile = Strings.EMPTY;
         String protectEvidenceFile = Strings.EMPTY;
+        String molecularTissueOriginTxt = Strings.EMPTY;
+        String molecularTissueOriginPlot = Strings.EMPTY;
+
         String germlineReportingTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
         String pipelineVersion = Strings.EMPTY;
@@ -269,6 +282,9 @@ public interface PatientReporterConfig {
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
             pipelineVersion = optionalFile(cmd, PIPELINE_VERSION_FILE);
+            molecularTissueOriginTxt = optionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_TXT);
+            molecularTissueOriginPlot = optionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_PLOT);
+
         }
 
         return ImmutablePatientReporterConfig.builder()
@@ -300,6 +316,8 @@ public interface PatientReporterConfig {
                 .chordPredictionTxt(chordPredictionTxt)
                 .circosFile(circosFile)
                 .protectEvidenceTsv(protectEvidenceFile)
+                .molecularTissueOriginTxt(molecularTissueOriginTxt)
+                .molecularTissueOriginPlot(molecularTissueOriginPlot)
                 .germlineReportingTsv(germlineReportingTsv)
                 .sampleSummaryTsv(sampleSummaryTsv)
                 .comments(cmd.getOptionValue(COMMENTS))

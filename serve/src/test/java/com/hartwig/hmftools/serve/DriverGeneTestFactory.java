@@ -10,9 +10,9 @@ import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class DriverGeneSupplier {
+public final class DriverGeneTestFactory {
 
-    private DriverGeneSupplier() {
+    private DriverGeneTestFactory() {
     }
 
     @NotNull

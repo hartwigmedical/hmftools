@@ -19,6 +19,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
 public class ServeApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(ServeApplication.class);
@@ -46,7 +48,9 @@ public class ServeApplication {
         Map<RefGenomeVersion, ExtractionResult> resultMap = algo.run(config);
 
         for (Map.Entry<RefGenomeVersion, ExtractionResult> entry : resultMap.entrySet()) {
-            new ExtractionResultWriter(config.outputDir(), entry.getKey()).write(entry.getValue());
+            RefGenomeVersion version = entry.getKey();
+            IndexedFastaSequenceFile refSequence = refGenomeManager.refSequenceForRefGenome(version);
+            new ExtractionResultWriter(config.outputDir(), version, refSequence).write(entry.getValue());
         }
 
         LOGGER.info("Complete!");

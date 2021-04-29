@@ -4,12 +4,16 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
 public class GeneNameMapping {
+
+    static final Set<String> IG_GENES = Sets.newHashSet("IGH", "IGK", "IGL");
 
     @NotNull
     private final Map<String, String> v37Map;
@@ -43,15 +47,19 @@ public class GeneNameMapping {
     }
 
     public boolean isValidV38Gene(@NotNull final String v38GeneId) {
-        return v38Map.containsKey(v38GeneId) && !v38Map.get(v38GeneId).equals("NA");
+        return (v38Map.containsKey(v38GeneId) && !v38Map.get(v38GeneId).equals("NA")) || IG_GENES.contains(v38GeneId);
     }
 
     public boolean isValidV37Gene(@NotNull final String v37GeneId) {
-        return v37Map.containsKey(v37GeneId);
+        return v37Map.containsKey(v37GeneId) || IG_GENES.contains(v37GeneId);
     }
 
     @NotNull
     public String v37Gene(@NotNull final String v38GeneId) {
+        if (IG_GENES.contains(v38GeneId)) {
+            return v38GeneId;
+        }
+
         String result = v38Map.get(v38GeneId);
         if (result == null || result.equals("NA")) {
             throw new IllegalArgumentException("Invalid v38 gene " + v38GeneId);
@@ -61,6 +69,10 @@ public class GeneNameMapping {
 
     @NotNull
     public String v38Gene(@NotNull final String v37GeneId) {
+        if (IG_GENES.contains(v37GeneId)) {
+            return v37GeneId;
+        }
+
         String result = v37Map.get(v37GeneId);
         if (result == null ) {
             return "NA";

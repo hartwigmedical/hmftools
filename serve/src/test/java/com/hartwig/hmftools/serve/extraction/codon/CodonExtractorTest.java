@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.serve.extraction.codon;
 
-import static com.hartwig.hmftools.serve.DriverGeneSupplier.createDriverGenes;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -12,6 +10,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.serve.DriverGeneTestFactory;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
@@ -26,7 +25,7 @@ public class CodonExtractorTest {
 
     @Test
     public void canExtractSimpleCodon() {
-        CodonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "KRAS"));
+        CodonExtractor extractor = createWithDriverGenes(createTestDriverGenes());
         List<CodonAnnotation> codons = extractor.extract("TP53", null, EventType.CODON, "R249");
 
         assertEquals(1, codons.size());
@@ -40,7 +39,7 @@ public class CodonExtractorTest {
 
     @Test
     public void canExtractCodonOnMultipleExons() {
-        CodonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "KRAS"));
+        CodonExtractor extractor = createWithDriverGenes(createTestDriverGenes());
         List<CodonAnnotation> codons = extractor.extract("KRAS", null, EventType.CODON, "R97");
 
         assertEquals(2, codons.size());
@@ -60,19 +59,19 @@ public class CodonExtractorTest {
 
     @Test
     public void failsOnTranscriptMismatch() {
-        CodonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "KRAS"));
+        CodonExtractor extractor = createWithDriverGenes(createTestDriverGenes());
         assertNull(extractor.extract("KRAS", "not the canonical transcript", EventType.CODON, "R97"));
     }
 
     @Test
     public void failsOnUnresolvableCodonIndex() {
-        CodonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "KRAS"));
+        CodonExtractor extractor = createWithDriverGenes(createTestDriverGenes());
         assertNull(extractor.extract("KRAS", "ENST00000256078", EventType.CODON, "Not a codon"));
     }
 
     @Test
     public void failsOnNonExistingCodonIndex() {
-        CodonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "KRAS"));
+        CodonExtractor extractor = createWithDriverGenes(createTestDriverGenes());
         assertNull(extractor.extract("KRAS", "ENST00000256078", EventType.CODON, "R10000"));
     }
 
@@ -87,9 +86,12 @@ public class CodonExtractorTest {
     }
 
     @NotNull
+    private static List<DriverGene> createTestDriverGenes() {
+        return DriverGeneTestFactory.createDriverGenes("TP53", "KRAS");
+    }
+
+    @NotNull
     private static CodonExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes) {
         return new CodonExtractor(V37_GENE_CHECKER, new MutationTypeFilterAlgo(driverGenes), V37_GENE_MAP);
     }
-
-
 }

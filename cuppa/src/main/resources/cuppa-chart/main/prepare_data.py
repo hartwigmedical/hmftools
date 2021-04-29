@@ -38,5 +38,6 @@ def read_prep_data(sample, sample_data):
         df_sample_selection = None
         return df_spider, df_bars
     except:
-        sys.exit('[ERROR] the sample data provided is not existing / is not in the correct format. No output files generated. CUPPA-chart will end.')
+        print('[ERROR] the sample data provided is not existing / is not in the correct format. No output files generated. CUPPA-chart will end.')
+        sys.exit(1)
 

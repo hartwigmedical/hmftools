@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.serve.extraction.gene;
 
-import static com.hartwig.hmftools.serve.DriverGeneSupplier.createDriverGenes;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -12,6 +10,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.serve.DriverGeneTestFactory;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.GeneCheckerTestFactory;
 
@@ -23,8 +22,8 @@ public class GeneLevelExtractorTest {
     private static final GeneChecker V37_GENE_CHECKER = GeneCheckerTestFactory.buildForV37();
 
     @Test
-    public void canExtractGeneLevelEventONCO() {
-        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "KIT"));
+    public void canExtractGeneLevelEventOnco() {
+        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"));
         GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("KIT", EventType.GENE_LEVEL, "KIT  positive");
 
         assertNotNull(geneLevelEvent);
@@ -33,8 +32,8 @@ public class GeneLevelExtractorTest {
     }
 
     @Test
-    public void canExtractGeneLevelEventTSG() {
-        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "KIT"));
+    public void canExtractGeneLevelEventTsg() {
+        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"));
         GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("TP53", EventType.GENE_LEVEL, "TP53  negative");
 
         assertNotNull(geneLevelEvent);
@@ -44,7 +43,7 @@ public class GeneLevelExtractorTest {
 
     @Test
     public void pickEventClassificationOnConflict() {
-        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "KIT"));
+        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"));
 
         GeneLevelAnnotation conflictingGeneLevelEvent = geneLevelExtractor.extract("STK11", EventType.GENE_LEVEL, "STK11 positive");
         assertNotNull(conflictingGeneLevelEvent);
@@ -54,7 +53,7 @@ public class GeneLevelExtractorTest {
 
     @Test
     public void canExtractGeneLevelEventGeneral() {
-        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "MET"));
+        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "MET"));
         GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("STK11", EventType.GENE_LEVEL, "Truncating Mutations");
 
         assertNotNull(geneLevelEvent);
@@ -64,7 +63,7 @@ public class GeneLevelExtractorTest {
 
     @Test
     public void canExtractGeneLevelEventFusion() {
-        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "MET"));
+        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "MET"));
         GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("NTRK3", EventType.PROMISCUOUS_FUSION, "NTRK3 fusion");
 
         assertNotNull(geneLevelEvent);
@@ -74,13 +73,13 @@ public class GeneLevelExtractorTest {
 
     @Test
     public void filtersNonExistingGenes() {
-        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("STK11", "MET"));
+        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "MET"));
         assertNull(geneLevelExtractor.extract("NOT-A-GENE", EventType.PROMISCUOUS_FUSION, "NTRK3 fusion"));
     }
 
     @Test
     public void canExtractGeneLevelEvent() {
-        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(createDriverGenes("NOTCH1", "MET"));
+        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("NOTCH1", "MET"));
 
         assertEquals(GeneLevelEvent.ACTIVATION, geneLevelExtractor.extractGeneLevelEvent("KRAS", "KRAS activating mutation"));
         assertEquals(GeneLevelEvent.ACTIVATION, geneLevelExtractor.extractGeneLevelEvent("KRAS", "KRAS act mut"));
@@ -96,7 +95,7 @@ public class GeneLevelExtractorTest {
 
     @Test
     public void canDetermineGeneLevelFromDriverGenes() {
-        List<DriverGene> driverGenes = createDriverGenes("STK11", "MET");
+        List<DriverGene> driverGenes = DriverGeneTestFactory.createDriverGenes("STK11", "MET");
 
         assertEquals(GeneLevelEvent.ACTIVATION, GeneLevelExtractor.determineGeneLevelEventFromDriverGenes(driverGenes, "MET"));
         assertEquals(GeneLevelEvent.INACTIVATION, GeneLevelExtractor.determineGeneLevelEventFromDriverGenes(driverGenes, "STK11"));

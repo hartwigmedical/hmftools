@@ -229,16 +229,45 @@ Finally, similar to VICC, cancer types for which no DOIDs have been specified ge
  
 ## Handling of multiple reference genome versions
  
-External knowledgebases generally define their knowledge for one specific reference genome version (v37 or v38). SERVE can merge knowledgebases 
-defined in differing reference genome versions. In addition SERVE generates its output for both reference genome v37 and v38.
+External knowledgebases generally define their knowledge for one specific reference genome version (v37 or v38). SERVE merges knowledgebases 
+defined in either v37 or v38 reference genome versions. In addition SERVE generates its output for both reference genome v37 and v38.
 
 ### Ref-genome dependent knowledge extraction
 
-TODO
+Knowledge is extracted from any knowledgebase with respect to the ref genome version of that knowledgebase. The following resources
+are used in a ref-dependent manner during knowledge extraction:
+ - The reference genome fasta file 
+ - The definition of Hartwig driver genes
+ - The definition of Hartwig known fusions
+ - The Hartwig mapping of gene to (canonical) transcript 
 
 ### Ref-genome dependent output
 
-TODO
+Once per-knowledgebase extraction is done, the extraction results are merged into a v37 and v38 version.
+Any extraction for a v37 knowledgebase is taken over unchanged in the v37 output, and the same holds for any v38 knowledgebase into the v38 
+output. For the remaining cases, the following conversion algo is executed.
+
+#### Genomic position lift-over
+
+Hotspots and ranges are lifted over using [HTSJDK's implementation](https://gatk.broadinstitute.org/hc/en-us/articles/360037060932-LiftoverVcf-Picard-) of UCSC LiftOver.
+In case lift-over could not be performed a warning is raised unless the position is known to not exist in the target ref genome. 
+In addition, any lift-over that lifts a position towards a different chromosome is raised as a warning but is accepted nonetheless.
+
+There are a few additional checks for specific types of knowledge:
+ - A hotspot lift-over is  accepted only in case the reference at the lifted position has remained unchanged.
+ - A codon lift-over is accepted only in case the lifted range has a length of 3 bases.
+ - Transcripts and codon/exon indices are removed from known codons and exons since they can't be trusted anymore after lift-over
+
+#### Gene lift-over
+
+Genes are lifted between reference genome using Hartwig's internal gene mapping. This impacts the following types of events:
+ - Known and actionable ranges
+ - Known and actionable copy numbers
+ - Actionable gene events
+ - Known and actionable fusion pairs
+ 
+Do note that for fusion pairs, additional annotation remains unchanged assuming exonic ranges relevant for known and actionable fusions 
+remain identical between ref genome versions.
  
 ## Overview of the SERVE algorithm
 
@@ -248,11 +277,11 @@ A knowledgebase can contribute to known and/or actionable events. Current config
       
 Knowledgebase  | Ref genome version | Contributes to known events? | Contributes to actionable events?
 ---|---|---|---
-DoCM | 37 | Yes | No 
-Hartwig Cohort | 37 | Yes | No
-Hartwig Curated | 37 | Yes | No
-iClusion | 37 | No | Yes
-VICC | 37 | Yes | Yes
+DoCM | v37 | Yes | No 
+Hartwig Cohort | v37 | Yes | No
+Hartwig Curated | v37 | Yes | No
+iClusion | v37 | No | Yes
+VICC | v37 | Yes | Yes
 
 Knowledge extraction is performed on a per-knowledgebase level after which all events are consolidated as follows:
  - All known events are aggregated on a per-event level where every event has a set of knowledgebases in which the event has been defined as pathogenic.
@@ -261,15 +290,16 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   
  Within the Hartwig pipeline, SERVE output is used in the following manner:
   - The known output is used in various algorithms for various purposes. For example, the known hotspots produced by SERVE are used by 
-  [SAGE](../sage/README.md) as the definition of the highest tier of calling.
+  [SAGE](../sage/README.md) as the definition of the highest tier of calling and HOTSPOT annotation.
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
 - Upcoming
-  - Support for merging sources that differ in ref genome version (37 vs 38)
-  - Support for generating output for both ref genome version 37 and 38
+  - Support for merging sources that differ in ref genome version (v37 vs v38)
+  - Support for generating output for both ref genome version v37 and v38
   - Driver catalog warnings are disabled for VICC
-  - KnownExons and KnownCodons are sorted more explicitly to make sure files don't change upon identical input. 
+  - KnownExons and KnownCodons are sorted more explicitly to make sure files don't change upon identical input.
+  - An index file is generated for KnownHotspots VCF (for both v37 and v38) 
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.2) 
   - Consistently pick a specific transcript for hotspot annotation in case multiple transcripts imply the same hotspot.
   - Extend splice sites from 5 bases to 10 bases beyond exon boundaries.

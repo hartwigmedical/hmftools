@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
+import com.hartwig.hmftools.patientreporter.cuppa.MolecularTissueOrigin;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -30,6 +31,9 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     @NotNull
     public abstract GenomicAnalysis genomicAnalysis();
+
+    @NotNull
+    public abstract MolecularTissueOrigin molecularTissueOrigin();
 
     @NotNull
     public abstract String circosPath();

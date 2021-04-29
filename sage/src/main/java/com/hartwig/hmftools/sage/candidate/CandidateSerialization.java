@@ -128,5 +128,4 @@ public final class CandidateSerialization {
         final Allele alt = Allele.create(variant.alt(), false);
         return Lists.newArrayList(ref, alt);
     }
-
 }

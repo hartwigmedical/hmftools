@@ -12,29 +12,22 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.serve.extraction.util.KeyFormatter;
+import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
-import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
-import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLineCount;
-import htsjdk.variant.vcf.VCFHeaderLineType;
-import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public final class KnownHotspotFile {
 
     private static final Logger LOGGER = LogManager.getLogger(KnownHotspotFile.class);
     private static final String KNOWN_HOTSPOT_VCF = "KnownHotspots.SERVE.vcf.gz";
-
-    private static final String INFO_SOURCES = "sources";
-    private static final String INFO_INPUT = "input";
 
     private KnownHotspotFile() {
     }
@@ -44,39 +37,29 @@ public final class KnownHotspotFile {
         return refGenomeVersion.addVersionToFilePath(outputDir + File.separator + KNOWN_HOTSPOT_VCF);
     }
 
-    public static void write(@NotNull String hotspotVcf, @NotNull Iterable<KnownHotspot> hotspots) {
-        VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(hotspotVcf)
-                .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
-                .modifyOption(Options.INDEX_ON_THE_FLY, false)
-                .build();
-
-        VCFHeader header = new VCFHeader(Sets.newHashSet(), Lists.newArrayList());
-        header.addMetaDataLine(new VCFInfoHeaderLine(INFO_INPUT, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "input"));
-        header.addMetaDataLine(new VCFInfoHeaderLine(INFO_SOURCES,
-                VCFHeaderLineCount.UNBOUNDED,
-                VCFHeaderLineType.String,
-                "sources [" + uniqueSourcesString(hotspots) + "]"));
-
-        writer.writeHeader(header);
+    public static void write(@NotNull String hotspotVcf, @NotNull IndexedFastaSequenceFile refSequence,
+            @NotNull Iterable<KnownHotspot> hotspots) {
+        VariantContextWriter writer =
+                VCFWriterFactory.openIndexedVCFWriter(hotspotVcf, refSequence, uniqueSourcesString(hotspots));
 
         for (KnownHotspot hotspot : sort(hotspots)) {
             List<Allele> hotspotAlleles = buildAlleles(hotspot);
 
-            VariantContext variantContext = new VariantContextBuilder().noGenotypes()
+            VariantContext variant = new VariantContextBuilder().noGenotypes()
                     .source("SERVE")
                     .chr(hotspot.chromosome())
                     .start(hotspot.position())
                     .alleles(hotspotAlleles)
                     .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
-                    .attribute(INFO_SOURCES, Knowledgebase.toCommaSeparatedSourceString(hotspot.sources()))
-                    .attribute(INFO_INPUT,
+                    .attribute(VCFWriterFactory.INPUT_FIELD,
                             KeyFormatter.toProteinKey(hotspot.gene(), hotspot.transcript(), hotspot.proteinAnnotation()))
+                    .attribute(VCFWriterFactory.SOURCES_FIELD, Knowledgebase.toCommaSeparatedSourceString(hotspot.sources()))
                     .make();
 
-            LOGGER.debug(" Writing variant '{}'", variantContext);
-            writer.add(variantContext);
-
+            LOGGER.debug(" Writing variant '{}'", variant);
+            writer.add(variant);
         }
+
         writer.close();
     }
 

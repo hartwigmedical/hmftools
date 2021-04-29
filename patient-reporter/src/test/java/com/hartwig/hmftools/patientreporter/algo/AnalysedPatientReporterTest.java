@@ -36,6 +36,8 @@ public class AnalysedPatientReporterTest {
     private static final String CIRCOS_FILE = BASE_DIRECTORY + "/purple/plot/sample.circos.png";
     private static final String PROTECT_EVIDENCE_TSV = BASE_DIRECTORY + "/protect/sample.protect.tsv";
     private static final String PIPELINE_VERSION = BASE_DIRECTORY + "/pipeline.version";
+    private static final String MOLECULAR_TISSUE_ORIGIN_PLOT = BASE_DIRECTORY + "/purple/plot/sample.circos.png";
+    private static final String MOLECULAR_TISSUE_ORIGIN_TXT = BASE_DIRECTORY + "/cuppa/sample.cuppa.conclusion.txt";
 
     @Test
     public void canRunOnRunDirectory() throws IOException {
@@ -51,7 +53,8 @@ public class AnalysedPatientReporterTest {
 
         assertNotNull(reporter.run(sampleMetadata,
                 PURPLE_PURITY_TSV,
-                PURPLE_QC_FILE, PURPLE_DRIVER_CATALOG_SOMATIC_TSV,
+                PURPLE_QC_FILE,
+                PURPLE_DRIVER_CATALOG_SOMATIC_TSV,
                 PURPLE_DRIVER_CATALOG_GERMLINE_TSV,
                 PURPLE_SOMATIC_VARIANT_VCF,
                 PURPLE_GERMLINE_VARIANT_VCF,
@@ -63,7 +66,10 @@ public class AnalysedPatientReporterTest {
                 CIRCOS_FILE,
                 PROTECT_EVIDENCE_TSV,
                 null,
-                false, PIPELINE_VERSION));
+                false,
+                PIPELINE_VERSION,
+                MOLECULAR_TISSUE_ORIGIN_TXT,
+                MOLECULAR_TISSUE_ORIGIN_PLOT));
     }
 
     @Test

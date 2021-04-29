@@ -30,6 +30,7 @@ import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.extraction.range.RangeAnnotation;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.refgenome.liftover.LiftOverAlgo;
+import com.hartwig.hmftools.serve.refgenome.liftover.LiftOverChecker;
 import com.hartwig.hmftools.serve.refgenome.liftover.LiftOverResult;
 
 import org.apache.logging.log4j.LogManager;
@@ -91,7 +92,7 @@ class RefGenomeConverter {
             RangeAnnotation liftedAnnotation = liftOverRange(codon.annotation());
             if (liftedAnnotation != null) {
                 if (liftedAnnotation.end() - liftedAnnotation.start() != 2) {
-                    LOGGER.warn("Skipping liftover: Lifted codon '{}' is no longer 3 bases long. Lifted codon: '{}'",
+                    LOGGER.warn(" Skipping liftover: Lifted codon '{}' is no longer 3 bases long. Lifted codon: '{}'",
                             codon.annotation(),
                             liftedAnnotation);
                 } else {
@@ -215,8 +216,7 @@ class RefGenomeConverter {
     private VariantHotspot liftOverHotspot(@NotNull VariantHotspot hotspot) {
         LiftOverResult lifted = liftOverAlgo.liftOver(hotspot.chromosome(), hotspot.position());
 
-        if (lifted == null) {
-            LOGGER.warn("Liftover could not be performed on '{}'", hotspot);
+        if (!LiftOverChecker.isValidLiftedPosition(lifted, hotspot)) {
             return null;
         }
 
@@ -224,7 +224,7 @@ class RefGenomeConverter {
 
         String newRef = sequence(lifted.chromosome(), lifted.position(), hotspot.ref().length());
         if (!newRef.equals(hotspot.ref())) {
-            LOGGER.warn("Skipping liftover: Ref changed from '{}' to '{}' on {}", hotspot.ref(), newRef, hotspot);
+            LOGGER.warn(" Skipping liftover: Ref changed from '{}' to '{}' on {}", hotspot.ref(), newRef, hotspot);
             return null;
         }
 
@@ -236,8 +236,7 @@ class RefGenomeConverter {
         LiftOverResult liftedStart = liftOverAlgo.liftOver(annotation.chromosome(), annotation.start());
         LiftOverResult liftedEnd = liftOverAlgo.liftOver(annotation.chromosome(), annotation.end());
 
-        if (liftedStart == null || liftedEnd == null) {
-            LOGGER.warn("Liftover could not be performed on '{}'", annotation);
+        if (!LiftOverChecker.isValidLiftedRegion(liftedStart, liftedEnd, annotation)) {
             return null;
         }
 
@@ -284,7 +283,7 @@ class RefGenomeConverter {
     private void verifyNoChromosomeChange(@NotNull String prevChromosome, @NotNull LiftOverResult lifted, @NotNull Object object) {
         String versionedChromosome = targetVersion.versionedChromosome(prevChromosome);
         if (!lifted.chromosome().equals(versionedChromosome)) {
-            LOGGER.warn("Liftover moved chromosome from '{}' to '{}' on {}", versionedChromosome, lifted.chromosome(), object);
+            LOGGER.warn(" Liftover moved chromosome from '{}' to '{}' on {}", versionedChromosome, lifted.chromosome(), object);
         }
     }
 
@@ -302,7 +301,10 @@ class RefGenomeConverter {
         }
 
         if (!mappedGene.equals(gene)) {
-            LOGGER.info("Mapped gene '{}' for {} to '{}' on {}", gene, sourceVersion, mappedGene, targetVersion);
+            LOGGER.debug(" Mapped gene '{}' for {} to '{}' on {}", gene, sourceVersion, mappedGene, targetVersion);
+            if (mappedGene.equals("NA")) {
+                LOGGER.warn(" Gene '{}' mapped to 'NA'", gene);
+            }
         }
 
         return mappedGene;
