@@ -121,13 +121,14 @@ class RecoveredVariantFactory implements AutoCloseable
 
             final boolean mateExists = mateChromosome != null && matePosition != null && mateId != null;
             if(mateExists && !HumanChromosome.contains(mateChromosome))
-            {
                 continue;
-            }
 
             final VariantContext mate = mateExists
                     ? findMate(mateId, mateChromosome, Math.max(1, matePosition - uncertainty), matePosition + uncertainty)
                     : null;
+
+            if(mate != null && !isAppropriatelyFiltered(mate))
+                continue;
 
             final StructuralVariant sv = mate != null ? create(potentialVariant, mate) : createSingleBreakend(potentialVariant);
             final Optional<StructuralVariantLegPloidy> structuralVariantLegPloidy =
@@ -243,11 +244,10 @@ class RecoveredVariantFactory implements AutoCloseable
     static boolean isAppropriatelyFiltered(@NotNull VariantContext variantContext)
     {
         final Set<String> filters = variantContext.getFilters();
-        return !filters.isEmpty() && filters.stream().noneMatch(DO_NOT_RESCUE   ::contains);
+        return !filters.isEmpty() && filters.stream().noneMatch(DO_NOT_RESCUE::contains);
     }
 
-    @NotNull
-    private VariantContext findMate(@NotNull final String id, @NotNull final String chromosome, final long min, final long max)
+    private VariantContext findMate(final String id, final String chromosome, final long min, final long max)
             throws IOException
     {
         return mReader.query(chromosome, (int) min, (int) max)
@@ -257,7 +257,6 @@ class RecoveredVariantFactory implements AutoCloseable
                 .orElseThrow(() -> new IOException("Unable to find mateId " + id + " between " + min + " and " + max));
     }
 
-    @Nullable
     static String mateLocation(@NotNull final String alt)
     {
         final String bracket;
