@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import java.net.MalformedURLException;
 import java.text.DecimalFormat;
 
 import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.BarChart;
@@ -14,10 +16,15 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.HrDeficiency;
 import com.hartwig.hmftools.patientreporter.cfreport.data.MicroSatelliteStatus;
 import com.hartwig.hmftools.patientreporter.cfreport.data.MutationalBurden;
 import com.hartwig.hmftools.patientreporter.cfreport.data.MutationalLoad;
+import com.itextpdf.io.IOException;
+import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Div;
+import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.Text;
+import com.itextpdf.layout.property.HorizontalAlignment;
 import com.itextpdf.layout.property.UnitValue;
 
 import org.apache.logging.log4j.util.Strings;
@@ -32,10 +39,10 @@ public class TumorCharacteristicsChapter implements ReportChapter {
     private static final DecimalFormat DOUBLE_DECIMAL_FORMAT = ReportResources.decimalFormat("#.##");
 
     @NotNull
-    private final GenomicAnalysis genomicAnalysis;
+    private final AnalysedPatientReport patientReport;
 
-    public TumorCharacteristicsChapter(@NotNull final GenomicAnalysis genomicAnalysis) {
-        this.genomicAnalysis = genomicAnalysis;
+    public TumorCharacteristicsChapter(@NotNull final AnalysedPatientReport patientReport) {
+        this.patientReport = patientReport;
     }
 
     @Override
@@ -50,9 +57,11 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         renderMicrosatelliteStabilityCharacteristic(reportDocument);
         renderMutationalLoadCharacteristic(reportDocument);
         renderMutationalBurdenCharacteristic(reportDocument);
+        renderMolecularTissueOriginPlot(reportDocument);
     }
 
     private void renderHrdCharacteristic(@NotNull Document reportDocument) {
+        GenomicAnalysis genomicAnalysis = patientReport.genomicAnalysis();
         double hrdValue = genomicAnalysis.chordHrdValue();
         ChordStatus hrdStatus = genomicAnalysis.chordHrdStatus();
 
@@ -63,8 +72,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         String hrdUnreliableFootnote = "* HRD score can not be determined reliably when a tumor is microsatellite unstable "
                 + "(MSI) or has insufficient number of mutations and is therefore not reported for this sample.";
         boolean displayFootNote = false;
-        boolean isHrdReliable =
-                genomicAnalysis.chordHrdStatus() == ChordStatus.HR_PROFICIENT || genomicAnalysis.chordHrdStatus() == ChordStatus.HR_DEFICIENT;
+        boolean isHrdReliable = genomicAnalysis.chordHrdStatus() == ChordStatus.HR_PROFICIENT
+                || genomicAnalysis.chordHrdStatus() == ChordStatus.HR_DEFICIENT;
         if (!isHrdReliable) {
             displayFootNote = true;
             hrDeficiencyLabel = DataUtil.NA_STRING + "*";
@@ -88,6 +97,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
     }
 
     private void renderMicrosatelliteStabilityCharacteristic(@NotNull Document reportDocument) {
+        GenomicAnalysis genomicAnalysis = patientReport.genomicAnalysis();
         boolean hasReliablePurity = genomicAnalysis.hasReliablePurity();
         double microSatelliteStability = genomicAnalysis.microsatelliteIndelsPerMb();
         String microSatelliteStabilityString = hasReliablePurity ? genomicAnalysis.microsatelliteStatus().display() + " "
@@ -115,6 +125,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
     }
 
     private void renderMutationalLoadCharacteristic(@NotNull Document reportDocument) {
+        GenomicAnalysis genomicAnalysis = patientReport.genomicAnalysis();
+
         boolean hasReliablePurity = genomicAnalysis.hasReliablePurity();
         int mutationalLoad = genomicAnalysis.tumorMutationalLoad();
         String tmlStatus = genomicAnalysis.tumorMutationalLoadStatus().display();
@@ -141,6 +153,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
     }
 
     private void renderMutationalBurdenCharacteristic(@NotNull Document reportDocument) {
+        GenomicAnalysis genomicAnalysis = patientReport.genomicAnalysis();
+
         boolean hasReliablePurity = genomicAnalysis.hasReliablePurity();
         double mutationalBurden = genomicAnalysis.tumorMutationalBurden();
         String mutationalBurdenString =
@@ -160,6 +174,72 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 mutationalBurdenChart,
                 Strings.EMPTY,
                 false));
+    }
+
+    private void renderMolecularTissueOriginPlot(@NotNull Document reportDocument) {
+        //TODO: fix how to add on new page?
+        reportDocument.add(createCharacteristicDiv(""));
+        reportDocument.add(createCharacteristicDiv(""));
+        reportDocument.add(createCharacteristicDiv(""));
+        reportDocument.add(createCharacteristicDiv(""));
+        reportDocument.add(createCharacteristicDiv(""));
+        reportDocument.add(createCharacteristicDiv(""));
+        reportDocument.add(createCharacteristicDiv(""));
+        reportDocument.add(createCharacteristicDiv(""));
+        reportDocument.add(createCharacteristicDiv(""));
+        reportDocument.add(createCharacteristicDiv(""));
+
+        reportDocument.add(createCharacteristicDiv("Molecular Tissue Origin Plot"));
+        String molecularTissueOriginPlot = patientReport.molecularTissueOrigin().molecularTissueOriginPlot();
+        try {
+            Image circosImage = new Image(ImageDataFactory.create(molecularTissueOriginPlot));
+            circosImage.setMaxHeight(250);
+            circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
+            circosImage.setMarginBottom(8);
+            reportDocument.add(circosImage);
+        } catch (MalformedURLException e) {
+            throw new IOException("Failed to read molecular tissue origin plot image at " + molecularTissueOriginPlot);
+        }
+
+        Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 10, 1, 10 }));
+        table.setWidth(contentWidth());
+
+        table.addCell(TableUtil.createLayoutCell()
+                .add(new Div().add(createContentParagraph("", " "))
+                        .add(createContentParagraph("", ""))));
+
+        table.addCell(TableUtil.createLayoutCell());
+
+        table.addCell(TableUtil.createLayoutCell()
+                .add(new Div().add(createContentParagraph("", " "))
+                        .add(createContentParagraph("", ""))));
+
+
+        table.addCell(TableUtil.createLayoutCell());
+
+        table.addCell(TableUtil.createLayoutCell()
+                .add(new Div().add(createContentParagraph("", " "))
+                        .add(createContentParagraph("", ""))));
+
+
+        reportDocument.add(table);
+    }
+
+    @NotNull
+    private static Paragraph createContentParagraph(@NotNull String boldPart, @NotNull String regularPart) {
+        return new Paragraph(boldPart).addStyle(ReportResources.subTextBoldStyle())
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
+                .add(new Text(regularPart).addStyle(ReportResources.subTextStyle()))
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
+    }
+
+    @NotNull
+    private Div createCharacteristicDiv(@NotNull String title) {
+        Div div = new Div();
+        div.setKeepTogether(true);
+
+        div.add(new Paragraph(title).addStyle(ReportResources.sectionTitleStyle()));
+        return div;
     }
 
     @NotNull

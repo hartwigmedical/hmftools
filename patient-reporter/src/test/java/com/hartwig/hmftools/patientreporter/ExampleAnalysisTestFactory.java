@@ -38,6 +38,8 @@ import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableGenomicAnalysis;
+import com.hartwig.hmftools.patientreporter.cuppa.ImmutableMolecularTissueOrigin;
+import com.hartwig.hmftools.patientreporter.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
@@ -164,12 +166,16 @@ public final class ExampleAnalysisTestFactory {
                 .viralInsertions(viralInsertions)
                 .build();
 
+        MolecularTissueOrigin molecularTissueOrigin =
+                ImmutableMolecularTissueOrigin.builder().molecularTissueOriginResult("Skin").molecularTissueOriginPlot(CIRCOS_PATH).build();
+
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(qcForNumber)
                 .clinicalSummary(clinicalSummary)
                 .genomicAnalysis(analysis)
                 .circosPath(CIRCOS_PATH)
+                .molecularTissueOrigin(molecularTissueOrigin)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(correctionReport)
                 .signaturePath(reportData.signaturePath())
@@ -233,12 +239,16 @@ public final class ExampleAnalysisTestFactory {
                 .viralInsertions(viralInsertions)
                 .build();
 
+        MolecularTissueOrigin molecularTissueOrigin =
+                ImmutableMolecularTissueOrigin.builder().molecularTissueOriginResult("Skin").molecularTissueOriginPlot(CIRCOS_PATH).build();
+
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(QsFormNumber.FOR_209.display())
                 .clinicalSummary(clinicalSummary)
                 .genomicAnalysis(analysis)
                 .circosPath(CIRCOS_PATH)
+                .molecularTissueOrigin(molecularTissueOrigin)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(false)
                 .signaturePath(reportData.signaturePath())

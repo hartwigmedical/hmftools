@@ -186,6 +186,10 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell().add(new Paragraph("HR Status").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(hrdStyle)));
 
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("Molecular Tissue Origin").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(patientReport.molecularTissueOrigin()
+                .molecularTissueOriginResult()).addStyle(hrdStyle)));
+
         reportDocument.add(div);
     }
 

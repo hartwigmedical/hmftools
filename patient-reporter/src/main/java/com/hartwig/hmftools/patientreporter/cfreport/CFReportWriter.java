@@ -65,7 +65,7 @@ public class CFReportWriter implements ReportWriter {
         ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(analysis),
                 new TherapyDetailsChapterOffLabel(analysis),
                 new GenomicAlterationsChapter(analysis, report.sampleReport(), germlineReportingModel),
-                new TumorCharacteristicsChapter(analysis), new CircosChapter(report), new ExplanationChapter(),
+                new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(),
                 new DetailsAndDisclaimerChapter(report) };
 
         writeReport(report, chapters, outputFilePath);

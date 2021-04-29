@@ -18,6 +18,9 @@ import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.cuppa.ImmutableMolecularTissueOrigin;
+import com.hartwig.hmftools.patientreporter.cuppa.MolecularTissueOrigin;
+import com.hartwig.hmftools.patientreporter.cuppa.MolecularTissueOriginFactory;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
@@ -44,7 +47,8 @@ public class AnalysedPatientReporter {
             @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String linxFusionTsv,
             @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv,
             @NotNull String chordPredictionTxt, @NotNull String circosFile, @NotNull String protectEvidenceTsv, @Nullable String comments,
-            boolean correctedReport, @NotNull String pipelineVersionFile) throws IOException {
+            boolean correctedReport, @NotNull String pipelineVersionFile, @NotNull String molecularTissueOriginTsv,
+            @NotNull String molecularTissueOriginPlot) throws IOException {
         // TODO Specific COLO handling doesn't belong in patient reporter!
         String patientId = sampleMetadata.patientId().startsWith("COLO829") ? "COLO829" : sampleMetadata.patientId();
         PatientPrimaryTumor patientPrimaryTumor =
@@ -80,12 +84,18 @@ public class AnalysedPatientReporter {
                 ? MetaDataResolver.majorDotMinorVersion(new File(pipelineVersionFile))
                 : "No pipeline version is known";
 
+        MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
+                .molecularTissueOriginResult(MolecularTissueOriginFactory.readMolecularTissueOriginResult(molecularTissueOriginTsv))
+                .molecularTissueOriginPlot(molecularTissueOriginPlot)
+                .build();
+
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(determineForNumber(genomicAnalysis.hasReliablePurity(), genomicAnalysis.impliedPurity()))
                 .clinicalSummary(clinicalSummary)
                 .pipelineVersion(pipelineVersion)
                 .genomicAnalysis(filteredAnalysis)
+                .molecularTissueOrigin(molecularTissueOrigin)
                 .circosPath(circosFile)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(correctedReport)
