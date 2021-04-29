@@ -6,8 +6,12 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.serve.ServeConfig;
+import com.hartwig.hmftools.serve.ServeLocalConfigProvider;
+import com.hartwig.hmftools.serve.extraction.KnownEvent;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExon;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExonFile;
 import com.hartwig.hmftools.serve.extraction.util.GenerateAltBase;
@@ -38,26 +42,27 @@ public class ExonAnnotationToVCFConverter {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        String knownExonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownExons.SERVE.37.tsv";
-        String outputFile = System.getProperty("user.home") + "/hmf/tmp/exons.vcf.gz";
-        GenerateAltBase altBaseGenerator = new GenerateAltBase(RefGenomeVersion.V37,
-                new IndexedFastaSequenceFile(new File(
-                        System.getProperty("user.home") + "/hmf/refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina.fasta")));
+        ServeConfig config = ServeLocalConfigProvider.create();
+
+        String knownExonsTsv = System.getProperty("user.home") + "/hmf/tmp/KnownExons.SERVE.37.tsv";
+        String outputVcf = System.getProperty("user.home") + "/hmf/tmp/exons.vcf.gz";
+        GenerateAltBase altBaseGenerator =
+                new GenerateAltBase(RefGenomeVersion.V37, new IndexedFastaSequenceFile(new File(config.refGenome37FastaFile())));
 
         List<KnownExon> exons = KnownExonFile.read(knownExonsTsv);
-        LOGGER.info("The number of known exons in the known exon file is '{}'", exons.size());
+        LOGGER.info("The number of known exons in the known exon file is {}", exons.size());
 
-        VariantContextWriter writer = VCFWriterFactory.generateVCFWriterWithInputAndSources(outputFile);
+        VariantContextWriter writer = VCFWriterFactory.generateVCFWriterWithInputAndSources(outputVcf, uniqueSourcesString(exons));
 
         for (KnownExon exon : exons) {
             String chromosome = exon.annotation().chromosome();
-            long start = exon.annotation().start() + 5; // remove the first 5 slice position before exon
-            long end = exon.annotation().end() - 5; // remove the last 5 splice position after exon
+            long start = exon.annotation().start() + 10; // remove the first 10 non-coding positions before exon
+            long end = exon.annotation().end() - 10; // remove the last 10 non-coding positions after exon
             long middle = start + Math.round((end - start) / 2D); // take middle position of exon
-            List<Long> genomicPositions = Lists.newArrayList(start, middle, end);
+            List<Long> positions = Lists.newArrayList(start, middle, end);
 
             String gene = exon.annotation().gene();
-            for (long position : genomicPositions) {
+            for (long position : positions) {
                 String refBaseOfPosition = altBaseGenerator.extractRefBaseAtGenomicPosition(chromosome, position);
                 String randomAltBase = altBaseGenerator.createAltForRefBase(chromosome, position);
 
@@ -75,7 +80,7 @@ public class ExonAnnotationToVCFConverter {
 
         writer.close();
 
-        LOGGER.info("All known exons are converted and written to VCF file!");
+        LOGGER.info("All known exons are converted and written to '{}'", outputVcf);
     }
 
     private static void writeVariantToVCF(@NotNull VariantContextWriter writer, @NotNull String chromosome, long position,
@@ -83,17 +88,26 @@ public class ExonAnnotationToVCFConverter {
             @NotNull String transcript) {
         List<Allele> alleles = Lists.newArrayList(Allele.create(ref, true), Allele.create(alt, false));
 
-        VariantContext variantContext = new VariantContextBuilder().noGenotypes()
+        VariantContext variant = new VariantContextBuilder().noGenotypes()
                 .source("ExonChecker")
                 .chr(chromosome)
                 .start(position)
                 .alleles(alleles)
                 .computeEndFromAlleles(alleles, new Long(position).intValue())
-                .attribute("source", Knowledgebase.toCommaSeparatedSourceString(knowledgebases))
-                .attribute("input", KeyFormatter.toExonKey(gene, transcript, exonIndex))
+                .attribute(VCFWriterFactory.INPUT_FIELD, KeyFormatter.toExonKey(gene, transcript, exonIndex))
+                .attribute(VCFWriterFactory.SOURCES_FIELD, Knowledgebase.toCommaSeparatedSourceString(knowledgebases))
                 .make();
 
-        LOGGER.debug(" Writing variant to VCF file'{}'", variantContext);
-        writer.add(variantContext);
+        LOGGER.debug(" Writing '{}' to VCF file", variant);
+        writer.add(variant);
+    }
+
+    @NotNull
+    private static String uniqueSourcesString(@NotNull Iterable<? extends KnownEvent> events) {
+        Set<Knowledgebase> sources = Sets.newHashSet();
+        for (KnownEvent event : events) {
+            sources.addAll(event.sources());
+        }
+        return Knowledgebase.toCommaSeparatedSourceString(sources);
     }
 }

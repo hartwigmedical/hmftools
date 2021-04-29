@@ -249,16 +249,6 @@ public class RefGenomeConverterTest {
                 GeneNameMapping.loadFromEmbeddedResource());
     }
 
-    @NotNull
-    private static RefGenomeConverter buildConverterWithGeneNameMapping(@NotNull RefGenomeVersion source, @NotNull RefGenomeVersion target,
-            @NotNull GeneNameMapping mapping) {
-        return new RefGenomeConverter(source,
-                RefGenomeVersion.V38,
-                RefGenomeResourceTestFactory.loadTestRefSequence38(),
-                new DummyLiftOver(),
-                mapping);
-    }
-
     private static class DummyLiftOver implements LiftOverAlgo {
 
         @Nullable
@@ -276,5 +266,4 @@ public class RefGenomeConverterTest {
             return null;
         }
     }
-
 }

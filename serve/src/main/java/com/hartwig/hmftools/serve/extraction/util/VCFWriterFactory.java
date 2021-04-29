@@ -15,19 +15,28 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public final class VCFWriterFactory {
 
+    public static final String SOURCES_FIELD = "sources";
+    public static final String INPUT_FIELD = "input";
+
     private VCFWriterFactory() {
     }
 
     @NotNull
-    public static VariantContextWriter generateVCFWriterWithInputAndSources(@NotNull String outputFile) {
+    public static VariantContextWriter generateVCFWriterWithInputAndSources(@NotNull String outputFile, @NotNull String sources) {
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputFile)
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
                 .modifyOption(Options.INDEX_ON_THE_FLY, false)
                 .build();
 
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Lists.newArrayList());
-        header.addMetaDataLine(new VCFInfoHeaderLine("input", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "input"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("sources", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "sources"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(INPUT_FIELD,
+                VCFHeaderLineCount.UNBOUNDED,
+                VCFHeaderLineType.String,
+                "input based on which SERVE generated this record"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(SOURCES_FIELD,
+                VCFHeaderLineCount.UNBOUNDED,
+                VCFHeaderLineType.String,
+                "SERVE sources that contained this record [" + sources + "]"));
 
         writer.writeHeader(header);
         return writer;

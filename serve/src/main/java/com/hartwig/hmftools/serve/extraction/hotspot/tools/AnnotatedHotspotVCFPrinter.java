@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
+import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 import com.hartwig.hmftools.serve.util.AminoAcidFunctions;
 
 import org.apache.logging.log4j.LogManager;
@@ -60,18 +61,20 @@ public class AnnotatedHotspotVCFPrinter {
                     .add(canonical.map(SnpEffAnnotation::hgvsCoding).orElse(Strings.EMPTY))
                     .add(AminoAcidFunctions.forceSingleLetterProteinAnnotation(canonicalProtein));
 
-            Object input = variant.getAttribute("input");
+            Object input = variant.getAttribute(VCFWriterFactory.INPUT_FIELD);
             if (input != null) {
                 joiner.add(input.toString());
             }
 
-            List<String> sources = variant.getAttributeAsStringList("sources", Strings.EMPTY);
+            List<String> sources = variant.getAttributeAsStringList(VCFWriterFactory.SOURCES_FIELD, Strings.EMPTY);
             if (!sources.isEmpty()) {
                 StringJoiner sourceJoiner = new StringJoiner(",");
                 for (String source : sources) {
                     sourceJoiner.add(source);
                 }
                 joiner.add(sourceJoiner.toString());
+            } else {
+                LOGGER.warn("No sources found on {}", variant);
             }
 
             System.out.println(joiner.toString());
