@@ -301,7 +301,10 @@ class RefGenomeConverter {
         }
 
         if (!mappedGene.equals(gene)) {
-            LOGGER.info(" Mapped gene '{}' for {} to '{}' on {}", gene, sourceVersion, mappedGene, targetVersion);
+            LOGGER.debug(" Mapped gene '{}' for {} to '{}' on {}", gene, sourceVersion, mappedGene, targetVersion);
+            if (mappedGene.equals("NA")) {
+                LOGGER.warn(" Gene '{}' mapped to 'NA'", gene);
+            }
         }
 
         return mappedGene;
