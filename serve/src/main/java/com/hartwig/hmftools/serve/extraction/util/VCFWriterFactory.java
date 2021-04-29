@@ -15,8 +15,8 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public final class VCFWriterFactory {
 
-    public static final String SOURCES_FIELD = "sources";
     public static final String INPUT_FIELD = "input";
+    public static final String SOURCES_FIELD = "sources";
 
     private VCFWriterFactory() {
     }
