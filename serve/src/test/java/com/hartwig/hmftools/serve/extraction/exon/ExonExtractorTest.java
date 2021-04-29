@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.serve.extraction.exon;
 
-import static com.hartwig.hmftools.serve.DriverGeneSupplier.createDriverGenes;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -13,6 +11,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.serve.DriverGeneTestFactory;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
@@ -27,7 +26,7 @@ public class ExonExtractorTest {
 
     @Test
     public void canExtractExonForExonAndFusion() {
-        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "KIT"));
+        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "KIT"));
         List<ExonAnnotation> exons = extractor.extract("KIT", null, EventType.FUSION_PAIR_AND_EXON, "EXON 11 MUTATION");
 
         assertEquals(1, exons.size());
@@ -41,7 +40,7 @@ public class ExonExtractorTest {
 
     @Test
     public void canExtractExonForwardStrand() {
-        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR"));
+        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"));
         List<ExonAnnotation> exons = extractor.extract("EGFR", null, EventType.EXON, "EXON 19 DELETION");
 
         assertEquals(1, exons.size());
@@ -55,7 +54,7 @@ public class ExonExtractorTest {
 
     @Test
     public void canExtractExonReverseStrand() {
-        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR"));
+        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"));
         List<ExonAnnotation> exons = extractor.extract("KRAS", null, EventType.EXON, "EXON 2 DELETION");
 
         assertEquals(1, exons.size());
@@ -69,19 +68,19 @@ public class ExonExtractorTest {
 
     @Test
     public void canFilterOnNonCanonicalTranscript() {
-        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR"));
+        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"));
         assertNull(extractor.extract("KRAS", "not the canonical transcript", EventType.EXON, "EXON 2 DELETION"));
     }
 
     @Test
     public void canFilterWhenExonIndicesDoNotExist() {
-        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR"));
+        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"));
         assertNull(extractor.extract("KRAS", "ENST00000256078", EventType.EXON, "not a correct event"));
     }
 
     @Test
     public void canFilterWhenExonIndexNotOnTranscript() {
-        ExonExtractor extractor = createWithDriverGenes(createDriverGenes("TP53", "EGFR"));
+        ExonExtractor extractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("TP53", "EGFR"));
         assertNull(extractor.extract("KRAS", "ENST00000256078", EventType.EXON, "Exon 2000 deletion"));
     }
 
@@ -101,5 +100,4 @@ public class ExonExtractorTest {
     private static ExonExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes) {
         return new ExonExtractor(V37_GENE_CHECKER, new MutationTypeFilterAlgo(driverGenes), V37_GENE_MAP);
     }
-
 }
