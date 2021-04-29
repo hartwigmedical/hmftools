@@ -70,10 +70,9 @@ public class DedupIndel extends BufferedPostProcessor {
         if (longer.alt().substring(0, shorter.alt().length()).equals(shorter.alt())) {
             longer.filters().add(SageVCF.DEDUP_FILTER);
         }
-
     }
 
-    private boolean isPassingPhasedIndel(@NotNull final SageVariant newEntry) {
+    private static boolean isPassingPhasedIndel(@NotNull final SageVariant newEntry) {
         return newEntry.isPassing() && newEntry.localPhaseSet() > 0 && newEntry.isIndel();
     }
 }

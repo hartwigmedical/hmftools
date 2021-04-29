@@ -29,7 +29,6 @@ public class PhasedInframeIndel extends BufferedPostProcessor {
 
     @Override
     protected void processSageVariant(@NotNull final SageVariant newVariant, @NotNull final Collection<SageVariant> buffer) {
-
         final int lps = newVariant.localPhaseSet();
         if (lps == 0 || !newVariant.isPassing() || !newVariant.variant().isFrameshiftIndel()) {
             return;
@@ -83,5 +82,4 @@ public class PhasedInframeIndel extends BufferedPostProcessor {
         }
         return null;
     }
-
 }
