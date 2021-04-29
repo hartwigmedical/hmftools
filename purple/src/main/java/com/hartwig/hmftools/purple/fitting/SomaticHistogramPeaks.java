@@ -112,7 +112,7 @@ public class SomaticHistogramPeaks
             double remainingWeight = positiveWeight(weightedVariants);
             double unexplainedWeight = remainingWeight / initialWeight;
 
-            PPL_LOGGER.info(String.format("somatic peak(%.3f) weight(%.3f avg=%.3f) remaining(%.3f pct=%.3f)",
+            PPL_LOGGER.debug(String.format("somatic peak(%.3f) weight(%.3f avg=%.3f) remaining(%.3f pct=%.3f)",
                     peak, peakTotalWeight, peakAverageWeight, remainingWeight, unexplainedWeight));
 
             if(Doubles.lessThan(unexplainedWeight, MAX_UNEXPLAINED_WEIGHT_PERCENT))

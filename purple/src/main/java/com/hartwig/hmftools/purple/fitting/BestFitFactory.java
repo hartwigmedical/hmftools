@@ -85,17 +85,23 @@ public class BestFitFactory
 
         final List<FittedPurity> bestFitPerPurityCandidates = inRangeOfLowest(lowestScoreFit.score(), allCandidates);
         final FittedPurityScore score = FittedPurityScoreFactory.score(bestFitPerPurityCandidates);
-
         final ImmutableBestFit.Builder builder = ImmutableBestFit.builder().score(score).allFits(allCandidates);
 
-        boolean useSomatics = useSomatics(score);
+        boolean exceedsPuritySpread = Doubles.greaterOrEqual(score.puritySpread(), mConfig.SomaticFitting.MinSomaticPuritySpread);
+        boolean highlyDiploid = isHighlyDiploid(score);
 
-        if(!useSomatics)
-        {
-            return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
-        }
-
+        boolean hasTumor = !highlyDiploid || hasTumor(somatics, structuralVariants, observedRegions);
         final List<FittedPurity> diploidCandidates = BestFit.mostDiploidPerPurity(allCandidates);
+
+        PPL_LOGGER.info("Sample maxDiploidProportion({}) diploidCandidates({}) purityRange({} - {}) hasTumor({})",
+                formatPurity(score.maxDiploidProportion()), diploidCandidates.size(),
+                formatPurity(score.minPurity()), formatPurity(score.maxPurity()), hasTumor);
+
+        FittedPurity lowestPurityFit = diploidCandidates.isEmpty() ?
+                lowestScoreFit : diploidCandidates.stream().min(Comparator.comparingDouble(FittedPurity::purity)).get();
+
+        if(!hasTumor)
+            return builder.fit(lowestPurityFit).method(FittedPurityMethod.NO_TUMOR).build();
 
         if(diploidCandidates.isEmpty())
         {
@@ -103,20 +109,13 @@ public class BestFitFactory
             return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
         }
 
-        final FittedPurity lowestPurityFit = diploidCandidates.stream().min(Comparator.comparingDouble(FittedPurity::purity)).get();
+        boolean useSomatics = !mConfig.TumorOnlyMode && exceedsPuritySpread && highlyDiploid;
 
-        setSvSummary(structuralVariants);
-        setSomaticSummary(somatics);
-
-        boolean hasTumor = hasTumor(observedRegions);
-
-        if(!hasTumor)
-        {
-            PPL_LOGGER.warn("No tumor found");
-            return builder.fit(lowestPurityFit).method(FittedPurityMethod.NO_TUMOR).build();
-        }
+        if(!useSomatics)
+            return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
 
         final Optional<FittedPurity> somaticFit = mSomaticPurityFitter.fromSomatics(mVariantsInReadCountRange, diploidCandidates);
+
         if(!somaticFit.isPresent())
         {
             return builder.fit(lowestPurityFit).method(FittedPurityMethod.SOMATIC).build();
@@ -131,23 +130,12 @@ public class BestFitFactory
         }
     }
 
-    private boolean useSomatics(final FittedPurityScore score)
+    private boolean hasTumor(
+            final List<SomaticVariant> somatics, final List<StructuralVariant> structuralVariants, final List<ObservedRegion> observedRegions)
     {
-        if(mConfig.TumorOnlyMode)
-            return false;
+        setSvSummary(structuralVariants);
+        setSomaticSummary(somatics);
 
-        if(Doubles.greaterOrEqual(score.puritySpread(), mConfig.SomaticFitting.MinSomaticPuritySpread) && isHighlyDiploid(score))
-        {
-            PPL_LOGGER.info("Sample is highly diploid({}) with large purity range({} - {})",
-                    formatPurity(score.maxDiploidProportion()), formatPurity(score.minPurity()), formatPurity(score.maxPurity()));
-            return true;
-        }
-
-        return false;
-    }
-
-    private boolean hasTumor(final List<ObservedRegion> observedRegions)
-    {
         if(mSomaticHotspotCount > 0 || mAlleleReadCountTotal >= mConfig.SomaticFitting.minTotalSomaticVariantAlleleReadCount())
         {
             PPL_LOGGER.info("Tumor evidence: somaticHotspotCount({}) alleleReadCountTotal({})",

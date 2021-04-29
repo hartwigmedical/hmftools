@@ -47,7 +47,7 @@ class RecoveredVariantFactory implements AutoCloseable
     public static final Set<String> DO_NOT_RESCUE =
             Sets.newHashSet("af", "qual", GripssFilters.DEDUP, GripssFilters.MIN_TUMOR_AF);
 
-    private static final Comparator<RecoveredVariant> QUALITY_COMPARATOR = comparingDouble(x -> x.context().getPhredScaledQual());
+    // private static final Comparator<RecoveredVariant> QUALITY_COMPARATOR = comparingDouble(x -> x.context().getPhredScaledQual());
 
     private final AbstractFeatureReader<VariantContext, LineIterator> mReader;
     private final StructuralVariantLegPloidyFactory<PurpleCopyNumber> mPloidyFactory;
@@ -243,7 +243,7 @@ class RecoveredVariantFactory implements AutoCloseable
     static boolean isAppropriatelyFiltered(@NotNull VariantContext variantContext)
     {
         final Set<String> filters = variantContext.getFilters();
-        return !filters.isEmpty() && filters.stream().noneMatch(DO_NOT_RESCUE::contains);
+        return !filters.isEmpty() && filters.stream().noneMatch(DO_NOT_RESCUE   ::contains);
     }
 
     @NotNull
