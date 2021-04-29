@@ -138,11 +138,12 @@ public class RecoverStructuralVariants implements Closeable
                         {
                             attemptRecovery = true;
                             int expectedOrientation = -1 * leg.orientation();
-                            final Optional<RecoveredVariant> optionalRecoveredVariant = mRecoveredVariantFactory.recoverVariantAtIndex(
-                                    expectedOrientation,
-                                    unexplainedCopyNumberChange,
-                                    index,
-                                    chromosomeCopyNumbers);
+
+                            final List<RecoveredVariant> candidates = mRecoveredVariantFactory.recoverVariantAtIndex(
+                                    expectedOrientation, unexplainedCopyNumberChange, index, chromosomeCopyNumbers);
+
+                            final Optional<RecoveredVariant> optionalRecoveredVariant = mRecoveredVariantFactory.findTopCandidate(candidates);
+
                             if(optionalRecoveredVariant.isPresent())
                             {
                                 final RecoveredVariant recoveredVariant = optionalRecoveredVariant.get();
@@ -179,11 +180,11 @@ public class RecoverStructuralVariants implements Closeable
         return false;
     }
 
-    @VisibleForTesting
-    @NotNull
-    List<VariantContext> recoverFromUnexplainedSegments() throws IOException
+    public List<VariantContext> recoverFromUnexplainedSegments() throws IOException
     {
         final List<VariantContext> result = Lists.newArrayList();
+
+        final List<List<RecoveredVariant>> candidateLists = Lists.newArrayList();
 
         for(Chromosome chromosome : mAllCopyNumbers.keySet())
         {
@@ -199,13 +200,62 @@ public class RecoverStructuralVariants implements Closeable
 
                     int expectedOrientation = Doubles.greaterThan(current.averageTumorCopyNumber(), prev.averageTumorCopyNumber()) ? -1 : 1;
 
-                    final Optional<RecoveredVariant> optionalRecoveredVariant = mRecoveredVariantFactory.recoverVariantAtIndex(
+                    final List<RecoveredVariant> candidates = mRecoveredVariantFactory.recoverVariantAtIndex(
                             expectedOrientation, unexplainedCopyNumberChange, index, chromosomeCopyNumbers);
 
-                    optionalRecoveredVariant.ifPresent(recoveredVariant -> result.addAll(toContext(recoveredVariant,
-                            "UNSUPPORTED_BREAKEND")));
+                    if(!candidates.isEmpty())
+                        candidateLists.add(candidates);
                 }
             }
+        }
+
+        // now prioritise across candidate locations (ie by CN index
+        for(int i = 0; i < candidateLists.size(); ++i)
+        {
+            final List<RecoveredVariant> variants1 = candidateLists.get(i);
+
+            if(variants1.isEmpty())
+                continue;
+
+            // check for other lists with a matching variant
+            RecoveredVariant topVariant = null;
+            boolean topHasRecoveredMate = false;
+            int topMateListIndex = -1;
+
+            for(RecoveredVariant variant : variants1)
+            {
+                boolean foundRecoveredMate = false;
+                int mateListIndex = -1;
+
+                if(variant.mate() != null)
+                {
+                    for(int j = i + 1; j < candidateLists.size(); ++j)
+                    {
+                        final List<RecoveredVariant> variants2 = candidateLists.get(j);
+
+                        if(variants2.stream().anyMatch(x -> x.mate().getID().equals(variant.context().getID())))
+                        {
+                            foundRecoveredMate = true;
+                            mateListIndex = j;
+                            break;
+                        }
+                    }
+                }
+
+                if(topVariant == null || foundRecoveredMate && !topHasRecoveredMate
+                || variant.context().getPhredScaledQual() > topVariant.context().getPhredScaledQual())
+                {
+                    topVariant = variant;
+                    topHasRecoveredMate = foundRecoveredMate;
+                    topMateListIndex = mateListIndex;
+                }
+            }
+
+            result.addAll(toContext(topVariant, "UNSUPPORTED_BREAKEND"));
+
+            // remove other candidates from any matched mate's list
+            if(topMateListIndex >= 0)
+                candidateLists.get(topMateListIndex).clear();
         }
 
         return result;
@@ -223,8 +273,7 @@ public class RecoverStructuralVariants implements Closeable
         return -1;
     }
 
-    @NotNull
-    private static List<VariantContext> toContext(@NotNull final RecoveredVariant variant, @NotNull final String partialMethod)
+    private static List<VariantContext> toContext(final RecoveredVariant variant, final String partialMethod)
     {
         final List<VariantContext> result = Lists.newArrayList();
         final Set<String> recoveryFilterSet = filterSet(variant.context());

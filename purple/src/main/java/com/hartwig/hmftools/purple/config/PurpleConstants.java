@@ -17,7 +17,7 @@ public class PurpleConstants
     public static final int SNV_HOTSPOT_MAX_SNV_COUNT = 1000;
 
     // SV recovery
-    public static final int DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE = 250;
+    public static final int DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE = 300;
     public static final int DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE = 800;
     public static final double RECOVERY_MIN_LENGTH = 1000;
     public static final double RECOVERY_MIN_PLOIDY = 0.5;

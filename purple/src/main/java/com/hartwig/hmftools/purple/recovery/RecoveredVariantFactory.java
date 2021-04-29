@@ -64,28 +64,32 @@ class RecoveredVariantFactory implements AutoCloseable
         mMinSglQual = minSglQual;
     }
 
-    @NotNull
-    Optional<RecoveredVariant> recoverVariantAtIndex(int expectedOrientation, double unexplainedCopyNumberChange, int index,
-            @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException
+    protected List<RecoveredVariant> recoverVariantAtIndex(
+            int expectedOrientation, double unexplainedCopyNumberChange, int index, final List<PurpleCopyNumber> copyNumbers) throws IOException
     {
         if(index <= 0)
-        {
+            return Lists.newArrayList();
+
+        return recoverAllVariantAtIndex(expectedOrientation, unexplainedCopyNumberChange, index, copyNumbers);
+    }
+
+    protected static Optional<RecoveredVariant> findTopCandidate(final List<RecoveredVariant> variants)
+    {
+        if(variants.isEmpty())
             return Optional.empty();
-        }
 
-        final List<RecoveredVariant> all = recoverAllVariantAtIndex(expectedOrientation, unexplainedCopyNumberChange, index, copyNumbers);
-
-        if(all.isEmpty())
-            return Optional.empty();
-
-        // all.sort(QUALITY_COMPARATOR.reversed());
-
+        // priorise by non-SGLs over SGLs, then highest qual-score
         RecoveredVariant topVariant = null;
 
-        for(RecoveredVariant variant : all)
+        for(RecoveredVariant variant : variants)
         {
             if(topVariant == null)
+            {
                 topVariant = variant;
+                continue;
+            }
+
+
             else if(topVariant.mate() == null && variant.mate() != null)
                 topVariant = variant;
             else if(variant.context().getPhredScaledQual() > topVariant.context().getPhredScaledQual())
