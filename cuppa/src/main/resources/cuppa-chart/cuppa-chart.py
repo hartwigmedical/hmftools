@@ -16,7 +16,7 @@ try:
     import main.create_chart as create_chart
 except:
     print('[ERROR] Dependencies of CUPPA-chart not existing. Please check your environment. CUPPA-chart can not run.')
-    exit()
+    exit(1)
 
 
 def main(sample, sample_data, output_dir):
@@ -29,7 +29,8 @@ def main(sample, sample_data, output_dir):
         try:
             os.makedirs(output_dir)
         except:
-            sys.exit('[ERROR] Output_dir does not exist but can also not be made. No output files generated. CUPPA-chart will end.')
+            print('[ERROR] Output_dir does not exist but can also not be made. No output files generated. CUPPA-chart will end.')
+            sys.exit(1)
 
     ## prepare data ##
     print(datetime.now().strftime("%Y/%m/%d %H:%M:%S") + " - [DEBUG] - preparing sample data for " + sample)
@@ -67,7 +68,8 @@ if __name__ == "__main__":
     in_arr = sys.argv
     if '-sample' not in in_arr  or '-sample_data' not in in_arr  or '-output_dir' not in in_arr:
         print (__doc__)
-        sys.exit('[ERROR] INPUT INCORRECT - not all inputs | inputs are wrongly provided. Please check USAGE above.')
+        print('[ERROR] INPUT INCORRECT - not all inputs | inputs are wrongly provided. Please check USAGE above.')
+        sys.exit(1)
     else:
         sample = in_arr[in_arr.index('-sample') + 1]
         sample_data = in_arr[in_arr.index('-sample_data') + 1]
@@ -79,6 +81,8 @@ if __name__ == "__main__":
 
     if sample not in sample_data:
         print (__doc__)
-        sys.exit('[ERROR] INPUT INCORRECT - the sample name is different from the name on the sample data provided. Please check USAGE above.')
+        print('[ERROR] INPUT INCORRECT - the sample name is different from the name on the sample data provided. Please check USAGE above.')
+        sys.exit(1)
     # start main function
     main(sample, sample_data, output_dir)
+    sys.exit(0)
