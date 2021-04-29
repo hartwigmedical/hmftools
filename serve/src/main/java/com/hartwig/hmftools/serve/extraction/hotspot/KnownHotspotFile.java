@@ -42,7 +42,7 @@ public final class KnownHotspotFile {
         for (KnownHotspot hotspot : sort(hotspots)) {
             List<Allele> hotspotAlleles = buildAlleles(hotspot);
 
-            VariantContext variantContext = new VariantContextBuilder().noGenotypes()
+            VariantContext variant = new VariantContextBuilder().noGenotypes()
                     .source("SERVE")
                     .chr(hotspot.chromosome())
                     .start(hotspot.position())
@@ -53,8 +53,8 @@ public final class KnownHotspotFile {
                     .attribute(VCFWriterFactory.SOURCES_FIELD, Knowledgebase.toCommaSeparatedSourceString(hotspot.sources()))
                     .make();
 
-            LOGGER.debug(" Writing variant '{}'", variantContext);
-            writer.add(variantContext);
+            LOGGER.debug(" Writing variant '{}'", variant);
+            writer.add(variant);
         }
 
         writer.close();
