@@ -290,7 +290,7 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   
  Within the Hartwig pipeline, SERVE output is used in the following manner:
   - The known output is used in various algorithms for various purposes. For example, the known hotspots produced by SERVE are used by 
-  [SAGE](../sage/README.md) as the definition of the highest tier of calling.
+  [SAGE](../sage/README.md) as the definition of the highest tier of calling and HOTSPOT annotation.
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
