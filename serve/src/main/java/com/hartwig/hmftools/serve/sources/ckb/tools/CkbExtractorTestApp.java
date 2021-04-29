@@ -12,8 +12,8 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.refseq.RefSeq;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.ServeConfig;
 import com.hartwig.hmftools.serve.ServeLocalConfigProvider;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
@@ -55,8 +55,8 @@ public class CkbExtractorTestApp {
         // List<RefSeq> refSeqMappings = RefSeqFile.readingRefSeq(config.refSeqTsv());
         List<RefSeq> refSeqMappings = Lists.newArrayList();
 
-        CkbExtractor extractor =
-                CkbExtractorFactory.buildCkbExtractor(CkbClassificationConfig.build(), buildRefGenomeResource(config), refSeqMappings);
+        RefGenomeResource refGenomeResource = buildRefGenomeResource(config);
+        CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(CkbClassificationConfig.build(), refGenomeResource, refSeqMappings);
 
         List<CkbEntry> entries = CkbReader.readAndCurate(config.ckbDir());
         ExtractionResult result = extractor.extract(entries);
@@ -65,7 +65,7 @@ public class CkbExtractorTestApp {
         CkbUtil.writeEventsToTsv(eventsTsv, entries);
         CkbUtil.printExtractionResults(result);
 
-        new ExtractionResultWriter(config.outputDir(), RefGenomeVersion.V38).write(result);
+        new ExtractionResultWriter(config.outputDir(), Knowledgebase.CKB.refGenomeVersion(), refGenomeResource.refSequence()).write(result);
     }
 
     @NotNull

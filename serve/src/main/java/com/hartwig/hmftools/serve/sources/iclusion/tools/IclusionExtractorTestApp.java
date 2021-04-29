@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.iclusion.classification.IclusionClassificationConfig;
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.serve.ServeConfig;
@@ -52,9 +52,9 @@ public class IclusionExtractorTestApp {
 
         DoidLookup doidLookup = DoidLookupFactory.buildFromMappingTsv(config.missingDoidsMappingTsv());
 
-        IclusionExtractor extractor = IclusionExtractorFactory.buildIclusionExtractor(IclusionClassificationConfig.build(),
-                buildRefGenomeResource(config),
-                doidLookup);
+        RefGenomeResource refGenomeResource = buildRefGenomeResource(config);
+        IclusionExtractor extractor =
+                IclusionExtractorFactory.buildIclusionExtractor(IclusionClassificationConfig.build(), refGenomeResource, doidLookup);
 
         List<IclusionTrial> trials = IclusionReader.readAndCurate(config.iClusionTrialTsv());
         ExtractionResult result = extractor.extract(trials);
@@ -63,7 +63,8 @@ public class IclusionExtractorTestApp {
         String iclusionMutationTsv = config.outputDir() + File.separator + "IclusionMutations.tsv";
         IclusionUtil.writeIclusionMutationTypes(iclusionMutationTsv, trials);
 
-        new ExtractionResultWriter(config.outputDir(), RefGenomeVersion.V37).write(result);
+        new ExtractionResultWriter(config.outputDir(), Knowledgebase.ICLUSION.refGenomeVersion(), refGenomeResource.refSequence()).write(
+                result);
     }
 
     @NotNull

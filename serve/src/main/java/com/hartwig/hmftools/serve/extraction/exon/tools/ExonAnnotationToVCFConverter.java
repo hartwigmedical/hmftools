@@ -43,16 +43,16 @@ public class ExonAnnotationToVCFConverter {
         }
 
         ServeConfig config = ServeLocalConfigProvider.create();
+        IndexedFastaSequenceFile refSequence37 = new IndexedFastaSequenceFile(new File(config.refGenome37FastaFile()));
 
         String knownExonsTsv = System.getProperty("user.home") + "/hmf/tmp/KnownExons.SERVE.37.tsv";
         String outputVcf = System.getProperty("user.home") + "/hmf/tmp/exons.vcf.gz";
-        GenerateAltBase altBaseGenerator =
-                new GenerateAltBase(RefGenomeVersion.V37, new IndexedFastaSequenceFile(new File(config.refGenome37FastaFile())));
+        GenerateAltBase altBaseGenerator = new GenerateAltBase(RefGenomeVersion.V37, refSequence37);
 
         List<KnownExon> exons = KnownExonFile.read(knownExonsTsv);
         LOGGER.info("The number of known exons in the known exon file is {}", exons.size());
 
-        VariantContextWriter writer = VCFWriterFactory.openVCFWriterWithInputAndSources(outputVcf, uniqueSourcesString(exons));
+        VariantContextWriter writer = VCFWriterFactory.openVCFWriter(outputVcf, uniqueSourcesString(exons));
 
         for (KnownExon exon : exons) {
             String chromosome = exon.annotation().chromosome();

@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.ServeConfig;
 import com.hartwig.hmftools.serve.ServeLocalConfigProvider;
 import com.hartwig.hmftools.serve.curation.DoidLookup;
@@ -57,9 +57,10 @@ public class ViccExtractorTestApp {
             Files.createDirectory(outputPath);
         }
 
+        RefGenomeResource refGenomeResource = buildRefGenomeResource(config);
         DoidLookup doidLookup = DoidLookupFactory.buildFromMappingTsv(config.missingDoidsMappingTsv());
         ViccExtractor viccExtractor =
-                ViccExtractorFactory.buildViccExtractor(ViccClassificationConfig.build(), buildRefGenomeResource(config), doidLookup);
+                ViccExtractorFactory.buildViccExtractor(ViccClassificationConfig.build(), refGenomeResource, doidLookup);
 
         List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(config.viccJson(), VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ExtractionResult result = viccExtractor.extract(entries);
@@ -67,7 +68,8 @@ public class ViccExtractorTestApp {
         String featureTsv = config.outputDir() + File.separator + "ViccFeatures.tsv";
         ViccUtil.writeFeaturesToTsv(featureTsv, entries);
 
-        new ExtractionResultWriter(config.outputDir(), RefGenomeVersion.V37).write(result);
+        new ExtractionResultWriter(config.outputDir(), Knowledgebase.VICC_CIVIC.refGenomeVersion(), refGenomeResource.refSequence()).write(
+                result);
     }
 
     @NotNull

@@ -19,6 +19,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
 public class ExtractionResultWriter {
 
     private static final Logger LOGGER = LogManager.getLogger(ExtractionResultWriter.class);
@@ -27,10 +29,14 @@ public class ExtractionResultWriter {
     private final String outputDir;
     @NotNull
     private final RefGenomeVersion refGenomeVersion;
+    @NotNull
+    private final IndexedFastaSequenceFile refSequence;
 
-    public ExtractionResultWriter(@NotNull final String outputDir, @NotNull final RefGenomeVersion refGenomeVersion) {
+    public ExtractionResultWriter(@NotNull final String outputDir, @NotNull final RefGenomeVersion refGenomeVersion,
+            @NotNull final IndexedFastaSequenceFile refSequence) {
         this.outputDir = outputDir;
         this.refGenomeVersion = refGenomeVersion;
+        this.refSequence = refSequence;
     }
 
     public void write(@NotNull ExtractionResult result) throws IOException {
@@ -38,7 +44,7 @@ public class ExtractionResultWriter {
 
         String hotspotVcf = KnownHotspotFile.knownHotspotVcfPath(outputDir, refGenomeVersion);
         LOGGER.info(" Writing {} known hotspots to {}", result.knownHotspots().size(), hotspotVcf);
-        KnownHotspotFile.write(hotspotVcf, result.knownHotspots());
+        KnownHotspotFile.write(hotspotVcf, refSequence, result.knownHotspots());
 
         String codonTsv = KnownCodonFile.knownCodonTsvPath(outputDir, refGenomeVersion);
         LOGGER.info(" Writing {} known codons to {}", result.knownCodons().size(), codonTsv);

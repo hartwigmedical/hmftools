@@ -43,17 +43,17 @@ public class CodonAnnotationToVCFConverter {
         }
 
         ServeConfig config = ServeLocalConfigProvider.create();
+        IndexedFastaSequenceFile refSequence37 = new IndexedFastaSequenceFile(new File(config.refGenome37FastaFile()));
 
         String knownCodonsTsv = System.getProperty("user.home") + "/hmf/tmp/serve/KnownCodons.SERVE.37.tsv";
         String outputVcf = System.getProperty("user.home") + "/hmf/tmp/codons.vcf.gz";
-        GenerateAltBase altBaseGenerator =
-                new GenerateAltBase(RefGenomeVersion.V37, new IndexedFastaSequenceFile(new File(config.refGenome37FastaFile())));
+        GenerateAltBase altBaseGenerator = new GenerateAltBase(RefGenomeVersion.V37, refSequence37);
 
         List<KnownCodon> codons = KnownCodonFile.read(knownCodonsTsv);
 
         LOGGER.info("The number of codons in known codon file is {}", codons.size());
 
-        VariantContextWriter writer = VCFWriterFactory.openVCFWriterWithInputAndSources(outputVcf, uniqueSourcesString(codons));
+        VariantContextWriter writer = VCFWriterFactory.openVCFWriter(outputVcf, uniqueSourcesString(codons));
 
         for (KnownCodon codon : codons) {
             long start = codon.annotation().start();

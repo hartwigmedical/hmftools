@@ -298,7 +298,8 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - Support for merging sources that differ in ref genome version (v37 vs v38)
   - Support for generating output for both ref genome version v37 and v38
   - Driver catalog warnings are disabled for VICC
-  - KnownExons and KnownCodons are sorted more explicitly to make sure files don't change upon identical input. 
+  - KnownExons and KnownCodons are sorted more explicitly to make sure files don't change upon identical input.
+  - An index file is generated for KnownHotspots VCF (for both v37 and v38) 
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.2) 
   - Consistently pick a specific transcript for hotspot annotation in case multiple transcripts imply the same hotspot.
   - Extend splice sites from 5 bases to 10 bases beyond exon boundaries.

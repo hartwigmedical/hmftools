@@ -35,12 +35,12 @@ public class RefGenomeManager {
 
     @NotNull
     public RefGenomeResource pickResourceForKnowledgebase(@NotNull Knowledgebase knowledgebase) {
-        RefGenomeResource resource = refGenomeResourceMap.get(knowledgebase.refGenomeVersion());
-        if (resource == null) {
-            throw new IllegalStateException("No ref genome resources found for knowledgebase " + knowledgebase + " with version "
-                    + knowledgebase.refGenomeVersion());
-        }
-        return resource;
+        return checkedRetrieve(knowledgebase.refGenomeVersion());
+    }
+
+    @NotNull
+    public IndexedFastaSequenceFile refSequenceForRefGenome(@NotNull RefGenomeVersion version) {
+        return checkedRetrieve(version).refSequence();
     }
 
     public void evaluateProteinResolving() {
@@ -82,8 +82,8 @@ public class RefGenomeManager {
             return extraction;
         }
 
-        RefGenomeResource sourceResource = refGenomeResourceMap.get(sourceVersion);
-        IndexedFastaSequenceFile targetSequence = refGenomeResourceMap.get(targetVersion).refSequence();
+        RefGenomeResource sourceResource = checkedRetrieve(sourceVersion);
+        IndexedFastaSequenceFile targetSequence = refSequenceForRefGenome(targetVersion);
         String chainFromSourceToTarget = sourceResource.chainToOtherRefGenomeMap().get(targetVersion);
 
         LiftOverAlgo liftOverAlgo = UCSCLiftOver.fromChainFile(chainFromSourceToTarget);
@@ -102,5 +102,14 @@ public class RefGenomeManager {
                 .actionableFusions(converter.convertActionableFusions(extraction.actionableFusions()))
                 .actionableCharacteristics(extraction.actionableCharacteristics())
                 .build();
+    }
+
+    @NotNull
+    private RefGenomeResource checkedRetrieve(@NotNull RefGenomeVersion version) {
+        RefGenomeResource resource = refGenomeResourceMap.get(version);
+        if (resource == null) {
+            throw new IllegalStateException("No ref genome resources found for ref genome version " + version);
+        }
+        return resource;
     }
 }

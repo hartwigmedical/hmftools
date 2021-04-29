@@ -18,6 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
@@ -36,8 +37,10 @@ public final class KnownHotspotFile {
         return refGenomeVersion.addVersionToFilePath(outputDir + File.separator + KNOWN_HOTSPOT_VCF);
     }
 
-    public static void write(@NotNull String hotspotVcf, @NotNull Iterable<KnownHotspot> hotspots) {
-        VariantContextWriter writer = VCFWriterFactory.openVCFWriterWithInputAndSources(hotspotVcf, uniqueSourcesString(hotspots));
+    public static void write(@NotNull String hotspotVcf, @NotNull IndexedFastaSequenceFile refSequence,
+            @NotNull Iterable<KnownHotspot> hotspots) {
+        VariantContextWriter writer =
+                VCFWriterFactory.openIndexedVCFWriter(hotspotVcf, refSequence, uniqueSourcesString(hotspots));
 
         for (KnownHotspot hotspot : sort(hotspots)) {
             List<Allele> hotspotAlleles = buildAlleles(hotspot);

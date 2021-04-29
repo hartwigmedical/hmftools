@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.genome.chromosome;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.Gender;
 
@@ -70,13 +71,13 @@ public enum HumanChromosome implements Chromosome {
     }
 
     public static boolean contains(@NotNull final String chromosome) {
-        final String trimmedConfig = chromosome.toLowerCase().startsWith("chr") ? chromosome.substring(3) : chromosome;
-        if (isNumeric(trimmedConfig)) {
-            final int integerContig = Integer.parseInt(trimmedConfig);
+        final String trimmedContig = RefGenomeFunctions.stripChrPrefix(chromosome);
+        if (isNumeric(trimmedContig)) {
+            final int integerContig = Integer.parseInt(trimmedContig);
             return integerContig >= 1 && integerContig <= 22;
         }
 
-        return trimmedConfig.equals("X") || trimmedConfig.equals("Y");
+        return trimmedContig.equals("X") || trimmedContig.equals("Y");
     }
 
     public int intValue() {
