@@ -32,7 +32,7 @@ public final class VCFWriterFactory {
         header.addMetaDataLine(new VCFInfoHeaderLine(INPUT_FIELD,
                 VCFHeaderLineCount.UNBOUNDED,
                 VCFHeaderLineType.String,
-                "input based on which SERVE generated this record"));
+                "Input based on which SERVE generated this record"));
         header.addMetaDataLine(new VCFInfoHeaderLine(SOURCES_FIELD,
                 VCFHeaderLineCount.UNBOUNDED,
                 VCFHeaderLineType.String,
