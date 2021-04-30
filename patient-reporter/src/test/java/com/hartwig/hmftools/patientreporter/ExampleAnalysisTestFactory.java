@@ -43,7 +43,7 @@ import com.hartwig.hmftools.patientreporter.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
-import com.hartwig.hmftools.patientreporter.viralbreakend.ImmutableViralbreakend;
+import com.hartwig.hmftools.protect.viralbreakend.ImmutableViralbreakend;
 import com.hartwig.hmftools.protect.viralbreakend.Viralbreakend;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableHomozygousDisruption;

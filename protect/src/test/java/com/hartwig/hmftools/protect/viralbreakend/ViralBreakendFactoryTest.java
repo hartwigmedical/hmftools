@@ -29,7 +29,7 @@ public class ViralBreakendFactoryTest {
     @Test
     public void canReadViralBreakendWithTsv() throws IOException {
         List<Viralbreakend> viralbreakendList = ViralBreakendFactory.readViralBreakend(VIRAL_BREAKEND_WITH_TSV);
-        assertEquals(1, viralbreakendList.size());
+        assertEquals(2, viralbreakendList.size());
 
         Viralbreakend viralbreakend = viralbreakendList.get(0);
 
