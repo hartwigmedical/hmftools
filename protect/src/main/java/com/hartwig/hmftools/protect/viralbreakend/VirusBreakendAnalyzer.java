@@ -11,44 +11,44 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class ViralInsertionAnalyzer {
+public final class VirusBreakendAnalyzer {
 
     private static final Set<String> EXCLUDED_VIRAL_INSERTIONS =
             Sets.newHashSet("Human immunodeficiency virus", "Human immunodeficiency virus 1", "Human immunodeficiency virus 2");
 
-    private ViralInsertionAnalyzer() {
+    private VirusBreakendAnalyzer() {
     }
 
     @NotNull
-    public static List<Viralbreakend> analyzeViralInsertions(@NotNull List<Viralbreakend> viralbreakends) {
-        Map<ViralInsertionAnalyzer.VirusKey, List<Viralbreakend>> itemsPerKey = Maps.newHashMap();
-        for (Viralbreakend viralBreakend : viralbreakends) {
-            ViralInsertionAnalyzer.VirusKey key = new ViralInsertionAnalyzer.VirusKey(viralBreakend.Reference());
-            List<Viralbreakend> items = itemsPerKey.get(key);
+    public static List<VirusBreakend> analyzeVirusBreakends(@NotNull List<VirusBreakend> virusBreakends) {
+        Map<VirusBreakendAnalyzer.VirusKey, List<VirusBreakend>> itemsPerKey = Maps.newHashMap();
+        for (VirusBreakend virusBreakend : virusBreakends) {
+            VirusBreakendAnalyzer.VirusKey key = new VirusBreakendAnalyzer.VirusKey(virusBreakend.Reference());
+            List<VirusBreakend> items = itemsPerKey.get(key);
 
             if (items == null) {
                 items = Lists.newArrayList();
             }
-            items.add(viralBreakend);
+            items.add(virusBreakend);
             itemsPerKey.put(key, items);
         }
 
-        List<Viralbreakend> viralInsertions = Lists.newArrayList();
-        for (Map.Entry<ViralInsertionAnalyzer.VirusKey, List<Viralbreakend>> entry : itemsPerKey.entrySet()) {
-            List<Viralbreakend> itemsForKey = entry.getValue();
+        List<VirusBreakend> virusBreakendFiltered = Lists.newArrayList();
+        for (Map.Entry<VirusBreakendAnalyzer.VirusKey, List<VirusBreakend>> entry : itemsPerKey.entrySet()) {
+            List<VirusBreakend> itemsForKey = entry.getValue();
 
             int count = itemsForKey.size();
             assert count > 0;
             String virusName = itemsForKey.get(0).nameAssigned();
             if (!EXCLUDED_VIRAL_INSERTIONS.contains(virusName)) {
-                viralInsertions.add(ImmutableViralbreakend.builder()
+                virusBreakendFiltered.add(ImmutableVirusBreakend.builder()
                         .from(itemsForKey.get(0))
                         .integrations(Integer.toString(count)) // TODO: can we use integrations of file?
                         .build());
             }
         }
 
-        return viralInsertions;
+        return virusBreakendFiltered;
     }
 
     private static class VirusKey {
@@ -68,7 +68,7 @@ public final class ViralInsertionAnalyzer {
             if (o == null || getClass() != o.getClass()) {
                 return false;
             }
-            final ViralInsertionAnalyzer.VirusKey key = (ViralInsertionAnalyzer.VirusKey) o;
+            final VirusBreakendAnalyzer.VirusKey key = (VirusBreakendAnalyzer.VirusKey) o;
             return Objects.equals(virusId, key.virusId);
         }
 

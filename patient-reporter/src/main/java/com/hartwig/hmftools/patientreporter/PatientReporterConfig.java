@@ -59,8 +59,7 @@ public interface PatientReporterConfig {
     String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
     String MOLECULAR_TISSUE_ORIGIN_TXT = "molecular_tissue_origin_txt";
     String MOLECULAR_TISSUE_ORIGIN_PLOT = "molecular_tissue_origin_plot";
-    String VIRAL_BREAKEND_TSV = "viral_breakend_tsv";
-
+    String VIRUS_BREAKEND_TSV = "virus_breakend_tsv";
 
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
     String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
@@ -112,7 +111,7 @@ public interface PatientReporterConfig {
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
         options.addOption(MOLECULAR_TISSUE_ORIGIN_TXT, true, "Path towards the molecular tissue origin TXT.");
         options.addOption(MOLECULAR_TISSUE_ORIGIN_PLOT, true, "Path towards the molecular tissue origin plot.");
-        options.addOption(VIRAL_BREAKEND_TSV, true, "Path towards the viral breakend TSV.");
+        options.addOption(VIRUS_BREAKEND_TSV, true, "Path towards the virus breakend TSV.");
 
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
@@ -212,7 +211,7 @@ public interface PatientReporterConfig {
     String molecularTissueOriginPlot();
 
     @NotNull
-    String viralBreakendTsv();
+    String virusBreakendTsv();
 
     @NotNull
     String germlineReportingTsv();
@@ -257,7 +256,7 @@ public interface PatientReporterConfig {
         String protectEvidenceFile = Strings.EMPTY;
         String molecularTissueOriginTxt = Strings.EMPTY;
         String molecularTissueOriginPlot = Strings.EMPTY;
-        String viralBreakendTsv = Strings.EMPTY;
+        String virusBreakendTsv = Strings.EMPTY;
 
         String germlineReportingTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
@@ -284,7 +283,7 @@ public interface PatientReporterConfig {
             pipelineVersion = optionalFile(cmd, PIPELINE_VERSION_FILE);
             molecularTissueOriginTxt = optionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_TXT);
             molecularTissueOriginPlot = optionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_PLOT);
-            viralBreakendTsv = optionalFile(cmd, VIRAL_BREAKEND_TSV);
+            virusBreakendTsv = optionalFile(cmd, VIRUS_BREAKEND_TSV);
         }
 
         return ImmutablePatientReporterConfig.builder()
@@ -317,7 +316,7 @@ public interface PatientReporterConfig {
                 .protectEvidenceTsv(protectEvidenceFile)
                 .molecularTissueOriginTxt(molecularTissueOriginTxt)
                 .molecularTissueOriginPlot(molecularTissueOriginPlot)
-                .viralBreakendTsv(viralBreakendTsv)
+                .virusBreakendTsv(virusBreakendTsv)
                 .germlineReportingTsv(germlineReportingTsv)
                 .sampleSummaryTsv(sampleSummaryTsv)
                 .comments(cmd.getOptionValue(COMMENTS))

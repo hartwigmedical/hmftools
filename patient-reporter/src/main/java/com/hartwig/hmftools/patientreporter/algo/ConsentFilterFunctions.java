@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.protect.viralbreakend.Viralbreakend;
+import com.hartwig.hmftools.protect.viralbreakend.VirusBreakend;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
@@ -29,7 +29,7 @@ public final class ConsentFilterFunctions {
                 germlineReportingLevel,
                 genomicAnalysis.hasReliablePurity());
 
-        List<Viralbreakend> filteredViralBreakends = reportViralBreakends ? genomicAnalysis.viralBreakends() : Lists.newArrayList();
+        List<VirusBreakend> filteredVirusBreakends = reportViralBreakends ? genomicAnalysis.virusBreakends() : Lists.newArrayList();
 
         List<ProtectEvidence> filteredTumorSpecificEvidence =
                 filterEvidenceForGermlineConsent(genomicAnalysis.tumorSpecificEvidence(), germlineReportingLevel);
@@ -43,7 +43,7 @@ public final class ConsentFilterFunctions {
         return ImmutableGenomicAnalysis.builder()
                 .from(genomicAnalysis)
                 .reportableVariants(filteredVariants)
-                .viralBreakends(filteredViralBreakends)
+                .virusBreakends(filteredVirusBreakends)
                 .tumorSpecificEvidence(filteredTumorSpecificEvidence)
                 .clinicalTrials(filteredClinicalTrials)
                 .offLabelEvidence(filteredOffLabelEvidence)

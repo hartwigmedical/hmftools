@@ -7,36 +7,33 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class ViralBreakendFactory {
+public class VirusBreakendFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(ViralBreakendFactory.class);
     private static final String DELIMITER = "\t";
 
-    private ViralBreakendFactory() {
+    private VirusBreakendFactory() {
     }
 
     @NotNull
-    public static List<Viralbreakend> readViralBreakend(@NotNull String viralBreakendTsv) throws IOException {
-        return fromLines(Files.readAllLines(new File(viralBreakendTsv).toPath()));
+    public static List<VirusBreakend> readVirusBreakend(@NotNull String virusBreakendTsv) throws IOException {
+        return fromLines(Files.readAllLines(new File(virusBreakendTsv).toPath()));
     }
 
     @NotNull
-    private static List<Viralbreakend> fromLines(@NotNull final List<String> lines) {
+    private static List<VirusBreakend> fromLines(@NotNull final List<String> lines) {
         return lines.stream()
                 .skip(1)
-                .map(ViralBreakendFactory::fromString)
+                .map(VirusBreakendFactory::fromString)
                 .collect(toList());
     }
 
     @NotNull
-    private static Viralbreakend fromString(@NotNull final String line) {
+    private static VirusBreakend fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
 
-        final ImmutableViralbreakend.Builder builder = ImmutableViralbreakend.builder()
+        final ImmutableVirusBreakend.Builder builder = ImmutableVirusBreakend.builder()
                 .taxidGenus(values[0])
                 .nameGenus(values[1])
                 .readsGenusTree(values[2])

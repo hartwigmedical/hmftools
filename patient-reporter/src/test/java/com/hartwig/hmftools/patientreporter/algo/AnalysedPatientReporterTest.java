@@ -37,7 +37,7 @@ public class AnalysedPatientReporterTest {
     private static final String PIPELINE_VERSION = BASE_DIRECTORY + "/pipeline.version";
     private static final String MOLECULAR_TISSUE_ORIGIN_PLOT = BASE_DIRECTORY + "/purple/plot/sample.circos.png";
     private static final String MOLECULAR_TISSUE_ORIGIN_TXT = BASE_DIRECTORY + "/cuppa/sample.cuppa.conclusion.txt";
-    private static final String VIRAL_BREAKEND_TSV = BASE_DIRECTORY + "/viralbreakend/sample.virusbreakend.vcf.summary.tsv";
+    private static final String VIRUS_BREAKEND_TSV = BASE_DIRECTORY + "/virusbreakend/sample.virusbreakend.vcf.summary.tsv";
 
     @Test
     public void canRunOnRunDirectory() throws IOException {
@@ -68,8 +68,7 @@ public class AnalysedPatientReporterTest {
                 false,
                 PIPELINE_VERSION,
                 MOLECULAR_TISSUE_ORIGIN_TXT,
-                MOLECULAR_TISSUE_ORIGIN_PLOT,
-                VIRAL_BREAKEND_TSV));
+                MOLECULAR_TISSUE_ORIGIN_PLOT, VIRUS_BREAKEND_TSV));
     }
 
     @Test
