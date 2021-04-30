@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
+import com.hartwig.hmftools.patientreporter.viralbreakend.Viralbreakend;
 import com.hartwig.hmftools.protect.linx.ViralInsertion;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -27,12 +28,12 @@ public final class ConsentFilterFunctions {
     // TODO Extend overruling functions to make json and pdf more consistent.
     @NotNull
     public GenomicAnalysis filterAndOverruleForConsent(@NotNull GenomicAnalysis genomicAnalysis,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralInsertions) {
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralBreakends) {
         List<ReportableVariant> filteredVariants = filterAndOverruleVariants(genomicAnalysis.reportableVariants(),
                 germlineReportingLevel,
                 genomicAnalysis.hasReliablePurity());
 
-        List<ViralInsertion> filteredViralInsertions = reportViralInsertions ? genomicAnalysis.viralInsertions() : Lists.newArrayList();
+        List<Viralbreakend> filteredViralBreakends = reportViralBreakends ? genomicAnalysis.viralBreakends() : Lists.newArrayList();
 
         List<ProtectEvidence> filteredTumorSpecificEvidence =
                 filterEvidenceForGermlineConsent(genomicAnalysis.tumorSpecificEvidence(), germlineReportingLevel);
@@ -46,7 +47,7 @@ public final class ConsentFilterFunctions {
         return ImmutableGenomicAnalysis.builder()
                 .from(genomicAnalysis)
                 .reportableVariants(filteredVariants)
-                .viralInsertions(filteredViralInsertions)
+                .viralBreakends(filteredViralBreakends)
                 .tumorSpecificEvidence(filteredTumorSpecificEvidence)
                 .clinicalTrials(filteredClinicalTrials)
                 .offLabelEvidence(filteredOffLabelEvidence)

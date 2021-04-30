@@ -116,7 +116,8 @@ public class PatientReporterApplication {
                 config.correctedReport(),
                 config.pipelineVersionFile(),
                 config.molecularTissueOriginTxt(),
-                config.molecularTissueOriginPlot());
+                config.molecularTissueOriginPlot(),
+                config.viralBreakendTsv());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(reportData.germlineReportingModel());
 

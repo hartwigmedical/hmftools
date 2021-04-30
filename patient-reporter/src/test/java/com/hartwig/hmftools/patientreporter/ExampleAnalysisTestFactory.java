@@ -43,6 +43,8 @@ import com.hartwig.hmftools.patientreporter.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
+import com.hartwig.hmftools.patientreporter.viralbreakend.ImmutableViralbreakend;
+import com.hartwig.hmftools.patientreporter.viralbreakend.Viralbreakend;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.linx.ImmutableViralInsertion;
@@ -113,7 +115,7 @@ public final class ExampleAnalysisTestFactory {
         List<LinxFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        List<ViralInsertion> viralInsertions = Lists.newArrayList();
+        List<Viralbreakend> viralBreakends = Lists.newArrayList();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, reportGermline, limsCohortConfig);
 
@@ -163,7 +165,7 @@ public final class ExampleAnalysisTestFactory {
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
-                .viralInsertions(viralInsertions)
+                .viralBreakends(viralBreakends)
                 .build();
 
         MolecularTissueOrigin molecularTissueOrigin =
@@ -210,7 +212,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<LinxFusion> fusions = createTestFusions();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        List<ViralInsertion> viralInsertions = createTestViralInsertions();
+        List<Viralbreakend> viralBreakends = createTestViralBreakends();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true, limsCohortConfig);
@@ -236,7 +238,7 @@ public final class ExampleAnalysisTestFactory {
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
-                .viralInsertions(viralInsertions)
+                .viralBreakends(viralBreakends)
                 .build();
 
         MolecularTissueOrigin molecularTissueOrigin =
@@ -1070,10 +1072,34 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ViralInsertion> createTestViralInsertions() {
-        List<ViralInsertion> viralInsertions =
-                Lists.newArrayList(ImmutableViralInsertion.builder().virus("Human papillomavirus type 16").viralInsertionCount(2).build());
-        return Lists.newArrayList(viralInsertions);
+    private static List<Viralbreakend> createTestViralBreakends() {
+        List<Viralbreakend> viralbreakends = Lists.newArrayList(ImmutableViralbreakend.builder()
+                .taxidGenus(Strings.EMPTY)
+                .nameGenus(Strings.EMPTY)
+                .readsGenusTree(Strings.EMPTY)
+                .taxidSpecies(Strings.EMPTY)
+                .nameSpecies(Strings.EMPTY)
+                .readsSpeciesTree(Strings.EMPTY)
+                .taxidAssigned(Strings.EMPTY)
+                .nameAssigned("Human papillomavirus type 16")
+                .readsAssignedTree(Strings.EMPTY)
+                .readsAssignedDirect(Strings.EMPTY)
+                .Reference(Strings.EMPTY)
+                .referenceTaxid(Strings.EMPTY)
+                .referenceKmerCount(Strings.EMPTY)
+                .alternateKmerCountRname(Strings.EMPTY)
+                .startpos(Strings.EMPTY)
+                .endpos(Strings.EMPTY)
+                .numreads(Strings.EMPTY)
+                .covbases(Strings.EMPTY)
+                .coverage(Strings.EMPTY)
+                .meandepth(Strings.EMPTY)
+                .meanbaseq(Strings.EMPTY)
+                .meanmapq(Strings.EMPTY)
+                .integrations("2")
+                .QCStatus(Strings.EMPTY)
+                .build());
+        return Lists.newArrayList(viralbreakends);
     }
 
     @NotNull

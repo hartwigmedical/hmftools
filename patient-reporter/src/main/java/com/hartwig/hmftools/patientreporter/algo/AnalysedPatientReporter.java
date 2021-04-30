@@ -48,7 +48,7 @@ public class AnalysedPatientReporter {
             @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv,
             @NotNull String chordPredictionTxt, @NotNull String circosFile, @NotNull String protectEvidenceTsv, @Nullable String comments,
             boolean correctedReport, @NotNull String pipelineVersionFile, @NotNull String molecularTissueOriginTsv,
-            @NotNull String molecularTissueOriginPlot) throws IOException {
+            @NotNull String molecularTissueOriginPlot, @NotNull String viralBreakendTsv) throws IOException {
         // TODO Specific COLO handling doesn't belong in patient reporter!
         String patientId = sampleMetadata.patientId().startsWith("COLO829") ? "COLO829" : sampleMetadata.patientId();
         PatientPrimaryTumor patientPrimaryTumor =
@@ -69,7 +69,7 @@ public class AnalysedPatientReporter {
                 linxViralInsertionTsv,
                 linxDriversTsv,
                 chordPredictionTxt,
-                protectEvidenceTsv);
+                protectEvidenceTsv, viralBreakendTsv);
 
         ConsentFilterFunctions consentFilterFunctions = new ConsentFilterFunctions();
 
@@ -146,7 +146,7 @@ public class AnalysedPatientReporter {
         LOGGER.info(" Gene fusions to report: {}", analysis.geneFusions().size());
         LOGGER.info(" Homozygous disruptions to report: {}", analysis.homozygousDisruptions().size());
         LOGGER.info(" Gene disruptions to report: {}", analysis.geneDisruptions().size());
-        LOGGER.info(" Viral insertions to report: {}", analysis.viralInsertions().size());
+        LOGGER.info(" Viral breakend to report: {}", analysis.viralBreakends().size());
         LOGGER.info(" CHORD analysis HRD prediction: {} ({})", analysis.chordHrdValue(), analysis.chordHrdStatus());
         LOGGER.info(" Microsatellite indels per Mb: {} ({})", analysis.microsatelliteIndelsPerMb(), analysis.microsatelliteStatus());
         LOGGER.info(" Tumor mutational load: {} ({})", analysis.tumorMutationalLoad(), analysis.tumorMutationalLoadStatus());
