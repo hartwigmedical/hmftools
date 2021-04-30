@@ -19,7 +19,7 @@ Key features include:
   
 ## Germline mode
 
-Sage can be run in a germline mode.  See details [here](https://github.com/hartwigmedical/hmftools/blob/master/sage/Germline.md).
+Sage can be run in a germline mode.  See details [here](https://github.com/hartwigmedical/hmftools/blob/master/sage/GERMLINE.md).
 
 ## BAM Requirements
 BAM records that are flagged as unmapped, duplicateRead or secondary/supplementary are ignored. 
