@@ -424,16 +424,19 @@ Note that a segment is diploid only if both the major and minor allele are betwe
 
 #### Somatic Purity
 
-If any of the candidate solutions are highly diploid (>= 0.97) and there is a wide range (>= 0.15) of valid purities in the candidate solutions and a somatic point mutation vcf has been supplied then a somatic mode of fitting is triggered, since there may be insufficient copy number events to resolve a purity.
-
-When somatic mode is triggered, PURPLE checks first for the presence of TUMOR.  If NONE of the following criteria are satisfied, then PURPLE sets qcStatus = FAIL_NO_TUMOR, fitMethod=NO_TUMOR and sets purity to min_purity value [0.08]:
+If any of the candidate solutions are highly diploid (>= 0.97), PURPLE checks first for the presence of TUMOR.  If NONE of the following criteria are satisfied, then PURPLE sets qcStatus = FAIL_NO_TUMOR, fitMethod=NO_TUMOR and sets purity to min_purity value [0.08]:
 - Tumor has one or more HOTSPOT SV or point mutation
 - SNV sum(allele read count) > 5000
 - SV sum(startTumorVariantFragmentSupport) > 1000 (excluding SGL breakends)
+- Tumor has 3000 BAF points in germline DIPLOID regions regions with tumor ratio < 0.8 OR > 1.2 (ie. evidence of at least some aneuploidy)
 
-If a tumor is detected, then PURPLE fits somatic peaks in VAF space. First PURPLE groups all somatic SNV by VAF with 0.6 x AverageTumorDepth < totalReadCount < 1.4x AverageTumorDepth. A kernel density estimator is used to find peaks in the VAF range [min_purity-min(0.5,max_purity)], and the somatic fitted purity is set to 2* the highest VAF peak with weight > max(10,3% SNV count in depth range).   If no peak meets this criteria but the sample has at least 10 SNV within the depth range in total choose 2 * VAF peak with the greatest count, else set the purity to min_purity [0.08]
+If a tumor is detected, and there is a wide range (>= 0.15) of valid purities in the candidate solutions and a somatic point mutation vcf has been supplied then a somatic mode of fitting is triggered, since there may be insufficient copy number events to resolve a purity.   In this case, PURPLE fits somatic peaks in VAF space. 
+
+First PURPLE groups all somatic SNV by VAF with 0.6 x AverageTumorDepth < totalReadCount < 1.4x AverageTumorDepth. A kernel density estimator is used to find peaks in the VAF range [min_purity-min(0.5,max_purity)], and the somatic fitted purity is set to 2* the highest VAF peak with weight > max(10,3% SNV count in depth range).   If no peak meets this criteria but the sample has at least 10 SNV within the depth range in total choose 2 * VAF peak with the greatest count, else set the purity to min_purity [0.08]
 
 If (somatic fitted purity and the copy number fitted purity are both < 0.17 AND the somatic purity > copy number purity) OR if there are no SNV that meet the VAF criteria, then use the copy number fit and set fitMethod = NORMAL.   Otherwise use the somatic fitted purity, set ploidy =2 and set fit method = SOMATIC.
+
+Finally, in case of tumors with very low SNV counts (<1000 total SNV) but with known hotpsot mutations, PURPLE checks if the VAF of any hotspot mutations is not outside the expected distribution of the fitted somatic VAF peak (p<0.01).  If the VAF of the hotspot is significantly higher than the fitted VAF peak, then PURPLE sets the purity to 2x maximum hotspot VAF. 
 
 ### 4. Copy Number Smoothing 
 
@@ -509,9 +512,10 @@ There are two situations where PURPLE will attempt to recover structural variant
 
 Eligible recovery candidates must:
 
-1. Be within 1kb of the min and max range of an unsupported copy number breakpoint or within 1kb of the unbalanced structural variant (if not a single breakend, the other breakpoint must also be within 1 kb of the min-max range of a copy number breakpoint)
-2. Not be “minTumorAF” or "minQual" filtered in GRIDSS 
-3. Have a junction copy number of at least 50% of the unexplained copy number change and of at least 0.5.
+1. Be within 1kb of the min and max range of an unsupported copy number breakpoint or within 1kb of the unbalanced structural variant.  Breakpoints where both ends are within 1kb of a recovery site are 
+2. Not be “minTumorAF” or "DEDUP" filtered in GRIPSS
+3. Have a minQual > 300 (breakpoints) or 800 (single breakends)
+4. Have a junction copy number of at least 50% of the unexplained copy number change and of at least 0.5.
 
 Following the successful recovery any structural variants we will rerun the segmentation, copy number smoothing and minor allele copy number smoothing with the updated structural variants to produce a final set of copy number segments and breakpoints. Note that the purity estimation does not change.
 
