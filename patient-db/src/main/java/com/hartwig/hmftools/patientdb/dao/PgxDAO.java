@@ -9,8 +9,8 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
-import com.hartwig.hmftools.common.pharmacogenetics.PGXCalls;
-import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotype;
+import com.hartwig.hmftools.common.peach.PeachCalls;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -26,12 +26,13 @@ class PgxDAO {
         this.context = context;
     }
 
-    void writePgx(@NotNull String sample, @NotNull List<PGXGenotype> pgxGenotype, @NotNull List<PGXCalls> pgxCalls) {
+    void writePeach(@NotNull String sample, @NotNull List<PeachGenotype> peachGenotypes, @NotNull List<PeachCalls> peachCalls) {
         deletePgxForSample(sample);
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
+        //TODO rename tables
 
-        for (List<PGXGenotype> genotypes : Iterables.partition(pgxGenotype, DB_BATCH_INSERT_SIZE)) {
+        for (List<PeachGenotype> genotypes : Iterables.partition(peachGenotypes, DB_BATCH_INSERT_SIZE)) {
             InsertValuesStep9 inserter = context.insertInto(PGXGENOTYPE,
                     PGXGENOTYPE.MODIFIED,
                     PGXGENOTYPE.SAMPLEID,
@@ -46,7 +47,7 @@ class PgxDAO {
             inserter.execute();
         }
 
-        for (List<PGXCalls> calls : Iterables.partition(pgxCalls, DB_BATCH_INSERT_SIZE)) {
+        for (List<PeachCalls> calls : Iterables.partition(peachCalls, DB_BATCH_INSERT_SIZE)) {
             InsertValuesStep12 inserter = context.insertInto(PGXCALLS,
                     PGXCALLS.MODIFIED,
                     PGXCALLS.SAMPLEID,
@@ -66,7 +67,7 @@ class PgxDAO {
     }
 
     private static void addGenotype(@NotNull Timestamp timestamp, @NotNull InsertValuesStep9 inserter, @NotNull String sample,
-            @NotNull PGXGenotype genotype) {
+            @NotNull PeachGenotype genotype) {
         inserter.values(timestamp,
                 sample,
                 genotype.gene(),
@@ -79,7 +80,7 @@ class PgxDAO {
     }
 
     private static void addCalls(@NotNull Timestamp timestamp, @NotNull InsertValuesStep12 inserter, @NotNull String sample,
-            @NotNull PGXCalls calls) {
+            @NotNull PeachCalls calls) {
         inserter.values(timestamp,
                 sample,
                 calls.gene(),

@@ -21,8 +21,8 @@ import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.hla.HlaType;
 import com.hartwig.hmftools.common.hla.HlaTypeDetails;
 import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
-import com.hartwig.hmftools.common.pharmacogenetics.PGXCalls;
-import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotype;
+import com.hartwig.hmftools.common.peach.PeachCalls;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -445,8 +445,8 @@ public class DatabaseAccess implements AutoCloseable {
         metricDAO.writeMetrics(sample, metrics);
     }
 
-    public void writePGX(@NotNull String sample, @NotNull List<PGXGenotype> pgxGenotype, @NotNull List<PGXCalls> pgxCalls) {
-        pgxDAO.writePgx(sample, pgxGenotype, pgxCalls);
+    public void writePeach(@NotNull String sample, @NotNull List<PeachGenotype> peachGenotypes, @NotNull List<PeachCalls> peachCalls) {
+        pgxDAO.writePeach(sample, peachGenotypes, peachCalls);
     }
 
     public void writeProtectEvidence(@NotNull String sample, @NotNull List<ProtectEvidence> evidence) {
