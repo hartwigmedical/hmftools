@@ -12,30 +12,44 @@ public abstract class PeachCalls {
     public abstract String gene();
 
     @NotNull
-    public abstract String positionGRCh37();
+    public abstract String chromosome();
 
     @NotNull
-    public abstract String refGRCh37();
+    public abstract String positionV37();
 
     @NotNull
-    public abstract String altGRCh37();
+    public abstract String positionV38();
 
     @NotNull
-    public abstract String positionGRCh38();
+    public abstract String refV37();
 
     @NotNull
-    public abstract String refGRCh38();
+    public abstract String refV38();
 
     @NotNull
-    public abstract String altGRCh38();
+    public abstract String allele1();
+
+    @NotNull
+    public abstract String allele2();
 
     @NotNull
     public abstract String rsid();
 
     @NotNull
-    public abstract String variantAnnotation();
+    public abstract String variantAnnotationV37();
 
     @NotNull
-    public abstract String filter();
+    public abstract String filterV37();
 
+    @NotNull
+    public abstract String variantAnnotationV38();
+
+    @NotNull
+    public abstract String filterV38();
+
+    @NotNull
+    public abstract String panelVersion();
+
+    @NotNull
+    public abstract String repoVersion();
 }

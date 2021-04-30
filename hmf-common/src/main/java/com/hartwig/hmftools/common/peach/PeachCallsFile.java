@@ -35,15 +35,20 @@ public final class PeachCallsFile {
 
         final ImmutablePeachCalls.Builder builder = ImmutablePeachCalls.builder()
                 .gene(values[0])
-                .positionGRCh37(values[1])
-                .refGRCh37(values[2])
-                .altGRCh37(values[3])
-                .positionGRCh38(values[4])
-                .refGRCh38(values[5])
-                .altGRCh38(values[6])
-                .rsid(values[7])
-                .variantAnnotation(values[8])
-                .filter(values[9]);
+                .chromosome(values[1])
+                .positionV37(values[2])
+                .positionV38(values[3])
+                .refV37(values[4])
+                .refV38(values[5])
+                .allele1(values[6])
+                .allele2(values[7])
+                .rsid(values[8])
+                .variantAnnotationV37(values[9])
+                .filterV37(values[10])
+                .variantAnnotationV38(values[11])
+                .filterV38(values[12])
+                .panelVersion(values[13])
+                .repoVersion(values[14]);
 
         return builder.build();
     }
