@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Viralbreakend {
+public abstract class VirusBreakend {
 
     @NotNull
     public abstract String taxidGenus();

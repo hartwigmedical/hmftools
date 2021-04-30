@@ -17,7 +17,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
-import com.hartwig.hmftools.protect.viralbreakend.Viralbreakend;
+import com.hartwig.hmftools.protect.viralbreakend.VirusBreakend;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -69,7 +69,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createFusionsTable(genomicAnalysis.geneFusions(), hasReliablePurity));
         reportDocument.add(createHomozygousDisruptionsTable(genomicAnalysis.homozygousDisruptions()));
         reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
-        reportDocument.add(createViralInsertionTable(genomicAnalysis.viralBreakends(), sampleReport.reportViralInsertions()));
+        reportDocument.add(createVirusBreakendsTable(genomicAnalysis.virusBreakends(), sampleReport.reportViralInsertions()));
     }
 
     @NotNull
@@ -246,12 +246,12 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createViralInsertionTable(@NotNull List<Viralbreakend> viralbreakends, boolean reportViralInsertions) {
+    private static Table createVirusBreakendsTable(@NotNull List<VirusBreakend> virusBreakends, boolean reportViralInsertions) {
         String title = "Tumor specific viral insertions";
 
         if (!reportViralInsertions) {
             return TableUtil.createNAReportTable(title);
-        } else if (viralbreakends.isEmpty()) {
+        } else if (virusBreakends.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         } else {
             Table contentTable = TableUtil.createReportContentTable(new float[] { 120, 120, 200 },
@@ -259,9 +259,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
                             TableUtil.createHeaderCell("Number of viral breakpoints").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("") });
 
-            for (Viralbreakend viralbreakend : viralbreakends) {
-                contentTable.addCell(TableUtil.createContentCell(viralbreakend.nameAssigned()));
-                contentTable.addCell(TableUtil.createContentCell(viralbreakend.integrations())
+            for (VirusBreakend virusBreakend : virusBreakends) {
+                contentTable.addCell(TableUtil.createContentCell(virusBreakend.nameAssigned()));
+                contentTable.addCell(TableUtil.createContentCell(virusBreakend.integrations())
                         .setTextAlignment(TextAlignment.CENTER));
                 contentTable.addCell(TableUtil.createContentCell(""));
             }

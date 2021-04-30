@@ -43,8 +43,8 @@ import com.hartwig.hmftools.patientreporter.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
-import com.hartwig.hmftools.protect.viralbreakend.ImmutableViralbreakend;
-import com.hartwig.hmftools.protect.viralbreakend.Viralbreakend;
+import com.hartwig.hmftools.protect.viralbreakend.ImmutableVirusBreakend;
+import com.hartwig.hmftools.protect.viralbreakend.VirusBreakend;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
@@ -113,7 +113,7 @@ public final class ExampleAnalysisTestFactory {
         List<LinxFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        List<Viralbreakend> viralBreakends = Lists.newArrayList();
+        List<VirusBreakend> virusBreakends = Lists.newArrayList();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, reportGermline, limsCohortConfig);
 
@@ -163,7 +163,7 @@ public final class ExampleAnalysisTestFactory {
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
-                .viralBreakends(viralBreakends)
+                .virusBreakends(virusBreakends)
                 .build();
 
         MolecularTissueOrigin molecularTissueOrigin =
@@ -210,7 +210,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<LinxFusion> fusions = createTestFusions();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        List<Viralbreakend> viralBreakends = createTestViralBreakends();
+        List<VirusBreakend> virusBreakends = createTestVirusBreakends();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true, limsCohortConfig);
@@ -236,7 +236,7 @@ public final class ExampleAnalysisTestFactory {
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
-                .viralBreakends(viralBreakends)
+                .virusBreakends(virusBreakends)
                 .build();
 
         MolecularTissueOrigin molecularTissueOrigin =
@@ -1070,8 +1070,8 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<Viralbreakend> createTestViralBreakends() {
-        List<Viralbreakend> viralbreakends = Lists.newArrayList(ImmutableViralbreakend.builder()
+    private static List<VirusBreakend> createTestVirusBreakends() {
+        List<VirusBreakend> virusbreakends = Lists.newArrayList(ImmutableVirusBreakend.builder()
                 .taxidGenus(Strings.EMPTY)
                 .nameGenus(Strings.EMPTY)
                 .readsGenusTree(Strings.EMPTY)
@@ -1097,7 +1097,7 @@ public final class ExampleAnalysisTestFactory {
                 .integrations("2")
                 .QCStatus(Strings.EMPTY)
                 .build());
-        return Lists.newArrayList(viralbreakends);
+        return Lists.newArrayList(virusbreakends);
     }
 
     @NotNull

@@ -9,12 +9,12 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
-import com.hartwig.hmftools.protect.viralbreakend.ViralBreakendFactory;
-import com.hartwig.hmftools.protect.viralbreakend.Viralbreakend;
+import com.hartwig.hmftools.protect.viralbreakend.VirusBreakendFactory;
+import com.hartwig.hmftools.protect.viralbreakend.VirusBreakend;
 import com.hartwig.hmftools.protect.chord.ChordDataLoader;
 import com.hartwig.hmftools.protect.linx.LinxData;
 import com.hartwig.hmftools.protect.linx.LinxDataLoader;
-import com.hartwig.hmftools.protect.viralbreakend.ViralInsertionAnalyzer;
+import com.hartwig.hmftools.protect.viralbreakend.VirusBreakendAnalyzer;
 import com.hartwig.hmftools.protect.purple.PurpleData;
 import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -36,7 +36,7 @@ public class GenomicAnalyzer {
             @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
             @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String linxFusionTsv,
             @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv,
-            @NotNull String chordPredictionTxt, @NotNull String protectEvidenceTsv, @NotNull String viralBreakendTsv) throws IOException {
+            @NotNull String chordPredictionTxt, @NotNull String protectEvidenceTsv, @NotNull String virusBreakendTsv) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
                 purpleQCFile,
                 purplePurityTsv,
@@ -47,8 +47,8 @@ public class GenomicAnalyzer {
 
         LinxData linxData = LinxDataLoader.load(linxFusionTsv, linxBreakendTsv, linxDriversTsv);
 
-        List<Viralbreakend> viralBreakends = ViralBreakendFactory.readViralBreakend(viralBreakendTsv);
-        List<Viralbreakend> viralBreakendsFiltered = ViralInsertionAnalyzer.analyzeViralInsertions(viralBreakends);
+        List<VirusBreakend> virusBreakends = VirusBreakendFactory.readVirusBreakend(virusBreakendTsv);
+        List<VirusBreakend> viralBreakendsFiltered = VirusBreakendAnalyzer.analyzeVirusBreakends(virusBreakends);
 
         List<ReportableVariant> reportableVariants =
                 ReportableVariantFactory.mergeVariantLists(purpleData.germlineVariants(), purpleData.somaticVariants());
@@ -81,7 +81,7 @@ public class GenomicAnalyzer {
                 .geneFusions(linxData.fusions())
                 .geneDisruptions(linxData.geneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())
-                .viralBreakends(viralBreakendsFiltered)
+                .virusBreakends(viralBreakendsFiltered)
                 .build();
     }
 
