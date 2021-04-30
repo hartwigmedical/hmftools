@@ -9,75 +9,56 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class VirusBreakend {
 
-    @NotNull
-    public abstract String taxidGenus();
+    public abstract int taxidGenus();
 
     @NotNull
     public abstract String nameGenus();
 
-    @NotNull
-    public abstract String readsGenusTree();
+    public abstract int readsGenusTree();
 
-    @NotNull
-    public abstract String taxidSpecies();
+    public abstract int taxidSpecies();
 
     @NotNull
     public abstract String nameSpecies();
 
-    @NotNull
-    public abstract String readsSpeciesTree();
+    public abstract int readsSpeciesTree();
 
-    @NotNull
-    public abstract String taxidAssigned();
+    public abstract int taxidAssigned();
 
     @NotNull
     public abstract String nameAssigned();
 
-    @NotNull
-    public abstract String readsAssignedTree();
+    public abstract int readsAssignedTree();
+
+    public abstract int readsAssignedDirect();
 
     @NotNull
-    public abstract String readsAssignedDirect();
+    public abstract String reference();
 
-    @NotNull
-    public abstract String Reference();
+    public abstract int referenceTaxid();
 
-    @NotNull
-    public abstract String referenceTaxid();
-
-    @NotNull
-    public abstract String referenceKmerCount();
+    public abstract int referenceKmerCount();
 
     @NotNull
     public abstract String alternateKmerCountRname();
 
-    @NotNull
-    public abstract String startpos();
+    public abstract int startpos();
 
-    @NotNull
-    public abstract String endpos();
+    public abstract int endpos();
 
-    @NotNull
-    public abstract String numreads();
+    public abstract int numreads();
 
-    @NotNull
-    public abstract String covbases();
+    public abstract int covbases();
+    
+    public abstract int coverage();
 
-    @NotNull
-    public abstract String coverage();
+    public abstract int meandepth();
 
-    @NotNull
-    public abstract String meandepth();
+    public abstract int meanbaseq();
 
-    @NotNull
-    public abstract String meanbaseq();
+    public abstract int meanmapq();
 
-    @NotNull
-    public abstract String meanmapq();
+    public abstract int integrations();
 
-    @NotNull
-    public abstract String integrations();
-
-    @NotNull
-    public abstract String QCStatus();
+    public abstract int QCStatus();
 }

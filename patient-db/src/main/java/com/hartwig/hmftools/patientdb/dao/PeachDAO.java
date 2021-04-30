@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep12;
+import org.jooq.InsertValuesStep17;
 import org.jooq.InsertValuesStep9;
 
 class PeachDAO {
@@ -47,19 +47,24 @@ class PeachDAO {
         }
 
         for (List<PeachCalls> calls : Iterables.partition(peachCalls, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep12 inserter = context.insertInto(PEACHCALLS,
+            InsertValuesStep17 inserter = context.insertInto(PEACHCALLS,
                     PEACHCALLS.MODIFIED,
                     PEACHCALLS.SAMPLEID,
                     PEACHCALLS.GENE,
-                    PEACHCALLS.POSITIONGRCH37,
-                    PEACHCALLS.REFGRCH37,
-                    PEACHCALLS.ALTGRCH37,
-                    PEACHCALLS.POSITIONGRCH38,
-                    PEACHCALLS.REFGRCH38,
-                    PEACHCALLS.ALTGRCH38,
+                    PEACHCALLS.CHROMOSOME,
+                    PEACHCALLS.POSITIONV37,
+                    PEACHCALLS.POSITIONV38,
+                    PEACHCALLS.REFV37,
+                    PEACHCALLS.REFV38,
+                    PEACHCALLS.ALLELE1,
+                    PEACHCALLS.ALLELE2,
                     PEACHCALLS.RSID,
-                    PEACHCALLS.VARIANTANNOTATION,
-                    PEACHCALLS.FILTER);
+                    PEACHCALLS.VARIANTANNOTATIONV37,
+                    PEACHCALLS.FILTERV37,
+                    PEACHCALLS.VARIANTANNOTATIONV38,
+                    PEACHCALLS.FILTERV38,
+                    PEACHCALLS.PANELVERSION,
+                    PEACHCALLS.REPOVERSION);
             calls.forEach(x -> addCalls(timestamp, inserter, sample, x));
             inserter.execute();
         }
@@ -78,20 +83,25 @@ class PeachDAO {
                 genotype.repoVersion());
     }
 
-    private static void addCalls(@NotNull Timestamp timestamp, @NotNull InsertValuesStep12 inserter, @NotNull String sample,
+    private static void addCalls(@NotNull Timestamp timestamp, @NotNull InsertValuesStep17 inserter, @NotNull String sample,
             @NotNull PeachCalls calls) {
         inserter.values(timestamp,
                 sample,
                 calls.gene(),
+                calls.chromosome(),
                 calls.positionV37(),
-                calls.refV37(),
-                calls.allele1(),
                 calls.positionV38(),
+                calls.refV37(),
                 calls.refV38(),
+                calls.allele1(),
                 calls.allele2(),
                 calls.rsid(),
                 calls.variantAnnotationV37(),
-                calls.filterV37());
+                calls.filterV37(),
+                calls.variantAnnotationV38(),
+                calls.filterV38(),
+                calls.panelVersion(),
+                calls.repoVersion());
     }
 
     void deletePeachForSample(@NotNull String sample) {

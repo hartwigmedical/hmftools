@@ -25,7 +25,7 @@ public final class VirusBreakendAnalyzer {
     public static List<VirusBreakend> analyzeVirusBreakends(@NotNull List<VirusBreakend> virusBreakends) {
         Map<VirusBreakendAnalyzer.VirusKey, List<VirusBreakend>> itemsPerKey = Maps.newHashMap();
         for (VirusBreakend virusBreakend : virusBreakends) {
-            VirusBreakendAnalyzer.VirusKey key = new VirusBreakendAnalyzer.VirusKey(virusBreakend.Reference());
+            VirusBreakendAnalyzer.VirusKey key = new VirusBreakendAnalyzer.VirusKey(virusBreakend.reference());
             List<VirusBreakend> items = itemsPerKey.get(key);
 
             if (items == null) {
@@ -45,7 +45,7 @@ public final class VirusBreakendAnalyzer {
             if (!EXCLUDED_VIRAL_INSERTIONS.contains(virusName)) {
                 virusBreakendFiltered.add(ImmutableVirusBreakend.builder()
                         .from(itemsForKey.get(0))
-                        .integrations(Integer.toString(count)) // TODO: can we use integrations of file?
+                        .integrations(count) // TODO: can we use integrations of file?
                         .build());
             }
         }

@@ -41,6 +41,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
@@ -93,6 +94,8 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final PeachDAO peachDAO;
     @NotNull
+    private final VirusBreakendDAO virusBreakendDAO;
+    @NotNull
     private final CopyNumberDAO copyNumberDAO;
     @NotNull
     private final DriverCatalogDAO driverCatalogDAO;
@@ -132,6 +135,7 @@ public class DatabaseAccess implements AutoCloseable {
         ecrfDAO = new EcrfDAO(context);
         clinicalDAO = new ClinicalDAO(context);
         protectDAO = new ProtectDAO(context);
+        virusBreakendDAO = new VirusBreakendDAO(context);
         validationFindingsDAO = new ValidationFindingDAO(context);
         rnaDAO = new RNADAO(context);
         purityDAO = new PurityDAO(context);
@@ -449,6 +453,10 @@ public class DatabaseAccess implements AutoCloseable {
         peachDAO.writePeach(sample, peachGenotypes, peachCalls);
     }
 
+    public void writeVirusBreakend(@NotNull String sample, @NotNull List<VirusBreakend> virusBreakends) {
+        virusBreakendDAO.writeVirusBreakend(sample, virusBreakends);
+    }
+
     public void writeProtectEvidence(@NotNull String sample, @NotNull List<ProtectEvidence> evidence) {
         protectDAO.write(sample, evidence);
     }
@@ -562,6 +570,9 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting hla data for sample: {}", sample);
         hlaTypeDAO.deleteHlaFprSample(sample);
+
+        LOGGER.info("Deleting virus breakend data for sample: {}", sample);
+        virusBreakendDAO.deleteVirusBreakendForSample(sample);
 
         LOGGER.info("All data for sample '{}' has been deleted", sample);
     }

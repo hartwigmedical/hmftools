@@ -31,29 +31,29 @@ public class VirusBreakendFactoryTest {
 
         VirusBreakend virusbreakend = virusbreakendList.get(0);
 
-        assertEquals("10", virusbreakend.taxidGenus());
+        assertEquals(10, virusbreakend.taxidGenus());
         assertEquals("Alphapapillomavirus", virusbreakend.nameGenus());
-        assertEquals("100", virusbreakend.readsGenusTree());
-        assertEquals("1200", virusbreakend.taxidSpecies());
+        assertEquals(100, virusbreakend.readsGenusTree());
+        assertEquals(1200, virusbreakend.taxidSpecies());
         assertEquals("Alphapapillomavirus 9", virusbreakend.nameSpecies());
-        assertEquals("5", virusbreakend.readsSpeciesTree());
-        assertEquals("450", virusbreakend.taxidAssigned());
+        assertEquals(5, virusbreakend.readsSpeciesTree());
+        assertEquals(450, virusbreakend.taxidAssigned());
         assertEquals("Human papillomavirus type 16", virusbreakend.nameAssigned());
-        assertEquals("12", virusbreakend.readsAssignedTree());
-        assertEquals("47", virusbreakend.readsAssignedDirect());
-        assertEquals("AB1234.1", virusbreakend.Reference());
-        assertEquals("3567", virusbreakend.referenceTaxid());
-        assertEquals("768", virusbreakend.referenceKmerCount());
-        assertEquals("54321", virusbreakend.alternateKmerCountRname());
-        assertEquals("adjusted_AB1234.1", virusbreakend.startpos());
-        assertEquals("12", virusbreakend.endpos());
-        assertEquals("89", virusbreakend.numreads());
-        assertEquals("123", virusbreakend.covbases());
-        assertEquals("789", virusbreakend.coverage());
-        assertEquals("1.1", virusbreakend.meandepth());
-        assertEquals("2.1", virusbreakend.meanbaseq());
-        assertEquals("3.2", virusbreakend.meanmapq());
-        assertEquals("16", virusbreakend.integrations());
-        assertEquals("3", virusbreakend.QCStatus());
+        assertEquals(12, virusbreakend.readsAssignedTree());
+        assertEquals(47, virusbreakend.readsAssignedDirect());
+        assertEquals("AB1234.1", virusbreakend.reference());
+        assertEquals(3567, virusbreakend.referenceTaxid());
+        assertEquals(768, virusbreakend.referenceKmerCount());
+        assertEquals("adjusted_AB1234.1", virusbreakend.alternateKmerCountRname());
+        assertEquals(54321, virusbreakend.startpos());
+        assertEquals(12, virusbreakend.endpos());
+        assertEquals(89, virusbreakend.numreads());
+        assertEquals(123, virusbreakend.covbases());
+        assertEquals(789, virusbreakend.coverage());
+        assertEquals(1, virusbreakend.meandepth());
+        assertEquals(2, virusbreakend.meanbaseq());
+        assertEquals(3, virusbreakend.meanmapq());
+        assertEquals(16, virusbreakend.integrations());
+        assertEquals(3, virusbreakend.QCStatus());
     }
 }

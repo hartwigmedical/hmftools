@@ -261,7 +261,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
             for (VirusBreakend virusBreakend : virusBreakends) {
                 contentTable.addCell(TableUtil.createContentCell(virusBreakend.nameAssigned()));
-                contentTable.addCell(TableUtil.createContentCell(virusBreakend.integrations())
+                contentTable.addCell(TableUtil.createContentCell(Integer.toString(virusBreakend.integrations()))
                         .setTextAlignment(TextAlignment.CENTER));
                 contentTable.addCell(TableUtil.createContentCell(""));
             }

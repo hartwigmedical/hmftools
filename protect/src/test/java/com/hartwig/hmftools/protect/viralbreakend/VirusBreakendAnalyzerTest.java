@@ -24,7 +24,7 @@ public class VirusBreakendAnalyzerTest {
 
         VirusBreakend viralBreakend1 = virusBreakendAnalyzed.get(0);
         assertEquals("Human papillomavirus type 16", viralBreakend1.nameAssigned());
-        assertEquals("1", viralBreakend1.integrations());
+        assertEquals(1, viralBreakend1.integrations());
 
     }
 }
