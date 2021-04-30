@@ -85,5 +85,4 @@ public class PeachCallsFileTest {
         assertEquals(PANEL_VERSION_2, peachCalls2.panelVersion());
         assertEquals(REPO_VERSION_2, peachCalls2.repoVersion());
     }
-
 }
