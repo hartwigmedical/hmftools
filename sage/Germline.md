@@ -17,10 +17,10 @@ Splice sites (+1,+2,+5,-2,-1) are included as well.
 The germline hotspot is created at the same time as the germline panel. 
 We select all variants from the clinvar file that are Pathogenic or Likely_pathogenic (but not Benign or Likely_benign) and are marked as report germline hotspot in the driver gene panel.
 
-A select number of [whitelist](../hmf-common/src/main/java/com/hartwig/hmftools/common/drivercatalog/panel/GermlineWhitelist.java) variants are added to the hotspot file. 
+A select number of [whitelist](../hmf-common/src/main/java/com/hartwig/hmftools/common/drivercatalog/panel/GermlineHotspotVCF.java) variants are added to the hotspot file. 
 
 ## BlackList
-[Blacklisted](../hmf-common/src/main/java/com/hartwig/hmftools/common/drivercatalog/panel/GermlineBlacklist.java) variants are not reported as pathogenic.  
+[Blacklisted](../hmf-common/src/main/java/com/hartwig/hmftools/common/drivercatalog/panel/GermlineBlacklistVCF.java) variants are not reported as pathogenic.  
 Neither are BRCA variants in the range 13:32972625-32972907 (or v38 -> chr13:32398488-32398770).
 
 ## Parameters
@@ -43,8 +43,8 @@ To run SAGE in germline mode we use the following parameters:
 -coverage_bed /opt/resources/sage/37/CoverageCodingPanel.germline.37.bed.gz 
 -high_confidence_bed /opt/resources/giab_high_conf/37/HighConfidence.37.bed.gz 
 -hotspots /opt/resources/sage/37/KnownHotspots.germline.37.vcf.gz 
+-ref_genome_version 37 
 -ref_genome /opt/resources/reference_genome/37/Homo_sapiens.GRCh37.GATK.illumina.fasta
--assembly hg19 
 -threads 8 
 -out /data/output/TUMOR_SAMPLE.sage.germline.vcf.gz 
 ``` 
