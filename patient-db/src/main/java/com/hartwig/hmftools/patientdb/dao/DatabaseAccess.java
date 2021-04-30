@@ -91,7 +91,7 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final MetricDAO metricDAO;
     @NotNull
-    private final PeachDAO pgxDAO;
+    private final PeachDAO peachDAO;
     @NotNull
     private final CopyNumberDAO copyNumberDAO;
     @NotNull
@@ -137,7 +137,7 @@ public class DatabaseAccess implements AutoCloseable {
         purityDAO = new PurityDAO(context);
         amberDAO = new AmberDAO(context);
         metricDAO = new MetricDAO(context);
-        pgxDAO = new PeachDAO(context);
+        peachDAO = new PeachDAO(context);
         copyNumberDAO = new CopyNumberDAO(context);
         geneCopyNumberDAO = new GeneCopyNumberDAO(context);
         somaticVariantDAO = new SomaticVariantDAO(context);
@@ -446,7 +446,7 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     public void writePeach(@NotNull String sample, @NotNull List<PeachGenotype> peachGenotypes, @NotNull List<PeachCalls> peachCalls) {
-        pgxDAO.writePeach(sample, peachGenotypes, peachCalls);
+        peachDAO.writePeach(sample, peachGenotypes, peachCalls);
     }
 
     public void writeProtectEvidence(@NotNull String sample, @NotNull List<ProtectEvidence> evidence) {
@@ -557,8 +557,8 @@ public class DatabaseAccess implements AutoCloseable {
         LOGGER.info("Deleting driver catalog for sample: {}", sample);
         driverCatalogDAO.deleteForSample(sample);
 
-        LOGGER.info("Deleting pgx data for sample: {}", sample);
-        pgxDAO.deletePgxForSample(sample);
+        LOGGER.info("Deleting PEACH data for sample: {}", sample);
+        peachDAO.deletePeachForSample(sample);
 
         LOGGER.info("Deleting hla data for sample: {}", sample);
         hlaTypeDAO.deleteHlaFprSample(sample);

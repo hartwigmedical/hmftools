@@ -27,7 +27,7 @@ class PeachDAO {
     }
 
     void writePeach(@NotNull String sample, @NotNull List<PeachGenotype> peachGenotypes, @NotNull List<PeachCalls> peachCalls) {
-        deletePgxForSample(sample);
+        deletePeachForSample(sample);
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
         //TODO rename tables
@@ -95,7 +95,7 @@ class PeachDAO {
                 calls.filter());
     }
 
-    void deletePgxForSample(@NotNull String sample) {
+    void deletePeachForSample(@NotNull String sample) {
         context.delete(PGXCALLS).where(PGXCALLS.SAMPLEID.eq(sample)).execute();
         context.delete(PGXGENOTYPE).where(PGXGENOTYPE.SAMPLEID.eq(sample)).execute();
     }
