@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.pharmacogenetics;
+package com.hartwig.hmftools.common.peach;
 
 import static java.util.stream.Collectors.toList;
 
@@ -9,31 +9,31 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class PGXGenotypeFile {
+public final class PeachGenotypeFile {
 
     private static final String DELIMITER = "\t";
 
-    private PGXGenotypeFile() {
+    private PeachGenotypeFile() {
     }
 
     @NotNull
-    public static List<PGXGenotype> read(@NotNull final String filename) throws IOException {
+    public static List<PeachGenotype> read(@NotNull final String filename) throws IOException {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
     @NotNull
-    private static List<PGXGenotype> fromLines(@NotNull final List<String> lines) {
+    private static List<PeachGenotype> fromLines(@NotNull final List<String> lines) {
         return lines.stream()
                 .skip(1)
-                .map(PGXGenotypeFile::fromString)
+                .map(PeachGenotypeFile::fromString)
                 .collect(toList());
     }
 
     @NotNull
-    private static PGXGenotype fromString(@NotNull final String line) {
+    private static PeachGenotype fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
 
-        final ImmutablePGXGenotype.Builder builder = ImmutablePGXGenotype.builder()
+        final ImmutablePeachGenotype.Builder builder = ImmutablePeachGenotype.builder()
                 .gene(values[0])
                 .haplotype(values[1])
                 .function(values[2])

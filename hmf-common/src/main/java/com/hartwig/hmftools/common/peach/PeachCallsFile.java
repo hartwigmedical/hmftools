@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.pharmacogenetics;
+package com.hartwig.hmftools.common.peach;
 
 import static java.util.stream.Collectors.toList;
 
@@ -9,31 +9,31 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class PGXCallsFile {
+public final class PeachCallsFile {
 
     private static final String DELIMITER = "\t";
 
-    private PGXCallsFile() {
+    private PeachCallsFile() {
     }
 
     @NotNull
-    public static List<PGXCalls> read(@NotNull final String filename) throws IOException {
+    public static List<PeachCalls> read(@NotNull final String filename) throws IOException {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
     @NotNull
-    private static List<PGXCalls> fromLines(@NotNull final List<String> lines) {
+    private static List<PeachCalls> fromLines(@NotNull final List<String> lines) {
         return lines.stream()
                 .skip(1)
-                .map(PGXCallsFile::fromString)
+                .map(PeachCallsFile::fromString)
                 .collect(toList());
     }
 
     @NotNull
-    private static PGXCalls fromString(@NotNull final String line) {
+    private static PeachCalls fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
 
-        final ImmutablePGXCalls.Builder builder = ImmutablePGXCalls.builder()
+        final ImmutablePeachCalls.Builder builder = ImmutablePeachCalls.builder()
                 .gene(values[0])
                 .positionGRCh37(values[1])
                 .refGRCh37(values[2])

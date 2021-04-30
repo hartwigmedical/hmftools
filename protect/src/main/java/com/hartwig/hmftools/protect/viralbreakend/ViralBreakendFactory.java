@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.viralbreakend;
+package com.hartwig.hmftools.protect.viralbreakend;
 
 import static java.util.stream.Collectors.toList;
 
