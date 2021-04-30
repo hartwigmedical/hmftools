@@ -22,9 +22,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class LoadPgxData {
+public class LoadPeachData {
 
-    private static final Logger LOGGER = LogManager.getLogger(LoadPgxData.class);
+    private static final Logger LOGGER = LogManager.getLogger(LoadPeachData.class);
 
     private static final String SAMPLE = "sample";
     private static final String PEACH_CALLS_TXT = "peach_calls_txt";

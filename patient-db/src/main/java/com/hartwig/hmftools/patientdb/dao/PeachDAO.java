@@ -17,12 +17,12 @@ import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep12;
 import org.jooq.InsertValuesStep9;
 
-class PgxDAO {
+class PeachDAO {
 
     @NotNull
     private final DSLContext context;
 
-    PgxDAO(@NotNull final DSLContext context) {
+    PeachDAO(@NotNull final DSLContext context) {
         this.context = context;
     }
 

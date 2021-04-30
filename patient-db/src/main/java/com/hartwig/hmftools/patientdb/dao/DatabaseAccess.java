@@ -91,7 +91,7 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final MetricDAO metricDAO;
     @NotNull
-    private final PgxDAO pgxDAO;
+    private final PeachDAO pgxDAO;
     @NotNull
     private final CopyNumberDAO copyNumberDAO;
     @NotNull
@@ -137,7 +137,7 @@ public class DatabaseAccess implements AutoCloseable {
         purityDAO = new PurityDAO(context);
         amberDAO = new AmberDAO(context);
         metricDAO = new MetricDAO(context);
-        pgxDAO = new PgxDAO(context);
+        pgxDAO = new PeachDAO(context);
         copyNumberDAO = new CopyNumberDAO(context);
         geneCopyNumberDAO = new GeneCopyNumberDAO(context);
         somaticVariantDAO = new SomaticVariantDAO(context);
