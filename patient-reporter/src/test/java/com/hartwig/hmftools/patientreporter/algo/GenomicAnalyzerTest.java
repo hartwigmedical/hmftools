@@ -19,7 +19,6 @@ public class GenomicAnalyzerTest {
     private static final String PURPLE_GERMLINE_VARIANT_VCF = BASE_DIRECTORY + "/purple/sample.purple.germline.vcf";
     private static final String LINX_FUSIONS_TSV = BASE_DIRECTORY + "/linx/sample.linx.fusion.tsv";
     private static final String LINX_BREAKEND_TSV = BASE_DIRECTORY + "/linx/sample.linx.breakend.tsv";
-    private static final String LINX_VIRAL_INSERTION_TSV = BASE_DIRECTORY + "/linx/sample.linx.viral_inserts.tsv";
     private static final String LINX_DRIVERS_TSV = BASE_DIRECTORY + "/linx/sample.linx.driver.catalog.tsv";
     private static final String CHORD_PREDICTION_TXT = BASE_DIRECTORY + "/chord/sample_chord_prediction.txt";
     private static final String PROTECT_EVIDENCE_TSV = BASE_DIRECTORY + "/protect/sample.protect.tsv";
@@ -38,7 +37,6 @@ public class GenomicAnalyzerTest {
                 PURPLE_GERMLINE_VARIANT_VCF,
                 LINX_FUSIONS_TSV,
                 LINX_BREAKEND_TSV,
-                LINX_VIRAL_INSERTION_TSV,
                 LINX_DRIVERS_TSV,
                 CHORD_PREDICTION_TXT,
                 PROTECT_EVIDENCE_TSV,

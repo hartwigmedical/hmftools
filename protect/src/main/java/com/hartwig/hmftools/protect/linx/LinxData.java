@@ -20,7 +20,4 @@ public interface LinxData {
 
     @NotNull
     List<ReportableHomozygousDisruption> homozygousDisruptions();
-
-    @NotNull
-    List<ViralInsertion> viralInsertions();
 }

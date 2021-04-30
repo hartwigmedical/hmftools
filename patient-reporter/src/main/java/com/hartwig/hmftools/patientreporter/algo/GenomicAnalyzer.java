@@ -14,6 +14,7 @@ import com.hartwig.hmftools.patientreporter.viralbreakend.Viralbreakend;
 import com.hartwig.hmftools.protect.chord.ChordDataLoader;
 import com.hartwig.hmftools.protect.linx.LinxData;
 import com.hartwig.hmftools.protect.linx.LinxDataLoader;
+import com.hartwig.hmftools.protect.linx.ViralInsertionAnalyzer;
 import com.hartwig.hmftools.protect.purple.PurpleData;
 import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -34,7 +35,7 @@ public class GenomicAnalyzer {
     public GenomicAnalysis run(@NotNull String tumorSampleId, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
             @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String linxFusionTsv,
-            @NotNull String linxBreakendTsv, @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv,
+            @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv,
             @NotNull String chordPredictionTxt, @NotNull String protectEvidenceTsv, @NotNull String viralBreakendTsv) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
                 purpleQCFile,
@@ -44,7 +45,7 @@ public class GenomicAnalyzer {
                 purpleDriverCatalogGermlineTsv,
                 purpleGermlineVariantVcf);
 
-        LinxData linxData = LinxDataLoader.load(linxFusionTsv, linxBreakendTsv, linxViralInsertionTsv, linxDriversTsv);
+        LinxData linxData = LinxDataLoader.load(linxFusionTsv, linxBreakendTsv, linxDriversTsv);
 
         List<Viralbreakend> viralBreakends = ViralBreakendFactory.readViralBreakend(viralBreakendTsv);
 

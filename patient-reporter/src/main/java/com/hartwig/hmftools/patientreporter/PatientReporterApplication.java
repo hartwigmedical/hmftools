@@ -107,7 +107,6 @@ public class PatientReporterApplication {
                 config.purpleGermlineVariantVcf(),
                 config.linxFusionTsv(),
                 config.linxBreakendTsv(),
-                config.linxViralInsertionTsv(),
                 config.linxDriverCatalogTsv(),
                 config.chordPredictionTxt(),
                 config.circosFile(),

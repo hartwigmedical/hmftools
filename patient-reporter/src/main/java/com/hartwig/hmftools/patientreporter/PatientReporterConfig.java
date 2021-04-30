@@ -53,7 +53,6 @@ public interface PatientReporterConfig {
     String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
-    String LINX_VIRAL_INSERTION_TSV = "linx_viral_insertion_tsv";
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     String CIRCOS_FILE = "circos_file";
@@ -107,7 +106,6 @@ public interface PatientReporterConfig {
         options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the linx breakend TSV.");
-        options.addOption(LINX_VIRAL_INSERTION_TSV, true, "Path towards the LINX viral insertion TSV.");
         options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
         options.addOption(CIRCOS_FILE, true, "Path towards the circos file.");
@@ -196,9 +194,6 @@ public interface PatientReporterConfig {
     String linxBreakendTsv();
 
     @NotNull
-    String linxViralInsertionTsv();
-
-    @NotNull
     String linxDriverCatalogTsv();
 
     @NotNull
@@ -256,7 +251,6 @@ public interface PatientReporterConfig {
         String purpleGermlineVariantVcf = Strings.EMPTY;
         String linxFusionTsv = Strings.EMPTY;
         String linxBreakendTsv = Strings.EMPTY;
-        String linxViralInsertionTsv = Strings.EMPTY;
         String linxDriverCatalogTsv = Strings.EMPTY;
         String chordPredictionTxt = Strings.EMPTY;
         String circosFile = Strings.EMPTY;
@@ -281,7 +275,6 @@ public interface PatientReporterConfig {
             purpleGermlineVariantVcf = nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF);
             linxFusionTsv = nonOptionalFile(cmd, LINX_FUSION_TSV);
             linxBreakendTsv = nonOptionalFile(cmd, LINX_BREAKEND_TSV);
-            linxViralInsertionTsv = nonOptionalFile(cmd, LINX_VIRAL_INSERTION_TSV);
             linxDriverCatalogTsv = nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV);
             chordPredictionTxt = nonOptionalFile(cmd, CHORD_PREDICTION_TXT);
             circosFile = nonOptionalFile(cmd, CIRCOS_FILE);
@@ -318,7 +311,6 @@ public interface PatientReporterConfig {
                 .purpleGermlineVariantVcf(purpleGermlineVariantVcf)
                 .linxFusionTsv(linxFusionTsv)
                 .linxBreakendTsv(linxBreakendTsv)
-                .linxViralInsertionTsv(linxViralInsertionTsv)
                 .linxDriverCatalogTsv(linxDriverCatalogTsv)
                 .chordPredictionTxt(chordPredictionTxt)
                 .circosFile(circosFile)
