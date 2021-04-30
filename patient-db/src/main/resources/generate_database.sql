@@ -893,8 +893,8 @@ CREATE TABLE protect
     INDEX(sampleId)
 );
 
-DROP TABLE IF EXISTS pgxCalls;
-CREATE TABLE pgxCalls
+DROP TABLE IF EXISTS peachCalls;
+CREATE TABLE peachCalls
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
@@ -911,8 +911,8 @@ CREATE TABLE pgxCalls
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS pgxGenotype;
-CREATE TABLE pgxGenotype
+DROP TABLE IF EXISTS peachGenotype;
+CREATE TABLE peachGenotype
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,

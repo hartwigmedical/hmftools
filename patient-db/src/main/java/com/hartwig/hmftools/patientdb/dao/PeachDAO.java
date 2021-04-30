@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.DB_BATCH_INSERT_SIZE;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PGXCALLS;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PGXGENOTYPE;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PEACHCALLS;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PEACHGENOTYPE;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -30,37 +30,36 @@ class PeachDAO {
         deletePeachForSample(sample);
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
-        //TODO rename tables
 
         for (List<PeachGenotype> genotypes : Iterables.partition(peachGenotypes, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep9 inserter = context.insertInto(PGXGENOTYPE,
-                    PGXGENOTYPE.MODIFIED,
-                    PGXGENOTYPE.SAMPLEID,
-                    PGXGENOTYPE.GENE,
-                    PGXGENOTYPE.HAPLOTYPE,
-                    PGXGENOTYPE.FUNCTION,
-                    PGXGENOTYPE.LINKEDDRUGS,
-                    PGXGENOTYPE.URLPRESCRIPTIONINFO,
-                    PGXGENOTYPE.PANELVERSION,
-                    PGXGENOTYPE.REPOVERSION);
+            InsertValuesStep9 inserter = context.insertInto(PEACHGENOTYPE,
+                    PEACHGENOTYPE.MODIFIED,
+                    PEACHGENOTYPE.SAMPLEID,
+                    PEACHGENOTYPE.GENE,
+                    PEACHGENOTYPE.HAPLOTYPE,
+                    PEACHGENOTYPE.FUNCTION,
+                    PEACHGENOTYPE.LINKEDDRUGS,
+                    PEACHGENOTYPE.URLPRESCRIPTIONINFO,
+                    PEACHGENOTYPE.PANELVERSION,
+                    PEACHGENOTYPE.REPOVERSION);
             genotypes.forEach(x -> addGenotype(timestamp, inserter, sample, x));
             inserter.execute();
         }
 
         for (List<PeachCalls> calls : Iterables.partition(peachCalls, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep12 inserter = context.insertInto(PGXCALLS,
-                    PGXCALLS.MODIFIED,
-                    PGXCALLS.SAMPLEID,
-                    PGXCALLS.GENE,
-                    PGXCALLS.POSITIONGRCH37,
-                    PGXCALLS.REFGRCH37,
-                    PGXCALLS.ALTGRCH37,
-                    PGXCALLS.POSITIONGRCH38,
-                    PGXCALLS.REFGRCH38,
-                    PGXCALLS.ALTGRCH38,
-                    PGXCALLS.RSID,
-                    PGXCALLS.VARIANTANNOTATION,
-                    PGXCALLS.FILTER);
+            InsertValuesStep12 inserter = context.insertInto(PEACHCALLS,
+                    PEACHCALLS.MODIFIED,
+                    PEACHCALLS.SAMPLEID,
+                    PEACHCALLS.GENE,
+                    PEACHCALLS.POSITIONGRCH37,
+                    PEACHCALLS.REFGRCH37,
+                    PEACHCALLS.ALTGRCH37,
+                    PEACHCALLS.POSITIONGRCH38,
+                    PEACHCALLS.REFGRCH38,
+                    PEACHCALLS.ALTGRCH38,
+                    PEACHCALLS.RSID,
+                    PEACHCALLS.VARIANTANNOTATION,
+                    PEACHCALLS.FILTER);
             calls.forEach(x -> addCalls(timestamp, inserter, sample, x));
             inserter.execute();
         }
@@ -96,7 +95,7 @@ class PeachDAO {
     }
 
     void deletePeachForSample(@NotNull String sample) {
-        context.delete(PGXCALLS).where(PGXCALLS.SAMPLEID.eq(sample)).execute();
-        context.delete(PGXGENOTYPE).where(PGXGENOTYPE.SAMPLEID.eq(sample)).execute();
+        context.delete(PEACHCALLS).where(PEACHCALLS.SAMPLEID.eq(sample)).execute();
+        context.delete(PEACHGENOTYPE).where(PEACHGENOTYPE.SAMPLEID.eq(sample)).execute();
     }
 }
