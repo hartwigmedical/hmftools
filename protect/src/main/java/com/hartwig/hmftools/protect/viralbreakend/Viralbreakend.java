@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.viralbreakend;
+package com.hartwig.hmftools.protect.viralbreakend;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

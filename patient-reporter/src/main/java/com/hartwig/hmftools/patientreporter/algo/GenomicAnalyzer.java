@@ -9,12 +9,12 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
-import com.hartwig.hmftools.patientreporter.viralbreakend.ViralBreakendFactory;
-import com.hartwig.hmftools.patientreporter.viralbreakend.Viralbreakend;
+import com.hartwig.hmftools.protect.viralbreakend.ViralBreakendFactory;
+import com.hartwig.hmftools.protect.viralbreakend.Viralbreakend;
 import com.hartwig.hmftools.protect.chord.ChordDataLoader;
 import com.hartwig.hmftools.protect.linx.LinxData;
 import com.hartwig.hmftools.protect.linx.LinxDataLoader;
-import com.hartwig.hmftools.protect.linx.ViralInsertionAnalyzer;
+import com.hartwig.hmftools.protect.viralbreakend.ViralInsertionAnalyzer;
 import com.hartwig.hmftools.protect.purple.PurpleData;
 import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -48,6 +48,7 @@ public class GenomicAnalyzer {
         LinxData linxData = LinxDataLoader.load(linxFusionTsv, linxBreakendTsv, linxDriversTsv);
 
         List<Viralbreakend> viralBreakends = ViralBreakendFactory.readViralBreakend(viralBreakendTsv);
+        List<Viralbreakend> viralBreakendsFiltered = ViralInsertionAnalyzer.analyzeViralInsertions(viralBreakends);
 
         List<ReportableVariant> reportableVariants =
                 ReportableVariantFactory.mergeVariantLists(purpleData.germlineVariants(), purpleData.somaticVariants());
@@ -80,7 +81,7 @@ public class GenomicAnalyzer {
                 .geneFusions(linxData.fusions())
                 .geneDisruptions(linxData.geneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())
-                .viralBreakends(viralBreakends)
+                .viralBreakends(viralBreakendsFiltered)
                 .build();
     }
 

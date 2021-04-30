@@ -1,2 +1,0 @@
-taxid_genus	name_genus	reads_genus_tree	taxid_species	name_species	reads_species_tree	taxid_assigned	name_assigned	reads_assigned_tree	reads_assigned_direct	reference	reference_taxid	reference_kmer_count	alternate_kmer_count#rname	startpos	endpos	numreads	covbases	coverage	meandepth	meanbaseq	meanmapq	integrations	QCStatus
-10	Alphapapillomavirus	100	1200	Alphapapillomavirus 9	5	450	Human papillomavirus type 16	12	47	AB1234.1	3567	768	54321	adjusted_AB1234.1	12	89	123	789	1.1	2.1	3.2	16	3

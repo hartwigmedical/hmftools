@@ -1,19 +1,21 @@
-package com.hartwig.hmftools.patientreporter.viralbreakend;
+package com.hartwig.hmftools.protect.viralbreakend;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.protect.viralbreakend.ViralBreakendFactory;
+import com.hartwig.hmftools.protect.viralbreakend.Viralbreakend;
 
 import org.junit.Test;
 
 public class ViralBreakendFactoryTest {
 
     private static final String VIRAL_BREAKEND_TSV = Resources.getResource("test_run/viralbreakend/sample.virusbreakend.vcf.summary.tsv").getPath();
-    private static final String VIRAL_BREAKEND_WITH_TSV = Resources.getResource("test_run/viralbreakend/sample_with.virusbreakend.vcf.summary.tsv").getPath();
+    private static final String VIRAL_BREAKEND_WITH_TSV = Resources.getResource(
+            "test_run/viralbreakend/sample_with.virusbreakend.vcf.summary.tsv").getPath();
 
 
     @Test
