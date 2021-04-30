@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakendFactory;
 
 import org.junit.Test;
 

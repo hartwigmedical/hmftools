@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.protect.viralbreakend;
+package com.hartwig.hmftools.common.virusbreakend;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -11,9 +11,9 @@ import org.junit.Test;
 
 public class VirusBreakendFactoryTest {
 
-    private static final String VIRUS_BREAKEND_TSV = Resources.getResource("test_run/virusbreakend/sample.virusbreakend.vcf.summary.tsv").getPath();
+    private static final String VIRUS_BREAKEND_TSV = Resources.getResource("virusbreakend/sample.virusbreakend.vcf.summary.tsv").getPath();
     private static final String VIRUS_BREAKEND_WITH_TSV = Resources.getResource(
-            "test_run/virusbreakend/sample_with.virusbreakend.vcf.summary.tsv").getPath();
+            "virusbreakend/sample_with.virusbreakend.vcf.summary.tsv").getPath();
 
 
     @Test

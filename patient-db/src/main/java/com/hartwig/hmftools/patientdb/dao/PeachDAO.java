@@ -83,15 +83,15 @@ class PeachDAO {
         inserter.values(timestamp,
                 sample,
                 calls.gene(),
-                calls.positionGRCh37(),
-                calls.refGRCh37(),
-                calls.altGRCh37(),
-                calls.positionGRCh38(),
-                calls.refGRCh38(),
-                calls.altGRCh38(),
+                calls.positionV37(),
+                calls.refV37(),
+                calls.allele1(),
+                calls.positionV38(),
+                calls.refV38(),
+                calls.allele2(),
                 calls.rsid(),
-                calls.variantAnnotation(),
-                calls.filter());
+                calls.variantAnnotationV37(),
+                calls.filterV37());
     }
 
     void deletePeachForSample(@NotNull String sample) {

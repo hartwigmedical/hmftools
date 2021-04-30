@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.viralbreakend;
+package com.hartwig.hmftools.common.virusbreakend;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
