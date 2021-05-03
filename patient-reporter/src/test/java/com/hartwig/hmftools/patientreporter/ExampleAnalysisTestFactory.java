@@ -11,12 +11,15 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
+import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
+import com.hartwig.hmftools.common.peach.ImmutablePeachGenotype;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
@@ -35,12 +38,12 @@ import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virusbreakend.ImmutableVirusBreakend;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableGenomicAnalysis;
-import com.hartwig.hmftools.patientreporter.cuppa.ImmutableMolecularTissueOrigin;
-import com.hartwig.hmftools.patientreporter.cuppa.MolecularTissueOrigin;
+import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
@@ -61,6 +64,7 @@ public final class ExampleAnalysisTestFactory {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
     private static final String CIRCOS_PATH = Resources.getResource("test_run/purple/plot/sample.circos.png").getPath();
+    private static final String CUPPA_PATH = Resources.getResource("test_run/cuppa/sample.cuppa.chart.png").getPath();
 
     private ExampleAnalysisTestFactory() {
     }
@@ -114,6 +118,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<VirusBreakend> virusBreakends = Lists.newArrayList();
+        List<PeachGenotype> peachGenotypes = createTestPeachgenotypes();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, reportGermline, limsCohortConfig);
 
@@ -164,10 +169,11 @@ public final class ExampleAnalysisTestFactory {
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .virusBreakends(virusBreakends)
+                .peachGenotypes(peachGenotypes)
                 .build();
 
         MolecularTissueOrigin molecularTissueOrigin =
-                ImmutableMolecularTissueOrigin.builder().molecularTissueOriginResult("Skin").molecularTissueOriginPlot(CIRCOS_PATH).build();
+                ImmutableMolecularTissueOrigin.builder().molecularTissueOriginResult("Skin").molecularTissueOriginPlot(CUPPA_PATH).build();
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
@@ -212,6 +218,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<VirusBreakend> virusBreakends = createTestVirusBreakends();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
+        List<PeachGenotype> peachGenotypes = createTestPeachgenotypes();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true, limsCohortConfig);
         String clinicalSummary = Strings.EMPTY;
@@ -237,10 +244,11 @@ public final class ExampleAnalysisTestFactory {
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .virusBreakends(virusBreakends)
+                .peachGenotypes(peachGenotypes)
                 .build();
 
         MolecularTissueOrigin molecularTissueOrigin =
-                ImmutableMolecularTissueOrigin.builder().molecularTissueOriginResult("Skin").molecularTissueOriginPlot(CIRCOS_PATH).build();
+                ImmutableMolecularTissueOrigin.builder().molecularTissueOriginResult("Skin").molecularTissueOriginPlot(CUPPA_PATH).build();
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
@@ -1070,6 +1078,23 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
+    private static List<PeachGenotype> createTestPeachgenotypes() {
+        List<PeachGenotype> peachGenotypes = Lists.newArrayList(ImmutablePeachGenotype.builder()
+                .gene("DYPD")
+                .haplotype("*1_HOM")
+                .function("Normal Function")
+                .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
+                .urlPrescriptionInfo(
+                        "https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939;"
+                                + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963;"
+                                + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
+                .panelVersion("PGx_min_DPYD_v0.3")
+                .repoVersion("1.0")
+                .build());
+        return peachGenotypes;
+    }
+
+    @NotNull
     private static List<VirusBreakend> createTestVirusBreakends() {
         List<VirusBreakend> virusbreakends = Lists.newArrayList(ImmutableVirusBreakend.builder()
                 .taxidGenus(0)
@@ -1085,7 +1110,8 @@ public final class ExampleAnalysisTestFactory {
                 .reference(Strings.EMPTY)
                 .referenceTaxid(0)
                 .referenceKmerCount(0)
-                .alternateKmerCountRname(Strings.EMPTY)
+                .alternateKmerCount(0)
+                .Rname(Strings.EMPTY)
                 .startpos(0)
                 .endpos(0)
                 .numreads(0)
@@ -1095,7 +1121,7 @@ public final class ExampleAnalysisTestFactory {
                 .meanbaseq(0)
                 .meanmapq(0)
                 .integrations(2)
-                .QCStatus(0)
+                .QCStatus(VirusBreakendQCStatus.ASSEMBLY_DOWNSAMPLED)
                 .build());
         return Lists.newArrayList(virusbreakends);
     }

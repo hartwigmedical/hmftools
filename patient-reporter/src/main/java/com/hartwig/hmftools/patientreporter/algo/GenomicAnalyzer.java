@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
+import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
@@ -35,8 +37,8 @@ public class GenomicAnalyzer {
     public GenomicAnalysis run(@NotNull String tumorSampleId, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
             @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String linxFusionTsv,
-            @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv,
-            @NotNull String chordPredictionTxt, @NotNull String protectEvidenceTsv, @NotNull String virusBreakendTsv) throws IOException {
+            @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt,
+            @NotNull String protectEvidenceTsv, @NotNull String virusBreakendTsv, @NotNull String peachgenotypeTsv) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
                 purpleQCFile,
                 purplePurityTsv,
@@ -49,6 +51,8 @@ public class GenomicAnalyzer {
 
         List<VirusBreakend> virusBreakends = VirusBreakendFactory.readVirusBreakend(virusBreakendTsv);
         List<VirusBreakend> viralBreakendsFiltered = VirusBreakendAnalyzer.analyzeVirusBreakends(virusBreakends);
+
+        List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachgenotypeTsv);
 
         List<ReportableVariant> reportableVariants =
                 ReportableVariantFactory.mergeVariantLists(purpleData.germlineVariants(), purpleData.somaticVariants());
@@ -82,6 +86,7 @@ public class GenomicAnalyzer {
                 .geneDisruptions(linxData.geneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())
                 .virusBreakends(viralBreakendsFiltered)
+                .peachGenotypes(peachGenotypes)
                 .build();
     }
 

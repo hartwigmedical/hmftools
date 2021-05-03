@@ -8,11 +8,14 @@ public final class FilterFactory {
 
     static final Set<String> VARIANT_KEYWORDS_TO_FILTER = Sets.newHashSet();
 
+    static final Set<String> GENES_TO_FILTER = Sets.newHashSet();
+
     static {
-        populateMutationToFilter();
+        populateVariantKeywordsToFilter();
+        populateGenesToFilter();
     }
 
-    private static void populateMutationToFilter() {
+    private static void populateVariantKeywordsToFilter() {
         // We don't consider wild-type events yet.
         VARIANT_KEYWORDS_TO_FILTER.add("wild-type");
 
@@ -27,6 +30,11 @@ public final class FilterFactory {
 
         // We don't consider LOH a driver on its own
         VARIANT_KEYWORDS_TO_FILTER.add("LOH");
+    }
+
+    private static void populateGenesToFilter() {
+        // COX2 lies on MT and we don't handle that in hmftools.
+        GENES_TO_FILTER.add("COX2");
     }
 
     private FilterFactory() {

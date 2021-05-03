@@ -20,11 +20,11 @@ class DndsGeneName {
         this.dndsGenes = dndsGenes;
         this.geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
         if (refGenomeVersion == RefGenomeVersion.V37) {
-            alignmentMapPredicate = aDriverGene -> geneNameMapping.isValidV37Gene(aDriverGene.gene());
+            alignmentMapPredicate = driverGene -> geneNameMapping.isValidV37Gene(driverGene.gene());
             dndsGeneFunction = DriverGene::gene;
         } else {
-            alignmentMapPredicate = aDriverGene -> geneNameMapping.isValidV38Gene(aDriverGene.gene());
-            dndsGeneFunction = aDriverGene -> geneNameMapping.v37Gene(aDriverGene.gene());
+            alignmentMapPredicate = driverGene -> geneNameMapping.isValidV38Gene(driverGene.gene());
+            dndsGeneFunction = driverGene -> geneNameMapping.v37Gene(driverGene.gene());
         }
     }
 
@@ -37,6 +37,7 @@ class DndsGeneName {
         return dndsGenes.contains(dndsGeneName);
     }
 
+    @NotNull
     public String dndsGeneName(@NotNull DriverGene driverGene) {
         return dndsGeneFunction.apply(driverGene);
     }

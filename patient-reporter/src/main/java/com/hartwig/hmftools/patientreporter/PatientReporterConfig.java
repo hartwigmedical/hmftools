@@ -60,6 +60,7 @@ public interface PatientReporterConfig {
     String MOLECULAR_TISSUE_ORIGIN_TXT = "molecular_tissue_origin_txt";
     String MOLECULAR_TISSUE_ORIGIN_PLOT = "molecular_tissue_origin_plot";
     String VIRUS_BREAKEND_TSV = "virus_breakend_tsv";
+    String PEACH_GENOTYPE_TSV = "peach_genotype_tsv";
 
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
     String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
@@ -112,6 +113,7 @@ public interface PatientReporterConfig {
         options.addOption(MOLECULAR_TISSUE_ORIGIN_TXT, true, "Path towards the molecular tissue origin TXT.");
         options.addOption(MOLECULAR_TISSUE_ORIGIN_PLOT, true, "Path towards the molecular tissue origin plot.");
         options.addOption(VIRUS_BREAKEND_TSV, true, "Path towards the virus breakend TSV.");
+        options.addOption(PEACH_GENOTYPE_TSV, true, "Path towards the peach genotype TSV.");
 
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
@@ -214,6 +216,9 @@ public interface PatientReporterConfig {
     String virusBreakendTsv();
 
     @NotNull
+    String peachgenotypeTsv();
+
+    @NotNull
     String germlineReportingTsv();
 
     @NotNull
@@ -257,6 +262,7 @@ public interface PatientReporterConfig {
         String molecularTissueOriginTxt = Strings.EMPTY;
         String molecularTissueOriginPlot = Strings.EMPTY;
         String virusBreakendTsv = Strings.EMPTY;
+        String peachGenotypeTsv = Strings.EMPTY;
 
         String germlineReportingTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
@@ -284,6 +290,7 @@ public interface PatientReporterConfig {
             molecularTissueOriginTxt = optionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_TXT);
             molecularTissueOriginPlot = optionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_PLOT);
             virusBreakendTsv = optionalFile(cmd, VIRUS_BREAKEND_TSV);
+            peachGenotypeTsv = optionalFile(cmd, PEACH_GENOTYPE_TSV);
         }
 
         return ImmutablePatientReporterConfig.builder()
@@ -317,6 +324,7 @@ public interface PatientReporterConfig {
                 .molecularTissueOriginTxt(molecularTissueOriginTxt)
                 .molecularTissueOriginPlot(molecularTissueOriginPlot)
                 .virusBreakendTsv(virusBreakendTsv)
+                .peachgenotypeTsv(peachGenotypeTsv)
                 .germlineReportingTsv(germlineReportingTsv)
                 .sampleSummaryTsv(sampleSummaryTsv)
                 .comments(cmd.getOptionValue(COMMENTS))

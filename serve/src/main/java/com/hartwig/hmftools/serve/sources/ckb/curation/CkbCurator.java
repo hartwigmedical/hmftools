@@ -21,6 +21,8 @@ public class CkbCurator {
 
     @NotNull
     private final Set<CurationEntry> evaluatedCurationEntries = Sets.newHashSet();
+    @NotNull
+    private final Set<String> evaluatedGenes = Sets.newHashSet();
 
     public CkbCurator() {
     }
@@ -53,31 +55,61 @@ public class CkbCurator {
                 unusedEntryCount,
                 evaluatedCurationEntries.size(),
                 CurationFactory.VARIANT_MAPPINGS.size());
+
+        int unusedGeneCount = 0;
+        for (String gene : CurationFactory.GENE_MAPPINGS.keySet()) {
+            if (!evaluatedGenes.contains(gene)) {
+                unusedGeneCount++;
+                LOGGER.warn(" Gene '{}' hasn't been used during CKB gene mapping", gene);
+            }
+        }
+
+        LOGGER.debug(" Found {} unused CKB gene mappings. {} keys have been requested against {} gene mapping entries",
+                unusedGeneCount,
+                evaluatedGenes.size(),
+                CurationFactory.GENE_MAPPINGS.size());
     }
 
     @NotNull
     private Variant curate(@NotNull Variant variant) {
-        CurationEntry entry = new CurationEntry(variant.gene().geneSymbol(), variant.variant());
+        String geneSymbol = variant.gene() != null ? variant.gene().geneSymbol() : null;
+        if (geneSymbol == null) {
+            LOGGER.debug("No gene symbol known, skipping curation on '{}'", variant);
+            return variant;
+        }
+
+        CurationEntry entry = new CurationEntry(geneSymbol, variant.variant());
+        evaluatedGenes.add(geneSymbol);
         evaluatedCurationEntries.add(entry);
 
-        Variant curatedMutation = variant;
+        Variant curatedVariant = variant;
         if (CurationFactory.VARIANT_MAPPINGS.containsKey(entry)) {
             String mappedVariant = CurationFactory.VARIANT_MAPPINGS.get(entry).variant();
             String mappedGeneSymbol = CurationFactory.VARIANT_MAPPINGS.get(entry).geneSymbol();
 
-            LOGGER.debug("Mapping mutation '{}' on '{}' to '{}' on '{}'",
+            LOGGER.debug("Mapping variant '{}' on '{}' to '{}' on '{}'",
                     entry.variant(),
                     entry.geneSymbol(),
                     mappedVariant,
                     mappedGeneSymbol);
 
-            curatedMutation = ImmutableVariant.builder()
-                    .from(curatedMutation)
+            curatedVariant = ImmutableVariant.builder()
+                    .from(curatedVariant)
                     .gene(ImmutableGene.builder().from(variant.gene()).geneSymbol(mappedGeneSymbol).build())
                     .variant(mappedVariant)
                     .build();
         }
 
-        return curatedMutation;
+        if (CurationFactory.GENE_MAPPINGS.containsKey(variant.gene().geneSymbol())) {
+            String mappedGeneSymbol = CurationFactory.GENE_MAPPINGS.get(variant.gene().geneSymbol());
+            LOGGER.debug("Mapping gene '{}' to '{}'", variant.gene().geneSymbol(), mappedGeneSymbol);
+
+            curatedVariant = ImmutableVariant.builder()
+                    .from(curatedVariant)
+                    .gene(ImmutableGene.builder().from(variant.gene()).geneSymbol(mappedGeneSymbol).build())
+                    .build();
+        }
+
+        return curatedVariant;
     }
 }

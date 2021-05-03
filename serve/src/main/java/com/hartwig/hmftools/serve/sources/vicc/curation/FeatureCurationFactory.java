@@ -59,10 +59,6 @@ final class FeatureCurationFactory {
     }
 
     private static void populateCIViCCuration() {
-        // These are not wrong but transvar can't resolve generic start lost variants so we update to something that transvar can interpret.
-        FEATURE_MAPPINGS.put(civic("VHL", "ENST00000256474", "M1? (c.3G>A)"), curation("VHL", "M1I (c.3G>A)"));
-        FEATURE_MAPPINGS.put(civic("VHL", "ENST00000256474", "M1? (c.1-1_20del21)"), curation("VHL", "M1I (c.1-1_20del21)"));
-
         // Protein annotation is not formally correct, update to make it correct.
         FEATURE_MAPPINGS.put(civic("EGFR", "ENST00000275493", "V769_770insASV"), curation("EGFR", "V769_D770insASV"));
         FEATURE_MAPPINGS.put(civic("ERBB2", "ENST00000269571", "M774INSAYVM"), curation("ERBB2", "M774_A775INSAYVM"));

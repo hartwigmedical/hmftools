@@ -351,9 +351,9 @@ public class AnnotatedHotspotVCFChecker {
         }
     }
 
-private enum MatchType {
-    IDENTICAL,
-    WHITE_LIST,
-    NO_MATCH
-}
+    private enum MatchType {
+        IDENTICAL,
+        WHITE_LIST,
+        NO_MATCH
+    }
 }
