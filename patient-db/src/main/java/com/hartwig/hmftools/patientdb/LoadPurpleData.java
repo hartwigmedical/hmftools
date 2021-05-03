@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLi
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -24,6 +26,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -56,7 +59,11 @@ public class LoadPurpleData {
 
         List<DriverCatalog> somaticDriverCatalog =
                 DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purpleDir, sample));
-        List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(DriverCatalogFile.generateGermlineFilename(purpleDir, sample));
+
+        final String germlineDriverFile = DriverCatalogFile.generateGermlineFilename(purpleDir, sample);
+
+        List<DriverCatalog> germlineDriverCatalog = Files.exists(Paths.get(germlineDriverFile)) ?
+                DriverCatalogFile.read(germlineDriverFile) : Lists.newArrayList();
 
         LOGGER.info("Persisting purple data to db for {}", sample);
         persistToDatabase(dbAccess,
