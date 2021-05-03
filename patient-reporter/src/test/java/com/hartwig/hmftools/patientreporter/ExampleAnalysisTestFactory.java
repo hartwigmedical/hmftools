@@ -1085,7 +1085,8 @@ public final class ExampleAnalysisTestFactory {
                 .reference(Strings.EMPTY)
                 .referenceTaxid(0)
                 .referenceKmerCount(0)
-                .alternateKmerCountRname(Strings.EMPTY)
+                .alternateKmerCount(0)
+                .Rname(Strings.EMPTY)
                 .startpos(0)
                 .endpos(0)
                 .numreads(0)
@@ -1095,7 +1096,7 @@ public final class ExampleAnalysisTestFactory {
                 .meanbaseq(0)
                 .meanmapq(0)
                 .integrations(2)
-                .QCStatus(0)
+                .QCStatus(Strings.EMPTY)
                 .build());
         return Lists.newArrayList(virusbreakends);
     }
