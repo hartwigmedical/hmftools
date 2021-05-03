@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.refgenome.liftover;
 import java.io.File;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,14 +15,17 @@ public class UCSCLiftOver implements LiftOverAlgo {
 
     @NotNull
     private final LiftOver liftOver;
+    @NotNull
+    private final RefGenomeVersion targetVersion;
 
     @NotNull
-    public static UCSCLiftOver fromChainFile(@NotNull String chainFile) {
-        return new UCSCLiftOver(new LiftOver(new File(chainFile)));
+    public static UCSCLiftOver fromChainFile(@NotNull String chainFile, @NotNull RefGenomeVersion targetVersion) {
+        return new UCSCLiftOver(new LiftOver(new File(chainFile)), targetVersion);
     }
 
-    private UCSCLiftOver(@NotNull final LiftOver liftOver) {
+    private UCSCLiftOver(@NotNull final LiftOver liftOver, @NotNull final RefGenomeVersion targetVersion) {
         this.liftOver = liftOver;
+        this.targetVersion = targetVersion;
     }
 
     @Nullable
@@ -35,6 +39,8 @@ public class UCSCLiftOver implements LiftOverAlgo {
             return null;
         }
 
-        return ImmutableLiftOverResult.builder().chromosome(lifted.getContig()).position(lifted.getStart()).build();
+        // We convert chromosome back from UCSC to target ref genome version
+        String targetChromosome = targetVersion.versionedChromosome(lifted.getContig());
+        return ImmutableLiftOverResult.builder().chromosome(targetChromosome).position(lifted.getStart()).build();
     }
 }

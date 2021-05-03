@@ -86,7 +86,7 @@ public class RefGenomeManager {
         IndexedFastaSequenceFile targetSequence = refSequenceForRefGenome(targetVersion);
         String chainFromSourceToTarget = sourceResource.chainToOtherRefGenomeMap().get(targetVersion);
 
-        LiftOverAlgo liftOverAlgo = UCSCLiftOver.fromChainFile(chainFromSourceToTarget);
+        LiftOverAlgo liftOverAlgo = UCSCLiftOver.fromChainFile(chainFromSourceToTarget, targetVersion);
         RefGenomeConverter converter = new RefGenomeConverter(sourceVersion, targetVersion, targetSequence, liftOverAlgo, geneNameMapping);
 
         return ImmutableExtractionResult.builder()
