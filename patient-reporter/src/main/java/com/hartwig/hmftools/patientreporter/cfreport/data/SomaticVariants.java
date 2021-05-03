@@ -107,13 +107,15 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String tVAFString(@NotNull String tVAF, boolean hasReliablePurity) {
-        return hasReliablePurity ? tVAF : DataUtil.NA_STRING;
+    public static String tVAFString(@NotNull String tVAF, boolean hasReliablePurity, double copyNumber) {
+        int copies = Integer.parseInt(String.valueOf(Math.round(copyNumber)));
+        return hasReliablePurity && copies >= 1 ? tVAF : DataUtil.NA_STRING;
     }
 
     @NotNull
     public static String copyNumberString(double copyNumber, boolean hasReliablePurity) {
-        return hasReliablePurity ? String.valueOf(Math.round(copyNumber)) : DataUtil.NA_STRING;
+        String copies = String.valueOf(Math.round(copyNumber));
+        return hasReliablePurity && Integer.parseInt(copies) >= 1 ? copies : DataUtil.NA_STRING;
     }
 
     @NotNull
