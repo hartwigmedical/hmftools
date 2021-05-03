@@ -38,6 +38,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virusbreakend.ImmutableVirusBreakend;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedPatientReport;
@@ -1120,7 +1121,7 @@ public final class ExampleAnalysisTestFactory {
                 .meanbaseq(0)
                 .meanmapq(0)
                 .integrations(2)
-                .QCStatus(Strings.EMPTY)
+                .QCStatus(VirusBreakendQCStatus.ASSEMBLY_DOWNSAMPLED)
                 .build());
         return Lists.newArrayList(virusbreakends);
     }

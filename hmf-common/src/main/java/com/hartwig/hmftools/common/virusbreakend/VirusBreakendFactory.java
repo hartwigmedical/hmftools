@@ -58,10 +58,10 @@ public class VirusBreakendFactory {
                 .meanbaseq(Double.parseDouble(values[21]))
                 .meanmapq(Double.parseDouble(values[22]))
                 .integrations(Integer.parseInt(values[23]))
-                .QCStatus(Strings.EMPTY);
+                .QCStatus(VirusBreakendQCStatus.extractVirusBreakendQCStatus(Strings.EMPTY));
 
         if (values.length == 25) {
-            builder.QCStatus(values[24]);
+            builder.QCStatus(VirusBreakendQCStatus.extractVirusBreakendQCStatus(values[24]));
         }
 
         return builder.build();

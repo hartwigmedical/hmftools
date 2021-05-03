@@ -64,5 +64,5 @@ public abstract class VirusBreakend {
     public abstract int integrations();
 
     @NotNull
-    public abstract String QCStatus();
+    public abstract VirusBreakendQCStatus QCStatus();
 }

@@ -282,7 +282,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         }
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 60, 60, 100, 60 },
-                new Cell[] { TableUtil.createHeaderCell("Geme"), TableUtil.createHeaderCell("Genotype"),
+                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
                         TableUtil.createHeaderCell("Function"), TableUtil.createHeaderCell("Linked drugs"),
                         TableUtil.createHeaderCell("Source").setTextAlignment(TextAlignment.CENTER) });
 
