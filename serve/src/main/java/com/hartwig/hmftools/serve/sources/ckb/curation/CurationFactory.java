@@ -22,6 +22,7 @@ public class CurationFactory {
         VARIANT_MAPPINGS.put(new CurationEntry("TMB", "low"), new CurationEntry("-", "TMB low"));
 
         // These are all valid gene symbols, for which we use a different synonym compared to CKB.
+        // TODO Resolve automatically using gene synonyms from CKB.
         GENE_MAPPINGS.put("ABRAXAS1", "FAM175A");
         GENE_MAPPINGS.put("ACP3", "ACPP");
         GENE_MAPPINGS.put("CARS1", "CARS");
