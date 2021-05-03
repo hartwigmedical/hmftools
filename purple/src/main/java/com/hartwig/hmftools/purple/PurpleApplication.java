@@ -322,11 +322,7 @@ public class PurpleApplication
                 germlineDriverCatalog.addAll(germlineDrivers.drivers(mGermlineVariants.reportableVariants(), geneCopyNumbers));
 
                 DriverCatalogFile.write(DriverCatalogFile.generateSomaticFilename(outputDir, tumorSample), somaticDriverCatalog);
-
-                if(!sampleDataFiles.GermlineVcfFile.isEmpty())
-                {
-                    DriverCatalogFile.write(DriverCatalogFile.generateGermlineFilename(outputDir, tumorSample), germlineDriverCatalog);
-                }
+                DriverCatalogFile.write(DriverCatalogFile.generateGermlineFilename(outputDir, tumorSample), germlineDriverCatalog);
             }
 
             PPL_LOGGER.info("Writing purple data to directory: {}", outputDir);
