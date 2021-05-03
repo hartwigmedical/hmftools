@@ -37,9 +37,6 @@ public final class FilterFactory {
         GENES_TO_FILTER.add("COX2");
     }
 
-
-
-
     private FilterFactory() {
     }
 }
