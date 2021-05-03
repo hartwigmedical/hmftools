@@ -77,13 +77,13 @@ public class CkbExtractor {
             assert !entry.variants().isEmpty();
 
             Variant variant = entry.variants().get(0);
-
-            if (entry.type() == EventType.UNKNOWN) {
-                LOGGER.warn("No event type known for '{}' on '{}'", variant.variant(), variant.gene().geneSymbol());
-            }
-
             String gene = EventAndGeneExtractor.extractGene(variant);
             String event = EventAndGeneExtractor.extractEvent(variant);
+
+            if (entry.type() == EventType.UNKNOWN) {
+                LOGGER.warn("No event type known for '{}' on '{}'", event, gene);
+            }
+
             String transcript = mapToEnsemblTranscript(variant.gene().canonicalTranscript());
 
             EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event);

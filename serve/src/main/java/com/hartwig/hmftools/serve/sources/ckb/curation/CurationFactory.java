@@ -8,6 +8,8 @@ public class CurationFactory {
 
     static final Map<CurationEntry, CurationEntry> VARIANT_MAPPINGS = Maps.newHashMap();
 
+    static final Map<String, String> GENE_MAPPINGS = Maps.newHashMap();
+
     private CurationFactory() {
     }
 
@@ -17,5 +19,7 @@ public class CurationFactory {
         VARIANT_MAPPINGS.put(new CurationEntry("MSI", "negative"), new CurationEntry("-", "MSI neg"));
         VARIANT_MAPPINGS.put(new CurationEntry("TMB", "high"), new CurationEntry("-", "TMB high"));
         VARIANT_MAPPINGS.put(new CurationEntry("TMB", "low"), new CurationEntry("-", "TMB low"));
+
+        GENE_MAPPINGS.put("SEPTIN14", "SEPT14");
     }
 }
