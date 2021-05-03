@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.google.common.io.Resources;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class VirusBreakendFactoryTest {
@@ -57,6 +58,6 @@ public class VirusBreakendFactoryTest {
         assertEquals(115.2, virusbreakend.meanbaseq(), EPSILON);
         assertEquals(60, virusbreakend.meanmapq(), EPSILON);
         assertEquals(9, virusbreakend.integrations());
-        assertNull(virusbreakend.QCStatus());
+        assertEquals(Strings.EMPTY, virusbreakend.QCStatus());
     }
 }

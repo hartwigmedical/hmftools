@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.algo;
 import java.util.List;
 
 import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
@@ -73,4 +74,7 @@ public abstract class GenomicAnalysis {
 
     @NotNull
     public abstract List<VirusBreakend> virusBreakends();
+
+    @NotNull
+    public abstract List<PeachGenotype> peachGenotypes();
 }

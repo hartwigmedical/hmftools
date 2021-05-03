@@ -48,7 +48,7 @@ public class AnalysedPatientReporter {
             @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv,
             @NotNull String chordPredictionTxt, @NotNull String circosFile, @NotNull String protectEvidenceTsv, @Nullable String comments,
             boolean correctedReport, @NotNull String pipelineVersionFile, @NotNull String molecularTissueOriginTsv,
-            @NotNull String molecularTissueOriginPlot, @NotNull String virusBreakendTsv) throws IOException {
+            @NotNull String molecularTissueOriginPlot, @NotNull String virusBreakendTsv, @NotNull String peachgenotypeTsv) throws IOException {
         // TODO Specific COLO handling doesn't belong in patient reporter!
         String patientId = sampleMetadata.patientId().startsWith("COLO829") ? "COLO829" : sampleMetadata.patientId();
         PatientPrimaryTumor patientPrimaryTumor =
@@ -68,7 +68,7 @@ public class AnalysedPatientReporter {
                 linxBreakendTsv,
                 linxDriversTsv,
                 chordPredictionTxt,
-                protectEvidenceTsv, virusBreakendTsv);
+                protectEvidenceTsv, virusBreakendTsv, peachgenotypeTsv);
 
         ConsentFilterFunctions consentFilterFunctions = new ConsentFilterFunctions();
 

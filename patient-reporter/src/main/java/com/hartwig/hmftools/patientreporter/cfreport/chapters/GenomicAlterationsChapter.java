@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 import java.util.List;
 
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
@@ -10,6 +11,7 @@ import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
@@ -70,6 +72,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createHomozygousDisruptionsTable(genomicAnalysis.homozygousDisruptions()));
         reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
         reportDocument.add(createVirusBreakendsTable(genomicAnalysis.virusBreakends(), sampleReport.reportViralInsertions()));
+        reportDocument.add(createPeachGenotypesTable(genomicAnalysis.peachGenotypes()));
+
     }
 
     @NotNull
@@ -268,5 +272,29 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
             return TableUtil.createWrappingReportTable(title, contentTable);
         }
+    }
+
+    @NotNull
+    private static Table createPeachGenotypesTable(@NotNull List<PeachGenotype> peachGenotypes) {
+        String title = "Pharmacogenetics";
+        if (peachGenotypes.isEmpty()) {
+            return TableUtil.createNoneReportTable(title);
+        }
+
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 60, 60, 100, 60 },
+                new Cell[] { TableUtil.createHeaderCell("Geme"), TableUtil.createHeaderCell("Genotype"),
+                        TableUtil.createHeaderCell("Function"), TableUtil.createHeaderCell("Linked drugs"),
+                        TableUtil.createHeaderCell("Source").setTextAlignment(TextAlignment.CENTER) });
+
+        for (PeachGenotype peachGenotype : peachGenotypes) { //TODO sort
+            contentTable.addCell(TableUtil.createContentCell(peachGenotype.gene()));
+            contentTable.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
+            contentTable.addCell(TableUtil.createContentCell(peachGenotype.function()));
+            contentTable.addCell(TableUtil.createContentCell(peachGenotype.linkedDrugs()));
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph("PHARMGKB").addStyle(ReportResources.dataHighlightLinksStyle()))
+                    .setAction(PdfAction.createURI(peachGenotype.urlPrescriptionInfo().split(";")[0]))
+                    .setTextAlignment(TextAlignment.CENTER));
+        }
+        return TableUtil.createWrappingReportTable(title, contentTable);
     }
 }

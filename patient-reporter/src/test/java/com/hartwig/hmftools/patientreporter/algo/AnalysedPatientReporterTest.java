@@ -38,6 +38,7 @@ public class AnalysedPatientReporterTest {
     private static final String MOLECULAR_TISSUE_ORIGIN_PLOT = BASE_DIRECTORY + "/purple/plot/sample.circos.png";
     private static final String MOLECULAR_TISSUE_ORIGIN_TXT = BASE_DIRECTORY + "/cuppa/sample.cuppa.conclusion.txt";
     private static final String VIRUS_BREAKEND_TSV = BASE_DIRECTORY + "/virusbreakend/sample.virusbreakend.vcf.summary.tsv";
+    private static final String PEACH_GENOTYPE_TSV = BASE_DIRECTORY + "/peach/sample.peach.genotype.tsv";
 
     @Test
     public void canRunOnRunDirectory() throws IOException {
@@ -68,7 +69,9 @@ public class AnalysedPatientReporterTest {
                 false,
                 PIPELINE_VERSION,
                 MOLECULAR_TISSUE_ORIGIN_TXT,
-                MOLECULAR_TISSUE_ORIGIN_PLOT, VIRUS_BREAKEND_TSV));
+                MOLECULAR_TISSUE_ORIGIN_PLOT,
+                VIRUS_BREAKEND_TSV,
+                PEACH_GENOTYPE_TSV));
     }
 
     @Test

@@ -17,6 +17,8 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
+import com.hartwig.hmftools.common.peach.ImmutablePeachGenotype;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
@@ -114,6 +116,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<VirusBreakend> virusBreakends = Lists.newArrayList();
+        List<PeachGenotype> peachGenotypes = createTestPeachgenotypes();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, reportGermline, limsCohortConfig);
 
@@ -164,6 +167,7 @@ public final class ExampleAnalysisTestFactory {
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .virusBreakends(virusBreakends)
+                .peachGenotypes(peachGenotypes)
                 .build();
 
         MolecularTissueOrigin molecularTissueOrigin =
@@ -212,6 +216,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<VirusBreakend> virusBreakends = createTestVirusBreakends();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
+        List<PeachGenotype> peachGenotypes = createTestPeachgenotypes();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true, limsCohortConfig);
         String clinicalSummary = Strings.EMPTY;
@@ -237,6 +242,7 @@ public final class ExampleAnalysisTestFactory {
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .virusBreakends(virusBreakends)
+                .peachGenotypes(peachGenotypes)
                 .build();
 
         MolecularTissueOrigin molecularTissueOrigin =
@@ -1067,6 +1073,23 @@ public final class ExampleAnalysisTestFactory {
                 .gene("SGCZ")
                 .build());
         return Lists.newArrayList(homozygousDisruptions);
+    }
+
+    @NotNull
+    private static List<PeachGenotype> createTestPeachgenotypes() {
+        List<PeachGenotype> peachGenotypes = Lists.newArrayList(ImmutablePeachGenotype.builder()
+                .gene("DYPD")
+                .haplotype("*1_HOM")
+                .function("Normal Function")
+                .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
+                .urlPrescriptionInfo(
+                        "https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939;"
+                                + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963;"
+                                + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
+                .panelVersion("PGx_min_DPYD_v0.3")
+                .repoVersion("1.0")
+                .build());
+        return peachGenotypes;
     }
 
     @NotNull
