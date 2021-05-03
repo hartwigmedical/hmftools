@@ -63,6 +63,7 @@ public final class ExampleAnalysisTestFactory {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
     private static final String CIRCOS_PATH = Resources.getResource("test_run/purple/plot/sample.circos.png").getPath();
+    private static final String CUPPA_PATH = Resources.getResource("test_run/cuppa/sample.cuppa.chart.png").getPath();
 
     private ExampleAnalysisTestFactory() {
     }
@@ -171,7 +172,7 @@ public final class ExampleAnalysisTestFactory {
                 .build();
 
         MolecularTissueOrigin molecularTissueOrigin =
-                ImmutableMolecularTissueOrigin.builder().molecularTissueOriginResult("Skin").molecularTissueOriginPlot(CIRCOS_PATH).build();
+                ImmutableMolecularTissueOrigin.builder().molecularTissueOriginResult("Skin").molecularTissueOriginPlot(CUPPA_PATH).build();
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
@@ -246,7 +247,7 @@ public final class ExampleAnalysisTestFactory {
                 .build();
 
         MolecularTissueOrigin molecularTissueOrigin =
-                ImmutableMolecularTissueOrigin.builder().molecularTissueOriginResult("Skin").molecularTissueOriginPlot(CIRCOS_PATH).build();
+                ImmutableMolecularTissueOrigin.builder().molecularTissueOriginResult("Skin").molecularTissueOriginPlot(CUPPA_PATH).build();
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
