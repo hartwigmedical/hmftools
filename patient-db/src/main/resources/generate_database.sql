@@ -934,7 +934,8 @@ CREATE TABLE virusBreakend
     reference varchar(255) NOT NULL,
     referenceTaxid int NOT NULL,
     referenceKmerCount int NOT NULL,
-    alternateKmerCountRname varchar(255) NOT NULL,
+    alternateKmerCount int NOT NULL,
+    Rname varchar(255) NOT NULL,
     startpos int NOT NULL,
     endpos int NOT NULL,
     numreads int NOT NULL,
@@ -944,7 +945,7 @@ CREATE TABLE virusBreakend
     meanbaseq int NOT NULL,
     meanmapq int NOT NULL,
     integrations int NOT NULL,
-    QCStatus int NOT NULL,
+    QCStatus varchar(255) NOT NULL,
     PRIMARY KEY (id)
 );
 

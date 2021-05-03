@@ -39,8 +39,11 @@ public abstract class VirusBreakend {
 
     public abstract int referenceKmerCount();
 
+    public abstract int alternateKmerCount();
+
     @NotNull
-    public abstract String alternateKmerCountRname();
+    public abstract String Rname();
+
 
     public abstract int startpos();
 
@@ -50,15 +53,16 @@ public abstract class VirusBreakend {
 
     public abstract int covbases();
     
-    public abstract int coverage();
+    public abstract double coverage();
 
-    public abstract int meandepth();
+    public abstract double meandepth();
 
-    public abstract int meanbaseq();
+    public abstract double meanbaseq();
 
-    public abstract int meanmapq();
+    public abstract double meanmapq();
 
     public abstract int integrations();
 
-    public abstract int QCStatus();
+    @NotNull
+    public abstract String QCStatus();
 }
