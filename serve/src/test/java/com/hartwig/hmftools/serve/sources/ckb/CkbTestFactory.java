@@ -25,6 +25,11 @@ public final class CkbTestFactory {
     }
 
     @NotNull
+    public static CkbEntry createEntryWithVariant(@NotNull String variant) {
+        return createEntryWithGeneAndVariant(Strings.EMPTY, variant);
+    }
+
+    @NotNull
     public static CkbEntry createEntryWithGeneAndVariant(@NotNull String geneSymbol, @NotNull String variant) {
         return ImmutableCkbEntry.builder()
                 .profileId(0)

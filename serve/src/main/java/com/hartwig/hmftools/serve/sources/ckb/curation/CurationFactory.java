@@ -24,5 +24,10 @@ public class CurationFactory {
         // These are all valid gene symbols, for which we use a different synonym compared to CKB.
         GENE_MAPPINGS.put("SEPTIN14", "SEPT14");
         GENE_MAPPINGS.put("H3C1", "HIST1H3A");
+        GENE_MAPPINGS.put("H3C7", "HIST1H3F");
+        GENE_MAPPINGS.put("STING1", "TMEM173");
+
+
     }
+
 }
