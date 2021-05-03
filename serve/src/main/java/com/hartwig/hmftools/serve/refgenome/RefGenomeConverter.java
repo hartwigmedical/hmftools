@@ -293,9 +293,19 @@ class RefGenomeConverter {
         if (sourceVersion == targetVersion) {
             mappedGene = gene;
         } else if (sourceVersion == RefGenomeVersion.V37 && targetVersion == RefGenomeVersion.V38) {
-            mappedGene = geneNameMapping.v38Gene(gene);
+            if (geneNameMapping.isValidV37Gene(gene)) {
+                mappedGene = geneNameMapping.v38Gene(gene);
+            } else {
+                LOGGER.warn("Not a valid 37 gene: '{}'!", gene);
+                mappedGene = gene;
+            }
         } else if (sourceVersion == RefGenomeVersion.V38 && targetVersion == RefGenomeVersion.V37) {
-            mappedGene = geneNameMapping.v37Gene(gene);
+            if (geneNameMapping.isValidV38Gene(gene)) {
+                mappedGene = geneNameMapping.v37Gene(gene);
+            } else {
+                LOGGER.warn("Not a valid 38 gene: '{}'!", gene);
+                mappedGene = gene;
+            }
         } else {
             throw new IllegalStateException("Cannot map genes from ref genome version " + sourceVersion + " to " + targetVersion);
         }

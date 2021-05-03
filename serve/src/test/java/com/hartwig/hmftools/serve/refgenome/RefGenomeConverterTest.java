@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.serve.refgenome;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
@@ -47,6 +48,48 @@ public class RefGenomeConverterTest {
 
     private static final String TEST_GENE = "BRAF";
     private static final String TEST_CHROMOSOME = "chr1";
+
+    @Test
+    public void canMapNormalGenes() {
+        Map<String, String> v37 = Maps.newHashMap();
+        Map<String, String> v38 = Maps.newHashMap();
+
+        v37.put("X", "Y");
+        v38.put("Y", "X");
+
+        RefGenomeConverter converter37To38 = new RefGenomeConverter(RefGenomeVersion.V37,
+                RefGenomeVersion.V38,
+                RefGenomeResourceTestFactory.loadTestRefSequence38(),
+                new DummyLiftOver(),
+                new GeneNameMapping(v37, v38));
+
+        KnownCopyNumber copyNumber37 =
+                ImmutableKnownCopyNumber.builder().from(ServeTestFactory.createTestKnownCopyNumber()).gene("X").build();
+
+        Set<KnownCopyNumber> convertedCopyNumber38 = converter37To38.convertKnownCopyNumbers(Sets.newHashSet(copyNumber37));
+        assertEquals("Y", convertedCopyNumber38.iterator().next().gene());
+
+        RefGenomeConverter converter38To37 = new RefGenomeConverter(RefGenomeVersion.V38,
+                RefGenomeVersion.V37,
+                RefGenomeResourceTestFactory.loadTestRefSequence37(),
+                new DummyLiftOver(),
+                new GeneNameMapping(v37, v38));
+
+        KnownCopyNumber copyNumber38 =
+                ImmutableKnownCopyNumber.builder().from(ServeTestFactory.createTestKnownCopyNumber()).gene("Y").build();
+
+        Set<KnownCopyNumber> convertedCopyNumber37 = converter38To37.convertKnownCopyNumbers(Sets.newHashSet(copyNumber38));
+        assertEquals("X", convertedCopyNumber37.iterator().next().gene());
+    }
+
+    @Test
+    public void canSkipInvalidGeneMapping() {
+        RefGenomeConverter converter = build37To38NullConverter();
+        KnownCopyNumber copyNumber38 =
+                ImmutableKnownCopyNumber.builder().from(ServeTestFactory.createTestKnownCopyNumber()).gene("RYBP").build();
+
+        assertNotNull(converter.convertKnownCopyNumbers(Sets.newHashSet(copyNumber38)));
+    }
 
     @Test
     public void canConvertKnownHotspots() {
@@ -195,39 +238,6 @@ public class RefGenomeConverterTest {
 
         Set<ActionableFusion> convertedActionableFusions = DUMMY_CONVERTER.convertActionableFusions(Sets.newHashSet(actionableFusion));
         assertEquals(actionableFusion, convertedActionableFusions.iterator().next());
-    }
-
-    @Test
-    public void canMapGenes() {
-        Map<String, String> v37 = Maps.newHashMap();
-        Map<String, String> v38 = Maps.newHashMap();
-
-        v37.put("X", "Y");
-        v38.put("Y", "X");
-
-        RefGenomeConverter converter37To38 = new RefGenomeConverter(RefGenomeVersion.V37,
-                RefGenomeVersion.V38,
-                RefGenomeResourceTestFactory.loadTestRefSequence38(),
-                new DummyLiftOver(),
-                new GeneNameMapping(v37, v38));
-
-        KnownCopyNumber copyNumber37 =
-                ImmutableKnownCopyNumber.builder().from(ServeTestFactory.createTestKnownCopyNumber()).gene("X").build();
-
-        Set<KnownCopyNumber> convertedCopyNumber38 = converter37To38.convertKnownCopyNumbers(Sets.newHashSet(copyNumber37));
-        assertEquals("Y", convertedCopyNumber38.iterator().next().gene());
-
-        RefGenomeConverter converter38To37 = new RefGenomeConverter(RefGenomeVersion.V38,
-                RefGenomeVersion.V37,
-                RefGenomeResourceTestFactory.loadTestRefSequence37(),
-                new DummyLiftOver(),
-                new GeneNameMapping(v37, v38));
-
-        KnownCopyNumber copyNumber38 =
-                ImmutableKnownCopyNumber.builder().from(ServeTestFactory.createTestKnownCopyNumber()).gene("Y").build();
-
-        Set<KnownCopyNumber> convertedCopyNumber37 = converter38To37.convertKnownCopyNumbers(Sets.newHashSet(copyNumber38));
-        assertEquals("X", convertedCopyNumber37.iterator().next().gene());
     }
 
     @NotNull
