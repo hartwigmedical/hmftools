@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.GeneNameMapping;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 
@@ -31,16 +32,22 @@ class TransvarProcessImpl implements TransvarProcess {
     private final RefGenomeVersion refGenomeVersion;
     @NotNull
     private final String refGenomeFastaFile;
+    @NotNull
+    private final GeneNameMapping geneNameMapping;
 
     TransvarProcessImpl(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile) {
         this.refGenomeVersion = refGenomeVersion;
         this.refGenomeFastaFile = refGenomeFastaFile;
+        this.geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
     }
 
     @Override
     @NotNull
     public List<TransvarRecord> runTransvarPanno(@NotNull String gene, @NotNull String proteinAnnotation)
             throws InterruptedException, IOException {
+        // Somehow can't manage to configure transvar to use typical v38 gene names.
+        String v37Gene = refGenomeVersion == RefGenomeVersion.V37 ? gene : geneNameMapping.v37Gene(gene);
+
         ProcessBuilder processBuilder = new ProcessBuilder("transvar",
                 "panno",
                 "--reference",
@@ -50,7 +57,7 @@ class TransvarProcessImpl implements TransvarProcess {
                 "--noheader",
                 "--ensembl",
                 "-i",
-                gene + ":p." + proteinAnnotation);
+                v37Gene + ":p." + proteinAnnotation);
 
         // Below is required on environments where LC_CTYPE is not properly configured (usually on apple).
         processBuilder.environment().put("LC_CTYPE", "UTF-8");
