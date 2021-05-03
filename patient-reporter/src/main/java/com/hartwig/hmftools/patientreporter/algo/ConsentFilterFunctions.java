@@ -95,13 +95,14 @@ public final class ConsentFilterFunctions {
     private static ReportableVariant overruleVariant(@NotNull ReportableVariant variant, boolean hasReliablePurity,
             @NotNull ReportableVariantSource source) {
         double flooredCopyNumber = Math.max(0, variant.totalCopyNumber());
+        int copies = Integer.parseInt(String.valueOf(Math.round(variant.totalCopyNumber())));
 
         return ImmutableReportableVariant.builder()
                 .from(variant)
                 .source(source)
-                .totalCopyNumber(hasReliablePurity ? flooredCopyNumber : Double.NaN)
-                .alleleCopyNumber(hasReliablePurity ? variant.alleleCopyNumber() : Double.NaN)
-                .biallelic(hasReliablePurity ? variant.biallelic() : null)
+                .totalCopyNumber(hasReliablePurity && copies >= 1 ? flooredCopyNumber : Double.NaN)
+                .alleleCopyNumber(hasReliablePurity && copies >= 1 ? variant.alleleCopyNumber() : Double.NaN)
+                .biallelic(hasReliablePurity && copies >= 1 ? variant.biallelic() : null)
                 .build();
     }
 }

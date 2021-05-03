@@ -130,8 +130,7 @@ public final class SomaticVariants {
 
     @NotNull
     public static String biallelicString(@Nullable Boolean biallelic, boolean hasReliablePurity) {
-        if (hasReliablePurity) {
-            assert biallelic != null;
+        if (hasReliablePurity && biallelic != null) {
             return biallelic ? "Yes" : "No";
         } else {
             return DataUtil.NA_STRING;
