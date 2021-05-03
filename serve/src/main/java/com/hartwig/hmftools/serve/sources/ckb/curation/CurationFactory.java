@@ -22,12 +22,13 @@ public class CurationFactory {
         VARIANT_MAPPINGS.put(new CurationEntry("TMB", "low"), new CurationEntry("-", "TMB low"));
 
         // These are all valid gene symbols, for which we use a different synonym compared to CKB.
-        GENE_MAPPINGS.put("SEPTIN14", "SEPT14");
+        GENE_MAPPINGS.put("CIP2A", "KIAA1524");
         GENE_MAPPINGS.put("H3C1", "HIST1H3A");
+        GENE_MAPPINGS.put("H3C6", "HIST1H3E");
         GENE_MAPPINGS.put("H3C7", "HIST1H3F");
+        GENE_MAPPINGS.put("SEPTIN14", "SEPT14");
         GENE_MAPPINGS.put("STING1", "TMEM173");
 
 
     }
-
 }
