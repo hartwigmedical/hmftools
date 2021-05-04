@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.hla.HlaType;
 import com.hartwig.hmftools.common.hla.HlaTypeDetails;
@@ -24,12 +25,11 @@ import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
 import com.hartwig.hmftools.common.peach.PeachCalls;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.SamplePurity;
-import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -92,6 +92,8 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final MetricDAO metricDAO;
     @NotNull
+    private final FlagstatDAO flagstatDAO;
+    @NotNull
     private final PeachDAO peachDAO;
     @NotNull
     private final VirusBreakendDAO virusBreakendDAO;
@@ -141,6 +143,7 @@ public class DatabaseAccess implements AutoCloseable {
         purityDAO = new PurityDAO(context);
         amberDAO = new AmberDAO(context);
         metricDAO = new MetricDAO(context);
+        flagstatDAO = new FlagstatDAO(context);
         peachDAO = new PeachDAO(context);
         copyNumberDAO = new CopyNumberDAO(context);
         geneCopyNumberDAO = new GeneCopyNumberDAO(context);
@@ -235,16 +238,6 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     public List<String> readPurpleSampleListPassingQC(double minPurity) {
         return purityDAO.getSamplesPassingQC(minPurity);
-    }
-
-    @NotNull
-    public List<SamplePurity> readSamplePurityPassingQC(double minPurity) {
-        return purityDAO.readPassingQC(minPurity);
-    }
-
-    @NotNull
-    public List<SamplePurity> readSamplePurityPassingQC(double minPurity, @NotNull String primaryTumorLocation) {
-        return purityDAO.readPassingQC(minPurity, primaryTumorLocation);
     }
 
     @Nullable
@@ -449,6 +442,10 @@ public class DatabaseAccess implements AutoCloseable {
         metricDAO.writeMetrics(sample, metrics);
     }
 
+    public void writeFlagstats(@NotNull String sample, @NotNull Flagstat refFlagstat, @NotNull Flagstat tumorFlagstat) {
+        flagstatDAO.writeFlagstats(sample, refFlagstat, tumorFlagstat);
+    }
+
     public void writePeach(@NotNull String sample, @NotNull List<PeachGenotype> peachGenotypes, @NotNull List<PeachCalls> peachCalls) {
         peachDAO.writePeach(sample, peachGenotypes, peachCalls);
     }
@@ -524,6 +521,9 @@ public class DatabaseAccess implements AutoCloseable {
     public void deleteAllDataForSample(@NotNull String sample) {
         LOGGER.info("Deleting metric data for sample: {}", sample);
         metricDAO.deleteMetricForSample(sample);
+
+        LOGGER.info("Deleting flagstat data for sample: {}", sample);
+        flagstatDAO.deleteFlagstatsForSample(sample);
 
         LOGGER.info("Deleting CHORD data for sample: {}", sample);
         chordDAO.deleteChordForSample(sample);

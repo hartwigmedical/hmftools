@@ -18,7 +18,7 @@ public final class FlagstatFile {
     }
 
     @NotNull
-    public static Flagstat loadFromFile(@NotNull String flagstatsPath) throws IOException {
+    public static Flagstat read(@NotNull String flagstatsPath) throws IOException {
         List<String> lines = Files.readAllLines(new File(flagstatsPath).toPath());
         String total = valueBySubstring(lines, "total");
         String mapped = valueBySubstring(lines, "mapped (");

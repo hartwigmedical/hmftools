@@ -284,6 +284,17 @@ CREATE TABLE metric
     PRIMARY KEY (sampleId)
 );
 
+DROP TABLE if EXISTS flagstat;
+CREATE TABLE flagstat
+(   sampleId varchar(255) NOT NULL,
+    refMappedProportion DOUBLE PRECISION NOT NULL,
+    refDuplicateProportion DOUBLE PRECISION NOT NULL,
+    tumorMappedProportion DOUBLE PRECISION NOT NULL,
+    tumorDuplicateProportion DOUBLE PRECISION NOT NULL,
+    passQC BOOLEAN NOT NULL,
+    PRIMARY KEY (sampleId)
+);
+
 DROP TABLE IF EXISTS somaticVariant;
 CREATE TABLE somaticVariant
 (   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

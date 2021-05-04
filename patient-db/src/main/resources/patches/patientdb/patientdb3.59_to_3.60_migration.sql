@@ -1,7 +1,6 @@
 DROP TABLE pgxCalls;
 
-ALTER TABLE pgxGenotype
-RENAME TO peachGenotype;
+ALTER TABLE pgxGenotype RENAME TO peachGenotype;
 
 CREATE TABLE peachCalls
 (   id int NOT NULL AUTO_INCREMENT,
@@ -55,4 +54,16 @@ CREATE TABLE virusBreakend
     integrations int NOT NULL,
     QCStatus varchar(255) NOT NULL,
     PRIMARY KEY (id)
+);
+
+CREATE TABLE metric
+(   sampleId varchar(255) NOT NULL,
+    refMeanCoverage DOUBLE PRECISION NOT NULL,
+    refCoverage10xPercentage DOUBLE PRECISION NOT NULL,
+    refCoverage20xPercentage DOUBLE PRECISION NOT NULL,
+    tumorMeanCoverage DOUBLE PRECISION NOT NULL,
+    tumorCoverage30xPercentage DOUBLE PRECISION NOT NULL,
+    tumorCoverage60xPercentage DOUBLE PRECISION NOT NULL,
+    sufficientCoverage BOOLEAN NOT NULL,
+    PRIMARY KEY (sampleId)
 );

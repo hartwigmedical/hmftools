@@ -30,7 +30,7 @@ public class FlagstatChecker implements HealthChecker {
     public List<QCValue> run() throws IOException {
         List<QCValue> qcValues = Lists.newArrayList();
 
-        Flagstat refFlagstat = FlagstatFile.loadFromFile(refFlagstatFile);
+        Flagstat refFlagstat = FlagstatFile.read(refFlagstatFile);
         qcValues.add(ImmutableQCValue.builder()
                 .type(QCValueType.REF_PROPORTION_MAPPED)
                 .value(String.valueOf(refFlagstat.mappedProportion()))
@@ -41,7 +41,7 @@ public class FlagstatChecker implements HealthChecker {
                 .build());
 
         if (tumFlagstatFile != null) {
-            Flagstat tumFlagstat = FlagstatFile.loadFromFile(tumFlagstatFile);
+            Flagstat tumFlagstat = FlagstatFile.read(tumFlagstatFile);
             qcValues.add(ImmutableQCValue.builder()
                     .type(QCValueType.TUM_PROPORTION_MAPPED)
                     .value(String.valueOf(tumFlagstat.mappedProportion()))

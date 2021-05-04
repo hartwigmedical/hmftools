@@ -17,7 +17,7 @@ public class FlagstatFileTest {
 
     @Test
     public void canReadFlagstatFile() throws IOException {
-        Flagstat flagstat = FlagstatFile.loadFromFile(FLAGSTAT_FILE);
+        Flagstat flagstat = FlagstatFile.read(FLAGSTAT_FILE);
 
         assertEquals(0.1, flagstat.duplicateProportion(), EPSILON);
         assertEquals(0.8, flagstat.mappedProportion(), EPSILON);
@@ -25,6 +25,6 @@ public class FlagstatFileTest {
 
     @Test (expected = IOException.class)
     public void crashesOnMalformed() throws IOException {
-        FlagstatFile.loadFromFile(MALFORMED_FILE);
+        FlagstatFile.read(MALFORMED_FILE);
     }
 }
