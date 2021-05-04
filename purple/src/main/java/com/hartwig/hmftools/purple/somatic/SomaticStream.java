@@ -196,6 +196,7 @@ public class SomaticStream
                         mConfig.DriverEnabled,
                         mConfig.SomaticFitting.clonalityBinWidth(),
                         mConfig.Version,
+                        mConfig.ReferenceId,
                         mConfig.TumorId,
                         mReferenceData.RefGenome,
                         purityAdjuster,
