@@ -1262,5 +1262,15 @@ CREATE TABLE hlaTypeDetails
     KEY(sampleId, type)
 );
 
+DROP TABLE IF EXISTS cuppaResult;
+CREATE TABLE cuppaResult
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    cuppaResult varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    KEY(sampleId)
+);
+
 
 SET FOREIGN_KEY_CHECKS = 1;

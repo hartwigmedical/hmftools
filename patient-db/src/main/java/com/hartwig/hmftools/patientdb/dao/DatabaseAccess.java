@@ -96,6 +96,8 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final PeachDAO peachDAO;
     @NotNull
+    private final CuppaDAO cuppaDAO;
+    @NotNull
     private final VirusBreakendDAO virusBreakendDAO;
     @NotNull
     private final CopyNumberDAO copyNumberDAO;
@@ -145,6 +147,7 @@ public class DatabaseAccess implements AutoCloseable {
         metricDAO = new MetricDAO(context);
         flagstatDAO = new FlagstatDAO(context);
         peachDAO = new PeachDAO(context);
+        cuppaDAO = new CuppaDAO(context);
         copyNumberDAO = new CopyNumberDAO(context);
         geneCopyNumberDAO = new GeneCopyNumberDAO(context);
         somaticVariantDAO = new SomaticVariantDAO(context);
@@ -450,6 +453,10 @@ public class DatabaseAccess implements AutoCloseable {
         peachDAO.writePeach(sample, peachGenotypes, peachCalls);
     }
 
+    public void writeCuppa(@NotNull String sample, @NotNull String cuppaResult) {
+        cuppaDAO.writeCuppa(sample, cuppaResult);
+    }
+
     public void writeVirusBreakend(@NotNull String sample, @NotNull List<VirusBreakend> virusBreakends) {
         virusBreakendDAO.writeVirusBreakend(sample, virusBreakends);
     }
@@ -573,6 +580,9 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting virus breakend data for sample: {}", sample);
         virusBreakendDAO.deleteVirusBreakendForSample(sample);
+
+        LOGGER.info("Deleting CUPPA result for sample: {}", sample);
+        cuppaDAO.deleteCuppaForSample(sample);
 
         LOGGER.info("All data for sample '{}' has been deleted", sample);
     }

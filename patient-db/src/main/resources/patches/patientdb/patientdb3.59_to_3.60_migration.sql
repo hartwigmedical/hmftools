@@ -65,3 +65,12 @@ CREATE TABLE flagstat
     passQC BOOLEAN NOT NULL,
     PRIMARY KEY (sampleId)
 );
+
+CREATE TABLE cuppaResult
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    cuppaResult varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    KEY(sampleId)
+);
