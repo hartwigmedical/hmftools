@@ -56,14 +56,12 @@ CREATE TABLE virusBreakend
     PRIMARY KEY (id)
 );
 
-CREATE TABLE metric
+CREATE TABLE flagstat
 (   sampleId varchar(255) NOT NULL,
-    refMeanCoverage DOUBLE PRECISION NOT NULL,
-    refCoverage10xPercentage DOUBLE PRECISION NOT NULL,
-    refCoverage20xPercentage DOUBLE PRECISION NOT NULL,
-    tumorMeanCoverage DOUBLE PRECISION NOT NULL,
-    tumorCoverage30xPercentage DOUBLE PRECISION NOT NULL,
-    tumorCoverage60xPercentage DOUBLE PRECISION NOT NULL,
-    sufficientCoverage BOOLEAN NOT NULL,
+    refMappedProportion DOUBLE PRECISION NOT NULL,
+    refDuplicateProportion DOUBLE PRECISION NOT NULL,
+    tumorMappedProportion DOUBLE PRECISION NOT NULL,
+    tumorDuplicateProportion DOUBLE PRECISION NOT NULL,
+    passQC BOOLEAN NOT NULL,
     PRIMARY KEY (sampleId)
 );
