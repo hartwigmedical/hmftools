@@ -45,10 +45,10 @@ public class AnalysedPatientReporter {
     public AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
             @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String linxFusionTsv,
-            @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv,
-            @NotNull String chordPredictionTxt, @NotNull String circosFile, @NotNull String protectEvidenceTsv, @Nullable String comments,
-            boolean correctedReport, @NotNull String pipelineVersionFile, @NotNull String molecularTissueOriginTsv,
-            @NotNull String molecularTissueOriginPlot, @NotNull String virusBreakendTsv, @NotNull String peachgenotypeTsv) throws IOException {
+            @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile,
+            @NotNull String protectEvidenceTsv, @Nullable String comments, boolean correctedReport, @NotNull String pipelineVersionFile,
+            @NotNull String molecularTissueOriginTsv, @NotNull String molecularTissueOriginPlot, @NotNull String virusBreakendTsv,
+            @NotNull String peachgenotypeTsv) throws IOException {
         // TODO Specific COLO handling doesn't belong in patient reporter!
         String patientId = sampleMetadata.patientId().startsWith("COLO829") ? "COLO829" : sampleMetadata.patientId();
         PatientPrimaryTumor patientPrimaryTumor =
@@ -68,7 +68,11 @@ public class AnalysedPatientReporter {
                 linxBreakendTsv,
                 linxDriversTsv,
                 chordPredictionTxt,
-                protectEvidenceTsv, virusBreakendTsv, peachgenotypeTsv);
+                protectEvidenceTsv,
+                virusBreakendTsv,
+                peachgenotypeTsv,
+                reportData.germlineReportingModel(),
+                sampleReport.germlineReportingLevel());
 
         ConsentFilterFunctions consentFilterFunctions = new ConsentFilterFunctions();
 

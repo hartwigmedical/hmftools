@@ -4,7 +4,13 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
+import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
+import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
+import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineReportingEntry;
 
 import org.junit.Test;
 
@@ -29,6 +35,20 @@ public class GenomicAnalyzerTest {
     public void canRunOnTestRun() throws IOException {
         GenomicAnalyzer analyzer = new GenomicAnalyzer();
 
+        GermlineReportingEntry germlineReportingTrue = ImmutableGermlineReportingEntry.builder()
+                .gene("GENE1")
+                .notifyClinicalGeneticist(GermlineCondition.ALWAYS)
+                .conditionFilter(null)
+                .build();
+
+        GermlineReportingEntry germlineReportingFalse = ImmutableGermlineReportingEntry.builder()
+                .gene("GENE2")
+                .notifyClinicalGeneticist(GermlineCondition.NEVER)
+                .conditionFilter(null)
+                .build();
+
+        GermlineReportingModel victim = new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
+
         assertNotNull(analyzer.run("sample",
                 PURPLE_PURITY_TSV,
                 PURPLE_QC_FILE,
@@ -42,6 +62,8 @@ public class GenomicAnalyzerTest {
                 CHORD_PREDICTION_TXT,
                 PROTECT_EVIDENCE_TSV,
                 VIRUS_BREAKEND_TSV,
-                PEACH_GENOTYPE_TSV));
+                PEACH_GENOTYPE_TSV,
+                victim,
+                LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
     }
 }
