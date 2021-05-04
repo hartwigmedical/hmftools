@@ -49,7 +49,6 @@ class TransvarProcessImpl implements TransvarProcess {
         this.geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
     }
 
-
     @Override
     @NotNull
     public List<TransvarRecord> runTransvarPanno(@NotNull String gene, @NotNull String proteinAnnotation)
@@ -94,7 +93,14 @@ class TransvarProcessImpl implements TransvarProcess {
     @NotNull
     private ProcessBuilder buildProcessBuilder(@NotNull String gene, @NotNull String proteinAnnotation) {
         // Somehow can't manage to configure transvar to use typical v38 gene names.
-        String v37Gene = refGenomeVersion == RefGenomeVersion.V37 ? gene : geneNameMapping.v37Gene(gene);
+        String v37Gene = gene;
+        if (refGenomeVersion == RefGenomeVersion.V38) {
+            if (geneNameMapping.isValidV38Gene(gene)) {
+                v37Gene = geneNameMapping.v37Gene(gene);
+            } else {
+                LOGGER.warn("Could not map gene '{}' to v37 for transvar!", gene);
+            }
+        }
 
         String modifiedProteinAnnotation = proteinAnnotation;
         if (PROTEIN_ANNOTATION_MAPPING.containsKey(proteinAnnotation)) {
