@@ -1,13 +1,9 @@
-package com.hartwig.hmftools.common.purple.qc;
+package com.hartwig.hmftools.common.purple;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
-import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
-import com.hartwig.hmftools.common.purple.PurpleQC;
-import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
 
 import org.jetbrains.annotations.NotNull;
@@ -19,12 +15,6 @@ public class PurpleQCTest {
     public void testDefault() {
         ImmutablePurpleQC.Builder template = builder();
         assertTrue(template.build().pass());
-        assertStatus(template, PurpleQCStatus.PASS);
-    }
-
-    @Test
-    public void testOldGender() {
-        ImmutablePurpleQC.Builder template = builder().amberGender(Gender.FEMALE).cobaltGender(Gender.MALE_KLINEFELTER);
         assertStatus(template, PurpleQCStatus.PASS);
     }
 
