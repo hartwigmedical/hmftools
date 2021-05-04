@@ -13,6 +13,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
@@ -30,29 +32,98 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class KmerGenerator
+public class RefSequenceGenerator
 {
     private RefGenomeInterface mRefGenome;
     private final String mOutputDir;
     private final String mKmerInputFile;
+    private final String mBedFile;
 
-    private static final Logger LOGGER = LogManager.getLogger(KmerGenerator.class);
+    private static final Logger LOGGER = LogManager.getLogger(RefSequenceGenerator.class);
 
-    public KmerGenerator(final String refGenomeFile, final String kmerInputFile, final String outputDir)
+    public RefSequenceGenerator(final CommandLine cmd)
     {
+        mOutputDir = parseOutputDir(cmd);
+        mBedFile = cmd.getOptionValue(BED_FILE);
+        mKmerInputFile = cmd.getOptionValue(KMER_INPUT_FILE);
+
         try
         {
-            IndexedFastaSequenceFile refGenome =
-                    new IndexedFastaSequenceFile(new File(refGenomeFile));
+            final String refGenomeFile = cmd.getOptionValue(REF_GENOME_FILE);
+            IndexedFastaSequenceFile refGenome = new IndexedFastaSequenceFile(new File(refGenomeFile));
             mRefGenome = new RefGenomeSource(refGenome);
         }
         catch(IOException e)
         {
             LOGGER.error("failed to load ref genome: {}", e.toString());
         }
+    }
 
-        mKmerInputFile = kmerInputFile;
-        mOutputDir = outputDir;
+    public void run()
+    {
+        if(mOutputDir == null || mOutputDir.isEmpty())
+        {
+            LOGGER.error("invalid output directory");
+            System.exit(1);
+        }
+
+        if(mKmerInputFile != null)
+        {
+            generateKmerData();
+        }
+
+        if(mBedFile != null)
+        {
+            generateRefGenomeSequences();
+        }
+    }
+
+    private void generateRefGenomeSequences()
+    {
+        try
+        {
+            BufferedWriter writer;
+
+            final String outputFileName = mOutputDir + "REF_GENOME_SEQUENCES.csv";
+
+            writer = createBufferedWriter(outputFileName, false);
+            writer.write("SequenceName,Chromosome,PosStart,PosEnd,Sequence");
+            writer.newLine();
+
+            final List<String> bedFileData = Files.readAllLines(new File(mBedFile).toPath());
+
+            for(String line : bedFileData)
+            {
+                String[] bedInfo = line.split("\t");
+
+                if(bedInfo.length != 4)
+                {
+                    LOGGER.error("invalid bed file line: {}", line);
+                    return;
+                }
+
+                String chromosome = bedInfo[0];
+                int posStart = Integer.parseInt(bedInfo[1]);
+                int posEnd = Integer.parseInt(bedInfo[2]);
+                String seqName = bedInfo[3];
+
+                LOGGER.debug("writing ref-genome sequence for {}: for chr({}) pos({} -> {})", seqName, chromosome, posStart, posEnd);
+
+                final String reqSequence = mRefGenome.getBaseString(chromosome, posStart, posEnd);;
+
+                writer.write(String.format("%s,%s,%d,%d,%s",
+                        seqName, chromosome, posStart, posEnd, reqSequence));
+                writer.newLine();
+
+            }
+
+            closeBufferedWriter(writer);
+
+        }
+        catch(IOException exception)
+        {
+            LOGGER.error("Failed to read bed file({})", mBedFile);
+        }
     }
 
     private static final int COL_KMER_ID = 0;
@@ -64,7 +135,7 @@ public class KmerGenerator
     private static final int COL_BASE_LENGTH = 6;
     private static final int COL_INSERT_SEQ = 7;
 
-    public void generateKmerData()
+    private void generateKmerData()
     {
         if(mOutputDir.isEmpty() || mKmerInputFile.isEmpty())
             return;
@@ -133,13 +204,15 @@ public class KmerGenerator
     }
 
     private static final String KMER_INPUT_FILE = "kmer_input_file";
+    private static final String BED_FILE = "bed_file";
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Ensembl gene transcript data cache directory");
-        options.addOption(KMER_INPUT_FILE, true, "File specifying locations to produce K-mers for");
+        options.addOption(KMER_INPUT_FILE, true, "File specifying locations for which to produce K-mers");
+        options.addOption(BED_FILE, true, "File specifying locations for which to produce ref-genome sequences");
         options.addOption(REF_GENOME_FILE, true, "Ref genome file");
 
         final CommandLineParser parser = new DefaultParser();
@@ -147,12 +220,8 @@ public class KmerGenerator
 
         Configurator.setRootLevel(Level.DEBUG);
 
-        final String outputDir = parseOutputDir(cmd);
-        final String kmerInputFile = cmd.getOptionValue(KMER_INPUT_FILE);
-        final String refGenomeFile = cmd.getOptionValue(REF_GENOME_FILE);
-
-        KmerGenerator kmerGenerator = new KmerGenerator(refGenomeFile, kmerInputFile, outputDir);
-        kmerGenerator.generateKmerData();
+        RefSequenceGenerator refSequenceGenerator = new RefSequenceGenerator(cmd);
+        refSequenceGenerator.run();
     }
 
 
