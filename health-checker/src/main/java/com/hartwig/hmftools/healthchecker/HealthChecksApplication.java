@@ -51,13 +51,13 @@ public class HealthChecksApplication {
     private final String tumFlagstatFile;
     @Nullable
     private final String purpleDir;
-    @NotNull
+    @Nullable
     private final String outputDir;
 
     @VisibleForTesting
     HealthChecksApplication(@NotNull String refSample, @Nullable String tumorSample, @NotNull String refWgsMetricsFile,
             @Nullable String tumWgsMetricsFile, @NotNull String refFlagstatFile, @Nullable String tumFlagstatFile,
-            @Nullable String purpleDir, @NotNull String outputDir) {
+            @Nullable String purpleDir, @Nullable String outputDir) {
         this.refSample = refSample;
         this.tumorSample = tumorSample;
         this.refWgsMetricsFile = refWgsMetricsFile;
@@ -72,12 +72,13 @@ public class HealthChecksApplication {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
 
+        boolean writeEvaluationFile = !cmd.hasOption(DO_NOT_WRITE_EVALUATION_FILE);
+        String outputDir = cmd.hasOption(OUTPUT_DIR) ? cmd.getOptionValue(OUTPUT_DIR) : null;
         String refSample = cmd.getOptionValue(REF_SAMPLE);
         String refFlagstat = cmd.getOptionValue(REF_FLAGSTAT_FILE);
         String refWgsMetricsFile = cmd.getOptionValue(REF_WGS_METRICS_FILE);
-        String outputDir = cmd.getOptionValue(OUTPUT_DIR);
 
-        if (refSample == null || refFlagstat == null || refWgsMetricsFile == null || outputDir == null) {
+        if (refSample == null || refFlagstat == null || refWgsMetricsFile == null || (writeEvaluationFile && outputDir == null)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Health-Checker", options);
             System.exit(1);
@@ -87,7 +88,6 @@ public class HealthChecksApplication {
         String tumWgsMetricsFile = cmd.hasOption(TUM_WGS_METRICS_FILE) ? cmd.getOptionValue(TUM_WGS_METRICS_FILE) : null;
         String tumFlagstat = cmd.hasOption(TUM_FLAGSTAT_FILE) ? cmd.getOptionValue(TUM_FLAGSTAT_FILE) : null;
         String purpleDir = cmd.hasOption(PURPLE_DIR) ? cmd.getOptionValue(PURPLE_DIR) : null;
-        boolean writeEvaluationFile = !cmd.hasOption(DO_NOT_WRITE_EVALUATION_FILE);
 
         new HealthChecksApplication(refSample,
                 tumorSample,
@@ -155,6 +155,8 @@ public class HealthChecksApplication {
 
     @NotNull
     private String fileOutputBasePath() {
+        assert outputDir != null;
+
         String sample = tumorSample != null ? tumorSample : refSample;
         return outputDir + File.separator + sample;
     }
