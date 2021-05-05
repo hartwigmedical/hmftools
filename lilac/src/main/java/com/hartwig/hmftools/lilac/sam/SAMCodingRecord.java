@@ -45,6 +45,8 @@ public class SAMCodingRecord
         ReverseStrand = reverseStrand;
     }
 
+    public List<Indel> getIndels() { return mIndels; }
+
     public final int maxIndelSize()
     {
         return mIndels.stream().mapToInt(x -> x.Length).max().orElse(0);

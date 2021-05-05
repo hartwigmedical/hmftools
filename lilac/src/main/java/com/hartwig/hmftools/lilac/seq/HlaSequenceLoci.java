@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.lilac.seq;
 
-import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.DEL_CHAR;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEL_STR;
 import static com.hartwig.hmftools.lilac.LilacConstants.WILD_CHAR;
 import static com.hartwig.hmftools.lilac.LilacConstants.WILD_STR;
@@ -12,8 +10,6 @@ import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;

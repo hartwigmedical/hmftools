@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 public final class SequenceCount
 {
-    // private final int length;
     private final int mMinCount;
     private final Map<String,Integer>[] mSeqCountsList;
 
@@ -18,7 +17,6 @@ public final class SequenceCount
     {
         mMinCount = minCount;
         mSeqCountsList = seqCounts;
-        // length = mSeqCounts.length;
     }
 
     public final int getLength()

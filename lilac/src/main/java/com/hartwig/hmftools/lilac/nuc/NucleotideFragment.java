@@ -126,7 +126,7 @@ public class NucleotideFragment
         return new NucleotideFragment(mId, mGenes, nucleotideLoci, nucleotideQuality, nucleotides);
     }
 
-    public final NucleotideFragment merge(final NucleotideFragment frag1, final NucleotideFragment frag2)
+    public static NucleotideFragment merge(final NucleotideFragment frag1, final NucleotideFragment frag2)
     {
         final Set<String> genes = Sets.newHashSet();
         genes.addAll(frag1.getGenes());

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.sam;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
@@ -20,13 +21,18 @@ public class SAMSlicer
         mMinMappingQuality = minMappingQuality;
     }
 
-    public final void slice(final GenomeRegion region, final SamReader samReader, final Consumer<SAMRecord> consumer)
+    public void slice(final GenomeRegion region, final SamReader samReader, final Consumer<SAMRecord> consumer)
     {
         String string = region.chromosome();
         slice(string, (int) region.start(), (int) region.end(), samReader, consumer);
     }
 
-    public final void slice(final String contig, int start, int end, final SamReader samReader, final Consumer<SAMRecord> consumer)
+    public void slice(final BaseRegion region, final SamReader samReader, final Consumer<SAMRecord> consumer)
+    {
+        slice(region.Chromosome, region.start(), region.end(), samReader, consumer);
+    }
+
+    public void slice(final String contig, int start, int end, final SamReader samReader, final Consumer<SAMRecord> consumer)
     {
         SAMRecordIterator sAMRecordIterator = samReader.query(contig, start, end, false);
 
@@ -39,6 +45,25 @@ public class SAMSlicer
 
             consumer.accept(samRecord);
         }
+    }
+
+    public List<SAMRecord> slice(final String contig, int start, int end, final SamReader samReader)
+    {
+        final List<SAMRecord> records = Lists.newArrayList();
+
+        SAMRecordIterator sAMRecordIterator = samReader.query(contig, start, end, false);
+
+        while(sAMRecordIterator.hasNext())
+        {
+            SAMRecord samRecord = sAMRecordIterator.next();
+
+            if(!meetsQualityRequirements(samRecord))
+                continue;
+
+            records.add(samRecord);
+        }
+
+        return records;
     }
 
     public final List<SAMRecord> queryMates(final SamReader samReader, final List<SAMRecord> records)
