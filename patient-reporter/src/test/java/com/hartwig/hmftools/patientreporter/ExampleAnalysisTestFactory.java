@@ -12,6 +12,7 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
+import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
@@ -38,16 +39,15 @@ import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virusbreakend.ImmutableVirusBreakend;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableGenomicAnalysis;
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
@@ -118,7 +118,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<VirusBreakend> virusBreakends = Lists.newArrayList();
-        List<PeachGenotype> peachGenotypes = createTestPeachgenotypes();
+        List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, reportGermline, limsCohortConfig);
 
@@ -218,7 +218,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<VirusBreakend> virusBreakends = createTestVirusBreakends();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
-        List<PeachGenotype> peachGenotypes = createTestPeachgenotypes();
+        List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true, limsCohortConfig);
         String clinicalSummary = Strings.EMPTY;
@@ -298,7 +298,6 @@ public final class ExampleAnalysisTestFactory {
     private static SampleReport createSkinMelanomaSampleReport(@NotNull String sample, boolean reportGermline,
             @NotNull LimsCohortConfig cohort) {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
-                .patientId("COLO829")
                 .refSampleId(Strings.EMPTY)
                 .refSampleBarcode("FR12123488")
                 .tumorSampleId(sample)
@@ -1069,17 +1068,16 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     private static List<ReportableHomozygousDisruption> createTestHomozygousDisruptions() {
-        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(ImmutableReportableHomozygousDisruption.builder()
+        return Lists.newArrayList(ImmutableReportableHomozygousDisruption.builder()
                 .chromosome("8")
                 .chromosomeBand("p22")
                 .gene("SGCZ")
                 .build());
-        return Lists.newArrayList(homozygousDisruptions);
     }
 
     @NotNull
-    private static List<PeachGenotype> createTestPeachgenotypes() {
-        List<PeachGenotype> peachGenotypes = Lists.newArrayList(ImmutablePeachGenotype.builder()
+    private static List<PeachGenotype> createTestPeachGenotypes() {
+        return Lists.newArrayList(ImmutablePeachGenotype.builder()
                 .gene("DYPD")
                 .haplotype("*1_HOM")
                 .function("Normal Function")
@@ -1091,7 +1089,6 @@ public final class ExampleAnalysisTestFactory {
                 .panelVersion("PGx_min_DPYD_v0.3")
                 .repoVersion("1.0")
                 .build());
-        return peachGenotypes;
     }
 
     @NotNull

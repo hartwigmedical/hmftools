@@ -24,10 +24,10 @@ import com.hartwig.hmftools.patientreporter.ReportData;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
-import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -471,7 +471,6 @@ public class CFReportWriterTest {
             @Nullable String wgsPurityString, @NotNull QCFailReason reason, boolean correctedReport, @NotNull String comments,
             @NotNull LimsCohortConfig limsCohortConfig) throws IOException {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
-                .patientId("patient")
                 .refSampleId("x")
                 .refSampleBarcode("FR12123488")
                 .tumorSampleId(sampleId)

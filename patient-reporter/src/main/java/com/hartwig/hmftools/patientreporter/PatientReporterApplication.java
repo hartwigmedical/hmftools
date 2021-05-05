@@ -160,7 +160,6 @@ public class PatientReporterApplication {
     @NotNull
     private static SampleMetadata buildSampleMetadata(@NotNull PatientReporterConfig config) {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
-                .patientId(config.tumorSampleId().substring(0, 12))
                 .refSampleId(config.refSampleId())
                 .refSampleBarcode(config.refSampleBarcode())
                 .tumorSampleId(config.tumorSampleId())

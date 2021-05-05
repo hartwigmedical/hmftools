@@ -17,9 +17,8 @@ import org.junit.Test;
 
 public class AnalysedPatientReporterTest {
 
-    private static final String TUMOR_SAMPLE_ID = "sample";
     private static final String REF_SAMPLE_ID = "ref_sample";
-    private static final String PATIENT_ID = "patient";
+    private static final String TUMOR_SAMPLE_ID = "sample";
 
     private static final String BASE_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String PURPLE_PURITY_TSV = BASE_DIRECTORY + "/purple/sample.purple.purity.tsv";
@@ -45,7 +44,6 @@ public class AnalysedPatientReporterTest {
         AnalysedPatientReporter reporter = new AnalysedPatientReporter(PatientReporterTestFactory.loadTestAnalysedReportData());
 
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
-                .patientId(PATIENT_ID)
                 .refSampleId(REF_SAMPLE_ID)
                 .refSampleBarcode(Strings.EMPTY)
                 .tumorSampleId(TUMOR_SAMPLE_ID)
