@@ -8,13 +8,12 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_CANCER;
 import static com.hartwig.hmftools.cup.common.CategoryType.GENE_EXP;
+import static com.hartwig.hmftools.cup.rna.RnaDataLoader.GENE_EXP_IGNORE_FIELDS;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
@@ -115,9 +114,7 @@ public class RefGeneExpression implements RefClassifier
         if(filename.isEmpty())
             return;
 
-        final List<String> ignoreFields = Lists.newArrayList("GeneId", "GeneName");
-
-        mGeneSampleExpressionData = loadMatrixDataFile(filename, mSampleTpmIndex, ignoreFields);
+        mGeneSampleExpressionData = loadMatrixDataFile(filename, mSampleTpmIndex, GENE_EXP_IGNORE_FIELDS);
         mGeneSampleExpressionData.cacheTranspose();
 
         // populate the gene info
@@ -190,32 +187,4 @@ public class RefGeneExpression implements RefClassifier
         }
     }
 
-    public static boolean loadGeneIdIndices(final String filename, final Map<String,Integer> geneIdIndices)
-    {
-        try
-        {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
-            String header = fileData.get(0);
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
-            fileData.remove(0);
-
-            // GeneId,GeneName,CancerTypes..
-
-            int geneIdCol = fieldsIndexMap.get("GeneId");
-
-            for(int i = 0; i < fileData.size(); ++i)
-            {
-                final String[] items = fileData.get(i).split(DATA_DELIM, -1);
-                final String geneId = items[geneIdCol];
-                geneIdIndices.put(geneId, i);
-            }
-        }
-        catch (IOException e)
-        {
-            CUP_LOGGER.error("failed to read RNA gene Ids from file({}): {}", filename, e.toString());
-            return false;
-        }
-
-        return true;
-    }
 }
