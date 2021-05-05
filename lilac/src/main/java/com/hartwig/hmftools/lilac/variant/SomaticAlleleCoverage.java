@@ -6,7 +6,7 @@ import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
-import com.hartwig.hmftools.lilac.read.SAMRecordReader;
+import com.hartwig.hmftools.lilac.sam.SAMRecordReader;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import java.util.Collection;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.read;
+package com.hartwig.hmftools.lilac.sam;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -61,8 +61,7 @@ public class SAMRecordReader
     private static final Indel STOP_LOSS_ON_C = new Indel("6", 31237115, "CN", "C");
 
     public SAMRecordReader(
-            final String bamFile, final String refGenome, final List<? extends HmfTranscriptRegion> transcripts,
-            final NucleotideFragmentFactory factory)
+            final String bamFile, final String refGenome, final List<HmfTranscriptRegion> transcripts, final NucleotideFragmentFactory factory)
     {
         mBamFile = bamFile;
         mRefGenome = refGenome;

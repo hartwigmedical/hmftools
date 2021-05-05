@@ -1,502 +1,237 @@
 package com.hartwig.hmftools.lilac.sam;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
-import htsjdk.samtools.AlignmentBlock;
-import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class SAMCodingRecord
 {
-    private final String id;
-    private final int softClippedStart;
-    private final int softClippedEnd;
-    private final List<Indel> indels;
-    private final int positionStart;
-    private final int positionEnd;
-    private final int readStart;
-    private final int readEnd;
-    private final SAMRecord record;
-    private final boolean reverseStrand;
+    public final String Id;
+    public final int SoftClippedStart;
+    public final int SoftClippedEnd;
+    public final int PositionStart;
+    public final int PositionEnd;
+    public final int ReadStart;
+    public final int ReadEnd;
+    public final boolean ReverseStrand;
 
-    public SAMCodingRecord(final String id, int softClippedStart, int softClippedEnd, final List<Indel> indels2, int positionStart,
+    private final List<Indel> mIndels;
+    private final SAMRecord mSamRecord;
+
+    public SAMCodingRecord(
+            final String id, int softClippedStart, int softClippedEnd, final List<Indel> indels2, int positionStart,
             int positionEnd, int readStart, int readEnd, final SAMRecord record, boolean reverseStrand)
     {
-        this.id = id;
-        this.softClippedStart = softClippedStart;
-        this.softClippedEnd = softClippedEnd;
-        this.indels = indels2;
-        this.positionStart = positionStart;
-        this.positionEnd = positionEnd;
-        this.readStart = readStart;
-        this.readEnd = readEnd;
-        this.record = record;
-        this.reverseStrand = reverseStrand;
+        Id = id;
+        SoftClippedStart = softClippedStart;
+        SoftClippedEnd = softClippedEnd;
+        mIndels = indels2;
+        PositionStart = positionStart;
+        PositionEnd = positionEnd;
+        ReadStart = readStart;
+        ReadEnd = readEnd;
+        mSamRecord = record;
+        ReverseStrand = reverseStrand;
     }
 
     public final int maxIndelSize()
     {
-        return 1;
-        // TODO
-        
-        /*
-        void var3_3;
-        void $receiver$iv$iv;
-        Iterable $receiver$iv;
-        Iterable iterable = $receiver$iv = (Iterable) this.indels;
-        Collection destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-        for(Object item$iv$iv : $receiver$iv$iv)
-        {
-            void it;
-            Indel indel = (Indel) item$iv$iv;
-            Collection collection = destination$iv$iv;
-            boolean bl = false;
-            int n = it.getLength();
-            Integer n2 = Math.abs(n);
-            collection.add(n2);
-        }
-        Integer n = (Integer) CollectionsKt.max((Iterable) ((List) var3_3));
-        return n != null ? n : 0;
-        
-         */
+        return mIndels.stream().mapToInt(x -> x.Length).max().orElse(0);
     }
 
-    public final boolean containsSoftClip()
-    {
-        return this.softClippedStart > 0 || this.softClippedEnd > 0;
-    }
+    public final boolean containsSoftClip() { return SoftClippedStart > 0 || SoftClippedEnd > 0; }
 
-    public final boolean containsIndel()
-    {
-        Collection collection = this.indels;
-        return !collection.isEmpty();
-    }
+    public final boolean containsIndel() { return !mIndels.isEmpty(); }
 
     public final char[] codingRegionRead(boolean reverseCompliment)
     {
-        return null;
-        
-        /*
-        char[] cArray;
-        if(reverseCompliment)
+        final char[] readBases = forwardRead();
+
+        if(!reverseCompliment)
+            return readBases;
+
+        final char[] reverseBases = new char[readBases.length];
+
+        int index = 0;
+        for(int i = readBases.length - 1; i >= 0; --i)
         {
-            void $receiver$iv$iv;
-            char[] $receiver$iv;
-            char[] cArray2 = $receiver$iv = this.forwardRead();
-            Collection destination$iv$iv = new ArrayList($receiver$iv.length);
-            int n = ((void) $receiver$iv$iv).length;
-            for(int i = 0; i < n; ++i)
-            {
-                void it;
-                void item$iv$iv;
-                void var8_8 = item$iv$iv = $receiver$iv$iv[i];
-                Collection collection = destination$iv$iv;
-                boolean bl = false;
-                Character c = Character.valueOf(Companion.reverseCompliment((char) it));
-                collection.add(c);
-            }
-            cArray = CollectionsKt.toCharArray((Collection) CollectionsKt.reversed((Iterable) ((List) destination$iv$iv)));
+            reverseBases[index] = reverseCompliment(readBases[i]);
         }
-        else
-        {
-            cArray = this.forwardRead();
-        }
-        return cArray;
-        
-         */
+
+        return reverseBases;
     }
 
     public final int[] codingRegionQuality(boolean reverseCompliment)
     {
-        return null;
+        final int[] readQuals = forwardQuality();
 
-//        return reverseCompliment
-//                ? CollectionsKt.toIntArray((Collection) ArraysKt.reversed((int[]) this.forwardQuality()))
-//                : this.forwardQuality();
+        if(!reverseCompliment)
+            return readQuals;
+
+        final int[] reverseQuals = new int[readQuals.length];
+
+        int index = 0;
+        for(int i = readQuals.length - 1; i >= 0; --i)
+        {
+            reverseQuals[index] = readQuals[i];
+        }
+
+        return reverseQuals;
     }
 
     private final char[] forwardRead()
     {
-        return null;
-        
-        /*
-        void var3_4;
-        void $receiver$iv$iv;
-        Iterable $receiver$iv;
-        int n = this.readStart;
-        Iterable iterable = $receiver$iv = (Iterable) new IntRange(n, this.readEnd);
-        Collection destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-        Iterator iterator = $receiver$iv$iv.iterator();
-        while(iterator.hasNext())
+        int readLength = ReadEnd - ReadStart + 1;
+        final char[] readBases = new char[readLength];
+
+        int index = 0;
+        for(int i = ReadStart; i <= ReadEnd; ++i)
         {
-            void it;
-            int item$iv$iv;
-            int n2 = item$iv$iv = ((IntIterator) iterator).nextInt();
-            Collection collection = destination$iv$iv;
-            boolean bl = false;
-            Character c = Character.valueOf((char) this.record.getReadBases()[it]);
-            collection.add(c);
+            readBases[index++] = mSamRecord.getReadString().charAt(i);
         }
-        return CollectionsKt.toCharArray((Collection) ((List) var3_4));
-        
-         */
+
+        return readBases;
     }
 
     private final int[] forwardQuality()
     {
-        return null;
-        
-        /*
-        void var3_4;
-        void $receiver$iv$iv;
-        Iterable $receiver$iv;
-        int n = this.readStart;
-        Iterable iterable = $receiver$iv = (Iterable) new IntRange(n, this.readEnd);
-        Collection destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-        Iterator iterator = $receiver$iv$iv.iterator();
-        while(iterator.hasNext())
+        int readLength = ReadEnd - ReadStart + 1;
+        final int[] readQuals = new int[readLength];
+
+        int index = 0;
+        for(int i = ReadStart; i <= ReadEnd; ++i)
         {
-            void it;
-            int item$iv$iv;
-            int n2 = item$iv$iv = ((IntIterator) iterator).nextInt();
-            Collection collection = destination$iv$iv;
-            boolean bl = false;
-            Integer n3 = this.record.getBaseQualities()[it];
-            collection.add(n3);
+            readQuals[index++] = mSamRecord.getBaseQualities()[i];
         }
-        return CollectionsKt.toIntArray((Collection) ((List) var3_4));
-        
-         */
+
+        return readQuals;
     }
 
     public final List<SAMCodingRecord> alignmentsOnly()
     {
-        return Lists.newArrayList();
+        final String chromosome = mSamRecord.getContig();
+        final BaseRegion outerRegion = new BaseRegion(chromosome, PositionStart, PositionEnd);
 
-        /*
-        Object object;
-        GenomeRegion it;
-        Collection collection;
-        Iterable $receiver$iv$iv;
-        GenomeRegion outerRegion =
-                GenomeRegions.create((String) this.record.getContig(), (long) this.positionStart, (long) this.positionEnd);
-        List list = this.record.getAlignmentBlocks();
-        Intrinsics.checkExpressionValueIsNotNull((Object) list, (String) "record.alignmentBlocks");
-        Iterable $receiver$iv = list;
-        Iterable iterable = $receiver$iv;
-        Collection destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-        for(Object item$iv$iv : $receiver$iv$iv)
-        {
-            AlignmentBlock alignmentBlock = (AlignmentBlock) item$iv$iv;
-            collection = destination$iv$iv;
-            boolean bl = false;
-            String string = this.record.getContig();
-            void v2 = it;
-            Intrinsics.checkExpressionValueIsNotNull((Object) v2, (String) "it");
-            object = GenomeRegions.create((String) string, (long) v2.getReferenceStart(), (long) (
-                    (long) it.getReferenceStart() + (long) it.getLength() - 1L));
-            collection.add(object);
-        }
-        $receiver$iv = (List) destination$iv$iv;
-        $receiver$iv$iv = $receiver$iv;
-        destination$iv$iv = new ArrayList();
-        for(Object element$iv$iv : $receiver$iv$iv)
-        {
-            it = (GenomeRegion) element$iv$iv;
-            boolean bl = false;
-            if(!outerRegion.overlaps(it))
-            {
-                continue;
-            }
-            destination$iv$iv.add(element$iv$iv);
-        }
-        $receiver$iv = (List) destination$iv$iv;
-        $receiver$iv$iv = $receiver$iv;
-        destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-        for(Object item$iv$iv : $receiver$iv$iv)
-        {
-            it = (GenomeRegion) item$iv$iv;
-            collection = destination$iv$iv;
-            boolean bl = false;
-            long $i$f$filterTo = it.start();
-            long l = outerRegion.start();
-            long l2 = Math.max($i$f$filterTo, l);
-            $i$f$filterTo = it.end();
-            l = outerRegion.end();
-            object = GenomeRegions.create((String) this.record.getContig(), (long) l2, (long) Math.min($i$f$filterTo, l));
-            collection.add(object);
-        }
-        $receiver$iv = (List) destination$iv$iv;
-        $receiver$iv$iv = $receiver$iv;
-        destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-        for(Object item$iv$iv : $receiver$iv$iv)
-        {
-            it = (GenomeRegion) item$iv$iv;
-            collection = destination$iv$iv;
-            boolean bl = false;
-            GenomeRegion genomeRegion = it;
-            Intrinsics.checkExpressionValueIsNotNull((Object) genomeRegion, (String) "it");
-            object = Companion.create(this.reverseStrand, genomeRegion, this.record, false, false);
-            collection.add(object);
-        }
-        List result = (List) destination$iv$iv;
-        return result;
-        
-         */
+        return mSamRecord.getAlignmentBlocks().stream()
+                .map(x -> new BaseRegion(chromosome, x.getReferenceStart(), x.getReferenceStart() + x.getLength()))
+                .filter(x -> outerRegion.overlaps(x))
+                .map(x -> new BaseRegion(chromosome, max(outerRegion.start(), x.start()), min(outerRegion.end(), x.end())))
+                .map(x -> create(ReverseStrand, x, mSamRecord, false, false))
+                .collect(Collectors.toList());
+
     }
 
-    public final String getId()
-    {
-        return this.id;
-    }
-
-    public final int getSoftClippedStart()
-    {
-        return this.softClippedStart;
-    }
-
-    public final int getSoftClippedEnd()
-    {
-        return this.softClippedEnd;
-    }
-
-    public final List<Indel> getIndels()
-    {
-        return this.indels;
-    }
-
-    public final int getPositionStart()
-    {
-        return this.positionStart;
-    }
-
-    public final int getPositionEnd()
-    {
-        return this.positionEnd;
-    }
-
-    public final int getReadStart()
-    {
-        return this.readStart;
-    }
-
-    public final int getReadEnd()
-    {
-        return this.readEnd;
-    }
-
-    public final SAMRecord getRecord()
-    {
-        return this.record;
-    }
-
-    public final boolean getReverseStrand()
-    {
-        return this.reverseStrand;
-    }
-
-    public static SAMCodingRecord create(boolean reverseStrand, final GenomeRegion codingRegion, final SAMRecord record,
+    public static SAMCodingRecord create(
+            boolean reverseStrand, final BaseRegion codingRegion, final SAMRecord record,
             boolean includeSoftClips, boolean includeIndels)
     {
-        return null;
-
-        /*
-        int n;
-        Intrinsics.checkParameterIsNotNull((Object) codingRegion, (String) "codingRegion");
-        Intrinsics.checkParameterIsNotNull((Object) record, (String) "record");
-        int softClipStart = this.softClipStart(record);
-        int softClipEnd = this.softClipEnd(record);
+        int softClipStart = softClipStart(record);
+        int softClipEnd = softClipEnd(record);
         int alignmentStart = record.getAlignmentStart();
         int alignmentEnd = record.getAlignmentEnd();
         int recordStart = alignmentStart - softClipStart;
         int recordEnd = alignmentEnd + softClipEnd;
-        int n2 = (int) codingRegion.start();
-        int positionStart = Math.max(n2, alignmentStart);
-        int n3 = (int) codingRegion.end();
-        int positionEnd = Math.min(n3, alignmentEnd);
+        int positionStart = max(codingRegion.start(), alignmentStart);
+        int positionEnd = min(codingRegion.end(), alignmentEnd);
+
         int readIndexStart = record.getReadPositionAtReferencePosition(positionStart, true) - 1;
         int readIndexEnd = record.getReadPositionAtReferencePosition(positionEnd, true) - 1;
         positionStart = record.getReferencePositionAtReadPosition(readIndexStart + 1);
         positionEnd = record.getReferencePositionAtReadPosition(readIndexEnd + 1);
-        if(positionStart == alignmentStart && softClipStart > 0 && includeSoftClips)
+
+        // Add soft clip start
+        if (positionStart == alignmentStart && softClipStart > 0 && includeSoftClips)
         {
-            n = (int) codingRegion.start();
-            int earliestStart = Math.max(n, recordStart);
+            int earliestStart = max(codingRegion.start(), recordStart);
             readIndexStart = readIndexStart - positionStart + earliestStart;
             positionStart = earliestStart;
         }
-        if(positionEnd == alignmentEnd && softClipEnd > 0 && includeSoftClips)
+
+        // Add soft clip end
+        if (positionEnd == alignmentEnd && softClipEnd > 0 && includeSoftClips)
         {
-            n = (int) codingRegion.end();
-            int latestEnd = Math.min(n, recordEnd);
+            int latestEnd = min(codingRegion.end(), recordEnd);
             readIndexEnd = readIndexEnd + latestEnd - positionEnd;
             positionEnd = latestEnd;
         }
-        n = alignmentStart - positionStart;
-        int n4 = 0;
-        int softClippedStart = Math.max(n, n4);
-        n4 = 0;
-        int n5 = positionEnd - alignmentEnd;
-        int softClippedEnd = Math.max(n4, n5);
-        List<Indel> indels2 = includeIndels ? this.indels(positionStart, positionEnd, record) : CollectionsKt.emptyList();
-        String string = record.getReadName();
-        Intrinsics.checkExpressionValueIsNotNull((Object) string, (String) "record.readName");
-        return new SAMCodingRecord(string, softClippedStart, softClippedEnd, indels2, positionStart, positionEnd, readIndexStart, readIndexEnd, record, reverseStrand);
 
-         */
+        int softClippedStart = max(alignmentStart - positionStart, 0);
+        int softClippedEnd = max(0, positionEnd - alignmentEnd);
+
+        List<Indel> indels = includeIndels ? indels(positionStart, positionEnd, record) : Lists.newArrayList();
+
+        return new SAMCodingRecord(
+                record.getReadName(), softClippedStart, softClippedEnd, indels,
+                positionStart, positionEnd, readIndexStart, readIndexEnd, record, reverseStrand);
     }
 
-    private static List<Indel> indels(int startPosition, int endPosition, SAMRecord record)
+    private static List<Indel> indels(int startPosition, int endPosition, final SAMRecord record)
     {
-        return Lists.newArrayList();
+        List<Indel> indels = Lists.newArrayList();
 
-        /*
-        List indels2 = new ArrayList();
-        CigarHandler handler2 = new CigarHandler(startPosition, endPosition, indels2)
+        CigarHandler cigarHandler = new CigarHandler()
         {
             public void handleInsert(final SAMRecord record, final CigarElement element, int readIndex, int refPosition)
             {
-                Intrinsics.checkParameterIsNotNull((Object) record, (String) "record");
-                Intrinsics.checkParameterIsNotNull((Object) element, (String) "element");
-                int n = refPosition;
-                if(this.$startPosition <= n && this.$endPosition >= n)
+                if(startPosition <= refPosition && refPosition <= endPosition)
                 {
-                    char base = (char) record.getReadBases()[readIndex];
-                    String string = record.getContig();
-                    Intrinsics.checkExpressionValueIsNotNull((Object) string, (String) "record.contig");
-                    String string2 = String.valueOf(base);
-                    String string3 = record.getReadString();
-                    Intrinsics.checkExpressionValueIsNotNull((Object) string3, (String) "record.readString");
-                    String string4 = string3;
-                    int n2 = readIndex + element.getLength() + 1;
-                    String string5 = string4;
-                    if(string5 == null)
-                    {
-                        throw new TypeCastException("null cannot be cast to non-null type java.lang.String");
-                    }
-                    String string6 = string5.substring(readIndex, n2);
-                    Intrinsics.checkExpressionValueIsNotNull((Object) string6, (String) "(this as java.lang.Strin\u2026ing(startIndex, endIndex)");
-                    Indel
-                            insert = new Indel(string, refPosition, string2, string6);
-                    this.$indels.add(insert);
+                    char baseChar = record.getReadString().charAt(readIndex);
+                    indels.add(new Indel(record.getContig(), refPosition, String.valueOf(baseChar),
+                            record.getReadString().substring(readIndex, readIndex + element.getLength() + 1)));
                 }
             }
 
-            public void handleDelete(final SAMRecord record, final CigarElement element, int readIndex, int refPosition)
-            {
-                Intrinsics.checkParameterIsNotNull((Object) record, (String) "record");
-                Intrinsics.checkParameterIsNotNull((Object) element, (String) "element");
-                int n = refPosition;
-                if(this.$startPosition <= n && this.$endPosition >= n)
-                {
-                    char base = (char) record.getReadBases()[readIndex];
-                    String string = record.getContig();
-                    Intrinsics.checkExpressionValueIsNotNull((Object) string, (String) "record.contig");
-                    char c = base;
-                    String string2 = StringsKt.repeat((CharSequence) "N", (int) element.getLength());
-                    Indel delete = new Indel(string, refPosition, String.valueOf(c) + string2, String.valueOf(base));
-                    this.$indels.add(delete);
-                }
-            }
+            public void handleDelete(final SAMRecord record, final CigarElement element, int readIndex, int refPosition) {
 
-            {
-                this.$startPosition = $captured_local_variable$0;
-                this.$endPosition = $captured_local_variable$1;
-                this.$indels = $captured_local_variable$2;
+                if(startPosition <= refPosition && refPosition <= endPosition)
+                {
+                    char baseChar = record.getReadString().charAt(readIndex);
+                    String delBases = String.valueOf(baseChar);
+
+                    for(int i = 0; i < element.getLength(); ++i)
+                        delBases += "N";
+
+                    indels.add(new Indel(record.getContig(), refPosition, delBases, String.valueOf(baseChar)));
+                }
             }
         };
-        CigarTraversal.traverseCigar((SAMRecord) record, (CigarHandler) handler2);
-        return indels2;
 
-         */
+        CigarTraversal.traverseCigar(record, cigarHandler);
+        return indels;
     }
 
-    private static int softClipStart(SAMRecord $receiver)
+    private static int softClipStart(final SAMRecord record)
     {
-        return 1;
-
-        /*
-        int n;
-        Cigar cigar = $receiver.getCigar();
-        Intrinsics.checkExpressionValueIsNotNull((Object) cigar, (String) "this.cigar");
-        CigarElement cigarElement = cigar.getFirstCigarElement();
-        Intrinsics.checkExpressionValueIsNotNull((Object) cigarElement, (String) "this.cigar.firstCigarElement");
-        if(cigarElement.getOperator() == CigarOperator.S)
-        {
-            Cigar cigar2 = $receiver.getCigar();
-            Intrinsics.checkExpressionValueIsNotNull((Object) cigar2, (String) "this.cigar");
-            CigarElement cigarElement2 = cigar2.getFirstCigarElement();
-            Intrinsics.checkExpressionValueIsNotNull((Object) cigarElement2, (String) "this.cigar.firstCigarElement");
-            n = cigarElement2.getLength();
-        }
-        else
-        {
-            n = 0;
-        }
-        return n;
-
-         */
+        return record.getCigar().getFirstCigarElement().getOperator() == CigarOperator.S ?
+                record.getCigar().getFirstCigarElement().getLength() : 0;
     }
 
-    private final int softClipEnd(SAMRecord $receiver)
+    private static int softClipEnd(final SAMRecord record)
     {
-        return 1;
-
-        /*
-        int n;
-        Cigar cigar = $receiver.getCigar();
-        Intrinsics.checkExpressionValueIsNotNull((Object) cigar, (String) "this.cigar");
-        CigarElement cigarElement = cigar.getLastCigarElement();
-        Intrinsics.checkExpressionValueIsNotNull((Object) cigarElement, (String) "this.cigar.lastCigarElement");
-        if(cigarElement.getOperator() == CigarOperator.S)
-        {
-            Cigar cigar2 = $receiver.getCigar();
-            Intrinsics.checkExpressionValueIsNotNull((Object) cigar2, (String) "this.cigar");
-            CigarElement cigarElement2 = cigar2.getLastCigarElement();
-            Intrinsics.checkExpressionValueIsNotNull((Object) cigarElement2, (String) "this.cigar.lastCigarElement");
-            n = cigarElement2.getLength();
-        }
-        else
-        {
-            n = 0;
-        }
-        return n;
-
-         */
+        return record.getCigar().getLastCigarElement().getOperator() == CigarOperator.S ?
+                record.getCigar().getLastCigarElement().getLength() : 0;
     }
 
-    public final char reverseCompliment(char $receiver)
+    public static char reverseCompliment(char base)
     {
-        switch($receiver)
+        switch(base)
         {
-            case 'G':
-            {
-                return 'C';
-            }
-            case 'A':
-            {
-                return 'T';
-            }
-            case 'T':
-            {
-                return 'A';
-            }
-            case 'C':
-            {
-                return 'G';
-            }
+            case 'G': return 'C';
+            case 'A': return 'T';
+            case 'T': return 'A';
+            case 'C': return 'G';
         }
-        return $receiver;
+        return base;
     }
 }

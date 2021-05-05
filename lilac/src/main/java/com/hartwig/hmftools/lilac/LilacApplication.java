@@ -20,7 +20,7 @@ import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.hla.HlaContextFactory;
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment;
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory;
-import com.hartwig.hmftools.lilac.read.SAMRecordReader;
+import com.hartwig.hmftools.lilac.sam.SAMRecordReader;
 
 import java.util.List;
 import java.util.Map;

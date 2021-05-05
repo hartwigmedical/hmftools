@@ -3,7 +3,7 @@ package com.hartwig.hmftools.lilac.qc;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.lilac.read.SAMRecordReader;
+import com.hartwig.hmftools.lilac.sam.SAMRecordReader;
 import com.hartwig.hmftools.lilac.sam.Indel;
 
 import java.util.List;
