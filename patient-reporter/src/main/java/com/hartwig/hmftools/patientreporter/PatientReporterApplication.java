@@ -101,8 +101,8 @@ public class PatientReporterApplication {
         AnalysedPatientReport report = reporter.run(sampleMetadata,
                 config.purplePurityTsv(),
                 config.purpleQcFile(),
-                config.purpleDriverCatalogSomaticTsv(),
-                config.purpleDriverCatalogGermlineTsv(),
+                config.purpleSomaticDriverCatalogTsv(),
+                config.purpleGermlineDriverCatalogTsv(),
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineVariantVcf(),
                 config.linxFusionTsv(),
@@ -116,7 +116,7 @@ public class PatientReporterApplication {
                 config.pipelineVersionFile(),
                 config.molecularTissueOriginTxt(),
                 config.molecularTissueOriginPlot(),
-                config.virusBreakendTsv(), config.peachgenotypeTsv());
+                config.virusBreakendTsv(), config.peachGenotypeTsv());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(reportData.germlineReportingModel());
 
