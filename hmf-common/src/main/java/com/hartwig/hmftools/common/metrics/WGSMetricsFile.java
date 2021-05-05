@@ -7,6 +7,19 @@ import org.jetbrains.annotations.NotNull;
 public final class WGSMetricsFile {
 
     private static final String MEAN_COVERAGE_COLUMN = "MEAN_COVERAGE";
+    private static final String SD_COVERAGE_COLUMN = "SD_COVERAGE";
+    private static final String MEDIAN_COVERAGE_COLUMN = "MEDIAN_COVERAGE";
+    private static final String MAD_COVERAGE_COLUMN = "MAD_COVERAGE";
+    private static final String PCT_EXC_ADAPTER_COLUMN = "PCT_EXC_ADAPTER";
+    private static final String PCT_EXC_MAPQ_COLUMN = "PCT_EXC_MAPQ";
+    private static final String PCT_EXC_DUPE_COLUMN = "PCT_EXC_DUPE";
+    private static final String PCT_EXC_UNPAIRED_COLUMN = "PCT_EXC_UNPAIRED";
+    private static final String PCT_EXC_BASEQ_COLUMN = "PCT_EXC_BASEQ";
+    private static final String PCT_EXC_OVERLAP_COLUMN = "PCT_EXC_OVERLAP";
+    private static final String PCT_EXC_CAPPED_COLUMN = "PCT_EXC_CAPPED";
+    private static final String PCT_EXC_TOTAL_COLUMN = "PCT_EXC_TOTAL";
+
+    private static final String COVERAGE_1X_COLUMN = "PCT_1X";
     private static final String COVERAGE_10X_COLUMN = "PCT_10X";
     private static final String COVERAGE_20X_COLUMN = "PCT_20X";
     private static final String COVERAGE_30X_COLUMN = "PCT_30X";
@@ -16,39 +29,31 @@ public final class WGSMetricsFile {
     }
 
     @NotNull
-    public static WGSMetrics read(@NotNull String refFilePath) throws IOException {
-        ImmutableWGSMetrics.Builder builder = ImmutableWGSMetrics.builder();
+    public static WGSMetrics read(@NotNull String metricsPath) throws IOException {
+        WGSMetricsLines lines = WGSMetricsLines.fromFile(metricsPath);
 
-        appendRefValues(builder, refFilePath);
+        // These 2 columns do not exist in older versions
+        String pctExcAdapter = lines.findValueByHeader(PCT_EXC_ADAPTER_COLUMN);
+        String coverage1x = lines.findValueByHeader(COVERAGE_1X_COLUMN);
 
-        return builder.build();
-    }
-
-    @NotNull
-    public static WGSMetrics read(@NotNull String refFilePath, @NotNull String tumorFilePath) throws IOException {
-        ImmutableWGSMetrics.Builder builder = ImmutableWGSMetrics.builder();
-
-        appendRefValues(builder, refFilePath);
-        appendTumorValues(builder, tumorFilePath);
-
-        return builder.build();
-    }
-
-    private static void appendRefValues(@NotNull ImmutableWGSMetrics.Builder builder, @NotNull String refFilePath)
-            throws IOException {
-        WGSMetricsLines lines = WGSMetricsLines.fromFile(refFilePath);
-
-        builder.refMeanCoverage(Double.parseDouble(lines.findValueByHeader(MEAN_COVERAGE_COLUMN)));
-        builder.ref10xCoveragePercentage(Double.parseDouble(lines.findValueByHeader(COVERAGE_10X_COLUMN)));
-        builder.ref20xCoveragePercentage(Double.parseDouble(lines.findValueByHeader(COVERAGE_20X_COLUMN)));
-    }
-
-    private static void appendTumorValues(@NotNull ImmutableWGSMetrics.Builder builder,
-            @NotNull String tumorFilePath) throws IOException {
-        WGSMetricsLines lines = WGSMetricsLines.fromFile(tumorFilePath);
-
-        builder.tumorMeanCoverage(Double.parseDouble(lines.findValueByHeader(MEAN_COVERAGE_COLUMN)));
-        builder.tumor30xCoveragePercentage(Double.parseDouble(lines.findValueByHeader(COVERAGE_30X_COLUMN)));
-        builder.tumor60xCoveragePercentage(Double.parseDouble(lines.findValueByHeader(COVERAGE_60X_COLUMN)));
+        return ImmutableWGSMetrics.builder()
+                .meanCoverage(Double.parseDouble(lines.findValueByHeader(MEAN_COVERAGE_COLUMN)))
+                .sdCoverage(Double.parseDouble(lines.findValueByHeader(SD_COVERAGE_COLUMN)))
+                .medianCoverage(Integer.parseInt(lines.findValueByHeader(MEDIAN_COVERAGE_COLUMN)))
+                .madCoverage(Integer.parseInt(lines.findValueByHeader(MAD_COVERAGE_COLUMN)))
+                .pctExcAdapter(pctExcAdapter != null ? Double.parseDouble(pctExcAdapter) : null)
+                .pctExcMapQ(Double.parseDouble(lines.findValueByHeader(PCT_EXC_MAPQ_COLUMN)))
+                .pctExcDupe(Double.parseDouble(lines.findValueByHeader(PCT_EXC_DUPE_COLUMN)))
+                .pctExcUnpaired(Double.parseDouble(lines.findValueByHeader(PCT_EXC_UNPAIRED_COLUMN)))
+                .pctExcBaseQ(Double.parseDouble(lines.findValueByHeader(PCT_EXC_BASEQ_COLUMN)))
+                .pctExcOverlap(Double.parseDouble(lines.findValueByHeader(PCT_EXC_OVERLAP_COLUMN)))
+                .pctExcCapped(Double.parseDouble(lines.findValueByHeader(PCT_EXC_CAPPED_COLUMN)))
+                .pctExcTotal(Double.parseDouble(lines.findValueByHeader(PCT_EXC_TOTAL_COLUMN)))
+                .coverage1xPercentage(coverage1x != null ? Double.parseDouble(coverage1x) : null)
+                .coverage10xPercentage(Double.parseDouble(lines.findValueByHeader(COVERAGE_10X_COLUMN)))
+                .coverage20xPercentage(Double.parseDouble(lines.findValueByHeader(COVERAGE_20X_COLUMN)))
+                .coverage30xPercentage(Double.parseDouble(lines.findValueByHeader(COVERAGE_30X_COLUMN)))
+                .coverage60xPercentage(Double.parseDouble(lines.findValueByHeader(COVERAGE_60X_COLUMN)))
+                .build();
     }
 }

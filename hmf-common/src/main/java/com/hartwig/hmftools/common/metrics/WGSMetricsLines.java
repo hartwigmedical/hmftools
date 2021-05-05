@@ -7,14 +7,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 class WGSMetricsLines {
-
-    private static final Logger LOGGER = LogManager.getLogger(WGSMetricsLines.class);
 
     private static final String VALUE_SEPARATOR = "\t";
 
@@ -35,10 +31,7 @@ class WGSMetricsLines {
         }
 
         String[] headers = lines.get(index).split(VALUE_SEPARATOR);
-        String[] values = lines.get(index+1).split(VALUE_SEPARATOR);
-        if (headers.length != values.length) {
-            throw new IllegalStateException("Mismatch in number of headers and number of values in " + path);
-        }
+        String[] values = lines.get(index + 1).split(VALUE_SEPARATOR);
 
         return new WGSMetricsLines(headers, values);
     }
@@ -55,18 +48,16 @@ class WGSMetricsLines {
     private WGSMetricsLines(@NotNull final String[] headers, @NotNull final String[] values) {
         this.headers = headers;
         this.values = values;
-
-        assert this.headers.length == this.values.length;
     }
 
-    @NotNull
+    @Nullable
     String findValueByHeader(@NotNull String header) {
         for (int i = 0; i < headers.length; i++) {
             if (headers[i].equals(header)) {
                 return values[i];
             }
         }
-        LOGGER.warn("Could not find header {} in WGSMetricsLines!", header);
-        return Strings.EMPTY;
+
+        return null;
     }
 }

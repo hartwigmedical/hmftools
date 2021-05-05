@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.metrics;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.io.File;
@@ -16,87 +15,61 @@ public class WGSMetricsFileTest {
     private static final String METRICS_DIRECTORY = Resources.getResource("metrics").getPath();
     private static final double EPSILON = 1.0E-10;
 
-    private static final String PV4_REF_SAMPLE = "sample1_pv4";
-    private static final String PV4_REF_FILE = METRICS_DIRECTORY + File.separator + PV4_REF_SAMPLE + ".wgsmetrics";
-    private static final double PV4_REF_MEAN_COVERAGE = 0.000856;
-    private static final double PV4_REF_COVERAGE_10X = 0.000037;
-    private static final double PV4_REF_COVERAGE_20X = 0.00002;
+    private static final String PV4_FILE = METRICS_DIRECTORY + File.separator + "sample.pv4.wgsmetrics";
+    private static final String PV5_FILE = METRICS_DIRECTORY + File.separator + "sample.pv5.wgsmetrics";
 
-    private static final String PV4_TUMOR_SAMPLE = "sample2_pv4";
-    private static final String PV4_TUMOR_FILE = METRICS_DIRECTORY + File.separator + PV4_TUMOR_SAMPLE + ".wgsmetrics";
-    private static final double PV4_TUMOR_MEAN_COVERAGE = 0.000756;
-    private static final double PV4_TUMOR_COVERAGE_30X = 0.000005;
-    private static final double PV4_TUMOR_COVERAGE_60X = 0;
-
-    private static final String PV5_REF_SAMPLE = "sample1_pv5";
-    private static final String PV5_REF_FILE = METRICS_DIRECTORY + File.separator + PV5_REF_SAMPLE + ".wgsmetrics";
-    private static final double PV5_REF_MEAN_COVERAGE = 37.190252;
-    private static final double PV5_REF_COVERAGE_10X = 0.979308;
-    private static final double PV5_REF_COVERAGE_20X = 0.96964;
-
-    private static final String PV5_TUMOR_SAMPLE = "sample2_pv5";
-    private static final String PV5_TUMOR_FILE = METRICS_DIRECTORY + File.separator + PV5_TUMOR_SAMPLE + ".wgsmetrics";
-    private static final double PV5_TUMOR_MEAN_COVERAGE = 122.955213;
-    private static final double PV5_TUMOR_COVERAGE_30X = 0.980146;
-    private static final double PV5_TUMOR_COVERAGE_60X = 0.974498;
-
-    private static final String EMPTY_FILE = METRICS_DIRECTORY + File.separator + "sample3" + ".wgsmetrics";
-    private static final String INCORRECT_FILE = METRICS_DIRECTORY + File.separator + "sample4" + ".wgsmetrics";
-    private static final String NON_EXISTING_FILE = METRICS_DIRECTORY + File.separator + "sample5" + ".wgsmetrics";
+    private static final String EMPTY_FILE = METRICS_DIRECTORY + File.separator + "sample.empty.wgsmetrics";
+    private static final String INCORRECT_FILE = METRICS_DIRECTORY + File.separator + "sample.incorrect.wgsmetrics";
+    private static final String NON_EXISTING_FILE = METRICS_DIRECTORY + File.separator + "sample.non-existing.wgsmetrics";
 
     @Test
-    public void worksForPv4RefAndTumorInput() throws IOException {
-        WGSMetrics metrics = WGSMetricsFile.read(PV4_REF_FILE, PV4_TUMOR_FILE);
+    public void worksForPv4Input() throws IOException {
+        WGSMetrics metrics = WGSMetricsFile.read(PV4_FILE);
 
-        assertEquals(PV4_REF_MEAN_COVERAGE, metrics.refMeanCoverage(), EPSILON);
-        assertEquals(PV4_REF_COVERAGE_10X, metrics.ref10xCoveragePercentage(), EPSILON);
-        assertEquals(PV4_REF_COVERAGE_20X, metrics.ref20xCoveragePercentage(), EPSILON);
+        assertEquals(0.000856, metrics.meanCoverage(), EPSILON);
+        assertEquals(0.257469, metrics.sdCoverage(), EPSILON);
+        assertEquals(0, metrics.medianCoverage());
+        assertEquals(0, metrics.madCoverage());
 
-        Double tumorMeanCov = metrics.tumorMeanCoverage();
-        assertNotNull(tumorMeanCov);
-        assertEquals(PV4_TUMOR_MEAN_COVERAGE, tumorMeanCov, EPSILON);
+        assertNull(metrics.pctExcAdapter());
+        assertEquals(0.000585, metrics.pctExcMapQ(), EPSILON);
+        assertEquals(0.059484, metrics.pctExcDupe(), EPSILON);
+        assertEquals(0.002331, metrics.pctExcUnpaired(), EPSILON);
+        assertEquals(0.002378, metrics.pctExcBaseQ(), EPSILON);
+        assertEquals(0.020675, metrics.pctExcOverlap(), EPSILON);
+        assertEquals(0.001026, metrics.pctExcCapped(), EPSILON);
+        assertEquals(0.086479, metrics.pctExcTotal(), EPSILON);
 
-        Double tumorCov30x = metrics.tumor30xCoveragePercentage();
-        assertNotNull(tumorCov30x);
-        assertEquals(PV4_TUMOR_COVERAGE_30X, tumorCov30x, EPSILON);
-
-        Double tumorCov60x = metrics.tumor60xCoveragePercentage();
-        assertNotNull(tumorCov60x);
-        assertEquals(PV4_TUMOR_COVERAGE_60X, tumorCov60x, EPSILON);
+        assertNull(metrics.coverage1xPercentage());
+        assertEquals(0.000037, metrics.coverage10xPercentage(), EPSILON);
+        assertEquals(0.00002, metrics.coverage20xPercentage(), EPSILON);
+        assertEquals(0.000005, metrics.coverage30xPercentage(), EPSILON);
+        assertEquals(0D, metrics.coverage60xPercentage(), EPSILON);
     }
 
     @Test
-    public void worksForPv4RefInputOnly() throws IOException {
-        WGSMetrics metrics = WGSMetricsFile.read(PV4_REF_FILE);
+    public void worksForPv5Input() throws IOException {
+        WGSMetrics metrics = WGSMetricsFile.read(PV5_FILE);
 
-        assertEquals(PV4_REF_MEAN_COVERAGE, metrics.refMeanCoverage(), EPSILON);
-        assertEquals(PV4_REF_COVERAGE_10X, metrics.ref10xCoveragePercentage(), EPSILON);
-        assertEquals(PV4_REF_COVERAGE_20X, metrics.ref20xCoveragePercentage(), EPSILON);
+        assertEquals(31.440964, metrics.meanCoverage(), EPSILON);
+        assertEquals(10.111387, metrics.sdCoverage(), EPSILON);
+        assertEquals(32, metrics.medianCoverage());
+        assertEquals(5, metrics.madCoverage());
 
-        assertNull(metrics.tumorMeanCoverage());
-        assertNull(metrics.tumor30xCoveragePercentage());
-        assertNull(metrics.tumor60xCoveragePercentage());
-    }
+        assertEquals(0.000009, metrics.pctExcAdapter(), EPSILON);
+        assertEquals(0.049723, metrics.pctExcMapQ(), EPSILON);
+        assertEquals(0.108882, metrics.pctExcDupe(), EPSILON);
+        assertEquals(0.000707, metrics.pctExcUnpaired(), EPSILON);
+        assertEquals(0.000045, metrics.pctExcBaseQ(), EPSILON);
+        assertEquals(0.005271, metrics.pctExcOverlap(), EPSILON);
+        assertEquals(0.014476, metrics.pctExcCapped(), EPSILON);
+        assertEquals(0.179113, metrics.pctExcTotal(), EPSILON);
 
-    @Test
-    public void worksForPv5RefAndTumorInput() throws IOException {
-        WGSMetrics metrics = WGSMetricsFile.read(PV5_REF_FILE,PV5_TUMOR_FILE);
-
-        assertEquals(PV5_REF_MEAN_COVERAGE, metrics.refMeanCoverage(), EPSILON);
-        assertEquals(PV5_REF_COVERAGE_10X, metrics.ref10xCoveragePercentage(), EPSILON);
-        assertEquals(PV5_REF_COVERAGE_20X, metrics.ref20xCoveragePercentage(), EPSILON);
-
-        Double tumorMeanCov = metrics.tumorMeanCoverage();
-        assertNotNull(tumorMeanCov);
-        assertEquals(PV5_TUMOR_MEAN_COVERAGE, tumorMeanCov, EPSILON);
-
-        Double tumorCov30x = metrics.tumor30xCoveragePercentage();
-        assertNotNull(tumorCov30x);
-        assertEquals(PV5_TUMOR_COVERAGE_30X, tumorCov30x, EPSILON);
-
-        Double tumorCov60x = metrics.tumor60xCoveragePercentage();
-        assertNotNull(tumorCov60x);
-        assertEquals(PV5_TUMOR_COVERAGE_60X, tumorCov60x, EPSILON);
+        assertEquals(0.99104, metrics.coverage1xPercentage(), EPSILON);
+        assertEquals(0.98104, metrics.coverage10xPercentage(), EPSILON);
+        assertEquals(0.918671, metrics.coverage20xPercentage(), EPSILON);
+        assertEquals(0.630782, metrics.coverage30xPercentage(), EPSILON);
+        assertEquals(0.003459, metrics.coverage60xPercentage(), EPSILON);
     }
 
     @Test(expected = IOException.class)
