@@ -81,7 +81,7 @@
                             <archive>
                                 <manifest>
                                     <addClasspath>true</addClasspath>
-                                    <mainClass>com.hartwig.hmftools.lilac.LilacApplicationKt</mainClass>
+                                    <mainClass>com.hartwig.hmftools.lilackt.LilacApplicationKt</mainClass>
                                     <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                                     <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                                 </manifest>

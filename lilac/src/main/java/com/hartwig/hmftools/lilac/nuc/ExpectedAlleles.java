@@ -39,20 +39,20 @@ public class ExpectedAlleles
         }
          */
 
-        // CHECK:
+        // CHECK: seems to be 1 short on the 6-groups
 
         int min = min(otherMin1, otherMin2);
         int max = max(otherMin1, otherMin2);
 
-        int arraySize = max + 1;
+        int arraySize = max - 1;
         int[] alleleCounts = new int[arraySize];
 
-        for(int i = 0; i < min; ++i)
+        for(int i = 0; i < min - 1; ++i)
         {
             alleleCounts[i] = 6;
         }
 
-        for(int i = min; i < max; ++i)
+        for(int i = min - 1; i < max - 1; ++i)
         {
             alleleCounts[i] = 4;
         }

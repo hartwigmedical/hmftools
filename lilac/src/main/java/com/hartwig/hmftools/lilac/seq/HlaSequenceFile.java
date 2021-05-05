@@ -43,7 +43,7 @@ public class HlaSequenceFile
                 HlaSequence sequence = entries.get(alleleStr);
 
                 if(sequence == null)
-                    entries.put(alleleStr, new HlaSequence(HlaAllele.from(alleleStr), remainder));
+                    entries.put(alleleStr, new HlaSequence(HlaAllele.fromString(alleleStr), remainder));
                 else
                     sequence.appendSequence(remainder);
             }

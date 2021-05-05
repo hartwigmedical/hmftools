@@ -7,7 +7,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.LociPosition;
 
 public class LilacConstants
 {
@@ -24,24 +23,24 @@ public class LilacConstants
 
     public static final Set<String> HLA_GENES = Sets.newHashSet(HLA_A, HLA_B, HLA_C);
 
-    public static final com.hartwig.hmftools.lilac.hla.HlaAllele DEFLATE_TEMPLATE = com.hartwig.hmftools.lilac.hla.HlaAllele.from("A*01:01");
+    public static final HlaAllele DEFLATE_TEMPLATE = HlaAllele.fromString("A*01:01");
 
-    public static final Set<com.hartwig.hmftools.lilac.hla.HlaAllele> EXCLUDED_ALLELES = Sets.newHashSet(
-            com.hartwig.hmftools.lilac.hla.HlaAllele.from("A*01:81"),
-            com.hartwig.hmftools.lilac.hla.HlaAllele.from("A*01:237"),
-            com.hartwig.hmftools.lilac.hla.HlaAllele.from("A*33:191"),
-            com.hartwig.hmftools.lilac.hla.HlaAllele.from("A*11:353"),
-            com.hartwig.hmftools.lilac.hla.HlaAllele.from("A*30:95"),
-            com.hartwig.hmftools.lilac.hla.HlaAllele.from("A*30:136"),
-            HlaAllele.from("A*31:135"));
+    public static final Set<HlaAllele> EXCLUDED_ALLELES = Sets.newHashSet(
+            HlaAllele.fromString("A*01:81"),
+            HlaAllele.fromString("A*01:237"),
+            HlaAllele.fromString("A*33:191"),
+            HlaAllele.fromString("A*11:353"),
+            HlaAllele.fromString("A*30:95"),
+            HlaAllele.fromString("A*30:136"),
+            HlaAllele.fromString("A*31:135"));
 
-    public static final Set<Integer> A_EXON_BOUNDARIES = Sets.newHashSet(24, 114, 206, 298, 337, 348, 364);
-    public static final Set<Integer> B_EXON_BOUNDARIES = Sets.newHashSet(24, 114, 206, 298, 337, 348);
-    public static final Set<Integer> C_EXON_BOUNDARIES = Sets.newHashSet(24, 114, 206, 298, 338, 349, 365);
+    public static final List<Integer> A_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348, 364);
+    public static final List<Integer> B_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348);
+    public static final List<Integer> C_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 338, 349, 365);
 
     public static final int MAX_AMINO_ACID_BOUNDARY = 298;
 
-    public static final Set<Integer> ALL_PROTEIN_EXON_BOUNDARIES = Sets.newHashSet(
+    public static final List<Integer> ALL_PROTEIN_EXON_BOUNDARIES = Lists.newArrayList(
             24, 114, 206, 298, 337, 348, 364, 338, 349, 365);
 
     public static final List<Integer> ALL_NUCLEOTIDE_EXON_BOUNDARIES = Lists.newArrayList();

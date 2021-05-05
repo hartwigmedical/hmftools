@@ -16,7 +16,7 @@ public class NucleotideGeneEnrichment
     private final int mAcMinBoundary;
     private final int mBcMinBoundary;
 
-    public NucleotideGeneEnrichment(final Set<Integer> aBoundaries, final Set<Integer> bBoundaries, final Set<Integer> cBoundaries)
+    public NucleotideGeneEnrichment(final List<Integer> aBoundaries, final List<Integer> bBoundaries, final List<Integer> cBoundaries)
     {
         Set<Integer> abUnique = Sets.newHashSet();
         Set<Integer> acUnique = Sets.newHashSet();
@@ -26,7 +26,7 @@ public class NucleotideGeneEnrichment
         bBoundaries.stream().filter(x -> !aBoundaries.contains(x)).forEach(x -> abUnique.add(x));
         mAbMinBoundary = abUnique.stream().mapToInt(x -> x).min().orElse(0);
 
-        aBoundaries.stream().filter(x -> !bBoundaries.contains(x)).forEach(x -> acUnique.add(x));
+        aBoundaries.stream().filter(x -> !cBoundaries.contains(x)).forEach(x -> acUnique.add(x));
         cBoundaries.stream().filter(x -> !aBoundaries.contains(x)).forEach(x -> acUnique.add(x));
         mAcMinBoundary = acUnique.stream().mapToInt(x -> x).min().orElse(0);
 

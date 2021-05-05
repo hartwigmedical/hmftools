@@ -4,16 +4,19 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -41,10 +44,11 @@ public class LilacConfig
     public final String SomaticVcf;
 
     public final boolean DebugPhasing;
-    public final List<com.hartwig.hmftools.lilac.hla.HlaAllele> ExpectedAlleles;
-    public final List<com.hartwig.hmftools.lilac.hla.HlaAllele> CommonAlleles;
+    public final List<HlaAllele> ExpectedAlleles;
+    public final List<HlaAllele> CommonAlleles;
     public final List<HlaAllele> StopLossRecoveryAlleles;
 
+    // config strings
     private static final String SAMPLE = "sample";
     private static final String REFERENCE_BAM = "reference_bam";
     private static final String TUMOR_BAM = "tumor_bam";
@@ -67,7 +71,7 @@ public class LilacConfig
 
     public static final Logger LL_LOGGER = LogManager.getLogger(LilacConfig.class);;
 
-    public LilacConfig(final CommandLine cmd) throws ParseException, IOException
+    public LilacConfig(final CommandLine cmd)
     {
         OutputDir = parseOutputDir(cmd);
         Sample = cmd.getOptionValue(SAMPLE);
@@ -90,10 +94,9 @@ public class LilacConfig
         GeneCopyNumberFile = cmd.getOptionValue(GENE_COPY_NUMBER);
         SomaticVcf = cmd.getOptionValue(SOMATIC_VCF);
 
-        // public final boolean DebugPhasing;
-        ExpectedAlleles = Lists.newArrayList();
-        CommonAlleles = Lists.newArrayList();
-        StopLossRecoveryAlleles = Lists.newArrayList();
+        ExpectedAlleles = parseExpectedAlleles(cmd.getOptionValue(EXPECTED_ALLELES));
+        CommonAlleles = loadCommonAlleles();
+        StopLossRecoveryAlleles = loadStopLossRecoveryAllele();
 
         Threads = getConfigValue(cmd, THREADS, 1);
         DebugPhasing = cmd.hasOption(DEBUG_PHASING);
@@ -120,19 +123,8 @@ public class LilacConfig
 
         // public final boolean DebugPhasing;
         ExpectedAlleles = Lists.newArrayList();
-        CommonAlleles = Lists.newArrayList();
-        StopLossRecoveryAlleles = Lists.newArrayList();
-
-        /*
-        val expectedAlleles = cmd.expectedAlleles(EXPECTED_ALLELES);
-        val commonAlleles = LilacConfig::class.java.getResource("/alleles/common.txt")
-            .readText()
-            .split("\n")
-            .map { HlaAllele(it) }
-                    .map { it.asFourDigit() }
-
-        val stopLossRecoveryAlleles = listOf(HlaAllele("C*04:09N"))
-        */
+        CommonAlleles = loadCommonAlleles();
+        StopLossRecoveryAlleles = loadStopLossRecoveryAllele();
 
         OutputFilePrefix = "";
         Threads = 0;
@@ -143,26 +135,49 @@ public class LilacConfig
     public static Options createOptions()
     {
         Options options = new Options();
-        options.addOption(SAMPLE, "Name of sample");
-        options.addOption(REFERENCE_BAM, "Path to reference/normal bam");
-        options.addOption(TUMOR_BAM, "Path to tumor bam");
-        options.addOption(RESOURCE_DIR, "Path to resource files");
-        options.addOption(OUTPUT_DIR, "Path to output");
-        options.addOption(OUTPUT_ID, "Output file prefix");
-        options.addOption(REF_GENOME, "Optional path to reference genome fasta file");
-        options.addOption(MIN_BASE_QUAL, "MIN_BASE_QUAL");
-        options.addOption(MIN_EVIDENCE, "MIN_EVIDENCE");
-        options.addOption(MIN_FRAGMENTS_PER_ALLELE, "MIN_FRAGMENTS_PER_ALLELE");
-        options.addOption(MIN_FRAGMENTS_TO_REMOVE_SINGLE, "MIN_FRAGMENTS_TO_REMOVE_SINGLE");
-        options.addOption(MIN_CONFIRMED_UNIQUE_COVERAGE, "MIN_CONFIRMED_UNIQUE_COVERAGE");
-        options.addOption(MAX_DISTANCE_FROM_TOP_SCORE, "Max distance from top score");
-        options.addOption(THREADS, "Number of threads");
-        options.addOption(EXPECTED_ALLELES, "Comma separated expected alleles");
-        options.addOption(GENE_COPY_NUMBER, "Path to gene copy number file");
-        options.addOption(SOMATIC_VCF, "Path to somatic VCF");
+        options.addOption(SAMPLE, true, "Name of sample");
+        options.addOption(REFERENCE_BAM, true,"Path to reference/normal bam");
+        options.addOption(TUMOR_BAM, true,"Path to tumor bam");
+        options.addOption(RESOURCE_DIR, true,"Path to resource files");
+        options.addOption(OUTPUT_DIR, true,"Path to output");
+        options.addOption(OUTPUT_ID, true,"Output file prefix");
+        options.addOption(REF_GENOME, true,"Optional path to reference genome fasta file");
+        options.addOption(MIN_BASE_QUAL, true,"MIN_BASE_QUAL");
+        options.addOption(MIN_EVIDENCE, true,"MIN_EVIDENCE");
+        options.addOption(MIN_FRAGMENTS_PER_ALLELE, true,"MIN_FRAGMENTS_PER_ALLELE");
+        options.addOption(MIN_FRAGMENTS_TO_REMOVE_SINGLE, true,"MIN_FRAGMENTS_TO_REMOVE_SINGLE");
+        options.addOption(MIN_CONFIRMED_UNIQUE_COVERAGE, true,"MIN_CONFIRMED_UNIQUE_COVERAGE");
+        options.addOption(MAX_DISTANCE_FROM_TOP_SCORE, true,"Max distance from top score");
+        options.addOption(THREADS, true,"Number of threads");
+        options.addOption(EXPECTED_ALLELES, true,"Comma separated expected alleles for the sample");
+        options.addOption(GENE_COPY_NUMBER, true,"Path to gene copy number file");
+        options.addOption(SOMATIC_VCF, true,"Path to somatic VCF");
         options.addOption(DEBUG_PHASING, false, "More detailed logging of phasing");
         DatabaseAccess.addDatabaseCmdLineArgs((Options) options);
         return options;
+    }
+
+    private final List<HlaAllele> parseExpectedAlleles(final String allelesStr)
+    {
+        if(allelesStr == null || allelesStr.isEmpty())
+            return Lists.newArrayList();
+
+        String[] alleles = allelesStr.split(";", -1);
+        return Arrays.stream(alleles).map(x -> HlaAllele.fromString(x)).collect(Collectors.toList());
+    }
+
+    private final List<HlaAllele> loadCommonAlleles()
+    {
+        final List<String> commonAlleleLines = new BufferedReader(new InputStreamReader(
+                RefGenomeCoordinates.class.getResourceAsStream("/alleles/common.txt")))
+                .lines().collect(Collectors.toList());
+
+        return commonAlleleLines.stream().map(x -> HlaAllele.fromString(x)).map(x -> x.asFourDigit()).collect(Collectors.toList());
+    }
+
+    private static List<HlaAllele> loadStopLossRecoveryAllele()
+    {
+        return Lists.newArrayList(HlaAllele.fromString("C*04:09N"));
     }
 
     /*
@@ -195,39 +210,6 @@ public class LilacConfig
         return string;
     }
     */
-
-    /*
-    private final List<HlaAllele> expectedAlleles(CommandLine $receiver, String opt)
-    {
-        if($receiver.hasOption(opt))
-        {
-            void $receiver$iv$iv;
-            Iterable $receiver$iv;
-            String string = $receiver.getOptionValue(opt);
-            if(string == null)
-            {
-                Intrinsics.throwNpe();
-            }
-            Iterable iterable = $receiver$iv = (Iterable) StringsKt.split$default((CharSequence) string, (String[]) new String[] {
-                    "," }, (boolean) false, (int) 0, (int) 6, null);
-            Collection destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-            for(Object item$iv$iv : $receiver$iv$iv)
-            {
-                void it;
-                String string2 = (String) item$iv$iv;
-                Collection collection = destination$iv$iv;
-                boolean bl = false;
-                HlaAllele hlaAllele = HlaAllele.Companion.invoke((String) it).asFourDigit();
-                collection.add(hlaAllele);
-            }
-            List result = (List) destination$iv$iv;
-            this.getLogger()
-                    .info("Using non default value {} for parameter {}", (Object) CollectionsKt.joinToString$default((Iterable) result, (CharSequence) ",", null, null, (int) 0, null, null, (int) 62, null), (Object) opt);
-            return result;
-        }
-        return CollectionsKt.emptyList();
-    }
-     */
 
     /*
     @NotNull

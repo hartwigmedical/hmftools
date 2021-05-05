@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.hla;
 
+import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.lilac.nuc.ExpectedAlleles;
@@ -9,12 +10,12 @@ import com.hartwig.hmftools.lilac.nuc.NucleotideGeneEnrichment;
 public class HlaContextFactory
 {
     private final NucleotideGeneEnrichment NucleotideGeneEnrichment;
-    private final Set<Integer> ABoundaries;
-    private final Set<Integer> BBoundaries;
-    private final Set<Integer> CBoundaries;
+    private final List<Integer> ABoundaries;
+    private final List<Integer> BBoundaries;
+    private final List<Integer> CBoundaries;
 
     public HlaContextFactory(
-            final Set<Integer> aBoundaries, final Set<Integer> bBoundaries, final Set<Integer> cBoundaries)
+            final List<Integer> aBoundaries, final List<Integer> bBoundaries, final List<Integer> cBoundaries)
     {
         NucleotideGeneEnrichment = new NucleotideGeneEnrichment(aBoundaries, bBoundaries, cBoundaries);
         ABoundaries = aBoundaries;
@@ -25,21 +26,21 @@ public class HlaContextFactory
     public final HlaContext hlaA()
     {
         ExpectedAlleles expectedAlleles =
-                ExpectedAlleles.expectedAlleles(this.NucleotideGeneEnrichment.getAFilterB(), this.NucleotideGeneEnrichment.getAFilterC());
-        return new HlaContext("A", this.ABoundaries, expectedAlleles);
+                ExpectedAlleles.expectedAlleles(NucleotideGeneEnrichment.getAFilterB(), NucleotideGeneEnrichment.getAFilterC());
+        return new HlaContext("A", ABoundaries, expectedAlleles);
     }
 
     public final HlaContext hlaB()
     {
         ExpectedAlleles expectedAlleles =
-                ExpectedAlleles.expectedAlleles(this.NucleotideGeneEnrichment.getBFilterA(), this.NucleotideGeneEnrichment.getBFilterC());
-        return new HlaContext("B", this.BBoundaries, expectedAlleles);
+                ExpectedAlleles.expectedAlleles(NucleotideGeneEnrichment.getBFilterA(), NucleotideGeneEnrichment.getBFilterC());
+        return new HlaContext("B", BBoundaries, expectedAlleles);
     }
 
     public final HlaContext hlaC()
     {
         ExpectedAlleles expectedAlleles =
-                ExpectedAlleles.expectedAlleles(this.NucleotideGeneEnrichment.getCFilterA(), this.NucleotideGeneEnrichment.getCFilterB());
-        return new HlaContext("C", this.CBoundaries, expectedAlleles);
+                ExpectedAlleles.expectedAlleles(NucleotideGeneEnrichment.getCFilterA(), NucleotideGeneEnrichment.getCFilterB());
+        return new HlaContext("C", CBoundaries, expectedAlleles);
     }
 }

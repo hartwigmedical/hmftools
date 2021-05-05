@@ -134,7 +134,7 @@ public class AminoAcidFragmentPipeline
                 Collectors.toList());
     }
 
-    private List<AminoAcidFragment> process(final Set<Integer> boundaries, final List<NucleotideFragment> fragments)
+    private List<AminoAcidFragment> process(final List<Integer> boundaries, final List<NucleotideFragment> fragments)
     {
         /*
                 if (fragments.isEmpty()) {

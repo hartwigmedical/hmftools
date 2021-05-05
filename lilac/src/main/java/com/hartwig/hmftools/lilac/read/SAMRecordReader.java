@@ -81,8 +81,9 @@ public class SAMRecordReader
         mUnmatchedPONIndels = Maps.newHashMap();
 
         // load indel PON
-        final InputStream inputStream = RefGenomeCoordinates.class.getResourceAsStream("/pon/indels.txt");
-        final List<String> ponLines = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList());
+        final List<String> ponLines = new BufferedReader(new InputStreamReader(
+                RefGenomeCoordinates.class.getResourceAsStream("/pon/indels.txt")))
+                .lines().collect(Collectors.toList());
         ponLines.stream().map(x -> Indel.fromString(x)).forEach(x -> INDEL_PON.add(x));
     }
 

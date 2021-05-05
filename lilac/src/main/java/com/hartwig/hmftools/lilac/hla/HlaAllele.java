@@ -18,11 +18,11 @@ public class HlaAllele implements Comparable<HlaAllele>
         SynonymousNonCoding = synonymousNonCoding;
     }
 
-    public static HlaAllele from(final String contig)
+    public static HlaAllele fromString(final String line)
     {
-        int starIndex = contig.indexOf("*");
-        String gene = contig.substring(0, starIndex);
-        String contigRemainder = contig.substring(starIndex + 1);
+        int starIndex = line.indexOf("*");
+        String gene = line.substring(0, starIndex);
+        String contigRemainder = line.substring(starIndex + 1);
         String[] contigSplit = contigRemainder.split(":");
 
         String alleleGroup = contigSplit[0];
