@@ -14,6 +14,7 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.reportingdb.ReportingDatabase;
 import com.hartwig.hmftools.common.reportingdb.ReportingEntry;
+import com.hartwig.hmftools.patientreporter.ExampleAnalysisConfig;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
@@ -64,82 +65,23 @@ public class ReportingDbTest {
                 writer.write("tumorBarcode\tsampleId\tcohort\treportDate\treportType\tpurity\thasReliableQuality\thasReliablePurity\n");
                 writer.close();
             }
-            LimsCohortConfig cohortConfig = PatientReporterTestFactory.createCohortConfig("CPCT",
-                    true,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    true,
-                    false,
-                    false);
+            LimsCohortConfig cohortConfig = PatientReporterTestFactory.createCPCTCohortConfig();
+
+            ExampleAnalysisConfig config =
+                    new ExampleAnalysisConfig.Builder().sampleId("CPCT01_SUCCESS").limsCohortConfig(cohortConfig).build();
 
             ReportingDb.addAnalysedReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_SUCCESS", null, cohortConfig));
+                    ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config));
 
             ReportingDb.addQCFailReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.buildQCFailReport("CPCT01_FAIL", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, cohortConfig));
+                    ExampleAnalysisTestFactory.createQCFailReport("CPCT01_FAIL", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, cohortConfig));
         }
     }
 
     @Test
     public void canDetermineWhetherSummaryIsRequired() {
-        assertTrue(ReportingDb.requiresSummary(PatientReporterTestFactory.createCohortConfig("WIDE",
-                true,
-                true,
-                true,
-                true,
-                true,
-                false,
-                true,
-                true,
-                false,
-                true)));
-        assertFalse(ReportingDb.requiresSummary(PatientReporterTestFactory.createCohortConfig("CPCT",
-                true,
-                false,
-                false,
-                false,
-                false,
-                false,
-                false,
-                true,
-                false,
-                false)));
-        assertTrue(ReportingDb.requiresSummary(PatientReporterTestFactory.createCohortConfig("CORE",
-                true,
-                true,
-                false,
-                true,
-                true,
-                true,
-                true,
-                false,
-                true,
-                true)));
-        assertFalse(ReportingDb.requiresSummary(PatientReporterTestFactory.createCohortConfig("CORE",
-                true,
-                true,
-                false,
-                false,
-                true,
-                true,
-                true,
-                false,
-                true,
-                true)));
-        assertTrue(ReportingDb.requiresSummary(PatientReporterTestFactory.createCohortConfig("CORE",
-                true,
-                true,
-                false,
-                true,
-                true,
-                true,
-                true,
-                false,
-                true,
-                true)));
+        assertTrue(ReportingDb.requiresSummary(PatientReporterTestFactory.createWIDECohortConfig()));
+        assertFalse(ReportingDb.requiresSummary(PatientReporterTestFactory.createCPCTCohortConfig()));
+        assertTrue(ReportingDb.requiresSummary(PatientReporterTestFactory.createCORECohortConfig()));
     }
 }

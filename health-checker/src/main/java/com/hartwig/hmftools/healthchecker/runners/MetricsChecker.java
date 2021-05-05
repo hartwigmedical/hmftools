@@ -18,51 +18,41 @@ public class MetricsChecker implements HealthChecker {
     @NotNull
     private final String refWgsMetricsFile;
     @Nullable
-    private final String tumWgsMetricsFile;
+    private final String tumorWgsMetricsFile;
 
-    public MetricsChecker(@NotNull final String refWgsMetricsFile, @Nullable final String tumWgsMetricsFile) {
+    public MetricsChecker(@NotNull final String refWgsMetricsFile, @Nullable final String tumorWgsMetricsFile) {
         this.refWgsMetricsFile = refWgsMetricsFile;
-        this.tumWgsMetricsFile = tumWgsMetricsFile;
+        this.tumorWgsMetricsFile = tumorWgsMetricsFile;
     }
 
     @NotNull
     @Override
     public List<QCValue> run() throws IOException {
-        WGSMetrics metrics = extractMetrics();
+        WGSMetrics refMetrics = WGSMetricsFile.read(refWgsMetricsFile);
 
         List<QCValue> qcValues = Lists.newArrayList();
         qcValues.add(ImmutableQCValue.builder()
                 .type(QCValueType.REF_COVERAGE_10X)
-                .value(String.valueOf(metrics.ref10xCoveragePercentage()))
+                .value(String.valueOf(refMetrics.coverage10xPercentage()))
                 .build());
         qcValues.add(ImmutableQCValue.builder()
                 .type(QCValueType.REF_COVERAGE_20X)
-                .value(String.valueOf(metrics.ref20xCoveragePercentage()))
+                .value(String.valueOf(refMetrics.coverage20xPercentage()))
                 .build());
 
-        if (tumWgsMetricsFile != null) {
-            assert metrics.tumor30xCoveragePercentage() != null;
-            assert metrics.tumor60xCoveragePercentage() != null;
+        if (tumorWgsMetricsFile != null) {
+            WGSMetrics tumorMetrics = WGSMetricsFile.read(tumorWgsMetricsFile);
 
             qcValues.add(ImmutableQCValue.builder()
                     .type(QCValueType.TUM_COVERAGE_30X)
-                    .value(String.valueOf(metrics.tumor30xCoveragePercentage()))
+                    .value(String.valueOf(tumorMetrics.coverage30xPercentage()))
                     .build());
             qcValues.add(ImmutableQCValue.builder()
                     .type(QCValueType.TUM_COVERAGE_60X)
-                    .value(String.valueOf(metrics.tumor60xCoveragePercentage()))
+                    .value(String.valueOf(tumorMetrics.coverage60xPercentage()))
                     .build());
         }
 
         return qcValues;
-    }
-
-    @NotNull
-    private WGSMetrics extractMetrics() throws IOException {
-        if (tumWgsMetricsFile != null) {
-            return WGSMetricsFile.read(refWgsMetricsFile, tumWgsMetricsFile);
-        } else {
-            return WGSMetricsFile.read(refWgsMetricsFile);
-        }
     }
 }

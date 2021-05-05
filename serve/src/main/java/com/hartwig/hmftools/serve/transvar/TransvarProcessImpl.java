@@ -5,15 +5,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.refgenome.GeneNameMapping;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 
@@ -27,28 +24,21 @@ class TransvarProcessImpl implements TransvarProcess {
 
     // DUPs give rise to errors in transvar but do lead to interpretable output so error can be ignored.
     private static final Set<String> ERRORS_TO_IGNORE = Sets.newHashSet("warning: unknown alternative: DUP, ignore alternative");
-    private static final Map<String, String> PROTEIN_ANNOTATION_MAPPING = Maps.newHashMap();
 
     private static final int TRANSVAR_TIMEOUT_SEC = 90;
-
-    static {
-        // Transvar can't interpret start-lost so we map it to another mutation.
-        PROTEIN_ANNOTATION_MAPPING.put("M1?", "M1I");
-    }
 
     @NotNull
     private final RefGenomeVersion refGenomeVersion;
     @NotNull
     private final String refGenomeFastaFile;
     @NotNull
-    private final GeneNameMapping geneNameMapping;
+    private final TransvarCurator curator;
 
     TransvarProcessImpl(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile) {
         this.refGenomeVersion = refGenomeVersion;
         this.refGenomeFastaFile = refGenomeFastaFile;
-        this.geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
+        this.curator = new TransvarCurator(refGenomeVersion);
     }
-
 
     @Override
     @NotNull
@@ -93,14 +83,8 @@ class TransvarProcessImpl implements TransvarProcess {
 
     @NotNull
     private ProcessBuilder buildProcessBuilder(@NotNull String gene, @NotNull String proteinAnnotation) {
-        // Somehow can't manage to configure transvar to use typical v38 gene names.
-        String v37Gene = refGenomeVersion == RefGenomeVersion.V37 ? gene : geneNameMapping.v37Gene(gene);
-
-        String modifiedProteinAnnotation = proteinAnnotation;
-        if (PROTEIN_ANNOTATION_MAPPING.containsKey(proteinAnnotation)) {
-            modifiedProteinAnnotation = PROTEIN_ANNOTATION_MAPPING.get(proteinAnnotation);
-            LOGGER.debug("Mapping protein annotation '{}' to '{}'", proteinAnnotation, modifiedProteinAnnotation);
-        }
+        String curatedGene = curator.curateGene(gene);
+        String curatedProteinAnnotation = curator.curateProteinAnnotation(proteinAnnotation);
 
         ProcessBuilder processBuilder = new ProcessBuilder("transvar",
                 "panno",
@@ -111,7 +95,7 @@ class TransvarProcessImpl implements TransvarProcess {
                 "--noheader",
                 "--ensembl",
                 "-i",
-                v37Gene + ":p." + modifiedProteinAnnotation);
+                curatedGene + ":p." + curatedProteinAnnotation);
 
         // Below is required on environments where LC_CTYPE is not properly configured (usually on apple).
         processBuilder.environment().put("LC_CTYPE", "UTF-8");

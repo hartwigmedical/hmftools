@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
-import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.flagstat.Flagstat;
+import com.hartwig.hmftools.common.flagstat.FlagstatFile;
 import com.hartwig.hmftools.healthchecker.result.ImmutableQCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValueType;
@@ -18,13 +16,13 @@ import org.jetbrains.annotations.Nullable;
 public class FlagstatChecker implements HealthChecker {
 
     @NotNull
-    private final String refFlagstat;
+    private final String refFlagstatFile;
     @Nullable
-    private final String tumFlagstat;
+    private final String tumorFlagstatFile;
 
-    public FlagstatChecker(@NotNull final String refFlagstat, @Nullable final String tumFlagstat) {
-        this.refFlagstat = refFlagstat;
-        this.tumFlagstat = tumFlagstat;
+    public FlagstatChecker(@NotNull final String refFlagstatFile, @Nullable final String tumorFlagstatFile) {
+        this.refFlagstatFile = refFlagstatFile;
+        this.tumorFlagstatFile = tumorFlagstatFile;
     }
 
     @NotNull
@@ -32,60 +30,28 @@ public class FlagstatChecker implements HealthChecker {
     public List<QCValue> run() throws IOException {
         List<QCValue> qcValues = Lists.newArrayList();
 
-        List<String> refLines = Files.readAllLines(new File(refFlagstat).toPath());
-        String refTotal = valueBySubstring(refLines, "total");
-        String refMapped = valueBySubstring(refLines, "mapped (");
-        String refDuplicates = valueBySubstring(refLines, "duplicates");
-        if (refTotal == null || refMapped == null || refDuplicates == null) {
-            throw new IOException("Unable to parse flagstat file correctly");
-        }
-        String refMappingProportion = divideTwoStrings(refMapped, refTotal);
-        String refDuplicateProportion = divideTwoStrings(refDuplicates, refTotal);
-        qcValues.add(ImmutableQCValue.of(QCValueType.REF_PROPORTION_MAPPED, refMappingProportion));
-        qcValues.add(ImmutableQCValue.of(QCValueType.REF_PROPORTION_DUPLICATE, refDuplicateProportion));
+        Flagstat refFlagstat = FlagstatFile.read(refFlagstatFile);
+        qcValues.add(ImmutableQCValue.builder()
+                .type(QCValueType.REF_PROPORTION_MAPPED)
+                .value(String.valueOf(refFlagstat.mappedProportion()))
+                .build());
+        qcValues.add(ImmutableQCValue.builder()
+                .type(QCValueType.REF_PROPORTION_DUPLICATE)
+                .value(String.valueOf(refFlagstat.duplicateProportion()))
+                .build());
 
-        if (tumFlagstat != null) {
-            List<String> tumLines = Files.readAllLines(new File(tumFlagstat).toPath());
-            String tumTotal = valueBySubstring(tumLines, "total");
-            String tumMapped = valueBySubstring(tumLines, "mapped (");
-            String tumDuplicates = valueBySubstring(tumLines, "duplicates");
-            if (tumTotal == null || tumMapped == null || tumDuplicates == null) {
-                throw new IOException("Unable to parse flagstat file correctly");
-            }
-            String tumMappingProportion = divideTwoStrings(tumMapped, tumTotal);
-            String tumDuplicateProportion = divideTwoStrings(tumDuplicates, tumTotal);
-            qcValues.add(ImmutableQCValue.of(QCValueType.TUM_PROPORTION_MAPPED, tumMappingProportion));
-            qcValues.add(ImmutableQCValue.of(QCValueType.TUM_PROPORTION_DUPLICATE, tumDuplicateProportion));
+        if (tumorFlagstatFile != null) {
+            Flagstat tumFlagstat = FlagstatFile.read(tumorFlagstatFile);
+            qcValues.add(ImmutableQCValue.builder()
+                    .type(QCValueType.TUM_PROPORTION_MAPPED)
+                    .value(String.valueOf(tumFlagstat.mappedProportion()))
+                    .build());
+            qcValues.add(ImmutableQCValue.builder()
+                    .type(QCValueType.TUM_PROPORTION_DUPLICATE)
+                    .value(String.valueOf(tumFlagstat.duplicateProportion()))
+                    .build());
         }
 
         return qcValues;
-    }
-
-    @NotNull
-    private static String divideTwoStrings(@NotNull String string1, @NotNull String string2) {
-        double double1 = Double.parseDouble(string1);
-        double double2 = Double.parseDouble(string2);
-        double proportion = roundToSixDecimals(double1 / double2);
-        return String.valueOf(proportion);
-    }
-
-    private static double roundToSixDecimals(double value) {
-        BigDecimal bd = BigDecimal.valueOf(value);
-        bd = bd.setScale(6, RoundingMode.HALF_UP);
-        return bd.doubleValue();
-    }
-
-    @Nullable
-    private static String valueBySubstring(@NotNull List<String> lines, @NotNull String subString) {
-        List<String> matchLines = Lists.newArrayList();
-        for (String line : lines) {
-            if (line.contains(subString)) {
-                matchLines.add(line);
-            }
-        }
-        if (matchLines.size() == 1) {
-            return matchLines.get(0).split(" ")[0];
-        }
-        return null;
     }
 }

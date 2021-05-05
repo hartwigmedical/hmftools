@@ -5,17 +5,23 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakendFactory;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
+import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
+import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
+import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.chord.ChordDataLoader;
 import com.hartwig.hmftools.protect.linx.LinxData;
 import com.hartwig.hmftools.protect.linx.LinxDataLoader;
+import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 import com.hartwig.hmftools.protect.viralbreakend.VirusBreakendAnalyzer;
 import com.hartwig.hmftools.protect.purple.PurpleData;
 import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
@@ -38,7 +44,9 @@ public class GenomicAnalyzer {
             @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
             @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String linxFusionTsv,
             @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt,
-            @NotNull String protectEvidenceTsv, @NotNull String virusBreakendTsv, @NotNull String peachgenotypeTsv) throws IOException {
+            @NotNull String protectEvidenceTsv, @NotNull String virusBreakendTsv, @NotNull String peachgenotypeTsv,
+            @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingLevel germlineReportingLevel)
+            throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
                 purpleQCFile,
                 purplePurityTsv,
@@ -50,12 +58,26 @@ public class GenomicAnalyzer {
         LinxData linxData = LinxDataLoader.load(linxFusionTsv, linxBreakendTsv, linxDriversTsv);
 
         List<VirusBreakend> virusBreakends = VirusBreakendFactory.readVirusBreakend(virusBreakendTsv);
-        List<VirusBreakend> viralBreakendsFiltered = VirusBreakendAnalyzer.analyzeVirusBreakends(virusBreakends);
+
+        List<VirusBreakend> virusBreakendsReportable = Lists.newArrayList();
+        for (VirusBreakend virusBreakend: virusBreakends) {
+            if (virusBreakend.QCStatus() != VirusBreakendQCStatus.LOW_VIRAL_COVERAGE) {
+                if (virusBreakend.integrations() >= 1) {
+                    virusBreakendsReportable.add(virusBreakend);
+                }
+            }
+        }
+
+        //TODO check if this is needed
+        List<VirusBreakend> viralBreakendsFiltered = VirusBreakendAnalyzer.analyzeVirusBreakends(virusBreakendsReportable);
 
         List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachgenotypeTsv);
 
         List<ReportableVariant> reportableVariants =
                 ReportableVariantFactory.mergeVariantLists(purpleData.germlineVariants(), purpleData.somaticVariants());
+
+        List<ReportableVariantNotify> reportableVariantsWithNotify =
+                determineNotify(reportableVariants, germlineReportingModel, germlineReportingLevel);
 
         ChordAnalysis chordAnalysis = ChordDataLoader.load(chordPredictionTxt);
 
@@ -85,9 +107,57 @@ public class GenomicAnalyzer {
                 .geneFusions(linxData.fusions())
                 .geneDisruptions(linxData.geneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())
-                .virusBreakends(viralBreakendsFiltered)
+                .virusBreakends(virusBreakendsReportable)
                 .peachGenotypes(peachGenotypes)
                 .build();
+    }
+
+    @NotNull
+    private static List<ReportableVariantNotify> determineNotify(List<ReportableVariant> reportableVariants,
+            @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
+        List<ReportableVariantNotify> reportableVariantNotifies = Lists.newArrayList();
+
+        boolean notify;
+        for (ReportableVariant reportableVariant : reportableVariants) {
+            if (reportableVariant.source() == ReportableVariantSource.GERMLINE) {
+                notify = notifyAboutVariant(reportableVariant, germlineReportingModel, germlineReportingLevel);
+
+            } else {
+                notify = false;
+
+            }
+            reportableVariantNotifies.add(ImmutableReportableVariantNotify.builder()
+                    .reportableVariant(reportableVariant)
+                    .notifyVariant(notify)
+                    .build());
+        }
+
+        return reportableVariantNotifies;
+    }
+
+    private static boolean notifyAboutVariant(@NotNull ReportableVariant variant, @NotNull GermlineReportingModel germlineReportingModel,
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
+        boolean notifyVariant = false;
+        if (variant.source() == ReportableVariantSource.GERMLINE) {
+            GermlineReportingEntry reportingEntry = germlineReportingModel.entryForGene(variant.gene());
+            if (reportingEntry != null) {
+                if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ONLY_GERMLINE_HOM) {
+                    String conditionFilter = reportingEntry.conditionFilter();
+                    if (conditionFilter != null) {
+                        notifyVariant = variant.genotypeStatus().simplifiedDisplay().equals(conditionFilter);
+                    }
+
+                } else if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ONLY_SPECIFIC_VARIANT) {
+                    String conditionFilter = reportingEntry.conditionFilter();
+                    if (conditionFilter != null) {
+                        notifyVariant = variant.canonicalHgvsProteinImpact().equals(conditionFilter);
+                    }
+                } else if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ALWAYS) {
+                    notifyVariant = true;
+                }
+            }
+        }
+        return notifyVariant && germlineReportingModel.notifyAboutGene(variant.gene(), germlineReportingLevel);
     }
 
     @NotNull

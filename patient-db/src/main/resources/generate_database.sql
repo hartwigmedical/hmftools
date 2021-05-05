@@ -275,12 +275,65 @@ DROP TABLE if EXISTS metric;
 CREATE TABLE metric
 (   sampleId varchar(255) NOT NULL,
     refMeanCoverage DOUBLE PRECISION NOT NULL,
+    refSdCoverage DOUBLE PRECISION NOT NULL,
+    refMedianCoverage int NOT NULL,
+    refMadCoverage int NOT NULL,
+    refPctExcAdapter DOUBLE PRECISION,
+    refPctExcMapQ DOUBLE PRECISION NOT NULL,
+    refPctExcDupe DOUBLE PRECISION NOT NULL,
+    refPctExcUnpaired DOUBLE PRECISION NOT NULL,
+    refPctExcBaseQ DOUBLE PRECISION NOT NULL,
+    refPctExcOverlap DOUBLE PRECISION NOT NULL,
+    refPctExcCapped DOUBLE PRECISION NOT NULL,
+    refPctExcTotal DOUBLE PRECISION NOT NULL,
+    refCoverage1xPercentage DOUBLE PRECISION,
     refCoverage10xPercentage DOUBLE PRECISION NOT NULL,
     refCoverage20xPercentage DOUBLE PRECISION NOT NULL,
+    refCoverage30xPercentage DOUBLE PRECISION NOT NULL,
+    refCoverage60xPercentage DOUBLE PRECISION NOT NULL,
     tumorMeanCoverage DOUBLE PRECISION NOT NULL,
+    tumorSdCoverage DOUBLE PRECISION NOT NULL,
+    tumorMedianCoverage int NOT NULL,
+    tumorMadCoverage int NOT NULL,
+    tumorPctExcAdapter DOUBLE PRECISION,
+    tumorPctExcMapQ DOUBLE PRECISION NOT NULL,
+    tumorPctExcDupe DOUBLE PRECISION NOT NULL,
+    tumorPctExcUnpaired DOUBLE PRECISION NOT NULL,
+    tumorPctExcBaseQ DOUBLE PRECISION NOT NULL,
+    tumorPctExcOverlap DOUBLE PRECISION NOT NULL,
+    tumorPctExcCapped DOUBLE PRECISION NOT NULL,
+    tumorPctExcTotal DOUBLE PRECISION NOT NULL,
+    tumorCoverage1xPercentage DOUBLE PRECISION,
+    tumorCoverage10xPercentage DOUBLE PRECISION NOT NULL,
+    tumorCoverage20xPercentage DOUBLE PRECISION NOT NULL,
     tumorCoverage30xPercentage DOUBLE PRECISION NOT NULL,
     tumorCoverage60xPercentage DOUBLE PRECISION NOT NULL,
     sufficientCoverage BOOLEAN NOT NULL,
+    PRIMARY KEY (sampleId)
+);
+
+DROP TABLE if EXISTS flagstat;
+CREATE TABLE flagstat
+(   sampleId varchar(255) NOT NULL,
+    refUniqueReadCount BIGINT NOT NULL,
+    refSecondaryCount BIGINT NOT NULL,
+    refSupplementaryCount BIGINT NOT NULL,
+    refDuplicateProportion DOUBLE PRECISION NOT NULL,
+    refMappedProportion DOUBLE PRECISION NOT NULL,
+    refPairedInSequencingProportion DOUBLE PRECISION NOT NULL,
+    refProperlyPairedProportion DOUBLE PRECISION NOT NULL,
+    refWithItselfAndMateMappedProportion DOUBLE PRECISION NOT NULL,
+    refSingletonProportion DOUBLE PRECISION NOT NULL,
+    tumorUniqueReadCount BIGINT NOT NULL,
+    tumorSecondaryCount BIGINT NOT NULL,
+    tumorSupplementaryCount BIGINT NOT NULL,
+    tumorDuplicateProportion DOUBLE PRECISION NOT NULL,
+    tumorMappedProportion DOUBLE PRECISION NOT NULL,
+    tumorPairedInSequencingProportion DOUBLE PRECISION NOT NULL,
+    tumorProperlyPairedProportion DOUBLE PRECISION NOT NULL,
+    tumorWithItselfAndMateMappedProportion DOUBLE PRECISION NOT NULL,
+    tumorSingletonProportion DOUBLE PRECISION NOT NULL,
+    passQC BOOLEAN NOT NULL,
     PRIMARY KEY (sampleId)
 );
 
@@ -1249,6 +1302,16 @@ CREATE TABLE hlaTypeDetails
     somaticSynonymous DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (id),
     KEY(sampleId, type)
+);
+
+DROP TABLE IF EXISTS cuppaResult;
+CREATE TABLE cuppaResult
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    cuppaResult varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    KEY(sampleId)
 );
 
 

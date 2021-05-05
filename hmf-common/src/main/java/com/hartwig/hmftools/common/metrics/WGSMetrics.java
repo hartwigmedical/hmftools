@@ -8,18 +8,39 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class WGSMetrics {
 
-    public abstract double refMeanCoverage();
+    public abstract double meanCoverage();
 
-    public abstract double ref10xCoveragePercentage();
+    public abstract double sdCoverage();
 
-    public abstract double ref20xCoveragePercentage();
+    public abstract int medianCoverage();
 
-    @Nullable
-    public abstract Double tumorMeanCoverage();
-
-    @Nullable
-    public abstract Double tumor30xCoveragePercentage();
+    public abstract int madCoverage();
 
     @Nullable
-    public abstract Double tumor60xCoveragePercentage();
+    public abstract Double pctExcAdapter();
+
+    public abstract double pctExcMapQ();
+
+    public abstract double pctExcDupe();
+
+    public abstract double pctExcUnpaired();
+
+    public abstract double pctExcBaseQ();
+
+    public abstract double pctExcOverlap();
+
+    public abstract double pctExcCapped();
+
+    public abstract double pctExcTotal();
+
+    @Nullable
+    public abstract Double coverage1xPercentage();
+
+    public abstract double coverage10xPercentage();
+
+    public abstract double coverage20xPercentage();
+
+    public abstract double coverage30xPercentage();
+
+    public abstract double coverage60xPercentage();
 }

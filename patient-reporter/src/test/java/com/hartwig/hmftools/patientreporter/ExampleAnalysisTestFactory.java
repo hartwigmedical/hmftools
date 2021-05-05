@@ -12,6 +12,7 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
+import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
@@ -38,16 +39,15 @@ import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virusbreakend.ImmutableVirusBreakend;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableGenomicAnalysis;
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
@@ -58,7 +58,6 @@ import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ExampleAnalysisTestFactory {
 
@@ -70,36 +69,12 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildTestReport() {
-        return buildWithCOLO829Data("TestSample",
-                false,
-                null,
-                QsFormNumber.FOR_080.display(),
-                true,
-                1D,
-                true,
-                false,
-                PatientReporterTestFactory.createTestCohortConfig());
+    public static AnalysedPatientReport createTestReport() {
+        return createWithCOLO829Data(new ExampleAnalysisConfig.Builder().build());
     }
 
     @NotNull
-    public static AnalysedPatientReport buildCOLO829(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
-            @NotNull LimsCohortConfig limsCohortConfig) {
-        return buildWithCOLO829Data(sampleId,
-                correctionReport,
-                comments,
-                QsFormNumber.FOR_080.display(),
-                true,
-                1D,
-                true,
-                false,
-                limsCohortConfig);
-    }
-
-    @NotNull
-    public static AnalysedPatientReport buildWithCOLO829Data(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
-            @NotNull String qcForNumber, boolean hasReliablePurity, double impliedTumorPurity, boolean includeSummary,
-            boolean reportGermline, @NotNull LimsCohortConfig limsCohortConfig) {
+    public static AnalysedPatientReport createWithCOLO829Data(@NotNull ExampleAnalysisConfig config) {
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 190;
         double tumorMutationalBurden = 13.7;
@@ -112,15 +87,15 @@ public final class ExampleAnalysisTestFactory {
         List<ProtectEvidence> tumorSpecificEvidence = createCOLO829TumorSpecificEvidence();
         List<ProtectEvidence> clinicalTrials = createCOLO829ClinicalTrials();
         List<ProtectEvidence> offLabelEvidence = createCOLO829OffLabelEvidence();
-        List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(reportGermline);
+        List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(config.reportGermline());
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<LinxFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<VirusBreakend> virusBreakends = Lists.newArrayList();
-        List<PeachGenotype> peachGenotypes = createTestPeachgenotypes();
+        List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
-        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, reportGermline, limsCohortConfig);
+        SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), config.reportGermline(), config.limsCohortConfig());
 
         String summaryWithoutGermline = "Melanoma sample showing:\n"
                 + " - activating BRAF mutation that is associated with response to BRAF-inhibitors (in combination with a MEK-inhibitor)\n"
@@ -140,17 +115,15 @@ public final class ExampleAnalysisTestFactory {
                 + "potentially associated with an increased response rate to checkpoint inhibitor immunotherapy";
 
         String clinicalSummary;
-        if (includeSummary && !reportGermline) {
-            clinicalSummary = summaryWithoutGermline;
-        } else if (includeSummary && reportGermline) {
-            clinicalSummary = summaryWithGermline;
+        if (config.includeSummary() && !config.reportGermline()) {
+            clinicalSummary = config.reportGermline() ? summaryWithGermline : summaryWithoutGermline;
         } else {
             clinicalSummary = Strings.EMPTY;
         }
 
         GenomicAnalysis analysis = ImmutableGenomicAnalysis.builder()
-                .impliedPurity(impliedTumorPurity)
-                .hasReliablePurity(hasReliablePurity)
+                .impliedPurity(config.impliedTumorPurity())
+                .hasReliablePurity(config.hasReliablePurity())
                 .hasReliableQuality(true)
                 .averageTumorPloidy(averageTumorPloidy)
                 .tumorSpecificEvidence(tumorSpecificEvidence)
@@ -177,13 +150,13 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
-                .qsFormNumber(qcForNumber)
+                .qsFormNumber(config.qcForNumber().display())
                 .clinicalSummary(clinicalSummary)
                 .genomicAnalysis(analysis)
                 .circosPath(CIRCOS_PATH)
                 .molecularTissueOrigin(molecularTissueOrigin)
-                .comments(Optional.ofNullable(comments))
-                .isCorrectedReport(correctionReport)
+                .comments(Optional.ofNullable(config.comments()))
+                .isCorrectedReport(config.isCorrectionReport())
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
@@ -192,14 +165,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildAnalysisWithAllTablesFilledInAndReliablePurity(@NotNull String sampleId,
-            @Nullable String comments, @NotNull LimsCohortConfig limsCohortConfig) {
-        return buildAnalysisWithAllTablesFilledIn(sampleId, comments, true, 1D, limsCohortConfig);
-    }
-
-    @NotNull
-    public static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn(@NotNull String sampleId, @Nullable String comments,
-            boolean hasReliablePurity, double impliedTumorPurity, @NotNull LimsCohortConfig limsCohortConfig) {
+    public static AnalysedPatientReport createAnalysisWithAllTablesFilledIn(@NotNull ExampleAnalysisConfig config) {
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 182;
         double tumorMutationalBurden = 13.6;
@@ -218,14 +184,14 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         List<VirusBreakend> virusBreakends = createTestVirusBreakends();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
-        List<PeachGenotype> peachGenotypes = createTestPeachgenotypes();
+        List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
-        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true, limsCohortConfig);
+        SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), true, config.limsCohortConfig());
         String clinicalSummary = Strings.EMPTY;
 
         GenomicAnalysis analysis = ImmutableGenomicAnalysis.builder()
-                .impliedPurity(impliedTumorPurity)
-                .hasReliablePurity(hasReliablePurity)
+                .impliedPurity(config.impliedTumorPurity())
+                .hasReliablePurity(config.hasReliablePurity())
                 .hasReliableQuality(true)
                 .averageTumorPloidy(averageTumorPloidy)
                 .tumorSpecificEvidence(tumorSpecificEvidence)
@@ -257,7 +223,7 @@ public final class ExampleAnalysisTestFactory {
                 .genomicAnalysis(analysis)
                 .circosPath(CIRCOS_PATH)
                 .molecularTissueOrigin(molecularTissueOrigin)
-                .comments(Optional.ofNullable(comments))
+                .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(false)
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
@@ -267,7 +233,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static QCFailReport buildQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason,
+    public static QCFailReport createQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason,
             @NotNull LimsCohortConfig limsCohortConfig) {
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true, limsCohortConfig);
 
@@ -298,7 +264,6 @@ public final class ExampleAnalysisTestFactory {
     private static SampleReport createSkinMelanomaSampleReport(@NotNull String sample, boolean reportGermline,
             @NotNull LimsCohortConfig cohort) {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
-                .patientId("COLO829")
                 .refSampleId(Strings.EMPTY)
                 .refSampleBarcode("FR12123488")
                 .tumorSampleId(sample)
@@ -1069,17 +1034,16 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     private static List<ReportableHomozygousDisruption> createTestHomozygousDisruptions() {
-        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(ImmutableReportableHomozygousDisruption.builder()
+        return Lists.newArrayList(ImmutableReportableHomozygousDisruption.builder()
                 .chromosome("8")
                 .chromosomeBand("p22")
                 .gene("SGCZ")
                 .build());
-        return Lists.newArrayList(homozygousDisruptions);
     }
 
     @NotNull
-    private static List<PeachGenotype> createTestPeachgenotypes() {
-        List<PeachGenotype> peachGenotypes = Lists.newArrayList(ImmutablePeachGenotype.builder()
+    private static List<PeachGenotype> createTestPeachGenotypes() {
+        return Lists.newArrayList(ImmutablePeachGenotype.builder()
                 .gene("DYPD")
                 .haplotype("*1_HOM")
                 .function("Normal Function")
@@ -1091,7 +1055,6 @@ public final class ExampleAnalysisTestFactory {
                 .panelVersion("PGx_min_DPYD_v0.3")
                 .repoVersion("1.0")
                 .build());
-        return peachGenotypes;
     }
 
     @NotNull

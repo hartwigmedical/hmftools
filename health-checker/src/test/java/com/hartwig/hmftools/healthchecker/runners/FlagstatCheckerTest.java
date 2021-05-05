@@ -16,13 +16,13 @@ public class FlagstatCheckerTest {
 
     private static final String FLAGSTAT_DIRECTORY = Resources.getResource("flagstat").getPath();
     private static final String REF_FLAGSTAT = FLAGSTAT_DIRECTORY + File.separator + "reference.flagstat";
-    private static final String TUM_FLAGSTAT = FLAGSTAT_DIRECTORY + File.separator + "tumor.flagstat";
+    private static final String TUMOR_FLAGSTAT = FLAGSTAT_DIRECTORY + File.separator + "tumor.flagstat";
     private static final String MALFORMED_FLAGSTAT = FLAGSTAT_DIRECTORY + File.separator + "malformed.flagstat";
     private static final String MISSING_FLAGSTAT = FLAGSTAT_DIRECTORY + File.separator + "doesnotexist.flagstat";
 
     @Test
     public void extractDataFromFlagstatWorksForSomatic() throws IOException {
-        FlagstatChecker checker = new FlagstatChecker(REF_FLAGSTAT, TUM_FLAGSTAT);
+        FlagstatChecker checker = new FlagstatChecker(REF_FLAGSTAT, TUMOR_FLAGSTAT);
         List<QCValue> values = checker.run();
 
         assertEquals(4, values.size());

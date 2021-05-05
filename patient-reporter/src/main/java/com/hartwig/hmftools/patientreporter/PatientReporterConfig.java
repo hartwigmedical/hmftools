@@ -24,7 +24,7 @@ public interface PatientReporterConfig {
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
     String TUMOR_SAMPLE_BARCODE = "tumor_sample_barcode";
     String OUTPUT_DIRECTORY_REPORT = "output_dir_report";
-    String OUTPUT_DIRECTORY_DATA_REPORT = "output_dir_data_report";
+    String OUTPUT_DIRECTORY_DATA = "output_dir_data";
 
     String REPORTING_DB_TSV = "reporting_db_tsv";
     String PRIMARY_TUMOR_TSV = "primary_tumor_tsv";
@@ -46,9 +46,9 @@ public interface PatientReporterConfig {
 
     // Params specific for actual patient reports
     String PURPLE_PURITY_TSV = "purple_purity_tsv"; // Also used for certain QC fail reports in case deep WGS is available.
-    String PURPLE_QC_FILE = "purple_qc_file";
+    String PURPLE_QC_FILE = "purple_qc_file"; // Also used for certain QC fail reports in case deep WGS is available.
     String PURPLE_SOMATIC_DRIVER_CATALOG_TSV = "purple_somatic_driver_catalog_tsv";
-    String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = "purple_somatic_driver_catalog_tsv";
+    String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = "purple_germline_driver_catalog_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
@@ -78,7 +78,7 @@ public interface PatientReporterConfig {
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a patient report will be generated.");
         options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
         options.addOption(OUTPUT_DIRECTORY_REPORT, true, "Path to where the PDF report will be written to.");
-        options.addOption(OUTPUT_DIRECTORY_DATA_REPORT, true, "Path to where the data of the report will be written to.");
+        options.addOption(OUTPUT_DIRECTORY_DATA, true, "Path to where the data of the report will be written to.");
 
         options.addOption(REPORTING_DB_TSV, true, "Path towards output file for the reporting db TSV.");
         options.addOption(PRIMARY_TUMOR_TSV, true, "Path towards the (curated) primary tumor TSV.");
@@ -167,7 +167,7 @@ public interface PatientReporterConfig {
 
     boolean qcFail();
 
-    @NotNull
+    @Nullable
     QCFailReason qcFailReason();
 
     @NotNull
@@ -177,10 +177,10 @@ public interface PatientReporterConfig {
     String purpleQcFile();
 
     @NotNull
-    String purpleDriverCatalogSomaticTsv();
+    String purpleSomaticDriverCatalogTsv();
 
     @NotNull
-    String purpleDriverCatalogGermlineTsv();
+    String purpleGermlineDriverCatalogTsv();
 
     @NotNull
     String purpleSomaticVariantVcf();
@@ -216,7 +216,7 @@ public interface PatientReporterConfig {
     String virusBreakendTsv();
 
     @NotNull
-    String peachgenotypeTsv();
+    String peachGenotypeTsv();
 
     @NotNull
     String germlineReportingTsv();
@@ -238,11 +238,11 @@ public interface PatientReporterConfig {
         }
 
         boolean isQCFail = cmd.hasOption(QC_FAIL);
-        QCFailReason qcFailReason = QCFailReason.UNDEFINED;
+        QCFailReason qcFailReason = null;
         if (isQCFail) {
             String qcFailReasonString = nonOptionalValue(cmd, QC_FAIL_REASON);
             qcFailReason = QCFailReason.fromIdentifier(qcFailReasonString);
-            if (qcFailReason == QCFailReason.UNDEFINED) {
+            if (qcFailReason == null) {
                 throw new ParseException("Did not recognize QC Fail reason: " + qcFailReasonString);
             }
         }
@@ -268,7 +268,7 @@ public interface PatientReporterConfig {
         String sampleSummaryTsv = Strings.EMPTY;
         String pipelineVersion = Strings.EMPTY;
 
-        if (qcFailReason.isDeepWGSDataAvailable()) {
+        if (isQCFail && qcFailReason.isDeepWGSDataAvailable()) {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
             purpleQCFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
         } else if (!isQCFail) {
@@ -299,7 +299,7 @@ public interface PatientReporterConfig {
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .tumorSampleBarcode(nonOptionalValue(cmd, TUMOR_SAMPLE_BARCODE))
                 .outputDirReport(nonOptionalDir(cmd, OUTPUT_DIRECTORY_REPORT))
-                .outputDirData(nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA_REPORT))
+                .outputDirData(nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA))
                 .reportingDbTsv(nonOptionalFile(cmd, REPORTING_DB_TSV))
                 .primaryTumorTsv(nonOptionalFile(cmd, PRIMARY_TUMOR_TSV))
                 .pipelineVersionFile(pipelineVersion)
@@ -311,8 +311,8 @@ public interface PatientReporterConfig {
                 .qcFailReason(qcFailReason)
                 .purplePurityTsv(purplePurityTsv)
                 .purpleQcFile(purpleQCFile)
-                .purpleDriverCatalogSomaticTsv(purpleDriverCatalogSomaticTsv)
-                .purpleDriverCatalogGermlineTsv(purpleDriverCatalogGermlineTsv)
+                .purpleSomaticDriverCatalogTsv(purpleDriverCatalogSomaticTsv)
+                .purpleGermlineDriverCatalogTsv(purpleDriverCatalogGermlineTsv)
                 .purpleSomaticVariantVcf(purpleSomaticVariantVcf)
                 .purpleGermlineVariantVcf(purpleGermlineVariantVcf)
                 .linxFusionTsv(linxFusionTsv)
@@ -324,7 +324,7 @@ public interface PatientReporterConfig {
                 .molecularTissueOriginTxt(molecularTissueOriginTxt)
                 .molecularTissueOriginPlot(molecularTissueOriginPlot)
                 .virusBreakendTsv(virusBreakendTsv)
-                .peachgenotypeTsv(peachGenotypeTsv)
+                .peachGenotypeTsv(peachGenotypeTsv)
                 .germlineReportingTsv(germlineReportingTsv)
                 .sampleSummaryTsv(sampleSummaryTsv)
                 .comments(cmd.getOptionValue(COMMENTS))

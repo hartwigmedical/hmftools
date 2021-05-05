@@ -12,6 +12,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
+import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
+import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFactory;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.runcontext.MetaDataResolver;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
@@ -19,8 +21,6 @@ import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFactory;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
@@ -45,12 +45,11 @@ public class AnalysedPatientReporter {
     public AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
             @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String linxFusionTsv,
-            @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv,
-            @NotNull String chordPredictionTxt, @NotNull String circosFile, @NotNull String protectEvidenceTsv, @Nullable String comments,
-            boolean correctedReport, @NotNull String pipelineVersionFile, @NotNull String molecularTissueOriginTsv,
-            @NotNull String molecularTissueOriginPlot, @NotNull String virusBreakendTsv, @NotNull String peachgenotypeTsv) throws IOException {
-        // TODO Specific COLO handling doesn't belong in patient reporter!
-        String patientId = sampleMetadata.patientId().startsWith("COLO829") ? "COLO829" : sampleMetadata.patientId();
+            @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile,
+            @NotNull String protectEvidenceTsv, @Nullable String comments, boolean correctedReport, @NotNull String pipelineVersionFile,
+            @NotNull String molecularTissueOriginTsv, @NotNull String molecularTissueOriginPlot, @NotNull String virusBreakendTsv,
+            @NotNull String peachGenotypeTsv) throws IOException {
+        String patientId = reportData.limsModel().patientId(sampleMetadata.tumorSampleBarcode());
         PatientPrimaryTumor patientPrimaryTumor =
                 PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(), patientId);
 
@@ -68,7 +67,11 @@ public class AnalysedPatientReporter {
                 linxBreakendTsv,
                 linxDriversTsv,
                 chordPredictionTxt,
-                protectEvidenceTsv, virusBreakendTsv, peachgenotypeTsv);
+                protectEvidenceTsv,
+                virusBreakendTsv,
+                peachGenotypeTsv,
+                reportData.germlineReportingModel(),
+                sampleReport.germlineReportingLevel());
 
         ConsentFilterFunctions consentFilterFunctions = new ConsentFilterFunctions();
 

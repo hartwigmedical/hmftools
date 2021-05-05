@@ -1,9 +1,9 @@
 QCStatus	FAIL_CONTAMINATION
 Method	NORMAL
 CopyNumberSegments	205
-UnsupportedCopyNumberSegments	400
+UnsupportedCopyNumberSegments	2
 Purity	0.9900
-AmberGender	MALE
+AmberGender	FEMALE
 CobaltGender	FEMALE
 DeletedGenes	2
 Contamination	0.5
