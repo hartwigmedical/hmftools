@@ -12,10 +12,10 @@ import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfig;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportData;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedReportData;
+import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
-import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -36,7 +36,32 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
-    public static LimsCohortConfig createCohortConfig(@NotNull String cohortId, boolean sampleContainsHospitalCenterId,
+    public static LimsCohortConfig createCPCTCohortConfig() {
+        return createCohortConfig("CPCT", true, false, false, false, false, false, false, true, false, false);
+    }
+
+    @NotNull
+    public static LimsCohortConfig createCOLOCohortConfig() {
+        return createCohortConfig("COLO", true, false, false, false, false, false, false, true, false, false);
+    }
+
+    @NotNull
+    public static LimsCohortConfig createCORECohortConfig() {
+        return createCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true);
+    }
+
+    @NotNull
+    public static LimsCohortConfig createWIDECohortConfig() {
+        return createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, true);
+    }
+
+    @NotNull
+    public static LimsCohortConfig createCOREDBCohortConfig() {
+        return createCohortConfig("COREDB", true, true, true, false, true, true, true, true, false, true);
+    }
+
+    @NotNull
+    private static LimsCohortConfig createCohortConfig(@NotNull String cohortId, boolean sampleContainsHospitalCenterId,
             boolean reportGermline, boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean requireHospitalId,
             boolean requireHospitalPAId, boolean requireHospitalPersonsStudy, boolean requireHospitalPersonsRequester,
             boolean requireAdditionalInformationForSidePanel) {

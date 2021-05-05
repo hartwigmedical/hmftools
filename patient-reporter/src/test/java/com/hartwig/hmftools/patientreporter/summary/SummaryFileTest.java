@@ -19,8 +19,7 @@ public class SummaryFileTest {
         SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
         assertEquals(1, summaryModel.summaryCount());
 
-        LimsCohortConfig cohortConfig =
-                PatientReporterTestFactory.createCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true);
+        LimsCohortConfig cohortConfig = PatientReporterTestFactory.createCORECohortConfig();
 
         String summary = summaryModel.findSummaryForSample("sample", cohortConfig);
 
