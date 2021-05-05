@@ -48,26 +48,24 @@ public class SomaticGenotypeEnrichment implements VariantContextEnrichment
     @Override
     public void accept(@NotNull final VariantContext context)
     {
-        // AllelicDepth tumorDepth = AllelicDepth.fromGenotype(tumorGenotype);
-
-        // Genotype germlineGenotype = context.getGenotype(mGermlineSample);
-        // AllelicDepth germlineDepth = AllelicDepth.fromGenotype(germlineGenotype);
-        // SomaticGenotypeStatus germlineStatus = status(germlineDepth);
-
         Allele refAllele = context.getReference();
         Allele altAllele = context.getAlternateAllele(0);
 
-        // set the germline status
-        Genotype germlineGT = context.getGenotype(mGermlineSample);
-
-        List<Allele> germlineAlleles = Lists.newArrayList();
-        germlineAlleles.add(refAllele);
-        germlineAlleles.add(refAllele);
-
-        Genotype germlineGenotype = new GenotypeBuilder(germlineGT).alleles(germlineAlleles).make();
-
         List<Genotype> updatedGenotypes = Lists.newArrayList();
-        updatedGenotypes.add(germlineGenotype);
+
+        // set the germline status if present
+        if(mGermlineSample != null && !mGermlineSample.isEmpty() && context.getGenotype(mGermlineSample) != null)
+        {
+            Genotype germlineGT = context.getGenotype(mGermlineSample);
+
+            List<Allele> germlineAlleles = Lists.newArrayList();
+            germlineAlleles.add(refAllele);
+            germlineAlleles.add(refAllele);
+
+            Genotype germlineGenotype = new GenotypeBuilder(germlineGT).alleles(germlineAlleles).make();
+
+            updatedGenotypes.add(germlineGenotype);
+        }
 
         // set the tumor status
         VariantContextDecorator variant = new VariantContextDecorator(context);
