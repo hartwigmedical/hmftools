@@ -58,7 +58,6 @@ import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class ExampleAnalysisTestFactory {
 
@@ -70,36 +69,12 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildTestReport() {
-        return buildWithCOLO829Data("TestSample",
-                false,
-                null,
-                QsFormNumber.FOR_080.display(),
-                true,
-                1D,
-                true,
-                false,
-                PatientReporterTestFactory.createTestCohortConfig());
+    public static AnalysedPatientReport createTestReport() {
+        return createWithCOLO829Data(new ExampleAnalysisConfig.Builder().build());
     }
 
     @NotNull
-    public static AnalysedPatientReport buildCOLO829(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
-            @NotNull LimsCohortConfig limsCohortConfig) {
-        return buildWithCOLO829Data(sampleId,
-                correctionReport,
-                comments,
-                QsFormNumber.FOR_080.display(),
-                true,
-                1D,
-                true,
-                false,
-                limsCohortConfig);
-    }
-
-    @NotNull
-    public static AnalysedPatientReport buildWithCOLO829Data(@NotNull String sampleId, boolean correctionReport, @Nullable String comments,
-            @NotNull String qcForNumber, boolean hasReliablePurity, double impliedTumorPurity, boolean includeSummary,
-            boolean reportGermline, @NotNull LimsCohortConfig limsCohortConfig) {
+    public static AnalysedPatientReport createWithCOLO829Data(@NotNull ExampleAnalysisConfig config) {
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 190;
         double tumorMutationalBurden = 13.7;
@@ -112,7 +87,7 @@ public final class ExampleAnalysisTestFactory {
         List<ProtectEvidence> tumorSpecificEvidence = createCOLO829TumorSpecificEvidence();
         List<ProtectEvidence> clinicalTrials = createCOLO829ClinicalTrials();
         List<ProtectEvidence> offLabelEvidence = createCOLO829OffLabelEvidence();
-        List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(reportGermline);
+        List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(config.reportGermline());
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<LinxFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
@@ -120,7 +95,7 @@ public final class ExampleAnalysisTestFactory {
         List<VirusBreakend> virusBreakends = Lists.newArrayList();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
-        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, reportGermline, limsCohortConfig);
+        SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), config.reportGermline(), config.limsCohortConfig());
 
         String summaryWithoutGermline = "Melanoma sample showing:\n"
                 + " - activating BRAF mutation that is associated with response to BRAF-inhibitors (in combination with a MEK-inhibitor)\n"
@@ -140,17 +115,15 @@ public final class ExampleAnalysisTestFactory {
                 + "potentially associated with an increased response rate to checkpoint inhibitor immunotherapy";
 
         String clinicalSummary;
-        if (includeSummary && !reportGermline) {
-            clinicalSummary = summaryWithoutGermline;
-        } else if (includeSummary && reportGermline) {
-            clinicalSummary = summaryWithGermline;
+        if (config.includeSummary() && !config.reportGermline()) {
+            clinicalSummary = config.reportGermline() ? summaryWithGermline : summaryWithoutGermline;
         } else {
             clinicalSummary = Strings.EMPTY;
         }
 
         GenomicAnalysis analysis = ImmutableGenomicAnalysis.builder()
-                .impliedPurity(impliedTumorPurity)
-                .hasReliablePurity(hasReliablePurity)
+                .impliedPurity(config.impliedTumorPurity())
+                .hasReliablePurity(config.hasReliablePurity())
                 .hasReliableQuality(true)
                 .averageTumorPloidy(averageTumorPloidy)
                 .tumorSpecificEvidence(tumorSpecificEvidence)
@@ -177,13 +150,13 @@ public final class ExampleAnalysisTestFactory {
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
-                .qsFormNumber(qcForNumber)
+                .qsFormNumber(config.qcForNumber().display())
                 .clinicalSummary(clinicalSummary)
                 .genomicAnalysis(analysis)
                 .circosPath(CIRCOS_PATH)
                 .molecularTissueOrigin(molecularTissueOrigin)
-                .comments(Optional.ofNullable(comments))
-                .isCorrectedReport(correctionReport)
+                .comments(Optional.ofNullable(config.comments()))
+                .isCorrectedReport(config.isCorrectionReport())
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
@@ -192,14 +165,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport buildAnalysisWithAllTablesFilledInAndReliablePurity(@NotNull String sampleId,
-            @Nullable String comments, @NotNull LimsCohortConfig limsCohortConfig) {
-        return buildAnalysisWithAllTablesFilledIn(sampleId, comments, true, 1D, limsCohortConfig);
-    }
-
-    @NotNull
-    public static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn(@NotNull String sampleId, @Nullable String comments,
-            boolean hasReliablePurity, double impliedTumorPurity, @NotNull LimsCohortConfig limsCohortConfig) {
+    public static AnalysedPatientReport createAnalysisWithAllTablesFilledIn(@NotNull ExampleAnalysisConfig config) {
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 182;
         double tumorMutationalBurden = 13.6;
@@ -220,12 +186,12 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
-        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true, limsCohortConfig);
+        SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), true, config.limsCohortConfig());
         String clinicalSummary = Strings.EMPTY;
 
         GenomicAnalysis analysis = ImmutableGenomicAnalysis.builder()
-                .impliedPurity(impliedTumorPurity)
-                .hasReliablePurity(hasReliablePurity)
+                .impliedPurity(config.impliedTumorPurity())
+                .hasReliablePurity(config.hasReliablePurity())
                 .hasReliableQuality(true)
                 .averageTumorPloidy(averageTumorPloidy)
                 .tumorSpecificEvidence(tumorSpecificEvidence)
@@ -257,7 +223,7 @@ public final class ExampleAnalysisTestFactory {
                 .genomicAnalysis(analysis)
                 .circosPath(CIRCOS_PATH)
                 .molecularTissueOrigin(molecularTissueOrigin)
-                .comments(Optional.ofNullable(comments))
+                .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(false)
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
@@ -267,7 +233,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static QCFailReport buildQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason,
+    public static QCFailReport createQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason,
             @NotNull LimsCohortConfig limsCohortConfig) {
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true, limsCohortConfig);
 

@@ -14,6 +14,7 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.reportingdb.ReportingDatabase;
 import com.hartwig.hmftools.common.reportingdb.ReportingEntry;
+import com.hartwig.hmftools.patientreporter.ExampleAnalysisConfig;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
@@ -66,11 +67,14 @@ public class ReportingDbTest {
             }
             LimsCohortConfig cohortConfig = PatientReporterTestFactory.createCPCTCohortConfig();
 
+            ExampleAnalysisConfig config =
+                    new ExampleAnalysisConfig.Builder().sampleId("CPCT01_SUCCESS").limsCohortConfig(cohortConfig).build();
+
             ReportingDb.addAnalysedReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_SUCCESS", null, cohortConfig));
+                    ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config));
 
             ReportingDb.addQCFailReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.buildQCFailReport("CPCT01_FAIL", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, cohortConfig));
+                    ExampleAnalysisTestFactory.createQCFailReport("CPCT01_FAIL", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, cohortConfig));
         }
     }
 
