@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakendFactory;
@@ -57,7 +58,18 @@ public class GenomicAnalyzer {
         LinxData linxData = LinxDataLoader.load(linxFusionTsv, linxBreakendTsv, linxDriversTsv);
 
         List<VirusBreakend> virusBreakends = VirusBreakendFactory.readVirusBreakend(virusBreakendTsv);
-        List<VirusBreakend> viralBreakendsFiltered = VirusBreakendAnalyzer.analyzeVirusBreakends(virusBreakends);
+
+        List<VirusBreakend> virusBreakendsReportable = Lists.newArrayList();
+        for (VirusBreakend virusBreakend: virusBreakends) {
+            if (virusBreakend.QCStatus() != VirusBreakendQCStatus.LOW_VIRAL_COVERAGE) {
+                if (virusBreakend.integrations() >= 1) {
+                    virusBreakendsReportable.add(virusBreakend);
+                }
+            }
+        }
+
+        //TODO check if this is needed
+        List<VirusBreakend> viralBreakendsFiltered = VirusBreakendAnalyzer.analyzeVirusBreakends(virusBreakendsReportable);
 
         List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachgenotypeTsv);
 
@@ -95,7 +107,7 @@ public class GenomicAnalyzer {
                 .geneFusions(linxData.fusions())
                 .geneDisruptions(linxData.geneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())
-                .virusBreakends(viralBreakendsFiltered)
+                .virusBreakends(virusBreakendsReportable)
                 .peachGenotypes(peachGenotypes)
                 .build();
     }
