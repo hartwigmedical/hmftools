@@ -18,11 +18,11 @@ public class MetricsChecker implements HealthChecker {
     @NotNull
     private final String refWgsMetricsFile;
     @Nullable
-    private final String tumWgsMetricsFile;
+    private final String tumorWgsMetricsFile;
 
-    public MetricsChecker(@NotNull final String refWgsMetricsFile, @Nullable final String tumWgsMetricsFile) {
+    public MetricsChecker(@NotNull final String refWgsMetricsFile, @Nullable final String tumorWgsMetricsFile) {
         this.refWgsMetricsFile = refWgsMetricsFile;
-        this.tumWgsMetricsFile = tumWgsMetricsFile;
+        this.tumorWgsMetricsFile = tumorWgsMetricsFile;
     }
 
     @NotNull
@@ -40,8 +40,8 @@ public class MetricsChecker implements HealthChecker {
                 .value(String.valueOf(refMetrics.coverage20xPercentage()))
                 .build());
 
-        if (tumWgsMetricsFile != null) {
-            WGSMetrics tumorMetrics = WGSMetricsFile.read(tumWgsMetricsFile);
+        if (tumorWgsMetricsFile != null) {
+            WGSMetrics tumorMetrics = WGSMetricsFile.read(tumorWgsMetricsFile);
 
             qcValues.add(ImmutableQCValue.builder()
                     .type(QCValueType.TUM_COVERAGE_30X)

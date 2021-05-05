@@ -18,11 +18,11 @@ public class FlagstatChecker implements HealthChecker {
     @NotNull
     private final String refFlagstatFile;
     @Nullable
-    private final String tumFlagstatFile;
+    private final String tumorFlagstatFile;
 
-    public FlagstatChecker(@NotNull final String refFlagstatFile, @Nullable final String tumFlagstatFile) {
+    public FlagstatChecker(@NotNull final String refFlagstatFile, @Nullable final String tumorFlagstatFile) {
         this.refFlagstatFile = refFlagstatFile;
-        this.tumFlagstatFile = tumFlagstatFile;
+        this.tumorFlagstatFile = tumorFlagstatFile;
     }
 
     @NotNull
@@ -40,8 +40,8 @@ public class FlagstatChecker implements HealthChecker {
                 .value(String.valueOf(refFlagstat.duplicateProportion()))
                 .build());
 
-        if (tumFlagstatFile != null) {
-            Flagstat tumFlagstat = FlagstatFile.read(tumFlagstatFile);
+        if (tumorFlagstatFile != null) {
+            Flagstat tumFlagstat = FlagstatFile.read(tumorFlagstatFile);
             qcValues.add(ImmutableQCValue.builder()
                     .type(QCValueType.TUM_PROPORTION_MAPPED)
                     .value(String.valueOf(tumFlagstat.mappedProportion()))
