@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.utils.SuffixTree;
 import com.hartwig.hmftools.lilac.read.AminoAcidIndices;
 import com.hartwig.hmftools.lilac.sam.SAMCodingRecord;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-import com.hartwig.hmftools.lilackt.LociPosition;
+import com.hartwig.hmftools.lilac.LociPosition;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,7 +40,7 @@ public class NucleotideFragmentFactory
         deletes.stream().forEach(x -> mDeleteSuffixTrees.put(x, new SuffixTree(x.sequence())));
     }
 
-    public final NucleotideFragment createAlignmentFragments(@NotNull com.hartwig.hmftools.lilac.sam.SAMCodingRecord samCoding, @NotNull NamedBed codingRegion)
+    public final NucleotideFragment createAlignmentFragments(final SAMCodingRecord samCoding, @NotNull NamedBed codingRegion)
     {
         return null;
 

@@ -19,7 +19,8 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.hla.HlaContextFactory;
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment;
-import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
+import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory;
+import com.hartwig.hmftools.lilac.read.SAMRecordReader;
 
 import java.util.List;
 import java.util.Map;
@@ -85,41 +86,52 @@ public class LilacApplication implements AutoCloseable, Runnable
         HlaContext hlaBContext = hlaContextFactory.hlaB();
         HlaContext hlaCContext = hlaContextFactory.hlaC();
 
+        ReferenceData refData = new ReferenceData(mConfig.ResourceDir);
+
+        if(!refData.load())
+        {
+            LL_LOGGER.error("reference data loading failed");
+            System.exit(1);
+        }
+
         /*
         LL_LOGGER.info("Reading nucleotide files");
         final List<HlaSequenceLoci> nucleotideSequences = Lists.newArrayList();
-        nucleotideSequences.addAll(nucleotideLoci(resourcesDir + "/A_nuc.txt"));
-        nucleotideSequences.addAll(nucleotideLoci(resourcesDir + "/B_nuc.txt"));
-        nucleotideSequences.addAll(nucleotideLoci(resourcesDir + "/C_nuc.txt"));
+        nucleotideSequences.addAll(nucleotideLoci(mConfig.ResourceDir + "/A_nuc.txt"));
+        nucleotideSequences.addAll(nucleotideLoci(mConfig.ResourceDir + "/B_nuc.txt"));
+        nucleotideSequences.addAll(nucleotideLoci(mConfig.ResourceDir + "/C_nuc.txt"));
 
         LL_LOGGER.info("Reading protein files");
         final List<HlaSequenceLoci> aminoAcidSequences = Lists.newArrayList();
-        aminoAcidSequences.addAll(aminoAcidLoci(resourcesDir + "/A_prot.txt"));
-        aminoAcidSequences.addAll(aminoAcidLoci(resourcesDir + "/B_prot.txt"));
-        aminoAcidSequences.addAll(aminoAcidLoci(resourcesDir + "/C_prot.txt"));
+        aminoAcidSequences.addAll(aminoAcidLoci(mConfig.ResourceDir + "/A_prot.txt"));
+        aminoAcidSequences.addAll(aminoAcidLoci(mConfig.ResourceDir + "/B_prot.txt"));
+        aminoAcidSequences.addAll(aminoAcidLoci(mConfig.ResourceDir + "/C_prot.txt"));
 
         final List<HlaSequenceLoci> aminoAcidSequencesWithInserts = aminoAcidSequences.stream().filter(x -> x.containsInserts()).collect(Collectors.toList());
         final List<HlaSequenceLoci> aminoAcidSequencesWithDeletes = aminoAcidSequences.stream().filter(x -> x.containsDeletes()).collect(Collectors.toList());
 
+         */
+
         LL_LOGGER.info("Querying records from reference bam " + mConfig.ReferenceBam);
 
-        nuc.NucleotideFragmentFactory nucleotideFragmentFactory =
-                new NucleotideFragmentFactory(mConfig.MinBaseQual, aminoAcidSequencesWithInserts, aminoAcidSequencesWithDeletes, LOCI_POSITION);
+        NucleotideFragmentFactory nucleotideFragmentFactory = new NucleotideFragmentFactory(
+                mConfig.MinBaseQual, refData.AminoAcidSequencesWithInserts, refData.AminoAcidSequencesWithDeletes, LOCI_POSITION);
 
-        read.SAMRecordReader tumorBamReader =
-                new read.SAMRecordReader(mConfig.TumorBam, mConfig.RefGenome, HLA_TRANSCRIPTS, nucleotideFragmentFactory);
+        SAMRecordReader tumorBamReader =
+                new SAMRecordReader(mConfig.TumorBam, mConfig.RefGenome, HLA_TRANSCRIPTS, nucleotideFragmentFactory);
 
-        read.SAMRecordReader referenceBamReader =
+        SAMRecordReader referenceBamReader =
                 new SAMRecordReader(mConfig.ReferenceBam, mConfig.RefGenome, HLA_TRANSCRIPTS, nucleotideFragmentFactory);
 
-        final List<nuc.NucleotideFragment> referenceNucleotideFragments = enrichGenes(referenceBamReader.readFromBam());
-        final List<nuc.NucleotideFragment> tumorNucleotideFragments = Lists.newArrayList();
+        final List<NucleotideFragment> referenceNucleotideFragments = enrichGenes(referenceBamReader.readFromBam());
+        final List<NucleotideFragment> tumorNucleotideFragments = Lists.newArrayList();
         if(!mConfig.TumorBam.isEmpty())
         {
             LL_LOGGER.info("Querying records from tumor bam " + mConfig.TumorBam);
             tumorNucleotideFragments.addAll(enrichGenes(tumorBamReader.readFromBam()));
         }
 
+        /*
         amino.AminoAcidFragmentPipeline aminoAcidPipeline =
                 new AminoAcidFragmentPipeline(mConfig, referenceNucleotideFragments, (List<? extends nuc.NucleotideFragment>) tumorNucleotideFragments);
 
@@ -478,119 +490,6 @@ public class LilacApplication implements AutoCloseable, Runnable
          */
     }
 
-    private final List<HlaSequenceLoci> nucleotideLoci(String inputFilename)
-    {
-        return Lists.newArrayList();
-
-        /*
-        Object it;
-        Iterable $receiver$iv$iv;
-        Iterable $receiver$iv;
-        Iterable iterable = seq.HlaSequenceFile.INSTANCE.readFile(inputFilename);
-        seq.HlaSequenceFile hlaSequenceFile = seq.HlaSequenceFile.INSTANCE;
-        void var4_4 = $receiver$iv;
-        Collection destination$iv$iv = new ArrayList();
-        for(Object element$iv$iv : $receiver$iv$iv)
-        {
-            it = (seq.HlaSequence) element$iv$iv;
-            boolean bl = false;
-            if(!(!EXCLUDED_ALLELES.contains(((seq.HlaSequence) it).getAllele())))
-            {
-                continue;
-            }
-            destination$iv$iv.add(element$iv$iv);
-        }
-        List list = (List) destination$iv$iv;
-        List<seq.HlaSequence> sequences = hlaSequenceFile.reduceToSixDigit(list);
-        $receiver$iv = seq.HlaSequenceLoci.Companion.create(sequences);
-        $receiver$iv$iv = $receiver$iv;
-        destination$iv$iv = new ArrayList();
-        for(Object element$iv$iv : $receiver$iv$iv)
-        {
-            it = (seq.HlaSequenceLoci) element$iv$iv;
-            boolean bl = false;
-            Collection collection = ((seq.HlaSequenceLoci) it).getSequences();
-            if(!(!collection.isEmpty()))
-            {
-                continue;
-            }
-            destination$iv$iv.add(element$iv$iv);
-        }
-        return (List) destination$iv$iv;
-
-         */
-    }
-
-    private final HlaSequenceLoci createSynonymous(HlaSequenceLoci template)
-    {
-        /*
-        List modSequences = CollectionsKt.toMutableList((Collection) template.getSequences());
-        modSequences.set(1011, "A");
-        modSequences.set(1012, "G");
-        modSequences.set(1013, "T");
-        return new seq.HlaSequenceLoci(hla.HlaAllele.Companion.invoke("C*04:82:01"), modSequences);
-
-         */
-
-        return null;
-    }
-
-    private final List<HlaSequenceLoci> aminoAcidLoci(String inputFilename)
-    {
-        return Lists.newArrayList();
-
-        /*
-        Object it;
-        Iterable $receiver$iv$iv;
-        Iterable $receiver$iv;
-        Iterable iterable = seq.HlaSequenceFile.INSTANCE.readFile(inputFilename);
-        Object object = seq.HlaSequenceFile.INSTANCE;
-        void var4_4 = $receiver$iv;
-        Collection destination$iv$iv = new ArrayList();
-        for(Object element$iv$iv : $receiver$iv$iv)
-        {
-            it = (seq.HlaSequence) element$iv$iv;
-            boolean bl = false;
-            if(!(!EXCLUDED_ALLELES.contains(((seq.HlaSequence) it).getAllele())))
-            {
-                continue;
-            }
-            destination$iv$iv.add(element$iv$iv);
-        }
-        Object object2 = (List) destination$iv$iv;
-        $receiver$iv = ((HlaSequenceFile) object).reduceToFourDigit((List<seq.HlaSequence>) object2);
-        $receiver$iv$iv = $receiver$iv;
-        destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-        for(Object item$iv$iv : $receiver$iv$iv)
-        {
-            it = (seq.HlaSequence) item$iv$iv;
-            object = destination$iv$iv;
-            boolean bl = false;
-            object2 = StringsKt.endsWith$default((String) ((seq.HlaSequence) it).getRawSequence(), (String) "X", (boolean) false, (int) 2, null)
-                    ? it
-                    : ((HlaSequence) it).copyWithAdditionalSequence("X");
-            object.add(object2);
-        }
-        List sequences = (List) destination$iv$iv;
-        $receiver$iv = seq.HlaSequenceLoci.Companion.create(sequences);
-        $receiver$iv$iv = $receiver$iv;
-        destination$iv$iv = new ArrayList();
-        for(Object element$iv$iv : $receiver$iv$iv)
-        {
-            it = (seq.HlaSequenceLoci) element$iv$iv;
-            boolean bl = false;
-            Collection collection = ((HlaSequenceLoci) it).getSequences();
-            if(!(!collection.isEmpty()))
-            {
-                continue;
-            }
-            destination$iv$iv.add(element$iv$iv);
-        }
-        return (List) destination$iv$iv;
-
-         */
-    }
-
     @Override
     public void close()
     {
@@ -636,15 +535,11 @@ public class LilacApplication implements AutoCloseable, Runnable
         final Options options = LilacConfig.createOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
-        try
-        {
-            LilacApplication lilac = new LilacApplication(cmd, new LilacConfig(cmd));
-            lilac.run();
-        }
-        catch(Exception e)
-        {
-            LL_LOGGER.error("initailisation failed: {}", e.toString());
-            System.exit(1);
+        // if(cmd.hasOption(LOG_DEBUG))
+        //    Configurator.setRootLevel(Level.DEBUG);
+
+        LilacApplication lilac = new LilacApplication(cmd, new LilacConfig(cmd));
+        lilac.run();
 
         /*
             } catch (e: IOException) {
@@ -658,15 +553,6 @@ public class LilacApplication implements AutoCloseable, Runnable
         }
 
          */
-        }
-
-    /*
-    if(cmd.hasOption(LOG_DEBUG))
-    {
-        Configurator.setRootLevel(Level.DEBUG);
-    }
-     */
-
     }
 
     @NotNull

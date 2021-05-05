@@ -231,8 +231,6 @@ public final class Candidates
         {
             PhasedEvidence newEvidence = evidence.get(i);
 
-            //int[] nArray = newEvidence.getAminoAcidIndices();
-
             candidates = candidates.stream()
                 .filter(x -> x.consistentWithAny(newEvidence.getEvidence().keySet(), newEvidence.getAminoAcidIndices()))
                 .collect(Collectors.toList());

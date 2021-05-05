@@ -95,4 +95,11 @@ public class HlaAllele implements Comparable<HlaAllele>
         }
         return SynonymousNonCoding.compareTo(other.SynonymousNonCoding);
     }
+
+
+    public boolean matches(final String alleleStr)
+    {
+        return alleleStr.equals(toString());
+    }
+
 }

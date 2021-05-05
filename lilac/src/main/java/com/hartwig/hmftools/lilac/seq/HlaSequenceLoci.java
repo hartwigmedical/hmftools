@@ -1,11 +1,19 @@
 package com.hartwig.hmftools.lilac.seq;
 
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEL_CHAR;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEL_STR;
+import static com.hartwig.hmftools.lilac.LilacConstants.WILD_CHAR;
+import static com.hartwig.hmftools.lilac.LilacConstants.WILD_STR;
+
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -29,9 +37,9 @@ public class HlaSequenceLoci
 
     public final List<String> getSequences() { return mSequences; }
 
-    public final boolean containsInserts() { return mSequences.stream().anyMatch(x -> x.length() > 0); }
+    public final boolean containsInserts() { return mSequences.stream().anyMatch(x -> x.length() > 1); }
 
-    public final boolean containsDeletes() { return mSequences.stream().anyMatch(x -> x.equals(".")); }
+    public final boolean containsDeletes() { return mSequences.stream().anyMatch(x -> x.equals(DEL_STR)); }
 
     public final boolean containsIndels() { return containsDeletes() || containsInserts(); }
 
@@ -52,10 +60,13 @@ public class HlaSequenceLoci
     public final String sequence(final Set<Integer> indices)
     {
         StringJoiner sj = new StringJoiner("");
-        for(int i = 0; i <= mSequences.size(); ++i)
+
+        for(Integer index : indices)
         {
-            if(indices.contains(i))
-                sj.add(mSequences.get(i));
+            if(index < mSequences.size())
+                sj.add(mSequences.get(index));
+            else
+                sj.add(WILD_STR);
         }
 
         return sj.toString();
@@ -63,11 +74,10 @@ public class HlaSequenceLoci
 
     public final String sequence()
     {
-        // TODO
         StringJoiner sj = new StringJoiner("");
-        for(int i = 0; i <= mSequences.size(); ++i)
+        for(String sequence : mSequences)
         {
-            sj.add(mSequences.get(i).replace(".", ""));
+            sj.add(sequence.replace(DEL_STR, ""));
         }
 
         return sj.toString();
@@ -75,54 +85,30 @@ public class HlaSequenceLoci
 
     public String toString()
     {
-        return "HlaSequenceLoci(allele=" + mAllele + ", sequence=" + sequence() + ')';
+        return String.format("HlaSequenceLoci(allele=%s, sequence=%s)", mAllele, sequence());
     }
 
     public final boolean consistentWith(final PhasedEvidence evidence)
     {
-        int[] nArray = evidence.getAminoAcidIndices();
-        return consistentWithAny(evidence.getEvidence().keySet(), Arrays.copyOf(nArray, nArray.length));
+        return consistentWithAny(
+                evidence.getEvidence().keySet().stream().collect(Collectors.toList()), evidence.getAminoAcidIndices());
     }
 
-    public final boolean consistentWithAny(final Collection<String> targetSequence, final int[] targetIndices)
+    public final boolean consistentWithAny(final Set<String> targetSequences, final int[] targetIndices)
     {
-        // TODO
-        return true;
+        return consistentWithAny(targetSequences.stream().collect(Collectors.toList()), targetIndices);
     }
 
-    public final boolean consistentWithAny(final Collection<String> targetSequence, final List<Integer> targetIndices)
+    public final boolean consistentWithAny(final List<String> targetSequences, final int[] targetIndices)
     {
-        // TODO
-        return true;
-        
-        /*
-        boolean bl;
-        block3:
-        {
-            Iterable $receiver$iv = targetSequence;
-            if(((Collection) $receiver$iv).isEmpty())
-            {
-                bl = false;
-            }
-            else
-            {
-                for(Object element$iv : $receiver$iv)
-                {
-                    String it = (String) element$iv;
-                    boolean bl2 = false;
-                    if(!consistentWith(it, Arrays.copyOf(targetIndices, targetIndices.length)))
-                    {
-                        continue;
-                    }
-                    bl = true;
-                    break block3;
-                }
-                bl = false;
-            }
-        }
-        return bl;
-        
-         */
+        Set<Integer> tiSet = Sets.newHashSet();
+        Arrays.stream(targetIndices).forEach(x -> tiSet.add(x));
+        return consistentWithAny(targetSequences, tiSet);
+    }
+
+    public final boolean consistentWithAny(final List<String> targetSequences, final Set<Integer> targetIndices)
+    {
+        return targetSequences.stream().anyMatch(x -> match(x, targetIndices) != HlaSequenceMatch.NONE);
     }
 
     public final boolean consistentWith(final String targetSequence, final Set<Integer> targetIndices)
@@ -133,15 +119,13 @@ public class HlaSequenceLoci
     // TODO - require both methods?
     public final boolean consistentWith(final String targetSequence, final int[] targetIndices)
     {
-        return false; // match(targetSequence, targetIndices) != HlaSequenceMatch.NONE;
+        Set<Integer> tiSet = Sets.newHashSet();
+        Arrays.stream(targetIndices).forEach(x -> tiSet.add(x));
+        return match(targetSequence, tiSet) != HlaSequenceMatch.NONE;
     }
 
     public final HlaSequenceMatch match(final String targetSequence, final Set<Integer> targetIndices)
     {
-        // TODO
-        /*
-        //int[] nArray = targetIndices;
-
         if(targetIndices.isEmpty())
             return HlaSequenceMatch.NONE;
 
@@ -151,40 +135,33 @@ public class HlaSequenceLoci
             return HlaSequenceMatch.NONE;
 
         int wildCardCount = 0;
-        int n = 0;
-        int n2 = ((CharSequence) targetSequence).length();
-        while(n < n2)
+
+        for(int i = 0; i < targetSequence.length(); ++i)
         {
-            void index;
-            char target = targetSequence.charAt((int) index);
-            if(hlaSequence.charAt((int) index) != '*' && hlaSequence.charAt((int) index) != target)
-            {
+            char targetChr = targetSequence.charAt(i);
+            char hlaSeqChr = hlaSequence.charAt(i);
+
+            if(hlaSeqChr != WILD_CHAR && hlaSeqChr != targetChr)
                 return HlaSequenceMatch.NONE;
-            }
-            if(hlaSequence.charAt((int) index) == '*')
-            {
-                ++wildCardCount;
-            }
-            ++index;
-        }
-        if(wildCardCount > 0)
-        {
-            if(wildCardCount == targetIndices.length)
-            {
-                return HlaSequenceMatch.WILD;
-            }
-            return HlaSequenceMatch.PARTIAL;
+
+            if (hlaSeqChr == WILD_CHAR)
+                wildCardCount++;
         }
 
-         */
+        if (wildCardCount > 0)
+            return wildCardCount == targetIndices.size() ? HlaSequenceMatch.WILD : HlaSequenceMatch.PARTIAL;
+
         return HlaSequenceMatch.FULL;
     }
 
-    public final List<HlaSequenceLoci> create(final List<HlaSequence> sequences)
+    public static List<HlaSequenceLoci> create(final List<HlaSequence> sequences)
     {
-        // CHECK
         final String reference = sequences.get(0).getRawSequence();
-        return sequences.stream().map(x -> create(mAllele, x.getRawSequence(), reference)).collect(Collectors.toList());
+
+        return sequences.stream()
+                .map(x -> create(x.Allele, x.getRawSequence(), reference))
+                .filter(x -> !x.getSequences().isEmpty())
+                .collect(Collectors.toList());
     }
 
     public static HlaSequenceLoci create(final HlaAllele allele, final String sequence, final String reference)
@@ -196,8 +173,8 @@ public class HlaSequenceLoci
         for(int i = 0; i < sequence.length(); ++i)
         {
             char seqChar = sequence.charAt(i);
-            boolean isBaseIgnored = (seqChar == '.' && reference.charAt(i) == '.') || (seqChar == '|');
             boolean isBaseInserted = seqChar != '.' && (i >= reference.length() || reference.charAt(i) == '.');
+            boolean isBaseIgnored = (seqChar == '.' && i < reference.length() && reference.charAt(i) == '.') || (seqChar == '|');
 
             if(insLength > 0 && !isBaseInserted)
             {
@@ -220,11 +197,8 @@ public class HlaSequenceLoci
                 else
                     sequences.add(String.valueOf(seqChar));
             }
-
-            return new HlaSequenceLoci(allele, sequences);
         }
 
-        // TODO
-        return null;
+        return new HlaSequenceLoci(allele, sequences);
     }
 }

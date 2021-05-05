@@ -2,16 +2,10 @@ package com.hartwig.hmftools.lilac.candidates;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.lilackt.nuc.NucleotideFragment;
-import com.hartwig.hmftools.lilackt.seq.HlaSequenceLoci;
+import com.hartwig.hmftools.lilac.nuc.NucleotideFragment;
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.jetbrains.annotations.NotNull;
@@ -28,7 +22,7 @@ public class NucleotideFiltering
     }
 
     public final List<HlaSequenceLoci> filterCandidatesOnAminoAcidBoundaries(
-            final Collection<HlaSequenceLoci> candidates, final List<NucleotideFragment> fragments)
+            final List<HlaSequenceLoci> candidates, final List<NucleotideFragment> fragments)
     {
         final List<HlaSequenceLoci> results = Lists.newArrayList();
 
@@ -48,8 +42,8 @@ public class NucleotideFiltering
     private final boolean consistentWithAny(
             final HlaSequenceLoci seqLoci, int startLoci, final List<String> startSequences, final List<String> endSequences)
     {
-        return seqLoci.consistentWithAny((Collection<String>) startSequences, startLoci)
-                && seqLoci.consistentWithAny((Collection<String>) endSequences, startLoci + 1, startLoci + 2);
+        return seqLoci.consistentWithAny(startSequences, Sets.newHashSet(startLoci))
+            && seqLoci.consistentWithAny(endSequences, Sets.newHashSet(startLoci + 1, startLoci + 2));
     }
 
     private final List<String> nucleotideSequence(List<NucleotideFragment> fragments, final Set<Integer> nucleotideIndices)

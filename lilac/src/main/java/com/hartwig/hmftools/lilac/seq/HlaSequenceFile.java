@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class HlaSequenceFile
 {
-    public final List<HlaSequence> readFile(final String filename)
+    public static List<HlaSequence> readFile(final String filename)
     {
         if(filename == null)
             return Lists.newArrayList();
@@ -26,13 +26,14 @@ public class HlaSequenceFile
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());
 
-            //fileData.remove(0);
-            final Map<String, HlaSequence> entries = Maps.newHashMap();
+            final List<String> orderedAlleles = Lists.newArrayList();
+            final Map<String,HlaSequence> entries = Maps.newHashMap();
 
-            for(final String line : fileData) {
+            for(final String line : fileData)
+            {
                 String lineData = line.trim();
 
-                if(lineData.startsWith("*", 1))
+                if(!lineData.startsWith("*", 1))
                     continue;
 
                 String[] split = lineData.split(" ");
@@ -43,12 +44,19 @@ public class HlaSequenceFile
                 HlaSequence sequence = entries.get(alleleStr);
 
                 if(sequence == null)
+                {
+                    orderedAlleles.add(alleleStr);
                     entries.put(alleleStr, new HlaSequence(HlaAllele.fromString(alleleStr), remainder));
+                }
                 else
+                {
                     sequence.appendSequence(remainder);
+                }
             }
 
-            return entries.values().stream().collect(Collectors.toList());
+            return orderedAlleles.stream().map(x -> entries.get(x)).collect(Collectors.toList());
+
+            // return entries.values().stream().collect(Collectors.toList());
         }
         catch (IOException e)
         {
@@ -58,35 +66,46 @@ public class HlaSequenceFile
     }
 
     @NotNull
-    public final List<HlaSequence> reduceToFourDigit(final List<HlaSequence> sequences)
+    public static List<HlaSequence> reduceToFourDigit(final List<HlaSequence> sequences)
     {
-        return null; // reduce($receiver, (Function1<? super HlaAllele, HlaAllele>) ((Function1) reduceToFourDigit .1.INSTANCE));
+        return reduce(sequences, true);
     }
 
     @NotNull
-    public final List<HlaSequence> reduceToSixDigit(final List<HlaSequence> sequences)
+    public static List<HlaSequence> reduceToSixDigit(final List<HlaSequence> sequences)
     {
-        return null; // this.reduce($receiver, (Function1<? super HlaAllele, HlaAllele>) ((Function1) reduceToSixDigit .1.INSTANCE));
+        return reduce(sequences, false);
     }
 
-    /*
-    private final List<HlaSequence> reduce(List<HlaSequence> $receiver, Function1<? super HlaAllele, HlaAllele> transform)
+    private static List<HlaSequence> reduce(final List<HlaSequence> sequences, boolean toFourDigit)
     {
-        LinkedHashMap resultMap = new LinkedHashMap();
-        for(HlaSequence sequence : $receiver)
-        {
-            HlaAllele reducedAllele = (HlaAllele) transform.invoke((Object) sequence.getAllele());
-            if(resultMap.containsKey(reducedAllele))
-            {
-                continue;
+        /*
+            val resultMap = LinkedHashMap<HlaAllele, HlaSequence>()
+
+            for (sequence in this) {
+            val reducedAllele = transform(sequence.allele)
+            if (!resultMap.containsKey(reducedAllele)) {
+                resultMap[reducedAllele] = HlaSequence(reducedAllele, sequence.rawSequence)
             }
-            ((Map) resultMap).put(reducedAllele, new HlaSequence(reducedAllele, sequence.getRawSequence()));
         }
-        Collection collection = resultMap.values();
+         */
 
-        return CollectionsKt.toList((Iterable) collection);
+        Map<String,HlaSequence> reducedMap = Maps.newHashMap();
+        List<String> orderAlleles = Lists.newArrayList();
+
+        for(HlaSequence sequence : sequences)
+        {
+            HlaAllele reducedAllele = toFourDigit ? sequence.Allele.asFourDigit() : sequence.Allele.asSixDigit();
+
+            if(reducedMap.containsKey(reducedAllele.toString()))
+                continue;
+
+            orderAlleles.add(reducedAllele.toString());
+            reducedMap.put(reducedAllele.toString(), new HlaSequence(reducedAllele, sequence.getRawSequence()));
+        }
+
+        return orderAlleles.stream().map(x -> reducedMap.get(x)).collect(Collectors.toList());
+        // return reducedMap.values().stream().collect(Collectors.toList());
     }
-
-     */
 
 }
