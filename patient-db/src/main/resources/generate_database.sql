@@ -287,10 +287,24 @@ CREATE TABLE metric
 DROP TABLE if EXISTS flagstat;
 CREATE TABLE flagstat
 (   sampleId varchar(255) NOT NULL,
-    refMappedProportion DOUBLE PRECISION NOT NULL,
+    refUniqueReadCount BIGINT NOT NULL,
+    refSecondaryCount BIGINT NOT NULL,
+    refSupplementaryCount BIGINT NOT NULL,
     refDuplicateProportion DOUBLE PRECISION NOT NULL,
-    tumorMappedProportion DOUBLE PRECISION NOT NULL,
+    refMappedProportion DOUBLE PRECISION NOT NULL,
+    refPairedInSequencingProportion DOUBLE PRECISION NOT NULL,
+    refProperlyPairedProportion DOUBLE PRECISION NOT NULL,
+    refWithItselfAndMateMappedProportion DOUBLE PRECISION NOT NULL,
+    refSingletonProportion DOUBLE PRECISION NOT NULL,
+    tumorUniqueReadCount BIGINT NOT NULL,
+    tumorSecondaryCount BIGINT NOT NULL,
+    tumorSupplementaryCount BIGINT NOT NULL,
     tumorDuplicateProportion DOUBLE PRECISION NOT NULL,
+    tumorMappedProportion DOUBLE PRECISION NOT NULL,
+    tumorPairedInSequencingProportion DOUBLE PRECISION NOT NULL,
+    tumorProperlyPairedProportion DOUBLE PRECISION NOT NULL,
+    tumorWithItselfAndMateMappedProportion DOUBLE PRECISION NOT NULL,
+    tumorSingletonProportion DOUBLE PRECISION NOT NULL,
     passQC BOOLEAN NOT NULL,
     PRIMARY KEY (sampleId)
 );

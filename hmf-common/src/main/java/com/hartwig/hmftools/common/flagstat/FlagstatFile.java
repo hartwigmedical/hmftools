@@ -18,18 +18,47 @@ public final class FlagstatFile {
     }
 
     @NotNull
-    public static Flagstat read(@NotNull String flagstatsPath) throws IOException {
-        List<String> lines = Files.readAllLines(new File(flagstatsPath).toPath());
+    public static Flagstat read(@NotNull String flagstatPath) throws IOException {
+        List<String> lines = Files.readAllLines(new File(flagstatPath).toPath());
         String total = valueBySubstring(lines, "total");
-        String mapped = valueBySubstring(lines, "mapped (");
+        String secondary = valueBySubstring(lines, "secondary");
+        String supplementary = valueBySubstring(lines, "supplementary");
         String duplicates = valueBySubstring(lines, "duplicates");
-        if (total == null || mapped == null || duplicates == null) {
+        String mapped = valueBySubstring(lines, "mapped (");
+        String pairedInSequencing = valueBySubstring(lines, "paired in sequencing");
+        String properlyPaired = valueBySubstring(lines, "properly paired");
+        String withItselfAndMateMapped = valueBySubstring(lines, "with itself and mate mapped");
+        String singletons = valueBySubstring(lines, "singletons");
+        if (anyNull(total,
+                secondary,
+                supplementary,
+                duplicates,
+                mapped,
+                pairedInSequencing,
+                properlyPaired,
+                withItselfAndMateMapped,
+                singletons)) {
             throw new IOException("Unable to parse flagstat file correctly");
         }
 
+        long totalReadCount = Long.parseLong(total);
+        long secondaryCount = Long.parseLong(secondary);
+        long supplementaryCount = Long.parseLong(supplementary);
+
+        // The total read count in flagstats double-counts secondary and supplementary reads, so need to remove to get unique read.
+        long uniqueReadCount = totalReadCount - secondaryCount - supplementaryCount;
+
+        // Paired-in-sequencing and properly-paired should be calculated over unique reads.
         return ImmutableFlagstat.builder()
-                .mappedProportion(divideTwoStrings(mapped, total))
+                .uniqueReadCount(uniqueReadCount)
+                .secondaryCount(secondaryCount)
+                .supplementaryCount(supplementaryCount)
                 .duplicateProportion(divideTwoStrings(duplicates, total))
+                .mappedProportion(divideTwoStrings(mapped, total))
+                .pairedInSequencingProportion(divideTwoStrings(pairedInSequencing, String.valueOf(uniqueReadCount)))
+                .properlyPairedProportion(divideTwoStrings(properlyPaired, String.valueOf(uniqueReadCount)))
+                .withItselfAndMateMappedProportion(divideTwoStrings(withItselfAndMateMapped, total))
+                .singletonProportion(divideTwoStrings(singletons, total))
                 .build();
     }
 
@@ -57,5 +86,14 @@ public final class FlagstatFile {
             return matchLines.get(0).split(" ")[0];
         }
         return null;
+    }
+
+    private static boolean anyNull(@NotNull Object... arguments) {
+        for (Object object : arguments) {
+            if (object == null) {
+                return true;
+            }
+        }
+        return false;
     }
 }

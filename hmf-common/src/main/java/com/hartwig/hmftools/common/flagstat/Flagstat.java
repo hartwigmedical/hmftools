@@ -8,7 +8,22 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Flagstat {
 
-    public abstract double mappedProportion();
+    public abstract long uniqueReadCount();
+
+    public abstract long secondaryCount();
+
+    public abstract long supplementaryCount();
 
     public abstract double duplicateProportion();
+
+    public abstract double mappedProportion();
+
+    public abstract double pairedInSequencingProportion();
+
+    public abstract double properlyPairedProportion();
+
+    public abstract double withItselfAndMateMappedProportion();
+
+    public abstract double singletonProportion();
+
 }
