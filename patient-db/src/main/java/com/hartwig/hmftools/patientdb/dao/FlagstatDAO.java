@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.METRIC;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Flagstat.FLAGSTAT;
 
 import com.hartwig.hmftools.common.flagstat.Flagstat;
@@ -39,6 +38,6 @@ public class FlagstatDAO {
     }
 
     void deleteFlagstatsForSample(@NotNull String sample) {
-        context.delete(METRIC).where(METRIC.SAMPLEID.eq(sample)).execute();
+        context.delete(FLAGSTAT).where(FLAGSTAT.SAMPLEID.eq(sample)).execute();
     }
 }
