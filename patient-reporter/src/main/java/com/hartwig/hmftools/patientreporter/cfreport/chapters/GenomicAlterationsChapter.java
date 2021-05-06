@@ -314,7 +314,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         } else {
             Table contentTable = TableUtil.createReportContentTable(new float[] { 120, 120, 200 },
                     new Cell[] { TableUtil.createHeaderCell("Virus"),
-                            TableUtil.createHeaderCell("Number of viral breakpoints").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("Number of detected integration sites").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("") });
 
             for (VirusBreakend virusBreakend : virusBreakends) {
