@@ -19,22 +19,17 @@ public final class NucleotideQualEnrichment
     public final List<NucleotideFragment> enrich(final List<NucleotideFragment> fragments)
     {
         final List<NucleotideFragment> highQualFragments = fragments.stream()
-                .map(x -> x.qualityFilter(mMinBaseQuality)).collect(Collectors.toList());
+                .map(x -> x.qualityFilter(mMinBaseQuality))
+                .filter(x -> x.isNotEmpty())
+                .collect(Collectors.toList());
 
-        /*
-                val highQualityFragments = nucleotideFragments.map { it.qualityFilter(minBaseQuality) }.filter { it.isNotEmpty() }
-        val highQualityCounts = SequenceCount.nucleotides(1, highQualityFragments)
-        val rawCounts = SequenceCount.nucleotides(minEvidence, nucleotideFragments)
-        val result = nucleotideFragments.map { enrich(it, highQualityCounts, rawCounts) }
-        return result
-
-         */
-
-        // TODO
-        return highQualFragments;
+        SequenceCount highQualCounts = SequenceCount.nucleotides(1, highQualFragments);
+        SequenceCount rawCounts = SequenceCount.nucleotides(mMinEvidence, fragments);
+        return fragments.stream().map(x -> enrich(x, highQualCounts, rawCounts)).collect(Collectors.toList());
     }
 
-    private final NucleotideFragment enrich(NucleotideFragment fragment, SequenceCount highQualityCount, SequenceCount rawCount)
+    private final NucleotideFragment enrich(
+            final NucleotideFragment fragment, final SequenceCount highQualityCount, final SequenceCount rawCount)
     {
         final List<Integer> nucleotideLoci = Lists.newArrayList();
         final List<Integer> nucleotideQuality = Lists.newArrayList();
@@ -44,12 +39,9 @@ public final class NucleotideQualEnrichment
         {
             int currentQuality = fragment.getNucleotideQuality().get(lociIndex);
             String fragmentNucleotide = fragment.getNucleotides().get(lociIndex);
-            Collection<String> highQualitySequences = highQualityCount.sequenceAt(lociIndex);
-            Collection<String> rawSequences = rawCount.sequenceAt(lociIndex);
-
-            // TODO
-            Collection<String> allowedSequences = Collections.EMPTY_LIST; // rawSequences intersect highQualitySequences
-            // Set<String> allowedSequences = rawSequences.in.intersect((Iterable) rawSequences, (Iterable) highQualitySequences);
+            List<String> highQualitySequences = highQualityCount.sequenceAt(lociIndex);
+            List<String> rawSequences = rawCount.sequenceAt(lociIndex);
+            List<String> allowedSequences = highQualitySequences.stream().filter(x -> rawSequences.contains(x)).collect(Collectors.toList());
 
             if(allowedSequences.contains(fragmentNucleotide))
             {

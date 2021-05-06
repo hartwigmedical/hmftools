@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.MAX_AMINO_ACID_BOUNDARY;
+import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.LilacConfig;
@@ -42,8 +43,8 @@ public class AminoAcidFragmentPipeline
 
         List<AminoAcidFragment> referenceAminoAcids = process(context.AminoAcidBoundaries, geneReferenceFragments);
 
-        // TODO, CHECK - need to cast to super type?
-        SequenceCount referenceNucleotideCounts = null; // SequenceCount.nucleotides(mMinEvidence, referenceAminoAcids);
+        // CHECK - cast to super type worked
+        SequenceCount referenceNucleotideCounts = SequenceCount.nucleotides(mMinEvidence, nucFragments(referenceAminoAcids));
         SequenceCount referenceAminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, referenceAminoAcids);
 
         referenceAminoAcidCounts.writeVertically(mConfig.OutputFilePrefix + '.' + gene + ".aminoacids.txt");
@@ -62,21 +63,13 @@ public class AminoAcidFragmentPipeline
         if(mHighQualityTumorFragments.isEmpty())
             return Lists.newArrayList();
 
-        // TODO: auto-casting from nuc frag to AA frag
         List<AminoAcidFragment> referenceAminoAcids = referenceCoverageFragments();
-        SequenceCount referenceNucleotideCounts = null; // SequenceCount.nucleotides(mMinEvidence, referenceAminoAcids);
+
+        SequenceCount referenceNucleotideCounts = SequenceCount.nucleotides(mMinEvidence, nucFragments(referenceAminoAcids));
         SequenceCount referenceAminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, referenceAminoAcids);
-        SequenceCount tumorNucleotideCounts = null; // SequenceCount.nucleotides(mMinEvidence, mHighQualityTumorFragments);
+
+        SequenceCount tumorNucleotideCounts = SequenceCount.nucleotides(mMinEvidence, nucFragments(mHighQualityTumorFragments));
         SequenceCount tumorAminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, mHighQualityTumorFragments);
-
-        /*
-                val nucleotideDifferences = SequenceCountDiff.create(referenceNucleotideCounts, tumorNucleotideCounts).filter { it.tumorCount > 0 }
-        val aminoAcidDifferences = SequenceCountDiff.create(referenceAminoAcidCounts, tumorAminoAcidCounts).filter { it.tumorCount > 0 }
-
-        val variantFilteredTumorAminoAcids = highQualityTumorFragments.filter { !it.containsVariant(nucleotideDifferences, aminoAcidDifferences) }
-        return variantFilteredTumorAminoAcids
-
-         */
 
         final List<SequenceCountDiff> nucleotideDifferences = SequenceCountDiff.create(referenceNucleotideCounts, tumorNucleotideCounts)
                 .stream().filter(x -> x.TumorCount > 0).collect(Collectors.toList());
@@ -85,41 +78,32 @@ public class AminoAcidFragmentPipeline
                 .stream().filter(x -> x.TumorCount > 0).collect(Collectors.toList());
 
         final List<AminoAcidFragment> variantFilteredTumorAminoAcids = mHighQualityTumorFragments.stream()
-                .filter(x -> !containsVariant(nucleotideDifferences, aminoAcidDifferences)).collect(
+                .filter(x -> !containsVariant(x, nucleotideDifferences, aminoAcidDifferences)).collect(
                 Collectors.toList());
 
         return variantFilteredTumorAminoAcids;
     }
 
-    private final boolean containsVariant(
+    private static boolean containsVariant(
+            final AminoAcidFragment fragment,
             final List<SequenceCountDiff> nucelotideVariants, final List<SequenceCountDiff> aminoAcidVariants)
     {
-        /*
-
-        return nucelotideVariants.any { this.containsNucleotideVariant(it) } || aminoAcidVariants.any { this.containsAminoAcidVariant(it) }
-
-         */
-        return true;
+        return nucelotideVariants.stream().anyMatch(x -> containsNucleotideVariant(fragment, x))
+                || aminoAcidVariants.stream().anyMatch(x -> containsAminoAcidVariant(fragment, x));
     }
 
-    private final boolean containsNucleotideVariant(final AminoAcidFragment fragment, SequenceCountDiff variant)
+    private static boolean containsNucleotideVariant(final AminoAcidFragment fragment, SequenceCountDiff variant)
     {
         return fragment.containsNucleotide(variant.Loci) && fragment.nucleotide(variant.Loci).equals(variant.Sequence);
     }
 
-    private final boolean containsAminoAcidVariant(final AminoAcidFragment fragment, SequenceCountDiff variant)
+    private static boolean containsAminoAcidVariant(final AminoAcidFragment fragment, SequenceCountDiff variant)
     {
         return fragment.containsAminoAcid(variant.Loci) && fragment.aminoAcid(variant.Loci).equals(variant.Sequence);
     }
 
-    private final List<AminoAcidFragment> qualFiltered(int minBaseQuality, List<NucleotideFragment> fragments)
+    private List<AminoAcidFragment> qualFiltered(int minBaseQuality, List<NucleotideFragment> fragments)
     {
-        /*
-        val qualityFilteredFragments = fragments.map { it.qualityFilter(minBaseQuality) }.filter { it.isNotEmpty() }
-        return qualityFilteredFragments.map { it.toAminoAcidFragment() }
-
-         */
-
         return fragments.stream()
                 .map(x -> x.qualityFilter(minBaseQuality))
                 .filter(x -> x.isNotEmpty())
@@ -129,20 +113,6 @@ public class AminoAcidFragmentPipeline
 
     private List<AminoAcidFragment> process(final List<Integer> boundaries, final List<NucleotideFragment> fragments)
     {
-        /*
-                if (fragments.isEmpty()) {
-            return listOf()
-        }
-
-        val qualEnriched = nucleotideQualEnrichment.enrich(fragments)
-        val spliceEnricher = NucleotideSpliceEnrichment(minBaseQuality, minEvidence, boundaries.filter { it <= MAX_AMINO_ACID_BOUNDARY }.toSet())
-        val spliceEnriched = spliceEnricher.enrich(qualEnriched)
-        val result = aminoAcidEnricher.enrich(spliceEnriched)
-
-        return result
-
-         */
-
         if(fragments.isEmpty())
             return Lists.newArrayList();
 

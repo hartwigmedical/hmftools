@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
@@ -21,6 +22,11 @@ public final class AminoAcidFragment extends NucleotideFragment
         super(id, genes, nucleotideLoci, nucleotideQuality, nucleotides);
         mAminoAcidLoci = aminoAcidLoci;
         mAminoAcids = aminoAcids;
+    }
+
+    public static List<NucleotideFragment> nucFragments(final List<AminoAcidFragment> fragments)
+    {
+        return fragments.stream().collect(Collectors.toList());
     }
 
     public final boolean containsAll(final List<Integer> indices)

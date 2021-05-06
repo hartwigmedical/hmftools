@@ -6,6 +6,7 @@ import com.hartwig.hmftools.lilac.SequenceCount;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class NucleotideSpliceEnrichment
 {
@@ -22,146 +23,43 @@ public class NucleotideSpliceEnrichment
 
     public final List<NucleotideFragment> enrich(final List<NucleotideFragment> fragments)
     {
-        // TODO
-        return Lists.newArrayList();
-        /*
-                val filteredNucleotides = fragments.map { it.qualityFilter(minBaseQuality) }.filter { it.isNotEmpty() }
+        // CHECK repeated from NucQualEnrichment ?!?
+        final List<NucleotideFragment> filteredNucleotides = fragments.stream()
+                .map(x -> x.qualityFilter(mMinBaseQuality))
+                .filter(x -> x.isNotEmpty())
+                .collect(Collectors.toList());
 
-        val nucleotideCounts = SequenceCount.nucleotides(minBaseCount, filteredNucleotides)
-        val nucleotideExonBoundaryStarts = aminoAcidBoundary.map { 3 * it }
-        val homLoci = nucleotideCounts.homozygousIndices().toSet()
-        val homStarts = nucleotideExonBoundaryStarts.filter { homLoci.contains(it) }
-        val homEnds = nucleotideExonBoundaryStarts.filter { homLoci.contains(it + 1) && homLoci.contains(it + 2) }
+        SequenceCount nucleotideCounts = SequenceCount.nucleotides(mMinBaseCount, filteredNucleotides);
+        Set<Integer> nucleotideExonBoundaryStarts = mAminoAcidBoundary.stream().map(x -> x * 3).collect(Collectors.toSet());
+        List<Integer> homLoci = nucleotideCounts.homozygousIndices();
 
-        val result = mutableListOf<NucleotideFragment>()
+        Set<Integer> homStarts = nucleotideExonBoundaryStarts.stream().filter(x -> homLoci.contains(x)).collect(Collectors.toSet());
 
-        for (fragment in fragments) {
-            var enriched = fragment
-            for (homStart in homStarts) {
-                if (missingStart(homStart, enriched)) {
-                    enriched = enriched.addStart(homStart, nucleotideCounts)
-                }
-            }
+        Set<Integer> homEnds = nucleotideExonBoundaryStarts.stream()
+                .filter(x -> homLoci.contains(x + 1) && homLoci.contains(x + 2)).collect(Collectors.toSet());
 
-            for (homEnd in homEnds) {
-                if (missingEnd(homEnd, enriched)) {
-                    enriched = enriched.addEnd(homEnd, nucleotideCounts)
-                }
-            }
-            result.add(enriched)
-        }
+        final List<NucleotideFragment> results = Lists.newArrayList();
 
-        return result
-
-         */
-
-        /*
-        void $receiver$iv$iv;
-        void $receiver$iv$iv2;
-        void $receiver$iv$iv3;
-        Object object;
-        Object it;
-        Collection collection;
-        Iterable $receiver$iv$iv4;
-        Iterable $receiver$iv;
-        Intrinsics.checkParameterIsNotNull(fragments, (String) "fragments");
-        Iterable iterable = $receiver$iv = (Iterable) fragments;
-        Collection destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-        for(Object item$iv$iv : $receiver$iv$iv4)
+        for (NucleotideFragment fragment : fragments)
         {
-            NucleotideFragment nucleotideFragment = (NucleotideFragment) item$iv$iv;
-            collection = destination$iv$iv;
-            boolean bl = false;
-            object = ((NucleotideFragment) it).qualityFilter(mMinBaseQuality);
-            collection.add(object);
-        }
-        $receiver$iv = (List) destination$iv$iv;
-        $receiver$iv$iv4 = $receiver$iv;
-        destination$iv$iv = new ArrayList();
-        for(Object element$iv$iv : $receiver$iv$iv4)
-        {
-            it = (NucleotideFragment) element$iv$iv;
-            boolean bl = false;
-            if(!((NucleotideFragment) it).isNotEmpty())
+            NucleotideFragment enrichedFrag = fragment;
+
+            for (Integer homStart : homStarts)
             {
-                continue;
+                if (missingStart(homStart, enrichedFrag))
+                    enrichedFrag = addStart(enrichedFrag, homStart, nucleotideCounts);
             }
-            destination$iv$iv.add(element$iv$iv);
-        }
-        List filteredNucleotides = (List) destination$iv$iv;
-        SequenceCount nucleotideCounts = SequenceCount.Companion.nucleotides(mMinBaseCount, filteredNucleotides);
-        Iterable $receiver$iv2 = mAminoAcidBoundary;
-        Iterable iterable2 = $receiver$iv2;
-        Collection destination$iv$iv2 = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv2, (int) 10));
-        for(Object item$iv$iv : $receiver$iv$iv3)
-        {
-            void it2;
-            int $i$f$filterTo = ((Number) item$iv$iv).intValue();
-            collection = destination$iv$iv2;
-            boolean bl = false;
-            object = 3 * it2;
-            collection.add(object);
-        }
-        List nucleotideExonBoundaryStarts = (List) destination$iv$iv2;
-        Set homLoci = CollectionsKt.toSet((Iterable) nucleotideCounts.homozygousIndices());
-        Iterable $receiver$iv3 = nucleotideExonBoundaryStarts;
-        it = $receiver$iv3;
-        Iterable destination$iv$iv3 = new ArrayList();
-        for(Object element$iv$iv : $receiver$iv$iv2)
-        {
-            int it3 = ((Number) element$iv$iv).intValue();
-            boolean bl = false;
-            if(!homLoci.contains(it3))
+
+            for (Integer homEnd : homEnds)
             {
-                continue;
+                if (missingEnd(homEnd, enrichedFrag))
+                    enrichedFrag = addEnd(enrichedFrag, homEnd, nucleotideCounts);
             }
-            destination$iv$iv3.add(element$iv$iv);
+
+            results.add(enrichedFrag);
         }
-        List homStarts = (List) destination$iv$iv3;
-        Iterable $receiver$iv4 = nucleotideExonBoundaryStarts;
-        destination$iv$iv3 = $receiver$iv4;
-        Collection destination$iv$iv4 = new ArrayList();
-        for(Object element$iv$iv : $receiver$iv$iv)
-        {
-            int it4 = ((Number) element$iv$iv).intValue();
-            boolean bl = false;
-            if(!(homLoci.contains(it4 + 1) && homLoci.contains(it4 + 2)))
-            {
-                continue;
-            }
-            destination$iv$iv4.add(element$iv$iv);
-        }
-        List homEnds = (List) destination$iv$iv4;
-        List result = new ArrayList();
-        Iterator<? extends NucleotideFragment> iterator = fragments.iterator();
-        while(iterator.hasNext())
-        {
-            NucleotideFragment fragment;
-            NucleotideFragment enriched = fragment = iterator.next();
-            Iterator iterator2 = homStarts.iterator();
-            while(iterator2.hasNext())
-            {
-                int homStart = ((Number) iterator2.next()).intValue();
-                if(!missingStart(homStart, enriched))
-                {
-                    continue;
-                }
-                enriched = addStart(enriched, homStart, nucleotideCounts);
-            }
-            iterator2 = homEnds.iterator();
-            while(iterator2.hasNext())
-            {
-                int homEnd = ((Number) iterator2.next()).intValue();
-                if(!missingEnd(homEnd, enriched))
-                {
-                    continue;
-                }
-                enriched = addEnd(enriched, homEnd, nucleotideCounts);
-            }
-            result.add(enriched);
-        }
-        return result;
-         */
+
+        return results;
     }
 
     private boolean missingStart(int index, NucleotideFragment fragment)
@@ -185,5 +83,4 @@ public class NucleotideSpliceEnrichment
                 index + 1, nucleotideCounts.sequenceAt(index + 1).get(0), mMinBaseQuality)
                 .enrich(index + 2, nucleotideCounts.sequenceAt(index + 2).get(0), mMinBaseQuality);
     }
-
 }
