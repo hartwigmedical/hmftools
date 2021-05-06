@@ -37,7 +37,7 @@ import org.junit.Test;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
     private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -305,6 +305,7 @@ public class CFReportWriterTest {
                         .extraDetails(Strings.EMPTY)
                         .isOverridden(false)
                         .build())
+                .biopsyLocation(Strings.EMPTY)
                 .germlineReportingLevel(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION)
                 .reportViralInsertions(true)
                 .refArrivalDate(LocalDate.parse("10-Jan-2020", DATE_FORMATTER))

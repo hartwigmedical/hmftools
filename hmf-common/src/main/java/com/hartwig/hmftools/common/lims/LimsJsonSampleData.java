@@ -57,6 +57,11 @@ abstract class LimsJsonSampleData {
     @SerializedName("ptum")
     public abstract String primaryTumor();
 
+    // Biopsy Location is only known for COREDB samples
+    @Nullable
+    @SerializedName("biopsy_site")
+    public abstract String biopsySite();
+
     @NotNull
     @SerializedName("submission")
     public abstract String submission();

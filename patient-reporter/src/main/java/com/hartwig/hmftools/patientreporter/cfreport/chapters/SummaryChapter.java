@@ -71,8 +71,9 @@ public class SummaryChapter implements ReportChapter {
     @Override
     public void render(@NotNull Document reportDocument) {
         reportDocument.add(new Paragraph("Summary").addStyle(ReportResources.chapterTitleStyle()));
-        reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(patientReport.sampleReport().primaryTumorLocationString(),
-                patientReport.sampleReport().primaryTumorTypeString(),
+        reportDocument.add(TumorLocationAndTypeTable.createBiopsyLocationAndTumorLocation(patientReport.sampleReport()
+                .primaryTumorLocationString(), patientReport.sampleReport().biopsyLocation(), contentWidth()));
+        reportDocument.add(TumorLocationAndTypeTable.createTumorType(patientReport.sampleReport().primaryTumorTypeString(),
                 contentWidth()));
         reportDocument.add(new Paragraph("\nThe information regarding 'primary tumor location' and 'primary tumor type'  is based on "
                 + "information received \nfrom the originating hospital.").addStyle(ReportResources.subTextStyle()));

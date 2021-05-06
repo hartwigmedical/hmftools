@@ -282,6 +282,7 @@ public final class ExampleAnalysisTestFactory {
                         .doids(Lists.newArrayList("8923"))
                         .isOverridden(false)
                         .build())
+                .biopsyLocation("Skin")
                 .germlineReportingLevel(reportGermline
                         ? LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION
                         : LimsGermlineReportingLevel.NO_REPORTING)

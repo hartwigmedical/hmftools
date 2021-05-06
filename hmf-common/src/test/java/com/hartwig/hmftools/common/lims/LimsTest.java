@@ -42,6 +42,7 @@ public class LimsTest {
         String dnaConcentration = "10";
         String purityShallowSeq = "0.71";
         String primaryTumor = "Prostate";
+        String biopsyLocation = "Skin";
         String labSopVersions = "PREP1V2-QC1V2-SEQ1V2";
         String cohort = "CPCT";
         String projectName = "projectX";
@@ -58,6 +59,7 @@ public class LimsTest {
                 .samplingDate(samplingDate)
                 .dnaConcentration(dnaConcentration)
                 .primaryTumor(primaryTumor)
+                .biopsySite(biopsyLocation)
                 .labSopVersions(labSopVersions)
                 .submission(SUBMISSION)
                 .cohort(cohort)
@@ -112,6 +114,7 @@ public class LimsTest {
         assertEquals("71%", lims.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.pathologyTumorPercentage(TUMOR_SAMPLE_BARCODE));
         assertEquals(primaryTumor, lims.primaryTumor(TUMOR_SAMPLE_BARCODE));
+        assertEquals(biopsyLocation, lims.biopsyLocation(TUMOR_SAMPLE_BARCODE));
         assertEquals(labSopVersions, lims.labProcedures(TUMOR_SAMPLE_BARCODE));
 
         assertEquals(hospitalPatientId, lims.hospitalPatientId(TUMOR_SAMPLE_BARCODE));
