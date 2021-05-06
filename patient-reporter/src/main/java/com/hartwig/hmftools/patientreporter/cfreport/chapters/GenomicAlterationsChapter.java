@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
@@ -9,7 +10,10 @@ import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
+import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
+import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
@@ -17,7 +21,9 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GeneDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
+import com.hartwig.hmftools.patientreporter.cfreport.data.Peach;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
+import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
@@ -31,12 +37,14 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.TextAlignment;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class GenomicAlterationsChapter implements ReportChapter {
 
     // TODO Remove this toggle-off once we can remove position (blocked by DEV-810)
     private static final boolean DISPLAY_CLONAL_COLUMN = false;
+    private static final float TABLE_SPACER_HEIGHT = 5;
 
     @NotNull
     private final GenomicAnalysis genomicAnalysis;
@@ -62,6 +70,10 @@ public class GenomicAlterationsChapter implements ReportChapter {
     public void render(@NotNull Document reportDocument) {
         boolean hasReliablePurity = genomicAnalysis.hasReliablePurity();
 
+        reportDocument.add(createPloidyPloidyTable(genomicAnalysis.averageTumorPloidy(),
+                genomicAnalysis.impliedPurity(),
+                hasReliablePurity));
+
         reportDocument.add(createTumorVariantsTable(genomicAnalysis.reportableVariants(),
                 hasReliablePurity,
                 germlineReportingModel,
@@ -74,6 +86,50 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createVirusBreakendsTable(genomicAnalysis.virusBreakends(), sampleReport.reportViralInsertions()));
         reportDocument.add(createPeachGenotypesTable(genomicAnalysis.peachGenotypes()));
 
+    }
+
+    @NotNull
+    private static Table createPloidyPloidyTable(double ploidy, double purity, boolean hasReliablePurity) {
+        String title = "Tumor purity & ploidy";
+
+        Table contentTable = TableUtil.createReportContentSmallTable(new float[] { 60,30, 30 }, new Cell[] {  });
+
+        double impliedPurityPercentage = MathUtil.mapPercentage(purity, TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
+        renderTumorPurity(hasReliablePurity,
+                DataUtil.formatPercentage(impliedPurityPercentage),
+                purity,
+                TumorPurity.RANGE_MIN,
+                TumorPurity.RANGE_MAX,
+                contentTable);
+
+        contentTable.addCell(TableUtil.createContentCell("Average tumor ploidy"));
+        contentTable.addCell(TableUtil.createContentCellPurityPloidy(GeneUtil.copyNumberToString(ploidy, hasReliablePurity)));
+        contentTable.addCell(TableUtil.createContentCell(Strings.EMPTY));
+
+        return TableUtil.createWrappingReportTable(title, contentTable);
+
+    }
+
+    @NotNull
+    private static InlineBarChart createInlineBarChart(double value, double min, double max) {
+        InlineBarChart chart = new InlineBarChart(value, min, max);
+        chart.setWidth(41);
+        chart.setHeight(6);
+        return chart;
+    }
+
+    private static void renderTumorPurity(boolean hasReliablePurity, @NotNull String valueLabel, double value, double min, double max,
+            @NotNull Table table) {
+
+        String label = "Tumor purity";
+        table.addCell(TableUtil.createContentCell(label));
+
+        if (hasReliablePurity) {
+            table.addCell(TableUtil.createContentCellPurityPloidy(valueLabel));
+            table.addCell(TableUtil.createContentCell(createInlineBarChart(value, min, max)));
+        } else {
+            table.addCell(TableUtil.createContentCell(Lims.PURITY_NOT_RELIABLE_STRING));
+        }
     }
 
     @NotNull
@@ -286,7 +342,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                         TableUtil.createHeaderCell("Function"), TableUtil.createHeaderCell("Linked drugs"),
                         TableUtil.createHeaderCell("Source").setTextAlignment(TextAlignment.CENTER) });
 
-        for (PeachGenotype peachGenotype : peachGenotypes) { //TODO sort
+        for (PeachGenotype peachGenotype : Peach.sort(peachGenotypes)) {
             contentTable.addCell(TableUtil.createContentCell(peachGenotype.gene()));
             contentTable.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
             contentTable.addCell(TableUtil.createContentCell(peachGenotype.function()));
