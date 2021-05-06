@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.sam;
+package com.hartwig.hmftools.lilac.read;
 
 public class Indel
 {

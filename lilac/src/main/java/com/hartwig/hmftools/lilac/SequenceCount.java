@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.lilac;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.lilac.amino.AminoAcidFragment;
-import com.hartwig.hmftools.lilac.nuc.NucleotideFragment;
+import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
+import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
 
 import java.util.List;
 import java.util.Map;
@@ -175,7 +175,7 @@ public final class SequenceCount
 
         Map<String,Integer>[] seqCountsList = new Map[length];
 
-        for(com.hartwig.hmftools.lilac.nuc.NucleotideFragment fragment : fragments)
+        for(NucleotideFragment fragment : fragments)
         {
             for(Integer lociIndex : fragment.getNucleotideLoci())
             {

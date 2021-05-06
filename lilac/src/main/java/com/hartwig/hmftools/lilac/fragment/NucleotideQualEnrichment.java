@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.nuc;
+package com.hartwig.hmftools.lilac.fragment;
 
 import java.util.Collection;
 import java.util.Collections;

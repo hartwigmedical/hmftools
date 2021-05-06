@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.nuc;
+package com.hartwig.hmftools.lilac.fragment;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;

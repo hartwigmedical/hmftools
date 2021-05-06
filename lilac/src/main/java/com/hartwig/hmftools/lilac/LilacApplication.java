@@ -18,9 +18,9 @@ import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.hla.HlaContextFactory;
-import com.hartwig.hmftools.lilac.nuc.NucleotideFragment;
-import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory;
-import com.hartwig.hmftools.lilac.sam.SAMRecordReader;
+import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
+import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
+import com.hartwig.hmftools.lilac.read.SAMRecordReader;
 
 import java.util.List;
 import java.util.Map;

@@ -2,13 +2,11 @@ package com.hartwig.hmftools.lilac.candidates;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.lilac.nuc.NucleotideFragment;
+import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import java.util.List;
 import java.util.Set;
-
-import org.jetbrains.annotations.NotNull;
 
 public class NucleotideFiltering
 {

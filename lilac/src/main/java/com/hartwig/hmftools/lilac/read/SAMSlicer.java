@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.sam;
+package com.hartwig.hmftools.lilac.read;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;

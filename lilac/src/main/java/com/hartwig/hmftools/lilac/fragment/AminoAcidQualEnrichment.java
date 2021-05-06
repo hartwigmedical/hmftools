@@ -1,12 +1,9 @@
-package com.hartwig.hmftools.lilac.amino;
+package com.hartwig.hmftools.lilac.fragment;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.SequenceCount;
-import com.hartwig.hmftools.lilac.nuc.NucleotideFragment;
 
 public class AminoAcidQualEnrichment
 {

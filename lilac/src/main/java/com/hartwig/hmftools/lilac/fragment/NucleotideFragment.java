@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.lilac.nuc;
+package com.hartwig.hmftools.lilac.fragment;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.lilac.amino.AminoAcidFragment;
+import com.hartwig.hmftools.common.codon.Codons;
 
 import java.util.List;
 import java.util.Set;
@@ -10,7 +10,7 @@ import java.util.StringJoiner;
 
 public class NucleotideFragment
 {
-    private final String mId;
+    private final String mId; // BAM read Id
     private final Set<String> mGenes;
     private final List<Integer> mNucleotideLoci;
     private final List<Integer> mNucleotideQuality;
@@ -68,45 +68,58 @@ public class NucleotideFragment
 
     public final NucleotideFragment qualityFilter(int minBaseQual)
     {
-        // TODO: make static?
         final List<Integer> filteredNucleotideLoci = Lists.newArrayList();
         final List<Integer> filteredNucleotideQuality = Lists.newArrayList();
         final List<String> filteredNucleotides = Lists.newArrayList();
 
-        // TODO
+        for(int i = 0; i < mNucleotideQuality.size(); ++i)
+        {
+            if(mNucleotideQuality.get(i) >= minBaseQual)
+            {
+                filteredNucleotideLoci.add(mNucleotideLoci.get(i));
+                filteredNucleotideQuality.add(mNucleotideQuality.get(i));
+                filteredNucleotides.add(mNucleotides.get(i));
+            }
+        }
+
         return new NucleotideFragment(mId, mGenes, filteredNucleotideLoci, filteredNucleotideQuality, filteredNucleotides);
     }
 
     public AminoAcidFragment toAminoAcidFragment()
     {
-        /*
-                fun aminoAcid(index: Int): String {
-            val first = nucleotide(index * 3)
-            val second = nucleotide(index * 3 + 1)
-            val third = nucleotide(index * 3 + 2)
-            if (first == "." && second == "." && third == ".") {
-                return "."
-            }
-
-            return Codons.aminoAcids(first + second + third)
-        }
-
-        val aminoAcidIndices = nucleotideLoci
-                .filter { it % 3 == 0 }
-                .filter { nucleotideLoci.contains(it + 1) && nucleotideLoci.contains(it + 2) }
-                .map { it / 3 }
-
-        val aminoAcids = aminoAcidIndices.map { aminoAcid(it) }.map { it }
-
-        return AminoAcidFragment(id, genes, nucleotideLoci, nucleotideQuality, nucleotides, aminoAcidIndices, aminoAcids)
-
-         */
-
-        // TODO
         final List<Integer> aminoAcidLoci = Lists.newArrayList();
         final List<String> aminoAcids = Lists.newArrayList();
 
+        // CHECK that i and locus are the same and which should be used
+
+        for(int i = 0; i < mNucleotideLoci.size(); ++i)
+        {
+            int locus = mNucleotideLoci.get(i);
+
+            if((locus % 3) != 0)
+                continue;
+
+            if(mNucleotideLoci.contains(locus + 1) && mNucleotideLoci.contains(locus + 2))
+            {
+                int aaLocus = locus / 3;
+                aminoAcidLoci.add(aaLocus);
+                aminoAcids.add(formCodonAminoAcid(aaLocus));
+            }
+        }
+
         return new AminoAcidFragment(mId, mGenes, mNucleotideLoci, mNucleotideQuality, mNucleotides, aminoAcidLoci, aminoAcids);
+    }
+
+    private String formCodonAminoAcid(int index)
+    {
+        String first = nucleotide(index * 3);
+        String second = nucleotide(index * 3 + 1);
+        String third = nucleotide(index * 3 + 2);
+
+        if (first == "." && second == "." && third == ".")
+            return ".";
+
+        return Codons.aminoAcids(first + second + third);
     }
 
     public final NucleotideFragment enrich(int loci, final String nucleotide, int quality)
@@ -124,6 +137,35 @@ public class NucleotideFragment
         nucleotides.add(nucleotide);
 
         return new NucleotideFragment(mId, mGenes, nucleotideLoci, nucleotideQuality, nucleotides);
+    }
+
+    public static List<NucleotideFragment> reduceById(final List<NucleotideFragment> fragments)
+    {
+        final List<NucleotideFragment> mergedFragments = Lists.newArrayList(); // by readId
+
+        while(!fragments.isEmpty())
+        {
+            NucleotideFragment frag1 = fragments.get(0);
+            fragments.remove(0);
+
+            NucleotideFragment frag2 = null;
+            for(int i = 0; i < fragments.size(); ++i)
+            {
+                if(fragments.get(i).getId().equals(frag1.getId()))
+                {
+                    frag2 = fragments.get(i);
+                    fragments.remove(i);
+                    break;
+                }
+            }
+
+            if(frag2 != null)
+            {
+                mergedFragments.add(NucleotideFragment.merge(frag1, frag2));
+            }
+        }
+
+        return mergedFragments;
     }
 
     public static NucleotideFragment merge(final NucleotideFragment frag1, final NucleotideFragment frag2)

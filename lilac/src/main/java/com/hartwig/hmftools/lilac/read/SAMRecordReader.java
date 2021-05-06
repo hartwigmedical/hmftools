@@ -1,6 +1,7 @@
-package com.hartwig.hmftools.lilac.sam;
+package com.hartwig.hmftools.lilac.read;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.fragment.NucleotideFragment.reduceById;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -13,8 +14,8 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
-import com.hartwig.hmftools.lilac.nuc.NucleotideFragment;
-import com.hartwig.hmftools.lilac.nuc.NucleotideFragmentFactory;
+import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
+import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -123,31 +124,7 @@ public class SAMRecordReader
             readFragments.addAll(realign(codingRegion, reverseStrand, mBamFile));
         }
 
-        final List<NucleotideFragment> mergedFragments = Lists.newArrayList(); // by readId
-
-        while(!readFragments.isEmpty())
-        {
-            NucleotideFragment frag1 = readFragments.get(0);
-            readFragments.remove(0);
-
-            NucleotideFragment frag2 = null;
-            for(int i = 0; i < readFragments.size(); ++i)
-            {
-                if(readFragments.get(i).getId().equals(frag1.getId()))
-                {
-                    frag2 = readFragments.get(i);
-                    readFragments.remove(i);
-                    break;
-                }
-            }
-
-            if(frag2 != null)
-            {
-                mergedFragments.add(NucleotideFragment.merge(frag1, frag2));
-            }
-        }
-
-        return mergedFragments;
+        return reduceById(readFragments);
     }
 
     private final List<NamedBed> codingRegions(final HmfTranscriptRegion transcript, boolean reverse)

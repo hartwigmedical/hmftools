@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.lilac.hla;
 
 import java.util.List;
-import java.util.Set;
 
-import com.hartwig.hmftools.lilac.nuc.ExpectedAlleles;
-import com.hartwig.hmftools.lilac.hla.HlaContext;
-import com.hartwig.hmftools.lilac.nuc.NucleotideGeneEnrichment;
+import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
+import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 
 public class HlaContextFactory
 {

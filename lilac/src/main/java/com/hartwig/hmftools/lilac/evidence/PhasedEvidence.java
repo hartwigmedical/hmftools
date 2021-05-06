@@ -8,7 +8,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.lilac.amino.AminoAcidFragment;
+import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 public final class PhasedEvidence implements Comparable<PhasedEvidence>

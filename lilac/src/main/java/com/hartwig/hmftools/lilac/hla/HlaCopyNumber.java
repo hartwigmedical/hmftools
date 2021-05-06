@@ -1,15 +1,10 @@
-package com.hartwig.hmftools.lilac.cna;
+package com.hartwig.hmftools.lilac.hla;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
-import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 

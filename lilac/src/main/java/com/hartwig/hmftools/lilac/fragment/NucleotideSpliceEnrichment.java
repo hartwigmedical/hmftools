@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.nuc;
+package com.hartwig.hmftools.lilac.fragment;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;

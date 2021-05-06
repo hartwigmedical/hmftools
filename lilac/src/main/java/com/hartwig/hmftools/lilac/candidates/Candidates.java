@@ -1,14 +1,11 @@
 package com.hartwig.hmftools.lilac.candidates;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.LilacConfig;
-import com.hartwig.hmftools.lilac.amino.AminoAcidFragment;
+import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaContext;

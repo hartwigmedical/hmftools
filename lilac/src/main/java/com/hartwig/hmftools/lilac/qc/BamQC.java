@@ -3,8 +3,8 @@ package com.hartwig.hmftools.lilac.qc;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.lilac.sam.SAMRecordReader;
-import com.hartwig.hmftools.lilac.sam.Indel;
+import com.hartwig.hmftools.lilac.read.SAMRecordReader;
+import com.hartwig.hmftools.lilac.read.Indel;
 
 import java.util.List;
 import java.util.Map;
@@ -55,7 +55,7 @@ public class BamQC
 
     public final BamQC create(final SAMRecordReader reader)
     {
-        Map<com.hartwig.hmftools.lilac.sam.Indel,Integer> fragmentsWithUnmatchedPonIndel = reader.unmatchedPonIndels(MIN_SUPPORT);
+        Map<Indel,Integer> fragmentsWithUnmatchedPonIndel = reader.unmatchedPonIndels(MIN_SUPPORT);
         Map<Indel,Integer> fragmentsWithUnmatchedIndel = reader.unmatchedIndels(MIN_SUPPORT);
 
         fragmentsWithUnmatchedIndel.entrySet().forEach(x -> LL_LOGGER.warn(

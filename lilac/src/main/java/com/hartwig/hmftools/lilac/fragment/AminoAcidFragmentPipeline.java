@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.amino;
+package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.MAX_AMINO_ACID_BOUNDARY;
 
@@ -7,15 +7,8 @@ import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.SequenceCount;
 import com.hartwig.hmftools.lilac.SequenceCountDiff;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
-import com.hartwig.hmftools.lilac.nuc.NucleotideFragment;
-import com.hartwig.hmftools.lilac.nuc.NucleotideQualEnrichment;
-import com.hartwig.hmftools.lilac.nuc.NucleotideSpliceEnrichment;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class AminoAcidFragmentPipeline

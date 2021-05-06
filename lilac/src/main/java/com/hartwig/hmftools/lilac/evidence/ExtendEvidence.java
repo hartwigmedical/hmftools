@@ -2,13 +2,10 @@ package com.hartwig.hmftools.lilac.evidence;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.LilacConfig;
-import com.hartwig.hmftools.lilac.amino.AminoAcidFragment;
-import com.hartwig.hmftools.lilac.nuc.ExpectedAlleles;
+import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
+import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
 import com.sun.tools.javac.util.Pair;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.nuc;
+package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
