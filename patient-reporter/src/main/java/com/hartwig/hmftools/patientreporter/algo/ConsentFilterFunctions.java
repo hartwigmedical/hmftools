@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
@@ -24,12 +25,14 @@ public final class ConsentFilterFunctions {
     // TODO Extend overruling functions to make json and pdf more consistent.
     @NotNull
     public GenomicAnalysis filterAndOverruleForConsent(@NotNull GenomicAnalysis genomicAnalysis,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralBreakends) {
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralBreakends, boolean reportPeach) {
         List<ReportableVariant> filteredVariants = filterAndOverruleVariants(genomicAnalysis.reportableVariants(),
                 germlineReportingLevel,
                 genomicAnalysis.hasReliablePurity());
 
         List<VirusBreakend> filteredVirusBreakends = reportViralBreakends ? genomicAnalysis.virusBreakends() : Lists.newArrayList();
+
+        List<PeachGenotype> filteredPeachGenotype = reportPeach ? genomicAnalysis.peachGenotypes() : Lists.newArrayList();
 
         List<ProtectEvidence> filteredTumorSpecificEvidence =
                 filterEvidenceForGermlineConsent(genomicAnalysis.tumorSpecificEvidence(), germlineReportingLevel);
@@ -44,6 +47,7 @@ public final class ConsentFilterFunctions {
                 .from(genomicAnalysis)
                 .reportableVariants(filteredVariants)
                 .virusBreakends(filteredVirusBreakends)
+                .peachGenotypes(filteredPeachGenotype)
                 .tumorSpecificEvidence(filteredTumorSpecificEvidence)
                 .clinicalTrials(filteredClinicalTrials)
                 .offLabelEvidence(filteredOffLabelEvidence)

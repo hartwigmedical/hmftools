@@ -32,39 +32,39 @@ public final class PatientReporterTestFactory {
 
     @NotNull
     public static LimsCohortConfig createTestCohortConfig() {
-        return createCohortConfig("TestCohort", false, false, false, false, false, false, false, false, false, false);
+        return createCohortConfig("TestCohort", false, false, false, false, false, true, false, false, false, false, false);
     }
 
     @NotNull
     public static LimsCohortConfig createCPCTCohortConfig() {
-        return createCohortConfig("CPCT", true, false, false, false, false, false, false, true, false, false);
+        return createCohortConfig("CPCT", true, false, false, false, false, true, false, false, true, false, false);
     }
 
     @NotNull
     public static LimsCohortConfig createCOLOCohortConfig() {
-        return createCohortConfig("COLO", true, false, false, false, false, false, false, true, false, false);
+        return createCohortConfig("COLO", true, false, false, false, false, true, false, false, true, false, false);
     }
 
     @NotNull
     public static LimsCohortConfig createCORECohortConfig() {
-        return createCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true);
+        return createCohortConfig("CORE", true, true, false, true, true, true, true, true, false, true, true);
     }
 
     @NotNull
     public static LimsCohortConfig createWIDECohortConfig() {
-        return createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, true);
+        return createCohortConfig("WIDE", true, true, true, true, true, true, false, true, true, false, true);
     }
 
     @NotNull
     public static LimsCohortConfig createCOREDBCohortConfig() {
-        return createCohortConfig("COREDB", true, true, true, false, true, true, true, true, false, true);
+        return createCohortConfig("COREDB", true, true, true, false, true, true, true, true, true, false, true);
     }
 
     @NotNull
     private static LimsCohortConfig createCohortConfig(@NotNull String cohortId, boolean sampleContainsHospitalCenterId,
-            boolean reportGermline, boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean requireHospitalId,
-            boolean requireHospitalPAId, boolean requireHospitalPersonsStudy, boolean requireHospitalPersonsRequester,
-            boolean requireAdditionalInformationForSidePanel) {
+            boolean reportGermline, boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean reportPeach,
+            boolean requireHospitalId, boolean requireHospitalPAId, boolean requireHospitalPersonsStudy,
+            boolean requireHospitalPersonsRequester, boolean requireAdditionalInformationForSidePanel) {
         return ImmutableLimsCohortConfig.builder()
                 .cohortId(cohortId)
                 .sampleContainsHospitalCenterId(sampleContainsHospitalCenterId)
@@ -72,6 +72,7 @@ public final class PatientReporterTestFactory {
                 .reportGermlineFlag(reportGermlineFlag)
                 .reportConclusion(reportConclusion)
                 .reportViral(reportViral)
+                .reportPeach(reportPeach)
                 .requireHospitalId(requireHospitalId)
                 .requireHospitalPAId(requireHospitalPAId)
                 .requireHospitalPersonsStudy(requireHospitalPersonsStudy)

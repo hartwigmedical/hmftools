@@ -27,6 +27,7 @@ public class LimsCohortModelFactoryTest {
         assertFalse(cohortConfigData.reportGermlineFlag());
         assertFalse(cohortConfigData.reportConclusion());
         assertFalse(cohortConfigData.reportViral());
+        assertFalse(cohortConfigData.reportPeach());
         assertFalse(cohortConfigData.requireHospitalId());
         assertFalse(cohortConfigData.requireHospitalPAId());
         assertTrue(cohortConfigData.requireHospitalPersonsStudy());

@@ -67,6 +67,7 @@ public final class LimsTestUtil {
                 .reportGermlineFlag(false)
                 .reportConclusion(false)
                 .reportViral(false)
+                .reportPeach(false)
                 .requireHospitalId(false)
                 .requireHospitalPAId(false)
                 .requireHospitalPersonsStudy(false)

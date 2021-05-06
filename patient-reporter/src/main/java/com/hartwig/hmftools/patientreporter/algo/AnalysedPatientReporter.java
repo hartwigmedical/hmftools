@@ -77,7 +77,7 @@ public class AnalysedPatientReporter {
 
         GenomicAnalysis filteredAnalysis = consentFilterFunctions.filterAndOverruleForConsent(genomicAnalysis,
                 sampleReport.germlineReportingLevel(),
-                sampleReport.reportViralInsertions());
+                sampleReport.reportViralInsertions(), sampleReport.cohort().reportPeach());
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
 

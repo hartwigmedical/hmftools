@@ -14,9 +14,9 @@ public class LimsCheckerTest {
 
     @NotNull
     public static LimsCohortConfig createCohortConfig(@NotNull String cohortId, boolean sampleContainsHospitalCenterId,
-            boolean reportGermline, boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean requireHospitalId,
-            boolean requireHospitalPAId, boolean requireHospitalPersonsStudy, boolean requireHospitalPersonsRequester,
-            boolean requireAdditionalInformationForSidePanel) {
+            boolean reportGermline, boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean reportPeach,
+            boolean requireHospitalId, boolean requireHospitalPAId, boolean requireHospitalPersonsStudy,
+            boolean requireHospitalPersonsRequester, boolean requireAdditionalInformationForSidePanel) {
         return ImmutableLimsCohortConfig.builder()
                 .cohortId(cohortId)
                 .sampleContainsHospitalCenterId(sampleContainsHospitalCenterId)
@@ -24,6 +24,7 @@ public class LimsCheckerTest {
                 .reportGermlineFlag(reportGermlineFlag)
                 .reportConclusion(reportConclusion)
                 .reportViral(reportViral)
+                .reportPeach(reportPeach)
                 .requireHospitalId(requireHospitalId)
                 .requireHospitalPAId(requireHospitalPAId)
                 .requireHospitalPersonsStudy(requireHospitalPersonsStudy)
@@ -42,19 +43,20 @@ public class LimsCheckerTest {
         String correctIdC = "C18-124";
         String wrongId = "BGr-121111";
 
-        LimsCohortConfig cohortConfigWIDE = createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, true);
+        LimsCohortConfig cohortConfigWIDE = createCohortConfig("WIDE", true, true, true, true, true, true, false, true, true, false, true);
         assertEquals(correctIdT, LimsChecker.toHospitalPathologySampleIdForReport(correctIdT, wideSampleId, cohortConfigWIDE));
         assertEquals(correctIdC, LimsChecker.toHospitalPathologySampleIdForReport(correctIdC, wideSampleId, cohortConfigWIDE));
         assertNull(LimsChecker.toHospitalPathologySampleIdForReport(wrongId, wideSampleId, cohortConfigWIDE));
         assertNull(LimsChecker.toHospitalPathologySampleIdForReport(Lims.NOT_AVAILABLE_STRING, wideSampleId, cohortConfigWIDE));
         assertNull(LimsChecker.toHospitalPathologySampleIdForReport(Strings.EMPTY, wideSampleId, cohortConfigWIDE));
 
-        LimsCohortConfig cohortConfigCORE = createCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true);
+        LimsCohortConfig cohortConfigCORE = createCohortConfig("CORE", true, true, false, true, true, true, true, true, false, true, true);
         assertNull(LimsChecker.toHospitalPathologySampleIdForReport(Strings.EMPTY, coreSampleId, cohortConfigCORE));
         assertEquals(correctIdT, LimsChecker.toHospitalPathologySampleIdForReport(correctIdT, coreSampleId, cohortConfigCORE));
         assertNull(LimsChecker.toHospitalPathologySampleIdForReport(wrongId, coreSampleId, cohortConfigCORE));
 
-        LimsCohortConfig cohortConfigCPCT = createCohortConfig("CPCT", true, false, false, false, false, false, false, true, false, false);
+        LimsCohortConfig cohortConfigCPCT =
+                createCohortConfig("CPCT", true, false, false, false, false, true, false, false, true, false, false);
         assertNull(correctIdT, LimsChecker.toHospitalPathologySampleIdForReport(correctIdT, cpctSampleId, cohortConfigCPCT));
         assertNull(correctIdC, LimsChecker.toHospitalPathologySampleIdForReport(correctIdC, cpctSampleId, cohortConfigCPCT));
     }
@@ -68,12 +70,12 @@ public class LimsCheckerTest {
         String hospitalIDEmpty = Strings.EMPTY;
         String hospitalId = "1234";
 
-        LimsCohortConfig cohortConfigCORE = createCohortConfig("CORE", true, true, false, true, true, true, true, false, true, true);
+        LimsCohortConfig cohortConfigCORE = createCohortConfig("CORE", true, true, false, true, true, true, true, true, false, true, true);
         LimsChecker.checkHospitalPatientId(hospitalIdNA, coreSampleId, cohortConfigCORE);
         LimsChecker.checkHospitalPatientId(hospitalIDEmpty, coreSampleId, cohortConfigCORE);
         LimsChecker.checkHospitalPatientId(hospitalId, coreSampleId, cohortConfigCORE);
 
-        LimsCohortConfig cohortConfigWIDE = createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, true);
+        LimsCohortConfig cohortConfigWIDE = createCohortConfig("WIDE", true, true, true, true, true, true, false, true, true, false, true);
         LimsChecker.checkHospitalPatientId(hospitalIdNA, wideSampleId, cohortConfigWIDE);
     }
 }
