@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.codon.Codons;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 public class NucleotideFragment
 {
@@ -54,11 +55,16 @@ public class NucleotideFragment
         return !indices.stream().anyMatch(x -> !containsNucleotide(x));
     }
 
-    public final String nucleotides(final Set<Integer> indices)
+    public final String nucleotides(final List<Integer> indices)
     {
         StringJoiner sj = new StringJoiner("");
         indices.stream().forEach(x -> sj.add(nucleotide(x)));
         return sj.toString();
+    }
+
+    public final String nucleotides(final Set<Integer> indices)
+    {
+        return nucleotides(indices.stream().collect(Collectors.toList()));
     }
 
     public final String nucleotide(int loci)

@@ -1,5 +1,14 @@
 package com.hartwig.hmftools.lilac.hla;
 
+import static java.lang.Math.min;
+
+import java.util.List;
+import java.util.StringJoiner;
+
+import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
+
+import org.apache.commons.compress.utils.Lists;
+
 public class HlaAllele implements Comparable<HlaAllele>
 {
     public final String Gene;
@@ -55,6 +64,13 @@ public class HlaAllele implements Comparable<HlaAllele>
         return Gene + '*' + AlleleGroup + ':' + Protein + ':' + Synonymous + ':' + SynonymousNonCoding;
     }
 
+    public static String toString(final List<HlaAllele> allees)
+    {
+        StringJoiner sj = new StringJoiner(", ");
+        allees.forEach(x -> sj.add(x.toString()));
+        return sj.toString();
+    }
+
     public final HlaAllele asSixDigit()
     {
         return new HlaAllele(Gene, AlleleGroup, Protein, Synonymous, "");
@@ -101,5 +117,18 @@ public class HlaAllele implements Comparable<HlaAllele>
     {
         return alleleStr.equals(toString());
     }
+
+    public static List<HlaAllele> takeN(final List<HlaAllele> list, int n)
+    {
+        List<HlaAllele> newList = Lists.newArrayList();
+
+        for(int i = 0; i < min(list.size(), n); ++i)
+        {
+            newList.add(list.get(i));
+        }
+
+        return newList;
+    }
+
 
 }

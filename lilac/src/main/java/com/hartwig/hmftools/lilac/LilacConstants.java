@@ -47,4 +47,6 @@ public class LilacConstants
     public static final char WILD_CHAR = WILD_STR.charAt(0);
     public static final String DEL_STR = ".";
     public static final char DEL_CHAR = DEL_STR.charAt(0);
+
+    public static final int COMPLEX_PERMS_THRESHOLD = 100000;
 }

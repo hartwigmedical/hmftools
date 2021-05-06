@@ -120,6 +120,11 @@ public class HlaSequenceLoci
         return match(targetSequence, tiSet) != HlaSequenceMatch.NONE;
     }
 
+    public final HlaSequenceMatch match(final String targetSequence, final List<Integer> targetIndices)
+    {
+        return match(targetSequence, targetIndices.stream().collect(Collectors.toSet()));
+    }
+
     public final HlaSequenceMatch match(final String targetSequence, final Set<Integer> targetIndices)
     {
         if(targetIndices.isEmpty())

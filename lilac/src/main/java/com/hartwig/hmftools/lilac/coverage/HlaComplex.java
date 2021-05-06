@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.lilac.coverage;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.read.FragmentAlleles;
@@ -19,146 +22,100 @@ public class HlaComplex
         Alleles = alleles;
     }
 
-    public static List<HlaComplex> complexes(final LilacConfig config, final List<FragmentAlleles> referenceFragmentAlleles,
-            final List<HlaAllele> candidateAlleles, final List<HlaAllele> recoveredAlleles)
+    public List<HlaAllele> getAlleles() { return Alleles; }
+
+    public static List<HlaComplex> complexes(
+            final LilacConfig config, final List<FragmentAlleles> referenceFragmentAlleles,
+            final List<HlaAllele> candidateAlleles) // final List<HlaAllele> recoveredAlleles was uused
     {
-        // TODO
-        return Lists.newArrayList();
-//        List<HlaComplex> list;
-//        Collection<HlaAllele> collection;
-//        void $receiver$iv$iv;
-//        void $receiver$iv;
-//        Iterable $receiver$iv$iv2;
-//        Iterable $receiver$iv2;
-//        void $receiver$iv$iv3;
-//        Iterable $receiver$iv3;
-//        Intrinsics.checkParameterIsNotNull((Object) config, (String) "config");
-//        Intrinsics.checkParameterIsNotNull(referenceFragmentAlleles, (String) "referenceFragmentAlleles");
-//        Intrinsics.checkParameterIsNotNull(candidateAlleles, (String) "candidateAlleles");
-//        Intrinsics.checkParameterIsNotNull(recoveredAlleles, (String) "recoveredAlleles");
-//        getLogger().info("Identifying uniquely identifiable groups and proteins [total,unique,shared,wide]");
-//        HlaComplexCoverage groupCoverage =
-//                HlaComplexCoverageFactory.Companion.groupCoverage(referenceFragmentAlleles, (Collection<HlaAllele>) candidateAlleles);
-//        List<HlaAlleleCoverage> confirmedGroups = confirmUnique(groupCoverage, config);
-//        Iterable iterable = $receiver$iv3 = (Iterable) groupCoverage.getAlleleCoverage();
-//        Collection destination$iv$iv = new ArrayList();
-//        for(Object element$iv$iv : $receiver$iv$iv3)
-//        {
-//            HlaAlleleCoverage it = (HlaAlleleCoverage) element$iv$iv;
-//            boolean bl = false;
-//            if(!(it.getUniqueCoverage() > 0 && !confirmedGroups.contains(it)))
-//            {
-//                continue;
-//            }
-//            destination$iv$iv.add(element$iv$iv);
-//        }
-//        List discardedGroups = CollectionsKt.sortedDescending((Iterable) ((List) destination$iv$iv));
-//        $receiver$iv3 = confirmedGroups;
-//        if(!$receiver$iv3.isEmpty())
-//        {
-//            getLogger()
-//                    .info("    confirmed " + confirmedGroups.size() + " unique groups: "
-//                            + CollectionsKt.joinToString$default((Iterable) confirmedGroups, (CharSequence) ", ", null, null, (int) 0, null, null, (int) 62, null));
-//        }
-//        else
-//        {
-//            getLogger().info("    confirmed 0 unique groups");
-//        }
-//        $receiver$iv3 = discardedGroups;
-//        if(!$receiver$iv3.isEmpty())
-//        {
-//            getLogger()
-//                    .info("    found " + discardedGroups.size() + " insufficiently unique groups: "
-//                            + CollectionsKt.joinToString$default((Iterable) discardedGroups, (CharSequence) ", ", null, null, (int) 0, null, null, (int) 62, null));
-//        }
-//        List<HlaAllele> confirmedGroupAlleles = alleles(confirmedGroups);
-//        List<HlaAllele> candidatesAfterConfirmedGroups = filterWithConfirmedGroups(candidateAlleles, confirmedGroupAlleles);
-//        HlaComplexCoverage proteinCoverage =
-//                HlaComplexCoverageFactory.Companion.proteinCoverage(referenceFragmentAlleles, (Collection<HlaAllele>) candidatesAfterConfirmedGroups);
-//        List<HlaAlleleCoverage> confirmedProtein = confirmUnique(proteinCoverage, config);
-//        Iterable bl = $receiver$iv2 = (Iterable) proteinCoverage.getAlleleCoverage();
-//        Collection destination$iv$iv2 = new ArrayList();
-//        for(Object element$iv$iv : $receiver$iv$iv2)
-//        {
-//            HlaAlleleCoverage it = (HlaAlleleCoverage) element$iv$iv;
-//            boolean bl2 = false;
-//            if(!(it.getUniqueCoverage() > 0 && !confirmedProtein.contains(it)))
-//            {
-//                continue;
-//            }
-//            destination$iv$iv2.add(element$iv$iv);
-//        }
-//        List discardedProtein = CollectionsKt.sortedDescending((Iterable) ((List) destination$iv$iv2));
-//        $receiver$iv2 = confirmedProtein;
-//        if(!$receiver$iv2.isEmpty())
-//        {
-//            getLogger()
-//                    .info("    confirmed " + confirmedProtein.size() + " unique proteins: "
-//                            + CollectionsKt.joinToString$default((Iterable) confirmedProtein, (CharSequence) ", ", null, null, (int) 0, null, null, (int) 62, null));
-//        }
-//        else
-//        {
-//            getLogger().info("    confirmed 0 unique proteins");
-//        }
-//        $receiver$iv2 = discardedProtein;
-//        if(!$receiver$iv2.isEmpty())
-//        {
-//            getLogger()
-//                    .info("    found " + discardedProtein.size() + " insufficiently unique proteins: "
-//                            + CollectionsKt.joinToString$default((Iterable) discardedProtein, (CharSequence) ", ", null, null, (int) 0, null, null, (int) 62, null));
-//        }
-//        $receiver$iv$iv2 = confirmedProtein;
-//        List<HlaAllele> list2 = candidatesAfterConfirmedGroups;
-//        Companion companion = this;
-//        destination$iv$iv2 = $receiver$iv;
-//        Collection destination$iv$iv3 = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-//        for(Object item$iv$iv : $receiver$iv$iv)
-//        {
-//            void it;
-//            HlaAlleleCoverage bl2 = (HlaAlleleCoverage) item$iv$iv;
-//            collection = destination$iv$iv3;
-//            boolean bl3 = false;
-//            HlaAllele hlaAllele = it.getAllele();
-//            collection.add(hlaAllele);
-//        }
-//        collection = (List) destination$iv$iv3;
-//        List<HlaAllele> candidatesAfterConfirmedProteins = companion.filterWithConfirmedProteins(list2, (List<HlaAllele>) collection);
-//        List<HlaComplex> aOnlyComplexes =
-//                gene("A", alleles(confirmedGroups), alleles(confirmedProtein), candidatesAfterConfirmedProteins);
-//        List<HlaComplex> bOnlyComplexes =
-//                gene("B", alleles(confirmedGroups), alleles(confirmedProtein), candidatesAfterConfirmedProteins);
-//        List<HlaComplex> cOnlyComplexes =
-//                gene("C", alleles(confirmedGroups), alleles(confirmedProtein), candidatesAfterConfirmedProteins);
-//        List<HlaComplex> complexes = null;
-//        long simpleComplexCount = (long) aOnlyComplexes.size() * (long) bOnlyComplexes.size() * (long) cOnlyComplexes.size();
-//        if(simpleComplexCount > (long) 100000 || simpleComplexCount < 0L)
-//        {
-//            getLogger().info("Candidate permutations exceeds maximum complexity");
-//            HlaComplexCoverageFactory groupRankedCoverageFactory = new HlaComplexCoverageFactory(config);
-//            List<HlaAllele> aTopCandidates =
-//                    groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, aOnlyComplexes);
-//            List<HlaAllele> bTopCandidates =
-//                    groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, bOnlyComplexes);
-//            List<HlaAllele> cTopCandidates =
-//                    groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, cOnlyComplexes);
-//            List topCandidates =
-//                    CollectionsKt.plus((Collection) CollectionsKt.plus((Collection) aTopCandidates, (Iterable) bTopCandidates), (Iterable) cTopCandidates);
-//            Set rejected = CollectionsKt.subtract((Iterable) candidatesAfterConfirmedProteins, (Iterable) topCandidates);
-//            getLogger()
-//                    .info("    discarding " + rejected.size() + " unlikely candidates: "
-//                            + CollectionsKt.joinToString$default((Iterable) rejected, (CharSequence) ", ", null, null, (int) 0, null, null, (int) 62, null));
-//            list = complexes(alleles(confirmedGroups), alleles(confirmedProtein), topCandidates);
-//        }
-//        else
-//        {
-//            list = complexes(alleles(confirmedGroups), alleles(confirmedProtein), candidatesAfterConfirmedProteins);
-//        }
-//        complexes = list;
-//        return complexes;
+        LL_LOGGER.info("Identifying uniquely identifiable groups and proteins [total,unique,shared,wide]");
+
+        HlaComplexCoverage groupCoverage = HlaComplexCoverageFactory.groupCoverage(referenceFragmentAlleles, candidateAlleles);
+
+        List<HlaAlleleCoverage> confirmedGroups = groupCoverage.confirmUnique(config);
+
+        List<HlaAlleleCoverage> discardedGroups = groupCoverage.getAlleleCoverage().stream()
+                .filter(x -> x.UniqueCoverage > 0 && !confirmedGroups.contains(x)).collect(Collectors.toList());
+
+        Collections.sort(discardedGroups, Collections.reverseOrder());
+
+        if(!confirmedGroups.isEmpty())
+        {
+            LL_LOGGER.info("  confirmed {} unique groups: {}",  confirmedGroups.size(), HlaAlleleCoverage.toString(confirmedGroups));
+        }
+        else
+        {
+            LL_LOGGER.info("  confirmed 0 unique groups");
+        }
+
+        if (!discardedGroups.isEmpty())
+        {
+            LL_LOGGER.info("  found {}} insufficiently unique groups: {}",
+                    discardedGroups.size(), HlaAlleleCoverage.toString(discardedGroups));
+        }
+
+        List<HlaAllele> confirmedGroupAlleles = alleles(confirmedGroups);
+        List<HlaAllele> candidatesAfterConfirmedGroups = filterWithConfirmedGroups(candidateAlleles, confirmedGroupAlleles);
+        HlaComplexCoverage proteinCoverage = HlaComplexCoverageFactory.proteinCoverage(referenceFragmentAlleles, candidatesAfterConfirmedGroups);
+        List<HlaAlleleCoverage> confirmedProtein = proteinCoverage.confirmUnique(config);
+        List<HlaAlleleCoverage> discardedProtein = proteinCoverage.getAlleleCoverage().stream()
+                .filter(x -> x.UniqueCoverage > 0 && !confirmedProtein.contains(x)).collect(Collectors.toList());
+        Collections.sort(discardedProtein, Collections.reverseOrder());
+
+        if(!confirmedProtein.isEmpty())
+        {
+            LL_LOGGER.info("  confirmed {} unique groups: {}", confirmedProtein.size(), HlaAlleleCoverage.toString(confirmedProtein));
+        }
+        else
+        {
+            LL_LOGGER.info("  confirmed 0 unique groups");
+        }
+
+        if (!discardedProtein.isEmpty())
+        {
+            LL_LOGGER.info("  found {}} insufficiently unique groups: {}", discardedProtein.size(), HlaAlleleCoverage.toString(discardedProtein));
+        }
+
+        List<HlaAllele> confirmedProteinAlleles = alleles(confirmedProtein);
+
+        List<HlaAllele> candidatesAfterConfirmedProteins = filterWithConfirmedProteins(candidatesAfterConfirmedGroups, confirmedProteinAlleles);
+
+        List<HlaComplex> aOnlyComplexes = gene("A", confirmedGroupAlleles, confirmedProteinAlleles, candidatesAfterConfirmedProteins);
+        List<HlaComplex> bOnlyComplexes = gene("B", confirmedGroupAlleles, confirmedProteinAlleles, candidatesAfterConfirmedProteins);
+        List<HlaComplex> cOnlyComplexes = gene("C", confirmedGroupAlleles, confirmedProteinAlleles, candidatesAfterConfirmedProteins);
+
+        List<HlaComplex> complexes;
+        long simpleComplexCount = aOnlyComplexes.size() * bOnlyComplexes.size() * cOnlyComplexes.size();
+
+        if (simpleComplexCount > 100_000 || simpleComplexCount < 0)
+        {
+            LL_LOGGER.info("Candidate permutations exceeds maximum complexity");
+
+            HlaComplexCoverageFactory groupRankedCoverageFactory = new HlaComplexCoverageFactory(config);
+            List<HlaAllele> aTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, aOnlyComplexes);
+            List<HlaAllele> bTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, bOnlyComplexes);
+            List<HlaAllele> cTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, cOnlyComplexes);
+            List<HlaAllele> topCandidates = Lists.newArrayList();
+            topCandidates.addAll(aTopCandidates);
+            topCandidates.addAll(bTopCandidates);
+            topCandidates.addAll(cTopCandidates);
+
+            List<HlaAllele> rejected = candidatesAfterConfirmedProteins.stream()
+                    .filter(x -> !topCandidates.contains(x)).collect(Collectors.toList());
+
+            LL_LOGGER.info("  discarding {} unlikely candidates: ", rejected.size(), HlaAllele.toString(rejected));
+            complexes = buildComplexes(confirmedGroupAlleles, confirmedProteinAlleles, topCandidates);
+        }
+        else
+        {
+            complexes = buildComplexes(confirmedGroupAlleles, confirmedProteinAlleles, candidatesAfterConfirmedProteins);
+        }
+
+        return complexes;
     }
 
-    private final List<HlaComplex> complexes(List<HlaAllele> confirmedGroups, List<HlaAllele> confirmedProteins,
-            List<HlaAllele> candidates)
+    private static List<HlaComplex> buildComplexes(
+            final List<HlaAllele> confirmedGroups, final List<HlaAllele> confirmedProteins, final List<HlaAllele> candidates)
     {
         List<HlaComplex> a = gene("A", confirmedGroups, confirmedProteins, candidates);
         List<HlaComplex> b = gene("B", confirmedGroups, confirmedProteins, candidates);
@@ -166,77 +123,149 @@ public class HlaComplex
         return combineComplexes(combineComplexes(a, b), c);
     }
 
-    /*
-     * WARNING - void declaration
-     */
-    public static List<HlaComplex> gene(final String gene, final List<HlaAllele> unfilteredGroups,
+    public static List<HlaComplex> gene(
+            final String gene, final List<HlaAllele> unfilteredGroups,
             final List<HlaAllele> unfilteredProteins, final List<HlaAllele> unfilteredCandidates)
     {
-        // TODO
-        return Lists.newArrayList();
+        List<HlaAllele> confirmedGroups = HlaAllele.takeN(unfilteredGroups.stream().filter(x -> x.Gene.equals(gene)).collect(Collectors.toList()), 2);
+        List<HlaAllele> confirmedProteins = HlaAllele.takeN(unfilteredProteins.stream().filter(x -> x.Gene.equals(gene)).collect(Collectors.toList()), 2);
+        List<HlaAllele> candidates = unfilteredCandidates.stream().filter(x -> x.Gene.equals(gene)).collect(Collectors.toList());
 
+        if (confirmedProteins.size() == 2)
+            return Lists.newArrayList(new HlaComplex(confirmedProteins));
+
+        if (confirmedProteins.size() == 1)
+        {
+            List<HlaAllele> confirmedProteinGroups = confirmedProteins.stream().map(x -> x.asAlleleGroup()).collect(Collectors.toList());
+            List<HlaAllele> remainingGroups = confirmedGroups.stream().filter(x -> !confirmedProteinGroups.contains(x)).collect(Collectors.toList());
+
+            List<HlaAllele> first = confirmedProteins;
+
+            List<HlaAllele> second = remainingGroups.isEmpty() ?
+                    candidates.stream().filter(x -> x != confirmedProteins.get(0)).collect(Collectors.toList()) :
+                    candidates.stream().filter(x -> remainingGroups.contains(x.asAlleleGroup())).collect(Collectors.toList());
+
+            List<HlaComplex> complexes = combineAlleles(first, second);
+            if(!remainingGroups.isEmpty())
+                return complexes;
+
+            // CHECK what does + do, combine the alleles?
+            complexes.add(new HlaComplex(first));
+            return complexes;
+
+            // return if (remainingGroups.isEmpty()) combineAlleles(first, second) + HlaComplex(first) else combineAlleles(first, second)
+        }
+
+        if (confirmedGroups.size() == 2)
+        {
+            List<HlaAllele> first = candidates.stream().filter(x -> x.asAlleleGroup() == confirmedGroups.get(0)).collect(Collectors.toList());
+            List<HlaAllele> second = candidates.stream().filter(x -> x.asAlleleGroup() == confirmedGroups.get(1)).collect(Collectors.toList());
+            return combineAlleles(first, second);
+        }
+
+        if (confirmedGroups.size() == 1)
+        {
+            List<HlaAllele> first = candidates.stream().filter(x -> x.asAlleleGroup() == confirmedGroups.get(0)).collect(Collectors.toList());
+            List<HlaAllele> second = candidates;
+
+            List<HlaComplex> complexes = first.stream().map(x -> new HlaComplex(Lists.newArrayList(x))).collect(Collectors.toList());
+            complexes.addAll(combineAlleles(first, second));
+            return complexes;
+        }
+
+        List<HlaComplex> complexes = candidates.stream().map(x -> new HlaComplex(Lists.newArrayList(x))).collect(Collectors.toList());
+        complexes.addAll(combineAlleles(candidates, candidates));
+        return complexes;
     }
 
     public static List<HlaComplex> combineComplexes(final List<HlaComplex> first, final List<HlaComplex> second)
     {
-        // TODO
+        List<List<HlaComplex>> intermediatePairs = cartesianComplexProduct(first, second);
+        // return intermediatePairs.stream().map(x -> )
+        // TODO, check how combined
         return Lists.newArrayList();
+        //return intermediate.map { it.flatMap { it.alleles } }.map { HlaComplex(it) }
     }
 
-    private static List<HlaComplex> combineAlleles(List<HlaAllele> first, List<HlaAllele> second)
+    private static List<List<HlaComplex>> cartesianComplexProduct(final List<HlaComplex> first, final List<HlaComplex> second)
     {
-        // TODO
-        return Lists.newArrayList();
-        
-    }
+        List<List<HlaComplex>> results = Lists.newArrayList();
 
-    /*
-    private static <T> List<List<T>> cartesianProduct(Collection<? extends T> first, Collection<? extends T> second)
-    {
-        List result = new ArrayList();
-        for(T i : first)
+        for(HlaComplex i : first)
         {
-            for(T j : second)
+            for(HlaComplex j : second)
             {
-                if(!(Intrinsics.areEqual(i, j) ^ true))
+                if(i != j)
                 {
-                    continue;
+                    List<HlaComplex> pairing = Lists.newArrayList(i, j);
+
+                    if(results.stream().anyMatch(x -> x.get(0) == pairing.get(0) && x.get(1) == pairing.get(1)))
+                        continue;
+
+                    results.add(pairing);
                 }
-                result.add(CollectionsKt.mutableListOf((Object[]) new Object[] { i, j }));
             }
         }
-        return CollectionsKt.distinct((Iterable) result);
-    }
-    
-     */
 
-    private static List<HlaAllele> filterWithConfirmedProteins(List<HlaAllele> $receiver, List<HlaAllele> confirmedGroups)
-    {
-        // TODO
-        return Lists.newArrayList();
+        return results;
     }
 
-    private static List<HlaAllele> filterWithConfirmedGroups(List<HlaAllele> $receiver, List<HlaAllele> confirmedGroups)
+
+
+    private static List<HlaComplex> combineAlleles(final List<HlaAllele> first, final List<HlaAllele> second)
     {
-        // TODO
-        return Lists.newArrayList();
+        List<List<HlaAllele>> allelePairs = cartesianAlleleProduct(first, second);
+        return allelePairs.stream().map(x -> new HlaComplex(x)).collect(Collectors.toList());
     }
 
-    private final List<HlaAllele> filterWithConfirmed(List<HlaAllele> $receiver, List<HlaAllele> confirmed) //            Function1<? super HlaAllele, HlaAllele> transform)
+    private static List<List<HlaAllele>> cartesianAlleleProduct(final List<HlaAllele> first, final List<HlaAllele> second)
     {
-        // TODO
-        return Lists.newArrayList();
+        List<List<HlaAllele>> results = Lists.newArrayList();
+
+        for(HlaAllele i : first)
+        {
+            for(HlaAllele j : second)
+            {
+                if(i != j)
+                {
+                    List<HlaAllele> pairing = Lists.newArrayList(i, j);
+                    Collections.sort(pairing);
+                    if(results.stream().anyMatch(x -> x.get(0) == pairing.get(0) && x.get(1) == pairing.get(1)))
+                        continue;
+
+                    results.add(pairing);
+                }
+            }
+        }
+
+        return results;
     }
 
-    private static List<HlaAlleleCoverage> confirmUnique(final HlaComplexCoverage coverage, final LilacConfig config)
+    private static List<HlaAllele> filterWithConfirmedProteins(final List<HlaAllele> alleles, List<HlaAllele> confirmedGroups)
     {
-        // TODO
-        return Lists.newArrayList();
+        return filterWithConfirmedGroups(alleles, confirmedGroups);    }
+
+    private static List<HlaAllele> filterWithConfirmedGroups(final List<HlaAllele> alleles, final List<HlaAllele> confirmedGroups)
+    {
+        List<HlaAllele> alleleGroups = alleles.stream().map(x -> x.asAlleleGroup()).collect(Collectors.toList());
+        return filterWithConfirmed(alleleGroups, confirmedGroups);
     }
 
-    private static List<HlaAllele> alleles(List<HlaAlleleCoverage> $receiver)
+    private static List<HlaAllele> filterWithConfirmed(final List<HlaAllele> alleles, final List<HlaAllele> confirmedGroups)
     {
-        // TODO
-        return Lists.newArrayList();
+        Map<String,List<HlaAllele>> map = Maps.newHashMap();
+
+        map.put("A", confirmedGroups.stream().filter(x -> x.Gene.equals("A")).collect(Collectors.toList()));
+        map.put("B", confirmedGroups.stream().filter(x -> x.Gene.equals("B")).collect(Collectors.toList()));
+        map.put("C", confirmedGroups.stream().filter(x -> x.Gene.equals("C")).collect(Collectors.toList()));
+
+        // CHECK
+        // return this.filter { map[it.gene]!!.size < 2 || map[it.gene]!!.contains(transform(it)) }
+        return alleles.stream().filter(x -> map.get(x.Gene).size() < 2 || map.get(x.Gene).contains(x.Gene)).collect(Collectors.toList());
+    }
+
+    private static List<HlaAllele> alleles(final List<HlaAlleleCoverage> coverage)
+    {
+        return coverage.stream().map(x -> x.Allele).collect(Collectors.toList());
     }
 }

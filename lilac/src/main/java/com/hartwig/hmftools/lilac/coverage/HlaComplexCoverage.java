@@ -1,9 +1,19 @@
 package com.hartwig.hmftools.lilac.coverage;
 
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.lilac.LilacConfig;
+import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
 {
@@ -12,85 +22,57 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
     public final int SharedCoverage;
     public final int WildCoverage;
     
-    public final List<HlaAlleleCoverage> AlleleCoverage;
+    private final List<HlaAlleleCoverage> mAlleleCoverage;
 
     public HlaComplexCoverage(int uniqueCoverage, int sharedCoverage, int wildCoverage, final List<HlaAlleleCoverage> alleleCoverage)
     {
         UniqueCoverage = uniqueCoverage;
         SharedCoverage = sharedCoverage;
         WildCoverage = wildCoverage;
-        AlleleCoverage = alleleCoverage;
+        mAlleleCoverage = alleleCoverage;
         TotalCoverage = UniqueCoverage + SharedCoverage + WildCoverage;
     }
 
+    public List<HlaAlleleCoverage> getAlleleCoverage() { return mAlleleCoverage; }
+
     public final HlaComplexCoverage expandToSixAlleles()
     {
-        return create(HlaAlleleCoverage.expand(AlleleCoverage));
+        return create(HlaAlleleCoverage.expand(mAlleleCoverage));
     }
 
     public final int homozygousAlleles()
     {
-        /*
-        void $receiver$iv$iv;
-        Iterable $receiver$iv;
-        Iterable iterable = $receiver$iv = (Iterable) AlleleCoverage;
-        Collection destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-        for(Object item$iv$iv : $receiver$iv$iv)
-        {
-            void it;
-            HlaAlleleCoverage
-                    hlaAlleleCoverage = (HlaAlleleCoverage) item$iv$iv;
-            Collection collection = destination$iv$iv;
-            boolean bl = false;
-            HlaAllele hlaAllele = it.getAllele();
-            collection.add(hlaAllele);
-        }
-        int distinct = CollectionsKt.distinct((Iterable) ((List) destination$iv$iv)).size();
-        return 6 - distinct;
-
-         */
-
-        return 0;
+        int alleleCount = (int)mAlleleCoverage.stream().map(x -> x.Allele).distinct().count();
+        return 6 - alleleCount;
     }
 
     @Override
     public int compareTo(final HlaComplexCoverage other)
     {
-        /*
-        int totalCoverageCompare = Intrinsics.compare((int) TotalCoverage, (int) other.TotalCoverage);
-        if(totalCoverageCompare != 0)
-        {
-            return totalCoverageCompare;
-        }
-        int wildCoverageCompare = Intrinsics.compare((int) WildCoverage, (int) other.WildCoverage);
-        if(wildCoverageCompare != 0)
-        {
-            return -wildCoverageCompare;
-        }
-        int sharedCoverageCompare = Intrinsics.compare((int) SharedCoverage, (int) other.SharedCoverage);
-        if(sharedCoverageCompare != 0)
-        {
-            return sharedCoverageCompare;
-        }
-        return Intrinsics.compare((int) UniqueCoverage, (int) other.UniqueCoverage);
+        if(TotalCoverage != other.TotalCoverage)
+            return TotalCoverage > other.TotalCoverage ? 1 : -1;
 
-         */
+        if(SharedCoverage != other.SharedCoverage)
+            return SharedCoverage > other.SharedCoverage ? 1 : -1;
 
-        // TODO
-        return 1;
+        if(WildCoverage != other.WildCoverage)
+            return WildCoverage > other.WildCoverage ? 1 : -1;
+
+        if(UniqueCoverage != other.UniqueCoverage)
+            return UniqueCoverage > other.UniqueCoverage ? 1 : -1;
+
+        return 0;
     }
 
     public String toString()
     {
-        //         val types = alleleCoverage.map { it.allele }.toSet()
-        //        return "${totalCoverage}\t$uniqueCoverage\t${sharedCoverage}\t${wildCoverage}\t${types.size}\t${alleleCoverage.joinToString("\t")}"
-        return "" ;
-        // TODO
-    }
+        Set<HlaAllele> alleles = mAlleleCoverage.stream().map(x -> x.Allele).collect(Collectors.toSet());
+        StringJoiner sj = new StringJoiner("\t");
 
-    public final List<HlaAlleleCoverage> getAlleleCoverage()
-    {
-        return AlleleCoverage;
+        // CHECK what is joined?
+        mAlleleCoverage.forEach(x -> sj.add(x.toString()));
+        return String.format("%d\t%d\t%d\t%d\t%d\t%s",
+                TotalCoverage, UniqueCoverage, SharedCoverage, WildCoverage, alleles.size(), sj.toString());
     }
 
     public static HlaComplexCoverage create(final List<HlaAlleleCoverage> alleles)
@@ -105,10 +87,10 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
             wild += coverage.WildCoverage;
         }
 
-        // TODO
-        // return new HlaComplexCoverage(unique, (int)round(shared), (int)round(wild), alleles.sortedBy { it.allele })
-        return null;
+        final List<HlaAlleleCoverage> sortedAlleles = alleles.stream().collect(Collectors.toList());
+        Collections.sort(sortedAlleles, new HlaAlleleCoverage.AlleleSorter());
 
+        return new HlaComplexCoverage(unique, (int)round(shared), (int)round(wild), sortedAlleles);
     }
 
     public final String header()
@@ -116,8 +98,40 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
         return "totalCoverage\tuniqueCoverage\tsharedCoverage\twildCoverage\ttypes\tallele1\tallele2\tallele3\tallele4\tallele5\tallele6";
     }
 
+    public List<HlaAlleleCoverage> confirmUnique(final LilacConfig config)
+    {
+        List<HlaAlleleCoverage> unique = mAlleleCoverage.stream()
+                .filter(x -> x.UniqueCoverage >= config.MinConfirmedUniqueCoverage).collect(Collectors.toList());
+
+        Collections.sort(unique, Collections.reverseOrder());
+
+        List<HlaAlleleCoverage> aList = takeN(unique.stream().filter(x -> x.Allele.Gene.equals("A")).collect(Collectors.toList()), 2);
+        List<HlaAlleleCoverage> bList = takeN(unique.stream().filter(x -> x.Allele.Gene.equals("B")).collect(Collectors.toList()), 2);
+        List<HlaAlleleCoverage> cList = takeN(unique.stream().filter(x -> x.Allele.Gene.equals("C")).collect(Collectors.toList()), 2);
+
+        List<HlaAlleleCoverage> results = Lists.newArrayList();
+        results.addAll(aList);
+        results.addAll(bList);
+        results.addAll(cList);
+        Collections.sort(results, Collections.reverseOrder());
+        return results;
+    }
+
+    private static List<HlaAlleleCoverage> takeN(final List<HlaAlleleCoverage> list, int n)
+    {
+        List<HlaAlleleCoverage> newList = Lists.newArrayList();
+
+        for(int i = 0; i < min(list.size(), n); ++i)
+        {
+            newList.add(list.get(i));
+        }
+
+        return newList;
+    }
+
     public final void writeToFile(final List<HlaComplexCoverage> coverage, final String fileName)
     {
+        // TODO
         File file = new File(fileName);
 
         /*
@@ -128,4 +142,16 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
         }
         */
     }
+
+    public static class TotalCoverageSorter implements Comparator<HlaComplexCoverage>
+    {
+        public int compare(final HlaComplexCoverage first, final HlaComplexCoverage second)
+        {
+            if(first.TotalCoverage != second.TotalCoverage)
+                return first.TotalCoverage > second.TotalCoverage ? 1 : -1;
+
+            return 0;
+        }
+    }
+
 }

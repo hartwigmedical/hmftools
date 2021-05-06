@@ -14,9 +14,9 @@ import java.util.stream.Collectors;
 public class NucleotideFiltering
 {
     private final int mMinNucleotideCount;
-    private final Set<Integer> mAminoAcidBoundaries;
+    private final List<Integer> mAminoAcidBoundaries;
 
-    public NucleotideFiltering(int minNucleotideCount, final Set<Integer> aminoAcidBoundaries)
+    public NucleotideFiltering(int minNucleotideCount, final List<Integer> aminoAcidBoundaries)
     {
         mMinNucleotideCount = minNucleotideCount;
         mAminoAcidBoundaries = aminoAcidBoundaries;

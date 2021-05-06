@@ -11,9 +11,9 @@ import java.util.stream.Collectors;
 
 public class AminoAcidFiltering
 {
-    private final Set<Integer> mAminoAcidBoundaries;
+    private final List<Integer> mAminoAcidBoundaries;
 
-    public AminoAcidFiltering(final Set<Integer> aminoAcidBoundaries)
+    public AminoAcidFiltering(final List<Integer> aminoAcidBoundaries)
     {
         mAminoAcidBoundaries = aminoAcidBoundaries;
     }
