@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class Peach {
@@ -23,5 +24,24 @@ public class Peach {
                 }
 
         }).collect(Collectors.toList());
+    }
+
+    @NotNull
+    public static String url(@NotNull String urlPrescriptionInfo) {
+        if (urlPrescriptionInfo.split(";")[0].startsWith("https://www.pharmgkb.org")) {
+            return urlPrescriptionInfo.split(";")[0];
+        } else {
+            return Strings.EMPTY;
+        }
+    }
+
+    @NotNull
+    public static String sourceName(@NotNull String urlPrescriptionInfo) {
+        if (urlPrescriptionInfo.split(";")[0].startsWith("https://www.pharmgkb.org")) {
+            return "PHARMGKB";
+        } else {
+            return Strings.EMPTY;
+        }
+
     }
 }

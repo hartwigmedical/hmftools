@@ -92,7 +92,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
     private static Table createPloidyPloidyTable(double ploidy, double purity, boolean hasReliablePurity) {
         String title = "Tumor purity & ploidy";
 
-        Table contentTable = TableUtil.createReportContentSmallTable(new float[] { 60,30, 30 }, new Cell[] {  });
+        Table contentTable = TableUtil.createReportContentSmallTable(new float[] { 60, 30, 30 }, new Cell[] {});
 
         double impliedPurityPercentage = MathUtil.mapPercentage(purity, TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
         renderTumorPurity(hasReliablePurity,
@@ -347,8 +347,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
             contentTable.addCell(TableUtil.createContentCell(peachGenotype.function()));
             contentTable.addCell(TableUtil.createContentCell(peachGenotype.linkedDrugs()));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph("PHARMGKB").addStyle(ReportResources.dataHighlightLinksStyle()))
-                    .setAction(PdfAction.createURI(peachGenotype.urlPrescriptionInfo().split(";")[0]))
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(Peach.sourceName(peachGenotype.urlPrescriptionInfo())).addStyle(
+                    ReportResources.dataHighlightLinksStyle()))
+                    .setAction(PdfAction.createURI(Peach.url(peachGenotype.urlPrescriptionInfo())))
                     .setTextAlignment(TextAlignment.CENTER));
         }
         return TableUtil.createWrappingReportTable(title, contentTable);
