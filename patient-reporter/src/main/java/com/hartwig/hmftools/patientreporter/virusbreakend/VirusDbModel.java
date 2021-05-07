@@ -25,7 +25,7 @@ public class VirusDbModel {
         boolean mappedVirus = mapIdtoVirusName(id);
 
         if (!mappedVirus) {
-            LOGGER.warn("Could not match id to virusName");
+            LOGGER.warn("Could not match id to virusName of virus DB");
         }
         return mappedVirus ? virusDbMap.get(id) : Strings.EMPTY;
     }

@@ -98,7 +98,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         ReportableVirusBreakendTotal virusBreakends = ImmutableReportableVirusBreakendTotal.builder()
                 .reportableVirussen(Lists.newArrayList())
-                .virusNameSummary(Strings.EMPTY)
+                .virusNameSummary("EBV positive, EBV negative")
                 .build();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 

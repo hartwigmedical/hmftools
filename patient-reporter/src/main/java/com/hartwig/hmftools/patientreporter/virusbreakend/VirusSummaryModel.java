@@ -26,7 +26,7 @@ public class VirusSummaryModel {
         boolean mappedVirusSummary = mapIdtoVirusName(id);
 
         if (!mappedVirusSummary) {
-            LOGGER.warn("Could not match id to virusName");
+            LOGGER.warn("Could not match id to virusName of summry");
         }
         return mappedVirusSummary ? virusSummaryMap.get(id) : Strings.EMPTY;
     }

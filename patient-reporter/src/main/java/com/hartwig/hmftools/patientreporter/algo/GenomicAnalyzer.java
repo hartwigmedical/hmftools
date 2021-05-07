@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
 import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBreakendReportableFactory;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusBreakendTotal;
@@ -66,43 +67,8 @@ public class GenomicAnalyzer {
 
         List<VirusBreakend> virusBreakends = VirusBreakendFactory.readVirusBreakend(virusBreakendTsv);
 
-        List<ReportableVirusbreakend> virusBreakendsReportable = Lists.newArrayList();
-        Set<String> postiveSummary = Sets.newHashSet();
-        Set<String> negativeSummary = Sets.newHashSet();
-
-        Set<String> summary = Sets.newHashSet();
-        for (VirusBreakend virusBreakend : virusBreakends) {
-            if (virusBreakend.QCStatus() != VirusBreakendQCStatus.LOW_VIRAL_COVERAGE) {
-                if (virusBreakend.integrations() >= 1) {
-
-                    String virusName = virusDbModel.findVirus(virusBreakend.referenceTaxid());
-                    virusBreakendsReportable.add(ImmutableReportableVirusbreakend.builder()
-                            .virusName(virusName)
-                            .integrations(virusBreakend.integrations())
-                            .build());
-
-                    if (virusSummaryModel.mapIdtoVirusName(virusBreakend.taxidSpecies())) {
-                        postiveSummary.add(virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()) + " positive");
-                    }
-                }
-            }
-        }
-
-        for (VirusBreakend virusBreakend : virusBreakends) {
-            for (String virus : virusSummaryModel.virussen()) {
-                if (!postiveSummary.contains(virus)) {
-                    negativeSummary.add(virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()) + " negative");
-                }
-            }
-        }
-
-        summary.addAll(postiveSummary);
-        summary.addAll(negativeSummary);
-
-        ReportableVirusBreakendTotal reportableVirusBreakendTotal = ImmutableReportableVirusBreakendTotal.builder()
-                .reportableVirussen(virusBreakendsReportable)
-                .virusNameSummary(summary.toString())
-                .build();
+        ReportableVirusBreakendTotal reportableVirusBreakendTotal =
+                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel);
 
         List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachgenotypeTsv);
 
