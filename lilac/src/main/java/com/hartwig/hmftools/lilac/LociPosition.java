@@ -64,7 +64,7 @@ public class LociPosition
     }
      */
 
-    public final int reverseLoci(int position, @NotNull HmfTranscriptRegion transcript)
+    public final int reverseLoci(int position, final HmfTranscriptRegion transcript)
     {
         if(transcript.strand() != Strand.REVERSE)
             return -1;
@@ -93,7 +93,7 @@ public class LociPosition
         return -1;
     }
 
-    private final int forwardLoci(int position, HmfTranscriptRegion transcript)
+    private final int forwardLoci(int position, final HmfTranscriptRegion transcript)
     {
         if(transcript.strand() != Strand.FORWARD)
             return -1;
@@ -121,7 +121,7 @@ public class LociPosition
         return -1;
     }
 
-    public final int reversePosition(int codingLoci, @NotNull HmfTranscriptRegion transcript)
+    public final int reversePosition(int codingLoci, final HmfTranscriptRegion transcript)
     {
         if(transcript.strand() != Strand.REVERSE)
             return -1;

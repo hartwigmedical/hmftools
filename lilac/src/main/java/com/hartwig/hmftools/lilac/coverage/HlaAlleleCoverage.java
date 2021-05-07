@@ -182,7 +182,7 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
         return coverage.stream().map(x -> x.Allele).collect(Collectors.toList());
     }
 
-    private static class TotalCoverageSorter implements Comparator<HlaAlleleCoverage>
+    public static class TotalCoverageSorter implements Comparator<HlaAlleleCoverage>
     {
         public int compare(final HlaAlleleCoverage first, final HlaAlleleCoverage second)
         {
@@ -199,7 +199,5 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
         {
             return first.Allele.toString().compareTo(second.Allele.toString());
         }
-
     }
-
 }

@@ -1,6 +1,13 @@
 package com.hartwig.hmftools.lilac.qc;
 
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
+import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 public class CoverageQC {
 
@@ -12,62 +19,75 @@ public class CoverageQC {
     public final int SharedFragments;
     public final int WildcardFragments;
 
-    public CoverageQC(final int ATypes, final int BTypes, final int CTypes, final int totalFragments, final int uniqueFragments,
+    public final int FittedFragments;
+    public final int UnusedFragments;
+    public final double PercentUnique;
+    public final double PercentShared;
+    public final double PercentWildcard;
+
+    public CoverageQC(
+            final int aTypes, final int bTypes, final int cTypes, final int totalFragments, final int uniqueFragments,
             final int sharedFragments, final int wildcardFragments) {
-        this.ATypes = ATypes;
-        this.BTypes = BTypes;
-        this.CTypes = CTypes;
+        ATypes = aTypes;
+        BTypes = bTypes;
+        CTypes = cTypes;
         TotalFragments = totalFragments;
         UniqueFragments = uniqueFragments;
         SharedFragments = sharedFragments;
         WildcardFragments = wildcardFragments;
+
+        FittedFragments = uniqueFragments + sharedFragments + wildcardFragments;
+        UnusedFragments = totalFragments - FittedFragments;
+        PercentUnique = 1.0 * uniqueFragments / FittedFragments;
+        PercentShared = 1.0 * sharedFragments / FittedFragments;
+        PercentWildcard = 1.0 * wildcardFragments / FittedFragments;
     }
 
-    // TODO
-    public double getPercentWildcard() { return 0; }
+    public static CoverageQC create(
+            int totalFragments, final HlaComplexCoverage winner)
+    {
+        List<HlaAllele> alleles = winner.getAlleleCoverage().stream().map(x -> x.Allele).collect(Collectors.toList());
+        int aTypes = alleles.stream().filter(x -> x.Gene.equals("A")).collect(Collectors.toSet()).size();
+        int bTypes = alleles.stream().filter(x -> x.Gene.equals("B")).collect(Collectors.toSet()).size();
+        int cTypes = alleles.stream().filter(x -> x.Gene.equals("C")).collect(Collectors.toSet()).size();
 
-    public static CoverageQC create(int totalFragments, HlaComplexCoverage winner) {
-        return null;
-
-        /*
-        val alleles = winner.AlleleCoverage.map { it.allele }
-        val aTypes = alleles.filter { it.gene == "A" }.distinct().size
-        val bTypes = alleles.filter { it.gene == "B" }.distinct().size
-        val cTypes = alleles.filter { it.gene == "C" }.distinct().size
-
-        if (aTypes == 0 || bTypes == 0 || cTypes == 0) {
-            logger.warn("  UNMATCHED_TYPE - $aTypes A alleles, $bTypes B alleles, $cTypes C alleles")
+        if (aTypes == 0 || bTypes == 0 || cTypes == 0)
+        {
+            LL_LOGGER.warn("  UNMATCHED_TYPE - {} A alleles, {} B alleles, {} C alleles", aTypes, bTypes, cTypes);
         }
 
-        if (winner.WildCoverage > 0) {
-            logger.warn("  WILDCARD_MATCH - winning solution contains wildcards")
+        if (winner.WildCoverage > 0)
+        {
+            LL_LOGGER.warn("  WILDCARD_MATCH - winning solution contains wildcards");
         }
 
-        return CoverageQC(aTypes, bTypes, cTypes, totalFragments, winner.UniqueCoverage, winner.SharedCoverage, winner.WildCoverage)
-
-         */
+        return new CoverageQC(aTypes, bTypes, cTypes, totalFragments, winner.UniqueCoverage, winner.SharedCoverage, winner.WildCoverage);
     }
 
-    /*
-    private val percentFormatter = DecimalFormat("00.0%")
-    private fun Double.percent(): String {
-        return percentFormatter.format(this)
+    public List<String> header()
+    {
+        return Lists.newArrayList(
+                "aTypes", "bTypes", "cTypes", "unusedFragments", "fittedFragments",
+                "percentUnique", "percentShared", "percentWildcard");
     }
 
-    fun header(): List<String> {
-        return listOf("aTypes", "bTypes", "cTypes", "unusedFragments", "fittedFragments", "percentUnique", "percentShared", "percentWildcard")
-        }
+    public List<String> body()
+    {
+        return Lists.newArrayList(
+                String.valueOf(ATypes),
+                String.valueOf(BTypes), String.valueOf(CTypes),
+                String.valueOf(UnusedFragments),
+                String.valueOf(FittedFragments),
+                String.format("%,1f", PercentUnique * 100),
+                String.format("%,1f", PercentShared * 100),
+                String.format("%,1f", PercentWildcard * 100));
+    }
 
-        fun body(): List<String> {
-        return listOf(aTypes.toString(), bTypes.toString(), cTypes.toString(), unusedFragments.toString(), fittedFragments.toString(), percentUnique.percent(), percentShared.percent(), percentWildcard.percent())
-        }
-
-        override fun toString(): String {
-        return "CoverageQC(aTypes=$aTypes, bTypes=$bTypes, cTypes=$cTypes, unusedFragments=$unusedFragments, uniqueFragments=$uniqueFragments, sharedFragments=$sharedFragments, wildcardFragments=$wildcardFragments, fittedFragments=$fittedFragments, percentUnique=${percentUnique.percent()}, percentShared=${percentShared.percent()}, percentWildcard=${percentWildcard.percent()})"
-        }
-
-        }
-
-     */
-
+    public String toString()
+    {
+        return String.format("CoverageQC(aTypes=%d, bTypes=%d, cTypes=%d, unusedFragments=%d, uniqueFragments=%d, sharedFragments=%d, "
+                        + "wildcardFragments=%d, fittedFragments=%d, percentUnique=%.3f, percentShared=%.3f, percentWildcard=%.3f)",
+                ATypes, BTypes, CTypes, UnusedFragments, UniqueFragments, SharedFragments, FittedFragments,
+                PercentUnique, PercentShared, PercentWildcard);
+    }
 }

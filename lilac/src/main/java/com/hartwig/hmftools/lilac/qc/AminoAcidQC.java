@@ -17,6 +17,7 @@ public class AminoAcidQC
 {
     private final int mUnusedAminoAcids;
     private final int mUnusedAminoAcidMaxSupport;
+
     private static final int MIN_COUNT = 3;
 
     public AminoAcidQC(int unusedAminoAcids, int unusedAminoAcidMaxSupport)
@@ -46,8 +47,6 @@ public class AminoAcidQC
             Set<String> actualSequences =  winners.stream()
                     .filter(x -> locus < x.getSequences().size()).map(x -> x.sequence(locus)).collect(Collectors.toSet());
 
-            // CHECK
-            // val actual = winners.filter { locus < it.sequences.size }.map { it.sequence(locus) }.toSet()
             for(Map.Entry<String,Integer> entry : expected.entrySet())
             {
                 int count = entry.getValue();
@@ -55,6 +54,7 @@ public class AminoAcidQC
                 {
                     ++unused;
                     largest = max(largest, count);
+
                     LL_LOGGER.warn("  UNMATCHED_AMINO_ACID - amino acid sequence({})' with count({}) support at locus({}) not in winning solution",
                             entry.getKey(), count, locus);
                 }

@@ -17,8 +17,6 @@ import java.io.File;
 import java.util.Set;
 import java.util.StringJoiner;
 
-import org.jetbrains.annotations.NotNull;
-
 public class LilacVCF implements AutoCloseable
 {
     private final VCFFileReader mHeader;
@@ -26,7 +24,7 @@ public class LilacVCF implements AutoCloseable
 
     public static final String HLA = "HLA";
 
-    public LilacVCF(@NotNull String outputVCF, @NotNull String templateVCF)
+    public LilacVCF(final String outputVCF, final String templateVCF)
     {
         mHeader = new VCFFileReader(new File(templateVCF), false);
 
@@ -47,6 +45,7 @@ public class LilacVCF implements AutoCloseable
 
     public final void writeVariant(final VariantContext context, final Set<HlaAllele> alleles)
     {
+        // CHECK what joiner is used
         StringJoiner sj = new StringJoiner("-");
         for(final HlaAllele allele : alleles)
         {
@@ -54,32 +53,6 @@ public class LilacVCF implements AutoCloseable
         }
 
         String alleleStr = alleles.isEmpty() ? "UNKNOWN" : sj.toString();
-
-        /*
-        List list;
-        if(alleles.isEmpty())
-        {
-            list = CollectionsKt.listOf((Object) "UNKNOWN");
-        }
-        else
-        {
-            void $receiver$iv$iv;
-            Iterable $receiver$iv;
-            Iterable iterable = $receiver$iv = (Iterable) alleles;
-            Collection destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-            for(Object item$iv$iv : $receiver$iv$iv)
-            {
-                void it;
-                HlaAllele hlaAllele = (HlaAllele) item$iv$iv;
-                Collection collection = destination$iv$iv;
-                boolean bl = false;
-                String string = it.toString();
-                collection.add(string);
-            }
-            list = (List) destination$iv$iv;
-        }
-        List hlaLabel = list;
-        */
 
         VariantContext newContext = new VariantContextBuilder(context).attribute(HLA, alleleStr).make();
         mWriter.add(newContext);

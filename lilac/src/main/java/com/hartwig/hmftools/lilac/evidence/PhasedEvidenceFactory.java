@@ -3,12 +3,18 @@ package com.hartwig.hmftools.lilac.evidence;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConfig;
+import com.hartwig.hmftools.lilac.SequenceCount;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
+import com.sun.tools.javac.util.Pair;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 public class PhasedEvidenceFactory
 {
@@ -37,45 +43,49 @@ public class PhasedEvidenceFactory
     public final List<PhasedEvidence> evidence(
             final ExpectedAlleles expectedAlleles, final List<AminoAcidFragment> aminoAcidAminoAcidFragments)
     {
-        return Lists.newArrayList();
+        SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, aminoAcidAminoAcidFragments);
 
-        /*
-        Object object;
-        Collection collection;
-        Intrinsics.checkParameterIsNotNull((Object) expectedAlleles, (String) "expectedAlleles");
-        Intrinsics.checkParameterIsNotNull(aminoAcidAminoAcidFragments, (String) "aminoAcidAminoAcidFragments");
-        SequenceCount aminoAcidCounts = SequenceCount.Companion.aminoAcids(this.mConfig.getMinEvidence(), aminoAcidAminoAcidFragments);
         List<Integer> heterozygousIndices = aminoAcidCounts.heterozygousLoci();
-        if(this.mConfig.getDebugPhasing())
+        
+        if (mConfig.DebugPhasing)
         {
-            LL_LOGGER.info("  Heterozygous Indices: " + heterozygousIndices);
+            LL_LOGGER.info("  Heterozygous Indices: $heterozygousIndices");
         }
-        ExtendEvidence heterozygousEvidence =
-                new ExtendEvidence(this.mConfig, heterozygousIndices, aminoAcidAminoAcidFragments, expectedAlleles);
-        Set finalisedEvidence = new LinkedHashSet();
-        List unprocessedEvidence = new ArrayList();
-        unprocessedEvidence.addAll((Collection) heterozygousEvidence.pairedEvidence());
-        if(this.mConfig.getDebugPhasing())
+
+        ExtendEvidence heterozygousEvidence = new ExtendEvidence(mConfig, heterozygousIndices, aminoAcidAminoAcidFragments, expectedAlleles);
+
+        List<PhasedEvidence> finalisedEvidence = Lists.newArrayList();
+        List<PhasedEvidence> unprocessedEvidence = Lists.newArrayList();
+        unprocessedEvidence.addAll(heterozygousEvidence.pairedEvidence());
+
+        if (mConfig.DebugPhasing)
         {
             LL_LOGGER.info("  Extending paired evidence");
         }
-        while(!(collection = (Collection) unprocessedEvidence).isEmpty())
+
+        while(!unprocessedEvidence.isEmpty())
         {
-            void parent;
-            PhasedEvidence top = (PhasedEvidence) unprocessedEvidence.remove(0);
-            if(this.mConfig.getDebugPhasing())
+            PhasedEvidence top = unprocessedEvidence.remove(0);
+
+            if (mConfig.DebugPhasing)
             {
-                LL_LOGGER.info("  Processing top: " + top);
+                LL_LOGGER.info("  Processing top: {}", top);
             }
-            Object object2 = heterozygousEvidence.merge(top, SetsKt.plus((Set) finalisedEvidence, (Iterable) unprocessedEvidence));
-            object = (PhasedEvidence) object2.component1();
-            Set children = (Set) object2.component2();
-            if(!(object2 = (Collection) children).isEmpty())
+
+            Set<PhasedEvidence> others = Sets.newHashSet();
+            others.addAll(finalisedEvidence);
+            others.addAll(unprocessedEvidence);
+            Pair<PhasedEvidence, Set<PhasedEvidence>> pair = heterozygousEvidence.merge(top, others);
+            PhasedEvidence parent = pair.fst;
+            Set<PhasedEvidence> children = pair.snd;
+
+            if (!children.isEmpty())
             {
-                if(this.mConfig.getDebugPhasing())
+                if (mConfig.DebugPhasing)
                 {
-                    LL_LOGGER.info("  Produced child: " + parent);
+                    LL_LOGGER.info("  Produced child: {}", pair.fst);
                 }
+
                 finalisedEvidence.removeAll(children);
                 unprocessedEvidence.removeAll(children);
                 unprocessedEvidence.add(parent);
@@ -84,27 +94,25 @@ public class PhasedEvidenceFactory
             {
                 finalisedEvidence.add(parent);
             }
-            CollectionsKt.sort((List) unprocessedEvidence);
+
+            Collections.sort(unprocessedEvidence);
         }
-        Iterable $receiver$iv = finalisedEvidence;
-        object = $receiver$iv;
-        Comparator comparator = new Comparator<T>()
-        {
 
-            public final int compare(T a, T b)
-            {
-                PhasedEvidence it = (PhasedEvidence) a;
-                boolean bl = false;
-                Comparable comparable = Integer.valueOf(it.getAminoAcidIndices()[0]);
-                it = (PhasedEvidence) b;
-                Comparable comparable2 = comparable;
-                bl = false;
-                Integer n = it.getAminoAcidIndices()[0];
-                return ComparisonsKt.compareValues((Comparable) comparable2, (Comparable) n);
-            }
-        };
-        return CollectionsKt.sortedWith((Iterable) object, (Comparator) comparator);
-
-         */
+        Collections.sort(finalisedEvidence, new PhasedEvidenceSorter());
+        return finalisedEvidence;
     }
+
+    private static class PhasedEvidenceSorter implements Comparator<PhasedEvidence>
+    {
+        public int compare(final PhasedEvidence first, final PhasedEvidence second)
+        {
+            int firstAA = first.getAminoAcidIndexList().get(0);
+            int secondAA = second.getAminoAcidIndexList().get(0);
+            if(firstAA != secondAA)
+                return firstAA > secondAA ? 1 : -1;
+
+            return 0;
+        }
+    }
+
 }

@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.lilac.qc;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import static java.lang.Math.abs;
+
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -24,18 +26,8 @@ public class SomaticVariantQC
 
     public final boolean unmatchedVariants()
     {
-        int n = mVariantCount - mVariantCount;
-        return (double) Math.abs(n) > 0.01;
-    }
-
-    public final int getVariantCount()
-    {
-        return mVariantCount;
-    }
-
-    public final double getVariantAlleleCount()
-    {
-        return mVariantAlleleCount;
+        // CHECK - was a bug in the original
+        return abs((double)mVariantCount - mVariantAlleleCount) > 0.01;
     }
 
     public SomaticVariantQC(int variantCount, double variantAlleleCount)
@@ -46,31 +38,15 @@ public class SomaticVariantQC
 
     public static SomaticVariantQC create(int variantCount, final List<SomaticCodingCount> codingCount)
     {
-        return null;
+        double totalCount = codingCount.stream().mapToDouble(x -> x.Total).sum();
 
-        /*
-        void $receiver$iv$iv;
-        Iterable $receiver$iv;
-        Intrinsics.checkParameterIsNotNull(codingCount, (String) "codingCount");
-        Iterable iterable = $receiver$iv = (Iterable) codingCount;
-        Collection destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-        for(Object item$iv$iv : $receiver$iv$iv)
-        {
-            void it;
-            com.hartwig.hmftools.lilac.variant.SomaticCodingCount somaticCodingCount = (SomaticCodingCount) item$iv$iv;
-            Collection collection = destination$iv$iv;
-            boolean bl = false;
-            Double d = it.getTotal();
-            collection.add(d);
-        }
-        double totalCount = CollectionsKt.sumOfDouble((Iterable) ((List) destination$iv$iv));
         SomaticVariantQC result = new SomaticVariantQC(variantCount, totalCount);
+
         if(result.unmatchedVariants())
         {
-            getLogger().warn("  UNASSIGNED_VARIANT - " + variantCount + " variants found but " + totalCount + " assigned");
+            LL_LOGGER.warn("  UNASSIGNED_VARIANT - {} variants found but $totalCount assigned", variantCount);
         }
-        return result;
 
-         */
+        return result;
     }
 }

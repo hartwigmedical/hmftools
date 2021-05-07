@@ -61,33 +61,8 @@ public class SomaticVariants
 
         fileReader.close();
 
-        LL_LOGGER.info("  found ${result.size} HLA variants", 0);
+        LL_LOGGER.info("  found {} HLA variants", results.size());
         return results;
-
-        /*
-        this.logger.info("Reading somatic vcf: " + this.mConfig.getSomaticVcf());
-        List result = new ArrayList();
-        VCFFileReader fileReader = new VCFFileReader(new File(this.mConfig.getSomaticVcf()), false);
-        CloseableIterator closeableIterator = iterator =
-                fileReader.isQueryable() ? fileReader.query(contig, (int) minPosition, (int) maxPosition) : fileReader.iterator();
-        Intrinsics.checkExpressionValueIsNotNull((Object) closeableIterator, (String) "iterator");
-        Iterator iterator2 = it = (Iterator) closeableIterator;
-        while(iterator2.hasNext())
-        {
-            VariantContext variantContext = (VariantContext) iterator2.next();
-            VariantContextDecorator enriched = new VariantContextDecorator(variantContext);
-            if(!LilacApplication.Companion.getHLA_GENES().contains(enriched.gene())
-                    || this.UNKNOWN_CODING_EFFECT.contains(enriched.canonicalCodingEffect()) || !enriched.isPass())
-            {
-                continue;
-            }
-            result.add(enriched);
-        }
-        fileReader.close();
-        this.logger.info("  found " + result.size() + " HLA variants");
-        return result;
-
-         */
     }
 
 }

@@ -49,4 +49,7 @@ public class LilacConstants
     public static final char DEL_CHAR = DEL_STR.charAt(0);
 
     public static final int COMPLEX_PERMS_THRESHOLD = 100000;
+
+    // technical
+    public static final String DELIM = "\t";
 }

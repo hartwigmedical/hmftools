@@ -5,26 +5,41 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
 public class SomaticCodingCount
 {
-    private final HlaAllele mAllele;
+    public final HlaAllele Allele;
 
-    public final double Total;
     public final double InframeIndel;
     public final double Missense;
     public final double Nonsense;
     public final double Splice;
     public final double Synonymous;
+    public final double Total;
+
+    public SomaticCodingCount(final HlaAllele allele, double inframeIndel, double missense, double nonsense, double splice, double synonymous)
+    {
+        Allele = allele;
+        InframeIndel = inframeIndel;
+        Missense = missense;
+        Nonsense = nonsense;
+        Splice = splice;
+        Synonymous = synonymous;
+        Total = InframeIndel + Missense + Nonsense + Splice + Synonymous;
+    }
+
+    public String toString()
+    {
+        return "SomaticCodingCount(allele=" + Allele + ", inframeIndel=" + InframeIndel + ", missense=" + Missense
+                + ", nonsense=" + Nonsense + ", splice=" + Splice + ", synonymous=" + Synonymous + ")";
+    }
 
     private static SomaticCodingCount addVariant(boolean indel, CodingEffect effect, double contribution)
     {
         SomaticCodingCount somaticCodingCount = null;
+
 
         /*
         if(indel && effect == CodingEffect.MISSENSE)
@@ -66,27 +81,6 @@ public class SomaticCodingCount
         return somaticCodingCount;
     }
 
-    public final HlaAllele getAllele()
-    {
-        return mAllele;
-    }
-
-    public SomaticCodingCount(final HlaAllele allele, double inframeIndel, double missense, double nonsense, double splice, double synonymous)
-    {
-        mAllele = allele;
-        InframeIndel = inframeIndel;
-        Missense = missense;
-        Nonsense = nonsense;
-        Splice = splice;
-        Synonymous = synonymous;
-        Total = InframeIndel + Missense + Nonsense + Splice + Synonymous;
-    }
-
-    public String toString()
-    {
-        return "SomaticCodingCount(allele=" + mAllele + ", inframeIndel=" + InframeIndel + ", missense=" + Missense
-                + ", nonsense=" + Nonsense + ", splice=" + Splice + ", synonymous=" + Synonymous + ")";
-    }
 
     public static final List<SomaticCodingCount> create(final List<HlaAllele> winners)
     {
