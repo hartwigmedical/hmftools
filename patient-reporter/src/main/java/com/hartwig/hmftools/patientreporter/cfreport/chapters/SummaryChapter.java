@@ -198,7 +198,7 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(hrdStyle)));
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Integrated Virus").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(hrdStyle)));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph("virus").addStyle(hrdStyle)));
 
         reportDocument.add(div);
     }
