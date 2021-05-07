@@ -11,6 +11,10 @@ import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineReportingEntry;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbFile;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryfile;
 
 import org.junit.Test;
 
@@ -30,6 +34,8 @@ public class GenomicAnalyzerTest {
     private static final String PROTECT_EVIDENCE_TSV = BASE_DIRECTORY + "/protect/sample.protect.tsv";
     private static final String VIRUS_BREAKEND_TSV = BASE_DIRECTORY + "/virusbreakend/sample.virusbreakend.vcf.summary.tsv";
     private static final String PEACH_GENOTYPE_TSV = BASE_DIRECTORY + "/peach/sample.peach.genotype.tsv";
+    private static final String VIRUS_DB_TSV = Resources.getResource("virusbreakend/virusdb.tsv").getPath();
+    private static final String VIRUS_SUMMARY_TSV = Resources.getResource("virusbreakend/virus_summary.tsv").getPath();
 
     @Test
     public void canRunOnTestRun() throws IOException {
@@ -49,6 +55,9 @@ public class GenomicAnalyzerTest {
 
         GermlineReportingModel victim = new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
 
+        VirusDbModel virusDbModel = VirusDbFile.buildFromTsv(VIRUS_DB_TSV);
+        VirusSummaryModel virusSummaryModel = VirusSummaryfile.buildFromTsv(VIRUS_SUMMARY_TSV);
+
         assertNotNull(analyzer.run("sample",
                 PURPLE_PURITY_TSV,
                 PURPLE_QC_FILE,
@@ -64,6 +73,8 @@ public class GenomicAnalyzerTest {
                 VIRUS_BREAKEND_TSV,
                 PEACH_GENOTYPE_TSV,
                 victim,
-                LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
+                LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
+                virusDbModel,
+                virusSummaryModel));
     }
 }

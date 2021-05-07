@@ -71,13 +71,16 @@ public class AnalysedPatientReporter {
                 virusBreakendTsv,
                 peachGenotypeTsv,
                 reportData.germlineReportingModel(),
-                sampleReport.germlineReportingLevel());
+                sampleReport.germlineReportingLevel(),
+                reportData.virusDbModel(),
+                reportData.virusSummaryModel());
 
         ConsentFilterFunctions consentFilterFunctions = new ConsentFilterFunctions();
 
         GenomicAnalysis filteredAnalysis = consentFilterFunctions.filterAndOverruleForConsent(genomicAnalysis,
                 sampleReport.germlineReportingLevel(),
-                sampleReport.reportViralInsertions(), sampleReport.cohort().reportPeach());
+                sampleReport.reportViralInsertions(),
+                sampleReport.cohort().reportPeach());
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
 
@@ -148,7 +151,7 @@ public class AnalysedPatientReporter {
         LOGGER.info(" Gene fusions to report: {}", analysis.geneFusions().size());
         LOGGER.info(" Homozygous disruptions to report: {}", analysis.homozygousDisruptions().size());
         LOGGER.info(" Gene disruptions to report: {}", analysis.geneDisruptions().size());
-        LOGGER.info(" Virus breakend to report: {}", analysis.virusBreakends().size());
+        LOGGER.info(" Virus breakend to report: {}", analysis.virusBreakends().reportableVirussen().size());
         LOGGER.info(" CHORD analysis HRD prediction: {} ({})", analysis.chordHrdValue(), analysis.chordHrdStatus());
         LOGGER.info(" Microsatellite indels per Mb: {} ({})", analysis.microsatelliteIndelsPerMb(), analysis.microsatelliteStatus());
         LOGGER.info(" Tumor mutational load: {} ({})", analysis.tumorMutationalLoad(), analysis.tumorMutationalLoadStatus());

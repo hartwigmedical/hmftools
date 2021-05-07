@@ -2,8 +2,10 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
@@ -18,11 +20,16 @@ import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
 import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusBreakendTotal;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusbreakend;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusbreakend;
 import com.hartwig.hmftools.protect.chord.ChordDataLoader;
 import com.hartwig.hmftools.protect.linx.LinxData;
 import com.hartwig.hmftools.protect.linx.LinxDataLoader;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
-import com.hartwig.hmftools.protect.viralbreakend.VirusBreakendAnalyzer;
 import com.hartwig.hmftools.protect.purple.PurpleData;
 import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -45,8 +52,8 @@ public class GenomicAnalyzer {
             @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String linxFusionTsv,
             @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt,
             @NotNull String protectEvidenceTsv, @NotNull String virusBreakendTsv, @NotNull String peachgenotypeTsv,
-            @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingLevel germlineReportingLevel)
-            throws IOException {
+            @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingLevel germlineReportingLevel,
+            @NotNull VirusDbModel virusDbModel, @NotNull VirusSummaryModel virusSummaryModel) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
                 purpleQCFile,
                 purplePurityTsv,
@@ -59,17 +66,43 @@ public class GenomicAnalyzer {
 
         List<VirusBreakend> virusBreakends = VirusBreakendFactory.readVirusBreakend(virusBreakendTsv);
 
-        List<VirusBreakend> virusBreakendsReportable = Lists.newArrayList();
-        for (VirusBreakend virusBreakend: virusBreakends) {
+        List<ReportableVirusbreakend> virusBreakendsReportable = Lists.newArrayList();
+        Set<String> postiveSummary = Sets.newHashSet();
+        Set<String> negativeSummary = Sets.newHashSet();
+
+        Set<String> summary = Sets.newHashSet();
+        for (VirusBreakend virusBreakend : virusBreakends) {
             if (virusBreakend.QCStatus() != VirusBreakendQCStatus.LOW_VIRAL_COVERAGE) {
                 if (virusBreakend.integrations() >= 1) {
-                    virusBreakendsReportable.add(virusBreakend);
+
+                    String virusName = virusDbModel.findVirus(virusBreakend.referenceTaxid());
+                    virusBreakendsReportable.add(ImmutableReportableVirusbreakend.builder()
+                            .virusName(virusName)
+                            .integrations(virusBreakend.integrations())
+                            .build());
+
+                    if (virusSummaryModel.mapIdtoVirusName(virusBreakend.taxidSpecies())) {
+                        postiveSummary.add(virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()) + " positive");
+                    }
                 }
             }
         }
 
-        //TODO check if this is needed
-        List<VirusBreakend> viralBreakendsFiltered = VirusBreakendAnalyzer.analyzeVirusBreakends(virusBreakendsReportable);
+        for (VirusBreakend virusBreakend : virusBreakends) {
+            for (String virus : virusSummaryModel.virussen()) {
+                if (!postiveSummary.contains(virus)) {
+                    negativeSummary.add(virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()) + " negative");
+                }
+            }
+        }
+
+        summary.addAll(postiveSummary);
+        summary.addAll(negativeSummary);
+
+        ReportableVirusBreakendTotal reportableVirusBreakendTotal = ImmutableReportableVirusBreakendTotal.builder()
+                .reportableVirussen(virusBreakendsReportable)
+                .virusNameSummary(summary.toString())
+                .build();
 
         List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachgenotypeTsv);
 
@@ -107,7 +140,7 @@ public class GenomicAnalyzer {
                 .geneFusions(linxData.fusions())
                 .geneDisruptions(linxData.geneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())
-                .virusBreakends(virusBreakendsReportable)
+                .virusBreakends(reportableVirusBreakendTotal)
                 .peachGenotypes(peachGenotypes)
                 .build();
     }

@@ -16,6 +16,10 @@ import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbFile;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryfile;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -26,6 +30,8 @@ public final class PatientReporterTestFactory {
     private static final String COMPANY_LOGO_PATH = Resources.getResource("company_logo/hartwig_logo_test.jpg").getPath();
 
     private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
+    private static final String VIRUS_DB_TSV = Resources.getResource("virusbreakend/virusdb.tsv").getPath();
+    private static final String VIRUS_SUMMARY_TSV = Resources.getResource("virusbreakend/virus_summary.tsv").getPath();
 
     private PatientReporterTestFactory() {
     }
@@ -93,11 +99,15 @@ public final class PatientReporterTestFactory {
     public static AnalysedReportData loadTestAnalysedReportData() {
         try {
             SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
+            VirusDbModel virusDbModel = VirusDbFile.buildFromTsv(VIRUS_DB_TSV);
+            VirusSummaryModel virusSummaryModel = VirusSummaryfile.buildFromTsv(VIRUS_SUMMARY_TSV);
 
             return ImmutableAnalysedReportData.builder()
                     .from(loadTestReportData())
                     .germlineReportingModel(new GermlineReportingModel(Lists.newArrayList()))
                     .summaryModel(summaryModel)
+                    .virusDbModel(virusDbModel)
+                    .virusSummaryModel(virusSummaryModel)
                     .build();
         } catch (IOException exception) {
             throw new IllegalStateException("Could not load test analysed report data: " + exception.getMessage());

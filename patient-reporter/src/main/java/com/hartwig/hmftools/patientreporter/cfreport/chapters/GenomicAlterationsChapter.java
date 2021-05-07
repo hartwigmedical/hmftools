@@ -23,7 +23,8 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.Peach;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusbreakend;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -207,8 +208,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 100, 80, 45, 120, 50 },
                 new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Region"),
-                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Type"),
-                        TableUtil.createHeaderCell("Copies"),TableUtil.createHeaderCell("Chromosome arm copies").setTextAlignment(TextAlignment.CENTER), TableUtil.createHeaderCell("") });
+                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("Copies"),
+                        TableUtil.createHeaderCell("Chromosome arm copies").setTextAlignment(TextAlignment.CENTER),
+                        TableUtil.createHeaderCell("") });
 
         List<ReportableGainLoss> sortedGainsAndLosses = GainsAndLosses.sort(gainsAndLosses);
         for (ReportableGainLoss gainLoss : sortedGainsAndLosses) {
@@ -306,12 +308,12 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createVirusBreakendsTable(@NotNull List<VirusBreakend> virusBreakends, boolean reportViralInsertions) {
+    private static Table createVirusBreakendsTable(@NotNull ReportableVirusBreakendTotal virusBreakends, boolean reportViralInsertions) {
         String title = "Tumor specific viral insertions";
 
         if (!reportViralInsertions) {
             return TableUtil.createNAReportTable(title);
-        } else if (virusBreakends.isEmpty()) {
+        } else if (virusBreakends.reportableVirussen().isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         } else {
             Table contentTable = TableUtil.createReportContentTable(new float[] { 120, 120, 200 },
@@ -319,8 +321,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
                             TableUtil.createHeaderCell("Number of detected integration sites").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("") });
 
-            for (VirusBreakend virusBreakend : virusBreakends) {
-                contentTable.addCell(TableUtil.createContentCell(virusBreakend.nameAssigned()));
+            for (ReportableVirusbreakend virusBreakend : virusBreakends.reportableVirussen()) {
+                contentTable.addCell(TableUtil.createContentCell(virusBreakend.virusName()));
                 contentTable.addCell(TableUtil.createContentCell(Integer.toString(virusBreakend.integrations()))
                         .setTextAlignment(TextAlignment.CENTER));
                 contentTable.addCell(TableUtil.createContentCell(""));

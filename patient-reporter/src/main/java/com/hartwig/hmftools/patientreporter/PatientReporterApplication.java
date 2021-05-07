@@ -116,7 +116,8 @@ public class PatientReporterApplication {
                 config.pipelineVersionFile(),
                 config.molecularTissueOriginTxt(),
                 config.molecularTissueOriginPlot(),
-                config.virusBreakendTsv(), config.peachGenotypeTsv());
+                config.virusBreakendTsv(),
+                config.peachGenotypeTsv());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(reportData.germlineReportingModel());
 
@@ -198,6 +199,8 @@ public class PatientReporterApplication {
     private static AnalysedReportData buildAnalysedReportData(@NotNull PatientReporterConfig config) throws IOException {
         return AnalysedReportDataLoader.buildFromFiles(buildBaseReportData(config),
                 config.germlineReportingTsv(),
-                config.sampleSummaryTsv());
+                config.sampleSummaryTsv(),
+                config.virusTsv(),
+                config.virusSummaryTsv());
     }
 }

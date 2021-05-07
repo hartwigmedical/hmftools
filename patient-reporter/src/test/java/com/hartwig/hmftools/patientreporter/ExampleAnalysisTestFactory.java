@@ -48,6 +48,10 @@ import com.hartwig.hmftools.patientreporter.algo.ImmutableGenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusBreakendTotal;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusbreakend;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusbreakend;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
@@ -92,7 +96,10 @@ public final class ExampleAnalysisTestFactory {
         List<LinxFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        List<VirusBreakend> virusBreakends = Lists.newArrayList();
+        ReportableVirusBreakendTotal virusBreakends = ImmutableReportableVirusBreakendTotal.builder()
+                .reportableVirussen(Lists.newArrayList())
+                .virusNameSummary(Strings.EMPTY)
+                .build();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), config.reportGermline(), config.limsCohortConfig());
@@ -182,7 +189,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<LinxFusion> fusions = createTestFusions();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        List<VirusBreakend> virusBreakends = createTestVirusBreakends();
+        ReportableVirusBreakendTotal virusBreakends = createTestVirusBreakends();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
@@ -1049,45 +1056,21 @@ public final class ExampleAnalysisTestFactory {
                 .haplotype("*1_HOM")
                 .function("Normal Function")
                 .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
-                .urlPrescriptionInfo(
-                        "https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939;"
-                                + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963;"
-                                + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
+                .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939;"
+                        + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963;"
+                        + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
                 .panelVersion("PGx_min_DPYD_v0.3")
                 .repoVersion("1.0")
                 .build());
     }
 
     @NotNull
-    private static List<VirusBreakend> createTestVirusBreakends() {
-        List<VirusBreakend> virusbreakends = Lists.newArrayList(ImmutableVirusBreakend.builder()
-                .taxidGenus(0)
-                .nameGenus(Strings.EMPTY)
-                .readsGenusTree(0)
-                .taxidSpecies(0)
-                .nameSpecies(Strings.EMPTY)
-                .readsSpeciesTree(0)
-                .taxidAssigned(0)
-                .nameAssigned("Human papillomavirus type 16")
-                .readsAssignedTree(0)
-                .readsAssignedDirect(0)
-                .reference(Strings.EMPTY)
-                .referenceTaxid(0)
-                .referenceKmerCount(0)
-                .alternateKmerCount(0)
-                .Rname(Strings.EMPTY)
-                .startpos(0)
-                .endpos(0)
-                .numreads(0)
-                .covbases(0)
-                .coverage(0)
-                .meandepth(0)
-                .meanbaseq(0)
-                .meanmapq(0)
+    private static ReportableVirusBreakendTotal createTestVirusBreakends() {
+        List<ReportableVirusbreakend> reportableVirusbreakend = Lists.newArrayList(ImmutableReportableVirusbreakend.builder()
+                .virusName("Human papillomavirus type 16")
                 .integrations(2)
-                .QCStatus(VirusBreakendQCStatus.ASSEMBLY_DOWNSAMPLED)
                 .build());
-        return Lists.newArrayList(virusbreakends);
+        return ImmutableReportableVirusBreakendTotal.builder().reportableVirussen(reportableVirusbreakend).virusNameSummary("EBV").build();
     }
 
     @NotNull

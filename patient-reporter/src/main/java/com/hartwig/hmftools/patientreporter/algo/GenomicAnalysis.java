@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -73,7 +73,7 @@ public abstract class GenomicAnalysis {
     public abstract List<ReportableHomozygousDisruption> homozygousDisruptions();
 
     @NotNull
-    public abstract List<VirusBreakend> virusBreakends();
+    public abstract ReportableVirusBreakendTotal virusBreakends();
 
     @NotNull
     public abstract List<PeachGenotype> peachGenotypes();
