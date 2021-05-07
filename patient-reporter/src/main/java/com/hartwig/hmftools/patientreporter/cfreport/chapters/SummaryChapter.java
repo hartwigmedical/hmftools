@@ -167,7 +167,7 @@ public class SummaryChapter implements ReportChapter {
 
         Style dataStyle = hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Molecular tissue of origin").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("Molecular tissue of origin prediction").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(patientReport.molecularTissueOrigin()
                 .molecularTissueOriginResult()).addStyle(dataStyle)));
 

@@ -112,7 +112,7 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("")));
 
         table.addCell(TableUtil.createLayoutCell()
-                .add(createContentDiv(new String[] { "Currently only integrated virus DNA can be detected.",
+                .add(createContentDiv(new String[] { "Only viruses for which DNA integration is detected are reported",
                         "The list of viruses that are considered can be found on https://resources.hartwigmedicalfoundation.nl."})));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell().add(createContentDiv(new String[] { "" })));
