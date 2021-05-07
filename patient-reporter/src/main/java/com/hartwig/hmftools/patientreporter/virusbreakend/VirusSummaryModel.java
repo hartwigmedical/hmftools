@@ -36,8 +36,12 @@ public class VirusSummaryModel {
         return virusSummaryMap.containsKey(id);
     }
 
-    @VisibleForTesting
     public Collection<String> virussen() {
         return virusSummaryMap.values();
+    }
+
+    @VisibleForTesting
+    int viruscount() {
+        return virusSummaryMap.keySet().size();
     }
 }

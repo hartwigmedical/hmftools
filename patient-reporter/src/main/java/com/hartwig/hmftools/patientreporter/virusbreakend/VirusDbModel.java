@@ -34,4 +34,10 @@ public class VirusDbModel {
     boolean mapIdtoVirusName(int id) {
         return virusDbMap.containsKey(id);
     }
+
+    @VisibleForTesting
+    int viruscount() {
+        return virusDbMap.keySet().size();
+    }
+
 }
