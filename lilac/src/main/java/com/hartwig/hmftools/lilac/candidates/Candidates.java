@@ -40,7 +40,7 @@ public final class Candidates
         List<HlaSequenceLoci> geneCandidates = mAminoAcidSequences.stream()
                 .filter(x -> x.getAllele().Gene.equals(context.Gene)).collect(Collectors.toList());
 
-        LL_LOGGER.info("    {}} candidates before filtering", geneCandidates.size());
+        LL_LOGGER.info("  {}} candidates before filtering", geneCandidates.size());
 
         // Amino acid filtering
         AminoAcidFiltering aminoAcidFilter = new AminoAcidFiltering(context.AminoAcidBoundaries);
@@ -54,11 +54,11 @@ public final class Candidates
 
         if (aminoAcidSpecificAllelesCandidate.isEmpty())
         {
-            LL_LOGGER.warn("    0 candidates after amino acid filtering - reverting to all gene candidates");
+            LL_LOGGER.warn("  0 candidates after amino acid filtering - reverting to all gene candidates");
             return geneCandidates.stream().map(x -> x.getAllele()).collect(Collectors.toList());
         }
 
-        LL_LOGGER.info("    {} candidates after amino acid filtering", aminoAcidCandidates.size());
+        LL_LOGGER.info("  {} candidates after amino acid filtering", aminoAcidCandidates.size());
 
         // Nucleotide filtering
         NucleotideFiltering nucleotideFiltering = new NucleotideFiltering(mConfig.MinEvidence, aminoAcidBoundary);
@@ -74,11 +74,11 @@ public final class Candidates
 
         if (nucleotideSpecificAllelesCandidate.isEmpty())
         {
-            LL_LOGGER.warn("    0 candidates after exon boundary filtering - reverting to amino acid candidates");
+            LL_LOGGER.warn("  0 candidates after exon boundary filtering - reverting to amino acid candidates");
             return aminoAcidCandidateAlleles;
         }
 
-        LL_LOGGER.info("    {} candidates after exon boundary filtering", nucleotideSpecificAllelesCandidate.size());
+        LL_LOGGER.info("  {} candidates after exon boundary filtering", nucleotideSpecificAllelesCandidate.size());
         return nucleotideSpecificAllelesCandidate;
     }
 
@@ -92,7 +92,7 @@ public final class Candidates
 
         List<HlaSequenceLoci> phasedCandidates = filterCandidates(unphasedCandidates, phasedEvidence);
         List<HlaAllele> phasedAlleles = phasedCandidates.stream().map(x -> x.getAllele()).collect(Collectors.toList());
-        LL_LOGGER.info("    {} candidates after phasing: {}",
+        LL_LOGGER.info("  {} candidates after phasing: {}",
                 phasedCandidates.size(), phasedAlleles);
 
         return phasedAlleles;

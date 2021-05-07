@@ -111,7 +111,7 @@ public class SAMRecordReader
 
     private List<NucleotideFragment> readFromBam(final HmfTranscriptRegion transcript)
     {
-        LL_LOGGER.info("    querying {} coding region({}: {} -> {})",
+        LL_LOGGER.info("  querying {} coding region({}: {} -> {})",
                 transcript.gene(), transcript.chromosome(), transcript.codingStart(), transcript.codingEnd());
 
         boolean reverseStrand = transcript.strand() == Strand.REVERSE;

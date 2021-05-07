@@ -182,7 +182,9 @@ public class HlaComplex
     {
         List<List<HlaComplex>> intermediatePairs = cartesianComplexProduct(first, second);
         // return intermediatePairs.stream().map(x -> )
+
         // TODO, check how combined
+        // input is a list of 1 or 2 alleles, and then makes a new list of the 2 HlaComplex pairs (not combing them)`
         return Lists.newArrayList();
         //return intermediate.map { it.flatMap { it.alleles } }.map { HlaComplex(it) }
     }

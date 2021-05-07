@@ -61,7 +61,7 @@ public class SomaticVariants
 
         fileReader.close();
 
-        LL_LOGGER.info("    found ${result.size} HLA variants", 0);
+        LL_LOGGER.info("  found ${result.size} HLA variants", 0);
         return results;
 
         /*
@@ -84,7 +84,7 @@ public class SomaticVariants
             result.add(enriched);
         }
         fileReader.close();
-        this.logger.info("    found " + result.size() + " HLA variants");
+        this.logger.info("  found " + result.size() + " HLA variants");
         return result;
 
          */

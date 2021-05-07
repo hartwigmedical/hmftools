@@ -59,10 +59,10 @@ public class BamQC
         Map<Indel,Integer> fragmentsWithUnmatchedIndel = reader.unmatchedIndels(MIN_SUPPORT);
 
         fragmentsWithUnmatchedIndel.entrySet().forEach(x -> LL_LOGGER.warn(
-                "    UNMATCHED_INDEL - {} fragments excluded with unmatched indel {}", x.getValue(), x.getKey().toString()));
+                "  UNMATCHED_INDEL - {} fragments excluded with unmatched indel {}", x.getValue(), x.getKey().toString()));
 
         fragmentsWithUnmatchedPonIndel.entrySet().forEach(x -> LL_LOGGER.warn(
-                "    UNMATCHED_PON_INDEL - {} fragments excluded with unmatched PON indel {}", x.getValue(), x.getKey().toString()));
+                "  UNMATCHED_PON_INDEL - {} fragments excluded with unmatched PON indel {}", x.getValue(), x.getKey().toString()));
 
         return new BamQC(reader.alignmentFiltered(),
                 fragmentsWithUnmatchedIndel.size(), fragmentsWithUnmatchedIndel.values().stream().mapToInt(x -> x).max().orElse(0),

@@ -67,7 +67,7 @@ public class SomaticVariantQC
         SomaticVariantQC result = new SomaticVariantQC(variantCount, totalCount);
         if(result.unmatchedVariants())
         {
-            getLogger().warn("    UNASSIGNED_VARIANT - " + variantCount + " variants found but " + totalCount + " assigned");
+            getLogger().warn("  UNASSIGNED_VARIANT - " + variantCount + " variants found but " + totalCount + " assigned");
         }
         return result;
 

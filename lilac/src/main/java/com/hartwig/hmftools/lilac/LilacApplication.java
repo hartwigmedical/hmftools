@@ -73,12 +73,12 @@ public class LilacApplication implements AutoCloseable, Runnable
         List expectedSequences;
 
         LL_LOGGER.info("Starting LILAC with parameters:");
-        LL_LOGGER.info("    sample = " + mConfig.Sample);
-        LL_LOGGER.info("    minBaseQual = " + mConfig.MinBaseQual);
-        LL_LOGGER.info("    minEvidence = " + mConfig.MinEvidence);
-        LL_LOGGER.info("    minUniqueCoverage = " + mConfig.MinConfirmedUniqueCoverage);
-        LL_LOGGER.info("    minFragmentsPerAllele = " + mConfig.MinFragmentsPerAllele);
-        LL_LOGGER.info("    minFragmentsToRemoveSingle = " + mConfig.MinFragmentsToRemoveSingle);
+        LL_LOGGER.info("  sample = " + mConfig.Sample);
+        LL_LOGGER.info("  minBaseQual = " + mConfig.MinBaseQual);
+        LL_LOGGER.info("  minEvidence = " + mConfig.MinEvidence);
+        LL_LOGGER.info("  minUniqueCoverage = " + mConfig.MinConfirmedUniqueCoverage);
+        LL_LOGGER.info("  minFragmentsPerAllele = " + mConfig.MinFragmentsPerAllele);
+        LL_LOGGER.info("  minFragmentsToRemoveSingle = " + mConfig.MinFragmentsToRemoveSingle);
 
         HlaContextFactory
                 hlaContextFactory = new HlaContextFactory(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES);
@@ -188,7 +188,7 @@ public class LilacApplication implements AutoCloseable, Runnable
             if(referenceBamReader.stopLossOnCIndels() > 0 && !($receiver$iv$iv7 = (Collection) missingStopLossAlleles).isEmpty())
             {
                 LL_LOGGER.info("Identified " + referenceBamReader.stopLossOnCIndels() + " stop loss fragments");
-                LL_LOGGER.info("    recovered stop loss candidates: "
+                LL_LOGGER.info("  recovered stop loss candidates: "
                         + CollectionsKt.joinToString$default((Iterable) missingStopLossAlleles, (CharSequence) ",", null, null, (int) 0, null, null, (int) 62, null));
                 list = missingStopLossAlleles;
             }
@@ -230,12 +230,12 @@ public class LilacApplication implements AutoCloseable, Runnable
             $receiver$iv7 = recoveredAlleles;
             if(!$receiver$iv7.isEmpty())
             {
-                LL_LOGGER.info("    recovered " + recoveredAlleles.size() + " common candidate alleles: "
+                LL_LOGGER.info("  recovered " + recoveredAlleles.size() + " common candidate alleles: "
                         + CollectionsKt.joinToString$default((Iterable) recoveredAlleles, (CharSequence) ", ", null, null, (int) 0, null, null, (int) 62, null));
             }
             else
             {
-                LL_LOGGER.info("    recovered 0 common candidate alleles");
+                LL_LOGGER.info("  recovered 0 common candidate alleles");
             }
             List<AminoAcidFragment> referenceCoverageFragments = aminoAcidPipeline.referenceCoverageFragments();
             referenceAminoAcidCounts = SequenceCount.Companion.aminoAcids(minEvidence, referenceCoverageFragments);
@@ -403,7 +403,7 @@ public class LilacApplication implements AutoCloseable, Runnable
                         Set<hla.HlaAllele> variantAlleles = Sets.newHashSet();
                         variantCoverage.forEach(x -> variantAlleles.add(x.getAllele());
 
-                        LL_LOGGER.info("    " + variant + " -> " + variantCoverage);
+                        LL_LOGGER.info("  " + variant + " -> " + variantCoverage);
                         VariantContext variantContext = variant.context();
                         lilacVCF.writeVariant(variantContext, variantAlleles);
 
@@ -431,9 +431,9 @@ public class LilacApplication implements AutoCloseable, Runnable
             qc.LilacQC
                     lilacQC = LilacQC.Companion.create(aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC);
             LL_LOGGER.info("QC Stats:");
-            LL_LOGGER.info("    "
+            LL_LOGGER.info("  "
                     + CollectionsKt.joinToString$default((Iterable) lilacQC.header(), (CharSequence) ",", null, null, (int) 0, null, null, (int) 62, null));
-            LL_LOGGER.info("    "
+            LL_LOGGER.info("  "
                     + CollectionsKt.joinToString$default((Iterable) lilacQC.body(), (CharSequence) ",", null, null, (int) 0, null, null, (int) 62, null));
             LL_LOGGER.info("Writing output to " + outputDir);
             outputFile = mConfig.getOutputFilePrefix() + ".lilac.txt";

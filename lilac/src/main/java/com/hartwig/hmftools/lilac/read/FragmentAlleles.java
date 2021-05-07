@@ -122,6 +122,8 @@ public class FragmentAlleles
                 .map(x -> x.getKey()).collect(Collectors.toList());
 
         // CHECK is sorting really required
+        // TODO - should be intersection not union
+        // val fragmentAminoAcidLoci = (aminoAcidFragment.aminoAcidLoci() intersect aminoAcidLoci).sorted().toIntArray()
         Set<Integer> combinedAminoAcidLoci = aminoAcidFragment.aminoAcidLoci().stream().collect(Collectors.toSet());
         combinedAminoAcidLoci.addAll(aminoAcidLoci);
         List<Integer> fragmentAminoAcidLoci = combinedAminoAcidLoci.stream().collect(Collectors.toList());

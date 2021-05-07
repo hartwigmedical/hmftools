@@ -44,8 +44,13 @@ public final class AminoAcidFragment extends NucleotideFragment
         return mAminoAcids.get(mAminoAcidLoci.indexOf(loci));
     }
 
-    @NotNull
+    // redundant
     public final String aminoAcids(final List<Integer> indices)
+    {
+        return aminoAcids(indices.stream().collect(Collectors.toSet()));
+    }
+
+    public final String aminoAcids(final Set<Integer> indices)
     {
         StringJoiner sj = new StringJoiner("");
         indices.stream().forEach(x -> sj.add(aminoAcid(x)));
@@ -56,20 +61,6 @@ public final class AminoAcidFragment extends NucleotideFragment
 
     public AminoAcidFragment intersectAminoAcidLoci(final List<Integer> otherAminoAcidLoci)
     {
-        /*
-            val filteredIndexes = aminoAcidLoci
-            .mapIndexed { index: Int, loci: Int -> Pair(index, loci) }
-            .filter { (_, loci) -> loci in otherAminoAcidLoci }
-            .map { (index, _) -> index }
-
-        val filteredAminoAcidLoci = filteredIndexes.map { aminoAcidLoci[it] }
-        val filteredAminoAcids = filteredIndexes.map { aminoAcids[it] }
-
-        return AminoAcidFragment(id, genes, nucleotideLoci, nucleotideQuality, nucleotides, filteredAminoAcidLoci, filteredAminoAcids)
-
-         */
-
-        // CHECK correct use of index vs loci
         final List<Integer> intersectAminoAcidLoci = Lists.newArrayList();
         final List<String> intersectAminoAcids = Lists.newArrayList();
 
@@ -83,7 +74,6 @@ public final class AminoAcidFragment extends NucleotideFragment
                 intersectAminoAcids.add(mAminoAcids.get(i));
             }
         }
-
 
         return new AminoAcidFragment(
                 getId(), getGenes(), getNucleotideLoci(), getNucleotideQuality(), getNucleotides(),

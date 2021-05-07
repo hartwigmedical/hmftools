@@ -1,13 +1,20 @@
 package com.hartwig.hmftools.lilac.evidence;
 
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacUtils.listMax;
+import static com.hartwig.hmftools.lilac.LilacUtils.listMin;
+
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
 import com.sun.tools.javac.util.Pair;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -18,8 +25,8 @@ public final class ExtendEvidence
     private final List<AminoAcidFragment> mAminoAcidFragments;
     private final ExpectedAlleles mExpectedAlleles;
 
-    public ExtendEvidence(@NotNull LilacConfig config, @NotNull List<Integer> heterozygousLoci,
-            @NotNull List<AminoAcidFragment> aminoAcidFragments, @NotNull ExpectedAlleles expectedAlleles)
+    public ExtendEvidence(final LilacConfig config, final List<Integer> heterozygousLoci,
+            final List<AminoAcidFragment> aminoAcidFragments, final ExpectedAlleles expectedAlleles)
     {
         mConfig = config;
         mHeterozygousLoci = heterozygousLoci;
@@ -29,157 +36,105 @@ public final class ExtendEvidence
 
     public final List<PhasedEvidence> pairedEvidence()
     {
-        return Lists.newArrayList();
+        List<PhasedEvidence> results = Lists.newArrayList();
 
-        /*
-        int n;
-        int n2;
-        List result = new ArrayList();
-        if(mConfig.getDebugPhasing())
+        if (mConfig.DebugPhasing)
         {
-            PhasedEvidenceFactory.Companion.getLogger().info("    Producing paired evidence");
+            LL_LOGGER.info("  Producing paired evidence");
         }
-        if((n2 = 0) <= (n = mHeterozygousLoci.size() - 2))
+
+        for(int i = 0; i < mHeterozygousLoci.size() - 2; ++i)
         {
-            void i;
-            do
+            List<Integer> indices = Lists.newArrayList(mHeterozygousLoci.get(i), mHeterozygousLoci.get(i + 1));
+
+            final List<AminoAcidFragment> filteredFragments = mAminoAcidFragments.stream()
+                    .filter(x -> x.containsAll(indices)).collect(Collectors.toList());
+
+            if(!filteredFragments.isEmpty())
             {
-                void $receiver$iv$iv;
-                Iterable $receiver$iv;
-                List indices = CollectionsKt.listOf((Object[]) new Integer[] { mHeterozygousLoci.get((int) (++i)),
-                        mHeterozygousLoci.get((int) (i + true)) });
-                Iterable iterable = $receiver$iv = (Iterable) mAminoAcidFragments;
-                Collection destination$iv$iv = new ArrayList();
-                for(Object element$iv$iv : $receiver$iv$iv)
-                {
-                    AminoAcidFragment it = (AminoAcidFragment) element$iv$iv;
-                    boolean bl = false;
-                    if(!it.containsAll(indices))
-                    {
-                        continue;
-                    }
-                    destination$iv$iv.add(element$iv$iv);
-                }
-                List filteredFragments = (List) destination$iv$iv;
-                $receiver$iv = filteredFragments;
-                if(!(!$receiver$iv.isEmpty()))
-                {
-                    continue;
-                }
                 int minTotalFragments = minTotalFragments(indices);
-                PhasedEvidence
-                        left = PhasedEvidence.Companion.evidence(mAminoAcidFragments, ((Number) indices.get(0)).intValue());
-                PhasedEvidence
-                        right = PhasedEvidence.Companion.evidence(mAminoAcidFragments, ((Number) indices.get(1)).intValue());
-                int[] nArray = CollectionsKt.toIntArray((Collection) indices);
-                PhasedEvidence combinedEvidence =
-                        PhasedEvidence.Companion.evidence(mAminoAcidFragments, Arrays.copyOf(nArray, nArray.length))
-                                .removeSingles(mConfig.getMinFragmentsToRemoveSingle());
-                if(combinedEvidence.totalEvidence() >= minTotalFragments
-                        && CombineEvidence.INSTANCE.canCombine(left, combinedEvidence, right))
-                {
-                    result.add(combinedEvidence);
-                    if(!mConfig.getDebugPhasing())
-                    {
-                        continue;
-                    }
-                    PhasedEvidenceFactory.Companion.getLogger().info("    Paired Evidence: " + combinedEvidence);
-                    continue;
-                }
-                if(!mConfig.getDebugPhasing())
-                {
-                    continue;
-                }
-                PhasedEvidenceFactory.Companion.getLogger().info("    FAILED Paired Evidence: " + combinedEvidence);
-            } while(i != n);
-        }
-        return CollectionsKt.sorted((Iterable) result);
 
-         */
+                PhasedEvidence left = PhasedEvidence.evidence(mAminoAcidFragments, Lists.newArrayList(indices.get(0)));
+                PhasedEvidence right = PhasedEvidence.evidence(mAminoAcidFragments, Lists.newArrayList(indices.get(1)));
+
+                PhasedEvidence combinedEvidence = PhasedEvidence.evidence(mAminoAcidFragments, indices)
+                        .removeSingles(mConfig.MinFragmentsToRemoveSingle);
+
+                if (combinedEvidence.totalEvidence() >= minTotalFragments && CombineEvidence.canCombine(left, combinedEvidence, right))
+                {
+                    results.add(combinedEvidence);
+
+                    if (mConfig.DebugPhasing)
+                    {
+                        LL_LOGGER.info("  Paired Evidence: {}", combinedEvidence);
+                    }
+                }
+                else
+                {
+                    if (mConfig.DebugPhasing)
+                    {
+                        LL_LOGGER.info("  FAILED Paired Evidence: {}", combinedEvidence);
+                    }
+                }
+            }
+        }
+
+        Collections.sort(results);
+        return results;
     }
 
-    public Pair<PhasedEvidence, Set<PhasedEvidence>> merge(@NotNull PhasedEvidence current, @NotNull Set<PhasedEvidence> others)
+    public Pair<PhasedEvidence, Set<PhasedEvidence>> merge(final PhasedEvidence current, final Set<PhasedEvidence> others)
     {
-        return null;
+        // List<Integer> existingIndices = current.getAminoAcidIndexList();
 
-        /*
-        Object left;
-        void $receiver$iv$iv;
-        void $receiver$iv$iv2;
-        Iterable $receiver$iv;
-        Intrinsics.checkParameterIsNotNull((Object) current, (String) "current");
-        Intrinsics.checkParameterIsNotNull(others, (String) "others");
-        int[] existingIndices = current.getAminoAcidIndices();
-        Integer n = ArraysKt.min((int[]) existingIndices);
-        if(n == null)
+        int minExisting = listMin(current.getAminoAcidIndexList());
+        int maxExisting = listMax(current.getAminoAcidIndexList());
+
+        // CHECK PhaseEvidence equality??
+        List<PhasedEvidence> othersContainingMax = others.stream()
+                .filter(x -> x != current && x.getAminoAcidIndexList().contains(maxExisting)).collect(Collectors.toList());
+
+        List<PhasedEvidence> othersContainingMin = others.stream()
+                .filter(x -> x != current && x.getAminoAcidIndexList().contains(minExisting)).collect(Collectors.toList());
+
+        if (!othersContainingMin.isEmpty() && !othersContainingMax.isEmpty())
         {
-            Intrinsics.throwNpe();
-        }
-        int minExisting = n;
-        Integer n2 = ArraysKt.max((int[]) existingIndices);
-        if(n2 == null)
-        {
-            Intrinsics.throwNpe();
-        }
-        int maxExisting = n2;
-        Iterable iterable = $receiver$iv = (Iterable) others;
-        Iterable destination$iv$iv = new ArrayList();
-        for(Object element$iv$iv : $receiver$iv$iv2)
-        {
-            PhasedEvidence it = (PhasedEvidence) element$iv$iv;
-            boolean bl = false;
-            if(!(Intrinsics.areEqual((Object) it, (Object) current) ^ true
-                    && ArraysKt.contains((int[]) it.getAminoAcidIndices(), (int) maxExisting)))
+            PhasedEvidence left = othersContainingMin.get(0);
+            PhasedEvidence right = othersContainingMax.get(0);
+
+            if (left.totalEvidence() > right.totalEvidence())
             {
-                continue;
+                Pair<PhasedEvidence, Set<PhasedEvidence>> result = merge(current, left, current);
+
+                if (result.snd.isEmpty())
+                    return merge(current, current, right);
+                else
+                    return result;
             }
-            destination$iv$iv.add(element$iv$iv);
-        }
-        List othersContainingMax = (List) destination$iv$iv;
-        Iterable $receiver$iv2 = others;
-        destination$iv$iv = $receiver$iv2;
-        Collection destination$iv$iv2 = new ArrayList();
-        for(Object element$iv$iv : $receiver$iv$iv)
-        {
-            PhasedEvidence it = (PhasedEvidence) element$iv$iv;
-            boolean bl = false;
-            if(!(Intrinsics.areEqual((Object) it, (Object) current) ^ true
-                    && ArraysKt.contains((int[]) it.getAminoAcidIndices(), (int) minExisting)))
+            else
             {
-                continue;
+                Pair<PhasedEvidence, Set<PhasedEvidence>> result = merge(current, current, right);
+
+                if (result.snd.isEmpty())
+                    return merge(current, left, current);
+                else
+                    return result;
             }
-            destination$iv$iv2.add(element$iv$iv);
         }
-        List othersContainingMin = (List) destination$iv$iv2;
-        $receiver$iv2 = othersContainingMin;
-        if(!$receiver$iv2.isEmpty() && !($receiver$iv2 = (Collection) othersContainingMax).isEmpty())
+
+        if (!othersContainingMin.isEmpty())
         {
-            Pair<PhasedEvidence, Set<PhasedEvidence>> result;
-            left = (PhasedEvidence) othersContainingMin.get(0);
-            PhasedEvidence right = (PhasedEvidence) othersContainingMax.get(0);
-            return ((PhasedEvidence) left).totalEvidence() > right.totalEvidence()
-                    ? (((Set) (result = merge(current, (PhasedEvidence) left, current)).getSecond()).isEmpty()
-                    ? merge(current, current, right)
-                    : result)
-                    : (((Set) (result = merge(current, current, right)).getSecond()).isEmpty()
-                            ? merge(current, (PhasedEvidence) left, current)
-                            : result);
+            PhasedEvidence left = othersContainingMin.get(0);
+            return merge(current, left, current);
         }
-        left = othersContainingMin;
-        if(!left.isEmpty())
+
+        if (!othersContainingMax.isEmpty())
         {
-            left = (PhasedEvidence) othersContainingMin.get(0);
-            return merge(current, (PhasedEvidence) left, current);
-        }
-        left = othersContainingMax;
-        if(!left.isEmpty())
-        {
-            PhasedEvidence right = (PhasedEvidence) othersContainingMax.get(0);
+            PhasedEvidence right = othersContainingMax.get(0);
             return merge(current, current, right);
         }
-        return new Pair((Object) current, (Object) SetsKt.emptySet());
 
-         */
+        return new Pair(current, Sets.newHashSet());
     }
 
     private final int minTotalFragments(List<Integer> indices)
@@ -187,48 +142,35 @@ public final class ExtendEvidence
         return mExpectedAlleles.expectedAlleles(indices) * mConfig.MinFragmentsPerAllele;
     }
 
-    private final Pair<PhasedEvidence, Set<PhasedEvidence>> merge(
-            PhasedEvidence current, PhasedEvidence left, PhasedEvidence right)
+    private final Pair<PhasedEvidence, Set<PhasedEvidence>> merge( PhasedEvidence current, PhasedEvidence left, PhasedEvidence right)
     {
-        return null;
+        List<Integer> leftTail = left.unambiguousTailIndices();
+        List<Integer> rightHead = right.unambiguousHeadIndices();
+        List<Integer> mergeIndices = leftTail.stream().collect(Collectors.toList());
 
-        /*
-        void $receiver$iv$iv;
-        Iterable $receiver$iv;
-        int[] leftTail = left.unambiguousTailIndices();
-        int[] rightHead = right.unambiguousHeadIndices();
-        List mergeIndices = CollectionsKt.sorted((Iterable) ArraysKt.distinct((int[]) ArraysKt.plus((int[]) leftTail, (int[]) rightHead)));
-        Iterable iterable = $receiver$iv = (Iterable) mAminoAcidFragments;
-        Collection destination$iv$iv = new ArrayList();
-        for(Object element$iv$iv : $receiver$iv$iv)
+        rightHead.stream().filter(x -> !leftTail.contains(x)).forEach(x -> mergeIndices.add(x));
+        Collections.sort(mergeIndices);
+
+        List<AminoAcidFragment> filteredFragments = mAminoAcidFragments.stream()
+                .filter(x -> x.containsAll(mergeIndices)).collect(Collectors.toList());
+
+        if (!filteredFragments.isEmpty())
         {
-            AminoAcidFragment it = (AminoAcidFragment) element$iv$iv;
-            boolean bl = false;
-            if(!it.containsAll(mergeIndices))
-            {
-                continue;
-            }
-            destination$iv$iv.add(element$iv$iv);
-        }
-        List filteredFragments = (List) destination$iv$iv;
-        $receiver$iv = filteredFragments;
-        if(!$receiver$iv.isEmpty())
-        {
-            PhasedEvidence combined;
             int minTotalFragments = minTotalFragments(mergeIndices);
-            int[] nArray = CollectionsKt.toIntArray((Collection) mergeIndices);
-            PhasedEvidence
-                    mergeEvidence = PhasedEvidence.Companion.evidence(filteredFragments, Arrays.copyOf(nArray, nArray.length))
-                    .removeSingles(mConfig.getMinFragmentsToRemoveSingle());
-            if(CombineEvidence.INSTANCE.canCombine(left, mergeEvidence, right)
-                    && (combined = CombineEvidence.INSTANCE.combine(left, mergeEvidence, right)).totalEvidence() >= minTotalFragments)
+
+            PhasedEvidence mergeEvidence = PhasedEvidence.evidence(filteredFragments, mergeIndices).removeSingles(mConfig.MinFragmentsToRemoveSingle);
+
+            if (CombineEvidence.canCombine(left, mergeEvidence, right))
             {
-                return new Pair((Object) combined, (Object) SetsKt.setOf((Object[]) new PhasedEvidence[] { left, right }));
+                PhasedEvidence combined = CombineEvidence.combine(left, mergeEvidence, right);
+
+                if (combined.totalEvidence() >= minTotalFragments)
+                {
+                    return new Pair(combined, Sets.newHashSet(left, right));
+                }
             }
         }
-        return new Pair((Object) current, (Object) SetsKt.emptySet());
 
-         */
+        return new Pair(current, Sets.newHashSet());
     }
-
 }

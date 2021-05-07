@@ -25,11 +25,11 @@ public class PhasedEvidenceFactory
         List<PhasedEvidence> result = this.evidence(context.ExpectedAlleles, fragments);
         if(this.mConfig.DebugPhasing)
         {
-            LL_LOGGER.info("    Consolidating evidence");
+            LL_LOGGER.info("  Consolidating evidence");
         }
         for(PhasedEvidence phasedEvidence : result)
         {
-            LL_LOGGER.info("    " + phasedEvidence);
+            LL_LOGGER.info("  " + phasedEvidence);
         }
         return result;
     }
@@ -48,7 +48,7 @@ public class PhasedEvidenceFactory
         List<Integer> heterozygousIndices = aminoAcidCounts.heterozygousLoci();
         if(this.mConfig.getDebugPhasing())
         {
-            LL_LOGGER.info("    Heterozygous Indices: " + heterozygousIndices);
+            LL_LOGGER.info("  Heterozygous Indices: " + heterozygousIndices);
         }
         ExtendEvidence heterozygousEvidence =
                 new ExtendEvidence(this.mConfig, heterozygousIndices, aminoAcidAminoAcidFragments, expectedAlleles);
@@ -57,7 +57,7 @@ public class PhasedEvidenceFactory
         unprocessedEvidence.addAll((Collection) heterozygousEvidence.pairedEvidence());
         if(this.mConfig.getDebugPhasing())
         {
-            LL_LOGGER.info("    Extending paired evidence");
+            LL_LOGGER.info("  Extending paired evidence");
         }
         while(!(collection = (Collection) unprocessedEvidence).isEmpty())
         {
@@ -65,7 +65,7 @@ public class PhasedEvidenceFactory
             PhasedEvidence top = (PhasedEvidence) unprocessedEvidence.remove(0);
             if(this.mConfig.getDebugPhasing())
             {
-                LL_LOGGER.info("    Processing top: " + top);
+                LL_LOGGER.info("  Processing top: " + top);
             }
             Object object2 = heterozygousEvidence.merge(top, SetsKt.plus((Set) finalisedEvidence, (Iterable) unprocessedEvidence));
             object = (PhasedEvidence) object2.component1();
@@ -74,7 +74,7 @@ public class PhasedEvidenceFactory
             {
                 if(this.mConfig.getDebugPhasing())
                 {
-                    LL_LOGGER.info("    Produced child: " + parent);
+                    LL_LOGGER.info("  Produced child: " + parent);
                 }
                 finalisedEvidence.removeAll(children);
                 unprocessedEvidence.removeAll(children);

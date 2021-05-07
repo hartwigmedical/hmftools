@@ -36,11 +36,11 @@ public class CoverageQC {
         val cTypes = alleles.filter { it.gene == "C" }.distinct().size
 
         if (aTypes == 0 || bTypes == 0 || cTypes == 0) {
-            logger.warn("    UNMATCHED_TYPE - $aTypes A alleles, $bTypes B alleles, $cTypes C alleles")
+            logger.warn("  UNMATCHED_TYPE - $aTypes A alleles, $bTypes B alleles, $cTypes C alleles")
         }
 
         if (winner.WildCoverage > 0) {
-            logger.warn("    WILDCARD_MATCH - winning solution contains wildcards")
+            logger.warn("  WILDCARD_MATCH - winning solution contains wildcards")
         }
 
         return CoverageQC(aTypes, bTypes, cTypes, totalFragments, winner.UniqueCoverage, winner.SharedCoverage, winner.WildCoverage)

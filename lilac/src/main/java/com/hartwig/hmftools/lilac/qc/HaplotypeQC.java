@@ -179,7 +179,7 @@ public class HaplotypeQC
             if(inPon(unmatched))
             {
                 ++pon;
-                logger.info("    UNMATCHED_PON_HAPLTOYPE - " + unmatched);
+                logger.info("  UNMATCHED_PON_HAPLTOYPE - " + unmatched);
                 continue;
             }
             int n = unmatched.getSupportingFragments();
@@ -187,7 +187,7 @@ public class HaplotypeQC
             n = unmatched.getHaplotype().length();
             maxLength = Math.max(maxLength, n);
             ++unusedCount;
-            logger.warn("    UNMATCHED_HAPLTOYPE - " + unmatched);
+            logger.warn("  UNMATCHED_HAPLTOYPE - " + unmatched);
         }
         return new HaplotypeQC(unusedCount, maxSupport, maxLength, pon);
 

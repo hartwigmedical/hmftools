@@ -21,8 +21,6 @@ public class ExpectedAlleles
 
     public final int expectedAlleles(final List<Integer> loci)
     {
-        // return loci.map { expectedAlleles(it) }.min()!!
-        // CHECK:
         return loci.stream().mapToInt(x -> expectedAlleles(x)).min().orElse(0);
     }
 

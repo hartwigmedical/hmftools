@@ -36,5 +36,15 @@ public class LilacUtils
         return list;
     }
 
+    public static int listMin(final List<Integer> list)
+    {
+        return list.stream().mapToInt(x -> x).min().orElse(0);
+    }
+
+    public static int listMax(final List<Integer> list)
+    {
+        return list.stream().mapToInt(x -> x).max().orElse(0);
+    }
+
 }
 

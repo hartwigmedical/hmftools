@@ -96,8 +96,6 @@ public class NucleotideFragment
         final List<Integer> aminoAcidLoci = Lists.newArrayList();
         final List<String> aminoAcids = Lists.newArrayList();
 
-        // CHECK that i and locus are the same and which should be used
-
         for(int i = 0; i < mNucleotideLoci.size(); ++i)
         {
             int locus = mNucleotideLoci.get(i);

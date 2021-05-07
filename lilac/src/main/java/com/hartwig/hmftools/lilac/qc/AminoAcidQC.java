@@ -55,7 +55,7 @@ public class AminoAcidQC
                 {
                     ++unused;
                     largest = max(largest, count);
-                    LL_LOGGER.warn("    UNMATCHED_AMINO_ACID - amino acid sequence({})' with count({}) support at locus({}) not in winning solution",
+                    LL_LOGGER.warn("  UNMATCHED_AMINO_ACID - amino acid sequence({})' with count({}) support at locus({}) not in winning solution",
                             entry.getKey(), count, locus);
                 }
             }

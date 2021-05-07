@@ -13,7 +13,7 @@ public final class SequenceCount
     private final int mMinCount;
     private final Map<String,Integer>[] mSeqCountsList;
 
-    public SequenceCount(int minCount, final Map<String, Integer>[] seqCounts)
+    public SequenceCount(int minCount, final Map<String,Integer>[] seqCounts)
     {
         mMinCount = minCount;
         mSeqCountsList = seqCounts;
@@ -159,14 +159,11 @@ public final class SequenceCount
     {
         Map<String,Integer> seqCounts = seqCountsList[index];
 
-        // CHECK
         Integer count = seqCounts.get(aminoAcid);
         if(count != null)
             seqCounts.put(aminoAcid, count + 1);
         else
             seqCounts.put(aminoAcid, 1);
-
-        // seqCounts.compute(aminoAcid, 1)
     }
 
     public static SequenceCount nucleotides(int minCount, final List<NucleotideFragment> fragments)
@@ -203,21 +200,6 @@ public final class SequenceCount
         }
 
         return new SequenceCount(minCount, seqCountsList);
-
-        /*
-            val length = fragments.map { it.aminoAcidLoci().max() ?: -1 }.max()!! + 1
-            val count = Array(length) { mutableMapOf<String, Int>() }
-
-            for (fragment in fragments) {
-                for (index in fragment.aminoAcidLoci()) {
-                    val aminoAcid = fragment.aminoAcid(index)
-                    count.increment(index, aminoAcid)
-                }
-            }
-            return SequenceCount(minCount, Array(length) { count[it] })
-
-         */
-
     }
 
 }
