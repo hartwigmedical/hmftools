@@ -208,7 +208,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 100, 80, 45, 105 },
                 new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Region"),
                         TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Type"),
-                        TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.CENTER), TableUtil.createHeaderCell("") });
+                        TableUtil.createHeaderCell("Copies"),TableUtil.createHeaderCell("Chromosome arm copies").setTextAlignment(TextAlignment.CENTER), TableUtil.createHeaderCell("") });
 
         List<ReportableGainLoss> sortedGainsAndLosses = GainsAndLosses.sort(gainsAndLosses);
         for (ReportableGainLoss gainLoss : sortedGainsAndLosses) {
@@ -217,6 +217,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(gainLoss.gene()));
             contentTable.addCell(TableUtil.createContentCell(gainLoss.interpretation().display()));
             contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? String.valueOf(gainLoss.copies()) : DataUtil.NA_STRING)
+                    .setTextAlignment(TextAlignment.CENTER));
+            contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? "0" : DataUtil.NA_STRING)
                     .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(""));
         }
