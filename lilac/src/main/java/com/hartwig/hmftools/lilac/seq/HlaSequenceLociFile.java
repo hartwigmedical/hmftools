@@ -14,7 +14,7 @@ public class HlaSequenceLociFile
         A*01:01                 MAVMAPRTLLLLLSGALALTQTWAGSHSMRYFFTSVSRPGRGEPRFIAVGYVDDTQFVRFDSDAA
      */
 
-    public final void write(
+    public void write(
             final String file, final Set<Integer> aBoundaries, final Set<Integer> bBoundaries,
             final Set<Integer> cBoundaries, final List<HlaSequenceLoci> sequences)
     {

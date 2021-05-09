@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 
@@ -44,6 +45,14 @@ public class LilacUtils
     public static int listMax(final List<Integer> list)
     {
         return list.stream().mapToInt(x -> x).max().orElse(0);
+    }
+
+    public static boolean namesMatch(final Set<String> list1, final Set<String> list2)
+    {
+        if(list1.size() != list2.size())
+            return false;
+
+        return !list1.stream().noneMatch(x -> list2.contains(x));
     }
 
 }

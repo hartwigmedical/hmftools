@@ -3,7 +3,7 @@ package com.hartwig.hmftools.lilackt.variant
 import com.hartwig.hmftools.common.variant.VariantContextDecorator
 import com.hartwig.hmftools.lilackt.LilacConfig
 import com.hartwig.hmftools.lilackt.LociPosition
-import com.hartwig.hmftools.lilackt.coverage.HlaAlleleCoverage
+import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage
 import com.hartwig.hmftools.lilackt.read.FragmentAlleles
 import com.hartwig.hmftools.lilackt.read.SAMRecordReader
 import com.hartwig.hmftools.lilackt.seq.HlaSequenceLoci

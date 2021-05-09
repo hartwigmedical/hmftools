@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.lilac.variant;
 
-import com.hartwig.hmftools.lilackt.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.lilac.hla;
 import static java.lang.Math.min;
 
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
@@ -130,5 +131,20 @@ public class HlaAllele implements Comparable<HlaAllele>
         return newList;
     }
 
+    public static boolean matches(final List<HlaAllele> list1, final List<HlaAllele> list2)
+    {
+        if(list1.size() != list2.size())
+            return false;
+
+        return !list1.stream().noneMatch(x -> list2.contains(x));
+    }
+
+    public static boolean matches(final Set<HlaAllele> list1, final Set<HlaAllele> list2)
+    {
+        if(list1.size() != list2.size())
+            return false;
+
+        return !list1.stream().noneMatch(x -> list2.contains(x));
+    }
 
 }

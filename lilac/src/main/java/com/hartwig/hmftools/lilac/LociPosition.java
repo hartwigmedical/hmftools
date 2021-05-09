@@ -73,8 +73,10 @@ public class LociPosition
         long codingEnd = transcript.codingEnd();
         int currentLoci = 0;
 
-        for(HmfExonRegion exon : transcript.exome())
+        for(int i = transcript.exome().size() - 1; i >= 0; i--)
         {
+            HmfExonRegion exon = transcript.exome().get(i);
+
             if(exon.end() < codingStart || exon.start() > codingEnd)
                 continue;
 
@@ -93,7 +95,7 @@ public class LociPosition
         return -1;
     }
 
-    private final int forwardLoci(int position, final HmfTranscriptRegion transcript)
+    public final int forwardLoci(int position, final HmfTranscriptRegion transcript)
     {
         if(transcript.strand() != Strand.FORWARD)
             return -1;
@@ -130,8 +132,10 @@ public class LociPosition
         long codingEnd = transcript.codingEnd();
         int currentLoci = 0;
 
-        for(HmfExonRegion exon : transcript.exome())
+        for(int i = transcript.exome().size() - 1; i >= 0; i--)
         {
+            HmfExonRegion exon = transcript.exome().get(i);
+
             int exonEndLoci = 0;
             if(exon.end() < codingStart || exon.start() > codingEnd)
                 continue;
@@ -150,7 +154,7 @@ public class LociPosition
         return -1;
     }
 
-    private final int forwardPosition(int codingLoci, HmfTranscriptRegion transcript)
+    public final int forwardPosition(int codingLoci, HmfTranscriptRegion transcript)
     {
         if(transcript.strand() != Strand.FORWARD)
             return -1;

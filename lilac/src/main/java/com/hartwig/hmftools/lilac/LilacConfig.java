@@ -103,6 +103,16 @@ public class LilacConfig
         DebugPhasing = cmd.hasOption(DEBUG_PHASING);
     }
 
+    public void logParams()
+    {
+        LL_LOGGER.info("  sample = " + Sample);
+        LL_LOGGER.info("  minBaseQual = " + MinBaseQual);
+        LL_LOGGER.info("  minEvidence = " + MinEvidence);
+        LL_LOGGER.info("  minUniqueCoverage = " + MinConfirmedUniqueCoverage);
+        LL_LOGGER.info("  minFragmentsPerAllele = " + MinFragmentsPerAllele);
+        LL_LOGGER.info("  minFragmentsToRemoveSingle = " + MinFragmentsToRemoveSingle);
+    }
+
     public LilacConfig()
     {
         OutputDir = "";

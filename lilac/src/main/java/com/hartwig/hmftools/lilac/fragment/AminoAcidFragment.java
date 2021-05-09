@@ -84,6 +84,15 @@ public final class AminoAcidFragment extends NucleotideFragment
     {
         int start = nucStartIndex / 3 + (nucStartIndex % 3 == 0 ? 0 : 1);
         int end = (nucEndIndex + 1) / 3 - 1;
+
+        if(end <= start)
+        {
+            List<Integer> range = Lists.newArrayList();
+            range.add(start);
+            range.add(end);
+            return range;
+        }
+
         return formRange(start, end);
     }
 

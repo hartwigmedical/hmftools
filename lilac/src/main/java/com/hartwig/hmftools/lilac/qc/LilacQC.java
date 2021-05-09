@@ -22,7 +22,7 @@ public final class LilacQC
     private final HaplotypeQC mHaplotypeQC;
     private final SomaticVariantQC mSomaticVariantQC;
 
-    private final String header()
+    public final String header()
     {
         StringJoiner sj = new StringJoiner(DELIM);
         sj.add("status");
@@ -85,7 +85,7 @@ public final class LilacQC
     }
 
 
-    public final LilacQC create(final AminoAcidQC aminoAcidQC, final BamQC bamQC, final CoverageQC coverageQC,
+    public static LilacQC create(final AminoAcidQC aminoAcidQC, final BamQC bamQC, final CoverageQC coverageQC,
             final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
     {
         Set status = new LinkedHashSet();

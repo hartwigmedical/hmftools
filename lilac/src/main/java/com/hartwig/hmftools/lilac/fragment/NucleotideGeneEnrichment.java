@@ -57,7 +57,7 @@ public class NucleotideGeneEnrichment
         return mBcMinBoundary;
     }
 
-    public final List<NucleotideFragment> enrich(final List<NucleotideFragment> fragments)
+    public List<NucleotideFragment> enrich(final List<NucleotideFragment> fragments)
     {
         return fragments.stream().map(x -> enrich(x)).collect(Collectors.toList());
     }

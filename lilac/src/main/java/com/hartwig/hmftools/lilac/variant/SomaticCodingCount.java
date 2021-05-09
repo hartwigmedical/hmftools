@@ -82,7 +82,7 @@ public class SomaticCodingCount
     }
 
 
-    public static final List<SomaticCodingCount> create(final List<HlaAllele> winners)
+    public static List<SomaticCodingCount> create(final List<HlaAllele> winners)
     {
         return Lists.newArrayList();
 
@@ -105,7 +105,7 @@ public class SomaticCodingCount
          */
     }
 
-    public static final List<SomaticCodingCount> addVariant(final List<SomaticCodingCount> $receiver,
+    public static List<SomaticCodingCount> addVariant(final List<SomaticCodingCount> $receiver,
             final VariantContextDecorator variant, final Set<HlaAllele> variantAlleles)
     {
         boolean bl = variant.alt().length() != variant.ref().length();

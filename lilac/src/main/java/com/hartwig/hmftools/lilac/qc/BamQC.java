@@ -53,7 +53,7 @@ public class BamQC
         return mDiscardedIndelFragments;
     }
 
-    public final BamQC create(final SAMRecordReader reader)
+    public static BamQC create(final SAMRecordReader reader)
     {
         Map<Indel,Integer> fragmentsWithUnmatchedPonIndel = reader.unmatchedPonIndels(MIN_SUPPORT);
         Map<Indel,Integer> fragmentsWithUnmatchedIndel = reader.unmatchedIndels(MIN_SUPPORT);

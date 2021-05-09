@@ -2,8 +2,8 @@ package com.hartwig.hmftools.lilackt.cna
 
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile
-import com.hartwig.hmftools.lilackt.coverage.HlaAlleleCoverage
-import com.hartwig.hmftools.lilackt.coverage.HlaComplexCoverage
+import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage
+import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage
 import com.hartwig.hmftools.lilackt.hla.HlaAllele
 
 data class HlaCopyNumber(val allele: HlaAllele, val copyNumber: Double) {

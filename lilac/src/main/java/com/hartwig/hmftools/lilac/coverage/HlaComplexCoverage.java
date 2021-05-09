@@ -93,7 +93,7 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
         return new HlaComplexCoverage(unique, (int)round(shared), (int)round(wild), sortedAlleles);
     }
 
-    public final String header()
+    public static String header()
     {
         return "totalCoverage\tuniqueCoverage\tsharedCoverage\twildCoverage\ttypes\tallele1\tallele2\tallele3\tallele4\tallele5\tallele6";
     }

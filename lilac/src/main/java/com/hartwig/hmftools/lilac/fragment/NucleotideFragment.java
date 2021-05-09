@@ -24,8 +24,7 @@ public class NucleotideFragment
     public final List<Integer> getNucleotideQuality() { return mNucleotideQuality; }
     public final List<String> getNucleotides() { return mNucleotides; }
 
-    public NucleotideFragment(
-            final String id, final Set<String> genes, final List<Integer> nucleotideLoci,
+    public NucleotideFragment(final String id, final Set<String> genes, final List<Integer> nucleotideLoci,
             final List<Integer> nucleotideQuality, final List<String> nucleotides)
     {
         mId = id;
@@ -35,10 +34,20 @@ public class NucleotideFragment
         mNucleotides = nucleotides;
     }
 
-    public final boolean isEmpty() { return mNucleotideLoci.isEmpty(); }
-    public final boolean isNotEmpty() { return !isEmpty(); }
+    public final boolean isEmpty()
+    {
+        return mNucleotideLoci.isEmpty();
+    }
 
-    public int maxLoci() { return mNucleotideLoci.stream().mapToInt(x -> x).max().orElse(0); }
+    public final boolean isNotEmpty()
+    {
+        return !isEmpty();
+    }
+
+    public int maxLoci()
+    {
+        return mNucleotideLoci.stream().mapToInt(x -> x).max().orElse(0);
+    }
 
     public final boolean containsIndel()
     {
@@ -101,7 +110,9 @@ public class NucleotideFragment
             int locus = mNucleotideLoci.get(i);
 
             if((locus % 3) != 0)
+            {
                 continue;
+            }
 
             if(mNucleotideLoci.contains(locus + 1) && mNucleotideLoci.contains(locus + 2))
             {
@@ -120,8 +131,10 @@ public class NucleotideFragment
         String second = nucleotide(index * 3 + 1);
         String third = nucleotide(index * 3 + 2);
 
-        if (first == "." && second == "." && third == ".")
+        if(first == "." && second == "." && third == ".")
+        {
             return ".";
+        }
 
         return Codons.aminoAcids(first + second + third);
     }
@@ -170,6 +183,13 @@ public class NucleotideFragment
         }
 
         return mergedFragments;
+    }
+
+    public static List<Integer> expandIndices(final List<Integer> aminoAcidLoci)
+    {
+        List<Integer> nucleotideLoci = Lists.newArrayList();
+        aminoAcidLoci.stream().forEach(x -> nucleotideLoci.addAll(Lists.newArrayList(3 * x, 3 * x + 1, 3 * x + 2)));
+        return nucleotideLoci;
     }
 
     public static NucleotideFragment merge(final NucleotideFragment frag1, final NucleotideFragment frag2)

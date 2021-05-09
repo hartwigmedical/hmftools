@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.lilackt.out
 
 import com.hartwig.hmftools.lilackt.cna.HlaCopyNumber
-import com.hartwig.hmftools.lilackt.coverage.HlaAlleleCoverage
-import com.hartwig.hmftools.lilackt.coverage.HlaComplexCoverage
+import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage
+import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage
 import com.hartwig.hmftools.lilackt.variant.SomaticCodingCount
 import java.io.File
 import java.util.*

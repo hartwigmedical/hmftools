@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.lilackt.qc
 
-import com.hartwig.hmftools.lilackt.coverage.HlaComplexCoverage
+import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage
 import org.apache.logging.log4j.LogManager
 import java.text.DecimalFormat
 

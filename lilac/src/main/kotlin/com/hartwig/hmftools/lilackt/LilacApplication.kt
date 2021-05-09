@@ -9,11 +9,11 @@ import com.hartwig.hmftools.lilackt.LilacApplication.Companion.logger
 import com.hartwig.hmftools.lilackt.amino.AminoAcidFragmentPipeline
 import com.hartwig.hmftools.lilackt.candidates.Candidates
 import com.hartwig.hmftools.lilackt.cna.HlaCopyNumber
-import com.hartwig.hmftools.lilackt.coverage.HlaAlleleCoverage
-import com.hartwig.hmftools.lilackt.coverage.HlaComplex
-import com.hartwig.hmftools.lilackt.coverage.HlaComplexCoverage
-import com.hartwig.hmftools.lilackt.coverage.HlaComplexCoverage.Companion.writeToFile
-import com.hartwig.hmftools.lilackt.coverage.HlaComplexCoverageFactory
+import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage
+import com.hartwig.hmftools.lilac.coverage.HlaComplex
+import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage
+import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage.Companion.writeToFile
+import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverageFactory
 import com.hartwig.hmftools.lilackt.evidence.PhasedEvidenceFactory
 import com.hartwig.hmftools.lilackt.evidence.PhasedEvidenceValidation
 import com.hartwig.hmftools.lilackt.hla.HlaAllele

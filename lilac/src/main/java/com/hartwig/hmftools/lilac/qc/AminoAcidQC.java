@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-import com.hartwig.hmftools.lilackt.SequenceCount;
+import com.hartwig.hmftools.lilac.SequenceCount;
 
 import java.util.List;
 import java.util.Map;
@@ -36,7 +36,7 @@ public class AminoAcidQC
         return Lists.newArrayList(String.valueOf(mUnusedAminoAcids), String.valueOf(mUnusedAminoAcidMaxSupport));
     }
 
-    public static AminoAcidQC create(final Set<HlaSequenceLoci> winners, final SequenceCount aminoAcidCount)
+    public static AminoAcidQC create(final List<HlaSequenceLoci> winners, final SequenceCount aminoAcidCount)
     {
         int unused = 0;
         int largest = 0;

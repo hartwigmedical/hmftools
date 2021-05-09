@@ -4,13 +4,21 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConfig.OUTPUT_DIR;
 import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_TRANSCRIPTS;
+import static com.hartwig.hmftools.lilac.LilacConstants.LOCI_POSITION;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToFourDigit;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToSixDigit;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
@@ -39,10 +47,26 @@ public class ReferenceData
         AminoAcidSequences = Lists.newArrayList();
         AminoAcidSequencesWithInserts = Lists.newArrayList();
         AminoAcidSequencesWithDeletes = Lists.newArrayList();
+
+        populateHlaTranscripts();
+    }
+
+    public static void populateHlaTranscripts()
+    {
+        if(!HLA_TRANSCRIPTS.isEmpty())
+            return;
+
+        final Map<String,HmfTranscriptRegion> allTranscripts = HmfGenePanelSupplier.allGenesMap37();
+        HLA_TRANSCRIPTS.add(allTranscripts.get(HLA_A));
+        HLA_TRANSCRIPTS.add(allTranscripts.get(HLA_B));
+        HLA_TRANSCRIPTS.add(allTranscripts.get(HLA_C));
+        LOCI_POSITION.initialise(HLA_TRANSCRIPTS);
     }
 
     public boolean load()
     {
+        // load gene definitions
+
         LL_LOGGER.info("Reading nucleotide files");
         NucleotideSequences.addAll(nucleotideLoci(mResourceDir + "/A_nuc.txt"));
         NucleotideSequences.addAll(nucleotideLoci(mResourceDir + "/B_nuc.txt"));

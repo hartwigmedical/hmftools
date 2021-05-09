@@ -3,6 +3,7 @@ package com.hartwig.hmftools.lilac.fragment;
 import static com.hartwig.hmftools.lilac.LilacUtils.arrayToList;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.calcAminoAcidIndices;
+import static com.hartwig.hmftools.lilac.fragment.NucleotideFragment.expandIndices;
 import static com.hartwig.hmftools.lilac.fragment.NucleotideFragment.merge;
 
 import com.google.common.collect.Lists;
@@ -114,8 +115,8 @@ public class NucleotideFragmentFactory
     {
         int endLoci = endLoci(startLoci, bamSequence, hlaSequence);
         List<Integer> aminoAcidLoci = formRange(startLoci, endLoci);
-        List<Integer> nucleotideLoci = Lists.newArrayList();
-        aminoAcidLoci.stream().forEach(x -> nucleotideLoci.addAll(Lists.newArrayList(3 * x, 3 * x + 1, 3 * x + 2)));
+        List<Integer> nucleotideLoci = expandIndices(aminoAcidLoci);
+        //aminoAcidLoci.stream().forEach(x -> nucleotideLoci.addAll(Lists.newArrayList(3 * x, 3 * x + 1, 3 * x + 2)));
 
         List<String> nucleotides = Lists.newArrayList();
 

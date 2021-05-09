@@ -29,7 +29,7 @@ public class SomaticVariants
         UNKNOWN_CODING_EFFECT = Sets.newHashSet(CodingEffect.NONE, CodingEffect.UNDEFINED);
     }
 
-    public final List<VariantContextDecorator> readSomaticVariants()
+    public List<VariantContextDecorator> readSomaticVariants()
     {
         if(mConfig.TumorBam.isEmpty() || mConfig.SomaticVcf.isEmpty())
             return Lists.newArrayList();

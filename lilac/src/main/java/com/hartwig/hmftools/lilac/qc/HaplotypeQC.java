@@ -5,10 +5,10 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.SequenceCount;
+import com.hartwig.hmftools.lilac.qc.Haplotype;
 import com.sun.tools.javac.util.Pair;
 
 import java.io.BufferedReader;
@@ -134,9 +134,16 @@ public class HaplotypeQC
         if (unmatched.isEmpty())
             return Lists.newArrayList();
 
-        List<Haplotype> haplotypes = unmatched.entrySet().stream()
-                .map(x -> Haplotype.create(evidence.getAminoAcidIndexList(), new Pair(x.getKey(), x.getValue()), aminoAcidCount))
-                .collect(Collectors.toList());
+//        List<Haplotype> haplotypes = unmatched.entrySet().stream()
+//                .map(x -> Haplotype.create(evidence.getAminoAcidIndexList(), new Pair(x.getKey(), x.getValue()), aminoAcidCount))
+//                .collect(Collectors.toList());
+
+        List<Haplotype> haplotypes = Lists.newArrayList();
+        for(Map.Entry<String,Integer> entry : unmatched.entrySet())
+        {
+            Haplotype haplotype = Haplotype.create(evidence.getAminoAcidIndexList(), new Pair(entry.getKey(), entry.getValue()), aminoAcidCount);
+            haplotypes.add(haplotype);
+        }
 
         return haplotypes;
     }
