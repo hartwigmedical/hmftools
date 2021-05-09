@@ -16,7 +16,7 @@ public class NucleotideFragmentFactoryTest
     private HlaSequence delete = new HlaSequence(HlaAllele.fromString("A*01:02"), "--...---..---..---");
     private HlaSequence insert = new HlaSequence(HlaAllele.fromString("A*01:03"), "--------AA---TT---");
 
-
+    /* TODO
     @Test
     public void testCreateNucleotidesFromAminoAcid()
     {
@@ -24,6 +24,8 @@ public class NucleotideFragmentFactoryTest
         assertEquals(Lists.newArrayList(".", ".", "."), NucleotideFragmentFactory.createNucleotidesFromAminoAcid("."));
         assertEquals(Lists.newArrayList("A", "G", "TTGA"), NucleotideFragmentFactory.createNucleotidesFromAminoAcid("SX"));
     }
+
+     */
 
     /*
         never used

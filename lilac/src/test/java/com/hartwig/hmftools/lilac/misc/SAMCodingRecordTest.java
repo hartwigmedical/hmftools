@@ -1,12 +1,17 @@
 package com.hartwig.hmftools.lilac.misc;
 
-import org.junit.Test;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.lilac.read.SAMCodingRecord;
+
+import htsjdk.samtools.SAMRecord;
 
 public class SAMCodingRecordTest
 {
-    private val shortCodingRegion = GenomeRegions.create("1", 1000, 1020)
-    private val longCodingRegion = GenomeRegions.create("1", 1000, 2000)
+    private GenomeRegion shortCodingRegion = GenomeRegions.create("1", 1000, 1020);
+    private GenomeRegion longCodingRegion = GenomeRegions.create("1", 1000, 2000);
 
+            /*
     @Test
     public void testCodingRegionContainsMatchedRecord()
     {
@@ -122,55 +127,56 @@ public class SAMCodingRecordTest
         assertIntersect(victim, 0, 0, 0, 0, 1000, 1020, 100, 120)
     }
 
-    fun assertIntersect(victim:SAMCodingRecord, softClippedStart:Int, softClippedEnd:Int, dels:Int, ins:Int, positionStart:Int,
-            positionEnd:Int, readIndexStart:Int, readIndexEnd:Int)
+    private void assertIntersect(
+            SAMCodingRecord victim, int softClippedStart, int softClippedEnd, int dels, int ins,
+            int positionStart, int positionEnd, int readIndexStart, int readIndexEnd)
     {
-        assertEquals(softClippedStart, victim.softClippedStart)
-        assertEquals(softClippedEnd, victim.softClippedEnd)
-        assertEquals(dels, victim.indels.filter {
-        it.isDelete
-    }.map {
-        it.length
-    }.sum())
-        assertEquals(ins, victim.indels.filter {
-        it.isInsert
-    }.map {
-        it.length
-    }.sum())
-        assertEquals(positionStart, victim.positionStart)
-        assertEquals(positionEnd, victim.positionEnd)
-        assertEquals(readIndexStart, victim.readStart)
-        assertEquals(readIndexEnd, victim.readEnd)
+        assertEquals(softClippedStart, victim.SoftClippedStart);
+        assertEquals(softClippedEnd, victim.SoftClippedEnd);
+
+        assertEquals(dels, victim.getIndels().stream().filter(x -> x.IsDelete).mapToInt(x -> x.Length).sum();
+        assertEquals(ins, victim.getIndels().stream().filter(x -> x.IsInsert).mapToInt(x -> x.Length).sum();
+
+        assertEquals(positionStart, victim.PositionStart);
+        assertEquals(positionEnd, victim.PositionEnd);
+        assertEquals(readIndexStart, victim.ReadStart);
+        assertEquals(readIndexEnd, victim.ReadEnd);
     }
 
-    fun buildSamRecord(alignmentStart:Int, cigar:String, length:Int):SAMRecord
+             */
 
+    private SAMRecord buildSamRecord(int alignmentStart, String cigar, int length)
     {
-        return buildSamRecord(alignmentStart, cigar,
-                (0until length).map {
-        'G'
-    }.joinToString(""),
-            (0 until length).map {
-        '#'
-    }.joinToString(""))
+        //(0until length).map {'G'}.joinToString(""), (0 until length).map {'#'}.joinToString(""))
+
+        String readStr = "";
+        String qualsStr = "";
+
+        for(int i = 0; i < length; ++i)
+        {
+            readStr += "G";
+            qualsStr += "#";
+
+        }
+
+        return buildSamRecord(alignmentStart, cigar, readStr, qualsStr);
     }
 
-    fun buildSamRecord(alignmentStart:Int, cigar:String, readString:String, qualities:String):SAMRecord
-
+    private SAMRecord buildSamRecord(int alignmentStart, String cigar, String readString, String qualities)
     {
-        val record = SAMRecord(null)
-        record.readName = "READNAME"
-        record.alignmentStart = alignmentStart
-        record.cigarString = cigar
-        record.readString = readString
-        record.readNegativeStrandFlag = false
-        record.baseQualityString = qualities
-        record.mappingQuality = 20
-        record.duplicateReadFlag = false
-        record.readUnmappedFlag = false
-        record.properPairFlag = true
-        record.readPairedFlag = true
-        return record
+        SAMRecord record = new SAMRecord(null);
+        record.setReadName("READNAME");
+        record.setAlignmentStart(alignmentStart);
+        record.setCigarString(cigar);
+        record.setReadString(readString);
+        record.setReadNegativeStrandFlag(false);
+        record.setBaseQualityString(qualities);
+        record.setMappingQuality(20);
+        record.setDuplicateReadFlag(false);
+        record.setReadUnmappedFlag(false);
+        record.setProperPairFlag(true);
+        record.setReadPairedFlag(true);
+        return record;
     }
 
 }

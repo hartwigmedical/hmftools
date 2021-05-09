@@ -9,12 +9,11 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-
-import org.apache.commons.compress.utils.Lists;
 
 public final class PhasedEvidence implements Comparable<PhasedEvidence>
 {

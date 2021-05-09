@@ -9,7 +9,7 @@ import com.hartwig.hmftools.lilac.SequenceCount;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
-import com.sun.tools.javac.util.Pair;
+import org.apache.commons.math3.util.Pair;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -76,14 +76,14 @@ public class PhasedEvidenceFactory
             others.addAll(finalisedEvidence);
             others.addAll(unprocessedEvidence);
             Pair<PhasedEvidence, Set<PhasedEvidence>> pair = heterozygousEvidence.merge(top, others);
-            PhasedEvidence parent = pair.fst;
-            Set<PhasedEvidence> children = pair.snd;
+            PhasedEvidence parent = pair.getFirst();
+            Set<PhasedEvidence> children = pair.getSecond();
 
             if (!children.isEmpty())
             {
                 if (mConfig.DebugPhasing)
                 {
-                    LL_LOGGER.info("  Produced child: {}", pair.fst);
+                    LL_LOGGER.info("  Produced child: {}", pair.getFirst());
                 }
 
                 finalisedEvidence.removeAll(children);

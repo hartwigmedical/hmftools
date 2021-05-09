@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.lilackt.seq.HlaSequenceLoci;
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 public class HlaSequenceLociFile
 {

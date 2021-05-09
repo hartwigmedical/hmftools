@@ -8,8 +8,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.SequenceCount;
-import com.hartwig.hmftools.lilac.qc.Haplotype;
-import com.sun.tools.javac.util.Pair;
+import org.apache.commons.math3.util.Pair;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

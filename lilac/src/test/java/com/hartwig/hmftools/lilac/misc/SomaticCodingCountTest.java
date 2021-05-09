@@ -17,6 +17,7 @@ public class SomaticCodingCountTest
     @Test
     public void testRepeatAllele()
     {
+        /* TODO - complete class impl first
         List<HlaAllele> winningAlleles = Lists.newArrayList(
                 HlaAllele.fromString("A*01:01"), HlaAllele.fromString("A*01:01"),
                 HlaAllele.fromString("B*01:01"), HlaAllele.fromString("B*01:02"),
@@ -25,7 +26,6 @@ public class SomaticCodingCountTest
         List<SomaticCodingCount> count = SomaticCodingCount.create(winningAlleles);
         assertEquals(6, count.size());
 
-        /* TODO - complete class impl first
         count = count.addVariant(true, CodingEffect.MISSENSE, Sets.newHashSet(HlaAllele.fromString("A*01:01"), HlaAllele.fromString("B*01:01")));
         count = count.addVariant(false, CodingEffect.MISSENSE, Sets.newHashSet(HlaAllele.fromString("B*01:01")));
 

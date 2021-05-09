@@ -9,14 +9,12 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
-import com.sun.tools.javac.util.Pair;
+import org.apache.commons.math3.util.Pair;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.jetbrains.annotations.NotNull;
 
 public final class ExtendEvidence
 {
@@ -106,7 +104,7 @@ public final class ExtendEvidence
             {
                 Pair<PhasedEvidence, Set<PhasedEvidence>> result = merge(current, left, current);
 
-                if (result.snd.isEmpty())
+                if (result.getSecond().isEmpty())
                     return merge(current, current, right);
                 else
                     return result;
@@ -115,7 +113,7 @@ public final class ExtendEvidence
             {
                 Pair<PhasedEvidence, Set<PhasedEvidence>> result = merge(current, current, right);
 
-                if (result.snd.isEmpty())
+                if (result.getSecond().isEmpty())
                     return merge(current, left, current);
                 else
                     return result;

@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.lilac.misc;
 
-import org.apache.commons.compress.utils.Lists;
+import com.hartwig.hmftools.lilac.seq.HlaSequence;
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
+
 import org.junit.Test;
 
 public class HaplotypeQCTest
@@ -8,6 +10,8 @@ public class HaplotypeQCTest
     @Test
     public void testUnmatchedHaplotype()
     {
+        // TODO
+        /*
         val index0Map = mapOf(Pair("C", 4), Pair("A", 4))
         val index1Map = mapOf(Pair("A", 4), Pair("T", 4))
         val index2Map = mapOf(Pair("R", 8))
@@ -37,12 +41,13 @@ public class HaplotypeQCTest
 
         val wildMatch = victim.unmatchedHaplotype(0, listOf(wildCandidate), aminoAcidCount)
         Assert.assertEquals(0, wildMatch.size)
+
+         */
     }
 
-    private fun create(sequences:HlaSequence):HlaSequenceLoci
-
+    private HlaSequenceLoci create(final HlaSequence sequences)
     {
-        return HlaSequenceLoci.create(sequences.allele, sequences.rawSequence, sequences.rawSequence)
+        return HlaSequenceLoci.create(sequences.Allele, sequences.getRawSequence(), sequences.getRawSequence());
     }
 
 }

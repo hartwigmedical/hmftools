@@ -11,8 +11,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.hartwig.hmftools.lilac.SequenceCount;
-import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
-import com.sun.tools.javac.util.Pair;
+import org.apache.commons.math3.util.Pair;
 
 public class Haplotype
 {
@@ -42,13 +41,13 @@ public class Haplotype
     {
         int startLocus = listMin(aminoAcidIndices);
         int endLocus = listMax(aminoAcidIndices);
-        String sparseHaplotype = evidence.fst;
+        String sparseHaplotype = evidence.getFirst();
         String complexHaplotype = "";
 
         // TODO
         // val completeHaplotype = (startLoci..endLoci).joinToString("")
         // { if (aminoAcidIndices.contains(it)) sparseHaplotype[aminoAcidIndices.indexOf(it)].toString() else aminoAcidCount.sequenceAt(it).first() }
-        return new Haplotype(startLocus, endLocus, evidence.snd, complexHaplotype);
+        return new Haplotype(startLocus, endLocus, evidence.getSecond(), complexHaplotype);
 
     }
 
