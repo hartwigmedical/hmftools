@@ -88,13 +88,13 @@ public class NucleotideGeneEnrichment
 
     private final boolean matchToA(final NucleotideFragment fragment)
     {
-        if(fragment.getGenes().contains(HLA_A))
+        if(fragment.containsGene(HLA_A))
             return true;
 
-        if(fragment.getGenes().contains(HLA_B) && fragment.maxLoci() < 3 * mAbMinBoundary)
+        if(fragment.containsGene(HLA_B) && fragment.maxLoci() < 3 * mAbMinBoundary)
             return true;
 
-        if(!fragment.getGenes().contains(HLA_C) && fragment.maxLoci() < 3 * mAcMinBoundary)
+        if(fragment.containsGene(HLA_C) && fragment.maxLoci() < 3 * mAcMinBoundary)
             return true;
 
         return false;
@@ -102,13 +102,13 @@ public class NucleotideGeneEnrichment
 
     private final boolean matchToB(final NucleotideFragment fragment)
     {
-        if(fragment.getGenes().contains(HLA_B))
+        if(fragment.containsGene(HLA_B))
             return true;
 
-        if(fragment.getGenes().contains(HLA_A) && fragment.maxLoci() < 3 * mAbMinBoundary)
+        if(fragment.containsGene(HLA_A) && fragment.maxLoci() < 3 * mAbMinBoundary)
             return true;
 
-        if(!fragment.getGenes().contains(HLA_C) && fragment.maxLoci() < 3 * mBcMinBoundary)
+        if(fragment.containsGene(HLA_C) && fragment.maxLoci() < 3 * mBcMinBoundary)
             return true;
 
         return false;
@@ -116,13 +116,13 @@ public class NucleotideGeneEnrichment
 
     private final boolean matchToC(final NucleotideFragment fragment)
     {
-        if(fragment.getGenes().contains(HLA_C))
+        if(fragment.containsGene(HLA_C))
             return true;
 
-        if(fragment.getGenes().contains(HLA_A) && fragment.maxLoci() < 3 * mAcMinBoundary)
+        if(fragment.containsGene(HLA_A) && fragment.maxLoci() < 3 * mAcMinBoundary)
             return true;
 
-        if(!fragment.getGenes().contains(HLA_B) && fragment.maxLoci() < 3 * mBcMinBoundary)
+        if(fragment.containsGene(HLA_B) && fragment.maxLoci() < 3 * mBcMinBoundary)
             return true;
 
         return false;

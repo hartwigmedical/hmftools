@@ -40,7 +40,7 @@ public final class Candidates
         List<HlaSequenceLoci> geneCandidates = mAminoAcidSequences.stream()
                 .filter(x -> x.getAllele().Gene.equals(context.Gene)).collect(Collectors.toList());
 
-        LL_LOGGER.info("  {}} candidates before filtering", geneCandidates.size());
+        LL_LOGGER.info("  {} candidates before filtering", geneCandidates.size());
 
         // Amino acid filtering
         AminoAcidFiltering aminoAcidFilter = new AminoAcidFiltering(context.AminoAcidBoundaries);

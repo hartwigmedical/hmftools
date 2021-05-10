@@ -11,14 +11,11 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceMatch;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.jetbrains.annotations.NotNull;
 
 public class FragmentAlleles
 {
@@ -79,7 +76,7 @@ public class FragmentAlleles
             final AminoAcidFragment aminoAcidFragment, final List<Integer> aminoAcidLoci, final List<HlaSequenceLoci> aminoAcidSequences,
             final List<Integer> nucleotideLoci, final List<HlaSequenceLoci> nucleotideSequences)
     {
-        List<Integer> fragmentNucleotideLoci = aminoAcidFragment.aminoAcidLoci().stream()
+        List<Integer> fragmentNucleotideLoci = aminoAcidFragment.getAminoAcidLoci().stream()
                 .filter(x -> nucleotideLoci.contains(x)).collect(Collectors.toList());
 
         Collections.sort(fragmentNucleotideLoci);
@@ -124,7 +121,7 @@ public class FragmentAlleles
         // CHECK is sorting really required
         // TODO - should be intersection not union
         // val fragmentAminoAcidLoci = (aminoAcidFragment.aminoAcidLoci() intersect aminoAcidLoci).sorted().toIntArray()
-        Set<Integer> combinedAminoAcidLoci = aminoAcidFragment.aminoAcidLoci().stream().collect(Collectors.toSet());
+        Set<Integer> combinedAminoAcidLoci = aminoAcidFragment.getAminoAcidLoci().stream().collect(Collectors.toSet());
         combinedAminoAcidLoci.addAll(aminoAcidLoci);
         List<Integer> fragmentAminoAcidLoci = combinedAminoAcidLoci.stream().collect(Collectors.toList());
         Collections.sort(fragmentAminoAcidLoci);

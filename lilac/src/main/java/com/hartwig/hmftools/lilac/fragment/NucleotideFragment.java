@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Codons;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -17,13 +21,6 @@ public class NucleotideFragment
     private final List<Integer> mNucleotideQuality;
     private final List<String> mNucleotides;
 
-    public final String getId() { return mId; }
-    public final Set<String> getGenes() { return mGenes; }
-
-    public final List<Integer> getNucleotideLoci() { return mNucleotideLoci; }
-    public final List<Integer> getNucleotideQuality() { return mNucleotideQuality; }
-    public final List<String> getNucleotides() { return mNucleotides; }
-
     public NucleotideFragment(final String id, final Set<String> genes, final List<Integer> nucleotideLoci,
             final List<Integer> nucleotideQuality, final List<String> nucleotides)
     {
@@ -33,6 +30,14 @@ public class NucleotideFragment
         mNucleotideQuality = nucleotideQuality;
         mNucleotides = nucleotides;
     }
+
+    public final String getId() { return mId; }
+    public Set<String> getGenes() { return mGenes; }
+    public boolean containsGene(final String gene) { return mGenes.stream().anyMatch(x -> x.equals(gene)); }
+
+    public final List<Integer> getNucleotideLoci() { return mNucleotideLoci; }
+    public final List<Integer> getNucleotideQuality() { return mNucleotideQuality; }
+    public final List<String> getNucleotides() { return mNucleotides; }
 
     public final boolean isEmpty()
     {
@@ -158,27 +163,46 @@ public class NucleotideFragment
 
     public static List<NucleotideFragment> reduceById(final List<NucleotideFragment> fragments)
     {
+        // merge paired reads but keep any single reads as well
         final List<NucleotideFragment> mergedFragments = Lists.newArrayList(); // by readId
 
-        while(!fragments.isEmpty())
-        {
-            NucleotideFragment frag1 = fragments.get(0);
-            fragments.remove(0);
+        Map<String,List<NucleotideFragment>> readGroupFrags = Maps.newHashMap();
 
-            NucleotideFragment frag2 = null;
-            for(int i = 0; i < fragments.size(); ++i)
+        for(NucleotideFragment fragment : fragments)
+        {
+            List<NucleotideFragment> idFrags = readGroupFrags.get(fragment.getId());
+
+            if(idFrags == null)
             {
-                if(fragments.get(i).getId().equals(frag1.getId()))
-                {
-                    frag2 = fragments.get(i);
-                    fragments.remove(i);
-                    break;
-                }
+                idFrags = Lists.newArrayList();
+                readGroupFrags.put(fragment.getId(), idFrags);
             }
 
-            if(frag2 != null)
+            idFrags.add(fragment);
+        }
+
+        for(Map.Entry<String,List<NucleotideFragment>> readGroup : readGroupFrags.entrySet())
+        {
+            List<NucleotideFragment> idFrags = readGroup.getValue();
+
+            if(idFrags.size() == 1)
             {
-                mergedFragments.add(NucleotideFragment.merge(frag1, frag2));
+                mergedFragments.add(idFrags.get(0));
+            }
+            else if(idFrags.size() == 2)
+            {
+                mergedFragments.add(NucleotideFragment.merge(idFrags.get(0), idFrags.get(1)));
+            }
+            else
+            {
+                NucleotideFragment mergedFrag = NucleotideFragment.merge(idFrags.get(0), idFrags.get(1));
+
+                for(int i = 2; i < idFrags.size(); ++i)
+                {
+                    mergedFrag = NucleotideFragment.merge(mergedFrag, idFrags.get(i));
+                }
+
+                mergedFragments.add(mergedFrag);
             }
         }
 

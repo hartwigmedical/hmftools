@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.groupCoverage;
+import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.proteinCoverage;
 
 import java.util.Collections;
 import java.util.List;
@@ -28,9 +30,9 @@ public class HlaComplex
             final LilacConfig config, final List<FragmentAlleles> referenceFragmentAlleles,
             final List<HlaAllele> candidateAlleles) // final List<HlaAllele> recoveredAlleles was uused
     {
-        LL_LOGGER.info("Identifying uniquely identifiable groups and proteins [total,unique,shared,wide]");
+        LL_LOGGER.info("Identifying uniquely identifiable groups and proteins [total,unique,shared,wild]");
 
-        HlaComplexCoverage groupCoverage = HlaComplexCoverageFactory.groupCoverage(referenceFragmentAlleles, candidateAlleles);
+        HlaComplexCoverage groupCoverage = groupCoverage(referenceFragmentAlleles, candidateAlleles);
 
         List<HlaAlleleCoverage> confirmedGroups = groupCoverage.confirmUnique(config);
 
@@ -56,7 +58,7 @@ public class HlaComplex
 
         List<HlaAllele> confirmedGroupAlleles = alleles(confirmedGroups);
         List<HlaAllele> candidatesAfterConfirmedGroups = filterWithConfirmedGroups(candidateAlleles, confirmedGroupAlleles);
-        HlaComplexCoverage proteinCoverage = HlaComplexCoverageFactory.proteinCoverage(referenceFragmentAlleles, candidatesAfterConfirmedGroups);
+        HlaComplexCoverage proteinCoverage = proteinCoverage(referenceFragmentAlleles, candidatesAfterConfirmedGroups);
         List<HlaAlleleCoverage> confirmedProtein = proteinCoverage.confirmUnique(config);
         List<HlaAlleleCoverage> discardedProtein = proteinCoverage.getAlleleCoverage().stream()
                 .filter(x -> x.UniqueCoverage > 0 && !confirmedProtein.contains(x)).collect(Collectors.toList());

@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConfig.OUTPUT_DIR;
 import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
+import static com.hartwig.hmftools.lilac.LilacConstants.ALL_NUCLEOTIDE_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.LilacConstants.ALL_PROTEIN_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
@@ -42,6 +44,7 @@ import org.jetbrains.annotations.NotNull;
 public class ReferenceData
 {
     private final String mResourceDir;
+    private final LilacConfig mConfig;
 
     public final List<HlaSequenceLoci> NucleotideSequences;
     public final List<HlaSequenceLoci> AminoAcidSequences;
@@ -52,17 +55,19 @@ public class ReferenceData
     private static final String NUC_REF_FILE = "lilac_ref_nucleotide_sequences.csv";
     private static final String AA_REF_FILE = "lilac_ref_aminoacid_sequences.csv";
 
-    public ReferenceData(final String resourceDir)
+    public ReferenceData(final String resourceDir, final LilacConfig config)
     {
         mResourceDir = resourceDir;
+        mConfig = config;
 
         NucleotideSequences = Lists.newArrayList();
         AminoAcidSequences = Lists.newArrayList();
         AminoAcidSequencesWithInserts = Lists.newArrayList();
         AminoAcidSequencesWithDeletes = Lists.newArrayList();
 
-        // load gene definitions
+        // load gene definitions and other constants
         populateHlaTranscripts();
+        populateConstants();
     }
 
     public static void populateHlaTranscripts()
@@ -77,13 +82,23 @@ public class ReferenceData
         LOCI_POSITION.initialise(HLA_TRANSCRIPTS);
     }
 
-    public boolean load()
+    public static void populateConstants()
+    {
+        for(Integer boundary : ALL_PROTEIN_EXON_BOUNDARIES)
+        {
+            ALL_NUCLEOTIDE_EXON_BOUNDARIES.add(boundary);
+            ALL_NUCLEOTIDE_EXON_BOUNDARIES.add(boundary + 1);
+            ALL_NUCLEOTIDE_EXON_BOUNDARIES.add(boundary + 2);
+        }
+    }
+
+    public boolean load(boolean canUseConsolidated)
     {
         LL_LOGGER.info("Reading nucleotide files");
 
         String nucleotideFilename = mResourceDir + NUC_REF_FILE;
 
-        if(Files.exists(Paths.get(nucleotideFilename)))
+        if(canUseConsolidated && Files.exists(Paths.get(nucleotideFilename)))
         {
             if(!loadSequenceFile(nucleotideFilename, NucleotideSequences))
                 return false;
@@ -99,7 +114,7 @@ public class ReferenceData
 
         String aminoAcidFilename = mResourceDir + AA_REF_FILE;
 
-        if(Files.exists(Paths.get(aminoAcidFilename)))
+        if(canUseConsolidated && Files.exists(Paths.get(aminoAcidFilename)))
         {
             if(!loadSequenceFile(aminoAcidFilename, AminoAcidSequences))
                 return false;
@@ -115,6 +130,28 @@ public class ReferenceData
         AminoAcidSequencesWithDeletes.addAll(AminoAcidSequences.stream().filter(x -> x.containsDeletes()).collect(Collectors.toList()));
 
         return true;
+    }
+
+    private boolean excludeAllele(final HlaAllele allele)
+    {
+        final HlaAllele allele4d = allele.asFourDigit();
+
+        if(EXCLUDED_ALLELES.stream().anyMatch(x -> allele4d.matches(x)))
+            return true;
+
+        if(mConfig == null)
+            return false;
+
+        if(!mConfig.RestrictedAlleles.isEmpty())
+        {
+            if(mConfig.ExpectedAlleles.stream().anyMatch(x -> x.matches(allele4d)))
+                return false;
+
+            if(mConfig.RestrictedAlleles.stream().noneMatch(x -> x.matches(allele4d)))
+                return true;
+        }
+
+        return false;
     }
 
     private boolean loadSequenceFile(final String filename, final List<HlaSequenceLoci> sequenceData)
@@ -133,6 +170,10 @@ public class ReferenceData
                     return false;
 
                 HlaAllele allele = HlaAllele.fromString(items[0]);
+
+                if(excludeAllele(allele))
+                    continue;
+
                 List<String> sequences = Lists.newArrayList();
                 String sequenceStr = items[1];
 
@@ -188,7 +229,7 @@ public class ReferenceData
         List<HlaSequence> sequences = HlaSequenceFile.readFile(filename);
 
         List<HlaSequence> filteredSequences = sequences.stream()
-                .filter(x -> EXCLUDED_ALLELES.stream().noneMatch(y -> x.Allele.asFourDigit().matches(y)))
+                .filter(x -> !excludeAllele(x.Allele))
                 .collect(Collectors.toList());
 
         List<HlaSequence> reducedSequences = reduceToSixDigit(filteredSequences);
@@ -196,12 +237,13 @@ public class ReferenceData
         return HlaSequenceLoci.create(reducedSequences);
     }
 
-    public static final List<HlaSequenceLoci> aminoAcidLoci(final String filename)
+    public final List<HlaSequenceLoci> aminoAcidLoci(final String filename)
     {
         List<HlaSequence> sequences = HlaSequenceFile.readFile(filename);
 
         List<HlaSequence> filteredSequences = sequences.stream()
-                .filter(x -> EXCLUDED_ALLELES.stream().noneMatch(y -> x.Allele.asFourDigit().matches(y)))
+                .filter(x -> !excludeAllele(x.Allele))
+                //.filter(x -> EXCLUDED_ALLELES.stream().noneMatch(y -> x.Allele.asFourDigit().matches(y)))
                 .collect(Collectors.toList());
 
         List<HlaSequence> reducedSequences = reduceToFourDigit(filteredSequences);
@@ -225,9 +267,11 @@ public class ReferenceData
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);
 
-        ReferenceData refData = new ReferenceData(cmd.getOptionValue(RESOURCE_DIR));
+        ReferenceData refData = new ReferenceData(cmd.getOptionValue(RESOURCE_DIR), null);
 
-        if(!refData.load())
+        EXCLUDED_ALLELES.clear();
+
+        if(!refData.load(false))
         {
             LL_LOGGER.error("ref data loading failed");
             System.exit(1);

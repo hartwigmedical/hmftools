@@ -28,17 +28,18 @@ public final class NucleotideQualEnrichment
         return fragments.stream().map(x -> enrich(x, highQualCounts, rawCounts)).collect(Collectors.toList());
     }
 
-    private final NucleotideFragment enrich(
+    private NucleotideFragment enrich(
             final NucleotideFragment fragment, final SequenceCount highQualityCount, final SequenceCount rawCount)
     {
         final List<Integer> nucleotideLoci = Lists.newArrayList();
         final List<Integer> nucleotideQuality = Lists.newArrayList();
         final List<String> nucleotides = Lists.newArrayList();
 
-        for(Integer lociIndex : fragment.getNucleotideLoci())
+        for(int i = 0; i < fragment.getNucleotideLoci().size(); ++i)
         {
-            int currentQuality = fragment.getNucleotideQuality().get(lociIndex);
-            String fragmentNucleotide = fragment.getNucleotides().get(lociIndex);
+            int lociIndex = fragment.getNucleotideLoci().get(i);
+            int currentQuality = fragment.getNucleotideQuality().get(i);
+            String fragmentNucleotide = fragment.getNucleotides().get(i);
             List<String> highQualitySequences = highQualityCount.sequenceAt(lociIndex);
             List<String> rawSequences = rawCount.sequenceAt(lociIndex);
             List<String> allowedSequences = highQualitySequences.stream().filter(x -> rawSequences.contains(x)).collect(Collectors.toList());

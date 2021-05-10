@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.calcAminoAcidIndices;
 import static com.hartwig.hmftools.lilac.fragment.NucleotideFragment.expandIndices;
 import static com.hartwig.hmftools.lilac.fragment.NucleotideFragment.merge;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -16,14 +17,15 @@ import com.hartwig.hmftools.lilac.read.SAMCodingRecord;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.LociPosition;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class NucleotideFragmentFactory
 {
-    private final Map<HlaSequenceLoci,SuffixTree> mInsertSuffixTrees;
-    private final Map<HlaSequenceLoci,SuffixTree> mDeleteSuffixTrees;
+    private final LinkedHashMap<HlaSequenceLoci,SuffixTree> mInsertSuffixTrees;
+    private final LinkedHashMap<HlaSequenceLoci,SuffixTree> mDeleteSuffixTrees;
     private final int mMinBaseQuality;
     private final LociPosition mLociPosition;
 
@@ -33,8 +35,8 @@ public class NucleotideFragmentFactory
         mMinBaseQuality = minBaseQuality;
         mLociPosition = lociPosition;
 
-        mInsertSuffixTrees = Maps.newHashMap();
-        mDeleteSuffixTrees = Maps.newHashMap();
+        mInsertSuffixTrees = Maps.newLinkedHashMap();
+        mDeleteSuffixTrees = Maps.newLinkedHashMap();
 
         inserts.stream().forEach(x -> mInsertSuffixTrees.put(x, new SuffixTree(x.sequence())));
         deletes.stream().forEach(x -> mDeleteSuffixTrees.put(x, new SuffixTree(x.sequence())));
@@ -66,33 +68,17 @@ public class NucleotideFragmentFactory
                 int matchRangeAllowedStart = firstAAIndex - record.SoftClippedStart / 3 - record.maxIndelSize();
                 int matchRangeAllowedEnd = firstAAIndex + record.maxIndelSize() + record.SoftClippedEnd / 3;
 
-                // CHECK !
-                for(Map.Entry<HlaSequenceLoci,SuffixTree> entry : mInsertSuffixTrees.entrySet())
-                {
-                    List<Integer> aaIndices = entry.getValue().indices(aminoAcids);
-                    List<Integer> filteredAaIndices = aaIndices.stream()
-                            .filter(x -> x >= matchRangeAllowedStart && x <= matchRangeAllowedEnd)
-                            .collect(Collectors.toList());
+                NucleotideFragment matchedFragment = checkMatchedInsertDeleteSequence(
+                        record, codingRegion, aminoAcids, matchRangeAllowedStart, matchRangeAllowedEnd, mInsertSuffixTrees);
 
-                    if(!filteredAaIndices.isEmpty())
-                    {
-                        return createNucleotideSequence(record.Id, codingRegion, filteredAaIndices.get(0), aminoAcids, entry.getKey());
-                    }
-                }
+                if(matchedFragment != null)
+                    return matchedFragment;
 
-                // TODO - turn these 2 into function
-                for(Map.Entry<HlaSequenceLoci,SuffixTree> entry : mDeleteSuffixTrees.entrySet())
-                {
-                    List<Integer> aaIndices = entry.getValue().indices(aminoAcids);
-                    List<Integer> filteredAaIndices = aaIndices.stream()
-                            .filter(x -> x >= matchRangeAllowedStart && x <= matchRangeAllowedEnd)
-                            .collect(Collectors.toList());
+                matchedFragment = checkMatchedInsertDeleteSequence(
+                        record, codingRegion, aminoAcids, matchRangeAllowedStart, matchRangeAllowedEnd, mDeleteSuffixTrees);
 
-                    if(!filteredAaIndices.isEmpty())
-                    {
-                        return createNucleotideSequence(record.Id, codingRegion, filteredAaIndices.get(0), aminoAcids, entry.getKey());
-                    }
-                }
+                if(matchedFragment != null)
+                    return matchedFragment;
             }
 
             if(record.containsIndel())
@@ -102,7 +88,6 @@ public class NucleotideFragmentFactory
         if (samCodingStartLoci < 0 || samCodingEndLoci < 0)
             return null;
 
-        // CHECK
         List<Integer> lociRange = formRange(samCodingStartLoci, samCodingEndLoci);
         List<String> nucleotides = arrayToList(codingRegionRead);
         List<Integer> qualities = arrayToList(codingRegionQuality);
@@ -110,13 +95,46 @@ public class NucleotideFragmentFactory
         return new NucleotideFragment(record.Id, Sets.newHashSet(codingRegion.name()), lociRange, qualities, nucleotides);
     }
 
-    private final NucleotideFragment createNucleotideSequence(
+    private NucleotideFragment checkMatchedInsertDeleteSequence(
+            final SAMCodingRecord record, final NamedBed codingRegion,
+            final String aminoAcids, int matchRangeAllowedStart, int matchRangeAllowedEnd,
+            final LinkedHashMap<HlaSequenceLoci,SuffixTree> sequenceMap)
+    {
+        List<List<Integer>> matchedIndicesList = Lists.newArrayList();
+        List<HlaSequenceLoci> matchedSeqLoci = Lists.newArrayList();
+
+        for(Map.Entry<HlaSequenceLoci,SuffixTree> entry : sequenceMap.entrySet())
+        {
+            HlaSequenceLoci seqLoci = entry.getKey();
+            List<Integer> aaIndices = entry.getValue().indices(aminoAcids);
+
+            List<Integer> filteredAaIndices = aaIndices.stream()
+                    .filter(x -> x >= matchRangeAllowedStart && x <= matchRangeAllowedEnd)
+                    .collect(Collectors.toList());
+
+            if(!filteredAaIndices.isEmpty())
+            {
+                matchedSeqLoci.add(seqLoci);
+                matchedIndicesList.add(filteredAaIndices);
+            }
+        }
+
+        if(!matchedIndicesList.isEmpty())
+        {
+            HlaSequenceLoci seqLoci = matchedSeqLoci.get(0);
+            List<Integer> filteredAaIndices = matchedIndicesList.get(0);
+            return createNucleotideSequence(record.Id, codingRegion, filteredAaIndices.get(0), aminoAcids, seqLoci);
+        }
+
+        return null;
+    }
+
+    private NucleotideFragment createNucleotideSequence(
             final String id, final NamedBed codingRegion, final int startLoci, final String bamSequence, final HlaSequenceLoci hlaSequence)
     {
         int endLoci = endLoci(startLoci, bamSequence, hlaSequence);
         List<Integer> aminoAcidLoci = formRange(startLoci, endLoci);
         List<Integer> nucleotideLoci = expandIndices(aminoAcidLoci);
-        //aminoAcidLoci.stream().forEach(x -> nucleotideLoci.addAll(Lists.newArrayList(3 * x, 3 * x + 1, 3 * x + 2)));
 
         List<String> nucleotides = Lists.newArrayList();
 
@@ -130,11 +148,10 @@ public class NucleotideFragmentFactory
         return new NucleotideFragment(id, Sets.newHashSet(codingRegion.name()), nucleotideLoci, qualities, nucleotides);
     }
 
-    private final int endLoci(int startLoci, final String bamSequence, final HlaSequenceLoci hlaSequence)
+    private int endLoci(int startLoci, final String bamSequence, final HlaSequenceLoci hlaSequence)
     {
         String tmpSequence = "";
 
-        // CHECK end of for-loop
         for(int locus = startLoci; locus < hlaSequence.length(); ++locus)
         {
             tmpSequence += hlaSequence.getSequences().get(locus);
@@ -148,12 +165,12 @@ public class NucleotideFragmentFactory
 
     public static List<String> createNucleotidesFromAminoAcid(final String aminoAcid)
     {
-        if(aminoAcid.equals("."))
-            return Lists.newArrayList(".", ".", ".");
+        if(aminoAcid.equals(DEL_STR))
+            return Lists.newArrayList(DEL_STR, DEL_STR, DEL_STR);
 
         String codons = Codons.codons(aminoAcid);
         return Lists.newArrayList(
-                String.valueOf(codons.charAt(0)), String.valueOf(codons.charAt(0)), codons.substring(2));
+                String.valueOf(codons.charAt(0)), String.valueOf(codons.charAt(1)), codons.substring(2));
     }
 
     public NucleotideFragment createAlignmentFragments(final SAMCodingRecord record, final NamedBed codingRegion)

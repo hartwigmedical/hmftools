@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -11,6 +12,8 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,8 +47,9 @@ public class LilacConfig
     public final String SomaticVcf;
 
     public final boolean DebugPhasing;
-    public final List<HlaAllele> ExpectedAlleles;
-    public final List<HlaAllele> CommonAlleles;
+    public final List<HlaAllele> ExpectedAlleles; // predetermined sample alleles, always kept and scored
+    public final List<HlaAllele> RestrictedAlleles; // limit analysis from full data set to these + other configured alleles
+    public final List<HlaAllele> CommonAlleles; // common in population
     public final List<HlaAllele> StopLossRecoveryAlleles;
 
     // config strings
@@ -64,6 +68,7 @@ public class LilacConfig
     private static final String MIN_FRAGMENTS_TO_REMOVE_SINGLE = "min_fragments_to_remove_single";
     private static final String MIN_CONFIRMED_UNIQUE_COVERAGE = "min_confirmed_unique_coverage";
     private static final String EXPECTED_ALLELES = "expected_alleles";
+    private static final String RESTRICTED_ALLELES = "restricted_alleles";
     private static final String GENE_COPY_NUMBER = "gene_copy_number";
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String MAX_DISTANCE_FROM_TOP_SCORE = "max_distance_from_top_score";
@@ -77,12 +82,12 @@ public class LilacConfig
         OutputDir = parseOutputDir(cmd);
         Sample = cmd.getOptionValue(SAMPLE);
 
-        ReferenceBam = cmd.getOptionValue(REFERENCE_BAM);
-        TumorBam = cmd.getOptionValue(TUMOR_BAM);
+        ReferenceBam = cmd.getOptionValue(REFERENCE_BAM, "");
+        TumorBam = cmd.getOptionValue(TUMOR_BAM, "");
         ResourceDir = cmd.getOptionValue(RESOURCE_DIR);
 
         OutputFilePrefix = cmd.getOptionValue(OUTPUT_ID);
-        RefGenome = cmd.getOptionValue(SAMPLE);
+        RefGenome = cmd.getOptionValue(REF_GENOME, "");
 
         MinBaseQual = ConfigUtils.getConfigValue(cmd, MIN_BASE_QUAL, LilacConstants.DEFAULT_MIN_BASE_QUAL);
         MinEvidence = ConfigUtils.getConfigValue(cmd, MIN_EVIDENCE, LilacConstants.DEFAULT_MIN_EVIDENCE);
@@ -95,22 +100,62 @@ public class LilacConfig
         GeneCopyNumberFile = cmd.getOptionValue(GENE_COPY_NUMBER);
         SomaticVcf = cmd.getOptionValue(SOMATIC_VCF);
 
-        ExpectedAlleles = parseExpectedAlleles(cmd.getOptionValue(EXPECTED_ALLELES));
+        ExpectedAlleles = parseAlleleList(cmd.getOptionValue(EXPECTED_ALLELES));
+        RestrictedAlleles = parseAlleleList(cmd.getOptionValue(RESTRICTED_ALLELES));
+
         CommonAlleles = loadCommonAlleles();
+
+        if(!CommonAlleles.isEmpty())
+        {
+            LL_LOGGER.info("loaded {} common alleles", CommonAlleles.size());
+        }
+
         StopLossRecoveryAlleles = loadStopLossRecoveryAllele();
 
         Threads = getConfigValue(cmd, THREADS, 1);
         DebugPhasing = cmd.hasOption(DEBUG_PHASING);
     }
 
+    public boolean isValid()
+    {
+        if(ReferenceBam.isEmpty() || !Files.exists(Paths.get(ReferenceBam)))
+        {
+            LL_LOGGER.error("missing or invalid reference BAM");
+            return false;
+        }
+
+        if(RefGenome.isEmpty() || !Files.exists(Paths.get(ResourceDir)))
+        {
+            LL_LOGGER.error("missing or invalid reference genome");
+            return false;
+        }
+
+        if(ResourceDir.isEmpty() || !Files.exists(Paths.get(ResourceDir)))
+        {
+            LL_LOGGER.error("missing resource file directory");
+            return false;
+        }
+
+        return true;
+    }
+
     public void logParams()
     {
-        LL_LOGGER.info("  sample = " + Sample);
-        LL_LOGGER.info("  minBaseQual = " + MinBaseQual);
-        LL_LOGGER.info("  minEvidence = " + MinEvidence);
-        LL_LOGGER.info("  minUniqueCoverage = " + MinConfirmedUniqueCoverage);
-        LL_LOGGER.info("  minFragmentsPerAllele = " + MinFragmentsPerAllele);
-        LL_LOGGER.info("  minFragmentsToRemoveSingle = " + MinFragmentsToRemoveSingle);
+        LL_LOGGER.info("sample({}) hasTumorBam({})", Sample, !TumorBam.isEmpty());
+
+        LL_LOGGER.info("minBaseQual({}, minEvidence({}) minUniqueCoverage({}) minFragmentsPerAllele({}) "
+                + "minFragmentsToRemoveSingle({}) maxDistanceFromTopScore({})",
+                MinBaseQual, MinEvidence, MinConfirmedUniqueCoverage, MinFragmentsPerAllele, MinFragmentsToRemoveSingle, MaxDistanceFromTopScore);
+
+        if(!ExpectedAlleles.isEmpty())
+        {
+            LL_LOGGER.info("expected alleles: {}", HlaAllele.toString(ExpectedAlleles));
+        }
+
+        if(!RestrictedAlleles.isEmpty())
+        {
+            LL_LOGGER.info("restricted alleles: {}", HlaAllele.toString(RestrictedAlleles));
+        }
     }
 
     public LilacConfig()
@@ -134,6 +179,7 @@ public class LilacConfig
 
         // public final boolean DebugPhasing;
         ExpectedAlleles = Lists.newArrayList();
+        RestrictedAlleles = Lists.newArrayList();
         CommonAlleles = loadCommonAlleles();
         StopLossRecoveryAlleles = loadStopLossRecoveryAllele();
 
@@ -161,6 +207,7 @@ public class LilacConfig
         options.addOption(MAX_DISTANCE_FROM_TOP_SCORE, true,"Max distance from top score");
         options.addOption(THREADS, true,"Number of threads");
         options.addOption(EXPECTED_ALLELES, true,"Comma separated expected alleles for the sample");
+        options.addOption(RESTRICTED_ALLELES, true,"Comma separated restricted analysis allele list");
         options.addOption(GENE_COPY_NUMBER, true,"Path to gene copy number file");
         options.addOption(SOMATIC_VCF, true,"Path to somatic VCF");
         options.addOption(DEBUG_PHASING, false, "More detailed logging of phasing");
@@ -168,12 +215,12 @@ public class LilacConfig
         return options;
     }
 
-    private final List<HlaAllele> parseExpectedAlleles(final String allelesStr)
+    private final List<HlaAllele> parseAlleleList(final String allelesStr)
     {
         if(allelesStr == null || allelesStr.isEmpty())
             return Lists.newArrayList();
 
-        String[] alleles = allelesStr.split(";", -1);
+        String[] alleles = allelesStr.split(ITEM_DELIM, -1);
         return Arrays.stream(alleles).map(x -> HlaAllele.fromString(x)).collect(Collectors.toList());
     }
 

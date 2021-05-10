@@ -24,40 +24,47 @@ public final class AminoAcidFragment extends NucleotideFragment
         mAminoAcids = aminoAcids;
     }
 
+    public List<Integer> getAminoAcidLoci() { return mAminoAcidLoci; }
+    public List<String> getAminoAcids() { return mAminoAcids; }
+
+    // cast to super class
     public static List<NucleotideFragment> nucFragments(final List<AminoAcidFragment> fragments)
     {
         return fragments.stream().collect(Collectors.toList());
     }
 
-    public final boolean containsAll(final List<Integer> indices)
+    public boolean containsAll(final List<Integer> indices)
     {
         return !indices.stream().noneMatch(x -> mAminoAcidLoci.contains(x));
     }
 
-    public final boolean containsAminoAcid(int index)
+    public boolean containsAminoAcid(int index)
     {
         return mAminoAcidLoci.contains(index);
     }
 
-    public final String aminoAcid(int loci)
+    public String aminoAcid(int loci)
     {
-        return mAminoAcids.get(mAminoAcidLoci.indexOf(loci));
+        int index = mAminoAcidLoci.indexOf(loci);
+
+        if(index < 0)
+            return "";
+
+        return mAminoAcids.get(index);
     }
 
     // redundant
-    public final String aminoAcids(final List<Integer> indices)
+    public String aminoAcids(final List<Integer> indices)
     {
         return aminoAcids(indices.stream().collect(Collectors.toSet()));
     }
 
-    public final String aminoAcids(final Set<Integer> indices)
+    public String aminoAcids(final Set<Integer> indices)
     {
         StringJoiner sj = new StringJoiner("");
         indices.stream().forEach(x -> sj.add(aminoAcid(x)));
         return sj.toString();
     }
-
-    public final List<Integer> aminoAcidLoci() { return mAminoAcidLoci; }
 
     public AminoAcidFragment intersectAminoAcidLoci(final List<Integer> otherAminoAcidLoci)
     {

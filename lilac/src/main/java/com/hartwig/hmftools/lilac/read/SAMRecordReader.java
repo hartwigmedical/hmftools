@@ -136,7 +136,7 @@ public class SAMRecordReader
 
         final List<NamedBed> regionsReversed = Lists.newArrayList();
 
-        for(int i = regions.size() - 1; i >= regions.size(); ++i)
+        for(int i = regions.size() - 1; i >= 0; --i)
             regionsReversed.add(regions.get(i));
 
         return regionsReversed;

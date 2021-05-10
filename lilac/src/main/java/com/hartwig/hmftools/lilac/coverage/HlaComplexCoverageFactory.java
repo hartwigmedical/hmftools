@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.proteinCoverage;
 import static com.hartwig.hmftools.lilac.hla.HlaAllele.takeN;
 
 import com.google.common.collect.Lists;
@@ -10,17 +11,11 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.read.FragmentAlleles;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.stream.Collectors;
-
-import org.jetbrains.annotations.NotNull;
 
 public class HlaComplexCoverageFactory
 {
@@ -62,17 +57,21 @@ public class HlaComplexCoverageFactory
         HlaComplexCoverageRanking ranking = new HlaComplexCoverageRanking(
                 mConfig.MaxDistanceFromTopScore, mConfig.CommonAlleles, recovered, mConfig.StopLossRecoveryAlleles);
 
-        List<Future<HlaComplexCoverage>> futures = Lists.newArrayList();
+        List<CoverageCalcTask> coverageCalcTasks = Lists.newArrayList();
+        List<FutureTask> taskList = new ArrayList<FutureTask>();
 
         for (HlaComplex complex : complexes)
         {
-            HlaComplexCoverage coverage = proteinCoverage(fragmentAlleles, complex.getAlleles());
+            CoverageCalcTask coverageTask = new CoverageCalcTask(fragmentAlleles, complex);
+            coverageCalcTasks.add(coverageTask);
 
-            //Callable<HlaComplexCoverage> untrackedCallable = coverage;
-            Callable untrackedCallable = null; //new Callable<HlaComplexCoverage>(fragmentAlleles, complex);
+            FutureTask futureTask = new FutureTask(coverageTask);
+            taskList.add(futureTask);
+            executorService.execute(futureTask);
 
-            Callable<HlaComplexCoverage> trackedCallable = mProgressTracker.add(untrackedCallable);
-            futures.add(executorService.submit(trackedCallable));
+            //callableList.add(coverageTask);
+            mProgressTracker.add(coverageTask);
+            // taskList.add(executorService.submit(coverageTask));
 
             /*
             val untrackedCallable: Callable<HlaComplexCoverage> = Callable { proteinCoverage(fragmentAlleles, complex.alleles) }
@@ -83,71 +82,22 @@ public class HlaComplexCoverageFactory
 
         try
         {
-            List<HlaComplexCoverage> results = Lists.newArrayList(); // )futures.stream().map(x -> x.get()).collect(Collectors.toList());
+            for (FutureTask futureTask : taskList)
+            {
+                futureTask.get();
+            }
+
+            List<HlaComplexCoverage> results = coverageCalcTasks.stream().map(x -> x.getCoverage()).collect(Collectors.toList());
             return ranking.candidateRanking(results);
+
         }
-        catch(Exception e)
+        catch (Exception e)
         {
-            LL_LOGGER.error("execution exception: {}", e.toString());
+            LL_LOGGER.error("task execution error: {}", e.toString());
+            e.printStackTrace();
             return null;
         }
 
-        /*
-
-        List list = new ArrayList();
-        for(HlaComplex complex : complexes)
-        {
-            Callable trackedCallable;
-            untrackedCallable2 = new Callable<HlaComplexCoverage>(fragmentAlleles, complex)
-            {
-                public final HlaComplexCoverage call()
-                {
-                    return HlaComplexCoverageFactory.Companion.proteinCoverage(this.$fragmentAlleles, (Collection<HlaAllele>) this.$complex.getAlleles());
-                }
-
-                {
-                    this.$fragmentAlleles = list;
-                    this.$complex = hlaComplex;
-                }
-            };
-            Intrinsics.checkExpressionValueIsNotNull((Object) this.mProgressTracker.add((Callable) untrackedCallable2), (String) "progressTracker.add(untrackedCallable)");
-            Future future = executorService.submit(trackedCallable);
-            Intrinsics.checkExpressionValueIsNotNull(future, (String) "executorService.submit(trackedCallable)");
-            list.add(future);
-        }
-        Iterable $receiver$iv = list;
-        untrackedCallable2 = $receiver$iv;
-        Collection destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-        for(Object item$iv$iv : $receiver$iv$iv)
-        {
-            void it;
-            Future future = (Future) item$iv$iv;
-            Collection collection = destination$iv$iv;
-            boolean bl = false;
-            HlaComplexCoverage
-                    hlaComplexCoverage = (HlaComplexCoverage) it.get();
-            collection.add(hlaComplexCoverage);
-        }
-        List result = (List) destination$iv$iv;
-        return ranking.candidateRanking(result);
-
-         */
     }
 
-    public static HlaComplexCoverage groupCoverage(final List<FragmentAlleles> fragmentAlleles, final List<HlaAllele> alleles)
-    {
-        List<FragmentAlleles> filteredFragments = fragmentAlleles(fragmentAlleles, alleles);
-        return HlaComplexCoverage.create(HlaAlleleCoverage.groupCoverage(filteredFragments));
-    }
-
-    public static HlaComplexCoverage proteinCoverage(final List<FragmentAlleles> fragmentAlleles, final List<HlaAllele> alleles)
-    {
-        List<FragmentAlleles> filteredFragments = fragmentAlleles(fragmentAlleles, alleles);
-        return HlaComplexCoverage.create(HlaAlleleCoverage.proteinCoverage(filteredFragments));
-    }
-
-    private static List<FragmentAlleles> fragmentAlleles(final List<FragmentAlleles> fragmentAlleles, final List<HlaAllele> alleles)
-    {
-        return FragmentAlleles.filter(fragmentAlleles, alleles);
-    }
 }

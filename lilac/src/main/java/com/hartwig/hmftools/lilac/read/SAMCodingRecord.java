@@ -47,6 +47,8 @@ public class SAMCodingRecord
 
     public List<Indel> getIndels() { return mIndels; }
 
+    public SAMRecord getSamRecord() { return mSamRecord; }
+
     public final int maxIndelSize()
     {
         return mIndels.stream().mapToInt(x -> x.Length).max().orElse(0);
@@ -66,7 +68,7 @@ public class SAMCodingRecord
         final char[] reverseBases = new char[readBases.length];
 
         int index = 0;
-        for(int i = readBases.length - 1; i >= 0; --i)
+        for(int i = readBases.length - 1; i >= 0; --i, ++index)
         {
             reverseBases[index] = reverseCompliment(readBases[i]);
         }
@@ -84,7 +86,7 @@ public class SAMCodingRecord
         final int[] reverseQuals = new int[readQuals.length];
 
         int index = 0;
-        for(int i = readQuals.length - 1; i >= 0; --i)
+        for(int i = readQuals.length - 1; i >= 0; --i, ++index)
         {
             reverseQuals[index] = readQuals[i];
         }

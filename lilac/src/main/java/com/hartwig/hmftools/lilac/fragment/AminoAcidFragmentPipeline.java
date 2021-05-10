@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.MAX_AMINO_ACID_BOUNDARY;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
 
@@ -39,7 +40,16 @@ public class AminoAcidFragmentPipeline
         String gene = "HLA-" + context.Gene;
 
         List<NucleotideFragment> geneReferenceFragments = mReferenceFragments.stream()
-                .filter(x -> x.getGenes().contains(gene)).collect(Collectors.toList());
+                .filter(x -> x.containsGene(gene)).collect(Collectors.toList());
+
+        /*
+        for(NucleotideFragment frag : geneReferenceFragments)
+        {
+            LL_LOGGER.info("read({}) has gene({})", frag.getId(), gene);
+        }
+
+        // NucleotideFragment frag1 = mReferenceFragments.stream().filter(x -> x.getId().equals("ST-E00285:220:HJG7JCCXY:6:1214:31132:40723")).findFirst().orElse(null);
+         */
 
         List<AminoAcidFragment> referenceAminoAcids = process(context.AminoAcidBoundaries, geneReferenceFragments);
 

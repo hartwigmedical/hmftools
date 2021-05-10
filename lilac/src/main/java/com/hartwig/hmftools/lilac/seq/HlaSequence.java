@@ -7,6 +7,14 @@ public class HlaSequence
     public final HlaAllele Allele;
     private String mRawSequence;
 
+    public static final char IDENTICAL = '-';
+    public static final char DELETION = '.';
+    public static final char WILDCARD = '*';
+    public static final char EXON_BOUNDARY = '|';
+
+    public static final String WILD_STR = String.valueOf(WILDCARD);
+    public static final String DEL_STR = String.valueOf(DELETION);
+
     public final HlaSequence copyWithAdditionalSequence(final String additionalSequence)
     {
         return new HlaSequence(Allele, mRawSequence + additionalSequence);

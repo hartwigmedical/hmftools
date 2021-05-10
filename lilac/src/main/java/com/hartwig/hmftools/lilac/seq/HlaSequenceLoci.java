@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.lilac.seq;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.DEL_STR;
-import static com.hartwig.hmftools.lilac.LilacConstants.WILD_CHAR;
-import static com.hartwig.hmftools.lilac.LilacConstants.WILD_STR;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILDCARD;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.DELETION;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.EXON_BOUNDARY;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.IDENTICAL;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -142,10 +145,10 @@ public class HlaSequenceLoci
             char targetChr = targetSequence.charAt(i);
             char hlaSeqChr = hlaSequence.charAt(i);
 
-            if(hlaSeqChr != WILD_CHAR && hlaSeqChr != targetChr)
+            if(hlaSeqChr != WILDCARD && hlaSeqChr != targetChr)
                 return HlaSequenceMatch.NONE;
 
-            if (hlaSeqChr == WILD_CHAR)
+            if (hlaSeqChr == WILDCARD)
                 wildCardCount++;
         }
 
@@ -174,8 +177,9 @@ public class HlaSequenceLoci
         for(int i = 0; i < sequence.length(); ++i)
         {
             char seqChar = sequence.charAt(i);
-            boolean isBaseInserted = seqChar != '.' && (i >= reference.length() || reference.charAt(i) == '.');
-            boolean isBaseIgnored = (seqChar == '.' && i < reference.length() && reference.charAt(i) == '.') || (seqChar == '|');
+            char refChar = i < reference.length() ? reference.charAt(i) : IDENTICAL;
+            boolean isBaseInserted = seqChar != DELETION && (i >= reference.length() || refChar == DELETION);
+            boolean isBaseIgnored = (seqChar == '.' && i < reference.length() && refChar == DELETION) || (seqChar == EXON_BOUNDARY);
 
             if(insLength > 0 && !isBaseInserted)
             {
@@ -193,8 +197,8 @@ public class HlaSequenceLoci
             {
                 // String locusSequence = seqChar; // sequence[i].toString()
 
-                if(seqChar == '-')
-                    sequences.add(String.valueOf(reference.charAt(i)));
+                if(seqChar == IDENTICAL)
+                    sequences.add(String.valueOf(refChar));
                 else
                     sequences.add(String.valueOf(seqChar));
             }

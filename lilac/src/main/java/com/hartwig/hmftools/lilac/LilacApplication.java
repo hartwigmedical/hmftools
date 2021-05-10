@@ -8,11 +8,13 @@ import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFLATE_TEMPLATE;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_TRANSCRIPTS;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOCI_POSITION;
+import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.proteinCoverage;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
 
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.candidates.Candidates;
+import com.hartwig.hmftools.lilac.coverage.CoverageCalcTask;
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.HlaComplex;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
@@ -80,6 +82,12 @@ public class LilacApplication implements AutoCloseable, Runnable
 
     public void run()
     {
+        if(!mConfig.isValid())
+        {
+            LL_LOGGER.warn("invalid config, exiting");
+            System.exit(1);
+        }
+
         VersionInfo version = new VersionInfo("lilac.version");
         LL_LOGGER.info("Starting LILAC version {} with parameters:", version.version());
         mConfig.logParams();
@@ -90,9 +98,9 @@ public class LilacApplication implements AutoCloseable, Runnable
         HlaContext hlaBContext = hlaContextFactory.hlaB();
         HlaContext hlaCContext = hlaContextFactory.hlaC();
 
-        ReferenceData refData = new ReferenceData(mConfig.ResourceDir);
+        ReferenceData refData = new ReferenceData(mConfig.ResourceDir, mConfig);
 
-        if(!refData.load())
+        if(!refData.load(true))
         {
             LL_LOGGER.error("reference data loading failed");
             System.exit(1);
@@ -230,7 +238,7 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         if(expectedSequences.isEmpty())
         {
-            HlaComplexCoverage expectedCoverage = HlaComplexCoverageFactory.proteinCoverage(
+            HlaComplexCoverage expectedCoverage = proteinCoverage(
                     referenceFragmentAlleles, expectedSequences.stream().map(x -> x.getAllele()).collect(Collectors.toList()));
             LL_LOGGER.info("Expected allele coverage: {}", expectedCoverage);
         }
@@ -264,7 +272,7 @@ public class LilacApplication implements AutoCloseable, Runnable
                     referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences,
                     referenceNucleotideHeterozygousLoci, candidateNucleotideSequences);
 
-            winningTumorCoverage = HlaComplexCoverageFactory.proteinCoverage(tumorFragmentAlleles, winningAlleles).expandToSixAlleles();
+            winningTumorCoverage = proteinCoverage(tumorFragmentAlleles, winningAlleles).expandToSixAlleles();
 
             LL_LOGGER.info("Calculating tumor copy number of winning alleles");
 

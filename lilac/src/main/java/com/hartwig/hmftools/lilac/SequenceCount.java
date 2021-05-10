@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
 
@@ -66,7 +67,7 @@ public final class SequenceCount
 
     public final List<String> sequenceAt(int index)
     {
-        if (index >= mSeqCountsList.length)
+        if (index >= mSeqCountsList.length || mSeqCountsList[index] == null)
             return Lists.newArrayList();
 
         return mSeqCountsList[index].entrySet().stream()
@@ -159,6 +160,12 @@ public final class SequenceCount
     {
         Map<String,Integer> seqCounts = seqCountsList[index];
 
+        if(seqCounts == null)
+        {
+            seqCountsList[index] = Maps.newHashMap();
+            seqCounts = seqCountsList[index];
+        }
+
         Integer count = seqCounts.get(aminoAcid);
         if(count != null)
             seqCounts.put(aminoAcid, count + 1);
@@ -174,10 +181,11 @@ public final class SequenceCount
 
         for(NucleotideFragment fragment : fragments)
         {
-            for(Integer lociIndex : fragment.getNucleotideLoci())
+            for(int index = 0; index < fragment.getNucleotideLoci().size(); ++index)
             {
-                String nucleotide = fragment.getNucleotides().get(lociIndex);
-                increment(seqCountsList, lociIndex, nucleotide);
+                int locus = fragment.getNucleotideLoci().get(index);
+                String nucleotide = fragment.getNucleotides().get(index);
+                increment(seqCountsList, locus, nucleotide);
             }
         }
 
@@ -190,12 +198,13 @@ public final class SequenceCount
 
         Map<String,Integer>[] seqCountsList = new Map[length];
 
-        for(NucleotideFragment fragment : fragments)
+        for(AminoAcidFragment fragment : fragments)
         {
-            for(Integer lociIndex : fragment.getNucleotideLoci())
+            for(int index = 0; index < fragment.getAminoAcidLoci().size(); ++index)
             {
-                String nucleotide = fragment.getNucleotides().get(lociIndex);
-                increment(seqCountsList, lociIndex, nucleotide);
+                int locus = fragment.getAminoAcidLoci().get(index);
+                String aminoAcid = fragment.getAminoAcids().get(index);
+                increment(seqCountsList, locus, aminoAcid);
             }
         }
 

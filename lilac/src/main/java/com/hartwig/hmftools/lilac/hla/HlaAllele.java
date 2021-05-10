@@ -114,6 +114,11 @@ public class HlaAllele implements Comparable<HlaAllele>
     }
 
 
+    public boolean matches(final HlaAllele other)
+    {
+        return other.toString().equals(toString());
+    }
+
     public boolean matches(final String alleleStr)
     {
         return alleleStr.equals(toString());

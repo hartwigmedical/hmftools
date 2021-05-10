@@ -32,7 +32,7 @@ public class AminoAcidQualEnrichment
 
     private final AminoAcidFragment enrich(final AminoAcidFragment fragment, final SequenceCount count)
     {
-        List<Integer> initialIntersect = fragment.aminoAcidLoci();
+        List<Integer> initialIntersect = fragment.getAminoAcidLoci();
 
         List<Integer> filteredIntersect = initialIntersect.stream()
                 .filter(x -> filter(fragment, count, x))
