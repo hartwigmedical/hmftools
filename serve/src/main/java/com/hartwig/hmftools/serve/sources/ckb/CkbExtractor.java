@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.ckb.classification.EventAndGeneExtractor;
+import com.hartwig.hmftools.ckb.classification.CkbEventAndGeneExtractor;
 import com.hartwig.hmftools.ckb.classification.ProteinAnnotationExtractor;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
@@ -60,14 +60,14 @@ public class CkbExtractor {
     @NotNull
     private final List<RefSeq> refSeqMappings;
     @NotNull
-    private final EventAndGeneExtractor eventAndGeneExtractor;
+    private final CkbEventAndGeneExtractor ckbEventAndGeneExtractor;
 
     public CkbExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableEvidenceFactory actionableEvidenceFactory,
             @NotNull final List<RefSeq> refSeqMappings) {
         this.eventExtractor = eventExtractor;
         this.actionableEvidenceFactory = actionableEvidenceFactory;
         this.refSeqMappings = refSeqMappings;
-        this.eventAndGeneExtractor = new EventAndGeneExtractor();
+        this.ckbEventAndGeneExtractor = new CkbEventAndGeneExtractor();
     }
 
     @NotNull
@@ -80,8 +80,8 @@ public class CkbExtractor {
             assert !entry.variants().isEmpty();
 
             Variant variant = entry.variants().get(0);
-            String gene = eventAndGeneExtractor.extractGene(variant);
-            String event = eventAndGeneExtractor.extractEvent(variant);
+            String gene = ckbEventAndGeneExtractor.extractGene(variant);
+            String event = ckbEventAndGeneExtractor.extractEvent(variant);
 
             if (entry.type() == EventType.UNKNOWN) {
                 LOGGER.warn("No event type known for '{}' on '{}'", event, gene);

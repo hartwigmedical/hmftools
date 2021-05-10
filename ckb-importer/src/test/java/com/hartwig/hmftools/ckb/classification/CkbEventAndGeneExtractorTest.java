@@ -7,11 +7,11 @@ import com.hartwig.hmftools.ckb.CkbTestFactory;
 
 import org.junit.Test;
 
-public class EventAndGeneExtractorTest {
+public class CkbEventAndGeneExtractorTest {
 
     @Test
     public void canExtractGene() {
-        EventAndGeneExtractor extractor = new EventAndGeneExtractor();
+        CkbEventAndGeneExtractor extractor = new CkbEventAndGeneExtractor();
         assertEquals("gene", extractor.extractGene(CkbTestFactory.createVariant("gene", "fullName", "variant", null)));
         assertEquals("NPM1 - ALK", extractor.extractGene(CkbTestFactory.createVariant("gene", "NPM1 - ALK", "NPM1 - ALK", "fusion")));
         assertEquals("NTRK2", extractor.extractGene(CkbTestFactory.createVariant("NTRK2", "NTRK2 fusion", "fusion", "fusion")));
@@ -27,7 +27,7 @@ public class EventAndGeneExtractorTest {
 
     @Test
     public void canExtractEvent() {
-        EventAndGeneExtractor extractor = new EventAndGeneExtractor();
+        CkbEventAndGeneExtractor extractor = new CkbEventAndGeneExtractor();
         assertEquals("wild-type", extractor.extractEvent(CkbTestFactory.createVariant("BRAF wild-type", "wild-type", "none")));
         assertEquals("exon 9", extractor.extractEvent(CkbTestFactory.createVariant("KIT exon9", "exon9", "unknown")));
         assertEquals("exon 9", extractor.extractEvent(CkbTestFactory.createVariant("KIT exon 9", "exon 9", "unknown")));

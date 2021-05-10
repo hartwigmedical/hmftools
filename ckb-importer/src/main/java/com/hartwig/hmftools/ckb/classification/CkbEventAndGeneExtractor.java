@@ -7,14 +7,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class EventAndGeneExtractor {
+public class CkbEventAndGeneExtractor {
 
-    private static final Logger LOGGER = LogManager.getLogger(EventAndGeneExtractor.class);
+    private static final Logger LOGGER = LogManager.getLogger(CkbEventAndGeneExtractor.class);
 
     @NotNull
     private final GeneNameMapping geneNameMapping;
 
-    public EventAndGeneExtractor() {
+    public CkbEventAndGeneExtractor() {
         this.geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
     }
 

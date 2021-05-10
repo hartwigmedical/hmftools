@@ -14,7 +14,7 @@ public final class EventTypeExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(EventTypeExtractor.class);
     private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(CkbClassificationConfig.build());
-    private static final EventAndGeneExtractor EXTRACTOR = new EventAndGeneExtractor();
+    private static final CkbEventAndGeneExtractor EXTRACTOR = new CkbEventAndGeneExtractor();
 
     private EventTypeExtractor() {
     }
