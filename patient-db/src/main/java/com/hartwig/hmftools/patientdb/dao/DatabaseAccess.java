@@ -84,29 +84,29 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final ValidationFindingDAO validationFindingsDAO;
     @NotNull
-    private final RNADAO rnaDAO;
+    private final DriverGenePanelDAO driverGenePanelDAO;
     @NotNull
-    private final PurityDAO purityDAO;
-    @NotNull
-    private final AmberDAO amberDAO;
+    private final CanonicalTranscriptDAO canonicalTranscriptDAO;
     @NotNull
     private final MetricDAO metricDAO;
     @NotNull
     private final FlagstatDAO flagstatDAO;
     @NotNull
-    private final PeachDAO peachDAO;
+    private final RNADAO rnaDAO;
     @NotNull
-    private final CuppaDAO cuppaDAO;
+    private final SnpCheckDAO snpCheckDAO;
     @NotNull
-    private final VirusBreakendDAO virusBreakendDAO;
+    private final SomaticVariantDAO somaticVariantDAO;
+    @NotNull
+    private final GermlineVariantDAO germlineVariantDAO;
+    @NotNull
+    private final AmberDAO amberDAO;
+    @NotNull
+    private final PurityDAO purityDAO;
     @NotNull
     private final CopyNumberDAO copyNumberDAO;
     @NotNull
-    private final DriverCatalogDAO driverCatalogDAO;
-    @NotNull
     private final GeneCopyNumberDAO geneCopyNumberDAO;
-    @NotNull
-    private final SomaticVariantDAO somaticVariantDAO;
     @NotNull
     private final StructuralVariantDAO structuralVariantDAO;
     @NotNull
@@ -114,19 +114,21 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final StructuralVariantFusionDAO structuralVariantFusionDAO;
     @NotNull
+    private final DriverCatalogDAO driverCatalogDAO;
+    @NotNull
+    private final PeachDAO peachDAO;
+    @NotNull
     private final SignatureDAO signatureDAO;
     @NotNull
-    private final CanonicalTranscriptDAO canonicalTranscriptDAO;
+    private final CuppaDAO cuppaDAO;
     @NotNull
     private final ChordDAO chordDAO;
     @NotNull
-    private final ProtectDAO protectDAO;
-    @NotNull
-    private final DriverGenePanelDAO driverGenePanelDAO;
-    @NotNull
-    private final GermlineVariantDAO germlineVariantDAO;
+    private final VirusBreakendDAO virusBreakendDAO;
     @NotNull
     private final HlaTypeDAO hlaTypeDAO;
+    @NotNull
+    private final ProtectDAO protectDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // Disable annoying jooq self-ad message
@@ -136,31 +138,32 @@ public class DatabaseAccess implements AutoCloseable {
         LOGGER.debug("Connecting to database {}", catalog);
         this.context = DSL.using(conn, SQLDialect.MYSQL, settings(catalog));
 
-        ecrfDAO = new EcrfDAO(context);
-        clinicalDAO = new ClinicalDAO(context);
-        protectDAO = new ProtectDAO(context);
-        virusBreakendDAO = new VirusBreakendDAO(context);
-        validationFindingsDAO = new ValidationFindingDAO(context);
-        rnaDAO = new RNADAO(context);
-        purityDAO = new PurityDAO(context);
-        amberDAO = new AmberDAO(context);
-        metricDAO = new MetricDAO(context);
-        flagstatDAO = new FlagstatDAO(context);
-        peachDAO = new PeachDAO(context);
-        cuppaDAO = new CuppaDAO(context);
-        copyNumberDAO = new CopyNumberDAO(context);
-        geneCopyNumberDAO = new GeneCopyNumberDAO(context);
-        somaticVariantDAO = new SomaticVariantDAO(context);
-        structuralVariantDAO = new StructuralVariantDAO(context);
-        structuralVariantClusterDAO = new StructuralVariantClusterDAO(context);
-        structuralVariantFusionDAO = new StructuralVariantFusionDAO(context);
-        signatureDAO = new SignatureDAO(context);
-        canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
-        driverCatalogDAO = new DriverCatalogDAO(context);
-        chordDAO = new ChordDAO(context);
-        driverGenePanelDAO = new DriverGenePanelDAO(context);
-        germlineVariantDAO = new GermlineVariantDAO(context);
-        hlaTypeDAO = new HlaTypeDAO(context);
+        this.ecrfDAO = new EcrfDAO(context);
+        this.clinicalDAO = new ClinicalDAO(context);
+        this.validationFindingsDAO = new ValidationFindingDAO(context);
+        this.driverGenePanelDAO = new DriverGenePanelDAO(context);
+        this.canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
+        this.metricDAO = new MetricDAO(context);
+        this.flagstatDAO = new FlagstatDAO(context);
+        this.rnaDAO = new RNADAO(context);
+        this.snpCheckDAO = new SnpCheckDAO(context);
+        this.somaticVariantDAO = new SomaticVariantDAO(context);
+        this.germlineVariantDAO = new GermlineVariantDAO(context);
+        this.amberDAO = new AmberDAO(context);
+        this.purityDAO = new PurityDAO(context);
+        this.copyNumberDAO = new CopyNumberDAO(context);
+        this.geneCopyNumberDAO = new GeneCopyNumberDAO(context);
+        this.structuralVariantDAO = new StructuralVariantDAO(context);
+        this.structuralVariantClusterDAO = new StructuralVariantClusterDAO(context);
+        this.structuralVariantFusionDAO = new StructuralVariantFusionDAO(context);
+        this.driverCatalogDAO = new DriverCatalogDAO(context);
+        this.peachDAO = new PeachDAO(context);
+        this.signatureDAO = new SignatureDAO(context);
+        this.cuppaDAO = new CuppaDAO(context);
+        this.chordDAO = new ChordDAO(context);
+        this.virusBreakendDAO = new VirusBreakendDAO(context);
+        this.hlaTypeDAO = new HlaTypeDAO(context);
+        this.protectDAO = new ProtectDAO(context);
     }
 
     public static void addDatabaseCmdLineArgs(@NotNull Options options) {
@@ -424,10 +427,6 @@ public class DatabaseAccess implements AutoCloseable {
         geneCopyNumberDAO.writeCopyNumber(sample, geneCopyNumbers);
     }
 
-    public void writeProtectDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog) {
-        driverCatalogDAO.writeAll(sample, driverCatalog);
-    }
-
     public void writeLinxDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog) {
         driverCatalogDAO.writeLinx(sample, somaticCatalog);
     }
@@ -473,6 +472,15 @@ public class DatabaseAccess implements AutoCloseable {
         rnaDAO.write(samples);
     }
 
+    public void writeSnpCheck(@NotNull String sample, boolean isPass) {
+        snpCheckDAO.write(sample, isPass);
+    }
+
+    public void writeHla(@NotNull final String sample, @NotNull final HlaType type, @NotNull final List<HlaTypeDetails> details) {
+        hlaTypeDAO.writeType(sample, type);
+        hlaTypeDAO.writeTypeDetails(sample, details);
+    }
+
     public void clearCpctEcrf() {
         ecrfDAO.clearCpct();
     }
@@ -486,11 +494,6 @@ public class DatabaseAccess implements AutoCloseable {
         clinicalDAO.clear();
     }
 
-    public void writeHla(@NotNull final String sample, @NotNull final HlaType type, @NotNull final List<HlaTypeDetails> details) {
-        hlaTypeDAO.writeType(sample, type);
-        hlaTypeDAO.writeTypeDetails(sample, details);
-    }
-
     public void writeFullClinicalData(@NotNull Patient patient, boolean blacklisted) {
         clinicalDAO.writeFullClinicalData(patient, blacklisted);
     }
@@ -499,7 +502,7 @@ public class DatabaseAccess implements AutoCloseable {
         clinicalDAO.writeSampleClinicalData(patientIdentifier, blacklisted, samples);
     }
 
-    public void writeGenePanel(DriverGenePanel panel) {
+    public void writeGenePanel(@NotNull DriverGenePanel panel) {
         driverGenePanelDAO.writePanel(panel);
     }
 
@@ -525,15 +528,12 @@ public class DatabaseAccess implements AutoCloseable {
         validationFindingsDAO.write(findings);
     }
 
-    public void deleteAllDataForSample(@NotNull String sample) {
+    public void deletePipelineDataForSample(@NotNull String sample) {
         LOGGER.info("Deleting metric data for sample: {}", sample);
         metricDAO.deleteMetricForSample(sample);
 
         LOGGER.info("Deleting flagstat data for sample: {}", sample);
         flagstatDAO.deleteFlagstatsForSample(sample);
-
-        LOGGER.info("Deleting CHORD data for sample: {}", sample);
-        chordDAO.deleteChordForSample(sample);
 
         LOGGER.info("Deleting AMBER data for sample: {}", sample);
         amberDAO.deleteAmberRecordsForSample(sample);
@@ -566,16 +566,16 @@ public class DatabaseAccess implements AutoCloseable {
         LOGGER.info("Deleting signatures for sample: {}", sample);
         signatureDAO.deleteSignatureDataForSample(sample);
 
-        LOGGER.info("Deleting PROTECT data for sample: {}", sample);
-        protectDAO.deleteEvidenceForSample(sample);
-
         LOGGER.info("Deleting driver catalog for sample: {}", sample);
         driverCatalogDAO.deleteForSample(sample);
+
+        LOGGER.info("Deleting CHORD data for sample: {}", sample);
+        chordDAO.deleteChordForSample(sample);
 
         LOGGER.info("Deleting PEACH data for sample: {}", sample);
         peachDAO.deletePeachForSample(sample);
 
-        LOGGER.info("Deleting hla data for sample: {}", sample);
+        LOGGER.info("Deleting HLA data for sample: {}", sample);
         hlaTypeDAO.deleteHlaFprSample(sample);
 
         LOGGER.info("Deleting virus breakend data for sample: {}", sample);
@@ -583,6 +583,9 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting CUPPA result for sample: {}", sample);
         cuppaDAO.deleteCuppaForSample(sample);
+
+        LOGGER.info("Deleting PROTECT data for sample: {}", sample);
+        protectDAO.deleteEvidenceForSample(sample);
 
         LOGGER.info("All data for sample '{}' has been deleted", sample);
     }
