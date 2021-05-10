@@ -106,7 +106,8 @@ public final class ReportableVariantFactory {
                 .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVAF()))
                 .hotspot(variant.hotspot())
                 .clonalLikelihood(variant.clonalLikelihood())
-                .biallelic(variant.biallelic());
+                .biallelic(variant.biallelic())
+                .localPhaseSet(variant.localPhaseSet());
     }
 
     private static double calcAlleleCopyNumber(double adjustedCopyNumber, double adjustedVAF) {

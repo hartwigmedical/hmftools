@@ -115,11 +115,17 @@ public class GenomicAnalyzer {
     private static List<ReportableVariantNotify> determineNotify(List<ReportableVariant> reportableVariants,
             @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
         List<ReportableVariantNotify> reportableVariantNotifies = Lists.newArrayList();
+        Set<String> germlineGenes = Sets.newHashSet();
+        for (ReportableVariant reportableVariant : reportableVariants) {
+            if (reportableVariant.source() == ReportableVariantSource.GERMLINE && reportableVariant.localPhaseSet() == null) {
+                germlineGenes.add(reportableVariant.gene());
+            }
+        }
 
         boolean notify;
         for (ReportableVariant reportableVariant : reportableVariants) {
             if (reportableVariant.source() == ReportableVariantSource.GERMLINE) {
-                notify = notifyAboutVariant(reportableVariant, germlineReportingModel, germlineReportingLevel);
+                notify = notifyAboutVariant(reportableVariant, germlineReportingModel, germlineReportingLevel, germlineGenes);
 
             } else {
                 notify = false;
@@ -135,7 +141,7 @@ public class GenomicAnalyzer {
     }
 
     private static boolean notifyAboutVariant(@NotNull ReportableVariant variant, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel, @NotNull Set<String> germlineGenes) {
         boolean notifyVariant = false;
         if (variant.source() == ReportableVariantSource.GERMLINE) {
             GermlineReportingEntry reportingEntry = germlineReportingModel.entryForGene(variant.gene());
@@ -143,7 +149,11 @@ public class GenomicAnalyzer {
                 if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ONLY_GERMLINE_HOM) {
                     String conditionFilter = reportingEntry.conditionFilter();
                     if (conditionFilter != null) {
-                        notifyVariant = variant.genotypeStatus().simplifiedDisplay().equals(conditionFilter);
+                        if (germlineGenes.contains(variant.gene())) {
+                            notifyVariant = true;
+                        } else {
+                            notifyVariant = variant.genotypeStatus().simplifiedDisplay().equals(conditionFilter);
+                        }
                     }
 
                 } else if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ONLY_SPECIFIC_VARIANT) {
