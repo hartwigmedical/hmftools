@@ -36,7 +36,7 @@ public final class TreatmentMatcher {
         List<BiopsyTreatmentData> yesTreatments = getYesTreatments(treatments);
         List<BiopsyTreatmentData> notYesTreatments = getNotYesTreatments(treatments);
 
-        // First match yes-treatments and wide treatments
+        // First match yes-treatments
         for (BiopsyTreatmentData treatment : yesTreatments) {
             LocalDate startDate = treatment.startDate();
             if (startDate == null) {
@@ -46,20 +46,11 @@ public final class TreatmentMatcher {
                 for (BiopsyData remainingBiopsy : remainingBiopsies) {
 
                     if (isPossibleMatch(remainingBiopsy, startDate)) {
-                        if (patientIdentifier.startsWith("WIDE")) {
-                            bestMatch = remainingBiopsy;
-                            matchedTreatments.add(BiopsyTreatmentData.of(bestMatch.id(),
-                                    treatment.treatmentGiven(),
-                                    treatment.radiotherapyGiven(),
-                                    treatment.drugs(),
-                                    treatment.formStatus()));
-                        } else {
-                            bestMatch = determineBestMatch(remainingBiopsy, bestMatch);
-                        }
+                        bestMatch = determineBestMatch(remainingBiopsy, bestMatch);
                     }
                 }
 
-                if (bestMatch != null && !patientIdentifier.equals("WIDE")) {
+                if (bestMatch != null) {
                     matchedTreatments.add(ImmutableBiopsyTreatmentData.builder().from(treatment).biopsyId(bestMatch.id()).build());
                     remainingBiopsies.remove(bestMatch);
                 } else {

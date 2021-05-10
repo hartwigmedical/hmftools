@@ -52,7 +52,7 @@ public final class BiopsyMatcher {
                             "sampling date: " + sequencedBiopsy.samplingDate() + "; ecrf biopsy date: " + clinicalBiopsy.date()));
                 }
                 remainingBiopsies = partitions.get(false);
-            } else if (!patientIdentifier.startsWith("WIDE")) {
+            } else {
                 if (possibleMatches.size() == 0 || (possibleMatches.size() == 1 && possibleMatches.get(0).date() == null)) {
                     findings.add(biopsyMatchFinding(patientIdentifier,
                             "Could not match any clinical biopsy with sequenced sample.",

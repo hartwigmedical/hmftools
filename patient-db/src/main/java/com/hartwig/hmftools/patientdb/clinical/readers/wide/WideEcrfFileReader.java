@@ -18,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 public class WideEcrfFileReader {
 
     private static final Logger LOGGER = LogManager.getLogger(WideEcrfFileReader.class);
+
     private static final char COMMA_DELIMITER = ',';
     private static final char SEMICOLON_DELIMITER = ';';
 
