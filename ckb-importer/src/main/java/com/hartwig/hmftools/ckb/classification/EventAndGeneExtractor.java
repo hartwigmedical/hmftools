@@ -1,25 +1,46 @@
 package com.hartwig.hmftools.ckb.classification;
 
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
+import com.hartwig.hmftools.common.genome.refgenome.GeneNameMapping;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class EventAndGeneExtractor {
+public class EventAndGeneExtractor {
 
-    private EventAndGeneExtractor() {
+    private static final Logger LOGGER = LogManager.getLogger(EventAndGeneExtractor.class);
+
+    @NotNull
+    private final GeneNameMapping geneNameMapping;
+
+    public EventAndGeneExtractor() {
+        this.geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
     }
 
     @NotNull
-    public static String extractGene(@NotNull Variant variant) {
+    public String extractGene(@NotNull Variant variant) {
         if (isFusion(variant) && !isPromiscuousFusion(variant)) {
             return variant.fullName();
         } else {
-            return variant.gene().geneSymbol();
+            String primaryGene = variant.gene().geneSymbol();
+            if (!geneNameMapping.isValidV38Gene(primaryGene)) {
+                for (String synonym : variant.gene().synonyms()) {
+                    if (geneNameMapping.isValidV38Gene(synonym)) {
+                        LOGGER.debug("Swapping CKB gene '{}' with synonym '{}'", primaryGene, synonym);
+                        return synonym;
+                    }
+                }
+
+                // If we can't find a mappable gene, just return the original gene again.
+                LOGGER.warn("Could not find synonym for '{}' that exists in HMF v38 gene model", primaryGene);
+            }
+            return primaryGene;
         }
     }
 
     @NotNull
-    public static String extractEvent(@NotNull Variant variant) {
+    public String extractEvent(@NotNull Variant variant) {
         if (isPromiscuousFusion(variant)) {
             return "fusion promiscuous";
         } else if (isFusion(variant)) {

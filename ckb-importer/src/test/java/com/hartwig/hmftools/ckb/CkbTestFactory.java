@@ -51,6 +51,12 @@ public final class CkbTestFactory {
     @NotNull
     public static Variant createVariant(@NotNull String geneSymbol, @NotNull String fullName, @NotNull String variant,
             @Nullable String impact) {
+        return createVariant(geneSymbol, Lists.newArrayList(), fullName, variant, impact);
+    }
+
+    @NotNull
+    public static Variant createVariant(@NotNull String geneSymbol, @NotNull List<String> geneSynonyms, @NotNull String fullName,
+            @NotNull String variant, @Nullable String impact) {
         return ImmutableVariant.builder()
                 .id(0)
                 .createDate(TEST_DATE)
@@ -58,18 +64,19 @@ public final class CkbTestFactory {
                 .fullName(fullName)
                 .variant(variant)
                 .impact(impact)
-                .gene(createGene(geneSymbol))
+                .gene(createGene(geneSymbol, geneSynonyms))
                 .build();
     }
 
     @NotNull
-    private static Gene createGene(@NotNull String geneSymbol) {
+    private static Gene createGene(@NotNull String geneSymbol, @NotNull List<String> synonyms) {
         return ImmutableGene.builder()
                 .id(0)
                 .createDate(TEST_DATE)
                 .updateDate(TEST_DATE)
                 .geneSymbol(geneSymbol)
                 .geneRole(Strings.EMPTY)
+                .synonyms(synonyms)
                 .build();
     }
 }
