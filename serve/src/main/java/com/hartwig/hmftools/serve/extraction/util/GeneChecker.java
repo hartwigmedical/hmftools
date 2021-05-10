@@ -19,7 +19,7 @@ public class GeneChecker {
     }
 
     public boolean isValidGene(@Nullable String gene) {
-        if (allValidGenes.contains(gene)) {
+        if (geneExistsInAllValidGenes(gene)) {
             return true;
         } else {
             if (gene != null) {
@@ -27,5 +27,9 @@ public class GeneChecker {
             }
             return false;
         }
+    }
+
+    public boolean geneExistsInAllValidGenes(@Nullable String gene) {
+        return allValidGenes.contains(gene);
     }
 }
