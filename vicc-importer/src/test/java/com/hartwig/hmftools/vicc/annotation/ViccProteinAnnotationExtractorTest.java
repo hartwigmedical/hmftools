@@ -4,11 +4,11 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class ProteinAnnotationExtractorTest {
+public class ViccProteinAnnotationExtractorTest {
 
     @Test
     public void canExtractProteinAnnotationFromEvent() {
-        ProteinAnnotationExtractor extractor = new ProteinAnnotationExtractor();
+        ViccProteinAnnotationExtractor extractor = new ViccProteinAnnotationExtractor();
         assertEquals("E709K", extractor.apply("E709K"));
         assertEquals("E709K", extractor.apply("EGFR E709K "));
         assertEquals("E709K", extractor.apply("EGFR:E709K"));

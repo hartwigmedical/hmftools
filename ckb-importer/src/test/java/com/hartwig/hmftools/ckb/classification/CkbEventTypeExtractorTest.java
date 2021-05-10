@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.serve.classification.EventType;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class EventTypeExtractorTest {
+public class CkbEventTypeExtractorTest {
 
     @Test
     public void entriesWithMultipleVariantsAreCombined() {
@@ -19,12 +19,12 @@ public class EventTypeExtractorTest {
         Variant variant2 = CkbTestFactory.createVariant();
         CkbEntry entry = CkbTestFactory.createEntry(Lists.newArrayList(variant1, variant2));
 
-        assertEquals(EventType.COMBINED, EventTypeExtractor.classify(entry));
+        assertEquals(EventType.COMBINED, CkbEventTypeExtractor.classify(entry));
     }
 
     @Test
     public void canClassifyCharacteristics() {
         Variant characteristic = CkbTestFactory.createVariant("-", "MSI neg", "MSI neg", Strings.EMPTY);
-        assertEquals(EventType.CHARACTERISTIC, EventTypeExtractor.classify(CkbTestFactory.createEntry(characteristic)));
+        assertEquals(EventType.CHARACTERISTIC, CkbEventTypeExtractor.classify(CkbTestFactory.createEntry(characteristic)));
     }
 }

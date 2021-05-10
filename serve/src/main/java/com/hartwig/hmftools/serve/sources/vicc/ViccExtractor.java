@@ -41,7 +41,7 @@ import com.hartwig.hmftools.serve.extraction.hotspot.ImmutableKnownHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspot;
 import com.hartwig.hmftools.serve.extraction.range.RangeAnnotation;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
-import com.hartwig.hmftools.vicc.annotation.ProteinAnnotationExtractor;
+import com.hartwig.hmftools.vicc.annotation.ViccProteinAnnotationExtractor;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
@@ -161,7 +161,7 @@ public final class ViccExtractor {
 
     @NotNull
     private static Set<KnownHotspot> convertToHotspots(@NotNull Map<ViccEntry, ViccExtractionResult> resultsPerEntry) {
-        ProteinAnnotationExtractor proteinExtractor = new ProteinAnnotationExtractor();
+        ViccProteinAnnotationExtractor proteinExtractor = new ViccProteinAnnotationExtractor();
         Set<KnownHotspot> hotspots = Sets.newHashSet();
         for (Map.Entry<ViccEntry, ViccExtractionResult> entryResult : resultsPerEntry.entrySet()) {
             ViccEntry entry = entryResult.getKey();

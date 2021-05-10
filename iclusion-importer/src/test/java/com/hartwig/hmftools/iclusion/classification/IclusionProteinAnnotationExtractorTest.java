@@ -4,11 +4,11 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class ProteinAnnotationExtractorTest {
+public class IclusionProteinAnnotationExtractorTest {
 
     @Test
     public void canGenerateProteinAnnotation() {
-        ProteinAnnotationExtractor extractor = new ProteinAnnotationExtractor();
+        IclusionProteinAnnotationExtractor extractor = new IclusionProteinAnnotationExtractor();
         assertEquals("W288fs", extractor.apply("W288FS"));
         assertEquals("W288IFS", extractor.apply("W288IFS"));
 

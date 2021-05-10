@@ -9,13 +9,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class EventTypeExtractor {
+public final class ViccEventTypeExtractor {
 
-    private static final Logger LOGGER = LogManager.getLogger(EventTypeExtractor.class);
+    private static final Logger LOGGER = LogManager.getLogger(ViccEventTypeExtractor.class);
 
     private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(ViccClassificationConfig.build());
 
-    private EventTypeExtractor() {
+    private ViccEventTypeExtractor() {
     }
 
     @NotNull

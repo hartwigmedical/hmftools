@@ -10,13 +10,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class EventTypeExtractor {
+public final class CkbEventTypeExtractor {
 
-    private static final Logger LOGGER = LogManager.getLogger(EventTypeExtractor.class);
+    private static final Logger LOGGER = LogManager.getLogger(CkbEventTypeExtractor.class);
     private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(CkbClassificationConfig.build());
     private static final CkbEventAndGeneExtractor EXTRACTOR = new CkbEventAndGeneExtractor();
 
-    private EventTypeExtractor() {
+    private CkbEventTypeExtractor() {
     }
 
     @NotNull

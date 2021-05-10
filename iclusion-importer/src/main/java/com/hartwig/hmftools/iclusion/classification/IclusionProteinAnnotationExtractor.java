@@ -7,11 +7,11 @@ import com.hartwig.hmftools.common.serve.classification.EventPreprocessor;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ProteinAnnotationExtractor implements EventPreprocessor {
+public class IclusionProteinAnnotationExtractor implements EventPreprocessor {
 
     private static final Set<String> CAPITALIZED_STRINGS_TO_UNCAPITALIZE = Sets.newHashSet("DELINS", "DEL", "INS", "DUP", "FS");
 
-    public ProteinAnnotationExtractor() {
+    public IclusionProteinAnnotationExtractor() {
     }
 
     @NotNull

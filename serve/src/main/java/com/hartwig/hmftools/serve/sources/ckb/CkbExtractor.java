@@ -6,7 +6,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.classification.CkbEventAndGeneExtractor;
-import com.hartwig.hmftools.ckb.classification.ProteinAnnotationExtractor;
+import com.hartwig.hmftools.ckb.classification.CkbProteinAnnotationExtractor;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.common.refseq.RefSeq;
@@ -166,7 +166,7 @@ public class CkbExtractor {
         Set<KnownHotspot> knownHotspots = Sets.newHashSet();
 
         if (hotspots != null) {
-            ProteinAnnotationExtractor proteinExtractor = new ProteinAnnotationExtractor();
+            CkbProteinAnnotationExtractor proteinExtractor = new CkbProteinAnnotationExtractor();
             for (VariantHotspot hotspot : hotspots) {
                 knownHotspots.add(ImmutableKnownHotspot.builder()
                         .from(hotspot)

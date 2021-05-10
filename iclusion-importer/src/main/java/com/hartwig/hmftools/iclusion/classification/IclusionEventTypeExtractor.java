@@ -7,12 +7,12 @@ import com.hartwig.hmftools.iclusion.datamodel.IclusionMutation;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class EventTypeExtractor {
+public final class IclusionEventTypeExtractor {
 
     @NotNull
     private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(IclusionClassificationConfig.build());
 
-    private EventTypeExtractor() {
+    private IclusionEventTypeExtractor() {
     }
 
     @NotNull
