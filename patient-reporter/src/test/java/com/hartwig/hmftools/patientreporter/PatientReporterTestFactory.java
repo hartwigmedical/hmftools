@@ -37,11 +37,6 @@ public final class PatientReporterTestFactory {
     }
 
     @NotNull
-    public static LimsCohortConfig createTestCohortConfig() {
-        return createCohortConfig("TestCohort", false, false, false, false, false, true, false, false, false, false, false);
-    }
-
-    @NotNull
     public static LimsCohortConfig createCPCTCohortConfig() {
         return createCohortConfig("CPCT", true, false, false, false, false, true, false, false, true, false, false);
     }
