@@ -23,6 +23,10 @@ public class CkbEventAndGeneExtractorTest {
                         "NTRK2 fusion",
                         "fusion",
                         "fusion")));
+
+        // We ignore NO_GENE case
+        assertEquals(CkbConstants.NO_GENE,
+                extractor.extractGene(CkbTestFactory.createVariant(CkbConstants.NO_GENE, "full_name", "variant", null)));
     }
 
     @Test

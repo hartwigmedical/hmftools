@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.ckb.classification;
 
+import java.util.Set;
+
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
 import com.hartwig.hmftools.common.genome.refgenome.GeneNameMapping;
 
@@ -11,8 +14,11 @@ public class CkbEventAndGeneExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(CkbEventAndGeneExtractor.class);
 
+    private static final Set<String> UNRESOLVABLE_GENES = Sets.newHashSet("MSI", "TMB", "UNKNOWN");
+
     @NotNull
     private final GeneNameMapping geneNameMapping;
+
 
     public CkbEventAndGeneExtractor() {
         this.geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
@@ -22,6 +28,8 @@ public class CkbEventAndGeneExtractor {
     public String extractGene(@NotNull Variant variant) {
         if (isFusion(variant) && !isPromiscuousFusion(variant)) {
             return variant.fullName();
+        } else if (variant.gene().geneSymbol().equals(CkbConstants.NO_GENE)) {
+            return CkbConstants.NO_GENE;
         } else {
             String primaryGene = variant.gene().geneSymbol();
             if (!geneNameMapping.isValidV38Gene(primaryGene)) {
@@ -33,7 +41,9 @@ public class CkbEventAndGeneExtractor {
                 }
 
                 // If we can't find a mappable gene, just return the original gene again.
-                LOGGER.warn("Could not find synonym for '{}' that exists in HMF v38 gene model", primaryGene);
+                if (!UNRESOLVABLE_GENES.contains(primaryGene)) {
+                    LOGGER.warn("Could not find synonym for '{}' that exists in HMF v38 gene model", primaryGene);
+                }
             }
             return primaryGene;
         }
