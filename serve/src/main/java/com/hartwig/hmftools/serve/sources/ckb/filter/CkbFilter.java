@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.ckb.classification.CkbConstants;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.ImmutableCkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
@@ -88,6 +89,11 @@ public class CkbFilter {
         if (geneSymbol != null) {
             if (FilterFactory.GENES_TO_FILTER.contains(geneSymbol)) {
                 usedFilterGenes.add(geneSymbol);
+                return false;
+            }
+
+            // We don't want to include evidence on genes that are unmappable between ref genome versions.
+            if (CkbConstants.UNMAPPABLE_GENES.contains(geneSymbol)) {
                 return false;
             }
         }

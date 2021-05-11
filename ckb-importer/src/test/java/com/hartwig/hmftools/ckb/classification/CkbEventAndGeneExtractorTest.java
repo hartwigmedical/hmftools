@@ -27,6 +27,11 @@ public class CkbEventAndGeneExtractorTest {
         // We ignore NO_GENE case
         assertEquals(CkbConstants.NO_GENE,
                 extractor.extractGene(CkbTestFactory.createVariant(CkbConstants.NO_GENE, "full_name", "variant", null)));
+
+        // We ignore unmappable genes case
+        String firstUnmappableGene = CkbConstants.UNMAPPABLE_GENES.iterator().next();
+        assertEquals(firstUnmappableGene,
+                extractor.extractGene(CkbTestFactory.createVariant(firstUnmappableGene, "full_name", "variant", null)));
     }
 
     @Test
