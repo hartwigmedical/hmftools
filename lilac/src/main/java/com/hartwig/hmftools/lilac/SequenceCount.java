@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac;
 
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
@@ -25,7 +27,62 @@ public final class SequenceCount
         return mSeqCountsList.length;
     }
 
-    public final Map<String,Integer> get(int locus) { return mSeqCountsList[locus]; }
+    public final Map<String,Integer> get(int locus)
+    {
+        if (locus >= mSeqCountsList.length || mSeqCountsList[locus] == null)
+        {
+            LL_LOGGER.error("invalid sequence count index({}) size({}) look-up", locus, mSeqCountsList.length);
+            return Maps.newHashMap();
+        }
+
+        return mSeqCountsList[locus];
+    }
+
+    public static SequenceCount nucleotides(int minCount, final List<NucleotideFragment> fragments)
+    {
+        int length = fragments.stream().mapToInt(x -> x.maxLoci()).max().orElse(0) + 1;
+
+        Map<String,Integer>[] seqCountsList = new Map[length];
+        for(int i = 0; i < length; ++i)
+        {
+            seqCountsList[i] = Maps.newHashMap();
+        }
+
+        for(NucleotideFragment fragment : fragments)
+        {
+            for(int index = 0; index < fragment.getNucleotideLoci().size(); ++index)
+            {
+                int locus = fragment.getNucleotideLoci().get(index);
+                String nucleotide = fragment.getNucleotides().get(index);
+                increment(seqCountsList, locus, nucleotide);
+            }
+        }
+
+        return new SequenceCount(minCount, seqCountsList);
+    }
+
+    public static SequenceCount aminoAcids(int minCount, final List<AminoAcidFragment> fragments)
+    {
+        int length = fragments.stream().mapToInt(x -> x.maxAminoAcidLoci()).max().orElse(0) + 1;
+
+        Map<String,Integer>[] seqCountsList = new Map[length];
+        for(int i = 0; i < length; ++i)
+        {
+            seqCountsList[i] = Maps.newHashMap();
+        }
+
+        for(AminoAcidFragment fragment : fragments)
+        {
+            for(int index = 0; index < fragment.getAminoAcidLoci().size(); ++index)
+            {
+                int locus = fragment.getAminoAcidLoci().get(index);
+                String aminoAcid = fragment.getAminoAcids().get(index);
+                increment(seqCountsList, locus, aminoAcid);
+            }
+        }
+
+        return new SequenceCount(minCount, seqCountsList);
+    }
 
     public final List<Integer> heterozygousLoci()
     {
@@ -55,30 +112,45 @@ public final class SequenceCount
 
     private final boolean isHomozygous(int index)
     {
-        Map<String,Integer> seqCounts = mSeqCountsList[index];
+        Map<String,Integer> seqCounts = get(index);
         return seqCounts.values().stream().filter(x -> x >= mMinCount).count() == 1;
     }
 
     private final boolean isHeterozygous(int index)
     {
-        Map<String,Integer> seqCounts = mSeqCountsList[index];
+        Map<String,Integer> seqCounts = get(index);
         return seqCounts.values().stream().filter(x -> x >= mMinCount).count() > 1;
     }
 
-    public final List<String> sequenceAt(int index)
+    public final List<String> getMinCountSequences(int index)
     {
-        if (index >= mSeqCountsList.length || mSeqCountsList[index] == null)
-            return Lists.newArrayList();
+        Map<String,Integer> seqCounts = get(index);
 
-        return mSeqCountsList[index].entrySet().stream()
+        return seqCounts.entrySet().stream()
                 .filter(x -> x.getValue() >= mMinCount)
                 .map(x -> x.getKey()).collect(Collectors.toList());
     }
 
     public final int depth(int index)
     {
-        Map<String,Integer> seqCounts = mSeqCountsList[index];
+        Map<String,Integer> seqCounts = get(index);
         return seqCounts.values().stream().mapToInt(x -> x).sum();
+    }
+
+    private static void increment(Map<String,Integer>[] seqCountsList, int index, String aminoAcid)
+    {
+        if(seqCountsList[index] == null)
+        {
+            seqCountsList[index] = Maps.newHashMap();
+        }
+
+        Map<String,Integer> seqCounts = seqCountsList[index];
+
+        Integer count = seqCounts.get(aminoAcid);
+        if(count != null)
+            seqCounts.put(aminoAcid, count + 1);
+        else
+            seqCounts.put(aminoAcid, 1);
     }
 
     public final void writeVertically(final String fileName)
@@ -155,60 +227,4 @@ public final class SequenceCount
         }
          */
     }
-
-    private static void increment(Map<String,Integer>[] seqCountsList, int index, String aminoAcid)
-    {
-        Map<String,Integer> seqCounts = seqCountsList[index];
-
-        if(seqCounts == null)
-        {
-            seqCountsList[index] = Maps.newHashMap();
-            seqCounts = seqCountsList[index];
-        }
-
-        Integer count = seqCounts.get(aminoAcid);
-        if(count != null)
-            seqCounts.put(aminoAcid, count + 1);
-        else
-            seqCounts.put(aminoAcid, 1);
-    }
-
-    public static SequenceCount nucleotides(int minCount, final List<NucleotideFragment> fragments)
-    {
-        int length = fragments.stream().mapToInt(x -> x.maxLoci()).max().orElse(0) + 1;
-
-        Map<String,Integer>[] seqCountsList = new Map[length];
-
-        for(NucleotideFragment fragment : fragments)
-        {
-            for(int index = 0; index < fragment.getNucleotideLoci().size(); ++index)
-            {
-                int locus = fragment.getNucleotideLoci().get(index);
-                String nucleotide = fragment.getNucleotides().get(index);
-                increment(seqCountsList, locus, nucleotide);
-            }
-        }
-
-        return new SequenceCount(minCount, seqCountsList);
-    }
-
-    public static SequenceCount aminoAcids(int minCount, final List<AminoAcidFragment> fragments)
-    {
-        int length = fragments.stream().mapToInt(x -> x.maxLoci()).max().orElse(0) + 1;
-
-        Map<String,Integer>[] seqCountsList = new Map[length];
-
-        for(AminoAcidFragment fragment : fragments)
-        {
-            for(int index = 0; index < fragment.getAminoAcidLoci().size(); ++index)
-            {
-                int locus = fragment.getAminoAcidLoci().get(index);
-                String aminoAcid = fragment.getAminoAcids().get(index);
-                increment(seqCountsList, locus, aminoAcid);
-            }
-        }
-
-        return new SequenceCount(minCount, seqCountsList);
-    }
-
 }

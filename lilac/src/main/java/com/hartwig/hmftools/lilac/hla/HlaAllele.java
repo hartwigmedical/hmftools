@@ -141,15 +141,25 @@ public class HlaAllele implements Comparable<HlaAllele>
         if(list1.size() != list2.size())
             return false;
 
-        return !list1.stream().noneMatch(x -> list2.contains(x));
+        return list1.stream().allMatch(x -> contains(list2, x));
     }
 
-    public static boolean matches(final Set<HlaAllele> list1, final Set<HlaAllele> list2)
+    public static boolean contains(final List<HlaAllele> list, final HlaAllele allele)
     {
-        if(list1.size() != list2.size())
-            return false;
+        return list.stream().anyMatch(x -> x.matches(allele));
+    }
 
-        return !list1.stream().noneMatch(x -> list2.contains(x));
+    public static List<HlaAllele> dedup(final List<HlaAllele> alleles)
+    {
+        List<HlaAllele> newList = Lists.newArrayList();
+
+        for(int i = 0; i < alleles.size(); ++i)
+        {
+            if(!contains(newList, alleles.get(i)))
+                newList.add(alleles.get(i));
+        }
+
+        return newList;
     }
 
 }

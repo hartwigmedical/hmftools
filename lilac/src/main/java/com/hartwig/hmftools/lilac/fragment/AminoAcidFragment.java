@@ -33,19 +33,19 @@ public final class AminoAcidFragment extends NucleotideFragment
         return fragments.stream().collect(Collectors.toList());
     }
 
-    public boolean containsAll(final List<Integer> indices)
+    public boolean containsAll(final List<Integer> loci)
     {
-        return !indices.stream().noneMatch(x -> mAminoAcidLoci.contains(x));
+        return loci.stream().allMatch(x -> containsAminoAcid(x));
     }
 
-    public boolean containsAminoAcid(int index)
+    public boolean containsAminoAcid(int locus)
     {
-        return mAminoAcidLoci.contains(index);
+        return mAminoAcidLoci.contains(locus);
     }
 
-    public String aminoAcid(int loci)
+    public String aminoAcid(int locus)
     {
-        int index = mAminoAcidLoci.indexOf(loci);
+        int index = mAminoAcidLoci.indexOf(locus);
 
         if(index < 0)
             return "";
@@ -53,16 +53,21 @@ public final class AminoAcidFragment extends NucleotideFragment
         return mAminoAcids.get(index);
     }
 
-    // redundant
-    public String aminoAcids(final List<Integer> indices)
+    public int maxAminoAcidLoci()
     {
-        return aminoAcids(indices.stream().collect(Collectors.toSet()));
+        return mAminoAcidLoci.stream().mapToInt(x -> x).max().orElse(0);
     }
 
-    public String aminoAcids(final Set<Integer> indices)
+    // redundant
+    public String aminoAcids(final List<Integer> loci)
+    {
+        return aminoAcids(loci.stream().collect(Collectors.toSet()));
+    }
+
+    public String aminoAcids(final Set<Integer> loci)
     {
         StringJoiner sj = new StringJoiner("");
-        indices.stream().forEach(x -> sj.add(aminoAcid(x)));
+        loci.stream().forEach(x -> sj.add(aminoAcid(x)));
         return sj.toString();
     }
 
@@ -85,6 +90,13 @@ public final class AminoAcidFragment extends NucleotideFragment
         return new AminoAcidFragment(
                 getId(), getGenes(), getNucleotideLoci(), getNucleotideQuality(), getNucleotides(),
                 intersectAminoAcidLoci, intersectAminoAcids);
+    }
+
+    public String toString()
+    {
+        return String.format("%s genes(%s) lociRange(%d -> %d)",
+                getId(), getGenes(), !mAminoAcidLoci.isEmpty() ? mAminoAcidLoci.get(0) : -1,
+                !mAminoAcidLoci.isEmpty() ? mAminoAcidLoci.get(mAminoAcidLoci.size() - 1) : -1);
     }
 
     public static List<Integer> calcAminoAcidIndices(int nucStartIndex, int nucEndIndex)

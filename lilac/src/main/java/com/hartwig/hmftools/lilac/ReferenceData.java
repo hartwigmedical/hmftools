@@ -86,9 +86,9 @@ public class ReferenceData
     {
         for(Integer boundary : ALL_PROTEIN_EXON_BOUNDARIES)
         {
-            ALL_NUCLEOTIDE_EXON_BOUNDARIES.add(boundary);
-            ALL_NUCLEOTIDE_EXON_BOUNDARIES.add(boundary + 1);
-            ALL_NUCLEOTIDE_EXON_BOUNDARIES.add(boundary + 2);
+            ALL_NUCLEOTIDE_EXON_BOUNDARIES.add(boundary * 3);
+            ALL_NUCLEOTIDE_EXON_BOUNDARIES.add(boundary * 3 + 1);
+            ALL_NUCLEOTIDE_EXON_BOUNDARIES.add(boundary * 3 + 2);
         }
     }
 

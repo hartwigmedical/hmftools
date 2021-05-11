@@ -43,7 +43,7 @@ public class AminoAcidQualEnrichment
 
     private static boolean filter(final AminoAcidFragment fragment, final SequenceCount count, int loci)
     {
-        List<String> allowed = count.sequenceAt(loci);
+        List<String> allowed = count.getMinCountSequences(loci);
         String actual = fragment.aminoAcid(loci);
 
         return allowed.contains(actual);

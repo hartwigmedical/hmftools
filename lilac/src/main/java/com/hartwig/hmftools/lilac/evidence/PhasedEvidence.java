@@ -68,7 +68,6 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
 
         List<Integer> indices = Lists.newArrayList();
 
-        // CHECK using index not i
         for(int i = 0; i < min(mAminoAcidIndices.length, headLength); ++i)
         {
             indices.add(mAminoAcidIndices[i]);

@@ -32,7 +32,7 @@ public class AminoAcidFiltering
 
             // int depth = aminoAcidCount.depth(loci);
 
-            List<String> expectedSequences = aminoAcidCount.sequenceAt(loci);
+            List<String> expectedSequences = aminoAcidCount.getMinCountSequences(loci);
 
             final int lociConst = loci;
 

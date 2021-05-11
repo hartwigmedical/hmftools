@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.lilac.fragment;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,8 +38,8 @@ public final class NucleotideQualEnrichment
             int lociIndex = fragment.getNucleotideLoci().get(i);
             int currentQuality = fragment.getNucleotideQuality().get(i);
             String fragmentNucleotide = fragment.getNucleotides().get(i);
-            List<String> highQualitySequences = highQualityCount.sequenceAt(lociIndex);
-            List<String> rawSequences = rawCount.sequenceAt(lociIndex);
+            List<String> highQualitySequences = highQualityCount.getMinCountSequences(lociIndex);
+            List<String> rawSequences = rawCount.getMinCountSequences(lociIndex);
             List<String> allowedSequences = highQualitySequences.stream().filter(x -> rawSequences.contains(x)).collect(Collectors.toList());
 
             if(allowedSequences.contains(fragmentNucleotide))

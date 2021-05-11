@@ -161,6 +161,13 @@ public class NucleotideFragment
         return new NucleotideFragment(mId, mGenes, nucleotideLoci, nucleotideQuality, nucleotides);
     }
 
+    public String toString()
+    {
+        return String.format("%s genes(%s) lociRange(%d -> %d)",
+                mId, mGenes, !mNucleotideLoci.isEmpty() ? mNucleotideLoci.get(0) : -1,
+                !mNucleotideLoci.isEmpty() ? mNucleotideLoci.get(mNucleotideLoci.size() - 1) : -1);
+    }
+
     public static List<NucleotideFragment> reduceById(final List<NucleotideFragment> fragments)
     {
         // merge paired reads but keep any single reads as well

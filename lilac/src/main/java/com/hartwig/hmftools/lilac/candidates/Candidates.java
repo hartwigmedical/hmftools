@@ -2,8 +2,10 @@ package com.hartwig.hmftools.lilac.candidates;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
+import static com.hartwig.hmftools.lilac.hla.HlaAllele.contains;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -49,10 +51,10 @@ public final class Candidates
 
         List<HlaAllele> aminoAcidCandidateAlleles = aminoAcidCandidates.stream().map(x -> x.getAllele()).collect(Collectors.toList());
 
-        List<HlaAllele> aminoAcidSpecificAllelesCandidate = aminoAcidCandidateAlleles.stream()
+        List<HlaAllele> aminoAcidSpecificAllelesCandidates = aminoAcidCandidateAlleles.stream()
                 .map(x -> x.asFourDigit()).collect(Collectors.toList());
 
-        if (aminoAcidSpecificAllelesCandidate.isEmpty())
+        if (aminoAcidSpecificAllelesCandidates.isEmpty())
         {
             LL_LOGGER.warn("  0 candidates after amino acid filtering - reverting to all gene candidates");
             return geneCandidates.stream().map(x -> x.getAllele()).collect(Collectors.toList());
@@ -64,22 +66,24 @@ public final class Candidates
         NucleotideFiltering nucleotideFiltering = new NucleotideFiltering(mConfig.MinEvidence, aminoAcidBoundary);
 
         List<HlaSequenceLoci> nucleotideCandidatesAfterAminoAcidFiltering = mNucleotideSequences.stream()
-                .filter(x -> aminoAcidSpecificAllelesCandidate.contains(x.getAllele().asFourDigit()))
+                .filter(x -> contains(aminoAcidSpecificAllelesCandidates, x.getAllele().asFourDigit()))
                 .collect(Collectors.toList());
 
         // CHECK distinct works as expected
-        List<HlaAllele> nucleotideSpecificAllelesCandidate = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(
-                nucleotideCandidatesAfterAminoAcidFiltering, nucFragments(fragments)).stream()
-                .map(x -> x.getAllele().asFourDigit()).distinct().collect(Collectors.toList());
+        List<HlaSequenceLoci> nucleotideSpecificSequences = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(
+                nucleotideCandidatesAfterAminoAcidFiltering, nucFragments(fragments));
 
-        if (nucleotideSpecificAllelesCandidate.isEmpty())
+        List<HlaAllele> nucleotideSpecificAllelesCandidates = HlaAllele.dedup
+                (nucleotideSpecificSequences.stream().map(x -> x.getAllele().asFourDigit()).collect(Collectors.toList()));
+
+        if (nucleotideSpecificAllelesCandidates.isEmpty())
         {
             LL_LOGGER.warn("  0 candidates after exon boundary filtering - reverting to amino acid candidates");
             return aminoAcidCandidateAlleles;
         }
 
-        LL_LOGGER.info("  {} candidates after exon boundary filtering", nucleotideSpecificAllelesCandidate.size());
-        return nucleotideSpecificAllelesCandidate;
+        LL_LOGGER.info("  {} candidates after exon boundary filtering", nucleotideSpecificAllelesCandidates.size());
+        return nucleotideSpecificAllelesCandidates;
     }
 
     public List<HlaAllele> phasedCandidates(

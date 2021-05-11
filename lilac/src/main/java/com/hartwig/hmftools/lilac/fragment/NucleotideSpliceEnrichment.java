@@ -74,13 +74,13 @@ public class NucleotideSpliceEnrichment
 
     private NucleotideFragment addStart(final NucleotideFragment fragment, int index, SequenceCount nucleotideCounts)
     {
-        return fragment.enrich(index, nucleotideCounts.sequenceAt(index).get(0), mMinBaseQuality);
+        return fragment.enrich(index, nucleotideCounts.getMinCountSequences(index).get(0), mMinBaseQuality);
     }
 
     private NucleotideFragment addEnd(final NucleotideFragment fragment, int index, SequenceCount nucleotideCounts)
     {
         return fragment.enrich(
-                index + 1, nucleotideCounts.sequenceAt(index + 1).get(0), mMinBaseQuality)
-                .enrich(index + 2, nucleotideCounts.sequenceAt(index + 2).get(0), mMinBaseQuality);
+                index + 1, nucleotideCounts.getMinCountSequences(index + 1).get(0), mMinBaseQuality)
+                .enrich(index + 2, nucleotideCounts.getMinCountSequences(index + 2).get(0), mMinBaseQuality);
     }
 }
