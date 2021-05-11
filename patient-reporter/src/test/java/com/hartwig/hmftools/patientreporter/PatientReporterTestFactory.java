@@ -16,6 +16,8 @@ import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlackListModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistFile;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbFile;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryModel;
@@ -32,6 +34,7 @@ public final class PatientReporterTestFactory {
     private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
     private static final String VIRUS_DB_TSV = Resources.getResource("virusbreakend/virusdb.tsv").getPath();
     private static final String VIRUS_SUMMARY_TSV = Resources.getResource("virusbreakend/virus_summary.tsv").getPath();
+    private static final String VIRUS_BLACKLIST_TSV = Resources.getResource("virusbreakend/virus_blacklist.tsv").getPath();
 
     private PatientReporterTestFactory() {
     }
@@ -96,6 +99,7 @@ public final class PatientReporterTestFactory {
             SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
             VirusDbModel virusDbModel = VirusDbFile.buildFromTsv(VIRUS_DB_TSV);
             VirusSummaryModel virusSummaryModel = VirusSummaryfile.buildFromTsv(VIRUS_SUMMARY_TSV);
+            VirusBlackListModel virusBlackListModel = VirusBlacklistFile.buildFromTsv(VIRUS_BLACKLIST_TSV);
 
             return ImmutableAnalysedReportData.builder()
                     .from(loadTestReportData())
@@ -103,6 +107,7 @@ public final class PatientReporterTestFactory {
                     .summaryModel(summaryModel)
                     .virusDbModel(virusDbModel)
                     .virusSummaryModel(virusSummaryModel)
+                    .virusBlackListModel(virusBlackListModel)
                     .build();
         } catch (IOException exception) {
             throw new IllegalStateException("Could not load test analysed report data: " + exception.getMessage());

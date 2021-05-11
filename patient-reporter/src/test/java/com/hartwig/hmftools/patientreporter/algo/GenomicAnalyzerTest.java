@@ -11,6 +11,8 @@ import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineReportingEntry;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlackListModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistFile;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbFile;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryModel;
@@ -36,6 +38,7 @@ public class GenomicAnalyzerTest {
     private static final String PEACH_GENOTYPE_TSV = BASE_DIRECTORY + "/peach/sample.peach.genotype.tsv";
     private static final String VIRUS_DB_TSV = Resources.getResource("virusbreakend/virusdb.tsv").getPath();
     private static final String VIRUS_SUMMARY_TSV = Resources.getResource("virusbreakend/virus_summary.tsv").getPath();
+    private static final String VIRUS_BLACKLIST_TSV = Resources.getResource("virusbreakend/virus_blacklist.tsv").getPath();
 
     @Test
     public void canRunOnTestRun() throws IOException {
@@ -58,6 +61,8 @@ public class GenomicAnalyzerTest {
         VirusDbModel virusDbModel = VirusDbFile.buildFromTsv(VIRUS_DB_TSV);
         VirusSummaryModel virusSummaryModel = VirusSummaryfile.buildFromTsv(VIRUS_SUMMARY_TSV);
 
+        VirusBlackListModel virusBlackListModel = VirusBlacklistFile.buildFromTsv(VIRUS_BLACKLIST_TSV);
+
         assertNotNull(analyzer.run("sample",
                 PURPLE_PURITY_TSV,
                 PURPLE_QC_FILE,
@@ -75,6 +80,6 @@ public class GenomicAnalyzerTest {
                 victim,
                 LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION,
                 virusDbModel,
-                virusSummaryModel));
+                virusSummaryModel, virusBlackListModel));
     }
 }

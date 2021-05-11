@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.algo;
 import java.io.IOException;
 
 import com.hartwig.hmftools.patientreporter.ReportData;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistFile;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbFile;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryfile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
@@ -19,7 +20,8 @@ public final class AnalysedReportDataLoader {
 
     @NotNull
     public static AnalysedReportData buildFromFiles(@NotNull ReportData reportData, @NotNull String germlineReportingTsv,
-            @NotNull String sampleSummaryTsv, @NotNull String virusTsv, @NotNull String virusSummaryTsv) throws IOException {
+            @NotNull String sampleSummaryTsv, @NotNull String virusTsv, @NotNull String virusSummaryTsv, @NotNull String virusBlacklistTsv)
+            throws IOException {
         GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(germlineReportingTsv);
         SummaryModel summaryModel = SummaryFile.buildFromTsv(sampleSummaryTsv);
 
@@ -29,6 +31,7 @@ public final class AnalysedReportDataLoader {
                 .summaryModel(summaryModel)
                 .virusDbModel(VirusDbFile.buildFromTsv(virusTsv))
                 .virusSummaryModel(VirusSummaryfile.buildFromTsv(virusSummaryTsv))
+                .virusBlackListModel(VirusBlacklistFile.buildFromTsv(virusBlacklistTsv))
                 .build();
     }
 }

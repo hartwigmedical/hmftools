@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
 import com.hartwig.hmftools.patientreporter.ReportData;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlackListModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryModel;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
@@ -26,4 +27,7 @@ public abstract class AnalysedReportData implements ReportData {
 
     @NotNull
     public abstract VirusSummaryModel virusSummaryModel();
+
+    @NotNull
+    public abstract VirusBlackListModel virusBlackListModel();
 }
