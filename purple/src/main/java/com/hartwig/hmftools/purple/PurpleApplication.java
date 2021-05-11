@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
@@ -30,7 +31,6 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurityAdjusterAbnormalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.purple.config.MiscConfig;
 import com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.Gender;
@@ -69,6 +69,7 @@ import com.hartwig.hmftools.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.purple.region.FittedRegionFactoryV2;
 import com.hartwig.hmftools.purple.somatic.SomaticPeakStream;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
+import com.hartwig.hmftools.purple.somatic.SomaticVariantEnrichment;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

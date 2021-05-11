@@ -3,13 +3,11 @@ package com.hartwig.hmftools.purple.somatic;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 
 import org.apache.commons.compress.utils.Lists;
-import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Allele;
@@ -17,7 +15,6 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
-import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticGenotypeEnrichment implements VariantContextEnrichment
@@ -49,6 +46,10 @@ public class SomaticGenotypeEnrichment implements VariantContextEnrichment
     public void accept(@NotNull final VariantContext context)
     {
         Allele refAllele = context.getReference();
+
+        if(context.getAlleles().size() < 2)
+            return;
+
         Allele altAllele = context.getAlternateAllele(0);
 
         List<Genotype> updatedGenotypes = Lists.newArrayList();
