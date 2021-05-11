@@ -31,11 +31,13 @@ public class VirusBreakendReportableFactory {
         for (VirusBreakend virusBreakend : virusBreakends) {
             if (virusBreakend.QCStatus() != VirusBreakendQCStatus.LOW_VIRAL_COVERAGE) {
                 if (virusBreakend.integrations() >= 1) {
-                    if (virusBlackListModel.checkTaxusForId(virusBreakend.taxidGenus()).equals("taxid_genus")) {
+                    if (virusBlackListModel.checkTaxusForId(virusBreakend.taxidGenus()) != null && virusBlackListModel.checkTaxusForId(
+                            virusBreakend.taxidGenus()).equals("taxid_genus")) {
                         if (!virusBlackListModel.checkVirusForBlacklisting(virusBreakend.taxidGenus())) {
                             virusBreakendsFiltered.add(virusBreakend);
                         }
-                    } else if (virusBlackListModel.checkTaxusForId(virusBreakend.taxidGenus()).equals("taxid_species")) {
+                    } else if (virusBlackListModel.checkTaxusForId(virusBreakend.taxidGenus()) != null
+                            && virusBlackListModel.checkTaxusForId(virusBreakend.taxidGenus()).equals("taxid_species")) {
                         if (!virusBlackListModel.checkVirusForBlacklisting(virusBreakend.taxidSpecies())) {
                             virusBreakendsFiltered.add(virusBreakend);
                         }
@@ -62,14 +64,10 @@ public class VirusBreakendReportableFactory {
         }
 
         for (VirusBreakend virusBreakend : virusBreakends) {
-            if (virusBreakend.QCStatus() != VirusBreakendQCStatus.LOW_VIRAL_COVERAGE) {
-                if (virusBreakend.integrations() >= 1) {
-                    for (String virus : virusSummaryModel.virussen()) {
-                        if (!postiveSummary.contains(virus + " positive")) {
-                            if (!virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()).equals(Strings.EMPTY)) {
-                                negativeSummary.add(virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()) + " negative");
-                            }
-                        }
+            for (String virus : virusSummaryModel.virussen()) {
+                if (!postiveSummary.contains(virus + " positive")) {
+                    if (!virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()).equals(Strings.EMPTY)) {
+                        negativeSummary.add(virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()) + " negative");
                     }
                 }
             }

@@ -71,10 +71,15 @@ public final class MetaDataResolver {
         }
     }
 
-    @NotNull
+    @Nullable
     public static String majorDotMinorVersion(@NotNull File pipelineVersionFile) throws IOException {
-        String [] version = readPipelineVersion(pipelineVersionFile).split("\\.");
-        return version[0] + "." + version[1];
+        String version = readPipelineVersion(pipelineVersionFile);
+        if (version == null) {
+            return null;
+        } else {
+            String[] versionSplit = version.split("\\.");
+            return versionSplit[0] + "." + versionSplit[1];
+        }
     }
 
     @Nullable
@@ -174,7 +179,7 @@ public final class MetaDataResolver {
         }
     }
 
-    @NotNull
+    @Nullable
     private static String readPipelineVersion(@NotNull File pipelineVersionFile) throws IOException {
         List<String> lines = Files.readAllLines(pipelineVersionFile.toPath());
         if (lines.isEmpty()) {
@@ -184,7 +189,7 @@ public final class MetaDataResolver {
                 return lines.get(0);
             } else {
                 LOGGER.warn("Too many lines in pipeline version file {}!", pipelineVersionFile);
-                return Strings.EMPTY;
+                return null;
             }
         }
     }

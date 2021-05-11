@@ -26,7 +26,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     public abstract String clinicalSummary();
 
-    @NotNull
+    @Nullable
     public abstract String pipelineVersion();
 
     @NotNull

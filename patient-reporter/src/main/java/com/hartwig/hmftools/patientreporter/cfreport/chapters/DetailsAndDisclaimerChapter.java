@@ -106,6 +106,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     @NotNull
     private static Div createDisclaimerDiv(@NotNull AnalysedPatientReport patientReport) {
+        String pipelineVersion = patientReport.pipelineVersion() == null ? "No pipeline version is known" : patientReport.pipelineVersion();
         Div div = new Div();
 
         div.add(new Paragraph("Disclaimer").addStyle(ReportResources.smallBodyHeadingStyle()));
@@ -117,7 +118,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 ReportResources.VERSION_REPORT,
                 " based on ",
                 patientReport.qsFormNumber()));
-        div.add(createContentParagraph("This report is based on pipeline version ", patientReport.pipelineVersion()));
+        div.add(createContentParagraph("This report is based on pipeline version ", pipelineVersion));
         div.add(createContentParagraph("The ‘primary tumor location’ and ‘primary tumor type’ have influence on the "
                 + "clinical evidence/study matching. No check is performed to verify the received information."));
         div.add(createContentParagraph("The conclusion of this report is based solely on the results of the DNA sequencing of the tumor "

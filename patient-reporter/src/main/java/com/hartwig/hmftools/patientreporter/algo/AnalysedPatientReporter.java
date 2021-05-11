@@ -84,10 +84,7 @@ public class AnalysedPatientReporter {
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
 
-        // TODO Move format to PDF. Make pipeline version in report @Nullable.
-        String pipelineVersion = !pipelineVersionFile.isEmpty()
-                ? MetaDataResolver.majorDotMinorVersion(new File(pipelineVersionFile))
-                : "No pipeline version is known";
+        String pipelineVersion = MetaDataResolver.majorDotMinorVersion(new File(pipelineVersionFile));
 
         MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
                 .molecularTissueOriginResult(MolecularTissueOriginFactory.readMolecularTissueOriginResult(molecularTissueOriginTsv))

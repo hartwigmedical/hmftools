@@ -23,7 +23,7 @@ public class VirusBreakendReportableFactoryTest {
         List<VirusBreakend> virusBreakends = Lists.newArrayList();
 
         virusBreakends.add(ImmutableVirusBreakend.builder()
-                .taxidGenus(0)
+                .taxidGenus(1)
                 .nameGenus(Strings.EMPTY)
                 .readsGenusTree(0)
                 .taxidSpecies(1)
@@ -90,7 +90,7 @@ public class VirusBreakendReportableFactoryTest {
                 .readsAssignedTree(0)
                 .readsAssignedDirect(0)
                 .reference(Strings.EMPTY)
-                .referenceTaxid(0)
+                .referenceTaxid(1)
                 .referenceKmerCount(0)
                 .alternateKmerCount(0)
                 .Rname(Strings.EMPTY)
@@ -155,7 +155,7 @@ public class VirusBreakendReportableFactoryTest {
         virusBlacklist.put(2, "HPV");
         VirusBlackListModel virusBlacklistModel = new VirusBlackListModel(virusBlacklist);
 
-        assertEquals(2,
+        assertEquals(1,
                 VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)
                         .reportableVirussen()
                         .size());
@@ -167,8 +167,9 @@ public class VirusBreakendReportableFactoryTest {
         assertEquals("Human papillomavirus type 16", reportableVirusbreakend.virusName());
         assertEquals(2, reportableVirusbreakend.integrations());
 
-        assertEquals("EBV positive, EBV negative",
-                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel).virusNameSummary());
+        assertEquals("EBV negative",
+                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)
+                        .virusNameSummary());
 
     }
 }
