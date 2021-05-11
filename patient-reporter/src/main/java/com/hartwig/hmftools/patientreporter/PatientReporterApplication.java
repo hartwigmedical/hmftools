@@ -201,6 +201,7 @@ public class PatientReporterApplication {
                 config.germlineReportingTsv(),
                 config.sampleSummaryTsv(),
                 config.virusTsv(),
-                config.virusSummaryTsv());
+                config.virusSummaryTsv(),
+                config.virusBlacklistTsv());
     }
 }

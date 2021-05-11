@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
 import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlackListModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBreakendReportableFactory;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryModel;
@@ -54,7 +55,8 @@ public class GenomicAnalyzer {
             @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt,
             @NotNull String protectEvidenceTsv, @NotNull String virusBreakendTsv, @NotNull String peachgenotypeTsv,
             @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingLevel germlineReportingLevel,
-            @NotNull VirusDbModel virusDbModel, @NotNull VirusSummaryModel virusSummaryModel) throws IOException {
+            @NotNull VirusDbModel virusDbModel, @NotNull VirusSummaryModel virusSummaryModel,
+            @NotNull VirusBlackListModel virusBlackListModel) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
                 purpleQCFile,
                 purplePurityTsv,
@@ -68,7 +70,7 @@ public class GenomicAnalyzer {
         List<VirusBreakend> virusBreakends = VirusBreakendFactory.readVirusBreakend(virusBreakendTsv);
 
         ReportableVirusBreakendTotal reportableVirusBreakendTotal =
-                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel);
+                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlackListModel);
 
         List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachgenotypeTsv);
 

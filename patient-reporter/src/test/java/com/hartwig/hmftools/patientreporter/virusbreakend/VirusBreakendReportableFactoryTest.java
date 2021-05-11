@@ -150,20 +150,25 @@ public class VirusBreakendReportableFactoryTest {
         VirusIdSummaryMap.put(2, "HPV");
         VirusSummaryModel virusSummaryModel = new VirusSummaryModel(VirusIdSummaryMap);
 
+        Map<Integer, String> virusBlacklist = Maps.newHashMap();
+        virusBlacklist.put(1, "taxid_genus");
+        virusBlacklist.put(2, "HPV");
+        VirusBlackListModel virusBlacklistModel = new VirusBlackListModel(virusBlacklist);
+
         assertEquals(2,
-                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel)
+                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)
                         .reportableVirussen()
                         .size());
 
         ReportableVirusbreakend reportableVirusbreakend =
-                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel)
+                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)
                         .reportableVirussen()
                         .get(0);
         assertEquals("Human papillomavirus type 16", reportableVirusbreakend.virusName());
         assertEquals(2, reportableVirusbreakend.integrations());
 
         assertEquals("EBV positive, EBV negative",
-                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel).virusNameSummary());
+                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel).virusNameSummary());
 
     }
 }

@@ -73,7 +73,7 @@ public class AnalysedPatientReporter {
                 reportData.germlineReportingModel(),
                 sampleReport.germlineReportingLevel(),
                 reportData.virusDbModel(),
-                reportData.virusSummaryModel());
+                reportData.virusSummaryModel(), reportData.virusBlackListModel());
 
         ConsentFilterFunctions consentFilterFunctions = new ConsentFilterFunctions();
 

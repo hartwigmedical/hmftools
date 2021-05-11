@@ -66,6 +66,7 @@ public interface PatientReporterConfig {
     String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
     String VIRUS_TSV = "virus_tsv";
     String VIRUS_SUMMARY_TSV = "virus_summary_tsv";
+    String VIRUS_BLACKLIST_TSV = "virus_blacklist_tsv";
 
     // Some additional optional params and flags
     String COMMENTS = "comments";
@@ -120,7 +121,7 @@ public interface PatientReporterConfig {
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
         options.addOption(VIRUS_TSV, true, "Path towards a TSV containing the virus names.");
-        options.addOption(VIRUS_TSV, true, "Path towards a TSV containing the virus names which we want to report on summary page.");
+        options.addOption(VIRUS_BLACKLIST_TSV, true, "Path towards a TSV containing the virus names which we want to report on summary page.");
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
         options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
@@ -234,6 +235,9 @@ public interface PatientReporterConfig {
     @NotNull
     String virusSummaryTsv();
 
+    @NotNull
+    String virusBlacklistTsv();
+
     @Nullable
     String comments();
 
@@ -278,6 +282,7 @@ public interface PatientReporterConfig {
         String sampleSummaryTsv = Strings.EMPTY;
         String virusTsv = Strings.EMPTY;
         String virusSummaryTsv = Strings.EMPTY;
+        String virusBlacklistTsv = Strings.EMPTY;
         String pipelineVersion = Strings.EMPTY;
 
         if (isQCFail && qcFailReason.isDeepWGSDataAvailable()) {
@@ -300,6 +305,7 @@ public interface PatientReporterConfig {
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
             virusTsv = nonOptionalFile(cmd, VIRUS_TSV);
             virusSummaryTsv = nonOptionalFile(cmd, VIRUS_SUMMARY_TSV);
+            virusBlacklistTsv = nonOptionalFile(cmd, VIRUS_BLACKLIST_TSV);
             pipelineVersion = optionalFile(cmd, PIPELINE_VERSION_FILE);
             molecularTissueOriginTxt = optionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_TXT);
             molecularTissueOriginPlot = optionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_PLOT);
@@ -343,6 +349,7 @@ public interface PatientReporterConfig {
                 .sampleSummaryTsv(sampleSummaryTsv)
                 .virusTsv(virusTsv)
                 .virusSummaryTsv(virusSummaryTsv)
+                .virusBlacklistTsv(virusBlacklistTsv)
                 .comments(cmd.getOptionValue(COMMENTS))
                 .correctedReport(cmd.hasOption(CORRECTED_REPORT))
                 .onlyCreatePDF(cmd.hasOption(ONLY_CREATE_PDF))
