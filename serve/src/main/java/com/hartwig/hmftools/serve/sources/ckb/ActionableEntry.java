@@ -9,5 +9,5 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-abstract class ActionableEvidence implements ActionableEvent {
+abstract class ActionableEntry implements ActionableEvent {
 }

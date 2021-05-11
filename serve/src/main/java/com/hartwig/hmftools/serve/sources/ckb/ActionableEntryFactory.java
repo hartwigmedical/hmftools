@@ -10,16 +10,15 @@ import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class ActionableEvidenceFactory {
+class ActionableEntryFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(ActionableEvidenceFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(ActionableEntryFactory.class);
 
     private static final Set<String> RESPONSIVE_DIRECTIONS = Sets.newHashSet();
     private static final Set<String> RESISTANT_DIRECTIONS = Sets.newHashSet();
@@ -53,27 +52,20 @@ class ActionableEvidenceFactory {
         EVIDENCE_TYPES_TO_IGNORE.add("Diagnostic");
     }
 
-    ActionableEvidenceFactory() {
+    ActionableEntryFactory() {
     }
 
     @NotNull
-    public Set<ActionableEvent> toActionableEvents(@NotNull CkbEntry entry) {
-        Set<ActionableEvent> actionableEvents = Sets.newHashSet();
+    public Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry) {
+        Set<ActionableEntry> actionableEntries = Sets.newHashSet();
 
         for (Evidence evidence : entry.evidences()) {
             if (hasUsableEvidenceType(evidence)) {
-                String therapyName = evidence.therapy().therapyName();
-
+                String treatment = evidence.therapy().therapyName();
                 EvidenceLevel level = resolveLevel(evidence.ampCapAscoEvidenceLevel());
                 EvidenceDirection direction = resolveDirection(evidence.responseType());
                 String cancerType = evidence.indication().name();
-
-                // TODO Convert to proper DOID part
-                Set<String> doids = Sets.newHashSet();
-                String evidenceDoid = evidence.indication().termId();
-                if (evidenceDoid != null) {
-                    doids.add(evidenceDoid);
-                }
+                String doid = extractDoid(evidence.indication().termId());
 
                 Set<String> urls = Sets.newHashSet();
                 for (Reference reference : evidence.references()) {
@@ -82,22 +74,21 @@ class ActionableEvidenceFactory {
                     }
                 }
 
-                if (therapyName != null && level != null && direction != null) {
-                    ImmutableActionableEvidence.Builder builder = ImmutableActionableEvidence.builder()
+                if (level != null && direction != null && doid != null) {
+                    actionableEntries.add(ImmutableActionableEntry.builder()
                             .source(Knowledgebase.CKB)
+                            .treatment(treatment)
+                            .cancerType(cancerType)
+                            .doid(doid)
                             .level(level)
                             .direction(direction)
-                            .treatment(therapyName)
-                            .cancerType(cancerType)
-                            .urls(urls);
-                    for (String doid : doids) {
-                        actionableEvents.add(builder.doid(doid).build());
-                    }
+                            .urls(urls)
+                            .build());
                 }
             }
         }
 
-        return actionableEvents;
+        return actionableEntries;
     }
 
     @Nullable
@@ -115,14 +106,14 @@ class ActionableEvidenceFactory {
                 if (parts[1].equals("10000003")) {
                     return "0050686";
                 } else {
-                    LOGGER.warn("Unexpected Doid string of annotated by JAX: '{}'", doidString);
+                    LOGGER.warn("Unexpected DOID string annotated by JAX: '{}'", doidString);
                     return null;
                 }
             } else {
                 return null;
             }
         } else {
-            LOGGER.warn("Unexpected Doid string: '{}'", doidString);
+            LOGGER.warn("Unexpected DOID string in CKB: '{}'", doidString);
             return null;
         }
     }
@@ -131,10 +122,10 @@ class ActionableEvidenceFactory {
         String evidenceType = evidence.evidenceType();
         if (USABLE_EVIDENCE_TYPES.contains(evidenceType)) {
             return true;
-        } else if (EVIDENCE_TYPES_TO_IGNORE.contains(evidenceType)) {
-            return false;
         } else {
-            LOGGER.warn("Unrecognized CKB evidence type '{}'", evidenceType);
+            if (!EVIDENCE_TYPES_TO_IGNORE.contains(evidenceType)) {
+                LOGGER.warn("Unrecognized CKB evidence type '{}'", evidenceType);
+            }
             return false;
         }
     }

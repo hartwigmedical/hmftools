@@ -56,16 +56,16 @@ public class CkbExtractor {
     @NotNull
     private final EventExtractor eventExtractor;
     @NotNull
-    private final ActionableEvidenceFactory actionableEvidenceFactory;
+    private final ActionableEntryFactory actionableEntryFactory;
     @NotNull
     private final List<RefSeq> refSeqMappings;
     @NotNull
     private final CkbEventAndGeneExtractor ckbEventAndGeneExtractor;
 
-    public CkbExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableEvidenceFactory actionableEvidenceFactory,
+    public CkbExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableEntryFactory actionableEntryFactory,
             @NotNull final List<RefSeq> refSeqMappings) {
         this.eventExtractor = eventExtractor;
-        this.actionableEvidenceFactory = actionableEvidenceFactory;
+        this.actionableEntryFactory = actionableEntryFactory;
         this.refSeqMappings = refSeqMappings;
         this.ckbEventAndGeneExtractor = new CkbEventAndGeneExtractor();
     }
@@ -90,7 +90,7 @@ public class CkbExtractor {
             String transcript = mapToEnsemblTranscript(variant.gene().canonicalTranscript());
 
             EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event);
-            Set<ActionableEvent> actionableEvents = actionableEvidenceFactory.toActionableEvents(entry);
+            Set<? extends ActionableEvent> actionableEvents = actionableEntryFactory.toActionableEntries(entry);
 
             extractions.add(toExtractionResult(gene, event, transcript, eventExtractorOutput, actionableEvents));
 
@@ -116,7 +116,7 @@ public class CkbExtractor {
 
     @NotNull
     private static ExtractionResult toExtractionResult(@NotNull String gene, @NotNull String variant, @Nullable String transcript,
-            @NotNull EventExtractorOutput output, @NotNull Set<ActionableEvent> actionableEvents) {
+            @NotNull EventExtractorOutput output, @NotNull Set<? extends ActionableEvent> actionableEvents) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
         Set<ActionableGene> actionableGenes = Sets.newHashSet();

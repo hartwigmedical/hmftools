@@ -21,7 +21,7 @@ public final class CkbExtractorFactory {
     public static CkbExtractor buildCkbExtractor(@NotNull EventClassifierConfig config, @NotNull RefGenomeResource refGenomeResource,
             @NotNull List<RefSeq> refSeqMappings) {
         return new CkbExtractor(EventExtractorFactory.create(config, refGenomeResource, REPORT_DRIVER_INCONSISTENCIES),
-                new ActionableEvidenceFactory(),
+                new ActionableEntryFactory(),
                 refSeqMappings);
     }
 }
