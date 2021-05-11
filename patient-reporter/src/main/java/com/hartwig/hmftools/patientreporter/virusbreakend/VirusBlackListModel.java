@@ -23,8 +23,9 @@ public class VirusBlackListModel {
         return virusBlacklistMap.containsKey(id);
     }
 
-    public boolean checkTaxus(@NotNull String whichTaxus) {
-        return virusBlacklistMap.containsValue(whichTaxus);
+    @NotNull
+    public String checkTaxusForId(int id) {
+        return virusBlacklistMap.get(id);
     }
 
     @VisibleForTesting

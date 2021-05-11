@@ -17,9 +17,8 @@ public class VirusBlacklistFileTest {
         VirusBlackListModel virusBlacklistModel = VirusBlacklistFile.buildFromTsv(VIRUS_BLACKLIST_TSV);
         assertEquals(3, virusBlacklistModel.virusBlacklistcount());
 
-        assertTrue(virusBlacklistModel.checkTaxus("taxid_genus"));
-        assertTrue(virusBlacklistModel.checkTaxus("taxid_species"));
-        assertFalse(virusBlacklistModel.checkTaxus("species"));
+        assertEquals("taxid_genus", virusBlacklistModel.checkTaxusForId(1));
+        assertEquals("taxid_species", virusBlacklistModel.checkTaxusForId(2));
 
         assertTrue(virusBlacklistModel.checkVirusForBlacklisting(1));
         assertTrue(virusBlacklistModel.checkVirusForBlacklisting(2));

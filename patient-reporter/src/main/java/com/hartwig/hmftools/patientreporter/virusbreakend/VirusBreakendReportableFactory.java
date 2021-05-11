@@ -31,11 +31,11 @@ public class VirusBreakendReportableFactory {
         for (VirusBreakend virusBreakend : virusBreakends) {
             if (virusBreakend.QCStatus() != VirusBreakendQCStatus.LOW_VIRAL_COVERAGE) {
                 if (virusBreakend.integrations() >= 1) {
-                    if (virusBlackListModel.checkTaxus("taxid_genus")) {
+                    if (virusBlackListModel.checkTaxusForId(virusBreakend.taxidGenus()).equals("taxid_genus")) {
                         if (!virusBlackListModel.checkVirusForBlacklisting(virusBreakend.taxidGenus())) {
                             virusBreakendsFiltered.add(virusBreakend);
                         }
-                    } else if (virusBlackListModel.checkTaxus("taxid_species")) {
+                    } else if (virusBlackListModel.checkTaxusForId(virusBreakend.taxidGenus()).equals("taxid_species")) {
                         if (!virusBlackListModel.checkVirusForBlacklisting(virusBreakend.taxidSpecies())) {
                             virusBreakendsFiltered.add(virusBreakend);
                         }
