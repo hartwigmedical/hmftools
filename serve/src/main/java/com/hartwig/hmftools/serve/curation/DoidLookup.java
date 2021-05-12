@@ -30,6 +30,13 @@ public class DoidLookup {
     }
 
     public void evaluateMappingUsage() {
+        if (evaluatedCancerTypes.isEmpty()) {
+            // If the DoidLookup hasn't been used at all we assume no sources are configured that rely on doid mapping
+            // and we don't check mapping usage.
+            LOGGER.info("Skipping DOID mapping evaluation since this doesn't seem to have been used");
+            return;
+        }
+
         int unusedCancerTypeCount = 0;
         for (String cancerType : cancerTypeToDoidsMapping.keySet()) {
             if (!evaluatedCancerTypes.contains(cancerType)) {
