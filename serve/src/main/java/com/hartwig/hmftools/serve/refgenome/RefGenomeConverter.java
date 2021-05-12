@@ -89,14 +89,16 @@ class RefGenomeConverter {
     public Set<KnownCodon> convertKnownCodons(@NotNull Set<KnownCodon> codons) {
         Set<KnownCodon> convertedCodons = Sets.newHashSet();
         for (KnownCodon codon : codons) {
-            RangeAnnotation liftedAnnotation = liftOverRange(codon.annotation());
+            RangeAnnotation originalAnnotation = codon.annotation();
+            RangeAnnotation liftedAnnotation = liftOverRange(originalAnnotation);
             if (liftedAnnotation != null) {
-                if (liftedAnnotation.end() - liftedAnnotation.start() != 2) {
+                if (originalAnnotation.end() - originalAnnotation.start() == 2 && liftedAnnotation.end() - liftedAnnotation.start() != 2) {
                     LOGGER.warn(" Skipping liftover: Lifted codon '{}' is no longer 3 bases long. Lifted codon: '{}'",
-                            codon.annotation(),
+                            originalAnnotation,
                             liftedAnnotation);
                 } else {
-                    // We blank out the transcript and codon index since we are unsure to what extend the transcript maps to the new ref genome.
+                    // We blank out the transcript and codon index since we are unsure to what extend
+                    // the transcript maps to the new ref genome.
                     convertedCodons.add(ImmutableKnownCodon.builder()
                             .from(codon)
                             .annotation(ImmutableCodonAnnotation.builder()
