@@ -3,12 +3,9 @@ package com.hartwig.hmftools.lilac.hla;
 import static java.lang.Math.min;
 
 import java.util.List;
-import java.util.Set;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
-
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 public class HlaAllele implements Comparable<HlaAllele>
 {
@@ -18,6 +15,8 @@ public class HlaAllele implements Comparable<HlaAllele>
     public final String Synonymous;
     public final String SynonymousNonCoding;
 
+    private final HlaAllele mFourDigit;
+
     public HlaAllele(
             final String gene, final String alleleGroup, final String protein, final String synonymous, final String synonymousNonCoding)
     {
@@ -26,6 +25,11 @@ public class HlaAllele implements Comparable<HlaAllele>
         Protein = protein;
         Synonymous = synonymous;
         SynonymousNonCoding = synonymousNonCoding;
+
+        if(!synonymous.isEmpty())
+            mFourDigit = new HlaAllele(gene, alleleGroup, protein, "", "");
+        else
+            mFourDigit = null;
     }
 
     public static HlaAllele fromString(final String line)
@@ -77,10 +81,7 @@ public class HlaAllele implements Comparable<HlaAllele>
         return new HlaAllele(Gene, AlleleGroup, Protein, Synonymous, "");
     }
 
-    public final HlaAllele asFourDigit()
-    {
-        return new HlaAllele(Gene, AlleleGroup, Protein, "", "");
-    }
+    public final HlaAllele asFourDigit() { return mFourDigit != null ? mFourDigit : this; }
 
     public final HlaAllele asAlleleGroup()
     {

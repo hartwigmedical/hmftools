@@ -2,6 +2,8 @@ package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.proteinCoverage;
+import static com.hartwig.hmftools.lilac.hla.HlaAllele.contains;
+import static com.hartwig.hmftools.lilac.hla.HlaAllele.dedup;
 import static com.hartwig.hmftools.lilac.hla.HlaAllele.takeN;
 
 import com.google.common.collect.Lists;
@@ -38,14 +40,14 @@ public class HlaComplexCoverageFactory
         List<HlaAllele> coverageAlleles = Lists.newArrayList();
         coverage.forEach(x -> x.getAlleleCoverage().forEach(y -> coverageAlleles.add(y.Allele)));
 
-        List<HlaAllele> topRanked = coverageAlleles.stream().distinct().collect(Collectors.toList());
+        List<HlaAllele> topRanked = dedup(coverageAlleles);
 
         List<HlaAllele> topTakers = takeN(topRanked, take);
 
-        List<HlaAllele> topRankedKeepers = topRanked.stream().filter(x -> mConfig.CommonAlleles.contains(x)).collect(Collectors.toList());
+        List<HlaAllele> topRankedKeepers = topRanked.stream().filter(x -> contains(mConfig.CommonAlleles, x)).collect(Collectors.toList());
 
         List<HlaAllele> uniqueRanked = topTakers.stream().collect(Collectors.toList());
-        topRankedKeepers.stream().filter(x -> !topTakers.contains(x)).forEach(x -> uniqueRanked.add(x));
+        topRankedKeepers.stream().filter(x -> !contains(topTakers, x)).forEach(x -> uniqueRanked.add(x));
 
         return uniqueRanked;
     }

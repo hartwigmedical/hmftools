@@ -74,6 +74,8 @@ public class LilacConfig
     private static final String MAX_DISTANCE_FROM_TOP_SCORE = "max_distance_from_top_score";
 
     private static final String DEBUG_PHASING = "debug_phasing";
+    public static final String LOG_DEBUG = "log_debug";
+    public static final String LOG_LEVEL = "log_level";
 
     public static final Logger LL_LOGGER = LogManager.getLogger(LilacConfig.class);;
 
@@ -113,7 +115,9 @@ public class LilacConfig
         StopLossRecoveryAlleles = loadStopLossRecoveryAllele();
 
         Threads = getConfigValue(cmd, THREADS, 1);
-        DebugPhasing = cmd.hasOption(DEBUG_PHASING);
+
+        // TODO keep or replace?
+        DebugPhasing = cmd.hasOption(DEBUG_PHASING); //  || cmd.hasOption(LOG_);
     }
 
     public boolean isValid()
@@ -211,6 +215,8 @@ public class LilacConfig
         options.addOption(GENE_COPY_NUMBER, true,"Path to gene copy number file");
         options.addOption(SOMATIC_VCF, true,"Path to somatic VCF");
         options.addOption(DEBUG_PHASING, false, "More detailed logging of phasing");
+        options.addOption(LOG_DEBUG, false, "More detailed logging of phasing");
+        options.addOption(LOG_LEVEL, true, "Specify log level WARN, INFO, DEBUG or TRACE");
         DatabaseAccess.addDatabaseCmdLineArgs((Options) options);
         return options;
     }

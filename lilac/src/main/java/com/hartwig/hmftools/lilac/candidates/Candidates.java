@@ -69,7 +69,6 @@ public final class Candidates
                 .filter(x -> contains(aminoAcidSpecificAllelesCandidates, x.getAllele().asFourDigit()))
                 .collect(Collectors.toList());
 
-        // CHECK distinct works as expected
         List<HlaSequenceLoci> nucleotideSpecificSequences = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(
                 nucleotideCandidatesAfterAminoAcidFiltering, nucFragments(fragments));
 
@@ -91,13 +90,13 @@ public final class Candidates
     {
         LL_LOGGER.info("Determining phased candidate set for gene HLA-{}", context.Gene);
 
-        List<HlaSequenceLoci>  unphasedCandidates = mAminoAcidSequences.stream()
-                .filter(x -> unphasedCandidateAlleles.contains(x.getAllele().asFourDigit())).collect(Collectors.toList());
+        List<HlaSequenceLoci> unphasedCandidates = mAminoAcidSequences.stream()
+                .filter(x -> contains(unphasedCandidateAlleles, x.getAllele().asFourDigit())).collect(Collectors.toList());
 
         List<HlaSequenceLoci> phasedCandidates = filterCandidates(unphasedCandidates, phasedEvidence);
         List<HlaAllele> phasedAlleles = phasedCandidates.stream().map(x -> x.getAllele()).collect(Collectors.toList());
-        LL_LOGGER.info("  {} candidates after phasing: {}",
-                phasedCandidates.size(), phasedAlleles);
+
+        LL_LOGGER.info("  {} candidates after phasing: {}", phasedCandidates.size(), phasedAlleles);
 
         return phasedAlleles;
     }

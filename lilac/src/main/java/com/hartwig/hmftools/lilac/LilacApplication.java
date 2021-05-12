@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.lilac.LilacConfig.LOG_LEVEL;
 import static com.hartwig.hmftools.lilac.LilacConstants.ALL_NUCLEOTIDE_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
@@ -10,6 +12,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.HLA_TRANSCRIPTS;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOCI_POSITION;
 import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.proteinCoverage;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
+import static com.hartwig.hmftools.lilac.hla.HlaAllele.contains;
 
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
@@ -60,6 +63,8 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class LilacApplication implements AutoCloseable, Runnable
@@ -151,7 +156,7 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         // Validate phasing against expected sequences
         List<HlaSequenceLoci> expectedSequences = refData.AminoAcidSequences.stream()
-                .filter(x -> mConfig.ExpectedAlleles.contains(x.getAllele().asFourDigit())).collect(Collectors.toList());
+                .filter(x -> contains(mConfig.ExpectedAlleles, x.getAllele().asFourDigit())).collect(Collectors.toList());
         
         PhasedEvidenceValidation.validateExpected("A", aPhasedEvidence, expectedSequences);
         PhasedEvidenceValidation.validateExpected("B", bPhasedEvidence, expectedSequences);
@@ -182,8 +187,8 @@ public class LilacApplication implements AutoCloseable, Runnable
         LL_LOGGER.info("Recovering common un-phased candidates:");
 
         List<HlaAllele> recoveredAlleles = mConfig.CommonAlleles.stream()
-                .filter(x -> !phasedCandidateAlleles.contains(x))
-                .filter(x -> allUnphasedCandidates.contains(x))
+                .filter(x -> !contains(phasedCandidateAlleles, x))
+                .filter(x -> contains(allUnphasedCandidates, x))
                 .collect(Collectors.toList());
 
         recoveredAlleles.addAll(stopLossRecovery);
@@ -192,7 +197,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         candidateAlleles.addAll(recoveredAlleles);
 
         List<HlaSequenceLoci> candidateSequences = refData.AminoAcidSequences.stream()
-                .filter(x -> candidateAlleles.contains(x.getAllele())).collect(Collectors.toList());
+                .filter(x -> contains(candidateAlleles, x.getAllele())).collect(Collectors.toList());
 
         if (!recoveredAlleles.isEmpty())
         {
@@ -214,10 +219,10 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         List<HlaAllele> candidateAlleleSpecificProteins = candidateAlleles.stream().map(x -> x.asFourDigit()).collect(Collectors.toList());
         List<HlaSequenceLoci> candidateAminoAcidSequences = refData.AminoAcidSequences.stream()
-                .filter(x -> candidateAlleles.contains(x.getAllele())).collect(Collectors.toList());
+                .filter(x -> contains(candidateAlleles, x.getAllele())).collect(Collectors.toList());
 
         List<HlaSequenceLoci> candidateNucleotideSequences = refData.NucleotideSequences.stream()
-            .filter(x -> candidateAlleleSpecificProteins.contains(x.getAllele())).collect(Collectors.toList());
+            .filter(x -> contains(candidateAlleleSpecificProteins, x.getAllele().asFourDigit())).collect(Collectors.toList());
 
         List<FragmentAlleles> referenceFragmentAlleles = FragmentAlleles.create(
                 referenceCoverageFragments, referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences,
@@ -376,8 +381,14 @@ public class LilacApplication implements AutoCloseable, Runnable
         final Options options = LilacConfig.createOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
-        // if(cmd.hasOption(LOG_DEBUG))
-        //    Configurator.setRootLevel(Level.DEBUG);
+        if (cmd.hasOption(LOG_DEBUG))
+        {
+            Configurator.setRootLevel(Level.DEBUG);
+        }
+        else if(cmd.hasOption(LOG_LEVEL))
+        {
+            Configurator.setRootLevel(Level.valueOf(cmd.getOptionValue(LOG_LEVEL)));
+        }
 
         LilacApplication lilac = new LilacApplication(cmd, new LilacConfig(cmd));
         lilac.run();

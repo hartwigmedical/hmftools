@@ -25,23 +25,23 @@ public class PhasedEvidenceFactory
         mConfig = config;
     }
 
-    public final List<PhasedEvidence> evidence(final HlaContext context, final List<AminoAcidFragment> fragments)
+    public List<PhasedEvidence> evidence(final HlaContext context, final List<AminoAcidFragment> fragments)
     {
         LL_LOGGER.info("Phasing HLA-" + context.Gene + " records:");
-        List<PhasedEvidence> result = this.evidence(context.ExpectedAlleles, fragments);
-        if(this.mConfig.DebugPhasing)
+        List<PhasedEvidence> result = evidence(context.ExpectedAlleles, fragments);
+
+        if(LL_LOGGER.isDebugEnabled() || mConfig.DebugPhasing)
         {
-            LL_LOGGER.info("  Consolidating evidence");
-        }
-        for(PhasedEvidence phasedEvidence : result)
-        {
-            LL_LOGGER.info("  " + phasedEvidence);
+            LL_LOGGER.debug("  Consolidating evidence");
+            for(PhasedEvidence phasedEvidence : result)
+            {
+                LL_LOGGER.debug("  " + phasedEvidence);
+            }
         }
         return result;
     }
 
-    public final List<PhasedEvidence> evidence(
-            final ExpectedAlleles expectedAlleles, final List<AminoAcidFragment> aminoAcidAminoAcidFragments)
+    public List<PhasedEvidence> evidence(final ExpectedAlleles expectedAlleles, final List<AminoAcidFragment> aminoAcidAminoAcidFragments)
     {
         SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, aminoAcidAminoAcidFragments);
 

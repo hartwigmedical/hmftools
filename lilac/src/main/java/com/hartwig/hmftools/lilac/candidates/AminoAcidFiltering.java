@@ -37,7 +37,7 @@ public class AminoAcidFiltering
             final int lociConst = loci;
 
             results = results.stream()
-                    .filter(x -> x.consistentWithAny(expectedSequences, Sets.newHashSet(lociConst)))
+                    .filter(x -> x.consistentWithAny(expectedSequences, Lists.newArrayList(lociConst)))
                     .collect(Collectors.toList());
         }
 

@@ -61,11 +61,6 @@ public final class AminoAcidFragment extends NucleotideFragment
     // redundant
     public String aminoAcids(final List<Integer> loci)
     {
-        return aminoAcids(loci.stream().collect(Collectors.toSet()));
-    }
-
-    public String aminoAcids(final Set<Integer> loci)
-    {
         StringJoiner sj = new StringJoiner("");
         loci.stream().forEach(x -> sj.add(aminoAcid(x)));
         return sj.toString();

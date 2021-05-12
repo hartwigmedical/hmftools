@@ -64,7 +64,7 @@ public class NucleotideFragment
         return mNucleotideLoci.contains(index);
     }
 
-    public final boolean containsAllNucleotides(final Set<Integer> indices)
+    public final boolean containsAllNucleotides(final List<Integer> indices)
     {
         return !indices.stream().anyMatch(x -> !containsNucleotide(x));
     }
@@ -76,14 +76,14 @@ public class NucleotideFragment
         return sj.toString();
     }
 
-    public final String nucleotides(final Set<Integer> indices)
+    public final String nucleotide(int locus)
     {
-        return nucleotides(indices.stream().collect(Collectors.toList()));
-    }
+        int index = mNucleotideLoci.indexOf(locus);
 
-    public final String nucleotide(int loci)
-    {
-        return mNucleotides.get(mNucleotideLoci.indexOf(loci));
+        if(index < 0)
+            return "";
+
+        return mNucleotides.get(index);
     }
 
     public final NucleotideFragment qualityFilter(int minBaseQual)

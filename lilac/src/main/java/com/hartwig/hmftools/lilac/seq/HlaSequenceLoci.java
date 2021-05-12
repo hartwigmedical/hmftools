@@ -56,7 +56,7 @@ public class HlaSequenceLoci
         return sj.toString();
     }
 
-    public final String sequence(final Set<Integer> indices)
+    public final String sequence(final List<Integer> indices)
     {
         StringJoiner sj = new StringJoiner("");
 
@@ -100,35 +100,24 @@ public class HlaSequenceLoci
 
     public final boolean consistentWithAny(final List<String> targetSequences, final int[] targetIndices)
     {
-        Set<Integer> tiSet = Sets.newHashSet();
-        Arrays.stream(targetIndices).forEach(x -> tiSet.add(x));
-        return consistentWithAny(targetSequences, tiSet);
+        List<Integer> tiList = Lists.newArrayList();
+        Arrays.stream(targetIndices).forEach(x -> tiList.add(x));
+        return consistentWithAny(targetSequences, tiList);
     }
 
-    public final boolean consistentWithAny(final List<String> targetSequences, final Set<Integer> targetIndices)
+    public final boolean consistentWithAny(final List<String> targetSequences, final List<Integer> targetIndices)
     {
         return targetSequences.stream().anyMatch(x -> match(x, targetIndices) != HlaSequenceMatch.NONE);
     }
 
-    public final boolean consistentWith(final String targetSequence, final Set<Integer> targetIndices)
-    {
-        return match(targetSequence, targetIndices) != HlaSequenceMatch.NONE;
-    }
-
-    // TODO - require both methods?
     public final boolean consistentWith(final String targetSequence, final int[] targetIndices)
     {
-        Set<Integer> tiSet = Sets.newHashSet();
-        Arrays.stream(targetIndices).forEach(x -> tiSet.add(x));
-        return match(targetSequence, tiSet) != HlaSequenceMatch.NONE;
+        List<Integer> tiList = Lists.newArrayList();
+        Arrays.stream(targetIndices).forEach(x -> tiList.add(x));
+        return match(targetSequence, tiList) != HlaSequenceMatch.NONE;
     }
 
-    public final HlaSequenceMatch match(final String targetSequence, final List<Integer> targetIndices)
-    {
-        return match(targetSequence, targetIndices.stream().collect(Collectors.toSet()));
-    }
-
-    public final HlaSequenceMatch match(final String targetSequence, final Set<Integer> targetIndices)
+    public HlaSequenceMatch match(final String targetSequence, final List<Integer> targetIndices)
     {
         if(targetIndices.isEmpty())
             return HlaSequenceMatch.NONE;

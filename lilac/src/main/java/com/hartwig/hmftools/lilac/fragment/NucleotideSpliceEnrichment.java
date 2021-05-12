@@ -64,7 +64,7 @@ public class NucleotideSpliceEnrichment
 
     private boolean missingStart(int index, NucleotideFragment fragment)
     {
-        return !fragment.containsNucleotide(index) && fragment.containsAllNucleotides(Sets.newHashSet(index + 1, index + 2));
+        return !fragment.containsNucleotide(index) && fragment.containsAllNucleotides(Lists.newArrayList(index + 1, index + 2));
     }
 
     private boolean missingEnd(int index, NucleotideFragment fragment)

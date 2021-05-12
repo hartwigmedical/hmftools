@@ -31,8 +31,8 @@ public class NucleotideFiltering
         for(int boundary : mAminoAcidBoundaries)
         {
             int nucleotideStart = boundary * 3;
-            final List<String> startSequences = nucleotideSequence(fragments, Sets.newHashSet(nucleotideStart));
-            final List<String> endSequences = nucleotideSequence(fragments, Sets.newHashSet(nucleotideStart + 1, nucleotideStart + 2));
+            final List<String> startSequences = nucleotideSequence(fragments, Lists.newArrayList(nucleotideStart));
+            final List<String> endSequences = nucleotideSequence(fragments, Lists.newArrayList(nucleotideStart + 1, nucleotideStart + 2));
 
             results = results.stream()
                     .filter(x -> consistentWithAny(x, nucleotideStart, startSequences, endSequences))
@@ -45,11 +45,11 @@ public class NucleotideFiltering
     private static boolean consistentWithAny(
             final HlaSequenceLoci seqLoci, int startLoci, final List<String> startSequences, final List<String> endSequences)
     {
-        return seqLoci.consistentWithAny(startSequences, Sets.newHashSet(startLoci))
-            && seqLoci.consistentWithAny(endSequences, Sets.newHashSet(startLoci + 1, startLoci + 2));
+        return seqLoci.consistentWithAny(startSequences, Lists.newArrayList(startLoci))
+            && seqLoci.consistentWithAny(endSequences, Lists.newArrayList(startLoci + 1, startLoci + 2));
     }
 
-    private final List<String> nucleotideSequence(final List<NucleotideFragment> fragments, final Set<Integer> nucleotideIndices)
+    private final List<String> nucleotideSequence(final List<NucleotideFragment> fragments, final List<Integer> nucleotideIndices)
     {
         Map<String,Integer> sequenceCounts = Maps.newHashMap();
 

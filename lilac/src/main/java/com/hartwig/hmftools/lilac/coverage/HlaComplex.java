@@ -3,6 +3,7 @@ package com.hartwig.hmftools.lilac.coverage;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.groupCoverage;
 import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.proteinCoverage;
+import static com.hartwig.hmftools.lilac.hla.HlaAllele.contains;
 
 import java.util.Collections;
 import java.util.List;
@@ -52,7 +53,7 @@ public class HlaComplex
 
         if (!discardedGroups.isEmpty())
         {
-            LL_LOGGER.info("  found {}} insufficiently unique groups: {}",
+            LL_LOGGER.info("  found {} insufficiently unique groups: {}",
                     discardedGroups.size(), HlaAlleleCoverage.toString(discardedGroups));
         }
 
@@ -75,7 +76,7 @@ public class HlaComplex
 
         if (!discardedProtein.isEmpty())
         {
-            LL_LOGGER.info("  found {}} insufficiently unique groups: {}", discardedProtein.size(), HlaAlleleCoverage.toString(discardedProtein));
+            LL_LOGGER.info("  found {} insufficiently unique groups: {}", discardedProtein.size(), HlaAlleleCoverage.toString(discardedProtein));
         }
 
         List<HlaAllele> confirmedProteinAlleles = alleles(confirmedProtein);
@@ -103,7 +104,7 @@ public class HlaComplex
             topCandidates.addAll(cTopCandidates);
 
             List<HlaAllele> rejected = candidatesAfterConfirmedProteins.stream()
-                    .filter(x -> !topCandidates.contains(x)).collect(Collectors.toList());
+                    .filter(x -> !contains(topCandidates, x)).collect(Collectors.toList());
 
             LL_LOGGER.info("  discarding {} unlikely candidates: ", rejected.size(), HlaAllele.toString(rejected));
             complexes = buildComplexes(confirmedGroupAlleles, confirmedProteinAlleles, topCandidates);
@@ -139,13 +140,13 @@ public class HlaComplex
         if (confirmedProteins.size() == 1)
         {
             List<HlaAllele> confirmedProteinGroups = confirmedProteins.stream().map(x -> x.asAlleleGroup()).collect(Collectors.toList());
-            List<HlaAllele> remainingGroups = confirmedGroups.stream().filter(x -> !confirmedProteinGroups.contains(x)).collect(Collectors.toList());
+            List<HlaAllele> remainingGroups = confirmedGroups.stream().filter(x -> !contains(confirmedProteinGroups, x)).collect(Collectors.toList());
 
             List<HlaAllele> first = confirmedProteins;
 
             List<HlaAllele> second = remainingGroups.isEmpty() ?
-                    candidates.stream().filter(x -> x != confirmedProteins.get(0)).collect(Collectors.toList()) :
-                    candidates.stream().filter(x -> remainingGroups.contains(x.asAlleleGroup())).collect(Collectors.toList());
+                    candidates.stream().filter(x -> !x.matches(confirmedProteins.get(0))).collect(Collectors.toList()) :
+                    candidates.stream().filter(x -> contains(remainingGroups, x.asAlleleGroup())).collect(Collectors.toList());
 
             List<HlaComplex> complexes = combineAlleles(first, second);
             if(!remainingGroups.isEmpty())
@@ -160,14 +161,14 @@ public class HlaComplex
 
         if (confirmedGroups.size() == 2)
         {
-            List<HlaAllele> first = candidates.stream().filter(x -> x.asAlleleGroup() == confirmedGroups.get(0)).collect(Collectors.toList());
-            List<HlaAllele> second = candidates.stream().filter(x -> x.asAlleleGroup() == confirmedGroups.get(1)).collect(Collectors.toList());
+            List<HlaAllele> first = candidates.stream().filter(x -> x.asAlleleGroup().matches(confirmedGroups.get(0))).collect(Collectors.toList());
+            List<HlaAllele> second = candidates.stream().filter(x -> x.asAlleleGroup().matches(confirmedGroups.get(1))).collect(Collectors.toList());
             return combineAlleles(first, second);
         }
 
         if (confirmedGroups.size() == 1)
         {
-            List<HlaAllele> first = candidates.stream().filter(x -> x.asAlleleGroup() == confirmedGroups.get(0)).collect(Collectors.toList());
+            List<HlaAllele> first = candidates.stream().filter(x -> x.asAlleleGroup().matches(confirmedGroups.get(0))).collect(Collectors.toList());
             List<HlaAllele> second = candidates;
 
             List<HlaComplex> complexes = first.stream().map(x -> new HlaComplex(Lists.newArrayList(x))).collect(Collectors.toList());
@@ -234,7 +235,7 @@ public class HlaComplex
                 {
                     List<HlaAllele> pairing = Lists.newArrayList(i, j);
                     Collections.sort(pairing);
-                    if(results.stream().anyMatch(x -> x.get(0) == pairing.get(0) && x.get(1) == pairing.get(1)))
+                    if(results.stream().anyMatch(x -> x.get(0).matches(pairing.get(0)) && x.get(1).matches(pairing.get(1))))
                         continue;
 
                     results.add(pairing);
@@ -247,25 +248,32 @@ public class HlaComplex
 
     private static List<HlaAllele> filterWithConfirmedProteins(final List<HlaAllele> alleles, List<HlaAllele> confirmedGroups)
     {
-        return filterWithConfirmedGroups(alleles, confirmedGroups);    }
+        return filterWithConfirmedGroups(alleles, confirmedGroups);
+    }
 
     private static List<HlaAllele> filterWithConfirmedGroups(final List<HlaAllele> alleles, final List<HlaAllele> confirmedGroups)
     {
-        List<HlaAllele> alleleGroups = alleles.stream().map(x -> x.asAlleleGroup()).collect(Collectors.toList());
-        return filterWithConfirmed(alleleGroups, confirmedGroups);
-    }
+        // List<HlaAllele> alleleGroups = alleles.stream().map(x -> x.asAlleleGroup()).collect(Collectors.toList());
+        //return filterWithConfirmed(alleleGroups, confirmedGroups);
 
-    private static List<HlaAllele> filterWithConfirmed(final List<HlaAllele> alleles, final List<HlaAllele> confirmedGroups)
-    {
         Map<String,List<HlaAllele>> map = Maps.newHashMap();
 
         map.put("A", confirmedGroups.stream().filter(x -> x.Gene.equals("A")).collect(Collectors.toList()));
         map.put("B", confirmedGroups.stream().filter(x -> x.Gene.equals("B")).collect(Collectors.toList()));
         map.put("C", confirmedGroups.stream().filter(x -> x.Gene.equals("C")).collect(Collectors.toList()));
 
-        // CHECK
         // return this.filter { map[it.gene]!!.size < 2 || map[it.gene]!!.contains(transform(it)) }
-        return alleles.stream().filter(x -> map.get(x.Gene).size() < 2 || map.get(x.Gene).contains(x.Gene)).collect(Collectors.toList());
+
+        List<HlaAllele> results = Lists.newArrayList();
+        for(HlaAllele allele : alleles)
+        {
+            List<HlaAllele> geneAlleleList = map.get(allele.Gene);
+
+            if(geneAlleleList.size() < 2 || contains(geneAlleleList, allele.asAlleleGroup()))
+                results.add(allele);
+        }
+
+        return results;
     }
 
     private static List<HlaAllele> alleles(final List<HlaAlleleCoverage> coverage)

@@ -41,7 +41,7 @@ public final class ExtendEvidence
             LL_LOGGER.info("  Producing paired evidence");
         }
 
-        for(int i = 0; i < mHeterozygousLoci.size() - 2; ++i)
+        for(int i = 0; i < mHeterozygousLoci.size() - 1; ++i)
         {
             List<Integer> indices = Lists.newArrayList(mHeterozygousLoci.get(i), mHeterozygousLoci.get(i + 1));
 
