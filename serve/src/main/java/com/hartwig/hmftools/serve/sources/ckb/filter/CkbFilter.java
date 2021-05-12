@@ -6,6 +6,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.classification.CkbConstants;
+import com.hartwig.hmftools.ckb.classification.CkbEventAndGeneExtractor;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.ImmutableCkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
@@ -22,6 +23,8 @@ public class CkbFilter {
     private final Set<String> usedFilterKeywords = Sets.newHashSet();
     @NotNull
     private final Set<String> usedFilterGenes = Sets.newHashSet();
+    @NotNull
+    private final CkbEventAndGeneExtractor ckbEventAndGeneExtractor = new CkbEventAndGeneExtractor();
 
     public CkbFilter() {
     }
@@ -78,24 +81,23 @@ public class CkbFilter {
     }
 
     private boolean include(@NotNull Variant variant) {
+        String event = ckbEventAndGeneExtractor.extractEvent(variant);
         for (String keywordToFilter : FilterFactory.VARIANT_KEYWORDS_TO_FILTER) {
-            if (variant.variant().contains(keywordToFilter)) {
+            if (event.contains(keywordToFilter)) {
                 usedFilterKeywords.add(keywordToFilter);
                 return false;
             }
         }
 
-        String geneSymbol = variant.gene() != null ? variant.gene().geneSymbol() : null;
-        if (geneSymbol != null) {
-            if (FilterFactory.GENES_TO_FILTER.contains(geneSymbol)) {
-                usedFilterGenes.add(geneSymbol);
-                return false;
-            }
+        String gene = ckbEventAndGeneExtractor.extractGene(variant);
+        if (FilterFactory.GENES_TO_FILTER.contains(gene)) {
+            usedFilterGenes.add(gene);
+            return false;
+        }
 
-            // We don't want to include evidence on genes that are unmappable between ref genome versions.
-            if (CkbConstants.UNMAPPABLE_GENES.contains(geneSymbol)) {
-                return false;
-            }
+        // We don't want to include evidence on genes that are unmappable between ref genome versions.
+        if (CkbConstants.UNMAPPABLE_GENES.contains(gene)) {
+            return false;
         }
 
         return true;

@@ -155,7 +155,7 @@ public class FusionExtractor {
             return null;
         }
 
-        return ImmutableKnownFusionPair.builder().geneUp(geneUp.replaceAll("\\s+", "")).geneDown(geneDown.replaceAll("\\s+", "")).build();
+        return ImmutableKnownFusionPair.builder().geneUp(removeAllSpaces(geneUp)).geneDown(removeAllSpaces(geneDown)).build();
     }
 
     private static boolean isInteger(@NotNull String string) {
@@ -198,5 +198,10 @@ public class FusionExtractor {
         return knownFusionCache.hasExonDelDup(fiveGene) || knownFusionCache.hasPromiscuousFiveGene(fiveGene)
                 || knownFusionCache.hasPromiscuousThreeGene(threeGene) || knownFusionCache.hasKnownFusion(fiveGene, threeGene)
                 || knownFusionCache.hasKnownIgFusion(fiveGene, threeGene) || knownFusionCache.hasPromiscuousIgFusion(fiveGene);
+    }
+
+    @NotNull
+    private static String removeAllSpaces(@NotNull String value) {
+        return value.replaceAll("\\s+", "");
     }
 }
