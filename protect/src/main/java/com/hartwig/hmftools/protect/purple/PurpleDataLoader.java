@@ -12,8 +12,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
@@ -70,7 +68,7 @@ public final class PurpleDataLoader {
 
         CnPerChromosome cnPerChromosome = null;
         if (purpleCnvSomaticTsv != null) {
-            cnPerChromosome = CnPerChromosomeFactory.extractCnPerChromsomsoemArm(purpleCnvSomaticTsv);
+            cnPerChromosome = CnPerChromosomeFactory.extractCnPerChromsomsomeArm(purpleCnvSomaticTsv);
         }
 
         List<ReportableGainLoss> copyNumberAlterations = somaticDriverCatalog.stream()

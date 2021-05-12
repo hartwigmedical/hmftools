@@ -176,8 +176,8 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Tumor mutational load").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(mutationalLoadString).addStyle(dataStyle)));
 
-        String microSatelliteStabilityString = hasReliablePurity ? analysis().microsatelliteStatus().display() + " (" + DOUBLE_DECIMAL_FORMAT
-                .format(analysis().microsatelliteIndelsPerMb()) + ")" : DataUtil.NA_STRING;
+        String microSatelliteStabilityString = hasReliablePurity ? analysis().microsatelliteStatus().display() + " ("
+                + DOUBLE_DECIMAL_FORMAT.format(analysis().microsatelliteIndelsPerMb()) + ")" : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Microsatellite (in)stability").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(microSatelliteStabilityString).addStyle(dataStyle)));
         div.add(table);
@@ -198,7 +198,8 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(hrdStyle)));
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Integrated Virus").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(analysis().virusBreakends().virusNameSummary()).addStyle(hrdStyle)));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(patientReport.sampleReport().reportViralInsertions()
+                ? analysis().virusBreakends().virusNameSummary() : DataUtil.NONE_STRING).addStyle(hrdStyle)));
 
         reportDocument.add(div);
     }
