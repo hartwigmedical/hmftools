@@ -204,29 +204,29 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
         Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 10, 1, 10 }));
         table.setWidth(contentWidth());
+        table.setWidth(contentWidth()); // For more space between plot and disclaimer text
 
         table.addCell(TableUtil.createLayoutCell()
-                .add(new Div().add(createContentParagraph("The title ", "shows the conclusion of the prediction of the molecular"
-                        + " tissue of origin. If none of the similarity predictions has a likelihood ≥80%, no reliable conclusion "
-                        + "can be drawn ( ‘results inconclusive’). "))));
+                .add(new Div().add(createContentParagraph("The title", " shows the conclusion of the prediction of the molecular"
+                        + " tissue of origin. If none of the similarity predictions has a likelihood ≥80%, no reliable conclusion"
+                        + " can be drawn ( ‘results inconclusive’)."))));
 
         table.addCell(TableUtil.createLayoutCell());
 
         table.addCell(TableUtil.createLayoutCell()
-                .add(new Div().add(createContentParagraph("The left plot ", "shows the likelihoods (similarity) for all the origin "
+                .add(new Div().add(createContentParagraph("The left plot", " shows the likelihoods (similarity) for all the origin "
                         + "types analyzed by the molecular tissue of origin prediction tool. Only when the likelihood is ≥80% "
                         + "(a peak in the green outer band of the plot), a reliable prediction (with >95% accuracy) can be drawn. "
                         + "Lower likelihoods (<80%) suggest there is similarity with that tissue of origin , but this is less strong "
-                        + "and there is lower confidence. "))));
+                        + "and there is lower confidence."))));
 
         table.addCell(TableUtil.createLayoutCell());
 
         table.addCell(TableUtil.createLayoutCell()
-                .add(new Div().add(createContentParagraph("The right plot(s) ", "shows the breakdown of the strongest predicted "
-                        + "likelihood(s) into the contribution of the 1) SNV signatures (i.e Cosmic 96-signatures), 2) driver "
-                        + "landscape and passenger characteristics (e.g. tumor-type specific drivers), and 3) somatic mutation pattern"
-                        + " (mutation distribution across the genome)."))
-                        .add(createContentParagraph("", ""))));
+                .add(new Div().add(createContentParagraph("The right plot(s)", " shows the breakdown of the strongest predicted "
+                        + "likelihood(s) into the contribution of the 1) SNV types (related to those used in Cosmic signatures), 2) "
+                        + "driver landscape and passenger characteristics (e.g. tumor-type specific drivers), and 3) somatic mutation "
+                        + "pattern (mutation distribution across the genome)."))));
 
 
         reportDocument.add(table);
