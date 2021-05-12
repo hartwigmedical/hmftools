@@ -63,13 +63,9 @@ public class VirusBreakendReportableFactory {
             }
         }
 
-        for (VirusBreakend virusBreakend : virusBreakends) {
-            for (String virus : virusSummaryModel.virussen()) {
-                if (!postiveSummary.contains(virus + " positive")) {
-                    if (!virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()).equals(Strings.EMPTY)) {
-                        negativeSummary.add(virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()) + " negative");
-                    }
-                }
+        for (String virus : virusSummaryModel.virussen()) {
+            if (!postiveSummary.contains(virus + " positive")) {
+                negativeSummary.add(virus + " negative");
             }
         }
 

@@ -82,7 +82,7 @@ public class VirusBreakendReportableFactoryTest {
                 .taxidGenus(0)
                 .nameGenus(Strings.EMPTY)
                 .readsGenusTree(0)
-                .taxidSpecies(0)
+                .taxidSpecies(1)
                 .nameSpecies(Strings.EMPTY)
                 .readsSpeciesTree(0)
                 .taxidAssigned(1)
@@ -167,7 +167,7 @@ public class VirusBreakendReportableFactoryTest {
         assertEquals("Human papillomavirus type 16", reportableVirusbreakend.virusName());
         assertEquals(2, reportableVirusbreakend.integrations());
 
-        assertEquals("EBV negative",
+        assertEquals("EBV positive, HPV negative",
                 VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)
                         .virusNameSummary());
 
