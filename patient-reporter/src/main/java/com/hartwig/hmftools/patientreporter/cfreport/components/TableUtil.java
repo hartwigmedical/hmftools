@@ -197,6 +197,11 @@ public final class TableUtil {
     }
 
     @NotNull
+    public static Cell createLayoutCellSummary() {
+        return createLayoutCell(2, 2);
+    }
+
+    @NotNull
     public static Cell createLayoutCell(int rowSpan, int colSpan) {
         Cell c = new Cell(rowSpan, colSpan);
         c.setBorder(Border.NO_BORDER);
