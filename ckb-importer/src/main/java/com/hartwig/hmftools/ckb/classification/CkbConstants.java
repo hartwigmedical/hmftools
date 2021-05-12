@@ -8,6 +8,8 @@ public final class CkbConstants {
 
     public static final String NO_GENE = "-";
     public static final Set<String> UNRESOLVABLE_GENES = Sets.newHashSet();
+
+    // TODO Figure out how to get these genes into HMF v38 gene model
     public static final Set<String> UNMAPPABLE_GENES = Sets.newHashSet();
 
     private CkbConstants() {

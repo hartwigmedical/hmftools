@@ -24,7 +24,7 @@ public class CkbEventAndGeneExtractor {
             return variant.fullName();
         } else if (variant.gene().geneSymbol().equals(CkbConstants.NO_GENE)) {
             return CkbConstants.NO_GENE;
-        } else if (CkbConstants.UNRESOLVABLE_GENES.contains(variant.gene().geneSymbol())) {
+        } else if (CkbConstants.UNMAPPABLE_GENES.contains(variant.gene().geneSymbol())) {
             LOGGER.debug("Skipping gene curation for '{}' since gene is unmappable", variant.gene().geneSymbol());
             return variant.gene().geneSymbol();
         } else {
