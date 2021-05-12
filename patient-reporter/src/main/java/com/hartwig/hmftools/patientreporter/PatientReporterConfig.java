@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.patientreporter;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+
 import java.io.File;
 import java.nio.file.Files;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.apache.commons.cli.CommandLine;
@@ -51,6 +54,7 @@ public interface PatientReporterConfig {
     String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = "purple_germline_driver_catalog_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
+    String PURPLE_CNV_SOMATIC_TSV = "purple_cnv_somatic_tsv";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
@@ -73,6 +77,8 @@ public interface PatientReporterConfig {
     String CORRECTED_REPORT = "corrected_report";
     String LOG_DEBUG = "log_debug";
     String ONLY_CREATE_PDF = "only_create_pdf";
+
+    public static RefGenomeVersion RG_VERSION = V37;
 
     @NotNull
     static Options createOptions() {
@@ -107,6 +113,7 @@ public interface PatientReporterConfig {
         options.addOption(PURPLE_GERMLINE_DRIVER_CATALOG_TSV, true, "Path towards the purple germline driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
+        options.addOption(PURPLE_CNV_SOMATIC_TSV, true, "Path towards the purple cnv somatic TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the linx breakend TSV.");
         options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
@@ -194,6 +201,9 @@ public interface PatientReporterConfig {
     String purpleGermlineVariantVcf();
 
     @NotNull
+    String purpleCnvSomaticTsv();
+
+    @NotNull
     String linxFusionTsv();
 
     @NotNull
@@ -267,6 +277,7 @@ public interface PatientReporterConfig {
         String purpleDriverCatalogGermlineTsv = Strings.EMPTY;
         String purpleSomaticVariantVcf = Strings.EMPTY;
         String purpleGermlineVariantVcf = Strings.EMPTY;
+        String purpleCnvSomaticTsv = Strings.EMPTY;
         String linxFusionTsv = Strings.EMPTY;
         String linxBreakendTsv = Strings.EMPTY;
         String linxDriverCatalogTsv = Strings.EMPTY;
@@ -295,6 +306,7 @@ public interface PatientReporterConfig {
             purpleDriverCatalogGermlineTsv = nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV);
             purpleSomaticVariantVcf = nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF);
             purpleGermlineVariantVcf = nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF);
+            purpleCnvSomaticTsv = nonOptionalFile(cmd, PURPLE_CNV_SOMATIC_TSV);
             linxFusionTsv = nonOptionalFile(cmd, LINX_FUSION_TSV);
             linxBreakendTsv = nonOptionalFile(cmd, LINX_BREAKEND_TSV);
             linxDriverCatalogTsv = nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV);
@@ -335,6 +347,7 @@ public interface PatientReporterConfig {
                 .purpleGermlineDriverCatalogTsv(purpleDriverCatalogGermlineTsv)
                 .purpleSomaticVariantVcf(purpleSomaticVariantVcf)
                 .purpleGermlineVariantVcf(purpleGermlineVariantVcf)
+                .purpleCnvSomaticTsv(purpleCnvSomaticTsv)
                 .linxFusionTsv(linxFusionTsv)
                 .linxBreakendTsv(linxBreakendTsv)
                 .linxDriverCatalogTsv(linxDriverCatalogTsv)
