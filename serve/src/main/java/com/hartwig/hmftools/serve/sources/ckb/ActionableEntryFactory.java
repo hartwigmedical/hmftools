@@ -61,20 +61,21 @@ class ActionableEntryFactory {
 
         for (Evidence evidence : entry.evidences()) {
             if (hasUsableEvidenceType(evidence)) {
-                String treatment = evidence.therapy().therapyName();
                 EvidenceLevel level = resolveLevel(evidence.ampCapAscoEvidenceLevel());
                 EvidenceDirection direction = resolveDirection(evidence.responseType());
-                String cancerType = evidence.indication().name();
                 String doid = extractDoid(evidence.indication().termId());
 
-                Set<String> urls = Sets.newHashSet();
-                for (Reference reference : evidence.references()) {
-                    if (reference.url() != null) {
-                        urls.add(reference.url());
-                    }
-                }
-
                 if (level != null && direction != null && doid != null) {
+                    String treatment = evidence.therapy().therapyName();
+                    String cancerType = evidence.indication().name();
+
+                    Set<String> urls = Sets.newHashSet();
+                    for (Reference reference : evidence.references()) {
+                        if (reference.url() != null) {
+                            urls.add(reference.url());
+                        }
+                    }
+
                     actionableEntries.add(ImmutableActionableEntry.builder()
                             .source(Knowledgebase.CKB)
                             .treatment(treatment)
