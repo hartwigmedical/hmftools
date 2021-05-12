@@ -298,14 +298,14 @@ class RefGenomeConverter {
             if (geneNameMapping.isValidV37Gene(gene)) {
                 mappedGene = geneNameMapping.v38Gene(gene);
             } else {
-                LOGGER.warn("Not a valid 37 gene: '{}'!", gene);
+                LOGGER.warn(" Not a valid 37 gene encountered during liftover: '{}'!", gene);
                 mappedGene = gene;
             }
         } else if (sourceVersion == RefGenomeVersion.V38 && targetVersion == RefGenomeVersion.V37) {
             if (geneNameMapping.isValidV38Gene(gene)) {
                 mappedGene = geneNameMapping.v37Gene(gene);
             } else {
-                LOGGER.warn("Not a valid 38 gene: '{}'!", gene);
+                LOGGER.warn(" Not a valid 38 gene encountered during liftover: '{}'!", gene);
                 mappedGene = gene;
             }
         } else {

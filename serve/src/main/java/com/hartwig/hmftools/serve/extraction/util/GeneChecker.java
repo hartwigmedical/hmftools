@@ -23,7 +23,7 @@ public class GeneChecker {
             return true;
         } else {
             if (gene != null) {
-                LOGGER.warn("Gene '{}' is not present in the full gene list used!", gene);
+                LOGGER.warn("Gene '{}' is not considered a valid gene!", gene);
             }
             return false;
         }
