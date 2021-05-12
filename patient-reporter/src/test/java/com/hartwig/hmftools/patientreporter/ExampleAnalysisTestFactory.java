@@ -352,7 +352,7 @@ public final class ExampleAnalysisTestFactory {
                 .germlineReportingLevel(reportGermline
                         ? LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION
                         : LimsGermlineReportingLevel.NO_REPORTING)
-                .reportViralInsertions(false)
+                .reportViralInsertions(cohort.reportViral())
                 .refArrivalDate(LocalDate.parse("01-Oct-2020", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Oct-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(Lims.NOT_PERFORMED_STRING)
