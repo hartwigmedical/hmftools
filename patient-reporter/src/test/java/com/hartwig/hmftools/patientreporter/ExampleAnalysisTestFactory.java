@@ -26,6 +26,7 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -52,6 +53,8 @@ import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVir
 import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusbreakend;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusbreakend;
+import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosome;
+import com.hartwig.hmftools.protect.cnchromosome.ImmutableCnPerChromosome;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
@@ -145,6 +148,7 @@ public final class ExampleAnalysisTestFactory {
                 .chordHrdValue(chordHrdValue)
                 .chordHrdStatus(chordStatus)
                 .gainsAndLosses(gainsAndLosses)
+                .cnPerChromosome(extractCnPerChromsome())
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
@@ -168,6 +172,60 @@ public final class ExampleAnalysisTestFactory {
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .pipelineVersion("5.19")
+                .build();
+    }
+
+    @NotNull
+    public static CnPerChromosome extractCnPerChromsome() {
+        return ImmutableCnPerChromosome.builder()
+                .chr1p(0)
+                .chr1q(0)
+                .chr2p(0)
+                .chr2q(0)
+                .chr3p(0)
+                .chr3q(0)
+                .chr4p(0)
+                .chr4q(0)
+                .chr5p(0)
+                .chr5q(0)
+                .chr6p(0)
+                .chr6q(0)
+                .chr7p(0)
+                .chr7q(0)
+                .chr8p(0)
+                .chr8q(0)
+                .chr9p(0)
+                .chr9q(0)
+                .chr10p(0)
+                .chr10q(0)
+                .chr11p(0)
+                .chr11q(0)
+                .chr12p(0)
+                .chr12q(0)
+                .chr13p(0)
+                .chr13q(0)
+                .chr14p(0)
+                .chr14q(0)
+                .chr15p(0)
+                .chr15q(0)
+                .chr16p(0)
+                .chr16q(0)
+                .chr17p(0)
+                .chr17q(0)
+                .chr18p(0)
+                .chr18q(0)
+                .chr19p(0)
+                .chr19q(0)
+                .chr20p(0)
+                .chr20q(0)
+                .chr21p(0)
+                .chr21q(0)
+                .chr22p(0)
+                .chr22q(0)
+                .chrXp(0)
+                .chrXq(0)
+                .chrYp(0)
+                .chrYq(0)
                 .build();
     }
 
@@ -213,6 +271,7 @@ public final class ExampleAnalysisTestFactory {
                 .chordHrdValue(chordHrdValue)
                 .chordHrdStatus(chordStatus)
                 .gainsAndLosses(gainsAndLosses)
+                .cnPerChromosome(extractCnPerChromsome())
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)

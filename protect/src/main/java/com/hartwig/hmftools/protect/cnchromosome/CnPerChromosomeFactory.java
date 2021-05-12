@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.cnchromosome;
+package com.hartwig.hmftools.protect.cnchromosome;
 
 import java.io.IOException;
 import java.util.List;
@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CnPerChromosomeFactory {
+public final class CnPerChromosomeFactory {
 
     public CnPerChromosomeFactory() {
 

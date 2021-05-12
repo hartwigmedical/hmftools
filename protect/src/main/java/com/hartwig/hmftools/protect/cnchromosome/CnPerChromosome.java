@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.cnchromosome;
+package com.hartwig.hmftools.protect.cnchromosome;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

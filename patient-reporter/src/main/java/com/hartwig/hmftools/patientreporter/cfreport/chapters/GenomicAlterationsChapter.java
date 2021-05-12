@@ -25,6 +25,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusbreakend;
+import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosome;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -38,6 +39,7 @@ import com.itextpdf.layout.property.TextAlignment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class GenomicAlterationsChapter implements ReportChapter {
 
@@ -78,7 +80,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 germlineReportingModel,
                 sampleReport.germlineReportingLevel()));
 
-        reportDocument.add(createGainsAndLossesTable(genomicAnalysis.gainsAndLosses(), hasReliablePurity));
+        reportDocument.add(createGainsAndLossesTable(genomicAnalysis.gainsAndLosses(),
+                hasReliablePurity,
+                genomicAnalysis.cnPerChromosome()));
         reportDocument.add(createFusionsTable(genomicAnalysis.geneFusions(), hasReliablePurity));
         reportDocument.add(createHomozygousDisruptionsTable(genomicAnalysis.homozygousDisruptions()));
         reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
@@ -200,7 +204,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createGainsAndLossesTable(@NotNull List<ReportableGainLoss> gainsAndLosses, boolean hasReliablePurity) {
+    private static Table createGainsAndLossesTable(@NotNull List<ReportableGainLoss> gainsAndLosses, boolean hasReliablePurity,
+            @Nullable CnPerChromosome cnPerChromosome) {
         String title = "Tumor specific gains & losses";
         if (gainsAndLosses.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
@@ -220,8 +225,10 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(gainLoss.interpretation().display()));
             contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? String.valueOf(gainLoss.copies()) : DataUtil.NA_STRING)
                     .setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? "0" : DataUtil.NA_STRING)
-                    .setTextAlignment(TextAlignment.CENTER));
+            contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? String.valueOf(GainsAndLosses.copyChromosomeArm(
+                    cnPerChromosome,
+                    gainLoss.chromosome(),
+                    gainLoss.chromosomeBand())) : DataUtil.NA_STRING).setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(""));
         }
 

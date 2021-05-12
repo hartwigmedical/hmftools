@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
+import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosome;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -62,6 +63,9 @@ public abstract class GenomicAnalysis {
 
     @NotNull
     public abstract List<ReportableGainLoss> gainsAndLosses();
+
+    @Nullable
+    public abstract CnPerChromosome cnPerChromosome();
 
     @NotNull
     public abstract List<LinxFusion> geneFusions();

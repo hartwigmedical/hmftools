@@ -20,6 +20,8 @@ import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.protect.ProtectConfig;
+import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosome;
+import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosomeFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -66,6 +68,11 @@ public final class PurpleDataLoader {
         List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(driverCatalogGermlineTsv);
         LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDriverCatalog.size(), driverCatalogGermlineTsv);
 
+        CnPerChromosome cnPerChromosome = null;
+        if (purpleCnvSomaticTsv != null) {
+            cnPerChromosome = CnPerChromosomeFactory.extractCnPerChromsomsoemArm(purpleCnvSomaticTsv);
+        }
+
         List<ReportableGainLoss> copyNumberAlterations = somaticDriverCatalog.stream()
                 .filter(x -> x.driver() == DriverType.AMP || x.driver() == DriverType.PARTIAL_AMP || x.driver() == DriverType.DEL)
                 .map(PurpleDataLoader::copyNumberAlteration)
@@ -95,6 +102,7 @@ public final class PurpleDataLoader {
                 .somaticVariants(reportableSomaticVariants)
                 .germlineVariants(reportableGermlineVariants)
                 .copyNumberAlterations(copyNumberAlterations)
+                .cnPerChromosome(cnPerChromosome)
                 .build();
     }
 
