@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.ext_compare.CfDbMatchType.LINX_ONLY;
 import static com.hartwig.hmftools.linx.ext_compare.CfSvData.CF_DATA_DELIMITER;
-import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
+import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.asStr;
 import static com.hartwig.hmftools.linx.types.LinxConstants.NO_DB_MARKER;
 import static com.hartwig.hmftools.linx.types.SvVarData.CR_DELIM;
 

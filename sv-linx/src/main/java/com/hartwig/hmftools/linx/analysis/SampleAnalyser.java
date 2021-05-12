@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_ID;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_NAME;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator.LINX_DRIVER_CATALOG;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
+import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.asStr;
 
 import java.io.IOException;
 import java.util.List;
@@ -49,7 +49,7 @@ import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
 import com.hartwig.hmftools.linx.cn.JcnCalcData;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.ArmCluster;
-import com.hartwig.hmftools.linx.types.ChromosomeArm;
+import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvBreakend;

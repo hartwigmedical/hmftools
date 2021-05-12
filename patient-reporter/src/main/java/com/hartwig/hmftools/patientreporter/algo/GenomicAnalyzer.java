@@ -51,19 +51,19 @@ public class GenomicAnalyzer {
     @NotNull
     public GenomicAnalysis run(@NotNull String tumorSampleId, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
-            @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String linxFusionTsv,
-            @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt,
-            @NotNull String protectEvidenceTsv, @NotNull String virusBreakendTsv, @NotNull String peachgenotypeTsv,
-            @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingLevel germlineReportingLevel,
-            @NotNull VirusDbModel virusDbModel, @NotNull VirusSummaryModel virusSummaryModel,
-            @NotNull VirusBlackListModel virusBlackListModel) throws IOException {
+            @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String purpleCnvSomaticTsv,
+            @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv,
+            @NotNull String chordPredictionTxt, @NotNull String protectEvidenceTsv, @NotNull String virusBreakendTsv,
+            @NotNull String peachgenotypeTsv, @NotNull GermlineReportingModel germlineReportingModel,
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel, @NotNull VirusDbModel virusDbModel,
+            @NotNull VirusSummaryModel virusSummaryModel, @NotNull VirusBlackListModel virusBlackListModel) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
                 purpleQCFile,
                 purplePurityTsv,
                 purpleDriverCatalogSomaticTsv,
                 purpleSomaticVariantVcf,
                 purpleDriverCatalogGermlineTsv,
-                purpleGermlineVariantVcf);
+                purpleGermlineVariantVcf, purpleCnvSomaticTsv);
 
         LinxData linxData = LinxDataLoader.load(linxFusionTsv, linxBreakendTsv, linxDriversTsv);
 

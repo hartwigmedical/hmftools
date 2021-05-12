@@ -8,10 +8,10 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
-import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
-import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
-import static com.hartwig.hmftools.linx.types.ChromosomeArm.UNKNOWN;
-import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
+import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.Q_ARM;
+import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.UNKNOWN;
+import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.asStr;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.linx.types.ChromosomeArm;
+import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 

@@ -29,6 +29,7 @@ public class GenomicAnalyzerTest {
     private static final String PURPLE_DRIVER_CATALOG_GERMLINE_TSV = BASE_DIRECTORY + "/purple/sample.driver.catalog.germline.tsv";
     private static final String PURPLE_SOMATIC_VARIANT_VCF = BASE_DIRECTORY + "/purple/sample.purple.somatic.vcf";
     private static final String PURPLE_GERMLINE_VARIANT_VCF = BASE_DIRECTORY + "/purple/sample.purple.germline.vcf";
+    private static final String PURPLE_CNV_SOMATIC_TSV = BASE_DIRECTORY + "/purple/sample.purple.cnv.somatic.tsv";
     private static final String LINX_FUSIONS_TSV = BASE_DIRECTORY + "/linx/sample.linx.fusion.tsv";
     private static final String LINX_BREAKEND_TSV = BASE_DIRECTORY + "/linx/sample.linx.breakend.tsv";
     private static final String LINX_DRIVERS_TSV = BASE_DIRECTORY + "/linx/sample.linx.driver.catalog.tsv";
@@ -70,6 +71,7 @@ public class GenomicAnalyzerTest {
                 PURPLE_DRIVER_CATALOG_GERMLINE_TSV,
                 PURPLE_SOMATIC_VARIANT_VCF,
                 PURPLE_GERMLINE_VARIANT_VCF,
+                PURPLE_CNV_SOMATIC_TSV,
                 LINX_FUSIONS_TSV,
                 LINX_BREAKEND_TSV,
                 LINX_DRIVERS_TSV,

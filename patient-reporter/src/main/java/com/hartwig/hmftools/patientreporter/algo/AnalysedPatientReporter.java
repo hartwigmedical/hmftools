@@ -44,11 +44,12 @@ public class AnalysedPatientReporter {
     @NotNull
     public AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
             @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
-            @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String linxFusionTsv,
-            @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile,
-            @NotNull String protectEvidenceTsv, @Nullable String comments, boolean correctedReport, @NotNull String pipelineVersionFile,
-            @NotNull String molecularTissueOriginTsv, @NotNull String molecularTissueOriginPlot, @NotNull String virusBreakendTsv,
-            @NotNull String peachGenotypeTsv) throws IOException {
+            @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String purpleCnvSomaticTsv,
+            @NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv,
+            @NotNull String chordPredictionTxt, @NotNull String circosFile, @NotNull String protectEvidenceTsv, @Nullable String comments,
+            boolean correctedReport, @NotNull String pipelineVersionFile, @NotNull String molecularTissueOriginTsv,
+            @NotNull String molecularTissueOriginPlot, @NotNull String virusBreakendTsv, @NotNull String peachGenotypeTsv)
+            throws IOException {
         String patientId = reportData.limsModel().patientId(sampleMetadata.tumorSampleBarcode());
         PatientPrimaryTumor patientPrimaryTumor =
                 PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(), patientId);
@@ -63,6 +64,7 @@ public class AnalysedPatientReporter {
                 purpleDriverCatalogGermlineTsv,
                 purpleSomaticVariantVcf,
                 purpleGermlineVariantVcf,
+                purpleCnvSomaticTsv,
                 linxFusionTsv,
                 linxBreakendTsv,
                 linxDriversTsv,
@@ -73,7 +75,8 @@ public class AnalysedPatientReporter {
                 reportData.germlineReportingModel(),
                 sampleReport.germlineReportingLevel(),
                 reportData.virusDbModel(),
-                reportData.virusSummaryModel(), reportData.virusBlackListModel());
+                reportData.virusSummaryModel(),
+                reportData.virusBlackListModel());
 
         ConsentFilterFunctions consentFilterFunctions = new ConsentFilterFunctions();
 

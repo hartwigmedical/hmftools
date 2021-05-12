@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.types;
+package com.hartwig.hmftools.common.purple.segment;
 
 public enum ChromosomeArm
 {

@@ -12,6 +12,8 @@ import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
@@ -22,6 +24,7 @@ import com.hartwig.hmftools.protect.ProtectConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class PurpleDataLoader {
 
@@ -39,13 +42,13 @@ public final class PurpleDataLoader {
                 config.purpleSomaticDriverCatalogTsv(),
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineDriverCatalogTsv(),
-                config.purpleGermlineVariantVcf());
+                config.purpleGermlineVariantVcf(), null);
     }
 
     @NotNull
     public static PurpleData load(@NotNull String sample, @NotNull String qcFile, @NotNull String purityTsv,
             @NotNull String driverCatalogSomaticTsv, @NotNull String somaticVcf, @NotNull String driverCatalogGermlineTsv,
-            @NotNull String germlineVcf) throws IOException {
+            @NotNull String germlineVcf, @Nullable String purpleCnvSomaticTsv) throws IOException {
         LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
 
         PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
@@ -62,6 +65,8 @@ public final class PurpleDataLoader {
 
         List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(driverCatalogGermlineTsv);
         LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDriverCatalog.size(), driverCatalogGermlineTsv);
+
+
 
         List<ReportableGainLoss> copyNumberAlterations = somaticDriverCatalog.stream()
                 .filter(x -> x.driver() == DriverType.AMP || x.driver() == DriverType.PARTIAL_AMP || x.driver() == DriverType.DEL)

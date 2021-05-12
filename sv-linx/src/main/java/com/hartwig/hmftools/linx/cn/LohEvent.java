@@ -2,13 +2,13 @@ package com.hartwig.hmftools.linx.cn;
 
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
-import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
-import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
+import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.Q_ARM;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.linx.types.ChromosomeArm;
+import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 
 public class LohEvent
