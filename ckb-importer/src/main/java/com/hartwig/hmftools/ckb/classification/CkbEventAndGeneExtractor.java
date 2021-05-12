@@ -37,8 +37,8 @@ public class CkbEventAndGeneExtractor {
                     }
                 }
 
-                // If we can't find a mappable gene, just return the original gene again.
-                if (!CkbConstants.UNRESOLVABLE_GENES.contains(primaryGene)) {
+                // Only warn in case the primary gene is a real gene in the first place.
+                if (!CkbConstants.NON_EXISTING_GENES.contains(primaryGene)) {
                     LOGGER.warn("Could not find synonym for '{}' that exists in HMF v38 gene model", primaryGene);
                 }
             }

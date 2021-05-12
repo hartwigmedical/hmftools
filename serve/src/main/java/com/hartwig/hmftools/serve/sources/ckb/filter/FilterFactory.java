@@ -8,11 +8,13 @@ public final class FilterFactory {
 
     static final Set<String> VARIANT_KEYWORDS_TO_FILTER = Sets.newHashSet();
 
-    static final Set<String> GENES_TO_FILTER = Sets.newHashSet();
+    static final Set<String> GENES_FOR_WHICH_TO_FILTER_ALL = Sets.newHashSet();
+    static final Set<String> GENES_FOR_WHICH_TO_FILTER_EXON_EVENTS = Sets.newHashSet();
 
     static {
         populateVariantKeywordsToFilter();
-        populateGenesToFilter();
+        populateGenesForWhichToFilterAll();
+        populateGenesForWhichToFilterExonEvents();
     }
 
     private static void populateVariantKeywordsToFilter() {
@@ -32,9 +34,14 @@ public final class FilterFactory {
         VARIANT_KEYWORDS_TO_FILTER.add("LOH");
     }
 
-    private static void populateGenesToFilter() {
+    private static void populateGenesForWhichToFilterAll() {
         // COX2 lies on MT and we don't handle that in hmftools.
-        GENES_TO_FILTER.add("COX2");
+        GENES_FOR_WHICH_TO_FILTER_ALL.add("COX2");
+    }
+
+    private static void populateGenesForWhichToFilterExonEvents() {
+        // NPM1 generally uses a different transcript, so exon events are too risky to interpret.
+        GENES_FOR_WHICH_TO_FILTER_EXON_EVENTS.add("NPM1");
     }
 
     private FilterFactory() {

@@ -12,7 +12,7 @@ public class CkbConstantsTest {
     public void unresolvableAndUnmappableGenesDoNotExistIn38() {
         GeneNameMapping geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
 
-        for (String unresolvableGene : CkbConstants.UNRESOLVABLE_GENES) {
+        for (String unresolvableGene : CkbConstants.NON_EXISTING_GENES) {
             assertFalse(geneNameMapping.isValidV38Gene(unresolvableGene));
         }
 
