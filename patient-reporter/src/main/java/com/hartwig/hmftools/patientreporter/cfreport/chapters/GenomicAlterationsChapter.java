@@ -129,7 +129,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         if (hasReliablePurity) {
             table.addCell(TableUtil.createContentCellPurityPloidy(valueLabel));
-            table.addCell(TableUtil.createContentCell(createInlineBarChart(value, min, max)));
+            table.addCell(TableUtil.createContentCell(createInlineBarChart(value, min, max)).setPadding(8));
         } else {
             table.addCell(TableUtil.createContentCell(Lims.PURITY_NOT_RELIABLE_STRING));
         }
