@@ -100,13 +100,18 @@ class ActionableEntryFactory {
 
         String[] parts = doidString.split(":");
         if (parts.length == 2) {
-            if (parts[0].equalsIgnoreCase("doid")) {
-                return parts[1];
-            } else if (parts[0].equalsIgnoreCase("jax")) {
-                if (parts[1].equals("10000003")) {
+            String source = parts[0];
+            String id = parts[1];
+            if (source.equalsIgnoreCase("doid")) {
+                return id;
+            } else if (source.equalsIgnoreCase("jax")) {
+                if (id.equals("10000003")) {
                     return "0050686";
                 } else {
-                    LOGGER.warn("Unexpected DOID string annotated by JAX: '{}'", doidString);
+                    // CKB uses 10000005 for configuring "Not a cancer". We can ignore these.
+                    if (!id.equals("10000005")) {
+                        LOGGER.warn("Unexpected DOID string annotated by CKB: '{}'", doidString);
+                    }
                     return null;
                 }
             } else {
