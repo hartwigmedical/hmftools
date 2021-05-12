@@ -125,7 +125,7 @@ public class SummaryChapter implements ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         table.setWidth(contentWidth());
         table.addCell(TableUtil.createLayoutCellSummary()
-                .add(new Paragraph("Treatment indications (tumor-type specific)").addStyle(ReportResources.sectionTitleStyle())));
+                .add(new Paragraph("Treatment options (tumor-type specific)").addStyle(ReportResources.sectionTitleStyle())));
 
         table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 

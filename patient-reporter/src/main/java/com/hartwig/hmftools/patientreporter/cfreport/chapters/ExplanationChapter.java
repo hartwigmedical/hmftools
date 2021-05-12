@@ -47,7 +47,7 @@ public class ExplanationChapter implements ReportChapter {
                                 + "evidence item or drug-biomarker is missing from the knowledgebases it will also not be "
                                 + "included in this report.",
                         "VICC (Variant Interpretation for Cancer Consortium, https://cancervariants.org) software has been used "
-                                + "to harmonize and curate the knowledgebases",
+                                + "to harmonize and curate the knowledgebases.",
                         "Clinical trials are matched against the iClusion database (https://iclusion.org) including a "
                                 + "link to the specific trial." })));
         table.addCell(TableUtil.createLayoutCell());
@@ -56,7 +56,7 @@ public class ExplanationChapter implements ReportChapter {
                         "The 'Read Depth' displays the raw number of reads supporting the variant versus the total "
                                 + "number of reads on the mutated position.",
                         "The 'Copies' field indicates the number of alleles present in the tumor on this particular mutated position.",
-                        "The 'tVAF' field displays the variant allele frequency corrected for tumor purity",
+                        "The 'tVAF' field displays the variant allele frequency corrected for tumor purity.",
                         "The 'Biallelic' field indicates whether the variant is present across all alleles in the tumor "
                                 + "(and is including variants with loss-of-heterozygosity).",
                         "The 'Driver' field is based on the driver probability calculated based on the HMF database. A "
@@ -81,13 +81,13 @@ public class ExplanationChapter implements ReportChapter {
                         "Any gene with more copies than 3 times the average tumor ploidy along the entire canonical transcript is reported "
                                 + "as a full gain.",
                         "Any gene where only a part of the canonical transcript has more copies than 3 times the average tumor ploidy "
-                                + "is reported as a partial gain",
+                                + "is reported as a partial gain.",
                 })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] { "The canonical, or otherwise longest transcript validly fused is reported.",
                         "Fusions are restricted to those in the HMF known fusion list and can be found on "
-                                + "https://resources.hartwigmedicalfoundation.nl in directory Patient-Reporting",
+                                + "https://resources.hartwigmedicalfoundation.nl in directory Patient-Reporting.",
                         "We additionally select fusions where one partner is promiscuous in either 5' or 3' position.",
                 "The 'Driver' field is set to HIGH in case the fusion is a known pathogenic fusion, or otherwise a fusion where "
                         + "the promiscuous partner is fused in an exon range that is typically observed in literature. \n"
@@ -95,7 +95,7 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] {
-                        "Genes are reported as being disrupted if their canonical transcript has been disrupted",
+                        "Genes are reported as being disrupted if their canonical transcript has been disrupted.",
                         "The range of the disruption is indicated by the intron/exon/promoter region of the break point "
                                 + "and the direction the disruption faces.",
                         "The type of disruption can be INV (inversion), DEL (deletion), DUP (duplication), INS "

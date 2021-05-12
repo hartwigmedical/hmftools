@@ -118,15 +118,15 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 ReportResources.VERSION_REPORT,
                 " based on ",
                 patientReport.qsFormNumber()));
+        div.add(createContentParagraph("The OncoAct user manual can be found at ", "https://www.oncoact.nl/manual"));
         div.add(createContentParagraph("This report is based on pipeline version ", pipelineVersion));
         div.add(createContentParagraph("The ‘primary tumor location’ and ‘primary tumor type’ have influence on the "
                 + "clinical evidence/study matching. No check is performed to verify the received information."));
         div.add(createContentParagraph("The conclusion of this report is based solely on the results of the DNA sequencing of the tumor "
                 + "and the received tumor type. Final interpretation of the clinical consequence of this report should therefore "
                 + "always be performed by the treating physician."));
-        div.add(createContentParagraph("Based on a tumor purity of at least 30%, the test has a sensitivity of >95% for detection of "
-                + "somatic variants and >95% for detection of translocations and gene copy number changes. For samples with a purity "
-                + "above 20%, the test has a sensitivity of >90%"));
+        div.add(createContentParagraph("Based on a tumor purity of at least 20%, the test has a sensitivity of >95% for detection of "
+                + "somatic variants and >95% for detection of translocations and gene copy number changes."));
         div.add(createContentParagraph("For feedback or complaints please contact ", ReportResources.CONTACT_EMAIL_QA));
         div.add(createContentParagraph("For questions about the contents of this report, please contact ",
                 ReportResources.CONTACT_EMAIL_GENERAL));
