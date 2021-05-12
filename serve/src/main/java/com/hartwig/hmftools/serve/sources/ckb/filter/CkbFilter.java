@@ -39,7 +39,7 @@ public class CkbFilter {
             if (entry.variants().size() > 1) {
                 // Do not filter variants when in combination event, since this might make them a non-combined event.
                 filteredCkbEntries.add(entry);
-            } else if (entry.variants().size() == 0) {
+            } else if (entry.variants().isEmpty()) {
                 // Always filter entries with no variants. Should never happen in practice!
                 LOGGER.warn("Filtering '{}' because no variants have been defined for this entry!", entry);
             } else {
