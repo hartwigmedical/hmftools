@@ -202,9 +202,13 @@ public class TumorCharacteristicsChapter implements ReportChapter {
             throw new IOException("Failed to read molecular tissue origin plot image at " + molecularTissueOriginPlot);
         }
 
+        reportDocument.add(createCharacteristicDiv(""));
+        reportDocument.add(createCharacteristicDiv(""));
+        reportDocument.add(createCharacteristicDiv(""));
+        reportDocument.add(createCharacteristicDiv(""));
+
         Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 10, 1, 10 }));
         table.setWidth(contentWidth());
-        table.setWidth(contentWidth()); // For more space between plot and disclaimer text
 
         table.addCell(TableUtil.createLayoutCell()
                 .add(new Div().add(createContentParagraph("The title", " shows the conclusion of the prediction of the molecular"
