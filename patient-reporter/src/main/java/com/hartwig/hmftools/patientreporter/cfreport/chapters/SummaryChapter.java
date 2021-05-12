@@ -198,10 +198,18 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(hrdStyle)));
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Integrated Virus").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(patientReport.sampleReport().reportViralInsertions()
-                ? analysis().virusBreakends().virusNameSummary() : DataUtil.NONE_STRING).addStyle(hrdStyle)));
+        table.addCell(createMiddleAlignedCell(2).add(createVirusCell(patientReport.sampleReport().reportViralInsertions()
+                ? analysis().virusBreakends().virusNameSummary() : DataUtil.NONE_STRING)));
 
         reportDocument.add(div);
+    }
+
+    @NotNull
+    private static Cell createVirusCell(@NotNull String virusSummary) {
+
+        Style style = !virusSummary.equals(DataUtil.NONE_STRING) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
+
+        return createMiddleAlignedCell().add(createHighlightParagraph(virusSummary)).addStyle(style);
     }
 
     private static void renderTumorPurity(boolean hasReliablePurity, @NotNull String valueLabel, double value, double min, double max,
