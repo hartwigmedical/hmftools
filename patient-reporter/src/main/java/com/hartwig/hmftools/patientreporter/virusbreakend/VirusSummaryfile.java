@@ -27,7 +27,7 @@ public class VirusSummaryfile {
 
         Map<Integer, String> virusIdToMap = Maps.newHashMap();
 
-        for (String line : linesVirusSummary) {
+        for (String line : linesVirusSummary.subList(1, linesVirusSummary.size())) {
             String[] parts = line.split(SEPARATOR);
             if (parts.length == 2) {
                 int id = Integer.valueOf(parts[0].trim());
