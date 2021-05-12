@@ -22,7 +22,7 @@ public class CnPerChromosomeFactory {
         return RefGenomeVersion.V38 == RefGenomeVersion.V38 ? RefGenomeCoordinates.COORDS_38 : RefGenomeCoordinates.COORDS_37;
     }
 
-    public static int getChromosomalArmLength(final String chromosome, final ChromosomeArm armType) {
+    private static int getChromosomalArmLength(final String chromosome, final ChromosomeArm armType) {
         final RefGenomeCoordinates refGenome = refGenomeLengths();
         final HumanChromosome chr = HumanChromosome.fromString(chromosome);
 
@@ -41,7 +41,7 @@ public class CnPerChromosomeFactory {
         return chrLength - centromerePos.intValue();
     }
 
-    public static double determineCopyNumberArm(@NotNull List<PurpleCopyNumber> copyNumbers, @NotNull String chromosome,
+    private static double determineCopyNumberArm(@NotNull List<PurpleCopyNumber> copyNumbers, @NotNull String chromosome,
             @NotNull ChromosomeArm chromosomeArm) {
         int chromosomeLength = getChromosomalArmLength(chromosome, chromosomeArm);
 
