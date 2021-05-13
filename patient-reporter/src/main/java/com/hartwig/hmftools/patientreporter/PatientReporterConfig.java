@@ -65,7 +65,7 @@ public interface PatientReporterConfig {
     // Resources used for generating an analysed patient report
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
     String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
-    String VIRUS_TSV = "virus_tsv";
+    String VIRUS_DB_TSV = "virus_db_tsv";
     String VIRUS_SUMMARY_TSV = "virus_summary_tsv";
     String VIRUS_BLACKLIST_TSV = "virus_blacklist_tsv";
 
@@ -119,7 +119,7 @@ public interface PatientReporterConfig {
 
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
-        options.addOption(VIRUS_TSV, true, "Path towards a TSV containing the virus names.");
+        options.addOption(VIRUS_DB_TSV, true, "Path towards a TSV containing the virus database used.");
         options.addOption(VIRUS_SUMMARY_TSV, true, "Path towards a TSV containing the virus summaries.");
         options.addOption(VIRUS_BLACKLIST_TSV, true, "Path towards a TSV containing the virus names which we report on summary page.");
 
@@ -233,7 +233,7 @@ public interface PatientReporterConfig {
     String sampleSummaryTsv();
 
     @NotNull
-    String virusTsv();
+    String virusDbTsv();
 
     @NotNull
     String virusSummaryTsv();
@@ -285,7 +285,7 @@ public interface PatientReporterConfig {
 
         String germlineReportingTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
-        String virusTsv = Strings.EMPTY;
+        String virusDbTsv = Strings.EMPTY;
         String virusSummaryTsv = Strings.EMPTY;
         String virusBlacklistTsv = Strings.EMPTY;
 
@@ -314,7 +314,7 @@ public interface PatientReporterConfig {
 
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
-            virusTsv = nonOptionalFile(cmd, VIRUS_TSV);
+            virusDbTsv = nonOptionalFile(cmd, VIRUS_DB_TSV);
             virusSummaryTsv = nonOptionalFile(cmd, VIRUS_SUMMARY_TSV);
             virusBlacklistTsv = nonOptionalFile(cmd, VIRUS_BLACKLIST_TSV);
         }
@@ -354,7 +354,7 @@ public interface PatientReporterConfig {
                 .protectEvidenceTsv(protectEvidenceTsv)
                 .germlineReportingTsv(germlineReportingTsv)
                 .sampleSummaryTsv(sampleSummaryTsv)
-                .virusTsv(virusTsv)
+                .virusDbTsv(virusDbTsv)
                 .virusSummaryTsv(virusSummaryTsv)
                 .virusBlacklistTsv(virusBlacklistTsv)
                 .comments(cmd.getOptionValue(COMMENTS))

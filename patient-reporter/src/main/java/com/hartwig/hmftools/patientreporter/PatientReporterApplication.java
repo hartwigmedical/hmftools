@@ -98,27 +98,7 @@ public class PatientReporterApplication {
         AnalysedReportData reportData = buildAnalysedReportData(config);
         AnalysedPatientReporter reporter = new AnalysedPatientReporter(reportData);
 
-        AnalysedPatientReport report = reporter.run(sampleMetadata,
-                config.purplePurityTsv(),
-                config.purpleQcFile(),
-                config.purpleSomaticDriverCatalogTsv(),
-                config.purpleGermlineDriverCatalogTsv(),
-                config.purpleSomaticVariantVcf(),
-                config.purpleGermlineVariantVcf(),
-                config.purpleSomaticCopyNumberTsv(),
-                config.linxFusionTsv(),
-                config.linxBreakendTsv(),
-                config.linxDriverCatalogTsv(),
-                config.chordPredictionTxt(),
-                config.purpleCircosPlot(),
-                config.protectEvidenceTsv(),
-                config.comments(),
-                config.isCorrectedReport(),
-                config.pipelineVersionFile(),
-                config.molecularTissueOriginTxt(),
-                config.molecularTissueOriginPlot(),
-                config.virusBreakendTsv(),
-                config.peachGenotypeTsv());
+        AnalysedPatientReport report = reporter.run(sampleMetadata, config);
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(reportData.germlineReportingModel());
 
@@ -201,7 +181,7 @@ public class PatientReporterApplication {
         return AnalysedReportDataLoader.buildFromFiles(buildBaseReportData(config),
                 config.germlineReportingTsv(),
                 config.sampleSummaryTsv(),
-                config.virusTsv(),
+                config.virusDbTsv(),
                 config.virusSummaryTsv(),
                 config.virusBlacklistTsv());
     }
