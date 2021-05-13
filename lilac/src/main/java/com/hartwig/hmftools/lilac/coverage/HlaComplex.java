@@ -89,7 +89,7 @@ public class HlaComplex
         List<HlaComplex> cOnlyComplexes = gene("C", confirmedGroupAlleles, confirmedProteinAlleles, candidatesAfterConfirmedProteins);
 
         List<HlaComplex> complexes;
-        long simpleComplexCount = aOnlyComplexes.size() * bOnlyComplexes.size() * cOnlyComplexes.size();
+        long simpleComplexCount = (long)aOnlyComplexes.size() * bOnlyComplexes.size() * cOnlyComplexes.size();
 
         if (simpleComplexCount > 100_000 || simpleComplexCount < 0)
         {
@@ -141,13 +141,13 @@ public class HlaComplex
         if (confirmedProteins.size() == 1)
         {
             List<HlaAllele> confirmedProteinGroups = confirmedProteins.stream().map(x -> x.asAlleleGroup()).collect(Collectors.toList());
-            List<HlaAllele> remainingGroups = confirmedGroups.stream().filter(x -> !contains(confirmedProteinGroups, x)).collect(Collectors.toList());
+            List<HlaAllele> remainingGroups = confirmedGroups.stream().filter(x -> !confirmedProteinGroups.contains(x)).collect(Collectors.toList());
 
             List<HlaAllele> first = confirmedProteins;
 
             List<HlaAllele> second = remainingGroups.isEmpty() ?
-                    candidates.stream().filter(x -> !x.matches(confirmedProteins.get(0))).collect(Collectors.toList()) :
-                    candidates.stream().filter(x -> contains(remainingGroups, x.asAlleleGroup())).collect(Collectors.toList());
+                    candidates.stream().filter(x -> x != confirmedProteins.get(0)).collect(Collectors.toList()) :
+                    candidates.stream().filter(x -> remainingGroups.contains(x.asAlleleGroup())).collect(Collectors.toList());
 
             List<HlaComplex> complexes = combineAlleles(first, second);
             if(!remainingGroups.isEmpty())
@@ -162,14 +162,14 @@ public class HlaComplex
 
         if (confirmedGroups.size() == 2)
         {
-            List<HlaAllele> first = candidates.stream().filter(x -> x.asAlleleGroup().matches(confirmedGroups.get(0))).collect(Collectors.toList());
-            List<HlaAllele> second = candidates.stream().filter(x -> x.asAlleleGroup().matches(confirmedGroups.get(1))).collect(Collectors.toList());
+            List<HlaAllele> first = candidates.stream().filter(x -> x.asAlleleGroup() == confirmedGroups.get(0)).collect(Collectors.toList());
+            List<HlaAllele> second = candidates.stream().filter(x -> x.asAlleleGroup() == confirmedGroups.get(1)).collect(Collectors.toList());
             return combineAlleles(first, second);
         }
 
         if (confirmedGroups.size() == 1)
         {
-            List<HlaAllele> first = candidates.stream().filter(x -> x.asAlleleGroup().matches(confirmedGroups.get(0))).collect(Collectors.toList());
+            List<HlaAllele> first = candidates.stream().filter(x -> x.asAlleleGroup() == confirmedGroups.get(0)).collect(Collectors.toList());
             List<HlaAllele> second = candidates;
 
             List<HlaComplex> complexes = first.stream().map(x -> new HlaComplex(Lists.newArrayList(x))).collect(Collectors.toList());
@@ -184,13 +184,19 @@ public class HlaComplex
 
     public static List<HlaComplex> combineComplexes(final List<HlaComplex> first, final List<HlaComplex> second)
     {
+        // first produce each unique combo pairing, then combine into a single complex
         List<List<HlaComplex>> intermediatePairs = cartesianComplexProduct(first, second);
-        // return intermediatePairs.stream().map(x -> )
 
-        // TODO, check how combined
-        // input is a list of 1 or 2 alleles, and then makes a new list of the 2 HlaComplex pairs (not combing them)`
-        return Lists.newArrayList();
-        //return intermediate.map { it.flatMap { it.alleles } }.map { HlaComplex(it) }
+        List<HlaComplex> complexes = Lists.newArrayList();
+
+        for(List<HlaComplex> pairing : intermediatePairs)
+        {
+            List<HlaAllele> combinedAlleles = pairing.get(0).getAlleles().stream().collect(Collectors.toList());
+            combinedAlleles.addAll(pairing.get(1).getAlleles());
+            complexes.add(new HlaComplex(combinedAlleles));
+        }
+
+        return complexes;
     }
 
     private static List<List<HlaComplex>> cartesianComplexProduct(final List<HlaComplex> first, final List<HlaComplex> second)
@@ -205,8 +211,9 @@ public class HlaComplex
                 {
                     List<HlaComplex> pairing = Lists.newArrayList(i, j);
 
-                    if(results.stream().anyMatch(x -> x.get(0) == pairing.get(0) && x.get(1) == pairing.get(1)))
-                        continue;
+                    // CHECK - could this check be avoided, is it redundant given than A/B, or B/Cs are always being combined
+                    //if(results.stream().anyMatch(x -> x.get(0) == pairing.get(0) && x.get(1) == pairing.get(1)))
+                    //    continue;
 
                     results.add(pairing);
                 }
@@ -215,8 +222,6 @@ public class HlaComplex
 
         return results;
     }
-
-
 
     private static List<HlaComplex> combineAlleles(final List<HlaAllele> first, final List<HlaAllele> second)
     {
@@ -236,7 +241,7 @@ public class HlaComplex
                 {
                     List<HlaAllele> pairing = Lists.newArrayList(i, j);
                     Collections.sort(pairing);
-                    if(results.stream().anyMatch(x -> x.get(0).matches(pairing.get(0)) && x.get(1).matches(pairing.get(1))))
+                    if(results.stream().anyMatch(x -> x.get(0) == pairing.get(0) && x.get(1) == pairing.get(1)))
                         continue;
 
                     results.add(pairing);
@@ -280,5 +285,10 @@ public class HlaComplex
     private static List<HlaAllele> alleles(final List<HlaAlleleCoverage> coverage)
     {
         return coverage.stream().map(x -> x.Allele).collect(Collectors.toList());
+    }
+
+    public String toString()
+    {
+        return String.format("alleles(%s)", HlaAllele.toString(Alleles));
     }
 }

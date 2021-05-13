@@ -116,9 +116,9 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
 
         for (HlaAllele allele : hlaAlleles)
         {
-            int uniqueCoverage = uniqueCoverageMap.entrySet().stream().filter(x -> x.getKey().matches(allele)).mapToInt(x -> x.getValue()).findFirst().orElse(0);
-            double combinedCoverage = combinedCoverageMap.entrySet().stream().filter(x -> x.getKey().matches(allele)).mapToDouble(x -> x.getValue()).findFirst().orElse(0);
-            double wildCoverage = wildCoverageMap.entrySet().stream().filter(x -> x.getKey().matches(allele)).mapToDouble(x -> x.getValue()).findFirst().orElse(0);
+            int uniqueCoverage = uniqueCoverageMap.entrySet().stream().filter(x -> x.getKey() == allele).mapToInt(x -> x.getValue()).findFirst().orElse(0);
+            double combinedCoverage = combinedCoverageMap.entrySet().stream().filter(x -> x.getKey() == allele).mapToDouble(x -> x.getValue()).findFirst().orElse(0);
+            double wildCoverage = wildCoverageMap.entrySet().stream().filter(x -> x.getKey() == allele).mapToDouble(x -> x.getValue()).findFirst().orElse(0);
 
             results.add(new HlaAlleleCoverage(allele, uniqueCoverage, combinedCoverage, wildCoverage));
         }
@@ -129,7 +129,7 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
 
     private static void increment(final Map<HlaAllele,Integer> map, final HlaAllele allele, int value)
     {
-        Map.Entry<HlaAllele,Integer> entry = map.entrySet().stream().filter(x -> x.getKey().matches(allele)).findFirst().orElse(null);
+        Map.Entry<HlaAllele,Integer> entry = map.entrySet().stream().filter(x -> x.getKey() == allele).findFirst().orElse(null);
 
         if(entry == null)
         {
@@ -142,7 +142,7 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
 
     private static void increment(final Map<HlaAllele,Double> map, final HlaAllele allele, double value)
     {
-        Map.Entry<HlaAllele,Double> entry = map.entrySet().stream().filter(x -> x.getKey().matches(allele)).findFirst().orElse(null);
+        Map.Entry<HlaAllele,Double> entry = map.entrySet().stream().filter(x -> x.getKey() == allele).findFirst().orElse(null);
 
         if(entry == null)
         {

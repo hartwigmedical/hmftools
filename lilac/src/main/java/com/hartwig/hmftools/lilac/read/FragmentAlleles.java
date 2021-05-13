@@ -108,7 +108,7 @@ public class FragmentAlleles
 
                 // keep the best match
                 Map.Entry<HlaAllele,HlaSequenceMatch> entryMatch = alleleMatches.entrySet().stream()
-                        .filter(x -> x.getKey().matches(allele.asFourDigit())).findFirst().orElse(null);
+                        .filter(x -> x.getKey() == allele.asFourDigit()).findFirst().orElse(null);
 
                 if(entryMatch == null || matchType.isBetter(entryMatch.getValue()))
                 {
@@ -159,7 +159,7 @@ public class FragmentAlleles
                     continue;
 
                 Map.Entry<HlaAllele,HlaSequenceMatch> entryMatch = alleleMatches.entrySet().stream()
-                        .filter(x -> x.getKey().matches(allele)).findFirst().orElse(null);
+                        .filter(x -> x.getKey() == allele).findFirst().orElse(null);
 
                 if(entryMatch == null || matchType.isBetter(entryMatch.getValue()))
                 {
@@ -180,7 +180,7 @@ public class FragmentAlleles
         List<HlaAllele> wildAminoAcidMatch = alleleMatches.entrySet().stream()
                 .filter(x -> x.getValue() == WILD).map(x -> x.getKey()).collect(Collectors.toList());
 
-        if (fullNucleotideMatch.isEmpty() && partialNucleotideMatch.isEmpty())
+        if(fullNucleotideMatch.isEmpty() && partialNucleotideMatch.isEmpty())
             return new FragmentAlleles(aminoAcidFragment, fullAminoAcidMatch, partialAminoAcidMatch, wildAminoAcidMatch);
 
         List<HlaAllele> consistentFull = fullAminoAcidMatch.stream()

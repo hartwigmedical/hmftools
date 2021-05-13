@@ -108,7 +108,6 @@ public class HlaAllele implements Comparable<HlaAllele>
         return SynonymousNonCoding.compareTo(other.SynonymousNonCoding);
     }
 
-
     public boolean matches(final HlaAllele other)
     {
         return other.toString().equals(toString());
@@ -151,33 +150,26 @@ public class HlaAllele implements Comparable<HlaAllele>
         return Gene + '*' + AlleleGroup + ':' + Protein + ':' + Synonymous + ':' + SynonymousNonCoding;
     }
 
-    public static String toString(final List<HlaAllele> allees)
+    public static String toString(final List<HlaAllele> alleles)
     {
         StringJoiner sj = new StringJoiner(", ");
-        allees.forEach(x -> sj.add(x.toString()));
+        alleles.forEach(x -> sj.add(x.toString()));
         return sj.toString();
-    }
-
-    public static boolean matches(final List<HlaAllele> list1, final List<HlaAllele> list2)
-    {
-        if(list1.size() != list2.size())
-            return false;
-
-        return list1.stream().allMatch(x -> contains(list2, x));
     }
 
     public static boolean contains(final List<HlaAllele> list, final HlaAllele allele)
     {
-        return list.stream().anyMatch(x -> x.matches(allele));
+        return list.contains(allele);
     }
 
     public static List<HlaAllele> dedup(final List<HlaAllele> alleles)
     {
+        // dedep but maintain ordering
         List<HlaAllele> newList = Lists.newArrayList();
 
         for(int i = 0; i < alleles.size(); ++i)
         {
-            if(!contains(newList, alleles.get(i)))
+            if(!newList.contains(alleles.get(i)))
                 newList.add(alleles.get(i));
         }
 

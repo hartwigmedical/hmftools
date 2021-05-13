@@ -199,6 +199,16 @@ public class LilacApplication implements AutoCloseable, Runnable
         List<HlaAllele> candidateAlleles = phasedCandidateAlleles.stream().collect(Collectors.toList());
         candidateAlleles.addAll(recoveredAlleles);
 
+        List<HlaAllele> missingExpected = mConfig.ExpectedAlleles.stream().filter(x -> !candidateAlleles.contains(x)).collect(Collectors.toList());
+
+        if (!missingExpected.isEmpty())
+        {
+            LL_LOGGER.info("  including {} expected alleles as candidates: {}",
+                    missingExpected.size(), HlaAllele.toString(missingExpected));
+
+            candidateAlleles.addAll(missingExpected);
+        }
+
         List<HlaSequenceLoci> candidateSequences = mRefData.AminoAcidSequences.stream()
                 .filter(x -> contains(candidateAlleles, x.getAllele())).collect(Collectors.toList());
 
