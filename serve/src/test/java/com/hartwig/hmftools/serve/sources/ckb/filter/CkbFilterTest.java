@@ -57,6 +57,10 @@ public class CkbFilterTest {
         String firstUnresolvableLeg = CkbConstants.UNRESOLVABLE_FUSION_LEGS.iterator().next();
         CkbEntry unresolvableEntry = CkbTestFactory.createEntryWithGeneAndVariant("BRAF", firstUnresolvableLeg + "-BRAF");
         assertTrue(filter.run(Lists.newArrayList(unresolvableEntry)).isEmpty());
+
+        String firstUnmappableLeg = CkbConstants.UNMAPPABLE_GENES.iterator().next();
+        CkbEntry unmappableEntry = CkbTestFactory.createEntryWithGeneAndVariant("BRAF", firstUnmappableLeg + "-BRAF");
+        assertTrue(filter.run(Lists.newArrayList(unmappableEntry)).isEmpty());
     }
 
     @Test

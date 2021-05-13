@@ -31,8 +31,10 @@ public final class CkbConstants {
         UNMAPPABLE_GENES.add("COX2");
         UNMAPPABLE_GENES.add("EPOP");
         UNMAPPABLE_GENES.add("FER1L5");
+        UNMAPPABLE_GENES.add("HMGN2P46"); // Only appears as a leg in a fusion but not directly as a gene that holds a variant
         UNMAPPABLE_GENES.add("IGHV3-21");
         UNMAPPABLE_GENES.add("IGHV4-34");
+        UNMAPPABLE_GENES.add("LOC389473"); // Only appears as a leg in a fusion but not directly as a gene that holds a variant
         UNMAPPABLE_GENES.add("MALAT1");
         UNMAPPABLE_GENES.add("MAP3K14");
         UNMAPPABLE_GENES.add("PVT1");
@@ -42,29 +44,21 @@ public final class CkbConstants {
         UNMAPPABLE_GENES.add("TERC");
         UNMAPPABLE_GENES.add("ZFTA");
 
-        UNRESOLVABLE_FUSION_LEGS.add("ACP3");
-        UNRESOLVABLE_FUSION_LEGS.add("BCAR4");
-        UNRESOLVABLE_FUSION_LEGS.add("CARS1");
-        UNRESOLVABLE_FUSION_LEGS.add("CEP43");
-        UNRESOLVABLE_FUSION_LEGS.add("COP1");
-        UNRESOLVABLE_FUSION_LEGS.add("FYB1");
-        UNRESOLVABLE_FUSION_LEGS.add("HMGN2P46");
-        UNRESOLVABLE_FUSION_LEGS.add("LOC389473");
-        UNRESOLVABLE_FUSION_LEGS.add("MALAT1");
-        UNRESOLVABLE_FUSION_LEGS.add("MIR548F1");
-        UNRESOLVABLE_FUSION_LEGS.add("MRTFB");
-        UNRESOLVABLE_FUSION_LEGS.add("OGA");
-        UNRESOLVABLE_FUSION_LEGS.add("PVT1");
-        UNRESOLVABLE_FUSION_LEGS.add("RARS1");
-        UNRESOLVABLE_FUSION_LEGS.add("RELCH");
-        UNRESOLVABLE_FUSION_LEGS.add("RNF217-AS1");
-        UNRESOLVABLE_FUSION_LEGS.add("SEPTIN7");
-        UNRESOLVABLE_FUSION_LEGS.add("SEPTIN14");
-        UNRESOLVABLE_FUSION_LEGS.add("SEPTIN6");
-        UNRESOLVABLE_FUSION_LEGS.add("SEPTIN3");
-        UNRESOLVABLE_FUSION_LEGS.add("SYN2");
-        UNRESOLVABLE_FUSION_LEGS.add("ZFTA");
-        UNRESOLVABLE_FUSION_LEGS.add("ZNF767P");
+        UNRESOLVABLE_FUSION_LEGS.add("ACP3"); // Map to ACPP
+        UNRESOLVABLE_FUSION_LEGS.add("CARS1"); // Map to CARS
+        UNRESOLVABLE_FUSION_LEGS.add("CEP43"); // Map to FGFR1OP
+        UNRESOLVABLE_FUSION_LEGS.add("COP1"); // Map to RFWD2
+        UNRESOLVABLE_FUSION_LEGS.add("FYB1"); // Map to FYB
+        UNRESOLVABLE_FUSION_LEGS.add("MIR548F1"); // Gene exists in v38 but has no v37-v38 mapping
+        UNRESOLVABLE_FUSION_LEGS.add("MRTFB"); // Map to MKL2
+        UNRESOLVABLE_FUSION_LEGS.add("OGA"); // Map to MGEA5
+        UNRESOLVABLE_FUSION_LEGS.add("RARS1"); // Map to RARS
+        UNRESOLVABLE_FUSION_LEGS.add("RELCH"); // Map to KIAA1468
+        UNRESOLVABLE_FUSION_LEGS.add("SEPTIN3"); // Map to SEPT3
+        UNRESOLVABLE_FUSION_LEGS.add("SEPTIN6"); // Map to SEPT6
+        UNRESOLVABLE_FUSION_LEGS.add("SEPTIN7"); // Map to SEPT7
+        UNRESOLVABLE_FUSION_LEGS.add("SEPTIN14"); // Map to SEPT14
+        UNRESOLVABLE_FUSION_LEGS.add("ZNF767P"); // Gene exists in v38 but has no v37-v38 mapping
 
         EXCLUSIVE_FUSION_GENES.add("IGH");
         EXCLUSIVE_FUSION_GENES.add("IGK");

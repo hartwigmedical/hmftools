@@ -127,10 +127,16 @@ public class CkbFilter {
             }
         }
 
-        // In case a leg of a fusion does not exist in our exome definition we have to remove it.
+        // In case a leg of a fusion does not exist in our exome definition, or mapping, we have to remove it.
         if (type == EventType.FUSION_PAIR) {
             for (String fusionLeg : CkbConstants.UNRESOLVABLE_FUSION_LEGS) {
                 if (event.contains(fusionLeg) && !gene.equals(fusionLeg)) {
+                    return false;
+                }
+            }
+
+            for (String unmappableGene : CkbConstants.UNMAPPABLE_GENES) {
+                if (event.contains(unmappableGene) && !gene.equals(unmappableGene)) {
                     return false;
                 }
             }
