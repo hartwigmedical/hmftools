@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.patientreporter;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-
 import java.io.File;
 import java.nio.file.Files;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.apache.commons.cli.CommandLine;
@@ -33,13 +30,11 @@ public interface PatientReporterConfig {
     String PRIMARY_TUMOR_TSV = "primary_tumor_tsv";
     String LIMS_DIRECTORY = "lims_dir";
 
-    String PIPELINE_VERSION_FILE = "pipeline_version_file";
-
     String RVA_LOGO = "rva_logo";
     String COMPANY_LOGO = "company_logo";
     String SIGNATURE = "signature";
 
-    // General params needed for every report but for QC fail it could be missing
+    // General params needed for every report but for QC fail it can be optional in some cases
     String REF_SAMPLE_ID = "ref_sample_id";
     String REF_SAMPLE_BARCODE = "ref_sample_barcode";
 
@@ -48,24 +43,26 @@ public interface PatientReporterConfig {
     String QC_FAIL_REASON = "qc_fail_reason";
 
     // Params specific for actual patient reports
+    String PIPELINE_VERSION_FILE = "pipeline_version_file";
     String PURPLE_PURITY_TSV = "purple_purity_tsv"; // Also used for certain QC fail reports in case deep WGS is available.
     String PURPLE_QC_FILE = "purple_qc_file"; // Also used for certain QC fail reports in case deep WGS is available.
     String PURPLE_SOMATIC_DRIVER_CATALOG_TSV = "purple_somatic_driver_catalog_tsv";
     String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = "purple_germline_driver_catalog_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
-    String PURPLE_CNV_SOMATIC_TSV = "purple_cnv_somatic_tsv";
+    String PURPLE_SOMATIC_CN_TSV = "purple_somatic_cn_tsv";
+    String PURPLE_CIRCOS_FILE = "purple_circos_file";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
-    String CIRCOS_FILE = "circos_file";
-    String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
     String MOLECULAR_TISSUE_ORIGIN_TXT = "molecular_tissue_origin_txt";
     String MOLECULAR_TISSUE_ORIGIN_PLOT = "molecular_tissue_origin_plot";
     String VIRUS_BREAKEND_TSV = "virus_breakend_tsv";
     String PEACH_GENOTYPE_TSV = "peach_genotype_tsv";
+    String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
 
+    // Resources used for generating an analysed patient report
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
     String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
     String VIRUS_TSV = "virus_tsv";
@@ -77,8 +74,6 @@ public interface PatientReporterConfig {
     String CORRECTED_REPORT = "corrected_report";
     String LOG_DEBUG = "log_debug";
     String ONLY_CREATE_PDF = "only_create_pdf";
-
-    public static RefGenomeVersion RG_VERSION = V37;
 
     @NotNull
     static Options createOptions() {
@@ -93,42 +88,40 @@ public interface PatientReporterConfig {
         options.addOption(PRIMARY_TUMOR_TSV, true, "Path towards the (curated) primary tumor TSV.");
         options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
 
-        options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version");
-
         options.addOption(RVA_LOGO, true, "Path towards an image file containing the RVA logo.");
         options.addOption(COMPANY_LOGO, true, "Path towards an image file containing the company logo.");
         options.addOption(SIGNATURE, true, "Path towards an image file containing the signature to be appended at the end of the report.");
 
-        options.addOption(REF_SAMPLE_ID, true, "The reference sample ID for the tumor sample for which we are generating a report.");
-        options.addOption(REF_SAMPLE_BARCODE,
-                true,
-                "The reference sample barcode for the tumor sample for which we are generating a report.");
+        options.addOption(REF_SAMPLE_ID, true, "The reference sample ID for the tumor sample for which a report is generated.");
+        options.addOption(REF_SAMPLE_BARCODE, true, "The reference sample barcode for the tumor sample for which a report is generated.");
 
         options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
         options.addOption(QC_FAIL_REASON, true, "One of: " + Strings.join(Lists.newArrayList(QCFailReason.validIdentifiers()), ','));
 
+        options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version");
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
         options.addOption(PURPLE_SOMATIC_DRIVER_CATALOG_TSV, true, "Path towards the purple somatic driver catalog TSV.");
         options.addOption(PURPLE_GERMLINE_DRIVER_CATALOG_TSV, true, "Path towards the purple germline driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
-        options.addOption(PURPLE_CNV_SOMATIC_TSV, true, "Path towards the purple cnv somatic TSV.");
+        options.addOption(PURPLE_SOMATIC_CN_TSV, true, "Path towards the purple somatic copynumber TSV.");
+        options.addOption(PURPLE_CIRCOS_FILE, true, "Path towards the purple circos file.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the linx breakend TSV.");
         options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
-        options.addOption(CIRCOS_FILE, true, "Path towards the circos file.");
-        options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
         options.addOption(MOLECULAR_TISSUE_ORIGIN_TXT, true, "Path towards the molecular tissue origin TXT.");
         options.addOption(MOLECULAR_TISSUE_ORIGIN_PLOT, true, "Path towards the molecular tissue origin plot.");
         options.addOption(VIRUS_BREAKEND_TSV, true, "Path towards the virus breakend TSV.");
         options.addOption(PEACH_GENOTYPE_TSV, true, "Path towards the peach genotype TSV.");
+        options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
 
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
         options.addOption(VIRUS_TSV, true, "Path towards a TSV containing the virus names.");
-        options.addOption(VIRUS_BLACKLIST_TSV, true, "Path towards a TSV containing the virus names which we want to report on summary page.");
+        options.addOption(VIRUS_SUMMARY_TSV, true, "Path towards a TSV containing the virus summaries.");
+        options.addOption(VIRUS_BLACKLIST_TSV, true, "Path towards a TSV containing the virus names which we report on summary page.");
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
         options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
@@ -166,9 +159,6 @@ public interface PatientReporterConfig {
     String limsDir();
 
     @NotNull
-    String pipelineVersionFile();
-
-    @NotNull
     String rvaLogo();
 
     @NotNull
@@ -181,6 +171,9 @@ public interface PatientReporterConfig {
 
     @Nullable
     QCFailReason qcFailReason();
+
+    @NotNull
+    String pipelineVersionFile();
 
     @NotNull
     String purplePurityTsv();
@@ -201,7 +194,10 @@ public interface PatientReporterConfig {
     String purpleGermlineVariantVcf();
 
     @NotNull
-    String purpleCnvSomaticTsv();
+    String purpleSomaticCopyNumberTsv();
+
+    @NotNull
+    String purpleCircosFile();
 
     @NotNull
     String linxFusionTsv();
@@ -216,12 +212,6 @@ public interface PatientReporterConfig {
     String chordPredictionTxt();
 
     @NotNull
-    String circosFile();
-
-    @NotNull
-    String protectEvidenceTsv();
-
-    @NotNull
     String molecularTissueOriginTxt();
 
     @NotNull
@@ -232,6 +222,9 @@ public interface PatientReporterConfig {
 
     @NotNull
     String peachGenotypeTsv();
+
+    @NotNull
+    String protectEvidenceTsv();
 
     @NotNull
     String germlineReportingTsv();
@@ -251,7 +244,7 @@ public interface PatientReporterConfig {
     @Nullable
     String comments();
 
-    boolean correctedReport();
+    boolean isCorrectedReport();
 
     boolean onlyCreatePDF();
 
@@ -271,63 +264,64 @@ public interface PatientReporterConfig {
             }
         }
 
+        String pipelineVersion = Strings.EMPTY;
         String purplePurityTsv = Strings.EMPTY;
         String purpleQCFile = Strings.EMPTY;
-        String purpleDriverCatalogSomaticTsv = Strings.EMPTY;
-        String purpleDriverCatalogGermlineTsv = Strings.EMPTY;
+        String purpleSomaticDriverCatalogTsv = Strings.EMPTY;
+        String purpleGermlineDriverCatalogTsv = Strings.EMPTY;
         String purpleSomaticVariantVcf = Strings.EMPTY;
         String purpleGermlineVariantVcf = Strings.EMPTY;
-        String purpleCnvSomaticTsv = Strings.EMPTY;
+        String purpleSomaticCopyNumberTsv = Strings.EMPTY;
+        String purpleCircosFile = Strings.EMPTY;
         String linxFusionTsv = Strings.EMPTY;
         String linxBreakendTsv = Strings.EMPTY;
         String linxDriverCatalogTsv = Strings.EMPTY;
         String chordPredictionTxt = Strings.EMPTY;
-        String circosFile = Strings.EMPTY;
-        String protectEvidenceFile = Strings.EMPTY;
         String molecularTissueOriginTxt = Strings.EMPTY;
         String molecularTissueOriginPlot = Strings.EMPTY;
         String virusBreakendTsv = Strings.EMPTY;
         String peachGenotypeTsv = Strings.EMPTY;
+        String protectEvidenceTsv = Strings.EMPTY;
 
         String germlineReportingTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
         String virusTsv = Strings.EMPTY;
         String virusSummaryTsv = Strings.EMPTY;
         String virusBlacklistTsv = Strings.EMPTY;
-        String pipelineVersion = Strings.EMPTY;
 
         if (isQCFail && qcFailReason.isDeepWGSDataAvailable()) {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
             purpleQCFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
         } else if (!isQCFail) {
+            pipelineVersion = optionalFile(cmd, PIPELINE_VERSION_FILE);
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
             purpleQCFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
-            purpleDriverCatalogSomaticTsv = nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVER_CATALOG_TSV);
-            purpleDriverCatalogGermlineTsv = nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV);
+            purpleSomaticDriverCatalogTsv = nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVER_CATALOG_TSV);
+            purpleGermlineDriverCatalogTsv = nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV);
             purpleSomaticVariantVcf = nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF);
             purpleGermlineVariantVcf = nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF);
-            purpleCnvSomaticTsv = nonOptionalFile(cmd, PURPLE_CNV_SOMATIC_TSV);
+            purpleSomaticCopyNumberTsv = nonOptionalFile(cmd, PURPLE_SOMATIC_CN_TSV);
+            purpleCircosFile = nonOptionalFile(cmd, PURPLE_CIRCOS_FILE);
             linxFusionTsv = nonOptionalFile(cmd, LINX_FUSION_TSV);
             linxBreakendTsv = nonOptionalFile(cmd, LINX_BREAKEND_TSV);
             linxDriverCatalogTsv = nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV);
             chordPredictionTxt = nonOptionalFile(cmd, CHORD_PREDICTION_TXT);
-            circosFile = nonOptionalFile(cmd, CIRCOS_FILE);
-            protectEvidenceFile = nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV);
+            molecularTissueOriginTxt = optionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_TXT);
+            molecularTissueOriginPlot = optionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_PLOT);
+            virusBreakendTsv = optionalFile(cmd, VIRUS_BREAKEND_TSV);
+            peachGenotypeTsv = optionalFile(cmd, PEACH_GENOTYPE_TSV);
+            protectEvidenceTsv = nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV);
+
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
             virusTsv = nonOptionalFile(cmd, VIRUS_TSV);
             virusSummaryTsv = nonOptionalFile(cmd, VIRUS_SUMMARY_TSV);
             virusBlacklistTsv = nonOptionalFile(cmd, VIRUS_BLACKLIST_TSV);
-            pipelineVersion = optionalFile(cmd, PIPELINE_VERSION_FILE);
-            molecularTissueOriginTxt = optionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_TXT);
-            molecularTissueOriginPlot = optionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_PLOT);
-            virusBreakendTsv = optionalFile(cmd, VIRUS_BREAKEND_TSV);
-            peachGenotypeTsv = optionalFile(cmd, PEACH_GENOTYPE_TSV);
         }
 
         return ImmutablePatientReporterConfig.builder()
-                .refSampleId(cmd.hasOption(REF_SAMPLE_ID) ? nonOptionalValue(cmd, REF_SAMPLE_ID) : null )
-                .refSampleBarcode(cmd.hasOption(REF_SAMPLE_BARCODE) ? nonOptionalValue(cmd, REF_SAMPLE_BARCODE): null)
+                .refSampleId(cmd.hasOption(REF_SAMPLE_ID) ? nonOptionalValue(cmd, REF_SAMPLE_ID) : null)
+                .refSampleBarcode(cmd.hasOption(REF_SAMPLE_BARCODE) ? nonOptionalValue(cmd, REF_SAMPLE_BARCODE) : null)
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .tumorSampleBarcode(nonOptionalValue(cmd, TUMOR_SAMPLE_BARCODE))
                 .outputDirReport(nonOptionalDir(cmd, OUTPUT_DIRECTORY_REPORT))
@@ -343,28 +337,28 @@ public interface PatientReporterConfig {
                 .qcFailReason(qcFailReason)
                 .purplePurityTsv(purplePurityTsv)
                 .purpleQcFile(purpleQCFile)
-                .purpleSomaticDriverCatalogTsv(purpleDriverCatalogSomaticTsv)
-                .purpleGermlineDriverCatalogTsv(purpleDriverCatalogGermlineTsv)
+                .purpleSomaticDriverCatalogTsv(purpleSomaticDriverCatalogTsv)
+                .purpleGermlineDriverCatalogTsv(purpleGermlineDriverCatalogTsv)
                 .purpleSomaticVariantVcf(purpleSomaticVariantVcf)
                 .purpleGermlineVariantVcf(purpleGermlineVariantVcf)
-                .purpleCnvSomaticTsv(purpleCnvSomaticTsv)
+                .purpleSomaticCopyNumberTsv(purpleSomaticCopyNumberTsv)
+                .purpleCircosFile(purpleCircosFile)
                 .linxFusionTsv(linxFusionTsv)
                 .linxBreakendTsv(linxBreakendTsv)
                 .linxDriverCatalogTsv(linxDriverCatalogTsv)
                 .chordPredictionTxt(chordPredictionTxt)
-                .circosFile(circosFile)
-                .protectEvidenceTsv(protectEvidenceFile)
                 .molecularTissueOriginTxt(molecularTissueOriginTxt)
                 .molecularTissueOriginPlot(molecularTissueOriginPlot)
                 .virusBreakendTsv(virusBreakendTsv)
                 .peachGenotypeTsv(peachGenotypeTsv)
+                .protectEvidenceTsv(protectEvidenceTsv)
                 .germlineReportingTsv(germlineReportingTsv)
                 .sampleSummaryTsv(sampleSummaryTsv)
                 .virusTsv(virusTsv)
                 .virusSummaryTsv(virusSummaryTsv)
                 .virusBlacklistTsv(virusBlacklistTsv)
                 .comments(cmd.getOptionValue(COMMENTS))
-                .correctedReport(cmd.hasOption(CORRECTED_REPORT))
+                .isCorrectedReport(cmd.hasOption(CORRECTED_REPORT))
                 .onlyCreatePDF(cmd.hasOption(ONLY_CREATE_PDF))
                 .build();
     }
@@ -419,5 +413,4 @@ public interface PatientReporterConfig {
     static boolean pathIsDirectory(@NotNull String path) {
         return Files.isDirectory(new File(path).toPath());
     }
-
 }

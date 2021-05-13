@@ -72,7 +72,7 @@ public class PatientReporterApplication {
                 config.purplePurityTsv(),
                 config.purpleQcFile(),
                 config.comments(),
-                config.correctedReport());
+                config.isCorrectedReport());
         LOGGER.info("Cohort of this sample is: {}", report.sampleReport().cohort().cohortId());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriterNoGermline();
@@ -105,15 +105,15 @@ public class PatientReporterApplication {
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineVariantVcf(),
-                config.purpleCnvSomaticTsv(),
+                config.purpleSomaticCopyNumberTsv(),
                 config.linxFusionTsv(),
                 config.linxBreakendTsv(),
                 config.linxDriverCatalogTsv(),
                 config.chordPredictionTxt(),
-                config.circosFile(),
+                config.purpleCircosFile(),
                 config.protectEvidenceTsv(),
                 config.comments(),
-                config.correctedReport(),
+                config.isCorrectedReport(),
                 config.pipelineVersionFile(),
                 config.molecularTissueOriginTxt(),
                 config.molecularTissueOriginPlot(),

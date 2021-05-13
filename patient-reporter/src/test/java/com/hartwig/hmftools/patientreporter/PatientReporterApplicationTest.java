@@ -60,5 +60,4 @@ public class PatientReporterApplicationTest {
                 .biallelic(false)
                 .build();
     }
-
 }
