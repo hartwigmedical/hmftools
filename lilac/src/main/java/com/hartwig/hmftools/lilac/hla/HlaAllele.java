@@ -16,9 +16,12 @@ public class HlaAllele implements Comparable<HlaAllele>
     public final String SynonymousNonCoding;
 
     private final HlaAllele mFourDigit;
+    private final HlaAllele mGroup;
+    private final int mHashCode;;
 
     public HlaAllele(
-            final String gene, final String alleleGroup, final String protein, final String synonymous, final String synonymousNonCoding)
+            final String gene, final String alleleGroup, final String protein, final String synonymous, final String synonymousNonCoding,
+            final HlaAllele fourDigit, final HlaAllele group)
     {
         Gene = gene;
         AlleleGroup = alleleGroup;
@@ -26,10 +29,10 @@ public class HlaAllele implements Comparable<HlaAllele>
         Synonymous = synonymous;
         SynonymousNonCoding = synonymousNonCoding;
 
-        if(!synonymous.isEmpty())
-            mFourDigit = new HlaAllele(gene, alleleGroup, protein, "", "");
-        else
-            mFourDigit = null;
+        mFourDigit = fourDigit;
+        mGroup = group;
+
+        mHashCode = toString().hashCode();
     }
 
     public static HlaAllele fromString(final String line)
@@ -46,47 +49,38 @@ public class HlaAllele implements Comparable<HlaAllele>
         String synonymousCoding = contigSplit.length < 3 ? "" : contigSplit[2];
         String synonymousNonCoding = contigSplit.length < 4 ? "": contigSplit[3];
 
-        return new HlaAllele(gene, alleleGroup, protein, synonymousCoding, synonymousNonCoding);
+        HlaAllele group = !protein.isEmpty() ?
+                new HlaAllele(gene, alleleGroup, "", "", "", null, null) : null;
+
+        HlaAllele fourDigit = !synonymousCoding.isEmpty() ?
+                new HlaAllele(gene, alleleGroup, protein, "", "", null, null) : null;
+
+        return new HlaAllele(gene, alleleGroup, protein, synonymousCoding, synonymousNonCoding, fourDigit, group);
     }
 
-    public String toString()
-    {
-        CharSequence charSequence = Protein;
-        if(charSequence.length() == 0)
-        {
-            return Gene + '*' + AlleleGroup;
-        }
-        charSequence = Synonymous;
-        if(charSequence.length() == 0)
-        {
-            return Gene + '*' + AlleleGroup + ':' + Protein;
-        }
-        charSequence = SynonymousNonCoding;
-        if(charSequence.length() == 0)
-        {
-            return Gene + '*' + AlleleGroup + ':' + Protein + ':' + Synonymous;
-        }
-        return Gene + '*' + AlleleGroup + ':' + Protein + ':' + Synonymous + ':' + SynonymousNonCoding;
-    }
+    public boolean isGroup() { return Protein.isEmpty(); }
+    public boolean isFourDigit() { return Synonymous.isEmpty(); }
 
-    public static String toString(final List<HlaAllele> allees)
+    public final HlaAllele asAlleleGroup()
     {
-        StringJoiner sj = new StringJoiner(", ");
-        allees.forEach(x -> sj.add(x.toString()));
-        return sj.toString();
-    }
-
-    public final HlaAllele asSixDigit()
-    {
-        return new HlaAllele(Gene, AlleleGroup, Protein, Synonymous, "");
+        return mGroup != null ? mGroup : this;
+        // return new HlaAllele(Gene, AlleleGroup, "", "", "");
     }
 
     public final HlaAllele asFourDigit() { return mFourDigit != null ? mFourDigit : this; }
 
-    public final HlaAllele asAlleleGroup()
+    public boolean equals(final Object other)
     {
-        return new HlaAllele(Gene, AlleleGroup, "", "", "");
+        if(this == other)
+            return true;
+
+        if (!(other instanceof HlaAllele))
+            return false;
+
+        return compareTo((HlaAllele)other) == 0;
     }
+
+    public int hashCode() { return mHashCode; }
 
     @Override
     public int compareTo(final HlaAllele other)
@@ -135,6 +129,33 @@ public class HlaAllele implements Comparable<HlaAllele>
         }
 
         return newList;
+    }
+
+    public String toString()
+    {
+        CharSequence charSequence = Protein;
+        if(charSequence.length() == 0)
+        {
+            return Gene + '*' + AlleleGroup;
+        }
+        charSequence = Synonymous;
+        if(charSequence.length() == 0)
+        {
+            return Gene + '*' + AlleleGroup + ':' + Protein;
+        }
+        charSequence = SynonymousNonCoding;
+        if(charSequence.length() == 0)
+        {
+            return Gene + '*' + AlleleGroup + ':' + Protein + ':' + Synonymous;
+        }
+        return Gene + '*' + AlleleGroup + ':' + Protein + ':' + Synonymous + ':' + SynonymousNonCoding;
+    }
+
+    public static String toString(final List<HlaAllele> allees)
+    {
+        StringJoiner sj = new StringJoiner(", ");
+        allees.forEach(x -> sj.add(x.toString()));
+        return sj.toString();
     }
 
     public static boolean matches(final List<HlaAllele> list1, final List<HlaAllele> list2)

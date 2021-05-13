@@ -17,19 +17,25 @@ import static com.hartwig.hmftools.lilac.LilacConstants.LOCI_POSITION;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToFourDigit;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToSixDigit;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
@@ -51,6 +57,11 @@ public class ReferenceData
     public final List<HlaSequenceLoci> AminoAcidSequencesWithInserts;
     public final List<HlaSequenceLoci> AminoAcidSequencesWithDeletes;
 
+    public final List<HlaAllele> CommonAlleles; // common in population
+    public final List<HlaAllele> StopLossRecoveryAlleles;
+
+    private final HlaAlleleCache mAlleleCache;
+
     private static final char SEQUENCE_DELIM = '|';
     private static final String NUC_REF_FILE = "lilac_ref_nucleotide_sequences.csv";
     private static final String AA_REF_FILE = "lilac_ref_aminoacid_sequences.csv";
@@ -60,6 +71,8 @@ public class ReferenceData
         mResourceDir = resourceDir;
         mConfig = config;
 
+        mAlleleCache = new HlaAlleleCache();
+
         NucleotideSequences = Lists.newArrayList();
         AminoAcidSequences = Lists.newArrayList();
         AminoAcidSequencesWithInserts = Lists.newArrayList();
@@ -68,6 +81,9 @@ public class ReferenceData
         // load gene definitions and other constants
         populateHlaTranscripts();
         populateConstants();
+
+        CommonAlleles = Lists.newArrayList();
+        StopLossRecoveryAlleles = Lists.newArrayList();
     }
 
     public static void populateHlaTranscripts()
@@ -94,13 +110,26 @@ public class ReferenceData
 
     public boolean load(boolean canUseConsolidated)
     {
+        // load and register configured and known alleles
+        mAlleleCache.rebuildProteinAlleles(mConfig.ExpectedAlleles);
+        mAlleleCache.rebuildProteinAlleles(mConfig.RestrictedAlleles);
+
+        loadCommonAlleles();
+
+        if(!CommonAlleles.isEmpty())
+        {
+            LL_LOGGER.info("loaded {} common alleles", CommonAlleles.size());
+        }
+
+        loadStopLossRecoveryAllele();
+
         LL_LOGGER.info("Reading nucleotide files");
 
         String nucleotideFilename = mResourceDir + NUC_REF_FILE;
 
         if(canUseConsolidated && Files.exists(Paths.get(nucleotideFilename)))
         {
-            if(!loadSequenceFile(nucleotideFilename, NucleotideSequences))
+            if(!loadSequenceFile(nucleotideFilename, NucleotideSequences, false))
                 return false;
         }
         else
@@ -116,7 +145,7 @@ public class ReferenceData
 
         if(canUseConsolidated && Files.exists(Paths.get(aminoAcidFilename)))
         {
-            if(!loadSequenceFile(aminoAcidFilename, AminoAcidSequences))
+            if(!loadSequenceFile(aminoAcidFilename, AminoAcidSequences, true))
                 return false;
         }
         else
@@ -130,6 +159,20 @@ public class ReferenceData
         AminoAcidSequencesWithDeletes.addAll(AminoAcidSequences.stream().filter(x -> x.containsDeletes()).collect(Collectors.toList()));
 
         return true;
+    }
+
+    private void loadCommonAlleles()
+    {
+        final List<String> commonAlleleLines = new BufferedReader(new InputStreamReader(
+                RefGenomeCoordinates.class.getResourceAsStream("/alleles/common.txt")))
+                .lines().collect(Collectors.toList());
+
+        commonAlleleLines.stream().map(x -> mAlleleCache.requestFourDigit(x)).forEach(x -> CommonAlleles.add(x));
+    }
+
+    private void loadStopLossRecoveryAllele()
+    {
+        StopLossRecoveryAlleles.add(mAlleleCache.requestFourDigit("C*04:09N"));
     }
 
     private boolean excludeAllele(final HlaAllele allele)
@@ -154,7 +197,7 @@ public class ReferenceData
         return false;
     }
 
-    private boolean loadSequenceFile(final String filename, final List<HlaSequenceLoci> sequenceData)
+    private boolean loadSequenceFile(final String filename, final List<HlaSequenceLoci> sequenceData, boolean isProteinFile)
     {
         try
         {
@@ -169,7 +212,9 @@ public class ReferenceData
                 if(items.length != 2)
                     return false;
 
-                HlaAllele allele = HlaAllele.fromString(items[0]);
+                String alleleStr = items[0];
+                // HlaAllele tmpAllele = HlaAllele.fromString(alleleStr);
+                HlaAllele allele = isProteinFile ? mAlleleCache.requestFourDigit(alleleStr) : mAlleleCache.request(alleleStr);
 
                 if(excludeAllele(allele))
                     continue;
@@ -214,7 +259,7 @@ public class ReferenceData
                 sequenceData.add(new HlaSequenceLoci(allele, sequences));
             }
 
-            LL_LOGGER.info("loaded {} from file {}", sequenceData.size(), filename);
+            LL_LOGGER.info("loaded {} sequences from file {}", sequenceData.size(), filename);
             return true;
         }
         catch (IOException e)
@@ -234,10 +279,10 @@ public class ReferenceData
 
         List<HlaSequence> reducedSequences = reduceToSixDigit(filteredSequences);
 
-        return HlaSequenceLoci.create(reducedSequences);
+        return buildSequences(reducedSequences, false);
     }
 
-    public final List<HlaSequenceLoci> aminoAcidLoci(final String filename)
+    public List<HlaSequenceLoci> aminoAcidLoci(final String filename)
     {
         List<HlaSequence> sequences = HlaSequenceFile.readFile(filename);
 
@@ -252,8 +297,39 @@ public class ReferenceData
                 .map(x -> x.getRawSequence().endsWith("X") ? x : x.copyWithAdditionalSequence("X"))
                 .collect(Collectors.toList());
 
-        return HlaSequenceLoci.create(reducedSequences);
+        return buildSequences(reducedSequences, true);
     }
+
+    public List<HlaSequenceLoci> buildSequences(final List<HlaSequence> sequences, boolean isProteinFile)
+    {
+        final String reference = sequences.get(0).getRawSequence();
+
+        // build sequences using the allele cache to avoid any duplication of alleles
+        List<HlaSequenceLoci> newSequences = Lists.newArrayList();
+
+        for(HlaSequence sequence : sequences)
+        {
+            HlaAllele allele = isProteinFile ?
+                    mAlleleCache.requestFourDigit(sequence.Allele.toString()) : mAlleleCache.request(sequence.Allele.toString());
+
+            HlaSequenceLoci newSequence = HlaSequenceLoci.create(allele, sequence.getRawSequence(), reference);
+
+            if(!newSequence.getSequences().isEmpty())
+            {
+                newSequences.add(newSequence);
+            }
+        }
+
+        return newSequences;
+
+        /*
+        return sequences.stream()
+                .map(x -> HlaSequenceLoci.create(x.Allele, x.getRawSequence(), reference))
+                .filter(x -> !x.getSequences().isEmpty())
+                .collect(Collectors.toList());
+         */
+    }
+
 
     // reference data rewrite
     public static void main(@NotNull final String[] args) throws ParseException

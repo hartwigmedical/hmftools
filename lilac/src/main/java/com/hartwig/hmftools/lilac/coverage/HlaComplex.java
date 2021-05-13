@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.LilacConfig;
+import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.read.FragmentAlleles;
 
@@ -28,7 +29,7 @@ public class HlaComplex
     public List<HlaAllele> getAlleles() { return Alleles; }
 
     public static List<HlaComplex> complexes(
-            final LilacConfig config, final List<FragmentAlleles> referenceFragmentAlleles,
+            final LilacConfig config, final ReferenceData refData, final List<FragmentAlleles> referenceFragmentAlleles,
             final List<HlaAllele> candidateAlleles) // final List<HlaAllele> recoveredAlleles was uused
     {
         LL_LOGGER.info("Identifying uniquely identifiable groups and proteins [total,unique,shared,wild]");
@@ -94,7 +95,7 @@ public class HlaComplex
         {
             LL_LOGGER.info("Candidate permutations exceeds maximum complexity");
 
-            HlaComplexCoverageFactory groupRankedCoverageFactory = new HlaComplexCoverageFactory(config);
+            HlaComplexCoverageFactory groupRankedCoverageFactory = new HlaComplexCoverageFactory(config, refData);
             List<HlaAllele> aTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, aOnlyComplexes);
             List<HlaAllele> bTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, bOnlyComplexes);
             List<HlaAllele> cTopCandidates = groupRankedCoverageFactory.rankedGroupCoverage(10, referenceFragmentAlleles, cOnlyComplexes);

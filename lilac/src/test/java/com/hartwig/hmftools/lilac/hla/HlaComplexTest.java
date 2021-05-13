@@ -88,12 +88,12 @@ public class HlaComplexTest
 
     private HlaAllele createA(int group, int protein)
     {
-        return new HlaAllele("A", String.valueOf(group), String.valueOf(protein), "", "");
+        return new HlaAllele("A", String.valueOf(group), String.valueOf(protein), "", "", null, null);
     }
 
     private HlaAllele createB(int group, int protein)
     {
-        return new HlaAllele("B", String.valueOf(group), String.valueOf(protein), "", "");
+        return new HlaAllele("B", String.valueOf(group), String.valueOf(protein), "", "", null, null);
     }
 
 }

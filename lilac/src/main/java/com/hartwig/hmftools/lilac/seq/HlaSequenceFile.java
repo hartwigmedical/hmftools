@@ -77,25 +77,19 @@ public class HlaSequenceFile
         return reduce(sequences, false);
     }
 
+    public static HlaAllele asSixDigit(final HlaAllele allele)
+    {
+        return new HlaAllele(allele.Gene, allele.AlleleGroup, allele.Protein, allele.Synonymous, "", null, null);
+    }
+
     private static List<HlaSequence> reduce(final List<HlaSequence> sequences, boolean toFourDigit)
     {
-        /*
-            val resultMap = LinkedHashMap<HlaAllele, HlaSequence>()
-
-            for (sequence in this) {
-            val reducedAllele = transform(sequence.allele)
-            if (!resultMap.containsKey(reducedAllele)) {
-                resultMap[reducedAllele] = HlaSequence(reducedAllele, sequence.rawSequence)
-            }
-        }
-         */
-
         Map<String,HlaSequence> reducedMap = Maps.newHashMap();
         List<String> orderAlleles = Lists.newArrayList();
 
         for(HlaSequence sequence : sequences)
         {
-            HlaAllele reducedAllele = toFourDigit ? sequence.Allele.asFourDigit() : sequence.Allele.asSixDigit();
+            HlaAllele reducedAllele = toFourDigit ? sequence.Allele.asFourDigit() : asSixDigit(sequence.Allele);
 
             if(reducedMap.containsKey(reducedAllele.toString()))
                 continue;
@@ -105,7 +99,6 @@ public class HlaSequenceFile
         }
 
         return orderAlleles.stream().map(x -> reducedMap.get(x)).collect(Collectors.toList());
-        // return reducedMap.values().stream().collect(Collectors.toList());
     }
 
 }

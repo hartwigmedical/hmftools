@@ -49,8 +49,6 @@ public class LilacConfig
     public final boolean DebugPhasing;
     public final List<HlaAllele> ExpectedAlleles; // predetermined sample alleles, always kept and scored
     public final List<HlaAllele> RestrictedAlleles; // limit analysis from full data set to these + other configured alleles
-    public final List<HlaAllele> CommonAlleles; // common in population
-    public final List<HlaAllele> StopLossRecoveryAlleles;
 
     // config strings
     public static final String RESOURCE_DIR = "resource_dir";
@@ -104,15 +102,6 @@ public class LilacConfig
 
         ExpectedAlleles = parseAlleleList(cmd.getOptionValue(EXPECTED_ALLELES));
         RestrictedAlleles = parseAlleleList(cmd.getOptionValue(RESTRICTED_ALLELES));
-
-        CommonAlleles = loadCommonAlleles();
-
-        if(!CommonAlleles.isEmpty())
-        {
-            LL_LOGGER.info("loaded {} common alleles", CommonAlleles.size());
-        }
-
-        StopLossRecoveryAlleles = loadStopLossRecoveryAllele();
 
         Threads = getConfigValue(cmd, THREADS, 1);
 
@@ -184,8 +173,6 @@ public class LilacConfig
         // public final boolean DebugPhasing;
         ExpectedAlleles = Lists.newArrayList();
         RestrictedAlleles = Lists.newArrayList();
-        CommonAlleles = loadCommonAlleles();
-        StopLossRecoveryAlleles = loadStopLossRecoveryAllele();
 
         OutputFilePrefix = "";
         Threads = 0;
@@ -228,20 +215,6 @@ public class LilacConfig
 
         String[] alleles = allelesStr.split(ITEM_DELIM, -1);
         return Arrays.stream(alleles).map(x -> HlaAllele.fromString(x)).collect(Collectors.toList());
-    }
-
-    private final List<HlaAllele> loadCommonAlleles()
-    {
-        final List<String> commonAlleleLines = new BufferedReader(new InputStreamReader(
-                RefGenomeCoordinates.class.getResourceAsStream("/alleles/common.txt")))
-                .lines().collect(Collectors.toList());
-
-        return commonAlleleLines.stream().map(x -> HlaAllele.fromString(x)).map(x -> x.asFourDigit()).collect(Collectors.toList());
-    }
-
-    private static List<HlaAllele> loadStopLossRecoveryAllele()
-    {
-        return Lists.newArrayList(HlaAllele.fromString("C*04:09N"));
     }
 
     /*

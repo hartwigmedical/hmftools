@@ -147,16 +147,6 @@ public class HlaSequenceLoci
         return HlaSequenceMatch.FULL;
     }
 
-    public static List<HlaSequenceLoci> create(final List<HlaSequence> sequences)
-    {
-        final String reference = sequences.get(0).getRawSequence();
-
-        return sequences.stream()
-                .map(x -> create(x.Allele, x.getRawSequence(), reference))
-                .filter(x -> !x.getSequences().isEmpty())
-                .collect(Collectors.toList());
-    }
-
     public static HlaSequenceLoci create(final HlaAllele allele, final String sequence, final String reference)
     {
         final List<String> sequences = Lists.newArrayList();

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.hla;
 
+import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.asSixDigit;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
@@ -20,9 +22,37 @@ public class HlaAlleleTest
     public void testReduce()
     {
         HlaAllele eightDigit = HlaAllele.fromString("A*01:01:01:01");
-        assertMatch(HlaAllele.fromString("A*01:01:01"), eightDigit.asSixDigit());
+        assertMatch(HlaAllele.fromString("A*01:01:01"), asSixDigit(eightDigit));
         assertMatch(HlaAllele.fromString("A*01:01"), eightDigit.asFourDigit());
         assertMatch(HlaAllele.fromString("A*01"), eightDigit.asAlleleGroup());
+    }
+
+    @Test
+    public void testAlleleCache()
+    {
+        HlaAlleleCache cache = new HlaAlleleCache();
+        HlaAllele allele1 = cache.request("A*01:01:01");
+        HlaAllele allele2 = cache.request("A*01:01:02");
+        HlaAllele allele3 = cache.request("A*01:02:01");
+        HlaAllele allele4 = cache.request("A*01:02:02");
+        assertEquals(4, cache.alleleCount());
+        assertEquals(2, cache.fourDigitCount());
+        assertEquals(1, cache.groupCount());
+
+        HlaAllele fourDigit1 = cache.requestFourDigit("A*01:01");
+        assertEquals(fourDigit1, allele1.asFourDigit());
+        assertEquals(fourDigit1, allele2.asFourDigit());
+        assertEquals(allele3.asFourDigit(), allele4.asFourDigit());
+        assertEquals(allele1.asAlleleGroup(), allele4.asAlleleGroup());
+
+        HlaAllele group1 = cache.requestGroup(HlaAllele.fromString("A*01"));
+        HlaAllele fourDigit2 = cache.requestFourDigit("A*01:02");
+        assertEquals(fourDigit2, allele3.asFourDigit());
+
+        assertEquals(group1, allele1.asAlleleGroup());
+        assertEquals(group1, fourDigit1.asAlleleGroup());
+        assertEquals(2, cache.fourDigitCount());
+        assertEquals(1, cache.groupCount());
     }
 
     private void assertContig(String expected, String contig)

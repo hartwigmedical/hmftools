@@ -29,6 +29,7 @@ import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
 import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.hla.HlaContextFactory;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
@@ -74,10 +75,12 @@ public class LilacApplication implements AutoCloseable, Runnable
     private final ExecutorService mExecutorService;
     private final NucleotideGeneEnrichment mNucleotideGeneEnrichment;
     private final LilacConfig mConfig;
+    private final ReferenceData mRefData;
 
     public LilacApplication(final CommandLine cmd, final LilacConfig config)
     {
         mConfig = config;
+        mRefData = new ReferenceData(mConfig.ResourceDir, mConfig);
 
         mStartTime = System.currentTimeMillis();
         mNamedThreadFactory = null; // new ThreadFactory();;
@@ -103,9 +106,9 @@ public class LilacApplication implements AutoCloseable, Runnable
         HlaContext hlaBContext = hlaContextFactory.hlaB();
         HlaContext hlaCContext = hlaContextFactory.hlaC();
 
-        ReferenceData refData = new ReferenceData(mConfig.ResourceDir, mConfig);
+        // ReferenceData refData = new ReferenceData(mConfig.ResourceDir, mConfig);
 
-        if(!refData.load(true))
+        if(!mRefData.load(true))
         {
             LL_LOGGER.error("reference data loading failed");
             System.exit(1);
@@ -114,7 +117,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         LL_LOGGER.info("Querying records from reference bam " + mConfig.ReferenceBam);
 
         NucleotideFragmentFactory nucleotideFragmentFactory = new NucleotideFragmentFactory(
-                mConfig.MinBaseQual, refData.AminoAcidSequencesWithInserts, refData.AminoAcidSequencesWithDeletes, LOCI_POSITION);
+                mConfig.MinBaseQual, mRefData.AminoAcidSequencesWithInserts, mRefData.AminoAcidSequencesWithDeletes, LOCI_POSITION);
 
         SAMRecordReader tumorBamReader =
                 new SAMRecordReader(mConfig.TumorBam, mConfig.RefGenome, HLA_TRANSCRIPTS, nucleotideFragmentFactory);
@@ -139,7 +142,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         List<AminoAcidFragment> cCandidateFragments = aminoAcidPipeline.referencePhasingFragments(hlaCContext);
 
         // Un-phased Candidates
-        Candidates candidateFactory = new Candidates(mConfig, refData.NucleotideSequences, refData.AminoAcidSequences);
+        Candidates candidateFactory = new Candidates(mConfig, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
         List<HlaAllele> aUnphasedCandidates = candidateFactory.unphasedCandidates(hlaAContext, aCandidateFragments);
         List<HlaAllele> bUnphasedCandidates = candidateFactory.unphasedCandidates(hlaBContext, bCandidateFragments);
         List<HlaAllele> cUnphasedCandidates = candidateFactory.unphasedCandidates(hlaCContext, cCandidateFragments);
@@ -155,7 +158,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         List<PhasedEvidence> cPhasedEvidence = phasedEvidenceFactory.evidence(hlaCContext, cCandidateFragments);
 
         // Validate phasing against expected sequences
-        List<HlaSequenceLoci> expectedSequences = refData.AminoAcidSequences.stream()
+        List<HlaSequenceLoci> expectedSequences = mRefData.AminoAcidSequences.stream()
                 .filter(x -> contains(mConfig.ExpectedAlleles, x.getAllele().asFourDigit())).collect(Collectors.toList());
         
         PhasedEvidenceValidation.validateExpected("A", aPhasedEvidence, expectedSequences);
@@ -171,7 +174,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         phasedCandidateAlleles.addAll(bCandidates);
         phasedCandidateAlleles.addAll(cCandidates);
 
-        List<HlaAllele> missingStopLossAlleles = mConfig.StopLossRecoveryAlleles.stream()
+        List<HlaAllele> missingStopLossAlleles = mRefData.StopLossRecoveryAlleles.stream()
                 .filter(x -> !phasedCandidateAlleles.contains(x)).collect(Collectors.toList());
 
         List<HlaAllele> stopLossRecovery = Lists.newArrayList();
@@ -186,7 +189,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         // Common Candidate Recovery
         LL_LOGGER.info("Recovering common un-phased candidates:");
 
-        List<HlaAllele> recoveredAlleles = mConfig.CommonAlleles.stream()
+        List<HlaAllele> recoveredAlleles = mRefData.CommonAlleles.stream()
                 .filter(x -> !contains(phasedCandidateAlleles, x))
                 .filter(x -> contains(allUnphasedCandidates, x))
                 .collect(Collectors.toList());
@@ -196,7 +199,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         List<HlaAllele> candidateAlleles = phasedCandidateAlleles.stream().collect(Collectors.toList());
         candidateAlleles.addAll(recoveredAlleles);
 
-        List<HlaSequenceLoci> candidateSequences = refData.AminoAcidSequences.stream()
+        List<HlaSequenceLoci> candidateSequences = mRefData.AminoAcidSequences.stream()
                 .filter(x -> contains(candidateAlleles, x.getAllele())).collect(Collectors.toList());
 
         if (!recoveredAlleles.isEmpty())
@@ -218,10 +221,10 @@ public class LilacApplication implements AutoCloseable, Runnable
                 .filter(x -> ALL_NUCLEOTIDE_EXON_BOUNDARIES.contains(x)).collect(Collectors.toList());
 
         List<HlaAllele> candidateAlleleSpecificProteins = candidateAlleles.stream().map(x -> x.asFourDigit()).collect(Collectors.toList());
-        List<HlaSequenceLoci> candidateAminoAcidSequences = refData.AminoAcidSequences.stream()
+        List<HlaSequenceLoci> candidateAminoAcidSequences = mRefData.AminoAcidSequences.stream()
                 .filter(x -> contains(candidateAlleles, x.getAllele())).collect(Collectors.toList());
 
-        List<HlaSequenceLoci> candidateNucleotideSequences = refData.NucleotideSequences.stream()
+        List<HlaSequenceLoci> candidateNucleotideSequences = mRefData.NucleotideSequences.stream()
             .filter(x -> contains(candidateAlleleSpecificProteins, x.getAllele().asFourDigit())).collect(Collectors.toList());
 
         List<FragmentAlleles> referenceFragmentAlleles = FragmentAlleles.create(
@@ -229,10 +232,10 @@ public class LilacApplication implements AutoCloseable, Runnable
                 referenceNucleotideHeterozygousLoci, candidateNucleotideSequences);
 
         // Complexes
-        List<HlaComplex> complexes = HlaComplex.complexes(mConfig, referenceFragmentAlleles, candidateAlleles); // , recoveredAlleles, not used
+        List<HlaComplex> complexes = HlaComplex.complexes(mConfig, mRefData, referenceFragmentAlleles, candidateAlleles); // , recoveredAlleles, not used
 
         LL_LOGGER.info("Calculating coverage of ${complexes.size} complexes");
-        HlaComplexCoverageFactory coverageFactory = new HlaComplexCoverageFactory(mConfig);
+        HlaComplexCoverageFactory coverageFactory = new HlaComplexCoverageFactory(mConfig, mRefData);
         List<HlaComplexCoverage> referenceRankedComplexes = coverageFactory.rankedComplexCoverage(mExecutorService, referenceFragmentAlleles, complexes, recoveredAlleles);
 
         if(referenceRankedComplexes.isEmpty())
@@ -342,7 +345,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         output.write(outputFile);
         lilacQC.writefile(outputQCFile);
 
-        //val deflatedSequenceTemplate = refData.AminoAcidSequences.get(0).getAllele().first { it.allele == DEFLATE_TEMPLATE }
+        //val deflatedSequenceTemplate = mRefData.AminoAcidSequences.get(0).getAllele().first { it.allele == DEFLATE_TEMPLATE }
         //val candidateToWrite = (candidateSequences + expectedSequences + deflatedSequenceTemplate).distinct().sortedBy { it.allele }
 
         /*

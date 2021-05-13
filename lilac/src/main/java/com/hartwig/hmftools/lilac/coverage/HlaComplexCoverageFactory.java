@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.lilac.hla.HlaAllele.takeN;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.progress.FutureProgressTracker;
 import com.hartwig.hmftools.lilac.LilacConfig;
+import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.read.FragmentAlleles;
 
@@ -23,10 +24,12 @@ public class HlaComplexCoverageFactory
 {
     private final FutureProgressTracker mProgressTracker;
     private final LilacConfig mConfig;
+    private final ReferenceData mRefData;
 
-    public HlaComplexCoverageFactory(final LilacConfig config)
+    public HlaComplexCoverageFactory(final LilacConfig config, final ReferenceData refData)
     {
         mConfig = config;
+        mRefData = refData;
         mProgressTracker = new FutureProgressTracker(0.1, 10000);
     }
 
@@ -44,7 +47,7 @@ public class HlaComplexCoverageFactory
 
         List<HlaAllele> topTakers = takeN(topRanked, take);
 
-        List<HlaAllele> topRankedKeepers = topRanked.stream().filter(x -> contains(mConfig.CommonAlleles, x)).collect(Collectors.toList());
+        List<HlaAllele> topRankedKeepers = topRanked.stream().filter(x -> contains(mRefData.CommonAlleles, x)).collect(Collectors.toList());
 
         List<HlaAllele> uniqueRanked = topTakers.stream().collect(Collectors.toList());
         topRankedKeepers.stream().filter(x -> !contains(topTakers, x)).forEach(x -> uniqueRanked.add(x));
@@ -57,7 +60,7 @@ public class HlaComplexCoverageFactory
             final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes, final List<HlaAllele> recovered)
     {
         HlaComplexCoverageRanking ranking = new HlaComplexCoverageRanking(
-                mConfig.MaxDistanceFromTopScore, mConfig.CommonAlleles, recovered, mConfig.StopLossRecoveryAlleles);
+                mConfig.MaxDistanceFromTopScore, mRefData.CommonAlleles, recovered, mRefData.StopLossRecoveryAlleles);
 
         List<CoverageCalcTask> coverageCalcTasks = Lists.newArrayList();
         List<FutureTask> taskList = new ArrayList<FutureTask>();
