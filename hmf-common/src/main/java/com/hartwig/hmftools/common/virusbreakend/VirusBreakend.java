@@ -44,7 +44,6 @@ public abstract class VirusBreakend {
     @NotNull
     public abstract String Rname();
 
-
     public abstract int startpos();
 
     public abstract int endpos();
