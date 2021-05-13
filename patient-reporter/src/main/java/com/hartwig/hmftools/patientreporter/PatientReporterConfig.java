@@ -50,8 +50,8 @@ public interface PatientReporterConfig {
     String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = "purple_germline_driver_catalog_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
-    String PURPLE_SOMATIC_CN_TSV = "purple_somatic_cn_tsv";
-    String PURPLE_CIRCOS_FILE = "purple_circos_file";
+    String PURPLE_SOMATIC_COPYNUMBER_TSV = "purple_somatic_copynumber_tsv";
+    String PURPLE_CIRCOS_PLOT = "purple_circos_plot";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
@@ -105,8 +105,8 @@ public interface PatientReporterConfig {
         options.addOption(PURPLE_GERMLINE_DRIVER_CATALOG_TSV, true, "Path towards the purple germline driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
-        options.addOption(PURPLE_SOMATIC_CN_TSV, true, "Path towards the purple somatic copynumber TSV.");
-        options.addOption(PURPLE_CIRCOS_FILE, true, "Path towards the purple circos file.");
+        options.addOption(PURPLE_SOMATIC_COPYNUMBER_TSV, true, "Path towards the purple somatic copynumber TSV.");
+        options.addOption(PURPLE_CIRCOS_PLOT, true, "Path towards the purple circos plot.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the linx breakend TSV.");
         options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
@@ -197,7 +197,7 @@ public interface PatientReporterConfig {
     String purpleSomaticCopyNumberTsv();
 
     @NotNull
-    String purpleCircosFile();
+    String purpleCircosPlot();
 
     @NotNull
     String linxFusionTsv();
@@ -272,7 +272,7 @@ public interface PatientReporterConfig {
         String purpleSomaticVariantVcf = Strings.EMPTY;
         String purpleGermlineVariantVcf = Strings.EMPTY;
         String purpleSomaticCopyNumberTsv = Strings.EMPTY;
-        String purpleCircosFile = Strings.EMPTY;
+        String purpleCircosPlot = Strings.EMPTY;
         String linxFusionTsv = Strings.EMPTY;
         String linxBreakendTsv = Strings.EMPTY;
         String linxDriverCatalogTsv = Strings.EMPTY;
@@ -300,8 +300,8 @@ public interface PatientReporterConfig {
             purpleGermlineDriverCatalogTsv = nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV);
             purpleSomaticVariantVcf = nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF);
             purpleGermlineVariantVcf = nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF);
-            purpleSomaticCopyNumberTsv = nonOptionalFile(cmd, PURPLE_SOMATIC_CN_TSV);
-            purpleCircosFile = nonOptionalFile(cmd, PURPLE_CIRCOS_FILE);
+            purpleSomaticCopyNumberTsv = nonOptionalFile(cmd, PURPLE_SOMATIC_COPYNUMBER_TSV);
+            purpleCircosPlot = nonOptionalFile(cmd, PURPLE_CIRCOS_PLOT);
             linxFusionTsv = nonOptionalFile(cmd, LINX_FUSION_TSV);
             linxBreakendTsv = nonOptionalFile(cmd, LINX_BREAKEND_TSV);
             linxDriverCatalogTsv = nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV);
@@ -342,7 +342,7 @@ public interface PatientReporterConfig {
                 .purpleSomaticVariantVcf(purpleSomaticVariantVcf)
                 .purpleGermlineVariantVcf(purpleGermlineVariantVcf)
                 .purpleSomaticCopyNumberTsv(purpleSomaticCopyNumberTsv)
-                .purpleCircosFile(purpleCircosFile)
+                .purpleCircosPlot(purpleCircosPlot)
                 .linxFusionTsv(linxFusionTsv)
                 .linxBreakendTsv(linxBreakendTsv)
                 .linxDriverCatalogTsv(linxDriverCatalogTsv)

@@ -110,7 +110,7 @@ public class PatientReporterApplication {
                 config.linxBreakendTsv(),
                 config.linxDriverCatalogTsv(),
                 config.chordPredictionTxt(),
-                config.purpleCircosFile(),
+                config.purpleCircosPlot(),
                 config.protectEvidenceTsv(),
                 config.comments(),
                 config.isCorrectedReport(),
