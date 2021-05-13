@@ -24,6 +24,5 @@ public class VirusSummaryModelTest {
 
         assertTrue(virusSummaryModel.mapIdToVirusName(1));
         assertFalse(virusSummaryModel.mapIdToVirusName(3));
-
     }
 }

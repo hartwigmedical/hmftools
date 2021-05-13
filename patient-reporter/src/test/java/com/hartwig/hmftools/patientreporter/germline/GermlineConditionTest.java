@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.germline;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -12,7 +12,6 @@ public class GermlineConditionTest {
         assertEquals(GermlineCondition.ALWAYS, GermlineCondition.extractGermlineCondition("ALWAYS"));
         assertEquals(GermlineCondition.ONLY_SPECIFIC_VARIANT, GermlineCondition.extractGermlineCondition("ONLY_SPECIFIC_VARIANT"));
         assertEquals(GermlineCondition.ONLY_GERMLINE_HOM, GermlineCondition.extractGermlineCondition("ONLY_GERMLINE_HOM"));
-
     }
 
     @Test(expected = IllegalStateException.class)
@@ -20,5 +19,4 @@ public class GermlineConditionTest {
         //noinspection ResultOfMethodCallIgnored
         GermlineCondition.extractGermlineCondition("always");
     }
-
 }

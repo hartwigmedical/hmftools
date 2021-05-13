@@ -8,7 +8,6 @@ import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
@@ -65,8 +64,7 @@ import org.jetbrains.annotations.NotNull;
 public final class ExampleAnalysisTestFactory {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
-    private static final String CIRCOS_PATH = Resources.getResource("test_run/purple/plot/sample.circos.png").getPath();
-    private static final String CUPPA_PATH = Resources.getResource("test_run/cuppa/sample.cuppa.chart.png").getPath();
+    private static final PatientReporterConfig REPORTER_CONFIG = PatientReporterTestFactory.createTestReporterConfig();
 
     private ExampleAnalysisTestFactory() {
     }
@@ -152,22 +150,24 @@ public final class ExampleAnalysisTestFactory {
                 .peachGenotypes(peachGenotypes)
                 .build();
 
-        MolecularTissueOrigin molecularTissueOrigin =
-                ImmutableMolecularTissueOrigin.builder().molecularTissueOriginResult("Skin").molecularTissueOriginPlot(CUPPA_PATH).build();
+        MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
+                .molecularTissueOriginResult("Skin")
+                .molecularTissueOriginPlot(REPORTER_CONFIG.molecularTissueOriginPlot())
+                .build();
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(config.qcForNumber().display())
                 .clinicalSummary(clinicalSummary)
                 .genomicAnalysis(analysis)
-                .circosPath(CIRCOS_PATH)
+                .circosPath(REPORTER_CONFIG.purpleCircosPlot())
                 .molecularTissueOrigin(molecularTissueOrigin)
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(config.isCorrectionReport())
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
-                .pipelineVersion("5.19")
+                .pipelineVersion("5.22")
                 .build();
     }
 
@@ -275,15 +275,17 @@ public final class ExampleAnalysisTestFactory {
                 .peachGenotypes(peachGenotypes)
                 .build();
 
-        MolecularTissueOrigin molecularTissueOrigin =
-                ImmutableMolecularTissueOrigin.builder().molecularTissueOriginResult("Skin").molecularTissueOriginPlot(CUPPA_PATH).build();
+        MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
+                .molecularTissueOriginResult("Skin")
+                .molecularTissueOriginPlot(REPORTER_CONFIG.molecularTissueOriginPlot())
+                .build();
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(QsFormNumber.FOR_209.display())
                 .clinicalSummary(clinicalSummary)
                 .genomicAnalysis(analysis)
-                .circosPath(CIRCOS_PATH)
+                .circosPath(REPORTER_CONFIG.purpleCircosPlot())
                 .molecularTissueOrigin(molecularTissueOrigin)
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(false)

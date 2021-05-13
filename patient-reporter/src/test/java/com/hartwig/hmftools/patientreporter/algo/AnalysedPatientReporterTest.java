@@ -7,7 +7,6 @@ import java.io.IOException;
 
 import com.hartwig.hmftools.patientreporter.ImmutableSampleMetadata;
 import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
-import com.hartwig.hmftools.patientreporter.PatientReporterTestConfig;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
@@ -24,7 +23,7 @@ public class AnalysedPatientReporterTest {
     @Test
     public void canRunOnRunDirectory() throws IOException {
         AnalysedPatientReporter reporter = new AnalysedPatientReporter(PatientReporterTestFactory.loadTestAnalysedReportData());
-        PatientReporterConfig config = PatientReporterTestConfig.create();
+        PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
 
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId(REF_SAMPLE_ID)

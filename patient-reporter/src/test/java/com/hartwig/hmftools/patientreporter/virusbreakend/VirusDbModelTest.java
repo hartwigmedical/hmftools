@@ -24,6 +24,5 @@ public class VirusDbModelTest {
 
         assertTrue(virusDbModel.mapIdToVirusName(1));
         assertFalse(virusDbModel.mapIdToVirusName(3));
-
     }
 }

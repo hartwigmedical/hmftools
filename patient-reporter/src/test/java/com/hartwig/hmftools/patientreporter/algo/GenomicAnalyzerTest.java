@@ -7,7 +7,7 @@ import java.io.IOException;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
-import com.hartwig.hmftools.patientreporter.PatientReporterTestConfig;
+import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
@@ -42,7 +42,7 @@ public class GenomicAnalyzerTest {
         GermlineReportingModel germlineReportingModel =
                 new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
 
-        PatientReporterConfig config = PatientReporterTestConfig.create();
+        PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
         VirusDbModel virusDbModel = VirusDbFile.buildFromTsv(config.virusDbTsv());
         VirusSummaryModel virusSummaryModel = VirusSummaryFile.buildFromTsv(config.virusSummaryTsv());
         VirusBlackListModel virusBlackListModel = VirusBlacklistFile.buildFromTsv(config.virusBlacklistTsv());

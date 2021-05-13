@@ -25,7 +25,5 @@ public class VirusSummaryFileTest {
 
         assertEquals("virus", virusSummaryModel.findVirusSummary(1));
         assertNotEquals("virus1", virusSummaryModel.findVirusSummary(2));
-
     }
-
 }

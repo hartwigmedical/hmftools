@@ -17,9 +17,43 @@ import org.junit.Test;
 
 public class VirusBreakendReportableFactoryTest {
 
+    @Test
+    public void canInterpretVirusBreakendForReportingPos() {
+        List<VirusBreakend> virusBreakends = virusBreakendData();
+
+        Map<Integer, String> VirusDBIdMap = Maps.newHashMap();
+        VirusDBIdMap.put(1, "Human papillomavirus type 16");
+        VirusDbModel virusDbModel = new VirusDbModel(VirusDBIdMap);
+
+        Map<Integer, String> VirusIdSummaryMap = Maps.newHashMap();
+        VirusIdSummaryMap.put(1, "EBV");
+        VirusIdSummaryMap.put(2, "HPV");
+        VirusSummaryModel virusSummaryModel = new VirusSummaryModel(VirusIdSummaryMap);
+
+        Map<Integer, String> virusBlacklist = Maps.newHashMap();
+        virusBlacklist.put(1, "taxid_genus");
+        virusBlacklist.put(2, "HPV");
+        VirusBlackListModel virusBlacklistModel = new VirusBlackListModel(virusBlacklist);
+
+        assertEquals(1,
+                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)
+                        .reportableViruses()
+                        .size());
+
+        ReportableVirusBreakend reportableVirusbreakend =
+                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)
+                        .reportableViruses()
+                        .get(0);
+        assertEquals("Human papillomavirus type 16", reportableVirusbreakend.virusName());
+        assertEquals(2, reportableVirusbreakend.integrations());
+
+        assertEquals("EBV positive, HPV negative",
+                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)
+                        .virusNameSummary());
+    }
+
     @NotNull
     private static List<VirusBreakend> virusBreakendData() {
-
         List<VirusBreakend> virusBreakends = Lists.newArrayList();
 
         virusBreakends.add(ImmutableVirusBreakend.builder()
@@ -135,41 +169,5 @@ public class VirusBreakendReportableFactoryTest {
                 .build());
 
         return virusBreakends;
-    }
-
-    @Test
-    public void canInterpretVirusBreakendForReportingPos() {
-        List<VirusBreakend> virusBreakends = virusBreakendData();
-
-        Map<Integer, String> VirusDBIdMap = Maps.newHashMap();
-        VirusDBIdMap.put(1, "Human papillomavirus type 16");
-        VirusDbModel virusDbModel = new VirusDbModel(VirusDBIdMap);
-
-        Map<Integer, String> VirusIdSummaryMap = Maps.newHashMap();
-        VirusIdSummaryMap.put(1, "EBV");
-        VirusIdSummaryMap.put(2, "HPV");
-        VirusSummaryModel virusSummaryModel = new VirusSummaryModel(VirusIdSummaryMap);
-
-        Map<Integer, String> virusBlacklist = Maps.newHashMap();
-        virusBlacklist.put(1, "taxid_genus");
-        virusBlacklist.put(2, "HPV");
-        VirusBlackListModel virusBlacklistModel = new VirusBlackListModel(virusBlacklist);
-
-        assertEquals(1,
-                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)
-                        .reportableViruses()
-                        .size());
-
-        ReportableVirusBreakend reportableVirusbreakend =
-                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)
-                        .reportableViruses()
-                        .get(0);
-        assertEquals("Human papillomavirus type 16", reportableVirusbreakend.virusName());
-        assertEquals(2, reportableVirusbreakend.integrations());
-
-        assertEquals("EBV positive, HPV negative",
-                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)
-                        .virusNameSummary());
-
     }
 }

@@ -25,6 +25,5 @@ public class VirusBlacklistFileTest {
         assertTrue(virusBlacklistModel.checkVirusForBlacklisting(1));
         assertTrue(virusBlacklistModel.checkVirusForBlacklisting(2));
         assertFalse(virusBlacklistModel.checkVirusForBlacklisting(40));
-
     }
 }
