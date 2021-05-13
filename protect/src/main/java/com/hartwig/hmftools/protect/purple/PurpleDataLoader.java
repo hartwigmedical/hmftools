@@ -35,14 +35,14 @@ public final class PurpleDataLoader {
 
     @NotNull
     public static PurpleData load(@NotNull ProtectConfig config) throws IOException {
-
         return load(config.tumorSampleId(),
                 config.purpleQcFile(),
                 config.purplePurityTsv(),
                 config.purpleSomaticDriverCatalogTsv(),
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineDriverCatalogTsv(),
-                config.purpleGermlineVariantVcf(), null);
+                config.purpleGermlineVariantVcf(),
+                null);
     }
 
     @NotNull
@@ -63,6 +63,12 @@ public final class PurpleDataLoader {
         List<DriverCatalog> somaticDriverCatalog = DriverCatalogFile.read(driverCatalogSomaticTsv);
         LOGGER.info(" Loaded {} somatic driver catalog entries from {}", somaticDriverCatalog.size(), driverCatalogSomaticTsv);
 
+        List<ReportableGainLoss> copyNumberAlterations = somaticDriverCatalog.stream()
+                .filter(x -> x.driver() == DriverType.AMP || x.driver() == DriverType.PARTIAL_AMP || x.driver() == DriverType.DEL)
+                .map(PurpleDataLoader::copyNumberAlteration)
+                .collect(Collectors.toList());
+        LOGGER.info("  Extracted {} reportable copy number alterations from driver catalog", copyNumberAlterations.size());
+
         List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(driverCatalogGermlineTsv);
         LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDriverCatalog.size(), driverCatalogGermlineTsv);
 
@@ -70,12 +76,6 @@ public final class PurpleDataLoader {
         if (purpleCnvSomaticTsv != null) {
             cnPerChromosome = CnPerChromosomeFactory.extractCnPerChromosomeArm(purpleCnvSomaticTsv);
         }
-
-        List<ReportableGainLoss> copyNumberAlterations = somaticDriverCatalog.stream()
-                .filter(x -> x.driver() == DriverType.AMP || x.driver() == DriverType.PARTIAL_AMP || x.driver() == DriverType.DEL)
-                .map(PurpleDataLoader::copyNumberAlteration)
-                .collect(Collectors.toList());
-        LOGGER.info("  Extracted {} reportable copy number alterations from driver catalog", copyNumberAlterations.size());
 
         List<SomaticVariant> germlineVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, germlineVcf);
         List<ReportableVariant> reportableGermlineVariants =
