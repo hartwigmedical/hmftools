@@ -1,265 +1,106 @@
 package com.hartwig.hmftools.lilac.seq;
 
+import static java.lang.Math.max;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
+import com.google.common.collect.Lists;
 
 public class HlaSequenceLociFile
 {
     // writes exon boundaries, and then the allele sequences
-    /*
-        HLA-C Boundaries                                |                                                                                         |                                                                                           |
-        A*01:01                 MAVMAPRTLLLLLSGALALTQTWAGSHSMRYFFTSVSRPGRGEPRFIAVGYVDDTQFVRFDSDAA
-     */
-
-    public void write(
-            final String file, final Set<Integer> aBoundaries, final Set<Integer> bBoundaries,
-            final Set<Integer> cBoundaries, final List<HlaSequenceLoci> sequences)
+    public static void write(
+            final String file, final List<Integer> aBoundaries, final List<Integer> bBoundaries,
+            final List<Integer> cBoundaries, final List<HlaSequenceLoci> sequences)
     {
         /*
-        void $receiver$iv$iv;
-        Iterable $receiver$iv;
-        boolean bl;
+        val outputFile = File(file)
+        outputFile.writeText("")
 
-        Collection collection = sequences;
-        boolean bl2 = bl = !collection.isEmpty();
-        if(!bl)
-        {
-            String string = "Failed requirement.";
-            throw (Throwable) new IllegalArgumentException(string.toString());
-        }
-        File outputFile = new File(file);
-        FilesKt.writeText$default((File) outputFile, (String) "", null, (int) 2, null);
-        Iterable iterable = $receiver$iv = (Iterable) sequences;
-        Collection destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-        for(Object item$iv$iv : $receiver$iv$iv)
-        {
-            void it;
-            HlaSequenceLoci hlaSequenceLoci = (HlaSequenceLoci) item$iv$iv;
-            Collection collection2 = destination$iv$iv;
-            boolean bl3 = false;
-            List<Integer> list = INSTANCE.lengths((HlaSequenceLoci) it);
-            collection2.add(list);
-        }
-        $receiver$iv = (List) destination$iv$iv;
-        Iterator iterator$iv22 = $receiver$iv.iterator();
-        if(!iterator$iv22.hasNext())
-        {
-            throw (Throwable) new UnsupportedOperationException("Empty collection can't be reduced.");
-        }
-        Object accumulator$iv = iterator$iv22.next();
-        while(iterator$iv22.hasNext())
-        {
-            void right;
-            List list = (List) iterator$iv22.next();
-            List left = (List) accumulator$iv;
-            boolean bl4 = false;
-            accumulator$iv = INSTANCE.maxLengths(left, (List<Integer>) right);
-        }
-        List maxLengths = (List) accumulator$iv;
-        String templateSequence = this.padInserts(sequences.get(0), maxLengths);
-        FilesKt.appendText$default((File) outputFile, (String) (StringsKt.padEnd((String) "HLA-A Boundaries", (int) 20, (char) ' ') + "\t"
-                + this.boundaryString((Collection<Integer>) aBoundaries, maxLengths) + "\n"), null, (int) 2, null);
-        FilesKt.appendText$default((File) outputFile, (String) (StringsKt.padEnd((String) "HLA-B Boundaries", (int) 20, (char) ' ') + "\t"
-                + this.boundaryString((Collection<Integer>) bBoundaries, maxLengths) + "\n"), null, (int) 2, null);
-        FilesKt.appendText$default((File) outputFile, (String) (StringsKt.padEnd((String) "HLA-C Boundaries", (int) 20, (char) ' ') + "\t"
-                + this.boundaryString((Collection<Integer>) cBoundaries, maxLengths) + "\n"), null, (int) 2, null);
-        FilesKt.appendText$default((File) outputFile, (String) (
-                StringsKt.padEnd((String) String.valueOf(sequences.get(0).getAllele()), (int) 20, (char) ' ') + "\t" + templateSequence
-                        + "\n"), null, (int) 2, null);
-        int iterator$iv22 = 1;
-        int n = sequences.size();
-        while(iterator$iv22 < n)
-        {
-            void i;
-            String victimSequence = this.diff(this.padInserts(sequences.get((int) i), maxLengths), templateSequence);
-            FilesKt.appendText$default((File) outputFile, (String) (
-                    StringsKt.padEnd((String) String.valueOf(sequences.get((int) i).getAllele()), (int) 20, (char) ' ') + "\t"
-                            + victimSequence + "\n"), null, (int) 2, null);
-            ++i;
-        }
+        val maxLengths = sequences.map { it.lengths() }.reduce { left, right -> maxLengths(left, right) }
+        val templateSequence = sequences[0].padInserts(maxLengths)
+        outputFile.appendText("HLA-A Boundaries".padEnd(20, ' ') + "\t" + boundaryString(aBoundaries, maxLengths) + "\n")
+        outputFile.appendText("HLA-B Boundaries".padEnd(20, ' ') + "\t" + boundaryString(bBoundaries, maxLengths) + "\n")
+        outputFile.appendText("HLA-C Boundaries".padEnd(20, ' ') + "\t" + boundaryString(cBoundaries, maxLengths) + "\n")
 
+        outputFile.appendText("${sequences[0].allele}".padEnd(20, ' ') + "\t" + templateSequence + "\n")
+        for (i in 1 until sequences.size) {
+            val victimSequence = diff(sequences[i].padInserts(maxLengths), templateSequence)
+            outputFile.appendText("${sequences[i].allele}".padEnd(20, ' ') + "\t" + victimSequence + "\n")
+        }
          */
     }
 
     private final String boundaryString(Collection<Integer> boundaries, List<Integer> lengths)
     {
         /*
-            val range = (0..boundaries.max()!!)
-            val unpadded = range.mapIndexed { index, _ -> if (index in boundaries) "|" else " " }
-            return unpadded.mapIndexed { index, value -> value.padEnd(lengths[index], ' ') }.joinToString("")
+        val range = (0..boundaries.max()!!)
+        val unpadded = range.mapIndexed { index, _ -> if (index in boundaries) "|" else " " }
+        return unpadded.mapIndexed { index, value -> value.padEnd(lengths[index], ' ') }.joinToString("")
+
+         */
+        return "";
+    }
+
+    private final String diff(String victim, String reference)
+    {
+        /*
+        return victim
+        .mapIndexed { index, _ -> diff(victim[index], if (index < reference.length) reference[index] else '!') }
+        .joinToString("")
+
+         */
+        return "";
+    }
+
+    private final char diff(char c, char reference)
+    {
+        return (c == '|' ? 124 : (c == '*' ? 42 : (c == '.' ? 46 : (c == reference ? 45 : c))));
+    }
+
+    private String padInserts(final HlaSequenceLoci seqLoci, final List<Integer> lengths)
+    {
+        for(int i = 0; i < seqLoci.getSequences().size(); ++i)
+        {
+            int reqLength = lengths.get(i);
+            String insert = seqLoci.getSequences().get(i);
+
+            for(int j = insert.length(); j < lengths.get(i); ++j)
+            {
+                insert += ".";
+            }
+        }
+
+        /*
+        return this.sequences
+                .mapIndexed { index, value -> value.padEnd(lengths[index], '.') }
+                .joinToString("")
+            .trimEnd { x -> x == '.' }
          */
 
         return "";
-
-        /*
-        String string;
-        int index;
-        Collection collection;
-        Iterable $receiver$iv$iv;
-        Iterable $receiver$iv;
-        boolean bl;
-        Collection<Integer> collection2 = boundaries;
-        boolean bl2 = bl = !collection2.isEmpty();
-        if(!bl)
-        {
-            String string2 = "Failed requirement.";
-            throw (Throwable) new IllegalArgumentException(string2.toString());
-        }
-        int n = 0;
-        Comparable comparable = CollectionsKt.max((Iterable) boundaries);
-        if(comparable == null)
-        {
-            Intrinsics.throwNpe();
-        }
-        IntRange range = new IntRange(n, ((Number) ((Object) comparable)).intValue());
-        Iterable iterable = $receiver$iv = (Iterable) range;
-        Collection destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-        int index$iv$iv = 0;
-        Iterator iterator = $receiver$iv$iv.iterator();
-        while(iterator.hasNext())
-        {
-            int item$iv$iv = ((IntIterator) iterator).nextInt();
-            int n2 = index$iv$iv++;
-            int n3 = item$iv$iv;
-            int n4 = n2;
-            collection = destination$iv$iv;
-            boolean bl3 = false;
-            string = boundaries.contains(index) ? "|" : " ";
-            collection.add(string);
-        }
-        List unpadded = (List) destination$iv$iv;
-        $receiver$iv$iv = $receiver$iv = (Iterable) unpadded;
-        destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-        index$iv$iv = 0;
-        for(Object item$iv$iv : $receiver$iv$iv)
-        {
-            void value;
-            int n5 = index$iv$iv++;
-            String $noName_1 = (String) item$iv$iv;
-            index = n5;
-            collection = destination$iv$iv;
-            boolean bl4 = false;
-            string = StringsKt.padEnd((String) value, (int) ((Number) lengths.get(index)).intValue(), (char) ' ');
-            collection.add(string);
-        }
-        return CollectionsKt.joinToString$default((Iterable) ((List) destination$iv$iv), (CharSequence) "", null, null, (int) 0, null, null, (int) 62, null);
-        */
     }
 
-    /*
-    private final String diff(String victim, String reference)
+    private List<Integer> lengths(final HlaSequenceLoci seqLoci)
     {
-        void $receiver$iv$iv;
-        CharSequence $receiver$iv = victim;
-        CharSequence charSequence = $receiver$iv;
-        Collection destination$iv$iv = new ArrayList($receiver$iv.length());
-        int index$iv$iv = 0;
-        void var7_7 = $receiver$iv$iv;
-        for(int i = 0; i < var7_7.length(); ++i)
-        {
-            void index;
-            char item$iv$iv = var7_7.charAt(i);
-            int n = index$iv$iv++;
-            char c = item$iv$iv;
-            int n2 = n;
-            Collection collection = destination$iv$iv;
-            boolean bl = false;
-            Character c2 = Character.valueOf(INSTANCE.diff(victim.charAt((int) index),
-                    index < reference.length() ? reference.charAt((int) index) : (char) '!'));
-            collection.add(c2);
-        }
-        return CollectionsKt.joinToString$default((Iterable) ((List) destination$iv$iv), (CharSequence) "", null, null, (int) 0, null, null, (int) 62, null);
+        return seqLoci.getSequences().stream().map(x -> new Integer(x.length())).collect(Collectors.toList());
     }
 
-    private final char diff(char victim, char reference)
+    private List<Integer> maxLengths(final List<Integer> left, final List<Integer> right)
     {
-        char c = victim;
-        return (char) (c == '|' ? 124 : (c == '*' ? 42 : (c == '.' ? 46 : (c == reference ? 45 : (int) victim))));
+        List<Integer> results = Lists.newArrayList();
+
+        for (int i = 0; i <  max(left.size(), right.size()); ++i)
+        {
+            int leftValue = i < left.size() ? left.get(i) : 0;
+            int rightValue = i < right.size() ? right.get(i) : 0;
+            results.add(max(leftValue, rightValue));
+        }
+
+        return results;
     }
 
-    private final String padInserts(HlaSequenceLoci $receiver, List<Integer> lengths)
-    {
-        CharSequence charSequence;
-        block3:
-        {
-            CharSequence $receiver$iv$iv;
-            Object $receiver$iv = $receiver.getSequences();
-            Iterable iterable = $receiver$iv;
-            Collection destination$iv$iv22 = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-            int index$iv$iv = 0;
-            Iterator iterator = $receiver$iv$iv.iterator();
-            while(iterator.hasNext())
-            {
-                void index;
-                void value;
-                Object item$iv$iv = iterator.next();
-                int n = index$iv$iv++;
-                String string = (String) item$iv$iv;
-                int n2 = n;
-                Collection collection = destination$iv$iv22;
-                boolean bl = false;
-                String string2 = StringsKt.padEnd((String) value, (int) ((Number) lengths.get((int) index)).intValue(), (char) '.');
-                collection.add(string2);
-            }
-            $receiver$iv =
-                    CollectionsKt.joinToString$default((Iterable) ((List) destination$iv$iv22), (CharSequence) "", null, null, (int) 0, null, null, (int) 62, null);
-            $receiver$iv$iv = (CharSequence) $receiver$iv;
-            int destination$iv$iv22 = $receiver$iv$iv.length();
-            boolean bl = false;
-            while(--destination$iv$iv22 >= 0)
-            {
-                void index$iv$iv2;
-                char x = $receiver$iv$iv.charAt((int) index$iv$iv2);
-                boolean bl2 = false;
-                if(!(x == '.'))
-                {
-                    charSequence = $receiver$iv$iv.subSequence(0, (int) (index$iv$iv2 + true));
-                    break block3;
-                }
-                --index$iv$iv2;
-            }
-            charSequence = "";
-        }
-        return ((Object) charSequence).toString();
-    }
-
-    private final List<Integer> lengths(HlaSequenceLoci $receiver)
-    {
-        void $receiver$iv$iv;
-        Iterable $receiver$iv;
-        Iterable iterable = $receiver$iv = (Iterable) $receiver.getSequences();
-        Collection destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-        for(Object item$iv$iv : $receiver$iv$iv)
-        {
-            void it;
-            String string = (String) item$iv$iv;
-            Collection collection = destination$iv$iv;
-            boolean bl = false;
-            Integer n = it.length();
-            collection.add(n);
-        }
-        return (List) destination$iv$iv;
-    }
-
-    private final List<Integer> maxLengths(List<Integer> left, List<Integer> right)
-    {
-        List result = new ArrayList();
-        int n = 0;
-        int n2 = left.size();
-        int n3 = right.size();
-        int n4 = Math.max(n2, n3);
-        while(n < n4)
-        {
-            void i;
-            int leftValue = i < left.size() ? ((Number) left.get((int) i)).intValue() : 0;
-            int rightValue = i < right.size() ? ((Number) right.get((int) i)).intValue() : 0;
-            result.add(Math.max(leftValue, rightValue));
-            ++i;
-        }
-        return result;
-    }
-    */
 }

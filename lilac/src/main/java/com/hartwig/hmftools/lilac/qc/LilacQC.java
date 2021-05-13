@@ -72,7 +72,6 @@ public final class LilacQC
         }
     }
 
-
     public LilacQC(final Set<LilacQCStatus> status, final AminoAcidQC aminoAcidQC, final BamQC bamQC,
             final CoverageQC coverageQC, final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
     {

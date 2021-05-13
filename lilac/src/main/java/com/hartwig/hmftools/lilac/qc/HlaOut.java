@@ -45,8 +45,7 @@ public class HlaOut
             writer.write(generateAlleleHeader());
             writer.newLine();
 
-            // CHECK off by 1
-            for(int i = 0; i < 5; ++i)
+            for(int i = 0; i < 6; ++i)
             {
                 writer.write(generateAlleleBody(i));
                 writer.newLine();

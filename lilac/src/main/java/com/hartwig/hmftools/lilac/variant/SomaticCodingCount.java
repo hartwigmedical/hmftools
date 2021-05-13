@@ -7,6 +7,7 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class SomaticCodingCount
 {
@@ -84,25 +85,8 @@ public class SomaticCodingCount
 
     public static List<SomaticCodingCount> create(final List<HlaAllele> winners)
     {
-        return Lists.newArrayList();
-
-        /*
-        void $receiver$iv$iv;
-        Iterable $receiver$iv;
-        Iterable iterable = $receiver$iv = (Iterable) CollectionsKt.sorted((Iterable) winners);
-        Collection destination$iv$iv = new ArrayList(CollectionsKt.collectionSizeOrDefault((Iterable) $receiver$iv, (int) 10));
-        for(Object item$iv$iv : $receiver$iv$iv)
-        {
-            void it;
-            HlaAllele hlaAllele = (HlaAllele) item$iv$iv;
-            Collection collection = destination$iv$iv;
-            boolean bl = false;
-            SomaticCodingCount somaticCodingCount = new SomaticCodingCount((HlaAllele) it, 0.0, 0.0, 0.0, 0.0, 0.0);
-            collection.add(somaticCodingCount);
-        }
-        return (List) destination$iv$iv;
-
-         */
+        return winners.stream()
+                .map(x -> new SomaticCodingCount(x, 0, 0, 0, 0, 0)).collect(Collectors.toList());
     }
 
     public static List<SomaticCodingCount> addVariant(final List<SomaticCodingCount> $receiver,

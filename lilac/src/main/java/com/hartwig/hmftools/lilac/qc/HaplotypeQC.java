@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.SequenceCount;
@@ -15,6 +16,7 @@ import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class HaplotypeQC
@@ -74,10 +76,19 @@ public class HaplotypeQC
         evidence.stream().map(x -> unmatchedHaplotype(x, minEvidence, winners, aminoAcidCount)).forEach(x -> allUnmatched.addAll(x));
         Collections.sort(allUnmatched, new Haplotype.HaplotypeFragmentSorter());
 
-        Map<String,Haplotype> distinctHaplotypeMap = allUnmatched.stream()
-                .collect(Collectors.toMap(entry -> String.format("%d-%d-%s", entry.StartLocus, entry.EndLocus, entry.Haplotype), entry -> entry));
+        Set<String> haplotypeKeys = Sets.newHashSet();
+        List<Haplotype> distinctHaplotypes = Lists.newArrayList();
 
-        List<Haplotype> distinctHaplotypes = distinctHaplotypeMap.values().stream().collect(Collectors.toList());
+        for(Haplotype haplotype : allUnmatched)
+        {
+            String key = String.format("%d-%d-%s", haplotype.StartLocus, haplotype.EndLocus, haplotype.Haplotype);
+            if(haplotypeKeys.contains(key))
+                continue;
+
+            haplotypeKeys.add(key);
+            distinctHaplotypes.add(haplotype);
+        }
+
         Collections.sort(distinctHaplotypes, new Haplotype.HaplotypeStartLocusSorter());
 
         /*

@@ -44,11 +44,15 @@ public class Haplotype
         String sparseHaplotype = evidence.getFirst();
         String complexHaplotype = "";
 
-        // TODO
-        // val completeHaplotype = (startLoci..endLoci).joinToString("")
-        // { if (aminoAcidIndices.contains(it)) sparseHaplotype[aminoAcidIndices.indexOf(it)].toString() else aminoAcidCount.sequenceAt(it).first() }
-        return new Haplotype(startLocus, endLocus, evidence.getSecond(), complexHaplotype);
+        for(int locus = startLocus; locus <= endLocus; ++locus)
+        {
+            if(aminoAcidIndices.contains(locus))
+                complexHaplotype += sparseHaplotype.charAt(aminoAcidIndices.indexOf(locus));
+            else
+                complexHaplotype += aminoAcidCount.getMinCountSequences(locus).get(0);
+        }
 
+        return new Haplotype(startLocus, endLocus, evidence.getSecond(), complexHaplotype);
     }
 
     public boolean contains(final Haplotype unmatched)

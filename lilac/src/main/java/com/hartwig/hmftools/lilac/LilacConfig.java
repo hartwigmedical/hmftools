@@ -57,7 +57,7 @@ public class LilacConfig
     private static final String SAMPLE = "sample";
     private static final String REFERENCE_BAM = "reference_bam";
     private static final String TUMOR_BAM = "tumor_bam";
-    private static final String OUTPUT_ID = "output_ID";
+    private static final String OUTPUT_ID = "output_id";
     private static final String REF_GENOME = "ref_genome";
     private static final String MIN_BASE_QUAL = "min_base_qual";
     private static final String MIN_EVIDENCE = "min_evidence";

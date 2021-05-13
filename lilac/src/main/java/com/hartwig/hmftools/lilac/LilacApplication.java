@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.proteinCovera
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
 import static com.hartwig.hmftools.lilac.hla.HlaAllele.contains;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.candidates.Candidates;
@@ -55,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
 
@@ -71,7 +73,6 @@ import org.jetbrains.annotations.NotNull;
 public class LilacApplication implements AutoCloseable, Runnable
 {
     private final long mStartTime;
-    private final ThreadFactory mNamedThreadFactory;
     private final ExecutorService mExecutorService;
     private final NucleotideGeneEnrichment mNucleotideGeneEnrichment;
     private final LilacConfig mConfig;
@@ -83,8 +84,10 @@ public class LilacApplication implements AutoCloseable, Runnable
         mRefData = new ReferenceData(mConfig.ResourceDir, mConfig);
 
         mStartTime = System.currentTimeMillis();
-        mNamedThreadFactory = null; // new ThreadFactory();;
-        mExecutorService = null;
+
+        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Lilac-%d").build();
+
+        mExecutorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
         mNucleotideGeneEnrichment = new NucleotideGeneEnrichment(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES);
     }
 
@@ -97,7 +100,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         }
 
         VersionInfo version = new VersionInfo("lilac.version");
-        LL_LOGGER.info("Starting LILAC version {} with parameters:", version.version());
+        LL_LOGGER.info("Starting LILAC with parameters:");
         mConfig.logParams();
 
         HlaContextFactory
@@ -113,6 +116,9 @@ public class LilacApplication implements AutoCloseable, Runnable
             LL_LOGGER.error("reference data loading failed");
             System.exit(1);
         }
+
+        HlaSequenceLoci deflatedSequenceTemplate = mRefData.AminoAcidSequences.stream()
+                .filter(x -> x.getAllele().toString().equals(DEFLATE_TEMPLATE)).findFirst().orElse(null);
 
         LL_LOGGER.info("Querying records from reference bam " + mConfig.ReferenceBam);
 
@@ -244,9 +250,10 @@ public class LilacApplication implements AutoCloseable, Runnable
         // Complexes
         List<HlaComplex> complexes = HlaComplex.complexes(mConfig, mRefData, referenceFragmentAlleles, candidateAlleles); // , recoveredAlleles, not used
 
-        LL_LOGGER.info("Calculating coverage of ${complexes.size} complexes");
+        LL_LOGGER.info("Calculating coverage of {} complexes", complexes.size());
         HlaComplexCoverageFactory coverageFactory = new HlaComplexCoverageFactory(mConfig, mRefData);
-        List<HlaComplexCoverage> referenceRankedComplexes = coverageFactory.rankedComplexCoverage(mExecutorService, referenceFragmentAlleles, complexes, recoveredAlleles);
+        List<HlaComplexCoverage> referenceRankedComplexes = coverageFactory.rankedComplexCoverage(
+                mExecutorService, referenceFragmentAlleles, complexes, recoveredAlleles);
 
         if(referenceRankedComplexes.isEmpty())
         {
@@ -346,7 +353,7 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         LL_LOGGER.info("QC Stats:");
         LL_LOGGER.info("  {}", lilacQC.header());
-        LL_LOGGER.info("  ", lilacQC.body());
+        LL_LOGGER.info("  {}", lilacQC.body());
 
         LL_LOGGER.info("Writing output to {}", mConfig.OutputDir);
         String outputFile = mConfig.OutputFilePrefix + ".lilac.txt";
@@ -355,17 +362,19 @@ public class LilacApplication implements AutoCloseable, Runnable
         output.write(outputFile);
         lilacQC.writefile(outputQCFile);
 
-        //val deflatedSequenceTemplate = mRefData.AminoAcidSequences.get(0).getAllele().first { it.allele == DEFLATE_TEMPLATE }
-        //val candidateToWrite = (candidateSequences + expectedSequences + deflatedSequenceTemplate).distinct().sortedBy { it.allele }
+        List<HlaSequenceLoci> candidatesToWrite = candidateSequences.stream().collect(Collectors.toList());
+        candidatesToWrite.addAll(expectedSequences);
+        candidatesToWrite.add(deflatedSequenceTemplate);
 
-        /*
-        HlaSequenceLociFile.write("$outputDir/$sample.candidates.sequences.txt",
-                A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES, candidateToWrite);
-        referenceRankedComplexes.writeToFile("$outputDir/$sample.candidates.coverage.txt")
-        referenceAminoAcidCounts.writeVertically("$outputDir/$sample.candidates.aminoacids.txt")
-        referenceNucleotideCounts.writeVertically("$outputDir/$sample.candidates.nucleotides.txt")
+        HlaSequenceLociFile.write(
+                String.format("%s/%s.candidates.sequences.txt", mConfig.OutputDir, mConfig.Sample),
+                A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES, candidatesToWrite);
 
-         */
+        HlaComplexCoverage.writeToFile(referenceRankedComplexes,
+                String.format("%s/%s.candidates.coverage.txt", mConfig.OutputDir, mConfig.Sample));
+
+        referenceAminoAcidCounts.writeVertically(String.format("%s/%s.candidates.aminoacids.txt", mConfig.OutputDir, mConfig.Sample));
+        referenceNucleotideCounts.writeVertically(String.format("%s/%s.candidates.nucleotides.txt", mConfig.OutputDir, mConfig.Sample));
 
         /*
         if(DatabaseAccess.hasDatabaseConfig((CommandLine) cmd))
@@ -405,19 +414,10 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         LilacApplication lilac = new LilacApplication(cmd, new LilacConfig(cmd));
         lilac.run();
+        lilac.close();
 
-        /*
-            } catch (e: IOException) {
-            LL_LOGGER.warn(e)
-            exitProcess(1)
-        } catch (e: ParseException) {
-            LL_LOGGER.warn(e)
-            val formatter = HelpFormatter()
-            formatter.printHelp("lilac", options)
-            exitProcess(1)
-        }
+        LL_LOGGER.info("Lilac complete");
 
-         */
     }
 
     @NotNull

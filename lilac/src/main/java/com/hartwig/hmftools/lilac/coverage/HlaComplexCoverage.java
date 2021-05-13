@@ -3,7 +3,12 @@ package com.hartwig.hmftools.lilac.coverage;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -69,7 +74,6 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
         Set<HlaAllele> alleles = mAlleleCoverage.stream().map(x -> x.Allele).collect(Collectors.toSet());
         StringJoiner sj = new StringJoiner("\t");
 
-        // CHECK what is joined?
         mAlleleCoverage.forEach(x -> sj.add(x.toString()));
         return String.format("%d\t%d\t%d\t%d\t%d\t%s",
                 TotalCoverage, UniqueCoverage, SharedCoverage, WildCoverage, alleles.size(), sj.toString());
@@ -129,26 +133,34 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
         return newList;
     }
 
-    public final void writeToFile(final List<HlaComplexCoverage> coverage, final String fileName)
+    public static void writeToFile(final List<HlaComplexCoverage> coverage, final String fileName)
     {
-        // TODO
-        File file = new File(fileName);
-
-        /*
-        FilesKt.writeText$default((File) file, (String) (header() + "\n"), null, (int) 2, null);
-        for(HlaComplexCoverage coverage : $receiver)
+        try
         {
-            FilesKt.appendText$default((File) file, (String) (coverage.toString() + "\n"), null, (int) 2, null);
+            BufferedWriter writer = createBufferedWriter(fileName, false);
+
+            writer.write(header());
+            writer.newLine();
+
+            writer.write(coverage.toString());
+            writer.newLine();
+
+            writer.close();
         }
-        */
+        catch(IOException e)
+        {
+            LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
+            return;
+        }
     }
 
     public static class TotalCoverageSorter implements Comparator<HlaComplexCoverage>
     {
+        // sorts by total coverage descending
         public int compare(final HlaComplexCoverage first, final HlaComplexCoverage second)
         {
             if(first.TotalCoverage != second.TotalCoverage)
-                return first.TotalCoverage > second.TotalCoverage ? 1 : -1;
+                return first.TotalCoverage < second.TotalCoverage ? 1 : -1;
 
             return 0;
         }

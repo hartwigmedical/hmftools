@@ -16,6 +16,7 @@ import com.hartwig.hmftools.lilac.read.FragmentAlleles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.FutureTask;
 import java.util.stream.Collectors;
@@ -36,14 +37,16 @@ public class HlaComplexCoverageFactory
     public List<HlaAllele> rankedGroupCoverage(
             int take, final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes)
     {
-        List<HlaComplexCoverage> coverage = complexes.stream()
+        List<HlaComplexCoverage> coverages = complexes.stream()
                 .map(x -> proteinCoverage(fragmentAlleles, x.getAlleles())).collect(Collectors.toList());
 
-        Collections.sort(coverage, new HlaComplexCoverage.TotalCoverageSorter());
-        List<HlaAllele> coverageAlleles = Lists.newArrayList();
-        coverage.forEach(x -> x.getAlleleCoverage().forEach(y -> coverageAlleles.add(y.Allele)));
+        Collections.sort(coverages, new HlaComplexCoverage.TotalCoverageSorter());
+        List<HlaAllele> topRanked = Lists.newArrayList();
 
-        List<HlaAllele> topRanked = dedup(coverageAlleles);
+        for(HlaComplexCoverage coverage : coverages)
+        {
+            coverage.getAlleleCoverage().stream().filter(x -> !topRanked.contains(x.Allele)).forEach(x -> topRanked.add(x.Allele));
+        }
 
         List<HlaAllele> topTakers = takeN(topRanked, take);
 
@@ -71,11 +74,11 @@ public class HlaComplexCoverageFactory
             coverageCalcTasks.add(coverageTask);
 
             FutureTask futureTask = new FutureTask(coverageTask);
+
             taskList.add(futureTask);
             executorService.execute(futureTask);
 
-            //callableList.add(coverageTask);
-            mProgressTracker.add(coverageTask);
+            // mProgressTracker.add(futureTask);
             // taskList.add(executorService.submit(coverageTask));
 
             /*
@@ -102,7 +105,5 @@ public class HlaComplexCoverageFactory
             e.printStackTrace();
             return null;
         }
-
     }
-
 }

@@ -107,7 +107,7 @@ public class HlaComplex
             List<HlaAllele> rejected = candidatesAfterConfirmedProteins.stream()
                     .filter(x -> !contains(topCandidates, x)).collect(Collectors.toList());
 
-            LL_LOGGER.info("  discarding {} unlikely candidates: ", rejected.size(), HlaAllele.toString(rejected));
+            LL_LOGGER.info("  discarding {} unlikely candidates: {}", rejected.size(), HlaAllele.toString(rejected));
             complexes = buildComplexes(confirmedGroupAlleles, confirmedProteinAlleles, topCandidates);
         }
         else

@@ -122,7 +122,7 @@ public final class SequenceCount
         return seqCounts.values().stream().filter(x -> x >= mMinCount).count() > 1;
     }
 
-    public final List<String> getMinCountSequences(int index)
+    public final List<String> getMinCountSequences(int index) // formally sequenceAt()
     {
         Map<String,Integer> seqCounts = get(index);
 
