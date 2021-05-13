@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.patientreporter.virusbreakend;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
@@ -15,7 +17,7 @@ public class VirusBlacklistFileTest {
     @Test
     public void readVirusBlacklistTsv() throws IOException {
         VirusBlackListModel virusBlacklistModel = VirusBlacklistFile.buildFromTsv(VIRUS_BLACKLIST_TSV);
-        assertEquals(3, virusBlacklistModel.virusBlacklistcount());
+        assertEquals(3, virusBlacklistModel.virusBlacklistCount());
 
         assertEquals("taxid_genus", virusBlacklistModel.checkTaxusForId(1));
         assertEquals("taxid_species", virusBlacklistModel.checkTaxusForId(2));

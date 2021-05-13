@@ -23,8 +23,8 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.Peach;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusbreakend;
 import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosome;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
@@ -320,7 +320,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         if (!reportViralInsertions) {
             return TableUtil.createNAReportTable(title);
-        } else if (virusBreakends.reportableVirussen().isEmpty()) {
+        } else if (virusBreakends.reportableViruses().isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         } else {
             Table contentTable = TableUtil.createReportContentTable(new float[] { 120, 120, 200 },
@@ -328,7 +328,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                             TableUtil.createHeaderCell("Number of detected integration sites").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("") });
 
-            for (ReportableVirusbreakend virusBreakend : virusBreakends.reportableVirussen()) {
+            for (ReportableVirusBreakend virusBreakend : virusBreakends.reportableViruses()) {
                 contentTable.addCell(TableUtil.createContentCell(virusBreakend.virusName()));
                 contentTable.addCell(TableUtil.createContentCell(Integer.toString(virusBreakend.integrations()))
                         .setTextAlignment(TextAlignment.CENTER));

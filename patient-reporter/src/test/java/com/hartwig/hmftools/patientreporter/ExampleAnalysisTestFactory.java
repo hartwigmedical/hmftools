@@ -26,7 +26,6 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -39,9 +38,6 @@ import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
-import com.hartwig.hmftools.common.virusbreakend.ImmutableVirusBreakend;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedPatientReport;
@@ -49,10 +45,10 @@ import com.hartwig.hmftools.patientreporter.algo.ImmutableGenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusBreakend;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusBreakendTotal;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusbreakend;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusbreakend;
 import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosome;
 import com.hartwig.hmftools.protect.cnchromosome.ImmutableCnPerChromosome;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableGeneDisruption;
@@ -100,7 +96,7 @@ public final class ExampleAnalysisTestFactory {
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         ReportableVirusBreakendTotal virusBreakends = ImmutableReportableVirusBreakendTotal.builder()
-                .reportableVirussen(Lists.newArrayList())
+                .reportableViruses(Lists.newArrayList())
                 .virusNameSummary("EBV positive, EBV negative")
                 .build();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
@@ -1125,11 +1121,11 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     private static ReportableVirusBreakendTotal createTestVirusBreakends() {
-        List<ReportableVirusbreakend> reportableVirusbreakend = Lists.newArrayList(ImmutableReportableVirusbreakend.builder()
+        List<ReportableVirusBreakend> reportableVirusbreakend = Lists.newArrayList(ImmutableReportableVirusBreakend.builder()
                 .virusName("Human papillomavirus type 16")
                 .integrations(2)
                 .build());
-        return ImmutableReportableVirusBreakendTotal.builder().reportableVirussen(reportableVirusbreakend).virusNameSummary("EBV").build();
+        return ImmutableReportableVirusBreakendTotal.builder().reportableViruses(reportableVirusbreakend).virusNameSummary("EBV").build();
     }
 
     @NotNull

@@ -16,8 +16,8 @@ import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlackListModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistFile;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbFile;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryFile;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryModel;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryfile;
 
 import org.junit.Test;
 
@@ -44,7 +44,7 @@ public class GenomicAnalyzerTest {
 
         PatientReporterConfig config = PatientReporterTestConfig.create();
         VirusDbModel virusDbModel = VirusDbFile.buildFromTsv(config.virusDbTsv());
-        VirusSummaryModel virusSummaryModel = VirusSummaryfile.buildFromTsv(config.virusSummaryTsv());
+        VirusSummaryModel virusSummaryModel = VirusSummaryFile.buildFromTsv(config.virusSummaryTsv());
         VirusBlackListModel virusBlackListModel = VirusBlacklistFile.buildFromTsv(config.virusBlacklistTsv());
 
         assertNotNull(analyzer.run("sample",

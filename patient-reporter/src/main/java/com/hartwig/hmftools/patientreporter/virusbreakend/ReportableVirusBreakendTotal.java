@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ReportableVirusBreakendTotal {
 
     @NotNull
-    public abstract List<ReportableVirusbreakend> reportableVirussen();
+    public abstract List<ReportableVirusBreakend> reportableViruses();
 
     @NotNull
     public abstract String virusNameSummary();

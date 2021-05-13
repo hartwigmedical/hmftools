@@ -35,7 +35,7 @@ public final class ConsentFilterFunctions {
         ReportableVirusBreakendTotal filteredVirusBreakends = reportViralBreakends
                 ? genomicAnalysis.virusBreakends()
                 : ImmutableReportableVirusBreakendTotal.builder()
-                        .reportableVirussen(Lists.newArrayList())
+                        .reportableViruses(Lists.newArrayList())
                         .virusNameSummary(Strings.EMPTY)
                         .build();
 

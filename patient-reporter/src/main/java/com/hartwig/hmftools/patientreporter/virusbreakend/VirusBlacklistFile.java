@@ -6,14 +6,13 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class VirusBlacklistFile {
+public final class VirusBlacklistFile {
 
     private static final Logger LOGGER = LogManager.getLogger(VirusDbFile.class);
 
@@ -21,7 +20,6 @@ public class VirusBlacklistFile {
 
     private VirusBlacklistFile() {
     }
-
 
     @NotNull
     public static VirusBlackListModel buildFromTsv(@NotNull String virusBlacklistTsv) throws IOException {
@@ -33,10 +31,10 @@ public class VirusBlacklistFile {
             String[] parts = line.split(SEPARATOR);
             if (parts.length == 3) {
                 int id = Integer.parseInt(parts[0].trim());
-                String taxidtype = parts[1].trim();
-                virusBlacklistToMap.put(id, taxidtype);
+                String taxidType = parts[1].trim();
+                virusBlacklistToMap.put(id, taxidType);
             } else {
-                LOGGER.warn("Suspicious line detected in virus db tsv: {}", line);
+                LOGGER.warn("Suspicious line detected in virus blacklist tsv: {}", line);
             }
         }
 

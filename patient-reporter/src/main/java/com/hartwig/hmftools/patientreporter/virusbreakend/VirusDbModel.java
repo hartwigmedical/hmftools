@@ -22,7 +22,7 @@ public class VirusDbModel {
 
     @NotNull
     public String findVirus(int id) {
-        boolean mappedVirus = mapIdtoVirusName(id);
+        boolean mappedVirus = mapIdToVirusName(id);
 
         if (!mappedVirus) {
             LOGGER.warn("Could not match id to virusName of virus DB");
@@ -31,12 +31,12 @@ public class VirusDbModel {
     }
 
     @VisibleForTesting
-    boolean mapIdtoVirusName(int id) {
+    boolean mapIdToVirusName(int id) {
         return virusDbMap.containsKey(id);
     }
 
     @VisibleForTesting
-    int viruscount() {
+    int virusCount() {
         return virusDbMap.keySet().size();
     }
 

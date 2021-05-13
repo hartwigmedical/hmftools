@@ -11,20 +11,18 @@ import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public class VirusBreakendReportableFactory {
+public final class VirusBreakendReportableFactory {
 
     private VirusBreakendReportableFactory() {
-
     }
 
     @NotNull
     public static ReportableVirusBreakendTotal analyzeVirusBreakend(@NotNull List<VirusBreakend> virusBreakends,
             @NotNull VirusDbModel virusDbModel, @NotNull VirusSummaryModel virusSummaryModel,
             @NotNull VirusBlackListModel virusBlackListModel) {
-
         List<VirusBreakend> virusBreakendsFiltered = Lists.newArrayList();
-        List<ReportableVirusbreakend> virusBreakendsReportable = Lists.newArrayList();
-        Set<String> postiveSummary = Sets.newHashSet();
+        List<ReportableVirusBreakend> virusBreakendsReportable = Lists.newArrayList();
+        Set<String> positiveSummary = Sets.newHashSet();
         Set<String> negativeSummary = Sets.newHashSet();
         Set<String> summary = Sets.newHashSet();
 
@@ -49,32 +47,31 @@ public class VirusBreakendReportableFactory {
         }
 
         for (VirusBreakend virusBreakend : virusBreakendsFiltered) {
-
             String virusName = virusDbModel.findVirus(virusBreakend.referenceTaxid());
-            virusBreakendsReportable.add(ImmutableReportableVirusbreakend.builder()
+            virusBreakendsReportable.add(ImmutableReportableVirusBreakend.builder()
                     .virusName(virusName)
                     .integrations(virusBreakend.integrations())
                     .build());
 
-            if (virusSummaryModel.mapIdtoVirusName(virusBreakend.taxidSpecies())) {
+            if (virusSummaryModel.mapIdToVirusName(virusBreakend.taxidSpecies())) {
                 if (!virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()).equals(Strings.EMPTY)) {
-                    postiveSummary.add(virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()) + " positive");
+                    positiveSummary.add(virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()) + " positive");
                 }
             }
         }
 
-        for (String virus : virusSummaryModel.virussen()) {
-            if (!postiveSummary.contains(virus + " positive")) {
+        for (String virus : virusSummaryModel.viruses()) {
+            if (!positiveSummary.contains(virus + " positive")) {
                 negativeSummary.add(virus + " negative");
             }
         }
 
-        summary.addAll(postiveSummary);
+        summary.addAll(positiveSummary);
         summary.addAll(negativeSummary);
         String virusNameSummary = summary.toString().replace("[", "").replace("]", "");
 
         return ImmutableReportableVirusBreakendTotal.builder()
-                .reportableVirussen(virusBreakendsReportable)
+                .reportableViruses(virusBreakendsReportable)
                 .virusNameSummary(virusNameSummary)
                 .build();
     }

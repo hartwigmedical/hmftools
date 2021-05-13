@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.patientreporter.virusbreakend;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
@@ -15,9 +17,9 @@ public class VirusDbFileTest {
     @Test
     public void readVirusDbTsv() throws IOException {
         VirusDbModel virusDbModel = VirusDbFile.buildFromTsv(VIRUSDB_TSV);
-        assertEquals(1, virusDbModel.viruscount());
+        assertEquals(1, virusDbModel.virusCount());
 
-        assertTrue(virusDbModel.mapIdtoVirusName(1));
-        assertFalse(virusDbModel.mapIdtoVirusName(2));
+        assertTrue(virusDbModel.mapIdToVirusName(1));
+        assertFalse(virusDbModel.mapIdToVirusName(2));
     }
 }

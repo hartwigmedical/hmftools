@@ -12,13 +12,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class VirusSummaryfile {
+public final class VirusSummaryFile {
 
-    private static final Logger LOGGER = LogManager.getLogger(VirusSummaryfile.class);
+    private static final Logger LOGGER = LogManager.getLogger(VirusSummaryFile.class);
 
     private static final String SEPARATOR = "\t";
 
-    private VirusSummaryfile() {
+    private VirusSummaryFile() {
     }
 
     @NotNull
@@ -30,7 +30,7 @@ public class VirusSummaryfile {
         for (String line : linesVirusSummary.subList(1, linesVirusSummary.size())) {
             String[] parts = line.split(SEPARATOR);
             if (parts.length == 2) {
-                int id = Integer.valueOf(parts[0].trim());
+                int id = Integer.parseInt(parts[0].trim());
                 String virusName = parts[1].trim();
                 virusIdToMap.put(id, virusName);
             } else {

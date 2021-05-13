@@ -23,7 +23,7 @@ public class VirusSummaryModel {
 
     @NotNull
     public String findVirusSummary(int id) {
-        boolean mappedVirusSummary = mapIdtoVirusName(id);
+        boolean mappedVirusSummary = mapIdToVirusName(id);
 
         if (!mappedVirusSummary) {
             LOGGER.warn("Could not match id to virusName of summry");
@@ -32,16 +32,16 @@ public class VirusSummaryModel {
     }
 
     @VisibleForTesting
-    public boolean mapIdtoVirusName(int id) {
+    public boolean mapIdToVirusName(int id) {
         return virusSummaryMap.containsKey(id);
     }
 
-    public Collection<String> virussen() {
+    public Collection<String> viruses() {
         return virusSummaryMap.values();
     }
 
     @VisibleForTesting
-    int viruscount() {
+    int virusCount() {
         return virusSummaryMap.keySet().size();
     }
 }

@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.patientreporter.virusbreakend;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
@@ -19,8 +22,8 @@ public class VirusDbModelTest {
         assertEquals("virus1", virusDbModel.findVirus(1));
         assertNotEquals("virus2", virusDbModel.findVirus(1));
 
-        assertTrue(virusDbModel.mapIdtoVirusName(1));
-        assertFalse(virusDbModel.mapIdtoVirusName(3));
+        assertTrue(virusDbModel.mapIdToVirusName(1));
+        assertFalse(virusDbModel.mapIdToVirusName(3));
 
     }
 }

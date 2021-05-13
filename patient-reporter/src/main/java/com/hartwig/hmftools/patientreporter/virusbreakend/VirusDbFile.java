@@ -12,7 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class VirusDbFile {
+public final class VirusDbFile {
 
     private static final Logger LOGGER = LogManager.getLogger(VirusDbFile.class);
 
@@ -22,15 +22,15 @@ public class VirusDbFile {
     }
 
     @NotNull
-    public static VirusDbModel buildFromTsv(@NotNull String virusTsv) throws IOException {
-        List<String> linesVirusDb = Files.readAllLines(new File(virusTsv).toPath());
+    public static VirusDbModel buildFromTsv(@NotNull String virusDbTsv) throws IOException {
+        List<String> linesVirusDb = Files.readAllLines(new File(virusDbTsv).toPath());
 
         Map<Integer, String> virusIdToMap = Maps.newHashMap();
 
         for (String line : linesVirusDb) {
             String[] parts = line.split(SEPARATOR);
             if (parts.length == 2) {
-                int id = Integer.valueOf(parts[0].trim());
+                int id = Integer.parseInt(parts[0].trim());
                 String virusName = parts[1].trim();
                 virusIdToMap.put(id, virusName);
             } else {

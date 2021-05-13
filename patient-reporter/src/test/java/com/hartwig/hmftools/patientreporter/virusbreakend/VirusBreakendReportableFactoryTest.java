@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.virusbreakend;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 import java.util.Map;
@@ -157,12 +157,12 @@ public class VirusBreakendReportableFactoryTest {
 
         assertEquals(1,
                 VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)
-                        .reportableVirussen()
+                        .reportableViruses()
                         .size());
 
-        ReportableVirusbreakend reportableVirusbreakend =
+        ReportableVirusBreakend reportableVirusbreakend =
                 VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)
-                        .reportableVirussen()
+                        .reportableViruses()
                         .get(0);
         assertEquals("Human papillomavirus type 16", reportableVirusbreakend.virusName());
         assertEquals(2, reportableVirusbreakend.integrations());

@@ -54,18 +54,54 @@ public class PatientReporterApplication {
             System.exit(1);
         }
 
+        new PatientReporterApplication(config).run();
+    }
+
+    @NotNull
+    private final PatientReporterConfig config;
+
+    private PatientReporterApplication(@NotNull final PatientReporterConfig config) {
+        this.config = config;
+    }
+
+    private void run() throws IOException {
         SampleMetadata sampleMetadata = buildSampleMetadata(config);
 
         if (config.qcFail()) {
             LOGGER.info("Generating qc-fail report");
-            generateQCFail(config, sampleMetadata);
+            generateQCFail(sampleMetadata);
         } else {
             LOGGER.info("Generating patient report");
-            generateAnalysedReport(config, sampleMetadata);
+            generateAnalysedReport(sampleMetadata);
         }
     }
 
-    private static void generateQCFail(@NotNull PatientReporterConfig config, @NotNull SampleMetadata sampleMetadata) throws IOException {
+    private void generateAnalysedReport(@NotNull SampleMetadata sampleMetadata) throws IOException {
+        AnalysedReportData reportData = buildAnalysedReportData(config);
+        AnalysedPatientReporter reporter = new AnalysedPatientReporter(reportData);
+
+        AnalysedPatientReport report = reporter.run(sampleMetadata, config);
+
+        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(reportData.germlineReportingModel());
+
+        String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
+        reportWriter.writeAnalysedPatientReport(report, outputFilePath);
+
+        if (!config.onlyCreatePDF()) {
+            LOGGER.debug("Updating additional files and databases");
+
+            writeReportDataToJson(config.outputDirData(),
+                    report.sampleReport().sampleMetadata().tumorSampleId(),
+                    report.sampleReport().sampleMetadata().tumorSampleBarcode(),
+                    report);
+
+            if (!report.sampleReport().cohort().cohortId().equals("COLO")) {
+                ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
+            }
+        }
+    }
+
+    private void generateQCFail(@NotNull SampleMetadata sampleMetadata) throws IOException {
         QCFailReporter reporter = new QCFailReporter(buildBaseReportData(config));
         QCFailReport report = reporter.run(config.qcFailReason(),
                 sampleMetadata,
@@ -89,32 +125,6 @@ public class PatientReporterApplication {
 
             if (!report.sampleReport().cohort().cohortId().equals("COLO")) {
                 ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
-            }
-        }
-    }
-
-    private static void generateAnalysedReport(@NotNull PatientReporterConfig config, @NotNull SampleMetadata sampleMetadata)
-            throws IOException {
-        AnalysedReportData reportData = buildAnalysedReportData(config);
-        AnalysedPatientReporter reporter = new AnalysedPatientReporter(reportData);
-
-        AnalysedPatientReport report = reporter.run(sampleMetadata, config);
-
-        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(reportData.germlineReportingModel());
-
-        String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
-        reportWriter.writeAnalysedPatientReport(report, outputFilePath);
-
-        if (!config.onlyCreatePDF()) {
-            LOGGER.debug("Updating additional files and databases");
-
-            writeReportDataToJson(config.outputDirData(),
-                    report.sampleReport().sampleMetadata().tumorSampleId(),
-                    report.sampleReport().sampleMetadata().tumorSampleBarcode(),
-                    report);
-
-            if (!report.sampleReport().cohort().cohortId().equals("COLO")) {
-                ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
             }
         }
     }
