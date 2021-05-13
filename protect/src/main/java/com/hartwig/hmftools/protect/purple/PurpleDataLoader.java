@@ -48,7 +48,7 @@ public final class PurpleDataLoader {
     @NotNull
     public static PurpleData load(@NotNull String sample, @NotNull String qcFile, @NotNull String purityTsv,
             @NotNull String driverCatalogSomaticTsv, @NotNull String somaticVcf, @NotNull String driverCatalogGermlineTsv,
-            @NotNull String germlineVcf, @Nullable String purpleCnvSomaticTsv) throws IOException {
+            @NotNull String germlineVcf, @Nullable String purpleSomaticCopynumberTsv) throws IOException {
         LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
 
         PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
@@ -73,8 +73,8 @@ public final class PurpleDataLoader {
         LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDriverCatalog.size(), driverCatalogGermlineTsv);
 
         CnPerChromosome cnPerChromosome = null;
-        if (purpleCnvSomaticTsv != null) {
-            cnPerChromosome = CnPerChromosomeFactory.extractCnPerChromosomeArm(purpleCnvSomaticTsv);
+        if (purpleSomaticCopynumberTsv != null) {
+            cnPerChromosome = CnPerChromosomeFactory.extractCnPerChromosomeArm(purpleSomaticCopynumberTsv);
         }
 
         List<SomaticVariant> germlineVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, germlineVcf);

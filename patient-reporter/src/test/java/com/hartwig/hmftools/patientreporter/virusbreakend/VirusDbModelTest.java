@@ -14,7 +14,7 @@ import org.junit.Test;
 public class VirusDbModelTest {
 
     @Test
-    public void matchVirusToId() {
+    public void canMatchVirusToId() {
         Map<Integer, String> VirusIdMap = Maps.newHashMap();
         VirusIdMap.put(1, "virus1");
         VirusDbModel virusDbModel = new VirusDbModel(VirusIdMap);

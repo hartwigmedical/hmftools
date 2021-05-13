@@ -49,14 +49,12 @@ public class AnalysedPatientReporter {
 
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
-        GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer();
-        GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
-                config,
-                reportData.germlineReportingModel(),
-                sampleReport.germlineReportingLevel(),
+        GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.germlineReportingModel(),
                 reportData.virusDbModel(),
                 reportData.virusSummaryModel(),
                 reportData.virusBlackListModel());
+        GenomicAnalysis genomicAnalysis =
+                genomicAnalyzer.run(sampleMetadata.tumorSampleId(), config, sampleReport.germlineReportingLevel());
 
         ConsentFilterFunctions consentFilterFunctions = new ConsentFilterFunctions();
 

@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class GermlineReportingFileTest {
 
-    private static final String GERMLINE_REPORTING_TSV = Resources.getResource("germline/germline_reporting.tsv").getPath();
+    private static final String GERMLINE_REPORTING_TSV = Resources.getResource("germline_reporting/germline_reporting.tsv").getPath();
 
     @Test
     public void canLoadGermlineReportingTsv() throws IOException {

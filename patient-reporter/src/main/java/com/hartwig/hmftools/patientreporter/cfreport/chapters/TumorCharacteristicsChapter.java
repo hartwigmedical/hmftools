@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.text.DecimalFormat;
 
 import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -11,7 +12,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.components.BarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
-import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HrDeficiency;
 import com.hartwig.hmftools.patientreporter.cfreport.data.MicroSatelliteStatus;
 import com.hartwig.hmftools.patientreporter.cfreport.data.MutationalBurden;
@@ -231,7 +231,6 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                         + "likelihood(s) into the contribution of the 1) SNV types (related to those used in Cosmic signatures), 2) "
                         + "driver landscape and passenger characteristics (e.g. tumor-type specific drivers), and 3) somatic mutation "
                         + "pattern (mutation distribution across the genome)."))));
-
 
         reportDocument.add(table);
     }

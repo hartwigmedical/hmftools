@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfig;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportData;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedReportData;
+import com.hartwig.hmftools.patientreporter.germline.GermlineReportingFile;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
@@ -53,6 +54,7 @@ public final class PatientReporterTestFactory {
     private static final String COMPANY_LOGO_PATH = Resources.getResource("company_logo/hartwig_logo_test.jpg").getPath();
 
     private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
+    private static final String GERMLINE_REPORTING_TSV = Resources.getResource("germline_reporting/germline_reporting.tsv").getPath();
     private static final String VIRUS_DB_TSV = Resources.getResource("virusbreakend/virusdb.tsv").getPath();
     private static final String VIRUS_SUMMARY_TSV = Resources.getResource("virusbreakend/virus_summary.tsv").getPath();
     private static final String VIRUS_BLACKLIST_TSV = Resources.getResource("virusbreakend/virus_blacklist.tsv").getPath();
@@ -165,6 +167,7 @@ public final class PatientReporterTestFactory {
     @NotNull
     public static AnalysedReportData loadTestAnalysedReportData() {
         try {
+            GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(GERMLINE_REPORTING_TSV);
             SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
             VirusDbModel virusDbModel = VirusDbFile.buildFromTsv(VIRUS_DB_TSV);
             VirusSummaryModel virusSummaryModel = VirusSummaryFile.buildFromTsv(VIRUS_SUMMARY_TSV);
@@ -172,7 +175,7 @@ public final class PatientReporterTestFactory {
 
             return ImmutableAnalysedReportData.builder()
                     .from(loadTestReportData())
-                    .germlineReportingModel(new GermlineReportingModel(Lists.newArrayList()))
+                    .germlineReportingModel(germlineReportingModel)
                     .summaryModel(summaryModel)
                     .virusDbModel(virusDbModel)
                     .virusSummaryModel(virusSummaryModel)

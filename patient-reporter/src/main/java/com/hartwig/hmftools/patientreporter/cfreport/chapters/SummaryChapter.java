@@ -25,10 +25,9 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
-import com.hartwig.hmftools.patientreporter.cfreport.data.Peach;
+import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
-import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.Cell;
@@ -281,7 +280,7 @@ public class SummaryChapter implements ReportChapter {
                         TableUtil.createHeaderCell("Function"),
                         TableUtil.createHeaderCell("Linked drugs").setTextAlignment(TextAlignment.CENTER) });
 
-        for (PeachGenotype peachGenotype : Peach.sort(analysis().peachGenotypes())) {
+        for (PeachGenotype peachGenotype : Pharmacogenetics.sort(analysis().peachGenotypes())) {
             table.addCell(TableUtil.createContentCell(peachGenotype.gene()));
             table.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
             table.addCell(TableUtil.createContentCell(peachGenotype.function()));

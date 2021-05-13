@@ -18,7 +18,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 
-public final class ConsentFilterFunctions {
+public class ConsentFilterFunctions {
 
     public ConsentFilterFunctions() {
     }

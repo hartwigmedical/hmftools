@@ -42,14 +42,26 @@ public class GenomicAnalyzer {
 
     private static final Logger LOGGER = LogManager.getLogger(GenomicAnalyzer.class);
 
-    public GenomicAnalyzer() {
+    @NotNull
+    private final GermlineReportingModel germlineReportingModel;
+    @NotNull
+    private final VirusDbModel virusDbModel;
+    @NotNull
+    private final VirusSummaryModel virusSummaryModel;
+    @NotNull
+    private final VirusBlackListModel virusBlackListModel;
+
+    public GenomicAnalyzer(@NotNull final GermlineReportingModel germlineReportingModel, @NotNull final VirusDbModel virusDbModel,
+            @NotNull final VirusSummaryModel virusSummaryModel, @NotNull final VirusBlackListModel virusBlackListModel) {
+        this.germlineReportingModel = germlineReportingModel;
+        this.virusDbModel = virusDbModel;
+        this.virusSummaryModel = virusSummaryModel;
+        this.virusBlackListModel = virusBlackListModel;
     }
 
     @NotNull
     public GenomicAnalysis run(@NotNull String tumorSampleId, @NotNull PatientReporterConfig config,
-            @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingLevel germlineReportingLevel,
-            @NotNull VirusDbModel virusDbModel, @NotNull VirusSummaryModel virusSummaryModel,
-            @NotNull VirusBlackListModel virusBlackListModel) throws IOException {
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
                 config.purpleQcFile(),
                 config.purplePurityTsv(),

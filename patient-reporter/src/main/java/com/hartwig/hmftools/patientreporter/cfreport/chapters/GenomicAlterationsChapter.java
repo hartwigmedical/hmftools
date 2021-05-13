@@ -19,7 +19,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GeneDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
-import com.hartwig.hmftools.patientreporter.cfreport.data.Peach;
+import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
@@ -351,14 +351,14 @@ public class GenomicAlterationsChapter implements ReportChapter {
                         TableUtil.createHeaderCell("Function"), TableUtil.createHeaderCell("Linked drugs"),
                         TableUtil.createHeaderCell("Source").setTextAlignment(TextAlignment.CENTER) });
 
-        for (PeachGenotype peachGenotype : Peach.sort(peachGenotypes)) {
+        for (PeachGenotype peachGenotype : Pharmacogenetics.sort(peachGenotypes)) {
             contentTable.addCell(TableUtil.createContentCell(peachGenotype.gene()));
             contentTable.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
             contentTable.addCell(TableUtil.createContentCell(peachGenotype.function()));
             contentTable.addCell(TableUtil.createContentCell(peachGenotype.linkedDrugs()));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(Peach.sourceName(peachGenotype.urlPrescriptionInfo())).addStyle(
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(Pharmacogenetics.sourceName(peachGenotype.urlPrescriptionInfo())).addStyle(
                     ReportResources.dataHighlightLinksStyle()))
-                    .setAction(PdfAction.createURI(Peach.url(peachGenotype.urlPrescriptionInfo())))
+                    .setAction(PdfAction.createURI(Pharmacogenetics.url(peachGenotype.urlPrescriptionInfo())))
                     .setTextAlignment(TextAlignment.CENTER));
         }
         return TableUtil.createWrappingReportTable(title, contentTable);

@@ -6,7 +6,6 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class TumorLocationAndTypeTable {
 
@@ -14,7 +13,8 @@ public final class TumorLocationAndTypeTable {
     }
 
     @NotNull
-    public static Table createBiopsyLocationAndTumorLocation(@NotNull String primaryTumorLocation, @NotNull String biopsyLocation, float width) {
+    public static Table createBiopsyLocationAndTumorLocation(@NotNull String primaryTumorLocation, @NotNull String biopsyLocation,
+            float width) {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 2, 2 }));
         table.setWidth(width);
 
@@ -28,7 +28,7 @@ public final class TumorLocationAndTypeTable {
     }
 
     @NotNull
-    public static Table createTumorType( String primaryTumorType, float width) {
+    public static Table createTumorType(String primaryTumorType, float width) {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1 }));
         table.setWidth(width);
 

@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosome;
 
 import org.apache.logging.log4j.LogManager;
@@ -17,10 +16,10 @@ import org.jetbrains.annotations.Nullable;
 
 public final class GainsAndLosses {
 
+    private static final Logger LOGGER = LogManager.getLogger(GainsAndLosses.class);
+
     private GainsAndLosses() {
     }
-
-    private static final Logger LOGGER = LogManager.getLogger(GainsAndLosses.class);
 
     @NotNull
     public static List<ReportableGainLoss> sort(@NotNull List<ReportableGainLoss> reportableGainsAndLosses) {

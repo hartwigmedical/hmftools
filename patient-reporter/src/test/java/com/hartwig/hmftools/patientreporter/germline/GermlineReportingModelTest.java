@@ -32,19 +32,19 @@ public class GermlineReportingModelTest {
                 .conditionFilter(null)
                 .build();
 
-        GermlineReportingModel victim = new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
-        assertNotNull(victim.entryForGene(notifyGene));
-        assertNotNull(victim.entryForGene(reportGene));
-        assertNull(victim.entryForGene("Other"));
+        GermlineReportingModel model = new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
+        assertNotNull(model.entryForGene(notifyGene));
+        assertNotNull(model.entryForGene(reportGene));
+        assertNull(model.entryForGene("Other"));
 
-        assertTrue(victim.notifyAboutGene(notifyGene, REPORT_WITH_NOTIFICATION));
-        assertFalse(victim.notifyAboutGene(notifyGene, REPORT_WITHOUT_NOTIFICATION));
-        assertFalse(victim.notifyAboutGene(notifyGene, NO_REPORTING));
+        assertTrue(model.notifyAboutGene(notifyGene, REPORT_WITH_NOTIFICATION));
+        assertFalse(model.notifyAboutGene(notifyGene, REPORT_WITHOUT_NOTIFICATION));
+        assertFalse(model.notifyAboutGene(notifyGene, NO_REPORTING));
 
-        assertFalse(victim.notifyAboutGene(reportGene, REPORT_WITHOUT_NOTIFICATION));
-        assertFalse(victim.notifyAboutGene(reportGene, REPORT_WITHOUT_NOTIFICATION));
-        assertFalse(victim.notifyAboutGene(reportGene, NO_REPORTING));
+        assertFalse(model.notifyAboutGene(reportGene, REPORT_WITHOUT_NOTIFICATION));
+        assertFalse(model.notifyAboutGene(reportGene, REPORT_WITHOUT_NOTIFICATION));
+        assertFalse(model.notifyAboutGene(reportGene, NO_REPORTING));
 
-        assertFalse(victim.notifyAboutGene("Other", REPORT_WITH_NOTIFICATION));
+        assertFalse(model.notifyAboutGene("Other", REPORT_WITH_NOTIFICATION));
     }
 }

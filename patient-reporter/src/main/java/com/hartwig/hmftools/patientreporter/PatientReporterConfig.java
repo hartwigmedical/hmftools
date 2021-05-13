@@ -266,7 +266,7 @@ public interface PatientReporterConfig {
 
         String pipelineVersion = Strings.EMPTY;
         String purplePurityTsv = Strings.EMPTY;
-        String purpleQCFile = Strings.EMPTY;
+        String purpleQcFile = Strings.EMPTY;
         String purpleSomaticDriverCatalogTsv = Strings.EMPTY;
         String purpleGermlineDriverCatalogTsv = Strings.EMPTY;
         String purpleSomaticVariantVcf = Strings.EMPTY;
@@ -291,11 +291,11 @@ public interface PatientReporterConfig {
 
         if (isQCFail && qcFailReason.isDeepWGSDataAvailable()) {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
-            purpleQCFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
+            purpleQcFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
         } else if (!isQCFail) {
             pipelineVersion = optionalFile(cmd, PIPELINE_VERSION_FILE);
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
-            purpleQCFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
+            purpleQcFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
             purpleSomaticDriverCatalogTsv = nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVER_CATALOG_TSV);
             purpleGermlineDriverCatalogTsv = nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV);
             purpleSomaticVariantVcf = nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF);
@@ -336,7 +336,7 @@ public interface PatientReporterConfig {
                 .qcFail(isQCFail)
                 .qcFailReason(qcFailReason)
                 .purplePurityTsv(purplePurityTsv)
-                .purpleQcFile(purpleQCFile)
+                .purpleQcFile(purpleQcFile)
                 .purpleSomaticDriverCatalogTsv(purpleSomaticDriverCatalogTsv)
                 .purpleGermlineDriverCatalogTsv(purpleGermlineDriverCatalogTsv)
                 .purpleSomaticVariantVcf(purpleSomaticVariantVcf)

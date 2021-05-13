@@ -20,8 +20,8 @@ public final class AnalysedReportDataLoader {
 
     @NotNull
     public static AnalysedReportData buildFromFiles(@NotNull ReportData reportData, @NotNull String germlineReportingTsv,
-            @NotNull String sampleSummaryTsv, @NotNull String virusTsv, @NotNull String virusSummaryTsv, @NotNull String virusBlacklistTsv)
-            throws IOException {
+            @NotNull String sampleSummaryTsv, @NotNull String virusDbTsv, @NotNull String virusSummaryTsv,
+            @NotNull String virusBlacklistTsv) throws IOException {
         GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(germlineReportingTsv);
         SummaryModel summaryModel = SummaryFile.buildFromTsv(sampleSummaryTsv);
 
@@ -29,7 +29,7 @@ public final class AnalysedReportDataLoader {
                 .from(reportData)
                 .germlineReportingModel(germlineReportingModel)
                 .summaryModel(summaryModel)
-                .virusDbModel(VirusDbFile.buildFromTsv(virusTsv))
+                .virusDbModel(VirusDbFile.buildFromTsv(virusDbTsv))
                 .virusSummaryModel(VirusSummaryFile.buildFromTsv(virusSummaryTsv))
                 .virusBlackListModel(VirusBlacklistFile.buildFromTsv(virusBlacklistTsv))
                 .build();
