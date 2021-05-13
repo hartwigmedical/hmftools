@@ -68,7 +68,7 @@ public final class PurpleDataLoader {
 
         CnPerChromosome cnPerChromosome = null;
         if (purpleCnvSomaticTsv != null) {
-            cnPerChromosome = CnPerChromosomeFactory.extractCnPerChromsomsomeArm(purpleCnvSomaticTsv);
+            cnPerChromosome = CnPerChromosomeFactory.extractCnPerChromosomeArm(purpleCnvSomaticTsv);
         }
 
         List<ReportableGainLoss> copyNumberAlterations = somaticDriverCatalog.stream()

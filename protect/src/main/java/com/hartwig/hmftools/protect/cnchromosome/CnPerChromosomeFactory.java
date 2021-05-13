@@ -13,63 +13,12 @@ import org.jetbrains.annotations.NotNull;
 
 public final class CnPerChromosomeFactory {
 
-    public CnPerChromosomeFactory() {
+    private CnPerChromosomeFactory() {
     }
 
-    private static int getChromosomalArmLength(final String chromosome, final ChromosomeArm armType) {
-        final RefGenomeCoordinates refGenome = RefGenomeCoordinates.COORDS_37;
-        final HumanChromosome chr = HumanChromosome.fromString(chromosome);
-
-        final Long centromerePos = refGenome.centromeres().get(chr);
-
-        if (centromerePos == null) {
-            return 0;
-        }
-
-        if (armType == ChromosomeArm.P_ARM) {
-            return centromerePos.intValue();
-        }
-
-        int chrLength = refGenome.lengths().get(chr).intValue();
-
-        return chrLength - centromerePos.intValue();
-    }
-
-    private static double determineCopyNumberPArm(@NotNull List<PurpleCopyNumber> copyNumbers, @NotNull String chromosome) {
-        int chromosomeLength = getChromosomalArmLength(chromosome, ChromosomeArm.P_ARM);
-
-        double copyNumber = 0;
-        double copyNumberArm = 0;
-        for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
-            if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() < chromosomeLength) {
-                copyNumber += purpleCopyNumber.averageObservedBAF();
-                long totalLengthSegemnt = (purpleCopyNumber.end() - purpleCopyNumber.start()) - 1;
-                copyNumber += copyNumber * totalLengthSegemnt / chromosomeLength;
-            }
-
-        }
-        return copyNumberArm;
-    }
-
-    private static double determineCopyNumberQArm(@NotNull List<PurpleCopyNumber> copyNumbers, @NotNull String chromosome) {
-        int chromosomeLength = getChromosomalArmLength(chromosome, ChromosomeArm.Q_ARM);
-
-        double copyNumber = 0;
-        double copyNumberArm = 0;
-        for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
-            if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() > chromosomeLength) {
-                copyNumber += purpleCopyNumber.averageObservedBAF();
-                long totalLengthSegemnt = (purpleCopyNumber.end() - purpleCopyNumber.start()) - 1;
-                copyNumber += copyNumber * totalLengthSegemnt / chromosomeLength;
-            }
-
-        }
-        return copyNumberArm;
-    }
-
-    public static CnPerChromosome extractCnPerChromsomsomeArm(@NotNull String purpleCnvSomaticTsv) throws IOException {
-
-        List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(purpleCnvSomaticTsv);
+    @NotNull
+    public static CnPerChromosome extractCnPerChromosomeArm(@NotNull String purpleSomaticCopynumberTsv) throws IOException {
+        List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(purpleSomaticCopynumberTsv);
 
         return ImmutableCnPerChromosome.builder()
                 .chr1p(determineCopyNumberPArm(copyNumbers, "1"))
@@ -121,5 +70,56 @@ public final class CnPerChromosomeFactory {
                 .chrYp(determineCopyNumberPArm(copyNumbers, "Y"))
                 .chrYq(determineCopyNumberQArm(copyNumbers, "Y"))
                 .build();
+    }
+
+    private static int getChromosomalArmLength(@NotNull String chromosome, @NotNull ChromosomeArm armType) {
+        RefGenomeCoordinates refGenome = RefGenomeCoordinates.COORDS_37;
+        HumanChromosome chr = HumanChromosome.fromString(chromosome);
+
+        Long centromerePos = refGenome.centromeres().get(chr);
+
+        if (centromerePos == null) {
+            return 0;
+        }
+
+        if (armType == ChromosomeArm.P_ARM) {
+            return centromerePos.intValue();
+        }
+
+        int chrLength = refGenome.lengths().get(chr).intValue();
+
+        return chrLength - centromerePos.intValue();
+    }
+
+    private static double determineCopyNumberPArm(@NotNull List<PurpleCopyNumber> copyNumbers, @NotNull String chromosome) {
+        int chromosomeLength = getChromosomalArmLength(chromosome, ChromosomeArm.P_ARM);
+
+        double copyNumber = 0;
+        double copyNumberArm = 0;
+        for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
+            if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() < chromosomeLength) {
+                copyNumber += purpleCopyNumber.averageObservedBAF();
+                long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) - 1;
+                copyNumber += copyNumber * totalLengthSegment / chromosomeLength;
+            }
+
+        }
+        return copyNumberArm;
+    }
+
+    private static double determineCopyNumberQArm(@NotNull List<PurpleCopyNumber> copyNumbers, @NotNull String chromosome) {
+        int chromosomeLength = getChromosomalArmLength(chromosome, ChromosomeArm.Q_ARM);
+
+        double copyNumber = 0;
+        double copyNumberArm = 0;
+        for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
+            if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() > chromosomeLength) {
+                copyNumber += purpleCopyNumber.averageObservedBAF();
+                long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) - 1;
+                copyNumber += copyNumber * totalLengthSegment / chromosomeLength;
+            }
+
+        }
+        return copyNumberArm;
     }
 }
