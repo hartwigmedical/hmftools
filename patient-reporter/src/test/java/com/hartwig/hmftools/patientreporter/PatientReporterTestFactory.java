@@ -43,7 +43,7 @@ public final class PatientReporterTestFactory {
     private static final String CHORD_PREDICTION_TXT = RUN_DIRECTORY + "/chord/sample_chord_prediction.txt";
     private static final String MOLECULAR_TISSUE_ORIGIN_TXT = RUN_DIRECTORY + "/cuppa/sample.cuppa.conclusion.txt";
     private static final String MOLECULAR_TISSUE_ORIGIN_PLOT = RUN_DIRECTORY + "/cuppa/sample.cuppa.chart.png";
-    private static final String VIRUS_BREAKEND_TSV = RUN_DIRECTORY + "/virusbreakend/empty.virusbreakend.vcf.summary.tsv";
+    private static final String VIRUS_BREAKEND_TSV = RUN_DIRECTORY + "/virusbreakend/sample.virusbreakend.vcf.summary.tsv";
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/sample.peach.genotype.tsv";
     private static final String PROTECT_EVIDENCE_TSV = RUN_DIRECTORY + "/protect/sample.protect.tsv";
 
