@@ -1,10 +1,7 @@
 package com.hartwig.hmftools.common.lims.hospital;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +18,7 @@ public class HospitalModelFactoryTest {
     @Test
     public void canReadHospitalAddressTsv() throws IOException {
         Map<String, HospitalAddress> hospitalAddress =
-                HospitalModelFactory.readFromHospitalAddress(LIMS_DIRECTORY + File.separator + "hospital_address.tsv");
+                HospitalModelFactory.readFromHospitalAddressTsv(LIMS_DIRECTORY + File.separator + "hospital_address.tsv");
 
         assertEquals(2, hospitalAddress.size());
 
@@ -39,7 +36,7 @@ public class HospitalModelFactoryTest {
     @Test
     public void canReadHospitalContactCPCT() throws IOException {
         Map<String, HospitalPersons> hospitalContactCPCT =
-                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_cpct.tsv", 2, "CPCT");
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_cpct.tsv", 2, "CPCT");
 
         assertEquals(2, hospitalContactCPCT.size());
 
@@ -57,7 +54,7 @@ public class HospitalModelFactoryTest {
     @Test
     public void canReadHospitalContactDRUP() throws IOException {
         Map<String, HospitalPersons> hospitalContactDRUP =
-                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_drup.tsv", 2, "DRUP");
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_drup.tsv", 2, "DRUP");
         assertEquals(2, hospitalContactDRUP.size());
 
         HospitalPersons drup1 = hospitalContactDRUP.get("01");
@@ -74,7 +71,7 @@ public class HospitalModelFactoryTest {
     @Test
     public void canReadHospitalContactWIDE() throws IOException {
         Map<String, HospitalPersons> hospitalContactWIDE =
-                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv", 4, "WIDE");
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv", 4, "WIDE");
         assertEquals(2, hospitalContactWIDE.size());
 
         HospitalPersons wide1 = hospitalContactWIDE.get("01");
@@ -91,7 +88,7 @@ public class HospitalModelFactoryTest {
     @Test
     public void canReadHospitalContactCOREDB() throws IOException {
         Map<String, HospitalPersons> hospitalContactCOREDB =
-                HospitalModelFactory.readFromHospitalPersons(LIMS_DIRECTORY + File.separator + "hospital_coredb.tsv", 4, "COREDB");
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_coredb.tsv", 4, "COREDB");
         assertEquals(1, hospitalContactCOREDB.size());
 
         HospitalPersons coredb01 = hospitalContactCOREDB.get("01");
@@ -103,7 +100,7 @@ public class HospitalModelFactoryTest {
     @Test
     public void canReadSampleToHospitalMapping() throws IOException {
         Map<String, String> sampleHospitalMapping =
-                HospitalModelFactory.readFromSampleToHospitalMapping(LIMS_DIRECTORY + File.separator + "sample_hospital_mapping.tsv");
+                HospitalModelFactory.readFromSampleToHospitalMappingTsv(LIMS_DIRECTORY + File.separator + "sample_hospital_mapping.tsv");
 
         assertEquals(2, sampleHospitalMapping.size());
 

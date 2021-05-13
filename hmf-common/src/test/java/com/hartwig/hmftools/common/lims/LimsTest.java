@@ -17,6 +17,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortTestFactory;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.HospitalModel;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalAddress;
@@ -471,7 +472,7 @@ public class LimsTest {
     @NotNull
     private static LimsCohortModel buildCohortModelFromSampleCohort(@NotNull String sampleCohort) {
         Map<String, LimsCohortConfig> configMap = Maps.newHashMap();
-        configMap.put(sampleCohort, LimsTestUtil.createAllDisabledCohortConfig(sampleCohort));
+        configMap.put(sampleCohort, LimsCohortTestFactory.createAllDisabledCohortConfig(sampleCohort));
         return ImmutableLimsCohortModel.builder().limsCohortMap(configMap).build();
     }
 }

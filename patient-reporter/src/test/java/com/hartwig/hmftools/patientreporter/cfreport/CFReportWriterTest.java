@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortTestFactory;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisConfig;
@@ -116,7 +117,7 @@ public class CFReportWriterTest {
     public void canGeneratePatientReportForCPCTSample() throws IOException {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CPCT01_FULL")
                 .comments(FULL_TABLES_COMMENT_STRING)
-                .limsCohortConfig(PatientReporterTestFactory.createCPCTCohortConfig())
+                .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
                 .build();
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
 
@@ -127,7 +128,7 @@ public class CFReportWriterTest {
     @Test
     public void canGeneratePatientReportForCORESample() throws IOException {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CORE01_FULL")
-                .limsCohortConfig(PatientReporterTestFactory.createCORECohortConfig())
+                .limsCohortConfig(LimsCohortTestFactory.createCORECohortConfig())
                 .build();
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
 
@@ -139,7 +140,7 @@ public class CFReportWriterTest {
     public void canGeneratePatientReportForWIDESample() throws IOException {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("WIDE01_FULL")
                 .comments(FULL_TABLES_COMMENT_STRING)
-                .limsCohortConfig(PatientReporterTestFactory.createWIDECohortConfig())
+                .limsCohortConfig(LimsCohortTestFactory.createWIDECohortConfig())
                 .build();
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
 
@@ -151,7 +152,7 @@ public class CFReportWriterTest {
     public void canGeneratePatientReportForCOREDBSample() throws IOException {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("COREDB01_FULL")
                 .comments(FULL_TABLES_COMMENT_STRING)
-                .limsCohortConfig(PatientReporterTestFactory.createCOREDBCohortConfig())
+                .limsCohortConfig(LimsCohortTestFactory.createCOREDBCohortConfig())
                 .build();
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
 
@@ -164,7 +165,7 @@ public class CFReportWriterTest {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CPCT01_NO_TUMOR_FOR-209")
                 .comments(FULL_TABLES_COMMENT_STRING)
                 .hasReliablePurity(false)
-                .limsCohortConfig(PatientReporterTestFactory.createCPCTCohortConfig())
+                .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
                 .build();
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
 
@@ -177,7 +178,7 @@ public class CFReportWriterTest {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CPCT01_INSUFFICIENT_TUMOR-FOR-209")
                 .comments(FULL_TABLES_COMMENT_STRING)
                 .impliedTumorPurity(0.19)
-                .limsCohortConfig(PatientReporterTestFactory.createCPCTCohortConfig())
+                .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
                 .build();
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
 
@@ -193,7 +194,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_DNA,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                PatientReporterTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig());
     }
 
     @Test
@@ -204,7 +205,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_DNA,
                 true,
                 COMMENT_STRING_QC_FAIL_CORRECTED,
-                PatientReporterTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig());
     }
 
     @Test
@@ -215,7 +216,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_DNA,
                 true,
                 COMMENT_STRING_QC_FAIL_CORRECTED,
-                PatientReporterTestFactory.createCOREDBCohortConfig());
+                LimsCohortTestFactory.createCOREDBCohortConfig());
     }
 
     @Test
@@ -226,7 +227,7 @@ public class CFReportWriterTest {
                 QCFailReason.TECHNICAL_FAILURE,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                PatientReporterTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig());
     }
 
     @Test
@@ -237,7 +238,7 @@ public class CFReportWriterTest {
                 QCFailReason.SUFFICIENT_TCP_QC_FAILURE,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                PatientReporterTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig());
     }
 
     @Test
@@ -248,7 +249,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_TCP_DEEP_WGS,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                PatientReporterTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig());
     }
 
     @Test
@@ -259,7 +260,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                PatientReporterTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig());
     }
 
     @Test
@@ -270,7 +271,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                PatientReporterTestFactory.createCORECohortConfig());
+                LimsCohortTestFactory.createCORECohortConfig());
     }
 
     @Test
@@ -281,7 +282,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                PatientReporterTestFactory.createWIDECohortConfig());
+                LimsCohortTestFactory.createWIDECohortConfig());
     }
 
     private static void generateQCFailReport(@NotNull String sampleId, @NotNull String shallowSeqPurity,

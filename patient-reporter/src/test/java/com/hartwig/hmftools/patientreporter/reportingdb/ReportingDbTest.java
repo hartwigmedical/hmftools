@@ -12,11 +12,11 @@ import java.util.List;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortTestFactory;
 import com.hartwig.hmftools.common.reportingdb.ReportingDatabase;
 import com.hartwig.hmftools.common.reportingdb.ReportingEntry;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisConfig;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
-import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.junit.Test;
@@ -65,7 +65,7 @@ public class ReportingDbTest {
                 writer.write("tumorBarcode\tsampleId\tcohort\treportDate\treportType\tpurity\thasReliableQuality\thasReliablePurity\n");
                 writer.close();
             }
-            LimsCohortConfig cohortConfig = PatientReporterTestFactory.createCPCTCohortConfig();
+            LimsCohortConfig cohortConfig = LimsCohortTestFactory.createCPCTCohortConfig();
 
             ExampleAnalysisConfig config =
                     new ExampleAnalysisConfig.Builder().sampleId("CPCT01_SUCCESS").limsCohortConfig(cohortConfig).build();
@@ -80,8 +80,8 @@ public class ReportingDbTest {
 
     @Test
     public void canDetermineWhetherSummaryIsRequired() {
-        assertTrue(ReportingDb.requiresSummary(PatientReporterTestFactory.createWIDECohortConfig()));
-        assertFalse(ReportingDb.requiresSummary(PatientReporterTestFactory.createCPCTCohortConfig()));
-        assertTrue(ReportingDb.requiresSummary(PatientReporterTestFactory.createCORECohortConfig()));
+        assertTrue(ReportingDb.requiresSummary(LimsCohortTestFactory.createWIDECohortConfig()));
+        assertFalse(ReportingDb.requiresSummary(LimsCohortTestFactory.createCPCTCohortConfig()));
+        assertTrue(ReportingDb.requiresSummary(LimsCohortTestFactory.createCORECohortConfig()));
     }
 }

@@ -95,7 +95,8 @@ public class PatientReporterApplication {
                     report.sampleReport().sampleMetadata().tumorSampleBarcode(),
                     report);
 
-            if (!report.sampleReport().cohort().cohortId().equals("COLO")) {
+            // A little ugly but we test frequently on COLO samples and don't want to write these to prod db.
+            if (!sampleMetadata.tumorSampleId().startsWith("COLO")) {
                 ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
             }
         }
@@ -123,7 +124,8 @@ public class PatientReporterApplication {
                     report.sampleReport().tumorSampleBarcode(),
                     report);
 
-            if (!report.sampleReport().cohort().cohortId().equals("COLO")) {
+            // A little ugly but we test frequently on COLO samples and don't want to write these to prod db.
+            if (!sampleMetadata.tumorSampleId().startsWith("COLO")) {
                 ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
             }
         }
