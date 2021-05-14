@@ -10,8 +10,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.common.peach.PeachFactory;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
-import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
@@ -75,9 +75,12 @@ public class GenomicAnalyzer {
 
         List<VirusBreakend> virusBreakends = VirusBreakendFactory.readVirusBreakend(config.virusBreakendTsv());
         ReportableVirusBreakendTotal reportableVirusBreakendTotal =
-                VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlackListModel);
+                VirusBreakendReportableFactory.analyzeVirusBreakend(config.virusBreakendTsv(), virusBreakends,
+                        virusDbModel,
+                        virusSummaryModel,
+                        virusBlackListModel);
 
-        List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(config.peachGenotypeTsv());
+        List<PeachGenotype> peachGenotypes = PeachFactory.analyzePeach(config.peachGenotypeTsv());
 
         List<ReportableVariant> reportableVariants =
                 ReportableVariantFactory.mergeVariantLists(purpleData.germlineVariants(), purpleData.somaticVariants());

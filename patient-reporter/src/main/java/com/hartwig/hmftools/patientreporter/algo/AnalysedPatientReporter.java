@@ -67,6 +67,7 @@ public class AnalysedPatientReporter {
 
         String pipelineVersion = MetaDataResolver.majorDotMinorVersion(new File(config.pipelineVersionFile()));
 
+        LOGGER.info("Loading CUPPA results");
         MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
                 .molecularTissueOriginResult(MolecularTissueOriginFactory.readMolecularTissueOriginResult(config.molecularTissueOriginTxt()))
                 .molecularTissueOriginPlot(config.molecularTissueOriginPlot())
@@ -112,6 +113,7 @@ public class AnalysedPatientReporter {
                 !report.sampleReport().primaryTumorTypeString().isEmpty()
                         ? " (" + report.sampleReport().primaryTumorTypeString() + ")"
                         : Strings.EMPTY);
+        LOGGER.info(" Molecular tissue of origin prediction: {}", report.molecularTissueOrigin().molecularTissueOriginResult());
         LOGGER.info(" Shallow seq purity: {}", report.sampleReport().shallowSeqPurityString());
         LOGGER.info(" Lab SOPs used: {}", report.sampleReport().labProcedures());
         LOGGER.info(" Clinical summary present: {}", (!report.clinicalSummary().isEmpty() ? "yes" : "no"));
@@ -130,6 +132,8 @@ public class AnalysedPatientReporter {
         LOGGER.info(" Homozygous disruptions to report: {}", analysis.homozygousDisruptions().size());
         LOGGER.info(" Gene disruptions to report: {}", analysis.geneDisruptions().size());
         LOGGER.info(" Virus breakend to report: {}", analysis.virusBreakends().reportableViruses().size());
+        LOGGER.info(" Pharmacogenetics to report: {}", analysis.peachGenotypes().size());
+
         LOGGER.info(" CHORD analysis HRD prediction: {} ({})", analysis.chordHrdValue(), analysis.chordHrdStatus());
         LOGGER.info(" Microsatellite indels per Mb: {} ({})", analysis.microsatelliteIndelsPerMb(), analysis.microsatelliteStatus());
         LOGGER.info(" Tumor mutational load: {} ({})", analysis.tumorMutationalLoad(), analysis.tumorMutationalLoadStatus());
