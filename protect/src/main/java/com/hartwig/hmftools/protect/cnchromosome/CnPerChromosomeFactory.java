@@ -17,9 +17,14 @@ public final class CnPerChromosomeFactory {
     }
 
     @NotNull
-    public static CnPerChromosome extractCnPerChromosomeArm(@NotNull String purpleSomaticCopynumberTsv) throws IOException {
+    public static CnPerChromosome fromPurpleSomaticCopynumberTsv(@NotNull String purpleSomaticCopynumberTsv) throws IOException {
         List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(purpleSomaticCopynumberTsv);
 
+        return extractCnPerChromosomeArm(copyNumbers);
+    }
+
+    @NotNull
+    static CnPerChromosome extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
         return ImmutableCnPerChromosome.builder()
                 .chr1p(determineCopyNumberPArm(copyNumbers, "1"))
                 .chr1q(determineCopyNumberQArm(copyNumbers, "1"))

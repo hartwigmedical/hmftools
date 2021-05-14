@@ -74,7 +74,7 @@ public final class PurpleDataLoader {
 
         CnPerChromosome cnPerChromosome = null;
         if (purpleSomaticCopynumberTsv != null) {
-            cnPerChromosome = CnPerChromosomeFactory.extractCnPerChromosomeArm(purpleSomaticCopynumberTsv);
+            cnPerChromosome = CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(purpleSomaticCopynumberTsv);
         }
 
         List<SomaticVariant> germlineVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, germlineVcf);
