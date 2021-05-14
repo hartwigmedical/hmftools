@@ -9,7 +9,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
@@ -20,7 +19,6 @@ import com.hartwig.hmftools.common.virusbreakend.VirusBreakendFactory;
 import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
-import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistModel;
@@ -137,7 +135,7 @@ public class GenomicAnalyzer {
         for (ReportableVariant variant : reportableVariants) {
             boolean notify = false;
             if (variant.source() == ReportableVariantSource.GERMLINE) {
-                notify = notifyGermlineVariant(variant, germlineReportingModel, germlineReportingLevel, germlineGenesWithIndependentHits);
+                notify = germlineReportingModel.notifyGermlineVariant(variant, germlineReportingLevel, germlineGenesWithIndependentHits);
             }
             notifyGermlineStatusPerVariant.put(variant, notify);
         }
@@ -157,48 +155,6 @@ public class GenomicAnalyzer {
         }
 
         return false;
-    }
-
-    private static boolean notifyGermlineVariant(@NotNull ReportableVariant germlineVariant,
-            @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingLevel germlineReportingLevel,
-            @NotNull Set<String> germlineGenesWithIndependentHits) {
-        assert germlineVariant.source() == ReportableVariantSource.GERMLINE;
-
-        if (germlineReportingLevel != LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION) {
-            return false;
-        }
-
-        GermlineReportingEntry reportingEntry = germlineReportingModel.entryForGene(germlineVariant.gene());
-        if (reportingEntry == null) {
-            LOGGER.warn("No reporting entry found for germline gene {}!", germlineVariant.gene());
-            return false;
-        }
-
-        switch (reportingEntry.notifyClinicalGeneticist()) {
-            case ALWAYS: {
-                return true;
-            }
-            case NEVER: {
-                return false;
-            }
-            case ONLY_GERMLINE_HOM: {
-                return germlineVariant.genotypeStatus() == GenotypeStatus.HOM_ALT || germlineGenesWithIndependentHits.contains(
-                        germlineVariant.gene());
-            }
-            case ONLY_SPECIFIC_VARIANT: {
-                String condition = reportingEntry.conditionFilter();
-                if (condition == null) {
-                    LOGGER.warn("No condition specified for germline reporting entry on {}!", germlineVariant.gene());
-                    return false;
-                } else {
-                    return condition.equals(germlineVariant.canonicalHgvsProteinImpact());
-                }
-            }
-            default: {
-                LOGGER.warn("Unrecognized germline reporting entry value: {}", reportingEntry.notifyClinicalGeneticist());
-                return false;
-            }
-        }
     }
 
     @NotNull

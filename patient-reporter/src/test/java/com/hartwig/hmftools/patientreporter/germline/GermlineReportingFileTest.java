@@ -22,7 +22,7 @@ public class GermlineReportingFileTest {
 
         GermlineReportingEntry apc = germlineReportingModel.entryForGene("APC");
         assertNotNull(apc);
-        assertEquals(apc.notifyClinicalGeneticist(), GermlineCondition.ALWAYS);
+        assertEquals(GermlineCondition.ALWAYS, apc.condition());
         assertNull(apc.conditionFilter());
     }
 }
