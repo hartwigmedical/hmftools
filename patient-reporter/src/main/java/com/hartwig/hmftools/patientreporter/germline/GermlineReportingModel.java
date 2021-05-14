@@ -25,6 +25,7 @@ public class GermlineReportingModel {
         this.entries = entries;
     }
 
+    @VisibleForTesting
     public boolean notifyGermlineVariant(@NotNull ReportableVariant germlineVariant,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel, @NotNull Set<String> germlineGenesWithIndependentHits) {
         assert germlineVariant.source() == ReportableVariantSource.GERMLINE;
