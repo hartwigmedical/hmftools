@@ -109,8 +109,6 @@ public class LilacApplication implements AutoCloseable, Runnable
         HlaContext hlaBContext = hlaContextFactory.hlaB();
         HlaContext hlaCContext = hlaContextFactory.hlaC();
 
-        // ReferenceData refData = new ReferenceData(mConfig.ResourceDir, mConfig);
-
         if(!mRefData.load(true))
         {
             LL_LOGGER.error("reference data loading failed");
@@ -118,7 +116,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         }
 
         HlaSequenceLoci deflatedSequenceTemplate = mRefData.AminoAcidSequences.stream()
-                .filter(x -> x.getAllele().toString().equals(DEFLATE_TEMPLATE)).findFirst().orElse(null);
+                .filter(x -> x.getAllele().matches(DEFLATE_TEMPLATE)).findFirst().orElse(null);
 
         LL_LOGGER.info("Querying records from reference bam " + mConfig.ReferenceBam);
 

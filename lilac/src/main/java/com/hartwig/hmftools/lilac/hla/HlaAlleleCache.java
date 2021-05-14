@@ -1,35 +1,42 @@
 package com.hartwig.hmftools.lilac.hla;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class HlaAlleleCache
 {
     // ensure the same HlaAlle is not created twice, allowing for object matching instead of string matching
-    private final List<HlaAllele> mGroups;
-    private final List<HlaAllele> mFourDigitList;
-    private final List<HlaAllele> mAlleles;
+    private final Set<HlaAllele> mGroups;
+    private final Set<HlaAllele> mFourDigitList;
+    private final Set<HlaAllele> mAlleles;
 
     public HlaAlleleCache()
     {
-        mGroups = Lists.newArrayList();
-        mFourDigitList = Lists.newArrayList();
-        mAlleles = Lists.newArrayList();
+        mGroups = Sets.newHashSet();
+        mFourDigitList = Sets.newHashSet();
+        mAlleles = Sets.newHashSet();
     }
 
     public int alleleCount() { return mAlleles.size(); }
     public int fourDigitCount() { return mFourDigitList.size(); }
     public int groupCount() { return mGroups.size(); }
 
-    public HlaAllele request(final String alleleStr)
+    public HlaAllele request(final String alleleStr) { return request(alleleStr, true); }
+
+    public HlaAllele request(final String alleleStr, boolean checkExists)
     {
         // first check if the allele has already been created
-        HlaAllele match = mAlleles.stream().filter(x -> x.matches(alleleStr)).findFirst().orElse(null);
-        if(match != null)
-            return match;
+        if(checkExists)
+        {
+            HlaAllele match = mAlleles.stream().filter(x -> x.matches(alleleStr)).findFirst().orElse(null);
+            if(match != null)
+                return match;
+        }
 
         HlaAllele tmpAllele = HlaAllele.fromString(alleleStr);
 
@@ -108,13 +115,13 @@ public class HlaAlleleCache
     }
 
     @VisibleForTesting
-    public List<HlaAllele> getAlleles() { return mAlleles; }
+    public Set<HlaAllele> getAlleles() { return mAlleles; }
 
     @VisibleForTesting
-    public List<HlaAllele> getFourDigits() { return mFourDigitList; }
+    public Set<HlaAllele> getFourDigits() { return mFourDigitList; }
 
     @VisibleForTesting
-    public List<HlaAllele> getGroups() { return mGroups; }
+    public Set<HlaAllele> getGroups() { return mGroups; }
 
 
 }

@@ -123,7 +123,7 @@ public class ReferenceData
 
         loadStopLossRecoveryAllele();
 
-        LL_LOGGER.info("Reading nucleotide files");
+        LL_LOGGER.info("reading nucleotide files");
 
         String nucleotideFilename = mResourceDir + NUC_REF_FILE;
 
@@ -139,7 +139,7 @@ public class ReferenceData
             NucleotideSequences.addAll(nucleotideLoci(mResourceDir + "/C_nuc.txt"));
         }
 
-        LL_LOGGER.info("Reading protein files");
+        LL_LOGGER.info("reading protein files");
 
         String aminoAcidFilename = mResourceDir + AA_REF_FILE;
 
@@ -213,7 +213,7 @@ public class ReferenceData
                     return false;
 
                 String alleleStr = items[0];
-                // HlaAllele tmpAllele = HlaAllele.fromString(alleleStr);
+                // HlaAllele allele = HlaAllele.fromString(alleleStr);
                 HlaAllele allele = isProteinFile ? mAlleleCache.requestFourDigit(alleleStr) : mAlleleCache.request(alleleStr);
 
                 if(excludeAllele(allele))
@@ -329,7 +329,6 @@ public class ReferenceData
                 .collect(Collectors.toList());
          */
     }
-
 
     // reference data rewrite
     public static void main(@NotNull final String[] args) throws ParseException
