@@ -102,7 +102,6 @@ public final class CnPerChromosomeFactory {
                 long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) - 1;
                 copyNumber += copyNumber * totalLengthSegment / chromosomeLength;
             }
-
         }
         return copyNumberArm;
     }
