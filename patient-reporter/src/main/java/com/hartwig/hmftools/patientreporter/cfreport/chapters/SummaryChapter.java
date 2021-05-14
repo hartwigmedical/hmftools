@@ -90,8 +90,8 @@ public class SummaryChapter implements ReportChapter {
         reportDocument.add(new Paragraph());
         reportDocument.add(TumorLocationAndTypeTable.createTumorType(patientReport.sampleReport().primaryTumorTypeString(),
                 contentWidth()));
-        reportDocument.add(new Paragraph("\nThe information regarding 'primary tumor location' and 'primary tumor type'  is based on "
-                + "information received \nfrom the originating hospital.").addStyle(ReportResources.subTextStyle()));
+        reportDocument.add(new Paragraph("\nThe information regarding 'primary tumor location' , 'primary tumor type', 'biopsy location'"
+                + "  is based on information received \nfrom the originating hospital.").addStyle(ReportResources.subTextStyle()));
 
         renderClinicalConclusionText(reportDocument);
         renderTreatmentIndications(reportDocument);
