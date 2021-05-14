@@ -19,7 +19,7 @@ public final class VirusBreakendReportableFactory {
     @NotNull
     public static ReportableVirusBreakendTotal analyzeVirusBreakend(@NotNull List<VirusBreakend> virusBreakends,
             @NotNull VirusDbModel virusDbModel, @NotNull VirusSummaryModel virusSummaryModel,
-            @NotNull VirusBlackListModel virusBlackListModel) {
+            @NotNull VirusBlackListModel2 virusBlackListModel) {
         List<VirusBreakend> virusBreakendsFiltered = Lists.newArrayList();
         List<ReportableVirusBreakend> virusBreakendsReportable = Lists.newArrayList();
         Set<String> positiveSummary = Sets.newHashSet();
