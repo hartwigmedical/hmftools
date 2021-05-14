@@ -39,7 +39,6 @@ public final class ReportableVariantFactory {
         List<ReportableVariant> result = Lists.newArrayList();
         for (SomaticVariant variant : variants) {
             if (variant.reported()) {
-
                 DriverCatalog geneDriver = geneDriverMap.get(variant.gene());
 
                 if (geneDriver == null) {
@@ -91,7 +90,6 @@ public final class ReportableVariantFactory {
                 .type(variant.type())
                 .source(source)
                 .gene(variant.gene())
-                .genotypeStatus(variant.genotypeStatus())
                 .chromosome(variant.chromosome())
                 .position(variant.position())
                 .ref(variant.ref())
@@ -107,6 +105,7 @@ public final class ReportableVariantFactory {
                 .hotspot(variant.hotspot())
                 .clonalLikelihood(variant.clonalLikelihood())
                 .biallelic(variant.biallelic())
+                .genotypeStatus(variant.genotypeStatus())
                 .localPhaseSet(variant.localPhaseSet());
     }
 
