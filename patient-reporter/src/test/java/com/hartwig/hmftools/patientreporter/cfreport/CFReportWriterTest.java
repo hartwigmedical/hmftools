@@ -6,7 +6,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
@@ -26,7 +25,6 @@ import com.hartwig.hmftools.patientreporter.ReportData;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
@@ -353,8 +351,7 @@ public class CFReportWriterTest {
 
     @NotNull
     private static CFReportWriter testCFReportWriter() {
-        GermlineReportingModel emptyGermlineReportingModel = new GermlineReportingModel(Lists.newArrayList());
-        return new CFReportWriter(WRITE_TO_PDF, emptyGermlineReportingModel);
+        return new CFReportWriter(WRITE_TO_PDF);
     }
 
     @NotNull

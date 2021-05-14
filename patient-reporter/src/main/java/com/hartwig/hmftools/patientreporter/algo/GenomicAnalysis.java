@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
@@ -43,6 +44,9 @@ public abstract class GenomicAnalysis {
 
     @NotNull
     public abstract List<ReportableVariant> reportableVariants();
+
+    @NotNull
+    public abstract Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant();
 
     public abstract double microsatelliteIndelsPerMb();
 

@@ -82,7 +82,7 @@ public class PatientReporterApplication {
 
         AnalysedPatientReport report = reporter.run(sampleMetadata, config);
 
-        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(reportData.germlineReportingModel());
+        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
 
         String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
         reportWriter.writeAnalysedPatientReport(report, outputFilePath);
@@ -106,7 +106,7 @@ public class PatientReporterApplication {
                 config.isCorrectedReport());
         LOGGER.info("Cohort of this sample is: {}", report.sampleReport().cohort().cohortId());
 
-        ReportWriter reportWriter = CFReportWriter.createProductionReportWriterNoGermline();
+        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
         String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
         reportWriter.writeQCFailReport(report, outputFilePath);
 

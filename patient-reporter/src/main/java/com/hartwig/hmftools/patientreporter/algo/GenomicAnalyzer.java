@@ -2,11 +2,14 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
@@ -17,7 +20,6 @@ import com.hartwig.hmftools.common.virusbreakend.VirusBreakendFactory;
 import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
-import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
@@ -74,7 +76,6 @@ public class GenomicAnalyzer {
         LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
 
         List<VirusBreakend> virusBreakends = VirusBreakendFactory.readVirusBreakend(config.virusBreakendTsv());
-
         ReportableVirusBreakendTotal reportableVirusBreakendTotal =
                 VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlackListModel);
 
@@ -83,15 +84,14 @@ public class GenomicAnalyzer {
         List<ReportableVariant> reportableVariants =
                 ReportableVariantFactory.mergeVariantLists(purpleData.germlineVariants(), purpleData.somaticVariants());
 
-        List<ReportableVariantNotify> reportableVariantsWithNotify =
+        Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant =
                 determineNotify(reportableVariants, germlineReportingModel, germlineReportingLevel);
 
         ChordAnalysis chordAnalysis = ChordDataLoader.load(config.chordPredictionTxt());
 
         List<ProtectEvidence> reportableEvidenceItems = extractReportableEvidenceItems(config.protectEvidenceTsv());
-
         List<ProtectEvidence> nonTrialsOnLabel = ReportableEvidenceItemFactory.extractNonTrialsOnLabel(reportableEvidenceItems);
-        List<ProtectEvidence> clinicalTrialsOnLabel = ClinicalTrialFactory.extractOnLabelTrials(reportableEvidenceItems);
+        List<ProtectEvidence> trialsOnLabel = ClinicalTrialFactory.extractOnLabelTrials(reportableEvidenceItems);
         List<ProtectEvidence> nonTrialsOffLabel = ReportableEvidenceItemFactory.extractNonTrialsOffLabel(reportableEvidenceItems);
 
         return ImmutableGenomicAnalysis.builder()
@@ -100,9 +100,10 @@ public class GenomicAnalyzer {
                 .hasReliableQuality(purpleData.hasReliableQuality())
                 .averageTumorPloidy(purpleData.ploidy())
                 .tumorSpecificEvidence(nonTrialsOnLabel)
-                .clinicalTrials(clinicalTrialsOnLabel)
+                .clinicalTrials(trialsOnLabel)
                 .offLabelEvidence(nonTrialsOffLabel)
                 .reportableVariants(reportableVariants)
+                .notifyGermlineStatusPerVariant(notifyGermlineStatusPerVariant)
                 .microsatelliteIndelsPerMb(purpleData.microsatelliteIndelsPerMb())
                 .microsatelliteStatus(purpleData.microsatelliteStatus())
                 .tumorMutationalLoad(purpleData.tumorMutationalLoad())
@@ -121,61 +122,83 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    private static List<ReportableVariantNotify> determineNotify(List<ReportableVariant> reportableVariants,
+    private static Map<ReportableVariant, Boolean> determineNotify(@NotNull List<ReportableVariant> reportableVariants,
             @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
-        List<ReportableVariantNotify> reportableVariantNotifies = Lists.newArrayList();
-        Set<String> germlineGenes = Sets.newHashSet();
-        for (ReportableVariant reportableVariant : reportableVariants) {
-            if (reportableVariant.source() == ReportableVariantSource.GERMLINE && reportableVariant.localPhaseSet() == null) {
-                germlineGenes.add(reportableVariant.gene());
+        Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant = Maps.newHashMap();
+
+        Set<String> germlineGenesWithIndependentHits = Sets.newHashSet();
+        for (ReportableVariant variant : reportableVariants) {
+            if (variant.source() == ReportableVariantSource.GERMLINE && hasOtherGermlineVariantWithDifferentPhaseSet(reportableVariants,
+                    variant)) {
+                germlineGenesWithIndependentHits.add(variant.gene());
             }
         }
 
-        boolean notify;
-        for (ReportableVariant reportableVariant : reportableVariants) {
-            if (reportableVariant.source() == ReportableVariantSource.GERMLINE) {
-                notify = notifyAboutVariant(reportableVariant, germlineReportingModel, germlineReportingLevel, germlineGenes);
-
-            } else {
-                notify = false;
-
+        for (ReportableVariant variant : reportableVariants) {
+            boolean notify = false;
+            if (variant.source() == ReportableVariantSource.GERMLINE) {
+                notify = notifyGermlineVariant(variant, germlineReportingModel, germlineReportingLevel, germlineGenesWithIndependentHits);
             }
-            reportableVariantNotifies.add(ImmutableReportableVariantNotify.builder()
-                    .reportableVariant(reportableVariant)
-                    .notifyVariant(notify)
-                    .build());
+            notifyGermlineStatusPerVariant.put(variant, notify);
         }
 
-        return reportableVariantNotifies;
+        return notifyGermlineStatusPerVariant;
     }
 
-    private static boolean notifyAboutVariant(@NotNull ReportableVariant variant, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel, @NotNull Set<String> germlineGenes) {
-        boolean notifyVariant = false;
-        if (variant.source() == ReportableVariantSource.GERMLINE) {
-            GermlineReportingEntry reportingEntry = germlineReportingModel.entryForGene(variant.gene());
-            if (reportingEntry != null) {
-                if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ONLY_GERMLINE_HOM) {
-                    String conditionFilter = reportingEntry.conditionFilter();
-                    if (conditionFilter != null) {
-                        if (germlineGenes.contains(variant.gene())) {
-                            notifyVariant = true;
-                        } else {
-                            notifyVariant = variant.genotypeStatus().simplifiedDisplay().equals(conditionFilter);
-                        }
-                    }
-
-                } else if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ONLY_SPECIFIC_VARIANT) {
-                    String conditionFilter = reportingEntry.conditionFilter();
-                    if (conditionFilter != null) {
-                        notifyVariant = variant.canonicalHgvsProteinImpact().equals(conditionFilter);
-                    }
-                } else if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ALWAYS) {
-                    notifyVariant = true;
-                }
+    private static boolean hasOtherGermlineVariantWithDifferentPhaseSet(@NotNull List<ReportableVariant> variants,
+            @NotNull ReportableVariant variantToCompareWith) {
+        Integer phaseSetToCompareWith = variantToCompareWith.localPhaseSet();
+        for (ReportableVariant variant : variants) {
+            if (!variant.equals(variantToCompareWith) && variant.gene().equals(variantToCompareWith.gene())
+                    && variant.source() == ReportableVariantSource.GERMLINE && (phaseSetToCompareWith == null
+                    || !phaseSetToCompareWith.equals(variant.localPhaseSet()))) {
+                return true;
             }
         }
-        return notifyVariant && germlineReportingModel.notifyAboutGene(variant.gene(), germlineReportingLevel);
+
+        return false;
+    }
+
+    private static boolean notifyGermlineVariant(@NotNull ReportableVariant germlineVariant,
+            @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingLevel germlineReportingLevel,
+            @NotNull Set<String> germlineGenesWithIndependentHits) {
+        assert germlineVariant.source() == ReportableVariantSource.GERMLINE;
+
+        if (germlineReportingLevel != LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION) {
+            return false;
+        }
+
+        GermlineReportingEntry reportingEntry = germlineReportingModel.entryForGene(germlineVariant.gene());
+        if (reportingEntry == null) {
+            LOGGER.warn("No reporting entry found for germline gene {}!", germlineVariant.gene());
+            return false;
+        }
+
+        switch (reportingEntry.notifyClinicalGeneticist()) {
+            case ALWAYS: {
+                return true;
+            }
+            case NEVER: {
+                return false;
+            }
+            case ONLY_GERMLINE_HOM: {
+                return germlineVariant.genotypeStatus() == GenotypeStatus.HOM_ALT || germlineGenesWithIndependentHits.contains(
+                        germlineVariant.gene());
+            }
+            case ONLY_SPECIFIC_VARIANT: {
+                String condition = reportingEntry.conditionFilter();
+                if (condition == null) {
+                    LOGGER.warn("No condition specified for germline reporting entry on {}!", germlineVariant.gene());
+                    return false;
+                } else {
+                    return condition.equals(germlineVariant.canonicalHgvsProteinImpact());
+                }
+            }
+            default: {
+                LOGGER.warn("Unrecognized germline reporting entry value: {}", reportingEntry.notifyClinicalGeneticist());
+                return false;
+            }
+        }
     }
 
     @NotNull

@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
@@ -22,7 +21,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChap
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChapterOnLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TumorCharacteristicsChapter;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
-import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -40,23 +38,15 @@ public class CFReportWriter implements ReportWriter {
     private static final Logger LOGGER = LogManager.getLogger(CFReportWriter.class);
 
     private final boolean writeToFile;
-    @NotNull
-    private final GermlineReportingModel germlineReportingModel;
 
     @NotNull
-    public static CFReportWriter createProductionReportWriterNoGermline() {
-        return new CFReportWriter(true, new GermlineReportingModel(Lists.newArrayList()));
-    }
-
-    @NotNull
-    public static CFReportWriter createProductionReportWriter(@NotNull GermlineReportingModel germlineReportingModel) {
-        return new CFReportWriter(true, germlineReportingModel);
+    public static CFReportWriter createProductionReportWriter() {
+        return new CFReportWriter(true);
     }
 
     @VisibleForTesting
-    CFReportWriter(final boolean writeToFile, @NotNull final GermlineReportingModel germlineReportingModel) {
+    CFReportWriter(final boolean writeToFile) {
         this.writeToFile = writeToFile;
-        this.germlineReportingModel = germlineReportingModel;
     }
 
     @Override
@@ -64,7 +54,7 @@ public class CFReportWriter implements ReportWriter {
         GenomicAnalysis analysis = report.genomicAnalysis();
         ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(analysis),
                 new TherapyDetailsChapterOffLabel(analysis),
-                new GenomicAlterationsChapter(analysis, report.sampleReport(), germlineReportingModel),
+                new GenomicAlterationsChapter(analysis, report.sampleReport()),
                 new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(),
                 new DetailsAndDisclaimerChapter(report) };
 

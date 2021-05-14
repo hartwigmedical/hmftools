@@ -1,20 +1,16 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
-import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
-import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.protect.purple.DriverInterpretation;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
-import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -42,10 +38,9 @@ public final class SomaticVariants {
         }).collect(Collectors.toList());
     }
 
-    public static boolean hasNotifiableGermlineVariant(@NotNull List<ReportableVariant> variants,
-            @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
-        for (ReportableVariant variant : variants) {
-            if (notifyAboutVariant(variant, germlineReportingModel, germlineReportingLevel)) {
+    public static boolean hasNotifiableGermlineVariant(@NotNull Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant) {
+        for (Boolean notify : notifyGermlineStatusPerVariant.values()) {
+            if (notify) {
                 return true;
             }
         }
@@ -54,39 +49,12 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String geneDisplayString(@NotNull ReportableVariant variant, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
-        if (notifyAboutVariant(variant, germlineReportingModel, germlineReportingLevel)) {
+    public static String geneDisplayString(@NotNull ReportableVariant variant, boolean notifyGermline) {
+        if (notifyGermline) {
             return variant.gene() + " #";
         } else {
             return variant.gene();
         }
-    }
-
-    private static boolean notifyAboutVariant(@NotNull ReportableVariant variant, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
-        boolean notifyVariant = false;
-        if (variant.source() == ReportableVariantSource.GERMLINE) {
-            GermlineReportingEntry reportingEntry = germlineReportingModel.entryForGene(variant.gene());
-            if (reportingEntry != null) {
-                if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ONLY_GERMLINE_HOM) {
-                    String conditionFilter = reportingEntry.conditionFilter();
-                    if (conditionFilter != null) {
-                        notifyVariant = variant.genotypeStatus().simplifiedDisplay().equals(conditionFilter);
-                    }
-
-                } else if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ONLY_SPECIFIC_VARIANT) {
-                    String conditionFilter = reportingEntry.conditionFilter();
-                    if (conditionFilter != null) {
-                        notifyVariant = variant.canonicalHgvsProteinImpact().equals(conditionFilter);
-                    }
-                } else if (reportingEntry.notifyClinicalGeneticist() == GermlineCondition.ALWAYS) {
-                    notifyVariant = true;
-                }
-            }
-        }
-
-        return notifyVariant && germlineReportingModel.notifyAboutGene(variant.gene(), germlineReportingLevel);
     }
 
     @VisibleForTesting

@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.utils.DataUtil;
@@ -22,7 +22,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
-import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
 import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosome;
@@ -51,14 +50,10 @@ public class GenomicAlterationsChapter implements ReportChapter {
     private final GenomicAnalysis genomicAnalysis;
     @NotNull
     private final SampleReport sampleReport;
-    @NotNull
-    private final GermlineReportingModel germlineReportingModel;
 
-    public GenomicAlterationsChapter(@NotNull final GenomicAnalysis genomicAnalysis, @NotNull final SampleReport sampleReport,
-            @NotNull final GermlineReportingModel germlineReportingModel) {
+    public GenomicAlterationsChapter(@NotNull final GenomicAnalysis genomicAnalysis, @NotNull final SampleReport sampleReport) {
         this.genomicAnalysis = genomicAnalysis;
         this.sampleReport = sampleReport;
-        this.germlineReportingModel = germlineReportingModel;
     }
 
     @Override
@@ -76,9 +71,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 hasReliablePurity));
 
         reportDocument.add(createTumorVariantsTable(genomicAnalysis.reportableVariants(),
-                hasReliablePurity,
-                germlineReportingModel,
-                sampleReport.germlineReportingLevel()));
+                genomicAnalysis.notifyGermlineStatusPerVariant(),
+                hasReliablePurity));
 
         reportDocument.add(createGainsAndLossesTable(genomicAnalysis.gainsAndLosses(),
                 hasReliablePurity,
@@ -136,8 +130,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createTumorVariantsTable(@NotNull List<ReportableVariant> reportableVariants, boolean hasReliablePurity,
-            @NotNull GermlineReportingModel germlineReportingModel, @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
+    private static Table createTumorVariantsTable(@NotNull List<ReportableVariant> reportableVariants,
+            @NotNull Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant, boolean hasReliablePurity) {
         String title = "Tumor specific variants";
         if (reportableVariants.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
@@ -169,8 +163,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         for (ReportableVariant variant : SomaticVariants.sort(reportableVariants)) {
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.geneDisplayString(variant,
-                    germlineReportingModel,
-                    germlineReportingLevel)));
+                    notifyGermlineStatusPerVariant.get(variant))));
             contentTable.addCell(TableUtil.createContentCell(variant.gDNA()));
             contentTable.addCell(TableUtil.createContentCell(variant.canonicalHgvsCodingImpact()));
             contentTable.addCell(TableUtil.createContentCell(variant.canonicalHgvsProteinImpact()));
@@ -194,7 +187,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     .setTextAlignment(TextAlignment.CENTER);
         }
 
-        if (SomaticVariants.hasNotifiableGermlineVariant(reportableVariants, germlineReportingModel, germlineReportingLevel)) {
+        if (SomaticVariants.hasNotifiableGermlineVariant(notifyGermlineStatusPerVariant)) {
             contentTable.addCell(TableUtil.createLayoutCell(1, contentTable.getNumberOfColumns())
                     .add(new Paragraph("\n# Marked variant(s) are also present in the germline of the patient. Referral to a genetic "
                             + "specialist should be advised.").addStyle(ReportResources.subTextStyle())));
@@ -356,8 +349,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
             contentTable.addCell(TableUtil.createContentCell(peachGenotype.function()));
             contentTable.addCell(TableUtil.createContentCell(peachGenotype.linkedDrugs()));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(Pharmacogenetics.sourceName(peachGenotype.urlPrescriptionInfo())).addStyle(
-                    ReportResources.dataHighlightLinksStyle()))
+            contentTable.addCell(TableUtil.createContentCell(new Paragraph(Pharmacogenetics.sourceName(peachGenotype.urlPrescriptionInfo()))
+                    .addStyle(ReportResources.dataHighlightLinksStyle()))
                     .setAction(PdfAction.createURI(Pharmacogenetics.url(peachGenotype.urlPrescriptionInfo())))
                     .setTextAlignment(TextAlignment.CENTER));
         }
