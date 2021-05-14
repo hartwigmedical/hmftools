@@ -56,10 +56,10 @@ public class ReportingDbTest {
     @Test
     public void canWriteReportDatesToTsv() throws IOException {
         if (WRITE_TO_TSV) {
-            File reportDatesTsv = new File(TEST_DB_OUTPUT_DIR + File.separator + "reporting_db_test.tsv");
+            File reportingDbTsv = new File(TEST_DB_OUTPUT_DIR + File.separator + "reporting_db_test.tsv");
 
-            if (reportDatesTsv.createNewFile()) {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
+            if (reportingDbTsv.createNewFile()) {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(reportingDbTsv, true));
                 writer.write("tumorBarcode\tsampleId\tcohort\treportDate\treportType\tpurity\thasReliableQuality\thasReliablePurity\n");
                 writer.close();
             }
@@ -68,11 +68,11 @@ public class ReportingDbTest {
             ExampleAnalysisConfig config =
                     new ExampleAnalysisConfig.Builder().sampleId("CPCT01_SUCCESS").limsCohortConfig(cohortConfig).build();
 
-            ReportingDb.addAnalysedReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config));
-
-            ReportingDb.addQCFailReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.createQCFailReport("CPCT01_FAIL", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, cohortConfig));
+            ReportingDb reportingDb = new ReportingDb(reportingDbTsv.getPath());
+            reportingDb.appendAnalysedReport(ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config));
+            reportingDb.appendQCFailReport(ExampleAnalysisTestFactory.createQCFailReport("CPCT01_FAIL",
+                    QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
+                    cohortConfig));
         }
     }
 }

@@ -95,7 +95,7 @@ public class PatientReporterApplication {
                     report.sampleReport().sampleMetadata().tumorSampleBarcode(),
                     report);
 
-            ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
+            new ReportingDb(config.reportingDbTsv()).appendAnalysedReport(report);
         }
     }
 
@@ -121,7 +121,7 @@ public class PatientReporterApplication {
                     report.sampleReport().tumorSampleBarcode(),
                     report);
 
-            ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
+            new ReportingDb(config.reportingDbTsv()).appendQCFailReport(report);
         }
     }
 

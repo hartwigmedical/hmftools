@@ -18,18 +18,21 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class ReportingDb {
+public class ReportingDb {
 
     private static final Logger LOGGER = LogManager.getLogger(ReportingDb.class);
 
     private static final String NA_STRING = "N/A";
 
-    private ReportingDb() {
+    @NotNull
+    private final String reportingDbTsv;
+
+    public ReportingDb(@NotNull final String reportingDbTsv) {
+        this.reportingDbTsv = reportingDbTsv;
     }
 
-    public static void addAnalysedReportToReportingDb(@NotNull String reportingDbTsv, @NotNull AnalysedPatientReport report)
-            throws IOException {
-        if (addToReportingDb(report.sampleReport())) {
+    public void appendAnalysedReport(@NotNull AnalysedPatientReport report) throws IOException {
+        if (shouldBeAddedToReportingDb(report.sampleReport())) {
             String sampleId = report.sampleReport().tumorSampleId();
             LimsCohortConfig cohort = report.sampleReport().cohort();
 
@@ -55,22 +58,14 @@ public final class ReportingDb {
                     reportType = reportType + "_corrected";
                 }
 
-                addToReportingDb(reportingDbTsv,
-                        tumorBarcode,
-                        sampleId,
-                        cohort,
-                        reportType,
-                        reportDate,
-                        purity,
-                        hasReliableQuality,
-                        hasReliablePurity);
+                addToReportingDb(tumorBarcode, sampleId, cohort, reportType, reportDate, purity, hasReliableQuality, hasReliablePurity);
             }
         }
     }
 
-    private static void addToReportingDb(@NotNull String reportingDbTsv, @NotNull String tumorBarcode, @NotNull String sampleId,
-            @NotNull LimsCohortConfig cohort, @NotNull String reportType, @NotNull String reportDate, @NotNull String purity,
-            boolean hasReliableQuality, boolean hasReliablePurity) throws IOException {
+    private void addToReportingDb(@NotNull String tumorBarcode, @NotNull String sampleId, @NotNull LimsCohortConfig cohort,
+            @NotNull String reportType, @NotNull String reportDate, @NotNull String purity, boolean hasReliableQuality,
+            boolean hasReliablePurity) throws IOException {
         boolean present = false;
         for (ReportingEntry entry : ReportingDatabase.read(reportingDbTsv)) {
             if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
@@ -89,8 +84,8 @@ public final class ReportingDb {
         }
     }
 
-    public static void addQCFailReportToReportingDb(@NotNull String reportingDbTsv, @NotNull QCFailReport report) throws IOException {
-        if (addToReportingDb(report.sampleReport())) {
+    public void appendQCFailReport(@NotNull QCFailReport report) throws IOException {
+        if (shouldBeAddedToReportingDb(report.sampleReport())) {
             String sampleId = report.sampleReport().tumorSampleId();
             LimsCohortConfig cohort = report.sampleReport().cohort();
             String tumorBarcode = report.sampleReport().tumorSampleBarcode();
@@ -117,20 +112,20 @@ public final class ReportingDb {
         }
     }
 
-    private static boolean addToReportingDb(@NotNull SampleReport report) {
+    private static boolean shouldBeAddedToReportingDb(@NotNull SampleReport report) {
         String sampleId = report.tumorSampleId();
         if (sampleId.startsWith("COLO")) {
-            LOGGER.debug("Sample '{}' filtered for reporting db because it appears to be belong to COLO test samples", sampleId);
+            LOGGER.info("Sample '{}' filtered for reporting db because it appears to be belong to COLO test samples", sampleId);
             return false;
         } else if (report.cohort().cohortId().isEmpty()) {
-            LOGGER.debug("Sample '{}' filtered for reporting db since it does not belong to a cohort and likely a test sample", sampleId);
+            LOGGER.info("Sample '{}' filtered for reporting db since it does not belong to a cohort and likely a test sample", sampleId);
             return false;
         }
         return true;
     }
 
-    private static void appendToTsv(@NotNull String reportDatesTsv, @NotNull String stringToAppend) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
+    private static void appendToTsv(@NotNull String reportingDbTsv, @NotNull String stringToAppend) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(reportingDbTsv, true));
         writer.write(stringToAppend);
         writer.close();
     }
