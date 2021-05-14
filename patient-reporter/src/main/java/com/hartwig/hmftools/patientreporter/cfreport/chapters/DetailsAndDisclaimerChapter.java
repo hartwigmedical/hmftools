@@ -173,7 +173,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     private static Paragraph createContentParagraphThreeParts(@NotNull String regularPart, @NotNull String boldPart,
             @NotNull String regularPart2) {
         return createContentParagraph(regularPart).add(new Text(boldPart).addStyle(ReportResources.smallBodyBoldTextStyle()))
-                .add(regularPart2).addStyle(ReportResources.smallBodyBoldTextStyle())
+                .add(regularPart2)
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 
@@ -199,6 +199,6 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
             @NotNull String regularPart2, @NotNull String boldPart2, @NotNull String regularPart3) {
         return createContentParagraph(regularPart).add(new Text(boldPart).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .add(regularPart2)
-                .add(new Text(boldPart2)).add(regularPart2).addStyle(ReportResources.smallBodyBoldTextStyle());
+                .add(new Text(boldPart2)).add(regularPart3);
     }
 }

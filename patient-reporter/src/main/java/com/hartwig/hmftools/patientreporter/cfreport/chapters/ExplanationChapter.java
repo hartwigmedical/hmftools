@@ -103,6 +103,9 @@ public class ExplanationChapter implements ReportChapter {
                                 + "is reported in a separate section called 'homozygous disruptions'." })));
 
         table.addCell(TableUtil.createLayoutCell(1, 5).setHeight(30));
+        table.addCell(TableUtil.createLayoutCell(1, 5).setHeight(30));
+
+        table.addCell(TableUtil.createLayoutCell(1, 5).setHeight(30));
 
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on reported viral insertions")));
         table.addCell(TableUtil.createLayoutCell());
