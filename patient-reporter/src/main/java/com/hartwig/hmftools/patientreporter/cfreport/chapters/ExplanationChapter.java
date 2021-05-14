@@ -12,7 +12,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class ExplanationChapter implements ReportChapter {
 
-    public ExplanationChapter() { }
+    public ExplanationChapter() {
+    }
 
     @NotNull
     @Override
@@ -34,18 +35,17 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] { "The analysis is based on reference genome version GRCh37.",
                         "Transcripts used for reporting can be found on https://resources.hartwigmedicalfoundation.nl in directory "
-                                + "Patient-Reporting and are generally the canonical transcripts as defined by Ensembl.",
+                                + "'Patient-Reporting' and are generally the canonical transcripts as defined by Ensembl.",
                         "Variant detection in samples with lower tumor content is less sensitive. In case of a low tumor "
                                 + "purity (below 20%) likelihood of failing to detect potential variants increases.",
                         "The (implied) tumor purity is the percentage of tumor cells in the tumor material based on analysis of "
                                 + "whole genome data." })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
-                .add(createContentDiv(new String[] {
-                        "The CGI and CIViC knowledgebase are used to annotate variants of all types with "
-                                + "clinical evidence, with a hyperlink to the specific evidence items. NOTE: If a certain "
-                                + "evidence item or drug-biomarker is missing from the knowledgebases it will also not be "
-                                + "included in this report.",
+                .add(createContentDiv(new String[] { "The CGI and CIViC knowledgebase are used to annotate variants of all types with "
+                        + "clinical evidence, with a hyperlink to the specific evidence items. NOTE: If a certain "
+                        + "evidence item or drug-biomarker is missing from the knowledgebases it will also not be "
+                        + "included in this report.",
                         "VICC (Variant Interpretation for Cancer Consortium, https://cancervariants.org) software has been used "
                                 + "to harmonize and curate the knowledgebases.",
                         "Clinical trials are matched against the iClusion database (https://iclusion.org) including a "
@@ -81,17 +81,16 @@ public class ExplanationChapter implements ReportChapter {
                         "Any gene with more copies than 3 times the average tumor ploidy along the entire canonical transcript is reported "
                                 + "as a full gain.",
                         "Any gene where only a part of the canonical transcript has more copies than 3 times the average tumor ploidy "
-                                + "is reported as a partial gain.",
-                })));
+                                + "is reported as a partial gain.", })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] { "The canonical, or otherwise longest transcript validly fused is reported.",
                         "Fusions are restricted to those in the HMF known fusion list and can be found on "
-                                + "https://resources.hartwigmedicalfoundation.nl in directory Patient-Reporting.",
+                                + "https://resources.hartwigmedicalfoundation.nl in directory 'Patient-Reporting'.",
                         "We additionally select fusions where one partner is promiscuous in either 5' or 3' position.",
-                "The 'Driver' field is set to HIGH in case the fusion is a known pathogenic fusion, or otherwise a fusion where "
-                        + "the promiscuous partner is fused in an exon range that is typically observed in literature. \n"
-                        + "All other fusions get assigned a LOW driver likelihood."})));
+                        "The 'Driver' field is set to HIGH in case the fusion is a known pathogenic fusion, or otherwise a fusion where "
+                                + "the promiscuous partner is fused in an exon range that is typically observed in literature. \n"
+                                + "All other fusions get assigned a LOW driver likelihood." })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] {
@@ -101,21 +100,29 @@ public class ExplanationChapter implements ReportChapter {
                         "The type of disruption can be INV (inversion), DEL (deletion), DUP (duplication), INS "
                                 + "(insertion), SGL (single) or BND (translocation).",
                         "A gene for which no wild type exists anymore in the tumor DNA due to disruption(s) "
-                                + "is reported in a separate section called 'homozygous disruptions'" })));
+                                + "is reported in a separate section called 'homozygous disruptions'." })));
 
         table.addCell(TableUtil.createLayoutCell(1, 5).setHeight(30));
 
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on reported viral insertions")));
         table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on pharmagenetics")));
+        table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on pharmacogenetics")));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("")));
 
         table.addCell(TableUtil.createLayoutCell()
-                .add(createContentDiv(new String[] { "Only viruses for which DNA integration is detected are reported",
-                        "The list of viruses that are considered can be found on https://resources.hartwigmedicalfoundation.nl."})));
+                .add(createContentDiv(new String[] { "Only viruses for which DNA integration is detected are reported.",
+                        "The list of viruses that are considered can be found on https://resources.hartwigmedicalfoundation.nl "
+                                + "in directory 'Patient-Reporting'." })));
         table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell().add(createContentDiv(new String[] { "" })));
+        table.addCell(TableUtil.createLayoutCell()
+                .add(createContentDiv(new String[] { "See the directory 'Patient Reporting' "
+                        + "in https://resources.hartwigmedicalfoundation.nl for details on the panel and for more links to advice on "
+                        + "treatment adjustments.",
+                        "The called haplotypes for a gene are the simplest combination of haplotypes that perfectly explains all of the "
+                                + "observed variants for that gene. If no combination of haplotypes in the panel can perfectly explain the "
+                                + "observed variants, then 'Unresolved Haplotype' is called.",
+                        "Wild type is assumed when no variants are observed." })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell().add(createContentDiv(new String[] { "" })));
 

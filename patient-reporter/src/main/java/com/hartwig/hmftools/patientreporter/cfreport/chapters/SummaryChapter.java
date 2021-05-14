@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.utils.DataUtil;
+import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
@@ -56,7 +57,15 @@ public class SummaryChapter implements ReportChapter {
     @NotNull
     @Override
     public String name() {
-        return patientReport.isCorrectedReport() ? "DNA Analysis Report (Corrected)" : "DNA Analysis Report";
+        if (patientReport.isCorrectedReport()) {
+            return "DNA Analysis Report (Corrected)";
+        } else {
+            if (patientReport.qsFormNumber().equals(QsFormNumber.FOR_209.name())) {
+                return "DNA Analysis Report - Low Sensitivity";
+            } else {
+                return "DNA Analysis Report";
+            }
+        }
     }
 
     @Override
@@ -102,8 +111,8 @@ public class SummaryChapter implements ReportChapter {
             } else if (analysis().impliedPurity() < ReportResources.PURITY_CUTOFF) {
                 double impliedPurityPercentage =
                         MathUtil.mapPercentage(analysis().impliedPurity(), TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
-                text = "Due to the lower tumor purity (" + DataUtil.formatPercentage(impliedPurityPercentage) + ") "
-                        + "potential (subclonal) DNA aberrations might not have been detected using this test. " + ""
+                text = "Due to the lower sensitivity (" + DataUtil.formatPercentage(impliedPurityPercentage) + ") "
+                        + "of this test potential (subclonal) DNA aberrations might not have been detected using this test. " + ""
                         + "This result should therefore be considered with caution.";
             }
         }
