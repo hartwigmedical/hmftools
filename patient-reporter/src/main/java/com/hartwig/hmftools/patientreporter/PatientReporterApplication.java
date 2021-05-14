@@ -88,17 +88,14 @@ public class PatientReporterApplication {
         reportWriter.writeAnalysedPatientReport(report, outputFilePath);
 
         if (!config.onlyCreatePDF()) {
-            LOGGER.debug("Updating additional files and databases");
+            LOGGER.debug("Updating reporting db and writing json file");
 
             writeReportDataToJson(config.outputDirData(),
                     report.sampleReport().sampleMetadata().tumorSampleId(),
                     report.sampleReport().sampleMetadata().tumorSampleBarcode(),
                     report);
 
-            // A little ugly but we test frequently on COLO samples and don't want to write these to prod db.
-            if (!sampleMetadata.tumorSampleId().startsWith("COLO")) {
-                ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
-            }
+            ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
         }
     }
 
@@ -117,17 +114,14 @@ public class PatientReporterApplication {
         reportWriter.writeQCFailReport(report, outputFilePath);
 
         if (!config.onlyCreatePDF()) {
-            LOGGER.debug("Updating additional files and databases");
+            LOGGER.debug("Updating reporting db and writing json file");
 
             writeReportDataToJson(config.outputDirData(),
                     report.sampleReport().tumorSampleId(),
                     report.sampleReport().tumorSampleBarcode(),
                     report);
 
-            // A little ugly but we test frequently on COLO samples and don't want to write these to prod db.
-            if (!sampleMetadata.tumorSampleId().startsWith("COLO")) {
-                ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
-            }
+            ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
         }
     }
 
