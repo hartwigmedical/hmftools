@@ -207,7 +207,7 @@ public class SummaryChapter implements ReportChapter {
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Integrated Virus").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createVirusCell(patientReport.sampleReport().reportViralInsertions()
-                ? analysis().virusBreakends().virusNameSummary() : DataUtil.NONE_STRING)));
+                ? analysis().virusBreakends().virusNameSummary() : DataUtil.NA_STRING)));
 
         reportDocument.add(div);
     }
