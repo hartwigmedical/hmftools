@@ -1,54 +1,49 @@
 package com.hartwig.hmftools.lilac.hla;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
+
+import org.apache.commons.math3.util.Pair;
 
 public class HlaAlleleCache
 {
     // ensure the same HlaAlle is not created twice, allowing for object matching instead of string matching
-    private final Set<HlaAllele> mGroups;
-    private final Set<HlaAllele> mFourDigitList;
-    private final Set<HlaAllele> mAlleles;
+    private final Map<HlaAllele,Map<HlaAllele,List<HlaAllele>>> mAlleleMap;
 
     public HlaAlleleCache()
     {
-        mGroups = Sets.newHashSet();
-        mFourDigitList = Sets.newHashSet();
-        mAlleles = Sets.newHashSet();
+        mAlleleMap = Maps.newHashMap();
     }
 
-    public int alleleCount() { return mAlleles.size(); }
-    public int fourDigitCount() { return mFourDigitList.size(); }
-    public int groupCount() { return mGroups.size(); }
-
-    public HlaAllele request(final String alleleStr) { return request(alleleStr, true); }
-
-    public HlaAllele request(final String alleleStr, boolean checkExists)
+    public int groupCount() { return mAlleleMap.size(); }
+    public int fourDigitCount() { return mAlleleMap.values().stream().mapToInt(x -> x.size()).sum(); }
+    public int alleleCount()
     {
-        // first check if the allele has already been created
-        if(checkExists)
-        {
-            HlaAllele match = mAlleles.stream().filter(x -> x.matches(alleleStr)).findFirst().orElse(null);
-            if(match != null)
-                return match;
-        }
+        return mAlleleMap.values().stream().mapToInt(x -> x.values().stream().mapToInt(y -> y.size()).sum()).sum();
+    }
 
+    public HlaAllele request(final String alleleStr)
+    {
         HlaAllele tmpAllele = HlaAllele.fromString(alleleStr);
 
-        // use existing group and protein/4-digit versions if they exist already
-        HlaAllele group = requestGroup(tmpAllele.asAlleleGroup());
-        HlaAllele protein = requestFourDigit(tmpAllele.asFourDigit().toString());
+        // first check if the allele has already been created
+        Pair<HlaAllele,Map<HlaAllele,List<HlaAllele>>> group = getOrCreateGroup(tmpAllele.asAlleleGroup());
+        Pair<HlaAllele,List<HlaAllele>> fourDigit = getOrCreateFourDigitList(group.getFirst(), group.getSecond(), tmpAllele.asFourDigit());
+        HlaAllele match = fourDigit.getSecond().stream().filter(x -> x == tmpAllele).findFirst().orElse(null);
+
+        if(match != null)
+            return match;
 
         HlaAllele newAllele = new HlaAllele(
                 tmpAllele.Gene, tmpAllele.AlleleGroup, tmpAllele.Protein, tmpAllele.Synonymous, tmpAllele.SynonymousNonCoding,
-                protein, group);
+                fourDigit.getFirst(), group.getFirst());
 
-        mAlleles.add(newAllele);
+        fourDigit.getSecond().add(newAllele);
         return newAllele;
     }
 
@@ -56,18 +51,65 @@ public class HlaAlleleCache
     {
         HlaAllele tmpAllele = HlaAllele.fromString(alleleStr).asFourDigit();
 
-        HlaAllele match = mFourDigitList.stream().filter(x -> x.matches(tmpAllele)).findFirst().orElse(null);
+        Pair<HlaAllele,Map<HlaAllele,List<HlaAllele>>> group = getOrCreateGroup(tmpAllele.asAlleleGroup());
+
+        HlaAllele match = group.getSecond().keySet().stream().filter(x -> x.equals(tmpAllele)).findFirst().orElse(null);
         if(match != null)
             return match;
 
-        HlaAllele group = requestGroup(tmpAllele.asAlleleGroup());
-
         HlaAllele newAllele = new HlaAllele(
                 tmpAllele.Gene, tmpAllele.AlleleGroup, tmpAllele.Protein, tmpAllele.Synonymous, tmpAllele.SynonymousNonCoding,
-                null, group);
+                null, group.getKey());
 
-        mFourDigitList.add(newAllele);
+        group.getSecond().put(newAllele, Lists.newArrayList());
         return newAllele;
+    }
+
+    public HlaAllele requestGroup(final HlaAllele requested)
+    {
+        // ensure in group format
+        HlaAllele allele = requested.asAlleleGroup().matches(requested) ? requested : requested.asAlleleGroup();
+        Pair<HlaAllele,Map<HlaAllele,List<HlaAllele>>> group = getOrCreateGroup(allele);
+        return group.getFirst();
+    }
+
+    private Pair<HlaAllele,Map<HlaAllele,List<HlaAllele>>> getOrCreateGroup(final HlaAllele allele)
+    {
+        HlaAllele groupAllele = allele.asAlleleGroup();
+
+        Map.Entry<HlaAllele,Map<HlaAllele,List<HlaAllele>>> entry = mAlleleMap.entrySet().stream()
+                .filter(x -> x.getKey().equals(groupAllele)).findFirst().orElse(null);
+
+        if(entry != null)
+            return new Pair(entry.getKey(), entry.getValue());
+
+        Map<HlaAllele,List<HlaAllele>> groupMap = Maps.newHashMap();
+
+        HlaAllele newGroup = new HlaAllele(
+                allele.Gene, allele.AlleleGroup, "", "", "", null, null);
+
+        mAlleleMap.put(newGroup, groupMap);
+        return new Pair(newGroup, groupMap);
+    }
+
+    private static Pair<HlaAllele,List<HlaAllele>> getOrCreateFourDigitList(
+            final HlaAllele groupAllele, final Map<HlaAllele,List<HlaAllele>> groupMap, final HlaAllele allele)
+    {
+        HlaAllele fourDigitAllele = allele.asFourDigit();
+
+        Map.Entry<HlaAllele,List<HlaAllele>> entry = groupMap.entrySet().stream()
+                .filter(x -> x.getKey().equals(fourDigitAllele)).findFirst().orElse(null);
+
+        if(entry != null)
+            return new Pair(entry.getKey(), entry.getValue());
+
+        List<HlaAllele> alleleList = Lists.newArrayList();
+
+        HlaAllele newFourDigit = new HlaAllele(
+                allele.Gene, allele.AlleleGroup, allele.Protein, "", "", null, groupAllele);
+
+        groupMap.put(newFourDigit, alleleList);
+        return new Pair(newFourDigit, alleleList);
     }
 
     public void rebuildProteinAlleles(final List<HlaAllele> list)
@@ -77,51 +119,12 @@ public class HlaAlleleCache
         list.addAll(cachedList);
     }
 
-
-    /*
-    public HlaAllele request(final HlaAllele allele)
-    {
-        HlaAllele match = mAlleles.stream().filter(x -> x.matches(allele)).findFirst().orElse(null);
-        if(match != null)
-            return match;
-
-        mAlleles.add(allele);
-        return allele;
-    }
-
-
-    public HlaAllele requestFourDigit(final String alleleStr)
-    {
-        return requestFourDigit(HlaAllele.fromString(alleleStr));
-    }
-
-    public HlaAllele requestGroup(final String alleleStr)
-    {
-        return requestGroup(HlaAllele.fromString(alleleStr));
-    }
-    */
-
-    public HlaAllele requestGroup(final HlaAllele requested)
-    {
-        // ensure in group format
-        HlaAllele allele = requested.asAlleleGroup().matches(requested) ? requested : requested.asAlleleGroup();
-
-        HlaAllele match = mGroups.stream().filter(x -> x.matches(allele)).findFirst().orElse(null);
-        if(match != null)
-            return match;
-
-        mGroups.add(allele);
-        return allele;
-    }
-
     @VisibleForTesting
-    public Set<HlaAllele> getAlleles() { return mAlleles; }
-
-    @VisibleForTesting
-    public Set<HlaAllele> getFourDigits() { return mFourDigitList; }
-
-    @VisibleForTesting
-    public Set<HlaAllele> getGroups() { return mGroups; }
-
+    public List<HlaAllele> getAlleles()
+    {
+        List<HlaAllele> allAlleles = Lists.newArrayList();
+        mAlleleMap.values().stream().forEach(x -> x.values().stream().forEach(y -> allAlleles.addAll(y)));
+        return allAlleles;
+    }
 
 }

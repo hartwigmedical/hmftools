@@ -154,6 +154,62 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
         }
     }
 
+    public static List<HlaAllele> parseCandidateCoverageData(final List<String> alleleDataList)
+    {
+        // convert allele coverage output back into the 6 candidate alleles
+        // example: A*01:01[199,131,68,0]   A*02:01[162,100,62,0]   B*18:01[182,112,70,0]   B*38:01[165,92,73,0]    C*12:03[356,320,36,0]
+
+        List<HlaAllele> rawAlleles = org.apache.commons.compress.utils.Lists.newArrayList();
+
+        for(String alleleCoverageData : alleleDataList)
+        {
+            String alleleData = alleleCoverageData.replaceAll("\\[[0-9,]*]", "");
+            rawAlleles.add(HlaAllele.fromString(alleleData));
+        }
+
+        List<HlaAllele> allAlleles = org.apache.commons.compress.utils.Lists.newArrayList();
+
+        int aCount = 0;
+        int bCount = 0;
+        int cCount = 0;
+
+        for(HlaAllele allele : rawAlleles)
+        {
+            if(allele.Gene.equals("A"))
+            {
+                ++aCount;
+                allAlleles.add(allele);
+            }
+            else if(allele.Gene.equals("B"))
+            {
+                if(aCount == 1)
+                {
+                    ++aCount;
+                    allAlleles.add(allAlleles.get(allAlleles.size() - 1));
+                }
+
+                ++bCount;
+                allAlleles.add(allele);
+            }
+            else
+            {
+                if(bCount == 1)
+                {
+                    ++bCount;
+                    allAlleles.add(allAlleles.get(allAlleles.size() - 1));
+                }
+
+                ++cCount;
+                allAlleles.add(allele);
+            }
+        }
+
+        if(cCount == 1)
+            allAlleles.add(allAlleles.get(allAlleles.size() - 1));
+
+        return allAlleles;
+    }
+
     public static class TotalCoverageSorter implements Comparator<HlaComplexCoverage>
     {
         // sorts by total coverage descending

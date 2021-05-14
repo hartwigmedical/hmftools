@@ -42,11 +42,9 @@ public class CandidateAlleles
 
     public double calcScore()
     {
-        int homozygousCount = homozygousCount();
-
         return TotalCoverage
-                + mCohortFrequencyTotal * TotalCoverage / TOTAL_COVERAGE_DENOM
-                + mHomozygousCount * TotalCoverage / (double)TOTAL_COVERAGE_DENOM;
+                + mCohortFrequencyTotal * 1.5 * TotalCoverage / TOTAL_COVERAGE_DENOM
+                + mHomozygousCount * 4.5 * TotalCoverage / (double)TOTAL_COVERAGE_DENOM;
     }
 
     public static String header()
@@ -54,8 +52,8 @@ public class CandidateAlleles
         StringJoiner sj = new StringJoiner(",");
         sj.add("CandidateId");
         sj.add("TotalCoverage");
-        sj.add("FrequencyBonus");
-        sj.add("HomozygousBonus");
+        sj.add("FrequencyCalc");
+        sj.add("HomozygousCount");
         sj.add("Score");
         sj.add("A1");
         sj.add("A2");
@@ -73,7 +71,7 @@ public class CandidateAlleles
         StringJoiner sj = new StringJoiner(",");
         sj.add(String.valueOf(Id));
         sj.add(String.valueOf(TotalCoverage));
-        sj.add(String.format("%.1f", mCohortFrequencyTotal));
+        sj.add(String.format("%.4f", mCohortFrequencyTotal));
         sj.add(String.format("%d", mHomozygousCount));
 
         double score = calcScore();
@@ -93,7 +91,7 @@ public class CandidateAlleles
         }
 
         sj.add(String.valueOf(isTruthSet));
-        sj.add(String.format("%.1f", diffFromTop));
+        sj.add(String.format("%.4f", diffFromTop));
 
         return sj.toString();
     }

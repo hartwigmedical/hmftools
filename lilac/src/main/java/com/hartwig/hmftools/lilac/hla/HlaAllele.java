@@ -64,7 +64,6 @@ public class HlaAllele implements Comparable<HlaAllele>
     public final HlaAllele asAlleleGroup()
     {
         return mGroup != null ? mGroup : this;
-        // return new HlaAllele(Gene, AlleleGroup, "", "", "");
     }
 
     public final HlaAllele asFourDigit() { return mFourDigit != null ? mFourDigit : this; }
@@ -77,7 +76,7 @@ public class HlaAllele implements Comparable<HlaAllele>
         if (!(other instanceof HlaAllele))
             return false;
 
-        return compareTo((HlaAllele)other) == 0;
+        return hashCode() == other.hashCode();
     }
 
     public int hashCode() { return mHashCode; }
@@ -85,6 +84,9 @@ public class HlaAllele implements Comparable<HlaAllele>
     @Override
     public int compareTo(final HlaAllele other)
     {
+        if(hashCode() == other.hashCode())
+            return 0;
+
         int geneCompare = Gene.compareTo(other.Gene);
         if(geneCompare != 0)
         {

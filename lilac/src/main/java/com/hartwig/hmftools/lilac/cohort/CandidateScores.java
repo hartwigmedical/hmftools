@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.cohort;
 
 import static java.lang.Math.log10;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.lilac.coverage.CandidateAlleles;
+import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import org.apache.commons.cli.CommandLine;
@@ -89,10 +91,18 @@ public class CandidateScores
 
         initialiseWriter();
 
+        int sampleCount = 0;
         for(String sampleId : mSampleIds)
         {
             List<CandidateAlleles> candidates = loadSampleCandidates(sampleId);
             processSampleCandidates(sampleId, candidates);
+
+            ++sampleCount;
+
+            if((sampleCount % 100 == 0))
+            {
+                LL_LOGGER.info("processed {} samples", sampleCount);
+            }
         }
 
         closeBufferedWriter(mWriter);
@@ -147,58 +157,14 @@ public class CandidateScores
                 String[] items = line.split(DELIM);
                 int totalCoverage = Integer.parseInt(items[totalCoverageIndex]);
 
-                // example: A*01:01[199,131,68,0]   A*02:01[162,100,62,0]   B*18:01[182,112,70,0]   B*38:01[165,92,73,0]    C*12:03[356,320,36,0]
+                List<String> rawAlleleData = Lists.newArrayList();
 
-                List<HlaAllele> rawAlleles = Lists.newArrayList();
-
-                for(int index = firstAlleleIndex; index < firstAlleleIndex + 6; ++index)
+                for(int index = firstAlleleIndex; index < min(firstAlleleIndex + 6, items.length); ++index)
                 {
-                    if(index >= items.length)
-                        break;
-
-                    String alleleData = items[index].replaceAll("\\[[0-9,]*]", "");
-                    rawAlleles.add(HlaAllele.fromString(alleleData));
+                    rawAlleleData.add(items[index]);
                 }
 
-                List<HlaAllele> allAlleles = Lists.newArrayList();
-
-                int aCount = 0;
-                int bCount = 0;
-                int cCount = 0;
-
-                for(HlaAllele allele : rawAlleles)
-                {
-                    if(allele.Gene.equals("A"))
-                    {
-                        ++aCount;
-                        allAlleles.add(allele);
-                    }
-                    else if(allele.Gene.equals("B"))
-                    {
-                        if(aCount == 1)
-                        {
-                            ++aCount;
-                            allAlleles.add(allAlleles.get(allAlleles.size() - 1));
-                        }
-
-                        ++bCount;
-                        allAlleles.add(allele);
-                    }
-                    else
-                    {
-                        if(bCount == 1)
-                        {
-                            ++bCount;
-                            allAlleles.add(allAlleles.get(allAlleles.size() - 1));
-                        }
-
-                        ++cCount;
-                        allAlleles.add(allele);
-                    }
-                }
-
-                if(cCount == 1)
-                    allAlleles.add(allAlleles.get(allAlleles.size() - 1));
+                List<HlaAllele> allAlleles = HlaComplexCoverage.parseCandidateCoverageData(rawAlleleData);
 
                 if(allAlleles.size() != 6)
                 {
