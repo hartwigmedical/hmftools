@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.lilac;
 
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
@@ -7,9 +10,14 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
+
+import org.apache.commons.math3.util.Pair;
 
 public final class SequenceCount
 {
@@ -155,75 +163,63 @@ public final class SequenceCount
 
     public final void writeVertically(final String fileName)
     {
-        // TODO
-        /*
-        Intrinsics.checkParameterIsNotNull((Object) fileName, (String) "fileName");
-        File file = new File(fileName);
-        FilesKt.writeText$default((File) file, (String) "", null, (int) 2, null);
-        int n = 0;
-        int n2 = length;
-        while(n < n2)
+        try
         {
-            void $receiver$iv$iv;
-            Object $receiver$iv;
-            void i;
-            StringJoiner lineBuilder = new StringJoiner("\t").add(String.valueOf((int) i));
-            Object object = $receiver$iv = mSeqCountsList[i];
-            Object destination$iv$iv322 = new ArrayList($receiver$iv.size());
-            void var10_15 = $receiver$iv$iv;
-            Pair pair = var10_15.entrySet().iterator();
-            while(pair.hasNext())
-            {
-                void k;
-                void $dstr$k$v;
-                Map.Entry item$iv$iv;
-                Map.Entry entry = item$iv$iv = pair.next();
-                Collection collection = destination$iv$iv322;
-                boolean bl = false;
-                void var15_20 = $dstr$k$v;
-                String string = (String) var15_20.getKey();
-                var15_20 = $dstr$k$v;
-                int v = ((Number) var15_20.getValue()).intValue();
-                Pair pair2 = new Pair((Object) k, (Object) v);
-                collection.add(pair2);
-            }
-            $receiver$iv = (List) destination$iv$iv322;
-            int $receiver$iv2 = 0;
-            int destination$iv$iv322 = 5;
-            object = $receiver$iv;
-            destination$iv$iv322 = new Comparator<T>()
-            {
+            BufferedWriter writer = createBufferedWriter(fileName, false);
 
-                public final int compare(T a, T b)
-                {
-                    Pair it = (Pair) a;
-                    boolean bl = false;
-                    Comparable comparable = Integer.valueOf(((Number) it.getSecond()).intValue());
-                    it = (Pair) b;
-                    Comparable comparable2 = comparable;
-                    bl = false;
-                    Integer n = ((Number) it.getSecond()).intValue();
-                    return ComparisonsKt.compareValues((Comparable) comparable2, (Comparable) n);
-                }
-            };
-            List baseCountList =
-                    CollectionsKt.reversed((Iterable) CollectionsKt.sortedWith((Iterable) object, (Comparator) destination$iv$iv322));
-            int $i$f$sortedBy = baseCountList.size() - 1;
-            int n3 = Math.min(destination$iv$iv322, $i$f$sortedBy);
-            if($receiver$iv2 <= n3)
+            for(int i = 0; i < getLength(); ++i)
             {
-                void j;
-                do
+                StringJoiner lineBuilder = new StringJoiner("\t");
+                lineBuilder.add(String.valueOf(i));
+
+                Map<String,Integer> seqMap = mSeqCountsList[i];
+
+                List<Pair<String,Integer>> sortedCounts = Lists.newArrayList();
+
+                for(Map.Entry<String,Integer> entry : seqMap.entrySet())
                 {
-                    void base;
-                    pair = (Pair) baseCountList.get((int) (++j));
-                    String destination$iv$iv322 = (String) pair.component1();
-                    int count = ((Number) pair.component2()).intValue();
-                    lineBuilder.add((CharSequence) base).add(String.valueOf(count));
-                } while(j != n3);
+                    int index = 0;
+                    while(index < sortedCounts.size())
+                    {
+                        if(entry.getValue() > sortedCounts.get(index).getSecond())
+                            break;
+
+                        ++index;
+                    }
+
+                    sortedCounts.add(index, new Pair(entry.getKey(), entry.getValue()));
+                }
+
+                for(int j = 0; j <= min(5, sortedCounts.size() - 1); ++j)
+                {
+                    Pair<String,Integer> pair = sortedCounts.get(j);
+                    lineBuilder.add(pair.getFirst());
+                    lineBuilder.add(String.valueOf(pair.getSecond()));
+                }
+
+                writer.write(lineBuilder.toString());
+                writer.newLine();
             }
-            FilesKt.appendText$default((File) file, (String) (lineBuilder.toString() + "\n"), null, (int) 2, null);
-            ++i;
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
+            return;
+        }
+
+        /*
+
+        for (i in 0 until length) {
+            val lineBuilder = StringJoiner("\t").add(i.toString())
+            val baseCountList = count[i].map { (k, v) -> Pair(k, v) }.sortedBy { it.second }.reversed()
+            for (j in 0..min(5, baseCountList.size - 1)) {
+                val (base, count) = baseCountList[j]
+                lineBuilder.add(base).add(count.toString())
+            }
+
+            file.appendText(lineBuilder.toString() + "\n")
         }
          */
     }

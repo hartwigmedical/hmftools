@@ -46,7 +46,6 @@ public class HlaSequenceLoci
 
     public final String sequence(int startLocus, int endLocus)
     {
-        // CHECK
         StringJoiner sj = new StringJoiner("");
         for(int i = startLocus; i <= endLocus; ++i)
         {

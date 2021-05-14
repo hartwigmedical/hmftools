@@ -61,8 +61,8 @@ public class Haplotype
             int start = max(unmatched.StartLocus, StartLocus);
             int end = min(unmatched.EndLocus, EndLocus);
 
-            // CHECK off by
-            for(int locus = start; locus < end; ++locus) {
+            for(int locus = start; locus <= end; ++locus)
+            {
                 if(charAt(locus) != unmatched.charAt(locus))
                     return false;
             }

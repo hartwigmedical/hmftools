@@ -26,7 +26,6 @@ public class SomaticVariantQC
 
     public final boolean unmatchedVariants()
     {
-        // CHECK - was a bug in the original
         return abs((double)mVariantCount - mVariantAlleleCount) > 0.01;
     }
 

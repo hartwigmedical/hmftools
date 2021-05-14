@@ -31,7 +31,6 @@ public class LilacConfig
     public final String TumorBam;
     public final String ResourceDir;
 
-    public final String OutputFilePrefix;
     public final String OutputDir;
     public final String RefGenome;
 
@@ -57,7 +56,6 @@ public class LilacConfig
     private static final String SAMPLE = "sample";
     private static final String REFERENCE_BAM = "reference_bam";
     private static final String TUMOR_BAM = "tumor_bam";
-    private static final String OUTPUT_ID = "output_id";
     private static final String REF_GENOME = "ref_genome";
     private static final String MIN_BASE_QUAL = "min_base_qual";
     private static final String MIN_EVIDENCE = "min_evidence";
@@ -86,7 +84,6 @@ public class LilacConfig
         TumorBam = cmd.getOptionValue(TUMOR_BAM, "");
         ResourceDir = cmd.getOptionValue(RESOURCE_DIR);
 
-        OutputFilePrefix = cmd.getOptionValue(OUTPUT_ID);
         RefGenome = cmd.getOptionValue(REF_GENOME, "");
 
         MinBaseQual = ConfigUtils.getConfigValue(cmd, MIN_BASE_QUAL, LilacConstants.DEFAULT_MIN_BASE_QUAL);
@@ -105,9 +102,10 @@ public class LilacConfig
 
         Threads = getConfigValue(cmd, THREADS, 1);
 
-        // TODO keep or replace?
         DebugPhasing = cmd.hasOption(DEBUG_PHASING); //  || cmd.hasOption(LOG_);
     }
+
+    public String outputPrefix() { return OutputDir + Sample;}
 
     public boolean isValid()
     {
@@ -170,11 +168,9 @@ public class LilacConfig
         GeneCopyNumberFile = "";
         SomaticVcf = "";
 
-        // public final boolean DebugPhasing;
         ExpectedAlleles = Lists.newArrayList();
         RestrictedAlleles = Lists.newArrayList();
 
-        OutputFilePrefix = "";
         Threads = 0;
         DebugPhasing = false;
     }
@@ -188,7 +184,6 @@ public class LilacConfig
         options.addOption(TUMOR_BAM, true,"Path to tumor bam");
         options.addOption(RESOURCE_DIR, true,"Path to resource files");
         options.addOption(OUTPUT_DIR, true,"Path to output");
-        options.addOption(OUTPUT_ID, true,"Output file prefix");
         options.addOption(REF_GENOME, true,"Optional path to reference genome fasta file");
         options.addOption(MIN_BASE_QUAL, true,"MIN_BASE_QUAL");
         options.addOption(MIN_EVIDENCE, true,"MIN_EVIDENCE");
@@ -216,54 +211,5 @@ public class LilacConfig
         String[] alleles = allelesStr.split(ITEM_DELIM, -1);
         return Arrays.stream(alleles).map(x -> HlaAllele.fromString(x)).collect(Collectors.toList());
     }
-
-    /*
-    @NotNull
-    public final String requiredFile$lilac(@NotNull CommandLine $receiver, @NotNull String argument) throws IOException
-    {
-        Intrinsics.checkParameterIsNotNull((Object) $receiver, (String) "$receiver");
-        Intrinsics.checkParameterIsNotNull((Object) argument, (String) "argument");
-        String result = $receiver.getOptionValue(argument);
-        if(!new File(result).exists())
-        {
-            throw (Throwable) new IOException("Unable to read file " + result);
-        }
-        String string = result;
-        Intrinsics.checkExpressionValueIsNotNull((Object) string, (String) "result");
-        return string;
-    }
-
-    @NotNull
-    public final String optionalFile$lilac(@NotNull CommandLine $receiver, @NotNull String argument, @NotNull String string)
-            throws IOException
-    {
-        Intrinsics.checkParameterIsNotNull((Object) $receiver, (String) "$receiver");
-        Intrinsics.checkParameterIsNotNull((Object) argument, (String) "argument");
-        Intrinsics.checkParameterIsNotNull((Object) string, (String) "default");
-        if($receiver.hasOption(argument))
-        {
-            return this.requiredFile$lilac($receiver, argument);
-        }
-        return string;
-    }
-    */
-
-    /*
-    @NotNull
-    public final String requiredDir$lilac(@NotNull CommandLine $receiver, @NotNull String argument) throws IOException
-    {
-        Intrinsics.checkParameterIsNotNull((Object) $receiver, (String) "$receiver");
-        Intrinsics.checkParameterIsNotNull((Object) argument, (String) "argument");
-        String result = $receiver.getOptionValue(argument);
-        File dir = new File(result);
-        if(!dir.exists() && !dir.mkdirs())
-        {
-            throw (Throwable) new IOException("Unable to create director " + result);
-        }
-        String string = result;
-        Intrinsics.checkExpressionValueIsNotNull((Object) string, (String) "result");
-        return string;
-    }
-     */
 
 }

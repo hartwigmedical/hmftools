@@ -153,7 +153,6 @@ public class HlaComplex
             if(!remainingGroups.isEmpty())
                 return complexes;
 
-            // CHECK what does + do, combine the alleles?
             complexes.add(new HlaComplex(first));
             return complexes;
 
@@ -211,7 +210,7 @@ public class HlaComplex
                 {
                     List<HlaComplex> pairing = Lists.newArrayList(i, j);
 
-                    // CHECK - could this check be avoided, is it redundant given than A/B, or B/Cs are always being combined
+                    // this check can be avoided given than A/B, or B/Cs are always being combined
                     //if(results.stream().anyMatch(x -> x.get(0) == pairing.get(0) && x.get(1) == pairing.get(1)))
                     //    continue;
 

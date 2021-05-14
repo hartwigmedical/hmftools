@@ -18,7 +18,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.candidates.Candidates;
-import com.hartwig.hmftools.lilac.coverage.CoverageCalcTask;
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.HlaComplex;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
@@ -30,7 +29,6 @@ import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
 import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.hla.HlaContextFactory;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
@@ -53,7 +51,6 @@ import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
 import com.hartwig.hmftools.lilac.variant.SomaticVariants;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -165,9 +162,9 @@ public class LilacApplication implements AutoCloseable, Runnable
         List<HlaSequenceLoci> expectedSequences = mRefData.AminoAcidSequences.stream()
                 .filter(x -> contains(mConfig.ExpectedAlleles, x.getAllele().asFourDigit())).collect(Collectors.toList());
         
-        PhasedEvidenceValidation.validateExpected("A", aPhasedEvidence, expectedSequences);
-        PhasedEvidenceValidation.validateExpected("B", bPhasedEvidence, expectedSequences);
-        PhasedEvidenceValidation.validateExpected("C", cPhasedEvidence, expectedSequences);
+        PhasedEvidenceValidation.logInconsistentEvidence("A", aPhasedEvidence, expectedSequences);
+        PhasedEvidenceValidation.logInconsistentEvidence("B", bPhasedEvidence, expectedSequences);
+        PhasedEvidenceValidation.logInconsistentEvidence("C", cPhasedEvidence, expectedSequences);
 
         // Phased Candidates
         List<HlaAllele> aCandidates = candidateFactory.phasedCandidates(hlaAContext, aUnphasedCandidates, aPhasedEvidence);
@@ -354,8 +351,8 @@ public class LilacApplication implements AutoCloseable, Runnable
         LL_LOGGER.info("  {}", lilacQC.body());
 
         LL_LOGGER.info("Writing output to {}", mConfig.OutputDir);
-        String outputFile = mConfig.OutputFilePrefix + ".lilac.txt";
-        String outputQCFile = mConfig.OutputFilePrefix + ".lilac.qc.txt";
+        String outputFile = mConfig.outputPrefix() + ".lilac.txt";
+        String outputQCFile = mConfig.outputPrefix() + ".lilac.qc.txt";
 
         output.write(outputFile);
         lilacQC.writefile(outputQCFile);
@@ -365,14 +362,14 @@ public class LilacApplication implements AutoCloseable, Runnable
         candidatesToWrite.add(deflatedSequenceTemplate);
 
         HlaSequenceLociFile.write(
-                String.format("%s/%s.candidates.sequences.txt", mConfig.OutputDir, mConfig.Sample),
+                String.format("%s.candidates.sequences.txt", mConfig.outputPrefix()),
                 A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES, candidatesToWrite);
 
         HlaComplexCoverage.writeToFile(referenceRankedComplexes,
-                String.format("%s/%s.candidates.coverage.txt", mConfig.OutputDir, mConfig.Sample));
+                String.format("%s.candidates.coverage.txt", mConfig.outputPrefix()));
 
-        referenceAminoAcidCounts.writeVertically(String.format("%s/%s.candidates.aminoacids.txt", mConfig.OutputDir, mConfig.Sample));
-        referenceNucleotideCounts.writeVertically(String.format("%s/%s.candidates.nucleotides.txt", mConfig.OutputDir, mConfig.Sample));
+        referenceAminoAcidCounts.writeVertically(String.format("%s.candidates.aminoacids.txt", mConfig.outputPrefix()));
+        referenceNucleotideCounts.writeVertically(String.format("%s.candidates.nucleotides.txt", mConfig.outputPrefix()));
 
         /*
         if(DatabaseAccess.hasDatabaseConfig((CommandLine) cmd))

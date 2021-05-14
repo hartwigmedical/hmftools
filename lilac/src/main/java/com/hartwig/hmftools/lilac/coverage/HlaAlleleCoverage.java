@@ -167,19 +167,9 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
                     single.SharedCoverage - first.SharedCoverage,
                     single.WildCoverage - single.WildCoverage);
 
-            // CHECK ordering
             List<HlaAlleleCoverage> newCoverage = Lists.newArrayList(single, remainder);
             Collections.sort(newCoverage, new TotalCoverageSorter());
             return newCoverage;
-
-            /*
-            if(single.TotalCoverage > remainder.TotalCoverage)
-                return Lists.newArrayList(single, remainder);
-            else
-                return Lists.newArrayList(remainder, single);
-             */
-
-            // return Lists.newArrayList(first, remainder).sortedBy { it.totalCoverage }.reversed()
         }
 
         return coverage;
@@ -192,10 +182,11 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
 
     public static class TotalCoverageSorter implements Comparator<HlaAlleleCoverage>
     {
+        // sorts by total coverage descending
         public int compare(final HlaAlleleCoverage first, final HlaAlleleCoverage second)
         {
             if(first.TotalCoverage != second.TotalCoverage)
-                return first.TotalCoverage > second.TotalCoverage ? 1 : -1;
+                return first.TotalCoverage < second.TotalCoverage ? 1 : -1;
 
             return 0;
         }

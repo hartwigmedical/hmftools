@@ -154,38 +154,6 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
         return this;
     }
 
-    public final String evidenceString()
-    {
-        StringJoiner sj = new StringJoiner(" ");
-        mEvidenceMap.entrySet().forEach(x -> sj.add(toEvidenceString(x.getKey(), x.getValue())));
-        return sj.toString();
-    }
-
-    public final String toEvidenceString(final String evidence, int count)
-    {
-        StringJoiner resultBuilder = new StringJoiner("");
-        int evidenceIndex = 0;
-
-        // CHECK whether i or index is being used
-        for (int i = 0; i < mAminoAcidIndices.length; ++i)
-        {
-            int index = mAminoAcidIndices[i];
-
-            // if (index in aminoAcidIndices)
-            if(true)
-            {
-                resultBuilder.add(mEvidenceMap.get(evidenceIndex).toString());
-                evidenceIndex++;
-            }
-            else
-            {
-                resultBuilder.add("-");
-            }
-        }
-
-        return resultBuilder.add("=").add(String.valueOf(count)).toString();
-    }
-
     public String toString()
     {
         int uniqueTail = unambiguousTailLength();

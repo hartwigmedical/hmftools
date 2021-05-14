@@ -88,7 +88,6 @@ public final class ExtendEvidence
         int minExisting = listMin(current.getAminoAcidIndexList());
         int maxExisting = listMax(current.getAminoAcidIndexList());
 
-        // CHECK PhaseEvidence equality??
         List<PhasedEvidence> othersContainingMax = others.stream()
                 .filter(x -> x != current && x.getAminoAcidIndexList().contains(maxExisting)).collect(Collectors.toList());
 

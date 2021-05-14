@@ -54,7 +54,6 @@ public class SomaticAlleleCoverage
 
         List<HlaAlleleCoverage> coverage = HlaAlleleCoverage.proteinCoverage(variantFragmentAlleles);
 
-        // CHECK is by descending
         Collections.sort(coverage, new HlaAlleleCoverage.TotalCoverageSorter());
 
         return coverage.stream().filter(x -> x.TotalCoverage == coverage.get(0).TotalCoverage).collect(Collectors.toList());

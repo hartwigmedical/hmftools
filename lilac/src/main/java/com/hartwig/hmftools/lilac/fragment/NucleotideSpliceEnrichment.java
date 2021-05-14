@@ -23,7 +23,6 @@ public class NucleotideSpliceEnrichment
 
     public final List<NucleotideFragment> enrich(final List<NucleotideFragment> fragments)
     {
-        // CHECK repeated from NucQualEnrichment ?!?
         final List<NucleotideFragment> filteredNucleotides = fragments.stream()
                 .map(x -> x.qualityFilter(mMinBaseQuality))
                 .filter(x -> x.isNotEmpty())
