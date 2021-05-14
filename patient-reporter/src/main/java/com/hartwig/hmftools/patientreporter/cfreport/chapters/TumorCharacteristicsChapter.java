@@ -213,7 +213,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell()
                 .add(new Div().add(createContentParagraph("The title", " shows the conclusion of the prediction of the molecular"
                         + " tissue of origin. If none of the similarity predictions has a likelihood ≥80%, no reliable conclusion"
-                        + " can be drawn ( ‘results inconclusive’)."))));
+                        + " can be drawn (‘results inconclusive’)."))));
 
         table.addCell(TableUtil.createLayoutCell());
 
@@ -221,7 +221,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 .add(new Div().add(createContentParagraph("The left plot", " shows the likelihoods (similarity) for all the origin "
                         + "types analyzed by the molecular tissue of origin prediction tool. Only when the likelihood is ≥80% "
                         + "(a peak in the green outer band of the plot), a reliable prediction (with >95% accuracy) can be drawn. "
-                        + "Lower likelihoods (<80%) suggest there is similarity with that tissue of origin , but this is less strong "
+                        + "Lower likelihoods (<80%) suggest there is similarity with that tissue of origin, but this is less strong "
                         + "and there is lower confidence."))));
 
         table.addCell(TableUtil.createLayoutCell());
