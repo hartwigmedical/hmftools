@@ -323,16 +323,14 @@ public class GenomicAlterationsChapter implements ReportChapter {
         } else if (virusBreakends.reportableViruses().isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         } else {
-            Table contentTable = TableUtil.createReportContentTable(new float[] { 120, 120, 200 },
+            Table contentTable = TableUtil.createReportContentTable(new float[] { 100, 100 },
                     new Cell[] { TableUtil.createHeaderCell("Virus"),
-                            TableUtil.createHeaderCell("Number of detected integration sites").setTextAlignment(TextAlignment.CENTER),
-                            TableUtil.createHeaderCell("") });
+                            TableUtil.createHeaderCell("Number of detected integration sites").setTextAlignment(TextAlignment.CENTER) });
 
             for (ReportableVirusBreakend virusBreakend : virusBreakends.reportableViruses()) {
                 contentTable.addCell(TableUtil.createContentCell(virusBreakend.virusName()));
                 contentTable.addCell(TableUtil.createContentCell(Integer.toString(virusBreakend.integrations()))
                         .setTextAlignment(TextAlignment.CENTER));
-                contentTable.addCell(TableUtil.createContentCell(""));
             }
 
             return TableUtil.createWrappingReportTable(title, contentTable);
