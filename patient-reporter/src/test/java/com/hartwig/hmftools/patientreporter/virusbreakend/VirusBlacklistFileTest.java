@@ -16,7 +16,7 @@ public class VirusBlacklistFileTest {
 
     @Test
     public void readVirusBlacklistTsv() throws IOException {
-        VirusBlackListModel2 virusBlacklistModel = VirusBlacklistFile.buildFromTsv(VIRUS_BLACKLIST_TSV);
+        VirusBlacklistModel virusBlacklistModel = VirusBlacklistFile.buildFromTsv(VIRUS_BLACKLIST_TSV);
         assertEquals(3, virusBlacklistModel.virusBlacklistCount());
 
         assertEquals("taxid_genus", virusBlacklistModel.checkTaxusForId(1));

@@ -15,8 +15,8 @@ import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlackListModel2;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistFile;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbFile;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryFile;
@@ -123,7 +123,7 @@ public final class PatientReporterTestFactory {
             SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
             VirusDbModel virusDbModel = VirusDbFile.buildFromTsv(VIRUS_DB_TSV);
             VirusSummaryModel virusSummaryModel = VirusSummaryFile.buildFromTsv(VIRUS_SUMMARY_TSV);
-            VirusBlackListModel2 virusBlackListModel = VirusBlacklistFile.buildFromTsv(VIRUS_BLACKLIST_TSV);
+            VirusBlacklistModel virusBlackListModel = VirusBlacklistFile.buildFromTsv(VIRUS_BLACKLIST_TSV);
 
             return ImmutableAnalysedReportData.builder()
                     .from(loadTestReportData())

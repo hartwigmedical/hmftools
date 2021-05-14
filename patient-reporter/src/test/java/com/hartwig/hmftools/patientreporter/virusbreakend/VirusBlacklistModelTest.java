@@ -9,13 +9,13 @@ import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
-public class VirusBlackListModel2Test {
+public class VirusBlacklistModelTest {
 
     @Test
     public void canMatchVirusToId() {
         Map<Integer, String> virusBlacklistMap = Maps.newHashMap();
         virusBlacklistMap.put(1, "virus1");
-        VirusBlackListModel2 VirusBlackListModel = new VirusBlackListModel2(virusBlacklistMap);
+        VirusBlacklistModel VirusBlackListModel = new VirusBlacklistModel(virusBlacklistMap);
 
         assertTrue(VirusBlackListModel.checkVirusForBlacklisting(1));
         assertFalse(VirusBlackListModel.checkVirusForBlacklisting(4));

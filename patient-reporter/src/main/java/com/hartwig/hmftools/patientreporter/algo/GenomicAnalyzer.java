@@ -21,7 +21,7 @@ import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlackListModel2;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBreakendReportableFactory;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryModel;
@@ -49,10 +49,10 @@ public class GenomicAnalyzer {
     @NotNull
     private final VirusSummaryModel virusSummaryModel;
     @NotNull
-    private final VirusBlackListModel2 virusBlackListModel;
+    private final VirusBlacklistModel virusBlackListModel;
 
     public GenomicAnalyzer(@NotNull final GermlineReportingModel germlineReportingModel, @NotNull final VirusDbModel virusDbModel,
-            @NotNull final VirusSummaryModel virusSummaryModel, @NotNull final VirusBlackListModel2 virusBlackListModel) {
+            @NotNull final VirusSummaryModel virusSummaryModel, @NotNull final VirusBlacklistModel virusBlackListModel) {
         this.germlineReportingModel = germlineReportingModel;
         this.virusDbModel = virusDbModel;
         this.virusSummaryModel = virusSummaryModel;

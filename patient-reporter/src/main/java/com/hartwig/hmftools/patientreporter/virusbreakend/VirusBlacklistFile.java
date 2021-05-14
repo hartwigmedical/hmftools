@@ -22,7 +22,7 @@ public final class VirusBlacklistFile {
     }
 
     @NotNull
-    public static VirusBlackListModel2 buildFromTsv(@NotNull String virusBlacklistTsv) throws IOException {
+    public static VirusBlacklistModel buildFromTsv(@NotNull String virusBlacklistTsv) throws IOException {
         List<String> linesVirusBlacklist = Files.readAllLines(new File(virusBlacklistTsv).toPath());
 
         Map<Integer, String> virusBlacklistToMap = Maps.newHashMap();
@@ -38,6 +38,6 @@ public final class VirusBlacklistFile {
             }
         }
 
-        return new VirusBlackListModel2(virusBlacklistToMap);
+        return new VirusBlacklistModel(virusBlacklistToMap);
     }
 }

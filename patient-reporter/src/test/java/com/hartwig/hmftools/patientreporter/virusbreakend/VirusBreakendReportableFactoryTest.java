@@ -33,7 +33,7 @@ public class VirusBreakendReportableFactoryTest {
         Map<Integer, String> virusBlacklist = Maps.newHashMap();
         virusBlacklist.put(1, "taxid_genus");
         virusBlacklist.put(2, "HPV");
-        VirusBlackListModel2 virusBlacklistModel = new VirusBlackListModel2(virusBlacklist);
+        VirusBlacklistModel virusBlacklistModel = new VirusBlacklistModel(virusBlacklist);
 
         assertEquals(1,
                 VirusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)

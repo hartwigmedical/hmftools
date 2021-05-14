@@ -7,12 +7,12 @@ import com.google.common.annotations.VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class VirusBlackListModel2 {
+public class VirusBlacklistModel {
 
     @NotNull
     private final Map<Integer, String> virusBlacklistMap;
 
-    public VirusBlackListModel2(@NotNull final Map<Integer, String> virusBlacklistMap) {
+    public VirusBlacklistModel(@NotNull final Map<Integer, String> virusBlacklistMap) {
         this.virusBlacklistMap = virusBlacklistMap;
     }
 
