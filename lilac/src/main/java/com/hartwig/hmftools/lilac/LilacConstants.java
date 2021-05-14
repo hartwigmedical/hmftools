@@ -21,7 +21,7 @@ public class LilacConstants
     public static final String HLA_B = "HLA-B";
     public static final String HLA_C = "HLA-C";
 
-    public static final Set<String> HLA_GENES = Sets.newHashSet(HLA_A, HLA_B, HLA_C);
+    public static final List<String> HLA_GENES = Lists.newArrayList(HLA_A, HLA_B, HLA_C);
 
     public static final HlaAllele DEFLATE_TEMPLATE = HlaAllele.fromString("A*01:01");
 

@@ -305,7 +305,7 @@ public class LilacApplication implements AutoCloseable, Runnable
             {
                 LL_LOGGER.info("Calculating somatic variant allele coverage");
 
-                String vcfFilename = mConfig.OutputFilePrefix + ".lilac.somatic.vcf.gz";
+                String vcfFilename = mConfig.outputPrefix() + ".lilac.somatic.vcf.gz";
                 LilacVCF lilacVCF = new LilacVCF(vcfFilename, mConfig.SomaticVcf).writeHeader(version.toString());
 
                 SomaticAlleleCoverage somaticCoverageFactory = new SomaticAlleleCoverage(

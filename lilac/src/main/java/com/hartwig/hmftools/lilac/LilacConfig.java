@@ -94,8 +94,8 @@ public class LilacConfig
 
         MaxDistanceFromTopScore = ConfigUtils.getConfigValue(cmd, MAX_DISTANCE_FROM_TOP_SCORE, LilacConstants.DEFAULT_MAX_DIST_FROM_TOP_SCORE);
 
-        GeneCopyNumberFile = cmd.getOptionValue(GENE_COPY_NUMBER);
-        SomaticVcf = cmd.getOptionValue(SOMATIC_VCF);
+        GeneCopyNumberFile = cmd.getOptionValue(GENE_COPY_NUMBER, "");
+        SomaticVcf = cmd.getOptionValue(SOMATIC_VCF, "");
 
         ExpectedAlleles = parseAlleleList(cmd.getOptionValue(EXPECTED_ALLELES));
         RestrictedAlleles = parseAlleleList(cmd.getOptionValue(RESTRICTED_ALLELES));
