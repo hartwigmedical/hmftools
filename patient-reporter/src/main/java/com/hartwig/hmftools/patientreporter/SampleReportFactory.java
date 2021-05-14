@@ -93,6 +93,7 @@ public final class SampleReportFactory {
                 .reportGermlineFlag(true)
                 .reportConclusion(false)
                 .reportViral(true)
+                .reportPeach(true)
                 .requireHospitalId(false)
                 .requireHospitalPAId(false)
                 .requireHospitalPersonsStudy(false)
