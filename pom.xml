@@ -10,27 +10,27 @@
 
     <modules>
         <module>hmf-common</module>
-        <module>patient-db</module>
-        <module>hmf-ensembl-resources</module>
-        <module>hmf-id-generator</module>
-        <module>gripss</module>
-        <module>lilac</module>
-        <module>paddle</module>
-        <module>health-checker</module>
-        <module>fastq-stats</module>
-        <module>compar</module>
-        <module>amber</module>
-        <module>cobalt</module>
-        <module>purple</module>
-        <module>sage</module>
-        <module>bachelor</module>
-        <module>sv-linx</module>
-        <module>sv-tools</module>
-        <module>imuno</module>
-        <module>sigs</module>
-        <module>cuppa</module>
-        <module>isofox</module>
-        <module>stat-calcs</module>
+        <!--<module>patient-db</module>-->
+        <!--<module>hmf-ensembl-resources</module>-->
+        <!--<module>hmf-id-generator</module>-->
+        <!--<module>gripss</module>-->
+        <!--<module>lilac</module>-->
+        <!--<module>paddle</module>-->
+        <!--<module>health-checker</module>-->
+        <!--<module>fastq-stats</module>-->
+        <!--<module>compar</module>-->
+        <!--<module>amber</module>-->
+        <!--<module>cobalt</module>-->
+        <!--<module>purple</module>-->
+        <!--<module>sage</module>-->
+        <!--<module>bachelor</module>-->
+        <!--<module>sv-linx</module>-->
+        <!--<module>sv-tools</module>-->
+        <!--<module>imuno</module>-->
+        <!--<module>sigs</module>-->
+        <!--<module>cuppa</module>-->
+        <!--<module>isofox</module>-->
+        <!--<module>stat-calcs</module>-->
         <module>ckb-importer</module>
         <module>iclusion-importer</module>
         <module>vicc-importer</module>
