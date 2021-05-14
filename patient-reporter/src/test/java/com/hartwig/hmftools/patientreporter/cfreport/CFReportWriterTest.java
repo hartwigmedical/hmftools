@@ -359,7 +359,7 @@ public class CFReportWriterTest {
 
     @NotNull
     private static String testReportFilePath(@NotNull PatientReport patientReport) {
-        String fileName = OutputFileUtil.generateOutputFileNameForReport(patientReport);
+        String fileName = OutputFileUtil.generateOutputFileNameForPdfReport(patientReport);
         String newFileName = fileName;
         if (TIMESTAMP_FILES) {
             int extensionStart = fileName.lastIndexOf('.');

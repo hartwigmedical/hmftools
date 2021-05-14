@@ -88,12 +88,9 @@ public class PatientReporterApplication {
         reportWriter.writeAnalysedPatientReport(report, outputFilePath);
 
         if (!config.onlyCreatePDF()) {
-            LOGGER.debug("Updating reporting db and writing json file");
+            LOGGER.debug("Updating reporting db and writing report data");
 
-            writeReportDataToJson(config.outputDirData(),
-                    report.sampleReport().sampleMetadata().tumorSampleId(),
-                    report.sampleReport().sampleMetadata().tumorSampleBarcode(),
-                    report);
+            writeReportDataToJson(report);
 
             new ReportingDb(config.reportingDbTsv()).appendAnalysedReport(report);
         }
@@ -114,24 +111,20 @@ public class PatientReporterApplication {
         reportWriter.writeQCFailReport(report, outputFilePath);
 
         if (!config.onlyCreatePDF()) {
-            LOGGER.debug("Updating reporting db and writing json file");
+            LOGGER.debug("Updating reporting db and writing report data");
 
-            writeReportDataToJson(config.outputDirData(),
-                    report.sampleReport().tumorSampleId(),
-                    report.sampleReport().tumorSampleBarcode(),
-                    report);
+            writeReportDataToJson(report);
 
             new ReportingDb(config.reportingDbTsv()).appendQCFailReport(report);
         }
     }
 
-    private static void writeReportDataToJson(@NotNull String outputDirData, @NotNull String tumorSampleId, @NotNull String tumorBarcode,
-            @NotNull PatientReport report) throws IOException {
-        String outputFileData = outputDirData + File.separator + tumorSampleId + "_" + tumorBarcode + ".json";
+    private void writeReportDataToJson(@NotNull PatientReport report) throws IOException {
+        String outputFileData = config.outputDirData() + File.separator + OutputFileUtil.generateOutputFileNameForJson(report);
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
         writer.write(convertToJson(report));
         writer.close();
-        LOGGER.info("Created json file at {} ", outputFileData);
+        LOGGER.info(" Created report data json file at {} ", outputFileData);
     }
 
     @VisibleForTesting
@@ -141,8 +134,8 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static String generateOutputFilePathForPatientReport(@NotNull String reportDirectory, @NotNull PatientReport patientReport) {
-        return reportDirectory + File.separator + OutputFileUtil.generateOutputFileNameForReport(patientReport);
+    private static String generateOutputFilePathForPatientReport(@NotNull String outputDirReport, @NotNull PatientReport patientReport) {
+        return outputDirReport + File.separator + OutputFileUtil.generateOutputFileNameForPdfReport(patientReport);
     }
 
     @NotNull
