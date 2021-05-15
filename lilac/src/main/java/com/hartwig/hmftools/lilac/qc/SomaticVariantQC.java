@@ -37,7 +37,7 @@ public class SomaticVariantQC
 
     public static SomaticVariantQC create(int variantCount, final List<SomaticCodingCount> codingCount)
     {
-        double totalCount = codingCount.stream().mapToDouble(x -> x.Total).sum();
+        double totalCount = codingCount.stream().mapToDouble(x -> x.total()).sum();
 
         SomaticVariantQC result = new SomaticVariantQC(variantCount, totalCount);
 

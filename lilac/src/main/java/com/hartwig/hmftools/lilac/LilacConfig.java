@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 
@@ -54,6 +55,7 @@ public class LilacConfig
     public static final String OUTPUT_DIR = "output_dir";
 
     private static final String SAMPLE = "sample";
+    private static final String SAMPLE_DATA_DIR = "sample_data_dir";
     private static final String REFERENCE_BAM = "reference_bam";
     private static final String TUMOR_BAM = "tumor_bam";
     private static final String REF_GENOME = "ref_genome";
@@ -77,13 +79,29 @@ public class LilacConfig
 
     public LilacConfig(final CommandLine cmd)
     {
-        OutputDir = parseOutputDir(cmd);
         Sample = cmd.getOptionValue(SAMPLE);
 
-        ReferenceBam = cmd.getOptionValue(REFERENCE_BAM, "");
-        TumorBam = cmd.getOptionValue(TUMOR_BAM, "");
-        ResourceDir = cmd.getOptionValue(RESOURCE_DIR);
+        if(cmd.hasOption(SAMPLE_DATA_DIR))
+        {
+            String sampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR));
+            String referenceId = Sample.substring(0, Sample.lastIndexOf('T')) + "R";
 
+            ReferenceBam = sampleDataDir + referenceId + ".hla.bam";
+            TumorBam = sampleDataDir + Sample + ".hla.bam";
+            GeneCopyNumberFile = sampleDataDir + Sample + ".purple.cnv.gene.tsv";
+            SomaticVcf = sampleDataDir + Sample + ".purple.somatic.vcf.gz";
+            OutputDir = sampleDataDir;
+        }
+        else
+        {
+            ReferenceBam = cmd.getOptionValue(REFERENCE_BAM, "");
+            TumorBam = cmd.getOptionValue(TUMOR_BAM, "");
+            GeneCopyNumberFile = cmd.getOptionValue(GENE_COPY_NUMBER, "");
+            SomaticVcf = cmd.getOptionValue(SOMATIC_VCF, "");
+            OutputDir = parseOutputDir(cmd);
+        }
+
+        ResourceDir = cmd.getOptionValue(RESOURCE_DIR);
         RefGenome = cmd.getOptionValue(REF_GENOME, "");
 
         MinBaseQual = ConfigUtils.getConfigValue(cmd, MIN_BASE_QUAL, LilacConstants.DEFAULT_MIN_BASE_QUAL);
@@ -93,9 +111,6 @@ public class LilacConfig
         MinConfirmedUniqueCoverage = ConfigUtils.getConfigValue(cmd, MIN_CONFIRMED_UNIQUE_COVERAGE, LilacConstants.DEFAULT_MIN_CONF_UNIQUE_COVERAGE);
 
         MaxDistanceFromTopScore = ConfigUtils.getConfigValue(cmd, MAX_DISTANCE_FROM_TOP_SCORE, LilacConstants.DEFAULT_MAX_DIST_FROM_TOP_SCORE);
-
-        GeneCopyNumberFile = cmd.getOptionValue(GENE_COPY_NUMBER, "");
-        SomaticVcf = cmd.getOptionValue(SOMATIC_VCF, "");
 
         ExpectedAlleles = parseAlleleList(cmd.getOptionValue(EXPECTED_ALLELES));
         RestrictedAlleles = parseAlleleList(cmd.getOptionValue(RESTRICTED_ALLELES));
@@ -180,6 +195,7 @@ public class LilacConfig
     {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Name of sample");
+        options.addOption(SAMPLE_DATA_DIR, true,"Path to all sample files");
         options.addOption(REFERENCE_BAM, true,"Path to reference/normal bam");
         options.addOption(TUMOR_BAM, true,"Path to tumor bam");
         options.addOption(RESOURCE_DIR, true,"Path to resource files");

@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 public class BaseRegion
 {
@@ -21,6 +22,8 @@ public class BaseRegion
         Chromosome = chromosome;
         Positions = new int[] { posStart, posEnd };
     }
+
+    public static BaseRegion from(final GenomeRegion region) { return new BaseRegion(region.chromosome(), (int)region.start(), (int)region.end()); }
 
     public int start() { return Positions[SE_START]; }
     public int end() { return Positions[SE_END]; }

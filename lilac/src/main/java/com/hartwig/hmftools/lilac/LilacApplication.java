@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.LOCI_POSITION;
 import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.proteinCoverage;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
 import static com.hartwig.hmftools.lilac.hla.HlaAllele.contains;
+import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -282,20 +283,20 @@ public class LilacApplication implements AutoCloseable, Runnable
         HlaComplexCoverage winningTumorCoverage = null;
         List<HlaCopyNumber> winningTumorCopyNumber = null;
         List<VariantContextDecorator> somaticVariants = Lists.newArrayList();
-        List<SomaticCodingCount> somaticCodingCount = SomaticCodingCount.create(winningAlleles);
+        List<SomaticCodingCount> somaticCodingCounts = SomaticCodingCount.create(winningAlleles);
 
         if(!mConfig.TumorBam.isEmpty())
         {
             LL_LOGGER.info("Calculating tumor coverage of winning alleles");
 
-            List<FragmentAlleles> tumorFragmentAlleles = FragmentAlleles.create(aminoAcidPipeline.tumorCoverageFragments(),
+            List<FragmentAlleles> tumorFragmentAlleles = FragmentAlleles.create(
+                    aminoAcidPipeline.tumorCoverageFragments(),
                     referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences,
                     referenceNucleotideHeterozygousLoci, candidateNucleotideSequences);
 
             winningTumorCoverage = proteinCoverage(tumorFragmentAlleles, winningAlleles).expandToSixAlleles();
 
             LL_LOGGER.info("Calculating tumor copy number of winning alleles");
-
             winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(winningAlleles, mConfig.GeneCopyNumberFile, winningTumorCoverage);
 
             // SOMATIC VARIANTS
@@ -314,12 +315,10 @@ public class LilacApplication implements AutoCloseable, Runnable
                 for (VariantContextDecorator variant : somaticVariants)
                 {
                     List<HlaAlleleCoverage> variantCoverage = somaticCoverageFactory.alleleCoverage(variant, tumorBamReader);
-                    Set<HlaAllele> variantAlleles = variantCoverage.stream().map(x -> x.Allele).collect(Collectors.toSet());
+                    List<HlaAllele> variantAlleles = variantCoverage.stream().map(x -> x.Allele).collect(Collectors.toList());
                     LL_LOGGER.info("    {} -> {}}", variant, variantCoverage);
                     lilacVCF.writeVariant(variant.context(), variantAlleles);
-
-                    // TODO
-                    // somaticCodingCount = somaticCodingCount.addVariant(variant, variantAlleles);
+                    addVariant(somaticCodingCounts, variant, variantAlleles);
                 }
             }
         }
@@ -329,11 +328,11 @@ public class LilacApplication implements AutoCloseable, Runnable
             winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(winningAlleles);
         }
 
-        HlaOut output = HlaOut.create(winningReferenceCoverage, winningTumorCoverage, winningTumorCopyNumber, somaticCodingCount);
+        HlaOut output = HlaOut.create(winningReferenceCoverage, winningTumorCoverage, winningTumorCopyNumber, somaticCodingCounts);
 
         // QC
         LL_LOGGER.info("Calculating QC Statistics");
-        SomaticVariantQC somaticVariantQC = SomaticVariantQC.create(somaticVariants.size(), somaticCodingCount);
+        SomaticVariantQC somaticVariantQC = SomaticVariantQC.create(somaticVariants.size(), somaticCodingCounts);
         AminoAcidQC aminoAcidQC = AminoAcidQC.create(winningSequences, referenceAminoAcidCounts);
 
         List<PhasedEvidence> combinedPhasedEvidence = Lists.newArrayList();

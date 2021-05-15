@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.lilac.variant;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -13,12 +12,11 @@ public class SomaticCodingCount
 {
     public final HlaAllele Allele;
 
-    public final double InframeIndel;
-    public final double Missense;
-    public final double Nonsense;
-    public final double Splice;
-    public final double Synonymous;
-    public final double Total;
+    public double InframeIndel;
+    public double Missense;
+    public double Nonsense;
+    public double Splice;
+    public double Synonymous;
 
     public SomaticCodingCount(final HlaAllele allele, double inframeIndel, double missense, double nonsense, double splice, double synonymous)
     {
@@ -28,7 +26,6 @@ public class SomaticCodingCount
         Nonsense = nonsense;
         Splice = splice;
         Synonymous = synonymous;
-        Total = InframeIndel + Missense + Nonsense + Splice + Synonymous;
     }
 
     public String toString()
@@ -37,51 +34,7 @@ public class SomaticCodingCount
                 + ", nonsense=" + Nonsense + ", splice=" + Splice + ", synonymous=" + Synonymous + ")";
     }
 
-    private static SomaticCodingCount addVariant(boolean indel, CodingEffect effect, double contribution)
-    {
-        SomaticCodingCount somaticCodingCount = null;
-
-
-        /*
-        if(indel && effect == CodingEffect.MISSENSE)
-        {
-            return SomaticCodingCount.copy$default(this, null, InframeIndel + contribution, 0.0, 0.0, 0.0, 0.0, 61, null);
-        }
-        switch(SomaticCodingCount$WhenMappings.$EnumSwitchMapping$0[effect.ordinal()])
-        {
-            case 1:
-            {
-                somaticCodingCount =
-                        SomaticCodingCount.copy$default(this, null, 0.0, Missense + contribution, 0.0, 0.0, 0.0, 59, null);
-                break;
-            }
-            case 2:
-            {
-                somaticCodingCount =
-                        SomaticCodingCount.copy$default(this, null, 0.0, 0.0, Nonsense + contribution, 0.0, 0.0, 55, null);
-                break;
-            }
-            case 3:
-            {
-                somaticCodingCount = SomaticCodingCount.copy$default(this, null, 0.0, 0.0, 0.0, Splice + contribution, 0.0, 47, null);
-                break;
-            }
-            case 4:
-            {
-                somaticCodingCount =
-                        SomaticCodingCount.copy$default(this, null, 0.0, 0.0, 0.0, 0.0, Synonymous + contribution, 31, null);
-                break;
-            }
-            default:
-            {
-                somaticCodingCount = this;
-            }
-        }
-
-         */
-        return somaticCodingCount;
-    }
-
+    public double total() { return InframeIndel + Missense + Nonsense + Splice + Synonymous; }
 
     public static List<SomaticCodingCount> create(final List<HlaAllele> winners)
     {
@@ -89,101 +42,63 @@ public class SomaticCodingCount
                 .map(x -> new SomaticCodingCount(x, 0, 0, 0, 0, 0)).collect(Collectors.toList());
     }
 
-    public static List<SomaticCodingCount> addVariant(final List<SomaticCodingCount> $receiver,
-            final VariantContextDecorator variant, final Set<HlaAllele> variantAlleles)
+    public static void addVariant(
+            final List<SomaticCodingCount> codingCounts, final VariantContextDecorator variant, final List<HlaAllele> variantAlleles)
     {
-        boolean bl = variant.alt().length() != variant.ref().length();
+        boolean isIndel = variant.alt().length() != variant.ref().length();
         CodingEffect codingEffect = variant.canonicalCodingEffect();
-        return addVariant($receiver, bl, codingEffect, variantAlleles);
+        addVariant(codingCounts, isIndel, codingEffect, variantAlleles);
     }
 
-    public static final List<SomaticCodingCount> addVariant(
-            final List<SomaticCodingCount> codingCounts, boolean indel, final CodingEffect effect, final Set<HlaAllele> variantAlleles)
+    public static void addVariant(
+            final List<SomaticCodingCount> codingCounts, boolean isIndel, final CodingEffect effect, final List<HlaAllele> variantAlleles)
     {
-        return Lists.newArrayList();
+        List<SomaticCodingCount> applicableCodingCounts = codingCounts.stream()
+                .filter(x -> x.Allele.equals(variantAlleles)).collect(Collectors.toList());
 
+        double contribution = 1.0 / variantAlleles.size();
+
+        for(HlaAllele allele : variantAlleles)
+        {
+            codingCounts.stream().filter(x -> x.Allele.equals(allele)).forEach(x -> x.addVariant(isIndel, effect, contribution));
+        }
         /*
-        double contribution = 1.0 / (double) variantAlleles.size();
-
-        List result = new ArrayList();
-        Iterable iterable = $receiver;
-        List list = result;
-        Object object = $receiver$iv;
-        Collection destination$iv$iv = new ArrayList();
-        for(Object element$iv$iv : $receiver$iv$iv)
-        {
-            SomaticCodingCount it = (SomaticCodingCount) element$iv$iv;
-            boolean bl = false;
-            if(!(!variantAlleles.contains(it.getAllele())))
-            {
-                continue;
+            // Alternative, give only to first to first
+            if (counts.isNotEmpty()) {
+                result.add(counts[0].addVariant(indel, effect, contribution))
+                result.addAll(counts.takeLast(counts.size - 1))
             }
-            destination$iv$iv.add(element$iv$iv);
+        */
+    }
+
+    private void addVariant(boolean indel, CodingEffect effect, double contribution)
+    {
+        if(indel && effect == CodingEffect.MISSENSE)
+        {
+            InframeIndel += contribution;
         }
-        List list2 = (List) destination$iv$iv;
-        list.addAll(list2);
-        for(HlaAllele variantAllele : variantAlleles)
-        {
-            void $receiver$iv$iv2;
-            Object element$iv$iv;
-            Iterable $receiver$iv2 = $receiver;
-            element$iv$iv = $receiver$iv2;
-            Collection destination$iv$iv2 = new ArrayList();
-            for(Object element$iv$iv2 : $receiver$iv$iv2)
-            {
-                SomaticCodingCount it = (SomaticCodingCount) element$iv$iv2;
-                boolean bl = false;
-                if(!Intrinsics.areEqual((Object) it.getAllele(), (Object) variantAllele))
-                {
-                    continue;
-                }
-                destination$iv$iv2.add(element$iv$iv2);
-            }
-            $receiver$iv2 = (List) destination$iv$iv2;
-            Iterable iterable2 = $receiver$iv2;
-            Comparator comparator = new Comparator<T>()
-            {
 
-                public final int compare(T a, T b)
-                {
-                    SomaticCodingCount it = (SomaticCodingCount) a;
-                    boolean bl = false;
-                    Comparable comparable = Double.valueOf(it.getTotal());
-                    it = (SomaticCodingCount) b;
-                    Comparable comparable2 = comparable;
-                    bl = false;
-                    Double d = it.getTotal();
-                    return ComparisonsKt.compareValues((Comparable) comparable2, (Comparable) d);
-                }
-            };
-            List counts = CollectionsKt.sortedWith((Iterable) iterable2, (Comparator) comparator);
-            if(!(!($receiver$iv2 = (Collection) counts).isEmpty()))
-            {
-                continue;
-            }
-            result.add(((SomaticCodingCount) counts.get(0)).addVariant(indel, effect, contribution));
-            result.addAll(CollectionsKt.takeLast((List) counts, (int) (counts.size() - 1)));
+        switch(effect)
+        {
+            case MISSENSE:
+                Missense += contribution;
+                break;
+
+            case NONSENSE_OR_FRAMESHIFT:
+                Nonsense += contribution;
+                break;
+
+            case SPLICE:
+                Splice += contribution;
+                break;
+
+            case SYNONYMOUS:
+                Synonymous += contribution;
+                break;
+
+            default:
+                break;
         }
-        $receiver$iv = result;
-        object = $receiver$iv;
-        Comparator comparator = new Comparator<T>()
-        {
-
-            public final int compare(T a, T b)
-            {
-                SomaticCodingCount it = (SomaticCodingCount) a;
-                boolean bl = false;
-                Comparable comparable = it.getAllele();
-                it = (SomaticCodingCount) b;
-                Comparable comparable2 = comparable;
-                bl = false;
-                HlaAllele hlaAllele = it.getAllele();
-                return ComparisonsKt.compareValues((Comparable) comparable2, (Comparable) hlaAllele);
-            }
-        };
-        return CollectionsKt.sortedWith((Iterable) object, (Comparator) comparator);
-
-         */
     }
 
 }

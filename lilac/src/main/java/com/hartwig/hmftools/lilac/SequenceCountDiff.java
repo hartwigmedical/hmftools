@@ -16,9 +16,9 @@ public class SequenceCountDiff
     public final int TumorCount;
     public final int TumorDepth;
 
-    public SequenceCountDiff(int loci, final String sequence, int referenceCount, int referenceDepth, int tumorCount, int tumorDepth)
+    public SequenceCountDiff(int locus, final String sequence, int referenceCount, int referenceDepth, int tumorCount, int tumorDepth)
     {
-        Loci = loci;
+        Loci = locus;
         Sequence = sequence;
         ReferenceCount = referenceCount;
         ReferenceDepth = referenceDepth;
@@ -32,44 +32,47 @@ public class SequenceCountDiff
 
         int minLength = min(referenceCount.getLength(), tumorCount.getLength());
 
-        for(int loci = 0; loci < minLength; ++loci) {
-            int refDepth = referenceCount.depth(loci);
-            int tumorDepth = tumorCount.depth(loci);
+        for(int locus = 0; locus < minLength; ++locus) 
+        {
+            int refDepth = referenceCount.depth(locus);
+            int tumorDepth = tumorCount.depth(locus);
 
-            Map<String, Integer> refSeqCounts = referenceCount.get(loci);
-            Map<String, Integer> tumorSeqCounts = tumorCount.get(loci);
+            Map<String, Integer> refSeqCounts = referenceCount.get(locus);
+            Map<String, Integer> tumorSeqCounts = tumorCount.get(locus);
 
-            final int lociIndex = loci;
+            final int locusIndex = locus;
 
             refSeqCounts.keySet().stream()
                     .filter(x -> !tumorSeqCounts.containsKey(x))
-                    .forEach(x -> seqCountDiffs.add(new SequenceCountDiff(lociIndex, x, refSeqCounts.get(x), refDepth, 0, tumorDepth)));
+                    .forEach(x -> seqCountDiffs.add(new SequenceCountDiff(locusIndex, x, refSeqCounts.get(x), refDepth, 0, tumorDepth)));
 
             tumorSeqCounts.keySet().stream()
                     .filter(x -> !refSeqCounts.containsKey(x))
-                    .forEach(x -> seqCountDiffs.add(new SequenceCountDiff(lociIndex, x, 0, refDepth, tumorSeqCounts.get(x), tumorDepth)));
+                    .forEach(x -> seqCountDiffs.add(new SequenceCountDiff(locusIndex, x, 0, refDepth, tumorSeqCounts.get(x), tumorDepth)));
         }
 
-        for(int loci = minLength; loci < tumorCount.getLength(); ++loci) {
-            int tumorDepth = tumorCount.depth(loci);
+        for(int locus = minLength; locus < tumorCount.getLength(); ++locus) 
+        {
+            int tumorDepth = tumorCount.depth(locus);
 
-            Map<String, Integer> tumorSeqCounts = tumorCount.get(loci);
+            Map<String, Integer> tumorSeqCounts = tumorCount.get(locus);
 
-            final int lociIndex = loci;
+            final int locusIndex = locus;
 
             tumorSeqCounts.keySet().stream()
-                    .forEach(x -> seqCountDiffs.add(new SequenceCountDiff(lociIndex, x, 0, 0, tumorSeqCounts.get(x), tumorDepth)));
+                    .forEach(x -> seqCountDiffs.add(new SequenceCountDiff(locusIndex, x, 0, 0, tumorSeqCounts.get(x), tumorDepth)));
         }
 
-        for(int loci = minLength; loci < referenceCount.getLength(); ++loci) {
-            int refDepth = referenceCount.depth(loci);
+        for(int locus = minLength; locus < referenceCount.getLength(); ++locus) 
+        {
+            int refDepth = referenceCount.depth(locus);
 
-            Map<String, Integer> refSeqCounts = referenceCount.get(loci);
+            Map<String, Integer> refSeqCounts = referenceCount.get(locus);
 
-            final int lociIndex = loci;
+            final int locusIndex = locus;
 
             refSeqCounts.keySet().stream()
-                    .forEach(x -> seqCountDiffs.add(new SequenceCountDiff(lociIndex, x, refSeqCounts.get(x), refDepth, 0, 0)));
+                    .forEach(x -> seqCountDiffs.add(new SequenceCountDiff(locusIndex, x, refSeqCounts.get(x), refDepth, 0, 0)));
         }
 
         return seqCountDiffs;

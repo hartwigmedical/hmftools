@@ -56,8 +56,8 @@ public class AminoAcidFragmentPipeline
         SequenceCount referenceNucleotideCounts = SequenceCount.nucleotides(mMinEvidence, nucFragments(referenceAminoAcids));
         SequenceCount referenceAminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, referenceAminoAcids);
 
-        referenceAminoAcidCounts.writeVertically(mConfig.OutputFilePrefix + '.' + gene + ".aminoacids.txt");
-        referenceNucleotideCounts.writeVertically(mConfig.OutputFilePrefix + '.' + gene + ".nucleotides.txt");
+        referenceAminoAcidCounts.writeVertically(mConfig.outputPrefix() + '.' + gene + ".aminoacids.txt");
+        referenceNucleotideCounts.writeVertically(mConfig.outputPrefix() + '.' + gene + ".nucleotides.txt");
 
         return referenceAminoAcids;
     }
@@ -87,8 +87,19 @@ public class AminoAcidFragmentPipeline
                 .stream().filter(x -> x.TumorCount > 0).collect(Collectors.toList());
 
         final List<AminoAcidFragment> variantFilteredTumorAminoAcids = mHighQualityTumorFragments.stream()
-                .filter(x -> !containsVariant(x, nucleotideDifferences, aminoAcidDifferences)).collect(
-                Collectors.toList());
+                .filter(x -> !containsVariant(x, nucleotideDifferences, aminoAcidDifferences)).collect(Collectors.toList());
+
+        /*
+                if (highQualityTumorFragments.isEmpty()) {
+            return listOf()
+        }
+
+        val nucleotideDifferences = SequenceCountDiff.create(referenceNucleotideCounts, tumorNucleotideCounts).filter { it.tumorCount > 0 }
+        val aminoAcidDifferences = SequenceCountDiff.create(referenceAminoAcidCounts, tumorAminoAcidCounts).filter { it.tumorCount > 0 }
+
+        val variantFilteredTumorAminoAcids = highQualityTumorFragments.filter { !it.containsVariant(nucleotideDifferences, aminoAcidDifferences) }
+
+         */
 
         return variantFilteredTumorAminoAcids;
     }

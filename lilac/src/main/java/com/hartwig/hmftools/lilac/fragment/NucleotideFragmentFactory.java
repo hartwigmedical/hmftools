@@ -177,14 +177,15 @@ public class NucleotideFragmentFactory
     {
         List<NucleotideFragment> fragments = record.alignmentsOnly().stream()
                 .filter(x -> x != null)
-                .map(x -> createFragment(record, codingRegion)).collect(
-                        Collectors.toList());
+                .map(x -> createFragment(record, codingRegion)).collect(Collectors.toList());
 
-        // CHECK: usage in SAMReader - implies only 2?!?
-        if(fragments.isEmpty() || fragments.size() != 2)
+        if(fragments.isEmpty())
             return null;
 
-        return merge(fragments.get(0), fragments.get(1));
+        if(fragments.size() == 1)
+            return fragments.get(0);
+
+        return NucleotideFragment.reduceById(fragments).get(0);
     }
 
 }

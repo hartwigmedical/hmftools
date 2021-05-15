@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.read;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.fragment.NucleotideFragment.reduceById;
 
@@ -8,6 +10,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.region.CodingRegions;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
@@ -144,132 +147,107 @@ public class SAMRecordReader
 
     public final List<NucleotideFragment> readFromBam(final VariantContextDecorator variant)
     {
-        return Lists.newArrayList();
+        final GenomePosition variantPosition = GenomePositions.create(variant.chromosome(), variant.position());
 
-        // TODO
+        for(HmfTranscriptRegion transcript : mTranscripts)
+        {
+            boolean reverseStrand = transcript.strand() == Strand.REVERSE;
+            final List<NamedBed> codingRegions = codingRegions(transcript, reverseStrand);
 
-        /*
-                val variantPosition = GenomePositions.create(variant.chromosome(), variant.position())
+            for(NamedBed codingRegion : codingRegions)
+            {
+                if (codingRegion.contains(variantPosition)
+                || abs(codingRegion.start() - variant.position()) <= 5 || abs(codingRegion.end() - variant.position()) <= 5)
+                {
+                    List<SAMCodingRecord> regionCodingRecords = query(reverseStrand, variantPosition, codingRegion, mBamFile);
+                    List<SAMCodingRecord> codingRecords = Lists.newArrayList();
 
-        for (transcript in transcripts) {
-            val reverseStrand = transcript.strand() == Strand.REVERSE
-            val codingRegions = if (reverseStrand) codingRegions(transcript).reversed() else codingRegions(transcript)
-            var hlaCodingRegionOffset = 0
-            for (codingRegion in codingRegions) {
-                if (codingRegion.contains(variantPosition) || abs(codingRegion.start() - variant.position()) <= 5 || abs(codingRegion.end() - variant.position()) <= 5) {
-                    val codingRecords = query(reverseStrand, variantPosition, codingRegion, mBamFile)
-                            .filter { recordContainsVariant(variant, it) }
-                            .distinct()
+                    for(SAMCodingRecord record : regionCodingRecords)
+                    {
+                        if(!recordContainsVariant(variant, record))
+                            continue;
 
-                    val nucleotideFragments = codingRecords
-                            .mapNotNull { factory.createAlignmentFragments(it, codingRegion) }
+                        if(codingRecords.stream().anyMatch(x -> x.getSamRecord().hashCode() == record.getSamRecord().hashCode()))
+                            continue;
 
-                    val mateFragments = queryMateFragments(transcript, codingRecords)
+                        codingRecords.add(record);
+                    }
 
-                    return (nucleotideFragments + mateFragments)
-                            .groupBy { it.id }
-                            .map { it.value.reduce { x, y -> NucleotideFragment.merge(x, y) } }
+                    final List<NucleotideFragment> readFragments = codingRecords.stream()
+                            .map(x -> mFragmentFactory.createAlignmentFragments(x, codingRegion))
+                            .filter(x -> x != null)
+                            .collect(Collectors.toList());
 
+                    List<NucleotideFragment> mateFragments = queryMateFragments(transcript, codingRecords);
+                    readFragments.addAll(mateFragments);
+
+                    List<NucleotideFragment> readGroupFragments = reduceById(readFragments);
+                    return readGroupFragments;
                 }
-                hlaCodingRegionOffset += codingRegion.bases().toInt()
             }
         }
 
-         */
+        return Lists.newArrayList();
     }
 
     private final boolean recordContainsVariant(final VariantContextDecorator variant, final SAMCodingRecord record)
     {
-        return false;
+        if (variant.alt().length() != variant.ref().length())
+        {
+            Indel expectedIndel = new Indel(variant.chromosome(), (int)variant.position(), variant.ref(), variant.alt());
+            return record.getIndels().stream().anyMatch(x -> x.match(expectedIndel));
+        }
 
-        /*
-        if(variant.alt().length() != variant.ref().length())
+        for (int i = 0; i < variant.alt().length(); ++i)
         {
-            boolean bl;
-            block7:
-            {
-                String string = variant.chromosome();
-                Intrinsics.checkExpressionValueIsNotNull((Object) string, (String) "variant.chromosome()");
-                int n = (int) variant.position();
-                String string2 = variant.ref();
-                Intrinsics.checkExpressionValueIsNotNull((Object) string2, (String) "variant.ref()");
-                String string3 = variant.alt();
-                Intrinsics.checkExpressionValueIsNotNull((Object) string3, (String) "variant.alt()");
-                Indel expectedIndel = new Indel(string, n, string2, string3);
-                Iterable $receiver$iv = record.getIndels();
-                if($receiver$iv instanceof Collection && ((Collection) $receiver$iv).isEmpty())
-                {
-                    bl = false;
-                }
-                else
-                {
-                    for(Object element$iv : $receiver$iv)
-                    {
-                        Indel it = (Indel) element$iv;
-                        boolean bl2 = false;
-                        if(!it.match(expectedIndel))
-                        {
-                            continue;
-                        }
-                        bl = true;
-                        break block7;
-                    }
-                    bl = false;
-                }
-            }
-            return bl;
-        }
-        int expectedIndel = 0;
-        String string = variant.alt();
-        Intrinsics.checkExpressionValueIsNotNull((Object) string, (String) "variant.alt()");
-        int n = ((CharSequence) string).length();
-        while(expectedIndel < n)
-        {
-            void i;
-            int position = (int) variant.position() + i;
-            char expectedBase = variant.alt().charAt((int) i);
-            int readIndex = record.getRecord().getReadPositionAtReferencePosition(position) - 1;
-            if(readIndex < 0)
-            {
+            int position = (int)variant.position() + i;
+            char expectedBase = variant.alt().charAt(i);
+
+            int readIndex = record.getSamRecord().getReadPositionAtReferencePosition(position) - 1;
+
+            if (readIndex < 0)
                 return false;
-            }
-            if((char) record.getRecord().getReadBases()[readIndex] != expectedBase)
-            {
+
+            if (record.getSamRecord().getReadString().charAt(readIndex) != expectedBase)
                 return false;
-            }
-            ++i;
         }
+
         return true;
-
-         */
     }
 
     private final List<NucleotideFragment> queryMateFragments(
             final HmfTranscriptRegion transcript, final List<SAMCodingRecord> codingRecords)
     {
-        // TODO for variant calling
-        return Lists.newArrayList();
+        SAMSlicer slicer = new SAMSlicer(MIN_MAPPING_QUALITY);
 
-        /*
-        val slicer = SAMSlicer(MIN_MAPPING_QUALITY)
-        val samRecords = codingRecords.map { it.record }.distinct()
-        val mates = samReaderFactory().open(File(mBamFile)).use { reader -> slicer.queryMates(reader, samRecords) }
-        val result = mutableListOf<NucleotideFragment>()
+        SamReader samReader = mSamReaderFactory.open(new File(mBamFile));
 
-        val reverseStrand = transcript.strand() == Strand.REVERSE
-        val codingRegions = if (reverseStrand) codingRegions(transcript).reversed() else codingRegions(transcript)
+        List<SAMRecord> records = codingRecords.stream().map(x -> x.getSamRecord()).collect(Collectors.toList());
+        List<SAMRecord> mateRecords = slicer.queryMates(samReader, records);
 
-        for (codingRegion in codingRegions) {
-            mates
-                    .filter { it.alignmentStart <= codingRegion.end() && it.alignmentEnd >= codingRegion.start() }
-                    .map { SAMCodingRecord.create(reverseStrand, codingRegion, it) }
-                    .mapNotNull { factory.createAlignmentFragments(it, codingRegion) }
-                    .forEach { result.add(it) }
+        List<NucleotideFragment> fragments = Lists.newArrayList();
+
+        boolean reverseStrand = transcript.strand() == Strand.REVERSE;
+        final List<NamedBed> codingRegions = codingRegions(transcript, reverseStrand);
+
+        for (NamedBed codingRegion : codingRegions)
+        {
+            for(SAMRecord record : mateRecords)
+            {
+                if(record.getAlignmentStart() > codingRegion.end() || record.getAlignmentEnd() < codingRegion.start())
+                    continue;
+
+                SAMCodingRecord codingRecord = SAMCodingRecord.create(
+                        reverseStrand, BaseRegion.from(codingRegion), record, true, true);
+
+                NucleotideFragment fragment = mFragmentFactory.createAlignmentFragments(codingRecord, codingRegion);
+
+                if(fragment != null)
+                    fragments.add(fragment);
+            }
         }
 
-        return result
-
-         */
+        return fragments;
     }
 
     private List<SAMCodingRecord> query(

@@ -14,6 +14,7 @@ import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 import java.io.File;
+import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -43,17 +44,9 @@ public class LilacVCF implements AutoCloseable
         return this;
     }
 
-    public final void writeVariant(final VariantContext context, final Set<HlaAllele> alleles)
+    public final void writeVariant(final VariantContext context, final List<HlaAllele> alleles)
     {
-        // CHECK what joiner is used
-        StringJoiner sj = new StringJoiner("-");
-        for(final HlaAllele allele : alleles)
-        {
-            sj.add(allele.toString());
-        }
-
-        String alleleStr = alleles.isEmpty() ? "UNKNOWN" : sj.toString();
-
+        String alleleStr = alleles.isEmpty() ? "UNKNOWN" : HlaAllele.toString(alleles);
         VariantContext newContext = new VariantContextBuilder(context).attribute(HLA, alleleStr).make();
         mWriter.add(newContext);
     }
