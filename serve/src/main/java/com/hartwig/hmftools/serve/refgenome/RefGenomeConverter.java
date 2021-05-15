@@ -89,14 +89,16 @@ class RefGenomeConverter {
     public Set<KnownCodon> convertKnownCodons(@NotNull Set<KnownCodon> codons) {
         Set<KnownCodon> convertedCodons = Sets.newHashSet();
         for (KnownCodon codon : codons) {
-            RangeAnnotation liftedAnnotation = liftOverRange(codon.annotation());
+            RangeAnnotation originalAnnotation = codon.annotation();
+            RangeAnnotation liftedAnnotation = liftOverRange(originalAnnotation);
             if (liftedAnnotation != null) {
-                if (liftedAnnotation.end() - liftedAnnotation.start() != 2) {
+                if (originalAnnotation.end() - originalAnnotation.start() == 2 && liftedAnnotation.end() - liftedAnnotation.start() != 2) {
                     LOGGER.warn(" Skipping liftover: Lifted codon '{}' is no longer 3 bases long. Lifted codon: '{}'",
-                            codon.annotation(),
+                            originalAnnotation,
                             liftedAnnotation);
                 } else {
-                    // We blank out the transcript and codon index since we are unsure to what extend the transcript maps to the new ref genome.
+                    // We blank out the transcript and codon index since we are unsure to what extend
+                    // the transcript maps to the new ref genome.
                     convertedCodons.add(ImmutableKnownCodon.builder()
                             .from(codon)
                             .annotation(ImmutableCodonAnnotation.builder()
@@ -296,14 +298,14 @@ class RefGenomeConverter {
             if (geneNameMapping.isValidV37Gene(gene)) {
                 mappedGene = geneNameMapping.v38Gene(gene);
             } else {
-                LOGGER.warn("Not a valid 37 gene: '{}'!", gene);
+                LOGGER.warn(" Not a valid 37 gene encountered during liftover: '{}'!", gene);
                 mappedGene = gene;
             }
         } else if (sourceVersion == RefGenomeVersion.V38 && targetVersion == RefGenomeVersion.V37) {
             if (geneNameMapping.isValidV38Gene(gene)) {
                 mappedGene = geneNameMapping.v37Gene(gene);
             } else {
-                LOGGER.warn("Not a valid 38 gene: '{}'!", gene);
+                LOGGER.warn(" Not a valid 38 gene encountered during liftover: '{}'!", gene);
                 mappedGene = gene;
             }
         } else {

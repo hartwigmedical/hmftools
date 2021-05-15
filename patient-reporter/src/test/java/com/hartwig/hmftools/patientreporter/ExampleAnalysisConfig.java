@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter;
 
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -88,7 +89,7 @@ public class ExampleAnalysisConfig {
         private boolean includeSummary = true;
         private boolean reportGermline = false;
         @NotNull
-        private LimsCohortConfig limsCohortConfig = PatientReporterTestFactory.createCOLOCohortConfig();
+        private LimsCohortConfig limsCohortConfig = LimsCohortTestFactory.createCOLOCohortConfig();
 
         public Builder() {
         }

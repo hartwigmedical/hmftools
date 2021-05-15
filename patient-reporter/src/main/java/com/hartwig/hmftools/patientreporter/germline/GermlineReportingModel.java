@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.patientreporter.germline;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.protect.purple.ReportableVariant;
+import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,8 +21,50 @@ public class GermlineReportingModel {
     @NotNull
     private final List<GermlineReportingEntry> entries;
 
-    public GermlineReportingModel(@NotNull final List<GermlineReportingEntry> entries) {
+    GermlineReportingModel(@NotNull final List<GermlineReportingEntry> entries) {
         this.entries = entries;
+    }
+
+    @VisibleForTesting
+    public boolean notifyGermlineVariant(@NotNull ReportableVariant germlineVariant,
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel, @NotNull Set<String> germlineGenesWithIndependentHits) {
+        assert germlineVariant.source() == ReportableVariantSource.GERMLINE;
+
+        if (germlineReportingLevel != LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION) {
+            return false;
+        }
+
+        GermlineReportingEntry reportingEntry = entryForGene(germlineVariant.gene());
+        if (reportingEntry == null) {
+            LOGGER.warn("No reporting entry found for germline gene {}!", germlineVariant.gene());
+            return false;
+        }
+
+        switch (reportingEntry.condition()) {
+            case ALWAYS: {
+                return true;
+            }
+            case NEVER: {
+                return false;
+            }
+            case ONLY_GERMLINE_HOM: {
+                return germlineVariant.genotypeStatus() == GenotypeStatus.HOM_ALT || germlineGenesWithIndependentHits.contains(
+                        germlineVariant.gene());
+            }
+            case ONLY_SPECIFIC_VARIANT: {
+                String condition = reportingEntry.conditionFilter();
+                if (condition == null) {
+                    LOGGER.warn("No condition specified for germline reporting entry on {}!", germlineVariant.gene());
+                    return false;
+                } else {
+                    return condition.equals(germlineVariant.canonicalHgvsProteinImpact());
+                }
+            }
+            default: {
+                LOGGER.warn("Unrecognized germline reporting entry value: {}", reportingEntry.condition());
+                return false;
+            }
+        }
     }
 
     @NotNull
@@ -28,29 +74,13 @@ public class GermlineReportingModel {
     }
 
     @Nullable
-    public GermlineReportingEntry entryForGene(@NotNull String gene) {
+    @VisibleForTesting
+    GermlineReportingEntry entryForGene(@NotNull String gene) {
         for (GermlineReportingEntry entry : entries) {
             if (entry.gene().equals(gene)) {
                 return entry;
             }
         }
         return null;
-    }
-
-    public boolean notifyAboutGene(@NotNull String gene, @NotNull LimsGermlineReportingLevel reportingLevel) {
-        GermlineReportingEntry entry = entryForGene(gene);
-        if (entry == null) {
-            LOGGER.warn("Requested notification status for a gene that is not amongst set of reportable germline genes: {}", gene);
-            return false;
-        }
-
-        return reportingLevel == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION && checkGermlineCondition(entry);
-    }
-
-    public boolean checkGermlineCondition(@NotNull GermlineReportingEntry entry) {
-        assert entry != null;
-        if (entry.notifyClinicalGeneticist() == GermlineCondition.ALWAYS || entry.notifyClinicalGeneticist() == GermlineCondition.ONLY_GERMLINE_HOM
-                || entry.notifyClinicalGeneticist() == GermlineCondition.ONLY_SPECIFIC_VARIANT);
-        return true;
     }
 }

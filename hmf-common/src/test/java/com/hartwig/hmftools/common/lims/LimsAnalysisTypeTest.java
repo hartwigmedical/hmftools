@@ -13,7 +13,7 @@ public class LimsAnalysisTypeTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void hasUnknownCohortType() {
+    public void hasUnknownAnalysisType() {
         //noinspection ResultOfMethodCallIgnored
         LimsAnalysisType.extractAnalysisType("somatic_T");
     }

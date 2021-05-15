@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.drivers.GeneCopyNumberRegion.calcGeneCopyNumberRegion;
 import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.disruptionGeneIds;
-import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DRIVER;
 
 import java.io.BufferedWriter;

@@ -46,7 +46,7 @@ public final class ViccClassificationConfig {
     @NotNull
     public static EventClassifierConfig build() {
         return ImmutableEventClassifierConfig.builder()
-                .proteinAnnotationExtractor(new ProteinAnnotationExtractor())
+                .proteinAnnotationExtractor(new ViccProteinAnnotationExtractor())
                 .exonIdentifiers(EXON_IDENTIFIERS)
                 .exonKeywords(EXON_KEYWORDS)
                 .exonBlacklistKeyPhrases(EXON_BLACKLIST_KEY_PHRASES)

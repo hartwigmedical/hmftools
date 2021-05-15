@@ -28,7 +28,7 @@ public class DeleteSampleFromDatabase {
         String sample = cmd.getOptionValue(SAMPLE);
 
         LOGGER.info("Removing sample '{}' from database", sample);
-        dbAccess.deleteAllDataForSample(sample);
+        dbAccess.deletePipelineDataForSample(sample);
         LOGGER.info("Complete");
     }
 

@@ -124,7 +124,7 @@ public class WidePatientReader {
             if (fiveDays != null) {
                 BiopsyData finalBiopsy = toBiopsyData(fiveDays);
                 SampleData sequencedSample = lookupOnPathologySampleId(sequencedBiopsies, clinicalBiopsy.pathologySampleId());
-                if (sequencedSample != null) {
+                if (sequencedSample != null && !sampleHasBeenMatched(biopsies, sequencedSample.sampleId())) {
                     finalBiopsy = ImmutableBiopsyData.builder().from(finalBiopsy).sampleId(sequencedSample.sampleId()).build();
                 }
 
@@ -137,6 +137,16 @@ public class WidePatientReader {
         }
 
         return new MatchResult<>(biopsies, findings);
+    }
+
+    private static boolean sampleHasBeenMatched(@NotNull List<BiopsyData> biopsies, @NotNull String sampleId) {
+        for (BiopsyData biopsy : biopsies) {
+            String matchedSampleId = biopsy.sampleId();
+            if (matchedSampleId != null && matchedSampleId.equals(sampleId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Nullable

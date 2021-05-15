@@ -129,3 +129,9 @@ CREATE TABLE metric
     sufficientCoverage BOOLEAN NOT NULL,
     PRIMARY KEY (sampleId)
 );
+
+CREATE TABLE snpcheck
+(   sampleId varchar(255) NOT NULL,
+    isPass BOOLEAN NOT NULL,
+    PRIMARY KEY (sampleId)
+);

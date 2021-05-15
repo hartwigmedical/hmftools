@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.virusbreakend;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,22 +13,21 @@ public class VirusBreakendFactoryTest {
 
     private static final double EPSILON = 1e-10;
 
-    private static final String VIRUS_BREAKEND_TSV = Resources.getResource("virusbreakend/sample.virusbreakend.vcf.summary.tsv").getPath();
-    private static final String VIRUS_BREAKEND_WITH_TSV = Resources.getResource(
-            "virusbreakend/sample_with.virusbreakend.vcf.summary.tsv").getPath();
-
+    private static final String EMPTY_VIRUS_BREAKEND_TSV =
+            Resources.getResource("virusbreakend/empty.virusbreakend.vcf.summary.tsv").getPath();
+    private static final String SAMPLE_VIRUS_BREAKEND_TSV =
+            Resources.getResource("virusbreakend/sample.virusbreakend.vcf.summary.tsv").getPath();
 
     @Test
-    public void canReadVirusBreakendTsv() throws IOException {
-        List<VirusBreakend> virusbreakendList = VirusBreakendFactory.readVirusBreakend(VIRUS_BREAKEND_TSV);
+    public void canReadEmptyVirusBreakendTsv() throws IOException {
+        List<VirusBreakend> virusbreakendList = VirusBreakendFactory.readVirusBreakend(EMPTY_VIRUS_BREAKEND_TSV);
 
         assertEquals(0, virusbreakendList.size());
-
     }
 
     @Test
-    public void canReadVirusBreakendWithTsv() throws IOException {
-        List<VirusBreakend> virusbreakendList = VirusBreakendFactory.readVirusBreakend(VIRUS_BREAKEND_WITH_TSV);
+    public void canReadSampleVirusBreakendTsv() throws IOException {
+        List<VirusBreakend> virusbreakendList = VirusBreakendFactory.readVirusBreakend(SAMPLE_VIRUS_BREAKEND_TSV);
         assertEquals(2, virusbreakendList.size());
 
         VirusBreakend virusbreakend = virusbreakendList.get(0);

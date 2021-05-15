@@ -1,69 +1,141 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
-import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
-import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
-import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
-import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineReportingEntry;
+import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
+import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
+import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
+import com.hartwig.hmftools.protect.purple.ReportableVariant;
+import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
+import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class GenomicAnalyzerTest {
 
-    private static final String BASE_DIRECTORY = Resources.getResource("test_run").getPath();
-    private static final String PURPLE_PURITY_TSV = BASE_DIRECTORY + "/purple/sample.purple.purity.tsv";
-    private static final String PURPLE_QC_FILE = BASE_DIRECTORY + "/purple/sample.purple.qc";
-    private static final String PURPLE_DRIVER_CATALOG_SOMATIC_TSV = BASE_DIRECTORY + "/purple/sample.driver.catalog.somatic.tsv";
-    private static final String PURPLE_DRIVER_CATALOG_GERMLINE_TSV = BASE_DIRECTORY + "/purple/sample.driver.catalog.germline.tsv";
-    private static final String PURPLE_SOMATIC_VARIANT_VCF = BASE_DIRECTORY + "/purple/sample.purple.somatic.vcf";
-    private static final String PURPLE_GERMLINE_VARIANT_VCF = BASE_DIRECTORY + "/purple/sample.purple.germline.vcf";
-    private static final String LINX_FUSIONS_TSV = BASE_DIRECTORY + "/linx/sample.linx.fusion.tsv";
-    private static final String LINX_BREAKEND_TSV = BASE_DIRECTORY + "/linx/sample.linx.breakend.tsv";
-    private static final String LINX_DRIVERS_TSV = BASE_DIRECTORY + "/linx/sample.linx.driver.catalog.tsv";
-    private static final String CHORD_PREDICTION_TXT = BASE_DIRECTORY + "/chord/sample_chord_prediction.txt";
-    private static final String PROTECT_EVIDENCE_TSV = BASE_DIRECTORY + "/protect/sample.protect.tsv";
-    private static final String VIRUS_BREAKEND_TSV = BASE_DIRECTORY + "/virusbreakend/sample.virusbreakend.vcf.summary.tsv";
-    private static final String PEACH_GENOTYPE_TSV = BASE_DIRECTORY + "/peach/sample.peach.genotype.tsv";
-
     @Test
     public void canRunOnTestRun() throws IOException {
-        GenomicAnalyzer analyzer = new GenomicAnalyzer();
+        AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
 
-        GermlineReportingEntry germlineReportingTrue = ImmutableGermlineReportingEntry.builder()
-                .gene("GENE1")
-                .notifyClinicalGeneticist(GermlineCondition.ALWAYS)
-                .conditionFilter(null)
+        GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel(),
+                testReportData.virusDbModel(),
+                testReportData.virusSummaryModel(),
+                testReportData.virusBlackListModel());
+
+        PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
+
+        assertNotNull(analyzer.run("sample", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
+    }
+
+    @Test
+    public void canTestHasOtherGermlineVariantWithDifferentPhaseSet() {
+        List<ReportableVariant> reportableVariants1 =
+                testReportableVariants("MUTYH", GenotypeStatus.HET, null, "MUTYH", GenotypeStatus.HET, null);
+        ReportableVariant reportableVariantToCompare1 = testReportableVariant("MUTYH", GenotypeStatus.HET, null);
+        assertFalse(GenomicAnalyzer.hasOtherGermlineVariantWithDifferentPhaseSet(reportableVariants1, reportableVariantToCompare1));
+
+        List<ReportableVariant> reportableVariants2 =
+                testReportableVariants("MUTYH", GenotypeStatus.HET, null, "MUTYH", GenotypeStatus.HET, 123);
+        ReportableVariant reportableVariantToCompare2 = testReportableVariant("MUTYH", GenotypeStatus.HET, 123);
+        assertTrue(GenomicAnalyzer.hasOtherGermlineVariantWithDifferentPhaseSet(reportableVariants2, reportableVariantToCompare2));
+
+    }
+
+    @NotNull
+    public List<ReportableVariant> testReportableVariants(@NotNull String gene1, @NotNull GenotypeStatus genotypeStatus1,
+            @Nullable Integer localPhaseSet1, @NotNull String gene2, @NotNull GenotypeStatus genotypeStatus2,
+            @Nullable Integer localPhaseSet2) {
+
+        ReportableVariant variant1 = ImmutableReportableVariant.builder()
+                .type(VariantType.SNP)
+                .source(ReportableVariantSource.GERMLINE)
+                .gene(gene1)
+                .genotypeStatus(genotypeStatus1)
+                .chromosome(Strings.EMPTY)
+                .position(0)
+                .ref(Strings.EMPTY)
+                .alt(Strings.EMPTY)
+                .canonicalTranscript(Strings.EMPTY)
+                .canonicalCodingEffect(CodingEffect.UNDEFINED)
+                .canonicalHgvsCodingImpact(Strings.EMPTY)
+                .canonicalHgvsProteinImpact(Strings.EMPTY)
+                .totalReadCount(0)
+                .alleleReadCount(0)
+                .totalCopyNumber(0)
+                .alleleCopyNumber(0D)
+                .hotspot(Hotspot.HOTSPOT)
+                .clonalLikelihood(1D)
+                .driverLikelihood(0D)
+                .biallelic(false)
+                .localPhaseSet(localPhaseSet1)
                 .build();
 
-        GermlineReportingEntry germlineReportingFalse = ImmutableGermlineReportingEntry.builder()
-                .gene("GENE2")
-                .notifyClinicalGeneticist(GermlineCondition.NEVER)
-                .conditionFilter(null)
+        ReportableVariant variant2 = ImmutableReportableVariant.builder()
+                .type(VariantType.SNP)
+                .source(ReportableVariantSource.GERMLINE)
+                .gene(gene2)
+                .genotypeStatus(genotypeStatus2)
+                .chromosome(Strings.EMPTY)
+                .position(0)
+                .ref(Strings.EMPTY)
+                .alt(Strings.EMPTY)
+                .canonicalTranscript(Strings.EMPTY)
+                .canonicalCodingEffect(CodingEffect.UNDEFINED)
+                .canonicalHgvsCodingImpact(Strings.EMPTY)
+                .canonicalHgvsProteinImpact(Strings.EMPTY)
+                .totalReadCount(0)
+                .alleleReadCount(0)
+                .totalCopyNumber(0)
+                .alleleCopyNumber(0D)
+                .hotspot(Hotspot.HOTSPOT)
+                .clonalLikelihood(1D)
+                .driverLikelihood(0D)
+                .biallelic(false)
+                .localPhaseSet(localPhaseSet2)
                 .build();
 
-        GermlineReportingModel victim = new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
+        return Lists.newArrayList(variant1, variant2);
+    }
 
-        assertNotNull(analyzer.run("sample",
-                PURPLE_PURITY_TSV,
-                PURPLE_QC_FILE,
-                PURPLE_DRIVER_CATALOG_SOMATIC_TSV,
-                PURPLE_DRIVER_CATALOG_GERMLINE_TSV,
-                PURPLE_SOMATIC_VARIANT_VCF,
-                PURPLE_GERMLINE_VARIANT_VCF,
-                LINX_FUSIONS_TSV,
-                LINX_BREAKEND_TSV,
-                LINX_DRIVERS_TSV,
-                CHORD_PREDICTION_TXT,
-                PROTECT_EVIDENCE_TSV,
-                VIRUS_BREAKEND_TSV,
-                PEACH_GENOTYPE_TSV,
-                victim,
-                LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
+    @NotNull
+    public ReportableVariant testReportableVariant(@NotNull String gene, @NotNull GenotypeStatus genotypeStatus,
+            @Nullable Integer localPhaseSet) {
+
+        return ImmutableReportableVariant.builder()
+                .type(VariantType.SNP)
+                .source(ReportableVariantSource.GERMLINE)
+                .gene(gene)
+                .genotypeStatus(genotypeStatus)
+                .chromosome(Strings.EMPTY)
+                .position(0)
+                .ref(Strings.EMPTY)
+                .alt(Strings.EMPTY)
+                .canonicalTranscript(Strings.EMPTY)
+                .canonicalCodingEffect(CodingEffect.UNDEFINED)
+                .canonicalHgvsCodingImpact(Strings.EMPTY)
+                .canonicalHgvsProteinImpact(Strings.EMPTY)
+                .totalReadCount(0)
+                .alleleReadCount(0)
+                .totalCopyNumber(0)
+                .alleleCopyNumber(0D)
+                .hotspot(Hotspot.HOTSPOT)
+                .clonalLikelihood(1D)
+                .driverLikelihood(0D)
+                .biallelic(false)
+                .localPhaseSet(localPhaseSet)
+                .build();
     }
 }

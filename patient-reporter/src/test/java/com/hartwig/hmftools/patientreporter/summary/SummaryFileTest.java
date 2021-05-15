@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
-import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortTestFactory;
 
 import org.junit.Test;
 
@@ -15,11 +15,11 @@ public class SummaryFileTest {
     private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
 
     @Test
-    public void summaryFromTSVWithNewLines() throws IOException {
+    public void summaryFromTsvWithNewLines() throws IOException {
         SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
         assertEquals(1, summaryModel.summaryCount());
 
-        LimsCohortConfig cohortConfig = PatientReporterTestFactory.createCORECohortConfig();
+        LimsCohortConfig cohortConfig = LimsCohortTestFactory.createCOLOCohortConfig();
 
         String summary = summaryModel.findSummaryForSample("sample", cohortConfig);
 

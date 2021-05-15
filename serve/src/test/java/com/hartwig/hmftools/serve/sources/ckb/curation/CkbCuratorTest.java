@@ -31,21 +31,4 @@ public class CkbCuratorTest {
 
         curator.reportUnusedCurationEntries();
     }
-
-    @Test
-    public void canMapGenes() {
-        CkbCurator curator = new CkbCurator();
-
-        String firstGeneKey = CurationFactory.GENE_MAPPINGS.keySet().iterator().next();
-        CkbEntry entry = CkbTestFactory.createEntryWithGene(firstGeneKey);
-
-        List<CkbEntry> entries = curator.run(Lists.newArrayList(entry));
-
-        Variant firstVariant = entries.get(0).variants().get(0);
-
-        String firstGeneValue = CurationFactory.GENE_MAPPINGS.get(firstGeneKey);
-        assertEquals(firstGeneValue, firstVariant.gene().geneSymbol());
-
-        curator.reportUnusedCurationEntries();
-    }
 }

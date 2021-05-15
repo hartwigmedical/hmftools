@@ -21,12 +21,12 @@ public class LimsCohortModelFactoryTest {
         assertEquals(1, cohortModel.limsCohortMap().size());
 
         LimsCohortConfig cohortConfigData = cohortModel.limsCohortMap().get("TEST");
-        assertEquals("TEST", cohortConfigData.cohortId());
         assertTrue(cohortConfigData.sampleContainsHospitalCenterId());
         assertFalse(cohortConfigData.reportGermline());
         assertFalse(cohortConfigData.reportGermlineFlag());
         assertFalse(cohortConfigData.reportConclusion());
         assertFalse(cohortConfigData.reportViral());
+        assertFalse(cohortConfigData.reportPeach());
         assertFalse(cohortConfigData.requireHospitalId());
         assertFalse(cohortConfigData.requireHospitalPAId());
         assertTrue(cohortConfigData.requireHospitalPersonsStudy());

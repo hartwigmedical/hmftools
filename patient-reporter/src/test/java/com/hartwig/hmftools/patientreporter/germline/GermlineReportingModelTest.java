@@ -1,50 +1,77 @@
 package com.hartwig.hmftools.patientreporter.germline;
 
-import static com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel.NO_REPORTING;
-import static com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION;
-import static com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION;
-
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.collect.Lists;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genotype.GenotypeStatus;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
+import com.hartwig.hmftools.patientreporter.algo.AnalysedReportData;
+import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
+import com.hartwig.hmftools.protect.purple.ReportableVariant;
+import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
+
+import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class GermlineReportingModelTest {
 
     @Test
-    public void modelWorksAsExpected() {
-        String notifyGene = "Notify";
-        String reportGene = "Report";
+    public void canDetermineNotifyForGermlineVariants() {
 
-        GermlineReportingEntry germlineReportingTrue = ImmutableGermlineReportingEntry.builder()
-                .gene(notifyGene)
-                .notifyClinicalGeneticist(GermlineCondition.ALWAYS)
-                .conditionFilter(null)
+        LimsGermlineReportingLevel germlineReportingLevel = LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION;
+        AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
+
+        ReportableVariant reportableVariant1 = testReportableVariant("MUTYH", GenotypeStatus.HOM_ALT);
+        Set<String> germlineGenesWithIndependentHits1 = Sets.newHashSet();
+
+        assertTrue(testReportData.germlineReportingModel()
+                .notifyGermlineVariant(reportableVariant1, germlineReportingLevel, germlineGenesWithIndependentHits1));
+
+        ReportableVariant reportableVariant = testReportableVariant("MUTYH", GenotypeStatus.UNKNOWN);
+        Set<String> germlineGenesWithIndependentHits = Sets.newHashSet();
+
+        assertFalse(testReportData.germlineReportingModel()
+                .notifyGermlineVariant(reportableVariant, germlineReportingLevel, germlineGenesWithIndependentHits));
+
+        assertFalse(testReportData.germlineReportingModel()
+                .notifyGermlineVariant(reportableVariant,
+                        LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
+                        germlineGenesWithIndependentHits));
+    }
+
+    @NotNull
+    public ReportableVariant testReportableVariant(@NotNull String gene, @NotNull GenotypeStatus genotypeStatus) {
+
+        return ImmutableReportableVariant.builder()
+                .type(VariantType.SNP)
+                .source(ReportableVariantSource.GERMLINE)
+                .gene(gene)
+                .genotypeStatus(genotypeStatus)
+                .chromosome(Strings.EMPTY)
+                .position(0)
+                .ref(Strings.EMPTY)
+                .alt(Strings.EMPTY)
+                .canonicalTranscript(Strings.EMPTY)
+                .canonicalCodingEffect(CodingEffect.UNDEFINED)
+                .canonicalHgvsCodingImpact(Strings.EMPTY)
+                .canonicalHgvsProteinImpact(Strings.EMPTY)
+                .totalReadCount(0)
+                .alleleReadCount(0)
+                .totalCopyNumber(0)
+                .alleleCopyNumber(0D)
+                .hotspot(Hotspot.HOTSPOT)
+                .clonalLikelihood(1D)
+                .driverLikelihood(0D)
+                .biallelic(false)
                 .build();
-
-        GermlineReportingEntry germlineReportingFalse = ImmutableGermlineReportingEntry.builder()
-                .gene(reportGene)
-                .notifyClinicalGeneticist(GermlineCondition.NEVER)
-                .conditionFilter(null)
-                .build();
-
-        GermlineReportingModel victim = new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
-        assertNotNull(victim.entryForGene(notifyGene));
-        assertNotNull(victim.entryForGene(reportGene));
-        assertNull(victim.entryForGene("Other"));
-
-        assertTrue(victim.notifyAboutGene(notifyGene, REPORT_WITH_NOTIFICATION));
-        assertFalse(victim.notifyAboutGene(notifyGene, REPORT_WITHOUT_NOTIFICATION));
-        assertFalse(victim.notifyAboutGene(notifyGene, NO_REPORTING));
-
-        assertFalse(victim.notifyAboutGene(reportGene, REPORT_WITHOUT_NOTIFICATION));
-        assertFalse(victim.notifyAboutGene(reportGene, REPORT_WITHOUT_NOTIFICATION));
-        assertFalse(victim.notifyAboutGene(reportGene, NO_REPORTING));
-
-        assertFalse(victim.notifyAboutGene("Other", REPORT_WITH_NOTIFICATION));
     }
 }

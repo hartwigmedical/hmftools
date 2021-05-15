@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFactory;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.runcontext.MetaDataResolver;
+import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
@@ -28,7 +29,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class AnalysedPatientReporter {
 
@@ -42,53 +42,35 @@ public class AnalysedPatientReporter {
     }
 
     @NotNull
-    public AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleQCFile,
-            @NotNull String purpleDriverCatalogSomaticTsv, @NotNull String purpleDriverCatalogGermlineTsv,
-            @NotNull String purpleSomaticVariantVcf, @NotNull String purpleGermlineVariantVcf, @NotNull String linxFusionTsv,
-            @NotNull String linxBreakendTsv, @NotNull String linxDriversTsv, @NotNull String chordPredictionTxt, @NotNull String circosFile,
-            @NotNull String protectEvidenceTsv, @Nullable String comments, boolean correctedReport, @NotNull String pipelineVersionFile,
-            @NotNull String molecularTissueOriginTsv, @NotNull String molecularTissueOriginPlot, @NotNull String virusBreakendTsv,
-            @NotNull String peachGenotypeTsv) throws IOException {
+    public AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull PatientReporterConfig config) throws IOException {
         String patientId = reportData.limsModel().patientId(sampleMetadata.tumorSampleBarcode());
         PatientPrimaryTumor patientPrimaryTumor =
                 PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(), patientId);
 
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
-        GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer();
-        GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
-                purplePurityTsv,
-                purpleQCFile,
-                purpleDriverCatalogSomaticTsv,
-                purpleDriverCatalogGermlineTsv,
-                purpleSomaticVariantVcf,
-                purpleGermlineVariantVcf,
-                linxFusionTsv,
-                linxBreakendTsv,
-                linxDriversTsv,
-                chordPredictionTxt,
-                protectEvidenceTsv,
-                virusBreakendTsv,
-                peachGenotypeTsv,
-                reportData.germlineReportingModel(),
-                sampleReport.germlineReportingLevel());
+        GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.germlineReportingModel(),
+                reportData.virusDbModel(),
+                reportData.virusSummaryModel(),
+                reportData.virusBlackListModel());
+        GenomicAnalysis genomicAnalysis =
+                genomicAnalyzer.run(sampleMetadata.tumorSampleId(), config, sampleReport.germlineReportingLevel());
 
         ConsentFilterFunctions consentFilterFunctions = new ConsentFilterFunctions();
 
         GenomicAnalysis filteredAnalysis = consentFilterFunctions.filterAndOverruleForConsent(genomicAnalysis,
                 sampleReport.germlineReportingLevel(),
-                sampleReport.reportViralInsertions());
+                sampleReport.reportViralInsertions(),
+                sampleReport.cohort().reportPeach());
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
 
-        // TODO Move format to PDF. Make pipeline version in report @Nullable.
-        String pipelineVersion = !pipelineVersionFile.isEmpty()
-                ? MetaDataResolver.majorDotMinorVersion(new File(pipelineVersionFile))
-                : "No pipeline version is known";
+        String pipelineVersion = MetaDataResolver.majorDotMinorVersion(new File(config.pipelineVersionFile()));
 
+        LOGGER.info("Loading CUPPA results");
         MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
-                .molecularTissueOriginResult(MolecularTissueOriginFactory.readMolecularTissueOriginResult(molecularTissueOriginTsv))
-                .molecularTissueOriginPlot(molecularTissueOriginPlot)
+                .molecularTissueOriginResult(MolecularTissueOriginFactory.readMolecularTissueOriginResult(config.molecularTissueOriginTxt()))
+                .molecularTissueOriginPlot(config.molecularTissueOriginPlot())
                 .build();
 
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
@@ -98,9 +80,9 @@ public class AnalysedPatientReporter {
                 .pipelineVersion(pipelineVersion)
                 .genomicAnalysis(filteredAnalysis)
                 .molecularTissueOrigin(molecularTissueOrigin)
-                .circosPath(circosFile)
-                .comments(Optional.ofNullable(comments))
-                .isCorrectedReport(correctedReport)
+                .circosPath(config.purpleCircosPlot())
+                .comments(Optional.ofNullable(config.comments()))
+                .isCorrectedReport(config.isCorrectedReport())
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
@@ -131,6 +113,7 @@ public class AnalysedPatientReporter {
                 !report.sampleReport().primaryTumorTypeString().isEmpty()
                         ? " (" + report.sampleReport().primaryTumorTypeString() + ")"
                         : Strings.EMPTY);
+        LOGGER.info(" Molecular tissue of origin prediction: {}", report.molecularTissueOrigin().molecularTissueOriginResult());
         LOGGER.info(" Shallow seq purity: {}", report.sampleReport().shallowSeqPurityString());
         LOGGER.info(" Lab SOPs used: {}", report.sampleReport().labProcedures());
         LOGGER.info(" Clinical summary present: {}", (!report.clinicalSummary().isEmpty() ? "yes" : "no"));
@@ -148,7 +131,9 @@ public class AnalysedPatientReporter {
         LOGGER.info(" Gene fusions to report: {}", analysis.geneFusions().size());
         LOGGER.info(" Homozygous disruptions to report: {}", analysis.homozygousDisruptions().size());
         LOGGER.info(" Gene disruptions to report: {}", analysis.geneDisruptions().size());
-        LOGGER.info(" Virus breakend to report: {}", analysis.virusBreakends().size());
+        LOGGER.info(" Virus breakend to report: {}", analysis.virusBreakends().reportableViruses().size());
+        LOGGER.info(" Pharmacogenetics to report: {}", analysis.peachGenotypes().size());
+
         LOGGER.info(" CHORD analysis HRD prediction: {} ({})", analysis.chordHrdValue(), analysis.chordHrdStatus());
         LOGGER.info(" Microsatellite indels per Mb: {} ({})", analysis.microsatelliteIndelsPerMb(), analysis.microsatelliteStatus());
         LOGGER.info(" Tumor mutational load: {} ({})", analysis.tumorMutationalLoad(), analysis.tumorMutationalLoadStatus());

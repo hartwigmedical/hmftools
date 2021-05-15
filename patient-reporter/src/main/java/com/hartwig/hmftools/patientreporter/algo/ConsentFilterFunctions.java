@@ -5,17 +5,20 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusBreakendTotal;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 
-public final class ConsentFilterFunctions {
+public class ConsentFilterFunctions {
 
     public ConsentFilterFunctions() {
     }
@@ -24,12 +27,19 @@ public final class ConsentFilterFunctions {
     // TODO Extend overruling functions to make json and pdf more consistent.
     @NotNull
     public GenomicAnalysis filterAndOverruleForConsent(@NotNull GenomicAnalysis genomicAnalysis,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralBreakends) {
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralBreakends, boolean reportPeach) {
         List<ReportableVariant> filteredVariants = filterAndOverruleVariants(genomicAnalysis.reportableVariants(),
                 germlineReportingLevel,
                 genomicAnalysis.hasReliablePurity());
 
-        List<VirusBreakend> filteredVirusBreakends = reportViralBreakends ? genomicAnalysis.virusBreakends() : Lists.newArrayList();
+        ReportableVirusBreakendTotal filteredVirusBreakends = reportViralBreakends
+                ? genomicAnalysis.virusBreakends()
+                : ImmutableReportableVirusBreakendTotal.builder()
+                        .reportableViruses(Lists.newArrayList())
+                        .virusNameSummary(Strings.EMPTY)
+                        .build();
+
+        List<PeachGenotype> filteredPeachGenotype = reportPeach ? genomicAnalysis.peachGenotypes() : Lists.newArrayList();
 
         List<ProtectEvidence> filteredTumorSpecificEvidence =
                 filterEvidenceForGermlineConsent(genomicAnalysis.tumorSpecificEvidence(), germlineReportingLevel);
@@ -44,6 +54,7 @@ public final class ConsentFilterFunctions {
                 .from(genomicAnalysis)
                 .reportableVariants(filteredVariants)
                 .virusBreakends(filteredVirusBreakends)
+                .peachGenotypes(filteredPeachGenotype)
                 .tumorSpecificEvidence(filteredTumorSpecificEvidence)
                 .clinicalTrials(filteredClinicalTrials)
                 .offLabelEvidence(filteredOffLabelEvidence)
@@ -102,7 +113,7 @@ public final class ConsentFilterFunctions {
                 .source(source)
                 .totalCopyNumber(hasReliablePurity && copies >= 1 ? flooredCopyNumber : Double.NaN)
                 .alleleCopyNumber(hasReliablePurity && copies >= 1 ? variant.alleleCopyNumber() : Double.NaN)
-                .biallelic(hasReliablePurity && copies >= 1 ? variant.biallelic() : null)
+                .biallelic(hasReliablePurity && copies >= 1 ? variant.biallelic() : Boolean.valueOf("null"))
                 .build();
     }
 }

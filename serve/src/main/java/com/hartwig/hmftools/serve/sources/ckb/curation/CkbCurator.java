@@ -21,8 +21,6 @@ public class CkbCurator {
 
     @NotNull
     private final Set<CurationEntry> evaluatedCurationEntries = Sets.newHashSet();
-    @NotNull
-    private final Set<String> evaluatedGenes = Sets.newHashSet();
 
     public CkbCurator() {
     }
@@ -55,19 +53,6 @@ public class CkbCurator {
                 unusedEntryCount,
                 evaluatedCurationEntries.size(),
                 CurationFactory.VARIANT_MAPPINGS.size());
-
-        int unusedGeneCount = 0;
-        for (String gene : CurationFactory.GENE_MAPPINGS.keySet()) {
-            if (!evaluatedGenes.contains(gene)) {
-                unusedGeneCount++;
-                LOGGER.warn(" Gene '{}' hasn't been used during CKB gene mapping", gene);
-            }
-        }
-
-        LOGGER.debug(" Found {} unused CKB gene mappings. {} keys have been requested against {} gene mapping entries",
-                unusedGeneCount,
-                evaluatedGenes.size(),
-                CurationFactory.GENE_MAPPINGS.size());
     }
 
     @NotNull
@@ -79,7 +64,6 @@ public class CkbCurator {
         }
 
         CurationEntry entry = new CurationEntry(geneSymbol, variant.variant());
-        evaluatedGenes.add(geneSymbol);
         evaluatedCurationEntries.add(entry);
 
         Variant curatedVariant = variant;
@@ -97,16 +81,6 @@ public class CkbCurator {
                     .from(curatedVariant)
                     .gene(ImmutableGene.builder().from(variant.gene()).geneSymbol(mappedGeneSymbol).build())
                     .variant(mappedVariant)
-                    .build();
-        }
-
-        if (CurationFactory.GENE_MAPPINGS.containsKey(variant.gene().geneSymbol())) {
-            String mappedGeneSymbol = CurationFactory.GENE_MAPPINGS.get(variant.gene().geneSymbol());
-            LOGGER.debug("Mapping gene '{}' to '{}'", variant.gene().geneSymbol(), mappedGeneSymbol);
-
-            curatedVariant = ImmutableVariant.builder()
-                    .from(curatedVariant)
-                    .gene(ImmutableGene.builder().from(variant.gene()).geneSymbol(mappedGeneSymbol).build())
                     .build();
         }
 

@@ -86,6 +86,13 @@ CREATE TABLE rna
     PRIMARY KEY (sampleId)
 );
 
+DROP TABLE IF EXISTS snpcheck;
+CREATE TABLE snpcheck
+(   sampleId varchar(255) NOT NULL,
+    isPass BOOLEAN NOT NULL,
+    PRIMARY KEY (sampleId)
+);
+
 DROP TABLE IF EXISTS biopsy;
 CREATE TABLE biopsy
 (   id int NOT NULL,

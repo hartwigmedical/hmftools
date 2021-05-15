@@ -13,14 +13,27 @@ public final class TumorLocationAndTypeTable {
     }
 
     @NotNull
-    public static Table createTumorLocationAndType(@NotNull String primaryTumorLocation, @NotNull String cancerSubType, float width) {
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
+    public static Table createBiopsyLocationAndTumorLocation(@NotNull String primaryTumorLocation, @NotNull String biopsyLocation,
+            float width) {
+        Table table = new Table(UnitValue.createPercentArray(new float[] { 2, 2 }));
         table.setWidth(width);
 
         table.addCell(TableUtil.createLayoutCell().add(new Paragraph("PRIMARY TUMOR LOCATION").addStyle(ReportResources.subTextStyle())));
-        table.addCell(TableUtil.createLayoutCell().add(new Paragraph("PRIMARY TUMOR TYPE").addStyle(ReportResources.subTextStyle())));
+        table.addCell(TableUtil.createLayoutCell().add(new Paragraph("BIOPSY LOCATION").addStyle(ReportResources.subTextStyle())));
+
         table.addCell(TableUtil.createLayoutCell().add(DataLabel.createDataLabel(primaryTumorLocation)));
-        table.addCell(TableUtil.createLayoutCell().add(DataLabel.createDataLabel(cancerSubType)));
+        table.addCell(TableUtil.createLayoutCell().add(DataLabel.createDataLabel(biopsyLocation)));
+
+        return table;
+    }
+
+    @NotNull
+    public static Table createTumorType(String primaryTumorType, float width) {
+        Table table = new Table(UnitValue.createPercentArray(new float[] { 1 }));
+        table.setWidth(width);
+
+        table.addCell(TableUtil.createLayoutCell().add(new Paragraph("PRIMARY TUMOR TYPE").addStyle(ReportResources.subTextStyle())));
+        table.addCell(TableUtil.createLayoutCell().add(DataLabel.createDataLabel(primaryTumorType)));
 
         return table;
     }

@@ -28,7 +28,7 @@ public final class GermlineReportingFile {
 
             germlineReportingEntries.add(ImmutableGermlineReportingEntry.builder()
                     .gene(parts[0])
-                    .notifyClinicalGeneticist(GermlineCondition.extractGermlineCondition(parts[1]))
+                    .condition(GermlineCondition.toGermlineCondition(parts[1]))
                     .conditionFilter(parts.length > 3 ? parts[2] : null)
                     .build());
         }

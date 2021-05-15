@@ -6,11 +6,11 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortTestFactory;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisConfig;
@@ -25,7 +25,6 @@ import com.hartwig.hmftools.patientreporter.ReportData;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
@@ -116,7 +115,7 @@ public class CFReportWriterTest {
     public void canGeneratePatientReportForCPCTSample() throws IOException {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CPCT01_FULL")
                 .comments(FULL_TABLES_COMMENT_STRING)
-                .limsCohortConfig(PatientReporterTestFactory.createCPCTCohortConfig())
+                .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
                 .build();
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
 
@@ -127,7 +126,7 @@ public class CFReportWriterTest {
     @Test
     public void canGeneratePatientReportForCORESample() throws IOException {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CORE01_FULL")
-                .limsCohortConfig(PatientReporterTestFactory.createCORECohortConfig())
+                .limsCohortConfig(LimsCohortTestFactory.createCORECohortConfig())
                 .build();
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
 
@@ -139,7 +138,7 @@ public class CFReportWriterTest {
     public void canGeneratePatientReportForWIDESample() throws IOException {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("WIDE01_FULL")
                 .comments(FULL_TABLES_COMMENT_STRING)
-                .limsCohortConfig(PatientReporterTestFactory.createWIDECohortConfig())
+                .limsCohortConfig(LimsCohortTestFactory.createWIDECohortConfig())
                 .build();
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
 
@@ -151,7 +150,7 @@ public class CFReportWriterTest {
     public void canGeneratePatientReportForCOREDBSample() throws IOException {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("COREDB01_FULL")
                 .comments(FULL_TABLES_COMMENT_STRING)
-                .limsCohortConfig(PatientReporterTestFactory.createCOREDBCohortConfig())
+                .limsCohortConfig(LimsCohortTestFactory.createCOREDBCohortConfig())
                 .build();
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
 
@@ -164,7 +163,7 @@ public class CFReportWriterTest {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CPCT01_NO_TUMOR_FOR-209")
                 .comments(FULL_TABLES_COMMENT_STRING)
                 .hasReliablePurity(false)
-                .limsCohortConfig(PatientReporterTestFactory.createCPCTCohortConfig())
+                .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
                 .build();
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
 
@@ -177,7 +176,7 @@ public class CFReportWriterTest {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CPCT01_INSUFFICIENT_TUMOR-FOR-209")
                 .comments(FULL_TABLES_COMMENT_STRING)
                 .impliedTumorPurity(0.19)
-                .limsCohortConfig(PatientReporterTestFactory.createCPCTCohortConfig())
+                .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
                 .build();
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
 
@@ -193,7 +192,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_DNA,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                PatientReporterTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig());
     }
 
     @Test
@@ -204,7 +203,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_DNA,
                 true,
                 COMMENT_STRING_QC_FAIL_CORRECTED,
-                PatientReporterTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig());
     }
 
     @Test
@@ -215,7 +214,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_DNA,
                 true,
                 COMMENT_STRING_QC_FAIL_CORRECTED,
-                PatientReporterTestFactory.createCOREDBCohortConfig());
+                LimsCohortTestFactory.createCOREDBCohortConfig());
     }
 
     @Test
@@ -226,7 +225,7 @@ public class CFReportWriterTest {
                 QCFailReason.TECHNICAL_FAILURE,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                PatientReporterTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig());
     }
 
     @Test
@@ -237,7 +236,7 @@ public class CFReportWriterTest {
                 QCFailReason.SUFFICIENT_TCP_QC_FAILURE,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                PatientReporterTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig());
     }
 
     @Test
@@ -248,7 +247,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_TCP_DEEP_WGS,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                PatientReporterTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig());
     }
 
     @Test
@@ -259,7 +258,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                PatientReporterTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig());
     }
 
     @Test
@@ -270,7 +269,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                PatientReporterTestFactory.createCORECohortConfig());
+                LimsCohortTestFactory.createCORECohortConfig());
     }
 
     @Test
@@ -281,7 +280,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                PatientReporterTestFactory.createWIDECohortConfig());
+                LimsCohortTestFactory.createWIDECohortConfig());
     }
 
     private static void generateQCFailReport(@NotNull String sampleId, @NotNull String shallowSeqPurity,
@@ -305,6 +304,7 @@ public class CFReportWriterTest {
                         .extraDetails(Strings.EMPTY)
                         .isOverridden(false)
                         .build())
+                .biopsyLocation(Strings.EMPTY)
                 .germlineReportingLevel(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION)
                 .reportViralInsertions(true)
                 .refArrivalDate(LocalDate.parse("10-Jan-2020", DATE_FORMATTER))
@@ -351,13 +351,12 @@ public class CFReportWriterTest {
 
     @NotNull
     private static CFReportWriter testCFReportWriter() {
-        GermlineReportingModel emptyGermlineReportingModel = new GermlineReportingModel(Lists.newArrayList());
-        return new CFReportWriter(WRITE_TO_PDF, emptyGermlineReportingModel);
+        return new CFReportWriter(WRITE_TO_PDF);
     }
 
     @NotNull
     private static String testReportFilePath(@NotNull PatientReport patientReport) {
-        String fileName = OutputFileUtil.generateOutputFileNameForReport(patientReport);
+        String fileName = OutputFileUtil.generateOutputFileNameForPdfReport(patientReport);
         String newFileName = fileName;
         if (TIMESTAMP_FILES) {
             int extensionStart = fileName.lastIndexOf('.');

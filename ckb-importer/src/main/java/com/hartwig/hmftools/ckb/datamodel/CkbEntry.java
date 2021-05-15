@@ -3,7 +3,7 @@ package com.hartwig.hmftools.ckb.datamodel;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.classification.EventTypeExtractor;
+import com.hartwig.hmftools.ckb.classification.CkbEventTypeExtractor;
 import com.hartwig.hmftools.ckb.datamodel.clinicaltrial.ClinicalTrial;
 import com.hartwig.hmftools.ckb.datamodel.evidence.Evidence;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
@@ -22,7 +22,7 @@ public abstract class CkbEntry {
     @NotNull
     @Value.Derived
     public EventType type() {
-        return EventTypeExtractor.classify(this);
+        return CkbEventTypeExtractor.classify(this);
     }
 
     @NotNull

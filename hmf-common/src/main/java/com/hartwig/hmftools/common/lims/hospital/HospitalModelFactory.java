@@ -58,16 +58,16 @@ public final class HospitalModelFactory {
 
         String sampleHospitalMappingTsv = limsDirectory + File.separator + SAMPLE_HOSPITAL_MAPPING_TSV;
 
-        Map<String, HospitalAddress> hospitalAddressMap = readFromHospitalAddress(hospitalAddressTsv);
+        Map<String, HospitalAddress> hospitalAddressMap = readFromHospitalAddressTsv(hospitalAddressTsv);
         Map<String, HospitalPersons> hospitalPersonsCPCT =
-                readFromHospitalPersons(hospitalPersonsCPCTTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP, "CPCT");
+                readFromHospitalPersonsTsv(hospitalPersonsCPCTTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP, "CPCT");
         Map<String, HospitalPersons> hospitalPersonsDRUP =
-                readFromHospitalPersons(hospitalPersonsDRUPTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP, "DRUP");
+                readFromHospitalPersonsTsv(hospitalPersonsDRUPTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP, "DRUP");
         Map<String, HospitalPersons> hospitalPersonsWIDE =
-                readFromHospitalPersons(hospitalPersonsWIDETsv, HOSPITAL_PERSONS_FIELD_COUNT_WIDE, "WIDE");
+                readFromHospitalPersonsTsv(hospitalPersonsWIDETsv, HOSPITAL_PERSONS_FIELD_COUNT_WIDE, "WIDE");
         Map<String, HospitalPersons> hospitalPersonsCOREDB =
-                readFromHospitalPersons(hospitalPersonsCOREDBTsv, HOSPITAL_PERSONS_FIELD_COUNT_COREDB, "COREDB");
-        Map<String, String> sampleHospitalMapping = readFromSampleToHospitalMapping(sampleHospitalMappingTsv);
+                readFromHospitalPersonsTsv(hospitalPersonsCOREDBTsv, HOSPITAL_PERSONS_FIELD_COUNT_COREDB, "COREDB");
+        Map<String, String> sampleHospitalMapping = readFromSampleToHospitalMappingTsv(sampleHospitalMappingTsv);
 
         HospitalModel hospitalModel = ImmutableHospitalModel.builder()
                 .hospitalAddressMap(hospitalAddressMap)
@@ -83,11 +83,9 @@ public final class HospitalModelFactory {
         return hospitalModel;
     }
 
-
-
     @NotNull
     @VisibleForTesting
-    static Map<String, HospitalAddress> readFromHospitalAddress(@NotNull String hospitalAddressTsv) throws IOException {
+    static Map<String, HospitalAddress> readFromHospitalAddressTsv(@NotNull String hospitalAddressTsv) throws IOException {
         Map<String, HospitalAddress> hospitalAddressMap = Maps.newHashMap();
         List<String> lines = Files.readAllLines(new File(hospitalAddressTsv).toPath());
 
@@ -110,7 +108,7 @@ public final class HospitalModelFactory {
 
     @NotNull
     @VisibleForTesting
-    static Map<String, HospitalPersons> readFromHospitalPersons(@NotNull String hospitalPersonsTsv, int expectedFieldCount,
+    static Map<String, HospitalPersons> readFromHospitalPersonsTsv(@NotNull String hospitalPersonsTsv, int expectedFieldCount,
             @NotNull String cohort) throws IOException {
         Map<String, HospitalPersons> hospitalPersonsMap = Maps.newHashMap();
         List<String> lines = Files.readAllLines(new File(hospitalPersonsTsv).toPath());
@@ -137,7 +135,7 @@ public final class HospitalModelFactory {
 
     @NotNull
     @VisibleForTesting
-    static Map<String, String> readFromSampleToHospitalMapping(@NotNull String sampleHospitalMappingTsv) throws IOException {
+    static Map<String, String> readFromSampleToHospitalMappingTsv(@NotNull String sampleHospitalMappingTsv) throws IOException {
         Map<String, String> hospitalPerSampleMap = Maps.newHashMap();
         List<String> lines = Files.readAllLines(new File(sampleHospitalMappingTsv).toPath());
 

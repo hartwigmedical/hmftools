@@ -5,6 +5,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosome;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -42,4 +43,7 @@ public interface PurpleData {
 
     @NotNull
     List<ReportableGainLoss> copyNumberAlterations();
+
+    @Nullable
+    CnPerChromosome cnPerChromosome();
 }

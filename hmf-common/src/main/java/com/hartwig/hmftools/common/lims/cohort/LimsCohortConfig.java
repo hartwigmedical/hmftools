@@ -22,6 +22,8 @@ public abstract class LimsCohortConfig {
 
     public abstract boolean reportViral();
 
+    public abstract boolean reportPeach();
+
     public abstract boolean requireHospitalId();
 
     public abstract boolean requireHospitalPAId();

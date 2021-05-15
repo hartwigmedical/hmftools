@@ -4,11 +4,12 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
@@ -38,9 +39,6 @@ import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
-import com.hartwig.hmftools.common.virusbreakend.ImmutableVirusBreakend;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedPatientReport;
@@ -48,6 +46,12 @@ import com.hartwig.hmftools.patientreporter.algo.ImmutableGenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusBreakend;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusBreakendTotal;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
+import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosome;
+import com.hartwig.hmftools.protect.cnchromosome.ImmutableCnPerChromosome;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
@@ -62,8 +66,7 @@ import org.jetbrains.annotations.NotNull;
 public final class ExampleAnalysisTestFactory {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
-    private static final String CIRCOS_PATH = Resources.getResource("test_run/purple/plot/sample.circos.png").getPath();
-    private static final String CUPPA_PATH = Resources.getResource("test_run/cuppa/sample.cuppa.chart.png").getPath();
+    private static final PatientReporterConfig REPORTER_CONFIG = PatientReporterTestFactory.createTestReporterConfig();
 
     private ExampleAnalysisTestFactory() {
     }
@@ -75,6 +78,7 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     public static AnalysedPatientReport createWithCOLO829Data(@NotNull ExampleAnalysisConfig config) {
+        String pipelineVersion = "5.22";
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 190;
         double tumorMutationalBurden = 13.7;
@@ -88,11 +92,15 @@ public final class ExampleAnalysisTestFactory {
         List<ProtectEvidence> clinicalTrials = createCOLO829ClinicalTrials();
         List<ProtectEvidence> offLabelEvidence = createCOLO829OffLabelEvidence();
         List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants(config.reportGermline());
+        Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant = notifyAllGermlineVariants(reportableVariants);
         List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<LinxFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        List<VirusBreakend> virusBreakends = Lists.newArrayList();
+        ReportableVirusBreakendTotal virusBreakends = ImmutableReportableVirusBreakendTotal.builder()
+                .reportableViruses(Lists.newArrayList())
+                .virusNameSummary("EBV positive, EBV negative")
+                .build();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), config.reportGermline(), config.limsCohortConfig());
@@ -130,6 +138,7 @@ public final class ExampleAnalysisTestFactory {
                 .clinicalTrials(clinicalTrials)
                 .offLabelEvidence(offLabelEvidence)
                 .reportableVariants(reportableVariants)
+                .notifyGermlineStatusPerVariant(notifyGermlineStatusPerVariant)
                 .microsatelliteIndelsPerMb(microsatelliteIndelsPerMb)
                 .microsatelliteStatus(MicrosatelliteStatus.fromIndelsPerMb(microsatelliteIndelsPerMb))
                 .tumorMutationalLoad(tumorMutationalLoad)
@@ -138,6 +147,7 @@ public final class ExampleAnalysisTestFactory {
                 .chordHrdValue(chordHrdValue)
                 .chordHrdStatus(chordStatus)
                 .gainsAndLosses(gainsAndLosses)
+                .cnPerChromosome(extractCnPerChromosome())
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
@@ -145,91 +155,45 @@ public final class ExampleAnalysisTestFactory {
                 .peachGenotypes(peachGenotypes)
                 .build();
 
-        MolecularTissueOrigin molecularTissueOrigin =
-                ImmutableMolecularTissueOrigin.builder().molecularTissueOriginResult("Skin").molecularTissueOriginPlot(CUPPA_PATH).build();
+        MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
+                .molecularTissueOriginResult("Skin")
+                .molecularTissueOriginPlot(REPORTER_CONFIG.molecularTissueOriginPlot())
+                .build();
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(config.qcForNumber().display())
                 .clinicalSummary(clinicalSummary)
                 .genomicAnalysis(analysis)
-                .circosPath(CIRCOS_PATH)
+                .circosPath(REPORTER_CONFIG.purpleCircosPlot())
                 .molecularTissueOrigin(molecularTissueOrigin)
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(config.isCorrectionReport())
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
-                .pipelineVersion("5.19")
+                .pipelineVersion(pipelineVersion)
                 .build();
     }
 
     @NotNull
     public static AnalysedPatientReport createAnalysisWithAllTablesFilledIn(@NotNull ExampleAnalysisConfig config) {
-        double averageTumorPloidy = 3.1;
-        int tumorMutationalLoad = 182;
-        double tumorMutationalBurden = 13.6;
-        double microsatelliteIndelsPerMb = 0.1089;
-        double chordHrdValue = 0.8;
-        ChordStatus chordStatus = ChordStatus.HR_DEFICIENT;
+        AnalysedPatientReport coloReport = createWithCOLO829Data(config);
 
-        ReportData reportData = PatientReporterTestFactory.loadTestReportData();
-
-        List<ProtectEvidence> tumorSpecificEvidence = createCOLO829TumorSpecificEvidence();
-        List<ProtectEvidence> clinicalTrials = createCOLO829ClinicalTrials();
-        List<ProtectEvidence> offLabelEvidence = createCOLO829OffLabelEvidence();
-        List<ReportableVariant> reportableVariants = createAllSomaticVariants();
-        List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         List<LinxFusion> fusions = createTestFusions();
-        List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        List<VirusBreakend> virusBreakends = createTestVirusBreakends();
+        ReportableVirusBreakendTotal virusBreakends = createTestVirusBreakends();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
-        SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), true, config.limsCohortConfig());
-        String clinicalSummary = Strings.EMPTY;
-
         GenomicAnalysis analysis = ImmutableGenomicAnalysis.builder()
-                .impliedPurity(config.impliedTumorPurity())
-                .hasReliablePurity(config.hasReliablePurity())
-                .hasReliableQuality(true)
-                .averageTumorPloidy(averageTumorPloidy)
-                .tumorSpecificEvidence(tumorSpecificEvidence)
-                .clinicalTrials(clinicalTrials)
-                .offLabelEvidence(offLabelEvidence)
-                .reportableVariants(reportableVariants)
-                .microsatelliteIndelsPerMb(microsatelliteIndelsPerMb)
-                .microsatelliteStatus(MicrosatelliteStatus.fromIndelsPerMb(microsatelliteIndelsPerMb))
-                .tumorMutationalLoad(tumorMutationalLoad)
-                .tumorMutationalLoadStatus(TumorMutationalStatus.fromLoad(tumorMutationalLoad))
-                .tumorMutationalBurden(tumorMutationalBurden)
-                .chordHrdValue(chordHrdValue)
-                .chordHrdStatus(chordStatus)
-                .gainsAndLosses(gainsAndLosses)
+                .from(coloReport.genomicAnalysis())
                 .geneFusions(fusions)
-                .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .virusBreakends(virusBreakends)
                 .peachGenotypes(peachGenotypes)
                 .build();
 
-        MolecularTissueOrigin molecularTissueOrigin =
-                ImmutableMolecularTissueOrigin.builder().molecularTissueOriginResult("Skin").molecularTissueOriginPlot(CUPPA_PATH).build();
-
-        return ImmutableAnalysedPatientReport.builder()
-                .sampleReport(sampleReport)
-                .qsFormNumber(QsFormNumber.FOR_209.display())
-                .clinicalSummary(clinicalSummary)
-                .genomicAnalysis(analysis)
-                .circosPath(CIRCOS_PATH)
-                .molecularTissueOrigin(molecularTissueOrigin)
-                .comments(Optional.ofNullable(config.comments()))
-                .isCorrectedReport(false)
-                .signaturePath(reportData.signaturePath())
-                .logoRVAPath(reportData.logoRVAPath())
-                .logoCompanyPath(reportData.logoCompanyPath())
-                .pipelineVersion("5.19")
-                .build();
+        return ImmutableAnalysedPatientReport.builder().from(coloReport).genomicAnalysis(analysis).build();
     }
 
     @NotNull
@@ -246,6 +210,69 @@ public final class ExampleAnalysisTestFactory {
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
+                .build();
+    }
+
+    @NotNull
+    private static Map<ReportableVariant, Boolean> notifyAllGermlineVariants(@NotNull List<ReportableVariant> reportableVariants) {
+        Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant = Maps.newHashMap();
+        for (ReportableVariant variant : reportableVariants) {
+            notifyGermlineStatusPerVariant.put(variant, variant.source() == ReportableVariantSource.GERMLINE);
+        }
+        return notifyGermlineStatusPerVariant;
+    }
+
+    @NotNull
+    public static CnPerChromosome extractCnPerChromosome() {
+        return ImmutableCnPerChromosome.builder()
+                .chr1p(0)
+                .chr1q(0)
+                .chr2p(0)
+                .chr2q(0)
+                .chr3p(0)
+                .chr3q(0)
+                .chr4p(0)
+                .chr4q(0)
+                .chr5p(0)
+                .chr5q(0)
+                .chr6p(0)
+                .chr6q(0)
+                .chr7p(0)
+                .chr7q(0)
+                .chr8p(0)
+                .chr8q(0)
+                .chr9p(0)
+                .chr9q(0)
+                .chr10p(0)
+                .chr10q(0)
+                .chr11p(0)
+                .chr11q(0)
+                .chr12p(0)
+                .chr12q(0)
+                .chr13p(0)
+                .chr13q(0)
+                .chr14p(0)
+                .chr14q(0)
+                .chr15p(0)
+                .chr15q(0)
+                .chr16p(0)
+                .chr16q(0)
+                .chr17p(0)
+                .chr17q(0)
+                .chr18p(0)
+                .chr18q(0)
+                .chr19p(0)
+                .chr19q(0)
+                .chr20p(0)
+                .chr20q(0)
+                .chr21p(0)
+                .chr21q(0)
+                .chr22p(0)
+                .chr22q(0)
+                .chrXp(0)
+                .chrXq(0)
+                .chrYp(0)
+                .chrYq(0)
                 .build();
     }
 
@@ -282,10 +309,11 @@ public final class ExampleAnalysisTestFactory {
                         .doids(Lists.newArrayList("8923"))
                         .isOverridden(false)
                         .build())
+                .biopsyLocation("Skin")
                 .germlineReportingLevel(reportGermline
                         ? LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION
                         : LimsGermlineReportingLevel.NO_REPORTING)
-                .reportViralInsertions(false)
+                .reportViralInsertions(cohort.reportViral())
                 .refArrivalDate(LocalDate.parse("01-Oct-2020", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Oct-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(Lims.NOT_PERFORMED_STRING)
@@ -898,57 +926,6 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableVariant> createAllSomaticVariants() {
-        ReportableVariant variant1 = ImmutableReportableVariant.builder()
-                .source(ReportableVariantSource.SOMATIC)
-                .gene("TP63")
-                .genotypeStatus(GenotypeStatus.HET)
-                .chromosome("3")
-                .position(189604330)
-                .ref("G")
-                .alt("T")
-                .type(VariantType.SNP)
-                .canonicalTranscript("123")
-                .canonicalCodingEffect(CodingEffect.MISSENSE)
-                .canonicalHgvsCodingImpact("c.1497G>T")
-                .canonicalHgvsProteinImpact("p.Met499Ile")
-                .alleleReadCount(48)
-                .totalReadCount(103)
-                .alleleCopyNumber(2.1)
-                .totalCopyNumber(4.1)
-                .hotspot(Hotspot.NON_HOTSPOT)
-                .clonalLikelihood(0.47)
-                .driverLikelihood(0.1)
-                .biallelic(false)
-                .build();
-
-        ReportableVariant variant2 = ImmutableReportableVariant.builder()
-                .source(ReportableVariantSource.SOMATIC)
-                .gene("KIT")
-                .genotypeStatus(GenotypeStatus.HET)
-                .chromosome("3")
-                .position(81627197)
-                .ref("G")
-                .alt("T")
-                .type(VariantType.SNP)
-                .canonicalTranscript("123")
-                .canonicalCodingEffect(CodingEffect.MISSENSE)
-                .canonicalHgvsCodingImpact("c.1497G>T")
-                .canonicalHgvsProteinImpact("p.Met499Ile")
-                .alleleReadCount(48)
-                .totalReadCount(103)
-                .alleleCopyNumber(1.3)
-                .totalCopyNumber(2.5)
-                .hotspot(Hotspot.NON_HOTSPOT)
-                .clonalLikelihood(0.68)
-                .driverLikelihood(0.1)
-                .biallelic(true)
-                .build();
-
-        return Lists.newArrayList(variant1, variant2);
-    }
-
-    @NotNull
     private static List<ReportableGainLoss> createCOLO829GainsLosses() {
         ReportableGainLoss gainLoss1 = ImmutableReportableGainLoss.builder()
                 .chromosome("10")
@@ -1020,7 +997,8 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     private static List<ReportableGeneDisruption> createCOLO829Disruptions() {
-        ReportableGeneDisruption disruption1 = createDisruptionBuilder().location("10q23.31")
+        ReportableGeneDisruption disruption1 = ImmutableReportableGeneDisruption.builder()
+                .location("10q23.31")
                 .gene("PTEN")
                 .range("Intron 5 -> Intron 6")
                 .type("DEL")
@@ -1048,50 +1026,21 @@ public final class ExampleAnalysisTestFactory {
                 .haplotype("*1_HOM")
                 .function("Normal Function")
                 .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
-                .urlPrescriptionInfo(
-                        "https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939;"
-                                + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963;"
-                                + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
+                .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939;"
+                        + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963;"
+                        + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
                 .panelVersion("PGx_min_DPYD_v0.3")
                 .repoVersion("1.0")
                 .build());
     }
 
     @NotNull
-    private static List<VirusBreakend> createTestVirusBreakends() {
-        List<VirusBreakend> virusbreakends = Lists.newArrayList(ImmutableVirusBreakend.builder()
-                .taxidGenus(0)
-                .nameGenus(Strings.EMPTY)
-                .readsGenusTree(0)
-                .taxidSpecies(0)
-                .nameSpecies(Strings.EMPTY)
-                .readsSpeciesTree(0)
-                .taxidAssigned(0)
-                .nameAssigned("Human papillomavirus type 16")
-                .readsAssignedTree(0)
-                .readsAssignedDirect(0)
-                .reference(Strings.EMPTY)
-                .referenceTaxid(0)
-                .referenceKmerCount(0)
-                .alternateKmerCount(0)
-                .Rname(Strings.EMPTY)
-                .startpos(0)
-                .endpos(0)
-                .numreads(0)
-                .covbases(0)
-                .coverage(0)
-                .meandepth(0)
-                .meanbaseq(0)
-                .meanmapq(0)
+    private static ReportableVirusBreakendTotal createTestVirusBreakends() {
+        List<ReportableVirusBreakend> reportableVirusbreakend = Lists.newArrayList(ImmutableReportableVirusBreakend.builder()
+                .virusName("Human papillomavirus type 16")
                 .integrations(2)
-                .QCStatus(VirusBreakendQCStatus.ASSEMBLY_DOWNSAMPLED)
                 .build());
-        return Lists.newArrayList(virusbreakends);
-    }
-
-    @NotNull
-    private static ImmutableReportableGeneDisruption.Builder createDisruptionBuilder() {
-        return ImmutableReportableGeneDisruption.builder().firstAffectedExon(1);
+        return ImmutableReportableVirusBreakendTotal.builder().reportableViruses(reportableVirusbreakend).virusNameSummary("EBV").build();
     }
 }
 

@@ -127,21 +127,6 @@ public class RefGenomeConverterTest {
         assertEquals(codon, convertedCodons.iterator().next());
 
         assertTrue(NULL_CONVERTER.convertKnownCodons(Sets.newHashSet(codon)).isEmpty());
-
-        // Codons that are not 3 bases long can't get converted
-        KnownCodon invalidCodon = ImmutableKnownCodon.builder()
-                .from(ServeTestFactory.createTestKnownCodon())
-                .annotation(ImmutableCodonAnnotation.builder()
-                        .from(ServeTestFactory.createTestCodonAnnotation())
-                        .gene(TEST_GENE)
-                        .chromosome(TEST_CHROMOSOME)
-                        .start(1)
-                        .end(2)
-                        .build())
-                .addSources(Knowledgebase.HARTWIG_CURATED)
-                .build();
-
-        assertTrue(DUMMY_CONVERTER.convertKnownCodons(Sets.newHashSet(invalidCodon)).isEmpty());
     }
 
     @Test

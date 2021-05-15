@@ -407,16 +407,16 @@ To reduce processing the following hard filters are applied:
 
 Filter | Default Value | Field
 ---|---|---
-hard_min_tumor_qual |30**| `QUAL`
+hard_min_tumor_qual |30| `QUAL`
 hard_min_tumor_raw_alt_support |2| `RAD[1]`
 hard_min_tumor_raw_base_quality |0| `RABQ[1]`
-hard_max_normal_alt_support** |2| Normal `AD[1]`
+filtered_max_normal_alt_support |3| Normal `AD[1]`
 
-** Hotspots are kept regardless of tumor quality
+Note that hotspots are never hard-filtered.
 
 The first 3 filters are excluded from this point onwards and have no further processing applied to them.  
-The hard_max_normal_alt_support is applied at the final step of the algorithm, solely to reduce file size. 
-The hard_max_normal_alt_support does not apply to germline variants in the same local phase set as passing somatic variants.
+The filtered_max_normal_alt_support is applied at the final step of the algorithm, solely to reduce file size. 
+The filtered_max_normal_alt_support does not apply to germline variants in the same local phase set as passing somatic variants.
  
 ## 4. Normal Counts and Quality
 
