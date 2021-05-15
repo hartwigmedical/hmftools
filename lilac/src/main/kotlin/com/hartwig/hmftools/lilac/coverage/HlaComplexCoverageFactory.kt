@@ -29,10 +29,15 @@ class HlaComplexCoverageFactory(private val config: LilacConfig) {
     }
 
     fun rankedGroupCoverage(take: Int, fragmentAlleles: List<FragmentAlleles>, complexes: List<HlaComplex>): List<HlaAllele> {
-        val topRanked =  complexes
+
+        val coveragesSorted =  complexes
                 .map { proteinCoverage(fragmentAlleles, it.alleles) }
                 .sortedBy { -it.totalCoverage }
+
+        val coveragesMapped =  coveragesSorted
                 .flatMap { it.alleleCoverage }
+
+        val topRanked = coveragesMapped
                 .map { it.allele }
                 .distinct()
 

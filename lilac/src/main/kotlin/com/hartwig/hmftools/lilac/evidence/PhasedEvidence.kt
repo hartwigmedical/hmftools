@@ -90,27 +90,6 @@ data class PhasedEvidence(val aminoAcidIndices: IntArray, val evidence: Map<Stri
 
     }
 
-    fun evidenceString(): String {
-        val resultBuilder = StringJoiner(" ")
-        evidence.forEach { (evidence, count) -> resultBuilder.add(toEvidenceString(evidence, count)) }
-        return "{$resultBuilder}"
-    }
-
-    fun toEvidenceString(evidence: String, count: Int): String {
-        val resultBuilder = StringJoiner("")
-        var evidenceIndex = 0
-        for (i in aminoAcidIndices[0]..aminoAcidIndices[aminoAcidIndices.lastIndex]) {
-            if (i in aminoAcidIndices) {
-                resultBuilder.add(evidence[evidenceIndex].toString())
-                evidenceIndex++
-            } else {
-                resultBuilder.add("-")
-            }
-        }
-
-        return resultBuilder.add("=").add(count.toString()).toString()
-    }
-
     override fun toString(): String {
         val uniqueTail = unambiguousTailLength()
         val uniqueHead = unambiguousHeadLength()

@@ -17,17 +17,4 @@ object PhasedEvidenceValidation {
             }
         }
     }
-
-    fun validateAgainstFinalCandidates(gene: String, evidence: List<PhasedEvidence>, candidates: List<HlaSequenceLoci>) {
-        for (inconsistentEvidence in unmatchedEvidence(evidence, candidates)) {
-            logger.warn("HLA-$gene phased evidence not found in candidates: $inconsistentEvidence")
-        }
-    }
-
-
-    private fun unmatchedEvidence(evidence: List<PhasedEvidence>, candidates: List<HlaSequenceLoci>): List<PhasedEvidence> {
-        return evidence.map { it.inconsistentEvidence(candidates) }.filter { it.evidence.isNotEmpty() }
-    }
-
-
 }

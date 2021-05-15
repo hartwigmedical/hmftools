@@ -72,12 +72,13 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
                 if (codingRegion.contains(variantPosition) || abs(codingRegion.start() - variant.position()) <= 5 || abs(codingRegion.end() - variant.position()) <= 5) {
                     val codingRecords = query(reverseStrand, variantPosition, codingRegion, bamFile)
                             .filter { recordContainsVariant(variant, it) }
-                            .distinct()
 
-                    val nucleotideFragments = codingRecords
+                    val distinctCodingRecords = codingRecords.distinct()
+
+                    val nucleotideFragments = distinctCodingRecords
                             .mapNotNull { factory.createAlignmentFragments(it, codingRegion) }
 
-                    val mateFragments = queryMateFragments(transcript, codingRecords)
+                    val mateFragments = queryMateFragments(transcript, distinctCodingRecords)
 
                     return (nucleotideFragments + mateFragments)
                             .groupBy { it.id }
@@ -126,9 +127,10 @@ class SAMRecordReader(private val bamFile: String, private val refGenome: String
             realignedRegions.addAll(realign(codingRegion, reverseStrand, bamFile))
         }
 
-        return realignedRegions
-                .groupBy { it.id }
-                .map { it.value.reduce { x, y -> NucleotideFragment.merge(x, y) } }
+        val groupedReads = realignedRegions.groupBy { it.id }
+        val mergedReads = groupedReads.map { it.value.reduce { x, y -> NucleotideFragment.merge(x, y) } }
+
+        return mergedReads
     }
 
     private fun codingRegions(transcript: HmfTranscriptRegion): List<NamedBed> {

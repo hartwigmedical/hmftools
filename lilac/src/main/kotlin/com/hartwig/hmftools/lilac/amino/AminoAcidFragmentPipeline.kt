@@ -7,6 +7,8 @@ import com.hartwig.hmftools.lilac.hla.HlaContext
 import com.hartwig.hmftools.lilac.nuc.NucleotideFragment
 import com.hartwig.hmftools.lilac.nuc.NucleotideQualEnrichment
 import com.hartwig.hmftools.lilac.nuc.NucleotideSpliceEnrichment
+import org.apache.logging.log4j.LogManager
+import java.util.function.Predicate
 
 class AminoAcidFragmentPipeline(private val config: LilacConfig, private val referenceFragments: List<NucleotideFragment>, tumorFragments: List<NucleotideFragment>) {
     private val minBaseQuality = config.minBaseQual
@@ -15,14 +17,19 @@ class AminoAcidFragmentPipeline(private val config: LilacConfig, private val ref
     private val nucleotideQualEnrichment = NucleotideQualEnrichment(minBaseQuality, minEvidence)
     private val highQualityTumorFragments = qualFiltered(minBaseQuality, tumorFragments)
 
+
+
     companion object {
         const val MAX_AMINO_ACID_BOUNDARY = 298
+
+        val logger = LogManager.getLogger(this::class.java)
     }
 
 
     fun referencePhasingFragments(context: HlaContext): List<AminoAcidFragment> {
         val gene = "HLA-${context.gene}"
         val geneReferenceFragments = referenceFragments.filter { it.genes.contains(gene) }
+
         val referenceAminoAcids = process(context.aminoAcidBoundaries, geneReferenceFragments)
         val referenceNucleotideCounts = SequenceCount.nucleotides(minEvidence, referenceAminoAcids)
         val referenceAminoAcidCounts = SequenceCount.aminoAcids(minEvidence, referenceAminoAcids)

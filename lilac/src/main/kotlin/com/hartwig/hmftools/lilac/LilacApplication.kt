@@ -135,7 +135,8 @@ class LilacApplication(private val cmd: CommandLine, private val config: LilacCo
         val aNucleotideSequences = nucleotideLoci("${resourcesDir}/A_nuc.txt")
         val bNucleotideSequences = nucleotideLoci("${resourcesDir}/B_nuc.txt")
         val cNucleotideSequences = nucleotideLoci("${resourcesDir}/C_nuc.txt")
-        val nucleotideSequences = aNucleotideSequences + bNucleotideSequences + cNucleotideSequences
+
+        val nucleotideSequences = (aNucleotideSequences + bNucleotideSequences + cNucleotideSequences)
 
         logger.info("Reading protein files")
         val aAminoAcidSequences = aminoAcidLoci("${resourcesDir}/A_prot.txt")
@@ -169,7 +170,7 @@ class LilacApplication(private val cmd: CommandLine, private val config: LilacCo
         val aUnphasedCandidates = candidateFactory.unphasedCandidates(hlaAContext, aCandidateFragments)
         val bUnphasedCandidates = candidateFactory.unphasedCandidates(hlaBContext, bCandidateFragments)
         val cUnphasedCandidates = candidateFactory.unphasedCandidates(hlaCContext, cCandidateFragments)
-        val allUnphasedCandidates = (aUnphasedCandidates + bUnphasedCandidates + cUnphasedCandidates)
+        var allUnphasedCandidates = (aUnphasedCandidates + bUnphasedCandidates + cUnphasedCandidates)
 
         // Phasing
         val phasedEvidenceFactory = PhasedEvidenceFactory(config)
@@ -203,7 +204,10 @@ class LilacApplication(private val cmd: CommandLine, private val config: LilacCo
         val recoveredAlleles = config.commonAlleles
                 .filter { it !in phasedCandidateAlleles && it in allUnphasedCandidates } + stopLossRecovery
 
-        val candidateAlleles = phasedCandidateAlleles + recoveredAlleles
+        // add back in expected alleles
+        val missingExpected = config.expectedAlleles.filter { it !in phasedCandidateAlleles && it !in recoveredAlleles }
+        val candidateAlleles = phasedCandidateAlleles + recoveredAlleles + missingExpected
+
         val candidateSequences = aminoAcidSequences.filter { it.allele in candidateAlleles }
         if (recoveredAlleles.isNotEmpty()) {
             logger.info("    recovered ${recoveredAlleles.size} common candidate alleles: " + recoveredAlleles.joinToString(", "))
@@ -325,26 +329,16 @@ class LilacApplication(private val cmd: CommandLine, private val config: LilacCo
     }
 
     private fun nucleotideLoci(inputFilename: String): List<HlaSequenceLoci> {
-        val sequences = HlaSequenceFile.readFile(inputFilename)
+        var sequences = HlaSequenceFile.readFile(inputFilename)
                 .filter { it.allele !in EXCLUDED_ALLELES }
                 .reduceToSixDigit()
+
         return HlaSequenceLoci.create(sequences)
                 .filter { it.sequences.isNotEmpty() }
     }
 
-
-    private fun createSynonymous(template: HlaSequenceLoci): HlaSequenceLoci {
-        val modSequences = template.sequences.toMutableList()
-        modSequences[1011] = "A"
-        modSequences[1012] = "G"
-        modSequences[1013] = "T"
-
-        return HlaSequenceLoci(HlaAllele("C*04:82:01"), modSequences)
-    }
-
-
     private fun aminoAcidLoci(inputFilename: String): List<HlaSequenceLoci> {
-        val sequences = HlaSequenceFile.readFile(inputFilename)
+        var sequences = HlaSequenceFile.readFile(inputFilename)
                 .filter { it.allele !in EXCLUDED_ALLELES }
                 .reduceToFourDigit()
                 .map { if (it.rawSequence.endsWith("X")) it else it.copyWithAdditionalSequence("X") }
@@ -352,7 +346,6 @@ class LilacApplication(private val cmd: CommandLine, private val config: LilacCo
         return HlaSequenceLoci.create(sequences)
                 .filter { it.sequences.isNotEmpty() }
     }
-
 
     override fun close() {
         executorService.shutdown()

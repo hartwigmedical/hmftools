@@ -77,7 +77,10 @@ data class LilacConfig(
             val minConfirmedUniqueCoverage = Configs.defaultIntValue(cmd, MIN_CONFIRMED_UNIQUE_COVERAGE, defaultConfig.minConfirmedUniqueCoverage)
             val threads = Configs.defaultIntValue(cmd, THREADS, defaultConfig.threads)
             val maxDistanceFromTopScore = Configs.defaultIntValue(cmd, MAX_DISTANCE_FROM_TOP_SCORE, defaultConfig.maxDistanceFromTopScore)
-            val expectedAlleles = cmd.expectedAlleles(EXPECTED_ALLELES);
+            val expectedAlleles = cmd.parseAlleles(EXPECTED_ALLELES);
+
+            // A*01:01, B*07:02, C*01:02 are the base types for each gene
+
             val commonAlleles = LilacConfig::class.java.getResource("/alleles/common.txt")
                     .readText()
                     .split("\n")
@@ -173,9 +176,9 @@ data class LilacConfig(
             return default
         }
 
-        private fun CommandLine.expectedAlleles(opt: String): List<HlaAllele> {
+        private fun CommandLine.parseAlleles(opt: String): List<HlaAllele> {
             if (this.hasOption(opt)) {
-                val result = this.getOptionValue(opt)!!.split(",").map { HlaAllele(it).asFourDigit() }
+                val result = this.getOptionValue(opt)!!.split(";").map { HlaAllele(it).asFourDigit() }
                 logger.info("Using non default value {} for parameter {}", result.joinToString(","), opt)
                 return result
             }
