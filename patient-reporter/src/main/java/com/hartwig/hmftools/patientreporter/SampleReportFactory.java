@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -60,10 +61,12 @@ public final class SampleReportFactory {
 
         String hospitalPatientId = lims.hospitalPatientId(tumorSampleBarcode);
         LimsChecker.checkHospitalPatientId(hospitalPatientId, tumorSampleId, cohortConfig);
+        String biopsyLocation = lims.biopsyLocation(tumorSampleBarcode) != null ? lims.biopsyLocation(tumorSampleBarcode) : Strings.EMPTY;
 
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
                 .patientPrimaryTumor(patientPrimaryTumor)
+                .biopsyLocation(biopsyLocation)
                 .germlineReportingLevel(lims.germlineReportingChoice(tumorSampleBarcode))
                 .reportViralInsertions(lims.reportViralInsertions(tumorSampleBarcode))
                 .refArrivalDate(arrivalDateRefSample)
@@ -75,7 +78,9 @@ public final class SampleReportFactory {
                 .submissionId(lims.submissionId(tumorSampleBarcode))
                 .hospitalContactData(lims.hospitalContactData(tumorSampleBarcode))
                 .hospitalPatientId(hospitalPatientId)
-                .hospitalPathologySampleId(LimsChecker.toHospitalPathologySampleIdForReport(hospitalPathologySampleId, tumorSampleId, cohortConfig))
+                .hospitalPathologySampleId(LimsChecker.toHospitalPathologySampleIdForReport(hospitalPathologySampleId,
+                        tumorSampleId,
+                        cohortConfig))
                 .build();
     }
 
@@ -88,6 +93,7 @@ public final class SampleReportFactory {
                 .reportGermlineFlag(true)
                 .reportConclusion(false)
                 .reportViral(true)
+                .reportPeach(true)
                 .requireHospitalId(false)
                 .requireHospitalPAId(false)
                 .requireHospitalPersonsStudy(false)

@@ -57,27 +57,33 @@ public class CkbCurator {
 
     @NotNull
     private Variant curate(@NotNull Variant variant) {
-        CurationEntry entry = new CurationEntry(variant.gene().geneSymbol(), variant.variant());
+        String geneSymbol = variant.gene() != null ? variant.gene().geneSymbol() : null;
+        if (geneSymbol == null) {
+            LOGGER.debug("No gene symbol known, skipping curation on '{}'", variant);
+            return variant;
+        }
+
+        CurationEntry entry = new CurationEntry(geneSymbol, variant.variant());
         evaluatedCurationEntries.add(entry);
 
-        Variant curatedMutation = variant;
+        Variant curatedVariant = variant;
         if (CurationFactory.VARIANT_MAPPINGS.containsKey(entry)) {
             String mappedVariant = CurationFactory.VARIANT_MAPPINGS.get(entry).variant();
             String mappedGeneSymbol = CurationFactory.VARIANT_MAPPINGS.get(entry).geneSymbol();
 
-            LOGGER.debug("Mapping mutation '{}' on '{}' to '{}' on '{}'",
+            LOGGER.debug("Mapping variant '{}' on '{}' to '{}' on '{}'",
                     entry.variant(),
                     entry.geneSymbol(),
                     mappedVariant,
                     mappedGeneSymbol);
 
-            curatedMutation = ImmutableVariant.builder()
-                    .from(curatedMutation)
+            curatedVariant = ImmutableVariant.builder()
+                    .from(curatedVariant)
                     .gene(ImmutableGene.builder().from(variant.gene()).geneSymbol(mappedGeneSymbol).build())
                     .variant(mappedVariant)
                     .build();
         }
 
-        return curatedMutation;
+        return curatedVariant;
     }
 }

@@ -38,7 +38,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using CFReportWriterTest
-    //                public static final String VERSION = "7.22";
+    //                public static final String VERSION = "7.23";
 
     public static void main(@NotNull String[] args) throws IOException {
         LOGGER.info("Running patient reporter v{}", VERSION);
@@ -54,96 +54,77 @@ public class PatientReporterApplication {
             System.exit(1);
         }
 
+        new PatientReporterApplication(config).run();
+    }
+
+    @NotNull
+    private final PatientReporterConfig config;
+
+    private PatientReporterApplication(@NotNull final PatientReporterConfig config) {
+        this.config = config;
+    }
+
+    private void run() throws IOException {
         SampleMetadata sampleMetadata = buildSampleMetadata(config);
 
         if (config.qcFail()) {
             LOGGER.info("Generating qc-fail report");
-            generateQCFail(config, sampleMetadata);
+            generateQCFail(sampleMetadata);
         } else {
             LOGGER.info("Generating patient report");
-            generateAnalysedReport(config, sampleMetadata);
+            generateAnalysedReport(sampleMetadata);
         }
     }
 
-    private static void generateQCFail(@NotNull PatientReporterConfig config, @NotNull SampleMetadata sampleMetadata) throws IOException {
+    private void generateAnalysedReport(@NotNull SampleMetadata sampleMetadata) throws IOException {
+        AnalysedReportData reportData = buildAnalysedReportData(config);
+        AnalysedPatientReporter reporter = new AnalysedPatientReporter(reportData);
+
+        AnalysedPatientReport report = reporter.run(sampleMetadata, config);
+
+        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
+
+        String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
+        reportWriter.writeAnalysedPatientReport(report, outputFilePath);
+
+        if (!config.onlyCreatePDF()) {
+            LOGGER.debug("Updating reporting db and writing report data");
+
+            writeReportDataToJson(report);
+
+            new ReportingDb(config.reportingDbTsv()).appendAnalysedReport(report);
+        }
+    }
+
+    private void generateQCFail(@NotNull SampleMetadata sampleMetadata) throws IOException {
         QCFailReporter reporter = new QCFailReporter(buildBaseReportData(config));
         QCFailReport report = reporter.run(config.qcFailReason(),
                 sampleMetadata,
                 config.purplePurityTsv(),
                 config.purpleQcFile(),
                 config.comments(),
-                config.correctedReport());
+                config.isCorrectedReport());
         LOGGER.info("Cohort of this sample is: {}", report.sampleReport().cohort().cohortId());
 
-        ReportWriter reportWriter = CFReportWriter.createProductionReportWriterNoGermline();
+        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
         String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
         reportWriter.writeQCFailReport(report, outputFilePath);
 
         if (!config.onlyCreatePDF()) {
-            LOGGER.debug("Updating additional files and databases");
+            LOGGER.debug("Updating reporting db and writing report data");
 
-            writeReportDataToJson(config.outputDirData(),
-                    report.sampleReport().tumorSampleId(),
-                    report.sampleReport().tumorSampleBarcode(),
-                    report);
+            writeReportDataToJson(report);
 
-            if (!report.sampleReport().cohort().cohortId().equals("COLO")) {
-                ReportingDb.addQCFailReportToReportingDb(config.reportingDbTsv(), report);
-            }
+            new ReportingDb(config.reportingDbTsv()).appendQCFailReport(report);
         }
     }
 
-    private static void generateAnalysedReport(@NotNull PatientReporterConfig config, @NotNull SampleMetadata sampleMetadata)
-            throws IOException {
-        AnalysedReportData reportData = buildAnalysedReportData(config);
-        AnalysedPatientReporter reporter = new AnalysedPatientReporter(reportData);
-
-        AnalysedPatientReport report = reporter.run(sampleMetadata,
-                config.purplePurityTsv(),
-                config.purpleQcFile(),
-                config.purpleDriverCatalogSomaticTsv(),
-                config.purpleDriverCatalogGermlineTsv(),
-                config.purpleSomaticVariantVcf(),
-                config.purpleGermlineVariantVcf(),
-                config.linxFusionTsv(),
-                config.linxBreakendTsv(),
-                config.linxViralInsertionTsv(),
-                config.linxDriverCatalogTsv(),
-                config.chordPredictionTxt(),
-                config.circosFile(),
-                config.protectEvidenceTsv(),
-                config.comments(),
-                config.correctedReport(),
-                config.pipelineVersionFile(),
-                config.molecularTissueOriginTxt(),
-                config.molecularTissueOriginPlot());
-
-        ReportWriter reportWriter = CFReportWriter.createProductionReportWriter(reportData.germlineReportingModel());
-
-        String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
-        reportWriter.writeAnalysedPatientReport(report, outputFilePath);
-
-        if (!config.onlyCreatePDF()) {
-            LOGGER.debug("Updating additional files and databases");
-
-            writeReportDataToJson(config.outputDirData(),
-                    report.sampleReport().sampleMetadata().tumorSampleId(),
-                    report.sampleReport().sampleMetadata().tumorSampleBarcode(),
-                    report);
-
-            if (!report.sampleReport().cohort().cohortId().equals("COLO")) {
-                ReportingDb.addAnalysedReportToReportingDb(config.reportingDbTsv(), report);
-            }
-        }
-    }
-
-    private static void writeReportDataToJson(@NotNull String outputDirData, @NotNull String tumorSampleId, @NotNull String tumorBarcode,
-            @NotNull PatientReport report) throws IOException {
-        String outputFileData = outputDirData + File.separator + tumorSampleId + "_" + tumorBarcode + ".json";
+    private void writeReportDataToJson(@NotNull PatientReport report) throws IOException {
+        String outputFileData = config.outputDirData() + File.separator + OutputFileUtil.generateOutputFileNameForJson(report);
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
         writer.write(convertToJson(report));
         writer.close();
-        LOGGER.info("Created json file at {} ", outputFileData);
+        LOGGER.info(" Created report data json file at {} ", outputFileData);
     }
 
     @VisibleForTesting
@@ -153,14 +134,13 @@ public class PatientReporterApplication {
     }
 
     @NotNull
-    private static String generateOutputFilePathForPatientReport(@NotNull String reportDirectory, @NotNull PatientReport patientReport) {
-        return reportDirectory + File.separator + OutputFileUtil.generateOutputFileNameForReport(patientReport);
+    private static String generateOutputFilePathForPatientReport(@NotNull String outputDirReport, @NotNull PatientReport patientReport) {
+        return outputDirReport + File.separator + OutputFileUtil.generateOutputFileNameForPdfReport(patientReport);
     }
 
     @NotNull
     private static SampleMetadata buildSampleMetadata(@NotNull PatientReporterConfig config) {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
-                .patientId(config.tumorSampleId().substring(0, 12))
                 .refSampleId(config.refSampleId())
                 .refSampleBarcode(config.refSampleBarcode())
                 .tumorSampleId(config.tumorSampleId())
@@ -199,6 +179,9 @@ public class PatientReporterApplication {
     private static AnalysedReportData buildAnalysedReportData(@NotNull PatientReporterConfig config) throws IOException {
         return AnalysedReportDataLoader.buildFromFiles(buildBaseReportData(config),
                 config.germlineReportingTsv(),
-                config.sampleSummaryTsv());
+                config.sampleSummaryTsv(),
+                config.virusDbTsv(),
+                config.virusSummaryTsv(),
+                config.virusBlacklistTsv());
     }
 }

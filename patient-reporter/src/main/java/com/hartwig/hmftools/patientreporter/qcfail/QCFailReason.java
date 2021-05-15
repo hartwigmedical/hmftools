@@ -5,7 +5,6 @@ import java.util.List;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
 
 import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,8 +13,7 @@ public enum QCFailReason {
     SUFFICIENT_TCP_QC_FAILURE("sufficient_tcp_qc_failure", QCFailType.LOW_QUALITY_BIOPSY, true, QsFormNumber.FOR_083),
     INSUFFICIENT_TCP_SHALLOW_WGS("insufficient_tcp_shallow_wgs", QCFailType.LOW_QUALITY_BIOPSY, false, QsFormNumber.FOR_100),
     INSUFFICIENT_TCP_DEEP_WGS("insufficient_tcp_deep_wgs", QCFailType.LOW_QUALITY_BIOPSY, true, QsFormNumber.FOR_100),
-    INSUFFICIENT_DNA("insufficient_dna", QCFailType.LOW_QUALITY_BIOPSY, false, QsFormNumber.FOR_082),
-    UNDEFINED(Strings.EMPTY, QCFailType.UNDEFINED, false, QsFormNumber.FOR_UNDEFINED);
+    INSUFFICIENT_DNA("insufficient_dna", QCFailType.LOW_QUALITY_BIOPSY, false, QsFormNumber.FOR_082);
 
     @NotNull
     private final String identifier;
@@ -52,10 +50,10 @@ public enum QCFailReason {
         return qsFormNumber.display();
     }
 
-    @NotNull
+    @Nullable
     public static QCFailReason fromIdentifier(@Nullable String identifier) {
         if (identifier == null) {
-            return UNDEFINED;
+            return null;
         }
 
         for (QCFailReason reason : QCFailReason.values()) {
@@ -64,16 +62,14 @@ public enum QCFailReason {
             }
         }
 
-        return UNDEFINED;
+        return null;
     }
 
     @NotNull
     public static List<String> validIdentifiers() {
         List<String> identifiers = Lists.newArrayList();
         for (QCFailReason reason : QCFailReason.values()) {
-            if (reason != QCFailReason.UNDEFINED) {
                 identifiers.add(reason.identifier);
-            }
         }
         return identifiers;
     }

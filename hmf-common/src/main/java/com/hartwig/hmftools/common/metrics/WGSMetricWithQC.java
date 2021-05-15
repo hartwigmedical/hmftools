@@ -9,7 +9,10 @@ import org.jetbrains.annotations.Nullable;
 public abstract class WGSMetricWithQC {
 
     @NotNull
-    public abstract WGSMetrics wgsMetrics();
+    public abstract WGSMetrics refMetrics();
 
-    public abstract boolean qcMetric();
+    @NotNull
+    public abstract WGSMetrics tumorMetrics();
+
+    public abstract boolean sufficientCoverage();
 }

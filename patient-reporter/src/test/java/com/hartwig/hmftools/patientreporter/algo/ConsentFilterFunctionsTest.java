@@ -14,10 +14,6 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.patientreporter.germline.GermlineCondition;
-import com.hartwig.hmftools.patientreporter.germline.GermlineReportingEntry;
-import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
-import com.hartwig.hmftools.patientreporter.germline.ImmutableGermlineReportingEntry;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
@@ -32,23 +28,6 @@ public class ConsentFilterFunctionsTest {
     public void canFilterVariantsForGermlineConsent() {
         ReportableVariant somaticVariant = createTestReportableVariantBuilder().source(ReportableVariantSource.SOMATIC).build();
         ReportableVariant germlineVariant = createTestReportableVariantBuilder().source(ReportableVariantSource.GERMLINE).build();
-
-        String notifyGene = "Notify";
-        String reportGene = "Report";
-
-        GermlineReportingEntry germlineReportingTrue = ImmutableGermlineReportingEntry.builder()
-                .gene(notifyGene)
-                .notifyClinicalGeneticist(GermlineCondition.ALWAYS)
-                .conditionFilter(null)
-                .build();
-
-        GermlineReportingEntry germlineReportingFalse = ImmutableGermlineReportingEntry.builder()
-                .gene(reportGene)
-                .notifyClinicalGeneticist(GermlineCondition.NEVER)
-                .conditionFilter(null)
-                .build();
-        GermlineReportingModel victim = new GermlineReportingModel(Lists.newArrayList(germlineReportingTrue, germlineReportingFalse));
-
 
         assertEquals(2,
                 ConsentFilterFunctions.filterAndOverruleVariants(Lists.newArrayList(somaticVariant, germlineVariant),

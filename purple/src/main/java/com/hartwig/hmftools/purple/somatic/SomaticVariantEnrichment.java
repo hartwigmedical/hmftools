@@ -31,68 +31,74 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticVariantEnrichment implements VariantContextEnrichment
 {
-    private final VariantContextEnrichment purityEnrichment;
-    private final VariantContextEnrichment hotspotEnrichment;
-    private final VariantContextEnrichment kataegisEnrichment;
-    private final VariantContextEnrichment somaticRefContextEnrichment;
-    private final SubclonalLikelihoodEnrichment subclonalLikelihoodEnrichment;
-    private final VariantContextEnrichment snpEffEnrichment;
+    private final VariantContextEnrichment mPurityEnrichment;
+    private final VariantContextEnrichment mHotspotEnrichment;
+    private final VariantContextEnrichment mKataegisEnrichment;
+    private final VariantContextEnrichment mSomaticRefContextEnrichment;
+    private final SubclonalLikelihoodEnrichment mSubclonalLikelihoodEnrichment;
+    private final VariantContextEnrichment mSnpEffEnrichment;
+    private final SomaticGenotypeEnrichment mGenotypeEnrichment;
 
-    public SomaticVariantEnrichment(boolean hotspotEnabled, double clonalityBinWidth, @NotNull final String purpleVersion,
-            @NotNull final String tumorSample, @NotNull final IndexedFastaSequenceFile reference,
-            @NotNull final PurityAdjuster purityAdjuster, @NotNull final DriverGenePanel genePanel,
-            @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<FittedRegion> fittedRegions,
-            @NotNull final Multimap<Chromosome, VariantHotspot> hotspots, @NotNull final List<HmfTranscriptRegion> transcripts,
-            @NotNull final List<PeakModel> peakModel, @NotNull final Consumer<VariantContext> consumer)
+    public SomaticVariantEnrichment(boolean hotspotEnabled, double clonalityBinWidth, final String purpleVersion,
+            final String referenceId, final String tumorSample, final IndexedFastaSequenceFile reference,
+            final PurityAdjuster purityAdjuster, final DriverGenePanel genePanel,
+            final List<PurpleCopyNumber> copyNumbers, final List<FittedRegion> fittedRegions,
+            final Multimap<Chromosome, VariantHotspot> hotspots, final List<HmfTranscriptRegion> transcripts,
+            final List<PeakModel> peakModel, final Consumer<VariantContext> consumer)
     {
-        subclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(clonalityBinWidth, peakModel, consumer);
-        purityEnrichment = new SomaticPurityEnrichment(purpleVersion,
-                tumorSample,
-                purityAdjuster,
-                copyNumbers,
-                fittedRegions,
-                subclonalLikelihoodEnrichment);
-        kataegisEnrichment = new KataegisEnrichment(purityEnrichment);
-        somaticRefContextEnrichment = new SomaticRefContextEnrichment(reference, kataegisEnrichment);
+        mGenotypeEnrichment = new SomaticGenotypeEnrichment(referenceId, tumorSample, consumer);
+
+        mSubclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(clonalityBinWidth, peakModel, mGenotypeEnrichment);
+
+        mPurityEnrichment = new SomaticPurityEnrichment(
+                purpleVersion, tumorSample, purityAdjuster, copyNumbers, fittedRegions, mSubclonalLikelihoodEnrichment);
+
+        mKataegisEnrichment = new KataegisEnrichment(mPurityEnrichment);
+
+        mSomaticRefContextEnrichment = new SomaticRefContextEnrichment(reference, mKataegisEnrichment);
+
         final Set<String> somaticGenes =
                 genePanel.driverGenes().stream().filter(DriverGene::reportSomatic).map(DriverGene::gene).collect(Collectors.toSet());
-        snpEffEnrichment = new SnpEffEnrichment(somaticGenes, transcripts, somaticRefContextEnrichment);
+
+        mSnpEffEnrichment = new SnpEffEnrichment(somaticGenes, transcripts, mSomaticRefContextEnrichment);
+
         if(hotspotEnabled)
         {
-            hotspotEnrichment = new VariantHotspotEnrichment(hotspots, snpEffEnrichment);
+            mHotspotEnrichment = new VariantHotspotEnrichment(hotspots, mSnpEffEnrichment);
         }
         else
         {
-            hotspotEnrichment = VariantContextEnrichmentFactory.noEnrichment().create(snpEffEnrichment);
+            mHotspotEnrichment = VariantContextEnrichmentFactory.noEnrichment().create(mSnpEffEnrichment);
         }
     }
 
     @Override
     public void flush()
     {
-        hotspotEnrichment.flush();
-        snpEffEnrichment.flush();
-        somaticRefContextEnrichment.flush();
-        kataegisEnrichment.flush();
-        purityEnrichment.flush();
-        subclonalLikelihoodEnrichment.flush();
+        mHotspotEnrichment.flush();
+        mSnpEffEnrichment.flush();
+        mSomaticRefContextEnrichment.flush();
+        mKataegisEnrichment.flush();
+        mPurityEnrichment.flush();
+        mSubclonalLikelihoodEnrichment.flush();
+        // mGenotypeEnrichment.flush();
     }
 
     @NotNull
     @Override
     public VCFHeader enrichHeader(@NotNull final VCFHeader template)
     {
-        VCFHeader header = somaticRefContextEnrichment.enrichHeader(template);
-        header = kataegisEnrichment.enrichHeader(header);
-        header = subclonalLikelihoodEnrichment.enrichHeader(header);
-        header = hotspotEnrichment.enrichHeader(header);
-        header = snpEffEnrichment.enrichHeader(header);
-        return purityEnrichment.enrichHeader(header);
+        VCFHeader header = mSomaticRefContextEnrichment.enrichHeader(template);
+        header = mKataegisEnrichment.enrichHeader(header);
+        header = mSubclonalLikelihoodEnrichment.enrichHeader(header);
+        header = mHotspotEnrichment.enrichHeader(header);
+        header = mSnpEffEnrichment.enrichHeader(header);
+        return mPurityEnrichment.enrichHeader(header);
     }
 
     @Override
     public void accept(@NotNull final VariantContext context)
     {
-        hotspotEnrichment.accept(context);
+        mHotspotEnrichment.accept(context);
     }
 }

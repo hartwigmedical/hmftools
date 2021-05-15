@@ -46,7 +46,7 @@ public class CkbClassificationConfig {
     @NotNull
     public static EventClassifierConfig build() {
         return ImmutableEventClassifierConfig.builder()
-                .proteinAnnotationExtractor(new ProteinAnnotationExtractor())
+                .proteinAnnotationExtractor(new CkbProteinAnnotationExtractor())
                 .exonIdentifiers(EXON_IDENTIFIERS)
                 .exonKeywords(EXON_KEYWORDS)
                 .exonBlacklistKeyPhrases(EXON_BLACKLIST_KEY_PHRASES)

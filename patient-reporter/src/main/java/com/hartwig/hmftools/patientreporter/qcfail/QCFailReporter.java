@@ -30,8 +30,7 @@ public class QCFailReporter {
     @NotNull
     public QCFailReport run(@NotNull QCFailReason reason, @NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv,
             @NotNull String purpleQCFile, @Nullable String comments, boolean correctedReport) throws IOException {
-
-        String patientId = sampleMetadata.patientId().startsWith("COLO829") ? "COLO829" : sampleMetadata.patientId();
+        String patientId = reportData.limsModel().patientId(sampleMetadata.tumorSampleBarcode());
 
         PatientPrimaryTumor patientPrimaryTumor =
                 PatientPrimaryTumorFunctions.findPrimaryTumorForPatient(reportData.patientPrimaryTumors(),
@@ -52,7 +51,6 @@ public class QCFailReporter {
 
             wgsPurityString = hasReliablePurity ? formattedPurity : Lims.PURITY_NOT_RELIABLE_STRING;
         }
-
 
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)

@@ -101,4 +101,7 @@ public abstract class ReportableVariant implements Variant {
 
     @NotNull
     public abstract GenotypeStatus genotypeStatus();
+
+    @Nullable
+    public abstract Integer localPhaseSet();
 }

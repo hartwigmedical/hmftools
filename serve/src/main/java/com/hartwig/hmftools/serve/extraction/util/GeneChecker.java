@@ -19,13 +19,17 @@ public class GeneChecker {
     }
 
     public boolean isValidGene(@Nullable String gene) {
-        if (allValidGenes.contains(gene)) {
+        if (geneExistsInAllValidGenes(gene)) {
             return true;
         } else {
             if (gene != null) {
-                LOGGER.warn("Gene '{}' is not present in the full gene list used!", gene);
+                LOGGER.warn("Gene '{}' is not considered a valid gene!", gene);
             }
             return false;
         }
+    }
+
+    public boolean geneExistsInAllValidGenes(@Nullable String gene) {
+        return allValidGenes.contains(gene);
     }
 }

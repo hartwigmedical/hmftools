@@ -294,7 +294,7 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
-- Upcoming
+- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.3)
   - Support for merging sources that differ in ref genome version (v37 vs v38)
   - Support for generating output for both ref genome version v37 and v38
   - Driver catalog warnings are disabled for VICC

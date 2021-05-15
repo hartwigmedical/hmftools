@@ -7,8 +7,8 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsTestUtil;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -36,7 +36,7 @@ public class HospitalModelTest {
         String hospitalId = "01";
         HospitalModel model = buildTestHospitalModel(hospitalId);
 
-        LimsCohortConfig cohortConfigCPCT = LimsTestUtil.createConfigForHospitalModel("CPCT", false, false);
+        LimsCohortConfig cohortConfigCPCT = LimsCohortTestFactory.createConfigForHospitalModel("CPCT", false, false);
         HospitalContactData dataCPCT =
                 model.queryHospitalData("CPCT02010001T", cohortConfigCPCT, CORE_REQUESTER_NAME, CORE_REQUESTER_EMAIL);
         assertEquals(CPCT_PI, dataCPCT.hospitalPI());
@@ -45,7 +45,7 @@ public class HospitalModelTest {
         assertEquals(HOSPITAL_NAME, dataCPCT.hospitalName());
         assertEquals(EXPECTED_HOSPITAL_ADDRESS, dataCPCT.hospitalAddress());
 
-        LimsCohortConfig cohortConfigDRUP = LimsTestUtil.createConfigForHospitalModel("DRUP", false, false);
+        LimsCohortConfig cohortConfigDRUP = LimsCohortTestFactory.createConfigForHospitalModel("DRUP", false, false);
         HospitalContactData dataDRUP =
                 model.queryHospitalData("DRUP02010001T", cohortConfigDRUP, CORE_REQUESTER_NAME, CORE_REQUESTER_EMAIL);
         assertEquals(DRUP_PI, dataDRUP.hospitalPI());
@@ -54,7 +54,7 @@ public class HospitalModelTest {
         assertEquals(HOSPITAL_NAME, dataDRUP.hospitalName());
         assertEquals(EXPECTED_HOSPITAL_ADDRESS, dataDRUP.hospitalAddress());
 
-        LimsCohortConfig cohortConfigWIDE = LimsTestUtil.createConfigForHospitalModel("WIDE", false, false);
+        LimsCohortConfig cohortConfigWIDE = LimsCohortTestFactory.createConfigForHospitalModel("WIDE", false, false);
         HospitalContactData dataWIDE =
                 model.queryHospitalData("WIDE02010001T", cohortConfigWIDE, CORE_REQUESTER_NAME, CORE_REQUESTER_EMAIL);
         assertEquals(WIDE_PI, dataWIDE.hospitalPI());
@@ -63,7 +63,7 @@ public class HospitalModelTest {
         assertEquals(HOSPITAL_NAME, dataWIDE.hospitalName());
         assertEquals(EXPECTED_HOSPITAL_ADDRESS, dataWIDE.hospitalAddress());
 
-        LimsCohortConfig cohortConfigCORE = LimsTestUtil.createConfigForHospitalModel("CORE", false, true);
+        LimsCohortConfig cohortConfigCORE = LimsCohortTestFactory.createConfigForHospitalModel("CORE", false, true);
         HospitalContactData dataCORE =
                 model.queryHospitalData("CORE02010001T", cohortConfigCORE, CORE_REQUESTER_NAME, CORE_REQUESTER_EMAIL);
         assertEquals(Lims.NOT_AVAILABLE_STRING, dataCORE.hospitalPI());
@@ -97,10 +97,20 @@ public class HospitalModelTest {
         Map<String, HospitalPersons> hospitalContactWIDE = Maps.newHashMap();
         Map<String, String> sampleHospitalMapping = Maps.newHashMap();
 
-        hospitalAddress.put(hospitalId, ImmutableHospitalAddress.of(HOSPITAL_NAME, HOSPITAL_ZIP, HOSPITAL_CITY));
-        hospitalContactCPCT.put(hospitalId, ImmutableHospitalPersons.of(CPCT_PI, null, null));
-        hospitalContactDRUP.put(hospitalId, ImmutableHospitalPersons.of(DRUP_PI, null, null));
-        hospitalContactWIDE.put(hospitalId, ImmutableHospitalPersons.of(WIDE_PI, WIDE_REQUESTER_NAME, WIDE_REQUESTER_EMAIL));
+        hospitalAddress.put(hospitalId,
+                ImmutableHospitalAddress.builder()
+                        .hospitalName(HOSPITAL_NAME)
+                        .hospitalZip(HOSPITAL_ZIP)
+                        .hospitalCity(HOSPITAL_CITY)
+                        .build());
+        hospitalContactCPCT.put(hospitalId, ImmutableHospitalPersons.builder().hospitalPI(CPCT_PI).build());
+        hospitalContactDRUP.put(hospitalId, ImmutableHospitalPersons.builder().hospitalPI(DRUP_PI).build());
+        hospitalContactWIDE.put(hospitalId,
+                ImmutableHospitalPersons.builder()
+                        .hospitalPI(WIDE_PI)
+                        .requesterName(WIDE_REQUESTER_NAME)
+                        .requesterEmail(WIDE_REQUESTER_EMAIL)
+                        .build());
         sampleHospitalMapping.put(MANUALLY_MAPPED_CORE_SAMPLE, hospitalId);
 
         return ImmutableHospitalModel.builder()

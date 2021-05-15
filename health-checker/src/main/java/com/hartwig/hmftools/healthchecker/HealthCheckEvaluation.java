@@ -2,7 +2,9 @@ package com.hartwig.hmftools.healthchecker;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.flagstat.FlagstatQC;
 import com.hartwig.hmftools.common.metrics.WGSMetricQC;
+import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
 
 import org.apache.logging.log4j.LogManager;
@@ -15,8 +17,6 @@ final class HealthCheckEvaluation {
 
     private static final String PURPLE_QC_PASS = "PASS";
     private static final String PURPLE_QC_FAIL = "FAIL";
-    private static final double MAX_PURPLE_CONTAMINATION = 0.1;
-    private static final double MIN_MAPPED_PROPORTION = 0.95;
 
     private HealthCheckEvaluation() {
     }
@@ -86,25 +86,25 @@ final class HealthCheckEvaluation {
 
     private static boolean checkPurpleContamination(@NotNull String value) {
         double contamination = Double.parseDouble(value);
-        if (contamination <= MAX_PURPLE_CONTAMINATION) {
-            LOGGER.info("QC PASS - Contamination of {} is lower than {}", value, MAX_PURPLE_CONTAMINATION);
+        if (contamination <= PurpleQC.MAX_CONTAMINATION) {
+            LOGGER.info("QC PASS - Contamination of {} is lower than {}", value, PurpleQC.MAX_CONTAMINATION);
             if (contamination > 0) {
                 LOGGER.warn("  But contamination is higher than 0!");
             }
             return true;
         } else {
-            LOGGER.info("QC FAIL - Contamination of {} is higher than {}", value, MAX_PURPLE_CONTAMINATION);
+            LOGGER.info("QC FAIL - Contamination of {} is higher than {}", value, PurpleQC.MAX_CONTAMINATION);
             return false;
         }
     }
 
     private static boolean checkFlagstatMappingProportion(@NotNull String value, @NotNull String name) {
         double proportion = Double.parseDouble(value);
-        if (proportion >= MIN_MAPPED_PROPORTION) {
-            LOGGER.info("QC PASS - {} mapping percentage {} is higher than min value {}", name, value, MIN_MAPPED_PROPORTION);
+        if (FlagstatQC.pass(proportion)) {
+            LOGGER.info("QC PASS - {} mapping percentage {} is higher than min value {}", name, value, FlagstatQC.MIN_MAPPED_PROPORTION);
             return true;
         } else {
-            LOGGER.info("QC FAIL - {} mapping percentage {} is lower than min value {}", name, value, MIN_MAPPED_PROPORTION);
+            LOGGER.info("QC FAIL - {} mapping percentage {} is lower than min value {}", name, value, FlagstatQC.MIN_MAPPED_PROPORTION);
             return false;
         }
     }

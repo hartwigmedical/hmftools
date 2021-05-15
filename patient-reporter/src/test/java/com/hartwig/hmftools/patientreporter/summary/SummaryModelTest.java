@@ -9,7 +9,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
-import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortTestFactory;
 
 import org.junit.Test;
 
@@ -31,8 +31,7 @@ public class SummaryModelTest {
         summaryToSampleMap.put("sample", "this is a test summary");
         SummaryModel summaryModel = new SummaryModel(summaryToSampleMap);
 
-        LimsCohortConfig cohortConfig =
-                PatientReporterTestFactory.createCohortConfig("WIDE", true, true, true, true, true, false, true, true, false, true);
+        LimsCohortConfig cohortConfig = LimsCohortTestFactory.createCOLOCohortConfig();
 
         assertEquals("this is a test summary", summaryModel.findSummaryForSample("sample", cohortConfig));
         assertNotEquals("this is a test summary", summaryModel.findSummaryForSample("sample2", cohortConfig));

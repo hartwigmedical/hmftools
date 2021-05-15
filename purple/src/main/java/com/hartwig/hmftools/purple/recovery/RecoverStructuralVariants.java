@@ -233,7 +233,9 @@ public class RecoverStructuralVariants implements Closeable
                     {
                         final List<RecoveredVariant> variants2 = candidateLists.get(j);
 
-                        if(variants2.stream().anyMatch(x -> x.mate().getID().equals(variant.context().getID())))
+                        if(variants2.stream()
+                                .filter(x -> x.mate() != null)
+                                .anyMatch(x -> x.mate().getID().equals(variant.context().getID())))
                         {
                             foundRecoveredMate = true;
                             mateListIndex = j;

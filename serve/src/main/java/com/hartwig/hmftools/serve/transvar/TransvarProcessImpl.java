@@ -31,30 +31,20 @@ class TransvarProcessImpl implements TransvarProcess {
     private final RefGenomeVersion refGenomeVersion;
     @NotNull
     private final String refGenomeFastaFile;
+    @NotNull
+    private final TransvarCurator curator;
 
     TransvarProcessImpl(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile) {
         this.refGenomeVersion = refGenomeVersion;
         this.refGenomeFastaFile = refGenomeFastaFile;
+        this.curator = new TransvarCurator(refGenomeVersion);
     }
 
     @Override
     @NotNull
     public List<TransvarRecord> runTransvarPanno(@NotNull String gene, @NotNull String proteinAnnotation)
             throws InterruptedException, IOException {
-        ProcessBuilder processBuilder = new ProcessBuilder("transvar",
-                "panno",
-                "--reference",
-                refGenomeFastaFile,
-                "--refversion",
-                toTransvarRefVersion(refGenomeVersion),
-                "--noheader",
-                "--ensembl",
-                "-i",
-                gene + ":p." + proteinAnnotation);
-
-        // Below is required on environments where LC_CTYPE is not properly configured (usually on apple).
-        processBuilder.environment().put("LC_CTYPE", "UTF-8");
-
+        ProcessBuilder processBuilder = buildProcessBuilder(gene, proteinAnnotation);
         String command = command(processBuilder);
 
         LOGGER.debug("Running '{}'", command);
@@ -89,6 +79,28 @@ class TransvarProcessImpl implements TransvarProcess {
         }
 
         return records;
+    }
+
+    @NotNull
+    private ProcessBuilder buildProcessBuilder(@NotNull String gene, @NotNull String proteinAnnotation) {
+        String curatedGene = curator.curateGene(gene);
+        String curatedProteinAnnotation = curator.curateProteinAnnotation(proteinAnnotation);
+
+        ProcessBuilder processBuilder = new ProcessBuilder("transvar",
+                "panno",
+                "--reference",
+                refGenomeFastaFile,
+                "--refversion",
+                toTransvarRefVersion(refGenomeVersion),
+                "--noheader",
+                "--ensembl",
+                "-i",
+                curatedGene + ":p." + curatedProteinAnnotation);
+
+        // Below is required on environments where LC_CTYPE is not properly configured (usually on apple).
+        processBuilder.environment().put("LC_CTYPE", "UTF-8");
+
+        return processBuilder;
     }
 
     @NotNull

@@ -89,28 +89,26 @@ public final class LimsChecker {
         boolean tMatch;
         boolean cMatch;
 
-        if (hospitalPathologySampleId.split("-")[1].length() == 1 && hospitalPathologySampleId.startsWith("T") && !hospitalPathologySampleId
+        if (hospitalPathologySampleId.split("-")[1].length() <= 6 && hospitalPathologySampleId.startsWith("T") && !hospitalPathologySampleId
                 .startsWith("C")) {
             tMatch = hospitalPathologySampleId.substring(1, 3).matches("[0-9]+") && hospitalPathologySampleId.substring(3, 4).equals("-")
-                    && hospitalPathologySampleId.substring(4).matches("[0-9]+");
-        } else if (hospitalPathologySampleId.split("-")[1].length() <= 6 && hospitalPathologySampleId.startsWith("T")
-                && !hospitalPathologySampleId.startsWith("C")) {
-
-            tMatch = hospitalPathologySampleId.substring(1, 3).matches("[0-9]+") && hospitalPathologySampleId.substring(3, 4).equals("-")
                     && hospitalPathologySampleId.substring(4, 4 + hospitalPathologySampleId.split("-")[1].length()).matches("[0-9]+");
+        } else if (hospitalPathologySampleId.contains(" ")) {
+            tMatch = hospitalPathologySampleId.substring(1, 3).matches("[0-9]+") && hospitalPathologySampleId.substring(3, 4).equals("-")
+                    && hospitalPathologySampleId.substring(4, 4 + hospitalPathologySampleId.split("-")[1].split("\\s")[0].length())
+                    .matches("[0-9]+") && hospitalPathologySampleId.split("\\s")[1].contains("I");
         } else {
             tMatch = false;
         }
 
-        if (hospitalPathologySampleId.split("-")[1].length() == 1 && hospitalPathologySampleId.startsWith("C") && !hospitalPathologySampleId
+        if (hospitalPathologySampleId.split("-")[1].length() <= 6 && hospitalPathologySampleId.startsWith("C") && !hospitalPathologySampleId
                 .startsWith("T")) {
             cMatch = hospitalPathologySampleId.substring(1, 3).matches("[0-9]+") && hospitalPathologySampleId.substring(3, 4).equals("-")
-                    && hospitalPathologySampleId.substring(4).matches("[0-9]+");
-        } else if (hospitalPathologySampleId.split("-")[1].length() <= 6 && hospitalPathologySampleId.startsWith("C")
-                && !hospitalPathologySampleId.startsWith("T")) {
-
-            cMatch = hospitalPathologySampleId.substring(1, 3).matches("[0-9]+") && hospitalPathologySampleId.substring(3, 4).equals("-")
                     && hospitalPathologySampleId.substring(4, 4 + hospitalPathologySampleId.split("-")[1].length()).matches("[0-9]+");
+        } else if (hospitalPathologySampleId.contains(" ")) {
+            cMatch = hospitalPathologySampleId.substring(1, 3).matches("[0-9]+") && hospitalPathologySampleId.substring(3, 4).equals("-")
+                    && hospitalPathologySampleId.substring(4, 4 + hospitalPathologySampleId.split("-")[1].split("\\s")[0].length())
+                    .matches("[0-9]+");
         } else {
             cMatch = false;
         }

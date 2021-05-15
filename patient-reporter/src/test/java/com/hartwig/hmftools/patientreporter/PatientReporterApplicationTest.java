@@ -22,7 +22,7 @@ public class PatientReporterApplicationTest {
 
     @Test
     public void canConvertNaNDataToJson() {
-        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.buildTestReport();
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createTestReport();
 
         PatientReport nanReport = ImmutableAnalysedPatientReport.builder()
                 .from(patientReport)
@@ -60,5 +60,4 @@ public class PatientReporterApplicationTest {
                 .biallelic(false)
                 .build();
     }
-
 }

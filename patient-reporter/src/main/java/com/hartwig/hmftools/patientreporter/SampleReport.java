@@ -26,6 +26,9 @@ public abstract class SampleReport {
     public abstract PatientPrimaryTumor patientPrimaryTumor();
 
     @NotNull
+    public abstract String biopsyLocation();
+
+    @NotNull
     public abstract LimsGermlineReportingLevel germlineReportingLevel();
 
     public abstract boolean reportViralInsertions();

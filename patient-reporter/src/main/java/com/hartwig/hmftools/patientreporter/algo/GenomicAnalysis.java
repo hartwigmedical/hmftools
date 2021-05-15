@@ -1,16 +1,19 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
+import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosome;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
-import com.hartwig.hmftools.protect.linx.ViralInsertion;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 
 import org.immutables.value.Value;
@@ -42,6 +45,9 @@ public abstract class GenomicAnalysis {
     @NotNull
     public abstract List<ReportableVariant> reportableVariants();
 
+    @NotNull
+    public abstract Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant();
+
     public abstract double microsatelliteIndelsPerMb();
 
     @NotNull
@@ -62,6 +68,9 @@ public abstract class GenomicAnalysis {
     @NotNull
     public abstract List<ReportableGainLoss> gainsAndLosses();
 
+    @Nullable
+    public abstract CnPerChromosome cnPerChromosome();
+
     @NotNull
     public abstract List<LinxFusion> geneFusions();
 
@@ -72,5 +81,8 @@ public abstract class GenomicAnalysis {
     public abstract List<ReportableHomozygousDisruption> homozygousDisruptions();
 
     @NotNull
-    public abstract List<ViralInsertion> viralInsertions();
+    public abstract ReportableVirusBreakendTotal virusBreakends();
+
+    @NotNull
+    public abstract List<PeachGenotype> peachGenotypes();
 }

@@ -12,7 +12,7 @@ public final class OutputFileUtil {
     }
 
     @NotNull
-    public static String generateOutputFileNameForReport(@NotNull PatientReport report) {
+    public static String generateOutputFileNameForPdfReport(@NotNull PatientReport report) {
         SampleReport sampleReport = report.sampleReport();
         LimsCohortConfig cohort = report.sampleReport().cohort();
 
@@ -25,5 +25,10 @@ public final class OutputFileUtil {
         String failPrefix = report instanceof QCFailReport ? "_failed" : Strings.EMPTY;
 
         return filePrefix + failPrefix + "_dna_analysis_report" + fileSuffix;
+    }
+
+    @NotNull
+    public static String generateOutputFileNameForJson(@NotNull PatientReport report) {
+        return report.sampleReport().tumorSampleId() + "_" + report.sampleReport().tumorSampleBarcode() + ".json";
     }
 }

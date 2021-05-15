@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.text.DecimalFormat;
 
 import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -11,7 +12,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.components.BarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
-import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HrDeficiency;
 import com.hartwig.hmftools.patientreporter.cfreport.data.MicroSatelliteStatus;
 import com.hartwig.hmftools.patientreporter.cfreport.data.MutationalBurden;
@@ -189,9 +189,10 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         reportDocument.add(createCharacteristicDiv(""));
         reportDocument.add(createCharacteristicDiv(""));
 
-        reportDocument.add(createCharacteristicDiv("Molecular Tissue Origin Plot"));
+        reportDocument.add(createCharacteristicDiv("Molecular tissue of origin prediction"));
         String molecularTissueOriginPlot = patientReport.molecularTissueOrigin().molecularTissueOriginPlot();
         try {
+            reportDocument.add(createCharacteristicDiv("")); // For better display plot
             Image circosImage = new Image(ImageDataFactory.create(molecularTissueOriginPlot));
             circosImage.setMaxHeight(250);
             circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
@@ -201,26 +202,35 @@ public class TumorCharacteristicsChapter implements ReportChapter {
             throw new IOException("Failed to read molecular tissue origin plot image at " + molecularTissueOriginPlot);
         }
 
+        reportDocument.add(createCharacteristicDiv(""));
+        reportDocument.add(createCharacteristicDiv(""));
+        reportDocument.add(createCharacteristicDiv(""));
+        reportDocument.add(createCharacteristicDiv(""));
+
         Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 10, 1, 10 }));
         table.setWidth(contentWidth());
 
         table.addCell(TableUtil.createLayoutCell()
-                .add(new Div().add(createContentParagraph("", " "))
-                        .add(createContentParagraph("", ""))));
+                .add(new Div().add(createContentParagraph("The title", " shows the conclusion of the prediction of the molecular"
+                        + " tissue of origin. If none of the similarity predictions has a likelihood ≥80%, no reliable conclusion"
+                        + " can be drawn (‘results inconclusive’)."))));
 
         table.addCell(TableUtil.createLayoutCell());
 
         table.addCell(TableUtil.createLayoutCell()
-                .add(new Div().add(createContentParagraph("", " "))
-                        .add(createContentParagraph("", ""))));
-
+                .add(new Div().add(createContentParagraph("The left plot", " shows the likelihoods (similarity) for all the origin "
+                        + "types analyzed by the molecular tissue of origin prediction tool. Only when the likelihood is ≥80% "
+                        + "(a peak in the green outer band of the plot), a reliable prediction (with >95% accuracy) can be drawn. "
+                        + "Lower likelihoods (<80%) suggest there is similarity with that tissue of origin, but this is less strong "
+                        + "and there is lower confidence."))));
 
         table.addCell(TableUtil.createLayoutCell());
 
         table.addCell(TableUtil.createLayoutCell()
-                .add(new Div().add(createContentParagraph("", " "))
-                        .add(createContentParagraph("", ""))));
-
+                .add(new Div().add(createContentParagraph("The right plot(s)", " shows the breakdown of the strongest predicted "
+                        + "likelihood(s) into the contribution of the 1) SNV types (related to those used in Cosmic signatures), 2) "
+                        + "driver landscape and passenger characteristics (e.g. tumor-type specific drivers), and 3) somatic mutation "
+                        + "pattern (mutation distribution across the genome)."))));
 
         reportDocument.add(table);
     }

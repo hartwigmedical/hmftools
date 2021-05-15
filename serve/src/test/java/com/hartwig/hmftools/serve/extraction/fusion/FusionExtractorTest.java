@@ -53,12 +53,21 @@ public class FusionExtractorTest {
 
     @Test
     public void canExtractFusionPairsWithOddNames() {
-        FusionExtractor fusionExtractor = testFusionExtractorWithGeneChecker(new GeneChecker(Sets.newHashSet("IGH", "NKX2-1")));
-        KnownFusionPair fusion = fusionExtractor.extract("NKX2-1", EventType.FUSION_PAIR, "IGH-NKX2-1 Fusion");
+        FusionExtractor fusionExtractor =
+                testFusionExtractorWithGeneChecker(new GeneChecker(Sets.newHashSet("IGH", "NKX2-1", "HLA-A", "ROS1")));
+        KnownFusionPair fusion1 = fusionExtractor.extract("NKX2-1", EventType.FUSION_PAIR, "IGH-NKX2-1 Fusion");
 
-        assertNotNull(fusion);
-        assertEquals("IGH", fusion.geneUp());
-        assertEquals("NKX2-1", fusion.geneDown());
+        assertNotNull(fusion1);
+        assertEquals("IGH", fusion1.geneUp());
+        assertEquals("NKX2-1", fusion1.geneDown());
+
+        KnownFusionPair fusion2 = fusionExtractor.extract("ROS1", EventType.FUSION_PAIR, "HLA-A-ROS1 Fusion");
+        assertEquals("HLA-A", fusion2.geneUp());
+        assertEquals("ROS1", fusion2.geneDown());
+
+        KnownFusionPair fusion3 = fusionExtractor.extract("ROS1", EventType.FUSION_PAIR, "HLA-A-HLA-A");
+        assertEquals("HLA-A", fusion3.geneUp());
+        assertEquals("HLA-A", fusion3.geneDown());
     }
 
     @Test

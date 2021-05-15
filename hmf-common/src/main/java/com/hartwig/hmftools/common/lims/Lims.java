@@ -239,6 +239,16 @@ public class Lims {
         return NOT_AVAILABLE_STRING;
     }
 
+    @Nullable
+    public String biopsyLocation(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+        if (sampleData != null) {
+            return sampleData.biopsySite();
+        }
+        // No warning raised since initially this information was not tracked so this will be missing for early samples.
+        return NOT_AVAILABLE_STRING;
+    }
+
     @NotNull
     public String labProcedures(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);

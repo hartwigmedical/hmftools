@@ -100,6 +100,7 @@ public final class LimsFactory {
                         .reportGermlineFlag(false)
                         .reportConclusion(false)
                         .reportViral(false)
+                        .reportPeach(false)
                         .requireHospitalId(false)
                         .requireHospitalPAId(false)
                         .requireHospitalPersonsStudy(false)

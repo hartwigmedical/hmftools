@@ -48,8 +48,9 @@ public class LoadMetricsData {
 
         LOGGER.info("Extracting and writing metrics for {}", sample);
 
-        WGSMetrics metrics = WGSMetricsFile.read(refMetricsFile, tumorMetricsFile);
-        WGSMetricWithQC wgsMetricWithQC = WGSMetricQC.buildWithQCMetric(metrics);
+        WGSMetrics refMetrics = WGSMetricsFile.read(refMetricsFile);
+        WGSMetrics tumorMetrics = WGSMetricsFile.read(tumorMetricsFile);
+        WGSMetricWithQC wgsMetricWithQC = WGSMetricQC.buildWithQCMetric(refMetrics, tumorMetrics);
         dbWriter.writeMetrics(sample, wgsMetricWithQC);
 
         LOGGER.info("Complete");

@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.serve.extraction.fusion.FusionAnnotationConfi
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
@@ -126,8 +125,7 @@ public class FusionExtractor {
     }
 
     @Nullable
-    @VisibleForTesting
-    static KnownFusionPair fromStandardFusionPairEvent(@NotNull String event) {
+    private KnownFusionPair fromStandardFusionPairEvent(@NotNull String event) {
         String[] fusionArray = event.split("-");
         String geneUp = null;
         String geneDown = null;
@@ -135,15 +133,21 @@ public class FusionExtractor {
             geneUp = fusionArray[0];
             geneDown = fusionArray[1].split(" ")[0];
         } else if (fusionArray.length == 3) {
-            // Assume one of the genes looks like "NAME-NUMBER"
-            String part3 = fusionArray[2].split(" ")[0];
-            if (isInteger(fusionArray[1])) {
-                geneUp = fusionArray[0] + "-" + fusionArray[1];
-                geneDown = part3;
-            } else if (isInteger(part3)) {
-                geneUp = fusionArray[0];
-                geneDown = fusionArray[1] + "-" + part3;
+            String geneUpScenario1 = fusionArray[0] + "-" + fusionArray[1];
+            String geneDownScenario1 = fusionArray[2].split(" ")[0];
+            String geneUpScenario2 = fusionArray[0];
+            String geneDownScenario2 = fusionArray[1] + "-" + fusionArray[2].split(" ")[0];
+
+            if (geneChecker.geneExistsInAllValidGenes(geneUpScenario1) && geneChecker.geneExistsInAllValidGenes(geneDownScenario1)) {
+                geneUp = geneUpScenario1;
+                geneDown = geneDownScenario1;
+            } else if (geneChecker.geneExistsInAllValidGenes(geneUpScenario2) && geneChecker.geneExistsInAllValidGenes(geneDownScenario2)) {
+                geneUp = geneUpScenario2;
+                geneDown = geneDownScenario2;
             }
+        } else if (fusionArray.length == 4) {
+            geneUp = fusionArray[0] + "-" + fusionArray[1];
+            geneDown = fusionArray[2] + "-" + fusionArray[3].split(" ")[0];
         }
 
         if (geneUp == null || geneDown == null) {
@@ -151,7 +155,7 @@ public class FusionExtractor {
             return null;
         }
 
-        return ImmutableKnownFusionPair.builder().geneUp(geneUp.replaceAll("\\s+", "")).geneDown(geneDown.replaceAll("\\s+", "")).build();
+        return ImmutableKnownFusionPair.builder().geneUp(removeAllSpaces(geneUp)).geneDown(removeAllSpaces(geneDown)).build();
     }
 
     private static boolean isInteger(@NotNull String string) {
@@ -194,5 +198,10 @@ public class FusionExtractor {
         return knownFusionCache.hasExonDelDup(fiveGene) || knownFusionCache.hasPromiscuousFiveGene(fiveGene)
                 || knownFusionCache.hasPromiscuousThreeGene(threeGene) || knownFusionCache.hasKnownFusion(fiveGene, threeGene)
                 || knownFusionCache.hasKnownIgFusion(fiveGene, threeGene) || knownFusionCache.hasPromiscuousIgFusion(fiveGene);
+    }
+
+    @NotNull
+    private static String removeAllSpaces(@NotNull String value) {
+        return value.replaceAll("\\s+", "");
     }
 }

@@ -19,7 +19,7 @@ Key features include:
   
 ## Germline mode
 
-Sage can be run in a germline mode.  See details [here](https://github.com/hartwigmedical/hmftools/blob/master/sage/Germline.md).
+Sage can be run in a germline mode.  See details [here](https://github.com/hartwigmedical/hmftools/blob/master/sage/GERMLINE.md).
 
 ## BAM Requirements
 BAM records that are flagged as unmapped, duplicateRead or secondary/supplementary are ignored. 
@@ -49,10 +49,10 @@ tumor | Comma separated names of the tumor sample
 tumor_bam | Comma separated paths to indexed tumor BAM file
 out | Name of the output VCF
 ref_genome | Path to reference genome fasta file
+ref_genome_version | One of `37` or `38`
 hotspots | Path to hotspots vcf
 panel_bed | Path to panel bed
 high_confidence_bed | Path to high confidence bed
-assembly | One of `hg19` or `hg38`
 
 The cardinality of `tumor` must match `tumor_bam`. At least one tumor must be supplied.
 
@@ -104,7 +104,7 @@ Minimum set of arguments (running in tumor only mode):
 ```
 java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -tumor COLO829v003T -tumor_bam /path/to/COLO829v003T.bam \
-    -assembly hg19 \
+    -ref_genome_version 37 \
     -ref_genome /path/to/refGenome.fasta \
     -hotspots /path/to/KnownHotspots.37.vcf.gz \
     -panel_bed /path/to/ActionableCodingPanel.somatic.37.bed.gz \
@@ -119,7 +119,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -threads 16 
     -reference COLO829v003R -reference_bam /path/to/COLO829v003R.bam \
     -tumor COLO829v003T -tumor_bam /path/to/COLO829v003T.bam \
-    -assembly hg19 \
+    -ref_genome_version 37 \
     -ref_genome /path/to/refGenome.fasta \
     -hotspots /path/to/KnownHotspots.37.vcf.gz \
     -panel_bed /path/to/ActionableCodingPanel.somatic.37.bed.gz \
@@ -407,16 +407,16 @@ To reduce processing the following hard filters are applied:
 
 Filter | Default Value | Field
 ---|---|---
-hard_min_tumor_qual |30**| `QUAL`
+hard_min_tumor_qual |30| `QUAL`
 hard_min_tumor_raw_alt_support |2| `RAD[1]`
 hard_min_tumor_raw_base_quality |0| `RABQ[1]`
-hard_max_normal_alt_support** |2| Normal `AD[1]`
+filtered_max_normal_alt_support |3| Normal `AD[1]`
 
-** Hotspots are kept regardless of tumor quality
+Note that hotspots are never hard-filtered.
 
 The first 3 filters are excluded from this point onwards and have no further processing applied to them.  
-The hard_max_normal_alt_support is applied at the final step of the algorithm, solely to reduce file size. 
-The hard_max_normal_alt_support does not apply to germline variants in the same local phase set as passing somatic variants.
+The filtered_max_normal_alt_support is applied at the final step of the algorithm, solely to reduce file size. 
+The filtered_max_normal_alt_support does not apply to germline variants in the same local phase set as passing somatic variants.
  
 ## 4. Normal Counts and Quality
 
@@ -642,6 +642,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 32 | 45 | 943 | 15
 
 # Version History and Download Links
+- Upcoming
+  - Renamed `assembly` to `ref_genome_version` with valid values [37, 38]
 - [2.8](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.8)
   - Right align inserts that would otherwise be outside a coding region in the same manner as deletes
 - [2.7](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.7)

@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.cli.Configs;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 
 import org.apache.commons.cli.CommandLine;
@@ -50,7 +51,7 @@ public interface SageConfig {
     String MAX_READ_DEPTH = "max_read_depth";
     String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
     String MAX_REALIGNMENT_DEPTH = "max_realignment_depth";
-    String ASSEMBLY = "assembly";
+    String REF_GENOME_VERSION = "ref_genome_version";
     String CHR = "chr";
     String SLICE_SIZE = "slice_size";
     String MNV = "mnv_enabled";
@@ -71,7 +72,7 @@ public interface SageConfig {
     static Options createSageOptions() {
         final Options options = new Options();
         options.addOption(MNV, true, "Enable MNVs [" + DEFAULT_MNV + "]");
-        options.addOption(ASSEMBLY, true, "Assembly, must be one of [hg19, hg38]");
+        options.addOption(REF_GENOME_VERSION, true, "Assembly, must be one of [37, 38]");
         options.addOption(TUMOR, true, "Name of tumor sample");
         options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
         options.addOption(READ_CONTEXT_FLANK_SIZE, true, "Size of read context flank [" + DEFAULT_READ_CONTEXT_FLANK_SIZE + "]");
@@ -212,7 +213,7 @@ public interface SageConfig {
     static SageConfig createConfig(boolean appendMode, @NotNull final String version, @NotNull final CommandLine cmd)
             throws ParseException, IOException {
         final int threads = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
-        final String assembly = cmd.getOptionValue(ASSEMBLY, "UNKNOWN");
+        final RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
 
         final List<String> referenceList = Lists.newArrayList();
         if (cmd.hasOption(REFERENCE)) {
@@ -291,11 +292,7 @@ public interface SageConfig {
                 throw new ParseException("At least one tumor must be supplied");
             }
 
-            if (!assembly.equals("hg19") && !assembly.equals("hg38")) {
-                throw new ParseException("Assembly must be one of hg19 or hg38");
-            }
-
-            transcripts = assembly.equals("hg19") ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
+            transcripts = refGenomeVersion.is37() ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
         }
 
         final File outputDir = new File(outputVcf).getParentFile();

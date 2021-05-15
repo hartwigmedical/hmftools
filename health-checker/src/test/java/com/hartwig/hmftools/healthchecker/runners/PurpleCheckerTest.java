@@ -23,14 +23,4 @@ public class PurpleCheckerTest {
         assertEquals(QCValueType.PURPLE_QC_STATUS, values.get(0).type());
         assertEquals("FAIL_CONTAMINATION", values.get(0).value());
     }
-
-    @Test(expected = IOException.class)
-    public void malformedYieldsIOException() throws IOException {
-        new PurpleChecker("malformed", PURPLE_DIRECTORY).run();
-    }
-
-    @Test(expected = IOException.class)
-    public void missingYieldsIOException() throws IOException {
-        new PurpleChecker("missing", PURPLE_DIRECTORY).run();
-    }
 }

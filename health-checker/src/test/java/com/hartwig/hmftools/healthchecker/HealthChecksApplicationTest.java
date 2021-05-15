@@ -16,32 +16,28 @@ public class HealthChecksApplicationTest {
 
     @Test
     public void runHealthCheckerInSomaticMode() throws IOException {
-        HealthChecksApplication app = new HealthChecksApplication(
-                "reference",
+        HealthChecksApplication app = new HealthChecksApplication("reference",
                 "tumor",
                 BASE_DIR + "metrics/reference.wgsmetrics",
                 BASE_DIR + "metrics/tumor.wgsmetrics",
                 BASE_DIR + "flagstat/reference.flagstat",
                 BASE_DIR + "flagstat/tumor.flagstat",
                 BASE_DIR + "purple",
-                OUTPUT_DIR
-        );
+                OUTPUT_DIR);
 
         app.run(WRITE_EVALUATION_FILE);
     }
 
     @Test
     public void runHealthCheckerInSingleSampleMode() throws IOException {
-        HealthChecksApplication app = new HealthChecksApplication(
-                "reference",
+        HealthChecksApplication app = new HealthChecksApplication("reference",
                 null,
                 BASE_DIR + "metrics/reference.wgsmetrics",
                 null,
                 BASE_DIR + "flagstat/reference.flagstat",
                 null,
                 null,
-                 OUTPUT_DIR
-        );
+                OUTPUT_DIR);
 
         app.run(WRITE_EVALUATION_FILE);
     }

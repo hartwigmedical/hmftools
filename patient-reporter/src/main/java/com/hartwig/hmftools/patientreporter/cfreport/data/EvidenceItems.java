@@ -78,10 +78,10 @@ public final class EvidenceItems {
     }
 
     public static int uniqueTherapyCount(@NotNull List<ProtectEvidence> evidenceItems) {
-        Set<String> drugs = Sets.newHashSet();
+        Set<String> treatments = Sets.newHashSet();
         for (ProtectEvidence evidence : evidenceItems) {
-            drugs.add(evidence.treatment());
+            treatments.add(evidence.treatment());
         }
-        return drugs.size();
+        return treatments.size();
     }
 }

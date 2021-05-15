@@ -13,7 +13,7 @@ public abstract class GermlineReportingEntry {
     public abstract String gene();
 
     @NotNull
-    public abstract GermlineCondition notifyClinicalGeneticist();
+    public abstract GermlineCondition condition();
 
     @Nullable
     public abstract String conditionFilter();

@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.patientreporter.reportingdb;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,10 +10,11 @@ import java.util.List;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
+import com.hartwig.hmftools.common.lims.cohort.LimsCohortTestFactory;
 import com.hartwig.hmftools.common.reportingdb.ReportingDatabase;
 import com.hartwig.hmftools.common.reportingdb.ReportingEntry;
+import com.hartwig.hmftools.patientreporter.ExampleAnalysisConfig;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
-import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.junit.Test;
@@ -57,89 +56,23 @@ public class ReportingDbTest {
     @Test
     public void canWriteReportDatesToTsv() throws IOException {
         if (WRITE_TO_TSV) {
-            File reportDatesTsv = new File(TEST_DB_OUTPUT_DIR + File.separator + "reporting_db_test.tsv");
+            File reportingDbTsv = new File(TEST_DB_OUTPUT_DIR + File.separator + "reporting_db_test.tsv");
 
-            if (reportDatesTsv.createNewFile()) {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
+            if (reportingDbTsv.createNewFile()) {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(reportingDbTsv, true));
                 writer.write("tumorBarcode\tsampleId\tcohort\treportDate\treportType\tpurity\thasReliableQuality\thasReliablePurity\n");
                 writer.close();
             }
-            LimsCohortConfig cohortConfig = PatientReporterTestFactory.createCohortConfig("CPCT",
-                    true,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    true,
-                    false,
-                    false);
+            LimsCohortConfig cohortConfig = LimsCohortTestFactory.createCPCTCohortConfig();
 
-            ReportingDb.addAnalysedReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.buildAnalysisWithAllTablesFilledInAndReliablePurity("CPCT01_SUCCESS", null, cohortConfig));
+            ExampleAnalysisConfig config =
+                    new ExampleAnalysisConfig.Builder().sampleId("CPCT01_SUCCESS").limsCohortConfig(cohortConfig).build();
 
-            ReportingDb.addQCFailReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.buildQCFailReport("CPCT01_FAIL", QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS, cohortConfig));
+            ReportingDb reportingDb = new ReportingDb(reportingDbTsv.getPath());
+            reportingDb.appendAnalysedReport(ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config));
+            reportingDb.appendQCFailReport(ExampleAnalysisTestFactory.createQCFailReport("CPCT01_FAIL",
+                    QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
+                    cohortConfig));
         }
-    }
-
-    @Test
-    public void canDetermineWhetherSummaryIsRequired() {
-        assertTrue(ReportingDb.requiresSummary(PatientReporterTestFactory.createCohortConfig("WIDE",
-                true,
-                true,
-                true,
-                true,
-                true,
-                false,
-                true,
-                true,
-                false,
-                true)));
-        assertFalse(ReportingDb.requiresSummary(PatientReporterTestFactory.createCohortConfig("CPCT",
-                true,
-                false,
-                false,
-                false,
-                false,
-                false,
-                false,
-                true,
-                false,
-                false)));
-        assertTrue(ReportingDb.requiresSummary(PatientReporterTestFactory.createCohortConfig("CORE",
-                true,
-                true,
-                false,
-                true,
-                true,
-                true,
-                true,
-                false,
-                true,
-                true)));
-        assertFalse(ReportingDb.requiresSummary(PatientReporterTestFactory.createCohortConfig("CORE",
-                true,
-                true,
-                false,
-                false,
-                true,
-                true,
-                true,
-                false,
-                true,
-                true)));
-        assertTrue(ReportingDb.requiresSummary(PatientReporterTestFactory.createCohortConfig("CORE",
-                true,
-                true,
-                false,
-                true,
-                true,
-                true,
-                true,
-                false,
-                true,
-                true)));
     }
 }

@@ -235,7 +235,7 @@ public class TransvarInterpreterTest {
     public void canReduceComplexityOnComplexDelInsHotspots() {
         VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").position(10).ref("ATGTTA").alt("ATCCTA").build();
 
-        VariantHotspot simplifiedHotspot = TransvarInterpreter.reduceComplexityForComplexInsDel(hotspot);
+        VariantHotspot simplifiedHotspot = testInterpreter37().reduceComplexityForComplexInsDel(hotspot);
 
         assertEquals(12, simplifiedHotspot.position());
         assertEquals("GT", simplifiedHotspot.ref());
@@ -263,7 +263,7 @@ public class TransvarInterpreterTest {
 
         assertEquals(1, hotspots.size());
 
-        assertHotspot(baseHotspot().position(4).ref("C").alt("CGAT").build(), hotspots.get(0));
+        assertHotspot(ImmutableVariantHotspotImpl.builder().chromosome("chr1").position(4).ref("C").alt("CGAT").build(), hotspots.get(0));
     }
 
     @Test
