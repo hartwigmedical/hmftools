@@ -8,8 +8,6 @@ import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFLATE_TEMPLATE;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_TRANSCRIPTS;
-import static com.hartwig.hmftools.lilac.LilacConstants.LOCI_POSITION;
 import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.proteinCoverage;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
 import static com.hartwig.hmftools.lilac.hla.HlaAllele.contains;
@@ -119,13 +117,14 @@ public class LilacApplication implements AutoCloseable, Runnable
         LL_LOGGER.info("Querying records from reference bam " + mConfig.ReferenceBam);
 
         NucleotideFragmentFactory nucleotideFragmentFactory = new NucleotideFragmentFactory(
-                mConfig.MinBaseQual, mRefData.AminoAcidSequencesWithInserts, mRefData.AminoAcidSequencesWithDeletes, LOCI_POSITION);
+                mConfig.MinBaseQual, mRefData.AminoAcidSequencesWithInserts, mRefData.AminoAcidSequencesWithDeletes,
+                mRefData.LociPositionFinder);
 
         SAMRecordReader tumorBamReader =
-                new SAMRecordReader(mConfig.TumorBam, mConfig.RefGenome, HLA_TRANSCRIPTS, nucleotideFragmentFactory);
+                new SAMRecordReader(mConfig.TumorBam, mConfig.RefGenome, mRefData.HlaTranscriptData, nucleotideFragmentFactory);
 
         SAMRecordReader referenceBamReader =
-                new SAMRecordReader(mConfig.ReferenceBam, mConfig.RefGenome, HLA_TRANSCRIPTS, nucleotideFragmentFactory);
+                new SAMRecordReader(mConfig.ReferenceBam, mConfig.RefGenome, mRefData.HlaTranscriptData, nucleotideFragmentFactory);
 
         final List<NucleotideFragment> referenceNucleotideFragments = mNucleotideGeneEnrichment.enrich(referenceBamReader.readFromBam());
         final List<NucleotideFragment> tumorNucleotideFragments = Lists.newArrayList();
@@ -300,7 +299,7 @@ public class LilacApplication implements AutoCloseable, Runnable
             winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(winningAlleles, mConfig.GeneCopyNumberFile, winningTumorCoverage);
 
             // SOMATIC VARIANTS
-            somaticVariants.addAll(new SomaticVariants(mConfig).readSomaticVariants());
+            somaticVariants.addAll(new SomaticVariants(mConfig, mRefData.HlaTranscriptData).readSomaticVariants());
 
             if(!somaticVariants.isEmpty())
             {
@@ -310,7 +309,7 @@ public class LilacApplication implements AutoCloseable, Runnable
                 LilacVCF lilacVCF = new LilacVCF(vcfFilename, mConfig.SomaticVcf).writeHeader(version.toString());
 
                 SomaticAlleleCoverage somaticCoverageFactory = new SomaticAlleleCoverage(
-                        mConfig, referenceAminoAcidHeterozygousLoci, LOCI_POSITION, somaticVariants, winningSequences);
+                        mConfig, referenceAminoAcidHeterozygousLoci, mRefData.LociPositionFinder, somaticVariants, winningSequences);
 
                 for (VariantContextDecorator variant : somaticVariants)
                 {

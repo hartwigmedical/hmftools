@@ -2,21 +2,23 @@ package com.hartwig.hmftools.lilac.read;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.fragment.NucleotideFragment.reduceById;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-import com.hartwig.hmftools.common.genome.region.CodingRegions;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
+import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
 
@@ -34,7 +36,7 @@ import java.util.stream.Collectors;
 
 public class SAMRecordReader
 {
-    private final List<HmfTranscriptRegion> mTranscripts;
+    private final Map<String,TranscriptData> mTranscripts;
     private final List<BaseRegion> mCodingRegions;
 
     private final String mBamFile;
@@ -55,16 +57,16 @@ public class SAMRecordReader
     private static final Indel STOP_LOSS_ON_C = new Indel("6", 31237115, "CN", "C");
 
     public SAMRecordReader(
-            final String bamFile, final String refGenome, final List<HmfTranscriptRegion> transcripts, final NucleotideFragmentFactory factory)
+            final String bamFile, final String refGenome, final Map<String,TranscriptData> transcripts, final NucleotideFragmentFactory factory)
     {
         mBamFile = bamFile;
 
         mSamReaderFactory = SamReaderFactory.makeDefault().referenceSequence(new File(refGenome));
 
         mTranscripts = transcripts;
-        mCodingRegions = transcripts.stream()
-                .map(x -> new BaseRegion(
-                        x.chromosome(), (int)x.codingStart() - MAX_DISTANCE, (int)x.codingEnd() + MAX_DISTANCE))
+
+        mCodingRegions = transcripts.values().stream()
+                .map(x -> new BaseRegion(HLA_CHR, x.CodingStart - MAX_DISTANCE, x.CodingEnd + MAX_DISTANCE))
                 .collect(Collectors.toList());
 
         mFragmentFactory = factory;
@@ -108,17 +110,17 @@ public class SAMRecordReader
     public final List<NucleotideFragment> readFromBam()
     {
         final List<NucleotideFragment> fragments = Lists.newArrayList();
-        mTranscripts.forEach(x -> fragments.addAll(readFromBam(x)));
+        mTranscripts.entrySet().stream().forEach(x -> fragments.addAll(readFromBam(x.getKey(), x.getValue())));
         return fragments;
     }
 
-    private List<NucleotideFragment> readFromBam(final HmfTranscriptRegion transcript)
+    private List<NucleotideFragment> readFromBam(final String geneName, final TranscriptData transcript)
     {
         LL_LOGGER.info("  querying {} coding region({}: {} -> {})",
-                transcript.gene(), transcript.chromosome(), transcript.codingStart(), transcript.codingEnd());
+                geneName, HLA_CHR, transcript.CodingStart, transcript.CodingEnd);
 
-        boolean reverseStrand = transcript.strand() == Strand.REVERSE;
-        final List<NamedBed> codingRegions = codingRegions(transcript, reverseStrand);
+        boolean reverseStrand = transcript.Strand == NEG_STRAND;
+        final List<NamedBed> codingRegions = codingRegions(geneName, transcript);
 
         final List<NucleotideFragment> readFragments = Lists.newArrayList();
 
@@ -130,11 +132,11 @@ public class SAMRecordReader
         return reduceById(readFragments);
     }
 
-    private final List<NamedBed> codingRegions(final HmfTranscriptRegion transcript, boolean reverse)
+    private final List<NamedBed> codingRegions(final String geneName, final TranscriptData transcript)
     {
-        final List<NamedBed> regions = CodingRegions.codingRegions(transcript);
+        final List<NamedBed> regions = LociPosition.codingRegions(geneName, HLA_CHR, transcript);
 
-        if(!reverse)
+        if(transcript.Strand == POS_STRAND)
             return regions;
 
         final List<NamedBed> regionsReversed = Lists.newArrayList();
@@ -149,10 +151,12 @@ public class SAMRecordReader
     {
         final GenomePosition variantPosition = GenomePositions.create(variant.chromosome(), variant.position());
 
-        for(HmfTranscriptRegion transcript : mTranscripts)
+        for(Map.Entry<String,TranscriptData> entry : mTranscripts.entrySet())
         {
-            boolean reverseStrand = transcript.strand() == Strand.REVERSE;
-            final List<NamedBed> codingRegions = codingRegions(transcript, reverseStrand);
+            TranscriptData transcript = entry.getValue();
+            String geneName = entry.getKey();
+            boolean reverseStrand = transcript.Strand == NEG_STRAND;
+            final List<NamedBed> codingRegions = codingRegions(geneName, transcript);
 
             for(NamedBed codingRegion : codingRegions)
             {
@@ -178,7 +182,7 @@ public class SAMRecordReader
                             .filter(x -> x != null)
                             .collect(Collectors.toList());
 
-                    List<NucleotideFragment> mateFragments = queryMateFragments(transcript, codingRecords);
+                    List<NucleotideFragment> mateFragments = queryMateFragments(geneName, transcript, codingRecords);
                     readFragments.addAll(mateFragments);
 
                     List<NucleotideFragment> readGroupFragments = reduceById(readFragments);
@@ -216,7 +220,7 @@ public class SAMRecordReader
     }
 
     private final List<NucleotideFragment> queryMateFragments(
-            final HmfTranscriptRegion transcript, final List<SAMCodingRecord> codingRecords)
+            final String geneName, final TranscriptData transcript, final List<SAMCodingRecord> codingRecords)
     {
         SAMSlicer slicer = new SAMSlicer(MIN_MAPPING_QUALITY);
 
@@ -227,8 +231,8 @@ public class SAMRecordReader
 
         List<NucleotideFragment> fragments = Lists.newArrayList();
 
-        boolean reverseStrand = transcript.strand() == Strand.REVERSE;
-        final List<NamedBed> codingRegions = codingRegions(transcript, reverseStrand);
+        boolean reverseStrand = transcript.Strand == NEG_STRAND;
+        final List<NamedBed> codingRegions = codingRegions(geneName, transcript);
 
         for (NamedBed codingRegion : codingRegions)
         {

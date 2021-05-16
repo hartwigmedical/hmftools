@@ -1,37 +1,34 @@
 package com.hartwig.hmftools.lilac;
 
-import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.genome.region.Strand;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.ensemblcache.ExonData;
+import com.hartwig.hmftools.common.genome.bed.ImmutableNamedBed;
+import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import java.util.List;
 
 import org.apache.commons.compress.utils.Lists;
-import org.jetbrains.annotations.NotNull;
 
 public class LociPosition
 {
-    private final List<HmfTranscriptRegion> mTranscripts;
+    private final List<TranscriptData> mTranscripts;
 
-    public LociPosition()
+    public LociPosition(final List<TranscriptData> transcripts)
     {
-        mTranscripts = Lists.newArrayList();
-    }
-
-    public void initialise(final List<HmfTranscriptRegion> transcripts)
-    {
-        mTranscripts.addAll(transcripts);
+        mTranscripts = transcripts;
     }
 
     public final int nucelotideLoci(int position)
     {
-        for(HmfTranscriptRegion transcript : mTranscripts)
+        for(TranscriptData transcript : mTranscripts)
         {
-            if((long) position < transcript.start() || (long) position > transcript.end())
+            if(position < transcript.TransStart || position > transcript.TransEnd)
             {
                 continue;
             }
-            if(transcript.strand() == Strand.FORWARD)
+            if(transcript.Strand == POS_STRAND)
             {
                 return forwardLoci(position, transcript);
             }
@@ -40,146 +37,146 @@ public class LociPosition
         return -1;
     }
 
-    /* UNUSED - confirm then delete
-    public final List<Integer> position(int codingLoci)
+    public final int reverseLoci(int position, final TranscriptData transcript)
     {
-        List result = new ArrayList();
-        for(HmfTranscriptRegion transcript : mTranscripts)
+        if(transcript.Strand != NEG_STRAND)
+            return -1;
+
+        int codingStart = transcript.CodingStart;
+        int codingEnd = transcript.CodingEnd;
+        int currentLoci = 0;
+
+        for(int i = transcript.exons().size() - 1; i >= 0; i--)
         {
-            if(transcript.strand() == Strand.FORWARD)
-            {
-                result.add(forwardPosition(codingLoci, transcript));
+            ExonData exon = transcript.exons().get(i);
+
+            if(exon.End < codingStart || exon.Start > codingEnd)
                 continue;
+
+            int exonStartPosition = Math.max(codingStart, exon.Start);
+            int exonEndPosition = Math.min(codingEnd, exon.End);
+            int exonLength = exonEndPosition - exonStartPosition + 1;
+            int exonStartLoci = currentLoci;
+            int exonEndLoci = exonStartLoci + exonLength - 1;
+            int l = position;
+            if(exonStartPosition <= l && exonEndPosition >= l)
+            {
+                return currentLoci - position + exonEndPosition;
             }
-            result.add(reversePosition(codingLoci, transcript));
+            currentLoci = exonEndLoci + 1;
         }
+        return -1;
+    }
+
+    public final int forwardLoci(int position, final TranscriptData transcript)
+    {
+        if(transcript.Strand != POS_STRAND)
+            return -1;
+
+        int codingStart = transcript.CodingStart;
+        int codingEnd = transcript.CodingEnd;
+        int currentLoci = 0;
+        for(ExonData exon : transcript.exons())
+        {
+            if(exon.End < codingStart || exon.Start > codingEnd)
+                continue;
+
+            int exonStartPosition = Math.max(codingStart, exon.Start);
+            int exonEndPosition = Math.min(codingEnd, exon.End);
+            int exonLength = exonEndPosition - exonStartPosition + 1;
+            int exonStartLoci = currentLoci;
+            int exonEndLoci = exonStartLoci + exonLength - 1;
+            int l = position;
+            if(exonStartPosition <= l && exonEndPosition >= l)
+            {
+                return currentLoci + position - exonStartPosition;
+            }
+            currentLoci = exonEndLoci + 1;
+        }
+        return -1;
+    }
+
+    public final int reversePosition(int codingLoci, final TranscriptData transcript)
+    {
+        if(transcript.Strand != NEG_STRAND)
+            return -1;
+
+        int codingStart = transcript.CodingStart;
+        int codingEnd = transcript.CodingEnd;
+        int currentLoci = 0;
+
+        for(int i = transcript.exons().size() - 1; i >= 0; i--)
+        {
+            ExonData exon = transcript.exons().get(i);
+
+            int exonEndLoci = 0;
+            if(exon.End < codingStart || exon.Start > codingEnd)
+                continue;
+
+            int exonStartPosition = Math.max(codingStart, exon.Start);
+            int exonEndPosition = Math.min(codingEnd, exon.End);
+            int exonLength = exonEndPosition - exonStartPosition + 1;
+            int exonStartLoci = currentLoci;
+            int n = codingLoci;
+            if(exonStartLoci <= n && (exonEndLoci = exonStartLoci + exonLength - 1) >= n)
+            {
+                return exonEndPosition - codingLoci + exonStartLoci;
+            }
+            currentLoci = exonEndLoci + 1;
+        }
+        return -1;
+    }
+
+    public final int forwardPosition(int codingLoci, TranscriptData transcript)
+    {
+        if(transcript.Strand != POS_STRAND)
+            return -1;
+
+        int codingStart = transcript.CodingStart;
+        int codingEnd = transcript.CodingEnd;
+        int currentLoci = 0;
+        for(ExonData exon : transcript.exons())
+        {
+            int exonEndLoci = 0;
+
+            if(exon.End < codingStart || exon.Start > codingEnd)
+                continue;
+
+            int exonStartPosition = Math.max(codingStart, exon.Start);
+            int exonEndPosition = Math.min(codingEnd, exon.End);
+            int exonLength = exonEndPosition - exonStartPosition + 1;
+            int exonStartLoci = currentLoci;
+            int n = codingLoci;
+            if(exonStartLoci <= n && (exonEndLoci = exonStartLoci + exonLength - 1) >= n)
+            {
+                return exonStartPosition + codingLoci - exonStartLoci;
+            }
+            currentLoci = exonEndLoci + 1;
+        }
+        return -1;
+    }
+
+    public static List<NamedBed> codingRegions(final String geneName, final String chromosome, final TranscriptData transcript)
+    {
+        final List<NamedBed> result = Lists.newArrayList();
+
+        int codingStart = transcript.CodingStart;
+        int codingEnd = transcript.CodingEnd;
+
+        for (ExonData exon : transcript.exons())
+        {
+            if (codingStart <= exon.End && codingEnd >= exon.Start)
+            {
+                result.add(ImmutableNamedBed.builder()
+                        .chromosome(chromosome)
+                        .start(Math.max(codingStart, exon.Start))
+                        .end(Math.min(codingEnd, exon.End))
+                        .name(geneName)
+                        .build());
+            }
+        }
+
         return result;
     }
 
-    public final int position(int codingLoci, @NotNull HmfTranscriptRegion transcript)
-    {
-        return transcript.strand() == Strand.FORWARD
-                ? forwardPosition(codingLoci, transcript)
-                : reversePosition(codingLoci, transcript);
-    }
-     */
-
-    public final int reverseLoci(int position, final HmfTranscriptRegion transcript)
-    {
-        if(transcript.strand() != Strand.REVERSE)
-            return -1;
-
-        long codingStart = transcript.codingStart();
-        long codingEnd = transcript.codingEnd();
-        int currentLoci = 0;
-
-        for(int i = transcript.exome().size() - 1; i >= 0; i--)
-        {
-            HmfExonRegion exon = transcript.exome().get(i);
-
-            if(exon.end() < codingStart || exon.start() > codingEnd)
-                continue;
-
-            long exonStartPosition = Math.max(codingStart, exon.start());
-            long exonEndPosition = Math.min(codingEnd, exon.end());
-            int exonLength = (int) (exonEndPosition - exonStartPosition + 1L);
-            int exonStartLoci = currentLoci;
-            int exonEndLoci = exonStartLoci + exonLength - 1;
-            long l = position;
-            if(exonStartPosition <= l && exonEndPosition >= l)
-            {
-                return (int) ((long) (currentLoci - position) + exonEndPosition);
-            }
-            currentLoci = exonEndLoci + 1;
-        }
-        return -1;
-    }
-
-    public final int forwardLoci(int position, final HmfTranscriptRegion transcript)
-    {
-        if(transcript.strand() != Strand.FORWARD)
-            return -1;
-
-        long codingStart = transcript.codingStart();
-        long codingEnd = transcript.codingEnd();
-        int currentLoci = 0;
-        for(HmfExonRegion exon : transcript.exome())
-        {
-            if(exon.end() < codingStart || exon.start() > codingEnd)
-                continue;
-
-            long exonStartPosition = Math.max(codingStart, exon.start());
-            long exonEndPosition = Math.min(codingEnd, exon.end());
-            int exonLength = (int) (exonEndPosition - exonStartPosition + 1L);
-            int exonStartLoci = currentLoci;
-            int exonEndLoci = exonStartLoci + exonLength - 1;
-            long l = position;
-            if(exonStartPosition <= l && exonEndPosition >= l)
-            {
-                return (int) ((long) (currentLoci + position) - exonStartPosition);
-            }
-            currentLoci = exonEndLoci + 1;
-        }
-        return -1;
-    }
-
-    public final int reversePosition(int codingLoci, final HmfTranscriptRegion transcript)
-    {
-        if(transcript.strand() != Strand.REVERSE)
-            return -1;
-
-        long codingStart = transcript.codingStart();
-        long codingEnd = transcript.codingEnd();
-        int currentLoci = 0;
-
-        for(int i = transcript.exome().size() - 1; i >= 0; i--)
-        {
-            HmfExonRegion exon = transcript.exome().get(i);
-
-            int exonEndLoci = 0;
-            if(exon.end() < codingStart || exon.start() > codingEnd)
-                continue;
-
-            long exonStartPosition = Math.max(codingStart, exon.start());
-            long exonEndPosition = Math.min(codingEnd, exon.end());
-            int exonLength = (int) (exonEndPosition - exonStartPosition + 1L);
-            int exonStartLoci = currentLoci;
-            int n = codingLoci;
-            if(exonStartLoci <= n && (exonEndLoci = exonStartLoci + exonLength - 1) >= n)
-            {
-                return (int) (exonEndPosition - (long) codingLoci + (long) exonStartLoci);
-            }
-            currentLoci = exonEndLoci + 1;
-        }
-        return -1;
-    }
-
-    public final int forwardPosition(int codingLoci, HmfTranscriptRegion transcript)
-    {
-        if(transcript.strand() != Strand.FORWARD)
-            return -1;
-
-        long codingStart = transcript.codingStart();
-        long codingEnd = transcript.codingEnd();
-        int currentLoci = 0;
-        for(HmfExonRegion exon : transcript.exome())
-        {
-            int exonEndLoci = 0;
-
-            if(exon.end() < codingStart || exon.start() > codingEnd)
-                continue;
-
-            long exonStartPosition = Math.max(codingStart, exon.start());
-            long exonEndPosition = Math.min(codingEnd, exon.end());
-            int exonLength = (int) (exonEndPosition - exonStartPosition + 1L);
-            int exonStartLoci = currentLoci;
-            int n = codingLoci;
-            if(exonStartLoci <= n && (exonEndLoci = exonStartLoci + exonLength - 1) >= n)
-            {
-                return (int) (exonStartPosition + (long) codingLoci - (long) exonStartLoci);
-            }
-            currentLoci = exonEndLoci + 1;
-        }
-        return -1;
-    }
 }

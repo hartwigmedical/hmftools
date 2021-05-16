@@ -75,7 +75,7 @@ public final class EnsemblDataLoader
 
             while (line != null)
             {
-                String[] items = line.split(",");
+                String[] items = line.split(ENSEMBL_DELIM);
 
                 final String geneId = items[geneIdIndex];
 
@@ -179,10 +179,8 @@ public final class EnsemblDataLoader
                 if(line == null)
                     break;
 
-                // parse CSV data
-                String[] items = line.split(",");
+                String[] items = line.split(ENSEMBL_DELIM);
 
-                // check if still on the same variant
                 final String geneId = items[geneIdIndex];
                 int transId = Integer.parseInt(items[transIdIndex]);
 
@@ -287,7 +285,7 @@ public final class EnsemblDataLoader
             while (line != null)
             {
                 // parse CSV data
-                String[] items = line.split(",");
+                String[] items = line.split(ENSEMBL_DELIM);
 
                 // check if still on the same variant
                 int transId = Integer.parseInt(items[transIdIndex]);
@@ -358,10 +356,8 @@ public final class EnsemblDataLoader
 
             while (line != null)
             {
-                // parse CSV data
-                String[] items = line.split(",");
+                String[] items = line.split(ENSEMBL_DELIM);
 
-                // check if still on the same variant
                 final int transId = Integer.parseInt(items[transIdIndex]);
 
                 if(!restrictedTransIds.isEmpty() && !restrictedTransIds.contains(transId))

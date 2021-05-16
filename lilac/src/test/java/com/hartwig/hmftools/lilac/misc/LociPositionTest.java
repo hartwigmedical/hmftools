@@ -1,16 +1,17 @@
 package com.hartwig.hmftools.lilac.misc;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_TRANSCRIPTS;
-import static com.hartwig.hmftools.lilac.LilacConstants.LOCI_POSITION;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.ReferenceData.populateHlaTranscripts;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
@@ -18,11 +19,6 @@ import org.junit.Test;
 
 public class LociPositionTest
 {
-//    private val transcripts = HmfGenePanelSupplier.allGenesMap37()
-//    private val aTranscript = transcripts[LilacApplication.HLA_A]!!
-//    private val bTranscript = transcripts[LilacApplication.HLA_B]!!
-//    private val hlaTranscripts = listOf(aTranscript, bTranscript, transcripts[LilacApplication.HLA_C]!!)
-
     @Test
     public void testAlleleMaps()
     {
@@ -58,18 +54,20 @@ public class LociPositionTest
     @Test
     public void testA()
     {
-        populateHlaTranscripts();
+        Map<String, TranscriptData> hlaTranscriptMap = Maps.newHashMap();
+        populateHlaTranscripts(hlaTranscriptMap);
+        LociPosition lociPosition = new LociPosition(hlaTranscriptMap.values().stream().collect(Collectors.toList()));
 
-        HmfTranscriptRegion aTranscript = HLA_TRANSCRIPTS.get(0);
-        int minLoci = LOCI_POSITION.nucelotideLoci((int)aTranscript.codingStart());
+        TranscriptData aTranscript = hlaTranscriptMap.get(HLA_A);
+        int minLoci = lociPosition.nucelotideLoci((int)aTranscript.CodingStart);
         assertTrue(minLoci >= 0);
 
-        int maxLoci = LOCI_POSITION.nucelotideLoci((int)aTranscript.codingEnd());
+        int maxLoci = lociPosition.nucelotideLoci((int)aTranscript.CodingEnd);
 
         for (int i = minLoci; i < maxLoci; ++i)
         {
-            int position = LOCI_POSITION.forwardPosition(i, aTranscript);
-            int loci = LOCI_POSITION.nucelotideLoci(position);
+            int position = lociPosition.forwardPosition(i, aTranscript);
+            int loci = lociPosition.nucelotideLoci(position);
             assertEquals(i, loci);
         }
     }
@@ -77,18 +75,20 @@ public class LociPositionTest
     @Test
     public void testB()
     {
-        populateHlaTranscripts();
-        HmfTranscriptRegion bTranscript = HLA_TRANSCRIPTS.get(1);
+        Map<String,TranscriptData> hlaTranscriptMap = Maps.newHashMap();
+        populateHlaTranscripts(hlaTranscriptMap);
+        TranscriptData bTranscript = hlaTranscriptMap.get(HLA_B);
+        LociPosition lociPosition = new LociPosition(hlaTranscriptMap.values().stream().collect(Collectors.toList()));
 
-        int minLoci = LOCI_POSITION.nucelotideLoci((int)bTranscript.codingEnd());
-        int maxLoci = LOCI_POSITION.nucelotideLoci((int)bTranscript.codingStart());
+        int minLoci = lociPosition.nucelotideLoci((int)bTranscript.CodingEnd);
+        int maxLoci = lociPosition.nucelotideLoci((int)bTranscript.CodingStart);
         assertTrue(minLoci >= 0);
         assertTrue(maxLoci > minLoci);
 
         for (int i = minLoci; i < maxLoci; ++i)
         {
-            int position = LOCI_POSITION.reversePosition(i, bTranscript);
-            int loci = LOCI_POSITION.nucelotideLoci(position);
+            int position = lociPosition.reversePosition(i, bTranscript);
+            int loci = lociPosition.nucelotideLoci(position);
             assertEquals(i, loci);
         }
     }
