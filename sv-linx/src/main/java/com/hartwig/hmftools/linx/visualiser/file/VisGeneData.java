@@ -14,6 +14,8 @@ public class VisGeneData
     public final String Chromosome;
     public final VisGeneAnnotationType AnnotationType;
 
+    // both sets of exon position adjustments below are used to rectify small differences in pseudogene deletions
+
     // optional list of exons by rank and any adjustments to their positions for display
     public final Map<Integer,int[]> ExonPositionOffsets;
 

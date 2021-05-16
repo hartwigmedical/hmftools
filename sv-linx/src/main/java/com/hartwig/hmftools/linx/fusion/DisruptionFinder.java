@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
+import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DISRUPTION;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -36,11 +37,13 @@ import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
+import com.hartwig.hmftools.linx.visualiser.file.VisDataWriter;
 
 public class DisruptionFinder
 {
     private final EnsemblDataCache mGeneTransCache;
     private final List<String> mDisruptionGeneIds;
+    private final VisDataWriter mVisWriter;
 
     private final List<BreakendTransData> mDisruptions;
     private final Map<BreakendTransData,String> mRemovedDisruptions; // cached for diagnostic purposes
@@ -50,10 +53,11 @@ public class DisruptionFinder
 
     public static final int MAX_NON_DISRUPTED_CHAIN_LENGTH = 5000;
 
-    public DisruptionFinder(final LinxConfig config, final EnsemblDataCache geneTransCache)
+    public DisruptionFinder(final LinxConfig config, final EnsemblDataCache geneTransCache, final VisDataWriter visWriter)
     {
         mGeneTransCache = geneTransCache;
         mDisruptionGeneIds = disruptionGeneIds(config.DriverGenes, geneTransCache);
+        mVisWriter = visWriter;
 
         mDisruptions = Lists.newArrayList();
         mRemovedDisruptions = Maps.newHashMap();
@@ -559,6 +563,13 @@ public class DisruptionFinder
 
                         transcript.setReportableDisruption(true);
                         mDisruptions.add(transcript);
+
+                        if(mVisWriter != null)
+                        {
+                            mVisWriter.addGeneExonData(
+                                    var.getCluster().id(), gene.StableId, gene.GeneName,
+                                    "", 0, gene.chromosome(), DISRUPTION);
+                        }
                     }
                 }
             }

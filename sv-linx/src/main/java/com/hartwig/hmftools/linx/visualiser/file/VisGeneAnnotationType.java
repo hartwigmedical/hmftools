@@ -4,6 +4,7 @@ public enum VisGeneAnnotationType
 {
     FUSION,
     DRIVER,
+    DISRUPTION,
     PSEUDOGENE,
     EXON_LOST;
 }

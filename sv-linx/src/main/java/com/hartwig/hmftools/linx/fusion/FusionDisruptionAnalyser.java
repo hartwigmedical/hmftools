@@ -20,6 +20,8 @@ import static com.hartwig.hmftools.linx.fusion.FusionWriter.convertBreakendsAndF
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.OK;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FILE_SOURCE;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FUSIONS_FILE;
+import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DISRUPTION;
+import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DRIVER;
 import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.FUSION;
 
 import java.util.List;
@@ -47,7 +49,7 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
+import com.hartwig.hmftools.linx.visualiser.file.VisDataWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 
@@ -77,7 +79,7 @@ public class FusionDisruptionAnalyser
     private final Map<GeneFusion,String> mInvalidFusions;
 
     private RnaFusionMapper mRnaFusionMapper;
-    private VisualiserWriter mVisWriter;
+    private VisDataWriter mVisWriter;
 
     private PerformanceCounter mPerfCounter;
 
@@ -88,8 +90,9 @@ public class FusionDisruptionAnalyser
     public static final String SKIP_UNPHASED_FUSIONS = "skip_unphased_fusions";
     public static final String WRITE_NEO_EPITOPES = "write_neo_epitopes";
 
-    public FusionDisruptionAnalyser(final CommandLine cmdLineArgs, final LinxConfig config,
-            EnsemblDataCache ensemblDataCache, VisualiserWriter writer)
+    public FusionDisruptionAnalyser(
+            final CommandLine cmdLineArgs, final LinxConfig config,
+            final EnsemblDataCache ensemblDataCache, final VisDataWriter writer)
     {
         mOutputDir = config.OutputDataPath;
 
@@ -97,7 +100,7 @@ public class FusionDisruptionAnalyser
         mGeneDataCache = ensemblDataCache;
         mFusionFinder = new FusionFinder(cmdLineArgs, ensemblDataCache);
         mFusionWriter = new FusionWriter(mOutputDir);
-        mDisruptionFinder = new DisruptionFinder(config, ensemblDataCache);
+        mDisruptionFinder = new DisruptionFinder(config, ensemblDataCache, writer);
         mVisWriter = writer;
 
         mNeoEpitopeWriter = null;

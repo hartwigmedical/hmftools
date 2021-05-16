@@ -13,7 +13,6 @@ import org.jetbrains.annotations.Nullable;
 // class linking an SV breakend to a potentially impacted gene
 public class BreakendGeneData
 {
-
     public final String GeneName;
     public final String StableId;
     public final byte Strand;

@@ -35,7 +35,7 @@ import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.TelomereCentromereCnData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
+import com.hartwig.hmftools.linx.visualiser.file.VisDataWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class DriverGeneAnnotator
@@ -59,7 +59,7 @@ public class DriverGeneAnnotator
 
     // references only
     private Map<String, List<SvBreakend>> mChrBreakendMap;
-    private VisualiserWriter mVisWriter;
+    private VisDataWriter mVisWriter;
 
     public static final String LINX_DRIVER_CATALOG = ".linx.driver.catalog.tsv";
 
@@ -91,7 +91,7 @@ public class DriverGeneAnnotator
         mDataCache.setSamplePurityData(ploidy, isMale);
     }
 
-    public void setVisWriter(VisualiserWriter writer) { mVisWriter = writer; }
+    public void setVisWriter(VisDataWriter writer) { mVisWriter = writer; }
     public final List<DriverGeneData> getDriverGeneDataList() { return mDataCache.getDriverGeneDataList(); }
 
     public void annotateSVs(final String sampleId, final Map<String, List<SvBreakend>> chrBreakendMap)

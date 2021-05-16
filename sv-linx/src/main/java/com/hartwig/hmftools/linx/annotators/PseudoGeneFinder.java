@@ -23,14 +23,14 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneData;
-import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
+import com.hartwig.hmftools.linx.visualiser.file.VisDataWriter;
 
 public class PseudoGeneFinder
 {
-    private final VisualiserWriter mVisWriter;
+    private final VisDataWriter mVisWriter;
     private EnsemblDataCache mGeneTransCache;
 
-    public PseudoGeneFinder(final VisualiserWriter visWriter)
+    public PseudoGeneFinder(final VisDataWriter visWriter)
     {
         mVisWriter = visWriter;
         mGeneTransCache = null;
@@ -129,28 +129,6 @@ public class PseudoGeneFinder
 
                                 String exonMatchData = String.format("%s;%s;%d;%d",
                                         gene.GeneName, maxTrans.TransName, pseudoMatch.ExonRank, pseudoMatch.ExonLength);
-
-                                /*
-                                for(int se = SE_START; se <= SE_END; ++se)
-                                {
-                                    final SvBreakend breakend = pair.getBreakend(se);
-
-                                    if (pseudoMatch.isHomologyMatch(isStart(se)))
-                                    {
-                                        exonPosOffsets[se] = pseudoMatch.HomologyOffset[se];
-                                    }
-                                    else if(pseudoMatch.PositionMismatch[se] < 0)
-                                    {
-                                        exonPosOffsets[se] = 0;
-                                        exonsLost[se] = pseudoMatch.PositionMismatch[se];
-                                    }
-
-                                    boolean homMismatch = hasHomologyMismatch(breakend.getSV(), pairMatchesMap, selectedTransId);
-
-                                    exonMatchData += String.format(";%d;%d;%s",
-                                            pseudoMatch.HomologyOffset[se], pseudoMatch.PositionMismatch[se], homMismatch);
-                                }
-                                */
 
                                 pair.setExonMatchData(exonMatchData);
 

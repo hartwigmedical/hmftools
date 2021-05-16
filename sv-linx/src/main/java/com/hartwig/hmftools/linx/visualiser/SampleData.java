@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiser.VIS_LOGGER;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiserConfig.parameter;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -14,10 +13,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
@@ -25,6 +26,8 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
@@ -54,7 +57,7 @@ public class SampleData
     public final String Sample;
 
     public final List<Segment> Segments;
-    public final List<VisSvData> Links;
+    public final List<VisSvData> SvData;
     public final List<CopyNumberAlteration> CopyNumberAlterations;
     public final List<ProteinDomain> ProteinDomains;
     public final List<Fusion> Fusions;
@@ -62,6 +65,8 @@ public class SampleData
     public final List<Integer> Clusters;
 
     public final List<String> Chromosomes;
+
+    private final String mSampleDataDir;
 
     private static final String SAMPLE = "sample";
     private static final String VIS_FILE_DIRECTORY = "vis_file_dir";
@@ -82,25 +87,25 @@ public class SampleData
         final StringJoiner missingJoiner = new StringJoiner(", ");
 
         Sample = parameter(cmd, SAMPLE, missingJoiner);
-        final String visFilesDirectory = cmd.getOptionValue(VIS_FILE_DIRECTORY);
+        mSampleDataDir = cmd.getOptionValue(VIS_FILE_DIRECTORY);
 
-        final String linkPath = visFilesDirectory != null ?
-                VisSvDataFile.generateFilename(visFilesDirectory, Sample) : parameter(cmd, LINK, missingJoiner);
+        final String linkPath = mSampleDataDir != null ?
+                VisSvDataFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, LINK, missingJoiner);
 
-        final String trackPath = visFilesDirectory != null ?
-                VisSegmentFile.generateFilename(visFilesDirectory, Sample) : parameter(cmd, SEGMENT, missingJoiner);
+        final String trackPath = mSampleDataDir != null ?
+                VisSegmentFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, SEGMENT, missingJoiner);
 
-        final String cnaPath = visFilesDirectory != null ?
-                VisCopyNumberFile.generateFilename(visFilesDirectory, Sample) : parameter(cmd, CNA, missingJoiner);
+        final String cnaPath = mSampleDataDir != null ?
+                VisCopyNumberFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, CNA, missingJoiner);
 
-        final String exonPath = visFilesDirectory != null ?
-                VisGeneExonFile.generateFilename(visFilesDirectory, Sample) : parameter(cmd, EXON, missingJoiner);
+        final String exonPath = mSampleDataDir != null ?
+                VisGeneExonFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, EXON, missingJoiner);
 
-        final String proteinDomainPath = visFilesDirectory != null ?
-                VisProteinDomainFile.generateFilename(visFilesDirectory, Sample) : parameter(cmd, PROTEIN_DOMAIN, missingJoiner);
+        final String proteinDomainPath = mSampleDataDir != null ?
+                VisProteinDomainFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, PROTEIN_DOMAIN, missingJoiner);
 
-        final String fusionPath = visFilesDirectory != null ?
-                VisFusionFile.generateFilename(visFilesDirectory, Sample) : parameter(cmd, FUSION, missingJoiner);
+        final String fusionPath = mSampleDataDir != null ?
+                VisFusionFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, FUSION, missingJoiner);
 
         final String missing = missingJoiner.toString();
         if (!missing.isEmpty())
@@ -109,7 +114,7 @@ public class SampleData
         }
 
         Fusions = loadFusions(fusionPath).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
-        Links = VisLinks.readLinks(linkPath).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
+        SvData = VisLinks.readLinks(linkPath).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
 
         Exons = VisExons.readExons(exonPath).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
         Segments = VisSegments.readTracks(trackPath).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
@@ -127,12 +132,12 @@ public class SampleData
 
         Exons.addAll(additionalExons(cmd, Exons, Clusters));
 
-        if (Segments.isEmpty() && Links.isEmpty())
+        if(Segments.isEmpty() && SvData.isEmpty())
         {
             VIS_LOGGER.warn("No structural variants found for sample {}", Sample);
         }
 
-        if (CopyNumberAlterations.isEmpty())
+        if(CopyNumberAlterations.isEmpty())
         {
             VIS_LOGGER.warn("No copy number alterations found for sample {}", Sample);
         }
@@ -152,6 +157,41 @@ public class SampleData
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache files");
         options.addOption(CLUSTERS, true, "Only generate image for specified comma separated clusters");
         options.addOption(CHROMOSOMES, true, "Only generate image for specified comma separated chromosomes");
+    }
+
+    public Set<Integer> findReportableClusters()
+    {
+        Set<Integer> clusterIds = Sets.newHashSet();
+
+        Fusions.stream().forEach(x -> clusterIds.add(x.clusterId()));
+
+        if(mSampleDataDir != null)
+        {
+            try
+            {
+                // reportable disruptions
+                final List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(mSampleDataDir, Sample));
+
+                final List<Integer> svIds = breakends.stream()
+                        .filter(x -> x.reportedDisruption()).map(x -> x.svId()).collect(toList());
+
+                for(Integer svId : svIds)
+                {
+                    VisSvData svData = SvData.stream().filter(x -> x.svId() == svId).findFirst().orElse(null);
+                    if(svData != null)
+                         clusterIds.add(svData.clusterId());
+                }
+
+                final List<LinxDriver> drivers = LinxDriver.read(LinxDriver.generateFilename(mSampleDataDir, Sample));
+                drivers.stream().filter(x -> x.clusterId() >= 0).forEach(x -> clusterIds.add(x.clusterId()));
+            }
+            catch(Exception e)
+            {
+                VIS_LOGGER.error("sample({}) could not read breakends or drivers: {}", Sample, e.toString());
+            }
+        }
+
+        return clusterIds;
     }
 
     private List<Fusion> loadFusions(final String fileName) throws IOException

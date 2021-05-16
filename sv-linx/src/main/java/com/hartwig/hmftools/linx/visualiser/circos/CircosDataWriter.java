@@ -77,6 +77,7 @@ public class CircosDataWriter
                     geneColorMap.put(x.name(), SINGLE_YELLOW);
                     break;
                 case DRIVER:
+                case DISRUPTION:
                     geneColorMap.put(x.name(), SINGLE_GREEN);
                     break;
                 case FUSION:

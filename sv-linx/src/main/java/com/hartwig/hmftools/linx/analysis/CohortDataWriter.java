@@ -50,7 +50,7 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
+import com.hartwig.hmftools.linx.visualiser.file.VisDataWriter;
 
 public class CohortDataWriter
 {
@@ -60,20 +60,20 @@ public class CohortDataWriter
     private final BufferedWriter mSvFileWriter;
     private final BufferedWriter mClusterFileWriter;
     private final BufferedWriter mLinksFileWriter;
-    private final VisualiserWriter mVisWriter;
+    private final VisDataWriter mVisWriter;
 
     public CohortDataWriter(final LinxConfig config, final ClusterAnalyser analyser)
     {
         mAnalyser = analyser;
         mConfig = config;
-        mVisWriter = new VisualiserWriter(config.OutputDataPath, config.Output.WriteVisualisationData, config.hasMultipleSamples());
+        mVisWriter = new VisDataWriter(config.OutputDataPath, config.Output.WriteVisualisationData, config.hasMultipleSamples());
 
         mSvFileWriter = createSvDataFile();
         mClusterFileWriter = createClusterFile();
         mLinksFileWriter = createLinksFile();
     }
 
-    public final VisualiserWriter getVisWriter() { return mVisWriter; }
+    public final VisDataWriter getVisWriter() { return mVisWriter; }
 
     public void close()
     {

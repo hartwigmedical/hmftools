@@ -59,6 +59,7 @@ public class SvVisualiser implements AutoCloseable
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException
     {
         final Options options = SvVisualiserConfig.createOptions();
+        SampleData.addCmdLineOptions(options);
         SvCircosConfig.addOptions(options);
 
         try (final SvVisualiser application = new SvVisualiser(options, args))
@@ -100,7 +101,17 @@ public class SvVisualiser implements AutoCloseable
     {
         final List<Future<Object>> futures = Lists.newArrayList();
 
-        if (!mSampleData.Clusters.isEmpty() || !mSampleData.Chromosomes.isEmpty())
+        if(mConfig.PlotReportableEvents)
+        {
+            Set<Integer> reportableClusterIds = mSampleData.findReportableClusters();
+
+            for (Integer clusterId : reportableClusterIds)
+            {
+                submitCluster(Lists.newArrayList(clusterId), true);
+            }
+        }
+
+        else if (!mSampleData.Clusters.isEmpty() || !mSampleData.Chromosomes.isEmpty())
         {
             if (!mSampleData.Clusters.isEmpty())
             {
@@ -114,7 +125,7 @@ public class SvVisualiser implements AutoCloseable
         }
         else
         {
-            final List<Integer> clusterIds = mSampleData.Links.stream().map(VisSvData::clusterId).distinct().sorted().collect(toList());
+            final List<Integer> clusterIds = mSampleData.SvData.stream().map(VisSvData::clusterId).distinct().sorted().collect(toList());
 
             for (Integer clusterId : clusterIds)
             {
@@ -122,8 +133,8 @@ public class SvVisualiser implements AutoCloseable
             }
 
             final Set<String> chromosomes = Sets.newHashSet();
-            mSampleData.Links.stream().map(VisSvData::startChromosome).filter(HumanChromosome::contains).forEach(chromosomes::add);
-            mSampleData.Links.stream().map(VisSvData::endChromosome).filter(HumanChromosome::contains).forEach(chromosomes::add);
+            mSampleData.SvData.stream().map(VisSvData::startChromosome).filter(HumanChromosome::contains).forEach(chromosomes::add);
+            mSampleData.SvData.stream().map(VisSvData::endChromosome).filter(HumanChromosome::contains).forEach(chromosomes::add);
             for (final String chromosome : chromosomes)
             {
                 submitChromosome(Lists.newArrayList(chromosome));
@@ -157,13 +168,13 @@ public class SvVisualiser implements AutoCloseable
 
         final String sample = mSampleData.Sample + ".chr" + chromosomesStr + (mConfig.Debug ? ".debug" : "");
 
-        final Set<Integer> clusterIds = mSampleData.Links
+        final Set<Integer> clusterIds = mSampleData.SvData
                 .stream()
                 .filter(combinedPredicate)
                 .map(VisSvData::clusterId)
                 .collect(toSet());
 
-        final List<VisSvData> chromosomeLinks = mSampleData.Links.stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        final List<VisSvData> chromosomeLinks = mSampleData.SvData.stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
         if (chromosomeLinks.isEmpty())
         {
             VIS_LOGGER.warn("Chromosomes {} not present in file", chromosomesStr);
@@ -198,7 +209,7 @@ public class SvVisualiser implements AutoCloseable
 
     private void submitCluster(final List<Integer> clusterIds, boolean skipSingles)
     {
-        final List<VisSvData> clusterLinks = mSampleData.Links.stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
+        final List<VisSvData> clusterLinks = mSampleData.SvData.stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
         final List<Segment> clusterSegments = mSampleData.Segments.stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
         final List<Exon> clusterExons =
                 mSampleData.Exons.stream().filter(x -> clusterIds.contains(x.clusterId())).distinct().collect(toList());

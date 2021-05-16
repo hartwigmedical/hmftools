@@ -61,7 +61,7 @@ import com.hartwig.hmftools.linx.visualiser.file.VisGeneExonFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegmentFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter;
+import com.hartwig.hmftools.linx.visualiser.file.VisDataWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
@@ -136,7 +136,7 @@ public class SampleAnalyser
     public final List<SvCluster> getClusters() { return mAnalyser.getClusters(); }
     public boolean inValidState() { return mIsValid; }
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mAnalyser.getState().getChrBreakendMap(); }
-    public final VisualiserWriter getVisWriter() { return mCohortDataWriter.getVisWriter(); }
+    public final VisDataWriter getVisWriter() { return mCohortDataWriter.getVisWriter(); }
 
     public void setCnDataLoader(CnDataLoader cnAnalyser)
     {

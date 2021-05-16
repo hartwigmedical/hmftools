@@ -50,24 +50,23 @@ import org.jetbrains.annotations.NotNull;
 
 public class SvVisualiserConfig
 {
-
     public final String OutputConfPath;
-
     public final String OutputPlotPath;
-
     public final String CircosBin;
 
-    public final int Threads;
+    public final boolean IncludeLineElements;
 
+    public final int Threads;
     public final boolean Debug;
 
-    public final boolean IncludeLineElements;
+    public final boolean PlotReportableEvents;
 
     private static final String PLOT_OUT = "plot_out";
     private static final String DATA_OUT = "data_out";
     private static final String CIRCOS = "circos";
     private static final String DEBUG = "debug";
     private static final String VIS_FILE_DIRECTORY = "vis_file_dir";
+    private static final String PLOT_REPORTABLE = "plot_reportable";
 
     private static final String THREADS = "threads";
     private static final String INCLUDE_LINE_ELEMENTS = "include_line_elements";
@@ -84,6 +83,7 @@ public class SvVisualiserConfig
         options.addOption(DEBUG, false, "Enabled debug mode");
         options.addOption(THREADS, true, "Number of threads to use");
         options.addOption(INCLUDE_LINE_ELEMENTS, false, "Include line elements in chromosome plots");
+        options.addOption(PLOT_REPORTABLE, false, "Plot all clusters with a fusion, disruption, AMP or DEL");
 
         return options;
     }
@@ -119,6 +119,7 @@ public class SvVisualiserConfig
         Debug = cmd.hasOption(DEBUG);
 
         IncludeLineElements = cmd.hasOption(INCLUDE_LINE_ELEMENTS);
+        PlotReportableEvents = cmd.hasOption(PLOT_REPORTABLE);
     }
 
     public static String parameter(@NotNull final CommandLine cmd, @NotNull final String parameter, @NotNull final StringJoiner missing)

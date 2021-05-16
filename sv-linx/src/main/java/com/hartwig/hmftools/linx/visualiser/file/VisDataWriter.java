@@ -36,7 +36,7 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-public class VisualiserWriter
+public class VisDataWriter
 {
     // references only
     private EnsemblDataCache mGeneTranscriptCollection;
@@ -56,7 +56,7 @@ public class VisualiserWriter
     private BufferedWriter mProteinDomainFileWriter;
     private BufferedWriter mFusionFileWriter;
 
-    public VisualiserWriter(final String outputDir, boolean enabled, boolean isBatchOutput)
+    public VisDataWriter(final String outputDir, boolean enabled, boolean isBatchOutput)
     {
         mEnabled = enabled;
         mOutputDir = outputDir;
@@ -413,6 +413,7 @@ public class VisualiserWriter
                 }
                 else
                 {
+                    // used to more accurately plot pseudogene gene deletions
                     final int[] exonPosOffsets = geneData.ExonPositionOffsets.get(exonData.Rank);
                     final int[] exonsLost = geneData.ExonsLostOffsets.get(exonData.Rank);
 
