@@ -236,6 +236,26 @@ public class DisruptionFinder
         }
     }
 
+    public static boolean isDisruptiveInTranscript(final SvVarData var, final TranscriptData transcript)
+    {
+        // return false if both breakends are not disruptive in this transcript
+        if(var.isSglBreakend())
+            return true;
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            BreakendTransData matchingTrans = var.getGenesList(isStart(se)).stream()
+                    .filter(x -> x.StableId.equals(transcript.GeneId))
+                    .map(x -> x.transcripts().stream().filter(y -> y.transId() == transcript.TransId).findFirst().orElse(null))
+                    .filter(x -> x != null).findFirst().orElse(null);
+
+            if(matchingTrans != null && matchingTrans.isDisruptive())
+                return true;
+        }
+
+        return false;
+    }
+
     public boolean isNonDisruptiveChainedPair(final BreakendTransData upTrans, final List<BreakendGeneData> downGenesList)
     {
         if(upTrans.regionType() == EXONIC)

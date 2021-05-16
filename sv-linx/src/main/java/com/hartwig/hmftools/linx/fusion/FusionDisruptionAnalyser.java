@@ -237,6 +237,7 @@ public class FusionDisruptionAnalyser
     public boolean hasRnaSampleData() { return mRnaFusionMapper != null; }
     public final Set<String> getRnaSampleIds() { return mRnaFusionMapper.getSampleRnaData().keySet(); }
     public final List<GeneFusion> getFusions() { return mFusions; }
+    public final List<GeneFusion> getUniqueFusions() { return mUniqueFusions; }
     public boolean validState() { return mValidState; }
     public final Map<GeneFusion,String> getInvalidFusions() { return mInvalidFusions; }
     public final FusionFinder getFusionFinder() { return mFusionFinder; }
@@ -693,9 +694,9 @@ public class FusionDisruptionAnalyser
 
                     boolean[] transTerminated = { false, false};
 
+                    // check that the chain does not disrupt (ie terminate) the rest of the gene, checking up then downstream in turn
                     for (int fs = FS_UP; fs <= FS_DOWN; ++fs)
                     {
-                        // look at each gene in turn
                         BreakendTransData transcript = fs == FS_UP ? fusion.upstreamTrans() : fusion.downstreamTrans();
                         BreakendGeneData gene = fs == FS_UP ? fusion.upstreamTrans().gene() : fusion.downstreamTrans().gene();
 
@@ -727,7 +728,8 @@ public class FusionDisruptionAnalyser
                                     break;
                                 }
 
-                                transTerminated[fs] = checkTranscriptDisruptionInfo(breakend, transcript, chain, linkIndex);
+                                boolean logSkip = false; // fusion.knownType() != NONE;
+                                transTerminated[fs] = checkTranscriptDisruptionInfo(breakend, transcript, chain, linkIndex, logSkip);
                             }
                         }
                     }
@@ -850,12 +852,11 @@ public class FusionDisruptionAnalyser
     }
 
     private boolean checkTranscriptDisruptionInfo(
-            final SvBreakend breakend, final BreakendTransData transcript, final SvChain chain, int linkIndex)
+            final SvBreakend breakend, final BreakendTransData transcript, final SvChain chain, int linkIndex, boolean logSkip)
     {
         // return true if the transcript is disrupted before the chain leaves it
 
         // starting with this breakend and working onwards from it in the chain, check for any disruptions to the transcript
-        // this includes subsequent links within the same chain and transcript
         LinkedPair startPair = chain.getLinkedPairs().get(linkIndex);
         boolean traverseUp = startPair.firstBreakend() == breakend; // whether to search up or down the chain
 
@@ -867,11 +868,10 @@ public class FusionDisruptionAnalyser
         {
             LinkedPair pair = chain.getLinkedPairs().get(linkIndex);
 
-            // identify next exon after this TI
-            // the breakend's transcript info cannot be used because it faces the opposite way from the fusing breakend
             SvBreakend nextBreakend = traverseUp ? pair.secondBreakend() : pair.firstBreakend();
 
-            // exit if the next breakend is now past the end of the transcript or if the breakend is down-stream of coding
+            // the chain does not terminate the transcript if the next breakend is now past the end of the transcript or
+            // if the breakend is down-stream of coding
             if(nextBreakend.orientation() == 1)
             {
                 if(nextBreakend.position() > transcript.transEnd())
@@ -887,10 +887,20 @@ public class FusionDisruptionAnalyser
                     break;
             }
 
-            transcriptTerminated = true;
-            break;
+            // continue on if the next SV (ie both its breakends) is non-disruptive in this transcript
+            if(DisruptionFinder.isDisruptiveInTranscript(nextBreakend.getSV(), transcript.TransData))
+            {
+                transcriptTerminated = true;
+                break;
+            }
 
-            // no longer check that subsequent links within the same transcript are valid
+            if(logSkip)
+            {
+                LNX_LOGGER.info("sample({}) cluster({}) chain({}) skipping non-disruptive SV({})",
+                        mSampleId, nextBreakend.getSV().getCluster().id(), chain.id(), nextBreakend.getSV().toString());
+            }
+
+            linkIndex += traverseUp ? 1 : -1;
         }
 
         return transcriptTerminated;

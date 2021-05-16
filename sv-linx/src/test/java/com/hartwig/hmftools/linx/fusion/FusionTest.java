@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.findTopPriorityFusion;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTranscript;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
@@ -39,6 +40,7 @@ import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
+import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
@@ -415,7 +417,7 @@ public class FusionTest
         // fusion the 2 genes
         var3 = createDel(2, CHR_1, 1750,11525);
 
-        // del skips an exon
+        // del skips an exon (making it disruptive to the transcript)
         var4 = createDel(3, CHR_1, 11575, 111800);
 
         tester.AllVariants.add(var1);
@@ -531,7 +533,7 @@ public class FusionTest
         assertFalse(fusion.validChainTraversal());
 
 
-        // non-disruptive chain, doesn't register a fusion
+        // test 5: non-disruptive chain, doesn't register a fusion
         PRE_GENE_PROMOTOR_DISTANCE = 30000;
 
         tester.clearClustersAndSVs();
@@ -559,6 +561,54 @@ public class FusionTest
         assertTrue(tester.FusionAnalyser.getFusions().isEmpty());
         assertEquals(1, tester.FusionAnalyser.getInvalidFusions().size());
         assertTrue(tester.FusionAnalyser.getInvalidFusions().keySet().iterator().next().nonDisruptiveChain());
+
+
+        // test 6: a chained fusion with non-disrputive SVs at both ends, means the fusion is not chain terminated
+        tester.clearClustersAndSVs();
+
+        // fully intronic, non-disruptive del
+        var1 = createDel(0, CHR_1, 1150,1250);
+
+        // intronic dup
+        var2 = createDup(1, CHR_1, 1525,1575);
+
+        // fuses the 2 genes
+        var3 = createDel(2, CHR_1, 1750,11525);
+
+        // fully intronic, non-disruptive TI
+        var4 = createBnd(3, CHR_1, 11750, 1, CHR_2, 50000, -1);
+        var5 = createBnd(4, CHR_1, 11850, -1, CHR_2, 50100, 1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+        cluster = tester.Analyser.getClusters().get(0);
+
+        assertEquals(1, cluster.getChains().size());
+        SvChain chain = cluster.getChains().get(0);
+        assertEquals(4, chain.getLinkCount());
+
+        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
+
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
+                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+
+        assertEquals(1, tester.FusionAnalyser.getUniqueFusions().size());
+
+        fusion = tester.FusionAnalyser.getUniqueFusions().stream().filter(x -> x.reportable()).findFirst().orElse(null);
+        assertTrue(fusion != null);
+        assertEquals(var3.id(), fusion.upstreamTrans().gene().id());
+        assertEquals(var3.id(), fusion.downstreamTrans().gene().id());
+
+        assertTrue(validateFusionAnnotations(fusion, true, true));
     }
 
     private static boolean validateFusionAnnotations(final GeneFusion fusion, boolean validEnds, boolean validTraversal)
