@@ -21,7 +21,8 @@ public class NucleotideFragment
     private final List<Integer> mNucleotideQuality;
     private final List<String> mNucleotides;
 
-    public NucleotideFragment(final String id, final Set<String> genes, final List<Integer> nucleotideLoci,
+    public NucleotideFragment(
+            final String id, final Set<String> genes, final List<Integer> nucleotideLoci,
             final List<Integer> nucleotideQuality, final List<String> nucleotides)
     {
         mId = id;

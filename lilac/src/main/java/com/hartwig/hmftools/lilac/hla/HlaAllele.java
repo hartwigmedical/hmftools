@@ -2,6 +2,8 @@ package com.hartwig.hmftools.lilac.hla;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_PREFIX;
+
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -58,8 +60,7 @@ public class HlaAllele implements Comparable<HlaAllele>
         return new HlaAllele(gene, alleleGroup, protein, synonymousCoding, synonymousNonCoding, fourDigit, group);
     }
 
-    public boolean isGroup() { return Protein.isEmpty(); }
-    public boolean isFourDigit() { return Synonymous.isEmpty(); }
+    public String geneName() { return HLA_PREFIX + Gene; }
 
     public final HlaAllele asAlleleGroup()
     {

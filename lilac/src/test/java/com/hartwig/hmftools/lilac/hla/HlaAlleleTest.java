@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.lilac.hla;
 
+import static com.hartwig.hmftools.lilac.hla.HlaAllele.dedup;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.asSixDigit;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
+import java.util.List;
+
+import org.apache.commons.compress.utils.Lists;
 import org.junit.Test;
 
 public class HlaAlleleTest
@@ -25,6 +29,25 @@ public class HlaAlleleTest
         assertMatch(HlaAllele.fromString("A*01:01:01"), asSixDigit(eightDigit));
         assertMatch(HlaAllele.fromString("A*01:01"), eightDigit.asFourDigit());
         assertMatch(HlaAllele.fromString("A*01"), eightDigit.asAlleleGroup());
+    }
+
+    @Test
+    public void testDedupAlleles()
+    {
+        List<HlaAllele> alleles = Lists.newArrayList();
+        HlaAllele allele1 = HlaAllele.fromString("A*01:01:01");
+        HlaAllele allele2 = HlaAllele.fromString("A*01:02:01");
+        HlaAllele allele3 = HlaAllele.fromString("A*01:03:01");
+        alleles.add(allele1);
+        alleles.add(allele1);
+        alleles.add(allele2);
+        alleles.add(allele2);
+        alleles.add(allele3);
+        List<HlaAllele> deduped = dedup(alleles);
+        assertEquals(3, deduped.size());
+        assertTrue(deduped.contains(allele1));
+        assertTrue(deduped.contains(allele2));
+        assertTrue(deduped.contains(allele3));
     }
 
     @Test

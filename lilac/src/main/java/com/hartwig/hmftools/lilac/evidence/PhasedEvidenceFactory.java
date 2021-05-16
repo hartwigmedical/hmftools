@@ -27,7 +27,7 @@ public class PhasedEvidenceFactory
 
     public List<PhasedEvidence> evidence(final HlaContext context, final List<AminoAcidFragment> fragments)
     {
-        LL_LOGGER.info("Phasing HLA-" + context.Gene + " records:");
+        LL_LOGGER.info("Phasing {} records:", context.geneName());
         List<PhasedEvidence> result = evidence(context.ExpectedAlleles, fragments);
 
         if(LL_LOGGER.isDebugEnabled() || mConfig.DebugPhasing)

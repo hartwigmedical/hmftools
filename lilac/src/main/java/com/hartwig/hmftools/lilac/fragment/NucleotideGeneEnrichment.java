@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 
+import org.apache.commons.math3.util.Pair;
+
 public class NucleotideGeneEnrichment
 {
     private final int mAbMinBoundary;
@@ -62,11 +64,6 @@ public class NucleotideGeneEnrichment
         return fragments.stream().map(x -> enrich(x)).collect(Collectors.toList());
     }
 
-    public final NucleotideFragment enrichGenes(final NucleotideFragment fragment)
-    {
-        return enrich(fragment);
-    }
-
     public final NucleotideFragment enrich(final NucleotideFragment fragment)
     {
         if(fragment.containsIndel())
@@ -74,58 +71,31 @@ public class NucleotideGeneEnrichment
 
         Set<String> genes = Sets.newHashSet();
 
-        if(matchToA(fragment))
+        if(matchToGene(fragment, HLA_A, new Pair(HLA_B, mAbMinBoundary), new Pair(HLA_C, mAcMinBoundary)))
             genes.add(HLA_A);
 
-        if(matchToB(fragment))
+        if(matchToGene(fragment, HLA_B, new Pair(HLA_A, mAbMinBoundary), new Pair(HLA_C, mBcMinBoundary)))
             genes.add(HLA_B);
 
-        if(matchToC(fragment))
+        if(matchToGene(fragment, HLA_C, new Pair(HLA_A, mAcMinBoundary), new Pair(HLA_B, mBcMinBoundary)))
             genes.add(HLA_C);
 
         return new NucleotideFragment(fragment.getId(), genes, fragment.getNucleotideLoci(), fragment.getNucleotideQuality(), fragment.getNucleotides());
     }
 
-    private final boolean matchToA(final NucleotideFragment fragment)
+    private final boolean matchToGene(
+            final NucleotideFragment fragment, final String gene,
+            final Pair<String,Integer> otherGene1, final Pair<String,Integer> otherGene2)
     {
-        if(fragment.containsGene(HLA_A))
+        if(fragment.containsGene(gene))
             return true;
 
-        if(fragment.containsGene(HLA_B) && fragment.maxLoci() < 3 * mAbMinBoundary)
+        if(fragment.containsGene(otherGene1.getFirst()) && fragment.maxLoci() < 3 * otherGene1.getSecond())
             return true;
 
-        if(fragment.containsGene(HLA_C) && fragment.maxLoci() < 3 * mAcMinBoundary)
+        if(fragment.containsGene(otherGene2.getFirst()) && fragment.maxLoci() < 3 * otherGene2.getSecond())
             return true;
 
         return false;
     }
-
-    private final boolean matchToB(final NucleotideFragment fragment)
-    {
-        if(fragment.containsGene(HLA_B))
-            return true;
-
-        if(fragment.containsGene(HLA_A) && fragment.maxLoci() < 3 * mAbMinBoundary)
-            return true;
-
-        if(fragment.containsGene(HLA_C) && fragment.maxLoci() < 3 * mBcMinBoundary)
-            return true;
-
-        return false;
-    }
-
-    private final boolean matchToC(final NucleotideFragment fragment)
-    {
-        if(fragment.containsGene(HLA_C))
-            return true;
-
-        if(fragment.containsGene(HLA_A) && fragment.maxLoci() < 3 * mAcMinBoundary)
-            return true;
-
-        if(fragment.containsGene(HLA_B) && fragment.maxLoci() < 3 * mBcMinBoundary)
-            return true;
-
-        return false;
-    }
-
 }

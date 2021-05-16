@@ -37,7 +37,7 @@ public class AminoAcidFragmentPipeline
 
     public final List<AminoAcidFragment> referencePhasingFragments(final HlaContext context)
     {
-        String gene = "HLA-" + context.Gene;
+        String gene = context.geneName();
 
         List<NucleotideFragment> geneReferenceFragments = mReferenceFragments.stream()
                 .filter(x -> x.containsGene(gene)).collect(Collectors.toList());

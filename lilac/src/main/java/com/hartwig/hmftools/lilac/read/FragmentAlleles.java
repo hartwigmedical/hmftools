@@ -102,8 +102,7 @@ public class FragmentAlleles
                     continue;
 
                 HlaAllele allele = sequence.getAllele();
-                String gene = "HLA-" + allele.Gene;
-                if(!aminoAcidFragment.getGenes().contains(gene))
+                if(!aminoAcidFragment.getGenes().contains(allele.geneName()))
                     continue;
 
                 // keep the best match
@@ -139,13 +138,6 @@ public class FragmentAlleles
 
             String fragmentAminoAcids = aminoAcidFragment.aminoAcids(fragmentAminoAcidLoci);
 
-            /*
-            val matchingAminoAcidSequences = aminoAcidSequences.stream().map(x -> )
-                    .map { Pair(it.allele, it.match(fragmentAminoAcids, *fragmentAminoAcidLoci)) }
-                        .filter { it.second != HlaSequenceMatch.NONE }
-                        .filter { aminoAcidFragment.genes.contains("HLA-${it.first.gene}") }
-             */
-
             for(HlaSequenceLoci sequence : aminoAcidSequences)
             {
                 HlaSequenceMatch matchType = sequence.match(fragmentAminoAcids, fragmentAminoAcidLoci);
@@ -154,8 +146,7 @@ public class FragmentAlleles
 
                 HlaAllele allele = sequence.getAllele();
 
-                String gene = "HLA-" + allele.Gene;
-                if(!aminoAcidFragment.getGenes().contains(gene))
+                if(!aminoAcidFragment.getGenes().contains(allele.geneName()))
                     continue;
 
                 Map.Entry<HlaAllele,HlaSequenceMatch> entryMatch = alleleMatches.entrySet().stream()

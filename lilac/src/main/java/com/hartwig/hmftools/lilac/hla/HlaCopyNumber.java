@@ -37,12 +37,10 @@ public class HlaCopyNumber
 
         try
         {
-            List<GeneCopyNumber> geneCopyNumberList = GeneCopyNumberFile.read(geneCopyNumberFile);
+            List<GeneCopyNumber> hlaGeneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberFile).stream()
+                    .filter(x -> HLA_GENES.contains(x.gene())).collect(Collectors.toList());
 
             List<HlaAlleleCoverage> alleleCoverage = tumorCoverage.getAlleleCoverage();
-
-            List<GeneCopyNumber> hlaGeneCopyNumbers = geneCopyNumberList.stream()
-                    .filter(x -> HLA_GENES.contains(x.gene())).collect(Collectors.toList());
 
             List<HlaCopyNumber> hlaCopyNumbers = Lists.newArrayList();
 
@@ -50,7 +48,7 @@ public class HlaCopyNumber
             {
                 String geneId = gene.substring(gene.length() - 1);
                 hlaCopyNumbers.addAll(alleleCopyNumber(
-                        geneCopyNumberList.stream().filter(x -> x.gene().equals(gene)).findFirst().orElse(null),
+                        hlaGeneCopyNumbers.stream().filter(x -> x.gene().equals(gene)).findFirst().orElse(null),
                         alleleCoverage.stream().filter(x -> x.Allele.Gene.equals(geneId)).collect(Collectors.toList())));
             }
 
