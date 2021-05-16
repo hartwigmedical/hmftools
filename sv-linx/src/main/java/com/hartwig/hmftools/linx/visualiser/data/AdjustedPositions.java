@@ -10,13 +10,13 @@ import org.jetbrains.annotations.NotNull;
 public class AdjustedPositions
 {
 
-    public static List<AdjustedPosition> create(@NotNull final List<Link> originalLinks, @NotNull final List<Link> scaledLinks)
+    public static List<AdjustedPosition> create(@NotNull final List<VisSvData> originalLinks, @NotNull final List<VisSvData> scaledLinks)
     {
         final List<AdjustedPosition> result = Lists.newArrayList();
         for (int i = 0; i < originalLinks.size(); i++)
         {
-            final Link original = originalLinks.get(i);
-            final Link scaled = scaledLinks.get(i);
+            final VisSvData original = originalLinks.get(i);
+            final VisSvData scaled = scaledLinks.get(i);
 
             if (scaled.isValidStart())
             {

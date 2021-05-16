@@ -11,7 +11,7 @@ import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumberFile;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CopyNumberAlterations
+public class VisCopyNumbers
 {
     private static final int MAX_EXTRA_DISTANCE = 1000;
     private static final double MIN_EXTRA_DISTANCE_PERCENT = 0.1;
@@ -68,7 +68,7 @@ public class CopyNumberAlterations
     @NotNull
     public static List<CopyNumberAlteration> read(@NotNull final String fileName) throws IOException
     {
-        return VisCopyNumberFile.read(fileName).stream().map(CopyNumberAlterations::fromVis).collect(Collectors.toList());
+        return VisCopyNumberFile.read(fileName).stream().map(VisCopyNumbers::fromVis).collect(Collectors.toList());
     }
 
     @NotNull

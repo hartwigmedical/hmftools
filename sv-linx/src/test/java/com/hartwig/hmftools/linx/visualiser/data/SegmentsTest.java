@@ -18,7 +18,7 @@ public class SegmentsTest
 
         final List<Segment> segments = Lists.newArrayList(createSegment("1"), createSegment("2"), createSegment("1"));
 
-        final List<Segment> incrementOnChromosome = Segments.incrementOnChromosome(segments, Collections.emptyList(), false);
+        final List<Segment> incrementOnChromosome = VisSegments.incrementOnChromosome(segments, Collections.emptyList(), false);
         assertEquals(3, incrementOnChromosome.size());
         assertEquals(1, incrementOnChromosome.get(0).track());
         assertEquals(1, incrementOnChromosome.get(1).track());

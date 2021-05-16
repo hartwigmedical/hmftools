@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
+import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DRIVER;
+
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
@@ -14,13 +16,13 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExonFile;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Exons
+public class VisExons
 {
-
     private static final Comparator<Exon> RANKED = Comparator.comparingInt(Exon::rank);
 
     @NotNull
@@ -99,7 +101,7 @@ public class Exons
             int rank = transcript.strand().equals(Strand.FORWARD) ? i + 1 : transcript.exome().size() - i;
 
             Exon exon = ImmutableExon.builder()
-                    .type(ExonType.DRIVER)
+                    .type(DRIVER)
                     .sampleId(sampleId)
                     .clusterId(clusterId)
                     .gene(transcript.gene())
@@ -126,7 +128,7 @@ public class Exons
             ExonData exonData = transcript.exons().get(i);
 
             Exon exon = ImmutableExon.builder()
-                    .type(ExonType.DRIVER)
+                    .type(DRIVER)
                     .sampleId(sampleId)
                     .clusterId(clusterId)
                     .gene(geneData.GeneName)
@@ -146,14 +148,14 @@ public class Exons
     @NotNull
     public static List<Exon> readExons(@NotNull final String fileName) throws IOException
     {
-        return VisGeneExonFile.read(fileName).stream().map(Exons::fromVis).collect(Collectors.toList());
+        return VisGeneExonFile.read(fileName).stream().map(VisExons::fromVis).collect(Collectors.toList());
     }
 
     @NotNull
     private static Exon fromVis(@NotNull final VisGeneExonFile file)
     {
         return ImmutableExon.builder()
-                .type(ExonType.fromString(file.AnnotationType))
+                .type(VisGeneAnnotationType.valueOf(file.AnnotationType))
                 .sampleId(file.SampleId)
                 .clusterId(file.ClusterId)
                 .gene(file.Gene)

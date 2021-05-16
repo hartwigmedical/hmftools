@@ -15,12 +15,12 @@ import com.hartwig.hmftools.linx.visualiser.data.Connectors;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.DisruptedExons;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
-import com.hartwig.hmftools.linx.visualiser.data.Exons;
+import com.hartwig.hmftools.linx.visualiser.data.VisExons;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.Genes;
-import com.hartwig.hmftools.linx.visualiser.data.Link;
-import com.hartwig.hmftools.linx.visualiser.data.Links;
+import com.hartwig.hmftools.linx.visualiser.data.VisSvData;
+import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 
 import org.jetbrains.annotations.NotNull;
@@ -28,7 +28,7 @@ import org.jetbrains.annotations.NotNull;
 public class CircosData
 {
     private final List<Exon> exons;
-    private final List<Link> links;
+    private final List<VisSvData> links;
     private final List<Gene> genes;
     private final List<Segment> segments;
     private final List<GenomeRegion> lineElements;
@@ -37,7 +37,7 @@ public class CircosData
     private final List<GenomeRegion> disruptedGeneRegions;
     private final List<Connector> connectors;
 
-    private final List<Link> unadjustedLinks;
+    private final List<VisSvData> unadjustedLinks;
     private final List<CopyNumberAlteration> unadjustedAlterations;
 
     private final Set<GenomePosition> contigLengths;
@@ -59,7 +59,7 @@ public class CircosData
             boolean showSimpleSvSegments,
             @NotNull final SvCircosConfig config,
             @NotNull final List<Segment> unadjustedSegments,
-            @NotNull final List<Link> unadjustedLinks,
+            @NotNull final List<VisSvData> unadjustedLinks,
             @NotNull final List<CopyNumberAlteration> unadjustedAlterations,
             @NotNull final List<Exon> unadjustedExons,
             @NotNull final List<Fusion> fusions)
@@ -73,10 +73,10 @@ public class CircosData
         final List<GenomeRegion> unadjustedDisruptedGeneRegions = DisruptedExons.disruptedGeneRegions(fusions, unadjustedExons);
 
         final List<Gene> unadjustedGenes = Genes.uniqueGenes(unadjustedExons);
-        final List<Exon> unadjustedGeneExons = Exons.geneExons(unadjustedGenes, unadjustedExons);
+        final List<Exon> unadjustedGeneExons = VisExons.geneExons(unadjustedGenes, unadjustedExons);
 
         final List<GenomePosition> positionsToScale = Lists.newArrayList();
-        positionsToScale.addAll(Links.allPositions(unadjustedLinks));
+        positionsToScale.addAll(VisLinks.allPositions(unadjustedLinks));
         positionsToScale.addAll(Span.allPositions(unadjustedSegments));
         positionsToScale.addAll(config.interpolateCopyNumberPositions()
                 ? Span.minMaxPositions(unadjustedAlterations)
@@ -107,7 +107,7 @@ public class CircosData
         maxCopyNumber = alterations.stream().mapToDouble(CopyNumberAlteration::copyNumber).max().orElse(0);
         maxMinorAllelePloidy = alterations.stream().mapToDouble(CopyNumberAlteration::minorAlleleCopyNumber).max().orElse(0);
 
-        double maxLinkPloidy = links.stream().mapToDouble(Link::jcn).max().orElse(0);
+        double maxLinkPloidy = links.stream().mapToDouble(VisSvData::jcn).max().orElse(0);
         double maxSegmentsPloidy = segments.stream().mapToDouble(Segment::ploidy).max().orElse(0);
 
         maxPloidy = Math.max(maxLinkPloidy, maxSegmentsPloidy);
@@ -182,7 +182,7 @@ public class CircosData
     }
 
     @NotNull
-    public List<Link> unadjustedLinks()
+    public List<VisSvData> unadjustedLinks()
     {
         return unadjustedLinks;
     }
@@ -200,7 +200,7 @@ public class CircosData
     }
 
     @NotNull
-    public List<Link> links()
+    public List<VisSvData> links()
     {
         return links;
     }

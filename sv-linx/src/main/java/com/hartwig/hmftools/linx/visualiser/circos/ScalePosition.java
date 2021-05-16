@@ -22,10 +22,10 @@ import com.hartwig.hmftools.linx.visualiser.data.ImmutableCopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableExon;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableFusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableGene;
-import com.hartwig.hmftools.linx.visualiser.data.ImmutableLink;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableSegment;
-import com.hartwig.hmftools.linx.visualiser.data.Link;
+import com.hartwig.hmftools.linx.visualiser.data.ImmutableVisSvData;
+import com.hartwig.hmftools.linx.visualiser.data.VisSvData;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 
@@ -176,14 +176,14 @@ class ScalePosition
     }
 
     @NotNull
-    public List<Link> scaleLinks(@NotNull final List<Link> links)
+    public List<VisSvData> scaleLinks(@NotNull final List<VisSvData> links)
     {
-        final List<Link> results = Lists.newArrayList();
-        for (final Link link : links)
+        final List<VisSvData> results = Lists.newArrayList();
+        for (final VisSvData link : links)
         {
             try
             {
-                final ImmutableLink.Builder builder = ImmutableLink.builder().from(link);
+                final ImmutableVisSvData.Builder builder = ImmutableVisSvData.builder().from(link);
                 if (link.isValidStart())
                 {
                     builder.startPosition(contigMap.get(link.startChromosome()).scale(link.startPosition()));

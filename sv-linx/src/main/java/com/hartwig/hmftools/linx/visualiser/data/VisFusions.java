@@ -11,7 +11,7 @@ import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Fusions
+public class VisFusions
 {
     @NotNull
     public static List<Fusion> fromFile(@NotNull final String fileName) throws IOException

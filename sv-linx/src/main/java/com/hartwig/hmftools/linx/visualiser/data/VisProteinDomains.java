@@ -11,7 +11,7 @@ import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ProteinDomains
+public class VisProteinDomains
 {
 
     public static final String UTR = "UTR/Non-coding";
@@ -21,7 +21,7 @@ public class ProteinDomains
             throws IOException
     {
         final List<ProteinDomain> all =
-                VisProteinDomainFile.read(fileName).stream().map(ProteinDomains::fromFile).collect(Collectors.toList());
+                VisProteinDomainFile.read(fileName).stream().map(VisProteinDomains::fromFile).collect(Collectors.toList());
         return proteinDomainsInFusionGenes(fusions, all);
     }
 

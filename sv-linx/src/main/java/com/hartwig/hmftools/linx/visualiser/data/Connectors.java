@@ -20,7 +20,7 @@ public class Connectors
     }
 
     @NotNull
-    public List<Connector> createConnectors(@NotNull final List<Segment> segments, @NotNull final List<Link> links)
+    public List<Connector> createConnectors(@NotNull final List<Segment> segments, @NotNull final List<VisSvData> links)
     {
         final List<Connector> result = Lists.newArrayList();
 
@@ -33,12 +33,12 @@ public class Connectors
                     .track(segment.track());
 
             final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), segment.start());
-            final Optional<Link> optionalStartPositionLink = Links.findLink(startPosition, links);
+            final Optional<VisSvData> optionalStartPositionLink = VisLinks.findLink(startPosition, links);
 
             if (optionalStartPositionLink.isPresent())
             {
                 double startLinkPloidy = optionalStartPositionLink.get().jcn();
-                double startLinkPloidyBeforeSegment = Segments.segmentPloidyBefore(segment.track(), startPosition, segments);
+                double startLinkPloidyBeforeSegment = VisSegments.segmentPloidyBefore(segment.track(), startPosition, segments);
 
                 if (startLinkPloidy > 0)
                 {
@@ -50,14 +50,14 @@ public class Connectors
             }
 
             final GenomePosition endPosition = GenomePositions.create(segment.chromosome(), segment.end());
-            final Optional<Link> optionalEndPositionLink = Links.findLink(endPosition, links);
+            final Optional<VisSvData> optionalEndPositionLink = VisLinks.findLink(endPosition, links);
 
             if (optionalEndPositionLink.isPresent())
             {
                 double endLinkPloidy = optionalEndPositionLink.get().jcn();
                 if (endLinkPloidy > 0)
                 {
-                    double endLinkPloidyBeforeSegment = Segments.segmentPloidyBefore(segment.track(), endPosition, segments);
+                    double endLinkPloidyBeforeSegment = VisSegments.segmentPloidyBefore(segment.track(), endPosition, segments);
                     result.add(builder.position(segment.end())
                             .ploidy(Math.max(0, endLinkPloidy - endLinkPloidyBeforeSegment))
                             .frame(optionalEndPositionLink.get().frame())
@@ -72,7 +72,7 @@ public class Connectors
     }
 
     @NotNull
-    private List<Connector> create(@NotNull final Link link)
+    private List<Connector> create(@NotNull final VisSvData link)
     {
         @NotNull
         final List<Connector> result = Lists.newArrayList();

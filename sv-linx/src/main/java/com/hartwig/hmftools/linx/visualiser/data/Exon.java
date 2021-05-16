@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.visualiser.data;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionBuilder;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +21,7 @@ public abstract class Exon implements GenomeRegion
 
     public abstract int clusterId();
 
-    public abstract ExonType type();
+    public abstract VisGeneAnnotationType type();
 
     @NotNull
     public abstract String gene();

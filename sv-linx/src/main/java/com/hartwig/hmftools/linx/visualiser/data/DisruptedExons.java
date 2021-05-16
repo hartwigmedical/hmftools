@@ -1,7 +1,8 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
-import static com.hartwig.hmftools.linx.visualiser.data.Exons.sortedDownstreamExons;
-import static com.hartwig.hmftools.linx.visualiser.data.Exons.sortedUpstreamExons;
+import static com.hartwig.hmftools.linx.visualiser.data.VisExons.sortedDownstreamExons;
+import static com.hartwig.hmftools.linx.visualiser.data.VisExons.sortedUpstreamExons;
+import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.EXON_LOST;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,7 +19,7 @@ public class DisruptedExons
     @NotNull
     public static List<GenomeRegion> disruptedGeneRegions(@NotNull final List<Fusion> fusions, @NotNull final List<Exon> exons)
     {
-        List<GenomeRegion> result = exons.stream().filter(x -> x.type().equals(ExonType.DISRUPTED)).collect(Collectors.toList());
+        List<GenomeRegion> result = exons.stream().filter(x -> x.type() == EXON_LOST).collect(Collectors.toList());
         for (Fusion fusion : fusions)
         {
             result.addAll(disruptedGeneRegions(fusion, exons));
@@ -57,7 +58,7 @@ public class DisruptedExons
     {
         return fusion.strandDown() < 0 ?
                 ImmutableGene.builder()
-                        .type(ExonType.DISRUPTED)
+                        .type(EXON_LOST)
                         .chromosome(firstExcludedDownExon.chromosome())
                         .end(firstExcludedDownExon.end())
                         .start(Math.min(fusion.positionDown(), firstIncludedDoneExon.end()))
@@ -67,7 +68,7 @@ public class DisruptedExons
                         .namePosition(0)
                         .build() :
                 ImmutableGene.builder()
-                        .type(ExonType.DISRUPTED)
+                        .type(EXON_LOST)
                         .chromosome(firstExcludedDownExon.chromosome())
                         .start(firstExcludedDownExon.start())
                         .end(Math.max(fusion.positionDown(), firstIncludedDoneExon.start()))
@@ -84,7 +85,7 @@ public class DisruptedExons
     {
         return fusion.strandUp() < 0 ?
                 ImmutableGene.builder()
-                        .type(ExonType.DISRUPTED)
+                        .type(EXON_LOST)
                         .chromosome(finalExcludedUpExon.chromosome())
                         .start(finalExcludedUpExon.start())
                         .end(Math.max(fusion.positionUp(), finalIncludedExon.start()))
@@ -94,7 +95,7 @@ public class DisruptedExons
                         .namePosition(0)
                         .build() :
                 ImmutableGene.builder()
-                        .type(ExonType.DISRUPTED)
+                        .type(EXON_LOST)
                         .chromosome(finalExcludedUpExon.chromosome())
                         .start(Math.min(fusion.positionUp(), finalIncludedExon.end()))
                         .end(finalExcludedUpExon.end())

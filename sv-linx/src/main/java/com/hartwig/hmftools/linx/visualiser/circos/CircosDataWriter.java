@@ -28,8 +28,8 @@ import com.hartwig.hmftools.linx.visualiser.data.Connector;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
-import com.hartwig.hmftools.linx.visualiser.data.Link;
-import com.hartwig.hmftools.linx.visualiser.data.Links;
+import com.hartwig.hmftools.linx.visualiser.data.VisSvData;
+import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 
 import org.jetbrains.annotations.NotNull;
@@ -91,7 +91,7 @@ public class CircosDataWriter
         int totalContigLength = data.totalContigLength();
 
         final List<Segment> segments = data.segments();
-        final List<Link> links = data.links();
+        final List<VisSvData> links = data.links();
         final List<CopyNumberAlteration> alterations = data.alterations();
         final List<GenomeRegion> fragileSites = data.fragileSites();
         final List<GenomeRegion> lineElements = data.lineElements();
@@ -354,7 +354,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> createScatter(@NotNull final List<Segment> segments, @NotNull final List<Link> links)
+    private List<String> createScatter(@NotNull final List<Segment> segments, @NotNull final List<VisSvData> links)
     {
         int glyphSize = circosConfig.glyphSize();
         int glyphSizeInner = (int) Math.floor(circosConfig.glyphSize() * 14d / 20d);
@@ -388,7 +388,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> createSglScatter(@NotNull final List<Link> links)
+    private List<String> createSglScatter(@NotNull final List<VisSvData> links)
     {
         int glyphSize = circosConfig.glyphSize();
         int glyphSizeInner = (int) Math.floor(circosConfig.glyphSize() * 14d / 20d);
@@ -396,7 +396,7 @@ public class CircosDataWriter
         final List<String> result = Lists.newArrayList();
 
         // Draw open circles at SGL ends
-        for (final Link link : links)
+        for (final VisSvData link : links)
         {
             if (link.isValidStart() && !link.isValidEnd())
             {
@@ -410,7 +410,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private String scatterGlyph(boolean isStart, @NotNull final Segment segment, @NotNull final List<Link> links)
+    private String scatterGlyph(boolean isStart, @NotNull final Segment segment, @NotNull final List<VisSvData> links)
     {
         long location = isStart ? segment.start() : segment.end();
         final SegmentTerminal terminal = isStart ? segment.startTerminal() : segment.endTerminal();
@@ -421,7 +421,7 @@ public class CircosDataWriter
 
         final GenomePosition startPosition = GenomePositions.create(segment.chromosome(), location);
         final boolean isFoldback =
-                Links.findStartLink(startPosition, links).filter(x -> x.startInfo().equals("FOLDBACK")).isPresent() || Links.findEndLink(
+                VisLinks.findStartLink(startPosition, links).filter(x -> x.startInfo().equals("FOLDBACK")).isPresent() || VisLinks.findEndLink(
                         startPosition,
                         links).filter(x -> x.endInfo().equals("FOLDBACK")).isPresent();
 
@@ -444,7 +444,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private String scatterSGLEntry(@NotNull final Link link, @NotNull final String color, int glyph_size)
+    private String scatterSGLEntry(@NotNull final VisSvData link, @NotNull final String color, int glyph_size)
     {
         return new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
                 .add(String.valueOf(link.startPosition()))
@@ -455,10 +455,10 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> createLinks(@NotNull final List<Link> links)
+    private List<String> createLinks(@NotNull final List<VisSvData> links)
     {
         final List<String> result = Lists.newArrayList();
-        for (final Link link : Links.clean(links))
+        for (final VisSvData link : VisLinks.clean(links))
         {
             final String linkString = new StringJoiner(DELIMITER).add(circosContig(link.startChromosome()))
                     .add(String.valueOf(link.startPosition()))
@@ -547,7 +547,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    private List<String> createPositionText(@NotNull final List<Link> originalLinks, @NotNull final List<Link> scaledLinks)
+    private List<String> createPositionText(@NotNull final List<VisSvData> originalLinks, @NotNull final List<VisSvData> scaledLinks)
     {
         final List<AdjustedPosition> positions = AdjustedPositions.create(originalLinks, scaledLinks);
         if (circosConfig.exactPosition())

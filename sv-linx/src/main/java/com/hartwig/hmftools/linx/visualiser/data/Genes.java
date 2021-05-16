@@ -2,6 +2,8 @@ package com.hartwig.hmftools.linx.visualiser.data;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.EXON_LOST;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class Genes
 {
-
     @NotNull
     public static List<Gene> uniqueGenes(@NotNull final List<Exon> exons)
     {
@@ -47,7 +48,7 @@ public class Genes
         final List<Gene> result = Lists.newArrayList();
 
         final Set<String> transcripts = exons.stream()
-                .filter(x -> !x.type().equals(ExonType.DISRUPTED))
+                .filter(x -> x.type() != EXON_LOST)
                 .map(Exon::transcript)
                 .collect(Collectors.toSet());
 

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
+import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.EXON_LOST;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -110,7 +112,7 @@ public class DisruptedExonsTest
     static Exon create(String chr, long start, long end, int rank)
     {
         return ImmutableExon.builder()
-                .type(ExonType.DISRUPTED)
+                .type(EXON_LOST)
                 .clusterId(1)
                 .chromosome(chr)
                 .transcript(chr)

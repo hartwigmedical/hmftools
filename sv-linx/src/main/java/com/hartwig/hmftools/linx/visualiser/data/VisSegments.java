@@ -24,9 +24,8 @@ import com.hartwig.hmftools.linx.visualiser.file.VisSegmentFile;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Segments
+public class VisSegments
 {
-
     private static final RefGenomeCoordinates REF_GENOME = RefGenomeCoordinates.COORDS_37;
 
     public static double segmentPloidyBefore(final int track, @NotNull final GenomePosition position,
@@ -82,12 +81,12 @@ public class Segments
     @NotNull
     public static List<Segment> readTracks(@NotNull final String fileName) throws IOException
     {
-        return VisSegmentFile.read(fileName).stream().map(Segments::fromFile).collect(Collectors.toList());
+        return VisSegmentFile.read(fileName).stream().map(VisSegments::fromFile).collect(Collectors.toList());
     }
 
     @NotNull
     public static List<Segment> extendTerminals(long terminalDistance, @NotNull final List<Segment> segments,
-            @NotNull final List<Link> links, @NotNull final List<GenomePosition> allPositions, boolean showSimpleSvSegments)
+            @NotNull final List<VisSvData> links, @NotNull final List<GenomePosition> allPositions, boolean showSimpleSvSegments)
     {
         final Map<Chromosome, Long> lengths = REF_GENOME.lengths();
         final Map<Chromosome, Long> centromeres = REF_GENOME.centromeres();
@@ -188,7 +187,7 @@ public class Segments
     }
 
     @NotNull
-    static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments, @NotNull final List<Link> links,
+    static List<Segment> incrementOnChromosome(@NotNull final List<Segment> segments, @NotNull final List<VisSvData> links,
             boolean showSimpleSvSegments)
     {
 
@@ -224,7 +223,7 @@ public class Segments
 
     }
 
-    private static boolean showSegment(boolean showSimpleSvSegments, @NotNull final Segment segment, @NotNull final List<Link> links)
+    private static boolean showSegment(boolean showSimpleSvSegments, @NotNull final Segment segment, @NotNull final List<VisSvData> links)
     {
         if (segment.startTerminal() == SegmentTerminal.NONE && segment.endTerminal() == SegmentTerminal.NONE)
         {
@@ -243,9 +242,9 @@ public class Segments
     }
 
     private static boolean showSegment(boolean showSimpleSvSegments, @NotNull final GenomePosition position,
-            @NotNull final List<Link> links)
+            @NotNull final List<VisSvData> links)
     {
-        return Links.findLink(position, links).filter(x -> !x.connectorsOnly(showSimpleSvSegments)).isPresent();
+        return VisLinks.findLink(position, links).filter(x -> !x.connectorsOnly(showSimpleSvSegments)).isPresent();
     }
 
 }

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
-import static com.hartwig.hmftools.linx.visualiser.data.Exons.sortedDownstreamExons;
-import static com.hartwig.hmftools.linx.visualiser.data.Exons.sortedUpstreamExons;
+import static com.hartwig.hmftools.linx.visualiser.data.VisExons.sortedDownstreamExons;
+import static com.hartwig.hmftools.linx.visualiser.data.VisExons.sortedUpstreamExons;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +29,7 @@ public class FusedExons
     {
         final List<FusedExon> result = Lists.newArrayList();
 
-        final List<Exon> fusionExons = Exons.fusionExons(fusion, exons);
+        final List<Exon> fusionExons = VisExons.fusionExons(fusion, exons);
         final List<Exon> upStreamExons = sortedUpstreamExons(fusion, fusionExons);
         final List<Exon> downStreamExons = sortedDownstreamExons(fusion, fusionExons);
         if (upStreamExons.isEmpty() || downStreamExons.isEmpty())

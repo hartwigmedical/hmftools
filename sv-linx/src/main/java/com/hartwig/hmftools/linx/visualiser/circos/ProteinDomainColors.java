@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
-import com.hartwig.hmftools.linx.visualiser.data.ProteinDomains;
+import com.hartwig.hmftools.linx.visualiser.data.VisProteinDomains;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -31,7 +31,7 @@ public class ProteinDomainColors
 
     ProteinDomainColors(@NotNull final Set<String> proteinDomains)
     {
-        proteinColorMap.put(ProteinDomains.UTR, UTR);
+        proteinColorMap.put(VisProteinDomains.UTR, UTR);
 
         final List<String> newProteinDomains =
                 proteinDomains.stream().filter(x -> !proteinColorMap.containsKey(x)).collect(Collectors.toList());
@@ -46,7 +46,7 @@ public class ProteinDomainColors
     @NotNull
     public Color color(@NotNull final ProteinDomain proteinDomain)
     {
-        if (proteinDomain.name().equals(ProteinDomains.UTR))
+        if (proteinDomain.name().equals(VisProteinDomains.UTR))
         {
             return proteinDomain.start() == 1 ? UTR_DOWN : UTR_UP;
         }
