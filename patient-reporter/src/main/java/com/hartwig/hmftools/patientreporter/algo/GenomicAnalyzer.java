@@ -73,11 +73,7 @@ public class GenomicAnalyzer {
 
         LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
 
-        List<VirusBreakend> virusBreakends = VirusBreakendFile.read(config.virusBreakendTsv());
-        ReportableVirusBreakendTotal reportableVirusBreakendTotal =
-                VirusBreakendReportableFactory.analyzeVirusBreakend(config.virusBreakendTsv(), virusBreakends, taxonomyDb,
-                        virusInterpretationModel,
-                        virusBlackListModel);
+        ReportableVirusBreakendTotal reportableVirusBreakendTotal = analyseVirusBreakends(config.virusBreakendTsv());
 
         List<PeachGenotype> peachGenotypes = PeachFactory.analyzePeach(config.peachGenotypeTsv());
 
@@ -157,6 +153,19 @@ public class GenomicAnalyzer {
         }
 
         return false;
+    }
+
+    @NotNull
+    private ReportableVirusBreakendTotal analyseVirusBreakends(@NotNull String virusBreakendTsv) throws IOException {
+        LOGGER.info("Loading virus breakends from {}", virusBreakendTsv);
+        List<VirusBreakend> virusBreakends = VirusBreakendFile.read(virusBreakendTsv);
+
+        VirusBreakendReportableFactory virusBreakendReportableFactory =
+                new VirusBreakendReportableFactory(taxonomyDb, virusInterpretationModel, virusBlackListModel);
+        ReportableVirusBreakendTotal reportableVirusBreakendTotal = virusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends);
+
+        LOGGER.info(" Loaded {} reportable virus breakends", reportableVirusBreakendTotal.reportableViruses().size());
+        return reportableVirusBreakendTotal;
     }
 
     @NotNull

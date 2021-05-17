@@ -7,11 +7,11 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.virusbreakend.ImmutableVirusBreakend;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakendTestFactory;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -19,94 +19,67 @@ public class VirusBreakendReportableFactoryTest {
 
     @Test
     public void canInterpretVirusBreakendForReportingPos() {
-        List<VirusBreakend> virusBreakends = virusBreakendData();
+        List<VirusBreakend> virusBreakends = createTestVirusBreakends();
 
         Map<Integer, String> taxonomyMap = Maps.newHashMap();
         taxonomyMap.put(1, "Human papillomavirus type 16");
         TaxonomyDb taxonomyDb = new TaxonomyDb(taxonomyMap);
 
         Map<Integer, String> virusInterpretationMap = Maps.newHashMap();
-        virusInterpretationMap.put(1, "EBV");
-        virusInterpretationMap.put(2, "HPV");
+        virusInterpretationMap.put(1, "HPV");
+        virusInterpretationMap.put(2, "EBV");
         VirusInterpretationModel virusInterpretationModel = new VirusInterpretationModel(virusInterpretationMap);
 
-        Map<Integer, String> virusBlacklistMap = Maps.newHashMap();
-        virusBlacklistMap.put(1, "taxid_genus");
-        virusBlacklistMap.put(2, "HPV");
-        VirusBlacklistModel virusBlacklistModel = new VirusBlacklistModel(virusBlacklistMap);
+        VirusBlacklistModel virusBlacklistModel = new VirusBlacklistModel(Sets.newHashSet(1), Sets.newHashSet());
 
-        assertEquals(1,
-                VirusBreakendReportableFactory.analyzeVirusBreakend("",
-                        virusBreakends, taxonomyDb, virusInterpretationModel,
-                        virusBlacklistModel).reportableViruses().size());
+        VirusBreakendReportableFactory factory =
+                new VirusBreakendReportableFactory(taxonomyDb, virusInterpretationModel, virusBlacklistModel);
+        assertEquals(1, factory.analyzeVirusBreakend(virusBreakends).reportableViruses().size());
 
-        ReportableVirusBreakend reportableVirusbreakend = VirusBreakendReportableFactory.analyzeVirusBreakend("",
-                virusBreakends, taxonomyDb, virusInterpretationModel,
-                virusBlacklistModel).reportableViruses().get(0);
+        ReportableVirusBreakend reportableVirusbreakend = factory.analyzeVirusBreakend(virusBreakends).reportableViruses().get(0);
         assertEquals("Human papillomavirus type 16", reportableVirusbreakend.virusName());
         assertEquals(2, reportableVirusbreakend.integrations());
 
-        assertEquals("EBV positive, HPV negative",
-                VirusBreakendReportableFactory.analyzeVirusBreakend("",
-                        virusBreakends, taxonomyDb, virusInterpretationModel,
-                        virusBlacklistModel).virusNameSummary());
+        assertEquals("HPV positive, EBV negative", factory.analyzeVirusBreakend(virusBreakends).virusNameSummary());
     }
 
     @NotNull
-    private static List<VirusBreakend> virusBreakendData() {
+    private static List<VirusBreakend> createTestVirusBreakends() {
         List<VirusBreakend> virusBreakends = Lists.newArrayList();
 
-        virusBreakends.add(testBuilder().nameAssigned("Human papillomavirus type 16")
-                .taxidGenus(0)
+        // This one should be added.
+        virusBreakends.add(VirusBreakendTestFactory.testBuilder()
+                .referenceTaxid(1)
+                .taxidGenus(2)
+                .taxidSpecies(1)
                 .integrations(2)
                 .build());
 
-        virusBreakends.add(testBuilder().nameAssigned("Human papillomavirus type 16")
+        // This one has a blacklisted genus taxid
+        virusBreakends.add(VirusBreakendTestFactory.testBuilder()
+                .referenceTaxid(1)
                 .taxidGenus(1)
+                .taxidSpecies(1)
                 .integrations(2)
                 .build());
 
-        virusBreakends.add(testBuilder().nameAssigned("Human papillomavirus type 16")
-                .taxidGenus(0)
+        // This one has a failed QC
+        virusBreakends.add(VirusBreakendTestFactory.testBuilder()
+                .referenceTaxid(1)
+                .taxidGenus(2)
+                .taxidSpecies(1)
                 .qcStatus(VirusBreakendQCStatus.LOW_VIRAL_COVERAGE)
                 .integrations(2)
                 .build());
 
-        virusBreakends.add(testBuilder().nameAssigned("Human papillomavirus type 16")
-                .taxidGenus(0)
+        // This one has no integrations
+        virusBreakends.add(VirusBreakendTestFactory.testBuilder()
+                .referenceTaxid(1)
+                .taxidGenus(2)
+                .taxidSpecies(1)
                 .integrations(0)
                 .build());
 
         return virusBreakends;
-    }
-
-    @NotNull
-    private static ImmutableVirusBreakend.Builder testBuilder() {
-        return ImmutableVirusBreakend.builder()
-                .taxidGenus(1)
-                .nameGenus(Strings.EMPTY)
-                .readsGenusTree(0)
-                .taxidSpecies(1)
-                .nameSpecies(Strings.EMPTY)
-                .readsSpeciesTree(0)
-                .taxidAssigned(1)
-                .nameAssigned(Strings.EMPTY)
-                .readsAssignedTree(0)
-                .readsAssignedDirect(0)
-                .reference(Strings.EMPTY)
-                .referenceTaxid(1)
-                .referenceKmerCount(0)
-                .alternateKmerCount(0)
-                .RName(Strings.EMPTY)
-                .startPos(0)
-                .endPos(0)
-                .numReads(0)
-                .covBases(0)
-                .coverage(0)
-                .meanDepth(0)
-                .meanBaseQ(0)
-                .meanMapQ(0)
-                .integrations(2)
-                .qcStatus(VirusBreakendQCStatus.PASS);
     }
 }

@@ -1,33 +1,35 @@
 package com.hartwig.hmftools.patientreporter.virusbreakend;
 
-import java.util.Map;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class VirusBlacklistModel {
 
     @NotNull
-    private final Map<Integer, String> virusBlacklistMap;
+    private final Set<Integer> blacklistedGenera;
+    @NotNull
+    private final Set<Integer> blacklistedSpecies;
 
-    VirusBlacklistModel(@NotNull final Map<Integer, String> virusBlacklistMap) {
-        this.virusBlacklistMap = virusBlacklistMap;
+    public VirusBlacklistModel(@NotNull final Set<Integer> blacklistedGenera, @NotNull final Set<Integer> blacklistedSpecies) {
+        this.blacklistedGenera = blacklistedGenera;
+        this.blacklistedSpecies = blacklistedSpecies;
     }
 
-    public boolean checkVirusForBlacklisting(int id) {
-        return virusBlacklistMap.containsKey(id);
-    }
-
-    @Nullable
-    public String checkTaxusForId(int id) {
-        return virusBlacklistMap.get(id);
+    public boolean isBlacklisted(@NotNull VirusBreakend virusBreakend) {
+        return blacklistedGenera.contains(virusBreakend.taxidGenus()) || blacklistedSpecies.contains(virusBreakend.taxidSpecies());
     }
 
     @VisibleForTesting
-    int count() {
-        return virusBlacklistMap.keySet().size();
+    int genusCount() {
+        return blacklistedGenera.size();
     }
 
+    @VisibleForTesting
+    int speciesCount() {
+        return blacklistedSpecies.size();
+    }
 }

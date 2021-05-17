@@ -31,12 +31,11 @@ public class VirusInterpretationModel {
         return idHasInterpretation ? speciesToInterpretationMap.get(speciesTaxid) : Strings.EMPTY;
     }
 
-    public Collection<String> viruses() {
+    Collection<String> interpretations() {
         return speciesToInterpretationMap.values();
     }
 
-    @VisibleForTesting
-    public boolean hasInterpretation(int speciesTaxid) {
+    boolean hasInterpretation(int speciesTaxid) {
         return speciesToInterpretationMap.containsKey(speciesTaxid);
     }
 
