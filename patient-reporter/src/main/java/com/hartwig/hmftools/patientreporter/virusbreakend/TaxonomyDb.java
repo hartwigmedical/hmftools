@@ -27,6 +27,7 @@ public class TaxonomyDb {
         if (!isMappedTaxid) {
             LOGGER.warn("Could not match taxid '{}' to a name in taxonomy DB", taxid);
         }
+
         return isMappedTaxid ? taxidToNameMap.get(taxid) : Strings.EMPTY;
     }
 

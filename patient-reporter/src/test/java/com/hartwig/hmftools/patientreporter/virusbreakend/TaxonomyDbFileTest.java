@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.patientreporter.virusbreakend;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
@@ -18,8 +16,5 @@ public class TaxonomyDbFileTest {
     public void canReadTaxonomyDbTsv() throws IOException {
         TaxonomyDb taxonomyDb = TaxonomyDbFile.loadFromTsv(TAXONOMY_DB_TSV);
         assertEquals(1, taxonomyDb.count());
-
-        assertTrue(taxonomyDb.taxidExists(1));
-        assertFalse(taxonomyDb.taxidExists(2));
     }
 }

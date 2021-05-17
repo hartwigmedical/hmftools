@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.virusbreakend;
 import org.jetbrains.annotations.NotNull;
 
 public enum VirusBreakendQCStatus {
-    PASS,
+    NO_ABNORMALITIES,
     LOW_VIRAL_COVERAGE,
     EXCESSIVE_VIRAL_COVERAGE,
     ASSEMBLY_DOWNSAMPLED,
@@ -13,7 +13,7 @@ public enum VirusBreakendQCStatus {
     @NotNull
     public static VirusBreakendQCStatus extractVirusBreakendQCStatus(@NotNull String qcStatusString) {
         if (qcStatusString.isEmpty()) {
-            return PASS;
+            return NO_ABNORMALITIES;
         }
 
         for (VirusBreakendQCStatus qcStatus : VirusBreakendQCStatus.values()) {

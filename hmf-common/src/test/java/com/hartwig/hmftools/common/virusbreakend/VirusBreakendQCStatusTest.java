@@ -9,7 +9,7 @@ public class VirusBreakendQCStatusTest {
 
     @Test
     public void canExtractQCOfVirusBreakend() {
-        assertEquals(VirusBreakendQCStatus.PASS, VirusBreakendQCStatus.extractVirusBreakendQCStatus(Strings.EMPTY));
+        assertEquals(VirusBreakendQCStatus.NO_ABNORMALITIES, VirusBreakendQCStatus.extractVirusBreakendQCStatus(Strings.EMPTY));
         assertEquals(VirusBreakendQCStatus.LOW_VIRAL_COVERAGE, VirusBreakendQCStatus.extractVirusBreakendQCStatus("LOW_VIRAL_COVERAGE"));
         assertEquals(VirusBreakendQCStatus.EXCESSIVE_VIRAL_COVERAGE,
                 VirusBreakendQCStatus.extractVirusBreakendQCStatus("EXCESSIVE_VIRAL_COVERAGE"));

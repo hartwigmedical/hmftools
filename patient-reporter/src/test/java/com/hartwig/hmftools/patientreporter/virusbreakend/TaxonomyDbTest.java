@@ -19,6 +19,7 @@ public class TaxonomyDbTest {
         taxidToNameMap.put(1, "species1");
         TaxonomyDb taxonomyDb = new TaxonomyDb(taxidToNameMap);
 
+        assertEquals(1, taxonomyDb.count());
         assertEquals("species1", taxonomyDb.lookupName(1));
         assertNotEquals("species2", taxonomyDb.lookupName(1));
 

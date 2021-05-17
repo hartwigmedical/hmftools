@@ -23,12 +23,12 @@ public class VirusInterpretationModel {
 
     @NotNull
     public String interpretVirusSpecies(int speciesTaxid) {
-        boolean idHasInterpretation = hasInterpretation(speciesTaxid);
+        boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
 
-        if (!idHasInterpretation) {
+        if (!speciesHasInterpretation) {
             LOGGER.debug("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
-        return idHasInterpretation ? speciesToInterpretationMap.get(speciesTaxid) : Strings.EMPTY;
+        return speciesHasInterpretation ? speciesToInterpretationMap.get(speciesTaxid) : Strings.EMPTY;
     }
 
     Collection<String> interpretations() {

@@ -35,6 +35,6 @@ public final class VirusBreakendTestFactory {
                 .meanBaseQ(0)
                 .meanMapQ(0)
                 .integrations(0)
-                .qcStatus(VirusBreakendQCStatus.PASS);
+                .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES);
     }
 }

@@ -57,7 +57,7 @@ public class VirusBreakendFile {
                 .meanBaseQ(Double.parseDouble(values[21]))
                 .meanMapQ(Double.parseDouble(values[22]))
                 .integrations(Integer.parseInt(values[23]))
-                .qcStatus(VirusBreakendQCStatus.PASS);
+                .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES);
 
         if (values.length == 25) {
             builder.qcStatus(VirusBreakendQCStatus.extractVirusBreakendQCStatus(values[24]));

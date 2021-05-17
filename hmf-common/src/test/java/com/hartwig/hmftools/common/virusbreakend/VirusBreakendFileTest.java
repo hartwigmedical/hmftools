@@ -56,6 +56,6 @@ public class VirusBreakendFileTest {
         assertEquals(115.2, virusbreakend.meanBaseQ(), EPSILON);
         assertEquals(60, virusbreakend.meanMapQ(), EPSILON);
         assertEquals(9, virusbreakend.integrations());
-        assertEquals(VirusBreakendQCStatus.PASS, virusbreakend.qcStatus());
+        assertEquals(VirusBreakendQCStatus.NO_ABNORMALITIES, virusbreakend.qcStatus());
     }
 }
