@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFactory;
+import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFile;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.runcontext.MetaDataResolver;
 import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
@@ -49,6 +49,9 @@ public class AnalysedPatientReporter {
 
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
+        String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
+
+        String pipelineVersion = MetaDataResolver.majorDotMinorVersion(new File(config.pipelineVersionFile()));
         GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.germlineReportingModel(),
                 reportData.taxonomyDb(),
                 reportData.virusInterpretationModel(),
@@ -63,15 +66,12 @@ public class AnalysedPatientReporter {
                 sampleReport.reportViralInsertions(),
                 sampleReport.cohort().reportPeach());
 
-        String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
-
-        String pipelineVersion = MetaDataResolver.majorDotMinorVersion(new File(config.pipelineVersionFile()));
-
-        LOGGER.info("Loading CUPPA results");
+        LOGGER.info("Loading CUPPA result from {}", new File(config.molecularTissueOriginTxt()).getParent());
         MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
-                .molecularTissueOriginResult(MolecularTissueOriginFactory.readMolecularTissueOriginResult(config.molecularTissueOriginTxt()))
-                .molecularTissueOriginPlot(config.molecularTissueOriginPlot())
+                .conclusion(MolecularTissueOriginFile.read(config.molecularTissueOriginTxt()))
+                .plotPath(config.molecularTissueOriginPlot())
                 .build();
+        LOGGER.info(" Molecular tissue origin conclusion: {}", molecularTissueOrigin.conclusion());
 
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
@@ -113,14 +113,16 @@ public class AnalysedPatientReporter {
                 !report.sampleReport().primaryTumorTypeString().isEmpty()
                         ? " (" + report.sampleReport().primaryTumorTypeString() + ")"
                         : Strings.EMPTY);
-        LOGGER.info(" Molecular tissue of origin prediction: {}", report.molecularTissueOrigin().molecularTissueOriginResult());
         LOGGER.info(" Shallow seq purity: {}", report.sampleReport().shallowSeqPurityString());
         LOGGER.info(" Lab SOPs used: {}", report.sampleReport().labProcedures());
         LOGGER.info(" Clinical summary present: {}", (!report.clinicalSummary().isEmpty() ? "yes" : "no"));
+        LOGGER.info(" Cohort: {}", report.sampleReport().cohort().cohortId());
+        LOGGER.info(" Germline reporting level: {}", report.sampleReport().germlineReportingLevel());
 
         GenomicAnalysis analysis = report.genomicAnalysis();
 
         LOGGER.info("Printing genomic analysis results for {}:", report.sampleReport().tumorSampleId());
+        LOGGER.info(" Molecular tissue origin conclusion: {}", report.molecularTissueOrigin().conclusion());
         LOGGER.info(" Somatic variants to report: {}", analysis.reportableVariants().size());
         if (report.sampleReport().germlineReportingLevel() != LimsGermlineReportingLevel.NO_REPORTING) {
             LOGGER.info("  Number of variants known to exist in germline: {}", germlineOnly(analysis.reportableVariants()).size());

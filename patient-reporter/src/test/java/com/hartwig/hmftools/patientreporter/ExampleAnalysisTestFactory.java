@@ -150,10 +150,8 @@ public final class ExampleAnalysisTestFactory {
                 .peachGenotypes(peachGenotypes)
                 .build();
 
-        MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
-                .molecularTissueOriginResult("Skin")
-                .molecularTissueOriginPlot(REPORTER_CONFIG.molecularTissueOriginPlot())
-                .build();
+        MolecularTissueOrigin molecularTissueOrigin =
+                ImmutableMolecularTissueOrigin.builder().conclusion("Skin").plotPath(REPORTER_CONFIG.molecularTissueOriginPlot()).build();
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)

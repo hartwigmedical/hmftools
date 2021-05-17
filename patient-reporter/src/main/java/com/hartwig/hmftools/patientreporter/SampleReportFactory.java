@@ -57,8 +57,6 @@ public final class SampleReportFactory {
             }
         }
 
-        LOGGER.info("Cohort ID of this sample is: {}", cohortConfig.cohortId());
-
         String hospitalPatientId = lims.hospitalPatientId(tumorSampleBarcode);
         LimsChecker.checkHospitalPatientId(hospitalPatientId, tumorSampleId, cohortConfig);
         String biopsyLocation = lims.biopsyLocation(tumorSampleBarcode) != null ? lims.biopsyLocation(tumorSampleBarcode) : Strings.EMPTY;
