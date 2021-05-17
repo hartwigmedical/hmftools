@@ -96,7 +96,7 @@ public final class CnPerChromosomeFactory {
             final String chromosome = entry.getKey().toString();
 
 
-            CopyNumberKey key = new CopyNumberKey(chromosome, ChromosomeArm.P_ARM);
+            CopyNumberKey key = new CopyNumberKey(chromosome, ChromosomeArm.Q_ARM);
 
             int chromosomeLength = getChromosomalArmLength(chromosome, ChromosomeArm.P_ARM);
             double copyNumber = 0;
