@@ -14,12 +14,16 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberFunctions;
 import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberType;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class CnPerChromosomeFactory {
+    private static final Logger LOGGER = LogManager.getLogger(PurpleDataLoader.class);
 
     private CnPerChromosomeFactory() {
     }
@@ -27,18 +31,21 @@ public final class CnPerChromosomeFactory {
     @NotNull
     public static Map<CopyNumberKey, Double> fromPurpleSomaticCopynumberTsv(@NotNull String purpleSomaticCopynumberTsv) throws IOException {
         List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(purpleSomaticCopynumberTsv);
-
         return extractCnPerChromosomeArm(copyNumbers);
     }
 
     @NotNull
     private static Map<CopyNumberKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
-        Map<CopyNumberKey, Double> cnPerChromosomeArm = Maps.newHashMap(determineCopyNumberQArm(copyNumbers));
+        Map<CopyNumberKey, Double> cnPerChromosomeArm = Maps.newHashMap();
         Map<CopyNumberKey, Double> cnPerChromosomePArm = Maps.newHashMap(determineCopyNumberPArm(copyNumbers));
         Map<CopyNumberKey, Double> cnPerChromosomeQArm = Maps.newHashMap(determineCopyNumberQArm(copyNumbers));
 
         cnPerChromosomeArm.putAll(cnPerChromosomePArm);
         cnPerChromosomeArm.putAll(cnPerChromosomeQArm);
+
+        for (Map.Entry<CopyNumberKey, Double> entry :cnPerChromosomeArm.entrySet()) {
+            LOGGER.info(entry.getKey().chromosome + " " + entry.getKey().chromosomeArm + " " + entry.getValue());
+        }
 
         return cnPerChromosomeArm;
     }
@@ -62,26 +69,26 @@ public final class CnPerChromosomeFactory {
         return chrLength - centromerePos.intValue();
     }
 
-    private static  Map<CopyNumberKey, Double> determineCopyNumberPArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
+    private static Map<CopyNumberKey, Double> determineCopyNumberPArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
         RefGenomeCoordinates refGenome = RefGenomeCoordinates.COORDS_37;
         Map<CopyNumberKey, Double> cnPerChromosomeArm = Maps.newHashMap();
 
-        for(Map.Entry<Chromosome,Long> entry : refGenome.lengths().entrySet()) {
+        for (Map.Entry<Chromosome, Long> entry : refGenome.lengths().entrySet()) {
             final String chromosome = entry.getKey().toString();
-
 
             CopyNumberKey key = new CopyNumberKey(chromosome, ChromosomeArm.P_ARM);
 
             int chromosomeLength = getChromosomalArmLength(chromosome, ChromosomeArm.P_ARM);
-            double copyNumber = 0;
+            double copyNumberArm = 0;
             for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
                 if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() < chromosomeLength) {
-                    copyNumber += purpleCopyNumber.averageObservedBAF();
-                    long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) - 1;
-                    copyNumber += copyNumber * totalLengthSegment / chromosomeLength;
+                    double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
+                    long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
+                    copyNumberArm += copyNumber * totalLengthSegment / chromosomeLength;
                 }
             }
-            cnPerChromosomeArm.put(key, copyNumber);
+
+            cnPerChromosomeArm.put(key, copyNumberArm);
 
         }
 
@@ -92,22 +99,22 @@ public final class CnPerChromosomeFactory {
         RefGenomeCoordinates refGenome = RefGenomeCoordinates.COORDS_37;
         Map<CopyNumberKey, Double> cnPerChromosomeArm = Maps.newHashMap();
 
-        for(Map.Entry<Chromosome,Long> entry : refGenome.lengths().entrySet()) {
+        for (Map.Entry<Chromosome, Long> entry : refGenome.lengths().entrySet()) {
             final String chromosome = entry.getKey().toString();
-
 
             CopyNumberKey key = new CopyNumberKey(chromosome, ChromosomeArm.Q_ARM);
 
-            int chromosomeLength = getChromosomalArmLength(chromosome, ChromosomeArm.P_ARM);
-            double copyNumber = 0;
+            int chromosomeLength = getChromosomalArmLength(chromosome, ChromosomeArm.Q_ARM);
+            double copyNumberArm = 0;
             for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
-                if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() < chromosomeLength) {
-                    copyNumber += purpleCopyNumber.averageObservedBAF();
-                    long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) - 1;
-                    copyNumber += copyNumber * totalLengthSegment / chromosomeLength;
+                if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() > chromosomeLength) {
+                    double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
+                    long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
+                    copyNumberArm += copyNumber * totalLengthSegment / chromosomeLength;
                 }
             }
-            cnPerChromosomeArm.put(key, copyNumber);
+
+            cnPerChromosomeArm.put(key, copyNumberArm);
 
         }
 
