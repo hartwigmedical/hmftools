@@ -37,8 +37,8 @@ public final class CnPerChromosomeFactory {
     @NotNull
     private static Map<CopyNumberKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
         Map<CopyNumberKey, Double> cnPerChromosomeArm = Maps.newHashMap();
-        Map<CopyNumberKey, Double> cnPerChromosomePArm = Maps.newHashMap(determineCopyNumberPArm(copyNumbers));
-        Map<CopyNumberKey, Double> cnPerChromosomeQArm = Maps.newHashMap(determineCopyNumberQArm(copyNumbers));
+        Map<CopyNumberKey, Double> cnPerChromosomePArm = Maps.newHashMap(determineCopyNumberArm(copyNumbers, ChromosomeArm.P_ARM));
+        Map<CopyNumberKey, Double> cnPerChromosomeQArm = Maps.newHashMap(determineCopyNumberArm(copyNumbers, ChromosomeArm.Q_ARM));
 
         cnPerChromosomeArm.putAll(cnPerChromosomePArm);
         cnPerChromosomeArm.putAll(cnPerChromosomeQArm);
@@ -69,49 +69,33 @@ public final class CnPerChromosomeFactory {
         return chrLength - centromerePos.intValue();
     }
 
-    private static Map<CopyNumberKey, Double> determineCopyNumberPArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
+
+    private static Map<CopyNumberKey, Double> determineCopyNumberArm(@NotNull List<PurpleCopyNumber> copyNumbers, @NotNull ChromosomeArm chromosomeArm) {
         RefGenomeCoordinates refGenome = RefGenomeCoordinates.COORDS_37;
         Map<CopyNumberKey, Double> cnPerChromosomeArm = Maps.newHashMap();
 
         for (Map.Entry<Chromosome, Long> entry : refGenome.lengths().entrySet()) {
             final String chromosome = entry.getKey().toString();
 
-            CopyNumberKey key = new CopyNumberKey(chromosome, ChromosomeArm.P_ARM);
+            CopyNumberKey key = new CopyNumberKey(chromosome, chromosomeArm);
 
-            int chromosomeLength = getChromosomalArmLength(chromosome, ChromosomeArm.P_ARM);
+            int chromosomeLength = getChromosomalArmLength(chromosome, chromosomeArm);
             double copyNumberArm = 0;
             for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
-                if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() < chromosomeLength) {
-                    double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
-                    long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
-                    copyNumberArm += copyNumber * totalLengthSegment / chromosomeLength;
+                if (chromosomeArm == ChromosomeArm.P_ARM) {
+                    if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() < chromosomeLength) {
+                        double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
+                        long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
+                        copyNumberArm += (copyNumber * totalLengthSegment) / chromosomeLength;
+                    }
+                } else if  (chromosomeArm == ChromosomeArm.Q_ARM) {
+                    if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() > chromosomeLength) {
+                        double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
+                        long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
+                        copyNumberArm += (copyNumber * totalLengthSegment) / chromosomeLength;
+                    }
                 }
-            }
 
-            cnPerChromosomeArm.put(key, copyNumberArm);
-
-        }
-
-        return cnPerChromosomeArm;
-    }
-
-    private static Map<CopyNumberKey, Double> determineCopyNumberQArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
-        RefGenomeCoordinates refGenome = RefGenomeCoordinates.COORDS_37;
-        Map<CopyNumberKey, Double> cnPerChromosomeArm = Maps.newHashMap();
-
-        for (Map.Entry<Chromosome, Long> entry : refGenome.lengths().entrySet()) {
-            final String chromosome = entry.getKey().toString();
-
-            CopyNumberKey key = new CopyNumberKey(chromosome, ChromosomeArm.Q_ARM);
-
-            int chromosomeLength = getChromosomalArmLength(chromosome, ChromosomeArm.Q_ARM);
-            double copyNumberArm = 0;
-            for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
-                if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() > chromosomeLength) {
-                    double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
-                    long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
-                    copyNumberArm += copyNumber * totalLengthSegment / chromosomeLength;
-                }
             }
 
             cnPerChromosomeArm.put(key, copyNumberArm);
