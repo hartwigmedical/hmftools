@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
@@ -18,7 +20,6 @@ import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.protect.ProtectConfig;
-import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosome;
 import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosomeFactory;
 
 import org.apache.logging.log4j.LogManager;
@@ -72,7 +73,7 @@ public final class PurpleDataLoader {
         List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(driverCatalogGermlineTsv);
         LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDriverCatalog.size(), driverCatalogGermlineTsv);
 
-        CnPerChromosome cnPerChromosome = null;
+        Map<CnPerChromosomeFactory.CopyNumberKey, Double> cnPerChromosome = Maps.newHashMap();
         if (purpleSomaticCopynumberTsv != null) {
             cnPerChromosome = CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(purpleSomaticCopynumberTsv);
         }
