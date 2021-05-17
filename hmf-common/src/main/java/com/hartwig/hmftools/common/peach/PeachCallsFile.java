@@ -23,17 +23,14 @@ public final class PeachCallsFile {
 
     @NotNull
     private static List<PeachCalls> fromLines(@NotNull final List<String> lines) {
-        return lines.stream()
-                .skip(1)
-                .map(PeachCallsFile::fromString)
-                .collect(toList());
+        return lines.stream().skip(1).map(PeachCallsFile::fromString).collect(toList());
     }
 
     @NotNull
     private static PeachCalls fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
 
-        final ImmutablePeachCalls.Builder builder = ImmutablePeachCalls.builder()
+        return ImmutablePeachCalls.builder()
                 .gene(values[0])
                 .chromosome(values[1])
                 .positionV37(values[2])
@@ -48,8 +45,7 @@ public final class PeachCallsFile {
                 .variantAnnotationV38(values[11])
                 .filterV38(values[12])
                 .panelVersion(values[13])
-                .repoVersion(values[14]);
-
-        return builder.build();
+                .repoVersion(values[14])
+                .build();
     }
 }

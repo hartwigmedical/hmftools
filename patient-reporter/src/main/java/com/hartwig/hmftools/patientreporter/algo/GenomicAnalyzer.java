@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -10,8 +11,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
-import com.hartwig.hmftools.common.peach.PeachFactory;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
+import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
@@ -75,7 +76,7 @@ public class GenomicAnalyzer {
 
         ReportableVirusBreakendTotal reportableVirusBreakendTotal = analyseVirusBreakends(config.virusBreakendTsv());
 
-        List<PeachGenotype> peachGenotypes = PeachFactory.analyzePeach(config.peachGenotypeTsv());
+        List<PeachGenotype> peachGenotypes = loadPeachData(config.peachGenotypeTsv());
 
         List<ReportableVariant> reportableVariants =
                 ReportableVariantFactory.mergeVariantLists(purpleData.germlineVariants(), purpleData.somaticVariants());
@@ -157,20 +158,30 @@ public class GenomicAnalyzer {
 
     @NotNull
     private ReportableVirusBreakendTotal analyseVirusBreakends(@NotNull String virusBreakendTsv) throws IOException {
-        LOGGER.info("Loading virus breakends from {}", virusBreakendTsv);
+        LOGGER.info("Loading virus breakend data {}", new File(virusBreakendTsv).getParent());
         List<VirusBreakend> virusBreakends = VirusBreakendFile.read(virusBreakendTsv);
 
         VirusBreakendReportableFactory virusBreakendReportableFactory =
                 new VirusBreakendReportableFactory(taxonomyDb, virusInterpretationModel, virusBlackListModel);
         ReportableVirusBreakendTotal reportableVirusBreakendTotal = virusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends);
 
-        LOGGER.info(" Loaded {} reportable virus breakends", reportableVirusBreakendTotal.reportableViruses().size());
+        LOGGER.info(" Loaded {} reportable virus breakends from {}",
+                reportableVirusBreakendTotal.reportableViruses().size(),
+                virusBreakendTsv);
         return reportableVirusBreakendTotal;
     }
 
     @NotNull
+    private static List<PeachGenotype> loadPeachData(@NotNull String peachGenotypeTsv) throws IOException {
+        LOGGER.info("Loading peach genotypes from {}", new File(peachGenotypeTsv).getParent());
+        List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachGenotypeTsv);
+        LOGGER.info(" Loaded {} reportable genotypes from {}", peachGenotypes.size(), peachGenotypeTsv);
+        return peachGenotypes;
+    }
+
+    @NotNull
     private static List<ProtectEvidence> extractReportableEvidenceItems(@NotNull String protectEvidenceTsv) throws IOException {
-        LOGGER.info("Loading PROTECT data from {}", protectEvidenceTsv);
+        LOGGER.info("Loading PROTECT data from {}", new File(protectEvidenceTsv).getParent());
         List<ProtectEvidence> evidences = ProtectEvidenceFile.read(protectEvidenceTsv);
 
         List<ProtectEvidence> reportableEvidenceItems = Lists.newArrayList();
@@ -179,7 +190,7 @@ public class GenomicAnalyzer {
                 reportableEvidenceItems.add(evidence);
             }
         }
-        LOGGER.info(" Loaded {} reportable evidence items", reportableEvidenceItems.size());
+        LOGGER.info(" Loaded {} reportable evidence items from {}", reportableEvidenceItems.size(), protectEvidenceTsv);
         return reportableEvidenceItems;
     }
 }

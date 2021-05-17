@@ -33,15 +33,14 @@ public final class PeachGenotypeFile {
     private static PeachGenotype fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
 
-        final ImmutablePeachGenotype.Builder builder = ImmutablePeachGenotype.builder()
+        return ImmutablePeachGenotype.builder()
                 .gene(values[0])
                 .haplotype(values[1])
                 .function(values[2])
                 .linkedDrugs(values[3])
                 .urlPrescriptionInfo(values[4])
                 .panelVersion(values[5])
-                .repoVersion(values[6]);
-
-        return builder.build();
+                .repoVersion(values[6])
+                .build();
     }
 }

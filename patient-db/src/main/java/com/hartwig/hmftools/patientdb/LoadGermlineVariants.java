@@ -37,7 +37,7 @@ public class LoadGermlineVariants {
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
         Options options = createBasicOptions();
-        CommandLine cmd = createCommandLine(args, options);
+        CommandLine cmd = new DefaultParser().parse(options, args);
 
         String vcfFileLocation = cmd.getOptionValue(GERMLINE_VCF);
         String sample = cmd.getOptionValue(SAMPLE);
@@ -70,10 +70,5 @@ public class LoadGermlineVariants {
         addDatabaseCmdLineArgs(options);
 
         return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
-        return new DefaultParser().parse(options, args);
     }
 }
