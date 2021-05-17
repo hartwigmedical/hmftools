@@ -84,13 +84,16 @@ public class LilacConfig
         if(cmd.hasOption(SAMPLE_DATA_DIR))
         {
             String sampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR));
-            String referenceId = Sample.substring(0, Sample.lastIndexOf('T')) + "R";
 
-            ReferenceBam = sampleDataDir + referenceId + ".hla.bam";
-            TumorBam = sampleDataDir + Sample + ".hla.bam";
-            GeneCopyNumberFile = sampleDataDir + Sample + ".purple.cnv.gene.tsv";
-            SomaticVcf = sampleDataDir + Sample + ".purple.somatic.vcf.gz";
             OutputDir = sampleDataDir;
+
+            String referenceId = Sample.substring(0, Sample.lastIndexOf('T')) + "R";
+            ReferenceBam = sampleDataDir + referenceId + ".hla.bam";
+
+            // these 3 are optional so check existence before initialising
+            TumorBam = checkFileExists(sampleDataDir + Sample + ".hla.bam");
+            GeneCopyNumberFile = checkFileExists(sampleDataDir + Sample + ".purple.cnv.gene.tsv");
+            SomaticVcf = checkFileExists(sampleDataDir + Sample + ".purple.somatic.vcf.gz");
         }
         else
         {
@@ -118,6 +121,11 @@ public class LilacConfig
         Threads = getConfigValue(cmd, THREADS, 1);
 
         DebugPhasing = cmd.hasOption(DEBUG_PHASING); //  || cmd.hasOption(LOG_);
+    }
+
+    private String checkFileExists(final String filename)
+    {
+        return Files.exists(Paths.get(filename)) ? filename : "";
     }
 
     public String outputPrefix() { return OutputDir + Sample;}

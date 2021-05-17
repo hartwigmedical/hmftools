@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
 import static com.hartwig.hmftools.lilac.fragment.NucleotideFragment.reduceById;
 
 import com.google.common.collect.Lists;
@@ -65,7 +66,8 @@ public class SAMRecordReader
 
         mTranscripts = transcripts;
 
-        mCodingRegions = transcripts.values().stream()
+        mCodingRegions = HLA_GENES.stream()
+                .map(x -> mTranscripts.get(x))
                 .map(x -> new BaseRegion(HLA_CHR, x.CodingStart - MAX_DISTANCE, x.CodingEnd + MAX_DISTANCE))
                 .collect(Collectors.toList());
 
@@ -110,7 +112,13 @@ public class SAMRecordReader
     public final List<NucleotideFragment> readFromBam()
     {
         final List<NucleotideFragment> fragments = Lists.newArrayList();
-        mTranscripts.entrySet().stream().forEach(x -> fragments.addAll(readFromBam(x.getKey(), x.getValue())));
+
+        for(String geneName : HLA_GENES)
+        {
+            TranscriptData transcript = mTranscripts.get(geneName);
+            fragments.addAll(readFromBam(geneName, transcript));
+        }
+
         return fragments;
     }
 
@@ -151,10 +159,9 @@ public class SAMRecordReader
     {
         final GenomePosition variantPosition = GenomePositions.create(variant.chromosome(), variant.position());
 
-        for(Map.Entry<String,TranscriptData> entry : mTranscripts.entrySet())
+        for(String geneName : HLA_GENES)
         {
-            TranscriptData transcript = entry.getValue();
-            String geneName = entry.getKey();
+            TranscriptData transcript = mTranscripts.get(geneName);
             boolean reverseStrand = transcript.Strand == NEG_STRAND;
             final List<NamedBed> codingRegions = codingRegions(geneName, transcript);
 

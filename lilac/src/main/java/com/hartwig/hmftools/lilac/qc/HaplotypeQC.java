@@ -119,7 +119,7 @@ public class HaplotypeQC
                     maxLength = max(maxLength, unmatched.Haplotype.length());
                     unusedCount++;
 
-                    LL_LOGGER.warn("  UNMATCHED_HAPLTOYPE - $unmatched");
+                    LL_LOGGER.warn("  UNMATCHED_HAPLTOYPE {}", unmatched);
                 }
             }
         }

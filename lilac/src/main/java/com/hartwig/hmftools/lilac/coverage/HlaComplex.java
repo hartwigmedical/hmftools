@@ -68,16 +68,16 @@ public class HlaComplex
 
         if(!confirmedProtein.isEmpty())
         {
-            LL_LOGGER.info("  confirmed {} unique groups: {}", confirmedProtein.size(), HlaAlleleCoverage.toString(confirmedProtein));
+            LL_LOGGER.info("  confirmed {} unique proteins: {}", confirmedProtein.size(), HlaAlleleCoverage.toString(confirmedProtein));
         }
         else
         {
-            LL_LOGGER.info("  confirmed 0 unique groups");
+            LL_LOGGER.info("  confirmed 0 unique proteins");
         }
 
         if (!discardedProtein.isEmpty())
         {
-            LL_LOGGER.info("  found {} insufficiently unique groups: {}", discardedProtein.size(), HlaAlleleCoverage.toString(discardedProtein));
+            LL_LOGGER.info("  found {} insufficiently unique proteins: {}", discardedProtein.size(), HlaAlleleCoverage.toString(discardedProtein));
         }
 
         List<HlaAllele> confirmedProteinAlleles = alleles(confirmedProtein);

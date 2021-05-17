@@ -80,7 +80,8 @@ public class NucleotideGeneEnrichment
         if(matchToGene(fragment, HLA_C, new Pair(HLA_A, mAcMinBoundary), new Pair(HLA_B, mBcMinBoundary)))
             genes.add(HLA_C);
 
-        return new NucleotideFragment(fragment.getId(), genes, fragment.getNucleotideLoci(), fragment.getNucleotideQuality(), fragment.getNucleotides());
+        return new NucleotideFragment(
+                fragment.getId(), genes, fragment.getNucleotideLoci(), fragment.getNucleotideQuality(), fragment.getNucleotides());
     }
 
     private final boolean matchToGene(
