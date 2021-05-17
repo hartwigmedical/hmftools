@@ -11,7 +11,7 @@ public class CnPerChromosomeFactoryTest {
 
     @Test
     public void extarctCopyNumberperChromosomeArm() throws IOException {
-        CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(System.getProperty("user.home") + "/hmf/tmp/COREDB010053T.purple.cnv.somatic.tsv");
+        CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(System.getProperty("user.home") + "/hmf/tmp/test.purple.cnv.somatic.tsv");
 
     }
 
