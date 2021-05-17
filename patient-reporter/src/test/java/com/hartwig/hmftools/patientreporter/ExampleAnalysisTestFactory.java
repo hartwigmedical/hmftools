@@ -48,9 +48,7 @@ import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusBreakend;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusBreakendTotal;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
 import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosomeFactory;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableHomozygousDisruption;
@@ -97,10 +95,7 @@ public final class ExampleAnalysisTestFactory {
         List<LinxFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        ReportableVirusBreakendTotal virusBreakends = ImmutableReportableVirusBreakendTotal.builder()
-                .reportableViruses(Lists.newArrayList())
-                .virusNameSummary("EBV positive, EBV negative")
-                .build();
+        List<ReportableVirusBreakend> virusBreakends = Lists.newArrayList();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), config.reportGermline(), config.limsCohortConfig());
@@ -181,7 +176,7 @@ public final class ExampleAnalysisTestFactory {
         AnalysedPatientReport coloReport = createWithCOLO829Data(config);
 
         List<LinxFusion> fusions = createTestFusions();
-        ReportableVirusBreakendTotal virusBreakends = createTestVirusBreakends();
+        List<ReportableVirusBreakend> virusBreakends = createTestVirusBreakends();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
@@ -1035,12 +1030,12 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static ReportableVirusBreakendTotal createTestVirusBreakends() {
-        List<ReportableVirusBreakend> reportableVirusbreakend = Lists.newArrayList(ImmutableReportableVirusBreakend.builder()
+    private static List<ReportableVirusBreakend> createTestVirusBreakends() {
+        return Lists.newArrayList(ImmutableReportableVirusBreakend.builder()
                 .virusName("Human papillomavirus type 16")
                 .integrations(2)
                 .build());
-        return ImmutableReportableVirusBreakendTotal.builder().reportableViruses(reportableVirusbreakend).virusNameSummary("EBV").build();
+
     }
 }
 

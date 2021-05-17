@@ -31,7 +31,7 @@ public class VirusBreakendReportableFactory {
     }
 
     @NotNull
-    public ReportableVirusBreakendTotal analyzeVirusBreakend(@NotNull List<VirusBreakend> virusBreakends) {
+    public List<ReportableVirusBreakend> analyzeVirusBreakend(@NotNull List<VirusBreakend> virusBreakends) {
         List<VirusBreakend> virusBreakendsFiltered = Lists.newArrayList();
         for (VirusBreakend virusBreakend : virusBreakends) {
             if (include(virusBreakend)) {
@@ -42,7 +42,6 @@ public class VirusBreakendReportableFactory {
         List<ReportableVirusBreakend> virusBreakendsReportable = Lists.newArrayList();
         Set<String> positiveSummary = Sets.newHashSet();
 
-        // TODO Add the interpretation to ReportableVirusBreakend
         for (VirusBreakend virusBreakend : virusBreakendsFiltered) {
             String virusName = taxonomyDb.lookupName(virusBreakend.referenceTaxid());
             virusBreakendsReportable.add(ImmutableReportableVirusBreakend.builder()
@@ -70,10 +69,7 @@ public class VirusBreakendReportableFactory {
         summary.addAll(negativeSummary);
         String virusNameSummary = summary.toString().replace("[", "").replace("]", "");
 
-        return ImmutableReportableVirusBreakendTotal.builder()
-                .reportableViruses(virusBreakendsReportable)
-                .virusNameSummary(virusNameSummary)
-                .build();
+        return virusBreakendsReportable;
     }
 
     private boolean include(@NotNull VirusBreakend virusBreakend) {

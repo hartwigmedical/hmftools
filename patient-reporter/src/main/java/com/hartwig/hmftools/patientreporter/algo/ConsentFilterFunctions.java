@@ -8,8 +8,7 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusBreakendTotal;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
@@ -32,12 +31,8 @@ public class ConsentFilterFunctions {
                 germlineReportingLevel,
                 genomicAnalysis.hasReliablePurity());
 
-        ReportableVirusBreakendTotal filteredVirusBreakends = reportViralBreakends
-                ? genomicAnalysis.virusBreakends()
-                : ImmutableReportableVirusBreakendTotal.builder()
-                        .reportableViruses(Lists.newArrayList())
-                        .virusNameSummary(Strings.EMPTY)
-                        .build();
+        List<ReportableVirusBreakend> filteredVirusBreakends =
+                reportViralBreakends ? genomicAnalysis.virusBreakends() : Lists.newArrayList();
 
         List<PeachGenotype> filteredPeachGenotype = reportPeach ? genomicAnalysis.peachGenotypes() : Lists.newArrayList();
 

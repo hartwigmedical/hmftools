@@ -21,7 +21,7 @@ import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
 import com.hartwig.hmftools.patientreporter.virusbreakend.TaxonomyDb;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBreakendReportableFactory;
@@ -74,7 +74,7 @@ public class GenomicAnalyzer {
 
         LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
 
-        ReportableVirusBreakendTotal reportableVirusBreakendTotal = analyseVirusBreakends(config.virusBreakendTsv());
+        List<ReportableVirusBreakend> reportableVirusBreakend = analyseVirusBreakends(config.virusBreakendTsv());
 
         List<PeachGenotype> peachGenotypes = loadPeachData(config.peachGenotypeTsv());
 
@@ -113,7 +113,7 @@ public class GenomicAnalyzer {
                 .geneFusions(linxData.fusions())
                 .geneDisruptions(linxData.geneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())
-                .virusBreakends(reportableVirusBreakendTotal)
+                .virusBreakends(reportableVirusBreakend)
                 .peachGenotypes(peachGenotypes)
                 .build();
     }
@@ -157,18 +157,18 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    private ReportableVirusBreakendTotal analyseVirusBreakends(@NotNull String virusBreakendTsv) throws IOException {
+    private List<ReportableVirusBreakend> analyseVirusBreakends(@NotNull String virusBreakendTsv) throws IOException {
         LOGGER.info("Loading virus breakend data {}", new File(virusBreakendTsv).getParent());
         List<VirusBreakend> virusBreakends = VirusBreakendFile.read(virusBreakendTsv);
 
         VirusBreakendReportableFactory virusBreakendReportableFactory =
                 new VirusBreakendReportableFactory(taxonomyDb, virusInterpretationModel, virusBlackListModel);
-        ReportableVirusBreakendTotal reportableVirusBreakendTotal = virusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends);
+        List<ReportableVirusBreakend> reportableVirusBreakend = virusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends);
 
         LOGGER.info(" Loaded {} reportable virus breakends from {}",
-                reportableVirusBreakendTotal.reportableViruses().size(),
+                reportableVirusBreakend.size(),
                 virusBreakendTsv);
-        return reportableVirusBreakendTotal;
+        return reportableVirusBreakend;
     }
 
     @NotNull

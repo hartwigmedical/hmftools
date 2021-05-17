@@ -131,7 +131,7 @@ public class AnalysedPatientReporter {
         LOGGER.info(" Gene fusions to report: {}", analysis.geneFusions().size());
         LOGGER.info(" Homozygous disruptions to report: {}", analysis.homozygousDisruptions().size());
         LOGGER.info(" Gene disruptions to report: {}", analysis.geneDisruptions().size());
-        LOGGER.info(" Virus breakend to report: {}", analysis.virusBreakends().reportableViruses().size());
+        LOGGER.info(" Virus breakend to report: {}", analysis.virusBreakends().size());
         LOGGER.info(" Pharmacogenetics to report: {}", analysis.peachGenotypes().size());
 
         LOGGER.info(" CHORD analysis HRD prediction: {} ({})", analysis.chordHrdValue(), analysis.chordHrdStatus());

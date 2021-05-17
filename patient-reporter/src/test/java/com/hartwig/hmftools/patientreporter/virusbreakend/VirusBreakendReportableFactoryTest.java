@@ -34,13 +34,12 @@ public class VirusBreakendReportableFactoryTest {
 
         VirusBreakendReportableFactory factory =
                 new VirusBreakendReportableFactory(taxonomyDb, virusInterpretationModel, virusBlacklistModel);
-        assertEquals(1, factory.analyzeVirusBreakend(virusBreakends).reportableViruses().size());
+        assertEquals(1, factory.analyzeVirusBreakend(virusBreakends).size());
 
-        ReportableVirusBreakend reportableVirusbreakend = factory.analyzeVirusBreakend(virusBreakends).reportableViruses().get(0);
+        ReportableVirusBreakend reportableVirusbreakend = factory.analyzeVirusBreakend(virusBreakends).get(0);
         assertEquals("Human papillomavirus type 16", reportableVirusbreakend.virusName());
         assertEquals(2, reportableVirusbreakend.integrations());
 
-        assertEquals("HPV positive, EBV negative", factory.analyzeVirusBreakend(virusBreakends).virusNameSummary());
     }
 
     @NotNull
