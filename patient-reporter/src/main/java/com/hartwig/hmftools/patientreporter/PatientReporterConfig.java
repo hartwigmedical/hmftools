@@ -65,8 +65,8 @@ public interface PatientReporterConfig {
     // Resources used for generating an analysed patient report
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
     String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
-    String VIRUS_DB_TSV = "virus_db_tsv";
-    String VIRUS_SUMMARY_TSV = "virus_summary_tsv";
+    String TAXONOMY_DB_TSV = "taxonomy_db_tsv";
+    String VIRUS_INTERPRETATION_TSV = "virus_interpretation_tsv";
     String VIRUS_BLACKLIST_TSV = "virus_blacklist_tsv";
 
     // Some additional optional params and flags
@@ -119,9 +119,9 @@ public interface PatientReporterConfig {
 
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
-        options.addOption(VIRUS_DB_TSV, true, "Path towards a TSV containing the virus database used.");
-        options.addOption(VIRUS_SUMMARY_TSV, true, "Path towards a TSV containing the virus summaries.");
-        options.addOption(VIRUS_BLACKLIST_TSV, true, "Path towards a TSV containing the virus names which we report on summary page.");
+        options.addOption(TAXONOMY_DB_TSV, true, "Path towards a TSV containing a mapping from taxid to taxonomy name.");
+        options.addOption(VIRUS_INTERPRETATION_TSV, true, "Path towards a TSV containing interpretation rules for viruses.");
+        options.addOption(VIRUS_BLACKLIST_TSV, true, "Path towards a TSV containing blacklisting for specific viruses.");
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
         options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
@@ -233,10 +233,10 @@ public interface PatientReporterConfig {
     String sampleSummaryTsv();
 
     @NotNull
-    String virusDbTsv();
+    String taxonomyDbTsv();
 
     @NotNull
-    String virusSummaryTsv();
+    String virusInterpretationTsv();
 
     @NotNull
     String virusBlacklistTsv();
@@ -285,8 +285,8 @@ public interface PatientReporterConfig {
 
         String germlineReportingTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
-        String virusDbTsv = Strings.EMPTY;
-        String virusSummaryTsv = Strings.EMPTY;
+        String taxonomyDbTsv = Strings.EMPTY;
+        String virusInterpretationTsv = Strings.EMPTY;
         String virusBlacklistTsv = Strings.EMPTY;
 
         if (isQCFail && qcFailReason.isDeepWGSDataAvailable()) {
@@ -314,8 +314,8 @@ public interface PatientReporterConfig {
 
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
-            virusDbTsv = nonOptionalFile(cmd, VIRUS_DB_TSV);
-            virusSummaryTsv = nonOptionalFile(cmd, VIRUS_SUMMARY_TSV);
+            taxonomyDbTsv = nonOptionalFile(cmd, TAXONOMY_DB_TSV);
+            virusInterpretationTsv = nonOptionalFile(cmd, VIRUS_INTERPRETATION_TSV);
             virusBlacklistTsv = nonOptionalFile(cmd, VIRUS_BLACKLIST_TSV);
         }
 
@@ -354,8 +354,8 @@ public interface PatientReporterConfig {
                 .protectEvidenceTsv(protectEvidenceTsv)
                 .germlineReportingTsv(germlineReportingTsv)
                 .sampleSummaryTsv(sampleSummaryTsv)
-                .virusDbTsv(virusDbTsv)
-                .virusSummaryTsv(virusSummaryTsv)
+                .taxonomyDbTsv(taxonomyDbTsv)
+                .virusInterpretationTsv(virusInterpretationTsv)
                 .virusBlacklistTsv(virusBlacklistTsv)
                 .comments(cmd.getOptionValue(COMMENTS))
                 .isCorrectedReport(cmd.hasOption(CORRECTED_REPORT))
