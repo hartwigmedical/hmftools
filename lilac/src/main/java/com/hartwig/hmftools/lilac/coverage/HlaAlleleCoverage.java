@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.coverage;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 import static com.hartwig.hmftools.lilac.hla.HlaAllele.contains;
 
 import java.util.Collections;
@@ -59,14 +60,13 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
 
     public static List<HlaAlleleCoverage> expand(final List<HlaAlleleCoverage> coverage)
     {
-        List<HlaAlleleCoverage> a = coverage.stream().filter(x -> x.Allele.Gene.equals("A")).collect(Collectors.toList());
-        List<HlaAlleleCoverage> b = coverage.stream().filter(x -> x.Allele.Gene.equals("B")).collect(Collectors.toList());
-        List<HlaAlleleCoverage> c = coverage.stream().filter(x -> x.Allele.Gene.equals("C")).collect(Collectors.toList());
-
         List<HlaAlleleCoverage> expandedCoverage = Lists.newArrayList();
-        expandedCoverage.addAll(splitSingle(a));
-        expandedCoverage.addAll(splitSingle(b));
-        expandedCoverage.addAll(splitSingle(c));
+
+        for(String gene : GENE_IDS)
+        {
+            List<HlaAlleleCoverage> geneCoverage = coverage.stream().filter(x -> x.Allele.Gene.equals(gene)).collect(Collectors.toList());
+            expandedCoverage.addAll(splitSingle(geneCoverage));
+        }
 
         Collections.sort(expandedCoverage, new AlleleSorter());
         return expandedCoverage;

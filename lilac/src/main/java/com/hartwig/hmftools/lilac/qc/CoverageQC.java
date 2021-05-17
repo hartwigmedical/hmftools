@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.lilac.qc;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,9 +50,9 @@ public class CoverageQC {
             int totalFragments, final HlaComplexCoverage winner)
     {
         List<HlaAllele> alleles = winner.getAlleleCoverage().stream().map(x -> x.Allele).collect(Collectors.toList());
-        int aTypes = alleles.stream().filter(x -> x.Gene.equals("A")).collect(Collectors.toSet()).size();
-        int bTypes = alleles.stream().filter(x -> x.Gene.equals("B")).collect(Collectors.toSet()).size();
-        int cTypes = alleles.stream().filter(x -> x.Gene.equals("C")).collect(Collectors.toSet()).size();
+        int aTypes = alleles.stream().filter(x -> x.Gene.equals(GENE_A)).collect(Collectors.toSet()).size();
+        int bTypes = alleles.stream().filter(x -> x.Gene.equals(GENE_B)).collect(Collectors.toSet()).size();
+        int cTypes = alleles.stream().filter(x -> x.Gene.equals(GENE_C)).collect(Collectors.toSet()).size();
 
         if (aTypes == 0 || bTypes == 0 || cTypes == 0)
         {

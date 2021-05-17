@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.lilac.hla;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
+
 import java.util.List;
 
 import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
@@ -25,20 +29,20 @@ public class HlaContextFactory
     {
         ExpectedAlleles expectedAlleles =
                 ExpectedAlleles.expectedAlleles(NucleotideGeneEnrichment.getAFilterB(), NucleotideGeneEnrichment.getAFilterC());
-        return new HlaContext("A", ABoundaries, expectedAlleles);
+        return new HlaContext(GENE_A, ABoundaries, expectedAlleles);
     }
 
     public final HlaContext hlaB()
     {
         ExpectedAlleles expectedAlleles =
                 ExpectedAlleles.expectedAlleles(NucleotideGeneEnrichment.getBFilterA(), NucleotideGeneEnrichment.getBFilterC());
-        return new HlaContext("B", BBoundaries, expectedAlleles);
+        return new HlaContext(GENE_B, BBoundaries, expectedAlleles);
     }
 
     public final HlaContext hlaC()
     {
         ExpectedAlleles expectedAlleles =
                 ExpectedAlleles.expectedAlleles(NucleotideGeneEnrichment.getCFilterA(), NucleotideGeneEnrichment.getCFilterB());
-        return new HlaContext("C", CBoundaries, expectedAlleles);
+        return new HlaContext(GENE_C, CBoundaries, expectedAlleles);
     }
 }

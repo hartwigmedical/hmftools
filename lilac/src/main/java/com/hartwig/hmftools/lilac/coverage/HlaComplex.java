@@ -2,6 +2,10 @@ package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.COMPLEX_PERMS_THRESHOLD;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.groupCoverage;
 import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.proteinCoverage;
 import static com.hartwig.hmftools.lilac.hla.HlaAllele.contains;
@@ -85,9 +89,9 @@ public class HlaComplex
 
         List<HlaAllele> candidatesAfterConfirmedProteins = filterWithConfirmedProteins(candidatesAfterConfirmedGroups, confirmedProteinAlleles);
 
-        List<HlaComplex> aOnlyComplexes = gene("A", confirmedGroupAlleles, confirmedProteinAlleles, candidatesAfterConfirmedProteins);
-        List<HlaComplex> bOnlyComplexes = gene("B", confirmedGroupAlleles, confirmedProteinAlleles, candidatesAfterConfirmedProteins);
-        List<HlaComplex> cOnlyComplexes = gene("C", confirmedGroupAlleles, confirmedProteinAlleles, candidatesAfterConfirmedProteins);
+        List<HlaComplex> aOnlyComplexes = gene(GENE_A, confirmedGroupAlleles, confirmedProteinAlleles, candidatesAfterConfirmedProteins);
+        List<HlaComplex> bOnlyComplexes = gene(GENE_B, confirmedGroupAlleles, confirmedProteinAlleles, candidatesAfterConfirmedProteins);
+        List<HlaComplex> cOnlyComplexes = gene(GENE_C, confirmedGroupAlleles, confirmedProteinAlleles, candidatesAfterConfirmedProteins);
 
         List<HlaComplex> complexes;
         long simpleComplexCount = (long)aOnlyComplexes.size() * bOnlyComplexes.size() * cOnlyComplexes.size();
@@ -122,9 +126,9 @@ public class HlaComplex
     private static List<HlaComplex> buildComplexes(
             final List<HlaAllele> confirmedGroups, final List<HlaAllele> confirmedProteins, final List<HlaAllele> candidates)
     {
-        List<HlaComplex> a = gene("A", confirmedGroups, confirmedProteins, candidates);
-        List<HlaComplex> b = gene("B", confirmedGroups, confirmedProteins, candidates);
-        List<HlaComplex> c = gene("C", confirmedGroups, confirmedProteins, candidates);
+        List<HlaComplex> a = gene(GENE_A, confirmedGroups, confirmedProteins, candidates);
+        List<HlaComplex> b = gene(GENE_B, confirmedGroups, confirmedProteins, candidates);
+        List<HlaComplex> c = gene(GENE_C, confirmedGroups, confirmedProteins, candidates);
         return combineComplexes(combineComplexes(a, b), c);
     }
 
@@ -259,16 +263,9 @@ public class HlaComplex
 
     private static List<HlaAllele> filterWithConfirmedGroups(final List<HlaAllele> alleles, final List<HlaAllele> confirmedGroups)
     {
-        // List<HlaAllele> alleleGroups = alleles.stream().map(x -> x.asAlleleGroup()).collect(Collectors.toList());
-        //return filterWithConfirmed(alleleGroups, confirmedGroups);
-
         Map<String,List<HlaAllele>> map = Maps.newHashMap();
 
-        map.put("A", confirmedGroups.stream().filter(x -> x.Gene.equals("A")).collect(Collectors.toList()));
-        map.put("B", confirmedGroups.stream().filter(x -> x.Gene.equals("B")).collect(Collectors.toList()));
-        map.put("C", confirmedGroups.stream().filter(x -> x.Gene.equals("C")).collect(Collectors.toList()));
-
-        // return this.filter { map[it.gene]!!.size < 2 || map[it.gene]!!.contains(transform(it)) }
+        GENE_IDS.forEach(x -> map.put(x, confirmedGroups.stream().filter(y -> y.Gene.equals(x)).collect(Collectors.toList())));
 
         List<HlaAllele> results = Lists.newArrayList();
         for(HlaAllele allele : alleles)

@@ -8,6 +8,9 @@ import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFLATE_TEMPLATE;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.proteinCoverage;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
 import static com.hartwig.hmftools.lilac.hla.HlaAllele.contains;
@@ -162,9 +165,9 @@ public class LilacApplication implements AutoCloseable, Runnable
         List<HlaSequenceLoci> expectedSequences = mRefData.AminoAcidSequences.stream()
                 .filter(x -> contains(mConfig.ExpectedAlleles, x.getAllele().asFourDigit())).collect(Collectors.toList());
         
-        PhasedEvidenceValidation.logInconsistentEvidence("A", aPhasedEvidence, expectedSequences);
-        PhasedEvidenceValidation.logInconsistentEvidence("B", bPhasedEvidence, expectedSequences);
-        PhasedEvidenceValidation.logInconsistentEvidence("C", cPhasedEvidence, expectedSequences);
+        PhasedEvidenceValidation.logInconsistentEvidence(GENE_A, aPhasedEvidence, expectedSequences);
+        PhasedEvidenceValidation.logInconsistentEvidence(GENE_B, bPhasedEvidence, expectedSequences);
+        PhasedEvidenceValidation.logInconsistentEvidence(GENE_C, cPhasedEvidence, expectedSequences);
 
         // Phased Candidates
         List<HlaAllele> aCandidates = candidateFactory.phasedCandidates(hlaAContext, aUnphasedCandidates, aPhasedEvidence);

@@ -5,10 +5,11 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
@@ -145,16 +146,6 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
             }
         }
 
-        /*
-        List<HlaAlleleCoverage> aList = takeN(unique.stream().filter(x -> x.Allele.Gene.equals("A")).collect(Collectors.toList()), 2);
-        List<HlaAlleleCoverage> bList = takeN(unique.stream().filter(x -> x.Allele.Gene.equals("B")).collect(Collectors.toList()), 2);
-        List<HlaAlleleCoverage> cList = takeN(unique.stream().filter(x -> x.Allele.Gene.equals("C")).collect(Collectors.toList()), 2);
-
-        results.addAll(aList);
-        results.addAll(bList);
-        results.addAll(cList);
-         */
-
         Collections.sort(results, Collections.reverseOrder());
         return results;
     }
@@ -205,7 +196,7 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
             rawAlleles.add(HlaAllele.fromString(alleleData));
         }
 
-        List<HlaAllele> allAlleles = org.apache.commons.compress.utils.Lists.newArrayList();
+        List<HlaAllele> allAlleles = Lists.newArrayList();
 
         int aCount = 0;
         int bCount = 0;
@@ -213,12 +204,12 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
 
         for(HlaAllele allele : rawAlleles)
         {
-            if(allele.Gene.equals("A"))
+            if(allele.Gene.equals(GENE_A))
             {
                 ++aCount;
                 allAlleles.add(allele);
             }
-            else if(allele.Gene.equals("B"))
+            else if(allele.Gene.equals(GENE_B))
             {
                 if(aCount == 1)
                 {

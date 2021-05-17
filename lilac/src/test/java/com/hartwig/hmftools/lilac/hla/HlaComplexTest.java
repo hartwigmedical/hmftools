@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.lilac.hla;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
+
 import static junit.framework.TestCase.assertEquals;
 
 import java.util.Collections;
@@ -34,7 +37,7 @@ public class HlaComplexTest
         List<HlaAllele> confirmedGroup = confirmedProtein.stream().map(x -> x.asAlleleGroup()).collect(Collectors.toList());
         // distinct
 
-        List<HlaComplex> result = HlaComplex.gene("A", confirmedGroup, confirmedProtein, all);
+        List<HlaComplex> result = HlaComplex.gene(GENE_A, confirmedGroup, confirmedProtein, all);
         assertEquals(confirmedProtein, result.get(0).getAlleles());
     }
 
@@ -88,12 +91,12 @@ public class HlaComplexTest
 
     private HlaAllele createA(int group, int protein)
     {
-        return new HlaAllele("A", String.valueOf(group), String.valueOf(protein), "", "", null, null);
+        return new HlaAllele(GENE_A, String.valueOf(group), String.valueOf(protein), "", "", null, null);
     }
 
     private HlaAllele createB(int group, int protein)
     {
-        return new HlaAllele("B", String.valueOf(group), String.valueOf(protein), "", "", null, null);
+        return new HlaAllele(GENE_B, String.valueOf(group), String.valueOf(protein), "", "", null, null);
     }
 
 }
