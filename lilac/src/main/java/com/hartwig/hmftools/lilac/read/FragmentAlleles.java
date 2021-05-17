@@ -188,4 +188,23 @@ public class FragmentAlleles
 
         return new FragmentAlleles(aminoAcidFragment, consistentFull, distinctPartial, wildAminoAcidMatch);
     }
+
+    public static void applyUniqueStopLossFragments(List<FragmentAlleles> fragmentAlleles, int stopLossFragments, final HlaAllele stopLossAllele)
+    {
+        if(stopLossFragments == 0)
+            return;
+
+        List<FragmentAlleles> sampleFragments = fragmentAlleles.stream()
+                .filter(x -> x.contains(stopLossAllele))
+                .map(x -> new FragmentAlleles(x.getFragment(), Lists.newArrayList(stopLossAllele), Lists.newArrayList(), Lists.newArrayList()))
+                .collect(Collectors.toList());
+
+        for(int i = 0; i < stopLossFragments; ++i)
+        {
+            if(i >= sampleFragments.size())
+                break;
+
+            fragmentAlleles.add(sampleFragments.get(i));
+        }
+    }
 }

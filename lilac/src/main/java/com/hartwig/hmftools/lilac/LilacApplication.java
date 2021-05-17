@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments
 import static com.hartwig.hmftools.lilac.hla.HlaAllele.contains;
 import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
@@ -53,7 +54,6 @@ import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
 import com.hartwig.hmftools.lilac.variant.SomaticVariants;
 
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -64,7 +64,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
@@ -244,6 +243,9 @@ public class LilacApplication implements AutoCloseable, Runnable
         List<FragmentAlleles> referenceFragmentAlleles = FragmentAlleles.create(
                 referenceCoverageFragments, referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences,
                 referenceNucleotideHeterozygousLoci, candidateNucleotideSequences);
+
+        FragmentAlleles.applyUniqueStopLossFragments(
+                referenceFragmentAlleles, referenceBamReader.stopLossOnCIndels(), mRefData.StopLossRecoveryAlleles.get(0));
 
         // Complexes
         List<HlaComplex> complexes = HlaComplex.complexes(mConfig, mRefData, referenceFragmentAlleles, candidateAlleles); // , recoveredAlleles, not used

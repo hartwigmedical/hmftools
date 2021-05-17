@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
+import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C;
 import static com.hartwig.hmftools.lilac.fragment.NucleotideFragment.reduceById;
 
 import com.google.common.collect.Lists;
@@ -53,9 +54,6 @@ public class SAMRecordReader
     public static final int MAX_DISTANCE = 1000;
 
     private static final Set<Indel> INDEL_PON = Sets.newHashSet();
-
-    // keep track of this common INDEL allele
-    private static final Indel STOP_LOSS_ON_C = new Indel("6", 31237115, "CN", "C");
 
     public SAMRecordReader(
             final String bamFile, final String refGenome, final Map<String,TranscriptData> transcripts, final NucleotideFragmentFactory factory)

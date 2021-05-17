@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.read;
 
+import com.hartwig.hmftools.lilac.hla.HlaAllele;
+
 public class Indel
 {
     public final boolean IsInsert;
@@ -10,6 +12,8 @@ public class Indel
     public final String Ref;
     public final String Alt;
 
+    private final int mHashcode;
+
     public Indel(final String contig, int position, final String ref, final String alt)
     {
         Contig = contig;
@@ -19,6 +23,8 @@ public class Indel
         IsInsert = Ref.length() < Alt.length();
         IsDelete = !IsInsert;
         Length = Alt.length() - Ref.length();
+
+        mHashcode = toString().hashCode();
     }
 
     public static Indel fromString(final String line)
@@ -32,8 +38,24 @@ public class Indel
         return Contig + ':' + Position + ' ' + Ref + '>' + Alt;
     }
 
+    public boolean equals(final Object other)
+    {
+        if(this == other)
+            return true;
+
+        if (!(other instanceof Indel))
+            return false;
+
+        return hashCode() == other.hashCode();
+    }
+
+    public int hashCode() { return mHashcode; }
+
     public final boolean match(final Indel other)
     {
+        if(equals(other))
+            return true;
+
         if(!Contig.equals(other.Contig))
             return false;
 

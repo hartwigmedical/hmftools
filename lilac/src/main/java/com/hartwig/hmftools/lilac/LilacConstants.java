@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.read.Indel;
 
 public class LilacConstants
 {
@@ -34,6 +35,8 @@ public class LilacConstants
     public static final List<String> EXCLUDED_ALLELES = Lists.newArrayList(
             "A*01:81", "A*01:237", "A*33:191", "A*11:353", "A*30:95", "A*30:136", "A*31:135");
 
+    // common INDEL associated with allele C*04:09N
+    public static final Indel STOP_LOSS_ON_C = new Indel("6", 31237115, "CN", "C");
 
     public static final List<Integer> A_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348, 364);
     public static final List<Integer> B_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348);

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.read;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -51,7 +52,7 @@ public class SAMCodingRecord
 
     public final int maxIndelSize()
     {
-        return mIndels.stream().mapToInt(x -> x.Length).max().orElse(0);
+        return mIndels.stream().mapToInt(x -> abs(x.Length)).max().orElse(0);
     }
 
     public final boolean containsSoftClip() { return SoftClippedStart > 0 || SoftClippedEnd > 0; }
