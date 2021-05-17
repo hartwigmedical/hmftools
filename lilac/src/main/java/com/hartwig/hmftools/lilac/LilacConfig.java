@@ -104,7 +104,7 @@ public class LilacConfig
             OutputDir = parseOutputDir(cmd);
         }
 
-        ResourceDir = cmd.getOptionValue(RESOURCE_DIR);
+        ResourceDir = checkAddDirSeparator(cmd.getOptionValue(RESOURCE_DIR));
         RefGenome = cmd.getOptionValue(REF_GENOME, "");
 
         MinBaseQual = ConfigUtils.getConfigValue(cmd, MIN_BASE_QUAL, LilacConstants.DEFAULT_MIN_BASE_QUAL);

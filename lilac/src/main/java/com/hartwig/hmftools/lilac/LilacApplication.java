@@ -82,8 +82,8 @@ public class LilacApplication implements AutoCloseable, Runnable
         mStartTime = System.currentTimeMillis();
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Lilac-%d").build();
-
         mExecutorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
+
         mNucleotideGeneEnrichment = new NucleotideGeneEnrichment(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES);
     }
 

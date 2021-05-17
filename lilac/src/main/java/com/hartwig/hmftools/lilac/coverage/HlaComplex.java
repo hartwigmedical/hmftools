@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.COMPLEX_PERMS_THRESHOLD;
 import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.groupCoverage;
 import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.proteinCoverage;
 import static com.hartwig.hmftools.lilac.hla.HlaAllele.contains;
@@ -36,7 +37,7 @@ public class HlaComplex
 
         HlaComplexCoverage groupCoverage = groupCoverage(referenceFragmentAlleles, candidateAlleles);
 
-        List<HlaAlleleCoverage> confirmedGroups = groupCoverage.confirmUnique(config);
+        List<HlaAlleleCoverage> confirmedGroups = groupCoverage.confirmUnique(config, Lists.newArrayList());
 
         List<HlaAlleleCoverage> discardedGroups = groupCoverage.getAlleleCoverage().stream()
                 .filter(x -> x.UniqueCoverage > 0 && !confirmedGroups.contains(x)).collect(Collectors.toList());
@@ -61,7 +62,7 @@ public class HlaComplex
         List<HlaAllele> confirmedGroupAlleles = alleles(confirmedGroups);
         List<HlaAllele> candidatesAfterConfirmedGroups = filterWithConfirmedGroups(candidateAlleles, confirmedGroupAlleles);
         HlaComplexCoverage proteinCoverage = proteinCoverage(referenceFragmentAlleles, candidatesAfterConfirmedGroups);
-        List<HlaAlleleCoverage> confirmedProtein = proteinCoverage.confirmUnique(config);
+        List<HlaAlleleCoverage> confirmedProtein = proteinCoverage.confirmUnique(config, confirmedGroupAlleles);
         List<HlaAlleleCoverage> discardedProtein = proteinCoverage.getAlleleCoverage().stream()
                 .filter(x -> x.UniqueCoverage > 0 && !confirmedProtein.contains(x)).collect(Collectors.toList());
         Collections.sort(discardedProtein, Collections.reverseOrder());
@@ -91,7 +92,7 @@ public class HlaComplex
         List<HlaComplex> complexes;
         long simpleComplexCount = (long)aOnlyComplexes.size() * bOnlyComplexes.size() * cOnlyComplexes.size();
 
-        if (simpleComplexCount > 100_000 || simpleComplexCount < 0)
+        if (simpleComplexCount > COMPLEX_PERMS_THRESHOLD || simpleComplexCount < 0)
         {
             LL_LOGGER.info("Candidate permutations exceeds maximum complexity");
 

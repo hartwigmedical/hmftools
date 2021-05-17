@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.lilac.LilacConfig.OUTPUT_DIR;
 import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
 import static com.hartwig.hmftools.lilac.LilacConstants.ALL_NUCLEOTIDE_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.ALL_PROTEIN_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTOFF;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToFourDigit;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToSixDigit;
@@ -30,6 +31,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.lilac.cohort.CohortFrequency;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
@@ -56,6 +58,8 @@ public class ReferenceData
     public final List<HlaAllele> CommonAlleles; // common in population
     public final List<HlaAllele> StopLossRecoveryAlleles;
 
+    private final CohortFrequency mAlleleFrequencies;
+
     public final Map<String,TranscriptData> HlaTranscriptData;
 
     public final LociPosition LociPositionFinder;
@@ -63,8 +67,9 @@ public class ReferenceData
     private final HlaAlleleCache mAlleleCache;
 
     private static final char SEQUENCE_DELIM = '|';
-    private static final String NUC_REF_FILE = "lilac_ref_nucleotide_sequences.csv";
-    private static final String AA_REF_FILE = "lilac_ref_aminoacid_sequences.csv";
+    private static final String NUC_REF_FILE = "hla_ref_nucleotide_sequences.csv";
+    private static final String AA_REF_FILE = "hla_ref_aminoacid_sequences.csv";
+    private static final String COHORT_ALLELE_FREQ_FILE = "lilac_allele_frequencies.csv";
 
     public ReferenceData(final String resourceDir, final LilacConfig config)
     {
@@ -72,6 +77,8 @@ public class ReferenceData
         mConfig = config;
 
         mAlleleCache = new HlaAlleleCache();
+
+        mAlleleFrequencies = new CohortFrequency(mResourceDir + COHORT_ALLELE_FREQ_FILE);
 
         NucleotideSequences = Lists.newArrayList();
         AminoAcidSequences = Lists.newArrayList();
@@ -218,11 +225,10 @@ public class ReferenceData
 
     private void loadCommonAlleles()
     {
-        final List<String> commonAlleleLines = new BufferedReader(new InputStreamReader(
-                ReferenceData.class.getResourceAsStream("/alleles/common.txt")))
-                .lines().collect(Collectors.toList());
-
-        commonAlleleLines.stream().map(x -> mAlleleCache.requestFourDigit(x)).forEach(x -> CommonAlleles.add(x));
+        mAlleleFrequencies.getAlleleFrequencies().entrySet().stream()
+                .filter(x -> x.getValue() >= COMMON_ALLELES_FREQ_CUTOFF)
+                .map(x -> mAlleleCache.requestFourDigit(x.getKey().toString()))
+                .forEach(x -> CommonAlleles.add(x));
     }
 
     private void loadStopLossRecoveryAllele()
@@ -415,10 +421,10 @@ public class ReferenceData
 
     public void rewriteRefData(final String outputDir)
     {
-        String nucleotideSequenceFile = outputDir + "lilac_ref_nucleotide_sequences.csv";
+        String nucleotideSequenceFile = outputDir + NUC_REF_FILE;
         writeSequenceData(nucleotideSequenceFile, NucleotideSequences);
 
-        String aminoAcidSequenceFile = outputDir + "lilac_ref_aminoacid_sequences.csv";
+        String aminoAcidSequenceFile = outputDir + AA_REF_FILE;
         writeSequenceData(aminoAcidSequenceFile, AminoAcidSequences);
     }
 

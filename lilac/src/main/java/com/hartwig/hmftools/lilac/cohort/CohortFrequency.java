@@ -28,6 +28,12 @@ public class CohortFrequency
             loadData(cmd.getOptionValue(ALLELE_FREQUENCY_FILE));
     }
 
+    public CohortFrequency(final String freqFile)
+    {
+        mAlleleFrequencies = Maps.newHashMap();
+        loadData(freqFile);
+    }
+
     public Map<HlaAllele, Double> getAlleleFrequencies()
     {
         return mAlleleFrequencies;
@@ -67,7 +73,7 @@ public class CohortFrequency
                 }
 
                 String alleleStr = items[0];
-                double frequency = Double.parseDouble(items[1]) / 100.0;
+                double frequency = Double.parseDouble(items[1]);
                 mAlleleFrequencies.put(HlaAllele.fromString(alleleStr), frequency);
             }
 

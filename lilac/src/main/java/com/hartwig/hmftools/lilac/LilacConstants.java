@@ -14,11 +14,18 @@ public class LilacConstants
     public static final int DEFAULT_MIN_CONF_UNIQUE_COVERAGE = 10;
     public static final int DEFAULT_MAX_DIST_FROM_TOP_SCORE = 3;
 
-    public static final String HLA_A = "HLA-A";
-    public static final String HLA_B = "HLA-B";
-    public static final String HLA_C = "HLA-C";
-    public static final String HLA_PREFIX = "HLA-";
+    public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.01;
 
+    public static final String GENE_A = "A";
+    public static final String GENE_B = "B";
+    public static final String GENE_C = "C";
+
+    public static final String HLA_PREFIX = "HLA-";
+    public static final String HLA_A = HLA_PREFIX + GENE_A;
+    public static final String HLA_B = HLA_PREFIX + GENE_B;
+    public static final String HLA_C = HLA_PREFIX + GENE_C;
+
+    public static final List<String> GENE_IDS = Lists.newArrayList(GENE_A, GENE_B, GENE_C);
     public static final List<String> HLA_GENES = Lists.newArrayList(HLA_A, HLA_B, HLA_C);
     public static final String HLA_CHR = "6";
 

@@ -5,6 +5,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -102,21 +103,58 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
         return "totalCoverage\tuniqueCoverage\tsharedCoverage\twildCoverage\ttypes\tallele1\tallele2\tallele3\tallele4\tallele5\tallele6";
     }
 
-    public List<HlaAlleleCoverage> confirmUnique(final LilacConfig config)
+    public List<HlaAlleleCoverage> confirmUnique(final LilacConfig config, final List<HlaAllele> confirmedGroupAlleles)
     {
         List<HlaAlleleCoverage> unique = mAlleleCoverage.stream()
                 .filter(x -> x.UniqueCoverage >= config.MinConfirmedUniqueCoverage).collect(Collectors.toList());
 
         Collections.sort(unique, Collections.reverseOrder());
 
+        List<HlaAlleleCoverage> results = Lists.newArrayList();
+
+        // take at most 2 alleles for each gene, and at most 1 unique protein if more than 1 unique group is provided
+        for(String gene : GENE_IDS)
+        {
+            List<HlaAlleleCoverage> geneCoverage = unique.stream().filter(x -> x.Allele.Gene.equals(gene)).collect(Collectors.toList());
+
+            if(geneCoverage.isEmpty())
+                continue;
+
+            final List<HlaAllele> geneGroupAlleles = confirmedGroupAlleles.stream().filter(x -> x.Gene.equals(gene)).collect(Collectors.toList());
+
+            int geneCount = 0;
+            for(HlaAlleleCoverage coverage : geneCoverage)
+            {
+                if(geneGroupAlleles.size() > 1)
+                {
+                    // how many added already from this protein's group
+                    int matchedGroupCount = (int)results.stream()
+                            .filter(x -> geneGroupAlleles.contains(x.Allele.asAlleleGroup())
+                                    && x.Allele.asAlleleGroup().equals(coverage.Allele.asAlleleGroup())).count();
+
+                    if(matchedGroupCount >= 1)
+                        continue;
+                }
+
+                results.add(coverage);
+
+                ++geneCount;
+
+                if(geneCount >= 2)
+                    break;
+            }
+        }
+
+        /*
         List<HlaAlleleCoverage> aList = takeN(unique.stream().filter(x -> x.Allele.Gene.equals("A")).collect(Collectors.toList()), 2);
         List<HlaAlleleCoverage> bList = takeN(unique.stream().filter(x -> x.Allele.Gene.equals("B")).collect(Collectors.toList()), 2);
         List<HlaAlleleCoverage> cList = takeN(unique.stream().filter(x -> x.Allele.Gene.equals("C")).collect(Collectors.toList()), 2);
 
-        List<HlaAlleleCoverage> results = Lists.newArrayList();
         results.addAll(aList);
         results.addAll(bList);
         results.addAll(cList);
+         */
+
         Collections.sort(results, Collections.reverseOrder());
         return results;
     }
