@@ -32,9 +32,9 @@ public class LoadVirusBreakendData {
         CommandLine cmd = new DefaultParser().parse(options, args);
 
         String sample = cmd.getOptionValue(SAMPLE);
-        String viusBreakendTsv = cmd.getOptionValue(VIRUS_BREAKEND_TSV);
+        String virusBreakendTsv = cmd.getOptionValue(VIRUS_BREAKEND_TSV);
 
-        if (Utils.anyNull(sample, viusBreakendTsv)) {
+        if (Utils.anyNull(sample, virusBreakendTsv)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-DB - Load VIRUSBreakend Data", options);
             System.exit(1);
@@ -42,8 +42,8 @@ public class LoadVirusBreakendData {
 
         DatabaseAccess dbWriter = databaseAccess(cmd);
 
-        LOGGER.info("Reading virus breakend TSV {}", viusBreakendTsv);
-        List<VirusBreakend> virusBreakends = VirusBreakendFile.read(viusBreakendTsv);
+        LOGGER.info("Reading virus breakend TSV {}", virusBreakendTsv);
+        List<VirusBreakend> virusBreakends = VirusBreakendFile.read(virusBreakendTsv);
         LOGGER.info(" Read {} virus breakends", virusBreakends.size());
 
         LOGGER.info("Writing virus breakends into database for {}", sample);
