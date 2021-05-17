@@ -2,8 +2,17 @@ package com.hartwig.hmftools.protect.cnchromosome;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
+
+import org.jetbrains.annotations.NotNull;
+import org.junit.Test;
+
 public class CnPerChromosomeFactoryTest {
 
-    //TODO
+    @Test
+    public void extarctCopyNumberperChromosomeArm() throws IOException {
+        CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(System.getProperty("user.home") + "/hmf/tmp/COREDB010053T.purple.cnv.somatic.tsv");
+
+    }
 
 }
