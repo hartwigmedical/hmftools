@@ -27,31 +27,29 @@ public class LoadVirusBreakendData {
     private static final String SAMPLE = "sample";
     private static final String VIRUS_BREAKEND_TSV = "virus_breakend_tsv";
 
-
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
 
         String sample = cmd.getOptionValue(SAMPLE);
-        String viusBreakendtsv = cmd.getOptionValue(VIRUS_BREAKEND_TSV);
+        String viusBreakendTsv = cmd.getOptionValue(VIRUS_BREAKEND_TSV);
 
-        if (Utils.anyNull(sample, viusBreakendtsv)) {
+        if (Utils.anyNull(sample, viusBreakendTsv)) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Patient-DB - Load PGX Data", options);
+            formatter.printHelp("Patient-DB - Load VIRUSBreakend Data", options);
             System.exit(1);
         }
 
         DatabaseAccess dbWriter = databaseAccess(cmd);
 
-        LOGGER.info("Reading virus breakend TSV {}", viusBreakendtsv);
-        List<VirusBreakend> virusBreakends = VirusBreakendFile.read(viusBreakendtsv);
-        LOGGER.info(" Read {} virus breakend", virusBreakends.size());
+        LOGGER.info("Reading virus breakend TSV {}", viusBreakendTsv);
+        List<VirusBreakend> virusBreakends = VirusBreakendFile.read(viusBreakendTsv);
+        LOGGER.info(" Read {} virus breakends", virusBreakends.size());
 
         LOGGER.info("Writing virus breakends into database for {}", sample);
         dbWriter.writeVirusBreakend(sample, virusBreakends);
 
         LOGGER.info("Complete");
-
     }
 
     @NotNull
@@ -59,7 +57,6 @@ public class LoadVirusBreakendData {
         Options options = new Options();
 
         options.addOption(SAMPLE, true, "Sample for which we are going to load the virus breakends");
-
         options.addOption(VIRUS_BREAKEND_TSV, true, "Path towards the virus breakend TSV file");
 
         addDatabaseCmdLineArgs(options);
