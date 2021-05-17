@@ -1,19 +1,18 @@
 package com.hartwig.hmftools.protect.cnchromosome;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
 
-import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
+import com.google.common.io.Resources;
+
 import org.junit.Test;
 
 public class CnPerChromosomeFactoryTest {
 
+    private static final String PURPLE_COPYNUMBER_TSV = Resources.getResource("cnchromosome/sample_purple.cnv.somatic.tsv").getPath();
+
     @Test
-    @Ignore
-    public void extarctCopyNumberperChromosomeArm() throws IOException {
-        CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(System.getProperty("user.home") + "/hmf/tmp/COREDB010053T.purple.cnv.somatic.tsv");
+    public void extractCopyNumberperChromosomeArm() throws IOException {
+        CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(PURPLE_COPYNUMBER_TSV);
 
     }
 
