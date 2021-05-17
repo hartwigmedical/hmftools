@@ -55,8 +55,8 @@ public class QCFailChapter implements ReportChapter {
         reportDocument.add(TumorLocationAndTypeTable.createTumorType(failReport.sampleReport().primaryTumorTypeString(),
                 contentWidth()));
 
-        reportDocument.add(new Paragraph("The information regarding 'primary tumor location' and 'primary tumor type' is based on "
-                + "information received from the originating hospital.").addStyle(ReportResources.subTextSmallStyle()));
+        reportDocument.add(new Paragraph("The information regarding 'primary tumor location', 'primary tumor type' 'biopsy location'"
+                + " is based on information received from the originating hospital.").addStyle(ReportResources.subTextSmallStyle()));
         reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
         reportDocument.add(createFailReasonDiv(failReport.reason()));
@@ -165,6 +165,8 @@ public class QCFailChapter implements ReportChapter {
         Div div = createDisclaimerDiv();
         div.add(reportIsBasedOnBloodAndTumorSamples());
         div.add(testsArePerformedByAccreditedLab());
+        div.add(testsArePerformedUnderUNI());
+        div.add(testsManual());
         div.add(reportIsVerifiedByAndAddressedTo());
         div.add(reportIsGeneratedByPatientReporterVersion());
         failReport.comments().ifPresent(comments -> div.add(createContentParagraphRed("Comments: " + comments)));
@@ -274,6 +276,16 @@ public class QCFailChapter implements ReportChapter {
     private Paragraph testsArePerformedByAccreditedLab() {
         return createContentParagraph(
                 "The results on this report are based on tests that are performed under ISO/ICE-17025:2017 TESTING L633 accreditation.");
+    }
+
+    @NotNull
+    private Paragraph testsArePerformedUnderUNI() {
+        return createContentParagraph("UDI-DI: ", ReportResources.UDI_DI + ".");
+    }
+
+    @NotNull
+    private Paragraph testsManual() {
+        return createContentParagraph("The OncoAct user manual can be found at ", ReportResources.MANUAL + ".");
     }
 
     @NotNull

@@ -69,6 +69,7 @@ public final class VirusBreakendReportableFactory {
                 if (!virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()).equals(Strings.EMPTY)) {
                     positiveSummary.add(virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()) + " positive");
                 }
+            } else {
                 LOGGER.warn("Virus breakend has called not a HPV/EBV/MCV virus");
             }
         }
