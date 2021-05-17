@@ -36,138 +36,86 @@ public class VirusBreakendReportableFactoryTest {
         VirusBlacklistModel virusBlacklistModel = new VirusBlacklistModel(virusBlacklist);
 
         assertEquals(1,
-                VirusBreakendReportableFactory.analyzeVirusBreakend("", virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)
-                        .reportableViruses()
-                        .size());
+                VirusBreakendReportableFactory.analyzeVirusBreakend("",
+                        virusBreakends,
+                        virusDbModel,
+                        virusSummaryModel,
+                        virusBlacklistModel).reportableViruses().size());
 
-        ReportableVirusBreakend reportableVirusbreakend =
-                VirusBreakendReportableFactory.analyzeVirusBreakend("", virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)
-                        .reportableViruses()
-                        .get(0);
+        ReportableVirusBreakend reportableVirusbreakend = VirusBreakendReportableFactory.analyzeVirusBreakend("",
+                virusBreakends,
+                virusDbModel,
+                virusSummaryModel,
+                virusBlacklistModel).reportableViruses().get(0);
         assertEquals("Human papillomavirus type 16", reportableVirusbreakend.virusName());
         assertEquals(2, reportableVirusbreakend.integrations());
 
         assertEquals("EBV positive, HPV negative",
-                VirusBreakendReportableFactory.analyzeVirusBreakend("", virusBreakends, virusDbModel, virusSummaryModel, virusBlacklistModel)
-                        .virusNameSummary());
+                VirusBreakendReportableFactory.analyzeVirusBreakend("",
+                        virusBreakends,
+                        virusDbModel,
+                        virusSummaryModel,
+                        virusBlacklistModel).virusNameSummary());
     }
 
     @NotNull
     private static List<VirusBreakend> virusBreakendData() {
         List<VirusBreakend> virusBreakends = Lists.newArrayList();
 
-        virusBreakends.add(ImmutableVirusBreakend.builder()
+        virusBreakends.add(testBuilder().nameAssigned("Human papillomavirus type 16")
+                .taxidGenus(0)
+                .qcStatus(VirusBreakendQCStatus.PASS)
+                .integrations(2)
+                .build());
+
+        virusBreakends.add(testBuilder().nameAssigned("Human papillomavirus type 16")
+                .taxidGenus(1)
+                .qcStatus(VirusBreakendQCStatus.PASS)
+                .integrations(2)
+                .build());
+
+        virusBreakends.add(testBuilder().nameAssigned("Human papillomavirus type 16")
+                .taxidGenus(0)
+                .qcStatus(VirusBreakendQCStatus.LOW_VIRAL_COVERAGE)
+                .integrations(2)
+                .build());
+
+        virusBreakends.add(testBuilder().nameAssigned("Human papillomavirus type 16")
+                .taxidGenus(0)
+                .qcStatus(VirusBreakendQCStatus.PASS)
+                .integrations(0)
+                .build());
+
+        return virusBreakends;
+    }
+
+    @NotNull
+    private static ImmutableVirusBreakend.Builder testBuilder() {
+        return ImmutableVirusBreakend.builder()
                 .taxidGenus(1)
                 .nameGenus(Strings.EMPTY)
                 .readsGenusTree(0)
                 .taxidSpecies(1)
                 .nameSpecies(Strings.EMPTY)
                 .readsSpeciesTree(0)
-                .taxidAssigned(0)
-                .nameAssigned("Human papillomavirus type 16")
-                .readsAssignedTree(0)
-                .readsAssignedDirect(0)
-                .reference(Strings.EMPTY)
-                .referenceTaxid(1)
-                .referenceKmerCount(0)
-                .alternateKmerCount(0)
-                .Rname(Strings.EMPTY)
-                .startpos(0)
-                .endpos(0)
-                .numreads(0)
-                .covbases(0)
-                .coverage(0)
-                .meandepth(0)
-                .meanbaseq(0)
-                .meanmapq(0)
-                .integrations(2)
-                .QCStatus(VirusBreakendQCStatus.ASSEMBLY_DOWNSAMPLED)
-                .build());
-
-        virusBreakends.add(ImmutableVirusBreakend.builder()
-                .taxidGenus(0)
-                .nameGenus(Strings.EMPTY)
-                .readsGenusTree(0)
-                .taxidSpecies(0)
-                .nameSpecies(Strings.EMPTY)
-                .readsSpeciesTree(0)
-                .taxidAssigned(0)
-                .nameAssigned("Human papillomavirus type 16")
-                .readsAssignedTree(0)
-                .readsAssignedDirect(0)
-                .reference(Strings.EMPTY)
-                .referenceTaxid(0)
-                .referenceKmerCount(0)
-                .alternateKmerCount(0)
-                .Rname(Strings.EMPTY)
-                .startpos(0)
-                .endpos(0)
-                .numreads(0)
-                .covbases(0)
-                .coverage(0)
-                .meandepth(0)
-                .meanbaseq(0)
-                .meanmapq(0)
-                .integrations(2)
-                .QCStatus(VirusBreakendQCStatus.LOW_VIRAL_COVERAGE)
-                .build());
-
-        virusBreakends.add(ImmutableVirusBreakend.builder()
-                .taxidGenus(0)
-                .nameGenus(Strings.EMPTY)
-                .readsGenusTree(0)
-                .taxidSpecies(1)
-                .nameSpecies(Strings.EMPTY)
-                .readsSpeciesTree(0)
                 .taxidAssigned(1)
-                .nameAssigned("Human papillomavirus type 16")
+                .nameAssigned(Strings.EMPTY)
                 .readsAssignedTree(0)
                 .readsAssignedDirect(0)
                 .reference(Strings.EMPTY)
                 .referenceTaxid(1)
                 .referenceKmerCount(0)
                 .alternateKmerCount(0)
-                .Rname(Strings.EMPTY)
-                .startpos(0)
-                .endpos(0)
-                .numreads(0)
-                .covbases(0)
+                .RName(Strings.EMPTY)
+                .startPos(0)
+                .endPos(0)
+                .numReads(0)
+                .covBases(0)
                 .coverage(0)
-                .meandepth(0)
-                .meanbaseq(0)
-                .meanmapq(0)
+                .meanDepth(0)
+                .meanBaseQ(0)
+                .meanMapQ(0)
                 .integrations(2)
-                .QCStatus(VirusBreakendQCStatus.ASSEMBLY_DOWNSAMPLED)
-                .build());
-
-        virusBreakends.add(ImmutableVirusBreakend.builder()
-                .taxidGenus(0)
-                .nameGenus(Strings.EMPTY)
-                .readsGenusTree(0)
-                .taxidSpecies(0)
-                .nameSpecies(Strings.EMPTY)
-                .readsSpeciesTree(0)
-                .taxidAssigned(0)
-                .nameAssigned("Human papillomavirus type 16")
-                .readsAssignedTree(0)
-                .readsAssignedDirect(0)
-                .reference(Strings.EMPTY)
-                .referenceTaxid(1)
-                .referenceKmerCount(0)
-                .alternateKmerCount(0)
-                .Rname(Strings.EMPTY)
-                .startpos(0)
-                .endpos(0)
-                .numreads(0)
-                .covbases(0)
-                .coverage(0)
-                .meandepth(0)
-                .meanbaseq(0)
-                .meanmapq(0)
-                .integrations(0)
-                .QCStatus(VirusBreakendQCStatus.ASSEMBLY_DOWNSAMPLED)
-                .build());
-
-        return virusBreakends;
+                .qcStatus(VirusBreakendQCStatus.ASSEMBLY_DOWNSAMPLED);
     }
 }

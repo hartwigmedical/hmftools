@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class VirusBreakendFactory {
@@ -48,20 +47,20 @@ public class VirusBreakendFactory {
                 .referenceTaxid(Integer.parseInt(values[11]))
                 .referenceKmerCount(Integer.parseInt(values[12]))
                 .alternateKmerCount(Integer.parseInt(values[13]))
-                .Rname(values[14])
-                .startpos(Integer.parseInt(values[15]))
-                .endpos(Integer.parseInt(values[16]))
-                .numreads(Integer.parseInt(values[17]))
-                .covbases(Integer.parseInt(values[18]))
+                .RName(values[14])
+                .startPos(Integer.parseInt(values[15]))
+                .endPos(Integer.parseInt(values[16]))
+                .numReads(Integer.parseInt(values[17]))
+                .covBases(Integer.parseInt(values[18]))
                 .coverage(Double.parseDouble(values[19]))
-                .meandepth(Double.parseDouble(values[20]))
-                .meanbaseq(Double.parseDouble(values[21]))
-                .meanmapq(Double.parseDouble(values[22]))
+                .meanDepth(Double.parseDouble(values[20]))
+                .meanBaseQ(Double.parseDouble(values[21]))
+                .meanMapQ(Double.parseDouble(values[22]))
                 .integrations(Integer.parseInt(values[23]))
-                .QCStatus(VirusBreakendQCStatus.extractVirusBreakendQCStatus(Strings.EMPTY));
+                .qcStatus(VirusBreakendQCStatus.PASS);
 
         if (values.length == 25) {
-            builder.QCStatus(VirusBreakendQCStatus.extractVirusBreakendQCStatus(values[24]));
+            builder.qcStatus(VirusBreakendQCStatus.extractVirusBreakendQCStatus(values[24]));
         }
 
         return builder.build();

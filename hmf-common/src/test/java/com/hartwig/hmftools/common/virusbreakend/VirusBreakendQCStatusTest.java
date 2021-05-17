@@ -9,7 +9,7 @@ public class VirusBreakendQCStatusTest {
 
     @Test
     public void canExtractQCOfVirusBreakend() {
-        assertEquals(VirusBreakendQCStatus.UNKNOWN, VirusBreakendQCStatus.extractVirusBreakendQCStatus(Strings.EMPTY));
+        assertEquals(VirusBreakendQCStatus.PASS, VirusBreakendQCStatus.extractVirusBreakendQCStatus(Strings.EMPTY));
         assertEquals(VirusBreakendQCStatus.LOW_VIRAL_COVERAGE, VirusBreakendQCStatus.extractVirusBreakendQCStatus("LOW_VIRAL_COVERAGE"));
         assertEquals(VirusBreakendQCStatus.EXCESSIVE_VIRAL_COVERAGE,
                 VirusBreakendQCStatus.extractVirusBreakendQCStatus("EXCESSIVE_VIRAL_COVERAGE"));
@@ -19,7 +19,6 @@ public class VirusBreakendQCStatusTest {
                 VirusBreakendQCStatus.extractVirusBreakendQCStatus("CHILD_TAXID_REFERENCE"));
         assertEquals(VirusBreakendQCStatus.UNCLEAR_TAXID_ASSIGNMENT,
                 VirusBreakendQCStatus.extractVirusBreakendQCStatus("UNCLEAR_TAXID_ASSIGNMENT"));
-
     }
 
     @Test(expected = IllegalStateException.class)

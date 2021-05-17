@@ -1,16 +1,13 @@
 package com.hartwig.hmftools.patientreporter.virusbreakend;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakendFactory;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
-import com.hartwig.hmftools.patientreporter.algo.GenomicAnalyzer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,7 +25,6 @@ public final class VirusBreakendReportableFactory {
     public static ReportableVirusBreakendTotal analyzeVirusBreakend(@NotNull String virusBreakendTsv,
             @NotNull List<VirusBreakend> virusBreakends, @NotNull VirusDbModel virusDbModel, @NotNull VirusSummaryModel virusSummaryModel,
             @NotNull VirusBlacklistModel virusBlackListModel) {
-
         List<VirusBreakend> virusBreakendsFiltered = Lists.newArrayList();
         List<ReportableVirusBreakend> virusBreakendsReportable = Lists.newArrayList();
         Set<String> positiveSummary = Sets.newHashSet();
@@ -37,7 +33,7 @@ public final class VirusBreakendReportableFactory {
 
         LOGGER.info("Loading virus breakend data from {}", new File(virusBreakendTsv).getParent());
         for (VirusBreakend virusBreakend : virusBreakends) {
-            if (virusBreakend.QCStatus() != VirusBreakendQCStatus.LOW_VIRAL_COVERAGE) {
+            if (virusBreakend.qcStatus() != VirusBreakendQCStatus.LOW_VIRAL_COVERAGE) {
                 if (virusBreakend.integrations() >= 1) {
                     if (virusBlackListModel.checkTaxusForId(virusBreakend.taxidGenus()) != null && virusBlackListModel.checkTaxusForId(
                             virusBreakend.taxidGenus()).equals("taxid_genus")) {

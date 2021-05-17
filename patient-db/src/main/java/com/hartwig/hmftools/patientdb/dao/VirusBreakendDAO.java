@@ -80,17 +80,17 @@ class VirusBreakendDAO {
                 virusBreakend.referenceTaxid(),
                 virusBreakend.referenceKmerCount(),
                 virusBreakend.alternateKmerCount(),
-                virusBreakend.Rname(),
-                virusBreakend.startpos(),
-                virusBreakend.endpos(),
-                virusBreakend.numreads(),
-                virusBreakend.covbases(),
+                virusBreakend.RName(),
+                virusBreakend.startPos(),
+                virusBreakend.endPos(),
+                virusBreakend.numReads(),
+                virusBreakend.covBases(),
                 virusBreakend.coverage(),
-                virusBreakend.meandepth(),
-                virusBreakend.meanbaseq(),
-                virusBreakend.meanmapq(),
+                virusBreakend.meanDepth(),
+                virusBreakend.meanBaseQ(),
+                virusBreakend.meanMapQ(),
                 virusBreakend.integrations(),
-                virusBreakend.QCStatus());
+                virusBreakend.qcStatus());
     }
 
     void deleteVirusBreakendForSample(@NotNull String sample) {
