@@ -79,16 +79,16 @@ public final class CnPerChromosomeFactory {
             CopyNumberKey key = new CopyNumberKey(chromosome, ChromosomeArm.P_ARM);
 
             int chromosomeLength = getChromosomalArmLength(chromosome, ChromosomeArm.P_ARM);
-            double copyNumber = 0;
+            double copyNumberArm = 0;
             for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
-                if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() > chromosomeLength) {
-                    copyNumber = purpleCopyNumber.averageTumorCopyNumber();
+                if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() < chromosomeLength) {
+                    double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
                     long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
-                    copyNumber += copyNumber * totalLengthSegment / chromosomeLength;
+                    copyNumberArm += copyNumber * totalLengthSegment / chromosomeLength;
                 }
             }
 
-            cnPerChromosomeArm.put(key, copyNumber);
+            cnPerChromosomeArm.put(key, copyNumberArm);
 
         }
 
@@ -104,17 +104,17 @@ public final class CnPerChromosomeFactory {
 
             CopyNumberKey key = new CopyNumberKey(chromosome, ChromosomeArm.Q_ARM);
 
-            int chromosomeLength = getChromosomalArmLength(chromosome, ChromosomeArm.P_ARM);
-            double copyNumber = 0;
+            int chromosomeLength = getChromosomalArmLength(chromosome, ChromosomeArm.Q_ARM);
+            double copyNumberArm = 0;
             for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
-                if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() < chromosomeLength) {
-                    copyNumber = purpleCopyNumber.averageTumorCopyNumber();
-
+                if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() > chromosomeLength) {
+                    double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
                     long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
-                    copyNumber += copyNumber * totalLengthSegment / chromosomeLength;
+                    copyNumberArm += copyNumber * totalLengthSegment / chromosomeLength;
                 }
             }
-            cnPerChromosomeArm.put(key, copyNumber);
+
+            cnPerChromosomeArm.put(key, copyNumberArm);
 
         }
 
