@@ -12,12 +12,12 @@ import org.junit.Test;
 
 public class VirusBlacklistFileTest {
 
-    private static final String VIRUS_BLACKLIST_TSV = Resources.getResource("virusbreakend/virus_blacklist.tsv").getPath();
+    private static final String VIRUS_BLACKLIST_TSV = Resources.getResource("viral_reporting/virus_blacklist.tsv").getPath();
 
     @Test
     public void readVirusBlacklistTsv() throws IOException {
         VirusBlacklistModel virusBlacklistModel = VirusBlacklistFile.buildFromTsv(VIRUS_BLACKLIST_TSV);
-        assertEquals(3, virusBlacklistModel.virusBlacklistCount());
+        assertEquals(3, virusBlacklistModel.count());
 
         assertEquals("taxid_genus", virusBlacklistModel.checkTaxusForId(1));
         assertEquals("taxid_species", virusBlacklistModel.checkTaxusForId(2));

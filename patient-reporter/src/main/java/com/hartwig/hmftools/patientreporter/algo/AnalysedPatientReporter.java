@@ -50,8 +50,8 @@ public class AnalysedPatientReporter {
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
         GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.germlineReportingModel(),
-                reportData.virusDbModel(),
-                reportData.virusSummaryModel(),
+                reportData.taxonomyDb(),
+                reportData.virusInterpretationModel(),
                 reportData.virusBlackListModel());
         GenomicAnalysis genomicAnalysis =
                 genomicAnalyzer.run(sampleMetadata.tumorSampleId(), config, sampleReport.germlineReportingLevel());

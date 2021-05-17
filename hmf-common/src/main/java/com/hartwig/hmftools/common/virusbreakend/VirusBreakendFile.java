@@ -9,15 +9,15 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
-public class VirusBreakendFactory {
+public class VirusBreakendFile {
 
     private static final String DELIMITER = "\t";
 
-    private VirusBreakendFactory() {
+    private VirusBreakendFile() {
     }
 
     @NotNull
-    public static List<VirusBreakend> readVirusBreakend(@NotNull String virusBreakendTsv) throws IOException {
+    public static List<VirusBreakend> read(@NotNull String virusBreakendTsv) throws IOException {
         return fromLines(Files.readAllLines(new File(virusBreakendTsv).toPath()));
     }
 
@@ -25,7 +25,7 @@ public class VirusBreakendFactory {
     private static List<VirusBreakend> fromLines(@NotNull final List<String> lines) {
         return lines.stream()
                 .skip(1)
-                .map(VirusBreakendFactory::fromString)
+                .map(VirusBreakendFile::fromString)
                 .collect(toList());
     }
 

@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakendFactory;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakendFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -44,7 +44,7 @@ public class LoadVirusBreakendData {
         DatabaseAccess dbWriter = databaseAccess(cmd);
 
         LOGGER.info("Reading virus breakend TSV {}", viusBreakendtsv);
-        List<VirusBreakend> virusBreakends = VirusBreakendFactory.readVirusBreakend(viusBreakendtsv);
+        List<VirusBreakend> virusBreakends = VirusBreakendFile.read(viusBreakendtsv);
         LOGGER.info(" Read {} virus breakend", virusBreakends.size());
 
         LOGGER.info("Writing virus breakends into database for {}", sample);

@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class VirusBlacklistFile {
 
-    private static final Logger LOGGER = LogManager.getLogger(VirusDbFile.class);
+    private static final Logger LOGGER = LogManager.getLogger(TaxonomyDbFile.class);
 
     private static final String SEPARATOR = "\t";
 

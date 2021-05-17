@@ -23,7 +23,7 @@ public final class VirusBreakendReportableFactory {
 
     @NotNull
     public static ReportableVirusBreakendTotal analyzeVirusBreakend(@NotNull String virusBreakendTsv,
-            @NotNull List<VirusBreakend> virusBreakends, @NotNull VirusDbModel virusDbModel, @NotNull VirusSummaryModel virusSummaryModel,
+            @NotNull List<VirusBreakend> virusBreakends, @NotNull TaxonomyDb taxonomyDb, @NotNull VirusInterpretationModel virusInterpretationModel,
             @NotNull VirusBlacklistModel virusBlackListModel) {
         List<VirusBreakend> virusBreakendsFiltered = Lists.newArrayList();
         List<ReportableVirusBreakend> virusBreakendsReportable = Lists.newArrayList();
@@ -55,22 +55,22 @@ public final class VirusBreakendReportableFactory {
         LOGGER.info(" Loaded {} reportable virus breakend from {}", virusBreakendsFiltered.size(), virusBreakendTsv);
 
         for (VirusBreakend virusBreakend : virusBreakendsFiltered) {
-            String virusName = virusDbModel.findVirus(virusBreakend.referenceTaxid());
+            String virusName = taxonomyDb.lookupName(virusBreakend.referenceTaxid());
             virusBreakendsReportable.add(ImmutableReportableVirusBreakend.builder()
                     .virusName(virusName)
                     .integrations(virusBreakend.integrations())
                     .build());
 
-            if (virusSummaryModel.mapIdToVirusName(virusBreakend.taxidSpecies())) {
-                if (!virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()).equals(Strings.EMPTY)) {
-                    positiveSummary.add(virusSummaryModel.findVirusSummary(virusBreakend.taxidSpecies()) + " positive");
+            if (virusInterpretationModel.hasInterpretation(virusBreakend.taxidSpecies())) {
+                if (!virusInterpretationModel.interpretVirusSpecies(virusBreakend.taxidSpecies()).equals(Strings.EMPTY)) {
+                    positiveSummary.add(virusInterpretationModel.interpretVirusSpecies(virusBreakend.taxidSpecies()) + " positive");
                 }
             } else {
                 LOGGER.warn("Virus breakend has called not a HPV/EBV/MCV virus");
             }
         }
 
-        for (String virus : virusSummaryModel.viruses()) {
+        for (String virus : virusInterpretationModel.viruses()) {
             if (!positiveSummary.contains(virus + " positive")) {
                 negativeSummary.add(virus + " negative");
             }

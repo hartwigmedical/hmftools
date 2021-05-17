@@ -22,7 +22,7 @@ public class VirusBreakendQCStatusTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void hasUnknownQCStatusOfVirusBreakend() {
+    public void crashOnUnknownQCStatusOfVirusBreakend() {
         VirusBreakendQCStatus.extractVirusBreakendQCStatus("ABC");
     }
 }

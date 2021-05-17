@@ -12,7 +12,7 @@ public class VirusBlacklistModel {
     @NotNull
     private final Map<Integer, String> virusBlacklistMap;
 
-    public VirusBlacklistModel(@NotNull final Map<Integer, String> virusBlacklistMap) {
+    VirusBlacklistModel(@NotNull final Map<Integer, String> virusBlacklistMap) {
         this.virusBlacklistMap = virusBlacklistMap;
     }
 
@@ -26,7 +26,7 @@ public class VirusBlacklistModel {
     }
 
     @VisibleForTesting
-    int virusBlacklistCount() {
+    int count() {
         return virusBlacklistMap.keySet().size();
     }
 

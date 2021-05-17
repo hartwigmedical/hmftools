@@ -9,7 +9,7 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class VirusBreakendFactoryTest {
+public class VirusBreakendFileTest {
 
     private static final double EPSILON = 1e-10;
 
@@ -20,14 +20,14 @@ public class VirusBreakendFactoryTest {
 
     @Test
     public void canReadEmptyVirusBreakendTsv() throws IOException {
-        List<VirusBreakend> virusbreakendList = VirusBreakendFactory.readVirusBreakend(EMPTY_VIRUS_BREAKEND_TSV);
+        List<VirusBreakend> virusbreakendList = VirusBreakendFile.read(EMPTY_VIRUS_BREAKEND_TSV);
 
         assertEquals(0, virusbreakendList.size());
     }
 
     @Test
     public void canReadSampleVirusBreakendTsv() throws IOException {
-        List<VirusBreakend> virusbreakendList = VirusBreakendFactory.readVirusBreakend(SAMPLE_VIRUS_BREAKEND_TSV);
+        List<VirusBreakend> virusbreakendList = VirusBreakendFile.read(SAMPLE_VIRUS_BREAKEND_TSV);
         assertEquals(2, virusbreakendList.size());
 
         VirusBreakend virusbreakend = virusbreakendList.get(0);

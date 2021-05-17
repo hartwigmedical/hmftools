@@ -31,8 +31,8 @@ public class GenomicAnalyzerTest {
         AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
 
         GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel(),
-                testReportData.virusDbModel(),
-                testReportData.virusSummaryModel(),
+                testReportData.taxonomyDb(),
+                testReportData.virusInterpretationModel(),
                 testReportData.virusBlackListModel());
 
         PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();

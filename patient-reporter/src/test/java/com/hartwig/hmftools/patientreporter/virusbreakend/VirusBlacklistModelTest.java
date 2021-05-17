@@ -12,7 +12,7 @@ import org.junit.Test;
 public class VirusBlacklistModelTest {
 
     @Test
-    public void canMatchVirusToId() {
+    public void canMatchIdToVirus() {
         Map<Integer, String> virusBlacklistMap = Maps.newHashMap();
         virusBlacklistMap.put(1, "virus1");
         VirusBlacklistModel VirusBlackListModel = new VirusBlacklistModel(virusBlacklistMap);

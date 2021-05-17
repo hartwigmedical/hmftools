@@ -15,16 +15,16 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakendFactory;
+import com.hartwig.hmftools.common.virusbreakend.VirusBreakendFile;
 import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
+import com.hartwig.hmftools.patientreporter.virusbreakend.TaxonomyDb;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBreakendReportableFactory;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbModel;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusInterpretationModel;
 import com.hartwig.hmftools.protect.chord.ChordDataLoader;
 import com.hartwig.hmftools.protect.linx.LinxData;
 import com.hartwig.hmftools.protect.linx.LinxDataLoader;
@@ -45,17 +45,17 @@ public class GenomicAnalyzer {
     @NotNull
     private final GermlineReportingModel germlineReportingModel;
     @NotNull
-    private final VirusDbModel virusDbModel;
+    private final TaxonomyDb taxonomyDb;
     @NotNull
-    private final VirusSummaryModel virusSummaryModel;
+    private final VirusInterpretationModel virusInterpretationModel;
     @NotNull
     private final VirusBlacklistModel virusBlackListModel;
 
-    public GenomicAnalyzer(@NotNull final GermlineReportingModel germlineReportingModel, @NotNull final VirusDbModel virusDbModel,
-            @NotNull final VirusSummaryModel virusSummaryModel, @NotNull final VirusBlacklistModel virusBlackListModel) {
+    public GenomicAnalyzer(@NotNull final GermlineReportingModel germlineReportingModel, @NotNull final TaxonomyDb taxonomyDb,
+            @NotNull final VirusInterpretationModel virusInterpretationModel, @NotNull final VirusBlacklistModel virusBlackListModel) {
         this.germlineReportingModel = germlineReportingModel;
-        this.virusDbModel = virusDbModel;
-        this.virusSummaryModel = virusSummaryModel;
+        this.taxonomyDb = taxonomyDb;
+        this.virusInterpretationModel = virusInterpretationModel;
         this.virusBlackListModel = virusBlackListModel;
     }
 
@@ -73,11 +73,10 @@ public class GenomicAnalyzer {
 
         LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
 
-        List<VirusBreakend> virusBreakends = VirusBreakendFactory.readVirusBreakend(config.virusBreakendTsv());
+        List<VirusBreakend> virusBreakends = VirusBreakendFile.read(config.virusBreakendTsv());
         ReportableVirusBreakendTotal reportableVirusBreakendTotal =
-                VirusBreakendReportableFactory.analyzeVirusBreakend(config.virusBreakendTsv(), virusBreakends,
-                        virusDbModel,
-                        virusSummaryModel,
+                VirusBreakendReportableFactory.analyzeVirusBreakend(config.virusBreakendTsv(), virusBreakends, taxonomyDb,
+                        virusInterpretationModel,
                         virusBlackListModel);
 
         List<PeachGenotype> peachGenotypes = PeachFactory.analyzePeach(config.peachGenotypeTsv());
