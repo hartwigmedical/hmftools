@@ -59,12 +59,12 @@ public class AnalysedPatientReporter {
         GenomicAnalysis genomicAnalysis =
                 genomicAnalyzer.run(sampleMetadata.tumorSampleId(), config, sampleReport.germlineReportingLevel());
 
-        ConsentFilterFunctions consentFilterFunctions = new ConsentFilterFunctions();
-
-        GenomicAnalysis filteredAnalysis = consentFilterFunctions.filterAndOverruleForConsent(genomicAnalysis,
+        GenomicAnalysis filteredAnalysis = ConsentFilterFunctions.filter(genomicAnalysis,
                 sampleReport.germlineReportingLevel(),
                 sampleReport.reportViralInsertions(),
                 sampleReport.cohort().reportPeach());
+
+        GenomicAnalysis overruledAnalysis = QualityOverruleFunctions.overrule(filteredAnalysis);
 
         LOGGER.info("Loading CUPPA result from {}", new File(config.molecularTissueOriginTxt()).getParent());
         MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
@@ -78,7 +78,7 @@ public class AnalysedPatientReporter {
                 .qsFormNumber(determineForNumber(genomicAnalysis.hasReliablePurity(), genomicAnalysis.impliedPurity()))
                 .clinicalSummary(clinicalSummary)
                 .pipelineVersion(pipelineVersion)
-                .genomicAnalysis(filteredAnalysis)
+                .genomicAnalysis(overruledAnalysis)
                 .molecularTissueOrigin(molecularTissueOrigin)
                 .circosPath(config.purpleCircosPlot())
                 .comments(Optional.ofNullable(config.comments()))

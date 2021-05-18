@@ -13,7 +13,6 @@ public class CnPerChromosomeFactoryTest {
     @Test
     public void extractCopyNumberPerChromosomeArm() throws IOException {
         CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(PURPLE_COPYNUMBER_TSV);
-
     }
 
 }

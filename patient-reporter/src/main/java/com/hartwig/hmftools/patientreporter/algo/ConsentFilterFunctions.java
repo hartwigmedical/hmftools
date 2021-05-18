@@ -13,23 +13,18 @@ import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
-import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 
-public class ConsentFilterFunctions {
+public final class ConsentFilterFunctions {
 
-    public ConsentFilterFunctions() {
+    private ConsentFilterFunctions() {
     }
 
-    // TODO Split up the filtering functions from the overruling functions.
-    // TODO Extend overruling functions to make json and pdf more consistent.
     @NotNull
-    public GenomicAnalysis filterAndOverruleForConsent(@NotNull GenomicAnalysis genomicAnalysis,
+    public static GenomicAnalysis filter(@NotNull GenomicAnalysis genomicAnalysis,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralBreakends, boolean reportPeach) {
-        List<ReportableVariant> filteredVariants = filterAndOverruleVariants(genomicAnalysis.reportableVariants(),
-                germlineReportingLevel,
-                genomicAnalysis.hasReliablePurity());
+        List<ReportableVariant> filteredVariants = filterVariants(genomicAnalysis.reportableVariants(), germlineReportingLevel);
 
         List<ReportableVirusBreakend> filteredVirusBreakends =
                 reportViralBreakends ? genomicAnalysis.virusBreakends() : Lists.newArrayList();
@@ -58,25 +53,23 @@ public class ConsentFilterFunctions {
 
     @NotNull
     @$VisibleForTesting
-    static List<ReportableVariant> filterAndOverruleVariants(@NotNull List<ReportableVariant> variants,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean hasReliablePurity) {
-
+    static List<ReportableVariant> filterVariants(@NotNull List<ReportableVariant> variants,
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
         List<ReportableVariant> filteredVariants = Lists.newArrayList();
         for (ReportableVariant variant : variants) {
             if (germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING || variant.source() == ReportableVariantSource.SOMATIC) {
-                filteredVariants.add(variant);
+                if (germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION
+                        && variant.source() == ReportableVariantSource.GERMLINE) {
+                    filteredVariants.add(ImmutableReportableVariant.builder()
+                            .from(variant)
+                            .source(ReportableVariantSource.SOMATIC)
+                            .build());
+                } else {
+                    filteredVariants.add(variant);
+                }
             }
         }
-
-        List<ReportableVariant> overruledVariants = Lists.newArrayList();
-        for (ReportableVariant variant : filteredVariants) {
-            if (germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION) {
-                overruledVariants.add(overruleVariant(variant, hasReliablePurity, ReportableVariantSource.SOMATIC));
-            } else {
-                overruledVariants.add(overruleVariant(variant, hasReliablePurity, variant.source()));
-            }
-        }
-        return overruledVariants;
+        return filteredVariants;
     }
 
     @NotNull
@@ -95,20 +88,5 @@ public class ConsentFilterFunctions {
         }
 
         return filtered;
-    }
-
-    @NotNull
-    private static ReportableVariant overruleVariant(@NotNull ReportableVariant variant, boolean hasReliablePurity,
-            @NotNull ReportableVariantSource source) {
-        double flooredCopyNumber = Math.max(0, variant.totalCopyNumber());
-        int copies = Integer.parseInt(String.valueOf(Math.round(variant.totalCopyNumber())));
-
-        return ImmutableReportableVariant.builder()
-                .from(variant)
-                .source(source)
-                .totalCopyNumber(hasReliablePurity && copies >= 1 ? flooredCopyNumber : Double.NaN)
-                .alleleCopyNumber(hasReliablePurity && copies >= 1 ? variant.alleleCopyNumber() : Double.NaN)
-                .biallelic(hasReliablePurity && copies >= 1 ? variant.biallelic() : Boolean.valueOf("null"))
-                .build();
     }
 }
