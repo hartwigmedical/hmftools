@@ -8,6 +8,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
@@ -26,7 +27,8 @@ public final class CnPerChromosomeFactory {
     }
 
     @NotNull
-    public static Map<ChromosomeArmKey, Double> fromPurpleSomaticCopynumberTsv(@NotNull String purpleSomaticCopynumberTsv) throws IOException {
+    public static Map<ChromosomeArmKey, Double> fromPurpleSomaticCopynumberTsv(@NotNull String purpleSomaticCopynumberTsv)
+            throws IOException {
         List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(purpleSomaticCopynumberTsv);
         return extractCnPerChromosomeArm(copyNumbers);
     }
@@ -54,8 +56,10 @@ public final class CnPerChromosomeFactory {
 
         for (Chromosome chr : REF_GENOME_COORDINATES.lengths().keySet()) {
             HumanChromosome chromosome = (HumanChromosome) chr;
-            ChromosomeArmKey key = new ChromosomeArmKey(chromosome, chromosomeArm);
 
+            // TODO Rather than length: determine GenomeRegion for P arm or Q arm
+            // Use start/end to determine if purple segment falls into P arm or Q arm
+            // Use bases() for length.
             int chromosomeLength = getChromosomalArmLength(chromosome, chromosomeArm);
             double copyNumberArm = 0;
             for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
@@ -75,10 +79,19 @@ public final class CnPerChromosomeFactory {
                 }
             }
 
-            cnPerChromosomeArm.put(key, copyNumberArm);
+            cnPerChromosomeArm.put(new ChromosomeArmKey(chromosome, chromosomeArm), copyNumberArm);
         }
 
         return cnPerChromosomeArm;
+    }
+
+    @NotNull
+    private static GenomeRegion determineArmRegion(@NotNull Chromosome chromosome, @NotNull ChromosomeArm arm) {
+        // TODO Implement!
+
+        // The smallest part of a chromosome is the P arm.
+
+        return null;
     }
 
     private static int getChromosomalArmLength(@NotNull Chromosome chromosome, @NotNull ChromosomeArm armType) {
