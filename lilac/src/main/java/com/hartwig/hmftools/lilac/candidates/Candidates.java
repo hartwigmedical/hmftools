@@ -2,7 +2,6 @@ package com.hartwig.hmftools.lilac.candidates;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
-import static com.hartwig.hmftools.lilac.hla.HlaAllele.contains;
 
 import java.util.List;
 import java.util.Set;
@@ -66,7 +65,7 @@ public final class Candidates
         NucleotideFiltering nucleotideFiltering = new NucleotideFiltering(mConfig.MinEvidence, aminoAcidBoundary);
 
         List<HlaSequenceLoci> nucleotideCandidatesAfterAminoAcidFiltering = mNucleotideSequences.stream()
-                .filter(x -> contains(aminoAcidSpecificAllelesCandidates, x.getAllele().asFourDigit()))
+                .filter(x -> aminoAcidSpecificAllelesCandidates.contains(x.getAllele().asFourDigit()))
                 .collect(Collectors.toList());
 
         List<HlaSequenceLoci> nucleotideSpecificSequences = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(
@@ -91,7 +90,7 @@ public final class Candidates
         LL_LOGGER.info("Determining phased candidate set for gene {}", context.geneName());
 
         List<HlaSequenceLoci> unphasedCandidates = mAminoAcidSequences.stream()
-                .filter(x -> contains(unphasedCandidateAlleles, x.getAllele().asFourDigit())).collect(Collectors.toList());
+                .filter(x -> unphasedCandidateAlleles.contains(x.getAllele().asFourDigit())).collect(Collectors.toList());
 
         List<HlaSequenceLoci> phasedCandidates = filterCandidates(unphasedCandidates, phasedEvidence);
         List<HlaAllele> phasedAlleles = phasedCandidates.stream().map(x -> x.getAllele()).collect(Collectors.toList());

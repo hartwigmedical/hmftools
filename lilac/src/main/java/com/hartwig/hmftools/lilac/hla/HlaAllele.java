@@ -169,11 +169,6 @@ public class HlaAllele implements Comparable<HlaAllele>
         return sj.toString();
     }
 
-    public static boolean contains(final List<HlaAllele> list, final HlaAllele allele)
-    {
-        return list.contains(allele);
-    }
-
     public static List<HlaAllele> dedup(final List<HlaAllele> alleles)
     {
         // dedep but maintain ordering

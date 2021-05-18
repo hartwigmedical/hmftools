@@ -48,9 +48,9 @@ public class FragmentAlleles
     {
         return new FragmentAlleles(
                 fragAlleles.getFragment(),
-                fragAlleles.getFull().stream().filter(x -> HlaAllele.contains(alleles, x)).collect(Collectors.toList()),
-                fragAlleles.getPartial().stream().filter(x -> HlaAllele.contains(alleles, x)).collect(Collectors.toList()),
-                fragAlleles.getWild().stream().filter(x -> HlaAllele.contains(alleles, x)).collect(Collectors.toList()));
+                fragAlleles.getFull().stream().filter(x -> alleles.contains(x)).collect(Collectors.toList()),
+                fragAlleles.getPartial().stream().filter(x -> alleles.contains(x)).collect(Collectors.toList()),
+                fragAlleles.getWild().stream().filter(x -> alleles.contains(x)).collect(Collectors.toList()));
     }
 
     public static List<FragmentAlleles> filter(final List<FragmentAlleles> fragAlleleList, final List<HlaAllele> alleles)
@@ -175,16 +175,16 @@ public class FragmentAlleles
             return new FragmentAlleles(aminoAcidFragment, fullAminoAcidMatch, partialAminoAcidMatch, wildAminoAcidMatch);
 
         List<HlaAllele> consistentFull = fullAminoAcidMatch.stream()
-                .filter(x -> HlaAllele.contains(fullNucleotideMatch, x.asFourDigit())).collect(Collectors.toList());
+                .filter(x -> fullNucleotideMatch.contains(x.asFourDigit())).collect(Collectors.toList());
 
         List<HlaAllele> downgradedToPartial = fullAminoAcidMatch.stream()
-                .filter(x -> HlaAllele.contains(partialNucleotideMatch, x.asFourDigit())).collect(Collectors.toList());
+                .filter(x -> partialNucleotideMatch.contains(x.asFourDigit())).collect(Collectors.toList());
 
         List<HlaAllele> otherPartial = partialAminoAcidMatch.stream()
-                .filter(x -> HlaAllele.contains(partialNucleotideMatch, x.asFourDigit())).collect(Collectors.toList());
+                .filter(x -> partialNucleotideMatch.contains(x.asFourDigit())).collect(Collectors.toList());
 
         List<HlaAllele> distinctPartial = downgradedToPartial;
-        otherPartial.stream().filter(x -> !HlaAllele.contains(downgradedToPartial, x)).forEach(x -> distinctPartial.add(x));
+        otherPartial.stream().filter(x -> !downgradedToPartial.contains(x)).forEach(x -> distinctPartial.add(x));
 
         return new FragmentAlleles(aminoAcidFragment, consistentFull, distinctPartial, wildAminoAcidMatch);
     }

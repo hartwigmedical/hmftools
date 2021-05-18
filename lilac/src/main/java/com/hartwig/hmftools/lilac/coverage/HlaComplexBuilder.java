@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.groupCoverage;
 import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.proteinCoverage;
 import static com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage.coverageAlleles;
-import static com.hartwig.hmftools.lilac.hla.HlaAllele.contains;
 
 import java.util.Collections;
 import java.util.List;
@@ -99,7 +98,8 @@ public class HlaComplexBuilder
 
         if (simpleComplexCount > COMPLEX_PERMS_THRESHOLD || simpleComplexCount < 0)
         {
-            LL_LOGGER.info("Candidate permutations exceeds maximum complexity");
+            LL_LOGGER.info("candidate permutations exceeds maximum complexity, complexes(A={} B={} C={})",
+                    aOnlyComplexes.size(), bOnlyComplexes.size(), cOnlyComplexes.size());
 
             List<HlaAllele> aTopCandidates = rankedGroupCoverage(10, referenceFragmentAlleles, aOnlyComplexes);
             List<HlaAllele> bTopCandidates = rankedGroupCoverage(10, referenceFragmentAlleles, bOnlyComplexes);
@@ -110,9 +110,10 @@ public class HlaComplexBuilder
             topCandidates.addAll(cTopCandidates);
 
             List<HlaAllele> rejected = candidatesAfterConfirmedProteins.stream()
-                    .filter(x -> !contains(topCandidates, x)).collect(Collectors.toList());
+                    .filter(x -> !topCandidates.contains(x)).collect(Collectors.toList());
 
             LL_LOGGER.info("  discarding {} unlikely candidates: {}", rejected.size(), HlaAllele.toString(rejected));
+
             complexes = buildComplexes(confirmedGroupAlleles, confirmedProteinAlleles, topCandidates);
         }
         else
@@ -273,7 +274,7 @@ public class HlaComplexBuilder
         {
             List<HlaAllele> geneAlleleList = map.get(allele.Gene);
 
-            if(geneAlleleList.size() < 2 || contains(geneAlleleList, allele.asAlleleGroup()))
+            if(geneAlleleList.size() < 2 || geneAlleleList.contains(allele.asAlleleGroup()))
                 results.add(allele);
         }
 
@@ -329,25 +330,36 @@ public class HlaComplexBuilder
     private List<HlaAllele> rankedGroupCoverage(
             int take, final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes)
     {
-        List<HlaComplexCoverage> coverages = complexes.stream()
+        List<HlaComplexCoverage> complexCoverages = complexes.stream()
                 .map(x -> proteinCoverage(fragmentAlleles, x.getAlleles())).collect(Collectors.toList());
 
-        Collections.sort(coverages, new HlaComplexCoverage.TotalCoverageSorter());
+        HlaComplexCoverageRanking complexRanker = new HlaComplexCoverageRanking(0, mRefData);
+        complexCoverages = complexRanker.rankCandidates(complexCoverages);
+
+        // Collections.sort(complexCoverages, new HlaComplexCoverage.TotalCoverageSorter());
         List<HlaAllele> topRanked = Lists.newArrayList();
 
-        for(HlaComplexCoverage coverage : coverages)
+        for(HlaComplexCoverage coverage : complexCoverages)
         {
             coverage.getAlleleCoverage().stream().filter(x -> !topRanked.contains(x.Allele)).forEach(x -> topRanked.add(x.Allele));
+
+            if(topRanked.size() >= take)
+                break;
         }
 
-        List<HlaAllele> topTakers = takeN(topRanked, take);
+        return topRanked;
 
-        List<HlaAllele> topRankedKeepers = topRanked.stream().filter(x -> contains(mRefData.CommonAlleles, x)).collect(Collectors.toList());
+        /* no longer reincluding common alleles if they ranked too low
+
+        List<HlaAllele> topTakers = topRanked;
+
+        List<HlaAllele> topRankedKeepers = topRanked.stream().filter(x -> mRefData.CommonAlleles.contains(x)).collect(Collectors.toList());
 
         List<HlaAllele> uniqueRanked = topTakers.stream().collect(Collectors.toList());
-        topRankedKeepers.stream().filter(x -> !contains(topTakers, x)).forEach(x -> uniqueRanked.add(x));
+        topRankedKeepers.stream().filter(x -> !topTakers.contains(x)).forEach(x -> uniqueRanked.add(x));
 
         return uniqueRanked;
+        */
     }
 
     private static List<HlaAllele> takeN(final List<HlaAllele> list, int n)

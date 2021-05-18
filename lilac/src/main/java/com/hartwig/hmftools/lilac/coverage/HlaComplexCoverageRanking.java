@@ -33,15 +33,14 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 public class HlaComplexCoverageRanking
 {
-    private final LilacConfig mConfig;
+    private final int mMaxScoreDifference;
     private final ReferenceData mRefData;
 
     public static final int TOTAL_COVERAGE_DENOM = 1000;
 
-    public HlaComplexCoverageRanking(
-            final LilacConfig config, final ReferenceData refData)
+    public HlaComplexCoverageRanking(final int maxScoreDifference, final ReferenceData refData)
     {
-        mConfig = config;
+        mMaxScoreDifference = maxScoreDifference;
         mRefData = refData;
     }
 
@@ -56,13 +55,18 @@ public class HlaComplexCoverageRanking
             calcComplexScore(complexCoverage);
         }
 
+        if(mMaxScoreDifference == 0)
+        {
+            Collections.sort(complexes, new ComplexCoverageSorter());
+            return complexes;
+        }
+
         double topScore = complexes.stream().mapToDouble(x -> x.getScore()).max().orElse(0);
 
         List<HlaComplexCoverage> results = complexes.stream()
-                .filter(x -> x.getScore() >= topScore - mConfig.MaxDistanceFromTopScore).collect(Collectors.toList());
+                .filter(x -> x.getScore() >= topScore - mMaxScoreDifference).collect(Collectors.toList());
 
         Collections.sort(results, new ComplexCoverageSorter());
-
         return results;
     }
 

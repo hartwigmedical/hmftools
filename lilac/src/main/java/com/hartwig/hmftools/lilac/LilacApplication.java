@@ -12,11 +12,9 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.proteinCoverage;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
-import static com.hartwig.hmftools.lilac.hla.HlaAllele.contains;
 import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.candidates.Candidates;
@@ -26,7 +24,6 @@ import com.hartwig.hmftools.lilac.coverage.HlaComplexBuilder;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverageCalculator;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverageRanking;
-import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverageRankingOld;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexFile;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory;
@@ -199,8 +196,8 @@ public class LilacApplication implements AutoCloseable, Runnable
 
             // add common alleles - either if supported or forced for inclusion
             List<HlaAllele> missedCommonAlleles = mRefData.CommonAlleles.stream()
-                    .filter(x -> !contains(candidateAlleles, x))
-                    .filter(x -> !contains(recoveredAlleles, x))
+                    .filter(x -> !candidateAlleles.contains(x))
+                    .filter(x -> !recoveredAlleles.contains(x))
                     // .filter(x -> contains(allUnphasedCandidates, x)) // was previously only added if supported but now always
                     .collect(Collectors.toList());
 
@@ -224,7 +221,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         }
 
         List<HlaSequenceLoci> candidateSequences = mRefData.AminoAcidSequences.stream()
-                .filter(x -> contains(candidateAlleles, x.getAllele())).collect(Collectors.toList());
+                .filter(x -> candidateAlleles.contains(x.getAllele())).collect(Collectors.toList());
 
         // Coverage
         List<AminoAcidFragment> referenceCoverageFragments = aminoAcidPipeline.referenceCoverageFragments();
@@ -244,10 +241,10 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         List<HlaAllele> candidateAlleleSpecificProteins = candidateAlleles.stream().map(x -> x.asFourDigit()).collect(Collectors.toList());
         List<HlaSequenceLoci> candidateAminoAcidSequences = mRefData.AminoAcidSequences.stream()
-                .filter(x -> contains(candidateAlleles, x.getAllele())).collect(Collectors.toList());
+                .filter(x -> candidateAlleles.contains(x.getAllele())).collect(Collectors.toList());
 
         List<HlaSequenceLoci> candidateNucleotideSequences = mRefData.NucleotideSequences.stream()
-            .filter(x -> contains(candidateAlleleSpecificProteins, x.getAllele().asFourDigit())).collect(Collectors.toList());
+            .filter(x -> candidateAlleleSpecificProteins.contains(x.getAllele().asFourDigit())).collect(Collectors.toList());
 
         List<FragmentAlleles> referenceFragmentAlleles = FragmentAlleles.create(
                 referenceCoverageFragments, referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences,
@@ -270,7 +267,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         ComplexCoverageCalculator complexCalculator = new ComplexCoverageCalculator(mConfig);
         List<HlaComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(referenceFragmentAlleles, complexes);
 
-        HlaComplexCoverageRanking complexRanker = new HlaComplexCoverageRanking(mConfig, mRefData);
+        HlaComplexCoverageRanking complexRanker = new HlaComplexCoverageRanking(mConfig.MaxDistanceFromTopScore, mRefData);
         List<HlaComplexCoverage> referenceRankedComplexes = complexRanker.rankCandidates(calculatedComplexes);
 
         if(referenceRankedComplexes.isEmpty())
