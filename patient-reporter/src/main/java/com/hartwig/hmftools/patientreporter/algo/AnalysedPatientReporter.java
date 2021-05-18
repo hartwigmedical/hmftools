@@ -166,12 +166,14 @@ public class AnalysedPatientReporter {
             boolean overridePipelineVersion) {
         if (!overridePipelineVersion) {
             if (pipelineVersion != null && !pipelineVersion.equals(expectedPipelineVersion)) {
-                LOGGER.warn("The expected pipeline version {} is different than the real pipeline version {}!",
-                        pipelineVersion,
-                        expectedPipelineVersion);
+                throw new IllegalStateException(
+                        "The expected pipeline version " + pipelineVersion + " is different than the real pipeline version "
+                                + expectedPipelineVersion + "!");
             }
         } else if (overridePipelineVersion) {
-            LOGGER.warn("Pipeline version is overridden!");
+            LOGGER.warn("Pipeline version is overridden! The version is {} but the expected version is {}",
+                    pipelineVersion,
+                    expectedPipelineVersion);
         }
     }
 }
