@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -13,17 +12,14 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
-import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberFunctions;
-import com.hartwig.hmftools.serve.extraction.copynumber.CopyNumberType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class CnPerChromosomeFactory {
-    private static final Logger LOGGER = LogManager.getLogger(PurpleDataLoader.class);
+
+    private static final Logger LOGGER = LogManager.getLogger(CnPerChromosomeFactory.class);
 
     private CnPerChromosomeFactory() {
     }
@@ -43,7 +39,7 @@ public final class CnPerChromosomeFactory {
         cnPerChromosomeArm.putAll(cnPerChromosomePArm);
         cnPerChromosomeArm.putAll(cnPerChromosomeQArm);
 
-        for (Map.Entry<CopyNumberKey, Double> entry :cnPerChromosomeArm.entrySet()) {
+        for (Map.Entry<CopyNumberKey, Double> entry : cnPerChromosomeArm.entrySet()) {
             LOGGER.info(entry.getKey().chromosome + " " + entry.getKey().chromosomeArm + " " + entry.getValue());
         }
 
@@ -69,8 +65,9 @@ public final class CnPerChromosomeFactory {
         return chrLength - centromerePos.intValue();
     }
 
-
-    private static Map<CopyNumberKey, Double> determineCopyNumberArm(@NotNull List<PurpleCopyNumber> copyNumbers, @NotNull ChromosomeArm chromosomeArm) {
+    @NotNull
+    private static Map<CopyNumberKey, Double> determineCopyNumberArm(@NotNull List<PurpleCopyNumber> copyNumbers,
+            @NotNull ChromosomeArm chromosomeArm) {
         RefGenomeCoordinates refGenome = RefGenomeCoordinates.COORDS_37;
         Map<CopyNumberKey, Double> cnPerChromosomeArm = Maps.newHashMap();
 
@@ -88,7 +85,7 @@ public final class CnPerChromosomeFactory {
                         long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
                         copyNumberArm += (copyNumber * totalLengthSegment) / chromosomeLength;
                     }
-                } else if  (chromosomeArm == ChromosomeArm.Q_ARM) {
+                } else if (chromosomeArm == ChromosomeArm.Q_ARM) {
                     if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() > chromosomeLength) {
                         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
                         long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
