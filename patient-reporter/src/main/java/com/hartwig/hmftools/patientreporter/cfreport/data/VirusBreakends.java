@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import java.util.List;
-import java.util.Set;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
 
 import org.jetbrains.annotations.NotNull;
