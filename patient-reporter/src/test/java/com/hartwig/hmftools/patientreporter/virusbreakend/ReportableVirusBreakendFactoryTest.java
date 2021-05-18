@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.virusbreakend.VirusBreakendTestFactory;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class VirusBreakendReportableFactoryTest {
+public class ReportableVirusBreakendFactoryTest {
 
     @Test
     public void canInterpretVirusBreakendForReportingPos() {
@@ -32,14 +32,14 @@ public class VirusBreakendReportableFactoryTest {
 
         VirusBlacklistModel virusBlacklistModel = new VirusBlacklistModel(Sets.newHashSet(1), Sets.newHashSet());
 
-        VirusBreakendReportableFactory factory =
-                new VirusBreakendReportableFactory(taxonomyDb, virusInterpretationModel, virusBlacklistModel);
-        assertEquals(1, factory.analyzeVirusBreakend(virusBreakends).size());
+        ReportableVirusBreakendFactory factory =
+                new ReportableVirusBreakendFactory(taxonomyDb, virusInterpretationModel, virusBlacklistModel);
+        assertEquals(1, factory.analyze(virusBreakends).size());
 
-        ReportableVirusBreakend reportableVirusbreakend = factory.analyzeVirusBreakend(virusBreakends).get(0);
+        ReportableVirusBreakend reportableVirusbreakend = factory.analyze(virusBreakends).get(0);
         assertEquals("Human papillomavirus type 16", reportableVirusbreakend.virusName());
         assertEquals(2, reportableVirusbreakend.integrations());
-
+        assertEquals("HPV", reportableVirusbreakend.interpretation());
     }
 
     @NotNull

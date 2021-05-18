@@ -177,8 +177,8 @@ public class SummaryChapter implements ReportChapter {
         Style dataStyle = hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Molecular tissue of origin prediction").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(patientReport.molecularTissueOrigin()
-                .conclusion()).addStyle(dataStyle)));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(patientReport.molecularTissueOrigin().conclusion()).addStyle(
+                dataStyle)));
 
         String mutationalLoadString = hasReliablePurity ? analysis().tumorMutationalLoadStatus().display() + " ("
                 + SINGLE_DECIMAL_FORMAT.format(analysis().tumorMutationalBurden()) + " mut/genome)" : DataUtil.NA_STRING;
@@ -208,15 +208,16 @@ public class SummaryChapter implements ReportChapter {
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Integrated Virus").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createVirusCell(patientReport.sampleReport().reportViralInsertions()
-                ? VirusBreakends.virusInterpretationSummary(analysis().virusBreakends()) : DataUtil.NA_STRING)));
+                ? VirusBreakends.virusInterpretationSummary(analysis().virusBreakends())
+                : DataUtil.NA_STRING)));
 
         reportDocument.add(div);
     }
 
     @NotNull
     private static Cell createVirusCell(@NotNull String virusSummary) {
-
-        Style style = !virusSummary.equals(DataUtil.NONE_STRING) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
+        Style style =
+                !virusSummary.equals(DataUtil.NONE_STRING) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
         return createMiddleAlignedCell().add(createHighlightParagraph(virusSummary)).addStyle(style);
     }

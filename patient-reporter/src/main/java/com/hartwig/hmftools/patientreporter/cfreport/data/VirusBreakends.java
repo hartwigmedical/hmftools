@@ -1,38 +1,32 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-public class VirusBreakends {
+public final class VirusBreakends {
 
     private VirusBreakends() {
-
     }
 
     @NotNull
     public static String virusInterpretationSummary(@NotNull List<ReportableVirusBreakend> reportableVirusBreakends) {
-        StringBuilder virusInterpretationSummary = new StringBuilder(",");
-
+        Set<String> positiveInterpretations = Sets.newHashSet();
         for (ReportableVirusBreakend virusBreakend : reportableVirusBreakends) {
-            if (determineInterpretation(virusBreakend.interpretations())) {
-                virusInterpretationSummary.append(virusBreakend.interpretations() + " positive");
-            } else {
-                virusInterpretationSummary.append(virusBreakend.interpretations() + " negative");
+            if (virusBreakend.interpretation() != null) {
+                positiveInterpretations.add(virusBreakend.interpretation());
             }
         }
-        return virusInterpretationSummary.toString();
 
-    }
-
-    private static boolean determineInterpretation(@Nullable String interpretation) {
-        if (interpretation != null) {
-            return true;
+        // TODO Also add "negative" for viruses that are not found.
+        StringBuilder virusInterpretationSummary = new StringBuilder(",");
+        for (String positiveVirus : positiveInterpretations) {
+            virusInterpretationSummary.append(positiveVirus + " positive");
         }
-        return false;
+        return virusInterpretationSummary.toString();
     }
 }

@@ -16,5 +16,5 @@ public abstract class ReportableVirusBreakend {
     public abstract int integrations();
 
     @Nullable
-    public abstract String interpretations();
+    public abstract String interpretation();
 }
