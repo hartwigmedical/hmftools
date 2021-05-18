@@ -164,7 +164,9 @@ public class AnalysedPatientReporter {
     private static void checkPipelineVersion(@Nullable String pipelineVersion, @NotNull PatientReporterConfig config) {
         if (!config.overridePipelineVersion()) {
             if (pipelineVersion != null && !pipelineVersion.equals(config.expectedPipelineVersion())) {
-                LOGGER.warn("The expected pipeline version is different than the real pipeline version!");
+                LOGGER.warn("The expected pipeline version {} is different than the real pipeline version {}!",
+                        pipelineVersion,
+                        config.expectedPipelineVersion());
             }
         } else if (config.overridePipelineVersion()) {
             LOGGER.warn("Pipeline version is overridden!");
