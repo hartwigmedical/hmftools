@@ -47,9 +47,8 @@ public class HlaComplexFile
             for(HlaComplexCoverage coverage : coverages)
             {
                 writer.write(asString(coverage));
+                writer.newLine();
             }
-
-            writer.newLine();
 
             writer.close();
         }
