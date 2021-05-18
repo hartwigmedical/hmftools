@@ -32,8 +32,7 @@ public class VirusBreakends {
     }
 
     private static boolean determineInterpretation(@Nullable String interpretation) {
-        Set<String> expectedInterpretations = Sets.newHashSet("EBV", "HPV", "MCV");
-        if (interpretation != null && expectedInterpretations.contains(interpretation)) {
+        if (interpretation != null) {
             return true;
         }
         return false;
