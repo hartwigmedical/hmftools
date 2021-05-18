@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 
 import org.apache.commons.compress.utils.Lists;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class CnPerChromosomeFactoryTest {
@@ -28,18 +27,16 @@ public class CnPerChromosomeFactoryTest {
     }
 
     @Test
-    @Ignore
     public void canDetermineCnPerChromosomeArm() {
         List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
         // Chromosome 1: 1-123035434-249250621
-        copyNumbers.add(PurpleTestUtils.createCopyNumber("1", 1, 123000000, 2).build());
-        copyNumbers.add(PurpleTestUtils.createCopyNumber("1", 124000000, 125000000, 300).build());
-        copyNumbers.add(PurpleTestUtils.createCopyNumber("1", 125000001, 250000000, 3).build());
+        copyNumbers.add(PurpleTestUtils.createCopyNumber("1", 1, 123035434, 2).build());
+        copyNumbers.add(PurpleTestUtils.createCopyNumber("1", 123035435, 124035434, 300).build());
+        copyNumbers.add(PurpleTestUtils.createCopyNumber("1", 124035435, 249250621, 3).build());
 
         Map<ChromosomeArmKey, Double> cnPerChromosomeArm = CnPerChromosomeFactory.extractCnPerChromosomeArm(copyNumbers);
         assertEquals(2D, cnPerChromosomeArm.get(new ChromosomeArmKey(HumanChromosome._1, ChromosomeArm.P_ARM)), EPSILON);
         // Below is not exactly 6 but close enough.
-        assertEquals(6, cnPerChromosomeArm.get(new ChromosomeArmKey(HumanChromosome._1, ChromosomeArm.Q_ARM)), EPSILON);
+        assertEquals(5.35312, cnPerChromosomeArm.get(new ChromosomeArmKey(HumanChromosome._1, ChromosomeArm.Q_ARM)), EPSILON);
     }
-
 }

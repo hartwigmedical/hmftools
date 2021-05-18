@@ -54,28 +54,22 @@ public final class CnPerChromosomeFactory {
         for (Chromosome chr : REF_GENOME_COORDINATES.lengths().keySet()) {
             HumanChromosome chromosome = (HumanChromosome) chr;
             Map<ChromosomeArm, GenomeRegion> genomeRegion = determineArmRegion(chromosome);
-            double copyNumberArm = 0;
 
             for (Map.Entry<ChromosomeArm, GenomeRegion> entry : genomeRegion.entrySet()) {
+                GenomeRegion region = entry.getValue();
+
+                double copyNumberArm = 0;
                 for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
                     Chromosome copyNumberChromosome = HumanChromosome.fromString(purpleCopyNumber.chromosome());
-                    if (entry.getKey() == ChromosomeArm.P_ARM) {
-                        if (copyNumberChromosome.equals(chromosome) && purpleCopyNumber.end() <= entry.getValue().end()) {
-                            double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
-                            long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
-                            copyNumberArm += (copyNumber * totalLengthSegment) / entry.getValue().bases();
-                        }
-                    } else if (entry.getKey() == ChromosomeArm.Q_ARM) {
-                        if (copyNumberChromosome.equals(chromosome) && purpleCopyNumber.end() <= entry.getValue().end()) {
-                            double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
-                            long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
-                            copyNumberArm += (copyNumber * totalLengthSegment) / entry.getValue().bases();
-                        }
+
+                    if (copyNumberChromosome.equals(chromosome) && region.overlaps(purpleCopyNumber)) {
+                        double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
+                        long totalLengthSegment = purpleCopyNumber.bases();
+                        copyNumberArm += (copyNumber * totalLengthSegment) / region.bases();
                     }
                 }
                 cnPerChromosomeArm.put(new ChromosomeArmKey(chromosome, entry.getKey()), copyNumberArm);
             }
-
         }
 
         return cnPerChromosomeArm;
@@ -83,20 +77,23 @@ public final class CnPerChromosomeFactory {
 
     @NotNull
     private static Map<ChromosomeArm, GenomeRegion> determineArmRegion(@NotNull Chromosome chromosome) {
+        long centromerePos = REF_GENOME_COORDINATES.centromeres().get(chromosome);
+        long chrLength = REF_GENOME_COORDINATES.lengths().get(chromosome);
 
-        Long centromerePos = REF_GENOME_COORDINATES.centromeres().get(chromosome);
-        int chrLength = REF_GENOME_COORDINATES.lengths().get(chromosome).intValue();
-        long endChr = chrLength - (centromerePos +1);
-        long startChr = centromerePos;
+        long lengthPastCentromere = chrLength - (centromerePos + 1);
+        long lengthBeforeCentromere = centromerePos;
+
         Map<ChromosomeArm, GenomeRegion> chromosomeArmGenomeRegionMap = Maps.newHashMap();
 
         // The smallest part of a chromosome is the P arm.
-        if (startChr < endChr) {
+        if (lengthBeforeCentromere < lengthPastCentromere) {
             chromosomeArmGenomeRegionMap.put(ChromosomeArm.P_ARM, GenomeRegions.create(chromosome.toString(), 1, centromerePos));
-            chromosomeArmGenomeRegionMap.put(ChromosomeArm.Q_ARM, GenomeRegions.create(chromosome.toString(), centromerePos + 1, chrLength));
-        } else  {
+            chromosomeArmGenomeRegionMap.put(ChromosomeArm.Q_ARM,
+                    GenomeRegions.create(chromosome.toString(), centromerePos + 1, chrLength));
+        } else {
             chromosomeArmGenomeRegionMap.put(ChromosomeArm.Q_ARM, GenomeRegions.create(chromosome.toString(), 1, centromerePos));
-            chromosomeArmGenomeRegionMap.put(ChromosomeArm.P_ARM, GenomeRegions.create(chromosome.toString(), centromerePos + 1, chrLength));
+            chromosomeArmGenomeRegionMap.put(ChromosomeArm.P_ARM,
+                    GenomeRegions.create(chromosome.toString(), centromerePos + 1, chrLength));
         }
         return chromosomeArmGenomeRegionMap;
     }
