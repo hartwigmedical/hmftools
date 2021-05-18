@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -14,19 +15,38 @@ public final class VirusBreakends {
     }
 
     @NotNull
-    public static String virusInterpretationSummary(@NotNull List<ReportableVirusBreakend> reportableVirusBreakends) {
+    public static String virusInterpretationSummary(@NotNull List<ReportableVirusBreakend> reportableVirusBreakends,
+            @NotNull Collection<String> interpretationVirus) {
         Set<String> positiveInterpretations = Sets.newHashSet();
+        Set<String> negativeInterpretations = Sets.newHashSet();
+        Set<String> virusInterpretationUnique = Sets.newHashSet();
+        StringBuilder virusInterpretationSummary = new StringBuilder(",");
+
         for (ReportableVirusBreakend virusBreakend : reportableVirusBreakends) {
             if (virusBreakend.interpretation() != null) {
                 positiveInterpretations.add(virusBreakend.interpretation());
             }
         }
 
-        // TODO Also add "negative" for viruses that are not found.
-        StringBuilder virusInterpretationSummary = new StringBuilder(",");
-        for (String positiveVirus : positiveInterpretations) {
-            virusInterpretationSummary.append(positiveVirus + " positive");
+        for (String possibleVirussen: interpretationVirus) {
+            if (!positiveInterpretations.contains(possibleVirussen)) {
+                negativeInterpretations.add(possibleVirussen);
+            }
         }
+
+        for (String positiveVirus : positiveInterpretations) {
+            virusInterpretationUnique.add(positiveVirus + " positive");
+        }
+
+        for (String negativeVirus : negativeInterpretations) {
+            virusInterpretationUnique.add(negativeVirus + " negative");
+        }
+
+
+        for (String virusInterpretation : virusInterpretationUnique) {
+            virusInterpretationSummary.append(virusInterpretation);
+        }
+
         return virusInterpretationSummary.toString();
     }
 }
