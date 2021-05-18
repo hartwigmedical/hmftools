@@ -59,9 +59,12 @@ public class AnalysedPatientReporterTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void crashTestPipelineVersion() {
-        AnalysedPatientReporter.checkPipelineVersion("5.22", "5.21", false);
+    public void crashTestPipelineVersionOnNoActual() {
         AnalysedPatientReporter.checkPipelineVersion(null, "5.21", false);
+    }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void crashTestPipelineVersionOnVersionDifference() {
+        AnalysedPatientReporter.checkPipelineVersion("5.22", "5.21", false);
     }
 }

@@ -162,23 +162,23 @@ public class AnalysedPatientReporter {
     }
 
     @VisibleForTesting
-    public static void checkPipelineVersion(@Nullable String pipelineVersion, @NotNull String expectedPipelineVersion,
+    static void checkPipelineVersion(@Nullable String actualPipelineVersion, @NotNull String expectedPipelineVersion,
             boolean overridePipelineVersion) {
         if (overridePipelineVersion) {
-            if (pipelineVersion == null) {
+            if (actualPipelineVersion == null) {
                 LOGGER.warn("No known pipeline version is known!");
             }
             LOGGER.warn("Pipeline version is overridden! The version is {} but the expected version is {}",
-                    pipelineVersion,
+                    actualPipelineVersion,
                     expectedPipelineVersion);
-        } else if (!overridePipelineVersion) {
-            if (pipelineVersion != null && !pipelineVersion.equals(expectedPipelineVersion)) {
+        } else {
+            if (actualPipelineVersion != null && !actualPipelineVersion.equals(expectedPipelineVersion)) {
                 throw new IllegalArgumentException(
-                        "The expected pipeline version " + expectedPipelineVersion + " is different than the real pipeline version "
-                                + pipelineVersion + "!");
-            } else if (pipelineVersion == null) {
-                throw new IllegalArgumentException("No pipeline version is known! The expected pipeline version " + expectedPipelineVersion
-                        + " is different than the real pipeline version " + pipelineVersion + "!");
+                        "The expected pipeline version " + expectedPipelineVersion + " is different from the actual pipeline version "
+                                + actualPipelineVersion + "!");
+            } else if (actualPipelineVersion == null) {
+                throw new IllegalArgumentException(
+                        "No pipeline version is known! The expected pipeline version is " + expectedPipelineVersion);
             }
         }
     }
