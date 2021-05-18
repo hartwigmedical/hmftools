@@ -30,7 +30,7 @@ public class VirusBreakends {
     }
 
     private static boolean determineInterpretation(@Nullable String interpretation) {
-        if (interpretation != null || !interpretation.equals(Strings.EMPTY)) {
+        if (interpretation != null) {
             return true;
         }
         return false;
