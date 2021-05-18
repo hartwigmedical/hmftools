@@ -24,11 +24,10 @@ public class CnPerChromosomeFactoryTest {
 
     @Test
     public void extractCopyNumberPerChromosomeArm() throws IOException {
-        CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(PURPLE_COPYNUMBER_TSV);
+        CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(System.getProperty("user.home") + "/hmf/tmp/COREDB010053T.purple.cnv.somatic.tsv");
     }
 
     @Test
-    @Ignore
     public void canDetermineCnPerChromosomeArm() {
         List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
         // Chromosome 1: 1-123035434-249250621

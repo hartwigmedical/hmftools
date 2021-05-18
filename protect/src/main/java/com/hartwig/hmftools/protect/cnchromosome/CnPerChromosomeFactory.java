@@ -97,7 +97,7 @@ public final class CnPerChromosomeFactory {
         // The smallest part of a chromosome is the P arm.
         Long centromerePos = REF_GENOME_COORDINATES.centromeres().get(chromosome);
         int chrLength = REF_GENOME_COORDINATES.lengths().get(chromosome).intValue();
-        long endChr = chrLength - centromerePos;
+        long endChr = chrLength - (centromerePos +1);
         long startChr = centromerePos;
         Map<ChromosomeArm, GenomeRegion> chromosomeArmGenomeRegionMap = Maps.newHashMap();
 
