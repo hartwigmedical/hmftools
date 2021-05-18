@@ -3,7 +3,6 @@ package com.hartwig.hmftools.protect.cnchromosome;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -25,22 +24,22 @@ public final class CnPerChromosomeFactory {
     }
 
     @NotNull
-    public static Map<CopyNumberKey, Double> fromPurpleSomaticCopynumberTsv(@NotNull String purpleSomaticCopynumberTsv) throws IOException {
+    public static Map<ChromosomeArmKey, Double> fromPurpleSomaticCopynumberTsv(@NotNull String purpleSomaticCopynumberTsv) throws IOException {
         List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(purpleSomaticCopynumberTsv);
         return extractCnPerChromosomeArm(copyNumbers);
     }
 
     @NotNull
-    private static Map<CopyNumberKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
-        Map<CopyNumberKey, Double> cnPerChromosomeArm = Maps.newHashMap();
-        Map<CopyNumberKey, Double> cnPerChromosomePArm = Maps.newHashMap(determineCopyNumberArm(copyNumbers, ChromosomeArm.P_ARM));
-        Map<CopyNumberKey, Double> cnPerChromosomeQArm = Maps.newHashMap(determineCopyNumberArm(copyNumbers, ChromosomeArm.Q_ARM));
+    private static Map<ChromosomeArmKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
+        Map<ChromosomeArmKey, Double> cnPerChromosomeArm = Maps.newHashMap();
+        Map<ChromosomeArmKey, Double> cnPerChromosomePArm = Maps.newHashMap(determineCopyNumberArm(copyNumbers, ChromosomeArm.P_ARM));
+        Map<ChromosomeArmKey, Double> cnPerChromosomeQArm = Maps.newHashMap(determineCopyNumberArm(copyNumbers, ChromosomeArm.Q_ARM));
 
         cnPerChromosomeArm.putAll(cnPerChromosomePArm);
         cnPerChromosomeArm.putAll(cnPerChromosomeQArm);
 
-        for (Map.Entry<CopyNumberKey, Double> entry : cnPerChromosomeArm.entrySet()) {
-            LOGGER.info(entry.getKey().chromosome + " " + entry.getKey().chromosomeArm + " " + entry.getValue());
+        for (Map.Entry<ChromosomeArmKey, Double> entry : cnPerChromosomeArm.entrySet()) {
+            LOGGER.info("{}: {}", entry.getKey(), entry.getValue());
         }
 
         return cnPerChromosomeArm;
@@ -66,15 +65,15 @@ public final class CnPerChromosomeFactory {
     }
 
     @NotNull
-    private static Map<CopyNumberKey, Double> determineCopyNumberArm(@NotNull List<PurpleCopyNumber> copyNumbers,
+    private static Map<ChromosomeArmKey, Double> determineCopyNumberArm(@NotNull List<PurpleCopyNumber> copyNumbers,
             @NotNull ChromosomeArm chromosomeArm) {
         RefGenomeCoordinates refGenome = RefGenomeCoordinates.COORDS_37;
-        Map<CopyNumberKey, Double> cnPerChromosomeArm = Maps.newHashMap();
+        Map<ChromosomeArmKey, Double> cnPerChromosomeArm = Maps.newHashMap();
 
         for (Map.Entry<Chromosome, Long> entry : refGenome.lengths().entrySet()) {
-            final String chromosome = entry.getKey().toString();
+            String chromosome = entry.getKey().toString();
 
-            CopyNumberKey key = new CopyNumberKey(chromosome, chromosomeArm);
+            ChromosomeArmKey key = new ChromosomeArmKey(chromosome, chromosomeArm);
 
             int chromosomeLength = getChromosomalArmLength(chromosome, chromosomeArm);
             double copyNumberArm = 0;
@@ -102,43 +101,4 @@ public final class CnPerChromosomeFactory {
         return cnPerChromosomeArm;
     }
 
-    public static class CopyNumberKey {
-
-        @NotNull
-        private final String chromosome;
-        @NotNull
-        private final ChromosomeArm chromosomeArm;
-
-        public CopyNumberKey(@NotNull final String chromosome, @NotNull final ChromosomeArm chromosomeArm) {
-            this.chromosome = chromosome;
-            this.chromosomeArm = chromosomeArm;
-        }
-
-        @NotNull
-        public String chromosome() {
-            return chromosome;
-        }
-
-        @NotNull
-        public ChromosomeArm chromosomeArm() {
-            return chromosomeArm;
-        }
-
-        @Override
-        public boolean equals(final Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            final CopyNumberKey that = (CopyNumberKey) o;
-            return chromosome.equals(that.chromosome) && chromosomeArm == that.chromosomeArm;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(chromosome, chromosomeArm);
-        }
-    }
 }
