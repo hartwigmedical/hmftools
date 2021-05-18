@@ -94,18 +94,17 @@ public final class CnPerChromosomeFactory {
     @NotNull
     private static Map<ChromosomeArm, GenomeRegion> determineArmRegion(@NotNull Chromosome chromosome) {
 
-        // The smallest part of a chromosome is the P arm.
         Long centromerePos = REF_GENOME_COORDINATES.centromeres().get(chromosome);
         int chrLength = REF_GENOME_COORDINATES.lengths().get(chromosome).intValue();
         long endChr = chrLength - (centromerePos +1);
         long startChr = centromerePos;
         Map<ChromosomeArm, GenomeRegion> chromosomeArmGenomeRegionMap = Maps.newHashMap();
 
-
-        if (startChr < endChr) {  //P arm
+        // The smallest part of a chromosome is the P arm.
+        if (startChr < endChr) {
             chromosomeArmGenomeRegionMap.put(ChromosomeArm.P_ARM, GenomeRegions.create(chromosome.toString(), 1, centromerePos));
             chromosomeArmGenomeRegionMap.put(ChromosomeArm.Q_ARM, GenomeRegions.create(chromosome.toString(), centromerePos + 1, chrLength));
-        } else  {  // q arm
+        } else  {
             chromosomeArmGenomeRegionMap.put(ChromosomeArm.Q_ARM, GenomeRegions.create(chromosome.toString(), 1, centromerePos));
             chromosomeArmGenomeRegionMap.put(ChromosomeArm.P_ARM, GenomeRegions.create(chromosome.toString(), centromerePos + 1, chrLength));
         }
