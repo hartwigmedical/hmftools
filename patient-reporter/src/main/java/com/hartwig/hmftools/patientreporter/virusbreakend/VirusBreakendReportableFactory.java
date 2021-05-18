@@ -40,34 +40,25 @@ public class VirusBreakendReportableFactory {
         }
 
         List<ReportableVirusBreakend> virusBreakendsReportable = Lists.newArrayList();
-        Set<String> positiveSummary = Sets.newHashSet();
+        String interpretations;
 
         for (VirusBreakend virusBreakend : virusBreakendsFiltered) {
             String virusName = taxonomyDb.lookupName(virusBreakend.referenceTaxid());
+
+
+            if (virusInterpretationModel.hasInterpretation(virusBreakend.taxidSpecies())) {
+                interpretations = virusInterpretationModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
+            } else {
+                LOGGER.info(" VIRUS breakend has called a non-interpreted virus: {}", virusName);
+                interpretations = null;
+            }
+
             virusBreakendsReportable.add(ImmutableReportableVirusBreakend.builder()
                     .virusName(virusName)
                     .integrations(virusBreakend.integrations())
+                    .interpretations(interpretations)
                     .build());
-
-            if (virusInterpretationModel.hasInterpretation(virusBreakend.taxidSpecies())) {
-                positiveSummary.add(virusInterpretationModel.interpretVirusSpecies(virusBreakend.taxidSpecies()) + " positive");
-            } else {
-                LOGGER.info(" VIRUS breakend has called a non-interpreted virus: {}", virusName);
-            }
         }
-
-        // TODO Make this a function in the report itself (this is formatting and not logic anymore).
-        Set<String> negativeSummary = Sets.newHashSet();
-        for (String interpretation : virusInterpretationModel.interpretations()) {
-            if (!positiveSummary.contains(interpretation + " positive")) {
-                negativeSummary.add(interpretation + " negative");
-            }
-        }
-
-        Set<String> summary = Sets.newHashSet();
-        summary.addAll(positiveSummary);
-        summary.addAll(negativeSummary);
-        String virusNameSummary = summary.toString().replace("[", "").replace("]", "");
 
         return virusBreakendsReportable;
     }
