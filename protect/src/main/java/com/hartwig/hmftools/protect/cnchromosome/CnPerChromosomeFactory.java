@@ -40,10 +40,6 @@ public final class CnPerChromosomeFactory {
     static Map<ChromosomeArmKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
         Map<ChromosomeArmKey, Double> cnPerChromosomeArm = determineCopyNumberArm(copyNumbers);
 
-        for (Map.Entry<ChromosomeArmKey, Double> entry : cnPerChromosomeArm.entrySet()) {
-            LOGGER.info("{}: {}", entry.getKey(), entry.getValue());
-        }
-
         return cnPerChromosomeArm;
     }
 
