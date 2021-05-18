@@ -168,7 +168,7 @@ public class AnalysedPatientReporter {
             if (actualPipelineVersion == null) {
                 LOGGER.warn("No known pipeline version is known!");
             }
-            LOGGER.warn("Pipeline version is overridden! The version is {} but the expected version is {}",
+            LOGGER.warn("Pipeline version is overridden! The version is {} and the expected version is {}",
                     actualPipelineVersion,
                     expectedPipelineVersion);
         } else {
