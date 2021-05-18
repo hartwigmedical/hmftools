@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,7 +16,6 @@ public class VirusBreakends {
 
     @NotNull
     public static String virusInterpretationSummary(@NotNull List<ReportableVirusBreakend> reportableVirusBreakends) {
-
         StringBuilder virusInterpretationSummary = new StringBuilder(",");
 
         for (ReportableVirusBreakend virusBreakend : reportableVirusBreakends) {
@@ -30,7 +30,7 @@ public class VirusBreakends {
     }
 
     private static boolean determineInterpretation(@Nullable String interpretation) {
-        if (interpretation != null) {
+        if (interpretation != null || !interpretation.equals(Strings.EMPTY)) {
             return true;
         }
         return false;

@@ -31,10 +31,6 @@ public class VirusInterpretationModel {
         return speciesHasInterpretation ? speciesToInterpretationMap.get(speciesTaxid) : Strings.EMPTY;
     }
 
-    Collection<String> interpretations() {
-        return speciesToInterpretationMap.values();
-    }
-
     boolean hasInterpretation(int speciesTaxid) {
         return speciesToInterpretationMap.containsKey(speciesTaxid);
     }
