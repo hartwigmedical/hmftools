@@ -53,7 +53,7 @@ public class AnalysedPatientReporter {
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
 
         String pipelineVersion = MetaDataResolver.majorDotMinorVersion(new File(config.pipelineVersionFile()));
-        checkPipelineVersion(pipelineVersion, config);
+        checkPipelineVersion(pipelineVersion, config.expectedPipelineVersion(), config.overridePipelineVersion());
 
         GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.germlineReportingModel(),
                 reportData.taxonomyDb(),
@@ -161,14 +161,16 @@ public class AnalysedPatientReporter {
         return germlineOnly;
     }
 
-    private static void checkPipelineVersion(@Nullable String pipelineVersion, @NotNull PatientReporterConfig config) {
-        if (!config.overridePipelineVersion()) {
-            if (pipelineVersion != null && !pipelineVersion.equals(config.expectedPipelineVersion())) {
+    @VisibleForTesting
+    public static void checkPipelineVersion(@Nullable String pipelineVersion, @NotNull String expectedPipelineVersion,
+            boolean overridePipelineVersion) {
+        if (!overridePipelineVersion) {
+            if (pipelineVersion != null && !pipelineVersion.equals(expectedPipelineVersion)) {
                 LOGGER.warn("The expected pipeline version {} is different than the real pipeline version {}!",
                         pipelineVersion,
-                        config.expectedPipelineVersion());
+                        expectedPipelineVersion);
             }
-        } else if (config.overridePipelineVersion()) {
+        } else if (overridePipelineVersion) {
             LOGGER.warn("Pipeline version is overridden!");
         }
     }

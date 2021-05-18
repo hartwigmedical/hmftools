@@ -49,4 +49,12 @@ public class AnalysedPatientReporterTest {
         assertEquals(QsFormNumber.FOR_209.display(),
                 AnalysedPatientReporter.determineForNumber(hasReliablePurityNotCorrect, purityNotCorrect));
     }
+
+    @Test
+    public void testPipelineVersion() {
+        AnalysedPatientReporter.checkPipelineVersion("5.22", "5.22", false);
+        AnalysedPatientReporter.checkPipelineVersion("5.22", "5.22", true);
+        AnalysedPatientReporter.checkPipelineVersion("5.22", "5.21", true);
+        AnalysedPatientReporter.checkPipelineVersion("5.22", "5.21", false);
+    }
 }
