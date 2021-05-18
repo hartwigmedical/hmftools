@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -34,7 +35,8 @@ public final class CnPerChromosomeFactory {
     }
 
     @NotNull
-    private static Map<ChromosomeArmKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
+    @VisibleForTesting
+    static Map<ChromosomeArmKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
         Map<ChromosomeArmKey, Double> cnPerChromosomePArm = determineCopyNumberArm(copyNumbers, ChromosomeArm.P_ARM);
         Map<ChromosomeArmKey, Double> cnPerChromosomeQArm = determineCopyNumberArm(copyNumbers, ChromosomeArm.Q_ARM);
 
