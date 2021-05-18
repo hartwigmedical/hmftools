@@ -164,16 +164,22 @@ public class AnalysedPatientReporter {
     @VisibleForTesting
     public static void checkPipelineVersion(@Nullable String pipelineVersion, @NotNull String expectedPipelineVersion,
             boolean overridePipelineVersion) {
-        if (!overridePipelineVersion) {
-            if (pipelineVersion != null && !pipelineVersion.equals(expectedPipelineVersion)) {
-                throw new IllegalStateException(
-                        "The expected pipeline version " + pipelineVersion + " is different than the real pipeline version "
-                                + expectedPipelineVersion + "!");
+        if (overridePipelineVersion) {
+            if (pipelineVersion == null) {
+                LOGGER.warn("No known pipeline version is known!");
             }
-        } else if (overridePipelineVersion) {
             LOGGER.warn("Pipeline version is overridden! The version is {} but the expected version is {}",
                     pipelineVersion,
                     expectedPipelineVersion);
+        } else if (!overridePipelineVersion) {
+            if (pipelineVersion != null && !pipelineVersion.equals(expectedPipelineVersion)) {
+                throw new IllegalArgumentException(
+                        "The expected pipeline version " + expectedPipelineVersion + " is different than the real pipeline version "
+                                + pipelineVersion + "!");
+            } else if (pipelineVersion == null) {
+                throw new IllegalArgumentException("No pipeline version is known! The expected pipeline version " + expectedPipelineVersion
+                        + " is different than the real pipeline version " + pipelineVersion + "!");
+            }
         }
     }
 }
