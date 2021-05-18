@@ -18,10 +18,10 @@ public final class ReportingDatabase {
 
     @NotNull
     public static List<ReportingEntry> read(@NotNull String reportingDbTsv) throws IOException {
-        List<String> linesReportDates = Files.readAllLines(new File(reportingDbTsv).toPath());
+        List<String> linesReportingDb = Files.readAllLines(new File(reportingDbTsv).toPath());
         List<ReportingEntry> reportingEntryList = Lists.newArrayList();
 
-        for (String line : linesReportDates.subList(1, linesReportDates.size())) {
+        for (String line : linesReportingDb.subList(1, linesReportingDb.size())) {
             String[] values = line.split(DELIMITER);
 
             reportingEntryList.add(ImmutableReportingEntry.builder()

@@ -10,6 +10,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.reportingdb.ReportingDatabase;
+import com.hartwig.hmftools.common.reportingdb.ReportingEntry;
 import com.hartwig.hmftools.common.runcontext.RunContext;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 import com.hartwig.hmftools.patientdb.clinical.readers.LimsSampleReader;
@@ -43,9 +45,13 @@ public class SampleLoader {
                 sequencedSamplesPerPatient.keySet().size(),
                 toUniqueSampleIds(sequencedSamplesPerPatient).size());
 
+        LOGGER.info(" Loading Reporting DB from {}", config.reportingDbTsv());
+        List<ReportingEntry> reportingEntries = ReportingDatabase.read(config.reportingDbTsv());
+        LOGGER.info("  Loaded {} reporting entries", reportingEntries.size());
+
         LOGGER.info(" Loading sample data from LIMS in {}", config.limsDirectory());
         Map<String, List<SampleData>> sampleDataPerPatient =
-                extractAllSamplesFromLims(lims, sampleToSetNameMap, sequencedSamplesPerPatient);
+                extractAllSamplesFromLims(lims, reportingEntries, sampleToSetNameMap, sequencedSamplesPerPatient);
         LOGGER.info("  Loaded samples for {} patient IDs ({} samples)",
                 sampleDataPerPatient.keySet().size(),
                 countValues(sampleDataPerPatient));
@@ -117,8 +123,10 @@ public class SampleLoader {
 
     @NotNull
     private static Map<String, List<SampleData>> extractAllSamplesFromLims(@NotNull Lims lims,
-            @NotNull Map<String, String> sampleToSetNameMap, @NotNull Map<String, List<String>> sequencedSamplesPerPatient) {
-        LimsSampleReader sampleReader = new LimsSampleReader(lims, sampleToSetNameMap, toUniqueSampleIds(sequencedSamplesPerPatient));
+            @NotNull List<ReportingEntry> reportingEntries, @NotNull Map<String, String> sampleToSetNameMap,
+            @NotNull Map<String, List<String>> sequencedSamplesPerPatient) {
+        LimsSampleReader sampleReader =
+                new LimsSampleReader(lims, reportingEntries, sampleToSetNameMap, toUniqueSampleIds(sequencedSamplesPerPatient));
 
         Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
         for (String sampleBarcode : lims.sampleBarcodes()) {

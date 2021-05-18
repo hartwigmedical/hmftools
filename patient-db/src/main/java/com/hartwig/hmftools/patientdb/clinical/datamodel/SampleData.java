@@ -36,6 +36,9 @@ public abstract class SampleData implements Comparable<SampleData> {
     public abstract LocalDate samplingDate();
 
     @Nullable
+    public abstract LocalDate reportedDate();
+
+    @Nullable
     public abstract Integer dnaNanograms();
 
     @Nullable
