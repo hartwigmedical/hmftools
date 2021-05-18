@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
-public class MicroSatelliteStatus {
+public final class MicroSatelliteStatus {
 
     public static final double RANGE_MIN = 1;
     public static final double RANGE_MAX = 100;
