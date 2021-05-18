@@ -29,6 +29,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class AnalysedPatientReporter {
 
@@ -52,6 +53,8 @@ public class AnalysedPatientReporter {
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
 
         String pipelineVersion = MetaDataResolver.majorDotMinorVersion(new File(config.pipelineVersionFile()));
+        checkPipelineVersion(pipelineVersion, config);
+
         GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.germlineReportingModel(),
                 reportData.taxonomyDb(),
                 reportData.virusInterpretationModel(),
@@ -156,5 +159,14 @@ public class AnalysedPatientReporter {
             }
         }
         return germlineOnly;
+    }
+
+    private static void checkPipelineVersion(@Nullable String pipelineVersion, @NotNull PatientReporterConfig config) {
+        if (config.overridePipelineVersion()) {
+            LOGGER.warn("Pipeline version is overridden!");
+        }
+        if (pipelineVersion != null && !pipelineVersion.equals(config.expectedPipelineVersion())) {
+            LOGGER.warn("The expected pipeline version is different than the real pipeline version!");
+        }
     }
 }

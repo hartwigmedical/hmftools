@@ -75,6 +75,11 @@ public interface PatientReporterConfig {
     String LOG_DEBUG = "log_debug";
     String ONLY_CREATE_PDF = "only_create_pdf";
 
+    // paramaters for pipeline version
+    String EXPECTED_PIPELINE_VERSION = "expected_pipeline_version";
+    String OVERRIDE_PIPELINE_VERSION = "override_pipeline_version";
+
+
     @NotNull
     static Options createOptions() {
         Options options = new Options();
@@ -127,6 +132,9 @@ public interface PatientReporterConfig {
         options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         options.addOption(ONLY_CREATE_PDF, false, "If provided, just the PDF will be generated and no additional data will be updated.");
+
+        options.addOption(EXPECTED_PIPELINE_VERSION, true, "String of the expected pipeline version");
+        options.addOption(OVERRIDE_PIPELINE_VERSION, true, "if true, the expected pipeline version is overriden");
 
         return options;
     }
@@ -249,6 +257,11 @@ public interface PatientReporterConfig {
     boolean onlyCreatePDF();
 
     @NotNull
+    String expectedPipelineVersion();
+
+    boolean overridePipelineVersion();
+
+    @NotNull
     static PatientReporterConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
@@ -264,6 +277,7 @@ public interface PatientReporterConfig {
             }
         }
 
+        String expectedPipelineVersion = Strings.EMPTY;
         String pipelineVersion = Strings.EMPTY;
         String purplePurityTsv = Strings.EMPTY;
         String purpleQcFile = Strings.EMPTY;
@@ -360,6 +374,8 @@ public interface PatientReporterConfig {
                 .comments(cmd.getOptionValue(COMMENTS))
                 .isCorrectedReport(cmd.hasOption(CORRECTED_REPORT))
                 .onlyCreatePDF(cmd.hasOption(ONLY_CREATE_PDF))
+                .expectedPipelineVersion(cmd.getOptionValue(EXPECTED_PIPELINE_VERSION))
+                .overridePipelineVersion(cmd.hasOption(OVERRIDE_PIPELINE_VERSION))
                 .build();
     }
 
