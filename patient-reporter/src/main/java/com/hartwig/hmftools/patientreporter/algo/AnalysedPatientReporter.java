@@ -169,6 +169,5 @@ public class AnalysedPatientReporter {
         } else if (config.overridePipelineVersion()) {
             LOGGER.warn("Pipeline version is overridden!");
         }
-
     }
 }
