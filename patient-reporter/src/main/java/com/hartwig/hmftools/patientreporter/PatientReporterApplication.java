@@ -180,8 +180,8 @@ public class PatientReporterApplication {
         return AnalysedReportDataLoader.buildFromFiles(buildBaseReportData(config),
                 config.germlineReportingTsv(),
                 config.sampleSummaryTsv(),
-                config.virusDbTsv(),
-                config.virusSummaryTsv(),
+                config.taxonomyDbTsv(),
+                config.virusInterpretationTsv(),
                 config.virusBlacklistTsv());
     }
 }

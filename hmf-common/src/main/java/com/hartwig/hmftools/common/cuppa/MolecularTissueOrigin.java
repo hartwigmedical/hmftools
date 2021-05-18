@@ -10,8 +10,8 @@ import org.jetbrains.annotations.Nullable;
 public abstract class MolecularTissueOrigin {
 
     @NotNull
-    public abstract String molecularTissueOriginResult();
+    public abstract String conclusion();
 
     @NotNull
-    public abstract String molecularTissueOriginPlot();
+    public abstract String plotPath();
 }

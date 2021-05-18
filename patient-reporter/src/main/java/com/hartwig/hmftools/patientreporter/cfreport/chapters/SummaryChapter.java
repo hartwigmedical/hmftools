@@ -90,7 +90,7 @@ public class SummaryChapter implements ReportChapter {
         reportDocument.add(new Paragraph());
         reportDocument.add(TumorLocationAndTypeTable.createTumorType(patientReport.sampleReport().primaryTumorTypeString(),
                 contentWidth()));
-        reportDocument.add(new Paragraph("\nThe information regarding 'primary tumor location' , 'primary tumor type', 'biopsy location'"
+        reportDocument.add(new Paragraph("\nThe information regarding 'primary tumor location', 'primary tumor type' and 'biopsy location'"
                 + "  \nis based on information received from the originating hospital.").addStyle(ReportResources.subTextStyle()));
 
         renderClinicalConclusionText(reportDocument);
@@ -177,7 +177,7 @@ public class SummaryChapter implements ReportChapter {
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Molecular tissue of origin prediction").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(patientReport.molecularTissueOrigin()
-                .molecularTissueOriginResult()).addStyle(dataStyle)));
+                .conclusion()).addStyle(dataStyle)));
 
         String mutationalLoadString = hasReliablePurity ? analysis().tumorMutationalLoadStatus().display() + " ("
                 + SINGLE_DECIMAL_FORMAT.format(analysis().tumorMutationalBurden()) + " mut/genome)" : DataUtil.NA_STRING;
@@ -207,7 +207,7 @@ public class SummaryChapter implements ReportChapter {
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Integrated Virus").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createVirusCell(patientReport.sampleReport().reportViralInsertions()
-                ? analysis().virusBreakends().virusNameSummary() : DataUtil.NA_STRING)));
+                ? "" : DataUtil.NA_STRING)));
 
         reportDocument.add(div);
     }

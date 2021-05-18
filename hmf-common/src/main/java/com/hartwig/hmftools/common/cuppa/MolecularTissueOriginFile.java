@@ -11,18 +11,18 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class MolecularTissueOriginFactory {
+public final class MolecularTissueOriginFile {
 
-    private static final Logger LOGGER = LogManager.getLogger(MolecularTissueOriginFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(MolecularTissueOriginFile.class);
 
-    private MolecularTissueOriginFactory(){
+    private MolecularTissueOriginFile(){
     }
 
     @NotNull
-    public static String readMolecularTissueOriginResult(@NotNull String molecularTissueOriginTxt) throws IOException {
+    public static String read(@NotNull String molecularTissueOriginTxt) throws IOException {
         String origin = fromLines(Files.readAllLines(new File(molecularTissueOriginTxt).toPath()));
         if (origin == null) {
-            LOGGER.warn("No molecular tissue origin could be rad from {}!", molecularTissueOriginTxt);
+            LOGGER.warn("No molecular tissue origin could be read from {}!", molecularTissueOriginTxt);
             origin = Strings.EMPTY;
         }
         return origin;

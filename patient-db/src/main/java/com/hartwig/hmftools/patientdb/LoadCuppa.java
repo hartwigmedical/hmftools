@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFactory;
+import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -30,7 +30,6 @@ public class LoadCuppa {
         CommandLine cmd = new DefaultParser().parse(options, args);
 
         String sample = cmd.getOptionValue(SAMPLE);
-
         String cuppaConclusionTxt = cmd.getOptionValue(CUPPA_CONCLUSION_TXT);
 
         if (Utils.anyNull(sample, cuppaConclusionTxt)) {
@@ -42,8 +41,8 @@ public class LoadCuppa {
         DatabaseAccess dbWriter = databaseAccess(cmd);
 
         LOGGER.info("Reading CUPPA conclusion file {}", cuppaConclusionTxt);
-        String molecularTissueOrigins = MolecularTissueOriginFactory.readMolecularTissueOriginResult(cuppaConclusionTxt);
-        LOGGER.info(" Read {} CUPPA conclusion result");
+        String molecularTissueOrigins = MolecularTissueOriginFile.read(cuppaConclusionTxt);
+        LOGGER.info(" Read '{}' as CUPPA conclusion result", molecularTissueOrigins);
 
         LOGGER.info("Writing CUPPA into database for {}", sample);
         dbWriter.writeCuppa(sample, molecularTissueOrigins);
@@ -55,8 +54,7 @@ public class LoadCuppa {
     private static Options createOptions() {
         Options options = new Options();
 
-        options.addOption(SAMPLE, true, "Sample for which we are going to load the cuppa results");
-
+        options.addOption(SAMPLE, true, "Sample for which we are going to load the CUPPA results");
         options.addOption(CUPPA_CONCLUSION_TXT, true, "Path towards the CUPPA conclusion txt file");
 
         addDatabaseCmdLineArgs(options);

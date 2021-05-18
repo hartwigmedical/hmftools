@@ -9,7 +9,7 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class VirusBreakendFactoryTest {
+public class VirusBreakendFileTest {
 
     private static final double EPSILON = 1e-10;
 
@@ -20,14 +20,14 @@ public class VirusBreakendFactoryTest {
 
     @Test
     public void canReadEmptyVirusBreakendTsv() throws IOException {
-        List<VirusBreakend> virusbreakendList = VirusBreakendFactory.readVirusBreakend(EMPTY_VIRUS_BREAKEND_TSV);
+        List<VirusBreakend> virusbreakendList = VirusBreakendFile.read(EMPTY_VIRUS_BREAKEND_TSV);
 
         assertEquals(0, virusbreakendList.size());
     }
 
     @Test
     public void canReadSampleVirusBreakendTsv() throws IOException {
-        List<VirusBreakend> virusbreakendList = VirusBreakendFactory.readVirusBreakend(SAMPLE_VIRUS_BREAKEND_TSV);
+        List<VirusBreakend> virusbreakendList = VirusBreakendFile.read(SAMPLE_VIRUS_BREAKEND_TSV);
         assertEquals(2, virusbreakendList.size());
 
         VirusBreakend virusbreakend = virusbreakendList.get(0);
@@ -46,16 +46,16 @@ public class VirusBreakendFactoryTest {
         assertEquals(87, virusbreakend.referenceTaxid());
         assertEquals(88, virusbreakend.referenceKmerCount());
         assertEquals(1200, virusbreakend.alternateKmerCount());
-        assertEquals("adjusted_MG10.1", virusbreakend.Rname());
-        assertEquals(1, virusbreakend.startpos());
-        assertEquals(11, virusbreakend.endpos());
-        assertEquals(12, virusbreakend.numreads());
-        assertEquals(100, virusbreakend.covbases());
+        assertEquals("adjusted_MG10.1", virusbreakend.RName());
+        assertEquals(1, virusbreakend.startPos());
+        assertEquals(11, virusbreakend.endPos());
+        assertEquals(12, virusbreakend.numReads());
+        assertEquals(100, virusbreakend.covBases());
         assertEquals(14.102, virusbreakend.coverage(), EPSILON);
-        assertEquals(12.1, virusbreakend.meandepth(), EPSILON);
-        assertEquals(115.2, virusbreakend.meanbaseq(), EPSILON);
-        assertEquals(60, virusbreakend.meanmapq(), EPSILON);
+        assertEquals(12.1, virusbreakend.meanDepth(), EPSILON);
+        assertEquals(115.2, virusbreakend.meanBaseQ(), EPSILON);
+        assertEquals(60, virusbreakend.meanMapQ(), EPSILON);
         assertEquals(9, virusbreakend.integrations());
-        assertEquals(VirusBreakendQCStatus.UNKNOWN, virusbreakend.QCStatus());
+        assertEquals(VirusBreakendQCStatus.NO_ABNORMALITIES, virusbreakend.qcStatus());
     }
 }

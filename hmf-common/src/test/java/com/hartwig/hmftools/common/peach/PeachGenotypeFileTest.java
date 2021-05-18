@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class PeachGenotypeFileTest {
 
-    private static final String FILE = Resources.getResource("peach/sample_genotype.txt").getPath();
+    private static final String PEACH_GENOTYPES_FILE = Resources.getResource("peach/sample_genotype.txt").getPath();
 
     private static final String GENE = "GENE";
     private static final String HAPLOTYPE = "*1_HET";
@@ -23,7 +23,7 @@ public class PeachGenotypeFileTest {
 
     @Test
     public void loadPeachGenotypeFile() throws IOException {
-        List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(FILE);
+        List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(PEACH_GENOTYPES_FILE);
 
         assertEquals(1, peachGenotypes.size());
 

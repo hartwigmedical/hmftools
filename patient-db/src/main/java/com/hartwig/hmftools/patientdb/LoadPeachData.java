@@ -27,8 +27,8 @@ public class LoadPeachData {
     private static final Logger LOGGER = LogManager.getLogger(LoadPeachData.class);
 
     private static final String SAMPLE = "sample";
-    private static final String PEACH_CALLS_TXT = "peach_calls_txt";
     private static final String PEACH_GENOTYPE_TXT = "peach_genotype_txt";
+    private static final String PEACH_CALLS_TXT = "peach_calls_txt";
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
         Options options = createOptions();
@@ -36,24 +36,24 @@ public class LoadPeachData {
 
         String sample = cmd.getOptionValue(SAMPLE);
 
-        String peachCallsFileName = cmd.getOptionValue(PEACH_CALLS_TXT);
-        String peachGenotypeFileName = cmd.getOptionValue(PEACH_GENOTYPE_TXT);
+        String peachGenotypeTxt = cmd.getOptionValue(PEACH_GENOTYPE_TXT);
+        String peachCallsTxt = cmd.getOptionValue(PEACH_CALLS_TXT);
 
-        if (Utils.anyNull(sample, peachCallsFileName, peachGenotypeFileName)) {
+        if (Utils.anyNull(sample, peachCallsTxt, peachGenotypeTxt)) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Patient-DB - Load PGX Data", options);
+            formatter.printHelp("Patient-DB - Load PEACH Data", options);
             System.exit(1);
         }
 
         DatabaseAccess dbWriter = databaseAccess(cmd);
 
-        LOGGER.info("Reading PEACH calls file {}", peachCallsFileName);
-        List<PeachCalls> peachCalls = PeachCallsFile.read(peachCallsFileName);
-        LOGGER.info(" Read {} PEACH calls", peachCalls.size());
-
-        LOGGER.info("Reading PEACH genotype file {}", peachGenotypeFileName);
-        List<PeachGenotype> peachGenotype = PeachGenotypeFile.read(peachGenotypeFileName);
+        LOGGER.info("Reading PEACH genotypes from {}", peachGenotypeTxt);
+        List<PeachGenotype> peachGenotype = PeachGenotypeFile.read(peachGenotypeTxt);
         LOGGER.info(" Read {} PEACH genotypes", peachGenotype.size());
+
+        LOGGER.info("Reading PEACH calls from {}", peachCallsTxt);
+        List<PeachCalls> peachCalls = PeachCallsFile.read(peachCallsTxt);
+        LOGGER.info(" Read {} PEACH calls", peachCalls.size());
 
         LOGGER.info("Writing PEACH into database for {}", sample);
         dbWriter.writePeach(sample, peachGenotype, peachCalls);
@@ -65,10 +65,10 @@ public class LoadPeachData {
     private static Options createOptions() {
         Options options = new Options();
 
-        options.addOption(SAMPLE, true, "Sample for which we are going to load the metrics");
+        options.addOption(SAMPLE, true, "Sample for which we are going to load the PEACH data");
 
-        options.addOption(PEACH_CALLS_TXT, true, "Path towards the PEACH calls txt file");
         options.addOption(PEACH_GENOTYPE_TXT, true, "Path towards the PEACH genotype txt file");
+        options.addOption(PEACH_CALLS_TXT, true, "Path towards the PEACH calls txt file");
 
         addDatabaseCmdLineArgs(options);
 

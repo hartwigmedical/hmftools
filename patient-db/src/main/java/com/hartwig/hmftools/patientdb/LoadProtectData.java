@@ -38,7 +38,7 @@ public class LoadProtectData {
 
         if (Utils.anyNull(evidenceTsv, sample) || !new File(evidenceTsv).exists()) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Patient-DB - Load Protect Data", options);
+            formatter.printHelp("Patient-DB - Load PROTECT Data", options);
             System.exit(1);
         }
 

@@ -27,6 +27,8 @@ public final class ReportResources {
     public static final String SIGNATURE_NAME = "Edwin Cuppen";
     public static final String SIGNATURE_TITLE = "Director " + HARTWIG_NAME;
     public static final String VERSION_REPORT = "version " + PatientReporterApplication.VERSION;
+    public static final String UDI_DI = "(01)8720299486003(8012)v5.22";
+    public static final String MANUAL = "https://www.oncoact.nl/manual";
 
     public static final double PURITY_CUTOFF = 0.195;
 

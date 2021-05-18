@@ -190,7 +190,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         reportDocument.add(createCharacteristicDiv(""));
 
         reportDocument.add(createCharacteristicDiv("Molecular tissue of origin prediction"));
-        String molecularTissueOriginPlot = patientReport.molecularTissueOrigin().molecularTissueOriginPlot();
+        String molecularTissueOriginPlot = patientReport.molecularTissueOrigin().plotPath();
         try {
             reportDocument.add(createCharacteristicDiv("")); // For better display plot
             Image circosImage = new Image(ImageDataFactory.create(molecularTissueOriginPlot));

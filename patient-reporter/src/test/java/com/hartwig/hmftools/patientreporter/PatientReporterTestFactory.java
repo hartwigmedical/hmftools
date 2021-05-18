@@ -15,12 +15,12 @@ import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.TaxonomyDb;
+import com.hartwig.hmftools.patientreporter.virusbreakend.TaxonomyDbFile;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistFile;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistModel;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbFile;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusDbModel;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryFile;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusSummaryModel;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusInterpretationFile;
+import com.hartwig.hmftools.patientreporter.virusbreakend.VirusInterpretationModel;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -53,9 +53,9 @@ public final class PatientReporterTestFactory {
 
     private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
     private static final String GERMLINE_REPORTING_TSV = Resources.getResource("germline_reporting/germline_reporting.tsv").getPath();
-    private static final String VIRUS_DB_TSV = Resources.getResource("virusbreakend/virusdb.tsv").getPath();
-    private static final String VIRUS_SUMMARY_TSV = Resources.getResource("virusbreakend/virus_summary.tsv").getPath();
-    private static final String VIRUS_BLACKLIST_TSV = Resources.getResource("virusbreakend/virus_blacklist.tsv").getPath();
+    private static final String TAXONOMY_DB_TSV = Resources.getResource("viral_reporting/taxonomy_db.tsv").getPath();
+    private static final String VIRUS_INTERPRETATION_TSV = Resources.getResource("viral_reporting/virus_interpretation.tsv").getPath();
+    private static final String VIRUS_BLACKLIST_TSV = Resources.getResource("viral_reporting/virus_blacklist.tsv").getPath();
 
     private PatientReporterTestFactory() {
     }
@@ -94,8 +94,8 @@ public final class PatientReporterTestFactory {
                 .protectEvidenceTsv(PROTECT_EVIDENCE_TSV)
                 .germlineReportingTsv(Strings.EMPTY)
                 .sampleSummaryTsv(SAMPLE_SUMMARY_TSV)
-                .virusDbTsv(VIRUS_DB_TSV)
-                .virusSummaryTsv(VIRUS_SUMMARY_TSV)
+                .taxonomyDbTsv(TAXONOMY_DB_TSV)
+                .virusInterpretationTsv(VIRUS_INTERPRETATION_TSV)
                 .virusBlacklistTsv(VIRUS_BLACKLIST_TSV)
                 .isCorrectedReport(false)
                 .onlyCreatePDF(false)
@@ -121,16 +121,16 @@ public final class PatientReporterTestFactory {
         try {
             GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(GERMLINE_REPORTING_TSV);
             SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
-            VirusDbModel virusDbModel = VirusDbFile.buildFromTsv(VIRUS_DB_TSV);
-            VirusSummaryModel virusSummaryModel = VirusSummaryFile.buildFromTsv(VIRUS_SUMMARY_TSV);
+            TaxonomyDb taxonomyDb = TaxonomyDbFile.loadFromTsv(TAXONOMY_DB_TSV);
+            VirusInterpretationModel virusInterpretationModel = VirusInterpretationFile.buildFromTsv(VIRUS_INTERPRETATION_TSV);
             VirusBlacklistModel virusBlackListModel = VirusBlacklistFile.buildFromTsv(VIRUS_BLACKLIST_TSV);
 
             return ImmutableAnalysedReportData.builder()
                     .from(loadTestReportData())
                     .germlineReportingModel(germlineReportingModel)
                     .summaryModel(summaryModel)
-                    .virusDbModel(virusDbModel)
-                    .virusSummaryModel(virusSummaryModel)
+                    .taxonomyDb(taxonomyDb)
+                    .virusInterpretationModel(virusInterpretationModel)
                     .virusBlackListModel(virusBlackListModel)
                     .build();
         } catch (IOException exception) {

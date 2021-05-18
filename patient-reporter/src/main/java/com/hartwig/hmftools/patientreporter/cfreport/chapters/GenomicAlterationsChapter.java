@@ -23,8 +23,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendTotal;
-import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosome;
+import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosomeFactory;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -38,7 +37,6 @@ import com.itextpdf.layout.property.TextAlignment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class GenomicAlterationsChapter implements ReportChapter {
 
@@ -198,7 +196,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private static Table createGainsAndLossesTable(@NotNull List<ReportableGainLoss> gainsAndLosses, boolean hasReliablePurity,
-            @Nullable CnPerChromosome cnPerChromosome) {
+            @NotNull Map<CnPerChromosomeFactory.CopyNumberKey, Double> cnPerChromosome) {
         String title = "Tumor specific gains & losses";
         if (gainsAndLosses.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
@@ -308,19 +306,19 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createVirusBreakendsTable(@NotNull ReportableVirusBreakendTotal virusBreakends, boolean reportViralInsertions) {
+    private static Table createVirusBreakendsTable(@NotNull List<ReportableVirusBreakend> virusBreakends, boolean reportViralInsertions) {
         String title = "Tumor specific viral insertions";
 
         if (!reportViralInsertions) {
             return TableUtil.createNAReportTable(title);
-        } else if (virusBreakends.reportableViruses().isEmpty()) {
+        } else if (virusBreakends.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         } else {
             Table contentTable = TableUtil.createReportContentTable(new float[] { 100, 100 },
                     new Cell[] { TableUtil.createHeaderCell("Virus"),
                             TableUtil.createHeaderCell("Number of detected integration sites").setTextAlignment(TextAlignment.CENTER) });
 
-            for (ReportableVirusBreakend virusBreakend : virusBreakends.reportableViruses()) {
+            for (ReportableVirusBreakend virusBreakend : virusBreakends) {
                 contentTable.addCell(TableUtil.createContentCell(virusBreakend.virusName()));
                 contentTable.addCell(TableUtil.createContentCell(Integer.toString(virusBreakend.integrations()))
                         .setTextAlignment(TextAlignment.CENTER));
