@@ -162,11 +162,13 @@ public class AnalysedPatientReporter {
     }
 
     private static void checkPipelineVersion(@Nullable String pipelineVersion, @NotNull PatientReporterConfig config) {
-        if (config.overridePipelineVersion()) {
+        if (!config.overridePipelineVersion()) {
+            if (pipelineVersion != null && !pipelineVersion.equals(config.expectedPipelineVersion())) {
+                LOGGER.warn("The expected pipeline version is different than the real pipeline version!");
+            }
+        } else if (config.overridePipelineVersion()) {
             LOGGER.warn("Pipeline version is overridden!");
         }
-        if (pipelineVersion != null && !pipelineVersion.equals(config.expectedPipelineVersion())) {
-            LOGGER.warn("The expected pipeline version is different than the real pipeline version!");
-        }
+
     }
 }
