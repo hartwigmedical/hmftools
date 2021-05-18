@@ -99,6 +99,8 @@ public final class PatientReporterTestFactory {
                 .virusBlacklistTsv(VIRUS_BLACKLIST_TSV)
                 .isCorrectedReport(false)
                 .onlyCreatePDF(false)
+                .expectedPipelineVersion("5.22")
+                .overridePipelineVersion(false)
                 .build();
     }
 
