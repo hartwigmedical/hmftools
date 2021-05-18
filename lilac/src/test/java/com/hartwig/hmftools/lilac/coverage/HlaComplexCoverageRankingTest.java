@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.coverage;
 
 import static junit.framework.TestCase.assertEquals;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -11,7 +12,81 @@ import org.junit.Test;
 
 public class HlaComplexCoverageRankingTest
 {
-    private HlaComplexCoverageRanking victim = new HlaComplexCoverageRanking(
+    @Test
+    public void testHomozygousCounts()
+    {
+        HlaComplexCoverage coverage = HlaComplexCoverage.create(Lists.newArrayList(
+                new HlaAlleleCoverage(HlaAllele.fromString("A*01:02"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("B*01:01"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("C*03:01"), 10, 0, 0)));
+
+        assertEquals(3, coverage.homozygousCount());
+
+        coverage = HlaComplexCoverage.create(Lists.newArrayList(
+                new HlaAlleleCoverage(HlaAllele.fromString("A*01:02"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("A*01:03"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("B*01:01"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("B*01:02"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("C*03:01"), 10, 0, 0)));
+
+        assertEquals(1, coverage.homozygousCount());
+
+        coverage = HlaComplexCoverage.create(Lists.newArrayList(
+                new HlaAlleleCoverage(HlaAllele.fromString("A*01:02"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("A*01:03"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("B*01:01"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("B*01:02"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("C*03:01"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("C*03:02"), 10, 0, 0)));
+
+        assertEquals(0, coverage.homozygousCount());
+    }
+
+    @Test
+    public void testCoverageRankSorting()
+    {
+        HlaComplexCoverage coverage1 = HlaComplexCoverage.create(Lists.newArrayList(
+                new HlaAlleleCoverage(HlaAllele.fromString("A*01:201"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("B*01:01"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("C*01:01"), 10, 0, 0)));
+
+        coverage1.setScore(34);
+
+        // middle 2 are sorted by their alleles numerically
+        HlaComplexCoverage coverage2 = HlaComplexCoverage.create(Lists.newArrayList(
+                new HlaAlleleCoverage(HlaAllele.fromString("A*02:01"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("B*02:01"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("C*02:01"), 10, 0, 0)));
+
+        coverage2.setScore(33);
+
+        HlaComplexCoverage coverage3 = HlaComplexCoverage.create(Lists.newArrayList(
+                new HlaAlleleCoverage(HlaAllele.fromString("A*03:01"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("B*03:01"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("C*03:01"), 10, 0, 0)));
+
+        coverage3.setScore(35);
+
+        HlaComplexCoverage coverage4 = HlaComplexCoverage.create(Lists.newArrayList(
+                new HlaAlleleCoverage(HlaAllele.fromString("A*01:78"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("B*01:02"), 10, 0, 0),
+                new HlaAlleleCoverage(HlaAllele.fromString("C*01:02"), 10, 0, 0)));
+
+        coverage4.setScore(34);
+
+        List<HlaComplexCoverage> complexCoverages = Lists.newArrayList(coverage1, coverage2, coverage3, coverage4);
+
+        Collections.sort(complexCoverages, new HlaComplexCoverageRanking.ComplexCoverageSorter());
+        assertEquals(coverage3, complexCoverages.get(0));
+        assertEquals(coverage4, complexCoverages.get(1));
+        assertEquals(coverage1, complexCoverages.get(2));
+        assertEquals(coverage2, complexCoverages.get(3));
+    }
+
+
+    /*
+
+    private HlaComplexCoverageRankingOld victim = new HlaComplexCoverageRankingOld(
             3, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
 
     private HlaAlleleCoverage a1 = new HlaAlleleCoverage(HlaAllele.fromString("A*01:01"), 10, 0.0, 0.0);
@@ -39,7 +114,7 @@ public class HlaComplexCoverageRankingTest
         {
             List<HlaComplexCoverage> complexes = Lists.newArrayList(common, lower); //.shuffled()
 
-            HlaComplexCoverage winner = new HlaComplexCoverageRanking(
+            HlaComplexCoverage winner = new HlaComplexCoverageRankingOld(
                     3, Lists.newArrayList(a3.Allele, b3.Allele, c3.Allele),
                     Lists.newArrayList(), Lists.newArrayList()).candidateRanking(complexes).get(0);
             assertEquals(common, winner);
@@ -57,7 +132,7 @@ public class HlaComplexCoverageRankingTest
         HlaComplexCoverage victim3 = HlaComplexCoverage.create(Lists.newArrayList(a2, a3, b1, b2, c1, c2));
         List<HlaComplexCoverage> complexes = Lists.newArrayList(victim1, victim2, victim3); // .shuffled()
 
-        List<HlaComplexCoverage> ranked = new HlaComplexCoverageRanking(
+        List<HlaComplexCoverage> ranked = new HlaComplexCoverageRankingOld(
                 3, common, recovered, Lists.newArrayList()).candidateRanking(complexes);
         HlaComplexCoverage winner = ranked.get(0);
         assertEquals(victim3, winner);
@@ -125,5 +200,7 @@ public class HlaComplexCoverageRankingTest
         assertEquals(homWithOneWild, victim.candidateRanking(Lists.newArrayList(homWithOneWild, hetWithOneWild)).get(0));
         assertEquals(hetWithOneWild, victim.candidateRanking(Lists.newArrayList(homWithTwoWild, hetWithOneWild)).get(0));
     }
+
+    */
 
 }

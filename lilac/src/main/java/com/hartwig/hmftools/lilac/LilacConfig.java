@@ -6,13 +6,10 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -47,8 +44,12 @@ public class LilacConfig
     public final String SomaticVcf;
 
     public final boolean DebugPhasing;
-    public final List<HlaAllele> ExpectedAlleles; // predetermined sample alleles, always kept and scored
-    public final List<HlaAllele> RestrictedAlleles; // limit analysis from full data set to these + other configured alleles
+
+    // pre-determined sample alleles, always kept and scored, primarily for testing
+    public final List<HlaAllele> ExpectedAlleles;
+
+    // limit analysis from full data set to these + other configured alleles, for testing purposes
+    public final List<HlaAllele> RestrictedAlleles;
 
     // config strings
     public static final String RESOURCE_DIR = "resource_dir";

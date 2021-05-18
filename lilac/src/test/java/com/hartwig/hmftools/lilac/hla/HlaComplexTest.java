@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.coverage.HlaComplex;
+import com.hartwig.hmftools.lilac.coverage.HlaComplexBuilder;
 
 import org.junit.Test;
 
@@ -37,7 +38,7 @@ public class HlaComplexTest
         List<HlaAllele> confirmedGroup = confirmedProtein.stream().map(x -> x.asAlleleGroup()).collect(Collectors.toList());
         // distinct
 
-        List<HlaComplex> result = HlaComplex.gene(GENE_A, confirmedGroup, confirmedProtein, all);
+        List<HlaComplex> result = HlaComplexBuilder.buildComplexesByGene(GENE_A, confirmedGroup, confirmedProtein, all);
         assertEquals(confirmedProtein, result.get(0).getAlleles());
     }
 

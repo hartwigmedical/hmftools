@@ -175,7 +175,7 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
         return coverage;
     }
 
-    public static List<HlaAllele> alleles(final List<HlaAlleleCoverage> coverage)
+    public static List<HlaAllele> coverageAlleles(final List<HlaAlleleCoverage> coverage)
     {
         return coverage.stream().map(x -> x.Allele).collect(Collectors.toList());
     }

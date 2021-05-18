@@ -21,7 +21,6 @@ public class CoverageCalcTask implements Callable
 
     public HlaComplexCoverage getCoverage() { return mCoverage; }
 
-
     @Override
     public Long call()
     {

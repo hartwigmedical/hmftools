@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConfig.OUTPUT_DIR;
 import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
+import static com.hartwig.hmftools.lilac.coverage.HlaComplexFile.parseCandidateCoverageData;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -164,7 +165,7 @@ public class CandidateScores
                     rawAlleleData.add(items[index]);
                 }
 
-                List<HlaAllele> allAlleles = HlaComplexCoverage.parseCandidateCoverageData(rawAlleleData);
+                List<HlaAllele> allAlleles = parseCandidateCoverageData(rawAlleleData);
 
                 if(allAlleles.size() != 6)
                 {

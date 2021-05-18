@@ -24,7 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -66,10 +65,15 @@ public class ReferenceData
 
     private final HlaAlleleCache mAlleleCache;
 
+    private HlaSequenceLoci mDeflatedSequenceTemplate;
+
     private static final char SEQUENCE_DELIM = '|';
     private static final String NUC_REF_FILE = "hla_ref_nucleotide_sequences.csv";
     private static final String AA_REF_FILE = "hla_ref_aminoacid_sequences.csv";
     private static final String COHORT_ALLELE_FREQ_FILE = "lilac_allele_frequencies.csv";
+
+    // sequence used to printing amino acid sequences to file
+    private static final HlaAllele DEFLATE_TEMPLATE = HlaAllele.fromString("A*01:01");
 
     public ReferenceData(final String resourceDir, final LilacConfig config)
     {
@@ -85,6 +89,8 @@ public class ReferenceData
         AminoAcidSequencesWithInserts = Lists.newArrayList();
         AminoAcidSequencesWithDeletes = Lists.newArrayList();
 
+        mDeflatedSequenceTemplate = null;
+
         HlaTranscriptData = Maps.newHashMap();
 
         // load gene definitions and other constants
@@ -96,6 +102,9 @@ public class ReferenceData
         CommonAlleles = Lists.newArrayList();
         StopLossRecoveryAlleles = Lists.newArrayList();
     }
+
+    public HlaSequenceLoci getDeflatedSequenceTemplate() { return mDeflatedSequenceTemplate; }
+    public CohortFrequency getAlleleFrequencies() { return mAlleleFrequencies; }
 
     public static void populateHlaTranscripts(final Map<String,TranscriptData> hlaTranscriptMap)
     {
@@ -274,10 +283,12 @@ public class ReferenceData
                     return false;
 
                 String alleleStr = items[0];
-                // HlaAllele allele = HlaAllele.fromString(alleleStr);
                 HlaAllele allele = isProteinFile ? mAlleleCache.requestFourDigit(alleleStr) : mAlleleCache.request(alleleStr);
 
-                if(excludeAllele(allele))
+                boolean isDefaultTemplate = isProteinFile && mDeflatedSequenceTemplate == null && allele.matches(DEFLATE_TEMPLATE);
+                boolean excludeAllele = excludeAllele(allele);
+
+                if(!isDefaultTemplate && excludeAllele)
                     continue;
 
                 List<String> sequences = Lists.newArrayList();
@@ -317,7 +328,13 @@ public class ReferenceData
                     ++index;
                 }
 
-                sequenceData.add(new HlaSequenceLoci(allele, sequences));
+                HlaSequenceLoci newSequence = new HlaSequenceLoci(allele, sequences);
+
+                if(isDefaultTemplate)
+                    mDeflatedSequenceTemplate = newSequence;
+
+                if(!excludeAllele)
+                    sequenceData.add(newSequence);
             }
 
             LL_LOGGER.info("loaded {} sequences from file {}", sequenceData.size(), filename);
@@ -349,7 +366,6 @@ public class ReferenceData
 
         List<HlaSequence> filteredSequences = sequences.stream()
                 .filter(x -> !excludeAllele(x.Allele))
-                //.filter(x -> EXCLUDED_ALLELES.stream().noneMatch(y -> x.Allele.asFourDigit().matches(y)))
                 .collect(Collectors.toList());
 
         List<HlaSequence> reducedSequences = reduceToFourDigit(filteredSequences);
@@ -363,6 +379,8 @@ public class ReferenceData
 
     public List<HlaSequenceLoci> buildSequences(final List<HlaSequence> sequences, boolean isProteinFile)
     {
+        // the first A, B and C entries in both the nucleotide and amino acid files (A*01:01:01, B*07:02:01, C*01:02:01)
+        // are used as a reference for all the others
         final String reference = sequences.get(0).getRawSequence();
 
         // build sequences using the allele cache to avoid any duplication of alleles

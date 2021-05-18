@@ -17,6 +17,7 @@ public class HlaAllele implements Comparable<HlaAllele>
     public final String Synonymous;
     public final String SynonymousNonCoding;
 
+    private final int mProteinNumber;
     private final HlaAllele mFourDigit;
     private final HlaAllele mGroup;
     private final int mHashCode;;
@@ -35,6 +36,22 @@ public class HlaAllele implements Comparable<HlaAllele>
         mGroup = group;
 
         mHashCode = toString().hashCode();
+
+        int proteinNumber = 0;
+
+        if(!protein.isEmpty())
+        {
+            try
+            {
+                proteinNumber = Integer.parseInt(protein);
+            }
+            catch(NumberFormatException e)
+            {
+                proteinNumber = Integer.parseInt(protein.substring(0, protein.length() - 1));
+            }
+        }
+
+        mProteinNumber = proteinNumber;
     }
 
     public static HlaAllele fromString(final String line)
@@ -81,6 +98,7 @@ public class HlaAllele implements Comparable<HlaAllele>
     }
 
     public int hashCode() { return mHashCode; }
+    public int proteinNumber() { return mProteinNumber; }
 
     @Override
     public int compareTo(final HlaAllele other)
@@ -93,16 +111,19 @@ public class HlaAllele implements Comparable<HlaAllele>
         {
             return geneCompare;
         }
+
         int groupCompare = AlleleGroup.compareTo(other.AlleleGroup);
         if(groupCompare != 0)
         {
             return groupCompare;
         }
-        int proteinCompare = Protein.compareTo(other.Protein);
-        if(proteinCompare != 0)
+
+        // force into integer terms rather than string (alphabetical) comparison
+        if(proteinNumber() != other.proteinNumber())
         {
-            return proteinCompare;
+            return proteinNumber() > other.proteinNumber() ? 1 : -1;
         }
+
         int synonymousCodingCompare = Synonymous.compareTo(other.Synonymous);
         if(synonymousCodingCompare != 0)
         {
@@ -119,18 +140,6 @@ public class HlaAllele implements Comparable<HlaAllele>
     public boolean matches(final String alleleStr)
     {
         return alleleStr.equals(toString());
-    }
-
-    public static List<HlaAllele> takeN(final List<HlaAllele> list, int n)
-    {
-        List<HlaAllele> newList = Lists.newArrayList();
-
-        for(int i = 0; i < min(list.size(), n); ++i)
-        {
-            newList.add(list.get(i));
-        }
-
-        return newList;
     }
 
     public String toString()
