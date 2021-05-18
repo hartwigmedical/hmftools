@@ -38,12 +38,7 @@ public final class CnPerChromosomeFactory {
     @NotNull
     @VisibleForTesting
     static Map<ChromosomeArmKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
-        Map<ChromosomeArmKey, Double> cnPerChromosomePArm = determineCopyNumberArm(copyNumbers, ChromosomeArm.P_ARM);
-        Map<ChromosomeArmKey, Double> cnPerChromosomeQArm = determineCopyNumberArm(copyNumbers, ChromosomeArm.Q_ARM);
-
-        Map<ChromosomeArmKey, Double> cnPerChromosomeArm = Maps.newHashMap();
-        cnPerChromosomeArm.putAll(cnPerChromosomePArm);
-        cnPerChromosomeArm.putAll(cnPerChromosomeQArm);
+        Map<ChromosomeArmKey, Double> cnPerChromosomeArm = determineCopyNumberArm(copyNumbers);
 
         for (Map.Entry<ChromosomeArmKey, Double> entry : cnPerChromosomeArm.entrySet()) {
             LOGGER.info("{}: {}", entry.getKey(), entry.getValue());
@@ -53,18 +48,15 @@ public final class CnPerChromosomeFactory {
     }
 
     @NotNull
-    private static Map<ChromosomeArmKey, Double> determineCopyNumberArm(@NotNull List<PurpleCopyNumber> copyNumbers,
-            @NotNull ChromosomeArm chromosomeArm) {
+    private static Map<ChromosomeArmKey, Double> determineCopyNumberArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
         Map<ChromosomeArmKey, Double> cnPerChromosomeArm = Maps.newHashMap();
 
         for (Chromosome chr : REF_GENOME_COORDINATES.lengths().keySet()) {
             HumanChromosome chromosome = (HumanChromosome) chr;
-
             Map<ChromosomeArm, GenomeRegion> genomeRegion = determineArmRegion(chromosome);
             double copyNumberArm = 0;
 
             for (Map.Entry<ChromosomeArm, GenomeRegion> entry : genomeRegion.entrySet()) {
-
                 for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
                     Chromosome copyNumberChromosome = HumanChromosome.fromString(purpleCopyNumber.chromosome());
                     if (entry.getKey() == ChromosomeArm.P_ARM) {
@@ -81,11 +73,9 @@ public final class CnPerChromosomeFactory {
                         }
                     }
                 }
-
+                cnPerChromosomeArm.put(new ChromosomeArmKey(chromosome, entry.getKey()), copyNumberArm);
             }
 
-
-            cnPerChromosomeArm.put(new ChromosomeArmKey(chromosome, chromosomeArm), copyNumberArm);
         }
 
         return cnPerChromosomeArm;
