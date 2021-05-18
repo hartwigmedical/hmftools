@@ -11,7 +11,7 @@ public class CnPerChromosomeFactoryTest {
     private static final String PURPLE_COPYNUMBER_TSV = Resources.getResource("cnchromosome/sample_purple.cnv.somatic.tsv").getPath();
 
     @Test
-    public void extractCopyNumberperChromosomeArm() throws IOException {
+    public void extractCopyNumberPerChromosomeArm() throws IOException {
         CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(PURPLE_COPYNUMBER_TSV);
 
     }

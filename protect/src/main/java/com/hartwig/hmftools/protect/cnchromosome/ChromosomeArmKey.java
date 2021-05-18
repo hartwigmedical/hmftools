@@ -2,6 +2,7 @@ package com.hartwig.hmftools.protect.cnchromosome;
 
 import java.util.Objects;
 
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 
 import org.jetbrains.annotations.NotNull;
@@ -9,11 +10,11 @@ import org.jetbrains.annotations.NotNull;
 public class ChromosomeArmKey {
 
     @NotNull
-    private final String chromosome;
+    private final HumanChromosome chromosome;
     @NotNull
     private final ChromosomeArm chromosomeArm;
 
-    public ChromosomeArmKey(@NotNull final String chromosome, @NotNull final ChromosomeArm chromosomeArm) {
+    public ChromosomeArmKey(@NotNull final HumanChromosome chromosome, @NotNull final ChromosomeArm chromosomeArm) {
         this.chromosome = chromosome;
         this.chromosomeArm = chromosomeArm;
     }
@@ -27,7 +28,7 @@ public class ChromosomeArmKey {
             return false;
         }
         final ChromosomeArmKey that = (ChromosomeArmKey) o;
-        return chromosome.equals(that.chromosome) && chromosomeArm == that.chromosomeArm;
+        return chromosome == that.chromosome && chromosomeArm == that.chromosomeArm;
     }
 
     @Override

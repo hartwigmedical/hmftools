@@ -20,6 +20,8 @@ public final class CnPerChromosomeFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(CnPerChromosomeFactory.class);
 
+    private static final RefGenomeCoordinates REF_GENOME_COORDINATES = RefGenomeCoordinates.COORDS_37;
+
     private CnPerChromosomeFactory() {
     }
 
@@ -31,10 +33,10 @@ public final class CnPerChromosomeFactory {
 
     @NotNull
     private static Map<ChromosomeArmKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
-        Map<ChromosomeArmKey, Double> cnPerChromosomeArm = Maps.newHashMap();
-        Map<ChromosomeArmKey, Double> cnPerChromosomePArm = Maps.newHashMap(determineCopyNumberArm(copyNumbers, ChromosomeArm.P_ARM));
-        Map<ChromosomeArmKey, Double> cnPerChromosomeQArm = Maps.newHashMap(determineCopyNumberArm(copyNumbers, ChromosomeArm.Q_ARM));
+        Map<ChromosomeArmKey, Double> cnPerChromosomePArm = determineCopyNumberArm(copyNumbers, ChromosomeArm.P_ARM);
+        Map<ChromosomeArmKey, Double> cnPerChromosomeQArm = determineCopyNumberArm(copyNumbers, ChromosomeArm.Q_ARM);
 
+        Map<ChromosomeArmKey, Double> cnPerChromosomeArm = Maps.newHashMap();
         cnPerChromosomeArm.putAll(cnPerChromosomePArm);
         cnPerChromosomeArm.putAll(cnPerChromosomeQArm);
 
@@ -45,11 +47,42 @@ public final class CnPerChromosomeFactory {
         return cnPerChromosomeArm;
     }
 
-    private static int getChromosomalArmLength(@NotNull String chromosome, @NotNull ChromosomeArm armType) {
-        RefGenomeCoordinates refGenome = RefGenomeCoordinates.COORDS_37;
-        HumanChromosome chr = HumanChromosome.fromString(chromosome);
+    @NotNull
+    private static Map<ChromosomeArmKey, Double> determineCopyNumberArm(@NotNull List<PurpleCopyNumber> copyNumbers,
+            @NotNull ChromosomeArm chromosomeArm) {
+        Map<ChromosomeArmKey, Double> cnPerChromosomeArm = Maps.newHashMap();
 
-        Long centromerePos = refGenome.centromeres().get(chr);
+        for (Chromosome chr : REF_GENOME_COORDINATES.lengths().keySet()) {
+            HumanChromosome chromosome = (HumanChromosome) chr;
+            ChromosomeArmKey key = new ChromosomeArmKey(chromosome, chromosomeArm);
+
+            int chromosomeLength = getChromosomalArmLength(chromosome, chromosomeArm);
+            double copyNumberArm = 0;
+            for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
+                Chromosome copyNumberChromosome = HumanChromosome.fromString(purpleCopyNumber.chromosome());
+                if (chromosomeArm == ChromosomeArm.P_ARM) {
+                    if (copyNumberChromosome.equals(chromosome) && purpleCopyNumber.end() < chromosomeLength) {
+                        double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
+                        long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
+                        copyNumberArm += (copyNumber * totalLengthSegment) / chromosomeLength;
+                    }
+                } else if (chromosomeArm == ChromosomeArm.Q_ARM) {
+                    if (copyNumberChromosome.equals(chromosome) && purpleCopyNumber.end() > chromosomeLength) {
+                        double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
+                        long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
+                        copyNumberArm += (copyNumber * totalLengthSegment) / chromosomeLength;
+                    }
+                }
+            }
+
+            cnPerChromosomeArm.put(key, copyNumberArm);
+        }
+
+        return cnPerChromosomeArm;
+    }
+
+    private static int getChromosomalArmLength(@NotNull Chromosome chromosome, @NotNull ChromosomeArm armType) {
+        Long centromerePos = REF_GENOME_COORDINATES.centromeres().get(chromosome);
 
         if (centromerePos == null) {
             return 0;
@@ -59,46 +92,8 @@ public final class CnPerChromosomeFactory {
             return centromerePos.intValue();
         }
 
-        int chrLength = refGenome.lengths().get(chr).intValue();
+        int chrLength = REF_GENOME_COORDINATES.lengths().get(chromosome).intValue();
 
         return chrLength - centromerePos.intValue();
     }
-
-    @NotNull
-    private static Map<ChromosomeArmKey, Double> determineCopyNumberArm(@NotNull List<PurpleCopyNumber> copyNumbers,
-            @NotNull ChromosomeArm chromosomeArm) {
-        RefGenomeCoordinates refGenome = RefGenomeCoordinates.COORDS_37;
-        Map<ChromosomeArmKey, Double> cnPerChromosomeArm = Maps.newHashMap();
-
-        for (Map.Entry<Chromosome, Long> entry : refGenome.lengths().entrySet()) {
-            String chromosome = entry.getKey().toString();
-
-            ChromosomeArmKey key = new ChromosomeArmKey(chromosome, chromosomeArm);
-
-            int chromosomeLength = getChromosomalArmLength(chromosome, chromosomeArm);
-            double copyNumberArm = 0;
-            for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
-                if (chromosomeArm == ChromosomeArm.P_ARM) {
-                    if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() < chromosomeLength) {
-                        double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
-                        long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
-                        copyNumberArm += (copyNumber * totalLengthSegment) / chromosomeLength;
-                    }
-                } else if (chromosomeArm == ChromosomeArm.Q_ARM) {
-                    if (purpleCopyNumber.chromosome().equals(chromosome) && purpleCopyNumber.end() > chromosomeLength) {
-                        double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
-                        long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
-                        copyNumberArm += (copyNumber * totalLengthSegment) / chromosomeLength;
-                    }
-                }
-
-            }
-
-            cnPerChromosomeArm.put(key, copyNumberArm);
-
-        }
-
-        return cnPerChromosomeArm;
-    }
-
 }

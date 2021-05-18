@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
@@ -49,7 +50,7 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusBreakend;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
-import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosomeFactory;
+import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
@@ -216,56 +217,12 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static Map<CnPerChromosomeFactory.CopyNumberKey, Double> extractCnPerChromosome() {
-        Map<CnPerChromosomeFactory.CopyNumberKey, Double> cnPerChromosomeArm = Maps.newHashMap();
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("1", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("1", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("2", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("2", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("3", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("3", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("4", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("4", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("5", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("5", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("6", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("6", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("7", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("7", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("8", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("8", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("9", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("9", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("10", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("10", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("11", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("11", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("12", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("12", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("13", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("13", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("14", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("14", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("15", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("15", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("16", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("16", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("17", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("17", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("18", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("18", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("19", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("19", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("20", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("20", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("21", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("21", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("22", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("22", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("X", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("X", ChromosomeArm.Q_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("Y", ChromosomeArm.P_ARM), 1.0);
-        cnPerChromosomeArm.put(new CnPerChromosomeFactory.CopyNumberKey("Y", ChromosomeArm.Q_ARM), 1.0);
+    public static Map<ChromosomeArmKey, Double> extractCnPerChromosome() {
+        Map<ChromosomeArmKey, Double> cnPerChromosomeArm = Maps.newHashMap();
+        for (HumanChromosome chromosome : HumanChromosome.values()) {
+            cnPerChromosomeArm.put(new ChromosomeArmKey(chromosome, ChromosomeArm.P_ARM), 1.0);
+            cnPerChromosomeArm.put(new ChromosomeArmKey(chromosome, ChromosomeArm.Q_ARM), 1.0);
+        }
         return cnPerChromosomeArm;
     }
 

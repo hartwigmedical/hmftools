@@ -23,7 +23,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
-import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosomeFactory;
+import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -196,7 +196,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private static Table createGainsAndLossesTable(@NotNull List<ReportableGainLoss> gainsAndLosses, boolean hasReliablePurity,
-            @NotNull Map<CnPerChromosomeFactory.CopyNumberKey, Double> cnPerChromosome) {
+            @NotNull Map<ChromosomeArmKey, Double> cnPerChromosome) {
         String title = "Tumor specific gains & losses";
         if (gainsAndLosses.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
