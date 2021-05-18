@@ -77,6 +77,11 @@ public class FragmentAlleles
                 results.add(fragmentAlleles);
         }
 
+        List<FragmentAlleles> tempFragAlleles = results.stream()
+                .filter(x -> x.getFull().size() == 1)
+                .filter(x -> x.getFull().stream().anyMatch(y -> y.toString().equals("B*35:08")))
+                .collect(Collectors.toList());
+
         return results;
     }
 

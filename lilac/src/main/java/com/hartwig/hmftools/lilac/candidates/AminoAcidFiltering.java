@@ -30,8 +30,6 @@ public class AminoAcidFiltering
             if(mAminoAcidBoundaries.contains(loci))
                 continue;
 
-            // int depth = aminoAcidCount.depth(loci);
-
             List<String> expectedSequences = aminoAcidCount.getMinCountSequences(loci);
 
             final int lociConst = loci;

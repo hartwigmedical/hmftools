@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.lilac.fragment;
 
-import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.MAX_AMINO_ACID_BOUNDARY;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
 

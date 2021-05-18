@@ -102,11 +102,11 @@ public class HlaOut
                 .add(String.valueOf(round(tumor.SharedCoverage)))
                 .add(String.valueOf(round(tumor.WildCoverage)))
                 .add(String.format("%.2f", copyNumber))
-                .add(String.format("%.2f", codingCount.Missense))
-                .add(String.format("%.2f", codingCount.Nonsense))
-                .add(String.format("%.2f", codingCount.Splice))
-                .add(String.format("%.2f", codingCount.Synonymous))
-                .add(String.format("%.2f", codingCount.InframeIndel));
+                .add(String.format("%.2f", codingCount.missense()))
+                .add(String.format("%.2f", codingCount.nonsense()))
+                .add(String.format("%.2f", codingCount.splice()))
+                .add(String.format("%.2f", codingCount.synonymous()))
+                .add(String.format("%.2f", codingCount.inframeIndel()));
 
         return header.toString();
     }

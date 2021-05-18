@@ -43,7 +43,7 @@ public class SomaticVariantQC
 
         if(result.unmatchedVariants())
         {
-            LL_LOGGER.warn("  UNASSIGNED_VARIANT - {} variants found but $totalCount assigned", variantCount);
+            LL_LOGGER.warn("  UNASSIGNED_VARIANT - {} variants found but {} assigned", variantCount, totalCount);
         }
 
         return result;
