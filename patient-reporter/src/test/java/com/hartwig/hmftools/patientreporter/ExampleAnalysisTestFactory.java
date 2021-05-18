@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -149,6 +150,7 @@ public final class ExampleAnalysisTestFactory {
                 .homozygousDisruptions(homozygousDisruptions)
                 .virusBreakends(virusBreakends)
                 .peachGenotypes(peachGenotypes)
+                .interpretationVirus(Collections.emptyList())
                 .build();
 
         MolecularTissueOrigin molecularTissueOrigin =

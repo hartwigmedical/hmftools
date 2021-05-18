@@ -36,6 +36,10 @@ public class VirusInterpretationModel {
         return speciesToInterpretationMap.containsKey(speciesTaxid);
     }
 
+    public Collection<String> interpretations() {
+        return speciesToInterpretationMap.values();
+    }
+
     @VisibleForTesting
     int count() {
         return speciesToInterpretationMap.keySet().size();
