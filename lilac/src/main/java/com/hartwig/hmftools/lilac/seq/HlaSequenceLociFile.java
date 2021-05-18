@@ -16,6 +16,9 @@ public class HlaSequenceLociFile
             final String file, final List<Integer> aBoundaries, final List<Integer> bBoundaries,
             final List<Integer> cBoundaries, final List<HlaSequenceLoci> sequences)
     {
+        // TODO - ensure an allele isn't written more than once
+
+
         /*
         val outputFile = File(file)
         outputFile.writeText("")

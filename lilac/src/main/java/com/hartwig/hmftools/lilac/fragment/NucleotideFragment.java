@@ -89,21 +89,37 @@ public class NucleotideFragment
 
     public final NucleotideFragment qualityFilter(int minBaseQual)
     {
-        final List<Integer> filteredNucleotideLoci = Lists.newArrayList();
-        final List<Integer> filteredNucleotideQuality = Lists.newArrayList();
-        final List<String> filteredNucleotides = Lists.newArrayList();
+        final List<Integer> filteredIndices = Lists.newArrayList();
+        boolean allPresent = true;
 
         for(int i = 0; i < mNucleotideQuality.size(); ++i)
         {
             if(mNucleotideQuality.get(i) >= minBaseQual)
             {
-                filteredNucleotideLoci.add(mNucleotideLoci.get(i));
-                filteredNucleotideQuality.add(mNucleotideQuality.get(i));
-                filteredNucleotides.add(mNucleotides.get(i));
+                filteredIndices.add(i);
+            }
+            else
+            {
+                allPresent = false;
             }
         }
 
-        return new NucleotideFragment(mId, mGenes, filteredNucleotideLoci, filteredNucleotideQuality, filteredNucleotides);
+        if(allPresent)
+            return this;
+
+        int filteredCount = filteredIndices.size();
+        final List<Integer> filteredLoci = Lists.newArrayListWithExpectedSize(filteredCount);
+        final List<Integer> filteredQuality = Lists.newArrayListWithExpectedSize(filteredCount);
+        final List<String> filteredNucleotides = Lists.newArrayListWithExpectedSize(filteredCount);
+
+        for(Integer index : filteredIndices)
+        {
+            filteredLoci.add(mNucleotideLoci.get(index));
+            filteredQuality.add(mNucleotideQuality.get(index));
+            filteredNucleotides.add(mNucleotides.get(index));
+        }
+
+        return new NucleotideFragment(mId, mGenes, filteredLoci, filteredQuality, filteredNucleotides);
     }
 
     public AminoAcidFragment toAminoAcidFragment()
@@ -145,21 +161,23 @@ public class NucleotideFragment
         return Codons.aminoAcids(first + second + third);
     }
 
-    public final NucleotideFragment enrich(int loci, final String nucleotide, int quality)
+    public void enrich(int locus, final String nucleotide, int quality)
     {
-        final List<Integer> nucleotideLoci = Lists.newArrayList();
-        nucleotideLoci.addAll(mNucleotideLoci);
-        nucleotideLoci.add(loci);
+        // adds an extra base, quality and locus
+        for(int i = 0; i < mNucleotideLoci.size(); ++i)
+        {
+            if(locus > mNucleotideLoci.get(i))
+                continue;
 
-        final List<Integer> nucleotideQuality = Lists.newArrayList();
-        nucleotideQuality.addAll(mNucleotideQuality);
-        nucleotideQuality.add(quality);
+            if(locus == mNucleotideLoci.get(i))
+                break;
 
-        final List<String> nucleotides = Lists.newArrayList();
-        nucleotides.addAll(mNucleotides);
-        nucleotides.add(nucleotide);
-
-        return new NucleotideFragment(mId, mGenes, nucleotideLoci, nucleotideQuality, nucleotides);
+            // add in order
+            mNucleotideLoci.add(i, locus);
+            mNucleotideQuality.add(i, quality);
+            mNucleotides.add(i, nucleotide);
+            break;
+        }
     }
 
     public String toString()
@@ -226,22 +244,31 @@ public class NucleotideFragment
 
     public static NucleotideFragment merge(final NucleotideFragment frag1, final NucleotideFragment frag2)
     {
-        final Set<String> genes = Sets.newHashSet();
-        genes.addAll(frag1.getGenes());
-        genes.addAll(frag2.getGenes());
+        // merge frag 2 into 1 and ensure no repetition of loci
+        frag2.getGenes().forEach(x -> frag1.getGenes().add(x));
 
-        final List<Integer> nucleotideLoci = Lists.newArrayList();
-        nucleotideLoci.addAll(frag1.getNucleotideLoci());
-        nucleotideLoci.addAll(frag2.getNucleotideLoci());
+        for(int index2 = 0; index2 < frag2.getNucleotideLoci().size(); ++index2)
+        {
+            int locus2 = frag2.getNucleotideLoci().get(index2);
 
-        final List<Integer> nucleotideQuality = Lists.newArrayList();
-        nucleotideQuality.addAll(frag1.getNucleotideQuality());
-        nucleotideQuality.addAll(frag2.getNucleotideQuality());
+            for(int index1 = 0; index1 < frag1.getNucleotideLoci().size(); ++index1)
+            {
+                int locus1 = frag1.getNucleotideLoci().get(index1);
 
-        final List<String> nucleotides = Lists.newArrayList();
-        nucleotides.addAll(frag1.getNucleotides());
-        nucleotides.addAll(frag2.getNucleotides());
+                if(locus1 < locus2)
+                    continue;
 
-        return new NucleotideFragment(frag1.getId(), genes, nucleotideLoci, nucleotideQuality, nucleotides);
+                else if(locus1 == locus2)
+                    break;
+
+                // add in order
+                frag1.getNucleotideLoci().add(index1, locus2);
+                frag1.getNucleotides().add(index1, frag2.getNucleotides().get(index2));
+                frag1.getNucleotideQuality().add(index1, frag2.getNucleotideQuality().get(index2));
+                break;
+            }
+        }
+
+        return frag1;
     }
 }

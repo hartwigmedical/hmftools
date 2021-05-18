@@ -29,14 +29,12 @@ public final class NucleotideQualEnrichment
     private NucleotideFragment enrich(
             final NucleotideFragment fragment, final SequenceCount highQualityCount, final SequenceCount rawCount)
     {
-        final List<Integer> nucleotideLoci = Lists.newArrayList();
-        final List<Integer> nucleotideQuality = Lists.newArrayList();
-        final List<String> nucleotides = Lists.newArrayList();
+        final List<Integer> filteredIndices = Lists.newArrayList();
+        boolean allPresent = true;
 
         for(int i = 0; i < fragment.getNucleotideLoci().size(); ++i)
         {
             int lociIndex = fragment.getNucleotideLoci().get(i);
-            int currentQuality = fragment.getNucleotideQuality().get(i);
             String fragmentNucleotide = fragment.getNucleotides().get(i);
             List<String> highQualitySequences = highQualityCount.getMinCountSequences(lociIndex);
             List<String> rawSequences = rawCount.getMinCountSequences(lociIndex);
@@ -44,13 +42,30 @@ public final class NucleotideQualEnrichment
 
             if(allowedSequences.contains(fragmentNucleotide))
             {
-                nucleotideLoci.add(lociIndex);
-                nucleotideQuality.add(currentQuality);
-                nucleotides.add(fragmentNucleotide);
+                filteredIndices.add(i);
+            }
+            else
+            {
+                allPresent = false;
             }
         }
 
-        return new NucleotideFragment(fragment.getId(), fragment.getGenes(), nucleotideLoci, nucleotideQuality, nucleotides);
+        if(allPresent)
+            return fragment;
+
+        int filteredCount = filteredIndices.size();
+        final List<Integer> filteredLoci = Lists.newArrayListWithExpectedSize(filteredCount);
+        final List<Integer> filteredQuality = Lists.newArrayListWithExpectedSize(filteredCount);
+        final List<String> filteredNucleotides = Lists.newArrayListWithExpectedSize(filteredCount);
+
+        for(Integer index : filteredIndices)
+        {
+            filteredLoci.add(fragment.getNucleotideLoci().get(index));
+            filteredQuality.add(fragment.getNucleotideQuality().get(index));
+            filteredNucleotides.add(fragment.getNucleotides().get(index));
+        }
+
+        return new NucleotideFragment(fragment.getId(), fragment.getGenes(), filteredLoci, filteredQuality, filteredNucleotides);
     }
 
     public NucleotideQualEnrichment(int minBaseQuality, int minEvidence)

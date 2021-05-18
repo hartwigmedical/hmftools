@@ -41,21 +41,21 @@ public class NucleotideSpliceEnrichment
 
         for (NucleotideFragment fragment : fragments)
         {
-            NucleotideFragment enrichedFrag = fragment;
-
             for (Integer homStart : homStarts)
             {
-                if (missingStart(homStart, enrichedFrag))
-                    enrichedFrag = addStart(enrichedFrag, homStart, nucleotideCounts);
+                if (missingStart(homStart, fragment))
+                {
+                    addStart(fragment, homStart, nucleotideCounts);
+                }
             }
 
             for (Integer homEnd : homEnds)
             {
-                if (missingEnd(homEnd, enrichedFrag))
-                    enrichedFrag = addEnd(enrichedFrag, homEnd, nucleotideCounts);
+                if (missingEnd(homEnd, fragment))
+                    addEnd(fragment, homEnd, nucleotideCounts);
             }
 
-            results.add(enrichedFrag);
+            results.add(fragment);
         }
 
         return results;
@@ -71,15 +71,14 @@ public class NucleotideSpliceEnrichment
         return fragment.containsNucleotide(index) && !fragment.containsNucleotide(index + 1) && !fragment.containsNucleotide(index + 2);
     }
 
-    private NucleotideFragment addStart(final NucleotideFragment fragment, int index, SequenceCount nucleotideCounts)
+    private void addStart(final NucleotideFragment fragment, int index, SequenceCount nucleotideCounts)
     {
-        return fragment.enrich(index, nucleotideCounts.getMinCountSequences(index).get(0), mMinBaseQuality);
+        fragment.enrich(index, nucleotideCounts.getMinCountSequences(index).get(0), mMinBaseQuality);
     }
 
-    private NucleotideFragment addEnd(final NucleotideFragment fragment, int index, SequenceCount nucleotideCounts)
+    private void addEnd(final NucleotideFragment fragment, int index, SequenceCount nucleotideCounts)
     {
-        return fragment.enrich(
-                index + 1, nucleotideCounts.getMinCountSequences(index + 1).get(0), mMinBaseQuality)
-                .enrich(index + 2, nucleotideCounts.getMinCountSequences(index + 2).get(0), mMinBaseQuality);
+        fragment.enrich(index + 1, nucleotideCounts.getMinCountSequences(index + 1).get(0), mMinBaseQuality);
+        fragment.enrich(index + 2, nucleotideCounts.getMinCountSequences(index + 2).get(0), mMinBaseQuality);
     }
 }

@@ -71,6 +71,8 @@ public final class AminoAcidFragment extends NucleotideFragment
         final List<Integer> intersectAminoAcidLoci = Lists.newArrayList();
         final List<String> intersectAminoAcids = Lists.newArrayList();
 
+        boolean allPresent = true;
+
         for(int i = 0; i < mAminoAcidLoci.size(); ++i)
         {
             int locus = mAminoAcidLoci.get(i);
@@ -80,7 +82,14 @@ public final class AminoAcidFragment extends NucleotideFragment
                 intersectAminoAcidLoci.add(locus);
                 intersectAminoAcids.add(mAminoAcids.get(i));
             }
+            else
+            {
+                allPresent = false;
+            }
         }
+
+        if(allPresent)
+            return this;
 
         return new AminoAcidFragment(
                 getId(), getGenes(), getNucleotideLoci(), getNucleotideQuality(), getNucleotides(),
