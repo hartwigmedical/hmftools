@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
@@ -59,24 +60,23 @@ public final class CnPerChromosomeFactory {
         for (Chromosome chr : REF_GENOME_COORDINATES.lengths().keySet()) {
             HumanChromosome chromosome = (HumanChromosome) chr;
 
-            // TODO Rather than length: determine GenomeRegion for P arm or Q arm
-            // Use start/end to determine if purple segment falls into P arm or Q arm
-            // Use bases() for length.
-            int chromosomeLength = getChromosomalArmLength(chromosome, chromosomeArm);
+            GenomeRegion genomeRegion = determineArmRegion(chromosome);
+            ChromosomeArm chromosomeArms = determineChromosomeArm(chromosome);
+
             double copyNumberArm = 0;
             for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
                 Chromosome copyNumberChromosome = HumanChromosome.fromString(purpleCopyNumber.chromosome());
-                if (chromosomeArm == ChromosomeArm.P_ARM) {
-                    if (copyNumberChromosome.equals(chromosome) && purpleCopyNumber.end() < chromosomeLength) {
+                if (chromosomeArms == ChromosomeArm.P_ARM) {
+                    if (copyNumberChromosome.equals(chromosome) && purpleCopyNumber.end() < genomeRegion.end()) {
                         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
                         long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
-                        copyNumberArm += (copyNumber * totalLengthSegment) / chromosomeLength;
+                        copyNumberArm += (copyNumber * totalLengthSegment) / genomeRegion.bases();
                     }
-                } else if (chromosomeArm == ChromosomeArm.Q_ARM) {
-                    if (copyNumberChromosome.equals(chromosome) && purpleCopyNumber.end() > chromosomeLength) {
+                } else if (chromosomeArms == ChromosomeArm.Q_ARM) {
+                    if (copyNumberChromosome.equals(chromosome) && purpleCopyNumber.end() > genomeRegion.start()) {
                         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
                         long totalLengthSegment = (purpleCopyNumber.end() - purpleCopyNumber.start()) + 1;
-                        copyNumberArm += (copyNumber * totalLengthSegment) / chromosomeLength;
+                        copyNumberArm += (copyNumber * totalLengthSegment) / genomeRegion.bases();
                     }
                 }
             }
@@ -88,27 +88,36 @@ public final class CnPerChromosomeFactory {
     }
 
     @NotNull
-    private static GenomeRegion determineArmRegion(@NotNull Chromosome chromosome, @NotNull ChromosomeArm arm) {
-        // TODO Implement!
+    private static GenomeRegion determineArmRegion(@NotNull Chromosome chromosome) {
 
         // The smallest part of a chromosome is the P arm.
+        Long centromerePos = REF_GENOME_COORDINATES.centromeres().get(chromosome);
+        int chrLength = REF_GENOME_COORDINATES.lengths().get(chromosome).intValue();
+        long endChr = chrLength - centromerePos;
+        long startChr = centromerePos;
 
-        return null;
+        if (startChr < endChr) {  //P arm
+            return GenomeRegions.create(chromosome.toString(), 1, centromerePos);
+        } else  {  // q arm
+            return GenomeRegions.create(chromosome.toString(), centromerePos + 1, chrLength);
+        }
+
     }
 
-    private static int getChromosomalArmLength(@NotNull Chromosome chromosome, @NotNull ChromosomeArm armType) {
+    @NotNull
+    private static ChromosomeArm determineChromosomeArm(@NotNull Chromosome chromosome) {
+
+        // The smallest part of a chromosome is the P arm.
         Long centromerePos = REF_GENOME_COORDINATES.centromeres().get(chromosome);
-
-        if (centromerePos == null) {
-            return 0;
-        }
-
-        if (armType == ChromosomeArm.P_ARM) {
-            return centromerePos.intValue();
-        }
-
         int chrLength = REF_GENOME_COORDINATES.lengths().get(chromosome).intValue();
+        long endChr = chrLength - centromerePos;
+        long startChr = centromerePos;
 
-        return chrLength - centromerePos.intValue();
+        if (startChr < endChr) {  //P arm
+            return ChromosomeArm.P_ARM;
+        } else  {  // q arm
+            return ChromosomeArm.Q_ARM;
+        }
+
     }
 }
