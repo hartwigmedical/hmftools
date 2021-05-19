@@ -59,7 +59,7 @@ public final class SampleReportFactory {
 
         String hospitalPatientId = lims.hospitalPatientId(tumorSampleBarcode);
         LimsChecker.checkHospitalPatientId(hospitalPatientId, tumorSampleId, cohortConfig);
-        String biopsyLocation = lims.biopsyLocation(tumorSampleBarcode) != null ? lims.biopsyLocation(tumorSampleBarcode) : Strings.EMPTY;
+        String biopsyLocation = lims.biopsyLocation(tumorSampleBarcode);
 
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
