@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -92,7 +93,7 @@ public final class SequenceCount
         return new SequenceCount(minCount, seqCountsList);
     }
 
-    public final List<Integer> heterozygousLoci()
+    public List<Integer> heterozygousLoci()
     {
         List<Integer> indices = Lists.newArrayList();
 
@@ -105,7 +106,7 @@ public final class SequenceCount
         return indices;
     }
 
-    public final List<Integer> homozygousIndices()
+    public List<Integer> homozygousIndices()
     {
         List<Integer> indices = Lists.newArrayList();
 
@@ -118,19 +119,19 @@ public final class SequenceCount
         return indices;
     }
 
-    private final boolean isHomozygous(int index)
+    private boolean isHomozygous(int index)
     {
         Map<String,Integer> seqCounts = get(index);
         return seqCounts.values().stream().filter(x -> x >= mMinCount).count() == 1;
     }
 
-    private final boolean isHeterozygous(int index)
+    private boolean isHeterozygous(int index)
     {
         Map<String,Integer> seqCounts = get(index);
         return seqCounts.values().stream().filter(x -> x >= mMinCount).count() > 1;
     }
 
-    public final List<String> getMinCountSequences(int index) // formally sequenceAt()
+    public List<String> getMinCountSequences(int index) // formally sequenceAt()
     {
         Map<String,Integer> seqCounts = get(index);
 
@@ -139,7 +140,29 @@ public final class SequenceCount
                 .map(x -> x.getKey()).collect(Collectors.toList());
     }
 
-    public final int depth(int index)
+    public String getMaxCountSequence(int index)
+    {
+        Map<String,Integer> seqCounts = get(index);
+
+        String sequence = "";
+        int maxCountSeq = 0;
+
+        for(Map.Entry<String,Integer> entry : seqCounts.entrySet())
+        {
+            if(entry.getValue() < mMinCount)
+                continue;
+
+            if(entry.getValue() > maxCountSeq)
+            {
+                sequence = entry.getKey();
+                maxCountSeq = entry.getValue();
+            }
+        }
+
+        return sequence;
+    }
+
+    public int depth(int index)
     {
         Map<String,Integer> seqCounts = get(index);
         return seqCounts.values().stream().mapToInt(x -> x).sum();

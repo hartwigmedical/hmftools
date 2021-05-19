@@ -49,7 +49,7 @@ public class Haplotype
             if(aminoAcidIndices.contains(locus))
                 complexHaplotype += sparseHaplotype.charAt(aminoAcidIndices.indexOf(locus));
             else
-                complexHaplotype += aminoAcidCount.getMinCountSequences(locus).get(0);
+                complexHaplotype += aminoAcidCount.getMaxCountSequence(locus);
         }
 
         return new Haplotype(startLocus, endLocus, evidence.getSecond(), complexHaplotype);
@@ -57,7 +57,8 @@ public class Haplotype
 
     public boolean contains(final Haplotype unmatched)
     {
-        if (unmatched.StartLocus >= StartLocus && unmatched.EndLocus <= EndLocus) {
+        if (unmatched.StartLocus >= StartLocus && unmatched.EndLocus <= EndLocus)
+        {
             int start = max(unmatched.StartLocus, StartLocus);
             int end = min(unmatched.EndLocus, EndLocus);
 
@@ -89,9 +90,10 @@ public class Haplotype
     {
         public int compare(final Haplotype first, final Haplotype second)
         {
+            // by fragments descending
             int compare = first.SupportingFragments - second.SupportingFragments;
             if(compare != 0)
-                return compare > 0 ? 1 : -1;
+                return compare < 0 ? 1 : -1;
 
             return 0;
         }
@@ -103,7 +105,7 @@ public class Haplotype
         {
             int compare = first.StartLocus - second.StartLocus;
             if(compare != 0)
-                return compare < 0 ? 1 : -1; // lower start first
+                return compare > 0 ? 1 : -1; // lower start first
 
             return 0;
         }

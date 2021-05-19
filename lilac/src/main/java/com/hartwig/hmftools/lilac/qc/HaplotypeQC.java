@@ -3,6 +3,7 @@ package com.hartwig.hmftools.lilac.qc;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.PON_HAPLOTYPE_MIN_SUPPORT;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -25,8 +26,6 @@ public class HaplotypeQC
     private final int mUnusedHaplotypeMaxSupport;
     private final int mUnusedHaplotypeMaxLength;
     private final int mUnusedHaplotypesPon;
-
-    private static final int MIN_SUPPORT = 7;
 
     private static final List<Haplotype> PON_HAPLOTYPES = Lists.newArrayList();
 
@@ -56,6 +55,12 @@ public class HaplotypeQC
         mUnusedHaplotypeMaxSupport = unusedHaplotypeMaxSupport;
         mUnusedHaplotypeMaxLength = unusedHaplotypeMaxLength;
         mUnusedHaplotypesPon = unusedHaplotypesPon;
+    }
+
+    private static void loadPonHaplotypes()
+    {
+        if(!PON_HAPLOTYPES.isEmpty())
+            return;
 
         final List<String> ponHaplotypes = new BufferedReader(new InputStreamReader(
                 HaplotypeQC.class.getResourceAsStream("/pon/haplotypes.txt")))
@@ -66,12 +71,14 @@ public class HaplotypeQC
 
     private static boolean inPon(final Haplotype haplotype)
     {
-        return PON_HAPLOTYPES.contains(haplotype);
+        return PON_HAPLOTYPES.stream().anyMatch(x -> x.contains(haplotype));
     }
 
     public static HaplotypeQC create(
             int minEvidence, final List<HlaSequenceLoci> winners, final List<PhasedEvidence> evidence, final SequenceCount aminoAcidCount)
     {
+        loadPonHaplotypes();
+
         List<Haplotype> allUnmatched = Lists.newArrayList();
         evidence.stream().map(x -> unmatchedHaplotype(x, minEvidence, winners, aminoAcidCount)).forEach(x -> allUnmatched.addAll(x));
         Collections.sort(allUnmatched, new Haplotype.HaplotypeFragmentSorter());
@@ -91,36 +98,28 @@ public class HaplotypeQC
 
         Collections.sort(distinctHaplotypes, new Haplotype.HaplotypeStartLocusSorter());
 
-        /*
-        val allUnmatched = evidence
-                .flatMap { it.unmatchedHaplotype(minEvidence, winners, aminoAcidCount) }
-                    .sortedByDescending { it.supportingFragments }
-                    .distinctBy { x -> (x.startLocus.toString() + x.endLocus.toString() + x.haplotype) }
-                    .sortedBy { it.startLocus }
-         */
-
         int pon = 0;
         int unusedCount = 0;
         int maxSupport = 0;
         int maxLength = 0;
 
-        for (Haplotype unmatched : allUnmatched)
+        for (Haplotype unmatched : distinctHaplotypes)
         {
-            if (unmatched.SupportingFragments >= MIN_SUPPORT)
-            {
-                if (inPon(unmatched))
-                {
-                    pon++;
-                    LL_LOGGER.info("  UNMATCHED_PON_HAPLTOYPE - {}", unmatched);
-                }
-                else
-                {
-                    maxSupport = max(maxSupport, unmatched.SupportingFragments);
-                    maxLength = max(maxLength, unmatched.Haplotype.length());
-                    unusedCount++;
+            if(unmatched.SupportingFragments < PON_HAPLOTYPE_MIN_SUPPORT)
+                continue;
 
-                    LL_LOGGER.warn("  UNMATCHED_HAPLTOYPE {}", unmatched);
-                }
+            if (inPon(unmatched))
+            {
+                pon++;
+                LL_LOGGER.info("  UNMATCHED_PON_HAPLTOYPE - {}", unmatched);
+            }
+            else
+            {
+                maxSupport = max(maxSupport, unmatched.SupportingFragments);
+                maxLength = max(maxLength, unmatched.Haplotype.length());
+                unusedCount++;
+
+                LL_LOGGER.warn("  UNMATCHED_HAPLTOYPE {}", unmatched);
             }
         }
 
