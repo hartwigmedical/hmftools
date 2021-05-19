@@ -105,7 +105,7 @@ public class HlaComplexCoverageRanking
         double score = totalCoverage
                 + complexCoverage.cohortFrequencyTotal() * FREQUENCY_SCORE_PENALTY * adjustedCoverageFactor
                 + complexCoverage.homozygousCount() * HOMOZYGOUS_SCORE_PENALTY * adjustedCoverageFactor
-                + complexCoverage.recoveredCount() * RECOVERY_SCORE_PENALTY * adjustedCoverageFactor;
+                - complexCoverage.recoveredCount() * RECOVERY_SCORE_PENALTY * adjustedCoverageFactor;
 
         complexCoverage.setScore(score);
     }

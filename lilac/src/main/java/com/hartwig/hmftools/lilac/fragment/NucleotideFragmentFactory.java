@@ -178,7 +178,9 @@ public class NucleotideFragmentFactory
     {
         List<NucleotideFragment> fragments = record.alignmentsOnly().stream()
                 .filter(x -> x != null)
-                .map(x -> createFragment(record, codingRegion)).collect(Collectors.toList());
+                .map(x -> createFragment(record, codingRegion))
+                .filter(x -> x != null)
+                .collect(Collectors.toList());
 
         if(fragments.isEmpty())
             return null;
