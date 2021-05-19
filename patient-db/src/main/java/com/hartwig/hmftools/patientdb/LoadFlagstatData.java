@@ -47,7 +47,10 @@ public class LoadFlagstatData {
         LOGGER.info("Extracting and writing flagstats for {}", sample);
 
         Flagstat refFlagstat = FlagstatFile.read(refFlagstatFile);
+        LOGGER.info(" Read reference sample flagstats from {}", refFlagstatFile);
         Flagstat tumorFlagstat = FlagstatFile.read(tumorFlagstatFile);
+        LOGGER.info(" Read tumor sample flagstats from {}", tumorFlagstatFile);
+
         dbWriter.writeFlagstats(sample, refFlagstat, tumorFlagstat);
 
         LOGGER.info("Complete");
