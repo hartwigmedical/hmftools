@@ -40,6 +40,7 @@ import com.itextpdf.layout.property.TextAlignment;
 import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class SummaryChapter implements ReportChapter {
@@ -61,7 +62,7 @@ public class SummaryChapter implements ReportChapter {
         if (patientReport.isCorrectedReport()) {
             return "DNA Analysis Report (Corrected)";
         } else {
-            if (patientReport.qsFormNumber().equals(QsFormNumber.FOR_209.name())) {
+            if (patientReport.qsFormNumber().equals(QsFormNumber.FOR_209.toString())) {
                 return "DNA Analysis Report - Low Sensitivity";
             } else {
                 return "DNA Analysis Report";
@@ -174,11 +175,11 @@ public class SummaryChapter implements ReportChapter {
                 TumorPurity.RANGE_MAX,
                 table);
 
+        String molecularTissuePrediction = hasReliablePurity ? patientReport.molecularTissueOrigin().conclusion() : DataUtil.NA_STRING;
         Style dataStyle = hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Molecular tissue of origin prediction").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(patientReport.molecularTissueOrigin().conclusion()).addStyle(
-                dataStyle)));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(molecularTissuePrediction).addStyle(dataStyle)));
 
         String mutationalLoadString = hasReliablePurity ? analysis().tumorMutationalLoadStatus().display() + " ("
                 + SINGLE_DECIMAL_FORMAT.format(analysis().tumorMutationalBurden()) + " mut/genome)" : DataUtil.NA_STRING;
@@ -206,20 +207,23 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell().add(new Paragraph("HR Status").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(hrdStyle)));
 
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Integrated Virus").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createVirusCell(patientReport.sampleReport().reportViralInsertions()
+        Style virusStyle;
+        String virusInterpretationString;
+        String virusSummary = patientReport.sampleReport().reportViralInsertions()
                 ? VirusBreakends.virusInterpretationSummary(analysis().virusBreakends())
-                : DataUtil.NA_STRING)));
+                : DataUtil.NA_STRING;
+        if (hasReliablePurity && !virusSummary.equals(DataUtil.NA_STRING)) {
+            virusStyle = ReportResources.dataHighlightStyle();
+            virusInterpretationString = virusSummary;
+        } else {
+            virusStyle = ReportResources.dataHighlightNaStyle();
+            virusInterpretationString = DataUtil.NA_STRING;
+        }
+
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("Integrated Virus").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(virusInterpretationString).addStyle(virusStyle)));
 
         reportDocument.add(div);
-    }
-
-    @NotNull
-    private static Cell createVirusCell(@NotNull String virusSummary) {
-        Style style =
-                !virusSummary.equals(DataUtil.NONE_STRING) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
-
-        return createMiddleAlignedCell().add(createHighlightParagraph(virusSummary)).addStyle(style);
     }
 
     private static void renderTumorPurity(boolean hasReliablePurity, @NotNull String valueLabel, double value, double min, double max,

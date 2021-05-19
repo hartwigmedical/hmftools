@@ -97,9 +97,14 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 TumorPurity.RANGE_MAX,
                 contentTable);
 
+        String copyNumber = GeneUtil.copyNumberToString(ploidy, hasReliablePurity);
         contentTable.addCell(TableUtil.createContentCell("Average tumor ploidy"));
-        contentTable.addCell(TableUtil.createContentCellPurityPloidy(GeneUtil.copyNumberToString(ploidy, hasReliablePurity))
-                .setTextAlignment(TextAlignment.CENTER));
+        if (copyNumber.equals(DataUtil.NA_STRING)) {
+            contentTable.addCell(TableUtil.createContentCell(copyNumber).setTextAlignment(TextAlignment.CENTER));
+        } else {
+            contentTable.addCell(TableUtil.createContentCellPurityPloidy(copyNumber).setTextAlignment(TextAlignment.CENTER));
+
+        }
         contentTable.addCell(TableUtil.createContentCell(Strings.EMPTY));
 
         return TableUtil.createWrappingReportTable(title, contentTable);
@@ -122,7 +127,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         if (hasReliablePurity) {
             table.addCell(TableUtil.createContentCellPurityPloidy(valueLabel).setTextAlignment(TextAlignment.CENTER));
-            table.addCell(TableUtil.createContentCell(createInlineBarChart(value, min, max)).setPadding(8).setTextAlignment(TextAlignment.CENTER));
+            table.addCell(TableUtil.createContentCell(createInlineBarChart(value, min, max))
+                    .setPadding(8)
+                    .setTextAlignment(TextAlignment.CENTER));
         } else {
             table.addCell(TableUtil.createContentCell(Lims.PURITY_NOT_RELIABLE_STRING));
             table.addCell(TableUtil.createContentCell(Strings.EMPTY));
@@ -315,7 +322,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         } else if (virusBreakends.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         } else {
-            Table contentTable = TableUtil.createReportContentTable(new float[] { 100, 100 },
+            Table contentTable = TableUtil.createReportContentTable(new float[] { 120, 140,150 },
                     new Cell[] { TableUtil.createHeaderCell("Virus"),
                             TableUtil.createHeaderCell("Number of detected integration sites").setTextAlignment(TextAlignment.CENTER) });
 
