@@ -228,11 +228,12 @@ class RefGenomeConverter {
 
         String newRef = sequence(lifted.chromosome(), lifted.position(), hotspot.ref().length());
         if (!newRef.equals(hotspot.ref())) {
-            LOGGER.warn(" Skipping liftover from {} to {}: Ref changed from '{}' to '{}' on {}",
+            LOGGER.warn(" Skipping liftover from {} to {}: Ref changed from '{}' to '{}' on position {} from {}",
                     sourceVersion,
                     targetVersion,
                     hotspot.ref(),
                     newRef,
+                    lifted.position(),
                     hotspot);
             return null;
         }
