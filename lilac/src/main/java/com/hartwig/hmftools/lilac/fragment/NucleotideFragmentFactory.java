@@ -123,7 +123,8 @@ public class NucleotideFragmentFactory
         {
             HlaSequenceLoci seqLoci = matchedSeqLoci.get(0);
             List<Integer> filteredAaIndices = matchedIndicesList.get(0);
-            return createNucleotideSequence(record.Id, codingRegion, filteredAaIndices.get(0), aminoAcids, seqLoci);
+            NucleotideFragment fragment = createNucleotideSequence(record.Id, codingRegion, filteredAaIndices.get(0), aminoAcids, seqLoci);
+            return !fragment.getNucleotideLoci().isEmpty() ? fragment : null;
         }
 
         return null;

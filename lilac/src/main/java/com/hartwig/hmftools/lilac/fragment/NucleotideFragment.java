@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -185,6 +186,27 @@ public class NucleotideFragment
         return String.format("%s genes(%s) lociRange(%d -> %d)",
                 mId, mGenes, !mNucleotideLoci.isEmpty() ? mNucleotideLoci.get(0) : -1,
                 !mNucleotideLoci.isEmpty() ? mNucleotideLoci.get(mNucleotideLoci.size() - 1) : -1);
+    }
+
+    public boolean validate()
+    {
+        if(mGenes.isEmpty() || mGenes.size() > 3)
+            return false;
+
+        // check loci are ordered and consistent with qualities and bases
+        if(mNucleotides.isEmpty())
+            return false;
+
+        if(mNucleotides.size() != mNucleotideQuality.size() || mNucleotides.size() != mNucleotideLoci.size())
+            return false;
+
+        for(int i = 0; i < mNucleotideLoci.size() - 1; ++i)
+        {
+            if(mNucleotideLoci.get(i) >= mNucleotideLoci.get(i + 1))
+                return false;
+        }
+
+        return true;
     }
 
     public static List<NucleotideFragment> reduceById(final List<NucleotideFragment> fragments)

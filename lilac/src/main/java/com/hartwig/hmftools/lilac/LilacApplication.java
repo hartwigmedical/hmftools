@@ -129,6 +129,9 @@ public class LilacApplication implements AutoCloseable, Runnable
             tumorNucleotideFragments.addAll(mNucleotideGeneEnrichment.enrich(tumorBamReader.readFromBam()));
         }
 
+        validateNucleotideFragments(referenceNucleotideFragments);
+        validateNucleotideFragments(tumorNucleotideFragments);
+
         AminoAcidFragmentPipeline aminoAcidPipeline = new AminoAcidFragmentPipeline(
                 mConfig, referenceNucleotideFragments, tumorNucleotideFragments);
 
@@ -225,19 +228,13 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         // Coverage
         List<AminoAcidFragment> referenceCoverageFragments = aminoAcidPipeline.referenceCoverageFragments();
+        validateAminoAcidFragments(referenceCoverageFragments);
+
         SequenceCount referenceAminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, referenceCoverageFragments);
         List<Integer> referenceAminoAcidHeterozygousLoci = referenceAminoAcidCounts.heterozygousLoci();
         SequenceCount referenceNucleotideCounts = SequenceCount.nucleotides(mConfig.MinEvidence, nucFragments(referenceCoverageFragments));
         List<Integer> referenceNucleotideHeterozygousLoci = referenceNucleotideCounts.heterozygousLoci().stream()
                 .filter(x -> ALL_NUCLEOTIDE_EXON_BOUNDARIES.contains(x)).collect(Collectors.toList());
-
-        /*
-        List<String> readIds = Lists.newArrayList("29402","12560","6231","55016","55104","6108","66302","49056","52186","50709","1098");
-
-        List<AminoAcidFragment> tempFrags = referenceCoverageFragments.stream()
-                .filter(x -> readIds.stream().anyMatch(y -> x.getId().endsWith(y)))
-                .collect(Collectors.toList());
-         */
 
         List<HlaAllele> candidateAlleleSpecificProteins = candidateAlleles.stream().map(x -> x.asFourDigit()).collect(Collectors.toList());
         List<HlaSequenceLoci> candidateAminoAcidSequences = mRefData.AminoAcidSequences.stream()
@@ -249,12 +246,6 @@ public class LilacApplication implements AutoCloseable, Runnable
         List<FragmentAlleles> referenceFragmentAlleles = FragmentAlleles.create(
                 referenceCoverageFragments, referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences,
                 referenceNucleotideHeterozygousLoci, candidateNucleotideSequences);
-
-        /*
-        List<FragmentAlleles> tempFragAlleles = referenceFragmentAlleles.stream()
-                .filter(x -> readIds.stream().anyMatch(y -> x.getFragment().getId().endsWith(y)))
-                .collect(Collectors.toList());
-         */
 
         FragmentAlleles.applyUniqueStopLossFragments(
                 referenceFragmentAlleles, referenceBamReader.stopLossOnCIndels(), mRefData.StopLossRecoveryAlleles);
@@ -401,6 +392,34 @@ public class LilacApplication implements AutoCloseable, Runnable
             dbAccess.writeHla(sample, type, typeDetails);
         }
          */
+    }
+
+    private boolean validateAminoAcidFragments(final List<AminoAcidFragment> fragments)
+    {
+        if(!mConfig.RunValidation)
+            return true;
+
+        List<AminoAcidFragment> invalidFragments = fragments.stream().filter(x -> !x.validate()).collect(Collectors.toList());
+        if(invalidFragments.isEmpty())
+            return true;
+
+
+        LL_LOGGER.warn("has {} invalid amino-acid fragments", invalidFragments.size());
+        return false;
+    }
+
+    private boolean validateNucleotideFragments(final List<NucleotideFragment> fragments)
+    {
+        if(!mConfig.RunValidation)
+            return true;
+
+        List<NucleotideFragment> invalidFragments = fragments.stream().filter(x -> !x.validate()).collect(Collectors.toList());
+        if(invalidFragments.isEmpty())
+            return true;
+
+
+        LL_LOGGER.warn("has {} invalid nucleotide fragments", invalidFragments.size());
+        return false;
     }
 
     @Override

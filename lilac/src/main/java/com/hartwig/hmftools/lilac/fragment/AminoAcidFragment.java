@@ -103,6 +103,27 @@ public final class AminoAcidFragment extends NucleotideFragment
                 !mAminoAcidLoci.isEmpty() ? mAminoAcidLoci.get(mAminoAcidLoci.size() - 1) : -1);
     }
 
+    public boolean validate()
+    {
+        if(!super.validate())
+            return false;
+
+        // TODO - determine if valid or not, may still want to look back into nucleotide data and infer an AA
+        //if(mAminoAcidLoci.isEmpty())
+        //    return false;
+
+        if(mAminoAcidLoci.size() != mAminoAcids.size())
+            return false;
+
+        for(int i = 0; i < mAminoAcidLoci.size() - 1; ++i)
+        {
+            if(mAminoAcidLoci.get(i) >= mAminoAcidLoci.get(i + 1))
+                return false;
+        }
+
+        return true;
+    }
+
     public static List<Integer> calcAminoAcidIndices(int nucStartIndex, int nucEndIndex)
     {
         int start = nucStartIndex / 3 + (nucStartIndex % 3 == 0 ? 0 : 1);

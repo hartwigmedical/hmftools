@@ -44,6 +44,7 @@ public class LilacConfig
     public final String SomaticVcf;
 
     public final boolean DebugPhasing;
+    public final boolean RunValidation;
 
     // pre-determined sample alleles, always kept and scored, primarily for testing
     public final List<HlaAllele> ExpectedAlleles;
@@ -74,6 +75,7 @@ public class LilacConfig
 
     private static final String DEBUG_PHASING = "debug_phasing";
     public static final String LOG_DEBUG = "log_debug";
+    public static final String RUN_VALIDATION = "run_validation";
     public static final String LOG_LEVEL = "log_level";
 
     public static final Logger LL_LOGGER = LogManager.getLogger(LilacConfig.class);;
@@ -122,6 +124,7 @@ public class LilacConfig
         Threads = getConfigValue(cmd, THREADS, 1);
 
         DebugPhasing = cmd.hasOption(DEBUG_PHASING); //  || cmd.hasOption(LOG_);
+        RunValidation = cmd.hasOption(RUN_VALIDATION);
     }
 
     private String checkFileExists(final String filename)
@@ -197,6 +200,7 @@ public class LilacConfig
 
         Threads = 0;
         DebugPhasing = false;
+        RunValidation = true;
     }
 
     @NotNull
@@ -222,6 +226,7 @@ public class LilacConfig
         options.addOption(GENE_COPY_NUMBER, true,"Path to gene copy number file");
         options.addOption(SOMATIC_VCF, true,"Path to somatic VCF");
         options.addOption(DEBUG_PHASING, false, "More detailed logging of phasing");
+        options.addOption(RUN_VALIDATION, false, "Run validation checks");
         options.addOption(LOG_DEBUG, false, "More detailed logging of phasing");
         options.addOption(LOG_LEVEL, true, "Specify log level WARN, INFO, DEBUG or TRACE");
         DatabaseAccess.addDatabaseCmdLineArgs((Options) options);
