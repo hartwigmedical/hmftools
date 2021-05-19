@@ -30,14 +30,12 @@ public class ConsentFilterFunctionsTest {
         ReportableVariant germlineVariant = createTestReportableVariantBuilder().source(ReportableVariantSource.GERMLINE).build();
 
         assertEquals(2,
-                ConsentFilterFunctions.filterAndOverruleVariants(Lists.newArrayList(somaticVariant, germlineVariant),
-                        LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION,
-                        true).size());
+                ConsentFilterFunctions.filterVariants(Lists.newArrayList(somaticVariant, germlineVariant),
+                        LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION).size());
 
         assertEquals(1,
-                ConsentFilterFunctions.filterAndOverruleVariants(Lists.newArrayList(somaticVariant, germlineVariant),
-                        LimsGermlineReportingLevel.NO_REPORTING,
-                        true).size());
+                ConsentFilterFunctions.filterVariants(Lists.newArrayList(somaticVariant, germlineVariant),
+                        LimsGermlineReportingLevel.NO_REPORTING).size());
     }
 
     @Test

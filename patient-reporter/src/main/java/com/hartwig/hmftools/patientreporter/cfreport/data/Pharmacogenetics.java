@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public class Pharmacogenetics {
+public final class Pharmacogenetics {
 
     private Pharmacogenetics() {
     }

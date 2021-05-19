@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class VirusInterpretationModel {
 
@@ -21,22 +22,22 @@ public class VirusInterpretationModel {
         this.speciesToInterpretationMap = speciesToInterpretationMap;
     }
 
-    @NotNull
+    @Nullable
     public String interpretVirusSpecies(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
 
         if (!speciesHasInterpretation) {
             LOGGER.debug("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
-        return speciesHasInterpretation ? speciesToInterpretationMap.get(speciesTaxid) : Strings.EMPTY;
-    }
-
-    Collection<String> interpretations() {
-        return speciesToInterpretationMap.values();
+        return speciesHasInterpretation ? speciesToInterpretationMap.get(speciesTaxid) : null;
     }
 
     boolean hasInterpretation(int speciesTaxid) {
         return speciesToInterpretationMap.containsKey(speciesTaxid);
+    }
+
+    public Collection<String> interpretations() {
+        return speciesToInterpretationMap.values();
     }
 
     @VisibleForTesting

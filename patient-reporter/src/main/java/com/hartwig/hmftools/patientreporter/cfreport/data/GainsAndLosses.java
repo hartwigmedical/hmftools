@@ -6,15 +6,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
-import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosomeFactory;
+import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class GainsAndLosses {
 
@@ -61,9 +61,8 @@ public final class GainsAndLosses {
         return genes;
     }
 
-    public static double copyChromosomeArm(@NotNull Map<CnPerChromosomeFactory.CopyNumberKey, Double> cnPerChromosome,
+    public static double copyChromosomeArm(@NotNull Map<ChromosomeArmKey, Double> cnPerChromosome,
             @NotNull String chromosome, @NotNull String chromosomeBand) {
-
         ChromosomeArm chromosomeArm;
         if (chromosomeBand.startsWith("p")) {
             chromosomeArm = ChromosomeArm.P_ARM;
@@ -73,7 +72,7 @@ public final class GainsAndLosses {
             chromosomeArm = ChromosomeArm.UNKNOWN;
         }
 
-        CnPerChromosomeFactory.CopyNumberKey key = new CnPerChromosomeFactory.CopyNumberKey(chromosome, chromosomeArm);
+        ChromosomeArmKey key = new ChromosomeArmKey(HumanChromosome.fromString(chromosome), chromosomeArm);
 
         return cnPerChromosome.get(key);
     }

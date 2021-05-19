@@ -57,7 +57,7 @@ public class PatientReporterApplicationTest {
                 .hotspot(Hotspot.HOTSPOT)
                 .driverLikelihood(0D)
                 .clonalLikelihood(0D)
-                .biallelic(false)
+                .biallelic(null)
                 .build();
     }
 }

@@ -94,6 +94,7 @@ class ClinicalDAO {
                 SAMPLE.SETNAME,
                 SAMPLE.ARRIVALDATE,
                 SAMPLE.SAMPLINGDATE,
+                SAMPLE.REPORTEDDATE,
                 SAMPLE.DNANANOGRAMS,
                 SAMPLE.LIMSPRIMARYTUMOR,
                 SAMPLE.PATHOLOGYTUMORPERCENTAGE)
@@ -102,6 +103,7 @@ class ClinicalDAO {
                         sample.setName(),
                         DatabaseUtil.sqlDate(sample.arrivalDate()),
                         DatabaseUtil.sqlDate(sample.samplingDate()),
+                        DatabaseUtil.sqlDate(sample.reportedDate()),
                         sample.dnaNanograms(),
                         sample.limsPrimaryTumor(),
                         sample.pathologyTumorPercentage())

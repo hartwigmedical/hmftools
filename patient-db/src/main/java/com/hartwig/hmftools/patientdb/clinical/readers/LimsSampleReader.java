@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.patientdb.clinical.readers;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsAnalysisType;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
+import com.hartwig.hmftools.common.reportingdb.ReportingEntry;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableSampleData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 
@@ -19,17 +22,21 @@ import org.jetbrains.annotations.Nullable;
 public class LimsSampleReader {
 
     private static final Logger LOGGER = LogManager.getLogger(LimsSampleReader.class);
+    private static final DateTimeFormatter REPORTED_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
 
     @NotNull
     private final Lims lims;
+    @NotNull
+    private final List<ReportingEntry> reportingEntries;
     @NotNull
     private final Map<String, String> sampleToSetNameMap;
     @NotNull
     private final Set<String> sequencedSampleIds;
 
-    public LimsSampleReader(@NotNull final Lims lims, @NotNull final Map<String, String> sampleToSetNameMap,
-            @NotNull final Set<String> sequencedSampleIds) {
+    public LimsSampleReader(@NotNull final Lims lims, @NotNull final List<ReportingEntry> reportingEntries,
+            @NotNull final Map<String, String> sampleToSetNameMap, @NotNull final Set<String> sequencedSampleIds) {
         this.lims = lims;
+        this.reportingEntries = reportingEntries;
         this.sampleToSetNameMap = sampleToSetNameMap;
         this.sequencedSampleIds = sequencedSampleIds;
     }
@@ -56,6 +63,12 @@ public class LimsSampleReader {
             LOGGER.warn("Could not resolve set name for sequenced sample {}", sampleId);
         }
 
+        ReportingEntry reportingEntry = findReportingEntry(sampleBarcode);
+        if (reportingEntry == null && isSequenced) {
+            LOGGER.warn("Could not find reporting entry for sequenced sample {}", sampleId);
+        }
+        LocalDate reportedDate = reportingEntry != null ? LocalDate.parse(reportingEntry.reportDate(), REPORTED_DATE_FORMATTER) : null;
+
         LimsCohortConfig cohortConfig = lims.cohortConfig(sampleBarcode);
         return ImmutableSampleData.builder()
                 .sampleId(sampleId)
@@ -67,11 +80,22 @@ public class LimsSampleReader {
                 .setName(setName != null ? setName : Strings.EMPTY)
                 .arrivalDate(arrivalDate)
                 .samplingDate(samplingDate)
+                .reportedDate(reportedDate)
                 .dnaNanograms(lims.dnaNanograms(sampleBarcode))
                 .limsPrimaryTumor(lims.primaryTumor(sampleBarcode))
                 .pathologyTumorPercentage(lims.pathologyTumorPercentage(sampleBarcode))
                 .pathologySampleId(lims.hospitalPathologySampleId(sampleBarcode))
                 .build();
+    }
+
+    @Nullable
+    private ReportingEntry findReportingEntry(@NotNull String sampleBarcode) {
+        for (ReportingEntry entry : reportingEntries) {
+            if (entry.tumorBarcode().equals(sampleBarcode)) {
+                return entry;
+            }
+        }
+        return null;
     }
 
     @Nullable

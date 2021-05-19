@@ -135,3 +135,6 @@ CREATE TABLE snpcheck
     isPass BOOLEAN NOT NULL,
     PRIMARY KEY (sampleId)
 );
+
+ALTER TABLE sample
+    ADD COLUMN reportedDate DATE AFTER samplingDate;

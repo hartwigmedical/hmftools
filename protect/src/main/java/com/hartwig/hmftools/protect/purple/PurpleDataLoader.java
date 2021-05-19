@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.protect.ProtectConfig;
+import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosomeFactory;
 
 import org.apache.logging.log4j.LogManager;
@@ -73,7 +74,7 @@ public final class PurpleDataLoader {
         List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(driverCatalogGermlineTsv);
         LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDriverCatalog.size(), driverCatalogGermlineTsv);
 
-        Map<CnPerChromosomeFactory.CopyNumberKey, Double> cnPerChromosome = Maps.newHashMap();
+        Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
         if (purpleSomaticCopynumberTsv != null) {
             cnPerChromosome = CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(purpleSomaticCopynumberTsv);
         }

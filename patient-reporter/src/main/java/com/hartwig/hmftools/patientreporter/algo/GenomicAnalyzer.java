@@ -22,9 +22,9 @@ import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
+import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendFactory;
 import com.hartwig.hmftools.patientreporter.virusbreakend.TaxonomyDb;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistModel;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBreakendReportableFactory;
 import com.hartwig.hmftools.patientreporter.virusbreakend.VirusInterpretationModel;
 import com.hartwig.hmftools.protect.chord.ChordDataLoader;
 import com.hartwig.hmftools.protect.linx.LinxData;
@@ -115,6 +115,7 @@ public class GenomicAnalyzer {
                 .homozygousDisruptions(linxData.homozygousDisruptions())
                 .virusBreakends(reportableVirusBreakend)
                 .peachGenotypes(peachGenotypes)
+                .interpretationVirus(virusInterpretationModel.interpretations())
                 .build();
     }
 
@@ -161,9 +162,9 @@ public class GenomicAnalyzer {
         LOGGER.info("Loading virus breakend data {}", new File(virusBreakendTsv).getParent());
         List<VirusBreakend> virusBreakends = VirusBreakendFile.read(virusBreakendTsv);
 
-        VirusBreakendReportableFactory virusBreakendReportableFactory =
-                new VirusBreakendReportableFactory(taxonomyDb, virusInterpretationModel, virusBlackListModel);
-        List<ReportableVirusBreakend> reportableVirusBreakend = virusBreakendReportableFactory.analyzeVirusBreakend(virusBreakends);
+        ReportableVirusBreakendFactory reportableVirusBreakendFactory =
+                new ReportableVirusBreakendFactory(taxonomyDb, virusInterpretationModel, virusBlackListModel);
+        List<ReportableVirusBreakend> reportableVirusBreakend = reportableVirusBreakendFactory.analyze(virusBreakends);
 
         LOGGER.info(" Loaded {} reportable virus breakends from {}",
                 reportableVirusBreakend.size(),

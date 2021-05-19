@@ -73,6 +73,7 @@ CREATE TABLE sample
     setName varchar(255) NOT NULL,
     arrivalDate DATE NOT NULL,
     samplingDate DATE,
+    reportedDate DATE,
     dnaNanograms int,
     limsPrimaryTumor varchar(255),
     pathologyTumorPercentage varchar(100),

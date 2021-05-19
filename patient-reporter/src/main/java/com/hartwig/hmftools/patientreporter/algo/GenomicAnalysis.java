@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +12,7 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
-import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosomeFactory;
+import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -69,7 +70,7 @@ public abstract class GenomicAnalysis {
     public abstract List<ReportableGainLoss> gainsAndLosses();
 
     @NotNull
-    public abstract Map<CnPerChromosomeFactory.CopyNumberKey, Double> cnPerChromosome();
+    public abstract Map<ChromosomeArmKey, Double> cnPerChromosome();
 
     @NotNull
     public abstract List<LinxFusion> geneFusions();
@@ -82,6 +83,9 @@ public abstract class GenomicAnalysis {
 
     @NotNull
     public abstract List<ReportableVirusBreakend> virusBreakends();
+
+    @NotNull
+    public abstract Collection<String> interpretationVirus();
 
     @NotNull
     public abstract List<PeachGenotype> peachGenotypes();
