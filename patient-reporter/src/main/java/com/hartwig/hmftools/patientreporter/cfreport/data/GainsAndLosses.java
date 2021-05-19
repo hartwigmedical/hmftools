@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
-import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 
 import org.jetbrains.annotations.NotNull;
@@ -20,9 +19,6 @@ public final class GainsAndLosses {
 
     private GainsAndLosses() {
     }
-
-    private static final DecimalFormat SINGLE_DECIMAL_FORMAT = ReportResources.decimalFormat("#");
-
 
     @NotNull
     public static List<ReportableGainLoss> sort(@NotNull List<ReportableGainLoss> reportableGainsAndLosses) {
@@ -71,7 +67,7 @@ public final class GainsAndLosses {
         } else if (chromosomeBand.startsWith("q")) {
             chromosomeArm = ChromosomeArm.Q_ARM;
         } else {
-            throw new IllegalStateException ("Chromosome arm is unknown");
+            throw new NullPointerException ("Chromosome arm is unknown!");
         }
 
         ChromosomeArmKey key = new ChromosomeArmKey(HumanChromosome.fromString(chromosome), chromosomeArm);
