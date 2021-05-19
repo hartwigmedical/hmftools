@@ -41,7 +41,7 @@ public class LimsFactoryTest {
         Map<String, LimsJsonSampleData> dataPerSampleBarcode =
                 LimsFactory.readLimsJsonSamples(LIMS_DIRECTORY + File.separator + "lims.json");
 
-        assertEquals(3, dataPerSampleBarcode.size());
+        assertEquals(4, dataPerSampleBarcode.size());
 
         String refSampleBarcode = "FR1234";
         LimsJsonSampleData refData = dataPerSampleBarcode.get(refSampleBarcode);

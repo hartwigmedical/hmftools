@@ -18,7 +18,6 @@ public final class PatientPrimaryTumorFunctions {
     @Nullable
     public static PatientPrimaryTumor findPrimaryTumorForPatient(@NotNull List<PatientPrimaryTumor> patientPrimaryTumors,
             @NotNull String patientIdentifier) {
-        LOGGER.info(patientIdentifier);
         List<PatientPrimaryTumor> matchingIdPrimaryTumors = patientPrimaryTumors.stream()
                 .filter(patientPrimaryTumor -> patientPrimaryTumor.patientIdentifier().equals(patientIdentifier))
                 .collect(Collectors.toList());
