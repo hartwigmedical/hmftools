@@ -8,7 +8,6 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import org.apache.commons.compress.utils.Lists;
-import org.jetbrains.annotations.NotNull;
 
 public final class AminoAcidFragment extends NucleotideFragment
 {

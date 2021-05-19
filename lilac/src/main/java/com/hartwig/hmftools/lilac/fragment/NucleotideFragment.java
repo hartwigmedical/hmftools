@@ -1,18 +1,13 @@
 package com.hartwig.hmftools.lilac.fragment;
 
-import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Codons;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 public class NucleotideFragment
 {
@@ -273,21 +268,26 @@ public class NucleotideFragment
         {
             int locus2 = frag2.getNucleotideLoci().get(index2);
 
-            for(int index1 = 0; index1 < frag1.getNucleotideLoci().size(); ++index1)
+            int index1 = 0;
+            boolean add = true;
+            for(; index1 < frag1.getNucleotideLoci().size(); ++index1)
             {
                 int locus1 = frag1.getNucleotideLoci().get(index1);
 
                 if(locus1 < locus2)
                     continue;
 
-                else if(locus1 == locus2)
-                    break;
+                if(locus1 == locus2)
+                    add = false;
 
-                // add in order
+                break;
+            }
+
+            if(add)
+            {
                 frag1.getNucleotideLoci().add(index1, locus2);
                 frag1.getNucleotides().add(index1, frag2.getNucleotides().get(index2));
                 frag1.getNucleotideQuality().add(index1, frag2.getNucleotideQuality().get(index2));
-                break;
             }
         }
 
