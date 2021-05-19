@@ -3,7 +3,6 @@ package com.hartwig.hmftools.lilac.coverage;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.EXPECTED_ALLELE_COUNT;
-import static com.hartwig.hmftools.lilac.coverage.HlaComplexCoverageRanking.TOTAL_COVERAGE_DENOM;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -25,6 +24,7 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
     private double mCohortFrequencyTotal;
     private double mScore;
     private final int mHomozygousCount;
+    private int mRecoveredCount;
 
     public HlaComplexCoverage(int uniqueCoverage, int sharedCoverage, int wildCoverage, final List<HlaAlleleCoverage> alleleCoverage)
     {
@@ -36,8 +36,9 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
         mAlleleCoverage = alleleCoverage;
 
         mHomozygousCount = calcHomozygousCount();
-        mScore = 0;
+        mRecoveredCount = 0;
         mCohortFrequencyTotal = 0;
+        mScore = 0;
     }
 
     public List<HlaAlleleCoverage> getAlleleCoverage() { return mAlleleCoverage; }
@@ -51,6 +52,9 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
     public void setCohortFrequencyTotal(double total) { mCohortFrequencyTotal = total; }
 
     public int homozygousCount() { return mHomozygousCount; }
+
+    public int recoveredCount() { return mRecoveredCount; }
+    public void setRecoveredCount(int count) { mRecoveredCount = count; }
 
     private int calcHomozygousCount()
     {

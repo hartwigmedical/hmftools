@@ -12,10 +12,15 @@ public class LilacConstants
     public static final int DEFAULT_MIN_EVIDENCE = 2;
     public static final int DEFAULT_FRAGS_PER_ALLELE = 6;
     public static final int DEFAULT_FRAGS_REMOVE_SGL = 40;
-    public static final int DEFAULT_MIN_CONF_UNIQUE_COVERAGE = 10;
     public static final int DEFAULT_MAX_DIST_FROM_TOP_SCORE = 3;
 
     public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.01;
+    public static final int MIN_CONF_UNIQUE_GROUP_COVERAGE = 20;
+    public static final int MIN_CONF_UNIQUE_PROTEIN_COVERAGE = 10;
+    public static final int TOTAL_COVERAGE_DENOM = 1000;
+    public static final double FREQUENCY_SCORE_PENALTY = 1.5;
+    public static final double HOMOZYGOUS_SCORE_PENALTY = 4.5;
+    public static final double RECOVERY_SCORE_PENALTY = 5;
 
     public static final String GENE_A = "A";
     public static final String GENE_B = "B";

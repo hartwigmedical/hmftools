@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.coverage;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.TOTAL_COVERAGE_DENOM;
+
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -13,8 +15,6 @@ public class CandidateAlleles
 
     private double mCohortFrequencyTotal;
     private final int mHomozygousCount;
-
-    private final int TOTAL_COVERAGE_DENOM = 1000;
 
     public CandidateAlleles(final int candidateId, final List<HlaAllele> alleles, int totalCoverage)
     {

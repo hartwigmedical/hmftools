@@ -54,9 +54,7 @@ import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
 import com.hartwig.hmftools.lilac.variant.SomaticVariants;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import org.apache.commons.cli.CommandLine;
@@ -252,14 +250,14 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         // build and score complexes
         HlaComplexBuilder complexBuilder = new HlaComplexBuilder(mConfig, mRefData);
-        List<HlaComplex> complexes = complexBuilder.buildComplexes(referenceFragmentAlleles, candidateAlleles);
+        List<HlaComplex> complexes = complexBuilder.buildComplexes(referenceFragmentAlleles, candidateAlleles, recoveredAlleles);
 
         LL_LOGGER.info("calculating coverage of {} complexes", complexes.size());
         ComplexCoverageCalculator complexCalculator = new ComplexCoverageCalculator(mConfig);
         List<HlaComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(referenceFragmentAlleles, complexes);
 
-        HlaComplexCoverageRanking complexRanker = new HlaComplexCoverageRanking(mConfig.MaxDistanceFromTopScore, mRefData);
-        List<HlaComplexCoverage> referenceRankedComplexes = complexRanker.rankCandidates(calculatedComplexes);
+        HlaComplexCoverageRanking complexRanker = new HlaComplexCoverageRanking(mConfig.TopScoreThreshold, mRefData);
+        List<HlaComplexCoverage> referenceRankedComplexes = complexRanker.rankCandidates(calculatedComplexes, recoveredAlleles);
 
         if(referenceRankedComplexes.isEmpty())
         {
@@ -286,9 +284,12 @@ public class LilacApplication implements AutoCloseable, Runnable
             LL_LOGGER.info(HlaComplexFile.asString(rankedComplex));
         }
 
-        LL_LOGGER.info("{} - REF - {} CANDIDATES, WINNING ALLELES: {}",
-                mConfig.Sample, referenceRankedComplexes.size(),
-                HlaAllele.toString(winningReferenceCoverage.getAlleleCoverage().stream().map(x -> x.Allele).collect(Collectors.toList())));
+        // log key results for fast post-run analysis
+        StringJoiner totalCoverages = new StringJoiner(",");
+        winningReferenceCoverage.getAlleleCoverage().forEach(x -> totalCoverages.add(String.format("%.0f",x.TotalCoverage)));
+
+        LL_LOGGER.info("WINNERS: {},{},{},{}",
+                mConfig.Sample, referenceRankedComplexes.size(), HlaAllele.toString(winningReferenceCoverage.getAlleles()), totalCoverages);
 
         HlaComplexCoverage winningTumorCoverage = null;
         List<HlaCopyNumber> winningTumorCopyNumber = null;

@@ -36,9 +36,8 @@ public class LilacConfig
     public final int MinEvidence;
     public final int MinFragmentsPerAllele;
     public final int MinFragmentsToRemoveSingle;
-    public final int MinConfirmedUniqueCoverage;
     public final int Threads;
-    public final int MaxDistanceFromTopScore;
+    public final int TopScoreThreshold;
 
     public final String GeneCopyNumberFile;
     public final String SomaticVcf;
@@ -66,12 +65,11 @@ public class LilacConfig
     private static final String THREADS = "threads";
     private static final String MIN_FRAGMENTS_PER_ALLELE = "min_fragments_per_allele";
     private static final String MIN_FRAGMENTS_TO_REMOVE_SINGLE = "min_fragments_to_remove_single";
-    private static final String MIN_CONFIRMED_UNIQUE_COVERAGE = "min_confirmed_unique_coverage";
     private static final String EXPECTED_ALLELES = "expected_alleles";
     private static final String RESTRICTED_ALLELES = "restricted_alleles";
     private static final String GENE_COPY_NUMBER = "gene_copy_number";
     private static final String SOMATIC_VCF = "somatic_vcf";
-    private static final String MAX_DISTANCE_FROM_TOP_SCORE = "max_distance_from_top_score";
+    private static final String TOP_SCORE_THRESHOLD = "top_score_threshold";
 
     private static final String DEBUG_PHASING = "debug_phasing";
     public static final String LOG_DEBUG = "log_debug";
@@ -114,9 +112,8 @@ public class LilacConfig
         MinEvidence = ConfigUtils.getConfigValue(cmd, MIN_EVIDENCE, LilacConstants.DEFAULT_MIN_EVIDENCE);
         MinFragmentsPerAllele = ConfigUtils.getConfigValue(cmd, MIN_FRAGMENTS_PER_ALLELE, LilacConstants.DEFAULT_FRAGS_PER_ALLELE);
         MinFragmentsToRemoveSingle = ConfigUtils.getConfigValue(cmd, MIN_FRAGMENTS_TO_REMOVE_SINGLE, LilacConstants.DEFAULT_FRAGS_REMOVE_SGL);
-        MinConfirmedUniqueCoverage = ConfigUtils.getConfigValue(cmd, MIN_CONFIRMED_UNIQUE_COVERAGE, LilacConstants.DEFAULT_MIN_CONF_UNIQUE_COVERAGE);
 
-        MaxDistanceFromTopScore = ConfigUtils.getConfigValue(cmd, MAX_DISTANCE_FROM_TOP_SCORE, LilacConstants.DEFAULT_MAX_DIST_FROM_TOP_SCORE);
+        TopScoreThreshold = ConfigUtils.getConfigValue(cmd, TOP_SCORE_THRESHOLD, LilacConstants.DEFAULT_MAX_DIST_FROM_TOP_SCORE);
 
         ExpectedAlleles = parseAlleleList(cmd.getOptionValue(EXPECTED_ALLELES));
         RestrictedAlleles = parseAlleleList(cmd.getOptionValue(RESTRICTED_ALLELES));
@@ -161,9 +158,9 @@ public class LilacConfig
     {
         LL_LOGGER.info("sample({}) hasTumorBam({})", Sample, !TumorBam.isEmpty());
 
-        LL_LOGGER.info("minBaseQual({}, minEvidence({}) minUniqueCoverage({}) minFragmentsPerAllele({}) "
+        LL_LOGGER.info("minBaseQual({}, minEvidence({}) minFragmentsPerAllele({}) "
                 + "minFragmentsToRemoveSingle({}) maxDistanceFromTopScore({})",
-                MinBaseQual, MinEvidence, MinConfirmedUniqueCoverage, MinFragmentsPerAllele, MinFragmentsToRemoveSingle, MaxDistanceFromTopScore);
+                MinBaseQual, MinEvidence, MinFragmentsPerAllele, MinFragmentsToRemoveSingle, TopScoreThreshold);
 
         if(!ExpectedAlleles.isEmpty())
         {
@@ -189,8 +186,7 @@ public class LilacConfig
         MinEvidence = LilacConstants.DEFAULT_MIN_EVIDENCE;
         MinFragmentsPerAllele = LilacConstants.DEFAULT_FRAGS_PER_ALLELE;
         MinFragmentsToRemoveSingle = LilacConstants.DEFAULT_FRAGS_REMOVE_SGL;
-        MinConfirmedUniqueCoverage = LilacConstants.DEFAULT_MIN_CONF_UNIQUE_COVERAGE;
-        MaxDistanceFromTopScore = LilacConstants.DEFAULT_MAX_DIST_FROM_TOP_SCORE;
+        TopScoreThreshold = LilacConstants.DEFAULT_MAX_DIST_FROM_TOP_SCORE;
 
         GeneCopyNumberFile = "";
         SomaticVcf = "";
@@ -218,8 +214,7 @@ public class LilacConfig
         options.addOption(MIN_EVIDENCE, true,"MIN_EVIDENCE");
         options.addOption(MIN_FRAGMENTS_PER_ALLELE, true,"MIN_FRAGMENTS_PER_ALLELE");
         options.addOption(MIN_FRAGMENTS_TO_REMOVE_SINGLE, true,"MIN_FRAGMENTS_TO_REMOVE_SINGLE");
-        options.addOption(MIN_CONFIRMED_UNIQUE_COVERAGE, true,"MIN_CONFIRMED_UNIQUE_COVERAGE");
-        options.addOption(MAX_DISTANCE_FROM_TOP_SCORE, true,"Max distance from top score");
+        options.addOption(TOP_SCORE_THRESHOLD, true,"Max distance from top score");
         options.addOption(THREADS, true,"Number of threads");
         options.addOption(EXPECTED_ALLELES, true,"Comma separated expected alleles for the sample");
         options.addOption(RESTRICTED_ALLELES, true,"Comma separated restricted analysis allele list");
