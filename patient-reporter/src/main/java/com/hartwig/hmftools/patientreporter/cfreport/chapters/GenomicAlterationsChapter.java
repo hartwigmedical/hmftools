@@ -87,7 +87,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
     private static Table createPloidyPloidyTable(double ploidy, double purity, boolean hasReliablePurity) {
         String title = "Tumor purity & ploidy";
 
-        Table contentTable = TableUtil.createReportContentSmallTable(new float[] { 60, 30, 30 }, new Cell[] {});
+        Table contentTable = TableUtil.createReportContentSmallTable(new float[] { 90, 95, 50 }, new Cell[] {});
 
         double impliedPurityPercentage = MathUtil.mapPercentage(purity, TumorPurity.RANGE_MIN, TumorPurity.RANGE_MAX);
         renderTumorPurity(hasReliablePurity,
@@ -98,7 +98,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 contentTable);
 
         contentTable.addCell(TableUtil.createContentCell("Average tumor ploidy"));
-        contentTable.addCell(TableUtil.createContentCellPurityPloidy(GeneUtil.copyNumberToString(ploidy, hasReliablePurity)));
+        contentTable.addCell(TableUtil.createContentCellPurityPloidy(GeneUtil.copyNumberToString(ploidy, hasReliablePurity))
+                .setTextAlignment(TextAlignment.CENTER));
         contentTable.addCell(TableUtil.createContentCell(Strings.EMPTY));
 
         return TableUtil.createWrappingReportTable(title, contentTable);
@@ -120,10 +121,11 @@ public class GenomicAlterationsChapter implements ReportChapter {
         table.addCell(TableUtil.createContentCell(label));
 
         if (hasReliablePurity) {
-            table.addCell(TableUtil.createContentCellPurityPloidy(valueLabel));
-            table.addCell(TableUtil.createContentCell(createInlineBarChart(value, min, max)).setPadding(8));
+            table.addCell(TableUtil.createContentCellPurityPloidy(valueLabel).setTextAlignment(TextAlignment.CENTER));
+            table.addCell(TableUtil.createContentCell(createInlineBarChart(value, min, max)).setPadding(8).setTextAlignment(TextAlignment.CENTER));
         } else {
             table.addCell(TableUtil.createContentCell(Lims.PURITY_NOT_RELIABLE_STRING));
+            table.addCell(TableUtil.createContentCell(Strings.EMPTY));
         }
     }
 
@@ -216,8 +218,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(gainLoss.interpretation().display()));
             contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? String.valueOf(gainLoss.copies()) : DataUtil.NA_STRING)
                     .setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? GainsAndLosses.copyChromosomeArm(
-                    cnPerChromosome,
+            contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? GainsAndLosses.copyChromosomeArm(cnPerChromosome,
                     gainLoss.chromosome(),
                     gainLoss.chromosomeBand()) : DataUtil.NA_STRING).setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(""));
