@@ -74,6 +74,6 @@ public final class GainsAndLosses {
 
         ChromosomeArmKey key = new ChromosomeArmKey(HumanChromosome.fromString(chromosome), chromosomeArm);
 
-        return cnPerChromosome.get(key);
+        return Math.round(Math.max(0, cnPerChromosome.get(key)));
     }
 }
