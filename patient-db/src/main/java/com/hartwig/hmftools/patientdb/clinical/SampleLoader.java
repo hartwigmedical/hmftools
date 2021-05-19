@@ -45,7 +45,7 @@ public class SampleLoader {
                 sequencedSamplesPerPatient.keySet().size(),
                 toUniqueSampleIds(sequencedSamplesPerPatient).size());
 
-        LOGGER.info(" Loading Reporting DB from {}", config.reportingDbTsv());
+        LOGGER.info(" Loading reporting database from {}", config.reportingDbTsv());
         List<ReportingEntry> reportingEntries = ReportingDatabase.read(config.reportingDbTsv());
         LOGGER.info("  Loaded {} reporting entries", reportingEntries.size());
 

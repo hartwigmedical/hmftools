@@ -19,6 +19,3 @@ hmf-common/src/test/resources/doid/201015_doid.json
 patient-db/patient-db-logs/*.log
 .DS_Store
 /patient-db/nb-configuration.xml
-
-# Ignore log file in bachelor
-bachelor/bachelor.log

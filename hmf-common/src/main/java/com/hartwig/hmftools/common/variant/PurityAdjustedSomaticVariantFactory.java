@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.variant;
 
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Multimap;
@@ -31,11 +30,6 @@ public class PurityAdjustedSomaticVariantFactory {
     private final GenomeRegionSelector<FittedRegion> fittedRegionSelector;
     @NotNull
     private final String sample;
-
-    public PurityAdjustedSomaticVariantFactory(@NotNull String sample, @NotNull PurityAdjuster purityAdjuster,
-            @NotNull final List<PurpleCopyNumber> copyNumbers) {
-        this(sample, purityAdjuster, copyNumbers, Collections.emptyList());
-    }
 
     public PurityAdjustedSomaticVariantFactory(@NotNull String sample, @NotNull PurityAdjuster purityAdjuster,
             @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<FittedRegion> fittedRegions) {
