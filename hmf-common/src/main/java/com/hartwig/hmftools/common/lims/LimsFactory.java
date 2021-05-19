@@ -162,10 +162,10 @@ public final class LimsFactory {
     @NotNull
     private static LimsJsonSampleData createLimsSampleDataForCOLO() {
         return ImmutableLimsJsonSampleData.builder()
-                .sampleId(Strings.EMPTY)
+                .sampleId("COLO829v003T")
                 .patientId("COLO829")
                 .tumorBarcode("COLO829V003TVAL")
-                .refBarcode(Strings.EMPTY)
+                .refBarcode("COLO829V003RVAL")
                 .arrivalDate(Strings.EMPTY)
                 .dnaConcentration(Strings.EMPTY)
                 .primaryTumor(Strings.EMPTY)
@@ -175,7 +175,7 @@ public final class LimsFactory {
                 .reportGermlineVariants(false)
                 .shallowSeq(false)
                 .reportViralInsertions(false)
-                .cohort(Strings.EMPTY)
+                .cohort("COLO")
                 .analysisType(Strings.EMPTY).build();
     }
 
