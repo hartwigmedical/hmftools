@@ -216,10 +216,10 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(gainLoss.interpretation().display()));
             contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? String.valueOf(gainLoss.copies()) : DataUtil.NA_STRING)
                     .setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? String.valueOf(GainsAndLosses.copyChromosomeArm(
+            contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? GainsAndLosses.copyChromosomeArm(
                     cnPerChromosome,
                     gainLoss.chromosome(),
-                    gainLoss.chromosomeBand())) : DataUtil.NA_STRING).setTextAlignment(TextAlignment.CENTER));
+                    gainLoss.chromosomeBand()) : DataUtil.NA_STRING).setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(""));
         }
 
