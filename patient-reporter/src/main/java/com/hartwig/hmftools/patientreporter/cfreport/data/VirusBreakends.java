@@ -25,21 +25,26 @@ public final class VirusBreakends {
         }
 
         Set<String> negativeInterpretations = Sets.newHashSet();
-        for (String possibleViruses: INTERPRETATIONS_TO_EVALUATE) {
+        for (String possibleViruses : INTERPRETATIONS_TO_EVALUATE) {
             if (!positiveInterpretations.contains(possibleViruses)) {
                 negativeInterpretations.add(possibleViruses);
             }
         }
 
-        StringBuilder virusInterpretationSummary = new StringBuilder(",");
+        StringBuilder virusInterpretationSummary = new StringBuilder();
         for (String positiveVirus : positiveInterpretations) {
             virusInterpretationSummary.append(positiveVirus + " positive");
+            virusInterpretationSummary.append(", ");
+
         }
 
         for (String negativeVirus : negativeInterpretations) {
             virusInterpretationSummary.append(negativeVirus + " negative");
+            virusInterpretationSummary.append(", ");
         }
 
-        return virusInterpretationSummary.toString();
+        String virusInterpretationSummaryString = virusInterpretationSummary.toString();
+        //TODO remove last comma
+        return virusInterpretationSummaryString;
     }
 }
