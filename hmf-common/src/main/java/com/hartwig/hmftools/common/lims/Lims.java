@@ -246,7 +246,7 @@ public class Lims {
             return sampleData.biopsySite();
         }
         // No warning raised since initially this information was not tracked so this will be missing for early samples.
-        return NOT_AVAILABLE_STRING;
+        return null;
     }
 
     @NotNull
