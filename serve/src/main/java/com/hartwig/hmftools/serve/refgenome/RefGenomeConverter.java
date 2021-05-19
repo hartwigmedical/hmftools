@@ -93,7 +93,9 @@ class RefGenomeConverter {
             RangeAnnotation liftedAnnotation = liftOverRange(originalAnnotation);
             if (liftedAnnotation != null) {
                 if (originalAnnotation.end() - originalAnnotation.start() == 2 && liftedAnnotation.end() - liftedAnnotation.start() != 2) {
-                    LOGGER.warn(" Skipping liftover: Lifted codon '{}' is no longer 3 bases long. Lifted codon: '{}'",
+                    LOGGER.warn(" Skipping liftover from {} to {}: Lifted codon '{}' is no longer 3 bases long. Lifted codon: '{}'",
+                            sourceVersion,
+                            targetVersion,
                             originalAnnotation,
                             liftedAnnotation);
                 } else {
@@ -226,7 +228,12 @@ class RefGenomeConverter {
 
         String newRef = sequence(lifted.chromosome(), lifted.position(), hotspot.ref().length());
         if (!newRef.equals(hotspot.ref())) {
-            LOGGER.warn(" Skipping liftover: Ref changed from '{}' to '{}' on {}", hotspot.ref(), newRef, hotspot);
+            LOGGER.warn(" Skipping liftover from {} to {}: Ref changed from '{}' to '{}' on {}",
+                    sourceVersion,
+                    targetVersion,
+                    hotspot.ref(),
+                    newRef,
+                    hotspot);
             return null;
         }
 
@@ -285,7 +292,12 @@ class RefGenomeConverter {
     private void verifyNoChromosomeChange(@NotNull String prevChromosome, @NotNull LiftOverResult lifted, @NotNull Object object) {
         String versionedChromosome = targetVersion.versionedChromosome(prevChromosome);
         if (!lifted.chromosome().equals(versionedChromosome)) {
-            LOGGER.warn(" Liftover moved chromosome from '{}' to '{}' on {}", versionedChromosome, lifted.chromosome(), object);
+            LOGGER.warn(" Liftover from {} to {} moved chromosome from '{}' to '{}' on {}",
+                    sourceVersion,
+                    targetVersion,
+                    versionedChromosome,
+                    lifted.chromosome(),
+                    object);
         }
     }
 
@@ -315,7 +327,7 @@ class RefGenomeConverter {
         if (!mappedGene.equals(gene)) {
             LOGGER.debug(" Mapped gene '{}' for {} to '{}' on {}", gene, sourceVersion, mappedGene, targetVersion);
             if (mappedGene.equals("NA")) {
-                LOGGER.warn(" Gene '{}' mapped to 'NA'", gene);
+                LOGGER.warn(" Gene '{}' mapped to 'NA' from {} to {}", gene, sourceVersion, targetVersion);
             }
         }
 
