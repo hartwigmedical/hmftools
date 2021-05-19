@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -83,9 +82,6 @@ public abstract class GenomicAnalysis {
 
     @NotNull
     public abstract List<ReportableVirusBreakend> virusBreakends();
-
-    @NotNull
-    public abstract Collection<String> interpretationVirus();
 
     @NotNull
     public abstract List<PeachGenotype> peachGenotypes();

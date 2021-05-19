@@ -115,7 +115,6 @@ public class GenomicAnalyzer {
                 .homozygousDisruptions(linxData.homozygousDisruptions())
                 .virusBreakends(reportableVirusBreakend)
                 .peachGenotypes(peachGenotypes)
-                .interpretationVirus(virusInterpretationModel.interpretations())
                 .build();
     }
 
