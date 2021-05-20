@@ -175,11 +175,18 @@ public class SummaryChapter implements ReportChapter {
                 TumorPurity.RANGE_MAX,
                 table);
 
-        String molecularTissuePrediction = hasReliablePurity ? patientReport.molecularTissueOrigin().conclusion() : DataUtil.NA_STRING;
-        Style dataStyle = hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
+        String molecularTissuePrediction = hasReliablePurity && patientReport.qsFormNumber().equals(QsFormNumber.FOR_080.display())
+                ? patientReport.molecularTissueOrigin().conclusion()
+                : DataUtil.NA_STRING;
+        Style dataStyleMolecularTissuePrediction = hasReliablePurity && patientReport.qsFormNumber().equals(QsFormNumber.FOR_080.display())
+                ? ReportResources.dataHighlightStyle()
+                : ReportResources.dataHighlightNaStyle();
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Molecular tissue of origin prediction").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(molecularTissuePrediction).addStyle(dataStyle)));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(molecularTissuePrediction).addStyle(
+                dataStyleMolecularTissuePrediction)));
+
+        Style dataStyle = hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
         String mutationalLoadString = hasReliablePurity ? analysis().tumorMutationalLoadStatus().display() + " ("
                 + SINGLE_DECIMAL_FORMAT.format(analysis().tumorMutationalBurden()) + " mut/genome)" : DataUtil.NA_STRING;
