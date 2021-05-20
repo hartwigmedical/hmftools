@@ -44,21 +44,54 @@ public class FragmentAlleles
     public final List<HlaAllele> getPartial() { return mPartial; }
     public final List<HlaAllele> getWild() { return mWild; }
 
-    public static FragmentAlleles filter(final FragmentAlleles fragAlleles, final List<HlaAllele> alleles)
-    {
-        return new FragmentAlleles(
-                fragAlleles.getFragment(),
-                fragAlleles.getFull().stream().filter(x -> alleles.contains(x)).collect(Collectors.toList()),
-                fragAlleles.getPartial().stream().filter(x -> alleles.contains(x)).collect(Collectors.toList()),
-                fragAlleles.getWild().stream().filter(x -> alleles.contains(x)).collect(Collectors.toList()));
-    }
-
     public static List<FragmentAlleles> filter(final List<FragmentAlleles> fragAlleleList, final List<HlaAllele> alleles)
     {
+        // gather any fragment allele which contains at least one of the specified alleles in its full or partial list,
+        // then collecting any matching alleles in each of the three groups
+        List<FragmentAlleles> matchedFragAlleles = Lists.newArrayList();
+
+        for(FragmentAlleles fragAlleles : fragAlleleList)
+        {
+            FragmentAlleles matchedFragAllele = null;
+
+            for(HlaAllele allele : alleles)
+            {
+                boolean inFull = fragAlleles.getFull().contains(allele);
+                boolean inPartial = fragAlleles.getPartial().contains(allele);
+
+                if((inFull || inPartial) && matchedFragAllele == null)
+                {
+                    matchedFragAllele = new FragmentAlleles(
+                            fragAlleles.getFragment(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+
+                    matchedFragAlleles.add(matchedFragAllele);
+                }
+
+                if(matchedFragAllele != null)
+                {
+                    if(inFull)
+                        matchedFragAllele.getFull().add(allele);
+
+                    if(inPartial)
+                        matchedFragAllele.getPartial().add(allele);
+                }
+            }
+
+            if(matchedFragAllele != null)
+            {
+                List<HlaAllele> wildAlleles = alleles.stream().filter(x -> fragAlleles.getWild().contains(x)).collect(Collectors.toList());
+                matchedFragAllele.getWild().addAll(wildAlleles);
+            }
+        }
+
+        return matchedFragAlleles;
+
+        /*
         return fragAlleleList.stream()
                 .map(x -> x.filter(x, alleles))
                 .filter(x -> !x.getFull().isEmpty() || !x.getPartial().isEmpty())
                 .collect(Collectors.toList());
+        */
     }
 
     public static List<FragmentAlleles> create(

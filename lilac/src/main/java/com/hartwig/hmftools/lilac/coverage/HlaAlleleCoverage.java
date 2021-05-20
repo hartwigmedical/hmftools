@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -89,13 +90,13 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
 
         for(FragmentAlleles fragment : fragmentSequences)
         {
-            List<HlaAllele> fullAlleles = HlaAllele.dedup(fragment.getFull().stream().map(x -> asAlleleGroup ? x.asAlleleGroup() : x).collect(Collectors.toList()));
-            List<HlaAllele> partialAlleles = HlaAllele.dedup(fragment.getPartial().stream().map(x -> asAlleleGroup ? x.asAlleleGroup() : x).collect(Collectors.toList()));
-            List<HlaAllele> wildAlleles = HlaAllele.dedup(fragment.getWild().stream().map(x -> asAlleleGroup ? x.asAlleleGroup() : x).collect(Collectors.toList()));
+            Set<HlaAllele> fullAlleles = fragment.getFull().stream().map(x -> asAlleleGroup ? x.asAlleleGroup() : x).collect(Collectors.toSet());
+            Set<HlaAllele> partialAlleles = fragment.getPartial().stream().map(x -> asAlleleGroup ? x.asAlleleGroup() : x).collect(Collectors.toSet());
+            Set<HlaAllele> wildAlleles = fragment.getWild().stream().map(x -> asAlleleGroup ? x.asAlleleGroup() : x).collect(Collectors.toSet());
 
             if(fullAlleles.size() == 1 && partialAlleles.isEmpty())
             {
-                increment(uniqueCoverageMap, fullAlleles.get(0), 1);
+                increment(uniqueCoverageMap, fullAlleles.iterator().next(), 1);
             }
             else
             {
@@ -111,11 +112,16 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
 
         for (HlaAllele allele : hlaAlleles)
         {
-            int uniqueCoverage = uniqueCoverageMap.entrySet().stream().filter(x -> x.getKey() == allele).mapToInt(x -> x.getValue()).findFirst().orElse(0);
-            double combinedCoverage = combinedCoverageMap.entrySet().stream().filter(x -> x.getKey() == allele).mapToDouble(x -> x.getValue()).findFirst().orElse(0);
-            double wildCoverage = wildCoverageMap.entrySet().stream().filter(x -> x.getKey() == allele).mapToDouble(x -> x.getValue()).findFirst().orElse(0);
+            // int uniqueCoverage = uniqueCoverageMap.entrySet().stream().filter(x -> x.getKey() == allele).mapToInt(x -> x.getValue()).findFirst().orElse(0);
+            Integer uniqueCoverage = uniqueCoverageMap.get(allele);
+            Double combinedCoverage = combinedCoverageMap.get(allele);
+            Double wildCoverage = wildCoverageMap.get(allele);
 
-            results.add(new HlaAlleleCoverage(allele, uniqueCoverage, combinedCoverage, wildCoverage));
+            results.add(new HlaAlleleCoverage(
+                    allele,
+                    uniqueCoverage != null ? uniqueCoverage : 0,
+                    combinedCoverage != null ? combinedCoverage : 0,
+                    wildCoverage != null ? wildCoverage : 0));
         }
 
         Collections.sort(results, Collections.reverseOrder());

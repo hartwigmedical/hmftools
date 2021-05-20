@@ -54,20 +54,12 @@ public class CoverageCalcTask implements Callable
     private HlaComplexCoverage proteinCoverage(final List<FragmentAlleles> fragmentAlleles, final List<HlaAllele> alleles)
     {
         // gather all fragments which cover this set of alleles
-
-        /*
         mPerfCounterFilter.start();
-
-        List<FragmentAlleles> filteredFragments = mAlleleFragmentMap == null || mAlleleFragmentMap.isEmpty() ?
-                FragmentAlleles.filter(fragmentAlleles, alleles) : getFragmentAlleles(alleles);
-
+        List<FragmentAlleles> filteredFragments = FragmentAlleles.filter(fragmentAlleles, alleles);
         mPerfCounterFilter.stop();
-         */
-
 
         // tally up protein-supporting coverage into the complex coverage counts
         mPerfCounterCoverage.start();
-        List<FragmentAlleles> filteredFragments = FragmentAlleles.filter(fragmentAlleles, alleles);
         HlaComplexCoverage coverage = HlaComplexCoverage.create(HlaAlleleCoverage.proteinCoverage(filteredFragments));
         mPerfCounterCoverage.stop();
 
@@ -76,54 +68,11 @@ public class CoverageCalcTask implements Callable
 
     public void logPerfResults()
     {
-        //LL_LOGGER.info(String.format("filter perf: count(%d) avg(%.4f) max(%.4f)",
-        //        mPerfCounterFilter.getSampleCount(), mPerfCounterFilter.getAvgTime(), mPerfCounterFilter.getMaxTime()));
+        LL_LOGGER.debug(String.format("filter perf: count(%d) avg(%.4f) max(%.4f)",
+                mPerfCounterFilter.getSampleCount(), mPerfCounterFilter.getAvgTime(), mPerfCounterFilter.getMaxTime()));
 
         LL_LOGGER.debug(String.format("coverage perf: count(%d) avg(%.4f) max(%.4f)",
                 mPerfCounterCoverage.getSampleCount(), mPerfCounterCoverage.getAvgTime(), mPerfCounterCoverage.getMaxTime()));
     }
-
-    private List<FragmentAlleles> getFragmentAlleles(final List<HlaAllele> alleles)
-    {
-        // form a set of unique (by readId) fragment alleles only containing the alleles provided
-        List<FragmentAlleles> fragments = Lists.newArrayList();
-
-        for(HlaAllele allele : alleles)
-        {
-            List<FragmentAlleles> alleleFragments = mAlleleFragmentMap.get(allele);
-
-            if(alleleFragments.isEmpty())
-                continue;
-
-            for(FragmentAlleles fragAlleles : alleleFragments)
-            {
-                FragmentAlleles existingFragment = fragments.stream()
-                        .filter(x -> x.getFragment() == fragAlleles.getFragment()).findFirst().orElse(null);
-
-                if(existingFragment == null)
-                {
-                    // cull the fragment's alleles to only those in the allele group
-                    List<HlaAllele> emptyList = Lists.newArrayList();
-                    List<HlaAllele> fullList = fragAlleles.getFull().contains(allele) ? Lists.newArrayList(allele) : emptyList;
-                    List<HlaAllele> partialList = fragAlleles.getPartial().contains(allele) ? Lists.newArrayList(allele) : emptyList;
-                    fragments.add(new FragmentAlleles(fragAlleles.getFragment(), fullList, partialList, emptyList));
-                }
-                else
-                {
-                    if(fragAlleles.getFull().contains(allele))
-                        existingFragment.getFull().add(allele);
-
-                    if(fragAlleles.getPartial().contains(allele))
-                        existingFragment.getPartial().add(allele);
-
-                    if(fragAlleles.getWild().contains(allele))
-                        existingFragment.getWild().add(allele);
-                }
-            }
-        }
-
-        return fragments;
-    }
-
 
 }

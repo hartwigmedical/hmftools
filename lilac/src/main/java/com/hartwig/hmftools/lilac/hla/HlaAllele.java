@@ -171,7 +171,7 @@ public class HlaAllele implements Comparable<HlaAllele>
 
     public static List<HlaAllele> dedup(final List<HlaAllele> alleles)
     {
-        // dedep but maintain ordering
+        // dedup but maintain ordering
         List<HlaAllele> newList = Lists.newArrayList();
 
         for(int i = 0; i < alleles.size(); ++i)
