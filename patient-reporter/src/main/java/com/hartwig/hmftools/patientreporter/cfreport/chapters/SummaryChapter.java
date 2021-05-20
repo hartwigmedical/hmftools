@@ -212,7 +212,7 @@ public class SummaryChapter implements ReportChapter {
         String virusSummary = patientReport.sampleReport().reportViralInsertions()
                 ? VirusBreakends.virusInterpretationSummary(analysis().virusBreakends())
                 : DataUtil.NA_STRING;
-        if (hasReliablePurity && !virusSummary.equals(DataUtil.NA_STRING)) {
+        if (!virusSummary.equals(DataUtil.NA_STRING)) {
             virusStyle = ReportResources.dataHighlightStyle();
             virusInterpretationString = virusSummary;
         } else {
