@@ -91,7 +91,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         }
 
         VersionInfo version = new VersionInfo("lilac.version");
-        LL_LOGGER.info("Starting LILAC with parameters:");
+        LL_LOGGER.info("starting LILAC with parameters:");
         mConfig.logParams();
 
         HlaContextFactory
@@ -106,7 +106,7 @@ public class LilacApplication implements AutoCloseable, Runnable
             System.exit(1);
         }
 
-        LL_LOGGER.info("Querying records from reference bam " + mConfig.ReferenceBam);
+        LL_LOGGER.info("querying records from reference bam " + mConfig.ReferenceBam);
 
         NucleotideFragmentFactory nucleotideFragmentFactory = new NucleotideFragmentFactory(
                 mConfig.MinBaseQual, mRefData.AminoAcidSequencesWithInserts, mRefData.AminoAcidSequencesWithDeletes,
@@ -122,7 +122,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         final List<NucleotideFragment> tumorNucleotideFragments = Lists.newArrayList();
         if(!mConfig.TumorBam.isEmpty())
         {
-            LL_LOGGER.info("Querying records from tumor bam " + mConfig.TumorBam);
+            LL_LOGGER.info("querying records from tumor bam " + mConfig.TumorBam);
             tumorNucleotideFragments.addAll(mNucleotideGeneEnrichment.enrich(tumorBamReader.readFromBam()));
         }
 
@@ -297,7 +297,7 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         if(!mConfig.TumorBam.isEmpty())
         {
-            LL_LOGGER.info("Calculating tumor coverage of winning alleles");
+            LL_LOGGER.info("calculating tumor coverage of winning alleles");
 
             List<FragmentAlleles> tumorFragmentAlleles = FragmentAlleles.create(
                     aminoAcidPipeline.tumorCoverageFragments(),
@@ -306,8 +306,11 @@ public class LilacApplication implements AutoCloseable, Runnable
 
             winningTumorCoverage = HlaComplexBuilder.calcProteinCoverage(tumorFragmentAlleles, winningAlleles).expandToSixAlleles();
 
-            LL_LOGGER.info("Calculating tumor copy number of winning alleles");
-            winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(winningAlleles, mConfig.GeneCopyNumberFile, winningTumorCoverage);
+            if(!mConfig.GeneCopyNumberFile.isEmpty())
+            {
+                LL_LOGGER.info("calculating tumor copy number of winning alleles");
+                winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(winningAlleles, mConfig.GeneCopyNumberFile, winningTumorCoverage);
+            }
 
             // SOMATIC VARIANTS
             SomaticVariantFinder somaticVariantFinder = new SomaticVariantFinder(mConfig, mRefData.HlaTranscriptData);
@@ -315,7 +318,7 @@ public class LilacApplication implements AutoCloseable, Runnable
 
             if(!somaticVariants.isEmpty())
             {
-                LL_LOGGER.info("Calculating somatic variant allele coverage");
+                LL_LOGGER.info("calculating somatic variant allele coverage");
 
                 String vcfFilename = mConfig.outputPrefix() + ".lilac.somatic.vcf.gz";
                 LilacVCF lilacVCF = new LilacVCF(vcfFilename, mConfig.SomaticVcf).writeHeader(version.toString());
@@ -342,7 +345,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         HlaOut output = HlaOut.create(winningReferenceCoverage, winningTumorCoverage, winningTumorCopyNumber, somaticCodingCounts);
 
         // QC
-        LL_LOGGER.info("Calculating QC Statistics");
+        LL_LOGGER.info("calculating QC Statistics");
         SomaticVariantQC somaticVariantQC = SomaticVariantQC.create(somaticVariants.size(), somaticCodingCounts);
         AminoAcidQC aminoAcidQC = AminoAcidQC.create(winningSequences, referenceAminoAcidCounts);
 
@@ -360,7 +363,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         LL_LOGGER.info("  {}", lilacQC.header());
         LL_LOGGER.info("  {}", lilacQC.body());
 
-        LL_LOGGER.info("Writing output to {}", mConfig.OutputDir);
+        LL_LOGGER.info("writing output to {}", mConfig.OutputDir);
         String outputFile = mConfig.outputPrefix() + ".lilac.txt";
         String outputQCFile = mConfig.outputPrefix() + ".lilac.qc.txt";
 
@@ -426,7 +429,7 @@ public class LilacApplication implements AutoCloseable, Runnable
     @Override
     public void close()
     {
-        LL_LOGGER.info("Finished in " + (System.currentTimeMillis() - mStartTime) / (long) 1000 + " seconds");
+        LL_LOGGER.info("run time: {} seconds", (System.currentTimeMillis() - mStartTime) / (long) 1000);
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

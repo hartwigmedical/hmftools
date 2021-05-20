@@ -412,7 +412,7 @@ public class ReferenceData
     // reference data rewrite
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        LL_LOGGER.info("Rewriting reference data");
+        LL_LOGGER.info("rewriting reference data");
 
         Options options = new Options();
         options.addOption(RESOURCE_DIR, true, "Path to resource files");
@@ -434,7 +434,7 @@ public class ReferenceData
         final String outputDir = parseOutputDir(cmd);
         refData.rewriteRefData(outputDir);
 
-        LL_LOGGER.info("Reference data written");
+        LL_LOGGER.info("reference data written");
     }
 
     public void rewriteRefData(final String outputDir)

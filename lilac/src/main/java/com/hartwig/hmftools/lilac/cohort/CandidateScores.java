@@ -221,7 +221,7 @@ public class CandidateScores
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        LL_LOGGER.info("Processing cohort sample candidate files");
+        LL_LOGGER.info("processing cohort sample candidate files");
 
         Options options = new Options();
         options.addOption(SAMPLE_IDS_FILE, true, "Sample IDs");
@@ -236,7 +236,7 @@ public class CandidateScores
         CandidateScores candidateScores = new CandidateScores(cmd);
         candidateScores.run();
 
-        LL_LOGGER.info("Cohort processing complete");
+        LL_LOGGER.info("cohort processing complete");
     }
 
 }

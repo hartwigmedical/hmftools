@@ -38,7 +38,7 @@ public final class ExtendEvidence
 
         if (mConfig.DebugPhasing)
         {
-            LL_LOGGER.info("  Producing paired evidence");
+            LL_LOGGER.info("  producing paired evidence");
         }
 
         for(int i = 0; i < mHeterozygousLoci.size() - 1; ++i)
@@ -64,14 +64,14 @@ public final class ExtendEvidence
 
                     if (mConfig.DebugPhasing)
                     {
-                        LL_LOGGER.info("  Paired Evidence: {}", combinedEvidence);
+                        LL_LOGGER.info("  paired Evidence: {}", combinedEvidence);
                     }
                 }
                 else
                 {
                     if (mConfig.DebugPhasing)
                     {
-                        LL_LOGGER.info("  FAILED Paired Evidence: {}", combinedEvidence);
+                        LL_LOGGER.info("  failed paired Evidence: {}", combinedEvidence);
                     }
                 }
             }

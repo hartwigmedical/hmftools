@@ -3,6 +3,11 @@ package com.hartwig.hmftools.lilac;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_PER_ALLELE;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_REMOVE_SGL;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_TOP_SCORE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 
 import com.google.common.collect.Lists;
@@ -108,12 +113,12 @@ public class LilacConfig
         ResourceDir = checkAddDirSeparator(cmd.getOptionValue(RESOURCE_DIR));
         RefGenome = cmd.getOptionValue(REF_GENOME, "");
 
-        MinBaseQual = ConfigUtils.getConfigValue(cmd, MIN_BASE_QUAL, LilacConstants.DEFAULT_MIN_BASE_QUAL);
-        MinEvidence = ConfigUtils.getConfigValue(cmd, MIN_EVIDENCE, LilacConstants.DEFAULT_MIN_EVIDENCE);
-        MinFragmentsPerAllele = ConfigUtils.getConfigValue(cmd, MIN_FRAGMENTS_PER_ALLELE, LilacConstants.DEFAULT_FRAGS_PER_ALLELE);
-        MinFragmentsToRemoveSingle = ConfigUtils.getConfigValue(cmd, MIN_FRAGMENTS_TO_REMOVE_SINGLE, LilacConstants.DEFAULT_FRAGS_REMOVE_SGL);
+        MinBaseQual = ConfigUtils.getConfigValue(cmd, MIN_BASE_QUAL, DEFAULT_MIN_BASE_QUAL);
+        MinEvidence = ConfigUtils.getConfigValue(cmd, MIN_EVIDENCE, DEFAULT_MIN_EVIDENCE);
+        MinFragmentsPerAllele = ConfigUtils.getConfigValue(cmd, MIN_FRAGMENTS_PER_ALLELE, DEFAULT_FRAGS_PER_ALLELE);
+        MinFragmentsToRemoveSingle = ConfigUtils.getConfigValue(cmd, MIN_FRAGMENTS_TO_REMOVE_SINGLE, DEFAULT_FRAGS_REMOVE_SGL);
 
-        TopScoreThreshold = ConfigUtils.getConfigValue(cmd, TOP_SCORE_THRESHOLD, LilacConstants.DEFAULT_MAX_DIST_FROM_TOP_SCORE);
+        TopScoreThreshold = ConfigUtils.getConfigValue(cmd, TOP_SCORE_THRESHOLD, DEFAULT_TOP_SCORE_THRESHOLD);
 
         ExpectedAlleles = parseAlleleList(cmd.getOptionValue(EXPECTED_ALLELES));
         RestrictedAlleles = parseAlleleList(cmd.getOptionValue(RESTRICTED_ALLELES));
@@ -156,7 +161,8 @@ public class LilacConfig
 
     public void logParams()
     {
-        LL_LOGGER.info("sample({}) hasTumorBam({})", Sample, !TumorBam.isEmpty());
+        LL_LOGGER.info("sample({}) inputs: tumorBam({}) somaticVCF({}) geneCopyNumber({})",
+                Sample, !TumorBam.isEmpty(), !SomaticVcf.isEmpty(), !GeneCopyNumberFile.isEmpty());
 
         LL_LOGGER.info("minBaseQual({}), minEvidence({}) minFragmentsPerAllele({}) "
                 + "minFragmentsToRemoveSingle({}) maxDistanceFromTopScore({})",
@@ -182,11 +188,11 @@ public class LilacConfig
         ResourceDir = "";
         RefGenome = "";
 
-        MinBaseQual = LilacConstants.DEFAULT_MIN_BASE_QUAL;
-        MinEvidence = LilacConstants.DEFAULT_MIN_EVIDENCE;
-        MinFragmentsPerAllele = LilacConstants.DEFAULT_FRAGS_PER_ALLELE;
-        MinFragmentsToRemoveSingle = LilacConstants.DEFAULT_FRAGS_REMOVE_SGL;
-        TopScoreThreshold = LilacConstants.DEFAULT_MAX_DIST_FROM_TOP_SCORE;
+        MinBaseQual = DEFAULT_MIN_BASE_QUAL;
+        MinEvidence = DEFAULT_MIN_EVIDENCE;
+        MinFragmentsPerAllele = DEFAULT_FRAGS_PER_ALLELE;
+        MinFragmentsToRemoveSingle = DEFAULT_FRAGS_REMOVE_SGL;
+        TopScoreThreshold = DEFAULT_TOP_SCORE_THRESHOLD;
 
         GeneCopyNumberFile = "";
         SomaticVcf = "";

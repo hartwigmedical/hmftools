@@ -34,7 +34,7 @@ public final class Candidates
     {
         List<Integer> aminoAcidBoundary = context.AminoAcidBoundaries;
 
-        LL_LOGGER.info("Determining un-phased candidate set for gene {}", context.geneName());
+        LL_LOGGER.info("determining un-phased candidate set for gene {}", context.geneName());
 
         SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, fragments);
 
@@ -87,7 +87,7 @@ public final class Candidates
     public List<HlaAllele> phasedCandidates(
             final HlaContext context, final List<HlaAllele> unphasedCandidateAlleles, final List<PhasedEvidence> phasedEvidence)
     {
-        LL_LOGGER.info("Determining phased candidate set for gene {}", context.geneName());
+        LL_LOGGER.info("determining phased candidate set for gene {}", context.geneName());
 
         List<HlaSequenceLoci> unphasedCandidates = mAminoAcidSequences.stream()
                 .filter(x -> unphasedCandidateAlleles.contains(x.getAllele().asFourDigit())).collect(Collectors.toList());

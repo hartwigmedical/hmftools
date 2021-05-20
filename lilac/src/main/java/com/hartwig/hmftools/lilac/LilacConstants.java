@@ -12,7 +12,7 @@ public class LilacConstants
     public static final int DEFAULT_MIN_EVIDENCE = 2;
     public static final int DEFAULT_FRAGS_PER_ALLELE = 7;
     public static final int DEFAULT_FRAGS_REMOVE_SGL = 40;
-    public static final int DEFAULT_MAX_DIST_FROM_TOP_SCORE = 3;
+    public static final int DEFAULT_TOP_SCORE_THRESHOLD = 5;
 
     public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.01;
     public static final int MIN_CONF_UNIQUE_GROUP_COVERAGE = 20;
