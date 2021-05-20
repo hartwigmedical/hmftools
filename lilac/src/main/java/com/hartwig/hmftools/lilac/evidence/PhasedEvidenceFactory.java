@@ -27,12 +27,13 @@ public class PhasedEvidenceFactory
 
     public List<PhasedEvidence> evidence(final HlaContext context, final List<AminoAcidFragment> fragments)
     {
-        LL_LOGGER.info("Phasing {} records:", context.geneName());
+        LL_LOGGER.info("phasing {} records:", context.geneName());
+
         List<PhasedEvidence> result = evidence(context.ExpectedAlleles, fragments);
 
         if(LL_LOGGER.isDebugEnabled() || mConfig.DebugPhasing)
         {
-            LL_LOGGER.debug("  Consolidating evidence");
+            LL_LOGGER.debug("  consolidating evidence");
             for(PhasedEvidence phasedEvidence : result)
             {
                 LL_LOGGER.debug("  " + phasedEvidence);
@@ -49,7 +50,7 @@ public class PhasedEvidenceFactory
         
         if (mConfig.DebugPhasing)
         {
-            LL_LOGGER.info("  Heterozygous Indices: $heterozygousIndices");
+            LL_LOGGER.debug("  heterozygous Indices: {}", heterozygousIndices);
         }
 
         ExtendEvidence heterozygousEvidence = new ExtendEvidence(mConfig, heterozygousIndices, aminoAcidAminoAcidFragments, expectedAlleles);
@@ -60,7 +61,7 @@ public class PhasedEvidenceFactory
 
         if (mConfig.DebugPhasing)
         {
-            LL_LOGGER.info("  Extending paired evidence");
+            LL_LOGGER.debug("  extending paired evidence");
         }
 
         while(!unprocessedEvidence.isEmpty())
@@ -69,7 +70,7 @@ public class PhasedEvidenceFactory
 
             if (mConfig.DebugPhasing)
             {
-                LL_LOGGER.info("  Processing top: {}", top);
+                LL_LOGGER.debug("  Processing top: {}", top);
             }
 
             Set<PhasedEvidence> others = Sets.newHashSet();
@@ -83,7 +84,7 @@ public class PhasedEvidenceFactory
             {
                 if (mConfig.DebugPhasing)
                 {
-                    LL_LOGGER.info("  Produced child: {}", pair.getFirst());
+                    LL_LOGGER.debug("  Produced child: {}", pair.getFirst());
                 }
 
                 finalisedEvidence.removeAll(children);

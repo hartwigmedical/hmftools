@@ -10,7 +10,7 @@ public class LilacConstants
 {
     public static final int DEFAULT_MIN_BASE_QUAL = 30;
     public static final int DEFAULT_MIN_EVIDENCE = 2;
-    public static final int DEFAULT_FRAGS_PER_ALLELE = 6;
+    public static final int DEFAULT_FRAGS_PER_ALLELE = 7;
     public static final int DEFAULT_FRAGS_REMOVE_SGL = 40;
     public static final int DEFAULT_MAX_DIST_FROM_TOP_SCORE = 3;
 
@@ -23,7 +23,6 @@ public class LilacConstants
     public static final double RECOVERY_SCORE_PENALTY = 5;
 
     public static final int PON_HAPLOTYPE_MIN_SUPPORT = 7;
-
 
     public static final String GENE_A = "A";
     public static final String GENE_B = "B";
