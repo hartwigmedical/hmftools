@@ -54,7 +54,7 @@ public class CFReportWriter implements ReportWriter {
         GenomicAnalysis analysis = report.genomicAnalysis();
         ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(analysis),
                 new TherapyDetailsChapterOffLabel(analysis),
-                new GenomicAlterationsChapter(analysis, report.sampleReport()),
+                new GenomicAlterationsChapter(report, report.sampleReport()),
                 new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(),
                 new DetailsAndDisclaimerChapter(report) };
 

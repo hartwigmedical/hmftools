@@ -297,19 +297,25 @@ public class SummaryChapter implements ReportChapter {
         Div div = createSectionStartDiv(contentWidth());
         String title = "Pharmacogenetics";
 
-        Table table = TableUtil.createReportContentTableSummary(new float[] { 15, 20, 25, 50 },
-                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
-                        TableUtil.createHeaderCell("Function"),
-                        TableUtil.createHeaderCell("Linked drugs").setTextAlignment(TextAlignment.CENTER) });
+        Table table;
+        if (patientReport.genomicAnalysis().hasReliablePurity() && patientReport.qsFormNumber().equals(QsFormNumber.FOR_080.display())) {
 
-        for (PeachGenotype peachGenotype : Pharmacogenetics.sort(analysis().peachGenotypes())) {
-            table.addCell(TableUtil.createContentCell(peachGenotype.gene()));
-            table.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
-            table.addCell(TableUtil.createContentCell(peachGenotype.function()));
-            table.addCell(TableUtil.createContentCell(peachGenotype.linkedDrugs()).setTextAlignment(TextAlignment.CENTER));
+            table = TableUtil.createReportContentTableSummary(new float[] { 15, 20, 25, 50 },
+                    new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
+                            TableUtil.createHeaderCell("Function"),
+                            TableUtil.createHeaderCell("Linked drugs").setTextAlignment(TextAlignment.CENTER) });
+
+            for (PeachGenotype peachGenotype : Pharmacogenetics.sort(analysis().peachGenotypes())) {
+                table.addCell(TableUtil.createContentCell(peachGenotype.gene()));
+                table.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
+                table.addCell(TableUtil.createContentCell(peachGenotype.function()));
+                table.addCell(TableUtil.createContentCell(peachGenotype.linkedDrugs()).setTextAlignment(TextAlignment.CENTER));
+            }
+            table = TableUtil.createWrappingReportTableSummary(title, table);
+        } else {
+            table = TableUtil.createNAReportTable(title);
         }
 
-        table = TableUtil.createWrappingReportTableSummary(title, table);
         div.add(table);
         report.add(div);
     }
