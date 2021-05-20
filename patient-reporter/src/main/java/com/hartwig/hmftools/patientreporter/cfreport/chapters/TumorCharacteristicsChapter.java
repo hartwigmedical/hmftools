@@ -236,8 +236,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                                     + "driver landscape and passenger characteristics (e.g. tumor-type specific drivers), and 3) somatic mutation "
                                     + "pattern (mutation distribution across the genome)."))));
         } else {
-            reportDocument.add(new Paragraph("Due to low tumor purity, the molecular tissue of origin prediction is unreliable"
-                    + " and results are not available.").addStyle(ReportResources.subTextStyle()));
+            reportDocument.add(new Paragraph("The molecular tissue of origin prediction is unreliable due to low tumor purity and "
+                    + "therefore the results are not available").addStyle(ReportResources.subTextStyle()));
         }
 
         reportDocument.add(table);
