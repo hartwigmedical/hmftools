@@ -137,7 +137,7 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCellSummary()
                 .add(new Paragraph("Treatment options (tumor-type specific)").addStyle(ReportResources.sectionTitleStyle())));
 
-        table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
+        table.addCell(TableUtil.createLayoutCell(4, 2).setHeight(TABLE_SPACER_HEIGHT));
 
         int therapyEventCount = EvidenceItems.uniqueEventCount(analysis().tumorSpecificEvidence());
         int therapyCount = EvidenceItems.uniqueTherapyCount(analysis().tumorSpecificEvidence());
@@ -163,7 +163,8 @@ public class SummaryChapter implements ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, .33f, .66f }));
         table.setWidth(contentWidth());
         table.addCell(TableUtil.createLayoutCell()
-                .add(new Paragraph("Tumor characteristics").addStyle(ReportResources.sectionTitleStyle())));
+                .add(new Paragraph("Tumor characteristics").setVerticalAlignment(VerticalAlignment.TOP)
+                        .addStyle(ReportResources.sectionTitleStyle())));
         table.addCell(TableUtil.createLayoutCell(1, 3).setHeight(TABLE_SPACER_HEIGHT));
 
         double impliedPurity = analysis().impliedPurity();
@@ -182,7 +183,8 @@ public class SummaryChapter implements ReportChapter {
                 ? ReportResources.dataHighlightStyle()
                 : ReportResources.dataHighlightNaStyle();
 
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Molecular tissue of origin prediction").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
+                .add(new Paragraph("Molecular tissue of origin prediction").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(molecularTissuePrediction).addStyle(
                 dataStyleMolecularTissuePrediction)));
 
@@ -190,12 +192,14 @@ public class SummaryChapter implements ReportChapter {
 
         String mutationalLoadString = hasReliablePurity ? analysis().tumorMutationalLoadStatus().display() + " ("
                 + SINGLE_DECIMAL_FORMAT.format(analysis().tumorMutationalBurden()) + " mut/genome)" : DataUtil.NA_STRING;
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Tumor mutational load").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
+                .add(new Paragraph("Tumor mutational load").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(mutationalLoadString).addStyle(dataStyle)));
 
         String microSatelliteStabilityString = hasReliablePurity ? analysis().microsatelliteStatus().display() + " ("
                 + DOUBLE_DECIMAL_FORMAT.format(analysis().microsatelliteIndelsPerMb()) + ")" : DataUtil.NA_STRING;
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Microsatellite (in)stability").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
+                .add(new Paragraph("Microsatellite (in)stability").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(microSatelliteStabilityString).addStyle(dataStyle)));
 
         String hrdString;
@@ -210,7 +214,8 @@ public class SummaryChapter implements ReportChapter {
             hrdStyle = ReportResources.dataHighlightNaStyle();
         }
 
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("HR Status").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
+                .add(new Paragraph("HR Status").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(hrdStyle)));
 
         Style virusStyle;
@@ -226,7 +231,8 @@ public class SummaryChapter implements ReportChapter {
             virusInterpretationString = DataUtil.NA_STRING;
         }
 
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Integrated Virus").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
+                .add(new Paragraph("Integrated Virus").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(virusInterpretationString).addStyle(virusStyle)));
         div.add(table);
 
