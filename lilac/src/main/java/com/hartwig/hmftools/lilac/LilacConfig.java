@@ -158,7 +158,7 @@ public class LilacConfig
     {
         LL_LOGGER.info("sample({}) hasTumorBam({})", Sample, !TumorBam.isEmpty());
 
-        LL_LOGGER.info("minBaseQual({}, minEvidence({}) minFragmentsPerAllele({}) "
+        LL_LOGGER.info("minBaseQual({}), minEvidence({}) minFragmentsPerAllele({}) "
                 + "minFragmentsToRemoveSingle({}) maxDistanceFromTopScore({})",
                 MinBaseQual, MinEvidence, MinFragmentsPerAllele, MinFragmentsToRemoveSingle, TopScoreThreshold);
 

@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
-import static com.hartwig.hmftools.lilac.coverage.CoverageCalcTask.proteinCoverage;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
 import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
@@ -267,7 +266,7 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         if(!expectedSequences.isEmpty())
         {
-            HlaComplexCoverage expectedCoverage = proteinCoverage(
+            HlaComplexCoverage expectedCoverage = HlaComplexBuilder.calcProteinCoverage(
                     referenceFragmentAlleles, expectedSequences.stream().map(x -> x.getAllele()).collect(Collectors.toList()));
             LL_LOGGER.info("expected allele coverage: {}", expectedCoverage);
         }
@@ -305,7 +304,7 @@ public class LilacApplication implements AutoCloseable, Runnable
                     referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences,
                     referenceNucleotideHeterozygousLoci, candidateNucleotideSequences);
 
-            winningTumorCoverage = proteinCoverage(tumorFragmentAlleles, winningAlleles).expandToSixAlleles();
+            winningTumorCoverage = HlaComplexBuilder.calcProteinCoverage(tumorFragmentAlleles, winningAlleles).expandToSixAlleles();
 
             LL_LOGGER.info("Calculating tumor copy number of winning alleles");
             winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(winningAlleles, mConfig.GeneCopyNumberFile, winningTumorCoverage);

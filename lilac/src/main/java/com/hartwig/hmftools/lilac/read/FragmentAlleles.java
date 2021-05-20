@@ -44,7 +44,7 @@ public class FragmentAlleles
     public final List<HlaAllele> getPartial() { return mPartial; }
     public final List<HlaAllele> getWild() { return mWild; }
 
-    private static FragmentAlleles filter(final FragmentAlleles fragAlleles, final List<HlaAllele> alleles)
+    public static FragmentAlleles filter(final FragmentAlleles fragAlleles, final List<HlaAllele> alleles)
     {
         return new FragmentAlleles(
                 fragAlleles.getFragment(),
@@ -76,11 +76,6 @@ public class FragmentAlleles
             if(!fragmentAlleles.getFull().isEmpty() || !fragmentAlleles.getPartial().isEmpty())
                 results.add(fragmentAlleles);
         }
-
-        List<FragmentAlleles> tempFragAlleles = results.stream()
-                .filter(x -> x.getFull().size() == 1)
-                .filter(x -> x.getFull().stream().anyMatch(y -> y.toString().equals("B*35:08")))
-                .collect(Collectors.toList());
 
         return results;
     }

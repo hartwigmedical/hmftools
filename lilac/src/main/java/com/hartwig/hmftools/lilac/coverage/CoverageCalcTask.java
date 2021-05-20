@@ -1,48 +1,128 @@
 package com.hartwig.hmftools.lilac.coverage;
 
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.read.FragmentAlleles;
 
 public class CoverageCalcTask implements Callable
 {
     private final List<FragmentAlleles> mFragmentAlleles;
-    private final HlaComplex mComplex;
-    private HlaComplexCoverage mCoverage;
+    private final List<HlaComplex> mComplexes;
+    private List<HlaComplexCoverage> mCoverageResults;
+
+    private final Map<HlaAllele,List<FragmentAlleles>> mAlleleFragmentMap;
+
+    private final PerformanceCounter mPerfCounterFilter;
+    private final PerformanceCounter mPerfCounterCoverage;
+
+    public CoverageCalcTask(
+            final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes,
+            Map<HlaAllele,List<FragmentAlleles>> alleleFragmentMap)
+    {
+        mFragmentAlleles = fragmentAlleles;
+        mComplexes = complexes;
+        mCoverageResults = Lists.newArrayList();
+
+        mAlleleFragmentMap = alleleFragmentMap;
+
+        mPerfCounterFilter = new PerformanceCounter("ComplexFilter");
+        mPerfCounterCoverage = new PerformanceCounter("ComplexCoverage");
+    }
 
     public CoverageCalcTask(final List<FragmentAlleles> fragmentAlleles, final HlaComplex complex)
     {
-        mFragmentAlleles = fragmentAlleles;
-        mComplex = complex;
-        mCoverage = null;
+        this(fragmentAlleles, Lists.newArrayList(complex), null);
     }
 
-    public HlaComplexCoverage getCoverage() { return mCoverage; }
+    public HlaComplexCoverage getCoverage() { return mCoverageResults.get(0); }
+    public List<HlaComplexCoverage> getCoverageResults() { return mCoverageResults; }
 
     @Override
     public Long call()
     {
-        mCoverage = proteinCoverage(mFragmentAlleles, mComplex.getAlleles());
+        mComplexes.forEach(x -> mCoverageResults.add(proteinCoverage(mFragmentAlleles, x.getAlleles())));
         return (long)0;
     }
 
-    public static HlaComplexCoverage proteinCoverage(final List<FragmentAlleles> fragmentAlleles, final List<HlaAllele> alleles)
+    private HlaComplexCoverage proteinCoverage(final List<FragmentAlleles> fragmentAlleles, final List<HlaAllele> alleles)
     {
-        List<FragmentAlleles> filteredFragments = fragmentAlleles(fragmentAlleles, alleles);
-        return HlaComplexCoverage.create(HlaAlleleCoverage.proteinCoverage(filteredFragments));
+        // gather all fragments which cover this set of alleles
+
+        /*
+        mPerfCounterFilter.start();
+
+        List<FragmentAlleles> filteredFragments = mAlleleFragmentMap == null || mAlleleFragmentMap.isEmpty() ?
+                FragmentAlleles.filter(fragmentAlleles, alleles) : getFragmentAlleles(alleles);
+
+        mPerfCounterFilter.stop();
+         */
+
+
+        // tally up protein-supporting coverage into the complex coverage counts
+        mPerfCounterCoverage.start();
+        List<FragmentAlleles> filteredFragments = FragmentAlleles.filter(fragmentAlleles, alleles);
+        HlaComplexCoverage coverage = HlaComplexCoverage.create(HlaAlleleCoverage.proteinCoverage(filteredFragments));
+        mPerfCounterCoverage.stop();
+
+        return coverage;
     }
 
-    public static List<FragmentAlleles> fragmentAlleles(final List<FragmentAlleles> fragmentAlleles, final List<HlaAllele> alleles)
+    public void logPerfResults()
     {
-        return FragmentAlleles.filter(fragmentAlleles, alleles);
+        //LL_LOGGER.info(String.format("filter perf: count(%d) avg(%.4f) max(%.4f)",
+        //        mPerfCounterFilter.getSampleCount(), mPerfCounterFilter.getAvgTime(), mPerfCounterFilter.getMaxTime()));
+
+        LL_LOGGER.debug(String.format("coverage perf: count(%d) avg(%.4f) max(%.4f)",
+                mPerfCounterCoverage.getSampleCount(), mPerfCounterCoverage.getAvgTime(), mPerfCounterCoverage.getMaxTime()));
     }
 
-    public static HlaComplexCoverage groupCoverage(final List<FragmentAlleles> fragmentAlleles, final List<HlaAllele> alleles)
+    private List<FragmentAlleles> getFragmentAlleles(final List<HlaAllele> alleles)
     {
-        List<FragmentAlleles> filteredFragments = fragmentAlleles(fragmentAlleles, alleles);
-        return HlaComplexCoverage.create(HlaAlleleCoverage.groupCoverage(filteredFragments));
+        // form a set of unique (by readId) fragment alleles only containing the alleles provided
+        List<FragmentAlleles> fragments = Lists.newArrayList();
+
+        for(HlaAllele allele : alleles)
+        {
+            List<FragmentAlleles> alleleFragments = mAlleleFragmentMap.get(allele);
+
+            if(alleleFragments.isEmpty())
+                continue;
+
+            for(FragmentAlleles fragAlleles : alleleFragments)
+            {
+                FragmentAlleles existingFragment = fragments.stream()
+                        .filter(x -> x.getFragment() == fragAlleles.getFragment()).findFirst().orElse(null);
+
+                if(existingFragment == null)
+                {
+                    // cull the fragment's alleles to only those in the allele group
+                    List<HlaAllele> emptyList = Lists.newArrayList();
+                    List<HlaAllele> fullList = fragAlleles.getFull().contains(allele) ? Lists.newArrayList(allele) : emptyList;
+                    List<HlaAllele> partialList = fragAlleles.getPartial().contains(allele) ? Lists.newArrayList(allele) : emptyList;
+                    fragments.add(new FragmentAlleles(fragAlleles.getFragment(), fullList, partialList, emptyList));
+                }
+                else
+                {
+                    if(fragAlleles.getFull().contains(allele))
+                        existingFragment.getFull().add(allele);
+
+                    if(fragAlleles.getPartial().contains(allele))
+                        existingFragment.getPartial().add(allele);
+
+                    if(fragAlleles.getWild().contains(allele))
+                        existingFragment.getWild().add(allele);
+                }
+            }
+        }
+
+        return fragments;
     }
 
 
