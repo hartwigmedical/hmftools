@@ -53,6 +53,8 @@ public final class CnPerChromosomeFactory {
                         copyNumberArm += (copyNumber * totalLengthSegment) / region.bases();
                     }
                 }
+
+                // if chromosome arm don't exist we call them 0.0 but this is not reported
                 cnPerChromosomeArm.put(new ChromosomeArmKey(chromosome, entry.getKey()), copyNumberArm);
             }
         }
