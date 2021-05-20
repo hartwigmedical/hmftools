@@ -33,18 +33,17 @@ public final class VirusBreakends {
 
         StringBuilder virusInterpretationSummary = new StringBuilder();
         for (String positiveVirus : positiveInterpretations) {
-            virusInterpretationSummary.append(positiveVirus + " positive");
+            virusInterpretationSummary.append(positiveVirus + "(+)");
             virusInterpretationSummary.append(", ");
 
         }
 
         for (String negativeVirus : negativeInterpretations) {
-            virusInterpretationSummary.append(negativeVirus + " negative");
+            virusInterpretationSummary.append(negativeVirus + "(-)");
             virusInterpretationSummary.append(", ");
         }
 
         String virusInterpretationSummaryString = virusInterpretationSummary.toString();
-        //TODO remove last comma
-        return virusInterpretationSummaryString;
+        return virusInterpretationSummaryString.substring(0, virusInterpretationSummaryString.length()-2);
     }
 }
