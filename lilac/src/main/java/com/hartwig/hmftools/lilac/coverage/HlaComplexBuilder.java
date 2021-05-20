@@ -45,7 +45,7 @@ public class HlaComplexBuilder
         HlaComplexCoverage groupCoverage = calcGroupCoverage(referenceFragmentAlleles, candidateAlleles);
 
         int totalFragmentCount = referenceFragmentAlleles.size();
-        List<HlaAlleleCoverage> uniqueGroups = confirmUnique(groupCoverage, Lists.newArrayList(), totalFragmentCount);
+        List<HlaAlleleCoverage> uniqueGroups = findUnique(groupCoverage, Lists.newArrayList(), totalFragmentCount);
 
         List<HlaAlleleCoverage> discardedGroups = groupCoverage.getAlleleCoverage().stream()
                 .filter(x -> x.UniqueCoverage > 0 && !uniqueGroups.contains(x)).collect(Collectors.toList());
@@ -84,7 +84,7 @@ public class HlaComplexBuilder
         }
 
         HlaComplexCoverage proteinCoverage = calcProteinCoverage(referenceFragmentAlleles, candidatesAfterUniqueGroups);
-        List<HlaAlleleCoverage> uniqueProteins = confirmUnique(proteinCoverage,  uniqueGroupAlleles, totalFragmentCount);
+        List<HlaAlleleCoverage> uniqueProteins = findUnique(proteinCoverage,  uniqueGroupAlleles, totalFragmentCount);
         List<HlaAlleleCoverage> discardedProtein = proteinCoverage.getAlleleCoverage().stream()
                 .filter(x -> x.UniqueCoverage > 0 && !uniqueProteins.contains(x)).collect(Collectors.toList());
         Collections.sort(discardedProtein, Collections.reverseOrder());
@@ -127,10 +127,12 @@ public class HlaComplexBuilder
             topCandidates.addAll(bTopCandidates);
             topCandidates.addAll(cTopCandidates);
 
+            List<HlaAllele> discardedUniqueGroupAlleles = coverageAlleles(discardedGroups);
+
             // ensure common alleles in unique groups are kept
             List<HlaAllele> commonAllelesInUniqueGroups = mRefData.CommonAlleles.stream()
                     .filter(x -> !topCandidates.contains(x))
-                    .filter(x -> uniqueGroupAlleles.contains(x.asAlleleGroup()))
+                    .filter(x -> uniqueGroupAlleles.contains(x.asAlleleGroup()) || discardedUniqueGroupAlleles.contains(x.asAlleleGroup()))
                     .collect(Collectors.toList());
 
             topCandidates.addAll(commonAllelesInUniqueGroups);
@@ -331,7 +333,7 @@ public class HlaComplexBuilder
                 totalCoverage / TOTAL_COVERAGE_DENOM * MIN_CONF_UNIQUE_PROTEIN_COVERAGE;
     }
 
-    private List<HlaAlleleCoverage> confirmUnique(
+    private List<HlaAlleleCoverage> findUnique(
             final HlaComplexCoverage complexCoverage, final List<HlaAllele> confirmedGroupAlleles, int totalFragmentCount)
     {
         List<HlaAlleleCoverage> unique = complexCoverage.getAlleleCoverage().stream()
@@ -388,11 +390,45 @@ public class HlaComplexBuilder
         HlaComplexCoverageRanking complexRanker = new HlaComplexCoverageRanking(0, mRefData);
         complexCoverages = complexRanker.rankCandidates(complexCoverages, recoveredAlleles);
 
+        // take the top N alleles but no more than 5 that pair with something in the top 10
+        Map<HlaAllele,Integer> pairingCount = Maps.newHashMap();
+
         List<HlaAllele> topRanked = Lists.newArrayList();
 
         for(HlaComplexCoverage coverage : complexCoverages)
         {
-            coverage.getAlleleCoverage().stream().filter(x -> !topRanked.contains(x.Allele)).forEach(x -> topRanked.add(x.Allele));
+            HlaAllele allele1 = coverage.getAlleles().get(0);
+            HlaAllele allele2 = coverage.getAlleles().get(1);
+            Integer count1 = pairingCount.get(allele1);
+            Integer count2 = pairingCount.get(allele2);
+
+            if(count1 != null && count1 >= 5 && count2 == null)
+                continue;
+
+            if(count2 != null && count2 >= 5 && count1 == null)
+                continue;
+
+            if(count1 == null)
+            {
+                pairingCount.put(allele1, 1);
+                topRanked.add(allele1);
+            }
+            else
+            {
+                pairingCount.put(allele1, count1 + 1);
+            }
+
+            if(count2 == null)
+            {
+                pairingCount.put(allele2, 1);
+                topRanked.add(allele2);
+            }
+            else
+            {
+                pairingCount.put(allele2, count2 + 1);
+            }
+
+            // coverage.getAlleleCoverage().stream().filter(x -> !topRanked.contains(x.Allele)).forEach(x -> topRanked.add(x.Allele));
 
             if(topRanked.size() >= take)
                 break;
