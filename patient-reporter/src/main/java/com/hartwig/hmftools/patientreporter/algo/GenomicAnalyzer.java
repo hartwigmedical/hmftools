@@ -38,6 +38,7 @@ import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class GenomicAnalyzer {
 
@@ -61,9 +62,9 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    public GenomicAnalysis run(@NotNull String tumorSampleId, @NotNull PatientReporterConfig config,
+    public GenomicAnalysis run(@NotNull String tumorSampleId, @Nullable String referenceSampleId, @NotNull PatientReporterConfig config,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) throws IOException {
-        PurpleData purpleData = PurpleDataLoader.load(tumorSampleId,
+        PurpleData purpleData = PurpleDataLoader.load(tumorSampleId, referenceSampleId,
                 config.purpleQcFile(),
                 config.purplePurityTsv(),
                 config.purpleSomaticDriverCatalogTsv(),
@@ -83,8 +84,6 @@ public class GenomicAnalyzer {
 
         Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant =
                 determineNotify(reportableVariants, germlineReportingModel, germlineReportingLevel);
-
-        LOGGER.info(notifyGermlineStatusPerVariant);
 
         ChordAnalysis chordAnalysis = ChordDataLoader.load(config.chordPredictionTxt());
 

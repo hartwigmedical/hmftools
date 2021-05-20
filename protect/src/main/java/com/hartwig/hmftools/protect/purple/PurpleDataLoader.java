@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
@@ -37,7 +38,7 @@ public final class PurpleDataLoader {
 
     @NotNull
     public static PurpleData load(@NotNull ProtectConfig config) throws IOException {
-        return load(config.tumorSampleId(),
+        return load(config.tumorSampleId(), null,
                 config.purpleQcFile(),
                 config.purplePurityTsv(),
                 config.purpleSomaticDriverCatalogTsv(),
@@ -48,7 +49,7 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    public static PurpleData load(@NotNull String sample, @NotNull String qcFile, @NotNull String purityTsv,
+    public static PurpleData load(@NotNull String sample, @Nullable String reference, @NotNull String qcFile, @NotNull String purityTsv,
             @NotNull String driverCatalogSomaticTsv, @NotNull String somaticVcf, @NotNull String driverCatalogGermlineTsv,
             @NotNull String germlineVcf, @Nullable String purpleSomaticCopynumberTsv) throws IOException {
         LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
@@ -79,7 +80,12 @@ public final class PurpleDataLoader {
             cnPerChromosome = CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(purpleSomaticCopynumberTsv);
         }
 
-        List<SomaticVariant> germlineVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, germlineVcf);
+        List<SomaticVariant> germlineVariants = Lists.newArrayList();
+        if (reference != null) {
+            germlineVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, reference, germlineVcf);
+        } else {
+            germlineVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, germlineVcf);
+        }
         List<ReportableVariant> reportableGermlineVariants =
                 ReportableVariantFactory.reportableGermlineVariants(germlineVariants, germlineDriverCatalog);
         LOGGER.info(" Loaded {} reportable germline variants from {}", reportableGermlineVariants.size(), germlineVcf);

@@ -30,6 +30,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 import com.hartwig.hmftools.patientreporter.cfreport.data.VirusBreakends;
+import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.Cell;
@@ -40,6 +41,8 @@ import com.itextpdf.layout.property.TextAlignment;
 import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -48,6 +51,7 @@ public class SummaryChapter implements ReportChapter {
     private static final float TABLE_SPACER_HEIGHT = 5;
     private static final DecimalFormat SINGLE_DECIMAL_FORMAT = ReportResources.decimalFormat("#.#");
     private static final DecimalFormat DOUBLE_DECIMAL_FORMAT = ReportResources.decimalFormat("#.##");
+    private static final Logger LOGGER = LogManager.getLogger(SummaryChapter.class);
 
     @NotNull
     private final AnalysedPatientReport patientReport;
@@ -218,25 +222,24 @@ public class SummaryChapter implements ReportChapter {
                 .add(new Paragraph("HR Status").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(hrdStyle)));
 
-        Style virusStyle;
-        String virusInterpretationString;
-        String virusSummary = patientReport.sampleReport().reportViralInsertions()
-                ? VirusBreakends.virusInterpretationSummary(analysis().virusBreakends())
-                : DataUtil.NA_STRING;
-        if (!virusSummary.equals(DataUtil.NA_STRING)) {
-            virusStyle = ReportResources.dataHighlightStyle();
-            virusInterpretationString = virusSummary;
-        } else {
-            virusStyle = ReportResources.dataHighlightNaStyle();
-            virusInterpretationString = DataUtil.NA_STRING;
-        }
-
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Integrated Virus").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(virusInterpretationString).addStyle(virusStyle)));
+        table.addCell(createVirusInterpretationString(VirusBreakends.virusInterpretationSummary(analysis().virusBreakends()),
+                patientReport.sampleReport().reportViralInsertions()));
+
         div.add(table);
 
         reportDocument.add(div);
+    }
+
+    @NotNull
+    private static Cell createVirusInterpretationString(@NotNull Set<String> virus, boolean reportViralInsertions) {
+        String virusSummary = reportViralInsertions ? String.join(", ", virus) : DataUtil.NA_STRING;
+
+        Style style = reportViralInsertions ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
+
+        return createMiddleAlignedCell(2).add(createHighlightParagraph(virusSummary)).addStyle(style);
+
     }
 
     private static void renderTumorPurity(boolean hasReliablePurity, @NotNull String valueLabel, double value, double min, double max,

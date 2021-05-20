@@ -16,7 +16,7 @@ public final class VirusBreakends {
     }
 
     @NotNull
-    public static String virusInterpretationSummary(@NotNull List<ReportableVirusBreakend> reportableVirusBreakends) {
+    public static Set<String> virusInterpretationSummary(@NotNull List<ReportableVirusBreakend> reportableVirusBreakends) {
         Set<String> positiveInterpretations = Sets.newHashSet();
         for (ReportableVirusBreakend virusBreakend : reportableVirusBreakends) {
             if (virusBreakend.interpretation() != null) {
@@ -31,19 +31,16 @@ public final class VirusBreakends {
             }
         }
 
-        StringBuilder virusInterpretationSummary = new StringBuilder();
+        Set<String> virusInterpretationSummary = Sets.newHashSet();
         for (String positiveVirus : positiveInterpretations) {
-            virusInterpretationSummary.append(positiveVirus + " positive");
-            virusInterpretationSummary.append(", ");
+            virusInterpretationSummary.add(positiveVirus + " positive");
 
         }
 
         for (String negativeVirus : negativeInterpretations) {
-            virusInterpretationSummary.append(negativeVirus + " negative");
-            virusInterpretationSummary.append(", ");
+            virusInterpretationSummary.add(negativeVirus + " negative");
         }
 
-        String virusInterpretationSummaryString = virusInterpretationSummary.toString();
-        return virusInterpretationSummaryString.substring(0, virusInterpretationSummaryString.length()-2);
+        return virusInterpretationSummary;
     }
 }

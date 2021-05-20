@@ -37,7 +37,7 @@ public class GenomicAnalyzerTest {
 
         PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
 
-        assertNotNull(analyzer.run("sample", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
+        assertNotNull(analyzer.run("sample", "reference", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
     }
 
     @Test
