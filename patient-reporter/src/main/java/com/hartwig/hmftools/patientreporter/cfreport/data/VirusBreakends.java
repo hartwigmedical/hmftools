@@ -33,13 +33,13 @@ public final class VirusBreakends {
 
         StringBuilder virusInterpretationSummary = new StringBuilder();
         for (String positiveVirus : positiveInterpretations) {
-            virusInterpretationSummary.append(positiveVirus + "(+)");
+            virusInterpretationSummary.append(positiveVirus + " positive");
             virusInterpretationSummary.append(", ");
 
         }
 
         for (String negativeVirus : negativeInterpretations) {
-            virusInterpretationSummary.append(negativeVirus + "(-)");
+            virusInterpretationSummary.append(negativeVirus + " negative");
             virusInterpretationSummary.append(", ");
         }
 

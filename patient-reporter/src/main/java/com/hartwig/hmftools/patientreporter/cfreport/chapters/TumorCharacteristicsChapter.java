@@ -237,7 +237,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                                     + "pattern (mutation distribution across the genome)."))));
         } else {
             reportDocument.add(new Paragraph("The molecular tissue of origin prediction is unreliable due to low tumor purity and "
-                    + "therefore the results are not available").addStyle(ReportResources.subTextStyle()));
+                    + "therefore the results are not available.").addStyle(ReportResources.subTextStyle()));
         }
 
         reportDocument.add(table);
