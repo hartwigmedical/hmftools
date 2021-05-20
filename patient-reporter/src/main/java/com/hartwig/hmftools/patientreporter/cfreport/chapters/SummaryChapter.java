@@ -197,7 +197,6 @@ public class SummaryChapter implements ReportChapter {
                 + DOUBLE_DECIMAL_FORMAT.format(analysis().microsatelliteIndelsPerMb()) + ")" : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Microsatellite (in)stability").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(microSatelliteStabilityString).addStyle(dataStyle)));
-        div.add(table);
 
         String hrdString;
         Style hrdStyle;
@@ -229,6 +228,7 @@ public class SummaryChapter implements ReportChapter {
 
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Integrated Virus").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(virusInterpretationString).addStyle(virusStyle)));
+        div.add(table);
 
         reportDocument.add(div);
     }
