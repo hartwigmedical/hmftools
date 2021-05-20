@@ -84,6 +84,8 @@ public class GenomicAnalyzer {
         Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant =
                 determineNotify(reportableVariants, germlineReportingModel, germlineReportingLevel);
 
+        LOGGER.info(notifyGermlineStatusPerVariant);
+
         ChordAnalysis chordAnalysis = ChordDataLoader.load(config.chordPredictionTxt());
 
         List<ProtectEvidence> reportableEvidenceItems = extractReportableEvidenceItems(config.protectEvidenceTsv());

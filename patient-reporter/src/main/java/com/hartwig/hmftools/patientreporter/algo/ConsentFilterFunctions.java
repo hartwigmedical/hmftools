@@ -77,14 +77,8 @@ public final class ConsentFilterFunctions {
                             .build(), false);
 
                 } else {
-                    filteredMap.put(ImmutableReportableVariant.builder()
-                            .from(reportableVariant)
-                            .build(), true);
+                    filteredMap.put(reportableVariant, entry.getValue());
                 }
-            } else {
-                filteredMap.put(ImmutableReportableVariant.builder()
-                        .from(reportableVariant)
-                        .build(), true);
             }
         }
 
