@@ -22,6 +22,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.coverage.CandidateAlleles;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -31,7 +32,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public class CandidateScores

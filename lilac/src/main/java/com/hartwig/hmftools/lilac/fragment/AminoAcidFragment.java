@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
 
 public final class AminoAcidFragment extends NucleotideFragment
 {
@@ -114,9 +114,12 @@ public final class AminoAcidFragment extends NucleotideFragment
         if(mAminoAcidLoci.size() != mAminoAcids.size())
             return false;
 
-        for(int i = 0; i < mAminoAcidLoci.size() - 1; ++i)
+        for(int i = 0; i < mAminoAcidLoci.size(); ++i)
         {
-            if(mAminoAcidLoci.get(i) >= mAminoAcidLoci.get(i + 1))
+            if(i < mAminoAcidLoci.size() - 1 && mAminoAcidLoci.get(i) >= mAminoAcidLoci.get(i + 1))
+                return false;
+
+            if(mAminoAcids.get(i).isEmpty())
                 return false;
         }
 

@@ -3,13 +3,12 @@ package com.hartwig.hmftools.lilac;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.genome.bed.ImmutableNamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import java.util.List;
-
-import org.apache.commons.compress.utils.Lists;
 
 public class LociPosition
 {

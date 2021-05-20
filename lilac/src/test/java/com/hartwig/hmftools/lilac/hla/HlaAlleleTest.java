@@ -8,7 +8,8 @@ import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
 
-import org.apache.commons.compress.utils.Lists;
+import com.google.common.collect.Lists;
+
 import org.junit.Test;
 
 public class HlaAlleleTest

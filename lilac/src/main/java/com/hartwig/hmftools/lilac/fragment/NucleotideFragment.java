@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Codons;
@@ -128,11 +130,14 @@ public class NucleotideFragment
             int locus = mNucleotideLoci.get(i);
 
             if((locus % 3) != 0)
-            {
                 continue;
-            }
 
-            if(mNucleotideLoci.contains(locus + 1) && mNucleotideLoci.contains(locus + 2))
+            // since loci are ordered, can just check the next 2 expected do exist
+            if(i >= mNucleotideLoci.size() - 2)
+                break;
+
+            if(mNucleotideLoci.get(i + 1) == locus + 1 && mNucleotideLoci.get(i + 2) == locus + 2)
+            // if(mNucleotideLoci.contains(locus + 1) && mNucleotideLoci.contains(locus + 2))
             {
                 int aaLocus = locus / 3;
                 aminoAcidLoci.add(aaLocus);
@@ -143,16 +148,15 @@ public class NucleotideFragment
         return new AminoAcidFragment(mId, mGenes, mNucleotideLoci, mNucleotideQuality, mNucleotides, aminoAcidLoci, aminoAcids);
     }
 
-    private String formCodonAminoAcid(int index)
+    private String formCodonAminoAcid(int locus)
     {
-        String first = nucleotide(index * 3);
-        String second = nucleotide(index * 3 + 1);
-        String third = nucleotide(index * 3 + 2);
+        int nucIndex = mNucleotideLoci.indexOf(locus * 3);
+        String first = mNucleotides.get(nucIndex);
+        String second = mNucleotides.get(nucIndex + 1);
+        String third = mNucleotides.get(nucIndex + 2);
 
-        if(first == "." && second == "." && third == ".")
-        {
-            return ".";
-        }
+        if(first == DEL_STR && second == DEL_STR && third == DEL_STR)
+            return DEL_STR;
 
         return Codons.aminoAcids(first + second + third);
     }

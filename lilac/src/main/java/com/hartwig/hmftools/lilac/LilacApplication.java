@@ -137,6 +137,9 @@ public class LilacApplication implements AutoCloseable, Runnable
         List<AminoAcidFragment> bCandidateFragments = aminoAcidPipeline.referencePhasingFragments(hlaBContext);
         List<AminoAcidFragment> cCandidateFragments = aminoAcidPipeline.referencePhasingFragments(hlaCContext);
 
+        // TEMP
+        // List<AminoAcidFragment> indelFrags = cCandidateFragments.stream().filter(x -> x.containsIndel()).collect(Collectors.toList());
+
         // Un-phased Candidates
         Candidates candidateFactory = new Candidates(mConfig, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
         List<HlaAllele> aUnphasedCandidates = candidateFactory.unphasedCandidates(hlaAContext, aCandidateFragments);
