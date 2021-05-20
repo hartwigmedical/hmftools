@@ -21,13 +21,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class SomaticVariants
+public class SomaticVariantFinder
 {
     private final Set<CodingEffect> UNKNOWN_CODING_EFFECT;
     private final LilacConfig mConfig;
     private final Map<String,TranscriptData> mHlaTranscriptData;
 
-    public SomaticVariants(final LilacConfig config, Map<String, TranscriptData> transcriptData)
+    public SomaticVariantFinder(final LilacConfig config, final Map<String, TranscriptData> transcriptData)
     {
         mConfig = config;
         mHlaTranscriptData = transcriptData;
@@ -42,9 +42,9 @@ public class SomaticVariants
         final List<VariantContextDecorator> results = Lists.newArrayList();
 
         int minPosition = mHlaTranscriptData.values().stream().mapToInt(x -> x.TransStart).min().orElse(0);
-        int maxPosition = mHlaTranscriptData.values().stream().mapToInt(x -> x.TransStart).max().orElse(0);
+        int maxPosition = mHlaTranscriptData.values().stream().mapToInt(x -> x.TransEnd).max().orElse(0);
 
-        LL_LOGGER.info("Reading somatic vcf: ", mConfig.SomaticVcf);
+        LL_LOGGER.info("reading somatic vcf: ", mConfig.SomaticVcf);
 
         VCFFileReader fileReader = new VCFFileReader(new File(mConfig.SomaticVcf), false);
 

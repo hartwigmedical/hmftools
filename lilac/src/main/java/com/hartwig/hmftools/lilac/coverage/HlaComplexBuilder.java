@@ -68,7 +68,17 @@ public class HlaComplexBuilder
         }
 
         List<HlaAllele> uniqueGroupAlleles = coverageAlleles(uniqueGroups);
+
         List<HlaAllele> candidatesAfterUniqueGroups = filterWithUniqueGroups(candidateAlleles, uniqueGroupAlleles, recoveredAlleles);
+
+        // ensure common alleles in unique groups are kept
+        List<HlaAllele> discardedUniqueGroupAlleles = coverageAlleles(discardedGroups);
+        List<HlaAllele> commonAllelesInDiscardedUniqueGroups = mRefData.CommonAlleles.stream()
+                .filter(x -> !candidatesAfterUniqueGroups.contains(x))
+                .filter(x -> discardedUniqueGroupAlleles.contains(x.asAlleleGroup()))
+                .collect(Collectors.toList());
+
+        candidatesAfterUniqueGroups.addAll(commonAllelesInDiscardedUniqueGroups);
 
         List<HlaAllele> stillRecovered = recoveredAlleles.stream().filter(x -> candidatesAfterUniqueGroups.contains(x)).collect(Collectors.toList());
 
@@ -126,16 +136,6 @@ public class HlaComplexBuilder
             topCandidates.addAll(aTopCandidates);
             topCandidates.addAll(bTopCandidates);
             topCandidates.addAll(cTopCandidates);
-
-            List<HlaAllele> discardedUniqueGroupAlleles = coverageAlleles(discardedGroups);
-
-            // ensure common alleles in unique groups are kept
-            List<HlaAllele> commonAllelesInUniqueGroups = mRefData.CommonAlleles.stream()
-                    .filter(x -> !topCandidates.contains(x))
-                    .filter(x -> uniqueGroupAlleles.contains(x.asAlleleGroup()) || discardedUniqueGroupAlleles.contains(x.asAlleleGroup()))
-                    .collect(Collectors.toList());
-
-            topCandidates.addAll(commonAllelesInUniqueGroups);
 
             List<HlaAllele> rejected = candidatesAfterUniqueProteins.stream()
                     .filter(x -> !topCandidates.contains(x)).collect(Collectors.toList());
@@ -398,34 +398,43 @@ public class HlaComplexBuilder
         for(HlaComplexCoverage coverage : complexCoverages)
         {
             HlaAllele allele1 = coverage.getAlleles().get(0);
-            HlaAllele allele2 = coverage.getAlleles().get(1);
-            Integer count1 = pairingCount.get(allele1);
-            Integer count2 = pairingCount.get(allele2);
 
-            if(count1 != null && count1 >= 5 && count2 == null)
-                continue;
-
-            if(count2 != null && count2 >= 5 && count1 == null)
-                continue;
-
-            if(count1 == null)
+            if(coverage.getAlleles().size() == 1)
             {
-                pairingCount.put(allele1, 1);
-                topRanked.add(allele1);
+                if(!topRanked.contains(allele1))
+                    topRanked.add(allele1);
             }
             else
             {
-                pairingCount.put(allele1, count1 + 1);
-            }
+                HlaAllele allele2 = coverage.getAlleles().get(1);
+                Integer count1 = pairingCount.get(allele1);
+                Integer count2 = pairingCount.get(allele2);
 
-            if(count2 == null)
-            {
-                pairingCount.put(allele2, 1);
-                topRanked.add(allele2);
-            }
-            else
-            {
-                pairingCount.put(allele2, count2 + 1);
+                if(count1 != null && count1 >= 5 && count2 == null)
+                    continue;
+
+                if(count2 != null && count2 >= 5 && count1 == null)
+                    continue;
+
+                if(count1 == null)
+                {
+                    pairingCount.put(allele1, 1);
+                    topRanked.add(allele1);
+                }
+                else
+                {
+                    pairingCount.put(allele1, count1 + 1);
+                }
+
+                if(count2 == null)
+                {
+                    pairingCount.put(allele2, 1);
+                    topRanked.add(allele2);
+                }
+                else
+                {
+                    pairingCount.put(allele2, count2 + 1);
+                }
             }
 
             // coverage.getAlleleCoverage().stream().filter(x -> !topRanked.contains(x.Allele)).forEach(x -> topRanked.add(x.Allele));

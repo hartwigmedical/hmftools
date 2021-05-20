@@ -50,7 +50,7 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLociFile;
 import com.hartwig.hmftools.lilac.variant.LilacVCF;
 import com.hartwig.hmftools.lilac.variant.SomaticAlleleCoverage;
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
-import com.hartwig.hmftools.lilac.variant.SomaticVariants;
+import com.hartwig.hmftools.lilac.variant.SomaticVariantFinder;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -310,7 +310,8 @@ public class LilacApplication implements AutoCloseable, Runnable
             winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(winningAlleles, mConfig.GeneCopyNumberFile, winningTumorCoverage);
 
             // SOMATIC VARIANTS
-            somaticVariants.addAll(new SomaticVariants(mConfig, mRefData.HlaTranscriptData).readSomaticVariants());
+            SomaticVariantFinder somaticVariantFinder = new SomaticVariantFinder(mConfig, mRefData.HlaTranscriptData);
+            somaticVariants.addAll(somaticVariantFinder.readSomaticVariants());
 
             if(!somaticVariants.isEmpty())
             {
