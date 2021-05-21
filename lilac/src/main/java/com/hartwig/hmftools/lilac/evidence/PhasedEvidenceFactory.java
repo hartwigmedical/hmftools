@@ -9,6 +9,7 @@ import com.hartwig.hmftools.lilac.SequenceCount;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
+
 import org.apache.commons.math3.util.Pair;
 
 import java.util.Collections;
@@ -18,11 +19,15 @@ import java.util.Set;
 
 public class PhasedEvidenceFactory
 {
+    private final int mMinEvidence;
+    private final boolean mDebugPhasing;
     private final LilacConfig mConfig;
 
     public PhasedEvidenceFactory(final LilacConfig config)
     {
         mConfig = config;
+        mMinEvidence = mConfig.MinEvidence;
+        mDebugPhasing = mConfig.DebugPhasing;
     }
 
     public List<PhasedEvidence> evidence(final HlaContext context, final List<AminoAcidFragment> fragments)
@@ -31,7 +36,7 @@ public class PhasedEvidenceFactory
 
         List<PhasedEvidence> result = evidence(context.ExpectedAlleles, fragments);
 
-        if(LL_LOGGER.isDebugEnabled() || mConfig.DebugPhasing)
+        if(LL_LOGGER.isDebugEnabled() || mDebugPhasing)
         {
             LL_LOGGER.debug("  consolidating evidence");
             for(PhasedEvidence phasedEvidence : result)
@@ -44,22 +49,23 @@ public class PhasedEvidenceFactory
 
     public List<PhasedEvidence> evidence(final ExpectedAlleles expectedAlleles, final List<AminoAcidFragment> aminoAcidAminoAcidFragments)
     {
-        SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, aminoAcidAminoAcidFragments);
+        SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, aminoAcidAminoAcidFragments);
 
         List<Integer> heterozygousIndices = aminoAcidCounts.heterozygousLoci();
-        
-        if (mConfig.DebugPhasing)
+
+        if(mDebugPhasing)
         {
             LL_LOGGER.debug("  heterozygous Indices: {}", heterozygousIndices);
         }
 
-        ExtendEvidence heterozygousEvidence = new ExtendEvidence(mConfig, heterozygousIndices, aminoAcidAminoAcidFragments, expectedAlleles);
+        ExtendEvidence heterozygousEvidence =
+                new ExtendEvidence(mConfig, heterozygousIndices, aminoAcidAminoAcidFragments, expectedAlleles);
 
         List<PhasedEvidence> finalisedEvidence = Lists.newArrayList();
         List<PhasedEvidence> unprocessedEvidence = Lists.newArrayList();
         unprocessedEvidence.addAll(heterozygousEvidence.pairedEvidence());
 
-        if (mConfig.DebugPhasing)
+        if(mDebugPhasing)
         {
             LL_LOGGER.debug("  extending paired evidence");
         }
@@ -68,7 +74,7 @@ public class PhasedEvidenceFactory
         {
             PhasedEvidence top = unprocessedEvidence.remove(0);
 
-            if (mConfig.DebugPhasing)
+            if(mDebugPhasing)
             {
                 LL_LOGGER.debug("  Processing top: {}", top);
             }
@@ -80,9 +86,9 @@ public class PhasedEvidenceFactory
             PhasedEvidence parent = pair.getFirst();
             Set<PhasedEvidence> children = pair.getSecond();
 
-            if (!children.isEmpty())
+            if(!children.isEmpty())
             {
-                if (mConfig.DebugPhasing)
+                if(mDebugPhasing)
                 {
                     LL_LOGGER.debug("  Produced child: {}", pair.getFirst());
                 }
@@ -110,7 +116,9 @@ public class PhasedEvidenceFactory
             int firstAA = first.getAminoAcidIndexList().get(0);
             int secondAA = second.getAminoAcidIndexList().get(0);
             if(firstAA != secondAA)
+            {
                 return firstAA > secondAA ? 1 : -1;
+            }
 
             return 0;
         }

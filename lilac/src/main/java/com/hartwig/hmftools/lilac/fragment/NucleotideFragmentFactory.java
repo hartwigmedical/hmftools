@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.lilac.LilacUtils.arrayToList;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.calcAminoAcidIndices;
 import static com.hartwig.hmftools.lilac.fragment.NucleotideFragment.expandIndices;
-import static com.hartwig.hmftools.lilac.fragment.NucleotideFragment.merge;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 
 import com.google.common.collect.Lists;
@@ -123,14 +122,14 @@ public class NucleotideFragmentFactory
         {
             HlaSequenceLoci seqLoci = matchedSeqLoci.get(0);
             List<Integer> filteredAaIndices = matchedIndicesList.get(0);
-            NucleotideFragment fragment = createNucleotideSequence(record.Id, codingRegion, filteredAaIndices.get(0), aminoAcids, seqLoci);
+            NucleotideFragment fragment = createIndelFragment(record.Id, codingRegion, filteredAaIndices.get(0), aminoAcids, seqLoci);
             return !fragment.getNucleotideLoci().isEmpty() ? fragment : null;
         }
 
         return null;
     }
 
-    private NucleotideFragment createNucleotideSequence(
+    private NucleotideFragment createIndelFragment(
             final String id, final NamedBed codingRegion, final int startLoci, final String bamSequence, final HlaSequenceLoci hlaSequence)
     {
         int endLoci = endLoci(startLoci, bamSequence, hlaSequence);

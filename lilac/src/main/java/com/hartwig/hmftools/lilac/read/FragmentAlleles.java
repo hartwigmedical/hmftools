@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.read;
 
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceMatch.FULL;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceMatch.PARTIAL;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceMatch.WILD;
