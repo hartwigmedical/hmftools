@@ -44,9 +44,7 @@ public final class Candidates
         LL_LOGGER.info("  {} candidates before filtering", geneCandidates.size());
 
         // Amino acid filtering
-        AminoAcidFiltering aminoAcidFilter = new AminoAcidFiltering(context.AminoAcidBoundaries);
-
-        List<HlaSequenceLoci> aminoAcidCandidates = aminoAcidFilter.aminoAcidCandidates(geneCandidates, aminoAcidCounts);
+        List<HlaSequenceLoci> aminoAcidCandidates = filterAminoAcidsByBoundries(geneCandidates, aminoAcidCounts, context.AminoAcidBoundaries);
 
         List<HlaAllele> aminoAcidCandidateAlleles = aminoAcidCandidates.stream().map(x -> x.getAllele()).collect(Collectors.toList());
 
@@ -82,6 +80,29 @@ public final class Candidates
 
         LL_LOGGER.info("  {} candidates after exon boundary filtering", nucleotideSpecificAllelesCandidates.size());
         return nucleotideSpecificAllelesCandidates;
+    }
+
+    private List<HlaSequenceLoci> filterAminoAcidsByBoundries(
+            final List<HlaSequenceLoci> candidates, final SequenceCount aminoAcidCount, final List<Integer> aminoAcidBoundaries)
+    {
+        List<HlaSequenceLoci> results = Lists.newArrayList();
+        results.addAll(candidates);
+
+        for(int loci = 0; loci < aminoAcidCount.getLength(); ++loci)
+        {
+            if(aminoAcidBoundaries.contains(loci))
+                continue;
+
+            List<String> expectedSequences = aminoAcidCount.getMinCountSequences(loci);
+
+            final int lociConst = loci;
+
+            results = results.stream()
+                    .filter(x -> x.consistentWithAny(expectedSequences, Lists.newArrayList(lociConst)))
+                    .collect(Collectors.toList());
+        }
+
+        return results;
     }
 
     public List<HlaAllele> phasedCandidates(

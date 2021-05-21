@@ -16,6 +16,7 @@ public class AminoAcidFragmentPipeline
 {
     private final int mMinBaseQuality;
     private final int mMinEvidence;
+
     private final AminoAcidQualEnrichment mAminoAcidEnricher;
     private final NucleotideQualEnrichment mNucleotideQualEnrichment;
     private final List<AminoAcidFragment> mHighQualTumorFragments;
@@ -32,11 +33,23 @@ public class AminoAcidFragmentPipeline
         mMinBaseQuality = mConfig.MinBaseQual;
         mMinEvidence = mConfig.MinEvidence;
 
+        // only used for phasing fragments
         mAminoAcidEnricher = new AminoAcidQualEnrichment(mMinEvidence);
         mNucleotideQualEnrichment = new NucleotideQualEnrichment(mMinBaseQuality, mMinEvidence);
 
         mHighQualReferenceFragments = applyQualityFilter(mReferenceFragments);
         mHighQualTumorFragments = applyQualityFilter(tumorFragments);
+    }
+
+    public final List<AminoAcidFragment> referenceCoverageFragments() { return mHighQualReferenceFragments; }
+
+    private List<AminoAcidFragment> applyQualityFilter(List<NucleotideFragment> fragments)
+    {
+        return fragments.stream()
+                .map(x -> x.qualityFilter(mMinBaseQuality))
+                .filter(x -> x.isNotEmpty())
+                .map(x -> x.toAminoAcidFragment()).collect(
+                        Collectors.toList());
     }
 
     public final List<AminoAcidFragment> referencePhasingFragments(final HlaContext context)
@@ -58,7 +71,20 @@ public class AminoAcidFragmentPipeline
         return referenceAminoAcids;
     }
 
-    public final List<AminoAcidFragment> referenceCoverageFragments() { return mHighQualReferenceFragments; }
+    private List<AminoAcidFragment> applyQualAndSpliceChecks(final List<Integer> boundaries, final List<NucleotideFragment> fragments)
+    {
+        if(fragments.isEmpty())
+            return Lists.newArrayList();
+
+        List<NucleotideFragment> qualEnriched = mNucleotideQualEnrichment.enrich(fragments);
+
+        NucleotideSpliceEnrichment spliceEnricher = new NucleotideSpliceEnrichment(
+                mMinBaseQuality, mMinEvidence, boundaries.stream().filter(x -> x <= MAX_AMINO_ACID_BOUNDARY).collect(Collectors.toSet()));
+
+        List<NucleotideFragment> spliceEnriched = spliceEnricher.enrich(qualEnriched);
+
+        return mAminoAcidEnricher.enrich(spliceEnriched);
+    }
 
     public final List<AminoAcidFragment> tumorCoverageFragments()
     {
@@ -101,27 +127,4 @@ public class AminoAcidFragmentPipeline
         return fragment.containsAminoAcid(variant.Loci) && fragment.aminoAcid(variant.Loci).equals(variant.Sequence);
     }
 
-    private List<AminoAcidFragment> applyQualityFilter(List<NucleotideFragment> fragments)
-    {
-        return fragments.stream()
-                .map(x -> x.qualityFilter(mMinBaseQuality))
-                .filter(x -> x.isNotEmpty())
-                .map(x -> x.toAminoAcidFragment()).collect(
-                Collectors.toList());
-    }
-
-    private List<AminoAcidFragment> applyQualAndSpliceChecks(final List<Integer> boundaries, final List<NucleotideFragment> fragments)
-    {
-        if(fragments.isEmpty())
-            return Lists.newArrayList();
-
-        List<NucleotideFragment> qualEnriched = mNucleotideQualEnrichment.enrich(fragments);
-
-        NucleotideSpliceEnrichment spliceEnricher = new NucleotideSpliceEnrichment(
-                mMinBaseQuality, mMinEvidence, boundaries.stream().filter(x -> x <= MAX_AMINO_ACID_BOUNDARY).collect(Collectors.toSet()));
-
-        List<NucleotideFragment> spliceEnriched = spliceEnricher.enrich(qualEnriched);
-
-        return mAminoAcidEnricher.enrich(spliceEnriched);
-    }
 }

@@ -94,16 +94,16 @@ public class FragmentAlleles
     }
 
     public static List<FragmentAlleles> createFragmentAlleles(
-            final List<AminoAcidFragment> referenceCoverageFragments, final List<Integer> referenceAminoAcidHeterozygousLoci,
-            final List<HlaSequenceLoci> candidateAminoAcidSequences, final List<Integer> referenceNucleotideHeterozygousLoci,
+            final List<AminoAcidFragment> refCoverageFragments, final List<Integer> refAminoAcidHetLoci,
+            final List<HlaSequenceLoci> candidateAminoAcidSequences, final List<Integer> refNucleotideHetLoci,
             final List<HlaSequenceLoci> candidateNucleotideSequences)
     {
         List<FragmentAlleles> results = Lists.newArrayList();
 
-        for(AminoAcidFragment fragment : referenceCoverageFragments)
+        for(AminoAcidFragment fragment : refCoverageFragments)
         {
             FragmentAlleles fragmentAlleles = create(
-                    fragment, referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences, referenceNucleotideHeterozygousLoci,
+                    fragment, refAminoAcidHetLoci, candidateAminoAcidSequences, refNucleotideHetLoci,
                     candidateNucleotideSequences);
 
             if(!fragmentAlleles.getFull().isEmpty() || !fragmentAlleles.getPartial().isEmpty())
@@ -115,10 +115,10 @@ public class FragmentAlleles
 
     private static FragmentAlleles create(
             final AminoAcidFragment aminoAcidFragment, final List<Integer> aminoAcidLoci, final List<HlaSequenceLoci> aminoAcidSequences,
-            final List<Integer> nucleotideLoci, final List<HlaSequenceLoci> nucleotideSequences)
+            final List<Integer> refNucleotideLoci, final List<HlaSequenceLoci> nucleotideSequences)
     {
         List<Integer> fragmentNucleotideLoci = aminoAcidFragment.getNucleotideLoci().stream()
-                .filter(x -> nucleotideLoci.contains(x)).collect(Collectors.toList());
+                .filter(x -> refNucleotideLoci.contains(x)).collect(Collectors.toList());
 
         Map<HlaAllele,HlaSequenceMatch> alleleMatches = Maps.newHashMap();
 
