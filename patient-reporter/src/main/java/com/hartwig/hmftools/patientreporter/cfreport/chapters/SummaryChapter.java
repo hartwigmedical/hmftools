@@ -307,20 +307,27 @@ public class SummaryChapter implements ReportChapter {
         String title = "Pharmacogenetics";
 
         Table table;
-        if (patientReport.genomicAnalysis().hasReliablePurity() && patientReport.qsFormNumber().equals(QsFormNumber.FOR_080.display())) {
+        if (patientReport.sampleReport().cohort().reportPeach()) {
+            if (analysis().peachGenotypes().isEmpty()) {
+                table = TableUtil.createNoneReportTable(title);
+            } else if (patientReport.genomicAnalysis().hasReliablePurity() && patientReport.qsFormNumber()
+                    .equals(QsFormNumber.FOR_080.display())) {
 
-            table = TableUtil.createReportContentTableSummary(new float[] { 15, 20, 25, 50 },
-                    new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
-                            TableUtil.createHeaderCell("Function"),
-                            TableUtil.createHeaderCell("Linked drugs").setTextAlignment(TextAlignment.CENTER) });
+                table = TableUtil.createReportContentTableSummary(new float[] { 15, 20, 25, 50 },
+                        new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
+                                TableUtil.createHeaderCell("Function"),
+                                TableUtil.createHeaderCell("Linked drugs").setTextAlignment(TextAlignment.CENTER) });
 
-            for (PeachGenotype peachGenotype : Pharmacogenetics.sort(analysis().peachGenotypes())) {
-                table.addCell(TableUtil.createContentCell(peachGenotype.gene()));
-                table.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
-                table.addCell(TableUtil.createContentCell(peachGenotype.function()));
-                table.addCell(TableUtil.createContentCell(peachGenotype.linkedDrugs()).setTextAlignment(TextAlignment.CENTER));
+                for (PeachGenotype peachGenotype : Pharmacogenetics.sort(analysis().peachGenotypes())) {
+                    table.addCell(TableUtil.createContentCell(peachGenotype.gene()));
+                    table.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
+                    table.addCell(TableUtil.createContentCell(peachGenotype.function()));
+                    table.addCell(TableUtil.createContentCell(peachGenotype.linkedDrugs()).setTextAlignment(TextAlignment.CENTER));
+                }
+                table = TableUtil.createWrappingReportTableSummary(title, table);
+            } else {
+                table = TableUtil.createNAReportTable(title);
             }
-            table = TableUtil.createWrappingReportTableSummary(title, table);
         } else {
             table = TableUtil.createNAReportTable(title);
         }

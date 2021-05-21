@@ -95,7 +95,7 @@ public final class SampleReportFactory {
                 curated = "Other";
             }
         } else {
-            if (biopsyLocation != null) {
+            if (biopsyLocation != null && !biopsyLocation.equals(Strings.EMPTY)) {
                 curated = biopsyLocation;
                 curated = curated.substring(0,1).toUpperCase() + curated.substring(1, curated.length());
             }

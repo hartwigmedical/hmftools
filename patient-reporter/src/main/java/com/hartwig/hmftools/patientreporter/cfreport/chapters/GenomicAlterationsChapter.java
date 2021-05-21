@@ -83,7 +83,10 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createHomozygousDisruptionsTable(genomicAnalysis.homozygousDisruptions()));
         reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
         reportDocument.add(createVirusBreakendsTable(genomicAnalysis.virusBreakends(), sampleReport.reportViralInsertions()));
-        reportDocument.add(createPeachGenotypesTable(genomicAnalysis.peachGenotypes(), hasReliablePurity, patientReport.qsFormNumber()));
+        reportDocument.add(createPeachGenotypesTable(genomicAnalysis.peachGenotypes(),
+                hasReliablePurity,
+                patientReport.qsFormNumber(),
+                sampleReport.cohort().reportPeach()));
 
     }
 
@@ -184,8 +187,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     .setTextAlignment(TextAlignment.CENTER)));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.copyNumberString(variant.totalCopyNumber(), hasReliablePurity))
                     .setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.tVAFString(variant.tVAF(), hasReliablePurity, variant.totalCopyNumber()))
-                    .setTextAlignment(TextAlignment.CENTER));
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.tVAFString(variant.tVAF(),
+                    hasReliablePurity,
+                    variant.totalCopyNumber())).setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.biallelicString(variant.biallelic(), hasReliablePurity))
                     .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.hotspotString(variant.hotspot()))
@@ -344,33 +348,36 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private static Table createPeachGenotypesTable(@NotNull List<PeachGenotype> peachGenotypes, boolean hasReliablePurity,
-            @NotNull String qsFormNumber) {
+            @NotNull String qsFormNumber, boolean reportPeach) {
         String title = "Pharmacogenetics";
 
-        if (hasReliablePurity && !qsFormNumber.equals(QsFormNumber.FOR_080.display())) {
-            String unreliable =
-                    "The pharmacogenetics calling is not validated for low tumor purities and therefore the results are not displayed.";
-            return TableUtil.createPeachUnreliableReportTable(title, unreliable);
-        } else if (peachGenotypes.isEmpty()) {
-            return TableUtil.createNAReportTable(title);
-        } else {
-            Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 60, 60, 100, 60 },
-                    new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
-                            TableUtil.createHeaderCell("Function"), TableUtil.createHeaderCell("Linked drugs"),
-                            TableUtil.createHeaderCell("Source").setTextAlignment(TextAlignment.CENTER) });
+        if (reportPeach) {
+            if (hasReliablePurity && !qsFormNumber.equals(QsFormNumber.FOR_080.display())) {
+                String unreliable =
+                        "The pharmacogenetics calling is not validated for low tumor purities and therefore the results are not displayed.";
+                return TableUtil.createPeachUnreliableReportTable(title, unreliable);
+            } else if (peachGenotypes.isEmpty()) {
+                return TableUtil.createNoneReportTable(title);
+            } else {
+                Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 60, 60, 100, 60 },
+                        new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
+                                TableUtil.createHeaderCell("Function"), TableUtil.createHeaderCell("Linked drugs"),
+                                TableUtil.createHeaderCell("Source").setTextAlignment(TextAlignment.CENTER) });
 
-            for (PeachGenotype peachGenotype : Pharmacogenetics.sort(peachGenotypes)) {
-                contentTable.addCell(TableUtil.createContentCell(peachGenotype.gene()));
-                contentTable.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
-                contentTable.addCell(TableUtil.createContentCell(peachGenotype.function()));
-                contentTable.addCell(TableUtil.createContentCell(peachGenotype.linkedDrugs()));
-                contentTable.addCell(TableUtil.createContentCell(new Paragraph(Pharmacogenetics.sourceName(peachGenotype.urlPrescriptionInfo()))
-                        .addStyle(ReportResources.dataHighlightLinksStyle()))
-                        .setAction(PdfAction.createURI(Pharmacogenetics.url(peachGenotype.urlPrescriptionInfo())))
-                        .setTextAlignment(TextAlignment.CENTER));
+                for (PeachGenotype peachGenotype : Pharmacogenetics.sort(peachGenotypes)) {
+                    contentTable.addCell(TableUtil.createContentCell(peachGenotype.gene()));
+                    contentTable.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
+                    contentTable.addCell(TableUtil.createContentCell(peachGenotype.function()));
+                    contentTable.addCell(TableUtil.createContentCell(peachGenotype.linkedDrugs()));
+                    contentTable.addCell(TableUtil.createContentCell(new Paragraph(Pharmacogenetics.sourceName(peachGenotype.urlPrescriptionInfo()))
+                            .addStyle(ReportResources.dataHighlightLinksStyle()))
+                            .setAction(PdfAction.createURI(Pharmacogenetics.url(peachGenotype.urlPrescriptionInfo())))
+                            .setTextAlignment(TextAlignment.CENTER));
+                }
+                return TableUtil.createWrappingReportTable(title, contentTable);
             }
-            return TableUtil.createWrappingReportTable(title, contentTable);
+        } else {
+            return TableUtil.createNAReportTable(title);
         }
-
     }
 }
