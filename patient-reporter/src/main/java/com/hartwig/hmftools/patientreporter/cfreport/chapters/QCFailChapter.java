@@ -156,6 +156,7 @@ public class QCFailChapter implements ReportChapter {
         if (failReport.reason().type() == QCFailType.LOW_QUALITY_BIOPSY) {
             div.add(sampleHasMolecularTumorPercentage());
         }
+        div.add(reportIsBasedOnBloodAndTumorSamples());
 
         return div;
     }
@@ -163,7 +164,6 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     private Div createDisclaimerColumn() {
         Div div = createDisclaimerDiv();
-        div.add(reportIsBasedOnBloodAndTumorSamples());
         div.add(testsArePerformedByAccreditedLab());
         div.add(testsArePerformedUnderUNI());
         div.add(testsManual());
