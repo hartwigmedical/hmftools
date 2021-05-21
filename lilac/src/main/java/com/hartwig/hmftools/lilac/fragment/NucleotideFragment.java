@@ -122,6 +122,7 @@ public class NucleotideFragment
 
     public AminoAcidFragment toAminoAcidFragment()
     {
+        // build a amino-acid fragment from this nucleotide fragment, by creating amino acids for any complete codon
         final List<Integer> aminoAcidLoci = Lists.newArrayList();
         final List<String> aminoAcids = Lists.newArrayList();
 
@@ -137,7 +138,6 @@ public class NucleotideFragment
                 break;
 
             if(mNucleotideLoci.get(i + 1) == locus + 1 && mNucleotideLoci.get(i + 2) == locus + 2)
-            // if(mNucleotideLoci.contains(locus + 1) && mNucleotideLoci.contains(locus + 2))
             {
                 int aaLocus = locus / 3;
                 aminoAcidLoci.add(aaLocus);

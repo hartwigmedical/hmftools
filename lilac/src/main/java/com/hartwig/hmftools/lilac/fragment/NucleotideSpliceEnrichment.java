@@ -23,12 +23,12 @@ public class NucleotideSpliceEnrichment
 
     public final List<NucleotideFragment> enrich(final List<NucleotideFragment> fragments)
     {
-        final List<NucleotideFragment> filteredNucleotides = fragments.stream()
+        final List<NucleotideFragment> highQualFragments = fragments.stream()
                 .map(x -> x.qualityFilter(mMinBaseQuality))
                 .filter(x -> x.isNotEmpty())
                 .collect(Collectors.toList());
 
-        SequenceCount nucleotideCounts = SequenceCount.nucleotides(mMinBaseCount, filteredNucleotides);
+        SequenceCount nucleotideCounts = SequenceCount.nucleotides(mMinBaseCount, highQualFragments);
         Set<Integer> nucleotideExonBoundaryStarts = mAminoAcidBoundary.stream().map(x -> x * 3).collect(Collectors.toSet());
         List<Integer> homLoci = nucleotideCounts.homozygousIndices();
 

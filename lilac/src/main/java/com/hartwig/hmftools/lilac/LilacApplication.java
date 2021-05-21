@@ -221,7 +221,7 @@ public class LilacApplication implements AutoCloseable, Runnable
                 .filter(x -> candidateAlleles.contains(x.getAllele())).collect(Collectors.toList());
 
         // Coverage
-        List<AminoAcidFragment> refAminoAcidFragments = aminoAcidPipeline.referenceCoverageFragments();
+        List<AminoAcidFragment> refAminoAcidFragments = aminoAcidPipeline.referenceAminoAcidFragments();
         allValid &= validateAminoAcidFragments(refAminoAcidFragments);
 
         SequenceCount refAminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, refAminoAcidFragments);
@@ -379,6 +379,8 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         HlaComplexFile.writeToFile(referenceRankedComplexes,
                 String.format("%s.candidates.coverage.txt", mConfig.outputPrefix()));
+
+        aminoAcidPipeline.writeCounts(mConfig.outputPrefix());
 
         refAminoAcidCounts.writeVertically(String.format("%s.candidates.aminoacids.txt", mConfig.outputPrefix()));
         refNucleotideCounts.writeVertically(String.format("%s.candidates.nucleotides.txt", mConfig.outputPrefix()));
