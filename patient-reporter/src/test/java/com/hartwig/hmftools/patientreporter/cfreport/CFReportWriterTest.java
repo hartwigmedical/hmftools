@@ -104,6 +104,7 @@ public class CFReportWriterTest {
                 .qcForNumber(QsFormNumber.FOR_209)
                 .impliedTumorPurity(0.19)
                 .includeSummary(false)
+                .hasReliablePurity(true)
                 .build();
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config);
 

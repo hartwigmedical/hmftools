@@ -48,24 +48,25 @@ public class LimsSampleReader {
 
         if (arrivalDate == null) {
             if (isSequenced) {
-                LOGGER.warn("Could not find arrival date for sequenced sample {}", sampleId);
+                LOGGER.warn("  Could not find arrival date for sequenced sample {}", sampleId);
             }
             return null;
         }
 
         LocalDate samplingDate = lims.samplingDate(sampleBarcode);
         if (samplingDate == null && isSequenced && !lims.confirmedToHaveNoSamplingDate(sampleId)) {
-            LOGGER.warn("Could not find sampling date for sequenced sample {}", sampleId);
+            LOGGER.warn("  Could not find sampling date for sequenced sample {}", sampleId);
         }
 
         String setName = sampleToSetNameMap.get(sampleId);
         if (setName == null && isSequenced) {
-            LOGGER.warn("Could not resolve set name for sequenced sample {}", sampleId);
+            LOGGER.warn("  Could not resolve set name for sequenced sample {}", sampleId);
         }
 
-        ReportingEntry reportingEntry = findReportingEntry(sampleBarcode);
+        // TODO: Once DEV-2020 is done we might be able to look up based on sample barcode.
+        ReportingEntry reportingEntry = findReportingEntry(sampleId);
         if (reportingEntry == null && isSequenced) {
-            LOGGER.warn("Could not find reporting entry for sequenced sample {}", sampleId);
+            LOGGER.debug("  Could not find reporting entry for sequenced sample {} with barcode {}", sampleId, sampleBarcode);
         }
         LocalDate reportedDate = reportingEntry != null ? LocalDate.parse(reportingEntry.reportDate(), REPORTED_DATE_FORMATTER) : null;
 
@@ -89,9 +90,9 @@ public class LimsSampleReader {
     }
 
     @Nullable
-    private ReportingEntry findReportingEntry(@NotNull String sampleBarcode) {
+    private ReportingEntry findReportingEntry(@NotNull String sampleId) {
         for (ReportingEntry entry : reportingEntries) {
-            if (entry.tumorBarcode().equals(sampleBarcode)) {
+            if (entry.sampleId().equals(sampleId)) {
                 return entry;
             }
         }

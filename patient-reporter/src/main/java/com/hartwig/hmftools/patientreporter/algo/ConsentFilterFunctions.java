@@ -1,14 +1,20 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
+import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
@@ -48,7 +54,40 @@ public final class ConsentFilterFunctions {
                 .tumorSpecificEvidence(filteredTumorSpecificEvidence)
                 .clinicalTrials(filteredClinicalTrials)
                 .offLabelEvidence(filteredOffLabelEvidence)
+                .notifyGermlineStatusPerVariant(filterVariantsNotifyMap(genomicAnalysis.notifyGermlineStatusPerVariant(),
+                        germlineReportingLevel,
+                        genomicAnalysis.hasReliablePurity()))
                 .build();
+    }
+
+    @NotNull
+    private static Map<ReportableVariant, Boolean> filterVariantsNotifyMap(
+            @NotNull Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant,
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean hasReliablePurity) {
+
+        Map<ReportableVariant, Boolean> filteredMap = Maps.newHashMap();
+        for (Map.Entry<ReportableVariant, Boolean> entry : notifyGermlineStatusPerVariant.entrySet()) {
+
+            ReportableVariant reportableVariant = entry.getKey();
+            if (germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING
+                    || reportableVariant.source() == ReportableVariantSource.SOMATIC) {
+                if (germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION
+                        && reportableVariant.source() == ReportableVariantSource.GERMLINE) {
+                    filteredMap.put(ImmutableReportableVariant.builder()
+                            .from(QualityOverruleFunctions.overruleVariant(reportableVariant, hasReliablePurity))
+                            .source(ReportableVariantSource.SOMATIC)
+                            .build(), false);
+
+                } else {
+                    filteredMap.put(ImmutableReportableVariant.builder()
+                            .from(QualityOverruleFunctions.overruleVariant(reportableVariant, hasReliablePurity))
+                            .source(reportableVariant.source())
+                            .build(), entry.getValue());
+                }
+            }
+        }
+
+        return filteredMap;
     }
 
     @NotNull

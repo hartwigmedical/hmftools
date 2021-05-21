@@ -28,8 +28,10 @@ public class QCFailReporter {
     }
 
     @NotNull
-    public QCFailReport run(@NotNull QCFailReason reason, @NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv,
+    public QCFailReport run(@Nullable QCFailReason reason, @NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv,
             @NotNull String purpleQCFile, @Nullable String comments, boolean correctedReport) throws IOException {
+        assert  reason != null;
+
         String patientId = reportData.limsModel().patientId(sampleMetadata.tumorSampleBarcode());
 
         PatientPrimaryTumor patientPrimaryTumor =

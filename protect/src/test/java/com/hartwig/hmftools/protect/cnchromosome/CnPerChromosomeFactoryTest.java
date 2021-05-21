@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.protect.cnchromosome;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,7 +24,7 @@ public class CnPerChromosomeFactoryTest {
 
     @Test
     public void extractCopyNumberPerChromosomeArm() throws IOException {
-        CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(PURPLE_COPYNUMBER_TSV);
+        assertNotNull(CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(PURPLE_COPYNUMBER_TSV));
     }
 
     @Test
@@ -36,7 +37,6 @@ public class CnPerChromosomeFactoryTest {
 
         Map<ChromosomeArmKey, Double> cnPerChromosomeArm = CnPerChromosomeFactory.extractCnPerChromosomeArm(copyNumbers);
         assertEquals(2D, cnPerChromosomeArm.get(new ChromosomeArmKey(HumanChromosome._1, ChromosomeArm.P_ARM)), EPSILON);
-        // Below is not exactly 6 but close enough.
         assertEquals(5.35312, cnPerChromosomeArm.get(new ChromosomeArmKey(HumanChromosome._1, ChromosomeArm.Q_ARM)), EPSILON);
     }
 }

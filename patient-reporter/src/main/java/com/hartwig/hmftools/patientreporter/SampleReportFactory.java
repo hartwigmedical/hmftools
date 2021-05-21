@@ -59,12 +59,13 @@ public final class SampleReportFactory {
 
         String hospitalPatientId = lims.hospitalPatientId(tumorSampleBarcode);
         LimsChecker.checkHospitalPatientId(hospitalPatientId, tumorSampleId, cohortConfig);
-        String biopsyLocation = lims.biopsyLocation(tumorSampleBarcode) != null ? lims.biopsyLocation(tumorSampleBarcode) : Strings.EMPTY;
+        String biopsyLocation = lims.biopsyLocation(tumorSampleBarcode);
+        String curatedBiopsyLocation = curateBiopsyLocation(biopsyLocation);
 
         return ImmutableSampleReport.builder()
                 .sampleMetadata(sampleMetadata)
                 .patientPrimaryTumor(patientPrimaryTumor)
-                .biopsyLocation(biopsyLocation)
+                .biopsyLocation(curatedBiopsyLocation)
                 .germlineReportingLevel(lims.germlineReportingChoice(tumorSampleBarcode))
                 .reportViralInsertions(lims.reportViralInsertions(tumorSampleBarcode))
                 .refArrivalDate(arrivalDateRefSample)
@@ -80,6 +81,26 @@ public final class SampleReportFactory {
                         tumorSampleId,
                         cohortConfig))
                 .build();
+    }
+
+    @Nullable
+    public static String curateBiopsyLocation(@Nullable String biopsyLocation) {
+        String curated = null;
+        if (biopsyLocation != null && biopsyLocation.startsWith("Other (please specify below)")) {
+            String[] curatedBiopsyLocation = biopsyLocation.split("_");
+            if (curatedBiopsyLocation.length == 2) {
+                curated = curatedBiopsyLocation[1];
+                curated = curated.substring(0,1).toUpperCase() + curated.substring(1, curated.length());
+            } else if (curatedBiopsyLocation.length == 1) {
+                curated = "Other";
+            }
+        } else {
+            if (biopsyLocation != null && !biopsyLocation.equals(Strings.EMPTY)) {
+                curated = biopsyLocation;
+                curated = curated.substring(0,1).toUpperCase() + curated.substring(1, curated.length());
+            }
+        }
+        return curated;
     }
 
     @NotNull

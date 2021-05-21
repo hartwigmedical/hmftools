@@ -25,7 +25,7 @@ public abstract class SampleReport {
     @Nullable
     public abstract PatientPrimaryTumor patientPrimaryTumor();
 
-    @NotNull
+    @Nullable
     public abstract String biopsyLocation();
 
     @NotNull
@@ -93,6 +93,17 @@ public abstract class SampleReport {
             return DataUtil.formatDate(sampleDate);
         } else {
             return DataUtil.formatDate(refDate);
+        }
+    }
+
+    @NotNull
+    @Value.Derived
+    public String biopsyLocationString() {
+        String biopsyLocation = biopsyLocation();
+        if (biopsyLocation != null) {
+            return biopsyLocation;
+        } else {
+            return Strings.EMPTY;
         }
     }
 

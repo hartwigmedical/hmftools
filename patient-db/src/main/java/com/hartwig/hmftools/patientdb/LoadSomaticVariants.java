@@ -57,7 +57,7 @@ public class LoadSomaticVariants {
         LOGGER.info("Removing old data of sample {}", sample);
         try (BufferedWriter<SomaticVariant> somaticWriter = dbAccess.somaticVariantWriter(sample)) {
             LOGGER.info("Streaming data from {} to db", vcfFileLocation);
-            new SomaticVariantFactory(filter).fromVCFFile(sample, referenceSample, rnaSample, vcfFileLocation, somaticWriter);
+            new SomaticVariantFactory(filter).fromVCFFile(sample, referenceSample, rnaSample, vcfFileLocation, true, somaticWriter);
         }
 
         LOGGER.info("Complete");

@@ -1,5 +1,8 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- TODO Cleanup per 1st of july 2021
+DROP TABLE IF EXISTS germlineVariant2;
+
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
 (   id int NOT NULL AUTO_INCREMENT,
@@ -792,41 +795,6 @@ CREATE TABLE canonicalTranscript
 
 DROP TABLE IF EXISTS germlineVariant;
 CREATE TABLE germlineVariant
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    chromosome varchar(255) NOT NULL,
-    position int not null,
-    filter varchar(255) NOT NULL,
-    refStatus varchar(20) NOT NULL,
-    reported BOOLEAN NOT NULL,
-    pathogenic varchar(50) NOT NULL,
-    clinvarInfo VARCHAR(255),
-    type varchar(255) NOT NULL,
-    ref varchar(255) NOT NULL,
-    alt varchar(255) NOT NULL,
-    gene varchar(255) NOT NULL,
-    transcript varchar(255) NOT NULL,
-    effect varchar(255) NOT NULL,
-    codingEffect varchar(255) NOT NULL,
-    hgvsCoding varchar(255) NOT NULL,
-    hgvsProtein varchar(255) NOT NULL,
-    microhomology varchar(255) NOT NULL,
-    repeatSequence varchar(255) NOT NULL,
-    repeatCount int NOT NULL,
-    trinucleotideContext varchar(3) NOT NULL,
-    alleleReadCount int NOT NULL,
-    totalReadCount int NOT NULL,
-    adjustedCopyNumber DOUBLE PRECISION NOT NULL,
-    minorAlleleCopyNumber DOUBLE PRECISION NOT NULL,
-    adjustedVaf DOUBLE PRECISION NOT NULL,
-    biallelic BOOLEAN NOT NULL,
-    PRIMARY KEY (id),
-    INDEX(sampleId)
-);
-
-DROP TABLE IF EXISTS germlineVariant2;
-CREATE TABLE germlineVariant2
 (   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,

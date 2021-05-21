@@ -68,16 +68,6 @@ public final class SnpEffAnnotationFactory {
     }
 
     @NotNull
-    // TODO: Doesn't really belong here..
-    public static List<String> rawAnnotations(@NotNull VariantContext context) {
-        if (context.hasAttribute(SNPEFF_IDENTIFIER)) {
-            return context.getAttributeAsStringList(SNPEFF_IDENTIFIER, "");
-        }
-
-        return Collections.emptyList();
-    }
-
-    @NotNull
     private static SnpEffAnnotation fromParts(@NotNull VariantContext context, @NotNull String[] parts) {
         String effects = effect(context, parts);
 

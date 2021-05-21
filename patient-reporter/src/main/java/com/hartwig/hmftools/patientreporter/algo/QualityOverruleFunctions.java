@@ -36,7 +36,7 @@ public final class QualityOverruleFunctions {
     }
 
     @NotNull
-    private static ReportableVariant overruleVariant(@NotNull ReportableVariant variant, boolean hasReliablePurity) {
+    public static ReportableVariant overruleVariant(@NotNull ReportableVariant variant, boolean hasReliablePurity) {
         double flooredCopyNumber = Math.max(0, variant.totalCopyNumber());
         long roundedCopyNumber = Math.round(flooredCopyNumber);
 

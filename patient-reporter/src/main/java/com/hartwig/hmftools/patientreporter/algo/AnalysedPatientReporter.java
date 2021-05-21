@@ -60,7 +60,7 @@ public class AnalysedPatientReporter {
                 reportData.virusInterpretationModel(),
                 reportData.virusBlackListModel());
         GenomicAnalysis genomicAnalysis =
-                genomicAnalyzer.run(sampleMetadata.tumorSampleId(), config, sampleReport.germlineReportingLevel());
+                genomicAnalyzer.run(sampleMetadata.tumorSampleId(), sampleMetadata.refSampleId(), config, sampleReport.germlineReportingLevel());
 
         GenomicAnalysis filteredAnalysis = ConsentFilterFunctions.filter(genomicAnalysis,
                 sampleReport.germlineReportingLevel(),

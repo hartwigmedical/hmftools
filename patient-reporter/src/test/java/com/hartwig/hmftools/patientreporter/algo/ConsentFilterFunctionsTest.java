@@ -72,7 +72,6 @@ public class ConsentFilterFunctionsTest {
     private static ImmutableReportableVariant.Builder createTestReportableVariantBuilder() {
         return ImmutableReportableVariant.builder()
                 .type(VariantType.SNP)
-                .source(ReportableVariantSource.SOMATIC)
                 .gene(Strings.EMPTY)
                 .genotypeStatus(GenotypeStatus.UNKNOWN)
                 .chromosome(Strings.EMPTY)

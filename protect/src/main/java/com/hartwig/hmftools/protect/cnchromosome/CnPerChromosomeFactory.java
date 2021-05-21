@@ -15,13 +15,9 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class CnPerChromosomeFactory {
-
-    private static final Logger LOGGER = LogManager.getLogger(CnPerChromosomeFactory.class);
 
     private static final RefGenomeCoordinates REF_GENOME_COORDINATES = RefGenomeCoordinates.COORDS_37;
 
@@ -38,13 +34,6 @@ public final class CnPerChromosomeFactory {
     @NotNull
     @VisibleForTesting
     static Map<ChromosomeArmKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
-        Map<ChromosomeArmKey, Double> cnPerChromosomeArm = determineCopyNumberArm(copyNumbers);
-
-        return cnPerChromosomeArm;
-    }
-
-    @NotNull
-    private static Map<ChromosomeArmKey, Double> determineCopyNumberArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
         Map<ChromosomeArmKey, Double> cnPerChromosomeArm = Maps.newHashMap();
 
         for (Chromosome chr : REF_GENOME_COORDINATES.lengths().keySet()) {
@@ -64,6 +53,8 @@ public final class CnPerChromosomeFactory {
                         copyNumberArm += (copyNumber * totalLengthSegment) / region.bases();
                     }
                 }
+
+                // if chromosome arm don't exist we call them 0.0 but this is not reported
                 cnPerChromosomeArm.put(new ChromosomeArmKey(chromosome, entry.getKey()), copyNumberArm);
             }
         }
@@ -93,5 +84,4 @@ public final class CnPerChromosomeFactory {
         }
         return chromosomeArmGenomeRegionMap;
     }
-
 }

@@ -23,7 +23,6 @@
         <module>cobalt</module>
         <module>purple</module>
         <module>sage</module>
-        <module>bachelor</module>
         <module>sv-linx</module>
         <module>sv-tools</module>
         <module>imuno</module>
@@ -55,13 +54,12 @@
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
 
-        <patient-db.version>3.59</patient-db.version>
+        <patient-db.version>3.60</patient-db.version>
         <hmf-id-generator.version>2.7</hmf-id-generator.version>
         <sage.version>2.8</sage.version>
         <amber.version>3.5</amber.version>
         <cobalt.version>1.12</cobalt.version>
         <purple.version>3.0</purple.version>
-        <bachelor.version>1.12</bachelor.version>
         <gripss.version>1.11</gripss.version>
         <lilac.version>0.1</lilac.version>
         <sv-linx.version>1.16</sv-linx.version>

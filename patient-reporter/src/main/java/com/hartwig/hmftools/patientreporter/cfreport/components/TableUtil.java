@@ -45,6 +45,15 @@ public final class TableUtil {
     }
 
     @NotNull
+    public static Table createPeachUnreliableReportTable(@NotNull String tableTitle, @NotNull String peachUnreliable) {
+        Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] {  });
+        table.setKeepTogether(true);
+        table.setMarginBottom(TABLE_BOTTOM_MARGIN);
+        table.addCell(TableUtil.createContentCell(new Paragraph(peachUnreliable)));
+        return createWrappingReportTable(tableTitle, table);
+    }
+
+    @NotNull
     public static Table createNoneReportTable(@NotNull String tableTitle) {
         Cell headerCell = new Cell().setBorder(Border.NO_BORDER)
                 .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle()
@@ -68,7 +77,6 @@ public final class TableUtil {
         table.setKeepTogether(true);
         table.setMarginBottom(TABLE_BOTTOM_MARGIN);
         table.addCell(TableUtil.createDisabledContentCell(new Paragraph(DataUtil.NA_STRING)));
-
         return table;
     }
 

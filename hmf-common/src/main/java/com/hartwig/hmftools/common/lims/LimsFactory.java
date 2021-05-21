@@ -31,6 +31,7 @@ import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalModel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -152,8 +153,30 @@ public final class LimsFactory {
                 }
             }
         });
+        //Make COLO patient ID available for use cases
+        limsDataPerSampleBarcode.put("COLO829V003TVAL", createLimsSampleDataForCOLO());
 
         return limsDataPerSampleBarcode;
+    }
+
+    @NotNull
+    private static LimsJsonSampleData createLimsSampleDataForCOLO() {
+        return ImmutableLimsJsonSampleData.builder()
+                .sampleId("COLO829v003T")
+                .patientId("COLO829")
+                .tumorBarcode("COLO829V003TVAL")
+                .refBarcode("COLO829V003RVAL")
+                .arrivalDate(Strings.EMPTY)
+                .dnaConcentration(Strings.EMPTY)
+                .primaryTumor(Strings.EMPTY)
+                .labSopVersions(Strings.EMPTY)
+                .submission(Strings.EMPTY)
+                .germlineReportingLevel(Strings.EMPTY)
+                .reportGermlineVariants(false)
+                .shallowSeq(false)
+                .reportViralInsertions(false)
+                .cohort("COLO")
+                .analysisType(Strings.EMPTY).build();
     }
 
     @NotNull

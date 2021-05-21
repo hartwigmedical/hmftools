@@ -17,7 +17,7 @@ public final class GeneUtil {
         if (!hasReliablePurity) {
             return DataUtil.NA_STRING;
         } else {
-            return copyNumber != null ? ReportResources.decimalFormat("#.#").format(copyNumber) : Strings.EMPTY;
+            return copyNumber != null ? ReportResources.decimalFormat("#.#").format(copyNumber) : DataUtil.NA_STRING;
         }
     }
 

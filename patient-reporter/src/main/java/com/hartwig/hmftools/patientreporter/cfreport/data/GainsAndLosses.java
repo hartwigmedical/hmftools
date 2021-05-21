@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,13 +13,9 @@ import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class GainsAndLosses {
-
-    private static final Logger LOGGER = LogManager.getLogger(GainsAndLosses.class);
 
     private GainsAndLosses() {
     }
@@ -61,7 +58,8 @@ public final class GainsAndLosses {
         return genes;
     }
 
-    public static double copyChromosomeArm(@NotNull Map<ChromosomeArmKey, Double> cnPerChromosome,
+    @NotNull
+    public static String copyChromosomeArm(@NotNull Map<ChromosomeArmKey, Double> cnPerChromosome,
             @NotNull String chromosome, @NotNull String chromosomeBand) {
         ChromosomeArm chromosomeArm;
         if (chromosomeBand.startsWith("p")) {
@@ -69,11 +67,11 @@ public final class GainsAndLosses {
         } else if (chromosomeBand.startsWith("q")) {
             chromosomeArm = ChromosomeArm.Q_ARM;
         } else {
-            chromosomeArm = ChromosomeArm.UNKNOWN;
+            throw new NullPointerException ("Chromosome arm is unknown!");
         }
 
         ChromosomeArmKey key = new ChromosomeArmKey(HumanChromosome.fromString(chromosome), chromosomeArm);
 
-        return cnPerChromosome.get(key);
+        return String.valueOf(Math.round(Math.max(0, cnPerChromosome.get(key))));
     }
 }

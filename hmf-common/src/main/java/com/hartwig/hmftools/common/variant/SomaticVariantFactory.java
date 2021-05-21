@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.common.variant;
 
 import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_GERMLINE_INFO;
-import static com.hartwig.hmftools.common.variant.enrich.Subclonality.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.KataegisEnrichment.KATAEGIS_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.Subclonality.SUBCLONAL_LIKELIHOOD_FLAG;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -62,23 +62,38 @@ public class SomaticVariantFactory implements VariantContextFilter {
     }
 
     @NotNull
+    public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @NotNull final String reference, @NotNull final String vcfFile) throws IOException {
+        return fromVCFFileWithoutCheck(tumor, reference, null, vcfFile);
+    }
+
+    @NotNull
     public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
             @NotNull final String vcfFile) throws IOException {
         final List<SomaticVariant> result = Lists.newArrayList();
-        fromVCFFile(tumor, reference, rna, vcfFile, result::add);
+        fromVCFFile(tumor, reference, rna, vcfFile, true, result::add);
+        return result;
+    }
+
+    @NotNull
+    public List<SomaticVariant> fromVCFFileWithoutCheck(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
+            @NotNull final String vcfFile) throws IOException {
+        final List<SomaticVariant> result = Lists.newArrayList();
+        fromVCFFile(tumor, reference, rna, vcfFile, false, result::add);
         return result;
     }
 
     public void fromVCFFile(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
-            @NotNull final String vcfFile, Consumer<SomaticVariant> consumer) throws IOException {
+            @NotNull final String vcfFile,  boolean useCheckReference, Consumer<SomaticVariant> consumer) throws IOException {
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
             final VCFHeader header = (VCFHeader) reader.getHeader();
             if (!sampleInFile(tumor, header)) {
                 throw new IllegalArgumentException("Sample " + tumor + " not found in vcf file " + vcfFile);
             }
 
-            if (reference != null && !sampleInFile(reference, header)) {
-                throw new IllegalArgumentException("Sample " + reference + " not found in vcf file " + vcfFile);
+            if (useCheckReference) {
+                if (reference != null && !sampleInFile(reference, header)) {
+                    throw new IllegalArgumentException("Sample " + reference + " not found in vcf file " + vcfFile);
+                }
             }
 
             if (rna != null && !sampleInFile(rna, header)) {
@@ -106,7 +121,9 @@ public class SomaticVariantFactory implements VariantContextFilter {
     public Optional<SomaticVariant> createVariant(@NotNull final String sample, @Nullable final String reference,
             @Nullable final String rna, @NotNull final VariantContext context) {
         final Genotype genotype = context.getGenotype(sample);
-        GenotypeStatus genotypeStatus = genotype != null ? GenotypeStatus.fromGenotype(genotype) : GenotypeStatus.UNKNOWN;
+
+        final VariantContextDecorator decorator = new VariantContextDecorator(context);
+        GenotypeStatus genotypeStatus  = decorator.genotypeStatus(reference);
 
         if (filter.test(context) && AllelicDepth.containsAllelicDepth(genotype)) {
             final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
@@ -129,12 +146,6 @@ public class SomaticVariantFactory implements VariantContextFilter {
             }
         }
         return Optional.empty();
-    }
-
-    @NotNull
-    public SomaticVariant createSomaticVariant(@NotNull final String sample, @NotNull final VariantContext context) {
-        final AllelicDepth allelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
-        return Optional.of(createVariantBuilder(allelicDepth, context)).map(ImmutableSomaticVariantImpl.Builder::build).get();
     }
 
     @NotNull
