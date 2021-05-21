@@ -49,7 +49,7 @@ public class SomaticAlleleCoverage
                 .map(x -> x.toAminoAcidFragment())
                 .collect(Collectors.toList());
 
-        List<FragmentAlleles> variantFragmentAlleles = FragmentAlleles.create(
+        List<FragmentAlleles> variantFragmentAlleles = FragmentAlleles.createFragmentAlleles(
                 variantFragments, mHetLociSansVariants, mWinners, Lists.newArrayList(), Lists.newArrayList());
 
         List<HlaAlleleCoverage> coverage = HlaAlleleCoverage.proteinCoverage(variantFragmentAlleles);

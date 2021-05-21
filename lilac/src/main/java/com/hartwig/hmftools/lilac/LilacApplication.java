@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
+import static com.hartwig.hmftools.lilac.read.FragmentAlleles.createFragmentAlleles;
 import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
 import com.google.common.collect.Lists;
@@ -106,6 +107,8 @@ public class LilacApplication implements AutoCloseable, Runnable
             System.exit(1);
         }
 
+        boolean allValid = true;
+
         LL_LOGGER.info("querying records from reference bam " + mConfig.ReferenceBam);
 
         NucleotideFragmentFactory nucleotideFragmentFactory = new NucleotideFragmentFactory(
@@ -126,13 +129,13 @@ public class LilacApplication implements AutoCloseable, Runnable
             tumorNucleotideFragments.addAll(mNucleotideGeneEnrichment.enrich(tumorBamReader.readFromBam()));
         }
 
-        validateNucleotideFragments(referenceNucleotideFragments);
-        validateNucleotideFragments(tumorNucleotideFragments);
+        allValid &= validateNucleotideFragments(referenceNucleotideFragments);
+        allValid &= validateNucleotideFragments(tumorNucleotideFragments);
 
         AminoAcidFragmentPipeline aminoAcidPipeline = new AminoAcidFragmentPipeline(
                 mConfig, referenceNucleotideFragments, tumorNucleotideFragments);
 
-        // Enrich bam records
+        // apply special filtering and splice checks on fragments, just for use in phasing
         List<AminoAcidFragment> aCandidateFragments = aminoAcidPipeline.referencePhasingFragments(hlaAContext);
         List<AminoAcidFragment> bCandidateFragments = aminoAcidPipeline.referencePhasingFragments(hlaBContext);
         List<AminoAcidFragment> cCandidateFragments = aminoAcidPipeline.referencePhasingFragments(hlaCContext);
@@ -142,10 +145,6 @@ public class LilacApplication implements AutoCloseable, Runnable
         List<HlaAllele> aUnphasedCandidates = candidateFactory.unphasedCandidates(hlaAContext, aCandidateFragments);
         List<HlaAllele> bUnphasedCandidates = candidateFactory.unphasedCandidates(hlaBContext, bCandidateFragments);
         List<HlaAllele> cUnphasedCandidates = candidateFactory.unphasedCandidates(hlaCContext, cCandidateFragments);
-        List<HlaAllele> allUnphasedCandidates = Lists.newArrayList();
-        allUnphasedCandidates.addAll(aUnphasedCandidates);
-        allUnphasedCandidates.addAll(bUnphasedCandidates);
-        allUnphasedCandidates.addAll(cUnphasedCandidates);
 
         // Phasing
         PhasedEvidenceFactory phasedEvidenceFactory = new PhasedEvidenceFactory(mConfig);
@@ -166,15 +165,14 @@ public class LilacApplication implements AutoCloseable, Runnable
         }
 
         // gather up all phased candidates
-        List<HlaAllele> phasedCandidateAlleles = Lists.newArrayList();
+        List<HlaAllele> candidateAlleles = Lists.newArrayList();
         List<HlaAllele> aCandidates = candidateFactory.phasedCandidates(hlaAContext, aUnphasedCandidates, aPhasedEvidence);
         List<HlaAllele> bCandidates = candidateFactory.phasedCandidates(hlaBContext, bUnphasedCandidates, bPhasedEvidence);
         List<HlaAllele> cCandidates = candidateFactory.phasedCandidates(hlaCContext, cUnphasedCandidates, cPhasedEvidence);
-        phasedCandidateAlleles.addAll(aCandidates);
-        phasedCandidateAlleles.addAll(bCandidates);
-        phasedCandidateAlleles.addAll(cCandidates);
+        candidateAlleles.addAll(aCandidates);
+        candidateAlleles.addAll(bCandidates);
+        candidateAlleles.addAll(cCandidates);
 
-        List<HlaAllele> candidateAlleles = phasedCandidateAlleles.stream().collect(Collectors.toList());
         List<HlaAllele> recoveredAlleles = Lists.newArrayList();
 
         if(!mConfig.RestrictedAlleles.isEmpty())
@@ -198,7 +196,6 @@ public class LilacApplication implements AutoCloseable, Runnable
             List<HlaAllele> missedCommonAlleles = mRefData.CommonAlleles.stream()
                     .filter(x -> !candidateAlleles.contains(x))
                     .filter(x -> !recoveredAlleles.contains(x))
-                    // .filter(x -> contains(allUnphasedCandidates, x)) // was previously only added if supported but now always
                     .collect(Collectors.toList());
 
             if(!missedCommonAlleles.isEmpty())
@@ -225,7 +222,7 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         // Coverage
         List<AminoAcidFragment> referenceCoverageFragments = aminoAcidPipeline.referenceCoverageFragments();
-        validateAminoAcidFragments(referenceCoverageFragments);
+        allValid &= validateAminoAcidFragments(referenceCoverageFragments);
 
         SequenceCount referenceAminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, referenceCoverageFragments);
         List<Integer> referenceAminoAcidHeterozygousLoci = referenceAminoAcidCounts.heterozygousLoci();
@@ -240,7 +237,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         List<HlaSequenceLoci> candidateNucleotideSequences = mRefData.NucleotideSequences.stream()
             .filter(x -> candidateAlleleSpecificProteins.contains(x.getAllele().asFourDigit())).collect(Collectors.toList());
 
-        List<FragmentAlleles> referenceFragmentAlleles = FragmentAlleles.create(
+        List<FragmentAlleles> referenceFragmentAlleles = createFragmentAlleles(
                 referenceCoverageFragments, referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences,
                 referenceNucleotideHeterozygousLoci, candidateNucleotideSequences);
 
@@ -299,7 +296,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         {
             LL_LOGGER.info("calculating tumor coverage of winning alleles");
 
-            List<FragmentAlleles> tumorFragmentAlleles = FragmentAlleles.create(
+            List<FragmentAlleles> tumorFragmentAlleles = createFragmentAlleles(
                     aminoAcidPipeline.tumorCoverageFragments(),
                     referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences,
                     referenceNucleotideHeterozygousLoci, candidateNucleotideSequences);
@@ -396,6 +393,11 @@ public class LilacApplication implements AutoCloseable, Runnable
             dbAccess.writeHla(sample, type, typeDetails);
         }
          */
+
+        if(!allValid)
+        {
+            LL_LOGGER.error("failed validation");
+        }
     }
 
     private boolean validateAminoAcidFragments(final List<AminoAcidFragment> fragments)

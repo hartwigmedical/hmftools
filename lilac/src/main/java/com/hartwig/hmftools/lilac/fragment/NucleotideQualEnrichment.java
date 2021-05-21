@@ -11,11 +11,16 @@ public final class NucleotideQualEnrichment
     private final int mMinBaseQuality;
     private final int mMinEvidence;
 
-    // Only permit high quality nucleotide values, ie, nucleotides that have at least 1 high quality (> [minBaseQuality])
-    // and at least [minEvidence] instances in aggregate
+    public NucleotideQualEnrichment(int minBaseQuality, int minEvidence)
+    {
+        mMinBaseQuality = minBaseQuality;
+        mMinEvidence = minEvidence;
+    }
 
     public final List<NucleotideFragment> enrich(final List<NucleotideFragment> fragments)
     {
+        // Only permit high quality nucleotide values, ie, nucleotides that have at least 1 high quality (> [minBaseQuality])
+        // and at least [minEvidence] instances in aggregate
         final List<NucleotideFragment> highQualFragments = fragments.stream()
                 .map(x -> x.qualityFilter(mMinBaseQuality))
                 .filter(x -> x.isNotEmpty())
@@ -23,6 +28,7 @@ public final class NucleotideQualEnrichment
 
         SequenceCount highQualCounts = SequenceCount.nucleotides(1, highQualFragments);
         SequenceCount rawCounts = SequenceCount.nucleotides(mMinEvidence, fragments);
+
         return fragments.stream().map(x -> enrich(x, highQualCounts, rawCounts)).collect(Collectors.toList());
     }
 
@@ -66,11 +72,5 @@ public final class NucleotideQualEnrichment
         }
 
         return new NucleotideFragment(fragment.getId(), fragment.getGenes(), filteredLoci, filteredQuality, filteredNucleotides);
-    }
-
-    public NucleotideQualEnrichment(int minBaseQuality, int minEvidence)
-    {
-        this.mMinBaseQuality = minBaseQuality;
-        this.mMinEvidence = minEvidence;
     }
 }

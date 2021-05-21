@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.lilac.read;
 
-import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceMatch.FULL;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceMatch.PARTIAL;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceMatch.WILD;
@@ -15,7 +14,6 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceMatch;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class FragmentAlleles
@@ -95,7 +93,7 @@ public class FragmentAlleles
         */
     }
 
-    public static List<FragmentAlleles> create(
+    public static List<FragmentAlleles> createFragmentAlleles(
             final List<AminoAcidFragment> referenceCoverageFragments, final List<Integer> referenceAminoAcidHeterozygousLoci,
             final List<HlaSequenceLoci> candidateAminoAcidSequences, final List<Integer> referenceNucleotideHeterozygousLoci,
             final List<HlaSequenceLoci> candidateNucleotideSequences)
@@ -105,7 +103,8 @@ public class FragmentAlleles
         for(AminoAcidFragment fragment : referenceCoverageFragments)
         {
             FragmentAlleles fragmentAlleles = create(
-                    fragment, referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences, referenceNucleotideHeterozygousLoci, candidateNucleotideSequences);
+                    fragment, referenceAminoAcidHeterozygousLoci, candidateAminoAcidSequences, referenceNucleotideHeterozygousLoci,
+                    candidateNucleotideSequences);
 
             if(!fragmentAlleles.getFull().isEmpty() || !fragmentAlleles.getPartial().isEmpty())
                 results.add(fragmentAlleles);
