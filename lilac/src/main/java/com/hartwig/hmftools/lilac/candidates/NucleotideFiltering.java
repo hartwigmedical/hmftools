@@ -1,14 +1,19 @@
 package com.hartwig.hmftools.lilac.candidates;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class NucleotideFiltering
@@ -71,4 +76,30 @@ public class NucleotideFiltering
 
     }
 
+    public static Map<String,List<Integer>> calcNucleotideHeterogygousLoci(final List<Integer> refNucleotideHetLoci)
+    {
+        // convert from amino acid exon boundaries to nucleotides for each gene
+        Map<String,List<Integer>> hetLociMap = Maps.newHashMap();
+
+        for(String gene : GENE_IDS)
+        {
+            List<Integer> aminoAcidExonBoundaries = gene.equals(GENE_A) ? A_EXON_BOUNDARIES :
+                    gene.equals(GENE_B) ? B_EXON_BOUNDARIES : C_EXON_BOUNDARIES;
+
+            List<Integer> nucleotideExonBoundaries = Lists.newArrayList();
+
+            for(Integer boundary : aminoAcidExonBoundaries)
+            {
+                nucleotideExonBoundaries.add(boundary * 3);
+                nucleotideExonBoundaries.add(boundary * 3 + 1);
+                nucleotideExonBoundaries.add(boundary * 3 + 2);
+            }
+
+            hetLociMap.put(gene,
+                    refNucleotideHetLoci.stream().filter(x -> nucleotideExonBoundaries.contains(x)).collect(Collectors.toList()));
+
+        }
+
+        return hetLociMap;
+    }
 }

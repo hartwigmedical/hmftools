@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.variant;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.LociPosition;
@@ -50,7 +51,7 @@ public class SomaticAlleleCoverage
                 .collect(Collectors.toList());
 
         List<FragmentAlleles> variantFragmentAlleles = FragmentAlleles.createFragmentAlleles(
-                variantFragments, mHetLociSansVariants, mWinners, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+                variantFragments, mHetLociSansVariants, mWinners, Lists.newArrayList(), Maps.newHashMap(), Lists.newArrayList());
 
         List<HlaAlleleCoverage> coverage = HlaAlleleCoverage.proteinCoverage(variantFragmentAlleles);
 

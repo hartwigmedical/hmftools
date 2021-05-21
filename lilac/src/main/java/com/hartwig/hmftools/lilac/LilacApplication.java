@@ -3,13 +3,13 @@ package com.hartwig.hmftools.lilac;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.lilac.LilacConfig.LOG_LEVEL;
-import static com.hartwig.hmftools.lilac.LilacConstants.ALL_NUCLEOTIDE_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
+import static com.hartwig.hmftools.lilac.candidates.NucleotideFiltering.calcNucleotideHeterogygousLoci;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleles.createFragmentAlleles;
 import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
@@ -18,6 +18,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.candidates.Candidates;
+import com.hartwig.hmftools.lilac.candidates.NucleotideFiltering;
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.HlaComplex;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexBuilder;
@@ -54,6 +55,7 @@ import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
 import com.hartwig.hmftools.lilac.variant.SomaticVariantFinder;
 
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -227,8 +229,8 @@ public class LilacApplication implements AutoCloseable, Runnable
         SequenceCount refAminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, refAminoAcidFragments);
         List<Integer> refAminoAcidHetLoci = refAminoAcidCounts.heterozygousLoci();
         SequenceCount refNucleotideCounts = SequenceCount.nucleotides(mConfig.MinEvidence, nucFragments(refAminoAcidFragments));
-        List<Integer> refNucleotideHetLoci = refNucleotideCounts.heterozygousLoci().stream()
-                .filter(x -> ALL_NUCLEOTIDE_EXON_BOUNDARIES.contains(x)).collect(Collectors.toList());
+
+        Map<String,List<Integer>> refNucleotideHetLoci = calcNucleotideHeterogygousLoci(refNucleotideCounts.heterozygousLoci());
 
         List<HlaAllele> candidateAlleleSpecificProteins = candidateAlleles.stream().map(x -> x.asFourDigit()).collect(Collectors.toList());
         List<HlaSequenceLoci> candidateAminoAcidSequences = mRefData.AminoAcidSequences.stream()
@@ -238,8 +240,8 @@ public class LilacApplication implements AutoCloseable, Runnable
             .filter(x -> candidateAlleleSpecificProteins.contains(x.getAllele().asFourDigit())).collect(Collectors.toList());
 
         List<FragmentAlleles> refFragAlleles = createFragmentAlleles(
-                refAminoAcidFragments, refAminoAcidHetLoci, candidateAminoAcidSequences,
-                refNucleotideHetLoci, candidateNucleotideSequences, aminoAcidPipeline.getReferenceAminoAcids());
+                refAminoAcidFragments, refAminoAcidHetLoci, candidateAminoAcidSequences, aminoAcidPipeline.getReferenceAminoAcids(),
+                refNucleotideHetLoci, candidateNucleotideSequences);
 
         FragmentAlleles.applyUniqueStopLossFragments(
                 refFragAlleles, referenceBamReader.stopLossOnCIndels(), mRefData.StopLossRecoveryAlleles);
@@ -297,9 +299,8 @@ public class LilacApplication implements AutoCloseable, Runnable
             LL_LOGGER.info("calculating tumor coverage of winning alleles");
 
             List<FragmentAlleles> tumorFragAlleles = createFragmentAlleles(
-                    aminoAcidPipeline.tumorCoverageFragments(),
-                    refAminoAcidHetLoci, candidateAminoAcidSequences,
-                    refNucleotideHetLoci, candidateNucleotideSequences, aminoAcidPipeline.getReferenceAminoAcids());
+                    aminoAcidPipeline.tumorCoverageFragments(), refAminoAcidHetLoci, candidateAminoAcidSequences,
+                    aminoAcidPipeline.getReferenceAminoAcids(), refNucleotideHetLoci, candidateNucleotideSequences);
 
             winningTumorCoverage = HlaComplexBuilder.calcProteinCoverage(tumorFragAlleles, winningAlleles).expandToSixAlleles();
 

@@ -99,8 +99,8 @@ public class FragmentAlleles
 
     public static List<FragmentAlleles> createFragmentAlleles(
             final List<AminoAcidFragment> refCoverageFragments, final List<Integer> refAminoAcidHetLoci,
-            final List<HlaSequenceLoci> candidateAminoAcidSequences, final List<Integer> refNucleotideHetLoci,
-            final List<HlaSequenceLoci> candidateNucleotideSequences, final List<Set<String>> refAminoAcids)
+            final List<HlaSequenceLoci> candidateAminoAcidSequences, final List<Set<String>> refAminoAcids,
+            final Map<String,List<Integer>> refNucleotideHetLoci, final List<HlaSequenceLoci> candidateNucleotideSequences)
     {
         List<FragmentAlleles> results = Lists.newArrayList();
 
@@ -119,27 +119,45 @@ public class FragmentAlleles
 
     private static FragmentAlleles create(
             final AminoAcidFragment fragment, final List<Integer> aminoAcidLoci, final List<HlaSequenceLoci> aminoAcidSequences,
-            final List<Integer> refNucleotideLoci, final List<HlaSequenceLoci> nucleotideSequences, final List<Set<String>> refAminoAcids)
+            final Map<String,List<Integer>> refNucleotideLoci, final List<HlaSequenceLoci> nucleotideSequences, final List<Set<String>> refAminoAcids)
     {
-        List<Integer> fragmentNucleotideLoci = fragment.getNucleotideLoci().stream()
-                .filter(x -> refNucleotideLoci.contains(x)).collect(Collectors.toList());
+        Map<String,List<Integer>> fragNucleotideLociMap = Maps.newHashMap();
+
+        refNucleotideLoci.entrySet().forEach(x -> fragNucleotideLociMap.put(
+                x.getKey(), fragment.getNucleotideLoci().stream().filter(y -> x.getValue().contains(y)).collect(Collectors.toList())));
+
+        //List<Integer> fragmentNucleotideLoci = fragment.getNucleotideLoci().stream()
+        //        .filter(x -> refNucleotideLoci.contains(x)).collect(Collectors.toList());
 
         Map<HlaAllele,HlaSequenceMatch> alleleMatches = Maps.newHashMap();
 
-        if(!fragmentNucleotideLoci.isEmpty())
+        if(fragNucleotideLociMap.values().stream().anyMatch(x -> !x.isEmpty()))
         {
-            Collections.sort(fragmentNucleotideLoci);
+            fragNucleotideLociMap.values().forEach(x -> Collections.sort(x));
+            // Collections.sort(fragmentNucleotideLoci);
 
-            String fragmentNucleotides = fragment.nucleotides(fragmentNucleotideLoci);
+            Map<String,String> fragNucleotideSequences = Maps.newHashMap();
 
             for(HlaSequenceLoci sequence : nucleotideSequences)
             {
-                HlaSequenceMatch matchType = sequence.match(fragmentNucleotides, fragmentNucleotideLoci);
-                if(matchType == HlaSequenceMatch.NONE)
-                    continue;
-
                 HlaAllele allele = sequence.getAllele();
                 if(!fragment.getGenes().contains(allele.geneName()))
+                    continue;
+
+                List<Integer> fragNucleotideLoci = fragNucleotideLociMap.get(allele.Gene);
+                if(fragNucleotideLoci.isEmpty())
+                    continue;
+
+                String fragNucleotides = fragNucleotideSequences.get(allele.Gene);
+
+                if(fragNucleotides == null)
+                {
+                    fragNucleotides = fragment.nucleotides(fragNucleotideLoci);
+                    fragNucleotideSequences.put(allele.Gene, fragNucleotides);
+                }
+
+                HlaSequenceMatch matchType = sequence.match(fragNucleotides, fragNucleotideLoci);
+                if(matchType == HlaSequenceMatch.NONE)
                     continue;
 
                 // keep the best match
@@ -164,10 +182,10 @@ public class FragmentAlleles
                 .filter(x -> !fullNucleotideMatch.contains(x))
                 .map(x -> x.getKey()).collect(Collectors.toList());
 
+        alleleMatches.clear();
+
         List<Integer> fragmentAminoAcidLoci = fragment.getAminoAcidLoci().stream()
                 .filter(x -> aminoAcidLoci.contains(x)).collect(Collectors.toList());
-
-        alleleMatches.clear();
 
         if(!fragmentAminoAcidLoci.isEmpty())
         {

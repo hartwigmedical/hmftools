@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConfig.OUTPUT_DIR;
 import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
-import static com.hartwig.hmftools.lilac.LilacConstants.ALL_NUCLEOTIDE_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.ALL_PROTEIN_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTOFF;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
@@ -97,8 +96,6 @@ public class ReferenceData
         populateHlaTranscripts(HlaTranscriptData);
         LociPositionFinder = new LociPosition(HlaTranscriptData.values().stream().collect(Collectors.toList()));
 
-        populateConstants();
-
         CommonAlleles = Lists.newArrayList();
         StopLossRecoveryAlleles = Lists.newArrayList();
     }
@@ -166,16 +163,6 @@ public class ReferenceData
                     Integer.parseInt(items[exonRankIndex]), Integer.parseInt(items[exonPhaseIndex]), Integer.parseInt(items[exonEndPhaseIndex]));
 
             exonDataList.add(exonData);
-        }
-    }
-
-    public static void populateConstants()
-    {
-        for(Integer boundary : ALL_PROTEIN_EXON_BOUNDARIES)
-        {
-            ALL_NUCLEOTIDE_EXON_BOUNDARIES.add(boundary * 3);
-            ALL_NUCLEOTIDE_EXON_BOUNDARIES.add(boundary * 3 + 1);
-            ALL_NUCLEOTIDE_EXON_BOUNDARIES.add(boundary * 3 + 2);
         }
     }
 

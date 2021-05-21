@@ -54,8 +54,6 @@ public class LilacConstants
     public static final List<Integer> ALL_PROTEIN_EXON_BOUNDARIES = Lists.newArrayList(
             24, 114, 206, 298, 337, 348, 364, 338, 349, 365);
 
-    public static final List<Integer> ALL_NUCLEOTIDE_EXON_BOUNDARIES = Lists.newArrayList();
-
     public static final int COMPLEX_PERMS_THRESHOLD = 100000;
 
     // technical
