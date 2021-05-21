@@ -54,14 +54,16 @@ public final class ConsentFilterFunctions {
                 .tumorSpecificEvidence(filteredTumorSpecificEvidence)
                 .clinicalTrials(filteredClinicalTrials)
                 .offLabelEvidence(filteredOffLabelEvidence)
-                .notifyGermlineStatusPerVariant(filterVariantsNotifyMap(genomicAnalysis.notifyGermlineStatusPerVariant(), germlineReportingLevel))
+                .notifyGermlineStatusPerVariant(filterVariantsNotifyMap(genomicAnalysis.notifyGermlineStatusPerVariant(),
+                        germlineReportingLevel,
+                        genomicAnalysis.hasReliablePurity()))
                 .build();
     }
 
     @NotNull
     private static Map<ReportableVariant, Boolean> filterVariantsNotifyMap(
             @NotNull Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean hasReliablePurity) {
 
         Map<ReportableVariant, Boolean> filteredMap = Maps.newHashMap();
         for (Map.Entry<ReportableVariant, Boolean> entry : notifyGermlineStatusPerVariant.entrySet()) {
@@ -72,12 +74,15 @@ public final class ConsentFilterFunctions {
                 if (germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION
                         && reportableVariant.source() == ReportableVariantSource.GERMLINE) {
                     filteredMap.put(ImmutableReportableVariant.builder()
-                            .from(reportableVariant)
+                            .from(QualityOverruleFunctions.overruleVariant(reportableVariant, hasReliablePurity))
                             .source(ReportableVariantSource.SOMATIC)
                             .build(), false);
 
                 } else {
-                    filteredMap.put(reportableVariant, entry.getValue());
+                    filteredMap.put(ImmutableReportableVariant.builder()
+                            .from(QualityOverruleFunctions.overruleVariant(reportableVariant, hasReliablePurity))
+                            .source(reportableVariant.source())
+                            .build(), entry.getValue());
                 }
             }
         }

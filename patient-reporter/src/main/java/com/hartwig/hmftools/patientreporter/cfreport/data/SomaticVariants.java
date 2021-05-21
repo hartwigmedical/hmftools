@@ -74,14 +74,20 @@ public final class SomaticVariants {
         return Integer.parseInt(codonAppender.toString());
     }
 
-    @NotNull
-    public static String tVAFString(@NotNull String tVAF, boolean hasReliablePurity) {
-        return hasReliablePurity ? tVAF : DataUtil.NA_STRING;
+    @Nullable
+    public static String tVAFString(@Nullable String tVAF, boolean hasReliablePurity, Double totalCopyNumber) {
+        if (totalCopyNumber == null)  {
+            return DataUtil.NA_STRING;
+        } else {
+            double flooredCopyNumber = Math.max(0, totalCopyNumber);
+            long roundedCopyNumber = Math.round(flooredCopyNumber);
+            return hasReliablePurity && roundedCopyNumber >= 1 ? tVAF : DataUtil.NA_STRING;
+        }
     }
 
     @NotNull
-    public static String copyNumberString(double copyNumber, boolean hasReliablePurity) {
-        return hasReliablePurity ? String.valueOf(Math.round(copyNumber)) : DataUtil.NA_STRING;
+    public static String copyNumberString(Double copyNumber, boolean hasReliablePurity) {
+        return hasReliablePurity && !copyNumber.isNaN() ? String.valueOf(Math.round(copyNumber)) : DataUtil.NA_STRING;
     }
 
     @NotNull
