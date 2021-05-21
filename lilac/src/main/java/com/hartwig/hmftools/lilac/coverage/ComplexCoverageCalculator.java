@@ -7,9 +7,7 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.progress.FutureProgressTracker;
 import com.hartwig.hmftools.lilac.LilacConfig;
-import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.read.FragmentAlleles;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +16,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadFactory;
-import java.util.stream.Collectors;
 
 public class ComplexCoverageCalculator
 {

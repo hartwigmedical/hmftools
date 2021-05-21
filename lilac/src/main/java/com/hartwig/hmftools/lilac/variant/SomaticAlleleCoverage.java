@@ -7,7 +7,7 @@ import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
-import com.hartwig.hmftools.lilac.read.FragmentAlleles;
+import com.hartwig.hmftools.lilac.coverage.FragmentAlleles;
 import com.hartwig.hmftools.lilac.read.SAMRecordReader;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
@@ -50,7 +50,7 @@ public class SomaticAlleleCoverage
                 .collect(Collectors.toList());
 
         List<FragmentAlleles> variantFragmentAlleles = FragmentAlleles.createFragmentAlleles(
-                variantFragments, mHetLociSansVariants, mWinners, Lists.newArrayList(), Lists.newArrayList());
+                variantFragments, mHetLociSansVariants, mWinners, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
 
         List<HlaAlleleCoverage> coverage = HlaAlleleCoverage.proteinCoverage(variantFragmentAlleles);
 

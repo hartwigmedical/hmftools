@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.read.FragmentAlleles;
 
 public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
 {

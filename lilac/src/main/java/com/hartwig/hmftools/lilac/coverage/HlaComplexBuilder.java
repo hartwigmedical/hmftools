@@ -23,7 +23,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.read.FragmentAlleles;
 
 public class HlaComplexBuilder
 {

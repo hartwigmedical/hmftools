@@ -23,8 +23,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.lilac.coverage.CandidateAlleles;
-import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import org.apache.commons.cli.CommandLine;

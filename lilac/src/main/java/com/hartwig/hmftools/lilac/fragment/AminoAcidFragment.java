@@ -14,6 +14,8 @@ public final class AminoAcidFragment extends NucleotideFragment
     private final List<Integer> mAminoAcidLoci;
     private final List<String> mAminoAcids;
 
+    private NucleotideFragment mAllQualityNucleotideFragment;
+
     public AminoAcidFragment(
             final String id, final Set<String> genes, final List<Integer> nucleotideLoci, final List<Integer> nucleotideQuality, 
             final List<String> nucleotides, final List<Integer> aminoAcidLoci, final List<String> aminoAcids)
@@ -21,10 +23,14 @@ public final class AminoAcidFragment extends NucleotideFragment
         super(id, genes, nucleotideLoci, nucleotideQuality, nucleotides);
         mAminoAcidLoci = aminoAcidLoci;
         mAminoAcids = aminoAcids;
+        mAllQualityNucleotideFragment = null;
     }
 
     public List<Integer> getAminoAcidLoci() { return mAminoAcidLoci; }
     public List<String> getAminoAcids() { return mAminoAcids; }
+
+    public void setAllQualitytNucleotideFragment(final NucleotideFragment fragment) { mAllQualityNucleotideFragment = fragment; };
+    public NucleotideFragment getAllQualitytNucleotideFragment() { return mAllQualityNucleotideFragment; }
 
     // cast to super class
     public static List<NucleotideFragment> nucFragments(final List<AminoAcidFragment> fragments)
@@ -57,7 +63,6 @@ public final class AminoAcidFragment extends NucleotideFragment
         return mAminoAcidLoci.stream().mapToInt(x -> x).max().orElse(0);
     }
 
-    // redundant
     public String aminoAcids(final List<Integer> loci)
     {
         StringJoiner sj = new StringJoiner("");
@@ -93,6 +98,23 @@ public final class AminoAcidFragment extends NucleotideFragment
         return new AminoAcidFragment(
                 getId(), getGenes(), getNucleotideLoci(), getNucleotideQuality(), getNucleotides(),
                 intersectAminoAcidLoci, intersectAminoAcids);
+    }
+
+    public String getLowQualAminoAcid(int locus)
+    {
+        if(mAllQualityNucleotideFragment == null)
+            return "";
+
+        int startNucleotideLocus = locus * 3;
+
+        if(mAllQualityNucleotideFragment.getNucleotideLoci().contains(startNucleotideLocus)
+        && mAllQualityNucleotideFragment.getNucleotideLoci().contains(startNucleotideLocus + 1)
+        && mAllQualityNucleotideFragment.getNucleotideLoci().contains(startNucleotideLocus + 2))
+        {
+            return mAllQualityNucleotideFragment.formCodonAminoAcid(locus);
+        }
+
+        return "";
     }
 
     public String toString()

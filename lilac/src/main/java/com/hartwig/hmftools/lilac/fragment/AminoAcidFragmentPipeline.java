@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.SequenceCount;
 import com.hartwig.hmftools.lilac.SequenceCountDiff;
@@ -12,6 +13,7 @@ import com.hartwig.hmftools.lilac.hla.HlaContext;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class AminoAcidFragmentPipeline
@@ -50,16 +52,26 @@ public class AminoAcidFragmentPipeline
 
     public List<AminoAcidFragment> referenceAminoAcidFragments() { return mHighQualRefAminoAcidFragments; }
 
-    public Map<String,SequenceCount> referenceNucleotideCounts() { return mRefNucleotideCounts; }
+    // public Map<String,SequenceCount> referenceNucleotideCounts() { return mRefNucleotideCounts; }
     public Map<String,SequenceCount> referenceAminoAcidCounts() { return mRefAminoAcidCounts; }
 
     private List<AminoAcidFragment> createHighQualAminoAcidFragments(final List<NucleotideFragment> fragments)
     {
-        return fragments.stream()
-                .map(x -> x.qualityFilter(mMinBaseQuality))
-                .filter(x -> x.isNotEmpty())
-                .map(x -> x.toAminoAcidFragment())
-                .collect(Collectors.toList());
+        List<AminoAcidFragment> aminoAcidFragments = Lists.newArrayList();
+
+        for(NucleotideFragment fragment : fragments)
+        {
+            NucleotideFragment highQualFragment = fragment.qualityFilter(mMinBaseQuality);
+
+            if(highQualFragment.isEmpty())
+                continue;
+
+            AminoAcidFragment aaFragment = highQualFragment.toAminoAcidFragment();
+            aaFragment.setAllQualitytNucleotideFragment(fragment);
+            aminoAcidFragments.add(aaFragment);
+        }
+
+        return aminoAcidFragments;
     }
 
     public List<AminoAcidFragment> referencePhasingFragments(final HlaContext context)
@@ -78,6 +90,32 @@ public class AminoAcidFragmentPipeline
 
         SequenceCount refAminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, refAminoAcids);
         mRefAminoAcidCounts.put(gene, refAminoAcidCounts);
+
+        return refAminoAcids;
+    }
+
+    public List<Set<String>> getReferenceAminoAcids()
+    {
+        List<Set<String>> refAminoAcids = Lists.newArrayList();
+
+        for(SequenceCount seqCounts : mRefAminoAcidCounts.values())
+        {
+            for(int locus = 0; locus < seqCounts.getLength(); ++locus)
+            {
+                Set<String> aminoAcids;
+                if(locus >= refAminoAcids.size())
+                {
+                    aminoAcids = Sets.newHashSet();
+                    refAminoAcids.add(locus, aminoAcids);
+                }
+                else
+                {
+                    aminoAcids = refAminoAcids.get(locus);
+                }
+
+                aminoAcids.addAll(seqCounts.get(locus).keySet());
+            }
+        }
 
         return refAminoAcids;
     }

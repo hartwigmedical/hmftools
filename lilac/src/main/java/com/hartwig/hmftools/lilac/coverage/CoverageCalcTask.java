@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.lilac.coverage;
 
-import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -9,7 +7,6 @@ import java.util.concurrent.Callable;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.read.FragmentAlleles;
 
 public class CoverageCalcTask implements Callable
 {

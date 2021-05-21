@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.coverage;
+package com.hartwig.hmftools.lilac.cohort;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.TOTAL_COVERAGE_DENOM;
 

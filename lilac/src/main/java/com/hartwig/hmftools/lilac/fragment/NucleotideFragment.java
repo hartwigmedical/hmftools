@@ -148,7 +148,7 @@ public class NucleotideFragment
         return new AminoAcidFragment(mId, mGenes, mNucleotideLoci, mNucleotideQuality, mNucleotides, aminoAcidLoci, aminoAcids);
     }
 
-    private String formCodonAminoAcid(int locus)
+    public String formCodonAminoAcid(int locus)
     {
         int nucIndex = mNucleotideLoci.indexOf(locus * 3);
         String first = mNucleotides.get(nucIndex);
