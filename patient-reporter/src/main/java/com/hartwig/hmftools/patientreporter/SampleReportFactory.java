@@ -90,11 +90,15 @@ public final class SampleReportFactory {
             String[] curatedBiopsyLocation = biopsyLocation.split("_");
             if (curatedBiopsyLocation.length == 2) {
                 curated = curatedBiopsyLocation[1];
+                curated = curated.substring(0,1).toUpperCase() + curated.substring(1, curated.length());
             } else if (curatedBiopsyLocation.length == 1) {
                 curated = "Other";
             }
         } else {
-            curated = biopsyLocation;
+            if (biopsyLocation != null) {
+                curated = biopsyLocation;
+                curated = curated.substring(0,1).toUpperCase() + curated.substring(1, curated.length());
+            }
         }
         return curated;
     }
