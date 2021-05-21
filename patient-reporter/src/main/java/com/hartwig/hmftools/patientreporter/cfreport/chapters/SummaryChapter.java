@@ -310,6 +310,7 @@ public class SummaryChapter implements ReportChapter {
         if (patientReport.sampleReport().cohort().reportPeach()) {
             if (analysis().peachGenotypes().isEmpty()) {
                 table = TableUtil.createNoneReportTable(title);
+                table.setWidth(ReportResources.CONTENT_WIDTH_NARROW);
             } else if (patientReport.genomicAnalysis().hasReliablePurity() && patientReport.qsFormNumber()
                     .equals(QsFormNumber.FOR_080.display())) {
 
@@ -327,9 +328,11 @@ public class SummaryChapter implements ReportChapter {
                 table = TableUtil.createWrappingReportTableSummary(title, table);
             } else {
                 table = TableUtil.createNAReportTable(title);
+                table.setWidth(ReportResources.CONTENT_WIDTH_NARROW);
             }
         } else {
             table = TableUtil.createNAReportTable(title);
+            table.setWidth(ReportResources.CONTENT_WIDTH_NARROW);
         }
 
         div.add(table);
