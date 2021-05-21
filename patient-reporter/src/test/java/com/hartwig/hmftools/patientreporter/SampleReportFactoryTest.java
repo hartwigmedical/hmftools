@@ -13,7 +13,5 @@ public class SampleReportFactoryTest {
         assertEquals("Ovary", SampleReportFactory.curateBiopsyLocation("Ovary"));
         assertEquals("Ovary", SampleReportFactory.curateBiopsyLocation("ovary"));
         assertNull(SampleReportFactory.curateBiopsyLocation(null));
-
     }
-
 }
