@@ -55,9 +55,13 @@ public class ComplexCoverageCalculator
 
         Map<HlaAllele,List<FragmentAlleles>> alleleFragmentMap = null; // buildAlleleFragmentMap(fragmentAlleles, complexes);
 
+        List<HlaAllele> alleles = Lists.newArrayList();
+        complexes.stream().forEach(x -> x.getAlleles().stream().filter(y -> !alleles.contains(y)).forEach(y -> alleles.add(y)));
+        FragmentAlleleMatrix fragAlleleMatrix = new FragmentAlleleMatrix(fragmentAlleles, alleles);
+
         for(List<HlaComplex> complexList : complexLists)
         {
-            CoverageCalcTask coverageTask = new CoverageCalcTask(fragmentAlleles, complexList, alleleFragmentMap);
+            CoverageCalcTask coverageTask = new CoverageCalcTask(fragmentAlleles, complexList, fragAlleleMatrix);
             coverageCalcTasks.add(coverageTask);
 
             FutureTask futureTask = new FutureTask(coverageTask);
@@ -112,51 +116,6 @@ public class ComplexCoverageCalculator
 
             return null;
         }
-    }
-
-    private Map<HlaAllele,List<FragmentAlleles>> buildAlleleFragmentMap(
-            final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes)
-    {
-        int allelesWithFrags = 0;
-        Map<HlaAllele,List<FragmentAlleles>> alleleFragmentMap = Maps.newHashMap();
-
-        for(HlaComplex complex : complexes)
-        {
-            for(HlaAllele allele : complex.getAlleles())
-            {
-                if(alleleFragmentMap.containsKey(allele))
-                    continue;
-
-                List<FragmentAlleles> fragments = Lists.newArrayList();
-                for(FragmentAlleles fragment : fragmentAlleles)
-                {
-                    if(fragment.getFull().contains(allele) || fragment.getPartial().contains(allele))
-                    {
-                        fragments.add(fragment);
-                    }
-                }
-
-                if(!fragments.isEmpty())
-                    ++allelesWithFrags;
-
-                alleleFragmentMap.put(allele, fragments);
-            }
-        }
-
-        LL_LOGGER.info("alleles {} with fragments: {}", alleleFragmentMap.size(), allelesWithFrags);
-        return alleleFragmentMap;
-    }
-
-    private static FragmentAlleles createIfContains(final FragmentAlleles fragAlleles, final HlaAllele allele)
-    {
-        List<HlaAllele> emptyList = Lists.newArrayList();
-        List<HlaAllele> fullList = fragAlleles.getFull().contains(allele) ? Lists.newArrayList(allele) : emptyList;
-        List<HlaAllele> partialList = fragAlleles.getPartial().contains(allele) ? Lists.newArrayList(allele) : emptyList;
-
-        if(fullList.isEmpty() && partialList.isEmpty())
-            return null;
-
-        return new FragmentAlleles(fragAlleles.getFragment(), fullList, partialList, emptyList);
     }
 
 }

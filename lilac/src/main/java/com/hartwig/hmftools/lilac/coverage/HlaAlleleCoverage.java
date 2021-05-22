@@ -81,11 +81,15 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
 
     public static List<HlaAlleleCoverage> create(final List<FragmentAlleles> fragmentSequences, boolean asAlleleGroup)
     {
+        // attributes coverage counts to each allele amongst the set of alleles present across all fragments
         List<HlaAlleleCoverage> results = Lists.newArrayList();
 
         Map<HlaAllele,Integer> uniqueCoverageMap = Maps.newHashMap();
         Map<HlaAllele,Double> combinedCoverageMap = Maps.newHashMap();
         Map<HlaAllele,Double> wildCoverageMap = Maps.newHashMap();
+
+        // test whether a fragment has a single (unique) allele in its full list (with nothing in partial)
+        // if not, split te contribution across the alleles into combined and wild
 
         for(FragmentAlleles fragment : fragmentSequences)
         {
@@ -106,6 +110,7 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
             }
         }
 
+        // gather up the unique set of supported alleles, then tally their results into a single allele coverage container
         List<HlaAllele> hlaAlleles = uniqueCoverageMap.keySet().stream().collect(Collectors.toList());
         combinedCoverageMap.keySet().stream().filter(x -> !hlaAlleles.contains(x)).forEach(x -> hlaAlleles.add(x));
 

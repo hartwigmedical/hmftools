@@ -88,13 +88,6 @@ public class FragmentAlleles
         }
 
         return matchedFragAlleles;
-
-        /*
-        return fragAlleleList.stream()
-                .map(x -> x.filter(x, alleles))
-                .filter(x -> !x.getFull().isEmpty() || !x.getPartial().isEmpty())
-                .collect(Collectors.toList());
-        */
     }
 
     public static List<FragmentAlleles> createFragmentAlleles(
@@ -126,15 +119,11 @@ public class FragmentAlleles
         refNucleotideLoci.entrySet().forEach(x -> fragNucleotideLociMap.put(
                 x.getKey(), fragment.getNucleotideLoci().stream().filter(y -> x.getValue().contains(y)).collect(Collectors.toList())));
 
-        //List<Integer> fragmentNucleotideLoci = fragment.getNucleotideLoci().stream()
-        //        .filter(x -> refNucleotideLoci.contains(x)).collect(Collectors.toList());
-
         Map<HlaAllele,HlaSequenceMatch> alleleMatches = Maps.newHashMap();
 
         if(fragNucleotideLociMap.values().stream().anyMatch(x -> !x.isEmpty()))
         {
             fragNucleotideLociMap.values().forEach(x -> Collections.sort(x));
-            // Collections.sort(fragmentNucleotideLoci);
 
             Map<String,String> fragNucleotideSequences = Maps.newHashMap();
 
