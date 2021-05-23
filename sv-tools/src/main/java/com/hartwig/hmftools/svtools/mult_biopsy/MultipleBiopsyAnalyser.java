@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.svtools.mult_biopsy;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.svtools.mult_biopsy.MultiBiopsyData.MATCH_TYPE_PARTIAL;
 import static com.hartwig.hmftools.svtools.mult_biopsy.MultiBiopsyData.MATCH_TYPE_PRIVATE;
 import static com.hartwig.hmftools.svtools.mult_biopsy.MultiBiopsyData.MATCH_TYPE_SHARED;

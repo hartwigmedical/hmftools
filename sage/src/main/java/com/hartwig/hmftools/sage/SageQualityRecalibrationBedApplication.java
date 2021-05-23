@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage;
 
-import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -53,7 +53,7 @@ public class SageQualityRecalibrationBedApplication implements AutoCloseable {
         final CommandLine cmd = createCommandLine(args, options);
 
         this.refGenome = new IndexedFastaSequenceFile(new File(cmd.getOptionValue(REF_GENOME)));
-        this.sampleSize = defaultIntValue(cmd, BQR_SAMPLE_SIZE, DEFAULT_BQR_SAMPLE_SIZE);
+        this.sampleSize = getConfigValue(cmd, BQR_SAMPLE_SIZE, DEFAULT_BQR_SAMPLE_SIZE);
         this.out = cmd.getOptionValue(OUT);
     }
 

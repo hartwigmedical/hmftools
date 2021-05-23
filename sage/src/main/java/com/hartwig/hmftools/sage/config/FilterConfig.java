@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sage.config;
 
-import static com.hartwig.hmftools.common.cli.Configs.defaultBooleanValue;
-import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 
 import java.util.function.Predicate;
 
@@ -139,13 +139,13 @@ public interface FilterConfig {
     @NotNull
     static FilterConfig createConfig(@NotNull final CommandLine cmd) {
         return ImmutableFilterConfig.builder()
-                .softFilter(defaultBooleanValue(cmd, SOFT_FILTER, DEFAULT_SOFT_FILTER_ENABLED))
-                .hardFilter(defaultBooleanValue(cmd, HARD_FILTER, DEFAULT_HARD_FILTER_ENABLED))
-                .mnvFilter(defaultBooleanValue(cmd, MNV_FILTER, DEFAULT_MNV_FILTER_ENABLED))
-                .filteredMaxNormalAltSupport(defaultIntValue(cmd, FILTERED_MAX_NORMAL_ALT_SUPPORT, DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT))
-                .hardMinTumorQual(defaultIntValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL))
-                .hardMinTumorRawAltSupport(defaultIntValue(cmd, HARD_MIN_TUMOR_RAW_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))
-                .hardMinTumorRawBaseQuality(defaultIntValue(cmd, HARD_MIN_TUMOR_RAW_BASE_QUALITY, DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY))
+                .softFilter(getConfigValue(cmd, SOFT_FILTER, DEFAULT_SOFT_FILTER_ENABLED))
+                .hardFilter(getConfigValue(cmd, HARD_FILTER, DEFAULT_HARD_FILTER_ENABLED))
+                .mnvFilter(getConfigValue(cmd, MNV_FILTER, DEFAULT_MNV_FILTER_ENABLED))
+                .filteredMaxNormalAltSupport(getConfigValue(cmd, FILTERED_MAX_NORMAL_ALT_SUPPORT, DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT))
+                .hardMinTumorQual(getConfigValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL))
+                .hardMinTumorRawAltSupport(getConfigValue(cmd, HARD_MIN_TUMOR_RAW_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))
+                .hardMinTumorRawBaseQuality(getConfigValue(cmd, HARD_MIN_TUMOR_RAW_BASE_QUALITY, DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY))
                 .softHotspotFilter(SoftFilterConfig.createConfig(cmd, "hotspot", DEFAULT_HOTSPOT_FILTER))
                 .softPanelFilter(SoftFilterConfig.createConfig(cmd, "panel", DEFAULT_PANEL_FILTER))
                 .softHighConfidenceFilter(SoftFilterConfig.createConfig(cmd, "high_confidence", DEFAULT_HIGH_CONFIDENCE_FILTER))

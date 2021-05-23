@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.sage.config;
 
-import static com.hartwig.hmftools.common.cli.Configs.defaultBooleanValue;
-import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
-import static com.hartwig.hmftools.common.cli.Configs.defaultStringValue;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.containsFlag;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.defaultEnumValue;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,7 +12,6 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.cli.Configs;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
@@ -212,7 +211,7 @@ public interface SageConfig {
     @NotNull
     static SageConfig createConfig(boolean appendMode, @NotNull final String version, @NotNull final CommandLine cmd)
             throws ParseException, IOException {
-        final int threads = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
+        final int threads = getConfigValue(cmd, THREADS, DEFAULT_THREADS);
         final RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
 
         final List<String> referenceList = Lists.newArrayList();
@@ -264,7 +263,7 @@ public interface SageConfig {
         }
 
         final Set<String> chromosomes = Sets.newHashSet();
-        final String chromosomeList = defaultStringValue(cmd, CHR, Strings.EMPTY);
+        final String chromosomeList = cmd.getOptionValue(CHR, Strings.EMPTY);
         if (!chromosomeList.isEmpty()) {
             chromosomes.addAll(Lists.newArrayList(chromosomeList.split(",")));
         }
@@ -301,7 +300,7 @@ public interface SageConfig {
         }
 
         final ValidationStringency validationStringency =
-                Configs.defaultEnumValue(cmd, VALIDATION_STRINGENCY, ValidationStringency.DEFAULT_STRINGENCY);
+                defaultEnumValue(cmd, VALIDATION_STRINGENCY, ValidationStringency.DEFAULT_STRINGENCY);
 
         return ImmutableSageConfig.builder()
                 .version(version)
@@ -314,14 +313,14 @@ public interface SageConfig {
                 .referenceBam(referenceBamList)
                 .tumor(tumorList)
                 .tumorBam(tumorBamList)
-                .mnvEnabled(defaultBooleanValue(cmd, MNV, DEFAULT_MNV))
+                .mnvEnabled(getConfigValue(cmd, MNV, DEFAULT_MNV))
                 .refGenome(cmd.getOptionValue(REF_GENOME))
-                .regionSliceSize(defaultIntValue(cmd, SLICE_SIZE, DEFAULT_SLICE_SIZE))
-                .readContextFlankSize(defaultIntValue(cmd, READ_CONTEXT_FLANK_SIZE, DEFAULT_READ_CONTEXT_FLANK_SIZE))
-                .minMapQuality(defaultIntValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))
-                .maxReadDepth(defaultIntValue(cmd, MAX_READ_DEPTH, DEFAULT_MAX_READ_DEPTH))
-                .maxReadDepthPanel(defaultIntValue(cmd, MAX_READ_DEPTH_PANEL, DEFAULT_MAX_READ_DEPTH_PANEL))
-                .maxRealignmentDepth(defaultIntValue(cmd, MAX_REALIGNMENT_DEPTH, DEFAULT_MAX_REALIGNMENT_DEPTH))
+                .regionSliceSize(getConfigValue(cmd, SLICE_SIZE, DEFAULT_SLICE_SIZE))
+                .readContextFlankSize(getConfigValue(cmd, READ_CONTEXT_FLANK_SIZE, DEFAULT_READ_CONTEXT_FLANK_SIZE))
+                .minMapQuality(getConfigValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))
+                .maxReadDepth(getConfigValue(cmd, MAX_READ_DEPTH, DEFAULT_MAX_READ_DEPTH))
+                .maxReadDepthPanel(getConfigValue(cmd, MAX_READ_DEPTH_PANEL, DEFAULT_MAX_READ_DEPTH_PANEL))
+                .maxRealignmentDepth(getConfigValue(cmd, MAX_REALIGNMENT_DEPTH, DEFAULT_MAX_REALIGNMENT_DEPTH))
                 .filter(FilterConfig.createConfig(cmd))
                 .panelBed(cmd.getOptionValue(PANEL_BED, Strings.EMPTY))
                 .coverageBed(cmd.getOptionValue(COVERAGE_BED, Strings.EMPTY))
@@ -329,7 +328,7 @@ public interface SageConfig {
                 .hotspots(cmd.getOptionValue(HOTSPOTS, Strings.EMPTY))
                 .qualityConfig(QualityConfig.createConfig(cmd, transcripts))
                 .baseQualityRecalibrationConfig(BaseQualityRecalibrationConfig.createConfig(cmd))
-                .panelOnly(Configs.containsFlag(cmd, PANEL_ONLY))
+                .panelOnly(containsFlag(cmd, PANEL_ONLY))
                 .validationStringency(validationStringency)
                 .build();
     }

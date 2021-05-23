@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.amber;
 
-import static com.hartwig.hmftools.common.cli.Configs.defaultDoubleValue;
-import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.defaultEnumValue;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.cli.Configs;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
@@ -155,16 +154,16 @@ public interface AmberConfig {
     static AmberConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
         final boolean isTumorOnly = cmd.hasOption(TUMOR_ONLY);
 
-        final int threadCount = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
-        final int minBaseQuality = defaultIntValue(cmd, MIN_BASE_QUALITY, DEFAULT_MIN_BASE_QUALITY);
-        final int minMappingQuality = defaultIntValue(cmd, MIN_MAPPING_QUALITY, DEFAULT_MIN_MAPPING_QUALITY);
-        final int tumorOnlyMinSupport = defaultIntValue(cmd, TUMOR_ONLY_MIN_SUPPORT, DEFAULT_TUMOR_ONLY_MIN_SUPPORT);
+        final int threadCount = getConfigValue(cmd, THREADS, DEFAULT_THREADS);
+        final int minBaseQuality = getConfigValue(cmd, MIN_BASE_QUALITY, DEFAULT_MIN_BASE_QUALITY);
+        final int minMappingQuality = getConfigValue(cmd, MIN_MAPPING_QUALITY, DEFAULT_MIN_MAPPING_QUALITY);
+        final int tumorOnlyMinSupport = getConfigValue(cmd, TUMOR_ONLY_MIN_SUPPORT, DEFAULT_TUMOR_ONLY_MIN_SUPPORT);
 
-        final double minDepthPercent = defaultDoubleValue(cmd, MIN_DEPTH_PERCENTAGE, DEFAULT_MIN_DEPTH_PERCENTAGE);
-        final double maxDepthPercent = defaultDoubleValue(cmd, MAX_DEPTH_PERCENTAGE, DEFAULT_MAX_DEPTH_PERCENTAGE);
-        final double minHetAfPercent = defaultDoubleValue(cmd, MIN_HET_AF_PERCENTAGE, DEFAULT_MIN_HET_AF_PERCENTAGE);
-        final double maxHetAfPercent = defaultDoubleValue(cmd, MAX_HET_AF_PERCENTAGE, DEFAULT_MAX_HET_AF_PERCENTAGE);
-        final double tumorOnlyMinVaf = defaultDoubleValue(cmd, TUMOR_ONLY_MIN_VAF, DEFAULT_TUMOR_ONLY_MIN_VAF);
+        final double minDepthPercent = getConfigValue(cmd, MIN_DEPTH_PERCENTAGE, DEFAULT_MIN_DEPTH_PERCENTAGE);
+        final double maxDepthPercent = getConfigValue(cmd, MAX_DEPTH_PERCENTAGE, DEFAULT_MAX_DEPTH_PERCENTAGE);
+        final double minHetAfPercent = getConfigValue(cmd, MIN_HET_AF_PERCENTAGE, DEFAULT_MIN_HET_AF_PERCENTAGE);
+        final double maxHetAfPercent = getConfigValue(cmd, MAX_HET_AF_PERCENTAGE, DEFAULT_MAX_HET_AF_PERCENTAGE);
+        final double tumorOnlyMinVaf = getConfigValue(cmd, TUMOR_ONLY_MIN_VAF, DEFAULT_TUMOR_ONLY_MIN_VAF);
 
         final StringJoiner missingJoiner = new StringJoiner(", ");
         final List<String> reference =
@@ -183,7 +182,7 @@ public interface AmberConfig {
         }
 
         final ValidationStringency validationStringency =
-                Configs.defaultEnumValue(cmd, VALIDATION_STRINGENCY, ValidationStringency.DEFAULT_STRINGENCY);
+                defaultEnumValue(cmd, VALIDATION_STRINGENCY, ValidationStringency.DEFAULT_STRINGENCY);
 
         if (!missing.isEmpty()) {
             throw new ParseException("Missing the following parameters: " + missing);

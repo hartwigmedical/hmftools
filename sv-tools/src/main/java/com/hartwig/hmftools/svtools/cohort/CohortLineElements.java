@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svtools.cohort;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
@@ -17,7 +18,6 @@ import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.LINE_ELEMENT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.svtools.cohort.LineElementType.fromString;
-import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
 
 import java.io.BufferedWriter;
 import java.io.File;

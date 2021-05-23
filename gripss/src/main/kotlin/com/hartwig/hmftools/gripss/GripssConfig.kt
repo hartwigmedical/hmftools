@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.gripss
 
-import com.hartwig.hmftools.common.cli.Configs.defaultDoubleValue
-import com.hartwig.hmftools.common.cli.Configs.defaultIntValue
+import com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.samtools.util.Interval
 import htsjdk.samtools.util.Locatable
@@ -188,19 +187,19 @@ data class GripssFilterConfig(
 
         fun createConfig(cmd: CommandLine, isGRCh38: Boolean): GripssFilterConfig {
             val defaultConfig = default()
-            val minTumorQual = defaultIntValue(cmd, HARD_MIN_TUMOR_QUAL_OPTION, defaultConfig.hardMinTumorQual)
-            val maxNormalAbsoluteSupport = defaultIntValue(cmd, HARD_MAX_NORMAL_ABSOLUTE_SUPPORT_OPTION, defaultConfig.hardMaxNormalAbsoluteSupport)
-            val hardMaxNormalRelativeSupport = defaultDoubleValue(cmd, HARD_MAX_NORMAL_RELATIVE_SUPPORT_OPTION, defaultConfig.hardMaxNormalRelativeSupport)
-            val softMaxNormalRelativeSupport = defaultDoubleValue(cmd, SOFT_MAX_NORMAL_RELATIVE_SUPPORT_OPTION, defaultConfig.softMaxNormalRelativeSupport)
-            val minNormalCoverage = defaultIntValue(cmd, MIN_NORMAL_COVERAGE_OPTION, defaultConfig.minNormalCoverage)
-            val minTumorAF = defaultDoubleValue(cmd, MIN_TUMOR_AF_OPTION, defaultConfig.minTumorAF)
-            val maxShortStrandBias = defaultDoubleValue(cmd, MAX_SHORT_STRAND_BIAS_OPTION, defaultConfig.maxShortStrandBias)
-            val minQualBreakEnd = defaultIntValue(cmd, MIN_QUAL_BREAK_END_OPTION, defaultConfig.minQualBreakEnd)
-            val minQualBreakPoint = defaultIntValue(cmd, MIN_QUAL_BREAK_POINT_OPTION, defaultConfig.minQualBreakPoint)
-            val minQualRescueMobileElementInserions = defaultIntValue(cmd, MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION, defaultConfig.minQualRescueMobileElementInsertion)
-            val maxHomLengthShortInversion = defaultIntValue(cmd, MAX_HOM_LENGTH_SHORT_INV_OPTION, defaultConfig.maxHomLengthShortInversion)
-            val maxInexactHomLengthShortDel = defaultIntValue(cmd, MAX_INEXACT_HOM_LENGTH_SHORT_DEL_OPTION, defaultConfig.maxInexactHomLengthShortDel)
-            val minLength = defaultIntValue(cmd, MIN_LENGTH_OPTION, defaultConfig.minLength)
+            val minTumorQual = getConfigValue(cmd, HARD_MIN_TUMOR_QUAL_OPTION, defaultConfig.hardMinTumorQual)
+            val maxNormalAbsoluteSupport = getConfigValue(cmd, HARD_MAX_NORMAL_ABSOLUTE_SUPPORT_OPTION, defaultConfig.hardMaxNormalAbsoluteSupport)
+            val hardMaxNormalRelativeSupport = getConfigValue(cmd, HARD_MAX_NORMAL_RELATIVE_SUPPORT_OPTION, defaultConfig.hardMaxNormalRelativeSupport)
+            val softMaxNormalRelativeSupport = getConfigValue(cmd, SOFT_MAX_NORMAL_RELATIVE_SUPPORT_OPTION, defaultConfig.softMaxNormalRelativeSupport)
+            val minNormalCoverage = getConfigValue(cmd, MIN_NORMAL_COVERAGE_OPTION, defaultConfig.minNormalCoverage)
+            val minTumorAF = getConfigValue(cmd, MIN_TUMOR_AF_OPTION, defaultConfig.minTumorAF)
+            val maxShortStrandBias = getConfigValue(cmd, MAX_SHORT_STRAND_BIAS_OPTION, defaultConfig.maxShortStrandBias)
+            val minQualBreakEnd = getConfigValue(cmd, MIN_QUAL_BREAK_END_OPTION, defaultConfig.minQualBreakEnd)
+            val minQualBreakPoint = getConfigValue(cmd, MIN_QUAL_BREAK_POINT_OPTION, defaultConfig.minQualBreakPoint)
+            val minQualRescueMobileElementInserions = getConfigValue(cmd, MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION, defaultConfig.minQualRescueMobileElementInsertion)
+            val maxHomLengthShortInversion = getConfigValue(cmd, MAX_HOM_LENGTH_SHORT_INV_OPTION, defaultConfig.maxHomLengthShortInversion)
+            val maxInexactHomLengthShortDel = getConfigValue(cmd, MAX_INEXACT_HOM_LENGTH_SHORT_DEL_OPTION, defaultConfig.maxInexactHomLengthShortDel)
+            val minLength = getConfigValue(cmd, MIN_LENGTH_OPTION, defaultConfig.minLength)
             val linc00486Definition = if (isGRCh38) linc00486Definition38 else linc00486Definition37
 
             return GripssFilterConfig(

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.config;
 
-import static com.hartwig.hmftools.common.cli.Configs.defaultBooleanValue;
-import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -49,11 +48,11 @@ public interface BaseQualityRecalibrationConfig {
     @NotNull
     static BaseQualityRecalibrationConfig createConfig(@NotNull final CommandLine cmd) {
         return ImmutableBaseQualityRecalibrationConfig.builder()
-                .enabled(defaultBooleanValue(cmd, BQR_ENABLED, DEFAULT_BQR_ENABLED))
-                .plot(defaultBooleanValue(cmd, BQR_PLOT, DEFAULT_BQR_PLOT))
-                .maxAltCount(defaultIntValue(cmd, BQR_MAX_ALT_COUNT, DEFAULT_BQR_MAX_ALT_COUNT))
-                .sampleSize(defaultIntValue(cmd, BQR_SAMPLE_SIZE, DEFAULT_BQR_SAMPLE_SIZE))
-                .minMapQuality(defaultIntValue(cmd, BQR_MIN_MAP_QUAL, DEFAULT_BQR_MIN_MAP_QUAL))
+                .enabled(getConfigValue(cmd, BQR_ENABLED, DEFAULT_BQR_ENABLED))
+                .plot(getConfigValue(cmd, BQR_PLOT, DEFAULT_BQR_PLOT))
+                .maxAltCount(getConfigValue(cmd, BQR_MAX_ALT_COUNT, DEFAULT_BQR_MAX_ALT_COUNT))
+                .sampleSize(getConfigValue(cmd, BQR_SAMPLE_SIZE, DEFAULT_BQR_SAMPLE_SIZE))
+                .minMapQuality(getConfigValue(cmd, BQR_MIN_MAP_QUAL, DEFAULT_BQR_MIN_MAP_QUAL))
                 .build();
     }
 }

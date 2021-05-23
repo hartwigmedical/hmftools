@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cobalt;
 
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_MIN_MAPPING_QUALITY;
-import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -57,8 +57,8 @@ public class CobaltConfig
 
     public CobaltConfig(final CommandLine cmd)
     {
-        ThreadCount = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
-        MinMappingQuality = defaultIntValue(cmd, MIN_MAPPING_QUALITY, DEFAULT_MIN_MAPPING_QUALITY);
+        ThreadCount = getConfigValue(cmd, THREADS, DEFAULT_THREADS);
+        MinMappingQuality = getConfigValue(cmd, MIN_MAPPING_QUALITY, DEFAULT_MIN_MAPPING_QUALITY);
         RefGenomePath = cmd.getOptionValue(REF_GENOME, "");
 
         final StringJoiner missingJoiner = new StringJoiner(", ");

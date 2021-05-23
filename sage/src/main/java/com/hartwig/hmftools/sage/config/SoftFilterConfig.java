@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.config;
 
-import static com.hartwig.hmftools.common.cli.Configs.defaultDoubleValue;
-import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL;
 import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.config.SoftFilter.MIN_GERMLINE_DEPTH;
@@ -48,13 +47,13 @@ public interface SoftFilterConfig {
 
     @NotNull
     static SoftFilterConfig createConfig(@NotNull final CommandLine cmd, @NotNull final String prefix, @NotNull final SoftFilterConfig defaultValue) {
-        final int minTumorQual = defaultIntValue(cmd, prefix + "_" + MIN_TUMOR_QUAL, defaultValue.minTumorQual());
-        final double minTumorVaf = defaultDoubleValue(cmd, prefix + "_" + MIN_TUMOR_VAF, defaultValue.minTumorVaf());
-        final int minGermlineDepth = defaultIntValue(cmd, prefix + "_" + MIN_GERMLINE_DEPTH, defaultValue.minGermlineReadContextCoverage());
-        final int minGermlineDepthAllosome = defaultIntValue(cmd, prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME, defaultValue.minGermlineReadContextCoverageAllosome());
+        final int minTumorQual = getConfigValue(cmd, prefix + "_" + MIN_TUMOR_QUAL, defaultValue.minTumorQual());
+        final double minTumorVaf = getConfigValue(cmd, prefix + "_" + MIN_TUMOR_VAF, defaultValue.minTumorVaf());
+        final int minGermlineDepth = getConfigValue(cmd, prefix + "_" + MIN_GERMLINE_DEPTH, defaultValue.minGermlineReadContextCoverage());
+        final int minGermlineDepthAllosome = getConfigValue(cmd, prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME, defaultValue.minGermlineReadContextCoverageAllosome());
 
-        final double maxGermlineVaf = defaultDoubleValue(cmd, prefix + "_" + MAX_GERMLINE_VAF, defaultValue.maxGermlineVaf());
-        final double maxGermlineRelativeQual = defaultDoubleValue(cmd, prefix + "_" + MAX_GERMLINE_REL_RAW_BASE_QUAL, defaultValue.maxGermlineRelativeQual());
+        final double maxGermlineVaf = getConfigValue(cmd, prefix + "_" + MAX_GERMLINE_VAF, defaultValue.maxGermlineVaf());
+        final double maxGermlineRelativeQual = getConfigValue(cmd, prefix + "_" + MAX_GERMLINE_REL_RAW_BASE_QUAL, defaultValue.maxGermlineRelativeQual());
 
         return ImmutableSoftFilterConfig.builder()
                 .minTumorQual(minTumorQual)

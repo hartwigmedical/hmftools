@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.sage.config;
 
-import static com.hartwig.hmftools.common.cli.Configs.defaultDoubleValue;
-import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
-import static com.hartwig.hmftools.common.cli.Configs.defaultStringValue;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 
 import java.util.Arrays;
 import java.util.List;
@@ -120,7 +118,7 @@ public interface QualityConfig {
     @NotNull
     static QualityConfig createConfig(@NotNull final CommandLine cmd, @NotNull final List<HmfTranscriptRegion> allTranscripts) {
         final Set<String> highlyPolymorphicGeneNames =
-                Arrays.stream(defaultStringValue(cmd, HIGHLY_POLYMORPHIC_GENES, DEFAULT_HIGHLY_POLYMORPHIC_GENES).split(","))
+                Arrays.stream(cmd.getOptionValue(HIGHLY_POLYMORPHIC_GENES, DEFAULT_HIGHLY_POLYMORPHIC_GENES).split(","))
                         .collect(Collectors.toSet());
 
         final List<HmfTranscriptRegion> highlyPolymorphicGeneTranscripts =
@@ -128,13 +126,13 @@ public interface QualityConfig {
 
         return ImmutableQualityConfig.builder()
                 .highlyPolymorphicGenes(highlyPolymorphicGeneTranscripts)
-                .jitterPenalty(defaultDoubleValue(cmd, JITTER_PENALTY, DEFAULT_JITTER_PENALTY))
-                .jitterMinRepeatCount(defaultIntValue(cmd, JITTER_MIN_REPEAT_COUNT, DEFAULT_JITTER_MIN_REPEAT_COUNT))
-                .baseQualityFixedPenalty(defaultIntValue(cmd, BASE_QUAL_FIXED_PENALTY, DEFAULT_BASE_QUAL_FIXED_PENALTY))
-                .distanceFromReadEdgeFixedPenalty(defaultIntValue(cmd, READ_EDGE_FIXED_PENALTY, DEFAULT_READ_EDGE_FIXED_PENALTY))
-                .mapQualityFixedPenalty(defaultIntValue(cmd, MAP_QUAL_FIXED_PENALTY, DEFAULT_MAP_QUAL_FIXED_PENALTY))
-                .mapQualityReadEventsPenalty(defaultIntValue(cmd, MAP_QUAL_READ_EVENTS_PENALTY, DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY))
-                .mapQualityImproperPairPenalty(defaultIntValue(cmd, MAP_QUAL_IMPROPER_PAIR_PENALTY, DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY))
+                .jitterPenalty(getConfigValue(cmd, JITTER_PENALTY, DEFAULT_JITTER_PENALTY))
+                .jitterMinRepeatCount(getConfigValue(cmd, JITTER_MIN_REPEAT_COUNT, DEFAULT_JITTER_MIN_REPEAT_COUNT))
+                .baseQualityFixedPenalty(getConfigValue(cmd, BASE_QUAL_FIXED_PENALTY, DEFAULT_BASE_QUAL_FIXED_PENALTY))
+                .distanceFromReadEdgeFixedPenalty(getConfigValue(cmd, READ_EDGE_FIXED_PENALTY, DEFAULT_READ_EDGE_FIXED_PENALTY))
+                .mapQualityFixedPenalty(getConfigValue(cmd, MAP_QUAL_FIXED_PENALTY, DEFAULT_MAP_QUAL_FIXED_PENALTY))
+                .mapQualityReadEventsPenalty(getConfigValue(cmd, MAP_QUAL_READ_EVENTS_PENALTY, DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY))
+                .mapQualityImproperPairPenalty(getConfigValue(cmd, MAP_QUAL_IMPROPER_PAIR_PENALTY, DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY))
                 .build();
     }
 }

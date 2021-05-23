@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.pon;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,7 +13,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.cli.Configs;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -43,7 +44,7 @@ public class PonApplication implements AutoCloseable {
         final CommandLine cmd = createCommandLine(args, options);
         final String inputFilePath = cmd.getOptionValue(IN_VCF);
         final String outputFilePath = cmd.getOptionValue(OUT_VCF);
-        final int threads = Configs.defaultIntValue(cmd, THREADS, 5);
+        final int threads = getConfigValue(cmd, THREADS, 5);
 
         if (outputFilePath == null || inputFilePath == null) {
             final HelpFormatter formatter = new HelpFormatter();
