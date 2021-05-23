@@ -8,20 +8,22 @@ import com.hartwig.hmftools.common.utils.r.RExecutor;
 
 import org.jetbrains.annotations.NotNull;
 
-class BAFSegmentation {
+public class BAFSegmentation
+{
+    private final String mOutputDir;
 
-    @NotNull
-    private final String outputDirectory;
-
-    BAFSegmentation(@NotNull final String outputDirectory) {
-        this.outputDirectory = outputDirectory;
+    public BAFSegmentation(final String outputDir)
+    {
+        mOutputDir = outputDir;
     }
 
-    void applySegmentation(@NotNull final String tumor) throws InterruptedException, IOException {
-        final String ratioFile = AmberBAFFile.generateAmberFilenameForReading(outputDirectory, tumor);
-        final String pcfFile = PCFFile.generateBAFFilename(outputDirectory, tumor);
+    public void applySegmentation(final String tumor) throws InterruptedException, IOException
+    {
+        final String ratioFile = AmberBAFFile.generateAmberFilenameForReading(mOutputDir, tumor);
+        final String pcfFile = PCFFile.generateBAFFilename(mOutputDir, tumor);
         int result = RExecutor.executeFromClasspath("r/bafSegmentation.R", ratioFile, pcfFile);
-        if (result != 0) {
+        if(result != 0)
+        {
             throw new IOException("R execution failed. Unable to complete segmentation.");
         }
     }

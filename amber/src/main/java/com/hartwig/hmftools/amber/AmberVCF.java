@@ -28,37 +28,42 @@ import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
-public class AmberVCF {
-
+public class AmberVCF
+{
     private static final String PASS = "PASS";
 
-    private final String tumorSample;
-    private final AmberConfig config;
+    private final AmberConfig mConfig;
 
-    AmberVCF(@NotNull final AmberConfig config) {
-        this.tumorSample = config.tumor();
-        this.config = config;
+    public AmberVCF(final AmberConfig config)
+    {
+        mConfig = config;
     }
 
-
-    public void writeBAF(@NotNull final String filename, @NotNull final Collection<TumorBAF> tumorEvidence,  @NotNull final AmberHetNormalEvidence hetNormalEvidence) {
+    public void writeBAF(@NotNull final String filename, @NotNull final Collection<TumorBAF> tumorEvidence,
+            @NotNull final AmberHetNormalEvidence hetNormalEvidence)
+    {
         final List<TumorBAF> list = Lists.newArrayList(tumorEvidence);
         Collections.sort(list);
 
         final VariantContextWriter writer =
                 new VariantContextWriterBuilder().setOutputFile(filename).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
-        final VCFHeader header = header(config.tumorOnly() ? Collections.singletonList(config.tumor()) : config.allSamples());
+
+        final VCFHeader header = header(mConfig.TumorOnly ? Collections.singletonList(mConfig.TumorId) : mConfig.allSamples());
+
         writer.setHeader(header);
         writer.writeHeader(header);
 
         final ListMultimap<AmberSite, Genotype> genotypeMap = ArrayListMultimap.create();
-        for (final String sample : hetNormalEvidence.samples()) {
-            for (BaseDepth baseDepth : hetNormalEvidence.evidence(sample)) {
+        for(final String sample : hetNormalEvidence.samples())
+        {
+            for(BaseDepth baseDepth : hetNormalEvidence.evidence(sample))
+            {
                 genotypeMap.put(AmberSiteFactory.asSite(baseDepth), createGenotype(sample, baseDepth));
             }
         }
 
-        for (final TumorBAF tumorBAF : list) {
+        for(final TumorBAF tumorBAF : list)
+        {
             AmberSite tumorSite = AmberSiteFactory.tumorSite(tumorBAF);
             genotypeMap.put(tumorSite, createGenotype(tumorBAF));
             writer.add(create(tumorBAF, genotypeMap.get(tumorSite)));
@@ -67,13 +72,14 @@ public class AmberVCF {
         writer.close();
     }
 
-    void writeContamination(@NotNull final String filename, @NotNull final Collection<TumorContamination> evidence) {
+    void writeContamination(@NotNull final String filename, @NotNull final Collection<TumorContamination> evidence)
+    {
         final List<TumorContamination> list = Lists.newArrayList(evidence);
         Collections.sort(list);
 
         final VariantContextWriter writer =
                 new VariantContextWriterBuilder().setOutputFile(filename).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
-        final VCFHeader header = header(Lists.newArrayList(config.primaryReference(), config.tumor()));
+        final VCFHeader header = header(Lists.newArrayList(mConfig.primaryReference(), mConfig.TumorId));
         writer.setHeader(header);
         writer.writeHeader(header);
 
@@ -81,13 +87,14 @@ public class AmberVCF {
         writer.close();
     }
 
-    void writeSNPCheck(@NotNull final String filename, @NotNull final List<BaseDepth> baseDepths) {
+    void writeSNPCheck(@NotNull final String filename, @NotNull final List<BaseDepth> baseDepths)
+    {
         final List<BaseDepth> list = Lists.newArrayList(baseDepths);
         Collections.sort(list);
 
         final VariantContextWriter writer =
                 new VariantContextWriterBuilder().setOutputFile(filename).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
-        final VCFHeader header = header(Lists.newArrayList(config.primaryReference()));
+        final VCFHeader header = header(Lists.newArrayList(mConfig.primaryReference()));
         writer.setHeader(header);
         writer.writeHeader(header);
 
@@ -95,9 +102,9 @@ public class AmberVCF {
         writer.close();
     }
 
-
     @NotNull
-    private VariantContext create(@NotNull final TumorBAF tumorBaf, final List<Genotype> genotypes) {
+    private VariantContext create(@NotNull final TumorBAF tumorBaf, final List<Genotype> genotypes)
+    {
 
         final List<Allele> alleles = alleles(tumorBaf);
 
@@ -113,7 +120,8 @@ public class AmberVCF {
     }
 
     @NotNull
-    private VariantContext create(@NotNull final TumorContamination contamination) {
+    private VariantContext create(@NotNull final TumorContamination contamination)
+    {
         assert (contamination.normal().altSupport() == 0);
 
         final Allele ref = Allele.create(contamination.tumor().ref().toString(), true);
@@ -121,12 +129,12 @@ public class AmberVCF {
 
         final List<Allele> alleles = Lists.newArrayList(ref, alt);
 
-        final Genotype tumor = new GenotypeBuilder(tumorSample).DP(contamination.tumor().readDepth())
+        final Genotype tumor = new GenotypeBuilder(mConfig.TumorId).DP(contamination.tumor().readDepth())
                 .AD(new int[] { contamination.tumor().refSupport(), contamination.tumor().altSupport() })
                 .alleles(alleles)
                 .make();
 
-        final Genotype normal = new GenotypeBuilder(config.primaryReference()).DP(contamination.normal().readDepth())
+        final Genotype normal = new GenotypeBuilder(mConfig.primaryReference()).DP(contamination.normal().readDepth())
                 .AD(new int[] { contamination.normal().refSupport(), contamination.normal().altSupport() })
                 .alleles(alleles)
                 .make();
@@ -141,7 +149,8 @@ public class AmberVCF {
     }
 
     @NotNull
-    private VariantContext create(@NotNull final BaseDepth snp) {
+    private VariantContext create(@NotNull final BaseDepth snp)
+    {
         final List<Allele> alleles = Lists.newArrayList();
         alleles.add(Allele.create(snp.ref().toString(), true));
         alleles.add(Allele.create(snp.alt().toString(), false));
@@ -150,7 +159,7 @@ public class AmberVCF {
         adField.add(snp.refSupport());
         adField.add(snp.altSupport());
 
-        final Genotype normal = new GenotypeBuilder(config.primaryReference()).DP(snp.readDepth())
+        final Genotype normal = new GenotypeBuilder(mConfig.primaryReference()).DP(snp.readDepth())
                 .AD(adField.stream().mapToInt(i -> i).toArray())
                 .alleles(alleles)
                 .make();
@@ -165,7 +174,8 @@ public class AmberVCF {
     }
 
     @NotNull
-    private static VCFHeader header(final List<String> samples) {
+    private static VCFHeader header(final List<String> samples)
+    {
         VCFHeader header = new VCFHeader(Collections.emptySet(), Lists.newArrayList(samples));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
@@ -176,7 +186,8 @@ public class AmberVCF {
     }
 
     @NotNull
-    private static Genotype createGenotype(@NotNull final String sample, @NotNull final BaseDepth depth) {
+    private static Genotype createGenotype(@NotNull final String sample, @NotNull final BaseDepth depth)
+    {
         return new GenotypeBuilder(sample).DP(depth.readDepth())
                 .AD(new int[] { depth.refSupport(), depth.altSupport() })
                 .alleles(alleles(depth))
@@ -184,21 +195,24 @@ public class AmberVCF {
     }
 
     @NotNull
-    private Genotype createGenotype(@NotNull final TumorBAF tumorBaf) {
-        return new GenotypeBuilder(tumorSample).DP(tumorBaf.tumorReadDepth())
+    private Genotype createGenotype(@NotNull final TumorBAF tumorBaf)
+    {
+        return new GenotypeBuilder(mConfig.TumorId).DP(tumorBaf.tumorReadDepth())
                 .AD(new int[] { tumorBaf.tumorRefSupport(), tumorBaf.tumorAltSupport() })
                 .alleles(alleles(tumorBaf))
                 .make();
     }
 
-    private static List<Allele> alleles(@NotNull final BaseDepth baseDepth) {
+    private static List<Allele> alleles(@NotNull final BaseDepth baseDepth)
+    {
         final Allele ref = Allele.create(baseDepth.ref().toString(), true);
         final Allele alt = Allele.create(baseDepth.alt().toString(), false);
 
         return Lists.newArrayList(ref, alt);
     }
 
-    private static List<Allele> alleles(@NotNull final TumorBAF baf) {
+    private static List<Allele> alleles(@NotNull final TumorBAF baf)
+    {
         final Allele ref = Allele.create(baf.ref(), true);
         final Allele alt = Allele.create(baf.alt(), false);
 

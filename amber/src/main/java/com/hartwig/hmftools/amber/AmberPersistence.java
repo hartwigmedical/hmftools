@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.amber;
 
+import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -20,61 +22,65 @@ import com.hartwig.hmftools.common.amber.qc.AmberQCFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class AmberPersistence {
+class AmberPersistence
+{
+    private final AmberConfig mConfig;
 
-    private static final Logger LOGGER = LogManager.getLogger(AmberPersistence.class);
-
-    private final AmberConfig config;
-
-    AmberPersistence(final AmberConfig config) {
-        this.config = config;
+    public AmberPersistence(final AmberConfig config)
+    {
+        mConfig = config;
     }
 
-    void persistVersionInfo(@NotNull final VersionInfo versionInfo) throws IOException {
-        versionInfo.write(config.outputDirectory());
+    void persistVersionInfo(@NotNull final VersionInfo versionInfo) throws IOException
+    {
+        versionInfo.write(mConfig.OutputDir);
     }
 
-    void persistBAF(@NotNull final List<AmberBAF> result) throws IOException, InterruptedException {
-        final String filename = AmberBAFFile.generateAmberFilenameForWriting(config.outputDirectory(), config.tumor());
+    void persistBAF(@NotNull final List<AmberBAF> result) throws IOException, InterruptedException
+    {
+        final String filename = AmberBAFFile.generateAmberFilenameForWriting(mConfig.OutputDir, mConfig.TumorId);
         AmberBAFFile.write(filename, result);
 
-        LOGGER.info("Applying pcf segmentation");
-        new BAFSegmentation(config.outputDirectory()).applySegmentation(config.tumor());
+        AMB_LOGGER.info("Applying pcf segmentation");
+        new BAFSegmentation(mConfig.OutputDir).applySegmentation(mConfig.TumorId);
     }
 
-    void persistBafVcf(@NotNull final List<TumorBAF> tumorBAFList, final AmberHetNormalEvidence amberHetNormalEvidence) {
-        final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.baf.vcf.gz";
-        LOGGER.info("Writing {} BAF records to {}", tumorBAFList.size(), outputVcf);
-        new AmberVCF(config).writeBAF(outputVcf, tumorBAFList, amberHetNormalEvidence);
+    void persistBafVcf(@NotNull final List<TumorBAF> tumorBAFList, final AmberHetNormalEvidence amberHetNormalEvidence)
+    {
+        final String outputVcf = mConfig.OutputDir + File.separator + mConfig.TumorId + ".amber.baf.vcf.gz";
+        AMB_LOGGER.info("Writing {} BAF records to {}", tumorBAFList.size(), outputVcf);
+        new AmberVCF(mConfig).writeBAF(outputVcf, tumorBAFList, amberHetNormalEvidence);
     }
 
-    void persistQC(@NotNull final List<AmberBAF> result, @NotNull final List<TumorContamination> contaminationRecords) throws IOException {
+    void persistQC(@NotNull final List<AmberBAF> result, @NotNull final List<TumorContamination> contaminationRecords) throws IOException
+    {
         final double contamination = new TumorContaminationModel().contamination(contaminationRecords);
         final AmberQC qcStats = AmberQCFactory.create(contamination, result);
-        final String qcFilename = AmberQCFile.generateFilename(config.outputDirectory(), config.tumor());
+        final String qcFilename = AmberQCFile.generateFilename(mConfig.OutputDir, mConfig.TumorId);
         AmberQCFile.write(qcFilename, qcStats);
     }
 
-    void persistContamination(@NotNull final List<TumorContamination> contaminationList) throws IOException {
+    void persistContamination(@NotNull final List<TumorContamination> contaminationList) throws IOException
+    {
         Collections.sort(contaminationList);
 
-        final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.contamination.vcf.gz";
-        LOGGER.info("Writing {} contamination records to {}", contaminationList.size(), outputVcf);
-        new AmberVCF(config).writeContamination(outputVcf, contaminationList);
+        final String outputVcf = mConfig.OutputDir + File.separator + mConfig.TumorId + ".amber.contamination.vcf.gz";
+        AMB_LOGGER.info("Writing {} contamination records to {}", contaminationList.size(), outputVcf);
+        new AmberVCF(mConfig).writeContamination(outputVcf, contaminationList);
 
-        final String filename = TumorContaminationFile.generateContaminationFilename(config.outputDirectory(), config.tumor());
+        final String filename = TumorContaminationFile.generateContaminationFilename(mConfig.OutputDir, mConfig.TumorId);
         TumorContaminationFile.write(filename, contaminationList);
     }
 
-    void persistSnpCheck(@NotNull final ListMultimap<Chromosome, BaseDepth> baseDepths) {
-        if (baseDepths.size() > 0) {
-            final String outputVcf = config.outputDirectory() + File.separator + config.reference().get(0) + ".amber.snp.vcf.gz";
-            LOGGER.info("Writing {} germline snp records to {}", baseDepths.size(), outputVcf);
-            new AmberVCF(config).writeSNPCheck(outputVcf, Lists.newArrayList(baseDepths.values()));
+    void persistSnpCheck(@NotNull final ListMultimap<Chromosome, BaseDepth> baseDepths)
+    {
+        if(baseDepths.size() > 0)
+        {
+            final String outputVcf = mConfig.OutputDir + File.separator + mConfig.primaryReference() + ".amber.snp.vcf.gz";
+            AMB_LOGGER.info("Writing {} germline snp records to {}", baseDepths.size(), outputVcf);
+            new AmberVCF(mConfig).writeSNPCheck(outputVcf, Lists.newArrayList(baseDepths.values()));
         }
     }
 }

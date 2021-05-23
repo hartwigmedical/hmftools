@@ -13,12 +13,13 @@ import com.hartwig.hmftools.common.genome.position.GenomePositions;
 
 import org.jetbrains.annotations.NotNull;
 
-class SnpCheckFilter implements Predicate<BaseDepth> {
+public class SnpCheckFilter implements Predicate<BaseDepth>
+{
+    private final Set<GenomePosition> mSnpLoci;
 
-    private final Set<GenomePosition> snpLoci;
-
-    SnpCheckFilter(@NotNull final Multimap<Chromosome, AmberSite> snpLoci) {
-        this.snpLoci = snpLoci.values()
+    public SnpCheckFilter(@NotNull final Multimap<Chromosome, AmberSite> snpLoci)
+    {
+        mSnpLoci = snpLoci.values()
                 .stream()
                 .filter(AmberSite::snpCheck)
                 .map(x -> GenomePositions.create(x.chromosome(), x.position()))
@@ -26,7 +27,8 @@ class SnpCheckFilter implements Predicate<BaseDepth> {
     }
 
     @Override
-    public boolean test(final BaseDepth baseDepth) {
-        return snpLoci.contains(GenomePositions.create(baseDepth));
+    public boolean test(final BaseDepth baseDepth)
+    {
+        return mSnpLoci.contains(GenomePositions.create(baseDepth));
     }
 }

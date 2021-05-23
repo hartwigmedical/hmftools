@@ -1,41 +1,51 @@
 package com.hartwig.hmftools.amber;
 
+import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
+
 import java.util.concurrent.Callable;
 
 import com.google.common.base.Strings;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-class AmberTaskCompletion {
+public class AmberTaskCompletion
+{
+    private int mExpected;
+    private int mComplete;
+    private double mPreviousPercentComplete;
 
-    private static final Logger LOGGER = LogManager.getLogger(AmberTaskCompletion.class);
+    public AmberTaskCompletion()
+    {
+        mExpected = 0;
+        mComplete = 0;
+        mPreviousPercentComplete = 0;
+    }
 
-    private int expected = 0;
-    private int complete = 0;
-    private double previousPercentComplete = 0;
+    public <T> Callable<T> task(@NotNull final Callable<T> callable)
+    {
+        mExpected++;
 
-    <T> Callable<T> task(@NotNull final Callable<T> callable) {
-        expected++;
-
-        return () -> {
+        return () ->
+        {
             T result = callable.call();
             completed();
             return result;
         };
     }
 
-    private void completed() {
-        double percentComplete = ((double) ++complete) / expected;
-        if (expected == complete || percentComplete > previousPercentComplete + 0.1) {
-            LOGGER.info("{}", complete(percentComplete));
-            previousPercentComplete = percentComplete;
+    private void completed()
+    {
+        double percentComplete = ((double) ++mComplete) / mExpected;
+        if(mExpected == mComplete || percentComplete > mPreviousPercentComplete + 0.1)
+        {
+            AMB_LOGGER.info("{}", complete(percentComplete));
+            mPreviousPercentComplete = percentComplete;
         }
     }
 
     @NotNull
-    private static String complete(double percent) {
+    private static String complete(double percent)
+    {
         int roundedPercent = (int) Math.round(percent * 100);
         int hashCount = Math.min(20, roundedPercent / 5);
         int gapCount = Math.max(0, 20 - hashCount);
