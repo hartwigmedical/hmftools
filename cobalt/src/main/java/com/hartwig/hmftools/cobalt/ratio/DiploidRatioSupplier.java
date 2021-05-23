@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.cobalt.ratio;
 
+import static com.hartwig.hmftools.cobalt.CobaltConstants.ROLLING_MEDIAN_MAX_DISTANCE;
+import static com.hartwig.hmftools.cobalt.CobaltConstants.ROLLING_MEDIAN_MIN_COVERAGE;
+
 import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -12,36 +15,37 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
-class DiploidRatioSupplier {
+public final class DiploidRatioSupplier
+{
+    public static ListMultimap<Chromosome, ReadRatio> calcDiploidRatioResults(
+            final CobaltChromosomes chromosomes, final ListMultimap<Chromosome, ReadRatio> normalRatios)
+    {
+        ListMultimap<Chromosome, ReadRatio> results = ArrayListMultimap.create();
 
-    private static final long ROLLING_MEDIAN_MAX_DISTANCE = 5_000;
-    private static final long ROLLING_MEDIAN_MIN_COVERAGE = 1_000;
-
-    private final ListMultimap<Chromosome, ReadRatio> result = ArrayListMultimap.create();
-
-    DiploidRatioSupplier(@NotNull final CobaltChromosomes chromosomes, @NotNull final ListMultimap<Chromosome, ReadRatio> normalRatios) {
-
-        for (CobaltChromosome cobaltChromosome : chromosomes.chromosomes()) {
-            if (HumanChromosome.contains(cobaltChromosome.contig())) {
+        for(CobaltChromosome cobaltChromosome : chromosomes.chromosomes())
+        {
+            if(HumanChromosome.contains(cobaltChromosome.contig()))
+            {
                 Chromosome chromosome = HumanChromosome.fromString(cobaltChromosome.contig());
                 final List<ReadRatio> ratios = normalRatios.get(chromosome);
                 final List<ReadRatio> adjustedRatios;
-                if (chromosome.equals(HumanChromosome._Y)) {
+                if(chromosome.equals(HumanChromosome._Y))
+                {
                     adjustedRatios = ratios;
-                } else {
+                }
+                else
+                {
                     double expectedRatio = cobaltChromosome.actualRatio();
                     adjustedRatios = new DiploidRatioNormalization(expectedRatio,
                             ROLLING_MEDIAN_MAX_DISTANCE,
                             ROLLING_MEDIAN_MIN_COVERAGE,
                             ratios).get();
                 }
-                result.replaceValues(chromosome, adjustedRatios);
+
+                results.replaceValues(chromosome, adjustedRatios);
             }
         }
-    }
 
-    @NotNull
-    ListMultimap<Chromosome, ReadRatio> result() {
-        return result;
+        return results;
     }
 }

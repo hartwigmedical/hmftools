@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cobalt.diploid;
 
+import static com.hartwig.hmftools.cobalt.CobaltConstants.WINDOW_SIZE;
+
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -10,56 +12,65 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-class DiploidRegionBuilder implements Consumer<DiploidCount> {
-
-    private static final int WINDOW_SIZE = 1000;
-
+public class DiploidRegionBuilder implements Consumer<DiploidCount>
+{
     private final List<GenomeRegion> result = Lists.newArrayList();
 
-    private final double cutoff;
-    private final int maleSamples;
-    private final int femaleSamples;
-    private long totalDiploidBases = 0;
+    private final double mCutoff;
+    private final int mMaleSamples;
+    private final int mFemaleSamples;
+    private long mTotalDiploidBases;
 
-    private String contig = "";
-    private long start = 0;
-    private long end = 0;
-    private boolean isDiploid;
+    private String mChromosome = "";
+    private long mStart = 0;
+    private long mEnd = 0;
+    private boolean mIsDiploid;
 
-    DiploidRegionBuilder(final double cutoff, final int femaleSamples, final int maleSamples) {
-        this.cutoff = cutoff;
-        this.maleSamples = maleSamples;
-        this.femaleSamples = femaleSamples;
+    public DiploidRegionBuilder(final double cutoff, final int femaleSamples, final int maleSamples)
+    {
+        mCutoff = cutoff;
+        mMaleSamples = maleSamples;
+        mFemaleSamples = femaleSamples;
+        mTotalDiploidBases = 0;
+        mStart = 0;
+        mEnd = 0;
+        mChromosome = "";
     }
 
     @Override
-    public void accept(@NotNull DiploidCount count) {
-        int samples = count.chromosome().equals("Y") || count.chromosome().equals("chrY") ? maleSamples : femaleSamples;
-        boolean isCountDiploid = Doubles.greaterOrEqual(count.proportionIsDiploid(samples), cutoff);
-        if (!count.chromosome().equals(contig) || isCountDiploid != isDiploid) {
+    public void accept(@NotNull DiploidCount count)
+    {
+        int samples = count.chromosome().equals("Y") || count.chromosome().equals("chrY") ? mMaleSamples : mFemaleSamples;
+        boolean isCountDiploid = Doubles.greaterOrEqual(count.proportionIsDiploid(samples), mCutoff);
+        if(!count.chromosome().equals(mChromosome) || isCountDiploid != mIsDiploid)
+        {
             finaliseCurrent();
-            contig = count.chromosome();
-            start = count.position();
-            isDiploid = isCountDiploid;
+            mChromosome = count.chromosome();
+            mStart = count.position();
+            mIsDiploid = isCountDiploid;
         }
 
-        end = count.position() + WINDOW_SIZE - 1;
+        mEnd = count.position() + WINDOW_SIZE - 1;
     }
 
-    private void finaliseCurrent() {
-        if (isDiploid) {
-            result.add(GenomeRegions.create(contig, start, end));
-            totalDiploidBases += end - start + 1;
+    private void finaliseCurrent()
+    {
+        if(mIsDiploid)
+        {
+            result.add(GenomeRegions.create(mChromosome, mStart, mEnd));
+            mTotalDiploidBases += mEnd - mStart + 1;
         }
-        isDiploid = false;
+        mIsDiploid = false;
     }
 
-    public long getTotalDiploidBases() {
-        return totalDiploidBases;
+    public long getTotalDiploidBases()
+    {
+        return mTotalDiploidBases;
     }
 
     @NotNull
-    public List<GenomeRegion> build() {
+    public List<GenomeRegion> build()
+    {
         finaliseCurrent();
         return result;
     }

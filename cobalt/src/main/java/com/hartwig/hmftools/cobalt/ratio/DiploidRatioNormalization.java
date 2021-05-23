@@ -9,81 +9,105 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-class DiploidRatioNormalization {
+class DiploidRatioNormalization
+{
+    private int mStartIndex;
+    private int mEndIndex;
 
-    private int startIndex = 0;
-    private int endIndex = -1;
+    private final long mMaxWindowDistance;
+    private final List<ReadRatio> mRatios;
+    private final List<ReadRatio> mResults;
+    private final RollingMedian mRollingMedian;
 
-    private final long maxWindowDistance;
-    private final List<ReadRatio> ratios;
-    private final List<ReadRatio> result = Lists.newArrayList();
-    private final RollingMedian rollingMedian = new RollingMedian();
+    DiploidRatioNormalization(final double expectedRatio, int maxWindowDistance, int minWindowCoverage,
+            final List<ReadRatio> ratios)
+    {
+        mStartIndex = 0;
+        mEndIndex = -1;
 
-    DiploidRatioNormalization(final double expectedRatio, final long maxWindowDistance, final long minWindowCoverage,
-            final List<ReadRatio> ratios) {
-        this.maxWindowDistance = maxWindowDistance;
-        this.ratios = ratios;
+        mResults = Lists.newArrayList();
+        mRollingMedian = new RollingMedian();
 
-        for (int currentIndex = 0; currentIndex < ratios.size(); currentIndex++) {
+        mMaxWindowDistance = maxWindowDistance;
+        mRatios = ratios;
+
+        for(int currentIndex = 0; currentIndex < ratios.size(); currentIndex++)
+        {
             final ReadRatio current = ratios.get(currentIndex);
 
             removeExpiredRatios(currentIndex);
             addNewRatios(currentIndex);
 
-            double medianRatio = rollingMedian.median();
-            double correctedRatio = isValid(current) && rollingMedian.size() >= minWindowCoverage
+            double medianRatio = mRollingMedian.median();
+            double correctedRatio = isValid(current) && mRollingMedian.size() >= minWindowCoverage
                     ? expectedRatio * current.ratio() / medianRatio
                     : current.ratio();
 
-            result.add(ImmutableReadRatio.builder().from(current).ratio(correctedRatio).build());
+            mResults.add(ImmutableReadRatio.builder().from(current).ratio(correctedRatio).build());
         }
     }
 
     @NotNull
-    List<ReadRatio> get() {
-        return result;
+    List<ReadRatio> get()
+    {
+        return mResults;
     }
 
-    private boolean isValid(@NotNull final ReadRatio ratio) {
+    private boolean isValid(@NotNull final ReadRatio ratio)
+    {
         return Doubles.greaterThan(ratio.ratio(), 0);
     }
 
-    private void addNewRatios(int currentIndex) {
-        for (int laterIndex = endIndex + 1; laterIndex < ratios.size(); laterIndex++) {
-            final ReadRatio later = ratios.get(laterIndex);
+    private void addNewRatios(int currentIndex)
+    {
+        for(int laterIndex = mEndIndex + 1; laterIndex < mRatios.size(); laterIndex++)
+        {
+            final ReadRatio later = mRatios.get(laterIndex);
 
-            if (distance(currentIndex, laterIndex) <= maxWindowDistance) {
+            if(distance(currentIndex, laterIndex) <= mMaxWindowDistance)
+            {
                 addToMedian(later);
-            } else {
+            }
+            else
+            {
                 return;
             }
         }
     }
 
-    private void addToMedian(@NotNull final ReadRatio current) {
-        endIndex++;
-        if (isValid(current)) {
-            rollingMedian.add(current.ratio());
+    private void addToMedian(@NotNull final ReadRatio current)
+    {
+        mEndIndex++;
+        if(isValid(current))
+        {
+            mRollingMedian.add(current.ratio());
         }
     }
 
-    private void removeExpiredRatios(int currentIndex) {
-        for (int earlierIndex = startIndex; earlierIndex < currentIndex; earlierIndex++) {
-            final ReadRatio earlier = ratios.get(earlierIndex);
+    private void removeExpiredRatios(int currentIndex)
+    {
+        for(int earlierIndex = mStartIndex; earlierIndex < currentIndex; earlierIndex++)
+        {
+            final ReadRatio earlier = mRatios.get(earlierIndex);
             final boolean isValid = isValid(earlier);
 
-            if (!isValid || distance(currentIndex, earlierIndex) > maxWindowDistance) {
-                if (isValid) {
-                    rollingMedian.remove(earlier.ratio());
+            if(!isValid || distance(currentIndex, earlierIndex) > mMaxWindowDistance)
+            {
+                if(isValid)
+                {
+                    mRollingMedian.remove(earlier.ratio());
                 }
-                startIndex++;
-            } else {
+                mStartIndex++;
+            }
+            else
+            {
                 return;
             }
         }
     }
 
-    private long distance(int firstIndex, int secondIndex) {
+    private long distance(int firstIndex, int secondIndex)
+    {
         return Math.abs(firstIndex - secondIndex);
     }
 }

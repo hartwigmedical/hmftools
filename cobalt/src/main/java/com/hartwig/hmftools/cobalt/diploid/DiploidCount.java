@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cobalt.diploid;
 
+import static com.hartwig.hmftools.cobalt.CobaltConstants.DELIMITER;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,80 +15,86 @@ import com.hartwig.hmftools.common.genome.position.GenomePositions;
 
 import org.jetbrains.annotations.NotNull;
 
-class DiploidCount implements Comparable<DiploidCount> {
+class DiploidCount implements Comparable<DiploidCount>
+{
+    public final GenomePosition Position;
+    
+    private int mDiploid;
+    private int mCount;
 
-    private static final String DELIMITER = "\t";
-
-    @NotNull
-    public static Map<GenomePosition, DiploidCount> readDiploidCountAsMap(final String inputFile) throws IOException {
-        return Files.readAllLines(new File(inputFile).toPath())
-                .stream()
-                .map(DiploidCount::new)
-                .collect(Collectors.toMap(x -> x.position, x -> x));
-    }
-
-    @NotNull
-    public static List<DiploidCount> readDiploidCountAsList(final String inputFile) throws IOException {
-        return Files.readAllLines(new File(inputFile).toPath()).stream().map(DiploidCount::new).collect(Collectors.toList());
-    }
-
-    private final GenomePosition position;
-    private int diploid;
-    private int count;
-
-    private DiploidCount(@NotNull String line) {
+    private DiploidCount(@NotNull String line)
+    {
         final String[] values = line.split(DELIMITER);
-        this.position = GenomePositions.create(values[0], Long.parseLong(values[1]));
-        this.diploid = Integer.parseInt(values[2]);
-        this.count = Integer.parseInt(values[3]);
+        Position = GenomePositions.create(values[0], Long.parseLong(values[1]));
+        mDiploid = Integer.parseInt(values[2]);
+        mCount = Integer.parseInt(values[3]);
     }
 
-    DiploidCount(final GenomePosition position, final int diploid, final int count) {
-        this.position = position;
-        this.diploid = diploid;
-        this.count = count;
+    public DiploidCount(final GenomePosition position, final int diploid, final int count)
+    {
+        Position = position;
+        mDiploid = diploid;
+        mCount = count;
     }
 
-    void incrementTotal() {
-        count++;
+    void incrementTotal()
+    {
+        mCount++;
     }
 
-    void incrementDiploid() {
-        diploid++;
+    void incrementDiploid()
+    {
+        mDiploid++;
     }
 
-    public int getDiploid() {
-        return diploid;
+    public int getDiploid()
+    {
+        return mDiploid;
     }
 
-    public int getCount() {
-        return count;
+    public String chromosome()
+    {
+        return Position.chromosome();
     }
 
-    public String chromosome() {
-        return position.chromosome();
+    public long position()
+    {
+        return Position.position();
     }
 
-    public long position() {
-        return position.position();
-    }
-
-    public double proportionIsDiploid(int count) {
+    public double proportionIsDiploid(int count)
+    {
         return 1d * getDiploid() / count;
     }
 
     @NotNull
-    @Override
-    public String toString() {
-        return new StringJoiner(DELIMITER).add(position.chromosome())
-                .add(String.valueOf(position.position()))
-                .add(String.valueOf(diploid))
-                .add(String.valueOf(count))
+    public String toString()
+    {
+        return new StringJoiner(DELIMITER).add(Position.chromosome())
+                .add(String.valueOf(Position.position()))
+                .add(String.valueOf(mDiploid))
+                .add(String.valueOf(mCount))
                 .toString();
     }
 
     @Override
-    public int compareTo(@NotNull final DiploidCount o) {
-        return position.compareTo(o.position);
+    public int compareTo(@NotNull final DiploidCount o)
+    {
+        return Position.compareTo(o.Position);
+    }
+
+    @NotNull
+    public static Map<GenomePosition, DiploidCount> readDiploidCountAsMap(final String inputFile) throws IOException
+    {
+        return Files.readAllLines(new File(inputFile).toPath())
+                .stream()
+                .map(DiploidCount::new)
+                .collect(Collectors.toMap(x -> x.Position, x -> x));
+    }
+
+    @NotNull
+    public static List<DiploidCount> readDiploidCountAsList(final String inputFile) throws IOException
+    {
+        return Files.readAllLines(new File(inputFile).toPath()).stream().map(DiploidCount::new).collect(Collectors.toList());
     }
 }

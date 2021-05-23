@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cobalt.count;
 
+import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
+
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -11,8 +13,6 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.window.Window;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
@@ -20,90 +20,103 @@ import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-class ChromosomeReadCount implements Callable<ChromosomeReadCount> {
+public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
+{
+    private final File mInputFile;
+    private final SamReaderFactory mReaderFactory;
+    private final String mChromosome;
+    private final long mChromosomeLength;
+    private final List<ReadCount> mResults;
+    private final int mMinMappingQuality;
+    private final Window mWindow;
 
-    private static final Logger LOGGER = LogManager.getLogger(ChromosomeReadCount.class);
+    private long mStart;
+    private int mCount;
 
-    private final File inputFile;
-    private final SamReaderFactory readerFactory;
-    private final String chromosome;
-    private final long chromosomeLength;
-    private final List<ReadCount> result = Lists.newArrayList();
-    private final int minMappingQuality;
-    private final Window window;
+    public ChromosomeReadCount(
+            final File inputFile, final SamReaderFactory readerFactory, @NotNull final String chromosome,
+            final long chromosomeLength, final int windowSize, final int minMappingQuality)
+    {
+        mInputFile = inputFile;
+        mReaderFactory = readerFactory;
+        mChromosome = chromosome;
+        mChromosomeLength = chromosomeLength;
+        mMinMappingQuality = minMappingQuality;
+        mWindow = new Window(windowSize);
+        mResults = Lists.newArrayList();
 
-    private long start;
-    private int count;
-
-    ChromosomeReadCount(final File inputFile, final SamReaderFactory readerFactory, @NotNull final String chromosome,
-            final long chromosomeLength, final int windowSize, final int minMappingQuality) {
-        this.inputFile = inputFile;
-        this.readerFactory = readerFactory;
-        this.chromosome = chromosome;
-        this.chromosomeLength = chromosomeLength;
-        this.minMappingQuality = minMappingQuality;
-        this.window = new Window(windowSize);
-
-        start = 1;
-        count = -1;
+        mStart = 1;
+        mCount = -1;
     }
 
     @Override
-    public ChromosomeReadCount call() throws Exception {
-        LOGGER.info("Generating windows on chromosome {}", chromosome);
+    public ChromosomeReadCount call() throws Exception
+    {
+        CB_LOGGER.info("Generating windows on chromosome {}", mChromosome);
 
-        try (final SamReader reader = readerFactory.open(inputFile)) {
-            final SAMRecordIterator iterator = reader.query(chromosome, 0, 0, true);
-            while (iterator.hasNext()) {
+        try(final SamReader reader = mReaderFactory.open(mInputFile))
+        {
+            final SAMRecordIterator iterator = reader.query(mChromosome, 0, 0, true);
+            while(iterator.hasNext())
+            {
                 addRecord(iterator.next());
             }
         }
         return this;
     }
 
-    @NotNull
-    Chromosome chromosome() {
-        return HumanChromosome.fromString(chromosome);
+    public Chromosome chromosome()
+    {
+        return HumanChromosome.fromString(mChromosome);
     }
 
-    @NotNull
-    List<ReadCount> readCount() {
-        addReadCount(start, count);
+    public List<ReadCount> readCount()
+    {
+        addReadCount(mStart, mCount);
 
         long lastWindowPosition = lastWindowPosition();
-        if (result.get(result.size() - 1).position() < lastWindowPosition) {
+        if(mResults.get(mResults.size() - 1).position() < lastWindowPosition)
+        {
             addReadCount(lastWindowPosition, -1);
         }
 
-        return result;
+        return mResults;
     }
 
-    private void addRecord(@NotNull SAMRecord record) {
-        if (isEligible(record)) {
-            long window = windowPosition(record.getAlignmentStart());
-            if (start != window) {
-                addReadCount(start, count);
-                start = window;
-                count = 0;
-            }
-            count++;
+    private void addRecord(final SAMRecord record)
+    {
+        if(!isEligible(record))
+            return;
+
+        long window = windowPosition(record.getAlignmentStart());
+        if(mStart != window)
+        {
+            addReadCount(mStart, mCount);
+            mStart = window;
+            mCount = 0;
         }
+
+        mCount++;
     }
 
-    private void addReadCount(long position, int count) {
-        result.add(ImmutableReadCount.builder().chromosome(chromosome).position(position).readCount(count).build());
+    private void addReadCount(long position, int count)
+    {
+        mResults.add(ImmutableReadCount.builder().chromosome(mChromosome).position(position).readCount(count).build());
     }
 
-    private boolean isEligible(@NotNull SAMRecord record) {
-        return record.getMappingQuality() >= minMappingQuality && !(record.getReadUnmappedFlag() || record.getDuplicateReadFlag()
-                || record.isSecondaryOrSupplementary());
+    private boolean isEligible(final SAMRecord record)
+    {
+        return record.getMappingQuality() >= mMinMappingQuality
+                && !(record.getReadUnmappedFlag() || record.getDuplicateReadFlag() || record.isSecondaryOrSupplementary());
     }
 
-    private long lastWindowPosition() {
-        return windowPosition(chromosomeLength);
+    private long lastWindowPosition()
+    {
+        return windowPosition(mChromosomeLength);
     }
 
-    private long windowPosition(long position) {
-        return window.start(position);
+    private long windowPosition(long position)
+    {
+        return mWindow.start(position);
     }
 }

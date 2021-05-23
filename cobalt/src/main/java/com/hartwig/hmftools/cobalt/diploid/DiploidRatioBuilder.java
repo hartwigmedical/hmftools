@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cobalt.diploid;
 
+import static com.hartwig.hmftools.cobalt.CobaltConstants.WINDOW_SIZE;
+
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -16,58 +18,68 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.util.Locatable;
 import htsjdk.tribble.bed.BEDFeature;
 
-public class DiploidRatioBuilder implements Consumer<Locatable> {
-
-    private static final int WINDOW_SIZE = 1000;
-
+public class DiploidRatioBuilder implements Consumer<Locatable>
+{
     private final ListMultimap<Chromosome, ReadRatio> result = ArrayListMultimap.create();
     private final List<ReadRatio> contigResult = Lists.newArrayList();
 
-    private String contig = "";
-    private int start = 0;
+    private String mChromosome;
+    private int mStart;
 
-    public DiploidRatioBuilder() {
+    public DiploidRatioBuilder()
+    {
+        mChromosome = "";
+        mStart = 0;
     }
 
-    public DiploidRatioBuilder(@NotNull List<BEDFeature> bedFeatures) {
+    public DiploidRatioBuilder(final List<BEDFeature> bedFeatures)
+    {
+        this();
         bedFeatures.forEach(this);
     }
 
     @Override
-    public void accept(@NotNull Locatable bed) {
-        if (!bed.getContig().equals(contig)) {
+    public void accept(@NotNull Locatable bed)
+    {
+        if(!bed.getContig().equals(mChromosome))
+        {
             finaliseCurrent();
-            contig = bed.getContig();
-            start = 1;
+            mChromosome = bed.getContig();
+            mStart = 1;
         }
 
         createRatio(bed.getContig(), bed.getStart(), bed.getEnd());
-        start = bed.getEnd() + 1;
+        mStart = bed.getEnd() + 1;
     }
 
-    private void createRatio(String contig, int start, int end) {
+    private void createRatio(String contig, int start, int end)
+    {
         int position = start;
-        while (position < end) {
+        while(position < end)
+        {
             contigResult.add(create(contig, position));
             position += WINDOW_SIZE;
         }
     }
 
-    @NotNull
-    private static ReadRatio create(String contig, int position) {
+    private static ReadRatio create(String contig, int position)
+    {
         return ImmutableReadRatio.builder().chromosome(contig).position(position).ratio(1).build();
     }
 
-    private void finaliseCurrent() {
-        if (start > 0) {
-            result.putAll(HumanChromosome.fromString(contig), contigResult);
+    private void finaliseCurrent()
+    {
+        if(mStart > 0)
+        {
+            result.putAll(HumanChromosome.fromString(mChromosome), contigResult);
         }
 
         contigResult.clear();
     }
 
     @NotNull
-    public ListMultimap<Chromosome, ReadRatio> build() {
+    public ListMultimap<Chromosome, ReadRatio> build()
+    {
         finaliseCurrent();
         return result;
     }

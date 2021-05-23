@@ -32,19 +32,23 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class CountBamLinesMigration implements AutoCloseable {
-
+public class CountBamLinesMigration
+{
+    /*
     private static final Logger LOGGER = LogManager.getLogger(CountBamLinesMigration.class);
 
     private final CobaltConfig config;
     private final VersionInfo versionInfo;
     private final ExecutorService executorService;
 
-    public static void main(final String... args) throws IOException, ExecutionException, InterruptedException {
+    public static void main(final String... args) throws IOException, ExecutionException, InterruptedException
+    {
         final Options options = CobaltConfig.createOptions();
-        try (final CountBamLinesMigration application = new CountBamLinesMigration(options, args)) {
+        try(final CountBamLinesMigration application = new CountBamLinesMigration(options, args))
+        {
             application.run();
-        } catch (ParseException e) {
+        } catch(ParseException e)
+        {
             LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("CountBamLinesApplication", options);
@@ -52,7 +56,8 @@ public class CountBamLinesMigration implements AutoCloseable {
         }
     }
 
-    private CountBamLinesMigration(final Options options, final String... args) throws ParseException, IOException {
+    private CountBamLinesMigration(final Options options, final String... args) throws ParseException, IOException
+    {
         versionInfo = new VersionInfo("cobalt.version");
         LOGGER.info("COBALT version: {}", versionInfo.version() + " migration");
 
@@ -60,15 +65,18 @@ public class CountBamLinesMigration implements AutoCloseable {
         config = CobaltConfig.createMigrationConfig(cmd);
 
         final File outputDir = new File(config.outputDirectory());
-        if (!outputDir.exists() && !outputDir.mkdirs()) {
+        if(!outputDir.exists() && !outputDir.mkdirs())
+        {
             throw new IOException("Unable to write directory " + config.outputDirectory());
         }
 
-        if (!new File(config.gcProfilePath()).exists()) {
+        if(!new File(config.gcProfilePath()).exists())
+        {
             throw new IOException("Unable to locate gc profile file " + config.gcProfilePath());
         }
 
-        if (!config.refGenomePath().isEmpty() && !new File(config.gcProfilePath()).exists()) {
+        if(!config.refGenomePath().isEmpty() && !new File(config.gcProfilePath()).exists())
+        {
             throw new IOException("Unable to locate ref genome file " + config.refGenomePath());
         }
 
@@ -81,15 +89,17 @@ public class CountBamLinesMigration implements AutoCloseable {
                 config.minMappingQuality());
     }
 
-    private void run() throws IOException, ExecutionException, InterruptedException {
+    private void run() throws IOException, ExecutionException, InterruptedException
+    {
         LOGGER.info("Reading GC Profile");
         final Multimap<Chromosome, GCProfile> gcProfiles = GCProfileFactory.loadGCContent(config.windowSize(), config.gcProfilePath());
 
         LOGGER.info("Reading previous output");
         final String inputFilename = CobaltRatioFile.generateFilenameForReading(config.inputDirectory(), config.tumor());
-        ListMultimap<Chromosome, CobaltRatio> oldRatios =  CobaltRatioFile.read(inputFilename);
+        ListMultimap<Chromosome, CobaltRatio> oldRatios = CobaltRatioFile.read(inputFilename);
         ListMultimap<Chromosome, CobaltCount> readCounts = ArrayListMultimap.create();
-        for (Chromosome key : oldRatios.keySet()) {
+        for(Chromosome key : oldRatios.keySet())
+        {
             List<CobaltRatio> ratios = oldRatios.get(key);
             List<CobaltCount> count = ratios.stream().map(x -> (CobaltCount) x).collect(Collectors.toList());
             readCounts.replaceValues(key, count);
@@ -107,14 +117,17 @@ public class CountBamLinesMigration implements AutoCloseable {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
+    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException
+    {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 
     @Override
-    public void close() {
+    public void close()
+    {
         executorService.shutdown();
         LOGGER.info("Complete");
     }
+     */
 }

@@ -11,13 +11,15 @@ import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class DiploidRatioNormalizationTest {
+public class DiploidRatioNormalizationTest
+{
 
     private static final String CHROMOSOME = "1";
     private static final double EPSILON = 1e-10;
 
     @Test
-    public void testCloseToZero() {
+    public void testCloseToZero()
+    {
         final List<ReadRatio> input = Lists.newArrayList(create(0, 0), create(50, 0), create(100, 0.002), create(150, 0), create(200, 0));
 
         final List<ReadRatio> output = new DiploidRatioNormalization(1.0, 5, 5, input).get();
@@ -30,7 +32,8 @@ public class DiploidRatioNormalizationTest {
     }
 
     @Test
-    public void testMaxWindowDistance() {
+    public void testMaxWindowDistance()
+    {
         final List<ReadRatio> input =
                 Lists.newArrayList(create(0, 1.0), create(50, 1.5), create(100, -1), create(150, 1.1), create(200, 1.2));
 
@@ -44,7 +47,8 @@ public class DiploidRatioNormalizationTest {
     }
 
     @Test
-    public void testMinCoverage() {
+    public void testMinCoverage()
+    {
         final List<ReadRatio> input =
                 Lists.newArrayList(create(0, 1.0), create(50, 1.5), create(100, 2.0), create(150, -1), create(200, -1));
 
@@ -57,18 +61,21 @@ public class DiploidRatioNormalizationTest {
         assertRatio(input.get(4), output.get(4), 1.0);
     }
 
-    private static void assertRatio(@NotNull final ReadRatio input, @NotNull final ReadRatio output, double median) {
+    private static void assertRatio(@NotNull final ReadRatio input, @NotNull final ReadRatio output, double median)
+    {
         assertEquals(input.position(), output.position());
         assertEquals(input.ratio() / median, output.ratio(), EPSILON);
     }
 
     @NotNull
-    private static ReadRatio create(long position, double ratio) {
+    private static ReadRatio create(long position, double ratio)
+    {
         return createReadRatio(CHROMOSOME, position, ratio).build();
     }
 
     @NotNull
-    private static ImmutableReadRatio.Builder createReadRatio(@NotNull final String chromosome, final long position, final double ratio) {
+    private static ImmutableReadRatio.Builder createReadRatio(@NotNull final String chromosome, final long position, final double ratio)
+    {
         return ImmutableReadRatio.builder().chromosome(chromosome).position(position).ratio(ratio);
     }
 }

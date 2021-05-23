@@ -1,47 +1,120 @@
 package com.hartwig.hmftools.cobalt;
 
-import static com.hartwig.hmftools.common.cli.Configs.defaultEnumValue;
+import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 
-import java.io.IOException;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.cli.Configs;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.ValidationStringency;
 
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface CobaltConfig {
+public class CobaltConfig
+{
+    public final int ThreadCount;
 
-    int DEFAULT_THREADS = 4;
-    int DEFAULT_MIN_MAPPING_QUALITY = 10;
+    public final int MinMappingQuality;
 
-    String TUMOR_ONLY = "tumor_only";
-    String TUMOR_ONLY_DIPLOID_BED = "tumor_only_diploid_bed";
-    String THREADS = "threads";
-    String REFERENCE = "reference";
-    String REFERENCE_BAM = "reference_bam";
-    String TUMOR = "tumor";
-    String TUMOR_BAM = "tumor_bam";
-    String REF_GENOME = "ref_genome";
-    String OUTPUT_DIR = "output_dir";
-    String INPUT_DIR = "input_dir";
-    String GC_PROFILE = "gc_profile";
-    String MIN_MAPPING_QUALITY = "min_quality";
-    String VALIDATION_STRINGENCY = "validation_stringency";
+    public final String ReferenceId;
+    public final String TumorId;
 
-    @NotNull
-    static Options createOptions() {
+    public final String TumorBamPath;
+    public final String ReferenceBamPath;
+    public final String RefGenomePath;
+    public final String GcProfilePath;
+    public final String OutputDir;
+
+    public final ValidationStringency Stringency;
+    public final boolean TumorOnly;
+    public final String TumorOnlyDiploidBed;
+
+    private static final int DEFAULT_THREADS = 4;
+
+    public static String TUMOR = "tumor";
+    public static String REFERENCE = "reference";
+
+    private static String TUMOR_ONLY = "tumor_only";
+    private static String TUMOR_ONLY_DIPLOID_BED = "tumor_only_diploid_bed";
+    private static String THREADS = "threads";
+    private static String REFERENCE_BAM = "reference_bam";
+    private static String TUMOR_BAM = "tumor_bam";
+    private static String REF_GENOME = "ref_genome";
+    private static String GC_PROFILE = "gc_profile";
+    private static String MIN_MAPPING_QUALITY = "min_quality";
+    private static String VALIDATION_STRINGENCY = "validation_stringency";
+
+    public static final Logger CB_LOGGER = LogManager.getLogger(CobaltConfig.class);
+
+    public CobaltConfig(final CommandLine cmd)
+    {
+        ThreadCount = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
+        MinMappingQuality = defaultIntValue(cmd, MIN_MAPPING_QUALITY, DEFAULT_MIN_MAPPING_QUALITY);
+        RefGenomePath = cmd.getOptionValue(REF_GENOME, "");
+
+        final StringJoiner missingJoiner = new StringJoiner(", ");
+        GcProfilePath = cmd.getOptionValue(GC_PROFILE);
+
+        TumorOnly = cmd.hasOption(TUMOR_ONLY);
+
+        if(TumorOnly)
+        {
+            ReferenceId = CobaltRatioFile.TUMOR_ONLY_REFERENCE_SAMPLE;
+            ReferenceBamPath = Strings.EMPTY;
+            TumorOnlyDiploidBed = cmd.getOptionValue(TUMOR_ONLY_DIPLOID_BED);
+        }
+        else
+        {
+            TumorOnlyDiploidBed = "";
+            ReferenceId = parameter(cmd, REFERENCE, missingJoiner);
+            ReferenceBamPath = cmd.getOptionValue(REFERENCE_BAM);
+        }
+
+        TumorBamPath = cmd.getOptionValue(TUMOR_BAM);
+        OutputDir = parseOutputDir(cmd);
+
+        TumorId = parameter(cmd, TUMOR, missingJoiner);
+
+        Stringency = ValidationStringency.valueOf(cmd.getOptionValue(VALIDATION_STRINGENCY, "DEFAULT_STRINGENCY"));
+    }
+
+    public boolean isValid()
+    {
+        if(TumorOnly)
+        {
+            if(ReferenceBamPath != null || ReferenceId != null)
+            {
+                CB_LOGGER.error( "referenceId or BAM not applicable to tumor only mode");
+                return false;
+            }
+        }
+
+        if(!checkCreateOutputDir(OutputDir))
+        {
+            CB_LOGGER.error("failed to create output directory({})", OutputDir);
+            return false;
+        }
+
+        if(GcProfilePath.endsWith("gz"))
+        {
+            CB_LOGGER.error( "invalid GC-profile file, must be uncompressed");
+            return false;
+        }
+
+        return true;
+    }
+
+    public static Options createOptions()
+    {
         final Options options = new Options();
         options.addOption(TUMOR_ONLY, false, "Tumor only mode");
         options.addOption(TUMOR_ONLY_DIPLOID_BED, true, "Diploid regions for tumor-only mode");
@@ -50,7 +123,6 @@ public interface CobaltConfig {
         options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
         options.addOption(TUMOR, true, "Name of tumor sample");
         options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
-        options.addOption(INPUT_DIR, true, "Input directory (used for migration only)");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(MIN_MAPPING_QUALITY, true, "Min quality [" + DEFAULT_MIN_MAPPING_QUALITY + "]");
         options.addOption(GC_PROFILE, true, "Location of GC Profile");
@@ -60,120 +132,14 @@ public interface CobaltConfig {
         return options;
     }
 
-    int threadCount();
-
-    int minMappingQuality();
-
-    @NotNull
-    String gcProfilePath();
-
-    @NotNull
-    String tumorBamPath();
-
-    @NotNull
-    String referenceBamPath();
-
-    @NotNull
-    String refGenomePath();
-
-    @NotNull
-    String inputDirectory();
-
-    @NotNull
-    String outputDirectory();
-
-    @NotNull
-    String reference();
-
-    @NotNull
-    String tumor();
-
-    @NotNull
-    ValidationStringency validationStringency();
-
-    boolean tumorOnly();
-
-    @NotNull
-    String tumorOnlyDiploidBed();
-
-    default int windowSize() {
-        return 1000;
-    }
-
-    @NotNull
-    static CobaltConfig createConfig(@NotNull final CommandLine cmd) throws ParseException, IOException {
-        final int threadCount = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
-        final int minMappingQuality = defaultIntValue(cmd, MIN_MAPPING_QUALITY, DEFAULT_MIN_MAPPING_QUALITY);
-        final String refGenomePath = cmd.getOptionValue(REF_GENOME, "");
-
-        final StringJoiner missingJoiner = new StringJoiner(", ");
-        final String gcProfilePath = Configs.readableFile(cmd, GC_PROFILE);
-        if (gcProfilePath.endsWith("gz")) {
-            throw new ParseException("Please supply un-compressed " + GC_PROFILE + " file");
-        }
-
-        if (cmd.hasOption(INPUT_DIR)) {
-            throw new ParseException(INPUT_DIR + " not applicable to COBALT");
-        }
-
-        final boolean isTumorOnly = cmd.hasOption(TUMOR_ONLY);
-        final String reference;
-        final String referenceBamPath;
-        final String diploidBed;
-        if (isTumorOnly) {
-            if (cmd.hasOption(REFERENCE_BAM)) {
-                throw new ParseException(REFERENCE_BAM + " not applicable to tumor only mode");
-            }
-
-            if (cmd.hasOption(REFERENCE)) {
-                throw new ParseException(REFERENCE + " not applicable to tumor only mode");
-            }
-
-            reference = CobaltRatioFile.TUMOR_ONLY_REFERENCE_SAMPLE;
-            referenceBamPath = Strings.EMPTY;
-            diploidBed = Configs.readableFile(cmd, TUMOR_ONLY_DIPLOID_BED);
-
-        } else {
-            diploidBed = Strings.EMPTY;
-            reference = parameter(cmd, REFERENCE, missingJoiner);
-            referenceBamPath = Configs.readableFile(cmd, REFERENCE_BAM);
-        }
-
-        final String tumorBamPath = Configs.readableFile(cmd, TUMOR_BAM);
-        final String outputDirectory = Configs.writableOutputDirectory(cmd, OUTPUT_DIR);
-        final String tumor = parameter(cmd, TUMOR, missingJoiner);
-        final String missing = missingJoiner.toString();
-
-        final ValidationStringency validationStringency =
-                defaultEnumValue(cmd, VALIDATION_STRINGENCY, ValidationStringency.DEFAULT_STRINGENCY);
-
-        if (!missing.isEmpty()) {
-            throw new ParseException("Missing the following parameters: " + missing);
-        }
-
-        return ImmutableCobaltConfig.builder()
-                .threadCount(threadCount)
-                .tumorOnly(isTumorOnly)
-                .tumorOnlyDiploidBed(diploidBed)
-                .minMappingQuality(minMappingQuality)
-                .gcProfilePath(gcProfilePath)
-                .tumorBamPath(tumorBamPath)
-                .inputDirectory(Strings.EMPTY)
-                .referenceBamPath(referenceBamPath)
-                .refGenomePath(refGenomePath)
-                .outputDirectory(outputDirectory)
-                .reference(reference)
-                .tumor(tumor)
-                .validationStringency(validationStringency)
-                .build();
-    }
-
-    @NotNull
-    static CobaltConfig createMigrationConfig(@NotNull final CommandLine cmd) throws ParseException {
+    /*
+    public CobaltConfig createMigrationConfig(final CommandLine cmd) throws ParseException
+    {
         final StringJoiner missingJoiner = new StringJoiner(", ");
 
-        final String gcProfilePath = parameter(cmd, GC_PROFILE, missingJoiner);
-        if (gcProfilePath.endsWith("gz")) {
+        GcProfilePath = parameter(cmd, GC_PROFILE, missingJoiner);
+        if(gcProfilePath.endsWith("gz"))
+        {
             throw new ParseException("Please supply un-compressed " + GC_PROFILE + " file");
         }
 
@@ -183,11 +149,13 @@ public interface CobaltConfig {
         final String outputDirectory = parameter(cmd, OUTPUT_DIR, missingJoiner);
         final String missing = missingJoiner.toString();
 
-        if (!missing.isEmpty()) {
+        if(!missing.isEmpty())
+        {
             throw new ParseException("Missing the following parameters: " + missing);
         }
 
-        if (inputDirectory.equals(outputDirectory)) {
+        if(inputDirectory.equals(outputDirectory))
+        {
             throw new ParseException("Input and output directories must be difference");
         }
 
@@ -205,11 +173,13 @@ public interface CobaltConfig {
                 .validationStringency(ValidationStringency.DEFAULT_STRINGENCY)
                 .build();
     }
+    */
 
-    @NotNull
-    static String parameter(@NotNull final CommandLine cmd, @NotNull final String parameter, @NotNull final StringJoiner missing) {
+    private String parameter(@NotNull final CommandLine cmd, @NotNull final String parameter, @NotNull final StringJoiner missing)
+    {
         final String value = cmd.getOptionValue(parameter);
-        if (value == null) {
+        if(value == null)
+        {
             missing.add(parameter);
             return "";
         }
