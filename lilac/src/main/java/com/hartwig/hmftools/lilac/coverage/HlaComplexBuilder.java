@@ -93,7 +93,11 @@ public class HlaComplexBuilder
         }
 
         HlaComplexCoverage proteinCoverage = calcProteinCoverage(referenceFragmentAlleles, candidatesAfterUniqueGroups);
-        List<HlaAlleleCoverage> uniqueProteins = findUnique(proteinCoverage,  uniqueGroupAlleles, totalFragmentCount);
+
+        // find uniquely supported protein alleles but don't allow recovered alleles to be in the unique protein set
+        List<HlaAlleleCoverage> uniqueProteins = findUnique(proteinCoverage,  uniqueGroupAlleles, totalFragmentCount).stream()
+                .filter(x -> !recoveredAlleles.contains(x.Allele)).collect(Collectors.toList());;
+
         List<HlaAlleleCoverage> discardedProtein = proteinCoverage.getAlleleCoverage().stream()
                 .filter(x -> x.UniqueCoverage > 0 && !uniqueProteins.contains(x)).collect(Collectors.toList());
         Collections.sort(discardedProtein, Collections.reverseOrder());
@@ -125,8 +129,13 @@ public class HlaComplexBuilder
 
         if (simpleComplexCount > COMPLEX_PERMS_THRESHOLD || simpleComplexCount < 0)
         {
-            LL_LOGGER.info("candidate permutations exceeds maximum complexity, complexes(A={} B={} C={})",
-                    aOnlyComplexes.size(), bOnlyComplexes.size(), cOnlyComplexes.size());
+            // common alleles will be kept regardless of any ranking
+            List<HlaAllele> commonAlleles = mRefData.CommonAlleles.stream()
+                    .filter(x -> candidatesAfterUniqueProteins.contains(x))
+                    .collect(Collectors.toList());
+
+            LL_LOGGER.info("candidate permutations exceeds maximum complexity, complexes(A={} B={} C={}) common({})",
+                    aOnlyComplexes.size(), bOnlyComplexes.size(), cOnlyComplexes.size(), commonAlleles.size());
 
             List<HlaAllele> aTopCandidates = rankedGroupCoverage(10, referenceFragmentAlleles, aOnlyComplexes, recoveredAlleles);
             List<HlaAllele> bTopCandidates = rankedGroupCoverage(10, referenceFragmentAlleles, bOnlyComplexes, recoveredAlleles);
@@ -135,6 +144,9 @@ public class HlaComplexBuilder
             topCandidates.addAll(aTopCandidates);
             topCandidates.addAll(bTopCandidates);
             topCandidates.addAll(cTopCandidates);
+
+            // ensure any common alleles, unfiltered so far, are kept regardless of ranking
+            commonAlleles.stream().filter(x -> !topCandidates.contains(x)).forEach(x -> topCandidates.add(x));
 
             List<HlaAllele> rejected = candidatesAfterUniqueProteins.stream()
                     .filter(x -> !topCandidates.contains(x)).collect(Collectors.toList());
