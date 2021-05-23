@@ -16,13 +16,15 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-public final class AmberSiteFactory {
-
-    private AmberSiteFactory() {
+public final class AmberSiteFactory
+{
+    private AmberSiteFactory()
+    {
     }
 
     @NotNull
-    public static AmberSite tumorSite(@NotNull final TumorBAF baseDepth) {
+    public static AmberSite tumorSite(@NotNull final TumorBAF baseDepth)
+    {
         return ImmutableAmberSite.builder()
                 .from(baseDepth)
                 .snpCheck(false)
@@ -32,7 +34,8 @@ public final class AmberSiteFactory {
     }
 
     @NotNull
-    public static AmberSite asSite(@NotNull final BaseDepth baseDepth) {
+    public static AmberSite asSite(@NotNull final BaseDepth baseDepth)
+    {
         return ImmutableAmberSite.builder()
                 .from(baseDepth)
                 .snpCheck(false)
@@ -42,13 +45,18 @@ public final class AmberSiteFactory {
     }
 
     @NotNull
-    public static ListMultimap<Chromosome, AmberSite> sites(@NotNull final String vcfFile) throws IOException {
+    public static ListMultimap<Chromosome, AmberSite> sites(@NotNull final String vcfFile) throws IOException
+    {
         final ListMultimap<Chromosome, AmberSite> result = ArrayListMultimap.create();
 
-        try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
-            for (VariantContext variant : reader.iterator()) {
-                if (variant.isNotFiltered()) {
-                    if (HumanChromosome.contains(variant.getContig())) {
+        try(final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false))
+        {
+            for(VariantContext variant : reader.iterator())
+            {
+                if(variant.isNotFiltered())
+                {
+                    if(HumanChromosome.contains(variant.getContig()))
+                    {
                         HumanChromosome chromosome = HumanChromosome.fromString(variant.getContig());
                         result.put(chromosome,
                                 ImmutableAmberSite.builder()

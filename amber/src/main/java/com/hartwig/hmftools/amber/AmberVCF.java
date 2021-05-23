@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSiteFactory;
 import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.TumorBAF;
-import com.hartwig.hmftools.common.amber.TumorContamination;
 
 import org.jetbrains.annotations.NotNull;
 

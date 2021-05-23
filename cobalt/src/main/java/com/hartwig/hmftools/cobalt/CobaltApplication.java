@@ -79,6 +79,12 @@ public class CobaltApplication implements AutoCloseable
 
     private void run() throws IOException, ExecutionException, InterruptedException
     {
+        if(!mConfig.isValid())
+        {
+            CB_LOGGER.error(" invalid config, exiting");
+            System.exit(1);
+        }
+
         CB_LOGGER.info("Reading GC Profile from {}", mConfig.GcProfilePath);
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("-%d").build();

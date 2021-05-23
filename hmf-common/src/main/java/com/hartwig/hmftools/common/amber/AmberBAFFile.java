@@ -18,7 +18,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class AmberBAFFile {
+public final class AmberBAFFile
+{
 
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final Logger LOGGER = LogManager.getLogger(AmberBAFFile.class);
@@ -27,31 +28,37 @@ public final class AmberBAFFile {
     private static final String AMBER_EXTENSION = ".amber.baf.tsv";
     private static final String AMBER_EXTENSION_OLD = ".amber.baf";
 
-    private AmberBAFFile() {
+    private AmberBAFFile()
+    {
     }
 
     @NotNull
-    public static String generateAmberFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
+    public static String generateAmberFilenameForWriting(@NotNull final String basePath, @NotNull final String sample)
+    {
         return basePath + File.separator + sample + AMBER_EXTENSION;
     }
 
     @NotNull
-    public static String generateAmberFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
+    public static String generateAmberFilenameForReading(@NotNull final String basePath, @NotNull final String sample)
+    {
         String filename = basePath + File.separator + sample + AMBER_EXTENSION;
         return (new File(filename).exists()) ? filename : basePath + File.separator + sample + AMBER_EXTENSION_OLD;
     }
 
     @NotNull
-    public static Multimap<Chromosome, AmberBAF> read(@NotNull final String fileName) throws IOException {
+    public static Multimap<Chromosome, AmberBAF> read(@NotNull final String fileName) throws IOException
+    {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull final List<AmberBAF> bafs) throws IOException {
+    public static void write(@NotNull final String filename, @NotNull final List<AmberBAF> bafs) throws IOException
+    {
         Files.write(new File(filename).toPath(), toLines(bafs));
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull final List<AmberBAF> bafs) {
+    private static List<String> toLines(@NotNull final List<AmberBAF> bafs)
+    {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         bafs.stream().map(AmberBAFFile::toString).forEach(lines::add);
@@ -59,7 +66,8 @@ public final class AmberBAFFile {
     }
 
     @NotNull
-    private static String header() {
+    private static String header()
+    {
         return new StringJoiner(DELIMITER, "", "").add("chromosome")
                 .add("position")
                 .add("tumorBAF")
@@ -72,7 +80,8 @@ public final class AmberBAFFile {
     }
 
     @NotNull
-    private static String toString(@NotNull final AmberBAF baf) {
+    private static String toString(@NotNull final AmberBAF baf)
+    {
         return new StringJoiner(DELIMITER).add(baf.chromosome())
                 .add(String.valueOf(baf.position()))
                 .add(FORMAT.format(baf.tumorBAF()))
@@ -85,14 +94,18 @@ public final class AmberBAFFile {
     }
 
     @NotNull
-    private static Multimap<Chromosome, AmberBAF> fromLines(@NotNull final List<String> lines) {
+    private static Multimap<Chromosome, AmberBAF> fromLines(@NotNull final List<String> lines)
+    {
         Multimap<Chromosome, AmberBAF> result = ArrayListMultimap.create();
-        for (int i = 1; i < lines.size(); i++) {
+        for(int i = 1; i < lines.size(); i++)
+        {
             final String line = lines.get(i);
-            try {
+            try
+            {
                 final AmberBAF baf = fromString(line);
                 result.put(HumanChromosome.fromString(baf.chromosome()), baf);
-            } catch (RuntimeException e) {
+            } catch(RuntimeException e)
+            {
                 LOGGER.info("Unable to parse line {}: {}", i, line);
                 throw e;
             }
@@ -102,7 +115,8 @@ public final class AmberBAFFile {
     }
 
     @NotNull
-    private static AmberBAF fromString(@NotNull final String line) {
+    private static AmberBAF fromString(@NotNull final String line)
+    {
         String[] values = line.split(DELIMITER);
         ImmutableAmberBAF.Builder builder = ImmutableAmberBAF.builder()
                 .chromosome(values[0])
@@ -112,7 +126,8 @@ public final class AmberBAFFile {
                 .normalBAF(0.5)
                 .normalDepth(0);
 
-        if (values.length == 8) {
+        if(values.length == 8)
+        {
             builder.tumorDepth(Integer.parseInt(values[4]))
                     .normalBAF(Double.parseDouble(values[5]))
                     .normalDepth(Integer.parseInt(values[7]));

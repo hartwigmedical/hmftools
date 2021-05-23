@@ -1,10 +1,13 @@
-package com.hartwig.hmftools.common.amber;
+package com.hartwig.hmftools.amber;
 
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.amber.BaseDepth;
+import com.hartwig.hmftools.common.amber.ModifiableTumorBAF;
+import com.hartwig.hmftools.common.amber.TumorBAF;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
@@ -19,9 +22,9 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class TumorBAFEvidence implements Callable<TumorBAFEvidence> {
-
-    private final String contig;
+public class TumorBAFEvidence implements Callable<TumorBAFEvidence>
+{
+    private final String mChromosome;
     private final String bamFile;
     private final TumorBAFFactory bafFactory;
     private final List<ModifiableTumorBAF> evidence;
@@ -30,14 +33,16 @@ public class TumorBAFEvidence implements Callable<TumorBAFEvidence> {
     private final SAMSlicer supplier;
 
     public TumorBAFEvidence(int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
-            final SamReaderFactory samReaderFactory, final List<BaseDepth> baseDepths) {
+            final SamReaderFactory samReaderFactory, final List<BaseDepth> baseDepths)
+    {
         this.bafFactory = new TumorBAFFactory(minBaseQuality);
-        this.contig = contig;
+        this.mChromosome = contig;
         this.bamFile = bamFile;
         this.samReaderFactory = samReaderFactory;
 
         final GenomeRegionsBuilder builder = new GenomeRegionsBuilder(typicalReadDepth);
-        for (BaseDepth bafRegion : baseDepths) {
+        for(BaseDepth bafRegion : baseDepths)
+        {
             builder.addPosition(bafRegion);
         }
 
@@ -48,30 +53,36 @@ public class TumorBAFEvidence implements Callable<TumorBAFEvidence> {
     }
 
     @NotNull
-    public String contig() {
-        return contig;
+    public String contig()
+    {
+        return mChromosome;
     }
 
     @NotNull
-    public List<TumorBAF> evidence() {
+    public List<TumorBAF> evidence()
+    {
         return evidence.stream().filter(x -> x.tumorIndelCount() == 0).collect(Collectors.toList());
     }
 
     @Override
-    public TumorBAFEvidence call() throws Exception {
-        try (SamReader reader = samReaderFactory.open(new File(bamFile))) {
+    public TumorBAFEvidence call() throws Exception
+    {
+        try(SamReader reader = samReaderFactory.open(new File(bamFile)))
+        {
             supplier.slice(reader, this::record);
         }
 
         return this;
     }
 
-    private void record(@NotNull final SAMRecord record) {
+    private void record(@NotNull final SAMRecord record)
+    {
         selector.select(asRegion(record), bafEvidence -> bafFactory.addEvidence(bafEvidence, record));
     }
 
     @NotNull
-    private static GenomeRegion asRegion(@NotNull final SAMRecord record) {
+    private static GenomeRegion asRegion(@NotNull final SAMRecord record)
+    {
         return GenomeRegions.create(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd());
     }
 }

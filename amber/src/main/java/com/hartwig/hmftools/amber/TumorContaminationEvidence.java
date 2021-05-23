@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.amber;
+package com.hartwig.hmftools.amber;
 
 import java.io.File;
 import java.util.List;
@@ -7,6 +7,9 @@ import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.amber.BaseDepth;
+import com.hartwig.hmftools.common.amber.BaseDepthFactory;
+import com.hartwig.hmftools.common.amber.ModifiableBaseDepth;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
@@ -20,8 +23,8 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class TumorContaminationEvidence implements Callable<TumorContaminationEvidence> {
-
+public class TumorContaminationEvidence implements Callable<TumorContaminationEvidence>
+{
     private final String contig;
     private final String bamFile;
     private final SamReaderFactory samReaderFactory;
@@ -31,7 +34,8 @@ public class TumorContaminationEvidence implements Callable<TumorContaminationEv
     private final SAMSlicer supplier;
 
     public TumorContaminationEvidence(int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig,
-            final String bamFile, final SamReaderFactory samReaderFactory, final List<BaseDepth> baseDepths) {
+            final String bamFile, final SamReaderFactory samReaderFactory, final List<BaseDepth> baseDepths)
+    {
         this.bafFactory = new BaseDepthFactory(minBaseQuality);
         this.contig = contig;
         this.bamFile = bamFile;
@@ -39,7 +43,8 @@ public class TumorContaminationEvidence implements Callable<TumorContaminationEv
         this.evidenceMap = Maps.newHashMap();
 
         final List<ModifiableBaseDepth> tumorRecords = Lists.newArrayList();
-        for (BaseDepth baseDepth : baseDepths) {
+        for(BaseDepth baseDepth : baseDepths)
+        {
             ModifiableBaseDepth modifiableBaseDepth = BaseDepthFactory.create(baseDepth);
             evidenceMap.put(baseDepth, modifiableBaseDepth);
             tumorRecords.add(modifiableBaseDepth);
@@ -52,17 +57,21 @@ public class TumorContaminationEvidence implements Callable<TumorContaminationEv
     }
 
     @NotNull
-    public String contig() {
+    public String contig()
+    {
         return contig;
     }
 
     @NotNull
-    public List<TumorContamination> evidence() {
+    public List<TumorContamination> evidence()
+    {
         final List<TumorContamination> result = Lists.newArrayList();
-        for (final Map.Entry<BaseDepth, ModifiableBaseDepth> entry : evidenceMap.entrySet()) {
+        for(final Map.Entry<BaseDepth, ModifiableBaseDepth> entry : evidenceMap.entrySet())
+        {
             final BaseDepth normal = entry.getKey();
             final BaseDepth tumor = entry.getValue();
-            if (tumor.altSupport() != 0) {
+            if(tumor.altSupport() != 0)
+            {
                 result.add(ImmutableTumorContamination.builder().from(normal).normal(normal).tumor(tumor).build());
             }
         }
@@ -71,20 +80,24 @@ public class TumorContaminationEvidence implements Callable<TumorContaminationEv
     }
 
     @Override
-    public TumorContaminationEvidence call() throws Exception {
-        try (SamReader reader = samReaderFactory.open(new File(bamFile))) {
+    public TumorContaminationEvidence call() throws Exception
+    {
+        try(SamReader reader = samReaderFactory.open(new File(bamFile)))
+        {
             supplier.slice(reader, this::record);
         }
 
         return this;
     }
 
-    private void record(@NotNull final SAMRecord record) {
+    private void record(@NotNull final SAMRecord record)
+    {
         selector.select(asRegion(record), bafEvidence -> bafFactory.addEvidence(bafEvidence, record));
     }
 
     @NotNull
-    private static GenomeRegion asRegion(@NotNull final SAMRecord record) {
+    private static GenomeRegion asRegion(@NotNull final SAMRecord record)
+    {
         return GenomeRegions.create(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd());
     }
 }

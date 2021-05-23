@@ -10,15 +10,17 @@ import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class BaseDepthFactory {
-
+public class BaseDepthFactory
+{
     @NotNull
-    public static ModifiableBaseDepth create(@NotNull final BaseDepth pos) {
+    public static ModifiableBaseDepth create(@NotNull final BaseDepth pos)
+    {
         return ModifiableBaseDepth.create().from(pos).setIndelCount(0).setRefSupport(0).setAltSupport(0).setReadDepth(0);
     }
 
     @NotNull
-    public static BaseDepth fromVariantContext(@NotNull final VariantContext context) {
+    public static BaseDepth fromVariantContext(@NotNull final VariantContext context)
+    {
         final Allele refAllele = context.getReference();
         final Allele altAllele = context.getAlternateAllele(0);
         final Genotype normal = context.getGenotype(0);
@@ -35,7 +37,8 @@ public class BaseDepthFactory {
     }
 
     @NotNull
-    public static ModifiableBaseDepth fromAmberSite(@NotNull final AmberSite site) {
+    public static ModifiableBaseDepth fromAmberSite(@NotNull final AmberSite site)
+    {
         return ModifiableBaseDepth.create()
                 .setChromosome(site.chromosome())
                 .setPosition(site.position())
@@ -49,38 +52,50 @@ public class BaseDepthFactory {
 
     private final int minBaseQuality;
 
-    BaseDepthFactory(final int minBaseQuality) {
+    public BaseDepthFactory(final int minBaseQuality)
+    {
         this.minBaseQuality = minBaseQuality;
     }
 
-    void addEvidence(@NotNull final ModifiableBaseDepth evidence, @NotNull final SAMRecord samRecord) {
+    public void addEvidence(@NotNull final ModifiableBaseDepth evidence, @NotNull final SAMRecord samRecord)
+    {
         int quality = getBaseQuality(evidence, samRecord);
-        if (quality >= minBaseQuality) {
+        if(quality >= minBaseQuality)
+        {
             evidence.setReadDepth(evidence.readDepth() + 1);
 
             int bafPosition = (int) evidence.position();
             int readPosition = samRecord.getReadPositionAtReferencePosition(bafPosition);
-            if (readPosition != 0) {
-                if (!indel(bafPosition, readPosition, samRecord)) {
+            if(readPosition != 0)
+            {
+                if(!indel(bafPosition, readPosition, samRecord))
+                {
                     final char baseChar = samRecord.getReadString().charAt(readPosition - 1);
                     final BaseDepth.Base base = BaseDepth.Base.valueOf(String.valueOf(baseChar).toUpperCase());
-                    if (base.equals(evidence.ref())) {
+                    if(base.equals(evidence.ref()))
+                    {
                         evidence.setRefSupport(evidence.refSupport() + 1);
-                    } else if (base.equals(evidence.alt())) {
+                    }
+                    else if(base.equals(evidence.alt()))
+                    {
                         evidence.setAltSupport(evidence.altSupport() + 1);
                     }
-                } else {
+                }
+                else
+                {
                     evidence.setIndelCount(evidence.indelCount() + 1);
                 }
             }
         }
     }
 
-    static boolean indel(int bafPosition, int readPosition, @NotNull final SAMRecord samRecord) {
-        if (samRecord.getAlignmentEnd() > bafPosition) {
-
+    public static boolean indel(int bafPosition, int readPosition, @NotNull final SAMRecord samRecord)
+    {
+        if(samRecord.getAlignmentEnd() > bafPosition)
+        {
             // Delete?
-            if (samRecord.getReadPositionAtReferencePosition(bafPosition + 1) == 0) {
+            if(samRecord.getReadPositionAtReferencePosition(bafPosition + 1) == 0)
+            {
                 return true;
             }
 
@@ -91,11 +106,14 @@ public class BaseDepthFactory {
         return false;
     }
 
-    static int getBaseQuality(@NotNull final GenomePosition position, @NotNull final SAMRecord samRecord) {
+    public static int getBaseQuality(@NotNull final GenomePosition position, @NotNull final SAMRecord samRecord)
+    {
         // Get quality of base after del if necessary
-        for (int pos = (int) position.position(); pos <= samRecord.getAlignmentEnd(); pos++) {
+        for(int pos = (int) position.position(); pos <= samRecord.getAlignmentEnd(); pos++)
+        {
             int readPosition = samRecord.getReadPositionAtReferencePosition(pos);
-            if (readPosition != 0) {
+            if(readPosition != 0)
+            {
                 return SAMRecords.getBaseQuality(samRecord, readPosition);
             }
         }
