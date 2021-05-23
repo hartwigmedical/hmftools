@@ -17,27 +17,28 @@ public class SomaticCodingCountTest
     @Test
     public void testRepeatAllele()
     {
-        /* TODO - complete class impl first
         List<HlaAllele> winningAlleles = Lists.newArrayList(
                 HlaAllele.fromString("A*01:01"), HlaAllele.fromString("A*01:01"),
                 HlaAllele.fromString("B*01:01"), HlaAllele.fromString("B*01:02"),
                 HlaAllele.fromString("C*01:01"), HlaAllele.fromString("C*01:03"));
 
-        List<SomaticCodingCount> count = SomaticCodingCount.create(winningAlleles);
-        assertEquals(6, count.size());
+        List<SomaticCodingCount> codingCounts = SomaticCodingCount.create(winningAlleles);
+        assertEquals(6, codingCounts.size());
 
-        count = count.addVariant(true, CodingEffect.MISSENSE, Sets.newHashSet(HlaAllele.fromString("A*01:01"), HlaAllele.fromString("B*01:01")));
-        count = count.addVariant(false, CodingEffect.MISSENSE, Sets.newHashSet(HlaAllele.fromString("B*01:01")));
+        SomaticCodingCount.addVariant(
+                codingCounts, true, CodingEffect.MISSENSE,
+                Lists.newArrayList(HlaAllele.fromString("A*01:01"), HlaAllele.fromString("B*01:01")));
 
-        assertEquals(0.5, count.get(0).Total, 0.001)
-        assertEquals(0.5, count.get(0).InframeIndel, 0.001)
+        SomaticCodingCount.addVariant(codingCounts,
+                false, CodingEffect.MISSENSE, Lists.newArrayList(HlaAllele.fromString("B*01:01")));
 
-        assertEquals(0.0, count.get(1).Total, 0.001)
-        assertEquals(1.5, count.get(2).Total, 0.001)
-        assertEquals(0.5, count.get(2).InframeIndel, 0.001)
-        assertEquals(1.0, count.get(2).Missense, 0.001)
+        assertEquals(0.5, codingCounts.get(0).total(), 0.001);
+        assertEquals(0.5, codingCounts.get(0).inframeIndel(), 0.001);
 
-         */
+        assertEquals(0.0, codingCounts.get(1).total(), 0.001);
+        assertEquals(1.5, codingCounts.get(2).total(), 0.001);
+        assertEquals(0.5, codingCounts.get(2).inframeIndel(), 0.001);
+        assertEquals(1.0, codingCounts.get(2).missense(), 0.001);
     }
 
 }

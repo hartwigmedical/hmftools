@@ -62,15 +62,12 @@ public class SomaticCodingCount
 
         for(HlaAllele allele : variantAlleles)
         {
-            codingCounts.stream().filter(x -> x.Allele.equals(allele)).forEach(x -> x.addVariant(isIndel, effect, contribution));
+            // give only to first to first matching allele
+            SomaticCodingCount matchingCount = codingCounts.stream().filter(x -> x.Allele.equals(allele)).findFirst().orElse(null);
+
+            if(matchingCount != null)
+                matchingCount.addVariant(isIndel, effect, contribution);
         }
-        /*
-            // Alternative, give only to first to first
-            if (counts.isNotEmpty()) {
-                result.add(counts[0].addVariant(indel, effect, contribution))
-                result.addAll(counts.takeLast(counts.size - 1))
-            }
-        */
     }
 
     private void addVariant(boolean indel, CodingEffect effect, double contribution)
@@ -78,6 +75,7 @@ public class SomaticCodingCount
         if(indel && effect == CodingEffect.MISSENSE)
         {
             mInframeIndel += contribution;
+            return;
         }
 
         switch(effect)

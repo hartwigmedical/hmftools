@@ -12,11 +12,12 @@ import htsjdk.samtools.SAMRecord;
 
 public class NucleotideFragmentFactoryTest
 {
+    /*
     private HlaSequence reference = new HlaSequence(HlaAllele.fromString("A*01:01"), "GATTTACA..CAT..ATC");
     private HlaSequence delete = new HlaSequence(HlaAllele.fromString("A*01:02"), "--...---..---..---");
     private HlaSequence insert = new HlaSequence(HlaAllele.fromString("A*01:03"), "--------AA---TT---");
+    */
 
-    /* TODO
     @Test
     public void testCreateNucleotidesFromAminoAcid()
     {
@@ -24,36 +25,4 @@ public class NucleotideFragmentFactoryTest
         assertEquals(Lists.newArrayList(".", ".", "."), NucleotideFragmentFactory.createNucleotidesFromAminoAcid("."));
         assertEquals(Lists.newArrayList("A", "G", "TTGA"), NucleotideFragmentFactory.createNucleotidesFromAminoAcid("SX"));
     }
-
-     */
-
-    /*
-        never used
-
-    private SAMRecord buildSamRecord(int alignmentStart, String cigar, String readString)
-    {
-        return buildSamRecord(alignmentStart, cigar, readString, readString.map {
-        '#'
-    }.joinToString(""))
-    }
-
-    fun buildSamRecord(alignmentStart:Int, cigar:String, readString:String, qualities:String):SAMRecord
-
-    {
-        val record = SAMRecord(null)
-        record.alignmentStart = alignmentStart
-        record.cigarString = cigar
-        record.readString = readString
-        record.readNegativeStrandFlag = false
-        record.baseQualityString = qualities
-        record.mappingQuality = 20
-        record.duplicateReadFlag = false
-        record.readUnmappedFlag = false
-        record.properPairFlag = true
-        record.readPairedFlag = true
-        return record
-    }
-
-     */
-
 }

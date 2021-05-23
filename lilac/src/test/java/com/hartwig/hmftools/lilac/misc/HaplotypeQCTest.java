@@ -1,8 +1,20 @@
 package com.hartwig.hmftools.lilac.misc;
 
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.lilac.SequenceCount;
+import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
+import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.qc.Haplotype;
+import com.hartwig.hmftools.lilac.qc.HaplotypeQC;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
+import org.apache.commons.math3.util.Pair;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class HaplotypeQCTest
@@ -10,44 +22,62 @@ public class HaplotypeQCTest
     @Test
     public void testUnmatchedHaplotype()
     {
-        // TODO
-        /*
-        val index0Map = mapOf(Pair("C", 4), Pair("A", 4))
-        val index1Map = mapOf(Pair("A", 4), Pair("T", 4))
-        val index2Map = mapOf(Pair("R", 8))
-        val index3Map = mapOf(Pair("T", 4), Pair("C", 4))
-        val array = Lists.newArrayList(index0Map, index1Map, index2Map, index3Map)
+        Map<String,Integer> index0Map = Maps.newHashMap();
+        index0Map.put("C", 4);
+        index0Map.put("A", 4);
 
-        val aminoAcidCount = SequenceCount(1, array)
-        val victim = PhasedEvidence(listOf(0, 1, 3).toIntArray(), mapOf(Pair("CAT", 4), Pair("ATC", 5)))
-        val catCandidate = create(HlaSequence("A*01:01", "CART"))
-        val atcCandidate = create(HlaSequence("A*01:02", "ATRC"))
-        val wildAtcCandidate = create(HlaSequence("A*01:03", "*TRC"))
-        val wildCandidate = create(HlaSequence("A*01:04", "****"))
+        Map<String,Integer> index1Map = Maps.newHashMap();
+        index1Map.put("A", 4);
+        index1Map.put("T", 4);
 
-        val noMissing = victim.unmatchedHaplotype(0, listOf(catCandidate, atcCandidate), aminoAcidCount)
-        Assert.assertEquals(0, noMissing.size)
+        Map<String,Integer> index2Map = Maps.newHashMap();
+        index2Map.put("R", 8);
 
-        val catMissing = victim.unmatchedHaplotype(4, listOf(atcCandidate), aminoAcidCount)
-        Assert.assertEquals(1, catMissing.size)
-        Assert.assertTrue(catMissing[0].haplotype == "CART")
+        Map<String,Integer> index3Map = Maps.newHashMap();
+        index3Map.put("T", 4);
+        index3Map.put("C", 4);
 
-        val catNotMissingBecauseOfMinEvidence = victim.unmatchedHaplotype(5, listOf(atcCandidate), aminoAcidCount)
-        Assert.assertEquals(0, catNotMissingBecauseOfMinEvidence.size)
+        Map<String,Integer>[] array = new Map[] { index0Map, index1Map, index2Map, index3Map };
 
-        val wildAtcMatch = victim.unmatchedHaplotype(0, listOf(wildAtcCandidate), aminoAcidCount)
-        Assert.assertEquals(1, wildAtcMatch.size)
-        Assert.assertTrue(wildAtcMatch[0].haplotype == "CART")
+        SequenceCount aminoAcidCount = new SequenceCount(1, array);
 
-        val wildMatch = victim.unmatchedHaplotype(0, listOf(wildCandidate), aminoAcidCount)
-        Assert.assertEquals(0, wildMatch.size)
+        List<Integer> aminoAcidIndexList = Lists.newArrayList(0, 1, 3);
+        Map<String,Integer> evidence = Maps.newHashMap();
+        evidence.put("CAT", 4);
+        evidence.put("ATC", 5);
+        PhasedEvidence victim = new PhasedEvidence(aminoAcidIndexList, evidence);
 
-         */
+        HlaSequenceLoci catCandidate = createSequenceLoci("A*01:01", "CART");
+        HlaSequenceLoci atcCandidate = createSequenceLoci("A*01:02", "ATRC");
+        HlaSequenceLoci wildAtcCandidate = createSequenceLoci("A*01:03", "*TRC");
+        HlaSequenceLoci wildCandidate = createSequenceLoci("A*01:04", "****");
+
+        List<Haplotype> noMissing = HaplotypeQC.unmatchedHaplotype(
+                victim, 0, Lists.newArrayList(catCandidate, atcCandidate), aminoAcidCount);
+        Assert.assertEquals(0, noMissing.size());
+
+        List<Haplotype> catMissing = HaplotypeQC.unmatchedHaplotype(
+                victim, 0, Lists.newArrayList(atcCandidate), aminoAcidCount);
+        Assert.assertEquals(1, catMissing.size());
+        Assert.assertTrue(catMissing.get((0)).Haplotype.equals("CART"));
+
+        List<Haplotype> catNotMissingBecauseOfMinEvidence = HaplotypeQC.unmatchedHaplotype(
+                victim, 5, Lists.newArrayList(atcCandidate), aminoAcidCount);
+        Assert.assertEquals(0, catNotMissingBecauseOfMinEvidence.size());
+
+        List<Haplotype> wildAtcMatch = HaplotypeQC.unmatchedHaplotype(
+                victim, 0, Lists.newArrayList(wildAtcCandidate), aminoAcidCount);
+        Assert.assertEquals(1, wildAtcMatch.size());
+        Assert.assertTrue(wildAtcMatch.get((0)).Haplotype.equals("CART"));
+
+        List<Haplotype> wildMatch = HaplotypeQC.unmatchedHaplotype(
+                victim, 0, Lists.newArrayList(wildCandidate), aminoAcidCount);
+        Assert.assertEquals(0, wildMatch.size());
     }
 
-    private HlaSequenceLoci create(final HlaSequence sequences)
+    private HlaSequenceLoci createSequenceLoci(final String allele, final String sequenceStr)
     {
-        return HlaSequenceLoci.create(sequences.Allele, sequences.getRawSequence(), sequences.getRawSequence());
+        HlaSequence sequence = new HlaSequence(HlaAllele.fromString(allele), sequenceStr);
+        return HlaSequenceLoci.create(sequence.Allele, sequence.getRawSequence(), sequence.getRawSequence());
     }
-
 }
