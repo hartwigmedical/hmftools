@@ -19,26 +19,41 @@ import java.util.concurrent.ThreadFactory;
 
 public class ComplexCoverageCalculator
 {
-    private final FutureProgressTracker mProgressTracker;
-    private final LilacConfig mConfig;
+    private final int mThreadCount;
 
-    public ComplexCoverageCalculator(final LilacConfig config)
+    public ComplexCoverageCalculator(int threadCount)
     {
-        mConfig = config;
-        mProgressTracker = new FutureProgressTracker(0.1, 10000);
+        mThreadCount = threadCount;
     }
 
     public List<HlaComplexCoverage> calculateComplexCoverages(final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes)
     {
+        List<HlaAllele> alleles = Lists.newArrayList();
+        complexes.stream().forEach(x -> x.getAlleles().stream().filter(y -> !alleles.contains(y)).forEach(y -> alleles.add(y)));
+        FragmentAlleleMatrix fragAlleleMatrix = new FragmentAlleleMatrix(fragmentAlleles, alleles);
+
+        if(mThreadCount > 1 || complexes.size() < 10000) // no point in allocating to threads
+        {
+            return calcMultiThreadResults(fragmentAlleles, complexes, fragAlleleMatrix);
+        }
+
+        CoverageCalcTask calcTask  = new CoverageCalcTask(fragmentAlleles, complexes, fragAlleleMatrix);
+        calcTask.call();
+        return calcTask.getCoverageResults();
+    }
+
+    private List<HlaComplexCoverage> calcMultiThreadResults(
+            final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes, final FragmentAlleleMatrix fragAlleleMatrix)
+    {
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Lilac-%d").build();
-        ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
+        ExecutorService executorService = Executors.newFixedThreadPool(mThreadCount, namedThreadFactory);
 
         List<CoverageCalcTask> coverageCalcTasks = Lists.newArrayList();
         List<FutureTask> taskList = new ArrayList<FutureTask>();
 
-        List<HlaComplex>[] complexLists = new List[mConfig.Threads];
+        List<HlaComplex>[] complexLists = new List[mThreadCount];
 
-        for(int i = 0; i < mConfig.Threads; ++i)
+        for(int i = 0; i < mThreadCount; ++i)
         {
             complexLists[i] = Lists.newArrayList();
         }
@@ -53,12 +68,6 @@ public class ComplexCoverageCalculator
                 listIndex = 0;
         }
 
-        Map<HlaAllele,List<FragmentAlleles>> alleleFragmentMap = null; // buildAlleleFragmentMap(fragmentAlleles, complexes);
-
-        List<HlaAllele> alleles = Lists.newArrayList();
-        complexes.stream().forEach(x -> x.getAlleles().stream().filter(y -> !alleles.contains(y)).forEach(y -> alleles.add(y)));
-        FragmentAlleleMatrix fragAlleleMatrix = new FragmentAlleleMatrix(fragmentAlleles, alleles);
-
         for(List<HlaComplex> complexList : complexLists)
         {
             CoverageCalcTask coverageTask = new CoverageCalcTask(fragmentAlleles, complexList, fragAlleleMatrix);
@@ -69,28 +78,6 @@ public class ComplexCoverageCalculator
             taskList.add(futureTask);
             executorService.execute(futureTask);
         }
-
-        /*
-        for (HlaComplex complex : complexes)
-        {
-            CoverageCalcTask coverageTask = new CoverageCalcTask(fragmentAlleles, complex);
-            coverageCalcTasks.add(coverageTask);
-
-            FutureTask futureTask = new FutureTask(coverageTask);
-
-            taskList.add(futureTask);
-            executorService.execute(futureTask);
-
-            // mProgressTracker.add(futureTask);
-            // taskList.add(executorService.submit(coverageTask));
-
-
-           // progress tracker usage
-            // val untrackedCallable: Callable<HlaComplexCoverage> = Callable { proteinCoverage(fragmentAlleles, complex.alleles) }
-            // val trackedCallable: Callable<HlaComplexCoverage> = progressTracker.add(untrackedCallable)
-            // list.add(executorService.submit(trackedCallable))
-        }
-        */
 
         try
         {
