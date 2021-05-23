@@ -314,7 +314,7 @@ public class SummaryChapter implements ReportChapter {
             } else if (patientReport.genomicAnalysis().hasReliablePurity() && patientReport.qsFormNumber()
                     .equals(QsFormNumber.FOR_080.display())) {
 
-                table = TableUtil.createReportContentTableSummary(new float[] { 15, 20, 25, 50 },
+                table = TableUtil.createReportContentTableSummary(new float[] { 15, 25, 25, 50 },
                         new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
                                 TableUtil.createHeaderCell("Function"),
                                 TableUtil.createHeaderCell("Linked drugs").setTextAlignment(TextAlignment.CENTER) });

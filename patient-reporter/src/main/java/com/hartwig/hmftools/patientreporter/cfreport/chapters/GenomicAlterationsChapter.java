@@ -352,7 +352,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         String title = "Pharmacogenetics";
 
         if (reportPeach) {
-            if (hasReliablePurity && !qsFormNumber.equals(QsFormNumber.FOR_080.display())) {
+            if (!hasReliablePurity && !qsFormNumber.equals(QsFormNumber.FOR_080.display())) {
                 String unreliable =
                         "The pharmacogenetics calling is not validated for low tumor purities and therefore the results are not displayed.";
                 return TableUtil.createPeachUnreliableReportTable(title, unreliable);
