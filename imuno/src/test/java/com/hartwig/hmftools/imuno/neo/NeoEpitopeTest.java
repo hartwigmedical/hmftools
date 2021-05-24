@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.imuno.neo.NeoEpitopeUtilsTest.CHR_1;
 import static com.hartwig.hmftools.imuno.neo.NeoEpitopeUtilsTest.GENE_ID_1;
 import static com.hartwig.hmftools.imuno.neo.NeoEpitopeUtilsTest.TRANS_ID_1;

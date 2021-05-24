@@ -5,9 +5,9 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
-import static com.hartwig.hmftools.common.neo.AminoAcidConverter.swapDnaToRna;
-import static com.hartwig.hmftools.common.neo.AminoAcidConverter.swapRnaToDna;
+import static com.hartwig.hmftools.common.codon.AminoAcidConverter.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.AminoAcidConverter.swapDnaToRna;
+import static com.hartwig.hmftools.common.codon.AminoAcidConverter.swapRnaToDna;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.findSkippedExonBoundaries;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.generatePeptides;
 import static com.hartwig.hmftools.imuno.neo.NeoUtils.getDownstreamCodingBases;
@@ -17,7 +17,6 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;

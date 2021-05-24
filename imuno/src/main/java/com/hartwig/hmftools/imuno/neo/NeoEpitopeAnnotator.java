@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIO
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.neo.AminoAcidConverter.AA_SELENOCYSTEINE;
-import static com.hartwig.hmftools.common.neo.AminoAcidConverter.STOP_SYMBOL;
+import static com.hartwig.hmftools.common.codon.AminoAcidConverter.AA_SELENOCYSTEINE;
+import static com.hartwig.hmftools.common.codon.AminoAcidConverter.STOP_SYMBOL;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.NE_FUSION_COHORT_FILE;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.generateFilename;

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.imuno.neo;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.codon.Codons.isStopCodon;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
@@ -15,15 +16,14 @@ import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
-import static com.hartwig.hmftools.common.neo.AminoAcidConverter.AA_SELENOCYSTEINE;
+import static com.hartwig.hmftools.common.codon.AminoAcidConverter.AA_SELENOCYSTEINE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.neo.AminoAcidConverter.STOP_SYMBOL;
-import static com.hartwig.hmftools.common.neo.AminoAcidConverter.convertDnaCodonToAminoAcid;
-import static com.hartwig.hmftools.common.neo.AminoAcidConverter.isStopCodon;
-import static com.hartwig.hmftools.common.neo.AminoAcidConverter.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.AminoAcidConverter.STOP_SYMBOL;
+import static com.hartwig.hmftools.common.codon.AminoAcidConverter.convertDnaCodonToAminoAcid;
+import static com.hartwig.hmftools.common.codon.AminoAcidConverter.reverseStrandBases;
 
 import java.util.List;
 import java.util.Set;

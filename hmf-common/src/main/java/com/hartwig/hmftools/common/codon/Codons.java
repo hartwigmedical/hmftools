@@ -2,50 +2,36 @@ package com.hartwig.hmftools.common.codon;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class Codons {
+public final class Codons
+{
+    public static final String DNA_START_CODON = "ATG";
 
-    private Codons() {
+    public static final String DNA_STOP_CODON_1 = "TAA";
+    public static final String DNA_STOP_CODON_2 = "TAG";
+    public static final String DNA_STOP_CODON_3 = "TGA";
+
+    public static final char UNKNOWN = '.';
+
+    public static boolean isStopCodon(final String codon)
+    {
+        return codon.equals(DNA_STOP_CODON_1) || codon.equals(DNA_STOP_CODON_2) || codon.equals(DNA_STOP_CODON_3);
     }
 
-    @NotNull
-    public static String codons(@NotNull String aminoAcids) {
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < aminoAcids.length(); i++) {
-            builder.append(codon(aminoAcids.charAt(i)));
-        }
-        return builder.toString();
+    public static boolean isStartCodon(final String codon)
+    {
+        return codon.equals(DNA_START_CODON);
     }
 
-    @NotNull
-    public static String codon(char aminoAcid) {
-        final char[] bases = new char[] { 'G', 'A', 'T', 'C' };
-        for (final char firstBase : bases) {
-            for (final char secondBase : bases) {
-                for (final char thirdBase : bases) {
-                    final String codon = String.valueOf(firstBase) + secondBase + thirdBase;
-                    if (aminoAcid(codon) == aminoAcid) {
-                        return codon;
-                    }
-                }
-            }
-        }
-        throw new IllegalArgumentException("Unknown amino acid " + aminoAcid);
-    }
+    public static char aminoAcid(final String codon)
+    {
+        if(isStopCodon(codon))
+            return 'X';
 
-    @NotNull
-    public static String aminoAcids(@NotNull String dna) {
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < dna.length() - 2; i += 3) {
-            builder.append(aminoAcid(dna.substring(i, i + 3)));
-        }
+        if(isStartCodon(codon))
+            return 'M';
 
-        return builder.toString();
-    }
-
-    public static char aminoAcid(@NotNull String codon) {
-        assert codon.length() == 3;
-
-        switch (codon) {
+        switch(codon)
+        {
             // SECOND BASE T
             case "TTT":
             case "TTC":
@@ -61,8 +47,6 @@ public final class Codons {
             case "ATC":
             case "ATA":
                 return 'I';
-            case "ATG":
-                return 'M';
             case "GTT":
             case "GTC":
             case "GTA":
@@ -95,9 +79,6 @@ public final class Codons {
             case "TAT":
             case "TAC":
                 return 'Y';
-            case "TAA":
-            case "TAG":
-                return 'X';
             case "CAT":
             case "CAC":
                 return 'H';
@@ -121,8 +102,6 @@ public final class Codons {
             case "TGT":
             case "TGC":
                 return 'C';
-            case "TGA":
-                return 'X';
             case "TGG":
                 return 'W';
             case "CGT":
@@ -143,6 +122,50 @@ public final class Codons {
                 return 'G';
         }
 
-        return '.';
+        return UNKNOWN;
     }
+
+    public static String codons(@NotNull String aminoAcids)
+    {
+        StringBuilder builder = new StringBuilder();
+        for(int i = 0; i < aminoAcids.length(); i++)
+        {
+            builder.append(codon(aminoAcids.charAt(i)));
+        }
+        return builder.toString();
+    }
+
+    @NotNull
+    public static String codon(char aminoAcid)
+    {
+        final char[] bases = new char[] { 'G', 'A', 'T', 'C' };
+        for(final char firstBase : bases)
+        {
+            for(final char secondBase : bases)
+            {
+                for(final char thirdBase : bases)
+                {
+                    final String codon = String.valueOf(firstBase) + secondBase + thirdBase;
+                    if(aminoAcid(codon) == aminoAcid)
+                    {
+                        return codon;
+                    }
+                }
+            }
+        }
+        throw new IllegalArgumentException("Unknown amino acid " + aminoAcid);
+    }
+
+    @NotNull
+    public static String aminoAcids(@NotNull String dna)
+    {
+        StringBuilder builder = new StringBuilder();
+        for(int i = 0; i < dna.length() - 2; i += 3)
+        {
+            builder.append(aminoAcid(dna.substring(i, i + 3)));
+        }
+
+        return builder.toString();
+    }
+
 }
