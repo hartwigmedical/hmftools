@@ -25,15 +25,7 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele;
     - calculate a score as TotalCoverage + Adjusted Homozygous Count + Adjusted Cohort-Frequency Count
     - order by score
     - where 2 or more solutions have the same score, take the numerically (alphabetically) lowest solution
-
-    Prevous ranking scheme:
-    1. any solution with a 'favourite', which means the known frameshift allele
-    2. fewest wildcard matches
-    3. most homozygous alleles
-    4. most common alleles
-    5. least recovered alleles (seems redundant but I guess there could be a solution with common alleles, and another with the same number of common alleles, but some of them needing recovery?)
-    6. lowest numbered alleles (sorted alphabetically)
-* */
+*/
 
 public class HlaComplexCoverageRanking
 {
@@ -91,7 +83,12 @@ public class HlaComplexCoverageRanking
         for(HlaAllele allele : alleles)
         {
             double frequency = cohortFrequency.getAlleleFrequency(allele);
-            cohortFrequencyTotal += log10(max(frequency, 0.0001));
+            double cohortPenalty = log10(max(frequency, 0.0001));
+
+            cohortFrequencyTotal += cohortPenalty;
+
+            if(complexCoverage.isHomozygous(allele))
+                cohortFrequencyTotal += cohortPenalty;
         }
 
         complexCoverage.setCohortFrequencyTotal(cohortFrequencyTotal);

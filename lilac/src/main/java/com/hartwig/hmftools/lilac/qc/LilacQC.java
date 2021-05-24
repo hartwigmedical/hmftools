@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public final class LilacQC
 {
@@ -84,35 +85,42 @@ public final class LilacQC
     }
 
 
-    public static LilacQC create(final AminoAcidQC aminoAcidQC, final BamQC bamQC, final CoverageQC coverageQC,
+    public static LilacQC create(
+            final AminoAcidQC aminoAcidQC, final BamQC bamQC, final CoverageQC coverageQC,
             final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
     {
-        Set status = new LinkedHashSet();
-        if(haplotypeQC.getUnusedHaplotypes() > 0)
+        Set<LilacQCStatus> statusList = Sets.newHashSet();
+
+        if(haplotypeQC.UnusedHaplotypes > 0)
         {
-            status.add(LilacQCStatus.WARN_UNMATCHED_HAPLOTYPE);
-        }
-        if(coverageQC.ATypes == 0 || coverageQC.BTypes == 0 || coverageQC.CTypes == 0)
-        {
-            status.add(LilacQCStatus.WARN_UNMATCHED_TYPE);
-        }
-        if(bamQC.getDiscardedIndelFragments() > 0)
-        {
-            status.add(LilacQCStatus.WARN_UNMATCHED_INDEL);
-        }
-        if(somaticVariantQC.unmatchedVariants())
-        {
-            status.add(LilacQCStatus.WARN_UNMATCHED_SOMATIC_VARIANT);
-        }
-        if(coverageQC.PercentWildcard > 0.0)
-        {
-            status.add(LilacQCStatus.WARN_WILDCARD_MATCH);
-        }
-        if(status.isEmpty())
-        {
-            status.add(LilacQCStatus.PASS);
+            statusList.add(LilacQCStatus.WARN_UNMATCHED_HAPLOTYPE);
         }
 
-        return new LilacQC(status, aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC);
+        if(coverageQC.ATypes == 0 || coverageQC.BTypes == 0 || coverageQC.CTypes == 0)
+        {
+            statusList.add(LilacQCStatus.WARN_UNMATCHED_TYPE);
+        }
+
+        if(bamQC.getDiscardedIndelFragments() > 0)
+        {
+            statusList.add(LilacQCStatus.WARN_UNMATCHED_INDEL);
+        }
+
+        if(somaticVariantQC.unmatchedVariants())
+        {
+            statusList.add(LilacQCStatus.WARN_UNMATCHED_SOMATIC_VARIANT);
+        }
+
+        if(coverageQC.PercentWildcard > 0.0)
+        {
+            statusList.add(LilacQCStatus.WARN_WILDCARD_MATCH);
+        }
+
+        if(statusList.isEmpty())
+        {
+            statusList.add(LilacQCStatus.PASS);
+        }
+
+        return new LilacQC(statusList, aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC);
     }
 }

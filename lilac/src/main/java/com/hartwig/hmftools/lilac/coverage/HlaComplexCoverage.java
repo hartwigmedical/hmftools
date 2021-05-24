@@ -73,6 +73,11 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
         */
     }
 
+    public boolean isHomozygous(final HlaAllele allele)
+    {
+        return getAlleles().stream().filter(x -> x.Gene.equals(allele.Gene)).count() == 1;
+    }
+
     public void setScore(double score) { mScore = score; }
     public double getScore() { return mScore; }
 

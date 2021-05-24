@@ -3,7 +3,8 @@ package com.hartwig.hmftools.lilac.qc;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.PON_HAPLOTYPE_MIN_SUPPORT;
+import static com.hartwig.hmftools.lilac.LilacConstants.LOG_UNMATCHED_HAPLOTYPE_SUPPORT;
+import static com.hartwig.hmftools.lilac.LilacConstants.WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -22,10 +23,12 @@ import java.util.stream.Collectors;
 
 public class HaplotypeQC
 {
-    private final int mUnusedHaplotypes;
-    private final int mUnusedHaplotypeMaxSupport;
-    private final int mUnusedHaplotypeMaxLength;
-    private final int mUnusedHaplotypesPon;
+    public final int UnusedHaplotypes;
+    public final int UnusedHaplotypeMaxSupport;
+    public final int UnusedHaplotypeMaxLength;
+    public final int UnusedHaplotypesPon;
+
+    public final List<Haplotype> UnmatchedHaplotypes;
 
     private static final List<Haplotype> PON_HAPLOTYPES = Lists.newArrayList();
 
@@ -38,23 +41,21 @@ public class HaplotypeQC
     public final List<String> body()
     {
         return Lists.newArrayList(
-                String.valueOf(mUnusedHaplotypes),
-                String.valueOf(mUnusedHaplotypeMaxSupport), 
-                String.valueOf(mUnusedHaplotypeMaxLength),
-                String.valueOf(mUnusedHaplotypesPon));
+                String.valueOf(UnusedHaplotypes),
+                String.valueOf(UnusedHaplotypeMaxSupport),
+                String.valueOf(UnusedHaplotypeMaxLength),
+                String.valueOf(UnusedHaplotypesPon));
     }
 
-    public final int getUnusedHaplotypes()
+    public HaplotypeQC(
+            int unusedHaplotypes, int unusedHaplotypeMaxSupport, int unusedHaplotypeMaxLength, int unusedHaplotypesPon,
+            final List<Haplotype> haplotypes)
     {
-        return mUnusedHaplotypes;
-    }
-
-    public HaplotypeQC(int unusedHaplotypes, int unusedHaplotypeMaxSupport, int unusedHaplotypeMaxLength, int unusedHaplotypesPon)
-    {
-        mUnusedHaplotypes = unusedHaplotypes;
-        mUnusedHaplotypeMaxSupport = unusedHaplotypeMaxSupport;
-        mUnusedHaplotypeMaxLength = unusedHaplotypeMaxLength;
-        mUnusedHaplotypesPon = unusedHaplotypesPon;
+        UnusedHaplotypes = unusedHaplotypes;
+        UnusedHaplotypeMaxSupport = unusedHaplotypeMaxSupport;
+        UnusedHaplotypeMaxLength = unusedHaplotypeMaxLength;
+        UnusedHaplotypesPon = unusedHaplotypesPon;
+        UnmatchedHaplotypes = haplotypes;
     }
 
     private static void loadPonHaplotypes()
@@ -81,6 +82,7 @@ public class HaplotypeQC
 
         List<Haplotype> allUnmatched = Lists.newArrayList();
         evidence.stream().map(x -> unmatchedHaplotype(x, minEvidence, winners, aminoAcidCount)).forEach(x -> allUnmatched.addAll(x));
+
         Collections.sort(allUnmatched, new Haplotype.HaplotypeFragmentSorter());
 
         Set<String> haplotypeKeys = Sets.newHashSet();
@@ -105,25 +107,32 @@ public class HaplotypeQC
 
         for (Haplotype unmatched : distinctHaplotypes)
         {
-            if(unmatched.SupportingFragments < PON_HAPLOTYPE_MIN_SUPPORT)
+            if(unmatched.SupportingFragments < LOG_UNMATCHED_HAPLOTYPE_SUPPORT)
                 continue;
+
+            boolean exceedsWarnThreshold = unmatched.SupportingFragments >= WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
 
             if (inPon(unmatched))
             {
-                pon++;
+                if(exceedsWarnThreshold)
+                    pon++;
+
                 LL_LOGGER.info("  UNMATCHED_PON_HAPLTOYPE - {}", unmatched);
             }
             else
             {
-                maxSupport = max(maxSupport, unmatched.SupportingFragments);
-                maxLength = max(maxLength, unmatched.Haplotype.length());
-                unusedCount++;
+                if(exceedsWarnThreshold)
+                {
+                    maxSupport = max(maxSupport, unmatched.SupportingFragments);
+                    maxLength = max(maxLength, unmatched.Haplotype.length());
+                    unusedCount++;
+                }
 
                 LL_LOGGER.warn("  UNMATCHED_HAPLTOYPE {}", unmatched);
             }
         }
 
-        return new HaplotypeQC(unusedCount, maxSupport, maxLength, pon);
+        return new HaplotypeQC(unusedCount, maxSupport, maxLength, pon, distinctHaplotypes);
     }
 
     private static boolean consistentWithAny(final PhasedEvidence phasedEvidence, final List<HlaSequenceLoci> winners, final String sequence)
@@ -135,17 +144,15 @@ public class HaplotypeQC
             final PhasedEvidence evidence, int minEvidence,
             final List<HlaSequenceLoci> winners, final SequenceCount aminoAcidCount)
     {
+        // look through all phased evidence for AA sequences which are not supported by the winning alleles
+        // ignore any wildcard sections
         Map<String,Integer> unmatched = evidence.getEvidence().entrySet().stream()
                 .filter(x -> !consistentWithAny(evidence, winners, x.getKey()))
                 .filter(x -> x.getValue() >= minEvidence)
                 .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
 
-        if (unmatched.isEmpty())
+        if(unmatched.isEmpty())
             return Lists.newArrayList();
-
-//        List<Haplotype> haplotypes = unmatched.entrySet().stream()
-//                .map(x -> Haplotype.create(evidence.getAminoAcidIndexList(), new Pair(x.getKey(), x.getValue()), aminoAcidCount))
-//                .collect(Collectors.toList());
 
         List<Haplotype> haplotypes = Lists.newArrayList();
         for(Map.Entry<String,Integer> entry : unmatched.entrySet())

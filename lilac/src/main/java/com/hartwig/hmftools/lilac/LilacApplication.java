@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
+import static com.hartwig.hmftools.lilac.LilacConstants.LOG_UNMATCHED_HAPLOTYPE_SUPPORT;
 import static com.hartwig.hmftools.lilac.candidates.NucleotideFiltering.calcNucleotideHeterogygousLoci;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleles.createFragmentAlleles;
@@ -342,16 +343,18 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         HlaOut output = HlaOut.create(winningRefCoverage, winningTumorCoverage, winningTumorCopyNumber, somaticCodingCounts);
 
-        // QC
+        // create various QC and other metrics
         LL_LOGGER.info("calculating QC Statistics");
         SomaticVariantQC somaticVariantQC = SomaticVariantQC.create(somaticVariants.size(), somaticCodingCounts);
-        AminoAcidQC aminoAcidQC = AminoAcidQC.create(winningSequences, refAminoAcidCounts);
 
         List<PhasedEvidence> combinedPhasedEvidence = Lists.newArrayList();
         combinedPhasedEvidence.addAll(aPhasedEvidence);
         combinedPhasedEvidence.addAll(bPhasedEvidence);
         combinedPhasedEvidence.addAll(cPhasedEvidence);
-        HaplotypeQC haplotypeQC = HaplotypeQC.create(3, winningSequences, combinedPhasedEvidence, refAminoAcidCounts);
+        HaplotypeQC haplotypeQC = HaplotypeQC.create(
+                LOG_UNMATCHED_HAPLOTYPE_SUPPORT, winningSequences, combinedPhasedEvidence, refAminoAcidCounts);
+
+        AminoAcidQC aminoAcidQC = AminoAcidQC.create(winningSequences, refAminoAcidCounts, haplotypeQC.UnmatchedHaplotypes);
 
         BamQC bamQC = BamQC.create(referenceBamReader);
         CoverageQC coverageQC = CoverageQC.create(referenceNucleotideFragments.size(), winningRefCoverage);

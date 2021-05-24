@@ -163,7 +163,6 @@ public class HlaSequenceLoci
             {
                 String insertStr = sequence.substring(i - insLength, i);
                 sequences.set(sequences.size() - 1, sequences.get(sequences.size() - 1) + insertStr);
-                //sequences[sequences.size - 1] = sequences[sequences.size - 1] + insertStr
                 insLength = 0;
             }
 

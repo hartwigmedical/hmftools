@@ -34,6 +34,7 @@ public class Haplotype
         int startLocus = Integer.parseInt(items[0]);
         String haplotype = items[1];
         int endLocus = startLocus + haplotype.length() - 1;
+
         return new Haplotype(startLocus, endLocus, 0, haplotype);
     }
 

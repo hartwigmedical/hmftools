@@ -22,7 +22,9 @@ public class LilacConstants
     public static final double HOMOZYGOUS_SCORE_PENALTY = 4.5;
     public static final double RECOVERY_SCORE_PENALTY = 5;
 
-    public static final int PON_HAPLOTYPE_MIN_SUPPORT = 7;
+    // warning thresholds
+    public static final int WARN_UNMATCHED_HAPLOTYPE_SUPPORT = 7;
+    public static final int LOG_UNMATCHED_HAPLOTYPE_SUPPORT = 3;
 
     public static final String GENE_A = "A";
     public static final String GENE_B = "B";
