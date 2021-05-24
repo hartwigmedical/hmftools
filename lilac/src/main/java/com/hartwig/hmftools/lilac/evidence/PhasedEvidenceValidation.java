@@ -11,7 +11,7 @@ public class PhasedEvidenceValidation
 {
     public static void logInconsistentEvidence(final String gene, final List<PhasedEvidence> evidence, final List<HlaSequenceLoci> candidates)
     {
-        List<HlaSequenceLoci> expectedSequences = candidates.stream().filter(x -> x.getAllele().Gene.equals(gene)).collect(Collectors.toList());
+        List<HlaSequenceLoci> expectedSequences = candidates.stream().filter(x -> x.Allele.Gene.equals(gene)).collect(Collectors.toList());
 
         for (HlaSequenceLoci sequence : expectedSequences)
         {
@@ -19,7 +19,7 @@ public class PhasedEvidenceValidation
             {
                 if (!sequence.consistentWith(phasedEvidence))
                 {
-                    LL_LOGGER.warn("Expected allele {} filtered by {}", sequence.getAllele(), phasedEvidence);
+                    LL_LOGGER.warn("Expected allele {} filtered by {}", sequence.Allele, phasedEvidence);
                 }
             }
         }

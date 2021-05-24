@@ -29,6 +29,7 @@ public class LilacConstants
     public static final String GENE_A = "A";
     public static final String GENE_B = "B";
     public static final String GENE_C = "C";
+    public static final String GENE_Y = "Y";
 
     public static final String HLA_PREFIX = "HLA-";
     public static final String HLA_A = HLA_PREFIX + GENE_A;

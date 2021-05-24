@@ -104,7 +104,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         HlaContext hlaBContext = hlaContextFactory.hlaB();
         HlaContext hlaCContext = hlaContextFactory.hlaC();
 
-        if(!mRefData.load(true))
+        if(!mRefData.load())
         {
             LL_LOGGER.error("reference data loading failed");
             System.exit(1);
@@ -160,7 +160,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         if(!mConfig.ExpectedAlleles.isEmpty())
         {
             expectedSequences.addAll(mRefData.AminoAcidSequences.stream()
-                    .filter(x -> mConfig.ExpectedAlleles.contains(x.getAllele().asFourDigit())).collect(Collectors.toList()));
+                    .filter(x -> mConfig.ExpectedAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList()));
 
             PhasedEvidenceValidation.logInconsistentEvidence(GENE_A, aPhasedEvidence, expectedSequences);
             PhasedEvidenceValidation.logInconsistentEvidence(GENE_B, bPhasedEvidence, expectedSequences);
@@ -221,7 +221,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         }
 
         List<HlaSequenceLoci> candidateSequences = mRefData.AminoAcidSequences.stream()
-                .filter(x -> candidateAlleles.contains(x.getAllele())).collect(Collectors.toList());
+                .filter(x -> candidateAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         // Coverage
         List<AminoAcidFragment> refAminoAcidFragments = aminoAcidPipeline.referenceAminoAcidFragments();
@@ -235,10 +235,10 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         List<HlaAllele> candidateAlleleSpecificProteins = candidateAlleles.stream().map(x -> x.asFourDigit()).collect(Collectors.toList());
         List<HlaSequenceLoci> candidateAminoAcidSequences = mRefData.AminoAcidSequences.stream()
-                .filter(x -> candidateAlleles.contains(x.getAllele())).collect(Collectors.toList());
+                .filter(x -> candidateAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         List<HlaSequenceLoci> candidateNucleotideSequences = mRefData.NucleotideSequences.stream()
-            .filter(x -> candidateAlleleSpecificProteins.contains(x.getAllele().asFourDigit())).collect(Collectors.toList());
+            .filter(x -> candidateAlleleSpecificProteins.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
 
         List<FragmentAlleles> refFragAlleles = createFragmentAlleles(
                 refAminoAcidFragments, refAminoAcidHetLoci, candidateAminoAcidSequences, aminoAcidPipeline.getReferenceAminoAcids(),
@@ -267,14 +267,14 @@ public class LilacApplication implements AutoCloseable, Runnable
         if(!expectedSequences.isEmpty())
         {
             HlaComplexCoverage expectedCoverage = HlaComplexBuilder.calcProteinCoverage(
-                    refFragAlleles, expectedSequences.stream().map(x -> x.getAllele()).collect(Collectors.toList()));
+                    refFragAlleles, expectedSequences.stream().map(x -> x.Allele).collect(Collectors.toList()));
             LL_LOGGER.info("expected allele coverage: {}", expectedCoverage);
         }
 
         HlaComplexCoverage winningRefCoverage = referenceRankedComplexes.get(0).expandToSixAlleles();
         List<HlaAllele> winningAlleles = winningRefCoverage.getAlleleCoverage().stream().map(x -> x.Allele).collect(Collectors.toList());
         List<HlaSequenceLoci> winningSequences = candidateSequences.stream()
-                .filter(x -> winningAlleles.contains(x.getAllele())).collect(Collectors.toList());
+                .filter(x -> winningAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         LL_LOGGER.info("{}", HlaComplexFile.header());
 

@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.lilac.seq.HlaSequence.EXON_BOUNDARY;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.IDENTICAL;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
@@ -20,19 +19,18 @@ import java.util.stream.Collectors;
 
 public class HlaSequenceLoci
 {
-    private final HlaAllele mAllele;
+    public final HlaAllele Allele;
+
     private final List<String> mSequences;
 
     public HlaSequenceLoci(final HlaAllele allele, final List<String> sequences)
     {
-        mAllele = allele;
+        Allele = allele;
         mSequences = Lists.newArrayList();
         mSequences.addAll(sequences);
     }
 
     public int length() { return mSequences.size(); }
-
-    public final HlaAllele getAllele() { return mAllele;}
 
     public final List<String> getSequences() { return mSequences; }
 
@@ -83,7 +81,7 @@ public class HlaSequenceLoci
 
     public String toString()
     {
-        return String.format("HlaSequenceLoci(allele=%s, sequence=%s)", mAllele, sequence());
+        return String.format("HlaSequenceLoci(allele=%s, sequence=%s)", Allele, sequence());
     }
 
     public final boolean consistentWith(final PhasedEvidence evidence)

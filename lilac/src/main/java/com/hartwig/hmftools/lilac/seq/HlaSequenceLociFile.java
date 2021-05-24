@@ -2,6 +2,11 @@ package com.hartwig.hmftools.lilac.seq;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -13,13 +18,26 @@ public class HlaSequenceLociFile
 {
     // writes exon boundaries, and then the allele sequences
     public static void write(
-            final String file, final List<Integer> aBoundaries, final List<Integer> bBoundaries,
+            final String fileName, final List<Integer> aBoundaries, final List<Integer> bBoundaries,
             final List<Integer> cBoundaries, final List<HlaSequenceLoci> sequences)
     {
-        // TODO - ensure an allele isn't written more than once
-
-
         /*
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(fileName, false);
+
+            writer.newLine();
+
+
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
+            return;
+        }
+
         val outputFile = File(file)
         outputFile.writeText("")
 

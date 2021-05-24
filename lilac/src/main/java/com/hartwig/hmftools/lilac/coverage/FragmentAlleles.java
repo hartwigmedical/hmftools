@@ -220,7 +220,7 @@ public class FragmentAlleles
 
         for(HlaSequenceLoci sequence : nucleotideSequences)
         {
-            HlaAllele allele = sequence.getAllele();
+            HlaAllele allele = sequence.Allele;
             if(!fragment.getGenes().contains(allele.geneName()))
                 continue;
 
@@ -337,7 +337,7 @@ public class FragmentAlleles
             if(matchType == HlaSequenceMatch.NONE)
                 continue;
 
-            HlaAllele allele = sequence.getAllele();
+            HlaAllele allele = sequence.Allele;
 
             if(!fragment.getGenes().contains(allele.geneName()))
                 continue;

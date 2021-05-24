@@ -39,14 +39,14 @@ public final class Candidates
         SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, fragments);
 
         List<HlaSequenceLoci> geneCandidates = mAminoAcidSequences.stream()
-                .filter(x -> x.getAllele().Gene.equals(context.Gene)).collect(Collectors.toList());
+                .filter(x -> x.Allele.Gene.equals(context.Gene)).collect(Collectors.toList());
 
         LL_LOGGER.info("  {} candidates before filtering", geneCandidates.size());
 
         // Amino acid filtering
         List<HlaSequenceLoci> aminoAcidCandidates = filterAminoAcidsByBoundries(geneCandidates, aminoAcidCounts, context.AminoAcidBoundaries);
 
-        List<HlaAllele> aminoAcidCandidateAlleles = aminoAcidCandidates.stream().map(x -> x.getAllele()).collect(Collectors.toList());
+        List<HlaAllele> aminoAcidCandidateAlleles = aminoAcidCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
 
         List<HlaAllele> aminoAcidSpecificAllelesCandidates = aminoAcidCandidateAlleles.stream()
                 .map(x -> x.asFourDigit()).collect(Collectors.toList());
@@ -54,7 +54,7 @@ public final class Candidates
         if (aminoAcidSpecificAllelesCandidates.isEmpty())
         {
             LL_LOGGER.warn("  0 candidates after amino acid filtering - reverting to all gene candidates");
-            return geneCandidates.stream().map(x -> x.getAllele()).collect(Collectors.toList());
+            return geneCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
         }
 
         LL_LOGGER.info("  {} candidates after amino acid filtering", aminoAcidCandidates.size());
@@ -63,14 +63,14 @@ public final class Candidates
         NucleotideFiltering nucleotideFiltering = new NucleotideFiltering(mConfig.MinEvidence, aminoAcidBoundary);
 
         List<HlaSequenceLoci> nucleotideCandidatesAfterAminoAcidFiltering = mNucleotideSequences.stream()
-                .filter(x -> aminoAcidSpecificAllelesCandidates.contains(x.getAllele().asFourDigit()))
+                .filter(x -> aminoAcidSpecificAllelesCandidates.contains(x.Allele.asFourDigit()))
                 .collect(Collectors.toList());
 
         List<HlaSequenceLoci> nucleotideSpecificSequences = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(
                 nucleotideCandidatesAfterAminoAcidFiltering, nucFragments(fragments));
 
         List<HlaAllele> nucleotideSpecificAllelesCandidates = HlaAllele.dedup
-                (nucleotideSpecificSequences.stream().map(x -> x.getAllele().asFourDigit()).collect(Collectors.toList()));
+                (nucleotideSpecificSequences.stream().map(x -> x.Allele.asFourDigit()).collect(Collectors.toList()));
 
         if (nucleotideSpecificAllelesCandidates.isEmpty())
         {
@@ -111,10 +111,10 @@ public final class Candidates
         LL_LOGGER.info("determining phased candidate set for gene {}", context.geneName());
 
         List<HlaSequenceLoci> unphasedCandidates = mAminoAcidSequences.stream()
-                .filter(x -> unphasedCandidateAlleles.contains(x.getAllele().asFourDigit())).collect(Collectors.toList());
+                .filter(x -> unphasedCandidateAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
 
         List<HlaSequenceLoci> phasedCandidates = filterCandidates(unphasedCandidates, phasedEvidence);
-        List<HlaAllele> phasedAlleles = phasedCandidates.stream().map(x -> x.getAllele()).collect(Collectors.toList());
+        List<HlaAllele> phasedAlleles = phasedCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
 
         LL_LOGGER.info("  {} candidates after phasing: {}", phasedCandidates.size(), phasedAlleles);
 
