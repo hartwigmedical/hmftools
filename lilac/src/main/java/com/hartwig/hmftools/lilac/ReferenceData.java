@@ -1,19 +1,11 @@
 package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_DELIM;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConfig.OUTPUT_DIR;
-import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
-import static com.hartwig.hmftools.lilac.LilacConstants.ALL_PROTEIN_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTOFF;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_Y;
-import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToFourDigit;
-import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToSixDigit;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -31,7 +23,6 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.lilac.cohort.CohortFrequency;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
-import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 public class ReferenceData
@@ -65,7 +56,7 @@ public class ReferenceData
     private static final String COHORT_ALLELE_FREQ_FILE = "lilac_allele_frequencies.csv";
 
     // sequence used to printing amino acid sequences to file
-    private static final HlaAllele DEFLATE_TEMPLATE = HlaAllele.fromString("A*01:01");
+    public static final HlaAllele DEFLATE_TEMPLATE = HlaAllele.fromString("A*01:01");
 
     public ReferenceData(final String resourceDir, final LilacConfig config)
     {
@@ -96,69 +87,6 @@ public class ReferenceData
 
     public HlaSequenceLoci getDeflatedSequenceTemplate() { return mDeflatedSequenceTemplate; }
     public CohortFrequency getAlleleFrequencies() { return mAlleleFrequencies; }
-
-    public static void populateHlaTranscripts(final Map<String,TranscriptData> hlaTranscriptMap)
-    {
-        final List<String> hlaTranscriptData = new BufferedReader(new InputStreamReader(
-                ReferenceData.class.getResourceAsStream("/alleles/hla_transcripts_v37.csv")))
-                .lines().collect(Collectors.toList());
-
-        final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(hlaTranscriptData.get(0), ENSEMBL_DELIM);
-        hlaTranscriptData.remove(0);
-
-        int geneIdIndex = fieldsIndexMap.get("GeneId");
-        int geneNameIndex = fieldsIndexMap.get("GeneName");
-        int strandIndex = fieldsIndexMap.get("Strand");
-        int transIdIndex = fieldsIndexMap.get("TransId");
-        int transNameIndex = fieldsIndexMap.containsKey("TransName") ? fieldsIndexMap.get("TransName") : fieldsIndexMap.get("Trans");
-        int biotypeIndex = fieldsIndexMap.get("BioType");
-        int transStartIndex = fieldsIndexMap.get("TransStart");
-        int transEndIndex = fieldsIndexMap.get("TransEnd");
-        int exonRankIndex = fieldsIndexMap.get("ExonRank");
-        int exonStartIndex = fieldsIndexMap.get("ExonStart");
-        int exonEndIndex = fieldsIndexMap.get("ExonEnd");
-        int exonPhaseIndex = fieldsIndexMap.get("ExonPhase");
-        int exonEndPhaseIndex = fieldsIndexMap.get("ExonEndPhase");
-        int codingStartIndex = fieldsIndexMap.get("CodingStart");
-        int codingEndIndex = fieldsIndexMap.get("CodingEnd");
-
-        String currentGene = "";
-        TranscriptData currentTrans = null;
-        List<ExonData> exonDataList = null;
-
-        for(String line : hlaTranscriptData)
-        {
-            String[] items = line.split(ENSEMBL_DELIM);
-
-            String geneId = items[geneIdIndex];
-            int transId = Integer.parseInt(items[transIdIndex]);
-
-            if(!geneId.equals(currentGene))
-            {
-                currentGene = geneId;
-
-                String geneName = items[geneNameIndex];
-
-                Integer codingStart = Integer.parseInt(items[codingStartIndex]);
-                Integer codingEnd = Integer.parseInt(items[codingEndIndex]);
-
-                currentTrans = new TranscriptData(
-                        transId, items[transNameIndex], geneId, true, Byte.parseByte(items[strandIndex]),
-                        Integer.parseInt(items[transStartIndex]), Integer.parseInt(items[transEndIndex]),
-                        codingStart, codingEnd, items[biotypeIndex]);
-
-                hlaTranscriptMap.put(geneName, currentTrans);
-
-                exonDataList = currentTrans.exons();
-            }
-
-            ExonData exonData = new ExonData(
-                    transId, Integer.parseInt(items[exonStartIndex]), Integer.parseInt(items[exonEndIndex]),
-                    Integer.parseInt(items[exonRankIndex]), Integer.parseInt(items[exonPhaseIndex]), Integer.parseInt(items[exonEndPhaseIndex]));
-
-            exonDataList.add(exonData);
-        }
-    }
 
     public boolean load()
     {
@@ -231,6 +159,69 @@ public class ReferenceData
         }
 
         return false;
+    }
+
+    public static void populateHlaTranscripts(final Map<String,TranscriptData> hlaTranscriptMap)
+    {
+        final List<String> hlaTranscriptData = new BufferedReader(new InputStreamReader(
+                ReferenceData.class.getResourceAsStream("/alleles/hla_transcripts_v37.csv")))
+                .lines().collect(Collectors.toList());
+
+        final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(hlaTranscriptData.get(0), ENSEMBL_DELIM);
+        hlaTranscriptData.remove(0);
+
+        int geneIdIndex = fieldsIndexMap.get("GeneId");
+        int geneNameIndex = fieldsIndexMap.get("GeneName");
+        int strandIndex = fieldsIndexMap.get("Strand");
+        int transIdIndex = fieldsIndexMap.get("TransId");
+        int transNameIndex = fieldsIndexMap.containsKey("TransName") ? fieldsIndexMap.get("TransName") : fieldsIndexMap.get("Trans");
+        int biotypeIndex = fieldsIndexMap.get("BioType");
+        int transStartIndex = fieldsIndexMap.get("TransStart");
+        int transEndIndex = fieldsIndexMap.get("TransEnd");
+        int exonRankIndex = fieldsIndexMap.get("ExonRank");
+        int exonStartIndex = fieldsIndexMap.get("ExonStart");
+        int exonEndIndex = fieldsIndexMap.get("ExonEnd");
+        int exonPhaseIndex = fieldsIndexMap.get("ExonPhase");
+        int exonEndPhaseIndex = fieldsIndexMap.get("ExonEndPhase");
+        int codingStartIndex = fieldsIndexMap.get("CodingStart");
+        int codingEndIndex = fieldsIndexMap.get("CodingEnd");
+
+        String currentGene = "";
+        TranscriptData currentTrans = null;
+        List<ExonData> exonDataList = null;
+
+        for(String line : hlaTranscriptData)
+        {
+            String[] items = line.split(ENSEMBL_DELIM);
+
+            String geneId = items[geneIdIndex];
+            int transId = Integer.parseInt(items[transIdIndex]);
+
+            if(!geneId.equals(currentGene))
+            {
+                currentGene = geneId;
+
+                String geneName = items[geneNameIndex];
+
+                Integer codingStart = Integer.parseInt(items[codingStartIndex]);
+                Integer codingEnd = Integer.parseInt(items[codingEndIndex]);
+
+                currentTrans = new TranscriptData(
+                        transId, items[transNameIndex], geneId, true, Byte.parseByte(items[strandIndex]),
+                        Integer.parseInt(items[transStartIndex]), Integer.parseInt(items[transEndIndex]),
+                        codingStart, codingEnd, items[biotypeIndex]);
+
+                hlaTranscriptMap.put(geneName, currentTrans);
+
+                exonDataList = currentTrans.exons();
+            }
+
+            ExonData exonData = new ExonData(
+                    transId, Integer.parseInt(items[exonStartIndex]), Integer.parseInt(items[exonEndIndex]),
+                    Integer.parseInt(items[exonRankIndex]), Integer.parseInt(items[exonPhaseIndex]), Integer.parseInt(items[exonEndPhaseIndex]));
+
+            exonDataList.add(exonData);
+        }
     }
 
     private boolean loadSequenceFile(final String filename, final List<HlaSequenceLoci> sequenceData, boolean isProteinFile)
