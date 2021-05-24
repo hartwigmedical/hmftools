@@ -1,10 +1,16 @@
 package com.hartwig.hmftools.lilac.hla;
 
+import static com.hartwig.hmftools.lilac.seq.HlaSequenceMatch.FULL;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
+import com.hartwig.hmftools.lilac.seq.HlaSequenceMatch;
 
 import org.junit.Test;
 
@@ -16,49 +22,107 @@ public class HlaSequenceLociTest
     @Test
     public void testReference()
     {
-        HlaSequenceLoci victim = HlaSequenceLoci.create(allele, reference, reference);
-        assertEquals(12, victim.getSequences().size());
-        assertEquals(reference.replace(".", ""), victim.sequence());
+        HlaSequenceLoci seqLoci = HlaSequenceLoci.create(allele, reference, reference);
+        assertEquals(12, seqLoci.getSequences().size());
+        assertEquals(reference.replace(".", ""), seqLoci.sequence());
 
-        for(String sequence : victim.getSequences())
+        for(String sequence : seqLoci.getSequences())
         {
             assertEquals(1, sequence.length());
         }
 
-        assertEquals("APRTSMNVEPRF", victim.sequence());
-        assertFalse(victim.containsIndels());
-        assertFalse(victim.containsInserts());
-        assertFalse(victim.containsDeletes());
+        assertEquals("APRTSMNVEPRF", seqLoci.sequence());
+        assertFalse(seqLoci.containsIndels());
+        assertFalse(seqLoci.containsInserts());
+        assertFalse(seqLoci.containsDeletes());
     }
 
     @Test
     public void testInsert()
     {
-        String victimSequence = "-----ET---..----";
-        HlaSequenceLoci victim = HlaSequenceLoci.create(allele, victimSequence, reference);
-        assertEquals(12, victim.getSequences().size());
-        assertEquals("SET", victim.sequence(4));
-        assertEquals("APRTSETMNVEPRF", victim.sequence(0, 11));
+        String sequence = "-----ET---..----";
+        HlaSequenceLoci seqLoci = HlaSequenceLoci.create(allele, sequence, reference);
+        assertEquals(12, seqLoci.getSequences().size());
+        assertEquals("SET", seqLoci.sequence(4));
+        assertEquals("APRTSETMNVEPRF", seqLoci.sequence(0, 11));
 
-        assertTrue(victim.containsIndels());
-        assertTrue(victim.containsInserts());
-        assertFalse(victim.containsDeletes());
+        assertTrue(seqLoci.containsIndels());
+        assertTrue(seqLoci.containsInserts());
+        assertFalse(seqLoci.containsDeletes());
     }
 
     @Test
     public void testDelete()
     {
-        String victimSequence = ".----...--..---.";
-        HlaSequenceLoci victim = HlaSequenceLoci.create(allele, victimSequence, reference);
-        assertEquals(12, victim.getSequences().size());
-        assertEquals(".", victim.sequence(0));
-        assertEquals(".", victim.sequence(5));
-        assertEquals(".", victim.sequence(11));
-        assertEquals(".PRTS.NVEPR.", victim.sequence(0, 11));
+        String sequence = ".----...--..---.";
+        HlaSequenceLoci seqLoci = HlaSequenceLoci.create(allele, sequence, reference);
+        assertEquals(12, seqLoci.getSequences().size());
+        assertEquals(".", seqLoci.sequence(0));
+        assertEquals(".", seqLoci.sequence(5));
+        assertEquals(".", seqLoci.sequence(11));
+        assertEquals(".PRTS.NVEPR.", seqLoci.sequence(0, 11));
 
-        assertTrue(victim.containsIndels());
-        assertFalse(victim.containsInserts());
-        assertTrue(victim.containsDeletes());
+        assertTrue(seqLoci.containsIndels());
+        assertFalse(seqLoci.containsInserts());
+        assertTrue(seqLoci.containsDeletes());
     }
 
+    @Test
+    public void testMatching()
+    {
+        String refSequence = "ABCDEFGHIJKLMNOP";
+        String alleleSequence = "ABXYEFWZIJKLABOP";
+        HlaSequenceLoci seqLoci = HlaSequenceLoci.create(allele, alleleSequence, refSequence);
+
+        List<Integer> fragmentLoci = buildTargetIndices(alleleSequence, refSequence);
+        String targetSeq = buildTargetSequence(refSequence, fragmentLoci);
+        assertEquals(HlaSequenceMatch.NONE, seqLoci.match(targetSeq, fragmentLoci));
+
+        // test against itself
+        targetSeq = buildTargetSequence(alleleSequence, fragmentLoci);
+        assertEquals(HlaSequenceMatch.FULL, seqLoci.match(targetSeq, fragmentLoci));
+
+        // test an allele with wilcards
+        String wildSequence = "ABXYEFW*********";
+        HlaSequenceLoci seqLociWild = HlaSequenceLoci.create(allele, wildSequence, refSequence);
+        // fragmentLoci = buildTargetIndices(wildSequence, refSequence);
+
+        String fragmentSeq = "ABXYEFWZIJKLABOP";
+        fragmentLoci = Lists.newArrayList(5, 6,7,8);
+        targetSeq = buildTargetSequence(fragmentSeq, fragmentLoci);
+        assertEquals(HlaSequenceMatch.PARTIAL, seqLociWild.match(targetSeq, fragmentLoci));
+
+        // all in the wildcard region
+        fragmentLoci = Lists.newArrayList(8,9,10,11);
+        targetSeq = buildTargetSequence(fragmentSeq, fragmentLoci);
+        assertEquals(HlaSequenceMatch.WILD, seqLociWild.match(targetSeq, fragmentLoci));
+    }
+
+    private static String buildTargetSequence(final String sequence, final List<Integer> indices)
+    {
+        if(indices.size() >= sequence.length())
+            return "";
+
+        StringBuilder targetSeq = new StringBuilder();
+        indices.forEach(x -> targetSeq.append(sequence.charAt(x)));
+        return targetSeq.toString();
+    }
+
+    private static List<Integer> buildTargetIndices(final String sequence, final String refSequence)
+    {
+        List<Integer> indices = Lists.newArrayList();
+
+        if(sequence.length() != refSequence.length())
+            return indices;
+
+        for(int i = 0; i < sequence.length(); ++i)
+        {
+            if(sequence.charAt(i) != refSequence.charAt(i))
+            {
+                indices.add(i);
+            }
+        }
+
+        return indices;
+    }
 }
