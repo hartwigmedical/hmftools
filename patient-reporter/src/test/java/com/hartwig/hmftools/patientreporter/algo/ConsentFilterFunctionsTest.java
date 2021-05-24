@@ -2,7 +2,11 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
@@ -29,13 +33,33 @@ public class ConsentFilterFunctionsTest {
         ReportableVariant somaticVariant = createTestReportableVariantBuilder().source(ReportableVariantSource.SOMATIC).build();
         ReportableVariant germlineVariant = createTestReportableVariantBuilder().source(ReportableVariantSource.GERMLINE).build();
 
-        assertEquals(2,
-                ConsentFilterFunctions.filterVariants(Lists.newArrayList(somaticVariant, germlineVariant),
-                        LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION).size());
+        Map<ReportableVariant, Boolean> notifyGermlineVariants = Maps.newHashMap();
+        notifyGermlineVariants.put(somaticVariant, false);
+        notifyGermlineVariants.put(germlineVariant, true);
 
-        assertEquals(1,
+        List<ReportableVariant> variantsWithNotify =
                 ConsentFilterFunctions.filterVariants(Lists.newArrayList(somaticVariant, germlineVariant),
-                        LimsGermlineReportingLevel.NO_REPORTING).size());
+                        notifyGermlineVariants,
+                        LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION);
+        assertEquals(2, variantsWithNotify.size());
+        assertEquals(1, variantsWithNotify.stream().filter(x -> x.source() == ReportableVariantSource.GERMLINE).count());
+
+        Map<ReportableVariant, Boolean> noNotifyGermlineVariants = Maps.newHashMap();
+        noNotifyGermlineVariants.put(somaticVariant, false);
+        noNotifyGermlineVariants.put(germlineVariant, false);
+
+        List<ReportableVariant> variantsWithoutNotify =
+                ConsentFilterFunctions.filterVariants(Lists.newArrayList(somaticVariant, germlineVariant),
+                        noNotifyGermlineVariants,
+                        LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION);
+        assertEquals(2, variantsWithoutNotify.size());
+        assertEquals(0, variantsWithoutNotify.stream().filter(x -> x.source() == ReportableVariantSource.GERMLINE).count());
+
+        List<ReportableVariant> noGermlineReporting =
+                ConsentFilterFunctions.filterVariants(Lists.newArrayList(somaticVariant, germlineVariant),
+                        notifyGermlineVariants,
+                        LimsGermlineReportingLevel.NO_REPORTING);
+        assertEquals(1, noGermlineReporting.size());
     }
 
     @Test
