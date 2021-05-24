@@ -93,15 +93,16 @@ public class FragmentAlleles
     public static List<FragmentAlleles> createFragmentAlleles(
             final List<AminoAcidFragment> refCoverageFragments, final List<Integer> refAminoAcidHetLoci,
             final List<HlaSequenceLoci> candidateAminoAcidSequences, final List<Set<String>> refAminoAcids,
-            final Map<String,List<Integer>> refNucleotideHetLoci, final List<HlaSequenceLoci> candidateNucleotideSequences)
+            final Map<String,List<Integer>> refNucleotideHetLoci, final List<HlaSequenceLoci> candidateNucleotideSequences,
+            final List<Set<String>> refNucleotides)
     {
         List<FragmentAlleles> results = Lists.newArrayList();
 
         for(AminoAcidFragment fragment : refCoverageFragments)
         {
             FragmentAlleles fragmentAlleles = create(
-                    fragment, refAminoAcidHetLoci, candidateAminoAcidSequences, refNucleotideHetLoci,
-                    candidateNucleotideSequences, refAminoAcids);
+                    fragment, refAminoAcidHetLoci, candidateAminoAcidSequences, refAminoAcids,
+                    refNucleotideHetLoci, candidateNucleotideSequences, refNucleotides);
 
             if(!fragmentAlleles.getFull().isEmpty() || !fragmentAlleles.getPartial().isEmpty())
                 results.add(fragmentAlleles);
@@ -112,145 +113,39 @@ public class FragmentAlleles
 
     private static FragmentAlleles create(
             final AminoAcidFragment fragment, final List<Integer> aminoAcidLoci, final List<HlaSequenceLoci> aminoAcidSequences,
-            final Map<String,List<Integer>> refNucleotideLoci, final List<HlaSequenceLoci> nucleotideSequences, final List<Set<String>> refAminoAcids)
+            final List<Set<String>> refAminoAcids,
+            final Map<String,List<Integer>> refNucleotideLoci, final List<HlaSequenceLoci> nucleotideSequences,
+            final List<Set<String>> refNucleotides)
     {
         Map<String,List<Integer>> fragNucleotideLociMap = Maps.newHashMap();
 
         refNucleotideLoci.entrySet().forEach(x -> fragNucleotideLociMap.put(
                 x.getKey(), fragment.getNucleotideLoci().stream().filter(y -> x.getValue().contains(y)).collect(Collectors.toList())));
 
-        Map<HlaAllele,HlaSequenceMatch> alleleMatches = Maps.newHashMap();
+        final List<HlaAllele> fullNucleotideMatch = Lists.newArrayList();
+        final List<HlaAllele> partialNucleotideMatch = Lists.newArrayList();
 
-        if(fragNucleotideLociMap.values().stream().anyMatch(x -> !x.isEmpty()))
-        {
-            fragNucleotideLociMap.values().forEach(x -> Collections.sort(x));
+        Map<HlaAllele,HlaSequenceMatch> nucleotideAlleleMatches = findNucleotideMatches(
+                fragment, refNucleotideLoci, nucleotideSequences, refNucleotides);
 
-            Map<String,String> fragNucleotideSequences = Maps.newHashMap();
+        fullNucleotideMatch.addAll(nucleotideAlleleMatches.entrySet().stream()
+                .filter(x -> x.getValue() == FULL).map(x -> x.getKey()).collect(Collectors.toList()));
 
-            for(HlaSequenceLoci sequence : nucleotideSequences)
-            {
-                HlaAllele allele = sequence.getAllele();
-                if(!fragment.getGenes().contains(allele.geneName()))
-                    continue;
-
-                List<Integer> fragNucleotideLoci = fragNucleotideLociMap.get(allele.Gene);
-                if(fragNucleotideLoci.isEmpty())
-                    continue;
-
-                String fragNucleotides = fragNucleotideSequences.get(allele.Gene);
-
-                if(fragNucleotides == null)
-                {
-                    fragNucleotides = fragment.nucleotides(fragNucleotideLoci);
-                    fragNucleotideSequences.put(allele.Gene, fragNucleotides);
-                }
-
-                HlaSequenceMatch matchType = sequence.match(fragNucleotides, fragNucleotideLoci);
-                if(matchType == HlaSequenceMatch.NONE)
-                    continue;
-
-                // keep the best match
-                Map.Entry<HlaAllele,HlaSequenceMatch> entryMatch = alleleMatches.entrySet().stream()
-                        .filter(x -> x.getKey() == allele.asFourDigit()).findFirst().orElse(null);
-
-                if(entryMatch == null || matchType.isBetter(entryMatch.getValue()))
-                {
-                    if(entryMatch != null)
-                        alleleMatches.remove(entryMatch.getKey());
-
-                    alleleMatches.put(allele.asFourDigit(), matchType);
-                }
-            }
-        }
-
-        List<HlaAllele> fullNucleotideMatch = alleleMatches.entrySet().stream()
-                .filter(x -> x.getValue() == FULL).map(x -> x.getKey()).collect(Collectors.toList());
-
-        List<HlaAllele> partialNucleotideMatch = alleleMatches.entrySet().stream()
+        partialNucleotideMatch.addAll(nucleotideAlleleMatches.entrySet().stream()
                 .filter(x -> x.getValue() == PARTIAL || x.getValue() == WILD)
                 .filter(x -> !fullNucleotideMatch.contains(x))
-                .map(x -> x.getKey()).collect(Collectors.toList());
+                .map(x -> x.getKey()).collect(Collectors.toList()));
 
-        alleleMatches.clear();
+        Map<HlaAllele,HlaSequenceMatch> aminoAcidAlleleMatches = findAminoAcidMatches(
+                fragment, aminoAcidLoci, aminoAcidSequences, refAminoAcids);
 
-        List<Integer> fragmentAminoAcidLoci = fragment.getAminoAcidLoci().stream()
-                .filter(x -> aminoAcidLoci.contains(x)).collect(Collectors.toList());
-
-        if(!fragmentAminoAcidLoci.isEmpty())
-        {
-            // also attempt to retrive amino acids from low-qual nucleotides
-            Map<Integer,String> missedAminoAcids = Maps.newHashMap();
-
-            List<Integer> missedAminoAcidLoci = aminoAcidLoci.stream()
-                    .filter(x -> !fragmentAminoAcidLoci.contains(x)).collect(Collectors.toList());
-
-            for(Integer missedLocus : missedAminoAcidLoci)
-            {
-                Set<String> candidateAminoAcids = missedLocus < refAminoAcids.size() ? refAminoAcids.get(missedLocus) : Sets.newHashSet();
-
-                String lowQualAminoAcid = fragment.getLowQualAminoAcid(missedLocus);
-
-                if(!lowQualAminoAcid.isEmpty() && candidateAminoAcids.contains(lowQualAminoAcid))
-                {
-                    fragmentAminoAcidLoci.add(missedLocus);
-                    missedAminoAcids.put(missedLocus, lowQualAminoAcid);
-                }
-            }
-
-            Collections.sort(fragmentAminoAcidLoci);
-
-            String fragmentAminoAcids;
-
-            if(missedAminoAcids.isEmpty())
-            {
-                fragmentAminoAcids = fragment.aminoAcids(fragmentAminoAcidLoci);
-            }
-            else
-            {
-                StringJoiner aaSj = new StringJoiner("");
-
-                for(Integer locus : fragmentAminoAcidLoci)
-                {
-                    if(missedAminoAcids.containsKey(locus))
-                        aaSj.add(missedAminoAcids.get(locus));
-                    else
-                        aaSj.add(fragment.aminoAcid(locus));
-                }
-
-                fragmentAminoAcids = aaSj.toString();
-            }
-
-            for(HlaSequenceLoci sequence : aminoAcidSequences)
-            {
-                HlaSequenceMatch matchType = sequence.match(fragmentAminoAcids, fragmentAminoAcidLoci);
-                if(matchType == HlaSequenceMatch.NONE)
-                    continue;
-
-                HlaAllele allele = sequence.getAllele();
-
-                if(!fragment.getGenes().contains(allele.geneName()))
-                    continue;
-
-                Map.Entry<HlaAllele,HlaSequenceMatch> entryMatch = alleleMatches.entrySet().stream()
-                        .filter(x -> x.getKey() == allele).findFirst().orElse(null);
-
-                if(entryMatch == null || matchType.isBetter(entryMatch.getValue()))
-                {
-                    if(entryMatch != null)
-                        alleleMatches.remove(entryMatch.getKey());
-
-                    alleleMatches.put(allele, matchType);
-                }
-            }
-        }
-
-        List<HlaAllele> fullAminoAcidMatch = alleleMatches.entrySet().stream()
+        List<HlaAllele> fullAminoAcidMatch = aminoAcidAlleleMatches.entrySet().stream()
                 .filter(x -> x.getValue() == FULL).map(x -> x.getKey()).collect(Collectors.toList());
 
-        List<HlaAllele> partialAminoAcidMatch = alleleMatches.entrySet().stream()
+        List<HlaAllele> partialAminoAcidMatch = aminoAcidAlleleMatches.entrySet().stream()
                 .filter(x -> x.getValue() == PARTIAL).map(x -> x.getKey()).collect(Collectors.toList());
 
-        List<HlaAllele> wildAminoAcidMatch = alleleMatches.entrySet().stream()
+        List<HlaAllele> wildAminoAcidMatch = aminoAcidAlleleMatches.entrySet().stream()
                 .filter(x -> x.getValue() == WILD).map(x -> x.getKey()).collect(Collectors.toList());
 
         if(fullNucleotideMatch.isEmpty() && partialNucleotideMatch.isEmpty())
@@ -269,6 +164,197 @@ public class FragmentAlleles
         otherPartial.stream().filter(x -> !downgradedToPartial.contains(x)).forEach(x -> distinctPartial.add(x));
 
         return new FragmentAlleles(fragment, consistentFull, distinctPartial, wildAminoAcidMatch);
+    }
+
+    private static Map<HlaAllele,HlaSequenceMatch> findNucleotideMatches(
+            final AminoAcidFragment fragment, final Map<String,List<Integer>> refNucleotideLociMap,
+            final List<HlaSequenceLoci> nucleotideSequences, final List<Set<String>> refNucleotides)
+    {
+        Map<String,List<Integer>> fragNucleotideLociMap = Maps.newHashMap();
+
+        //refNucleotideLociMap.entrySet().forEach(x -> fragNucleotideLociMap.put(
+        //        x.getKey(), fragment.getNucleotideLoci().stream().filter(y -> x.getValue().contains(y)).collect(Collectors.toList())));
+
+        Map<HlaAllele,HlaSequenceMatch> alleleMatches = Maps.newHashMap();
+
+        // also attempt to retrive amino acids from low-qual nucleotides
+        Map<Integer,String> missedNucleotides = Maps.newHashMap();
+
+        for(Map.Entry<String,List<Integer>> entry : refNucleotideLociMap.entrySet())
+        {
+            String gene = entry.getKey();
+            List<Integer> refNucleotideLoci = entry.getValue();
+
+            List<Integer> fragmentMatchedLoci = fragment.getNucleotideLoci().stream()
+                    .filter(y -> refNucleotideLoci.contains(y)).collect(Collectors.toList());
+
+            // also check for support from low-qual reads at this same location
+            List<Integer> missedNucleotideLoci = refNucleotideLoci.stream()
+                    .filter(x -> !fragment.getNucleotideLoci().contains(x)).collect(Collectors.toList());
+
+            for(Integer missedLocus : missedNucleotideLoci)
+            {
+                if(missedLocus >= refNucleotides.size())
+                    continue;
+
+                Set<String> candidateNucleotides = refNucleotides.get(missedLocus);
+
+                String lowQualNucleotide = fragment.getLowQualNucleotide(missedLocus);
+
+                if(!lowQualNucleotide.isEmpty() && candidateNucleotides.contains(lowQualNucleotide))
+                {
+                    fragmentMatchedLoci.add(missedLocus);
+                    missedNucleotides.put(missedLocus, lowQualNucleotide);
+                }
+            }
+
+            fragNucleotideLociMap.put(gene, fragmentMatchedLoci);
+        }
+
+        if(fragNucleotideLociMap.values().stream().allMatch(x -> x.isEmpty()))
+            return alleleMatches;
+
+        fragNucleotideLociMap.values().forEach(x -> Collections.sort(x));
+
+        Map<String,String> fragNucleotideSequences = Maps.newHashMap();
+
+        for(HlaSequenceLoci sequence : nucleotideSequences)
+        {
+            HlaAllele allele = sequence.getAllele();
+            if(!fragment.getGenes().contains(allele.geneName()))
+                continue;
+
+            List<Integer> fragNucleotideLoci = fragNucleotideLociMap.get(allele.Gene);
+            if(fragNucleotideLoci.isEmpty())
+                continue;
+
+            String fragNucleotides = fragNucleotideSequences.get(allele.Gene);
+
+            if(fragNucleotides == null)
+            {
+                if(missedNucleotides.isEmpty())
+                {
+                    fragNucleotides = fragment.nucleotides(fragNucleotideLoci);
+                }
+                else
+                {
+                    StringJoiner nucSj = new StringJoiner("");
+
+                    for(Integer locus : fragNucleotideLoci)
+                    {
+                        if(missedNucleotides.containsKey(locus))
+                            nucSj.add(missedNucleotides.get(locus));
+                        else
+                            nucSj.add(fragment.nucleotide(locus));
+                    }
+
+                    fragNucleotides = nucSj.toString();
+                }
+
+                fragNucleotideSequences.put(allele.Gene, fragNucleotides);
+            }
+
+            HlaSequenceMatch matchType = sequence.match(fragNucleotides, fragNucleotideLoci);
+            if(matchType == HlaSequenceMatch.NONE)
+                continue;
+
+            // keep the best match
+            Map.Entry<HlaAllele,HlaSequenceMatch> entryMatch = alleleMatches.entrySet().stream()
+                    .filter(x -> x.getKey() == allele.asFourDigit()).findFirst().orElse(null);
+
+            if(entryMatch == null || matchType.isBetter(entryMatch.getValue()))
+            {
+                if(entryMatch != null)
+                    alleleMatches.remove(entryMatch.getKey());
+
+                alleleMatches.put(allele.asFourDigit(), matchType);
+            }
+        }
+
+        return alleleMatches;
+    }
+
+    private static Map<HlaAllele,HlaSequenceMatch> findAminoAcidMatches(
+            final AminoAcidFragment fragment, final List<Integer> aminoAcidLoci, final List<HlaSequenceLoci> aminoAcidSequences,
+            final List<Set<String>> refAminoAcids)
+    {
+        Map<HlaAllele,HlaSequenceMatch> alleleMatches = Maps.newHashMap();
+
+        List<Integer> fragmentAminoAcidLoci = fragment.getAminoAcidLoci().stream()
+                .filter(x -> aminoAcidLoci.contains(x)).collect(Collectors.toList());
+
+        if(fragmentAminoAcidLoci.isEmpty())
+            return alleleMatches;
+
+        // also attempt to retrive amino acids from low-qual nucleotides
+        Map<Integer,String> missedAminoAcids = Maps.newHashMap();
+
+        List<Integer> missedAminoAcidLoci = aminoAcidLoci.stream()
+                .filter(x -> !fragmentAminoAcidLoci.contains(x)).collect(Collectors.toList());
+
+        for(Integer missedLocus : missedAminoAcidLoci)
+        {
+            if(missedLocus >= refAminoAcids.size())
+                continue;
+
+            Set<String> candidateAminoAcids = refAminoAcids.get(missedLocus);
+
+            String lowQualAminoAcid = fragment.getLowQualAminoAcid(missedLocus);
+
+            if(!lowQualAminoAcid.isEmpty() && candidateAminoAcids.contains(lowQualAminoAcid))
+            {
+                fragmentAminoAcidLoci.add(missedLocus);
+                missedAminoAcids.put(missedLocus, lowQualAminoAcid);
+            }
+        }
+
+        Collections.sort(fragmentAminoAcidLoci);
+
+        String fragmentAminoAcids;
+
+        if(missedAminoAcids.isEmpty())
+        {
+            fragmentAminoAcids = fragment.aminoAcids(fragmentAminoAcidLoci);
+        }
+        else
+        {
+            StringJoiner aaSj = new StringJoiner("");
+
+            for(Integer locus : fragmentAminoAcidLoci)
+            {
+                if(missedAminoAcids.containsKey(locus))
+                    aaSj.add(missedAminoAcids.get(locus));
+                else
+                    aaSj.add(fragment.aminoAcid(locus));
+            }
+
+            fragmentAminoAcids = aaSj.toString();
+        }
+
+        for(HlaSequenceLoci sequence : aminoAcidSequences)
+        {
+            HlaSequenceMatch matchType = sequence.match(fragmentAminoAcids, fragmentAminoAcidLoci);
+            if(matchType == HlaSequenceMatch.NONE)
+                continue;
+
+            HlaAllele allele = sequence.getAllele();
+
+            if(!fragment.getGenes().contains(allele.geneName()))
+                continue;
+
+            Map.Entry<HlaAllele,HlaSequenceMatch> entryMatch = alleleMatches.entrySet().stream()
+                    .filter(x -> x.getKey() == allele).findFirst().orElse(null);
+
+            if(entryMatch == null || matchType.isBetter(entryMatch.getValue()))
+            {
+                if(entryMatch != null)
+                    alleleMatches.remove(entryMatch.getKey());
+
+                alleleMatches.put(allele, matchType);
+            }
+        }
+
+        return alleleMatches;
     }
 
     public static void applyUniqueStopLossFragments(

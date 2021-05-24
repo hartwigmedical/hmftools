@@ -242,7 +242,7 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         List<FragmentAlleles> refFragAlleles = createFragmentAlleles(
                 refAminoAcidFragments, refAminoAcidHetLoci, candidateAminoAcidSequences, aminoAcidPipeline.getReferenceAminoAcids(),
-                refNucleotideHetLoci, candidateNucleotideSequences);
+                refNucleotideHetLoci, candidateNucleotideSequences, aminoAcidPipeline.getReferenceNucleotides());
 
         FragmentAlleles.applyUniqueStopLossFragments(
                 refFragAlleles, referenceBamReader.stopLossOnCIndels(), mRefData.StopLossRecoveryAlleles);
@@ -301,7 +301,8 @@ public class LilacApplication implements AutoCloseable, Runnable
 
             List<FragmentAlleles> tumorFragAlleles = createFragmentAlleles(
                     aminoAcidPipeline.tumorCoverageFragments(), refAminoAcidHetLoci, candidateAminoAcidSequences,
-                    aminoAcidPipeline.getReferenceAminoAcids(), refNucleotideHetLoci, candidateNucleotideSequences);
+                    aminoAcidPipeline.getReferenceAminoAcids(),
+                    refNucleotideHetLoci, candidateNucleotideSequences, aminoAcidPipeline.getReferenceNucleotides());
 
             winningTumorCoverage = HlaComplexBuilder.calcProteinCoverage(tumorFragAlleles, winningAlleles).expandToSixAlleles();
 

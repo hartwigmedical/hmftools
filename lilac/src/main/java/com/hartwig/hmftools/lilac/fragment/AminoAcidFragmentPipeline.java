@@ -96,9 +96,19 @@ public class AminoAcidFragmentPipeline
 
     public List<Set<String>> getReferenceAminoAcids()
     {
+        return createSequenceSets(mRefAminoAcidCounts);
+    }
+
+    public List<Set<String>> getReferenceNucleotides()
+    {
+        return createSequenceSets(mRefNucleotideCounts);
+    }
+
+    private static List<Set<String>> createSequenceSets(final Map<String,SequenceCount> countsMap)
+    {
         List<Set<String>> refAminoAcids = Lists.newArrayList();
 
-        for(SequenceCount seqCounts : mRefAminoAcidCounts.values())
+        for(SequenceCount seqCounts : countsMap.values())
         {
             for(int locus = 0; locus < seqCounts.getLength(); ++locus)
             {

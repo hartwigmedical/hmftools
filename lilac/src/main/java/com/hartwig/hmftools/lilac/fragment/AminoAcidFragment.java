@@ -100,6 +100,17 @@ public final class AminoAcidFragment extends NucleotideFragment
                 intersectAminoAcidLoci, intersectAminoAcids);
     }
 
+    public String getLowQualNucleotide(int locus)
+    {
+        if(mAllQualityNucleotideFragment == null)
+            return "";
+
+        if(mAllQualityNucleotideFragment.getNucleotideLoci().contains(locus))
+            return mAllQualityNucleotideFragment.nucleotide(locus);
+
+        return "";
+    }
+
     public String getLowQualAminoAcid(int locus)
     {
         if(mAllQualityNucleotideFragment == null)
@@ -108,8 +119,8 @@ public final class AminoAcidFragment extends NucleotideFragment
         int startNucleotideLocus = locus * 3;
 
         if(mAllQualityNucleotideFragment.getNucleotideLoci().contains(startNucleotideLocus)
-        && mAllQualityNucleotideFragment.getNucleotideLoci().contains(startNucleotideLocus + 1)
-        && mAllQualityNucleotideFragment.getNucleotideLoci().contains(startNucleotideLocus + 2))
+                && mAllQualityNucleotideFragment.getNucleotideLoci().contains(startNucleotideLocus + 1)
+                && mAllQualityNucleotideFragment.getNucleotideLoci().contains(startNucleotideLocus + 2))
         {
             return mAllQualityNucleotideFragment.formCodonAminoAcid(locus);
         }
