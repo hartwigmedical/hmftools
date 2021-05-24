@@ -124,36 +124,35 @@ public class LilacApplication implements AutoCloseable, Runnable
         SAMRecordReader referenceBamReader =
                 new SAMRecordReader(mConfig.ReferenceBam, mConfig.RefGenome, mRefData.HlaTranscriptData, nucleotideFragmentFactory);
 
-        final List<NucleotideFragment> referenceNucleotideFragments = mNucleotideGeneEnrichment.enrich(referenceBamReader.readFromBam());
-        final List<NucleotideFragment> tumorNucleotideFragments = Lists.newArrayList();
+        final List<NucleotideFragment> refNucleotideFrags = mNucleotideGeneEnrichment.enrich(referenceBamReader.readFromBam());
+        final List<NucleotideFragment> tumorNucleotideFrags = Lists.newArrayList();
         if(!mConfig.TumorBam.isEmpty())
         {
             LL_LOGGER.info("querying records from tumor bam " + mConfig.TumorBam);
-            tumorNucleotideFragments.addAll(mNucleotideGeneEnrichment.enrich(tumorBamReader.readFromBam()));
+            tumorNucleotideFrags.addAll(mNucleotideGeneEnrichment.enrich(tumorBamReader.readFromBam()));
         }
 
-        allValid &= validateNucleotideFragments(referenceNucleotideFragments);
-        allValid &= validateNucleotideFragments(tumorNucleotideFragments);
+        allValid &= validateNucleotideFragments(refNucleotideFrags);
+        allValid &= validateNucleotideFragments(tumorNucleotideFrags);
 
-        AminoAcidFragmentPipeline aminoAcidPipeline = new AminoAcidFragmentPipeline(
-                mConfig, referenceNucleotideFragments, tumorNucleotideFragments);
+        AminoAcidFragmentPipeline aminoAcidPipeline = new AminoAcidFragmentPipeline(mConfig, refNucleotideFrags, tumorNucleotideFrags);
 
         // apply special filtering and splice checks on fragments, just for use in phasing
-        List<AminoAcidFragment> aCandidateFragments = aminoAcidPipeline.referencePhasingFragments(hlaAContext);
-        List<AminoAcidFragment> bCandidateFragments = aminoAcidPipeline.referencePhasingFragments(hlaBContext);
-        List<AminoAcidFragment> cCandidateFragments = aminoAcidPipeline.referencePhasingFragments(hlaCContext);
+        List<AminoAcidFragment> aCandidateFrags = aminoAcidPipeline.referencePhasingFragments(hlaAContext);
+        List<AminoAcidFragment> bCandidateFrags = aminoAcidPipeline.referencePhasingFragments(hlaBContext);
+        List<AminoAcidFragment> cCandidateFrags = aminoAcidPipeline.referencePhasingFragments(hlaCContext);
 
         // Un-phased Candidates
         Candidates candidateFactory = new Candidates(mConfig, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
-        List<HlaAllele> aUnphasedCandidates = candidateFactory.unphasedCandidates(hlaAContext, aCandidateFragments);
-        List<HlaAllele> bUnphasedCandidates = candidateFactory.unphasedCandidates(hlaBContext, bCandidateFragments);
-        List<HlaAllele> cUnphasedCandidates = candidateFactory.unphasedCandidates(hlaCContext, cCandidateFragments);
+        List<HlaAllele> aUnphasedCandidates = candidateFactory.unphasedCandidates(hlaAContext, aCandidateFrags);
+        List<HlaAllele> bUnphasedCandidates = candidateFactory.unphasedCandidates(hlaBContext, bCandidateFrags);
+        List<HlaAllele> cUnphasedCandidates = candidateFactory.unphasedCandidates(hlaCContext, cCandidateFrags);
 
         // Phasing
         PhasedEvidenceFactory phasedEvidenceFactory = new PhasedEvidenceFactory(mConfig);
-        List<PhasedEvidence> aPhasedEvidence = phasedEvidenceFactory.evidence(hlaAContext, aCandidateFragments);
-        List<PhasedEvidence> bPhasedEvidence = phasedEvidenceFactory.evidence(hlaBContext, bCandidateFragments);
-        List<PhasedEvidence> cPhasedEvidence = phasedEvidenceFactory.evidence(hlaCContext, cCandidateFragments);
+        List<PhasedEvidence> aPhasedEvidence = phasedEvidenceFactory.evidence(hlaAContext, aCandidateFrags);
+        List<PhasedEvidence> bPhasedEvidence = phasedEvidenceFactory.evidence(hlaBContext, bCandidateFrags);
+        List<PhasedEvidence> cPhasedEvidence = phasedEvidenceFactory.evidence(hlaCContext, cCandidateFrags);
 
         // validate phasing against expected sequences
         List<HlaSequenceLoci> expectedSequences = Lists.newArrayList();
@@ -240,12 +239,14 @@ public class LilacApplication implements AutoCloseable, Runnable
         List<HlaSequenceLoci> candidateNucleotideSequences = mRefData.NucleotideSequences.stream()
             .filter(x -> candidateAlleleSpecificProteins.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
 
-        List<FragmentAlleles> refFragAlleles = createFragmentAlleles(
+        List<FragmentAlleles> refFragAlleles = FragmentAlleles.createFragmentAlleles(
                 refAminoAcidFragments, refAminoAcidHetLoci, candidateAminoAcidSequences, aminoAcidPipeline.getReferenceAminoAcids(),
                 refNucleotideHetLoci, candidateNucleotideSequences, aminoAcidPipeline.getReferenceNucleotides());
 
         FragmentAlleles.applyUniqueStopLossFragments(
                 refFragAlleles, referenceBamReader.stopLossOnCIndels(), mRefData.StopLossRecoveryAlleles);
+
+        FragmentAlleles.checkHlaYSupport(mRefData.HlaYNucleotideSequences, refFragAlleles, refNucleotideFrags);
 
         // build and score complexes
         HlaComplexBuilder complexBuilder = new HlaComplexBuilder(mConfig, mRefData);
@@ -358,7 +359,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         AminoAcidQC aminoAcidQC = AminoAcidQC.create(winningSequences, refAminoAcidCounts, haplotypeQC.UnmatchedHaplotypes);
 
         BamQC bamQC = BamQC.create(referenceBamReader);
-        CoverageQC coverageQC = CoverageQC.create(referenceNucleotideFragments.size(), winningRefCoverage);
+        CoverageQC coverageQC = CoverageQC.create(refNucleotideFrags.size(), winningRefCoverage);
         LilacQC lilacQC = LilacQC.create(aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC);
 
         LL_LOGGER.info("QC Stats:");

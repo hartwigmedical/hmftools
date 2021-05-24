@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.coverage;
 
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceMatch.FULL;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceMatch.PARTIAL;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceMatch.WILD;
@@ -9,6 +10,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.SequenceCount;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
+import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceMatch;
@@ -117,6 +119,7 @@ public class FragmentAlleles
             final Map<String,List<Integer>> refNucleotideLoci, final List<HlaSequenceLoci> nucleotideSequences,
             final List<Set<String>> refNucleotides)
     {
+        // look first for nucleotide support at the exon boundaries, then for amino acid support - full, partial or wild
         Map<String,List<Integer>> fragNucleotideLociMap = Maps.newHashMap();
 
         refNucleotideLoci.entrySet().forEach(x -> fragNucleotideLociMap.put(
@@ -171,9 +174,6 @@ public class FragmentAlleles
             final List<HlaSequenceLoci> nucleotideSequences, final List<Set<String>> refNucleotides)
     {
         Map<String,List<Integer>> fragNucleotideLociMap = Maps.newHashMap();
-
-        //refNucleotideLociMap.entrySet().forEach(x -> fragNucleotideLociMap.put(
-        //        x.getKey(), fragment.getNucleotideLoci().stream().filter(y -> x.getValue().contains(y)).collect(Collectors.toList())));
 
         Map<HlaAllele,HlaSequenceMatch> alleleMatches = Maps.newHashMap();
 
@@ -355,6 +355,60 @@ public class FragmentAlleles
         }
 
         return alleleMatches;
+    }
+
+    public static void checkHlaYSupport(
+            final List<HlaSequenceLoci> hlaYSequences, final List<FragmentAlleles> fragmentAlleles,
+            final List<NucleotideFragment> refCoverageFragments)
+    {
+        Map<HlaAllele,Integer> alleleMatchCount = Maps.newHashMap();
+        int matchedUniqueNonY = 0;
+        int matchedSharedNonY = 0;
+        int uniqueHlaY = 0;
+
+        List<FragmentAlleles> matchedFragmentAlleles = Lists.newArrayList();
+
+        for(NucleotideFragment fragment : refCoverageFragments)
+        {
+            List<Integer> fragNucleotideLoci = fragment.getNucleotideLoci();
+
+            boolean matchesY = false;
+
+            for(HlaSequenceLoci sequence : hlaYSequences)
+            {
+                HlaAllele allele = sequence.Allele;
+
+                String fragNucleotides = fragment.nucleotides(fragNucleotideLoci);
+
+                HlaSequenceMatch matchType = sequence.match(fragNucleotides, fragNucleotideLoci);
+                if(matchType == HlaSequenceMatch.FULL)
+                {
+                    matchesY = true;
+                    break;
+                }
+            }
+
+            if(!matchesY)
+                continue;
+
+            final FragmentAlleles matchedFrag = fragmentAlleles.stream()
+                    .filter(x -> x.getFragment().getId().equals(fragment.getId())).findFirst().orElse(null);
+
+            if(matchedFrag == null)
+            {
+                ++uniqueHlaY;
+            }
+            else
+            {
+                matchedFragmentAlleles.add(matchedFrag);
+            }
+        }
+
+        if(uniqueHlaY > 0 || !matchedFragmentAlleles.isEmpty())
+        {
+            LL_LOGGER.info("HLA-Y matches: unique({}) shared({})", uniqueHlaY, matchedFragmentAlleles.size());
+            // matchedFragmentAlleles.forEach(x -> fragmentAlleles.remove(x));
+        }
     }
 
     public static void applyUniqueStopLossFragments(
