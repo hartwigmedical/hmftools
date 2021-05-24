@@ -61,7 +61,8 @@ public final class ConsentFilterFunctions {
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
         List<ReportableVariant> filteredVariants = Lists.newArrayList();
         for (ReportableVariant variant : variants) {
-            if (germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING || variant.source() == ReportableVariantSource.SOMATIC) {
+            if (!(variant.source() == ReportableVariantSource.GERMLINE
+                    && germlineReportingLevel == LimsGermlineReportingLevel.NO_REPORTING)) {
                 if (variant.source() == ReportableVariantSource.GERMLINE && !notifyGermlineStatusPerVariant.get(variant)) {
                     filteredVariants.add(ImmutableReportableVariant.builder()
                             .from(variant)
@@ -81,10 +82,9 @@ public final class ConsentFilterFunctions {
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION) {
+            if (evidence.germline() && germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING) {
+                // We always overwrite to somatic in evidence since we are not sure we notify about the actual variant.
                 filtered.add(ImmutableProtectEvidence.builder().from(evidence).germline(false).build());
-            } else if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION) {
-                filtered.add(evidence);
             } else if (!evidence.germline()) {
                 filtered.add(evidence);
             }

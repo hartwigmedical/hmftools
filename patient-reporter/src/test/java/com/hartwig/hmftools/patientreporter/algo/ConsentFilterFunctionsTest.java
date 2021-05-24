@@ -75,17 +75,10 @@ public class ConsentFilterFunctionsTest {
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
                 .build();
 
-        assertEquals(1,
-                ConsentFilterFunctions.filterEvidenceForGermlineConsent(Lists.newArrayList(evidence),
-                        LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION).size());
-
-        assertEquals(0,
-                ConsentFilterFunctions.filterEvidenceForGermlineConsent(Lists.newArrayList(evidence),
-                        LimsGermlineReportingLevel.NO_REPORTING).size());
-
-        assertEquals(0,
-                ConsentFilterFunctions.filterEvidenceForGermlineConsent(Lists.newArrayList(evidence),
-                        LimsGermlineReportingLevel.NO_REPORTING).size());
+        List<ProtectEvidence> withNotify = ConsentFilterFunctions.filterEvidenceForGermlineConsent(Lists.newArrayList(evidence),
+                LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION);
+        assertEquals(1, withNotify.size());
+        assertEquals(0, withNotify.stream().filter(x -> x.germline()).count());
 
         assertEquals(0,
                 ConsentFilterFunctions.filterEvidenceForGermlineConsent(Lists.newArrayList(evidence),
