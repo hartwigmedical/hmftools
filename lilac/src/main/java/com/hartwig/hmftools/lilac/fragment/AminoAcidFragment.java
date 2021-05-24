@@ -140,10 +140,6 @@ public final class AminoAcidFragment extends NucleotideFragment
         if(!super.validate())
             return false;
 
-        // TODO - determine if valid or not, may still want to look back into nucleotide data and infer an AA
-        //if(mAminoAcidLoci.isEmpty())
-        //    return false;
-
         if(mAminoAcidLoci.size() != mAminoAcids.size())
             return false;
 

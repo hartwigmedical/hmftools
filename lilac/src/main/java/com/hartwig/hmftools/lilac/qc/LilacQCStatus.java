@@ -1,9 +1,3 @@
-/*
- * Decompiled with CFR 0.151.
- *
- * Could not load the following classes:
- *  kotlin.Metadata
- */
 package com.hartwig.hmftools.lilac.qc;
 
 public enum LilacQCStatus

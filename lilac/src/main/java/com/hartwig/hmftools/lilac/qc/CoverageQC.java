@@ -81,9 +81,9 @@ public class CoverageQC {
                 String.valueOf(BTypes), String.valueOf(CTypes),
                 String.valueOf(UnusedFragments),
                 String.valueOf(FittedFragments),
-                String.format("%,1f", PercentUnique * 100),
-                String.format("%,1f", PercentShared * 100),
-                String.format("%,1f", PercentWildcard * 100));
+                String.format("%.1f", PercentUnique * 100),
+                String.format("%.1f", PercentShared * 100),
+                String.format("%.1f", PercentWildcard * 100));
     }
 
     public String toString()

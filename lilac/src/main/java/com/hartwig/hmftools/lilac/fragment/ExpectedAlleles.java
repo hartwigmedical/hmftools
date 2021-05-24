@@ -37,7 +37,7 @@ public class ExpectedAlleles
         }
          */
 
-        // CHECK: seems to be 1 short on the 6-groups
+        // seems to be 1 short on the 6-groups
 
         int min = min(otherMin1, otherMin2);
         int max = max(otherMin1, otherMin2);

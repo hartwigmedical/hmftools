@@ -49,7 +49,6 @@ import com.hartwig.hmftools.lilac.qc.SomaticVariantQC;
 import com.hartwig.hmftools.lilac.coverage.FragmentAlleles;
 import com.hartwig.hmftools.lilac.read.SAMRecordReader;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-import com.hartwig.hmftools.lilac.seq.HlaSequenceLociFile;
 import com.hartwig.hmftools.lilac.variant.LilacVCF;
 import com.hartwig.hmftools.lilac.variant.SomaticAlleleCoverage;
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
@@ -327,11 +326,11 @@ public class LilacApplication implements AutoCloseable, Runnable
                 SomaticAlleleCoverage somaticCoverageFactory = new SomaticAlleleCoverage(
                         mConfig, refAminoAcidHetLoci, mRefData.LociPositionFinder, somaticVariants, winningSequences);
 
-                for (VariantContextDecorator variant : somaticVariants)
+                for(VariantContextDecorator variant : somaticVariants)
                 {
                     List<HlaAlleleCoverage> variantCoverage = somaticCoverageFactory.alleleCoverage(variant, tumorBamReader);
                     List<HlaAllele> variantAlleles = variantCoverage.stream().map(x -> x.Allele).collect(Collectors.toList());
-                    LL_LOGGER.info("    {} -> {}}", variant, variantCoverage);
+                    LL_LOGGER.info("  {} -> {}}", variant, variantCoverage);
                     lilacVCF.writeVariant(variant.context(), variantAlleles);
                     addVariant(somaticCodingCounts, variant, variantAlleles);
                 }
@@ -372,16 +371,6 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         output.write(outputFile);
         lilacQC.writefile(outputQCFile);
-
-        List<HlaSequenceLoci> candidatesToWrite = candidateSequences.stream().collect(Collectors.toList());
-        candidatesToWrite.addAll(expectedSequences);
-
-        if(mRefData.getDeflatedSequenceTemplate() != null)
-            candidatesToWrite.add(mRefData.getDeflatedSequenceTemplate());
-
-        HlaSequenceLociFile.write(
-                String.format("%s.candidates.sequences.txt", mConfig.outputPrefix()),
-                A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES, candidatesToWrite);
 
         HlaComplexFile.writeToFile(referenceRankedComplexes,
                 String.format("%s.candidates.coverage.txt", mConfig.outputPrefix()));

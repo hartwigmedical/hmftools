@@ -14,6 +14,12 @@ public class SomaticVariantQC
     private final int mVariantCount;
     private final double mVariantAlleleCount;
 
+    public SomaticVariantQC(int variantCount, double variantAlleleCount)
+    {
+        mVariantCount = variantCount;
+        mVariantAlleleCount = variantAlleleCount;
+    }
+
     public final List<String> header()
     {
         return Lists.newArrayList("variantCount", "variantAlleleCount");
@@ -27,12 +33,6 @@ public class SomaticVariantQC
     public final boolean unmatchedVariants()
     {
         return abs((double)mVariantCount - mVariantAlleleCount) > 0.01;
-    }
-
-    public SomaticVariantQC(int variantCount, double variantAlleleCount)
-    {
-        mVariantCount = variantCount;
-        mVariantAlleleCount = variantAlleleCount;
     }
 
     public static SomaticVariantQC create(int variantCount, final List<SomaticCodingCount> codingCount)
