@@ -32,9 +32,10 @@ public final class QualityOverruleFunctions {
 
         Map<ReportableVariant, Boolean> filteredMap = Maps.newHashMap();
         for (Map.Entry<ReportableVariant, Boolean> entry : notifyGermlineStatusPerVariant.entrySet()) {
+            ReportableVariant overruledVariants =
+                    overruleVariant(entry.getKey(), hasReliablePurity);
             filteredMap.put(ImmutableReportableVariant.builder()
-                    .from(QualityOverruleFunctions.overruleVariant(entry.getKey(), hasReliablePurity))
-                    .source(entry.getKey().source())
+                    .from(overruledVariants)
                     .build(), entry.getValue());
         }
         return filteredMap;
