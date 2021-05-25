@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
@@ -28,6 +29,8 @@ public final class ConsentFilterFunctions {
         List<ReportableVariant> filteredVariants = filterVariants(genomicAnalysis.reportableVariants(),
                 genomicAnalysis.notifyGermlineStatusPerVariant(),
                 germlineReportingLevel);
+        Map<ReportableVariant, Boolean> updatedNotifyStates =
+                updateNotifyStates(filteredVariants, genomicAnalysis.notifyGermlineStatusPerVariant());
 
         List<ReportableVirusBreakend> filteredVirusBreakends =
                 reportViralBreakends ? genomicAnalysis.virusBreakends() : Lists.newArrayList();
@@ -46,6 +49,7 @@ public final class ConsentFilterFunctions {
         return ImmutableGenomicAnalysis.builder()
                 .from(genomicAnalysis)
                 .reportableVariants(filteredVariants)
+                .notifyGermlineStatusPerVariant(updatedNotifyStates)
                 .virusBreakends(filteredVirusBreakends)
                 .peachGenotypes(filteredPeachGenotypes)
                 .tumorSpecificEvidence(filteredTumorSpecificEvidence)
@@ -74,6 +78,20 @@ public final class ConsentFilterFunctions {
             }
         }
         return filteredVariants;
+    }
+
+    @NotNull
+    private static Map<ReportableVariant, Boolean> updateNotifyStates(@NotNull List<ReportableVariant> filteredVariants,
+            @NotNull Map<ReportableVariant, Boolean> oldNotifyGermlineStates) {
+        Map<ReportableVariant, Boolean> updatedNotifyGermlineStates = Maps.newHashMap();
+        for (ReportableVariant variant : filteredVariants) {
+            if (oldNotifyGermlineStates.containsKey(variant)) {
+                updatedNotifyGermlineStates.put(variant, oldNotifyGermlineStates.get(variant));
+            } else {
+                updatedNotifyGermlineStates.put(variant, false);
+            }
+        }
+        return updatedNotifyGermlineStates;
     }
 
     @NotNull
