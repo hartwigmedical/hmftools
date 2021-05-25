@@ -59,7 +59,7 @@ public class FragmentAlleleCoverageTest
     private AminoAcidFragment createFragment(final String id)
     {
         return new AminoAcidFragment(
-                id, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(),
+                id, "", Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(),
                 Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
     }
 }

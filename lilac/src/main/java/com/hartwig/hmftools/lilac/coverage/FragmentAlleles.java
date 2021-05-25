@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_Y_FRAGMENT_THRESHOLD;
+import static com.hartwig.hmftools.lilac.LilacConstants.TOTAL_COVERAGE_DENOM;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceMatch.FULL;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceMatch.PARTIAL;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceMatch.WILD;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.lilac.SequenceCount;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -358,21 +358,26 @@ public class FragmentAlleles
     }
 
     public static void checkHlaYSupport(
-            final List<HlaSequenceLoci> hlaYSequences, final List<FragmentAlleles> fragmentAlleles,
-            final List<NucleotideFragment> refCoverageFragments)
+            final List<HlaSequenceLoci> hlaYSequences, List<Integer> refAminoAcidHetLoci,
+            final List<FragmentAlleles> fragmentAlleles, final List<AminoAcidFragment> refCoverageFragments)
     {
-        Map<HlaAllele,Integer> alleleMatchCount = Maps.newHashMap();
-        int matchedUniqueNonY = 0;
-        int matchedSharedNonY = 0;
+        // ignore fragments which don't contain any heterozygous locations
         int uniqueHlaY = 0;
 
         List<FragmentAlleles> matchedFragmentAlleles = Lists.newArrayList();
 
-        for(NucleotideFragment fragment : refCoverageFragments)
+        for(AminoAcidFragment fragment : refCoverageFragments)
         {
+            List<Integer> fragmentAminoAcidLoci = fragment.getAminoAcidLoci().stream()
+                    .filter(x -> refAminoAcidHetLoci.contains(x)).collect(Collectors.toList());
+
+            if(fragmentAminoAcidLoci.isEmpty())
+                continue;
+
             List<Integer> fragNucleotideLoci = fragment.getNucleotideLoci();
 
             boolean matchesY = false;
+            FragmentAlleles matchedFrag = null;
 
             for(HlaSequenceLoci sequence : hlaYSequences)
             {
@@ -384,15 +389,25 @@ public class FragmentAlleles
                 if(matchType == HlaSequenceMatch.FULL)
                 {
                     matchesY = true;
+
+                    matchedFrag = fragmentAlleles.stream()
+                            .filter(x -> x.getFragment().id().equals(fragment.id())).findFirst().orElse(null);
+
+                    if(LL_LOGGER.isDebugEnabled())
+                    {
+                        LL_LOGGER.debug("HLA-Y allele({}) fragment({}: {}) range({} -> {}) assignedGenes({})",
+                                allele.toString(), fragment.id(), fragment.readInfo(),
+                                fragment.getNucleotideLoci().get(0),
+                                fragment.getNucleotideLoci().get(fragment.getNucleotideLoci().size() - 1),
+                                matchedFrag != null ? matchedFrag.getFragment().getGenes() : "");
+                    }
+
                     break;
                 }
             }
 
             if(!matchesY)
                 continue;
-
-            final FragmentAlleles matchedFrag = fragmentAlleles.stream()
-                    .filter(x -> x.getFragment().getId().equals(fragment.getId())).findFirst().orElse(null);
 
             if(matchedFrag == null)
             {
@@ -404,10 +419,19 @@ public class FragmentAlleles
             }
         }
 
-        if(uniqueHlaY > 0 || !matchedFragmentAlleles.isEmpty())
+        int totalHlaYFrags = uniqueHlaY  + matchedFragmentAlleles.size();
+        double threshold = HLA_Y_FRAGMENT_THRESHOLD * fragmentAlleles.size() / (double)TOTAL_COVERAGE_DENOM;
+        boolean exceedsThreshold = uniqueHlaY >= threshold;
+
+        if(totalHlaYFrags > 0)
         {
-            LL_LOGGER.info("HLA-Y matches: unique({}) shared({})", uniqueHlaY, matchedFragmentAlleles.size());
-            // matchedFragmentAlleles.forEach(x -> fragmentAlleles.remove(x));
+            LL_LOGGER.info("HLA-Y fragments({} unique={}) shared={}) aboveThreshold({})",
+                    totalHlaYFrags, uniqueHlaY, matchedFragmentAlleles.size(), exceedsThreshold);
+
+            if(exceedsThreshold)
+            {
+                matchedFragmentAlleles.forEach(x -> fragmentAlleles.remove(x));
+            }
         }
     }
 

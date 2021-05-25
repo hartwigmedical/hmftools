@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
-import com.hartwig.hmftools.lilac.hla.HlaCopyNumber;
+import com.hartwig.hmftools.lilac.variant.HlaCopyNumber;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

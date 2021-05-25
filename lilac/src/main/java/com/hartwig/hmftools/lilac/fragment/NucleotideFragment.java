@@ -14,23 +14,27 @@ import java.util.StringJoiner;
 public class NucleotideFragment
 {
     private final String mId; // BAM read Id
+    private final String mReadInfo; // BAM read chr, start, end, gene, cigar
+
     private final Set<String> mGenes;
     private final List<Integer> mNucleotideLoci;
     private final List<Integer> mNucleotideQuality;
     private final List<String> mNucleotides;
 
     public NucleotideFragment(
-            final String id, final Set<String> genes, final List<Integer> nucleotideLoci,
+            final String id, final String readInfo, final Set<String> genes, final List<Integer> nucleotideLoci,
             final List<Integer> nucleotideQuality, final List<String> nucleotides)
     {
         mId = id;
+        mReadInfo = readInfo;
         mGenes = genes;
         mNucleotideLoci = nucleotideLoci;
         mNucleotideQuality = nucleotideQuality;
         mNucleotides = nucleotides;
     }
 
-    public final String getId() { return mId; }
+    public final String id() { return mId; }
+    public final String readInfo() { return mReadInfo; }
     public Set<String> getGenes() { return mGenes; }
     public boolean containsGene(final String gene) { return mGenes.stream().anyMatch(x -> x.equals(gene)); }
 
@@ -117,7 +121,7 @@ public class NucleotideFragment
             filteredNucleotides.add(mNucleotides.get(index));
         }
 
-        return new NucleotideFragment(mId, mGenes, filteredLoci, filteredQuality, filteredNucleotides);
+        return new NucleotideFragment(mId, mReadInfo, mGenes, filteredLoci, filteredQuality, filteredNucleotides);
     }
 
     public AminoAcidFragment toAminoAcidFragment()
@@ -145,7 +149,7 @@ public class NucleotideFragment
             }
         }
 
-        return new AminoAcidFragment(mId, mGenes, mNucleotideLoci, mNucleotideQuality, mNucleotides, aminoAcidLoci, aminoAcids);
+        return new AminoAcidFragment(mId, mReadInfo, mGenes, mNucleotideLoci, mNucleotideQuality, mNucleotides, aminoAcidLoci, aminoAcids);
     }
 
     public String formCodonAminoAcid(int locus)
@@ -217,12 +221,12 @@ public class NucleotideFragment
 
         for(NucleotideFragment fragment : fragments)
         {
-            List<NucleotideFragment> idFrags = readGroupFrags.get(fragment.getId());
+            List<NucleotideFragment> idFrags = readGroupFrags.get(fragment.id());
 
             if(idFrags == null)
             {
                 idFrags = Lists.newArrayList();
-                readGroupFrags.put(fragment.getId(), idFrags);
+                readGroupFrags.put(fragment.id(), idFrags);
             }
 
             idFrags.add(fragment);

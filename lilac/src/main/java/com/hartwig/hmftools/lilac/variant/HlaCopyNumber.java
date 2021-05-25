@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.hla;
+package com.hartwig.hmftools.lilac.variant;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
+import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import java.io.IOException;
 import java.util.List;

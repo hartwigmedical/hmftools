@@ -17,10 +17,10 @@ public final class AminoAcidFragment extends NucleotideFragment
     private NucleotideFragment mAllQualityNucleotideFragment;
 
     public AminoAcidFragment(
-            final String id, final Set<String> genes, final List<Integer> nucleotideLoci, final List<Integer> nucleotideQuality, 
+            final String id, final String readInfo, final Set<String> genes, final List<Integer> nucleotideLoci, final List<Integer> nucleotideQuality,
             final List<String> nucleotides, final List<Integer> aminoAcidLoci, final List<String> aminoAcids)
     {
-        super(id, genes, nucleotideLoci, nucleotideQuality, nucleotides);
+        super(id, readInfo, genes, nucleotideLoci, nucleotideQuality, nucleotides);
         mAminoAcidLoci = aminoAcidLoci;
         mAminoAcids = aminoAcids;
         mAllQualityNucleotideFragment = null;
@@ -96,7 +96,7 @@ public final class AminoAcidFragment extends NucleotideFragment
             return this;
 
         return new AminoAcidFragment(
-                getId(), getGenes(), getNucleotideLoci(), getNucleotideQuality(), getNucleotides(),
+                id(), readInfo(), getGenes(), getNucleotideLoci(), getNucleotideQuality(), getNucleotides(),
                 intersectAminoAcidLoci, intersectAminoAcids);
     }
 
@@ -131,7 +131,7 @@ public final class AminoAcidFragment extends NucleotideFragment
     public String toString()
     {
         return String.format("%s genes(%s) lociRange(%d -> %d)",
-                getId(), getGenes(), !mAminoAcidLoci.isEmpty() ? mAminoAcidLoci.get(0) : -1,
+                id(), getGenes(), !mAminoAcidLoci.isEmpty() ? mAminoAcidLoci.get(0) : -1,
                 !mAminoAcidLoci.isEmpty() ? mAminoAcidLoci.get(mAminoAcidLoci.size() - 1) : -1);
     }
 

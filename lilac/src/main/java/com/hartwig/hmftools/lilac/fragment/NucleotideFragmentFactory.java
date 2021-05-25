@@ -91,7 +91,7 @@ public class NucleotideFragmentFactory
         List<String> nucleotides = arrayToList(codingRegionRead);
         List<Integer> qualities = arrayToList(codingRegionQuality);
 
-        return new NucleotideFragment(record.Id, Sets.newHashSet(codingRegion.name()), lociRange, qualities, nucleotides);
+        return new NucleotideFragment(record.Id, record.readInfo(), Sets.newHashSet(codingRegion.name()), lociRange, qualities, nucleotides);
     }
 
     private NucleotideFragment checkMatchedInsertDeleteSequence(
@@ -122,7 +122,7 @@ public class NucleotideFragmentFactory
         {
             HlaSequenceLoci seqLoci = matchedSeqLoci.get(0);
             List<Integer> filteredAaIndices = matchedIndicesList.get(0);
-            NucleotideFragment fragment = createIndelFragment(record.Id, codingRegion, filteredAaIndices.get(0), aminoAcids, seqLoci);
+            NucleotideFragment fragment = createIndelFragment(record, codingRegion, filteredAaIndices.get(0), aminoAcids, seqLoci);
             return !fragment.getNucleotideLoci().isEmpty() ? fragment : null;
         }
 
@@ -130,7 +130,8 @@ public class NucleotideFragmentFactory
     }
 
     private NucleotideFragment createIndelFragment(
-            final String id, final NamedBed codingRegion, final int startLoci, final String bamSequence, final HlaSequenceLoci hlaSequence)
+            final SAMCodingRecord record, final NamedBed codingRegion, final int startLoci,
+            final String bamSequence, final HlaSequenceLoci hlaSequence)
     {
         int endLoci = endLoci(startLoci, bamSequence, hlaSequence);
         List<Integer> aminoAcidLoci = formRange(startLoci, endLoci);
@@ -145,7 +146,8 @@ public class NucleotideFragmentFactory
 
         List<Integer> qualities = nucleotideLoci.stream().map(x -> mMinBaseQuality).collect(Collectors.toList());
 
-        return new NucleotideFragment(id, Sets.newHashSet(codingRegion.name()), nucleotideLoci, qualities, nucleotides);
+        return new NucleotideFragment(
+                record.Id, record.readInfo(), Sets.newHashSet(codingRegion.name()), nucleotideLoci, qualities, nucleotides);
     }
 
     private int endLoci(int startLoci, final String bamSequence, final HlaSequenceLoci hlaSequence)

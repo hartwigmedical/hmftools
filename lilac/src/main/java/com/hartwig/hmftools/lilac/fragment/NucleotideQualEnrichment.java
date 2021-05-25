@@ -71,6 +71,6 @@ public final class NucleotideQualEnrichment
             filteredNucleotides.add(fragment.getNucleotides().get(index));
         }
 
-        return new NucleotideFragment(fragment.getId(), fragment.getGenes(), filteredLoci, filteredQuality, filteredNucleotides);
+        return new NucleotideFragment(fragment.id(), fragment.readInfo(), fragment.getGenes(), filteredLoci, filteredQuality, filteredNucleotides);
     }
 }

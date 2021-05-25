@@ -46,6 +46,12 @@ public class SAMCodingRecord
         ReverseStrand = reverseStrand;
     }
 
+    public String readInfo()
+    {
+        return String.format("%s:%d-%d %s",
+                mSamRecord.getContig(), mSamRecord.getStart(), mSamRecord.getEnd(), mSamRecord.getCigarString());
+    }
+
     public List<Indel> getIndels() { return mIndels; }
 
     public SAMRecord getSamRecord() { return mSamRecord; }

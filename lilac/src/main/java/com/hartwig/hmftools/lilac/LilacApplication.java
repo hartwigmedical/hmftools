@@ -19,7 +19,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.candidates.Candidates;
-import com.hartwig.hmftools.lilac.candidates.NucleotideFiltering;
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.HlaComplex;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexBuilder;
@@ -38,7 +37,7 @@ import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.hla.HlaContextFactory;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
-import com.hartwig.hmftools.lilac.hla.HlaCopyNumber;
+import com.hartwig.hmftools.lilac.variant.HlaCopyNumber;
 import com.hartwig.hmftools.lilac.qc.AminoAcidQC;
 import com.hartwig.hmftools.lilac.qc.BamQC;
 import com.hartwig.hmftools.lilac.qc.CoverageQC;
@@ -245,7 +244,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         FragmentAlleles.applyUniqueStopLossFragments(
                 refFragAlleles, referenceBamReader.stopLossOnCIndels(), mRefData.StopLossRecoveryAlleles);
 
-        FragmentAlleles.checkHlaYSupport(mRefData.HlaYNucleotideSequences, refFragAlleles, refNucleotideFrags);
+        FragmentAlleles.checkHlaYSupport(mRefData.HlaYNucleotideSequences, refAminoAcidHetLoci, refFragAlleles, refAminoAcidFragments);
 
         // build and score complexes
         HlaComplexBuilder complexBuilder = new HlaComplexBuilder(mConfig, mRefData);

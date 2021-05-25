@@ -39,11 +39,11 @@ public class FragmentsTest
     {
         String readId = "01";
         NucleotideFragment frag1 = new NucleotideFragment(
-                readId, Sets.newHashSet(GENE_A),
+                readId, "", Sets.newHashSet(GENE_A),
                 Lists.newArrayList(1), Lists.newArrayList(30), Lists.newArrayList("A"));
 
         NucleotideFragment frag2 = new NucleotideFragment(
-                readId, Sets.newHashSet(GENE_B),
+                readId, "", Sets.newHashSet(GENE_B),
                 Lists.newArrayList(1), Lists.newArrayList(30), Lists.newArrayList("A"));
 
         NucleotideFragment mergedFrag = merge(frag1, frag2);
@@ -54,7 +54,7 @@ public class FragmentsTest
         assertEquals(1, mergedFrag.getNucleotides().size());
 
         frag2 = new NucleotideFragment(
-                readId, Sets.newHashSet(GENE_A),
+                readId, "", Sets.newHashSet(GENE_A),
                 Lists.newArrayList(0, 1, 2, 3),
                 Lists.newArrayList(30, 30, 30, 30),
                 Lists.newArrayList("A", "A", "A", "A"));
@@ -68,7 +68,7 @@ public class FragmentsTest
         assertEquals(4, mergedFrag.getNucleotides().size());
 
         frag2 = new NucleotideFragment(
-                readId, Sets.newHashSet(GENE_C),
+                readId, "", Sets.newHashSet(GENE_C),
                 Lists.newArrayList(3, 4, 5),
                 Lists.newArrayList(30, 30, 30),
                 Lists.newArrayList("A", "A", "A"));
