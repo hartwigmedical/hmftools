@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.coverage;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.EXPECTED_ALLELE_COUNT;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 
 import java.util.Collections;
@@ -57,12 +58,19 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
 
     public static List<HlaAlleleCoverage> expand(final List<HlaAlleleCoverage> coverage)
     {
+        if(coverage.size() == EXPECTED_ALLELE_COUNT)
+            return coverage;
+
         List<HlaAlleleCoverage> expandedCoverage = Lists.newArrayList();
 
         for(String gene : GENE_IDS)
         {
             List<HlaAlleleCoverage> geneCoverage = coverage.stream().filter(x -> x.Allele.Gene.equals(gene)).collect(Collectors.toList());
-            expandedCoverage.addAll(splitSingle(geneCoverage));
+
+            if(geneCoverage.size() == 2)
+                expandedCoverage.addAll(geneCoverage);
+            else
+                expandedCoverage.addAll(splitHomozygousCoverage(geneCoverage));
         }
 
         Collections.sort(expandedCoverage, new AlleleSorter());
@@ -158,28 +166,25 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
         entry.setValue(entry.getValue() + value);
     }
 
-    private static List<HlaAlleleCoverage> splitSingle(final List<HlaAlleleCoverage> coverage)
+    private static List<HlaAlleleCoverage> splitHomozygousCoverage(final List<HlaAlleleCoverage> coverage)
     {
-        if (coverage.size() == 1)
-        {
-            HlaAlleleCoverage single = coverage.get(0);
-            HlaAlleleCoverage first = new HlaAlleleCoverage(
-                    single.Allele,
-                    single.UniqueCoverage / 2,
-                    single.SharedCoverage / 2,
-                    single.WildCoverage / 2);
+        if (coverage.size() != 1)
+            return coverage;
 
-            HlaAlleleCoverage remainder = new HlaAlleleCoverage(single.Allele,
-                    single.UniqueCoverage - first.UniqueCoverage,
-                    single.SharedCoverage - first.SharedCoverage,
-                    single.WildCoverage - single.WildCoverage);
+        HlaAlleleCoverage single = coverage.get(0);
+        HlaAlleleCoverage first = new HlaAlleleCoverage(
+                single.Allele,
+                single.UniqueCoverage / 2,
+                single.SharedCoverage / 2,
+                single.WildCoverage / 2);
 
-            List<HlaAlleleCoverage> newCoverage = Lists.newArrayList(single, remainder);
-            Collections.sort(newCoverage, new TotalCoverageSorter());
-            return newCoverage;
-        }
+        HlaAlleleCoverage remainder = new HlaAlleleCoverage(single.Allele,
+                single.UniqueCoverage - first.UniqueCoverage,
+                single.SharedCoverage - first.SharedCoverage,
+                single.WildCoverage - single.WildCoverage);
 
-        return coverage;
+        List<HlaAlleleCoverage> newCoverage = Lists.newArrayList(first, remainder);
+        return newCoverage;
     }
 
     public static List<HlaAllele> coverageAlleles(final List<HlaAlleleCoverage> coverage)

@@ -244,11 +244,13 @@ public class LilacApplication implements AutoCloseable, Runnable
         FragmentAlleles.applyUniqueStopLossFragments(
                 refFragAlleles, referenceBamReader.stopLossOnCIndels(), mRefData.StopLossRecoveryAlleles);
 
-        FragmentAlleles.checkHlaYSupport(mConfig.Sample, mRefData.HlaYNucleotideSequences, refAminoAcidHetLoci, refFragAlleles, refAminoAcidFragments);
+        FragmentAlleles.checkHlaYSupport(
+                mConfig.Sample, mRefData.HlaYNucleotideSequences, refAminoAcidHetLoci, refFragAlleles, refAminoAcidFragments);
 
         // build and score complexes
         HlaComplexBuilder complexBuilder = new HlaComplexBuilder(mConfig, mRefData);
-        List<HlaComplex> complexes = complexBuilder.buildComplexes(refFragAlleles, candidateAlleles, recoveredAlleles);
+        List<HlaComplex> complexes = complexBuilder.buildComplexes(
+                refFragAlleles, candidateAlleles, recoveredAlleles, mRefData.getWildcardAlleles());
 
         LL_LOGGER.info("calculating coverage of {} complexes", complexes.size());
         ComplexCoverageCalculator complexCalculator = new ComplexCoverageCalculator(mConfig.Threads);

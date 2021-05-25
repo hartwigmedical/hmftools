@@ -40,6 +40,8 @@ public class HlaSequenceLoci
 
     public final boolean containsIndels() { return containsDeletes() || containsInserts(); }
 
+    public final boolean containsWildcards() { return mSequences.stream().anyMatch(x -> x.equals(WILD_STR)); }
+
     public final String sequence(int locus) { return mSequences.get(locus); }
 
     public final String sequence(int startLocus, int endLocus)

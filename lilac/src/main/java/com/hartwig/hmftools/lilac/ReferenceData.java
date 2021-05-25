@@ -139,6 +139,11 @@ public class ReferenceData
         StopLossRecoveryAlleles.add(mAlleleCache.requestFourDigit("C*04:09N"));
     }
 
+    public List<HlaAllele> getWildcardAlleles()
+    {
+        return AminoAcidSequences.stream().filter(x -> x.containsWildcards()).map(x -> x.Allele).collect(Collectors.toList());
+    }
+
     private boolean excludeAllele(final HlaAllele allele)
     {
         final HlaAllele allele4d = allele.asFourDigit();
