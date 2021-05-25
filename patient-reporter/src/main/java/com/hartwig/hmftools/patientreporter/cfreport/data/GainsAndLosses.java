@@ -6,11 +6,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.xml.crypto.Data;
+
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 
 import org.jetbrains.annotations.NotNull;
@@ -71,7 +74,7 @@ public final class GainsAndLosses {
         }
 
         ChromosomeArmKey key = new ChromosomeArmKey(HumanChromosome.fromString(chromosome), chromosomeArm);
-
-        return String.valueOf(Math.round(Math.max(0, cnPerChromosome.get(key))));
+        Double copyNumber = cnPerChromosome.get(key);
+        return copyNumber != null ? String.valueOf(Math.round(Math.max(0, copyNumber))) : DataUtil.NA_STRING;
     }
 }

@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 
@@ -23,6 +24,11 @@ public final class QualityOverruleFunctions {
         List<ReportableVariantWithNotify> overruledVariantsWithNotify =
                 overruleVariants(genomicAnalysis.reportableVariants(), overruledVariantMaps, genomicAnalysis.hasReliablePurity());
 
+        Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
+        for (Map.Entry<ChromosomeArmKey, Double> entry : genomicAnalysis.cnPerChromosome().entrySet()) {
+            cnPerChromosome.put(entry.getKey(), genomicAnalysis.hasReliablePurity() ? entry.getValue() : null);
+        }
+
         List<ReportableVariant> overruledVariants = Lists.newArrayList();
         Map<ReportableVariant, Boolean> newNotifyPerVariant = Maps.newHashMap();
         for (ReportableVariantWithNotify overruled : overruledVariantsWithNotify) {
@@ -34,6 +40,7 @@ public final class QualityOverruleFunctions {
                 .from(genomicAnalysis)
                 .reportableVariants(overruledVariants)
                 .notifyGermlineStatusPerVariant(newNotifyPerVariant)
+                .cnPerChromosome(cnPerChromosome)
                 .build();
     }
 
