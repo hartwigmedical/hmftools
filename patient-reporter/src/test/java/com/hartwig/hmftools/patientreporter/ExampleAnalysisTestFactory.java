@@ -152,7 +152,7 @@ public final class ExampleAnalysisTestFactory {
                 .build();
 
         MolecularTissueOrigin molecularTissueOrigin =
-                ImmutableMolecularTissueOrigin.builder().conclusion("Skin").plotPath(REPORTER_CONFIG.molecularTissueOriginPlot()).build();
+                ImmutableMolecularTissueOrigin.builder().conclusion("Melanoma (likelihood=99.7%)").plotPath(REPORTER_CONFIG.molecularTissueOriginPlot()).build();
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
