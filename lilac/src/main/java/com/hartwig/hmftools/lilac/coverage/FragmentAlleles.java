@@ -358,7 +358,7 @@ public class FragmentAlleles
     }
 
     public static void checkHlaYSupport(
-            final List<HlaSequenceLoci> hlaYSequences, List<Integer> refAminoAcidHetLoci,
+            final String sampleId, final List<HlaSequenceLoci> hlaYSequences, List<Integer> refAminoAcidHetLoci,
             final List<FragmentAlleles> fragmentAlleles, final List<AminoAcidFragment> refCoverageFragments)
     {
         // ignore fragments which don't contain any heterozygous locations
@@ -425,8 +425,8 @@ public class FragmentAlleles
 
         if(totalHlaYFrags > 0)
         {
-            LL_LOGGER.info("HLA-Y fragments({} unique={}) shared={}) aboveThreshold({})",
-                    totalHlaYFrags, uniqueHlaY, matchedFragmentAlleles.size(), exceedsThreshold);
+            LL_LOGGER.info("sample({}) HLA-Y fragments({} unique={}) shared={}) aboveThreshold({})",
+                    sampleId, totalHlaYFrags, uniqueHlaY, matchedFragmentAlleles.size(), exceedsThreshold);
 
             if(exceedsThreshold)
             {

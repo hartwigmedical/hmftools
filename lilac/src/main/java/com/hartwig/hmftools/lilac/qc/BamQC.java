@@ -17,21 +17,14 @@ public class BamQC
     private final int mDiscardedIndelFragments;
     private final int mDiscardedIndelMaxCount;
 
-    // FIXME: not written, can exclude?
-    private final int mDiscardedPonIndelFragments;
-    private final int mDiscardedPonIndelMaxCount;
-
     private static final int MIN_SUPPORT = 3;
 
     public BamQC(
-            int discardedAlignmentFragments, int discardedIndelFragments, int discardedIndelMaxCount, int discardedPonIndelFragments,
-            int discardedPonIndelMaxCount)
+            int discardedAlignmentFragments, int discardedIndelFragments, int discardedIndelMaxCount)
     {
         mDiscardedAlignmentFragments = discardedAlignmentFragments;
         mDiscardedIndelFragments = discardedIndelFragments;
         mDiscardedIndelMaxCount = discardedIndelMaxCount;
-        mDiscardedPonIndelFragments = discardedPonIndelFragments;
-        mDiscardedPonIndelMaxCount = discardedPonIndelMaxCount;
     }
 
     public final List<String> header()
@@ -65,7 +58,6 @@ public class BamQC
                 "  UNMATCHED_PON_INDEL - {} fragments excluded with unmatched PON indel {}", x.getValue(), x.getKey().toString()));
 
         return new BamQC(reader.alignmentFiltered(),
-                fragmentsWithUnmatchedIndel.size(), fragmentsWithUnmatchedIndel.values().stream().mapToInt(x -> x).max().orElse(0),
-                fragmentsWithUnmatchedPonIndel.size(), fragmentsWithUnmatchedPonIndel.values().stream().mapToInt(x -> x).max().orElse(0));
+                fragmentsWithUnmatchedIndel.size(), fragmentsWithUnmatchedIndel.values().stream().mapToInt(x -> x).max().orElse(0));
     }
 }
