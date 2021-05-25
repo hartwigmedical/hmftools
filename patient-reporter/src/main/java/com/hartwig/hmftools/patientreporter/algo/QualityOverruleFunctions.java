@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 
@@ -21,7 +23,21 @@ public final class QualityOverruleFunctions {
         return ImmutableGenomicAnalysis.builder()
                 .from(genomicAnalysis)
                 .reportableVariants(overruledVariants)
-                .build();
+                .notifyGermlineStatusPerVariant(filterVariantsNotifyMap(genomicAnalysis.notifyGermlineStatusPerVariant(),
+                        genomicAnalysis.hasReliablePurity())).build();
+    }
+
+    private static Map<ReportableVariant, Boolean> filterVariantsNotifyMap(
+            @NotNull Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant, boolean hasReliablePurity) {
+
+        Map<ReportableVariant, Boolean> filteredMap = Maps.newHashMap();
+        for (Map.Entry<ReportableVariant, Boolean> entry : notifyGermlineStatusPerVariant.entrySet()) {
+            filteredMap.put(ImmutableReportableVariant.builder()
+                    .from(QualityOverruleFunctions.overruleVariant(entry.getKey(), hasReliablePurity))
+                    .source(entry.getKey().source())
+                    .build(), entry.getValue());
+        }
+        return filteredMap;
     }
 
     @NotNull
