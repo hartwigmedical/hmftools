@@ -37,29 +37,33 @@ public class ConsentFilterFunctionsTest {
         notifyGermlineVariants.put(somaticVariant, false);
         notifyGermlineVariants.put(germlineVariant, true);
 
-        List<ReportableVariant> variantsWithNotify =
+        List<ReportableVariantWithNotify> variantsWithNotify =
                 ConsentFilterFunctions.filterVariants(Lists.newArrayList(somaticVariant, germlineVariant),
                         notifyGermlineVariants,
                         LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION);
         assertEquals(2, variantsWithNotify.size());
-        assertEquals(1, variantsWithNotify.stream().filter(x -> x.source() == ReportableVariantSource.GERMLINE).count());
+        assertEquals(1, variantsWithNotify.stream().filter(x -> x.variant().source() == ReportableVariantSource.GERMLINE).count());
+        assertEquals(1, variantsWithNotify.stream().filter(x -> x.notifyVariant()).count());
 
         Map<ReportableVariant, Boolean> noNotifyGermlineVariants = Maps.newHashMap();
         noNotifyGermlineVariants.put(somaticVariant, false);
         noNotifyGermlineVariants.put(germlineVariant, false);
 
-        List<ReportableVariant> variantsWithoutNotify =
+        List<ReportableVariantWithNotify> variantsWithoutNotify =
                 ConsentFilterFunctions.filterVariants(Lists.newArrayList(somaticVariant, germlineVariant),
                         noNotifyGermlineVariants,
                         LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION);
         assertEquals(2, variantsWithoutNotify.size());
-        assertEquals(0, variantsWithoutNotify.stream().filter(x -> x.source() == ReportableVariantSource.GERMLINE).count());
+        assertEquals(0, variantsWithoutNotify.stream().filter(x -> x.variant().source() == ReportableVariantSource.GERMLINE).count());
+        assertEquals(0, variantsWithoutNotify.stream().filter(x -> x.notifyVariant()).count());
 
-        List<ReportableVariant> noGermlineReporting =
+        List<ReportableVariantWithNotify> noGermlineReporting =
                 ConsentFilterFunctions.filterVariants(Lists.newArrayList(somaticVariant, germlineVariant),
                         notifyGermlineVariants,
                         LimsGermlineReportingLevel.NO_REPORTING);
         assertEquals(1, noGermlineReporting.size());
+        assertEquals(0, noGermlineReporting.stream().filter(x -> x.variant().source() == ReportableVariantSource.GERMLINE).count());
+        assertEquals(0, noGermlineReporting.stream().filter(x -> x.notifyVariant()).count());
     }
 
     @Test

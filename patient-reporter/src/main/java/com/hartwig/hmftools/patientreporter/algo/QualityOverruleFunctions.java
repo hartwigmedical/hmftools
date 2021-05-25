@@ -17,43 +17,42 @@ public final class QualityOverruleFunctions {
 
     @NotNull
     public static GenomicAnalysis overrule(@NotNull GenomicAnalysis genomicAnalysis) {
-        List<ReportableVariant> overruledVariants =
-                overruleVariants(genomicAnalysis.reportableVariants(), genomicAnalysis.hasReliablePurity());
+        List<ReportableVariantWithNotify> overruledVariantsWithNotify = overruleVariants(genomicAnalysis.reportableVariants(),
+                genomicAnalysis.notifyGermlineStatusPerVariant(),
+                genomicAnalysis.hasReliablePurity());
+
+        List<ReportableVariant> overruledVariants = Lists.newArrayList();
+        Map<ReportableVariant, Boolean> newNotifyPerVariant = Maps.newHashMap();
+        for (ReportableVariantWithNotify overruled : overruledVariantsWithNotify) {
+            overruledVariants.add(overruled.variant());
+            newNotifyPerVariant.put(overruled.variant(), overruled.notifyVariant());
+        }
 
         return ImmutableGenomicAnalysis.builder()
                 .from(genomicAnalysis)
                 .reportableVariants(overruledVariants)
-                .notifyGermlineStatusPerVariant(filterVariantsNotifyMap(genomicAnalysis.notifyGermlineStatusPerVariant(),
-                        genomicAnalysis.hasReliablePurity())).build();
-    }
-
-    private static Map<ReportableVariant, Boolean> filterVariantsNotifyMap(
-            @NotNull Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant, boolean hasReliablePurity) {
-
-        Map<ReportableVariant, Boolean> filteredMap = Maps.newHashMap();
-        for (Map.Entry<ReportableVariant, Boolean> entry : notifyGermlineStatusPerVariant.entrySet()) {
-            ReportableVariant overruledVariants =
-                    overruleVariant(entry.getKey(), hasReliablePurity);
-            filteredMap.put(ImmutableReportableVariant.builder()
-                    .from(overruledVariants)
-                    .build(), entry.getValue());
-        }
-        return filteredMap;
+                .notifyGermlineStatusPerVariant(newNotifyPerVariant)
+                .build();
     }
 
     @NotNull
-    private static List<ReportableVariant> overruleVariants(@NotNull List<ReportableVariant> variants, boolean hasReliablePurity) {
-        List<ReportableVariant> overruledVariants = Lists.newArrayList();
+    private static List<ReportableVariantWithNotify> overruleVariants(@NotNull List<ReportableVariant> variants,
+            @NotNull Map<ReportableVariant, Boolean> notifyVariant, boolean hasReliablePurity) {
+        List<ReportableVariantWithNotify> overruledVariants = Lists.newArrayList();
 
         for (ReportableVariant variant : variants) {
-            overruledVariants.add(overruleVariant(variant, hasReliablePurity));
+            ReportableVariant newVariant = overruleVariant(variant, hasReliablePurity);
+            overruledVariants.add(ImmutableReportableVariantWithNotify.builder()
+                    .variant(newVariant)
+                    .notifyVariant(notifyVariant.get(newVariant))
+                    .build());
         }
 
         return overruledVariants;
     }
 
     @NotNull
-    public static ReportableVariant overruleVariant(@NotNull ReportableVariant variant, boolean hasReliablePurity) {
+    private static ReportableVariant overruleVariant(@NotNull ReportableVariant variant, boolean hasReliablePurity) {
         double flooredCopyNumber = Math.max(0, variant.totalCopyNumber());
         long roundedCopyNumber = Math.round(flooredCopyNumber);
 
