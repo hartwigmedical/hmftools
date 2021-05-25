@@ -41,6 +41,9 @@ public final class QualityOverruleFunctions {
                 .reportableVariants(overruledVariants)
                 .notifyGermlineStatusPerVariant(newNotifyPerVariant)
                 .cnPerChromosome(cnPerChromosome)
+                .peachGenotypes(genomicAnalysis.impliedPurity() >= 0.20 && genomicAnalysis.hasReliablePurity()
+                        ? genomicAnalysis.peachGenotypes()
+                        : Lists.newArrayList())
                 .build();
     }
 

@@ -193,7 +193,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         reportDocument.add(createCharacteristicDiv("Molecular tissue of origin prediction"));
         Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 10, 1, 10 }));
         table.setWidth(contentWidth());
-        if (patientReport.qsFormNumber().equals(QsFormNumber.FOR_080.display())) {
+        if (patientReport.qsFormNumber().equals(QsFormNumber.FOR_080.display()) && patientReport.molecularTissueOrigin() != null) {
             String molecularTissueOriginPlot = patientReport.molecularTissueOrigin().plotPath();
             try {
                 reportDocument.add(createCharacteristicDiv("")); // For better display plot

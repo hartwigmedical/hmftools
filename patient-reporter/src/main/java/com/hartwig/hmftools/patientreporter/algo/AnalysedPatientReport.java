@@ -32,7 +32,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     public abstract GenomicAnalysis genomicAnalysis();
 
-    @NotNull
+    @Nullable
     public abstract MolecularTissueOrigin molecularTissueOrigin();
 
     @NotNull

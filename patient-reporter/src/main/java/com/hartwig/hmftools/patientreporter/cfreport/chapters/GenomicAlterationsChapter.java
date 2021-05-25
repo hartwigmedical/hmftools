@@ -351,10 +351,13 @@ public class GenomicAlterationsChapter implements ReportChapter {
         String title = "Pharmacogenetics";
 
         if (reportPeach) {
-            if (peachGenotypes.isEmpty()) {
+            if (qsFormNumber.equals(QsFormNumber.FOR_209.display())) {
+                String unreliable =
+                        "The pharmacogenetics calling is not validated for low tumor purities and therefore the results are not displayed.";
+                return TableUtil.createPeachUnreliableReportTable(title, unreliable);
+            } else if (peachGenotypes.isEmpty()) {
                 return TableUtil.createNoneReportTable(title);
-            }
-            if (hasReliablePurity && qsFormNumber.equals(QsFormNumber.FOR_080.display())) {
+            } else if (hasReliablePurity && qsFormNumber.equals(QsFormNumber.FOR_080.display())) {
                 Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 60, 60, 100, 60 },
                         new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
                                 TableUtil.createHeaderCell("Function"), TableUtil.createHeaderCell("Linked drugs"),
@@ -371,10 +374,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
                             .setTextAlignment(TextAlignment.CENTER));
                 }
                 return TableUtil.createWrappingReportTable(title, contentTable);
-            }  else {
-                String unreliable =
-                        "The pharmacogenetics calling is not validated for low tumor purities and therefore the results are not displayed.";
-                return TableUtil.createPeachUnreliableReportTable(title, unreliable);
+
+            } else {
+                return TableUtil.createNAReportTable(title);
             }
         } else {
             return TableUtil.createNAReportTable(title);
