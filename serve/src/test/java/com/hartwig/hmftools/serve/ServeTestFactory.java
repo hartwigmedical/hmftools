@@ -172,8 +172,13 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableGene createTestActionableGeneForSource(@NotNull Knowledgebase source) {
+        return ImmutableActionableGene.builder().from(createTestActionableGene()).source(source).build();
+    }
+
+    @NotNull
+    public static ActionableGene createTestActionableGene() {
         return ImmutableActionableGene.builder()
-                .from(createTestBaseEvent(source))
+                .from(createTestBaseEvent())
                 .gene(Strings.EMPTY)
                 .event(GeneLevelEvent.AMPLIFICATION)
                 .build();
@@ -181,7 +186,12 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableFusion createTestActionableFusionForSource(@NotNull Knowledgebase source) {
-        return ImmutableActionableFusion.builder().from(createTestBaseEvent(source)).geneUp(Strings.EMPTY).geneDown(Strings.EMPTY).build();
+        return ImmutableActionableFusion.builder().from(createTestActionableFusion()).source(source).build();
+    }
+
+    @NotNull
+    public static ActionableFusion createTestActionableFusion() {
+        return ImmutableActionableFusion.builder().from(createTestBaseEvent()).geneUp(Strings.EMPTY).geneDown(Strings.EMPTY).build();
     }
 
     @NotNull
@@ -190,6 +200,11 @@ public final class ServeTestFactory {
                 .from(createTestBaseEvent(source))
                 .name(TumorCharacteristic.MICROSATELLITE_UNSTABLE)
                 .build();
+    }
+
+    @NotNull
+    private static ActionableEvent createTestBaseEvent() {
+        return createTestBaseEvent(Knowledgebase.HARTWIG_CURATED);
     }
 
     @NotNull

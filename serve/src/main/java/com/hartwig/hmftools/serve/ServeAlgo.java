@@ -83,8 +83,8 @@ public class ServeAlgo {
             extractions.add(extractHartwigCuratedKnowledge(config.hartwigCuratedTsv(), !config.skipHotspotResolving()));
         }
 
-        refGenomeManager.evaluateProteinResolving();
-        missingDoidLookup.evaluateMappingUsage();
+        refGenomeManager.evaluate();
+        missingDoidLookup.evaluate();
 
         Map<RefGenomeVersion, List<ExtractionResult>> versionedMap = refGenomeManager.makeVersioned(extractions);
 

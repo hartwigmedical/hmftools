@@ -26,11 +26,16 @@ public final class ConsentFilterFunctions {
     @NotNull
     public static GenomicAnalysis filter(@NotNull GenomicAnalysis genomicAnalysis,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralBreakends, boolean reportPeach) {
-        List<ReportableVariant> filteredVariants = filterVariants(genomicAnalysis.reportableVariants(),
+        List<ReportableVariantWithNotify> filteredVariantsWithNotify = filterVariants(genomicAnalysis.reportableVariants(),
                 genomicAnalysis.notifyGermlineStatusPerVariant(),
                 germlineReportingLevel);
-        Map<ReportableVariant, Boolean> updatedNotifyStates =
-                updateNotifyStates(filteredVariants, genomicAnalysis.notifyGermlineStatusPerVariant());
+
+        List<ReportableVariant> filteredVariants = Lists.newArrayList();
+        Map<ReportableVariant, Boolean> notifyPerVariant = Maps.newHashMap();
+        for (ReportableVariantWithNotify filtered : filteredVariantsWithNotify) {
+            filteredVariants.add(filtered.variant());
+            notifyPerVariant.put(filtered.variant(), filtered.notifyVariant());
+        }
 
         List<ReportableVirusBreakend> filteredVirusBreakends =
                 reportViralBreakends ? genomicAnalysis.virusBreakends() : Lists.newArrayList();
@@ -49,7 +54,7 @@ public final class ConsentFilterFunctions {
         return ImmutableGenomicAnalysis.builder()
                 .from(genomicAnalysis)
                 .reportableVariants(filteredVariants)
-                .notifyGermlineStatusPerVariant(updatedNotifyStates)
+                .notifyGermlineStatusPerVariant(notifyPerVariant)
                 .virusBreakends(filteredVirusBreakends)
                 .peachGenotypes(filteredPeachGenotypes)
                 .tumorSpecificEvidence(filteredTumorSpecificEvidence)
@@ -60,38 +65,27 @@ public final class ConsentFilterFunctions {
 
     @NotNull
     @$VisibleForTesting
-    static List<ReportableVariant> filterVariants(@NotNull List<ReportableVariant> variants,
+    static List<ReportableVariantWithNotify> filterVariants(@NotNull List<ReportableVariant> variants,
             @NotNull Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
-        List<ReportableVariant> filteredVariants = Lists.newArrayList();
+        List<ReportableVariantWithNotify> filteredVariants = Lists.newArrayList();
         for (ReportableVariant variant : variants) {
             if (!(variant.source() == ReportableVariantSource.GERMLINE
                     && germlineReportingLevel == LimsGermlineReportingLevel.NO_REPORTING)) {
                 if (variant.source() == ReportableVariantSource.GERMLINE && !notifyGermlineStatusPerVariant.get(variant)) {
-                    filteredVariants.add(ImmutableReportableVariant.builder()
-                            .from(variant)
-                            .source(ReportableVariantSource.SOMATIC)
+                    filteredVariants.add(ImmutableReportableVariantWithNotify.builder()
+                            .variant(ImmutableReportableVariant.builder().from(variant).source(ReportableVariantSource.SOMATIC).build())
+                            .notifyVariant(false)
                             .build());
                 } else {
-                    filteredVariants.add(variant);
+                    filteredVariants.add(ImmutableReportableVariantWithNotify.builder()
+                            .variant(variant)
+                            .notifyVariant(notifyGermlineStatusPerVariant.get(variant))
+                            .build());
                 }
             }
         }
         return filteredVariants;
-    }
-
-    @NotNull
-    private static Map<ReportableVariant, Boolean> updateNotifyStates(@NotNull List<ReportableVariant> filteredVariants,
-            @NotNull Map<ReportableVariant, Boolean> oldNotifyGermlineStates) {
-        Map<ReportableVariant, Boolean> updatedNotifyGermlineStates = Maps.newHashMap();
-        for (ReportableVariant variant : filteredVariants) {
-            if (oldNotifyGermlineStates.containsKey(variant)) {
-                updatedNotifyGermlineStates.put(variant, oldNotifyGermlineStates.get(variant));
-            } else {
-                updatedNotifyGermlineStates.put(variant, false);
-            }
-        }
-        return updatedNotifyGermlineStates;
     }
 
     @NotNull

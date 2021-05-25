@@ -180,9 +180,10 @@ public class SummaryChapter implements ReportChapter {
                 TumorPurity.RANGE_MAX,
                 table);
 
-        String molecularTissuePrediction = hasReliablePurity && patientReport.qsFormNumber().equals(QsFormNumber.FOR_080.display())
-                ? patientReport.molecularTissueOrigin().conclusion()
-                : DataUtil.NA_STRING;
+        String molecularTissuePrediction =
+                patientReport.qsFormNumber().equals(QsFormNumber.FOR_080.display()) && patientReport.molecularTissueOrigin() != null
+                        ? patientReport.molecularTissueOrigin().conclusion()
+                        : DataUtil.NA_STRING;
         Style dataStyleMolecularTissuePrediction = hasReliablePurity && patientReport.qsFormNumber().equals(QsFormNumber.FOR_080.display())
                 ? ReportResources.dataHighlightStyle()
                 : ReportResources.dataHighlightNaStyle();
@@ -308,7 +309,10 @@ public class SummaryChapter implements ReportChapter {
 
         Table table;
         if (patientReport.sampleReport().cohort().reportPeach()) {
-            if (analysis().peachGenotypes().isEmpty()) {
+            if (patientReport.qsFormNumber().equals(QsFormNumber.FOR_209.display())) {
+                table = TableUtil.createNAReportTable(title);
+                table.setWidth(ReportResources.CONTENT_WIDTH_NARROW);
+            } else if (analysis().peachGenotypes().isEmpty()) {
                 table = TableUtil.createNoneReportTable(title);
                 table.setWidth(ReportResources.CONTENT_WIDTH_NARROW);
             } else if (patientReport.genomicAnalysis().hasReliablePurity() && patientReport.qsFormNumber()

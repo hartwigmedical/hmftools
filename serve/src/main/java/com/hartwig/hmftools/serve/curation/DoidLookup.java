@@ -29,7 +29,7 @@ public class DoidLookup {
         return cancerTypeToDoidsMapping.get(cancerType);
     }
 
-    public void evaluateMappingUsage() {
+    public void evaluate() {
         if (evaluatedCancerTypes.isEmpty()) {
             // If the DoidLookup hasn't been used at all we assume no sources are configured that rely on doid mapping
             // and we don't check mapping usage.

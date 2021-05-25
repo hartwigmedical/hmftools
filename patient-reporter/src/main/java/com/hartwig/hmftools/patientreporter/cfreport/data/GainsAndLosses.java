@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,6 +10,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 
 import org.jetbrains.annotations.NotNull;
@@ -59,19 +59,23 @@ public final class GainsAndLosses {
     }
 
     @NotNull
-    public static String copyChromosomeArm(@NotNull Map<ChromosomeArmKey, Double> cnPerChromosome,
-            @NotNull String chromosome, @NotNull String chromosomeBand) {
+    public static String chromosomeArmCopyNumber(@NotNull Map<ChromosomeArmKey, Double> cnPerChromosome,
+            @NotNull ReportableGainLoss gainLoss) {
         ChromosomeArm chromosomeArm;
-        if (chromosomeBand.startsWith("p")) {
+        if (gainLoss.chromosomeBand().startsWith("p")) {
             chromosomeArm = ChromosomeArm.P_ARM;
-        } else if (chromosomeBand.startsWith("q")) {
+        } else if (gainLoss.chromosomeBand().startsWith("q")) {
             chromosomeArm = ChromosomeArm.Q_ARM;
         } else {
-            throw new NullPointerException ("Chromosome arm is unknown!");
+            throw new IllegalArgumentException("Chromosome arm could not be resolved from band: " + gainLoss.chromosomeBand() + "!");
         }
 
-        ChromosomeArmKey key = new ChromosomeArmKey(HumanChromosome.fromString(chromosome), chromosomeArm);
+        ChromosomeArmKey key = new ChromosomeArmKey(HumanChromosome.fromString(gainLoss.chromosome()), chromosomeArm);
+        if (!cnPerChromosome.containsKey(key)) {
+            throw new IllegalStateException("Could not find chromosome arm entry with key " + key);
+        }
 
-        return String.valueOf(Math.round(Math.max(0, cnPerChromosome.get(key))));
+        Double copyNumber = cnPerChromosome.get(key);
+        return copyNumber != null ? String.valueOf(Math.round(Math.max(0, copyNumber))) : DataUtil.NA_STRING;
     }
 }

@@ -55,7 +55,7 @@ public class QCFailChapter implements ReportChapter {
         reportDocument.add(TumorLocationAndTypeTable.createTumorType(failReport.sampleReport().primaryTumorTypeString(),
                 contentWidth()));
 
-        reportDocument.add(new Paragraph("The information regarding 'primary tumor location', 'primary tumor type' 'biopsy location'"
+        reportDocument.add(new Paragraph("The information regarding 'primary tumor location', 'primary tumor type' and 'biopsy location'"
                 + " is based on information received from the originating hospital.").addStyle(ReportResources.subTextSmallStyle()));
         reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 

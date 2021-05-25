@@ -233,9 +233,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(gainLoss.interpretation().display()));
             contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? String.valueOf(gainLoss.copies()) : DataUtil.NA_STRING)
                     .setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? GainsAndLosses.copyChromosomeArm(cnPerChromosome,
-                    gainLoss.chromosome(),
-                    gainLoss.chromosomeBand()) : DataUtil.NA_STRING).setTextAlignment(TextAlignment.CENTER));
+            contentTable.addCell(TableUtil.createContentCell(GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, gainLoss))
+                    .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(""));
         }
 
@@ -352,13 +351,13 @@ public class GenomicAlterationsChapter implements ReportChapter {
         String title = "Pharmacogenetics";
 
         if (reportPeach) {
-            if (!hasReliablePurity && !qsFormNumber.equals(QsFormNumber.FOR_080.display())) {
+            if (qsFormNumber.equals(QsFormNumber.FOR_209.display())) {
                 String unreliable =
                         "The pharmacogenetics calling is not validated for low tumor purities and therefore the results are not displayed.";
                 return TableUtil.createPeachUnreliableReportTable(title, unreliable);
             } else if (peachGenotypes.isEmpty()) {
                 return TableUtil.createNoneReportTable(title);
-            } else {
+            } else if (hasReliablePurity && qsFormNumber.equals(QsFormNumber.FOR_080.display())) {
                 Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 60, 60, 100, 60 },
                         new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
                                 TableUtil.createHeaderCell("Function"), TableUtil.createHeaderCell("Linked drugs"),
@@ -375,6 +374,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
                             .setTextAlignment(TextAlignment.CENTER));
                 }
                 return TableUtil.createWrappingReportTable(title, contentTable);
+
+            } else {
+                return TableUtil.createNAReportTable(title);
             }
         } else {
             return TableUtil.createNAReportTable(title);

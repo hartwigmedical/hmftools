@@ -25,6 +25,6 @@ public class DoidLookupTest {
         assertEquals(testDoids, doidLookup.lookupDoidsForCancerType(testCancerType));
         assertNull(doidLookup.lookupDoidsForCancerType("does not exist"));
 
-        doidLookup.evaluateMappingUsage();
+        doidLookup.evaluate();
     }
 }

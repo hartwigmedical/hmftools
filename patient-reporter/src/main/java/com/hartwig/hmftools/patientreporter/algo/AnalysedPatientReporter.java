@@ -59,8 +59,10 @@ public class AnalysedPatientReporter {
                 reportData.taxonomyDb(),
                 reportData.virusInterpretationModel(),
                 reportData.virusBlackListModel());
-        GenomicAnalysis genomicAnalysis =
-                genomicAnalyzer.run(sampleMetadata.tumorSampleId(), sampleMetadata.refSampleId(), config, sampleReport.germlineReportingLevel());
+        GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
+                sampleMetadata.refSampleId(),
+                config,
+                sampleReport.germlineReportingLevel());
 
         GenomicAnalysis filteredAnalysis = ConsentFilterFunctions.filter(genomicAnalysis,
                 sampleReport.germlineReportingLevel(),
@@ -82,7 +84,8 @@ public class AnalysedPatientReporter {
                 .clinicalSummary(clinicalSummary)
                 .pipelineVersion(pipelineVersion)
                 .genomicAnalysis(overruledAnalysis)
-                .molecularTissueOrigin(molecularTissueOrigin)
+                .molecularTissueOrigin(
+                        genomicAnalysis.impliedPurity() >= 0.20 && genomicAnalysis.hasReliablePurity() ? molecularTissueOrigin : null)
                 .circosPath(config.purpleCircosPlot())
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(config.isCorrectedReport())
@@ -125,7 +128,9 @@ public class AnalysedPatientReporter {
         GenomicAnalysis analysis = report.genomicAnalysis();
 
         LOGGER.info("Printing genomic analysis results for {}:", report.sampleReport().tumorSampleId());
-        LOGGER.info(" Molecular tissue origin conclusion: {}", report.molecularTissueOrigin().conclusion());
+        if (report.molecularTissueOrigin() != null) {
+            LOGGER.info(" Molecular tissue origin conclusion: {}", report.molecularTissueOrigin().conclusion());
+        }
         LOGGER.info(" Somatic variants to report: {}", analysis.reportableVariants().size());
         if (report.sampleReport().germlineReportingLevel() != LimsGermlineReportingLevel.NO_REPORTING) {
             LOGGER.info("  Number of variants known to exist in germline: {}", germlineOnly(analysis.reportableVariants()).size());
