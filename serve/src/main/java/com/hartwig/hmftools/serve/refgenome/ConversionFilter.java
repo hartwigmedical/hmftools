@@ -46,11 +46,11 @@ class ConversionFilter {
         for (String gene : ConversionFilterFactory.GENES_TO_FILTER) {
             if (!filteredGenes.contains(gene)) {
                 unusedGeneCount++;
-                LOGGER.warn(" Gene '{}' hasn't been used ref genome conversion filtering", gene);
+                LOGGER.warn("Gene '{}' hasn't been used ref genome conversion filtering", gene);
             }
         }
 
-        LOGGER.debug(" Found {} unused genes during ref genome conversion", unusedGeneCount);
+        LOGGER.debug("Found {} unused genes during ref genome conversion", unusedGeneCount);
     }
 
     @NotNull
@@ -60,7 +60,7 @@ class ConversionFilter {
             if (!isBlacklistedGene(hotspot.gene())) {
                 filteredHotspots.add(hotspot);
             } else {
-                LOGGER.debug(" Filtered known hotspot for ref genome conversion: {}", hotspot);
+                LOGGER.debug("Filtered known hotspot for ref genome conversion: {}", hotspot);
             }
         }
         return filteredHotspots;
@@ -73,7 +73,7 @@ class ConversionFilter {
             if (!isBlacklistedGene(codon.annotation().gene())) {
                 filteredCodons.add(codon);
             } else {
-                LOGGER.debug(" Filtered known codon for ref genome conversion: {}", codon);
+                LOGGER.debug("Filtered known codon for ref genome conversion: {}", codon);
             }
         }
         return filteredCodons;
@@ -86,7 +86,7 @@ class ConversionFilter {
             if (!isBlacklistedGene(exon.annotation().gene())) {
                 filteredExons.add(exon);
             } else {
-                LOGGER.debug(" Filtered known exon for ref genome conversion: {}", exon);
+                LOGGER.debug("Filtered known exon for ref genome conversion: {}", exon);
             }
         }
         return filteredExons;
@@ -99,7 +99,7 @@ class ConversionFilter {
             if (!isBlacklistedGene(copyNumber.gene())) {
                 filteredCopyNumbers.add(copyNumber);
             } else {
-                LOGGER.debug(" Filtered known copy number for ref genome conversion: {}", copyNumber);
+                LOGGER.debug("Filtered known copy number for ref genome conversion: {}", copyNumber);
             }
         }
         return filteredCopyNumbers;
@@ -112,7 +112,7 @@ class ConversionFilter {
             if (!isBlacklistedGene(fusionPair.geneUp()) && !isBlacklistedGene(fusionPair.geneDown())) {
                 filteredFusionPairs.add(fusionPair);
             } else {
-                LOGGER.debug(" Filtered known fusion pair for ref genome conversion: {}", fusionPair);
+                LOGGER.debug("Filtered known fusion pair for ref genome conversion: {}", fusionPair);
             }
         }
         return filteredFusionPairs;
@@ -137,7 +137,7 @@ class ConversionFilter {
             if (!isBlacklistedGene(actionableGene.gene())) {
                 filteredActionableGenes.add(actionableGene);
             } else {
-                LOGGER.debug(" Filtered actionable gene for ref genome conversion: {}", actionableGene);
+                LOGGER.debug("Filtered actionable gene for ref genome conversion: {}", actionableGene);
             }
         }
         return filteredActionableGenes;
@@ -150,7 +150,7 @@ class ConversionFilter {
             if (!isBlacklistedGene(actionableFusion.geneUp()) && !isBlacklistedGene(actionableFusion.geneDown())) {
                 filteredActionableFusions.add(actionableFusion);
             } else {
-                LOGGER.debug(" Filtered actionable fusion for ref genome conversion: {}", actionableFusion);
+                LOGGER.debug("Filtered actionable fusion for ref genome conversion: {}", actionableFusion);
             }
         }
         return filteredActionableFusions;
