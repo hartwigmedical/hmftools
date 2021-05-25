@@ -257,12 +257,12 @@ public final class ExampleAnalysisTestFactory {
         cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("18"), ChromosomeArm.Q_ARM), 2.850749440994104);
         cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("19"), ChromosomeArm.P_ARM), 2.885974468288675);
         cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("19"), ChromosomeArm.Q_ARM), 2.9279000888664264);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString(""), ChromosomeArm.P_ARM), 4.016485962287397);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString(""), ChromosomeArm.Q_ARM), 4.00558480110238);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString(""), ChromosomeArm.P_ARM), 2.9929997659548166);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString(""), ChromosomeArm.Q_ARM), 3.0001645829865997);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString(""), ChromosomeArm.P_ARM), 3.9840997252344827);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString(""), ChromosomeArm.Q_ARM), 3.9767647179863497);
+        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("20"), ChromosomeArm.P_ARM), 4.016485962287397);
+        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("20"), ChromosomeArm.Q_ARM), 4.00558480110238);
+        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("21"), ChromosomeArm.P_ARM), 2.9929997659548166);
+        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("21"), ChromosomeArm.Q_ARM), 3.0001645829865997);
+        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("22"), ChromosomeArm.P_ARM), 3.9840997252344827);
+        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("22"), ChromosomeArm.Q_ARM), 3.9767647179863497);
         cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("X"), ChromosomeArm.P_ARM), 1.9504007026407164);
         cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("X"), ChromosomeArm.Q_ARM), 1.9559000205584387);
         cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("Y"), ChromosomeArm.P_ARM), -0.007499999353701948);
