@@ -17,9 +17,11 @@ public final class QualityOverruleFunctions {
 
     @NotNull
     public static GenomicAnalysis overrule(@NotNull GenomicAnalysis genomicAnalysis) {
-        List<ReportableVariantWithNotify> overruledVariantsWithNotify = overruleVariants(genomicAnalysis.reportableVariants(),
-                genomicAnalysis.notifyGermlineStatusPerVariant(),
-                genomicAnalysis.hasReliablePurity());
+        Map<ReportableVariant, Boolean> overruledVariantMaps =
+                overruleMap(genomicAnalysis.notifyGermlineStatusPerVariant(), genomicAnalysis.hasReliablePurity());
+
+        List<ReportableVariantWithNotify> overruledVariantsWithNotify =
+                overruleVariants(genomicAnalysis.reportableVariants(), overruledVariantMaps, genomicAnalysis.hasReliablePurity());
 
         List<ReportableVariant> overruledVariants = Lists.newArrayList();
         Map<ReportableVariant, Boolean> newNotifyPerVariant = Maps.newHashMap();
@@ -33,6 +35,19 @@ public final class QualityOverruleFunctions {
                 .reportableVariants(overruledVariants)
                 .notifyGermlineStatusPerVariant(newNotifyPerVariant)
                 .build();
+    }
+
+    @NotNull
+    private static Map<ReportableVariant, Boolean> overruleMap(@NotNull Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant,
+            boolean hasReliablePurity) {
+        Map<ReportableVariant, Boolean> filteredMap = Maps.newHashMap();
+        for (Map.Entry<ReportableVariant, Boolean> entry : notifyGermlineStatusPerVariant.entrySet()) {
+            filteredMap.put(ImmutableReportableVariant.builder()
+                    .from(QualityOverruleFunctions.overruleVariant(entry.getKey(), hasReliablePurity))
+                    .build(), entry.getValue());
+
+        }
+        return filteredMap;
     }
 
     @NotNull
