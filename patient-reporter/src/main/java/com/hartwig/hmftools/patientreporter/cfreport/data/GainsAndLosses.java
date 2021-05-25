@@ -71,6 +71,10 @@ public final class GainsAndLosses {
         }
 
         ChromosomeArmKey key = new ChromosomeArmKey(HumanChromosome.fromString(gainLoss.chromosome()), chromosomeArm);
+        if (!cnPerChromosome.containsKey(key)) {
+            throw new IllegalStateException("Could not find chromosome arm entry with key " + key);
+        }
+
         Double copyNumber = cnPerChromosome.get(key);
         return copyNumber != null ? String.valueOf(Math.round(Math.max(0, copyNumber))) : DataUtil.NA_STRING;
     }

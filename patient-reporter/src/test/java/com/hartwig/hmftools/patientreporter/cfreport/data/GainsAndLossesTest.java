@@ -14,7 +14,6 @@ import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class GainsAndLossesTest {
@@ -37,34 +36,31 @@ public class GainsAndLossesTest {
         assertEquals("5", GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss(chromosome, "q.12")));
     }
 
-    @Ignore
-    @Test(expected = NullPointerException.class)
-    public void crashTestCanDetermineCopyNumberDifferentChromosomes() {
+    @Test(expected = IllegalStateException.class)
+    public void crashOnCopyNumberDifferentChromosomes() {
         Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
         cnPerChromosome.put(new ChromosomeArmKey(HumanChromosome.fromString("1"), ChromosomeArm.P_ARM), 1.123);
 
         GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss("2", "p.12"));
     }
 
-    @Ignore
-    @Test(expected = NullPointerException.class)
-    public void crashTestCanDetermineCopyNumberUnknownArms() {
+    @Test(expected = IllegalStateException.class)
+    public void crashOnCopyNumberUnknownArms() {
         Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
         cnPerChromosome.put(new ChromosomeArmKey(HumanChromosome.fromString("1"), ChromosomeArm.UNKNOWN), 2.34);
 
         GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss("1", "p.12"));
     }
 
-    @Ignore
-    @Test(expected = NullPointerException.class)
-    public void crashTestCanDetermineCopyNumberDifferentArms() {
+    @Test(expected = IllegalStateException.class)
+    public void crashOnCopyNumberDifferentArms() {
         Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
         cnPerChromosome.put(new ChromosomeArmKey(HumanChromosome.fromString("1"), ChromosomeArm.Q_ARM), 2.34);
         GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss("1", "p.12"));
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void crashTestCanDetermineCopyNumber() {
+    public void crashOnDetermineCopyNumberWeirdArm() {
         Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
         cnPerChromosome.put(new ChromosomeArmKey(HumanChromosome.fromString("1"), ChromosomeArm.Q_ARM), 1.123);
         GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss("1", ".12"));
