@@ -4,7 +4,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 
-public final class FilterFactory {
+final class FilterFactory {
 
     static final Set<String> VARIANT_KEYWORDS_TO_FILTER = Sets.newHashSet();
 

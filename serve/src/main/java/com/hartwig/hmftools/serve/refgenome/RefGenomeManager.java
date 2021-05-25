@@ -27,10 +27,14 @@ public class RefGenomeManager {
     @NotNull
     private final Map<RefGenomeVersion, RefGenomeResource> refGenomeResourceMap;
     @NotNull
-    private final GeneNameMapping geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
+    private final GeneNameMapping geneNameMapping;
+    @NotNull
+    private final ConversionFilter conversionFilter;
 
     RefGenomeManager(@NotNull final Map<RefGenomeVersion, RefGenomeResource> refGenomeResourceMap) {
         this.refGenomeResourceMap = refGenomeResourceMap;
+        this.geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
+        this.conversionFilter = new ConversionFilter();
     }
 
     @NotNull
@@ -43,20 +47,10 @@ public class RefGenomeManager {
         return checkedRetrieve(version).refSequence();
     }
 
-    public void evaluateProteinResolving() {
-        for (Map.Entry<RefGenomeVersion, RefGenomeResource> entry : refGenomeResourceMap.entrySet()) {
-            RefGenomeVersion version = entry.getKey();
-            RefGenomeResource resource = entry.getValue();
-            Set<String> unresolvedProteinAnnotations = resource.proteinResolver().unresolvedProteinAnnotations();
-            if (!unresolvedProteinAnnotations.isEmpty()) {
-                LOGGER.warn("Protein resolver {} could not resolve {} protein annotations", version, unresolvedProteinAnnotations.size());
-                for (String unresolvedProteinAnnotation : unresolvedProteinAnnotations) {
-                    LOGGER.warn("Protein resolver {} could not resolve protein annotation '{}'", version, unresolvedProteinAnnotation);
-                }
-            } else {
-                LOGGER.debug("Protein resolver {} observed no issues when resolving hotspots", version);
-            }
-        }
+    public void evaluate() {
+        evaluateProteinResolving();
+
+        conversionFilter.reportUnusedFilterEntries();
     }
 
     @NotNull
@@ -88,19 +82,20 @@ public class RefGenomeManager {
 
         LiftOverAlgo liftOverAlgo = UCSCLiftOver.fromChainFile(chainFromSourceToTarget, targetVersion);
         RefGenomeConverter converter = new RefGenomeConverter(sourceVersion, targetVersion, targetSequence, liftOverAlgo, geneNameMapping);
+        ExtractionResult filteredExtraction = conversionFilter.filter(extraction);
 
         return ImmutableExtractionResult.builder()
                 .refGenomeVersion(targetVersion)
-                .knownHotspots(converter.convertKnownHotspots(extraction.knownHotspots()))
-                .knownCodons(converter.convertKnownCodons(extraction.knownCodons()))
-                .knownExons(converter.convertKnownExons(extraction.knownExons()))
-                .knownCopyNumbers(converter.convertKnownCopyNumbers(extraction.knownCopyNumbers()))
-                .knownFusionPairs(converter.convertKnownFusionPairs(extraction.knownFusionPairs()))
-                .actionableHotspots(converter.convertActionableHotspots(extraction.actionableHotspots()))
-                .actionableRanges(converter.convertActionableRanges(extraction.actionableRanges()))
-                .actionableGenes(converter.convertActionableGenes(extraction.actionableGenes()))
-                .actionableFusions(converter.convertActionableFusions(extraction.actionableFusions()))
-                .actionableCharacteristics(extraction.actionableCharacteristics())
+                .knownHotspots(converter.convertKnownHotspots(filteredExtraction.knownHotspots()))
+                .knownCodons(converter.convertKnownCodons(filteredExtraction.knownCodons()))
+                .knownExons(converter.convertKnownExons(filteredExtraction.knownExons()))
+                .knownCopyNumbers(converter.convertKnownCopyNumbers(filteredExtraction.knownCopyNumbers()))
+                .knownFusionPairs(converter.convertKnownFusionPairs(filteredExtraction.knownFusionPairs()))
+                .actionableHotspots(converter.convertActionableHotspots(filteredExtraction.actionableHotspots()))
+                .actionableRanges(converter.convertActionableRanges(filteredExtraction.actionableRanges()))
+                .actionableGenes(converter.convertActionableGenes(filteredExtraction.actionableGenes()))
+                .actionableFusions(converter.convertActionableFusions(filteredExtraction.actionableFusions()))
+                .actionableCharacteristics(filteredExtraction.actionableCharacteristics())
                 .build();
     }
 
@@ -111,5 +106,21 @@ public class RefGenomeManager {
             throw new IllegalStateException("No ref genome resources found for ref genome version " + version);
         }
         return resource;
+    }
+
+    private void evaluateProteinResolving() {
+        for (Map.Entry<RefGenomeVersion, RefGenomeResource> entry : refGenomeResourceMap.entrySet()) {
+            RefGenomeVersion version = entry.getKey();
+            RefGenomeResource resource = entry.getValue();
+            Set<String> unresolvedProteinAnnotations = resource.proteinResolver().unresolvedProteinAnnotations();
+            if (!unresolvedProteinAnnotations.isEmpty()) {
+                LOGGER.warn("Protein resolver {} could not resolve {} protein annotations", version, unresolvedProteinAnnotations.size());
+                for (String unresolvedProteinAnnotation : unresolvedProteinAnnotations) {
+                    LOGGER.warn("Protein resolver {} could not resolve protein annotation '{}'", version, unresolvedProteinAnnotation);
+                }
+            } else {
+                LOGGER.debug("Protein resolver {} observed no issues when resolving hotspots", version);
+            }
+        }
     }
 }
