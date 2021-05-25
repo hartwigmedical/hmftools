@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.visualiser;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiser.VIS_LOGGER;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiserConfig.parameter;
 
@@ -28,6 +29,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
+import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
@@ -50,7 +52,6 @@ import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.jetbrains.annotations.NotNull;
 
 public class SampleData
 {
@@ -82,6 +83,8 @@ public class SampleData
     private static final String EXON = "exon";
     private static final String GENE = "gene";
 
+    private static final String PLOT_CLUSTER_GENES = "plot_cluster_genes";
+
     public SampleData(final CommandLine cmd) throws ParseException, IOException
     {
         final StringJoiner missingJoiner = new StringJoiner(", ");
@@ -89,22 +92,22 @@ public class SampleData
         Sample = parameter(cmd, SAMPLE, missingJoiner);
         mSampleDataDir = cmd.getOptionValue(VIS_FILE_DIRECTORY);
 
-        final String linkPath = mSampleDataDir != null ?
+        final String svDataFile = mSampleDataDir != null ?
                 VisSvDataFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, LINK, missingJoiner);
 
-        final String trackPath = mSampleDataDir != null ?
+        final String linksFile = mSampleDataDir != null ?
                 VisSegmentFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, SEGMENT, missingJoiner);
 
-        final String cnaPath = mSampleDataDir != null ?
+        final String cnaFile = mSampleDataDir != null ?
                 VisCopyNumberFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, CNA, missingJoiner);
 
-        final String exonPath = mSampleDataDir != null ?
+        final String geneExonFile = mSampleDataDir != null ?
                 VisGeneExonFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, EXON, missingJoiner);
 
-        final String proteinDomainPath = mSampleDataDir != null ?
+        final String proteinDomainFile = mSampleDataDir != null ?
                 VisProteinDomainFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, PROTEIN_DOMAIN, missingJoiner);
 
-        final String fusionPath = mSampleDataDir != null ?
+        final String fusionFile = mSampleDataDir != null ?
                 VisFusionFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, FUSION, missingJoiner);
 
         final String missing = missingJoiner.toString();
@@ -113,16 +116,16 @@ public class SampleData
             throw new ParseException("Missing the following parameters: " + missing);
         }
 
-        Fusions = loadFusions(fusionPath).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
-        SvData = VisLinks.readLinks(linkPath).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
+        Fusions = loadFusions(fusionFile).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
+        SvData = VisLinks.readSvData(svDataFile).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
 
-        Exons = VisExons.readExons(exonPath).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
-        Segments = VisSegments.readTracks(trackPath).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
+        Exons = VisExons.readExons(geneExonFile).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
+        Segments = VisSegments.readTracks(linksFile).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
 
-        CopyNumberAlterations = VisCopyNumbers.read(cnaPath)
+        CopyNumberAlterations = VisCopyNumbers.read(cnaFile)
                 .stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
 
-        ProteinDomains = VisProteinDomains.readProteinDomains(proteinDomainPath, Fusions)
+        ProteinDomains = VisProteinDomains.readProteinDomains(proteinDomainFile, Fusions)
                 .stream()
                 .filter(x -> x.sampleId().equals(Sample))
                 .collect(toList());
@@ -130,7 +133,28 @@ public class SampleData
         Clusters = parseClusters(cmd);
         Chromosomes = parseChromosomes(cmd);
 
-        Exons.addAll(additionalExons(cmd, Exons, Clusters));
+        final Set<String> geneList = Sets.newHashSet();
+
+        if(cmd.hasOption(GENE))
+        {
+            Arrays.stream(cmd.getOptionValue(GENE).split(",")).forEach(x -> geneList.add(x));
+        }
+
+        if(cmd.hasOption(PLOT_CLUSTER_GENES) && !Clusters.isEmpty() && mSampleDataDir != null)
+        {
+            List<LinxSvAnnotation> svAnnotations = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(mSampleDataDir, Sample));
+
+            for(LinxSvAnnotation svAnnotation : svAnnotations)
+            {
+                if(Clusters.contains(svAnnotation.clusterId()))
+                {
+                    Arrays.stream(svAnnotation.geneStart().split(ITEM_DELIM)).forEach(x -> geneList.add(x));
+                    Arrays.stream(svAnnotation.geneEnd().split(ITEM_DELIM)).forEach(x -> geneList.add(x));
+                }
+            }
+        }
+
+        Exons.addAll(additionalExons(geneList, cmd, Exons, Clusters));
 
         if(Segments.isEmpty() && SvData.isEmpty())
         {
@@ -157,6 +181,9 @@ public class SampleData
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache files");
         options.addOption(CLUSTERS, true, "Only generate image for specified comma separated clusters");
         options.addOption(CHROMOSOMES, true, "Only generate image for specified comma separated chromosomes");
+
+        options.addOption(PLOT_CLUSTER_GENES, false,
+                "Show all genes linked to SVs in a cluster (only applicable when clusterId is specified)");
     }
 
     public Set<Integer> findReportableClusters()
@@ -238,7 +265,6 @@ public class SampleData
                     throw new ParseException(CLUSTERS + " should be comma separated integer values");
                 }
             }
-
         }
 
         return result;
@@ -263,17 +289,16 @@ public class SampleData
         return result;
     }
 
-    private static List<Exon> additionalExons(final CommandLine cmd, @NotNull final List<Exon> currentExons, final List<Integer> clusterIds)
+    private static List<Exon> additionalExons(
+            final Set<String> geneList, final CommandLine cmd, final List<Exon> currentExons, final List<Integer> clusterIds)
     {
         final List<Exon> exonList = Lists.newArrayList();
 
-        if (!cmd.hasOption(GENE))
+        if(geneList.isEmpty())
             return exonList;
 
         final String sampleId = cmd.getOptionValue(SAMPLE);
         final List<Integer> allClusterIds = clusterIds.isEmpty() ? Lists.newArrayList(0) : clusterIds;
-
-        final String[] geneList = cmd.getOptionValue(GENE).split(",");
 
         EnsemblDataCache geneTransCache = null;
         Map<String, HmfTranscriptRegion> geneMap = null;

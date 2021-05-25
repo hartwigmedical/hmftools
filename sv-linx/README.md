@@ -102,6 +102,7 @@ Single sample - Load SVs and purple data from file, upload Linx results to datab
 ```
 java -jar sv-linx.jar 
     -sample SAMPLE_ID 
+    -ref_genome_version 37
     -sv_vcf /path_to_purple_vcf/
     -purple_dir /path_to_purple_data_files/
     -output_dir /path_to_sample_data/ 

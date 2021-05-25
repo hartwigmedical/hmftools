@@ -60,11 +60,11 @@ public class VisLinks
     }
 
     @NotNull
-    public static List<VisSvData> readLinks(@NotNull final String fileName) throws IOException
+    public static List<VisSvData> readSvData(@NotNull final String fileName) throws IOException
     {
-        List<VisSvDataFile> visLinks = VisSvDataFile.read(fileName);
+        List<VisSvDataFile> svDataList = VisSvDataFile.read(fileName);
 
-        return visLinks.stream().map(VisLinks::fromFile).collect(Collectors.toList());
+        return svDataList.stream().map(VisLinks::fromFile).collect(Collectors.toList());
     }
 
     private static VisSvData fromFile(@NotNull final VisSvDataFile file)

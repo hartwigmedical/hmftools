@@ -478,7 +478,7 @@ public class SvVarData
         for(final BreakendGeneData gene : genesList)
         {
             String geneStr = includeId ? gene.StableId + ":" + gene.GeneName : gene.GeneName;
-            genesStr = appendStr(genesStr, geneStr, ';');
+            genesStr = appendStr(genesStr, geneStr, ITEM_DELIM_CHR);
         }
 
         return genesStr;

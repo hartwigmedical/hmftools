@@ -76,7 +76,9 @@ public class SvVisualiserConfig
         final Options options = new Options();
         options.addOption(PLOT_OUT, true, "Plot output directory");
         options.addOption(DATA_OUT, true, "Data output directory");
-        options.addOption(VIS_FILE_DIRECTORY, true, "Path to all Linx vis files, used instead of specifying them individually");
+        options.addOption(VIS_FILE_DIRECTORY, true,
+                "Path to all Linx vis files, used instead of specifying them individually");
+
         options.addOption(CIRCOS, true, "Path to circos binary");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache files");
 
