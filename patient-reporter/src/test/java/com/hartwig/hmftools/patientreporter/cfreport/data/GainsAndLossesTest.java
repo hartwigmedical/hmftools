@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 
 import org.apache.logging.log4j.util.Strings;
@@ -36,27 +37,27 @@ public class GainsAndLossesTest {
         assertEquals("5", GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss(chromosome, "q.12")));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void crashOnCopyNumberDifferentChromosomes() {
         Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
         cnPerChromosome.put(new ChromosomeArmKey(HumanChromosome.fromString("1"), ChromosomeArm.P_ARM), 1.123);
 
-        GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss("2", "p.12"));
+        assertEquals(DataUtil.NA_STRING, GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss("2", "p.12")));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void crashOnCopyNumberUnknownArms() {
         Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
         cnPerChromosome.put(new ChromosomeArmKey(HumanChromosome.fromString("1"), ChromosomeArm.UNKNOWN), 2.34);
 
-        GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss("1", "p.12"));
+        assertEquals(DataUtil.NA_STRING, GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss("1", "p.12")));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void crashOnCopyNumberDifferentArms() {
         Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
         cnPerChromosome.put(new ChromosomeArmKey(HumanChromosome.fromString("1"), ChromosomeArm.Q_ARM), 2.34);
-        GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss("1", "p.12"));
+        assertEquals(DataUtil.NA_STRING, GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss("1", "p.12")));
     }
 
     @Test(expected = IllegalArgumentException.class)
