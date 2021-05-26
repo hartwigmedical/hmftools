@@ -3,7 +3,6 @@ package com.hartwig.hmftools.lilac.seq;
 public enum SequenceMatchType
 {
     FULL,
-    PARTIAL,
     WILD,
     NONE;
 
@@ -15,8 +14,7 @@ public enum SequenceMatchType
     public int rank()
     {
         if(this == FULL) return 0;
-        if(this == PARTIAL) return 1;
-        if(this == WILD) return 2;
+        if(this == WILD) return 1;
         return 3;
     }
 

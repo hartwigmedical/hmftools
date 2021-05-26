@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.lilac.LilacConstants.TOTAL_COVERAGE_DENOM;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.filterExonBoundaryWildcards;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.filterWildcards;
 import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.FULL;
-import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.PARTIAL;
 import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.WILD;
 
 import com.google.common.collect.Lists;
@@ -27,48 +26,52 @@ public class FragmentAlleles
 {
     private final AminoAcidFragment mFragment;
     private final List<HlaAllele> mFull;
-    private final List<HlaAllele> mPartial;
     private final List<HlaAllele> mWild;
 
     public FragmentAlleles(
-            final AminoAcidFragment fragment, final List<HlaAllele> full, final List<HlaAllele> partial, final List<HlaAllele> wild)
+            final AminoAcidFragment fragment, final List<HlaAllele> full, final List<HlaAllele> wild)
     {
         mFragment = fragment;
         mFull = full;
-        mPartial = partial;
         mWild = wild;
     }
 
     public boolean contains(final HlaAllele allele)
     {
-        return mFull.contains(allele) || mPartial.contains(allele) || mWild.contains(allele);
+        return mFull.contains(allele) || mWild.contains(allele);
     }
 
     public final AminoAcidFragment getFragment() { return mFragment; }
 
     public final List<HlaAllele> getFull() { return mFull; }
-    public final List<HlaAllele> getPartial() { return mPartial; }
     public final List<HlaAllele> getWild() { return mWild; }
 
     public static List<FragmentAlleles> filter(final List<FragmentAlleles> fragAlleleList, final List<HlaAllele> alleles)
     {
-        // gather any fragment allele which contains at least one of the specified alleles in its full or partial list,
+        // gather any fragment allele which contains at least one of the specified alleles in its full or wild list,
         // then collecting any matching alleles in each of the three groups
         List<FragmentAlleles> matchedFragAlleles = Lists.newArrayList();
 
-        for(FragmentAlleles fragAlleles : fragAlleleList)
+        for(FragmentAlleles fragAllele : fragAlleleList)
         {
+            if(alleles.stream().anyMatch(x -> fragAllele.contains(x)))
+            {
+                matchedFragAlleles.add(new FragmentAlleles(
+                        fragAllele.getFragment(),
+                        alleles.stream().filter(x -> fragAllele.getFull().contains(x)).collect(Collectors.toList()),
+                        alleles.stream().filter(x -> fragAllele.getWild().contains(x)).collect(Collectors.toList())));
+            }
+
+            /*
             FragmentAlleles matchedFragAllele = null;
 
             for(HlaAllele allele : alleles)
             {
                 boolean inFull = fragAlleles.getFull().contains(allele);
-                boolean inPartial = fragAlleles.getPartial().contains(allele);
 
-                if((inFull || inPartial) && matchedFragAllele == null)
+                if(inFull && matchedFragAllele == null)
                 {
-                    matchedFragAllele = new FragmentAlleles(
-                            fragAlleles.getFragment(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+                    matchedFragAllele = new FragmentAlleles(fragAlleles.getFragment(), Lists.newArrayList(), Lists.newArrayList());
 
                     matchedFragAlleles.add(matchedFragAllele);
                 }
@@ -77,9 +80,6 @@ public class FragmentAlleles
                 {
                     if(inFull)
                         matchedFragAllele.getFull().add(allele);
-
-                    if(inPartial)
-                        matchedFragAllele.getPartial().add(allele);
                 }
             }
 
@@ -88,6 +88,7 @@ public class FragmentAlleles
                 List<HlaAllele> wildAlleles = alleles.stream().filter(x -> fragAlleles.getWild().contains(x)).collect(Collectors.toList());
                 matchedFragAllele.getWild().addAll(wildAlleles);
             }
+             */
         }
 
         return matchedFragAlleles;
@@ -108,7 +109,7 @@ public class FragmentAlleles
                     refNucleotideHetLoci, candidateNucleotideSequences, refNucleotides);
 
             // drop wild-only alleles since their support can't be clearly established
-            if(!fragmentAlleles.getFull().isEmpty() || !fragmentAlleles.getPartial().isEmpty())
+            if(!fragmentAlleles.getFull().isEmpty())
                 results.add(fragmentAlleles);
         }
 
@@ -128,7 +129,7 @@ public class FragmentAlleles
                 x.getKey(), fragment.getNucleotideLoci().stream().filter(y -> x.getValue().contains(y)).collect(Collectors.toList())));
 
         final List<HlaAllele> fullNucleotideMatch = Lists.newArrayList();
-        final List<HlaAllele> partialNucleotideMatch = Lists.newArrayList();
+        final List<HlaAllele> wildNucleotideMatch = Lists.newArrayList();
 
         Map<HlaAllele, SequenceMatchType> nucleotideAlleleMatches = findNucleotideMatches(
                 fragment, refNucleotideHetLoci, nucleotideSequences, refNucleotides);
@@ -136,8 +137,8 @@ public class FragmentAlleles
         fullNucleotideMatch.addAll(nucleotideAlleleMatches.entrySet().stream()
                 .filter(x -> x.getValue() == FULL).map(x -> x.getKey()).collect(Collectors.toList()));
 
-        partialNucleotideMatch.addAll(nucleotideAlleleMatches.entrySet().stream()
-                .filter(x -> x.getValue() == PARTIAL || x.getValue() == WILD)
+        wildNucleotideMatch.addAll(nucleotideAlleleMatches.entrySet().stream()
+                .filter(x -> x.getValue() == WILD)
                 .filter(x -> !fullNucleotideMatch.contains(x))
                 .map(x -> x.getKey()).collect(Collectors.toList()));
 
@@ -147,28 +148,19 @@ public class FragmentAlleles
         List<HlaAllele> fullAminoAcidMatch = aminoAcidAlleleMatches.entrySet().stream()
                 .filter(x -> x.getValue() == FULL).map(x -> x.getKey()).collect(Collectors.toList());
 
-        List<HlaAllele> partialAminoAcidMatch = aminoAcidAlleleMatches.entrySet().stream()
-                .filter(x -> x.getValue() == PARTIAL).map(x -> x.getKey()).collect(Collectors.toList());
-
         List<HlaAllele> wildAminoAcidMatch = aminoAcidAlleleMatches.entrySet().stream()
                 .filter(x -> x.getValue() == WILD).map(x -> x.getKey()).collect(Collectors.toList());
 
-        if(fullNucleotideMatch.isEmpty() && partialNucleotideMatch.isEmpty())
-            return new FragmentAlleles(fragment, fullAminoAcidMatch, partialAminoAcidMatch, wildAminoAcidMatch);
+        if(fullNucleotideMatch.isEmpty() && wildNucleotideMatch.isEmpty())
+            return new FragmentAlleles(fragment, fullAminoAcidMatch, wildAminoAcidMatch);
 
         List<HlaAllele> consistentFull = fullAminoAcidMatch.stream()
                 .filter(x -> fullNucleotideMatch.contains(x.asFourDigit())).collect(Collectors.toList());
 
-        List<HlaAllele> downgradedToPartial = fullAminoAcidMatch.stream()
-                .filter(x -> partialNucleotideMatch.contains(x.asFourDigit())).collect(Collectors.toList());
+        List<HlaAllele> downgradedToWild = fullAminoAcidMatch.stream()
+                .filter(x -> wildNucleotideMatch.contains(x.asFourDigit())).collect(Collectors.toList());
 
-        List<HlaAllele> otherPartial = partialAminoAcidMatch.stream()
-                .filter(x -> partialNucleotideMatch.contains(x.asFourDigit())).collect(Collectors.toList());
-
-        List<HlaAllele> distinctPartial = downgradedToPartial;
-        otherPartial.stream().filter(x -> !downgradedToPartial.contains(x)).forEach(x -> distinctPartial.add(x));
-
-        return new FragmentAlleles(fragment, consistentFull, distinctPartial, wildAminoAcidMatch);
+        return new FragmentAlleles(fragment, consistentFull, downgradedToWild);
     }
 
     private static Map<HlaAllele, SequenceMatchType> findNucleotideMatches(
@@ -263,9 +255,6 @@ public class FragmentAlleles
             if(matchType == SequenceMatchType.NONE)
                 continue;
 
-            if(matchType == PARTIAL)
-                matchType = WILD;
-
             // keep the best match
             Map.Entry<HlaAllele, SequenceMatchType> entryMatch = alleleMatches.entrySet().stream()
                     .filter(x -> x.getKey() == allele.asFourDigit()).findFirst().orElse(null);
@@ -352,9 +341,6 @@ public class FragmentAlleles
             SequenceMatchType matchType = sequence.determineMatchType(fragmentAminoAcids, alleleFilteredLoci);
             if(matchType == SequenceMatchType.NONE)
                 continue;
-
-            if(matchType == PARTIAL) // no longer treat partial any differently
-                matchType = WILD;
 
             Map.Entry<HlaAllele, SequenceMatchType> entryMatch = alleleMatches.entrySet().stream()
                     .filter(x -> x.getKey() == allele).findFirst().orElse(null);
@@ -461,7 +447,7 @@ public class FragmentAlleles
         {
             List<FragmentAlleles> sampleFragments = fragmentAlleles.stream()
                     .filter(x -> x.contains(stopLossAllele))
-                    .map(x -> new FragmentAlleles(x.getFragment(), Lists.newArrayList(stopLossAllele), Lists.newArrayList(), Lists.newArrayList()))
+                    .map(x -> new FragmentAlleles(x.getFragment(), Lists.newArrayList(stopLossAllele), Lists.newArrayList()))
                     .collect(Collectors.toList());
 
             for(int i = 0; i < stopLossFragments; ++i)

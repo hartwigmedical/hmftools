@@ -88,7 +88,7 @@ public class HlaSequenceLociTest
         String fragmentSeq = "ABXYEFWZIJKLABOP";
         fragmentLoci = Lists.newArrayList(5, 6,7,8);
         targetSeq = buildTargetSequence(fragmentSeq, fragmentLoci);
-        assertEquals(SequenceMatchType.PARTIAL, seqLociWild.determineMatchType(targetSeq, fragmentLoci));
+        assertEquals(SequenceMatchType.WILD, seqLociWild.determineMatchType(targetSeq, fragmentLoci));
 
         // all in the wildcard region
         fragmentLoci = Lists.newArrayList(8,9,10,11);

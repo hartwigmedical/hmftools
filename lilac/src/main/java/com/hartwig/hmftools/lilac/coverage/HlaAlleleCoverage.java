@@ -102,18 +102,16 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
         for(FragmentAlleles fragment : fragmentSequences)
         {
             Set<HlaAllele> fullAlleles = fragment.getFull().stream().map(x -> asAlleleGroup ? x.asAlleleGroup() : x).collect(Collectors.toSet());
-            Set<HlaAllele> partialAlleles = fragment.getPartial().stream().map(x -> asAlleleGroup ? x.asAlleleGroup() : x).collect(Collectors.toSet());
             Set<HlaAllele> wildAlleles = fragment.getWild().stream().map(x -> asAlleleGroup ? x.asAlleleGroup() : x).collect(Collectors.toSet());
 
-            if(fullAlleles.size() == 1 && partialAlleles.isEmpty())
+            if(fullAlleles.size() == 1 && wildAlleles.isEmpty())
             {
                 increment(uniqueCoverageMap, fullAlleles.iterator().next(), 1);
             }
             else
             {
-                double contribution = 1.0 / (fullAlleles.size() + partialAlleles.size() + wildAlleles.size());
+                double contribution = 1.0 / (fullAlleles.size() + wildAlleles.size());
                 fullAlleles.forEach(x -> increment(combinedCoverageMap, x, contribution));
-                partialAlleles.forEach(x -> increment(combinedCoverageMap, x, contribution));
                 wildAlleles.forEach(x -> increment(wildCoverageMap, x, contribution));
             }
         }

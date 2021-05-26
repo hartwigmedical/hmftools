@@ -187,12 +187,11 @@ public class HlaComplexBuilder
         {
             //  && fragAllele.getWild().isEmpty() - don't check since shouldn't impact uniqueness
             boolean isUniqueFrag = fragAllele.getFull().size() == 1;
-            boolean isUniqueWildFrag = fragAllele.getFull().isEmpty() && fragAllele.getPartial().size() == 1;
 
-            if(!isUniqueFrag && !isUniqueWildFrag)
+            if(!isUniqueFrag)
                 continue;
 
-            HlaAllele allele = isUniqueFrag ? fragAllele.getFull().get(0) : fragAllele.getPartial().get(0);
+            HlaAllele allele = fragAllele.getFull().get(0);
 
             if(!wildcardAlleles.contains(allele))
                 continue;

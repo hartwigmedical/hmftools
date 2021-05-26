@@ -166,7 +166,7 @@ public class HlaSequenceLoci
         }
 
         if (wildCardCount > 0)
-            return wildCardCount == targetIndices.size() ? SequenceMatchType.WILD : SequenceMatchType.PARTIAL;
+            return SequenceMatchType.WILD;
 
         return SequenceMatchType.FULL;
     }

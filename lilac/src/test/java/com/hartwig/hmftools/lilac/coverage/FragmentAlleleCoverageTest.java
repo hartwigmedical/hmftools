@@ -26,19 +26,19 @@ public class FragmentAlleleCoverageTest
         List<FragmentAlleles> fragmentAlleles = Lists.newArrayList();
 
         fragmentAlleles.add(new FragmentAlleles(
-                createFragment("01"), Lists.newArrayList(allele1), Lists.newArrayList(), Lists.newArrayList()));
+                createFragment("01"), Lists.newArrayList(allele1), Lists.newArrayList()));
 
         fragmentAlleles.add(new FragmentAlleles(
-                createFragment("02"), Lists.newArrayList(allele2), Lists.newArrayList(), Lists.newArrayList()));
+                createFragment("02"), Lists.newArrayList(allele2), Lists.newArrayList()));
 
         fragmentAlleles.add(new FragmentAlleles(
-                createFragment("03"), Lists.newArrayList(allele3), Lists.newArrayList(), Lists.newArrayList()));
+                createFragment("03"), Lists.newArrayList(allele3), Lists.newArrayList()));
 
         fragmentAlleles.add(new FragmentAlleles(
-                createFragment("04"), Lists.newArrayList(allele2), Lists.newArrayList(allele1), Lists.newArrayList(allele3)));
+                createFragment("04"), Lists.newArrayList(allele2), Lists.newArrayList(allele1, allele3)));
 
         fragmentAlleles.add(new FragmentAlleles(
-                createFragment("05"), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(allele1, allele2, allele3)));
+                createFragment("05"), Lists.newArrayList(), Lists.newArrayList(allele1, allele2, allele3)));
 
         FragmentAlleleMatrix matrix = new FragmentAlleleMatrix(fragmentAlleles, alleles);
 
@@ -50,7 +50,7 @@ public class FragmentAlleleCoverageTest
         assertEquals(1, coverages.get(0).UniqueCoverage, 0.01);
         assertEquals(1, coverages.get(1).UniqueCoverage, 0.01);
         assertEquals(1, coverages.get(2).UniqueCoverage, 0.01);
-        assertEquals(0.33, coverages.get(0).WildCoverage, 0.01);
+        assertEquals(0.67, coverages.get(0).WildCoverage, 0.01);
         assertEquals(0.33, coverages.get(1).WildCoverage, 0.01);
         assertEquals(0.67, coverages.get(2).WildCoverage, 0.01);
     }
