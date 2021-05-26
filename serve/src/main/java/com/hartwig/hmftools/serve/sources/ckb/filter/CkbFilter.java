@@ -5,7 +5,6 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.ckb.classification.CkbConstants;
 import com.hartwig.hmftools.ckb.classification.CkbEventAndGeneExtractor;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.ImmutableCkbEntry;
@@ -21,15 +20,14 @@ public class CkbFilter {
     private static final Logger LOGGER = LogManager.getLogger(CkbFilter.class);
 
     @NotNull
-    private final Set<String> usedFilterKeywords = Sets.newHashSet();
+    private final Set<CkbFilterEntry> filters;
     @NotNull
-    private final Set<String> usedAllFilterGenes = Sets.newHashSet();
-    @NotNull
-    private final Set<String> usedExonFilterGenes = Sets.newHashSet();
+    private final Set<CkbFilterEntry> usedFilters = Sets.newHashSet();
     @NotNull
     private final CkbEventAndGeneExtractor ckbEventAndGeneExtractor = new CkbEventAndGeneExtractor();
 
-    public CkbFilter() {
+    public CkbFilter(@NotNull final Set<CkbFilterEntry> filters) {
+        this.filters = filters;
     }
 
     @NotNull
@@ -62,86 +60,54 @@ public class CkbFilter {
     }
 
     public void reportUnusedFilterEntries() {
-        int unusedKeywordCount = 0;
-        for (String keyword : FilterFactory.VARIANT_KEYWORDS_TO_FILTER) {
-            if (!usedFilterKeywords.contains(keyword)) {
-                unusedKeywordCount++;
-                LOGGER.warn(" Keyword '{}' hasn't been used for CKB filtering", keyword);
+        int unusedFilterEntryCount = 0;
+        for (CkbFilterEntry entry : filters) {
+            if (!usedFilters.contains(entry)) {
+                unusedFilterEntryCount++;
+                LOGGER.warn(" Filter entry '{}' hasn't been used for CKB filtering", entry);
             }
         }
 
-        LOGGER.debug(" Found {} unused keywords during CKB filtering", unusedKeywordCount);
-
-        int unusedAllGeneCount = 0;
-        for (String gene : FilterFactory.GENES_FOR_WHICH_TO_FILTER_ALL) {
-            if (!usedAllFilterGenes.contains(gene)) {
-                unusedAllGeneCount++;
-                LOGGER.warn(" Gene '{}' hasn't been used for CKB all gene event filtering", gene);
-            }
-        }
-
-        LOGGER.debug(" Found {} unused genes during CKB all gene event filtering", unusedAllGeneCount);
-
-        int unusedExonGeneCount = 0;
-        for (String gene : FilterFactory.GENES_FOR_WHICH_TO_FILTER_EXON_EVENTS) {
-            if (!usedExonFilterGenes.contains(gene)) {
-                unusedExonGeneCount++;
-                LOGGER.warn(" Gene '{}' hasn't been used for exon gene event CKB filtering", gene);
-            }
-        }
-
-        LOGGER.debug(" Found {} unused genes during exon gene event CKB filtering", unusedExonGeneCount);
+        LOGGER.debug(" Found {} unused filter entries during CKB filtering", unusedFilterEntryCount);
     }
 
     private boolean include(@NotNull EventType type, @NotNull Variant variant) {
-        String event = ckbEventAndGeneExtractor.extractEvent(variant);
-        for (String keywordToFilter : FilterFactory.VARIANT_KEYWORDS_TO_FILTER) {
-            if (event.contains(keywordToFilter)) {
-                usedFilterKeywords.add(keywordToFilter);
-                return false;
-            }
-        }
-
         String gene = ckbEventAndGeneExtractor.extractGene(variant);
-        if (FilterFactory.GENES_FOR_WHICH_TO_FILTER_ALL.contains(gene)) {
-            usedAllFilterGenes.add(gene);
-            return false;
-        }
+        String event = ckbEventAndGeneExtractor.extractEvent(variant);
 
-        if (type == EventType.EXON) {
-            if (FilterFactory.GENES_FOR_WHICH_TO_FILTER_EXON_EVENTS.contains(gene)) {
-                usedExonFilterGenes.add(gene);
+        for (CkbFilterEntry filterEntry : filters) {
+            boolean filterMatches = evaluateFilter(filterEntry, type, gene, event);
+            if (filterMatches) {
+                usedFilters.add(filterEntry);
                 return false;
-            }
-        }
-
-        // We don't want to include evidence on genes that are unmappable between ref genome versions.
-        if (CkbConstants.UNMAPPABLE_GENES.contains(gene)) {
-            return false;
-        }
-
-        // For some genes we only accept evidence in case the evidence is on a fusion.
-        if (type != EventType.FUSION_PAIR && type != EventType.PROMISCUOUS_FUSION) {
-            if (CkbConstants.EXCLUSIVE_FUSION_GENES.contains(gene)) {
-                return false;
-            }
-        }
-
-        // In case a leg of a fusion does not exist in our exome definition, or mapping, we have to remove it.
-        if (type == EventType.FUSION_PAIR) {
-            for (String fusionLeg : CkbConstants.UNRESOLVABLE_FUSION_LEGS) {
-                if (event.contains(fusionLeg) && !gene.equals(fusionLeg)) {
-                    return false;
-                }
-            }
-
-            for (String unmappableGene : CkbConstants.UNMAPPABLE_GENES) {
-                if (event.contains(unmappableGene) && !gene.equals(unmappableGene)) {
-                    return false;
-                }
             }
         }
 
         return true;
+    }
+
+    private boolean evaluateFilter(@NotNull CkbFilterEntry filterEntry, @NotNull EventType type, @NotNull String gene,
+            @NotNull String event) {
+        switch (filterEntry.type()) {
+            case FILTER_ANY_VARIANT_WITH_KEYWORD: {
+                return event.contains(filterEntry.value());
+            }
+            case FILTER_ALL_EVIDENCE_ON_GENE: {
+                return gene.equals(filterEntry.value());
+            }
+            case FILTER_EVIDENCE_FOR_EXONS_ON_GENE: {
+                return gene.equals(filterEntry.value()) && type == EventType.EXON;
+            }
+            case ALLOW_GENE_IN_FUSIONS_EXCLUSIVELY: {
+                return gene.equals(filterEntry.value()) && type != EventType.FUSION_PAIR && type != EventType.PROMISCUOUS_FUSION;
+            }
+            case FILTER_SECONDARY_GENE_WHEN_FUSION_LEG: {
+                return type == EventType.FUSION_PAIR && !gene.equals(filterEntry.value()) && event.contains(filterEntry.value());
+            }
+            default: {
+                LOGGER.warn("Filter entry found with unrecognized type: {}", filterEntry);
+                return false;
+            }
+        }
     }
 }

@@ -43,7 +43,7 @@ class ConversionFilter {
 
     public void reportUnusedFilterEntries() {
         int unusedGeneCount = 0;
-        for (String gene : ConversionFilterFactory.GENES_TO_FILTER) {
+        for (String gene : ConversionFilterFactory.GENES_TO_EXCLUDE_FOR_CONVERSION) {
             if (!filteredGenes.contains(gene)) {
                 unusedGeneCount++;
                 LOGGER.warn("Gene '{}' hasn't been used ref genome conversion filtering", gene);
@@ -157,7 +157,7 @@ class ConversionFilter {
     }
 
     private boolean isBlacklistedGene(@NotNull String gene) {
-        if (ConversionFilterFactory.GENES_TO_FILTER.contains(gene)) {
+        if (ConversionFilterFactory.GENES_TO_EXCLUDE_FOR_CONVERSION.contains(gene)) {
             filteredGenes.add(gene);
             return true;
         } else {

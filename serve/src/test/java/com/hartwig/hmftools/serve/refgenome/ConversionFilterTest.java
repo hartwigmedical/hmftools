@@ -25,7 +25,8 @@ public class ConversionFilterTest {
     public void canFilterGenes() {
         ConversionFilter filter = new ConversionFilter();
 
-        ExtractionResult resultToFilter = createExtractionResultForGene(ConversionFilterFactory.GENES_TO_FILTER.iterator().next());
+        ExtractionResult resultToFilter =
+                createExtractionResultForGene(ConversionFilterFactory.GENES_TO_EXCLUDE_FOR_CONVERSION.iterator().next());
         ExtractionResult filtered = filter.filter(resultToFilter);
         assertTrue(filtered.knownHotspots().isEmpty());
         assertTrue(filtered.knownCodons().isEmpty());
@@ -77,5 +78,4 @@ public class ConversionFilterTest {
                         .build())
                 .build();
     }
-
 }

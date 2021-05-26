@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.sources.ckb;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.CkbEntryReader;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.serve.sources.ckb.curation.CkbCurator;
@@ -45,7 +46,8 @@ public final class CkbReader {
 
     @NotNull
     private static List<CkbEntry> filter(@NotNull List<CkbEntry> entries) {
-        CkbFilter filter = new CkbFilter();
+        // TODO Pass filter from file
+        CkbFilter filter = new CkbFilter(Sets.newHashSet());
 
         LOGGER.info("Filtering {} CKB entries", entries.size());
         List<CkbEntry> filteredEntries = filter.run(entries);
