@@ -1,0 +1,3 @@
+filterType	value	rationale
+FILTER_ALL_EVIDENCE_ON_GENE	gene	just because we can
+ALLOW_GENE_IN_FUSIONS_EXCLUSIVELY	gene2	also just because we can
