@@ -10,8 +10,6 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_CONF_UNIQUE_GROUP_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_CONF_UNIQUE_PROTEIN_COVERAGE;
-import static com.hartwig.hmftools.lilac.LilacConstants.TOTAL_COVERAGE_DENOM;
-import static com.hartwig.hmftools.lilac.LilacConstants.WILCARD_UNIQUE_FRAGMENTS;
 import static com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage.coverageAlleles;
 
 import java.util.Collections;
@@ -212,7 +210,7 @@ public class HlaComplexBuilder
             LL_LOGGER.info("sample({}) wildcard allele({}) uniqueSupport({})",
                     mConfig.Sample, allele, fragCount);
 
-            if(fragCount >= WILCARD_UNIQUE_FRAGMENTS)
+            if(fragCount >= 5)
             {
                 supportedAlleles.add(allele);
             }
@@ -399,8 +397,8 @@ public class HlaComplexBuilder
     private static double requiredUniqueGroupCoverage(double totalCoverage, boolean isGroup)
     {
         return isGroup ?
-                totalCoverage / TOTAL_COVERAGE_DENOM * MIN_CONF_UNIQUE_GROUP_COVERAGE :
-                totalCoverage / TOTAL_COVERAGE_DENOM * MIN_CONF_UNIQUE_PROTEIN_COVERAGE;
+                totalCoverage * MIN_CONF_UNIQUE_GROUP_COVERAGE :
+                totalCoverage * MIN_CONF_UNIQUE_PROTEIN_COVERAGE;
     }
 
     private List<HlaAlleleCoverage> findUnique(

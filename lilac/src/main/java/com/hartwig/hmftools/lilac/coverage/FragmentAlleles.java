@@ -2,7 +2,6 @@ package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_Y_FRAGMENT_THRESHOLD;
-import static com.hartwig.hmftools.lilac.LilacConstants.TOTAL_COVERAGE_DENOM;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.filterExonBoundaryWildcards;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.filterWildcards;
 import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.FULL;
@@ -422,7 +421,7 @@ public class FragmentAlleles
         }
 
         int totalHlaYFrags = uniqueHlaY  + matchedFragmentAlleles.size();
-        double threshold = HLA_Y_FRAGMENT_THRESHOLD * fragmentAlleles.size() / (double)TOTAL_COVERAGE_DENOM;
+        double threshold = fragmentAlleles.size() * HLA_Y_FRAGMENT_THRESHOLD;
         boolean exceedsThreshold = uniqueHlaY >= threshold;
 
         if(totalHlaYFrags > 0)

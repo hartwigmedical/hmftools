@@ -12,18 +12,16 @@ public class LilacConstants
     public static final int DEFAULT_MIN_EVIDENCE = 2;
     public static final int DEFAULT_FRAGS_PER_ALLELE = 7;
     public static final int DEFAULT_FRAGS_REMOVE_SGL = 40;
-    public static final int DEFAULT_TOP_SCORE_THRESHOLD = 5;
+    public static final double DEFAULT_TOP_SCORE_THRESHOLD = 0.005;
 
     public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.01;
-    public static final int MIN_CONF_UNIQUE_GROUP_COVERAGE = 20;
-    public static final int MIN_CONF_UNIQUE_PROTEIN_COVERAGE = 10;
-    public static final int WILCARD_UNIQUE_FRAGMENTS = 5;
-    public static final int HLA_Y_FRAGMENT_THRESHOLD = 10;
+    public static final double MIN_CONF_UNIQUE_GROUP_COVERAGE = 0.02;
+    public static final double MIN_CONF_UNIQUE_PROTEIN_COVERAGE = 0.01;
+    public static final double HLA_Y_FRAGMENT_THRESHOLD = 0.01;
 
-    public static final int TOTAL_COVERAGE_DENOM = 1000;
-    public static final double FREQUENCY_SCORE_PENALTY = 1.5;
-    public static final double HOMOZYGOUS_SCORE_PENALTY = 4.5;
-    public static final double RECOVERY_SCORE_PENALTY = 5;
+    public static final double FREQUENCY_SCORE_PENALTY = 0.0015;
+    public static final double HOMOZYGOUS_SCORE_PENALTY = 0.0045;
+    public static final double RECOVERY_SCORE_PENALTY = 0.005;
 
     // warning thresholds
     public static final int WARN_UNMATCHED_HAPLOTYPE_SUPPORT = 7;

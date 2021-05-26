@@ -42,7 +42,7 @@ public class LilacConfig
     public final int MinFragmentsPerAllele;
     public final int MinFragmentsToRemoveSingle;
     public final int Threads;
-    public final int TopScoreThreshold;
+    public final double TopScoreThreshold;
 
     public final String GeneCopyNumberFile;
     public final String SomaticVcf;

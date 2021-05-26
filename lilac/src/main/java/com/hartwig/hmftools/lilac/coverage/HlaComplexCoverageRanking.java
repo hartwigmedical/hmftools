@@ -8,7 +8,6 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.lilac.LilacConstants.FREQUENCY_SCORE_PENALTY;
 import static com.hartwig.hmftools.lilac.LilacConstants.HOMOZYGOUS_SCORE_PENALTY;
 import static com.hartwig.hmftools.lilac.LilacConstants.RECOVERY_SCORE_PENALTY;
-import static com.hartwig.hmftools.lilac.LilacConstants.TOTAL_COVERAGE_DENOM;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -29,10 +28,10 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 public class HlaComplexCoverageRanking
 {
-    private final int mMaxScoreDifference;
+    private final double mMaxScoreDifference;
     private final ReferenceData mRefData;
 
-    public HlaComplexCoverageRanking(final int maxScoreDifference, final ReferenceData refData)
+    public HlaComplexCoverageRanking(double maxScoreDifference, final ReferenceData refData)
     {
         mMaxScoreDifference = maxScoreDifference;
         mRefData = refData;
@@ -58,7 +57,7 @@ public class HlaComplexCoverageRanking
 
         double topScore = complexes.stream().mapToDouble(x -> x.getScore()).max().orElse(0);
         int topCoverage = complexes.stream().mapToInt(x -> x.TotalCoverage).max().orElse(0);
-        double inclusionThreshold = min(topScore - mMaxScoreDifference, topScore - mMaxScoreDifference * topCoverage / TOTAL_COVERAGE_DENOM);
+        double inclusionThreshold = topScore - mMaxScoreDifference * topCoverage;
 
         List<HlaComplexCoverage> results = complexes.stream()
                 .filter(x -> x.getScore() >= inclusionThreshold).collect(Collectors.toList());
@@ -100,12 +99,11 @@ public class HlaComplexCoverageRanking
     private void calcComplexScore(final HlaComplexCoverage complexCoverage)
     {
         int totalCoverage = complexCoverage.TotalCoverage;
-        double adjustedCoverageFactor = totalCoverage / (double)TOTAL_COVERAGE_DENOM;
 
         double score = totalCoverage
-                + complexCoverage.cohortFrequencyTotal() * FREQUENCY_SCORE_PENALTY * adjustedCoverageFactor
-                + complexCoverage.homozygousCount() * HOMOZYGOUS_SCORE_PENALTY * adjustedCoverageFactor
-                - complexCoverage.recoveredCount() * RECOVERY_SCORE_PENALTY * adjustedCoverageFactor;
+                + complexCoverage.cohortFrequencyTotal() * FREQUENCY_SCORE_PENALTY * totalCoverage
+                + complexCoverage.homozygousCount() * HOMOZYGOUS_SCORE_PENALTY * totalCoverage
+                - complexCoverage.recoveredCount() * RECOVERY_SCORE_PENALTY * totalCoverage;
 
         complexCoverage.setScore(score);
     }
