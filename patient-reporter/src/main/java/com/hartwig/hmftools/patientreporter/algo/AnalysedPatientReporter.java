@@ -78,9 +78,8 @@ public class AnalysedPatientReporter {
                 .conclusion(MolecularTissueOriginFile.read(config.molecularTissueOriginTxt()))
                 .plotPath(config.molecularTissueOriginPlot())
                 .build();
-        if (qcForm.equals(QsFormNumber.FOR_080.display())) {
-            LOGGER.info(" Molecular tissue origin conclusion: {}", molecularTissueOrigin.conclusion());
-        }
+
+        LOGGER.info(" Molecular tissue origin conclusion: {}", molecularTissueOrigin.conclusion());
 
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
