@@ -27,7 +27,9 @@ public final class QualityOverruleFunctions {
 
         Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
         for (Map.Entry<ChromosomeArmKey, Double> entry : genomicAnalysis.cnPerChromosome().entrySet()) {
-            cnPerChromosome.put(entry.getKey(), genomicAnalysis.hasReliablePurity() ? entry.getValue() : null);
+            if (genomicAnalysis.hasReliablePurity()) {
+                cnPerChromosome.put(entry.getKey(), entry.getValue());
+            }
         }
 
         List<ReportableVariant> overruledVariants = Lists.newArrayList();
