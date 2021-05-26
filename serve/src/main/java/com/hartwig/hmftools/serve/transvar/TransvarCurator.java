@@ -24,7 +24,10 @@ class TransvarCurator {
         // Transvar can't interpret start-lost so we map it to another mutation.
         PROTEIN_ANNOTATION_MAPPING.put("M1?", "M1I");
 
+        // These genes have no mapping in HMF but should be mapped for transvar specifically.
         ADDITIONAL_GENE_MAPPING_38_TO_37.put("EPOP", "C17orf96");
+
+        // These genes work in transvar fine and should not be mapped.
         GENES_FOR_WHICH_TO_SKIP_38_MAPPING.add("CCDC186");
     }
 
