@@ -9,7 +9,6 @@ import com.hartwig.hmftools.ckb.classification.CkbEventAndGeneExtractor;
 import com.hartwig.hmftools.ckb.classification.CkbProteinAnnotationExtractor;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
-import com.hartwig.hmftools.common.refseq.RefSeq;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -58,15 +57,11 @@ public class CkbExtractor {
     @NotNull
     private final ActionableEntryFactory actionableEntryFactory;
     @NotNull
-    private final List<RefSeq> refSeqMappings;
-    @NotNull
     private final CkbEventAndGeneExtractor ckbEventAndGeneExtractor;
 
-    public CkbExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableEntryFactory actionableEntryFactory,
-            @NotNull final List<RefSeq> refSeqMappings) {
+    public CkbExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableEntryFactory actionableEntryFactory) {
         this.eventExtractor = eventExtractor;
         this.actionableEntryFactory = actionableEntryFactory;
-        this.refSeqMappings = refSeqMappings;
         this.ckbEventAndGeneExtractor = new CkbEventAndGeneExtractor();
     }
 
@@ -87,7 +82,7 @@ public class CkbExtractor {
                 LOGGER.warn("No event type known for '{}' on '{}'", event, gene);
             }
 
-            String transcript = mapToEnsemblTranscript(variant.gene().canonicalTranscript());
+            String transcript = null;
 
             EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event);
             Set<? extends ActionableEvent> actionableEvents = actionableEntryFactory.toActionableEntries(entry);
@@ -98,20 +93,6 @@ public class CkbExtractor {
         }
 
         return ExtractionFunctions.merge(extractions);
-    }
-
-    @Nullable
-    private String mapToEnsemblTranscript(@Nullable String refseqToMatch) {
-        if (refseqToMatch == null) {
-            return null;
-        }
-
-        for (RefSeq refSeq : refSeqMappings) {
-            if (refSeq.dbPrimaryAcc().equals(refseqToMatch)) {
-                return refSeq.transcriptId();
-            }
-        }
-        return null;
     }
 
     @NotNull
