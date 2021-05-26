@@ -186,9 +186,9 @@ public class NucleotideFragment
 
     public String toString()
     {
-        return String.format("%s genes(%s) lociRange(%d -> %d)",
+        return String.format("%s genes(%s) lociRange(%d -> %d) read(%s)",
                 mId, mGenes, !mNucleotideLoci.isEmpty() ? mNucleotideLoci.get(0) : -1,
-                !mNucleotideLoci.isEmpty() ? mNucleotideLoci.get(mNucleotideLoci.size() - 1) : -1);
+                !mNucleotideLoci.isEmpty() ? mNucleotideLoci.get(mNucleotideLoci.size() - 1) : -1, readInfo());
     }
 
     public boolean validate()

@@ -184,7 +184,7 @@ public class HlaComplexBuilder
         for(FragmentAlleles fragAllele : refFragAlleles)
         {
             //  && fragAllele.getWild().isEmpty() - don't check since shouldn't impact uniqueness
-            boolean isUniqueFrag = fragAllele.getFull().size() == 1 && fragAllele.getPartial().isEmpty();
+            boolean isUniqueFrag = fragAllele.getFull().size() == 1;
             boolean isUniqueWildFrag = fragAllele.getFull().isEmpty() && fragAllele.getPartial().size() == 1;
 
             if(!isUniqueFrag && !isUniqueWildFrag)
@@ -197,6 +197,9 @@ public class HlaComplexBuilder
 
             Integer count = uniqueSupport.get(allele);
             uniqueSupport.put(allele, count != null ? count + 1 : 1);
+
+            LL_LOGGER.debug("wildcard allele({}) unique {} from read({} {})",
+                    allele, isUniqueFrag ? "full" : "partial", fragAllele.getFragment().id(), fragAllele.getFragment().readInfo());
         }
 
         final List<HlaAllele> supportedAlleles = Lists.newArrayList();

@@ -367,8 +367,8 @@ public class LilacApplication implements AutoCloseable, Runnable
         LL_LOGGER.info("  {}", lilacQC.body());
 
         LL_LOGGER.info("writing output to {}", mConfig.OutputDir);
-        String outputFile = mConfig.outputPrefix() + ".lilac.txt";
-        String outputQCFile = mConfig.outputPrefix() + ".lilac.qc.txt";
+        String outputFile = mConfig.outputPrefix() + ".lilac.tsv";
+        String outputQCFile = mConfig.outputPrefix() + ".lilac.qc.tsv";
 
         output.write(outputFile);
         lilacQC.writefile(outputQCFile);

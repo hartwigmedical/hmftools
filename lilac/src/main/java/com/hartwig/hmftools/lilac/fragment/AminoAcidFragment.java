@@ -130,9 +130,9 @@ public final class AminoAcidFragment extends NucleotideFragment
 
     public String toString()
     {
-        return String.format("%s genes(%s) lociRange(%d -> %d)",
+        return String.format("%s genes(%s) lociRange(%d -> %d) read(%s)",
                 id(), getGenes(), !mAminoAcidLoci.isEmpty() ? mAminoAcidLoci.get(0) : -1,
-                !mAminoAcidLoci.isEmpty() ? mAminoAcidLoci.get(mAminoAcidLoci.size() - 1) : -1);
+                !mAminoAcidLoci.isEmpty() ? mAminoAcidLoci.get(mAminoAcidLoci.size() - 1) : -1, readInfo());
     }
 
     public boolean validate()
