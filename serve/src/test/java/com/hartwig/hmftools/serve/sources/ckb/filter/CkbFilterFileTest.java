@@ -3,7 +3,7 @@ package com.hartwig.hmftools.serve.sources.ckb.filter;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.util.Set;
+import java.util.List;
 
 import com.google.common.io.Resources;
 
@@ -15,7 +15,7 @@ public class CkbFilterFileTest {
 
     @Test
     public void canReadCkbFilterTsv() throws IOException {
-        Set<CkbFilterEntry> filterEntries = CkbFilterFile.read(TEST_CKB_FILTER_FILE);
+        List<CkbFilterEntry> filterEntries = CkbFilterFile.read(TEST_CKB_FILTER_FILE);
         assertEquals(2, filterEntries.size());
     }
 }

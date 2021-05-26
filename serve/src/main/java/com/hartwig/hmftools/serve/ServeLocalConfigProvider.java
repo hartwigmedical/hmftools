@@ -35,7 +35,8 @@ public final class ServeLocalConfigProvider {
         // Datastore is a shared vm with fixed paths.
         if (hostname.toLowerCase().equals("datastore")) {
             builder.viccJson("/data/common/dbs/serve/static_sources/vicc/all.json");
-            builder.ckbDir("/data/common/dbs/ckb/210402_flex_dump");
+            builder.ckbDir("/data/common/dbs/ckb/210514_flex_dump");
+            builder.ckbFilterTsv("/data/common/dbs/serve/curation/ckb_filters.tsv");
             builder.iClusionTrialTsv("/data/common/dbs/iclusion/iclusion_trials_prod.tsv");
 
             builder.outputDir(System.getProperty("user.home") + "/tmp/serve");
@@ -53,6 +54,7 @@ public final class ServeLocalConfigProvider {
             // Assume we run on local machine with fixed paths
             builder.viccJson(System.getProperty("user.home") + "/hmf/projects/serve/static_sources/vicc/all.json");
             builder.ckbDir(System.getProperty("user.home") + "/hmf/projects/serve/ckb");
+            builder.ckbFilterTsv(System.getProperty("user.home") + "/hmf/projects/serve/curation/ckb_filters.tsv");
             builder.iClusionTrialTsv(System.getProperty("user.home") + "/hmf/projects/serve/iclusion/iclusion_trials_prod.tsv");
 
             builder.outputDir(System.getProperty("user.home") + "/hmf/tmp/serve");

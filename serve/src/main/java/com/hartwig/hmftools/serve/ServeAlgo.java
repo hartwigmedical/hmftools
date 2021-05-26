@@ -68,7 +68,7 @@ public class ServeAlgo {
         }
 
         if (config.useCkb()) {
-            extractions.add(extractCkbKnowledge(config.ckbDir()));
+            extractions.add(extractCkbKnowledge(config.ckbDir(), config.ckbFilterTsv()));
         }
 
         if (config.useDocm()) {
@@ -124,13 +124,13 @@ public class ServeAlgo {
     }
 
     @NotNull
-    private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir) throws IOException {
+    private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir, @NotNull String ckbFilterTsv) throws IOException {
         // TODO Read RefSeq mapping from a resource file rather than from an external file
         //        LOGGER.info("Reading ref seq matching to transcript");
         //        List<RefSeq> refSeqMappings = RefSeqFile.readingRefSeq(refseqTsv);
         List<RefSeq> refSeqMappings = Lists.newArrayList();
 
-        List<CkbEntry> ckbEntries = CkbReader.readAndCurate(ckbDir);
+        List<CkbEntry> ckbEntries = CkbReader.readAndCurate(ckbDir, ckbFilterTsv);
 
         EventClassifierConfig config = CkbClassificationConfig.build();
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config,

@@ -58,7 +58,7 @@ public class CkbExtractorTestApp {
         RefGenomeResource refGenomeResource = buildRefGenomeResource(config);
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(CkbClassificationConfig.build(), refGenomeResource, refSeqMappings);
 
-        List<CkbEntry> entries = CkbReader.readAndCurate(config.ckbDir());
+        List<CkbEntry> entries = CkbReader.readAndCurate(config.ckbDir(), config.ckbFilterTsv());
         ExtractionResult result = extractor.extract(entries);
 
         String eventsTsv = config.outputDir() + File.separator + "CkbEvents.tsv";

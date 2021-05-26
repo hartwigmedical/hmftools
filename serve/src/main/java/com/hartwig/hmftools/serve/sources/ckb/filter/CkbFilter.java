@@ -20,13 +20,13 @@ public class CkbFilter {
     private static final Logger LOGGER = LogManager.getLogger(CkbFilter.class);
 
     @NotNull
-    private final Set<CkbFilterEntry> filters;
+    private final List<CkbFilterEntry> filters;
     @NotNull
     private final Set<CkbFilterEntry> usedFilters = Sets.newHashSet();
     @NotNull
     private final CkbEventAndGeneExtractor ckbEventAndGeneExtractor = new CkbEventAndGeneExtractor();
 
-    public CkbFilter(@NotNull final Set<CkbFilterEntry> filters) {
+    public CkbFilter(@NotNull final List<CkbFilterEntry> filters) {
         this.filters = filters;
     }
 

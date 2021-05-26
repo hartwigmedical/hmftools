@@ -6,10 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Set;
 
-import com.google.common.collect.Sets;
-
+import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public final class CkbFilterFile {
@@ -18,15 +16,15 @@ public final class CkbFilterFile {
     }
 
     @NotNull
-    public static Set<CkbFilterEntry> read(@NotNull String ckbFilterTsv) throws IOException {
+    public static List<CkbFilterEntry> read(@NotNull String ckbFilterTsv) throws IOException {
         List<String> lines = Files.readAllLines(new File(ckbFilterTsv).toPath());
         // Skip header
         return fromLines(lines.subList(1, lines.size()));
     }
 
     @NotNull
-    private static Set<CkbFilterEntry> fromLines(@NotNull List<String> lines) {
-        Set<CkbFilterEntry> filterEntries = Sets.newHashSet();
+    private static List<CkbFilterEntry> fromLines(@NotNull List<String> lines) {
+        List<CkbFilterEntry> filterEntries = Lists.newArrayList();
         for (String line : lines) {
             filterEntries.add(fromLine(line));
         }

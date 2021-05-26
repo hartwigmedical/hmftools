@@ -17,7 +17,8 @@ public class ServeAlgoTest {
 
     private static final String VICC_JSON = Resources.getResource("vicc/empty.vicc.json").getPath();
     private static final String ICLUSION_TRIAL_TSV = Resources.getResource("iclusion/empty.iclusion.tsv").getPath();
-    private static final String CKB_DIR = Resources.getResource("ckb").getPath();
+    private static final String CKB_DIR = Resources.getResource("ckb_data").getPath();
+    private static final String CKB_FILTER_TSV = Resources.getResource("ckb_filter/ckb_filters.tsv").getPath();
     private static final String DOCM_TSV = Resources.getResource("docm/example.tsv").getPath();
     private static final String HARTWIG_CURATED_TSV = Resources.getResource("hartwig/example.tsv").getPath();
     private static final String HARTWIG_COHORT_TSV = Resources.getResource("hartwig/example.tsv").getPath();
@@ -42,6 +43,7 @@ public class ServeAlgoTest {
                 .iClusionTrialTsv(ICLUSION_TRIAL_TSV)
                 .useCkb(true)
                 .ckbDir(CKB_DIR)
+                .ckbFilterTsv(CKB_FILTER_TSV)
                 .useDocm(true)
                 .docmTsv(DOCM_TSV)
                 .useHartwigCohort(true)
