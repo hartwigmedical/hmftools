@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.seq;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.getExonGeneBoundries;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILDCARD;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
@@ -32,19 +33,19 @@ public class HlaSequenceLoci
 
     public int length() { return mSequences.size(); }
 
-    public final List<String> getSequences() { return mSequences; }
+    public List<String> getSequences() { return mSequences; }
 
-    public final boolean containsInserts() { return mSequences.stream().anyMatch(x -> x.length() > 1); }
+    public boolean containsInserts() { return mSequences.stream().anyMatch(x -> x.length() > 1); }
 
-    public final boolean containsDeletes() { return mSequences.stream().anyMatch(x -> x.equals(DEL_STR)); }
+    public boolean containsDeletes() { return mSequences.stream().anyMatch(x -> x.equals(DEL_STR)); }
 
-    public final boolean containsIndels() { return containsDeletes() || containsInserts(); }
+    public boolean containsIndels() { return containsDeletes() || containsInserts(); }
 
-    public final boolean containsWildcards() { return mSequences.stream().anyMatch(x -> x.equals(WILD_STR)); }
+    public boolean containsWildcards() { return mSequences.stream().anyMatch(x -> x.equals(WILD_STR)); }
 
-    public final String sequence(int locus) { return mSequences.get(locus); }
+    public String sequence(int locus) { return mSequences.get(locus); }
 
-    public final String sequence(int startLocus, int endLocus)
+    public String sequence(int startLocus, int endLocus)
     {
         StringJoiner sj = new StringJoiner("");
         for(int i = startLocus; i <= endLocus; ++i)
@@ -55,7 +56,7 @@ public class HlaSequenceLoci
         return sj.toString();
     }
 
-    public final String sequence(final List<Integer> indices)
+    public String sequence(final List<Integer> indices)
     {
         StringJoiner sj = new StringJoiner("");
 
@@ -70,7 +71,7 @@ public class HlaSequenceLoci
         return sj.toString();
     }
 
-    public final String sequence()
+    public String sequence()
     {
         StringJoiner sj = new StringJoiner("");
         for(String sequence : mSequences)
@@ -86,45 +87,69 @@ public class HlaSequenceLoci
         return String.format("HlaSequenceLoci(allele=%s, sequence=%s)", Allele, sequence());
     }
 
-    public final boolean consistentWith(final PhasedEvidence evidence)
+    public boolean consistentWith(final PhasedEvidence evidence)
     {
         return consistentWithAny(
                 evidence.getEvidence().keySet().stream().collect(Collectors.toList()), evidence.getAminoAcidIndices());
     }
 
-    public final boolean consistentWithAny(final Set<String> targetSequences, final int[] targetIndices)
+    public boolean consistentWithAny(final Set<String> targetSequences, final int[] targetIndices)
     {
         return consistentWithAny(targetSequences.stream().collect(Collectors.toList()), targetIndices);
     }
 
-    public final boolean consistentWithAny(final List<String> targetSequences, final int[] targetIndices)
+    public boolean consistentWithAny(final List<String> targetSequences, final int[] targetIndices)
     {
         List<Integer> tiList = Lists.newArrayList();
         Arrays.stream(targetIndices).forEach(x -> tiList.add(x));
         return consistentWithAny(targetSequences, tiList);
     }
 
-    public final boolean consistentWithAny(final List<String> targetSequences, final List<Integer> targetIndices)
+    public boolean consistentWithAny(final List<String> targetSequences, final List<Integer> targetIndices)
     {
-        return targetSequences.stream().anyMatch(x -> match(x, targetIndices) != HlaSequenceMatch.NONE);
+        return targetSequences.stream().anyMatch(x -> determineMatchType(x, targetIndices) != SequenceMatchType.NONE);
     }
 
-    public final boolean consistentWith(final String targetSequence, final int[] targetIndices)
+    public boolean consistentWith(final String targetSequence, final int[] targetIndices)
     {
         List<Integer> tiList = Lists.newArrayList();
         Arrays.stream(targetIndices).forEach(x -> tiList.add(x));
-        return match(targetSequence, tiList) != HlaSequenceMatch.NONE;
+        return determineMatchType(targetSequence, tiList) != SequenceMatchType.NONE;
     }
 
-    public HlaSequenceMatch match(final String targetSequence, final List<Integer> targetIndices)
+    public static List<Integer> filterExonBoundaryWildcards(final HlaSequenceLoci sequence, final List<Integer> loci)
+    {
+        // exclude any wildcard location matching an exon boundary
+        if(!sequence.containsWildcards())
+            return loci;
+
+        List<Integer> aminoAcidExonBoundaries = getExonGeneBoundries(sequence.Allele.Gene);
+
+        return loci.stream()
+                .filter(x -> !aminoAcidExonBoundaries.contains(x) || !sequence.sequence(x).equals(WILD_STR))
+                .collect(Collectors.toList());
+    }
+
+    public static List<Integer> filterWildcards(final HlaSequenceLoci sequence, final List<Integer> loci)
+    {
+        // exclude any wildcard location matching an exon boundary
+        if(!sequence.containsWildcards())
+            return loci;
+
+        return loci.stream()
+                .filter(x -> !sequence.sequence(x).equals(WILD_STR))
+                .collect(Collectors.toList());
+    }
+
+    public SequenceMatchType determineMatchType(final String targetSequence, final List<Integer> targetIndices)
     {
         if(targetIndices.isEmpty())
-            return HlaSequenceMatch.NONE;
+            return SequenceMatchType.NONE;
 
         String hlaSequence = sequence(targetIndices);
 
         if(hlaSequence.length() != targetSequence.length())
-            return HlaSequenceMatch.NONE;
+            return SequenceMatchType.NONE;
 
         int wildCardCount = 0;
 
@@ -134,16 +159,16 @@ public class HlaSequenceLoci
             char hlaSeqChr = hlaSequence.charAt(i);
 
             if(hlaSeqChr != WILDCARD && hlaSeqChr != targetChr)
-                return HlaSequenceMatch.NONE;
+                return SequenceMatchType.NONE;
 
             if (hlaSeqChr == WILDCARD)
                 wildCardCount++;
         }
 
         if (wildCardCount > 0)
-            return wildCardCount == targetIndices.size() ? HlaSequenceMatch.WILD : HlaSequenceMatch.PARTIAL;
+            return wildCardCount == targetIndices.size() ? SequenceMatchType.WILD : SequenceMatchType.PARTIAL;
 
-        return HlaSequenceMatch.FULL;
+        return SequenceMatchType.FULL;
     }
 
     public static HlaSequenceLoci create(final HlaAllele allele, final String sequence, final String reference)

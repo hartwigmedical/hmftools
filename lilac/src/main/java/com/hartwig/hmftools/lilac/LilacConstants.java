@@ -65,4 +65,14 @@ public class LilacConstants
     // technical
     public static final String DELIM = "\t";
     public static final String ITEM_DELIM = ";";
+
+    public static List<Integer> getExonGeneBoundries(final String gene)
+    {
+        if(gene.equals(GENE_A))
+            return A_EXON_BOUNDARIES;
+        else if(gene.equals(GENE_B))
+            return B_EXON_BOUNDARIES;
+        else
+            return C_EXON_BOUNDARIES;
+    }
 }

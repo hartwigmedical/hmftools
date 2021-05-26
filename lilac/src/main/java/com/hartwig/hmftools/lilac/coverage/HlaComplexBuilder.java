@@ -103,7 +103,9 @@ public class HlaComplexBuilder
                     supportedWildcard.size(), HlaAllele.toString(supportedWildcard));
         }
 
+        /*
         wildcardAlleles.stream().filter(x -> !supportedWildcard.contains(x)).forEach(x -> candidatesAfterUniqueGroups.remove(x));
+         */
 
         HlaComplexCoverage proteinCoverage = calcProteinCoverage(refFragAlleles, candidatesAfterUniqueGroups);
 

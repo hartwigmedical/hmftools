@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
+import static com.hartwig.hmftools.lilac.LilacConstants.getExonGeneBoundries;
 import static com.hartwig.hmftools.lilac.ReferenceData.AA_REF_FILE;
 import static com.hartwig.hmftools.lilac.ReferenceData.DEFLATE_TEMPLATE;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_REF_FILE;
@@ -333,8 +334,7 @@ public class GenerateReferenceSequences
                 String alleleStr = padString(allele.toString(), alleleNameLength);
                 writer.write(alleleStr);
 
-                List<Integer> exonBoundaries = allele.Gene.equals(GENE_A) ? A_EXON_BOUNDARIES :
-                        allele.Gene.equals(GENE_B) ? B_EXON_BOUNDARIES : C_EXON_BOUNDARIES;
+                List<Integer> exonBoundaries = getExonGeneBoundries(allele.Gene);
 
                 int nextExonIndex = 0;
                 int nextExonBoundary = exonBoundaries.get(nextExonIndex);

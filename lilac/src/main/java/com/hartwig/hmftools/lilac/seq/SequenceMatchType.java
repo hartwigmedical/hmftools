@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.lilac.seq;
 
-public enum HlaSequenceMatch
+public enum SequenceMatchType
 {
     FULL,
     PARTIAL,
     WILD,
     NONE;
 
-    public boolean isBetter(final HlaSequenceMatch other)
+    public boolean isBetter(final SequenceMatchType other)
     {
         return this.rank() < other.rank();
     }

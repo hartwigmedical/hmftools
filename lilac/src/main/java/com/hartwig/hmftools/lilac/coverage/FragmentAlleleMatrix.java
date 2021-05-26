@@ -129,7 +129,7 @@ public class FragmentAlleleMatrix
             {
                 ++uniqueCoverage[fullAlleleIndex];
             }
-            else if(fullCount > 0 || partialCount > 0)
+            else if(fullCount > 0 || partialCount > 0 || wildCount > 0)
             {
                 double contribution = 1.0 / (fullCount + partialCount + wildCount);
 

@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.lilac.hla;
 
-import static com.hartwig.hmftools.lilac.seq.HlaSequenceMatch.FULL;
-
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
@@ -10,7 +8,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-import com.hartwig.hmftools.lilac.seq.HlaSequenceMatch;
+import com.hartwig.hmftools.lilac.seq.SequenceMatchType;
 
 import org.junit.Test;
 
@@ -76,11 +74,11 @@ public class HlaSequenceLociTest
 
         List<Integer> fragmentLoci = buildTargetIndices(alleleSequence, refSequence);
         String targetSeq = buildTargetSequence(refSequence, fragmentLoci);
-        assertEquals(HlaSequenceMatch.NONE, seqLoci.match(targetSeq, fragmentLoci));
+        assertEquals(SequenceMatchType.NONE, seqLoci.determineMatchType(targetSeq, fragmentLoci));
 
         // test against itself
         targetSeq = buildTargetSequence(alleleSequence, fragmentLoci);
-        assertEquals(HlaSequenceMatch.FULL, seqLoci.match(targetSeq, fragmentLoci));
+        assertEquals(SequenceMatchType.FULL, seqLoci.determineMatchType(targetSeq, fragmentLoci));
 
         // test an allele with wilcards
         String wildSequence = "ABXYEFW*********";
@@ -90,12 +88,12 @@ public class HlaSequenceLociTest
         String fragmentSeq = "ABXYEFWZIJKLABOP";
         fragmentLoci = Lists.newArrayList(5, 6,7,8);
         targetSeq = buildTargetSequence(fragmentSeq, fragmentLoci);
-        assertEquals(HlaSequenceMatch.PARTIAL, seqLociWild.match(targetSeq, fragmentLoci));
+        assertEquals(SequenceMatchType.PARTIAL, seqLociWild.determineMatchType(targetSeq, fragmentLoci));
 
         // all in the wildcard region
         fragmentLoci = Lists.newArrayList(8,9,10,11);
         targetSeq = buildTargetSequence(fragmentSeq, fragmentLoci);
-        assertEquals(HlaSequenceMatch.WILD, seqLociWild.match(targetSeq, fragmentLoci));
+        assertEquals(SequenceMatchType.WILD, seqLociWild.determineMatchType(targetSeq, fragmentLoci));
     }
 
     private static String buildTargetSequence(final String sequence, final List<Integer> indices)

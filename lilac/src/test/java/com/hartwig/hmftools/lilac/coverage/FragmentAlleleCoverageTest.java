@@ -37,23 +37,22 @@ public class FragmentAlleleCoverageTest
         fragmentAlleles.add(new FragmentAlleles(
                 createFragment("04"), Lists.newArrayList(allele2), Lists.newArrayList(allele1), Lists.newArrayList(allele3)));
 
-        // wild-only is ignored
         fragmentAlleles.add(new FragmentAlleles(
-                createFragment("04"), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(allele1, allele2, allele3)));
+                createFragment("05"), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(allele1, allele2, allele3)));
 
         FragmentAlleleMatrix matrix = new FragmentAlleleMatrix(fragmentAlleles, alleles);
 
         List<HlaAlleleCoverage> coverages = matrix.create(complex);
         assertEquals(3, coverages.size());
-        assertEquals(1.33, coverages.get(0).TotalCoverage, 0.01);
-        assertEquals(1.33, coverages.get(1).TotalCoverage, 0.01);
-        assertEquals(1.33, coverages.get(2).TotalCoverage, 0.01);
+        assertEquals(1.67, coverages.get(0).TotalCoverage, 0.01);
+        assertEquals(1.67, coverages.get(1).TotalCoverage, 0.01);
+        assertEquals(1.67, coverages.get(2).TotalCoverage, 0.01);
         assertEquals(1, coverages.get(0).UniqueCoverage, 0.01);
         assertEquals(1, coverages.get(1).UniqueCoverage, 0.01);
         assertEquals(1, coverages.get(2).UniqueCoverage, 0.01);
-        assertEquals(0, coverages.get(0).WildCoverage, 0.01);
-        assertEquals(0, coverages.get(1).WildCoverage, 0.01);
-        assertEquals(0.33, coverages.get(2).WildCoverage, 0.01);
+        assertEquals(0.33, coverages.get(0).WildCoverage, 0.01);
+        assertEquals(0.33, coverages.get(1).WildCoverage, 0.01);
+        assertEquals(0.67, coverages.get(2).WildCoverage, 0.01);
     }
 
     private AminoAcidFragment createFragment(final String id)
