@@ -2,5 +2,7 @@ package com.hartwig.hmftools.common.serve.actionability;
 
 public enum EvidenceDirection {
     RESPONSIVE,
-    RESISTANT
+    PREDICTED_RESPONSIVE,
+    RESISTANT,
+    PREDICTED_RESISTANT
 }
