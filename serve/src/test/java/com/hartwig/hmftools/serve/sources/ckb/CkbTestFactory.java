@@ -21,32 +21,42 @@ public final class CkbTestFactory {
 
     @NotNull
     public static CkbEntry createEntryWithGene(@NotNull String geneSymbol) {
-        return createEntryWithGeneAndVariant(geneSymbol, Strings.EMPTY);
+        return createEntry(geneSymbol, Strings.EMPTY, Strings.EMPTY);
     }
 
     @NotNull
     public static CkbEntry createEntryWithVariant(@NotNull String variant) {
-        return createEntryWithGeneAndVariant(Strings.EMPTY, variant);
+        return createEntry(Strings.EMPTY, variant, Strings.EMPTY);
+    }
+
+    @NotNull
+    public static CkbEntry createEntryWithFullName(@NotNull String fullName) {
+        return createEntry(Strings.EMPTY, Strings.EMPTY, fullName);
     }
 
     @NotNull
     public static CkbEntry createEntryWithGeneAndVariant(@NotNull String geneSymbol, @NotNull String variant) {
+        return createEntry(geneSymbol, variant, Strings.EMPTY);
+    }
+
+    @NotNull
+    private static CkbEntry createEntry(@NotNull String geneSymbol, @NotNull String variant, @NotNull String fullName) {
         return ImmutableCkbEntry.builder()
                 .profileId(0)
                 .createDate(TEST_DATE)
                 .updateDate(TEST_DATE)
                 .profileName(Strings.EMPTY)
-                .addVariants(createVariant(geneSymbol, variant))
+                .addVariants(createVariant(geneSymbol, variant, fullName))
                 .build();
     }
 
     @NotNull
-    private static Variant createVariant(@NotNull String geneSymbol, @NotNull String variant) {
+    private static Variant createVariant(@NotNull String geneSymbol, @NotNull String variant, @NotNull String fullName) {
         return ImmutableVariant.builder()
                 .id(0)
                 .createDate(TEST_DATE)
                 .updateDate(TEST_DATE)
-                .fullName(Strings.EMPTY)
+                .fullName(fullName)
                 .variant(variant)
                 .gene(createGene(geneSymbol))
                 .build();

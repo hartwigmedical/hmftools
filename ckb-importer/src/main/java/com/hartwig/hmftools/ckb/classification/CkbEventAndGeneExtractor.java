@@ -20,9 +20,7 @@ public class CkbEventAndGeneExtractor {
 
     @NotNull
     public String extractGene(@NotNull Variant variant) {
-        if (isFusion(variant) && !isPromiscuousFusion(variant)) {
-            return variant.fullName();
-        } else if (variant.gene().geneSymbol().equals(CkbConstants.NO_GENE)) {
+        if (variant.gene().geneSymbol().equals(CkbConstants.NO_GENE)) {
             return CkbConstants.NO_GENE;
         } else if (CkbConstants.UNMAPPABLE_GENES.contains(variant.gene().geneSymbol())) {
             LOGGER.debug("Skipping gene curation for '{}' since gene is unmappable", variant.gene().geneSymbol());

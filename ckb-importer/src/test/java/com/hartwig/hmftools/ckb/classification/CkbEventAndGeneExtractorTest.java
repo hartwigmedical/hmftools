@@ -13,7 +13,6 @@ public class CkbEventAndGeneExtractorTest {
     public void canExtractGene() {
         CkbEventAndGeneExtractor extractor = new CkbEventAndGeneExtractor();
         assertEquals("gene", extractor.extractGene(CkbTestFactory.createVariant("gene", "fullName", "variant", null)));
-        assertEquals("NPM1 - ALK", extractor.extractGene(CkbTestFactory.createVariant("gene", "NPM1 - ALK", "NPM1 - ALK", "fusion")));
         assertEquals("NTRK2", extractor.extractGene(CkbTestFactory.createVariant("NTRK2", "NTRK2 fusion", "fusion", "fusion")));
 
         // We fall back on synonyms in case the main symbol that does not exist.

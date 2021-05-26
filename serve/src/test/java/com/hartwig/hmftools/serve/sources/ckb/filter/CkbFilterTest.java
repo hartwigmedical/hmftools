@@ -15,11 +15,9 @@ public class CkbFilterTest {
 
     @Test
     public void canFilterOnKeywords() {
-        CkbFilter filter = new CkbFilter(createFilterEntryList(CkbFilterType.FILTER_ANY_VARIANT_WITH_KEYWORD, "benign"));
+        CkbFilter filter = new CkbFilter(createFilterEntryList(CkbFilterType.FILTER_EVENT_WITH_KEYWORD, "benign"));
         CkbEntry entry = CkbTestFactory.createEntryWithVariant("filter benign me!");
-
-        List<CkbEntry> entries = filter.run(Lists.newArrayList(entry));
-        assertTrue(entries.isEmpty());
+        assertTrue(filter.run(Lists.newArrayList(entry)).isEmpty());
 
         filter.reportUnusedFilterEntries();
     }
@@ -49,6 +47,13 @@ public class CkbFilterTest {
         CkbFilter filter = new CkbFilter(createFilterEntryList(CkbFilterType.ALLOW_GENE_IN_FUSIONS_EXCLUSIVELY, "gene"));
         CkbEntry exclusiveFusionEntry = CkbTestFactory.createEntryWithGeneAndVariant("gene", "gene mutant");
         assertTrue(filter.run(Lists.newArrayList(exclusiveFusionEntry)).isEmpty());
+    }
+
+    @Test
+    public void canFilterOnFullNames() {
+        CkbFilter filter = new CkbFilter(createFilterEntryList(CkbFilterType.FILTER_EXACT_VARIANT_FULLNAME, "BRAF V600E"));
+        CkbEntry entry = CkbTestFactory.createEntryWithFullName("BRAF V600E");
+        assertTrue(filter.run(Lists.newArrayList(entry)).isEmpty());
     }
 
     @NotNull

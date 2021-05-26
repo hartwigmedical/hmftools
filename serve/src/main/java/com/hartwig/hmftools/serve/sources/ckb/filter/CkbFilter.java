@@ -76,7 +76,7 @@ public class CkbFilter {
         String event = ckbEventAndGeneExtractor.extractEvent(variant);
 
         for (CkbFilterEntry filterEntry : filters) {
-            boolean filterMatches = isMatch(filterEntry, type, gene, event);
+            boolean filterMatches = isMatch(filterEntry, type, gene, event, variant.fullName());
             if (filterMatches) {
                 usedFilters.add(filterEntry);
                 return false;
@@ -87,9 +87,9 @@ public class CkbFilter {
     }
 
     private boolean isMatch(@NotNull CkbFilterEntry filterEntry, @NotNull EventType type, @NotNull String gene,
-            @NotNull String event) {
+            @NotNull String event, @NotNull String fullName) {
         switch (filterEntry.type()) {
-            case FILTER_ANY_VARIANT_WITH_KEYWORD: {
+            case FILTER_EVENT_WITH_KEYWORD: {
                 return event.contains(filterEntry.value());
             }
             case FILTER_ALL_EVIDENCE_ON_GENE: {
@@ -103,6 +103,9 @@ public class CkbFilter {
             }
             case FILTER_SECONDARY_GENE_WHEN_FUSION_LEG: {
                 return type == EventType.FUSION_PAIR && !gene.equals(filterEntry.value()) && event.contains(filterEntry.value());
+            }
+            case FILTER_EXACT_VARIANT_FULLNAME: {
+                return fullName.equals(filterEntry.value());
             }
             default: {
                 LOGGER.warn("Filter entry found with unrecognized type: {}", filterEntry);
