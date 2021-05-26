@@ -53,6 +53,7 @@ import com.hartwig.hmftools.lilac.variant.SomaticAlleleCoverage;
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
 import com.hartwig.hmftools.lilac.variant.SomaticVariantFinder;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -200,6 +201,7 @@ public class LilacApplication implements AutoCloseable, Runnable
 
             if(!missedCommonAlleles.isEmpty())
             {
+                Collections.sort(missedCommonAlleles);
                 LL_LOGGER.info("recovering common alleles: {}", HlaAllele.toString(missedCommonAlleles));
                 recoveredAlleles.addAll(missedCommonAlleles);
             }

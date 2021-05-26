@@ -37,7 +37,7 @@ public class ComplexCoverageCalculator
             return calcMultiThreadResults(fragmentAlleles, complexes, fragAlleleMatrix);
         }
 
-        CoverageCalcTask calcTask  = new CoverageCalcTask(fragmentAlleles, complexes, fragAlleleMatrix);
+        CoverageCalcTask calcTask  = new CoverageCalcTask(complexes, fragAlleleMatrix);
         calcTask.call();
         return calcTask.getCoverageResults();
     }
@@ -70,7 +70,7 @@ public class ComplexCoverageCalculator
 
         for(List<HlaComplex> complexList : complexLists)
         {
-            CoverageCalcTask coverageTask = new CoverageCalcTask(fragmentAlleles, complexList, fragAlleleMatrix);
+            CoverageCalcTask coverageTask = new CoverageCalcTask(complexList, fragAlleleMatrix);
             coverageCalcTasks.add(coverageTask);
 
             FutureTask futureTask = new FutureTask(coverageTask);

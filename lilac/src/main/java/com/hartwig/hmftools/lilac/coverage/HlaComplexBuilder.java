@@ -38,7 +38,8 @@ public class HlaComplexBuilder
             final List<FragmentAlleles> refFragAlleles,
             final List<HlaAllele> candidateAlleles, final List<HlaAllele> recoveredAlleles, final List<HlaAllele> wildcardAlleles)
     {
-        LL_LOGGER.info("identifying uniquely identifiable groups and proteins [total,unique,shared,wild]");
+        LL_LOGGER.info("building complexes from fragAlleles({}) candidates({}) recovered({}) wildcards({})",
+                refFragAlleles.size(), candidateAlleles.size(), recoveredAlleles.size(), wildcardAlleles.size());
 
         HlaComplexCoverage groupCoverage = calcGroupCoverage(refFragAlleles, candidateAlleles);
 
@@ -105,6 +106,7 @@ public class HlaComplexBuilder
         wildcardAlleles.stream().filter(x -> !supportedWildcard.contains(x)).forEach(x -> candidatesAfterUniqueGroups.remove(x));
          */
 
+        /*
         HlaComplexCoverage proteinCoverage = calcProteinCoverage(refFragAlleles, candidatesAfterUniqueGroups);
 
         // find uniquely supported protein alleles but don't allow recovered alleles to be in the unique protein set
@@ -130,6 +132,9 @@ public class HlaComplexBuilder
         }
 
         List<HlaAllele> confirmedProteinAlleles = coverageAlleles(uniqueProteins);
+        */
+
+        List<HlaAllele> confirmedProteinAlleles = candidatesAfterUniqueGroups;
 
         List<HlaAllele> candidatesAfterUniqueProteins = filterWithUniqueProteins(candidatesAfterUniqueGroups, confirmedProteinAlleles);
 
@@ -216,24 +221,18 @@ public class HlaComplexBuilder
             }
         }
 
-        /*
-        final List<HlaAllele> supportedAlleles = uniqueSupport.entrySet().stream()
-                .filter(x -> x.getValue() >= WILCARD_UNIQUE_FRAGMENTS)
-                .map(x -> x.getKey()).collect(Collectors.toList());
-        */
-
         return supportedAlleles;
     }
 
     private static HlaComplexCoverage calcGroupCoverage(final List<FragmentAlleles> fragAlleles, final List<HlaAllele> alleles)
     {
-        List<FragmentAlleles> filteredFragments = FragmentAlleles.filter(fragAlleles, alleles);
+        List<FragmentAlleles> filteredFragments = FragmentAlleles.filter(fragAlleles, alleles, false);
         return HlaComplexCoverage.create(HlaAlleleCoverage.groupCoverage(filteredFragments));
     }
 
     public static HlaComplexCoverage calcProteinCoverage(final List<FragmentAlleles> fragmentAlleles, final List<HlaAllele> alleles)
     {
-        List<FragmentAlleles> filteredFragments = FragmentAlleles.filter(fragmentAlleles, alleles);
+        List<FragmentAlleles> filteredFragments = FragmentAlleles.filter(fragmentAlleles, alleles, true);
         return HlaComplexCoverage.create(HlaAlleleCoverage.proteinCoverage(filteredFragments));
     }
 
@@ -396,9 +395,7 @@ public class HlaComplexBuilder
 
     private static double requiredUniqueGroupCoverage(double totalCoverage, boolean isGroup)
     {
-        return isGroup ?
-                totalCoverage * MIN_CONF_UNIQUE_GROUP_COVERAGE :
-                totalCoverage * MIN_CONF_UNIQUE_PROTEIN_COVERAGE;
+        return isGroup ? totalCoverage * MIN_CONF_UNIQUE_GROUP_COVERAGE : totalCoverage * MIN_CONF_UNIQUE_PROTEIN_COVERAGE;
     }
 
     private List<HlaAlleleCoverage> findUnique(

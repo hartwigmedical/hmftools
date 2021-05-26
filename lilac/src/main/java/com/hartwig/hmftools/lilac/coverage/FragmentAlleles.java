@@ -45,7 +45,7 @@ public class FragmentAlleles
     public final List<HlaAllele> getFull() { return mFull; }
     public final List<HlaAllele> getWild() { return mWild; }
 
-    public static List<FragmentAlleles> filter(final List<FragmentAlleles> fragAlleleList, final List<HlaAllele> alleles)
+    public static List<FragmentAlleles> filter(final List<FragmentAlleles> fragAlleleList, final List<HlaAllele> alleles, boolean logDebug)
     {
         // gather any fragment allele which contains at least one of the specified alleles in its full or wild list,
         // then collecting any matching alleles in each of the three groups
@@ -99,6 +99,10 @@ public class FragmentAlleles
             final Map<String,List<Integer>> refNucleotideHetLoci, final List<HlaSequenceLoci> candidateNucleotideSequences,
             final List<Set<String>> refNucleotides)
     {
+        LL_LOGGER.info("building frag-alleles from aminoAcids(frags={} hetLoci={} candSeq={} acids={}) nucFrags(hetLoci={} candSeq={} nucs={})",
+                refCoverageFragments.size(), refAminoAcidHetLoci.size(), candidateAminoAcidSequences.size(), refAminoAcids.size(),
+                refNucleotideHetLoci.size(), candidateNucleotideSequences.size(), refNucleotides.size());
+
         List<FragmentAlleles> results = Lists.newArrayList();
 
         for(AminoAcidFragment fragment : refCoverageFragments)
@@ -380,8 +384,6 @@ public class FragmentAlleles
 
             for(HlaSequenceLoci sequence : hlaYSequences)
             {
-                HlaAllele allele = sequence.Allele;
-
                 String fragNucleotides = fragment.nucleotides(fragNucleotideLoci);
 
                 SequenceMatchType matchType = sequence.determineMatchType(fragNucleotides, fragNucleotideLoci);
@@ -395,6 +397,8 @@ public class FragmentAlleles
                     /*
                     if(LL_LOGGER.isDebugEnabled())
                     {
+                        HlaAllele allele = sequence.Allele;
+
                         LL_LOGGER.debug("HLA-Y allele({}) fragment({}: {}) range({} -> {}) assignedGenes({})",
                                 allele.toString(), fragment.id(), fragment.readInfo(),
                                 fragment.getNucleotideLoci().get(0),
