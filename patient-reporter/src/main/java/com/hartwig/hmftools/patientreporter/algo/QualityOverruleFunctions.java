@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -17,7 +18,7 @@ public final class QualityOverruleFunctions {
     }
 
     @NotNull
-    public static GenomicAnalysis overrule(@NotNull GenomicAnalysis genomicAnalysis) {
+    public static GenomicAnalysis overrule(@NotNull GenomicAnalysis genomicAnalysis, @NotNull String qcForm) {
         Map<ReportableVariant, Boolean> overruledVariantMaps =
                 overruleMap(genomicAnalysis.notifyGermlineStatusPerVariant(), genomicAnalysis.hasReliablePurity());
 
@@ -41,9 +42,7 @@ public final class QualityOverruleFunctions {
                 .reportableVariants(overruledVariants)
                 .notifyGermlineStatusPerVariant(newNotifyPerVariant)
                 .cnPerChromosome(cnPerChromosome)
-                .peachGenotypes(genomicAnalysis.impliedPurity() >= 0.20 && genomicAnalysis.hasReliablePurity()
-                        ? genomicAnalysis.peachGenotypes()
-                        : Lists.newArrayList())
+                .peachGenotypes(qcForm.equals(QsFormNumber.FOR_080.display()) ? genomicAnalysis.peachGenotypes() : Lists.newArrayList())
                 .build();
     }
 

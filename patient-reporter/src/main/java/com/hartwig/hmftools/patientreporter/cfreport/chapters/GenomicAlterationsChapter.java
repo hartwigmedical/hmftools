@@ -374,7 +374,6 @@ public class GenomicAlterationsChapter implements ReportChapter {
                             .setTextAlignment(TextAlignment.CENTER));
                 }
                 return TableUtil.createWrappingReportTable(title, contentTable);
-
             } else {
                 return TableUtil.createNAReportTable(title);
             }
