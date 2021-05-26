@@ -76,7 +76,7 @@ public class CkbFilter {
         String event = ckbEventAndGeneExtractor.extractEvent(variant);
 
         for (CkbFilterEntry filterEntry : filters) {
-            boolean filterMatches = evaluateFilter(filterEntry, type, gene, event);
+            boolean filterMatches = isMatch(filterEntry, type, gene, event);
             if (filterMatches) {
                 usedFilters.add(filterEntry);
                 return false;
@@ -86,7 +86,7 @@ public class CkbFilter {
         return true;
     }
 
-    private boolean evaluateFilter(@NotNull CkbFilterEntry filterEntry, @NotNull EventType type, @NotNull String gene,
+    private boolean isMatch(@NotNull CkbFilterEntry filterEntry, @NotNull EventType type, @NotNull String gene,
             @NotNull String event) {
         switch (filterEntry.type()) {
             case FILTER_ANY_VARIANT_WITH_KEYWORD: {

@@ -46,7 +46,7 @@ class ConversionFilter {
         for (String gene : ConversionFilterFactory.GENES_TO_EXCLUDE_FOR_CONVERSION) {
             if (!filteredGenes.contains(gene)) {
                 unusedGeneCount++;
-                LOGGER.warn("Gene '{}' hasn't been used ref genome conversion filtering", gene);
+                LOGGER.warn("Gene '{}' hasn't been used during ref genome conversion filtering", gene);
             }
         }
 
