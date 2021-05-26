@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.sigs.loaders;
 
-import static java.lang.Math.max;
-
-import static com.hartwig.hmftools.common.sigs.PositionFrequencies.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getBucketIndex;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getChromosomeFromIndex;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getPositionFromIndex;
@@ -24,7 +21,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -104,7 +100,6 @@ public class PositionFreqBuilder
         mSampleList = null;
         mSamplePosCountsFile = null;
     }
-
 
     public static void addCmdLineArgs(Options options)
     {

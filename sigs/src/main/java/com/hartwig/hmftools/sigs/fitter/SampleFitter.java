@@ -67,7 +67,6 @@ public class SampleFitter
     private Matrix mSignatures;
 
     private final int mPositionBucketSize;
-    private final int mMaxSampleCount;
     private final boolean mFitToTotal;
     private final boolean mWritePosFreqCoords;
 
@@ -77,8 +76,11 @@ public class SampleFitter
     private boolean mUploadToDb;
     private BufferedWriter mFitWriter;
 
-    private static double MIN_ALLOCATION = 1;
-    private static double MIN_ALLOCATION_PERC = 0.005;
+    private final double mMinFit;
+    private final double mMinFitPerc;
+
+    private static final double DEFAULT_MIN_ALLOCATION = 0.01;
+    private static final double DEFAULT_MIN_ALLOCATION_PERC = 0.0005;
     private static final int ALLOC_ROUND = 3;
     private static final int PERC_ROUND = 5;
 
@@ -110,10 +112,9 @@ public class SampleFitter
         mWritePosFreqCoords = cmd.hasOption(WRITE_POS_COORDS);
 
         mPositionBucketSize = Integer.parseInt(cmd.getOptionValue(POSITION_BUCKET_SIZE, "0"));
-        mMaxSampleCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, String.valueOf(DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT)));
 
-        MIN_ALLOCATION = Double.parseDouble(cmd.getOptionValue(MIN_ALLOC, "0.01"));
-        MIN_ALLOCATION_PERC = Double.parseDouble(cmd.getOptionValue(MIN_ALLOC_PERC, "0.0005"));
+        mMinFit = Double.parseDouble(cmd.getOptionValue(MIN_ALLOC, String.valueOf(DEFAULT_MIN_ALLOCATION)));;
+        mMinFitPerc = Double.parseDouble(cmd.getOptionValue(MIN_ALLOC_PERC, String.valueOf(DEFAULT_MIN_ALLOCATION_PERC)));;
 
         mSnvLoader = new SigSnvLoader(null);
 
@@ -270,7 +271,7 @@ public class SampleFitter
             allocTotal += sigAlloc;
 
             // avoid storing tiny or zero sig allocations
-            if(sigAlloc < MIN_ALLOCATION || allocPerc < MIN_ALLOCATION_PERC)
+            if(sigAlloc < mMinFit || allocPerc < mMinFitPerc)
                 continue;
 
             final String sigName = mSignatureNames.get(s);
