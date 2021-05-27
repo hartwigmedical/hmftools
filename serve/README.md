@@ -228,18 +228,18 @@ Finally, cancer types for which no DOIDs have been specified get a DOID assigned
 
 ### CKB FLEX Curation
 
-For CKB FLEX curation and filtering is predominantly configurable rather than hardcoded in SERVE. The only hardcoded curation done in SERVE
+For CKB FLEX curation and filtering is predominantly configurable rather than fixed in SERVE. The only fixed curation done in SERVE
 is mapping evidence for tumor characteristics (such as MSI or High TMB) to actual characteristics since CKB FLEX models this as "genes".
 
 The following filters can be configured for CKB FLEX, along with an example of how this is used by Hartwig:
 Filter  | Description
 ---|---
 ALLOW_GENE_IN_FUSIONS_EXCLUSIVELY  | CKB FLEX uses a hierarchy of events in such a way that every "fusion" is a child of "mutant". For certain genes (eg @IG) we want to ignore the abstract level and only include the fusion evidence since we only handle @IG on a fusion level in the Hartwig pipeline. 
-FILTER_EVENT_WITH_KEYWORD  | Can be used to remove evidence of types that are not observable in DNA (eg "hypermethylation")
-FILTER_EXACT_VARIANT_FULLNAME  | Any specific variant can be removed through this filter. This is primarily used to remove variants that have a coding impact on their configured refseq transcript in CKB but are non-coding or don't exist on the ensembl canonical transcript.
-FILTER_ALL_EVIDENCE_ON_GENE  | Is primarily used to remove evidence on genes which are simply not modeled correctly in Hartwig's gene model
+FILTER_EVENT_WITH_KEYWORD  | Can be used to remove evidence of a type that is not observable in DNA (eg "hypermethylation")
+FILTER_EXACT_VARIANT_FULLNAME  | Any specific variant can be removed through this filter. This is primarily used to remove variants that have a coding impact on their configured refseq transcript in CKB but are non-coding or don't exist on Hartwig's ensembl transcript.
+FILTER_ALL_EVIDENCE_ON_GENE  | Is primarily used to remove evidence on genes which are simply not modeled correctly in Hartwig's gene model and hence can't be mapped properly
 FILTER_EVIDENCE_FOR_EXONS_ON_GENE  | Some genes may have evidence on specific exons which don't exist on the ensembl transcript used by Hartwig
-FILTER_SECONDARY_GENE_WHEN_FUSION_LEG  | Usage of this filter is similar to the use case for removing entire genes. 
+FILTER_SECONDARY_GENE_WHEN_FUSION_LEG  | Usage of this filter is similar to the use case for removing all evidence on genes. 
     
 ## Handling of multiple reference genome versions
  
@@ -312,23 +312,23 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   
 ## Version History and Download Links
 - Upcoming
-  - Various additional checks to ref genome lift-over (such as filtering of events on genes for which strand has flipped)
-  - CKB FLEX filtering framework 
+  - Various additional checks to ref genome lift-over (such as filtering of events on genes for which strand has flipped).
+  - CKB FLEX filtering framework has been added.
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.3)
-  - Support for merging sources that differ in ref genome version (v37 vs v38)
-  - Support for generating output for both ref genome version v37 and v38
-  - Driver catalog warnings are disabled for VICC
+  - Support for merging sources that differ in ref genome version (v37 vs v38).
+  - Support for generating output for both ref genome version v37 and v38.
+  - Driver catalog warnings are disabled for VICC.
   - KnownExons and KnownCodons are sorted more explicitly to make sure files don't change upon identical input.
-  - An index file is generated for KnownHotspots VCF (for both v37 and v38) 
+  - An index file is generated for KnownHotspots VCF (for both v37 and v38). 
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.2) 
   - Consistently pick a specific transcript for hotspot annotation in case multiple transcripts imply the same hotspot.
   - Extend splice sites from 5 bases to 10 bases beyond exon boundaries.
-  - Add support for evidence for actionable viral presence (starting with EBV and HPV presence)
-  - Add support for evidence of absence of high TMB and MSI
+  - Add support for evidence for actionable viral presence (starting with EBV and HPV presence).
+  - Add support for evidence of absence of high TMB and MSI.
   - Renamed actionable signatures to actionable characteristics.
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.1) 
-  - Ability to switch every resource on/off independently
-  - More predictable sorting of knowledge to ensure identical output on identical input
-  - Ability to curate VICC evidence levels in case they are suspicious
+  - Ability to switch every resource on/off independently.
+  - More predictable sorting of knowledge to ensure identical output on identical input.
+  - Ability to curate VICC evidence levels in case they are suspicious.
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.0)
-  - Initial release
+  - Initial release.
