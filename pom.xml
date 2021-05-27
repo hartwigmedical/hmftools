@@ -25,6 +25,7 @@
         <module>sage</module>
         <module>sv-linx</module>
         <module>sv-tools</module>
+        <module>virus-interpreter</module>
         <module>imuno</module>
         <module>sigs</module>
         <module>cuppa</module>
@@ -63,8 +64,9 @@
         <gripss.version>1.11</gripss.version>
         <lilac.version>0.1</lilac.version>
         <sv-linx.version>1.16</sv-linx.version>
-        <health-checker.version>3.2</health-checker.version>
         <sv-tools.version>1.0</sv-tools.version>
+        <virus-interpreter.version>0.1</virus-interpreter.version>
+        <health-checker.version>3.2</health-checker.version>
         <imuno.version>1.0</imuno.version>
         <sigs.version>1.0</sigs.version>
         <cuppa.version>1.4</cuppa.version>
