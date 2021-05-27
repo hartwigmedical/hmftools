@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DELETION;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.EXON_BOUNDARY;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.IDENTICAL;
+import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.FULL;
+import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.WILD;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
@@ -148,6 +150,9 @@ public class HlaSequenceLoci
 
         String hlaSequence = sequence(targetIndices);
 
+        if(hlaSequence.equals(targetSequence))
+            return FULL;
+
         if(hlaSequence.length() != targetSequence.length())
             return SequenceMatchType.NONE;
 
@@ -166,9 +171,9 @@ public class HlaSequenceLoci
         }
 
         if (wildCardCount > 0)
-            return SequenceMatchType.WILD;
+            return WILD;
 
-        return SequenceMatchType.FULL;
+        return FULL;
     }
 
     public static HlaSequenceLoci create(final HlaAllele allele, final String sequence, final String reference)

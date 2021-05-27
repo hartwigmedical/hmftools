@@ -32,9 +32,9 @@ public class ComplexCoverageCalculator
         complexes.stream().forEach(x -> x.getAlleles().stream().filter(y -> !alleles.contains(y)).forEach(y -> alleles.add(y)));
         FragmentAlleleMatrix fragAlleleMatrix = new FragmentAlleleMatrix(fragmentAlleles, alleles);
 
-        if(mThreadCount > 1 || complexes.size() < 10000) // no point in allocating to threads
+        if(mThreadCount > 1 && complexes.size() >= 10000) // no point in allocating to threads if complex count is small
         {
-            return calcMultiThreadResults(fragmentAlleles, complexes, fragAlleleMatrix);
+            return calcMultiThreadResults(complexes, fragAlleleMatrix);
         }
 
         CoverageCalcTask calcTask  = new CoverageCalcTask(complexes, fragAlleleMatrix);
@@ -42,8 +42,7 @@ public class ComplexCoverageCalculator
         return calcTask.getCoverageResults();
     }
 
-    private List<HlaComplexCoverage> calcMultiThreadResults(
-            final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes, final FragmentAlleleMatrix fragAlleleMatrix)
+    private List<HlaComplexCoverage> calcMultiThreadResults(final List<HlaComplex> complexes, final FragmentAlleleMatrix fragAlleleMatrix)
     {
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Lilac-%d").build();
         ExecutorService executorService = Executors.newFixedThreadPool(mThreadCount, namedThreadFactory);

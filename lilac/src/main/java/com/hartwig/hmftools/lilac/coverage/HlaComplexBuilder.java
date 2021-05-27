@@ -102,11 +102,6 @@ public class HlaComplexBuilder
                     supportedWildcard.size(), HlaAllele.toString(supportedWildcard));
         }
 
-        /*
-        wildcardAlleles.stream().filter(x -> !supportedWildcard.contains(x)).forEach(x -> candidatesAfterUniqueGroups.remove(x));
-         */
-
-        /*
         HlaComplexCoverage proteinCoverage = calcProteinCoverage(refFragAlleles, candidatesAfterUniqueGroups);
 
         // find uniquely supported protein alleles but don't allow recovered alleles to be in the unique protein set
@@ -131,10 +126,8 @@ public class HlaComplexBuilder
             LL_LOGGER.info("  found {} insufficiently unique proteins: {}", discardedProtein.size(), HlaAlleleCoverage.toString(discardedProtein));
         }
 
-        List<HlaAllele> confirmedProteinAlleles = coverageAlleles(uniqueProteins);
-        */
-
-        List<HlaAllele> confirmedProteinAlleles = candidatesAfterUniqueGroups;
+        // unique protein filtering is no longer applied
+        List<HlaAllele> confirmedProteinAlleles = Lists.newArrayList(); // coverageAlleles(uniqueProteins);
 
         List<HlaAllele> candidatesAfterUniqueProteins = filterWithUniqueProteins(candidatesAfterUniqueGroups, confirmedProteinAlleles);
 
@@ -226,13 +219,13 @@ public class HlaComplexBuilder
 
     private static HlaComplexCoverage calcGroupCoverage(final List<FragmentAlleles> fragAlleles, final List<HlaAllele> alleles)
     {
-        List<FragmentAlleles> filteredFragments = FragmentAlleles.filter(fragAlleles, alleles, false);
+        List<FragmentAlleles> filteredFragments = FragmentAlleles.filter(fragAlleles, alleles);
         return HlaComplexCoverage.create(HlaAlleleCoverage.groupCoverage(filteredFragments));
     }
 
     public static HlaComplexCoverage calcProteinCoverage(final List<FragmentAlleles> fragmentAlleles, final List<HlaAllele> alleles)
     {
-        List<FragmentAlleles> filteredFragments = FragmentAlleles.filter(fragmentAlleles, alleles, true);
+        List<FragmentAlleles> filteredFragments = FragmentAlleles.filter(fragmentAlleles, alleles);
         return HlaComplexCoverage.create(HlaAlleleCoverage.proteinCoverage(filteredFragments));
     }
 

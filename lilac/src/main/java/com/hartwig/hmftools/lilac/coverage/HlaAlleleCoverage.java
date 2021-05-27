@@ -77,17 +77,17 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
         return expandedCoverage;
     }
 
-    public static List<HlaAlleleCoverage> proteinCoverage(final List<FragmentAlleles> fragmentSequences)
+    public static List<HlaAlleleCoverage> proteinCoverage(final List<FragmentAlleles> fragAlleles)
     {
-        return create(fragmentSequences, false);
+        return buildCoverage(fragAlleles, false);
     }
 
-    public static List<HlaAlleleCoverage> groupCoverage(final List<FragmentAlleles> fragmentSequences)
+    public static List<HlaAlleleCoverage> groupCoverage(final List<FragmentAlleles> fragAlleles)
     {
-        return create(fragmentSequences, true);
+        return buildCoverage(fragAlleles, true);
     }
 
-    public static List<HlaAlleleCoverage> create(final List<FragmentAlleles> fragAlleles, boolean asAlleleGroup)
+    private static List<HlaAlleleCoverage> buildCoverage(final List<FragmentAlleles> fragAlleles, boolean asAlleleGroup)
     {
         // attributes coverage counts to each allele amongst the set of alleles present across all fragments
         List<HlaAlleleCoverage> results = Lists.newArrayList();
@@ -122,7 +122,6 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
 
         for (HlaAllele allele : hlaAlleles)
         {
-            // int uniqueCoverage = uniqueCoverageMap.entrySet().stream().filter(x -> x.getKey() == allele).mapToInt(x -> x.getValue()).findFirst().orElse(0);
             Integer uniqueCoverage = uniqueCoverageMap.get(allele);
             Double combinedCoverage = combinedCoverageMap.get(allele);
             Double wildCoverage = wildCoverageMap.get(allele);

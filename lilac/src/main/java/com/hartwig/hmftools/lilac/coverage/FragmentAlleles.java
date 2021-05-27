@@ -45,7 +45,7 @@ public class FragmentAlleles
     public final List<HlaAllele> getFull() { return mFull; }
     public final List<HlaAllele> getWild() { return mWild; }
 
-    public static List<FragmentAlleles> filter(final List<FragmentAlleles> fragAlleleList, final List<HlaAllele> alleles, boolean logDebug)
+    public static List<FragmentAlleles> filter(final List<FragmentAlleles> fragAlleleList, final List<HlaAllele> alleles)
     {
         // gather any fragment allele which contains at least one of the specified alleles in its full or wild list,
         // then collecting any matching alleles in each of the three groups
@@ -60,34 +60,6 @@ public class FragmentAlleles
                         alleles.stream().filter(x -> fragAllele.getFull().contains(x)).collect(Collectors.toList()),
                         alleles.stream().filter(x -> fragAllele.getWild().contains(x)).collect(Collectors.toList())));
             }
-
-            /*
-            FragmentAlleles matchedFragAllele = null;
-
-            for(HlaAllele allele : alleles)
-            {
-                boolean inFull = fragAlleles.getFull().contains(allele);
-
-                if(inFull && matchedFragAllele == null)
-                {
-                    matchedFragAllele = new FragmentAlleles(fragAlleles.getFragment(), Lists.newArrayList(), Lists.newArrayList());
-
-                    matchedFragAlleles.add(matchedFragAllele);
-                }
-
-                if(matchedFragAllele != null)
-                {
-                    if(inFull)
-                        matchedFragAllele.getFull().add(allele);
-                }
-            }
-
-            if(matchedFragAllele != null)
-            {
-                List<HlaAllele> wildAlleles = alleles.stream().filter(x -> fragAlleles.getWild().contains(x)).collect(Collectors.toList());
-                matchedFragAllele.getWild().addAll(wildAlleles);
-            }
-             */
         }
 
         return matchedFragAlleles;
@@ -160,10 +132,14 @@ public class FragmentAlleles
         List<HlaAllele> consistentFull = fullAminoAcidMatch.stream()
                 .filter(x -> fullNucleotideMatch.contains(x.asFourDigit())).collect(Collectors.toList());
 
-        List<HlaAllele> downgradedToWild = fullAminoAcidMatch.stream()
-                .filter(x -> wildNucleotideMatch.contains(x.asFourDigit())).collect(Collectors.toList());
+        fullAminoAcidMatch.stream()
+                .filter(x -> !wildAminoAcidMatch.contains(x))
+                .filter(x -> wildNucleotideMatch.contains(x))
+                .forEach(x -> wildAminoAcidMatch.add(x));
 
-        return new FragmentAlleles(fragment, consistentFull, downgradedToWild);
+        // wildAminoAcidMatch.stream().filter(x -> !downgradedToWild.contains(x)).forEach(x -> do);
+
+        return new FragmentAlleles(fragment, consistentFull, wildAminoAcidMatch);
     }
 
     private static Map<HlaAllele, SequenceMatchType> findNucleotideMatches(
@@ -228,33 +204,43 @@ public class FragmentAlleles
             // filter out wildcard bases at these exon boundaries
             List<Integer> alleleNucleotideLoci = filterWildcards(sequence, fragNucleotideLoci);
 
-            String fragNucleotides = fragNucleotideSequences.get(allele.Gene);
-
-            if(fragNucleotides == null)
+            SequenceMatchType matchType;
+            if(alleleNucleotideLoci.isEmpty())
             {
-                if(missedNucleotides.isEmpty())
-                {
-                    fragNucleotides = fragment.nucleotides(alleleNucleotideLoci);
-                }
-                else
-                {
-                    StringJoiner nucSj = new StringJoiner("");
+                // if all bases being considered a wild, the treat it as full in nucleotide space and rely on the amino acid match type
+                matchType = FULL;
+            }
+            else
+            {
+                String fragNucleotides = fragNucleotideSequences.get(allele.Gene);
 
-                    for(Integer locus : alleleNucleotideLoci)
+                if(fragNucleotides == null)
+                {
+                    if(missedNucleotides.isEmpty())
                     {
-                        if(missedNucleotides.containsKey(locus))
-                            nucSj.add(missedNucleotides.get(locus));
-                        else
-                            nucSj.add(fragment.nucleotide(locus));
+                        fragNucleotides = fragment.nucleotides(alleleNucleotideLoci);
+                    }
+                    else
+                    {
+                        StringJoiner nucSj = new StringJoiner("");
+
+                        for(Integer locus : alleleNucleotideLoci)
+                        {
+                            if(missedNucleotides.containsKey(locus))
+                                nucSj.add(missedNucleotides.get(locus));
+                            else
+                                nucSj.add(fragment.nucleotide(locus));
+                        }
+
+                        fragNucleotides = nucSj.toString();
                     }
 
-                    fragNucleotides = nucSj.toString();
+                    fragNucleotideSequences.put(allele.Gene, fragNucleotides);
                 }
 
-                fragNucleotideSequences.put(allele.Gene, fragNucleotides);
+                matchType = sequence.determineMatchType(fragNucleotides, alleleNucleotideLoci);
             }
 
-            SequenceMatchType matchType = sequence.determineMatchType(fragNucleotides, alleleNucleotideLoci);
             if(matchType == SequenceMatchType.NONE)
                 continue;
 
