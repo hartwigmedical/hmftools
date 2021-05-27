@@ -102,10 +102,7 @@
         <bouncycastle.jdk15.version>1.53</bouncycastle.jdk15.version>
         <kotlin.version>1.2.61</kotlin.version>
         <kotlin.coroutines.version>0.23.4</kotlin.coroutines.version>
-        <owlapi.version>3.5.1</owlapi.version>
-        <hermit.reasoner.version>1.3.8.4</hermit.reasoner.version>
         <selenium.version>3.14.0</selenium.version>
-        <rtree.version>0.8.6</rtree.version>
         <itext.version>7.1.5</itext.version>
 
         <kotlintest.version>2.0.7</kotlintest.version>
@@ -197,28 +194,8 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>cobalt</artifactId>
-                <version>${cobalt.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>amber</artifactId>
-                <version>${amber.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
                 <artifactId>sv-linx</artifactId>
                 <version>${sv-linx.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>sigs</artifactId>
-                <version>${sigs.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>paddle</artifactId>
-                <version>${paddle.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
@@ -414,24 +391,9 @@
                 <version>${kotlin.coroutines.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.sourceforge.owlapi</groupId>
-                <artifactId>owlapi-distribution</artifactId>
-                <version>${owlapi.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hermit-reasoner</groupId>
-                <artifactId>org.semanticweb.hermit</artifactId>
-                <version>${hermit.reasoner.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.seleniumhq.selenium</groupId>
                 <artifactId>selenium-java</artifactId>
                 <version>${selenium.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.davidmoten</groupId>
-                <artifactId>rtree</artifactId>
-                <version>${rtree.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.itextpdf</groupId>
