@@ -375,8 +375,9 @@ public class LilacApplication implements AutoCloseable, Runnable
         output.write(outputFile);
         lilacQC.writefile(outputQCFile);
 
-        HlaComplexFile.writeToFile(referenceRankedComplexes,
-                String.format("%s.candidates.coverage.txt", mConfig.outputPrefix()));
+        HlaComplexFile.writeToFile(String.format("%s.candidates.coverage.tsv", mConfig.outputPrefix()), referenceRankedComplexes);
+        HlaComplexFile.writeFragmentAssignment(
+                String.format("%s.candidates.fragments.csv", mConfig.outputPrefix()), referenceRankedComplexes, refFragAlleles);
 
         aminoAcidPipeline.writeCounts(mConfig.outputPrefix());
 

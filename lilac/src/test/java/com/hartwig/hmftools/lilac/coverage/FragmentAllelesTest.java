@@ -6,17 +6,41 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static junit.framework.TestCase.assertEquals;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import org.junit.Test;
 
-public class FragmentAlleleCoverageTest
+public class FragmentAllelesTest
 {
+    @Test
+    public void testFragmentAlleleCreation()
+    {
+        /*
+        final List<AminoAcidFragment> refCoverageFragments, final List<Integer> refAminoAcidHetLoci,
+        final List<HlaSequenceLoci> candidateAminoAcidSequences, final List<Set<String>> refAminoAcids,
+        final Map<String,List<Integer>> refNucleotideHetLoci, final List<HlaSequenceLoci> candidateNucleotideSequences,
+        final List<Set<String>> refNucleotides)
+
+
+
+        List<FragmentAlleles> fragAlleles = FragmentAlleles.createFragmentAlleles(
+        final List<AminoAcidFragment> refCoverageFragments, final List<Integer> refAminoAcidHetLoci,
+        final List<HlaSequenceLoci> candidateAminoAcidSequences, final List<Set<String>> refAminoAcids,
+        final Map<String,List<Integer>> refNucleotideHetLoci, final List<HlaSequenceLoci> candidateNucleotideSequences,
+        final List<Set<String>> refNucleotides)
+*/
+    }
+
+
+
     @Test
     public void testFragmentAlleleCoverage()
     {

@@ -3,15 +3,11 @@ package com.hartwig.hmftools.lilac.coverage;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.hartwig.hmftools.common.progress.FutureProgressTracker;
-import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;

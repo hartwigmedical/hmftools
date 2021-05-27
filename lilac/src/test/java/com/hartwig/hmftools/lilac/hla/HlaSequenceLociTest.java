@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.lilac.hla;
 
+import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.buildTargetIndices;
+import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.buildTargetSequence;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
@@ -96,31 +99,4 @@ public class HlaSequenceLociTest
         assertEquals(SequenceMatchType.WILD, seqLociWild.determineMatchType(targetSeq, fragmentLoci));
     }
 
-    private static String buildTargetSequence(final String sequence, final List<Integer> indices)
-    {
-        if(indices.size() >= sequence.length())
-            return "";
-
-        StringBuilder targetSeq = new StringBuilder();
-        indices.forEach(x -> targetSeq.append(sequence.charAt(x)));
-        return targetSeq.toString();
-    }
-
-    private static List<Integer> buildTargetIndices(final String sequence, final String refSequence)
-    {
-        List<Integer> indices = Lists.newArrayList();
-
-        if(sequence.length() != refSequence.length())
-            return indices;
-
-        for(int i = 0; i < sequence.length(); ++i)
-        {
-            if(sequence.charAt(i) != refSequence.charAt(i))
-            {
-                indices.add(i);
-            }
-        }
-
-        return indices;
-    }
 }

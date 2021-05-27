@@ -12,12 +12,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class NucleotideFragmentFactoryTest
 {
-    /*
-    private HlaSequence reference = new HlaSequence(HlaAllele.fromString("A*01:01"), "GATTTACA..CAT..ATC");
-    private HlaSequence delete = new HlaSequence(HlaAllele.fromString("A*01:02"), "--...---..---..---");
-    private HlaSequence insert = new HlaSequence(HlaAllele.fromString("A*01:03"), "--------AA---TT---");
-    */
-
     @Test
     public void testCreateNucleotidesFromAminoAcid()
     {

@@ -214,7 +214,7 @@ public class HlaComplexBuilder
             }
         }
 
-        return supportedAlleles;
+            return supportedAlleles;
     }
 
     private static HlaComplexCoverage calcGroupCoverage(final List<FragmentAlleles> fragAlleles, final List<HlaAllele> alleles)

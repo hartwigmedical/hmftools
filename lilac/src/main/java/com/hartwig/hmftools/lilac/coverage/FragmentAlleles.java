@@ -327,7 +327,22 @@ public class FragmentAlleles
             // ignore any wildcard loci at an exon boundary
             List<Integer> alleleFilteredLoci = filterExonBoundaryWildcards(sequence, fragAminoAcidLoci);
 
-            SequenceMatchType matchType = sequence.determineMatchType(fragmentAminoAcids, alleleFilteredLoci);
+            String adjustedSequence = "";
+
+            if(fragAminoAcidLoci.size() > alleleFilteredLoci.size())
+            {
+                for(int i = 0; i < fragAminoAcidLoci.size(); ++i)
+                {
+                    if(alleleFilteredLoci.contains(fragAminoAcidLoci.get(i)))
+                        adjustedSequence += fragmentAminoAcids.charAt(i);
+                }
+            }
+            else
+            {
+                adjustedSequence = fragmentAminoAcids;
+            }
+
+            SequenceMatchType matchType = sequence.determineMatchType(adjustedSequence, alleleFilteredLoci);
             if(matchType == SequenceMatchType.NONE)
                 continue;
 

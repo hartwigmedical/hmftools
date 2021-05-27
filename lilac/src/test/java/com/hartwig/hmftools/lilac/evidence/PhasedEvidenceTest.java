@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.evidence;
 
+import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createSequenceLoci;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
@@ -22,10 +24,10 @@ public class PhasedEvidenceTest
         evidence.put("CAT", 4);
         evidence.put("ATC", 5);
         PhasedEvidence victim = new PhasedEvidence(Lists.newArrayList(new Integer(0), new Integer(1), new Integer(3)), evidence);
-        HlaSequenceLoci catCandidate = create(new HlaSequence(HlaAllele.fromString("A*01:01"), "CART"));
-        HlaSequenceLoci atcCandidate = create(new HlaSequence(HlaAllele.fromString("A*01:02"), "ATRC"));
-        HlaSequenceLoci wildAtcCandidate = create(new HlaSequence(HlaAllele.fromString("A*01:03"), "*TRC"));
-        HlaSequenceLoci wildCandidate = create(new HlaSequence(HlaAllele.fromString("A*01:04"), "****"));
+        HlaSequenceLoci catCandidate = createSequenceLoci(new HlaSequence(HlaAllele.fromString("A*01:01"), "CART"));
+        HlaSequenceLoci atcCandidate = createSequenceLoci(new HlaSequence(HlaAllele.fromString("A*01:02"), "ATRC"));
+        HlaSequenceLoci wildAtcCandidate = createSequenceLoci(new HlaSequence(HlaAllele.fromString("A*01:03"), "*TRC"));
+        HlaSequenceLoci wildCandidate = createSequenceLoci(new HlaSequence(HlaAllele.fromString("A*01:04"), "****"));
 
         PhasedEvidence noMissing = victim.inconsistentEvidence(Lists.newArrayList(catCandidate, atcCandidate));
         assertEquals(0, noMissing.totalEvidence());
@@ -40,11 +42,6 @@ public class PhasedEvidenceTest
 
         PhasedEvidence wildMatch = victim.inconsistentEvidence(Lists.newArrayList(wildCandidate));
         assertEquals(0, wildMatch.totalEvidence());
-    }
-
-    private HlaSequenceLoci create(final HlaSequence sequences)
-    {
-        return HlaSequenceLoci.create(sequences.Allele, sequences.getRawSequence(), sequences.getRawSequence());
     }
 
 }
