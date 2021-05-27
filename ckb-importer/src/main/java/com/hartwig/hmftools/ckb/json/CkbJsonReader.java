@@ -27,14 +27,10 @@ import com.hartwig.hmftools.ckb.json.treatmentapproach.TreatmentApproachReader;
 import com.hartwig.hmftools.ckb.json.variant.JsonVariant;
 import com.hartwig.hmftools.ckb.json.variant.VariantReader;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class CkbJsonReader {
-
-    private static final Logger LOGGER = LogManager.getLogger(CkbJsonReader.class);
 
     private static final String MOLECULAR_PROFILES_DIR = "molecularProfiles";
     private static final String VARIANTS_DIR = "variants";

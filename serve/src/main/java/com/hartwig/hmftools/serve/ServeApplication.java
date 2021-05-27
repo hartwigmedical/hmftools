@@ -44,7 +44,6 @@ public class ServeApplication {
         RefGenomeManager refGenomeManager = RefGenomeManagerFactory.createFromServeConfig(config);
 
         ServeAlgo algo = new ServeAlgo(refGenomeManager, buildDoidLookup(config.missingDoidsMappingTsv()));
-
         Map<RefGenomeVersion, ExtractionResult> resultMap = algo.run(config);
 
         for (Map.Entry<RefGenomeVersion, ExtractionResult> entry : resultMap.entrySet()) {
