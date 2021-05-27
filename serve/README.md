@@ -234,16 +234,11 @@ is mapping evidence for tumor characteristics (such as MSI or High TMB) to actua
 The following filters can be configured for CKB FLEX, along with an example of how this is used by Hartwig:
 Filter  | Description
 ---|---
-ALLOW_GENE_IN_FUSIONS_EXCLUSIVELY  | CKB FLEX uses a hierarchy of events in such a way that every "fusion" is a child of "mutant". For 
-certain genes (eg @IG) we want to ignore the abstract level and only include the fusion evidence since we only handle @IG on a fusion level
-in the Hartwig pipeline. 
+ALLOW_GENE_IN_FUSIONS_EXCLUSIVELY  | CKB FLEX uses a hierarchy of events in such a way that every "fusion" is a child of "mutant". For certain genes (eg @IG) we want to ignore the abstract level and only include the fusion evidence since we only handle @IG on a fusion level in the Hartwig pipeline. 
 FILTER_EVENT_WITH_KEYWORD  | Can be used to remove evidence of types that are not observable in DNA (eg "hypermethylation")
-FILTER_EXACT_VARIANT_FULLNAME  | Any specific variant can be removed through this filter. This is primarily used to remove variants that have a
-coding impact on their configured refseq transcript in CKB but are non-coding or don't exist on the ensembl canonical transcript.
-FILTER_ALL_EVIDENCE_ON_GENE  | Is primarily used to remove evidence on genes which are simply not modeled correctly in Hartwig's gene
-model
-FILTER_EVIDENCE_FOR_EXONS_ON_GENE  | Some genes may have evidence on specific exons which don't exist on the ensembl transcript used by 
-Hartwig
+FILTER_EXACT_VARIANT_FULLNAME  | Any specific variant can be removed through this filter. This is primarily used to remove variants that have a coding impact on their configured refseq transcript in CKB but are non-coding or don't exist on the ensembl canonical transcript.
+FILTER_ALL_EVIDENCE_ON_GENE  | Is primarily used to remove evidence on genes which are simply not modeled correctly in Hartwig's gene model
+FILTER_EVIDENCE_FOR_EXONS_ON_GENE  | Some genes may have evidence on specific exons which don't exist on the ensembl transcript used by Hartwig
 FILTER_SECONDARY_GENE_WHEN_FUSION_LEG  | Usage of this filter is similar to the use case for removing entire genes. 
     
 ## Handling of multiple reference genome versions
