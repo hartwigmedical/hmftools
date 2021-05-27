@@ -2,17 +2,18 @@ package com.hartwig.hmftools.lilac.evidence;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 public final class PhasedEvidence implements Comparable<PhasedEvidence>
@@ -221,12 +222,12 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
         return Arrays.hashCode(mAminoAcidIndices);
     }
 
-    public static PhasedEvidence evidence(final List<AminoAcidFragment> aminoAcidFragments, final List<Integer> indices)
+    public static PhasedEvidence evidence(final List<Fragment> fragments, final List<Integer> indices)
     {
-        List<AminoAcidFragment> filteredFragments = aminoAcidFragments.stream().filter(x -> x.containsAll(indices)).collect(Collectors.toList());
+        List<Fragment> filteredFragments = fragments.stream().filter(x -> x.containsAminoAcids(indices)).collect(Collectors.toList());
         final Map<String,Integer> evidence = Maps.newHashMap();
 
-        for(AminoAcidFragment fragment : filteredFragments)
+        for(Fragment fragment : filteredFragments)
         {
             String sequence = fragment.aminoAcids(indices);
             Integer count = evidence.get(sequence);
@@ -234,12 +235,22 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
         }
 
         return new PhasedEvidence(indices, evidence);
-
-        /*
-            val filteredFragments = aminoAcidFragments.filter { it.containsAll(indices) }
-            val aminoAcidEvidence = filteredFragments.map { it.toAminoAcids(indices) }.groupingBy { it }.eachCount()
-            return PhasedEvidence(indices, aminoAcidEvidence)
-
-         */
     }
+
+    public static void logInconsistentEvidence(final String gene, final List<PhasedEvidence> evidence, final List<HlaSequenceLoci> candidates)
+    {
+        List<HlaSequenceLoci> expectedSequences = candidates.stream().filter(x -> x.Allele.Gene.equals(gene)).collect(Collectors.toList());
+
+        for (HlaSequenceLoci sequence : expectedSequences)
+        {
+            for (PhasedEvidence phasedEvidence : evidence)
+            {
+                if (!sequence.consistentWith(phasedEvidence))
+                {
+                    LL_LOGGER.warn("Expected allele {} filtered by {}", sequence.Allele, phasedEvidence);
+                }
+            }
+        }
+    }
+
 }

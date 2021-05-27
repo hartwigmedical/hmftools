@@ -10,9 +10,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOG_UNMATCHED_HAPLOTYPE_SUPPORT;
-import static com.hartwig.hmftools.lilac.candidates.Candidates.filterCandidatesByAminoAcidLoci;
 import static com.hartwig.hmftools.lilac.candidates.NucleotideFiltering.calcNucleotideHeterogygousLoci;
-import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleles.createFragmentAlleles;
 import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
@@ -29,14 +27,12 @@ import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverageRanking;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexFile;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory;
-import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceValidation;
-import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
 import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.hla.HlaContextFactory;
-import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
 import com.hartwig.hmftools.lilac.variant.HlaCopyNumber;
 import com.hartwig.hmftools.lilac.qc.AminoAcidQC;
@@ -95,7 +91,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         }
 
         VersionInfo version = new VersionInfo("lilac.version");
-        LL_LOGGER.info("starting LILAC with parameters:");
+        LL_LOGGER.info("starting Lilac with parameters:");
         mConfig.logParams();
 
         HlaContextFactory
@@ -124,22 +120,22 @@ public class LilacApplication implements AutoCloseable, Runnable
         SAMRecordReader referenceBamReader =
                 new SAMRecordReader(mConfig.ReferenceBam, mConfig.RefGenome, mRefData.HlaTranscriptData, nucleotideFragmentFactory);
 
-        final List<NucleotideFragment> refNucleotideFrags = mNucleotideGeneEnrichment.enrich(referenceBamReader.readFromBam());
-        final List<NucleotideFragment> tumorNucleotideFrags = Lists.newArrayList();
+        final List<Fragment> refNucleotideFrags = mNucleotideGeneEnrichment.enrich(referenceBamReader.readFromBam());
+        final List<Fragment> tumorNucleotideFrags = Lists.newArrayList();
         if(!mConfig.TumorBam.isEmpty())
         {
             LL_LOGGER.info("querying records from tumor bam " + mConfig.TumorBam);
             tumorNucleotideFrags.addAll(mNucleotideGeneEnrichment.enrich(tumorBamReader.readFromBam()));
         }
 
-        allValid &= validateNucleotideFragments(refNucleotideFrags);
-        allValid &= validateNucleotideFragments(tumorNucleotideFrags);
+        allValid &= validateFragments(refNucleotideFrags);
+        allValid &= validateFragments(tumorNucleotideFrags);
 
         AminoAcidFragmentPipeline aminoAcidPipeline = new AminoAcidFragmentPipeline(mConfig, refNucleotideFrags, tumorNucleotideFrags);
 
         /*
         // repeat the heterozygous-loci check on all candidates
-        List<AminoAcidFragment> refAminoAcidFragments = aminoAcidPipeline.referenceAminoAcidFragments();
+        List<Fragment> refAminoAcidFragments = aminoAcidPipeline.referenceAminoAcidFragments();
         SequenceCount refAminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, refAminoAcidFragments);
         List<HlaSequenceLoci> supportedAminoAcidSequences = filterCandidatesByAminoAcidLoci(mRefData.AminoAcidSequences, refAminoAcidCounts);
 
@@ -150,9 +146,9 @@ public class LilacApplication implements AutoCloseable, Runnable
         */
 
         // apply special filtering and splice checks on fragments, just for use in phasing
-        List<AminoAcidFragment> aCandidateFrags = aminoAcidPipeline.referencePhasingFragments(hlaAContext);
-        List<AminoAcidFragment> bCandidateFrags = aminoAcidPipeline.referencePhasingFragments(hlaBContext);
-        List<AminoAcidFragment> cCandidateFrags = aminoAcidPipeline.referencePhasingFragments(hlaCContext);
+        List<Fragment> aCandidateFrags = aminoAcidPipeline.referencePhasingFragments(hlaAContext);
+        List<Fragment> bCandidateFrags = aminoAcidPipeline.referencePhasingFragments(hlaBContext);
+        List<Fragment> cCandidateFrags = aminoAcidPipeline.referencePhasingFragments(hlaCContext);
 
         // determine un-phased Candidates
         Candidates candidateFactory = new Candidates(mConfig, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
@@ -173,9 +169,9 @@ public class LilacApplication implements AutoCloseable, Runnable
             expectedSequences.addAll(mRefData.AminoAcidSequences.stream()
                     .filter(x -> mConfig.ExpectedAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList()));
 
-            PhasedEvidenceValidation.logInconsistentEvidence(GENE_A, aPhasedEvidence, expectedSequences);
-            PhasedEvidenceValidation.logInconsistentEvidence(GENE_B, bPhasedEvidence, expectedSequences);
-            PhasedEvidenceValidation.logInconsistentEvidence(GENE_C, cPhasedEvidence, expectedSequences);
+            PhasedEvidence.logInconsistentEvidence(GENE_A, aPhasedEvidence, expectedSequences);
+            PhasedEvidence.logInconsistentEvidence(GENE_B, bPhasedEvidence, expectedSequences);
+            PhasedEvidence.logInconsistentEvidence(GENE_C, cPhasedEvidence, expectedSequences);
         }
 
         // gather up all phased candidates
@@ -236,13 +232,11 @@ public class LilacApplication implements AutoCloseable, Runnable
                 .filter(x -> candidateAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         // calculate allele coverage
-        List<AminoAcidFragment> refAminoAcidFragments = aminoAcidPipeline.referenceAminoAcidFragments();
+        List<Fragment> refAminoAcidFragments = aminoAcidPipeline.getReferenceFragments();
         SequenceCount refAminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, refAminoAcidFragments);
-        allValid &= validateAminoAcidFragments(refAminoAcidFragments);
+        SequenceCount refNucleotideCounts = SequenceCount.nucleotides(mConfig.MinEvidence, refAminoAcidFragments);
 
-        //SequenceCount refAminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, refAminoAcidFragments);
         //List<Integer> refAminoAcidHetLoci = refAminoAcidCounts.heterozygousLoci();
-        SequenceCount refNucleotideCounts = SequenceCount.nucleotides(mConfig.MinEvidence, nucFragments(refAminoAcidFragments));
 
         List<Integer> refAminoAcidHetLoci = refAminoAcidCounts.heterozygousLoci();
         Map<String,List<Integer>> refNucleotideHetLoci = calcNucleotideHeterogygousLoci(refNucleotideCounts.heterozygousLoci());
@@ -414,31 +408,17 @@ public class LilacApplication implements AutoCloseable, Runnable
         }
     }
 
-    private boolean validateAminoAcidFragments(final List<AminoAcidFragment> fragments)
+    private boolean validateFragments(final List<Fragment> fragments)
     {
         if(!mConfig.RunValidation)
             return true;
 
-        List<AminoAcidFragment> invalidFragments = fragments.stream().filter(x -> !x.validate()).collect(Collectors.toList());
+        List<Fragment> invalidFragments = fragments.stream().filter(x -> !x.validate()).collect(Collectors.toList());
         if(invalidFragments.isEmpty())
             return true;
 
 
-        LL_LOGGER.warn("has {} invalid amino-acid fragments", invalidFragments.size());
-        return false;
-    }
-
-    private boolean validateNucleotideFragments(final List<NucleotideFragment> fragments)
-    {
-        if(!mConfig.RunValidation)
-            return true;
-
-        List<NucleotideFragment> invalidFragments = fragments.stream().filter(x -> !x.validate()).collect(Collectors.toList());
-        if(invalidFragments.isEmpty())
-            return true;
-
-
-        LL_LOGGER.warn("has {} invalid nucleotide fragments", invalidFragments.size());
+        LL_LOGGER.warn("has {} invalid fragments", invalidFragments.size());
         return false;
     }
 

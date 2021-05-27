@@ -2,8 +2,8 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.LilacUtils.arrayToList;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
-import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.calcAminoAcidIndices;
-import static com.hartwig.hmftools.lilac.fragment.NucleotideFragment.expandIndices;
+import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidIndices;
+import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 
 import com.google.common.collect.Lists;
@@ -41,7 +41,7 @@ public class NucleotideFragmentFactory
         deletes.stream().forEach(x -> mDeleteSuffixTrees.put(x, new SuffixTree(x.sequence())));
     }
 
-    public final NucleotideFragment createFragment(final SAMCodingRecord record, final NamedBed codingRegion)
+    public final Fragment createFragment(final SAMCodingRecord record, final NamedBed codingRegion)
     {
         boolean reverseStrand = record.ReverseStrand;
 
@@ -67,7 +67,7 @@ public class NucleotideFragmentFactory
                 int matchRangeAllowedStart = firstAAIndex - record.SoftClippedStart / 3 - record.maxIndelSize();
                 int matchRangeAllowedEnd = firstAAIndex + record.maxIndelSize() + record.SoftClippedEnd / 3;
 
-                NucleotideFragment matchedFragment = checkMatchedInsertDeleteSequence(
+                Fragment matchedFragment = checkMatchedInsertDeleteSequence(
                         record, codingRegion, aminoAcids, matchRangeAllowedStart, matchRangeAllowedEnd, mInsertSuffixTrees);
 
                 if(matchedFragment != null)
@@ -91,10 +91,10 @@ public class NucleotideFragmentFactory
         List<String> nucleotides = arrayToList(codingRegionRead);
         List<Integer> qualities = arrayToList(codingRegionQuality);
 
-        return new NucleotideFragment(record.Id, record.readInfo(), Sets.newHashSet(codingRegion.name()), lociRange, qualities, nucleotides);
+        return new Fragment(record.Id, record.readInfo(), Sets.newHashSet(codingRegion.name()), lociRange, qualities, nucleotides);
     }
 
-    private NucleotideFragment checkMatchedInsertDeleteSequence(
+    private Fragment checkMatchedInsertDeleteSequence(
             final SAMCodingRecord record, final NamedBed codingRegion,
             final String aminoAcids, int matchRangeAllowedStart, int matchRangeAllowedEnd,
             final LinkedHashMap<HlaSequenceLoci,SuffixTree> sequenceMap)
@@ -122,14 +122,14 @@ public class NucleotideFragmentFactory
         {
             HlaSequenceLoci seqLoci = matchedSeqLoci.get(0);
             List<Integer> filteredAaIndices = matchedIndicesList.get(0);
-            NucleotideFragment fragment = createIndelFragment(record, codingRegion, filteredAaIndices.get(0), aminoAcids, seqLoci);
+            Fragment fragment = createIndelFragment(record, codingRegion, filteredAaIndices.get(0), aminoAcids, seqLoci);
             return !fragment.getNucleotideLoci().isEmpty() ? fragment : null;
         }
 
         return null;
     }
 
-    private NucleotideFragment createIndelFragment(
+    private Fragment createIndelFragment(
             final SAMCodingRecord record, final NamedBed codingRegion, final int startLoci,
             final String bamSequence, final HlaSequenceLoci hlaSequence)
     {
@@ -146,7 +146,7 @@ public class NucleotideFragmentFactory
 
         List<Integer> qualities = nucleotideLoci.stream().map(x -> mMinBaseQuality).collect(Collectors.toList());
 
-        return new NucleotideFragment(
+        return new Fragment(
                 record.Id, record.readInfo(), Sets.newHashSet(codingRegion.name()), nucleotideLoci, qualities, nucleotides);
     }
 
@@ -175,9 +175,9 @@ public class NucleotideFragmentFactory
                 String.valueOf(codons.charAt(0)), String.valueOf(codons.charAt(1)), codons.substring(2));
     }
 
-    public NucleotideFragment createAlignmentFragments(final SAMCodingRecord record, final NamedBed codingRegion)
+    public Fragment createAlignmentFragments(final SAMCodingRecord record, final NamedBed codingRegion)
     {
-        List<NucleotideFragment> fragments = record.alignmentsOnly().stream()
+        List<Fragment> fragments = record.alignmentsOnly().stream()
                 .filter(x -> x != null)
                 .map(x -> createFragment(record, codingRegion))
                 .filter(x -> x != null)
@@ -189,7 +189,7 @@ public class NucleotideFragmentFactory
         if(fragments.size() == 1)
             return fragments.get(0);
 
-        return NucleotideFragment.reduceById(fragments).get(0);
+        return FragmentUtils.mergeFragmentsById(fragments).get(0);
     }
 
 }

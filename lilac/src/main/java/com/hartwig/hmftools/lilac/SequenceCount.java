@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.lilac;
 
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -8,8 +7,7 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
-import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -47,7 +45,7 @@ public final class SequenceCount
         return mSeqCountsList[locus];
     }
 
-    public static SequenceCount nucleotides(int minCount, final List<NucleotideFragment> fragments)
+    public static SequenceCount nucleotides(int minCount, final List<Fragment> fragments)
     {
         int length = fragments.stream().mapToInt(x -> x.maxLoci()).max().orElse(0) + 1;
 
@@ -57,7 +55,7 @@ public final class SequenceCount
             seqCountsList[i] = Maps.newHashMap();
         }
 
-        for(NucleotideFragment fragment : fragments)
+        for(Fragment fragment : fragments)
         {
             for(int index = 0; index < fragment.getNucleotideLoci().size(); ++index)
             {
@@ -70,9 +68,9 @@ public final class SequenceCount
         return new SequenceCount(minCount, seqCountsList);
     }
 
-    public static SequenceCount aminoAcids(int minCount, final List<AminoAcidFragment> fragments)
+    public static SequenceCount aminoAcids(int minCount, final List<Fragment> fragments)
     {
-        int length = fragments.stream().mapToInt(x -> x.maxAminoAcidLoci()).max().orElse(0) + 1;
+        int length = fragments.stream().mapToInt(x -> x.maxAminoAcidLocus()).max().orElse(0) + 1;
 
         Map<String,Integer>[] seqCountsList = new Map[length];
         for(int i = 0; i < length; ++i)
@@ -80,7 +78,7 @@ public final class SequenceCount
             seqCountsList[i] = Maps.newHashMap();
         }
 
-        for(AminoAcidFragment fragment : fragments)
+        for(Fragment fragment : fragments)
         {
             for(int index = 0; index < fragment.getAminoAcidLoci().size(); ++index)
             {
@@ -231,19 +229,5 @@ public final class SequenceCount
             LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
             return;
         }
-
-        /*
-
-        for (i in 0 until length) {
-            val lineBuilder = StringJoiner("\t").add(i.toString())
-            val baseCountList = count[i].map { (k, v) -> Pair(k, v) }.sortedBy { it.second }.reversed()
-            for (j in 0..min(5, baseCountList.size - 1)) {
-                val (base, count) = baseCountList[j]
-                lineBuilder.add(base).add(count.toString())
-            }
-
-            file.appendText(lineBuilder.toString() + "\n")
-        }
-         */
     }
 }

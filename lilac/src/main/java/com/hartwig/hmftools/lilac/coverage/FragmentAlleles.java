@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.WILD;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceMatchType;
@@ -23,12 +23,12 @@ import java.util.stream.Collectors;
 
 public class FragmentAlleles
 {
-    private final AminoAcidFragment mFragment;
+    private final Fragment mFragment;
     private final List<HlaAllele> mFull;
     private final List<HlaAllele> mWild;
 
     public FragmentAlleles(
-            final AminoAcidFragment fragment, final List<HlaAllele> full, final List<HlaAllele> wild)
+            final Fragment fragment, final List<HlaAllele> full, final List<HlaAllele> wild)
     {
         mFragment = fragment;
         mFull = full;
@@ -40,7 +40,7 @@ public class FragmentAlleles
         return mFull.contains(allele) || mWild.contains(allele);
     }
 
-    public final AminoAcidFragment getFragment() { return mFragment; }
+    public final Fragment getFragment() { return mFragment; }
 
     public final List<HlaAllele> getFull() { return mFull; }
     public final List<HlaAllele> getWild() { return mWild; }
@@ -66,7 +66,7 @@ public class FragmentAlleles
     }
 
     public static List<FragmentAlleles> createFragmentAlleles(
-            final List<AminoAcidFragment> refCoverageFragments, final List<Integer> refAminoAcidHetLoci,
+            final List<Fragment> refCoverageFragments, final List<Integer> refAminoAcidHetLoci,
             final List<HlaSequenceLoci> candidateAminoAcidSequences, final List<Set<String>> refAminoAcids,
             final Map<String,List<Integer>> refNucleotideHetLoci, final List<HlaSequenceLoci> candidateNucleotideSequences,
             final List<Set<String>> refNucleotides)
@@ -77,7 +77,7 @@ public class FragmentAlleles
 
         List<FragmentAlleles> results = Lists.newArrayList();
 
-        for(AminoAcidFragment fragment : refCoverageFragments)
+        for(Fragment fragment : refCoverageFragments)
         {
             FragmentAlleles fragmentAlleles = create(
                     fragment, refAminoAcidHetLoci, candidateAminoAcidSequences, refAminoAcids,
@@ -92,7 +92,7 @@ public class FragmentAlleles
     }
 
     private static FragmentAlleles create(
-            final AminoAcidFragment fragment, final List<Integer> aminoAcidLoci, final List<HlaSequenceLoci> aminoAcidSequences,
+            final Fragment fragment, final List<Integer> aminoAcidLoci, final List<HlaSequenceLoci> aminoAcidSequences,
             final List<Set<String>> refAminoAcids,
             final Map<String,List<Integer>> refNucleotideHetLoci, final List<HlaSequenceLoci> nucleotideSequences,
             final List<Set<String>> refNucleotides)
@@ -143,7 +143,7 @@ public class FragmentAlleles
     }
 
     private static Map<HlaAllele, SequenceMatchType> findNucleotideMatches(
-            final AminoAcidFragment fragment, final Map<String,List<Integer>> refNucleotideLociMap,
+            final Fragment fragment, final Map<String,List<Integer>> refNucleotideLociMap,
             final List<HlaSequenceLoci> nucleotideSequences, final List<Set<String>> refNucleotides)
     {
         Map<String,List<Integer>> fragNucleotideLociMap = Maps.newHashMap();
@@ -261,7 +261,7 @@ public class FragmentAlleles
     }
 
     private static Map<HlaAllele, SequenceMatchType> findAminoAcidMatches(
-            final AminoAcidFragment fragment, final List<Integer> aminoAcidLoci, final List<HlaSequenceLoci> aminoAcidSequences,
+            final Fragment fragment, final List<Integer> aminoAcidLoci, final List<HlaSequenceLoci> aminoAcidSequences,
             final List<Set<String>> refAminoAcids)
     {
         Map<HlaAllele, SequenceMatchType> alleleMatches = Maps.newHashMap();
@@ -363,14 +363,14 @@ public class FragmentAlleles
 
     public static void checkHlaYSupport(
             final String sampleId, final List<HlaSequenceLoci> hlaYSequences, List<Integer> refAminoAcidHetLoci,
-            final List<FragmentAlleles> fragmentAlleles, final List<AminoAcidFragment> refCoverageFragments)
+            final List<FragmentAlleles> fragmentAlleles, final List<Fragment> refCoverageFragments)
     {
         // ignore fragments which don't contain any heterozygous locations
         int uniqueHlaY = 0;
 
         List<FragmentAlleles> matchedFragmentAlleles = Lists.newArrayList();
 
-        for(AminoAcidFragment fragment : refCoverageFragments)
+        for(Fragment fragment : refCoverageFragments)
         {
             List<Integer> fragAminoAcidLoci = fragment.getAminoAcidLoci().stream()
                     .filter(x -> refAminoAcidHetLoci.contains(x)).collect(Collectors.toList());

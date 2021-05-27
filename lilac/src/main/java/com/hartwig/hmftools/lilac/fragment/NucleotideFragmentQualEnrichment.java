@@ -6,34 +6,21 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.SequenceCount;
 
-public final class NucleotideQualEnrichment
+public final class NucleotideFragmentQualEnrichment
 {
-    private final int mMinBaseQuality;
-    private final int mMinEvidence;
-
-    public NucleotideQualEnrichment(int minBaseQuality, int minEvidence)
+    public static List<Fragment> enrich(final int minEvidence, final List<Fragment> fragments, final List<Fragment> highQualFrags)
     {
-        mMinBaseQuality = minBaseQuality;
-        mMinEvidence = minEvidence;
-    }
+        // fragments are all in nucleotide-space
 
-    public final List<NucleotideFragment> enrich(final List<NucleotideFragment> fragments)
-    {
-        // Only permit high quality nucleotide values, ie, nucleotides that have at least 1 high quality (> [minBaseQuality])
-        // and at least [minEvidence] instances in aggregate
-        final List<NucleotideFragment> highQualFragments = fragments.stream()
-                .map(x -> x.qualityFilter(mMinBaseQuality))
-                .filter(x -> x.isNotEmpty())
-                .collect(Collectors.toList());
-
-        SequenceCount highQualCounts = SequenceCount.nucleotides(1, highQualFragments);
-        SequenceCount rawCounts = SequenceCount.nucleotides(mMinEvidence, fragments);
+        // filter fragments so that each nucleotide has at least 1 base at or above the min-qual threshold, and one
+        // X fragments (minEvidence) at that base with any qual
+        SequenceCount highQualCounts = SequenceCount.nucleotides(1, highQualFrags);
+        SequenceCount rawCounts = SequenceCount.nucleotides(minEvidence, fragments);
 
         return fragments.stream().map(x -> enrich(x, highQualCounts, rawCounts)).collect(Collectors.toList());
     }
 
-    private NucleotideFragment enrich(
-            final NucleotideFragment fragment, final SequenceCount highQualityCount, final SequenceCount rawCount)
+    private static Fragment enrich(final Fragment fragment, final SequenceCount highQualityCount, final SequenceCount rawCount)
     {
         final List<Integer> filteredIndices = Lists.newArrayList();
         boolean allPresent = true;
@@ -71,6 +58,6 @@ public final class NucleotideQualEnrichment
             filteredNucleotides.add(fragment.getNucleotides().get(index));
         }
 
-        return new NucleotideFragment(fragment.id(), fragment.readInfo(), fragment.getGenes(), filteredLoci, filteredQuality, filteredNucleotides);
+        return new Fragment(fragment.id(), fragment.readInfo(), fragment.getGenes(), filteredLoci, filteredQuality, filteredNucleotides);
     }
 }

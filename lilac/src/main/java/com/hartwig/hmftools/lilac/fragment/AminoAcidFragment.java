@@ -9,12 +9,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
-public final class AminoAcidFragment extends NucleotideFragment
+public final class AminoAcidFragment extends Fragment
 {
     private final List<Integer> mAminoAcidLoci;
     private final List<String> mAminoAcids;
 
-    private NucleotideFragment mAllQualityNucleotideFragment;
+    private Fragment mAllQualityNucleotideFragment;
 
     public AminoAcidFragment(
             final String id, final String readInfo, final Set<String> genes, final List<Integer> nucleotideLoci, final List<Integer> nucleotideQuality,
@@ -29,11 +29,11 @@ public final class AminoAcidFragment extends NucleotideFragment
     public List<Integer> getAminoAcidLoci() { return mAminoAcidLoci; }
     public List<String> getAminoAcids() { return mAminoAcids; }
 
-    public void setAllQualitytNucleotideFragment(final NucleotideFragment fragment) { mAllQualityNucleotideFragment = fragment; };
-    public NucleotideFragment getAllQualitytNucleotideFragment() { return mAllQualityNucleotideFragment; }
+    public void setAllQualitytNucleotideFragment(final Fragment fragment) { mAllQualityNucleotideFragment = fragment; };
+    public Fragment getAllQualitytNucleotideFragment() { return mAllQualityNucleotideFragment; }
 
     // cast to super class
-    public static List<NucleotideFragment> nucFragments(final List<AminoAcidFragment> fragments)
+    public static List<Fragment> nucFragments(final List<AminoAcidFragment> fragments)
     {
         return fragments.stream().collect(Collectors.toList());
     }

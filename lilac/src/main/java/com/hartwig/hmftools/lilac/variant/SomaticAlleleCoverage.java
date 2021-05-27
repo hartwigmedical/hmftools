@@ -6,8 +6,7 @@ import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
-import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
-import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.coverage.FragmentAlleles;
 import com.hartwig.hmftools.lilac.read.SAMRecordReader;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
@@ -42,13 +41,21 @@ public class SomaticAlleleCoverage
 
     public final List<HlaAlleleCoverage> alleleCoverage(final VariantContextDecorator variant, final SAMRecordReader reader)
     {
-        List<NucleotideFragment> fragments = reader.readFromBam(variant);
+        List<Fragment> fragments = reader.readFromBam(variant);
 
-        List<AminoAcidFragment> variantFragments = fragments.stream()
-                .map(x -> x.qualityFilter(mConfig.MinBaseQual))
-                .filter(x -> x.isNotEmpty())
-                .map(x -> x.toAminoAcidFragment())
-                .collect(Collectors.toList());
+        fragments.forEach(x -> x.qualityFilter(mConfig.MinBaseQual));
+        fragments.forEach(x -> x.buildAminoAcids());
+
+        List<Fragment> variantFragments = Lists.newArrayList();
+
+        for(Fragment fragment : fragments)
+        {
+            fragment.qualityFilter(mConfig.MinBaseQual);
+            fragment.buildAminoAcids();
+
+            if(fragment.hasNucleotides())
+                variantFragments.add(fragment);
+        }
 
         List<FragmentAlleles> variantFragmentAlleles = FragmentAlleles.createFragmentAlleles(
                 variantFragments, mHetLociSansVariants, mWinners, Lists.newArrayList(), Maps.newHashMap(),

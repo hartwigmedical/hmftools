@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C;
-import static com.hartwig.hmftools.lilac.fragment.NucleotideFragment.reduceById;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -21,7 +20,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.LociPosition;
-import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.fragment.FragmentUtils;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
 
 import htsjdk.samtools.SAMRecord;
@@ -107,9 +107,9 @@ public class SAMRecordReader
         return filteredMap;
     }
 
-    public final List<NucleotideFragment> readFromBam()
+    public final List<Fragment> readFromBam()
     {
-        final List<NucleotideFragment> fragments = Lists.newArrayList();
+        final List<Fragment> fragments = Lists.newArrayList();
 
         for(String geneName : HLA_GENES)
         {
@@ -120,7 +120,7 @@ public class SAMRecordReader
         return fragments;
     }
 
-    private List<NucleotideFragment> readFromBam(final String geneName, final TranscriptData transcript)
+    private List<Fragment> readFromBam(final String geneName, final TranscriptData transcript)
     {
         LL_LOGGER.info("  querying {} coding region({}: {} -> {})",
                 geneName, HLA_CHR, transcript.CodingStart, transcript.CodingEnd);
@@ -128,14 +128,14 @@ public class SAMRecordReader
         boolean reverseStrand = transcript.Strand == NEG_STRAND;
         final List<NamedBed> codingRegions = codingRegions(geneName, transcript);
 
-        final List<NucleotideFragment> readFragments = Lists.newArrayList();
+        final List<Fragment> readFragments = Lists.newArrayList();
 
         for (NamedBed codingRegion : codingRegions)
         {
             readFragments.addAll(realign(codingRegion, reverseStrand, mBamFile));
         }
 
-        return reduceById(readFragments);
+        return FragmentUtils.mergeFragmentsById(readFragments);
     }
 
     private final List<NamedBed> codingRegions(final String geneName, final TranscriptData transcript)
@@ -153,7 +153,7 @@ public class SAMRecordReader
         return regionsReversed;
     }
 
-    public final List<NucleotideFragment> readFromBam(final VariantContextDecorator variant)
+    public final List<Fragment> readFromBam(final VariantContextDecorator variant)
     {
         final GenomePosition variantPosition = GenomePositions.create(variant.chromosome(), variant.position());
 
@@ -182,15 +182,15 @@ public class SAMRecordReader
                         codingRecords.add(record);
                     }
 
-                    final List<NucleotideFragment> readFragments = codingRecords.stream()
+                    final List<Fragment> readFragments = codingRecords.stream()
                             .map(x -> mFragmentFactory.createAlignmentFragments(x, codingRegion))
                             .filter(x -> x != null)
                             .collect(Collectors.toList());
 
-                    List<NucleotideFragment> mateFragments = queryMateFragments(geneName, transcript, codingRecords);
+                    List<Fragment> mateFragments = queryMateFragments(geneName, transcript, codingRecords);
                     readFragments.addAll(mateFragments);
 
-                    List<NucleotideFragment> readGroupFragments = reduceById(readFragments);
+                    List<Fragment> readGroupFragments = FragmentUtils.mergeFragmentsById(readFragments);
                     return readGroupFragments;
                 }
             }
@@ -224,7 +224,7 @@ public class SAMRecordReader
         return true;
     }
 
-    private final List<NucleotideFragment> queryMateFragments(
+    private final List<Fragment> queryMateFragments(
             final String geneName, final TranscriptData transcript, final List<SAMCodingRecord> codingRecords)
     {
         SAMSlicer slicer = new SAMSlicer(MIN_MAPPING_QUALITY);
@@ -234,7 +234,7 @@ public class SAMRecordReader
         List<SAMRecord> records = codingRecords.stream().map(x -> x.getSamRecord()).collect(Collectors.toList());
         List<SAMRecord> mateRecords = slicer.queryMates(samReader, records);
 
-        List<NucleotideFragment> fragments = Lists.newArrayList();
+        List<Fragment> fragments = Lists.newArrayList();
 
         boolean reverseStrand = transcript.Strand == NEG_STRAND;
         final List<NamedBed> codingRegions = codingRegions(geneName, transcript);
@@ -249,7 +249,7 @@ public class SAMRecordReader
                 SAMCodingRecord codingRecord = SAMCodingRecord.create(
                         reverseStrand, BaseRegion.from(codingRegion), record, true, true);
 
-                NucleotideFragment fragment = mFragmentFactory.createAlignmentFragments(codingRecord, codingRegion);
+                Fragment fragment = mFragmentFactory.createAlignmentFragments(codingRecord, codingRegion);
 
                 if(fragment != null)
                     fragments.add(fragment);
@@ -316,9 +316,9 @@ public class SAMRecordReader
         return codingRecords;
     }
 
-    private List<NucleotideFragment> realign(final NamedBed codingRegion, boolean reverseStrand, String bamFileName)
+    private List<Fragment> realign(final NamedBed codingRegion, boolean reverseStrand, String bamFileName)
     {
-        List<NucleotideFragment> fragments = Lists.newArrayList();
+        List<Fragment> fragments = Lists.newArrayList();
 
         final List<SAMCodingRecord> codingRecords = query(reverseStrand, codingRegion, bamFileName);
 
@@ -329,7 +329,7 @@ public class SAMRecordReader
                 incrementIndelCounter(mStopLossOnC, STOP_LOSS_ON_C);
             }
 
-            NucleotideFragment fragment = mFragmentFactory.createFragment(codingRecord, codingRegion);
+            Fragment fragment = mFragmentFactory.createFragment(codingRecord, codingRegion);
 
             if(fragment != null)
             {

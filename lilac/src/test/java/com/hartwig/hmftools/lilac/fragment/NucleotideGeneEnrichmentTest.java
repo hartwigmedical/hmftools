@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
 import static com.hartwig.hmftools.lilac.LilacUtils.namesMatch;
-import static com.hartwig.hmftools.lilac.fragment.NucleotideFragment.expandIndices;
+import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
 
 import static junit.framework.TestCase.assertTrue;
 
@@ -43,16 +43,16 @@ public class NucleotideGeneEnrichmentTest
             NucleotideGeneEnrichment enricher,
             Set<String> expectedGenes, String alignedGene, List<Integer> aminoAcideIndices)
     {
-        NucleotideFragment fragment = create(alignedGene, expandIndices(aminoAcideIndices));
-        NucleotideFragment result = enricher.enrich(fragment);
+        Fragment fragment = create(alignedGene, expandIndices(aminoAcideIndices));
+        Fragment result = enricher.enrich(fragment);
         assertTrue(namesMatch(result.getGenes(), expectedGenes));
     }
 
-    private NucleotideFragment create(final String gene, final List<Integer> indices)
+    private Fragment create(final String gene, final List<Integer> indices)
     {
         List<Integer> qualities = Lists.newArrayList();
         qualities.add(0);
-        return new NucleotideFragment("id", "", Sets.newHashSet(gene), indices, qualities, Lists.newArrayList("G"));
+        return new Fragment("id", "", Sets.newHashSet(gene), indices, qualities, Lists.newArrayList("G"));
     }
 
 }

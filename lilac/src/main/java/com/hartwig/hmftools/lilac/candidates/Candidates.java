@@ -1,18 +1,16 @@
 package com.hartwig.hmftools.lilac.candidates;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.SequenceCount;
-import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
@@ -31,7 +29,7 @@ public final class Candidates
         mAminoAcidSequences = aminoAcidSequences;
     }
 
-    public final List<HlaAllele> unphasedCandidates(final HlaContext context, final List<AminoAcidFragment> fragments)
+    public final List<HlaAllele> unphasedCandidates(final HlaContext context, final List<Fragment> fragments)
     {
         List<Integer> aminoAcidBoundary = context.AminoAcidBoundaries;
 
@@ -45,7 +43,7 @@ public final class Candidates
         LL_LOGGER.info("  {} candidates before filtering", geneCandidates.size());
 
         // Amino acid filtering
-        List<HlaSequenceLoci> aminoAcidCandidates = filterAminoAcidsByBoundries(geneCandidates, aminoAcidCounts, context.AminoAcidBoundaries);
+        List<HlaSequenceLoci> aminoAcidCandidates = filterSequencesByMinSupport(geneCandidates, aminoAcidCounts, context.AminoAcidBoundaries);
 
         List<HlaAllele> aminoAcidCandidateAlleles = aminoAcidCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
 
@@ -68,7 +66,7 @@ public final class Candidates
                 .collect(Collectors.toList());
 
         List<HlaSequenceLoci> nucleotideSpecificSequences = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(
-                nucleotideCandidatesAfterAminoAcidFiltering, nucFragments(fragments));
+                nucleotideCandidatesAfterAminoAcidFiltering, fragments);
 
         List<HlaAllele> nucleotideSpecificAllelesCandidates = HlaAllele.dedup
                 (nucleotideSpecificSequences.stream().map(x -> x.Allele.asFourDigit()).collect(Collectors.toList()));
@@ -83,38 +81,19 @@ public final class Candidates
         return nucleotideSpecificAllelesCandidates;
     }
 
-    private List<HlaSequenceLoci> filterAminoAcidsByBoundries(
+    private List<HlaSequenceLoci> filterSequencesByMinSupport(
             final List<HlaSequenceLoci> candidates, final SequenceCount aminoAcidCount, final List<Integer> aminoAcidBoundaries)
     {
-        List<HlaSequenceLoci> results = Lists.newArrayList();
-        results.addAll(candidates);
-
-        for(int loci = 0; loci < aminoAcidCount.getLength(); ++loci)
-        {
-            if(aminoAcidBoundaries.contains(loci))
-                continue;
-
-            List<String> expectedSequences = aminoAcidCount.getMinCountSequences(loci);
-
-            final int lociConst = loci;
-
-            results = results.stream()
-                    .filter(x -> x.consistentWithAny(expectedSequences, Lists.newArrayList(lociConst)))
-                    .collect(Collectors.toList());
-        }
-
-        return results;
-    }
-
-    public static List<HlaSequenceLoci> filterCandidatesByAminoAcidLoci(
-            final List<HlaSequenceLoci> candidates, final SequenceCount aminoAcidCounts)
-    {
+        // eliminate sequences without min support for their amino acid at each loco, ignoring exon boundaries
         List<HlaSequenceLoci> candidateSequences = Lists.newArrayList();
         candidateSequences.addAll(candidates);
 
-        for(int locus = 0; locus < aminoAcidCounts.getLength(); ++locus)
+        for(int locus = 0; locus < aminoAcidCount.getLength(); ++locus)
         {
-            List<String> expectedSequences = aminoAcidCounts.getMinCountSequences(locus);
+            if(aminoAcidBoundaries.contains(locus))
+                continue;
+
+            List<String> expectedSequences = aminoAcidCount.getMinCountSequences(locus);
 
             if(expectedSequences.isEmpty())
                 continue;
@@ -137,6 +116,14 @@ public final class Candidates
 
                 candidateSequences.remove(index);
             }
+
+            /*
+            final int lociConst = loci;
+
+            results = results.stream()
+                    .filter(x -> x.consistentWithAny(expectedSequences, Lists.newArrayList(lociConst)))
+                    .collect(Collectors.toList());
+            */
         }
 
         return candidateSequences;

@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
@@ -24,7 +24,7 @@ public class FragmentAllelesTest
     public void testFragmentAlleleCreation()
     {
         /*
-        final List<AminoAcidFragment> refCoverageFragments, final List<Integer> refAminoAcidHetLoci,
+        final List<Fragment> refCoverageFragments, final List<Integer> refAminoAcidHetLoci,
         final List<HlaSequenceLoci> candidateAminoAcidSequences, final List<Set<String>> refAminoAcids,
         final Map<String,List<Integer>> refNucleotideHetLoci, final List<HlaSequenceLoci> candidateNucleotideSequences,
         final List<Set<String>> refNucleotides)
@@ -32,7 +32,7 @@ public class FragmentAllelesTest
 
 
         List<FragmentAlleles> fragAlleles = FragmentAlleles.createFragmentAlleles(
-        final List<AminoAcidFragment> refCoverageFragments, final List<Integer> refAminoAcidHetLoci,
+        final List<Fragment> refCoverageFragments, final List<Integer> refAminoAcidHetLoci,
         final List<HlaSequenceLoci> candidateAminoAcidSequences, final List<Set<String>> refAminoAcids,
         final Map<String,List<Integer>> refNucleotideHetLoci, final List<HlaSequenceLoci> candidateNucleotideSequences,
         final List<Set<String>> refNucleotides)
@@ -83,11 +83,10 @@ public class FragmentAllelesTest
         assertEquals(0.67, coverages.get(2).WildCoverage, 0.01);
     }
 
-    private AminoAcidFragment createFragment(final String id)
+    private Fragment createFragment(final String id)
     {
-        return new AminoAcidFragment(
-                id, "", Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(),
-                Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+        return new Fragment(
+                id, "", Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
     }
 
     public static class HlaComplexTest

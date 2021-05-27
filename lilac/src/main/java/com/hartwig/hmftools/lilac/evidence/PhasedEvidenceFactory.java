@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.SequenceCount;
-import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
 
@@ -30,7 +30,7 @@ public class PhasedEvidenceFactory
         mDebugPhasing = mConfig.DebugPhasing;
     }
 
-    public List<PhasedEvidence> evidence(final HlaContext context, final List<AminoAcidFragment> fragments)
+    public List<PhasedEvidence> evidence(final HlaContext context, final List<Fragment> fragments)
     {
         LL_LOGGER.info("phasing {} records:", context.geneName());
 
@@ -47,9 +47,9 @@ public class PhasedEvidenceFactory
         return result;
     }
 
-    public List<PhasedEvidence> evidence(final ExpectedAlleles expectedAlleles, final List<AminoAcidFragment> aminoAcidAminoAcidFragments)
+    public List<PhasedEvidence> evidence(final ExpectedAlleles expectedAlleles, final List<Fragment> fragments)
     {
-        SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, aminoAcidAminoAcidFragments);
+        SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, fragments);
 
         List<Integer> heterozygousIndices = aminoAcidCounts.heterozygousLoci();
 
@@ -59,7 +59,7 @@ public class PhasedEvidenceFactory
         }
 
         ExtendEvidence heterozygousEvidence =
-                new ExtendEvidence(mConfig, heterozygousIndices, aminoAcidAminoAcidFragments, expectedAlleles);
+                new ExtendEvidence(mConfig, heterozygousIndices, fragments, expectedAlleles);
 
         List<PhasedEvidence> finalisedEvidence = Lists.newArrayList();
         List<PhasedEvidence> unprocessedEvidence = Lists.newArrayList();

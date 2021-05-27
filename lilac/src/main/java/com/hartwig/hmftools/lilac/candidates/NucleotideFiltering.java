@@ -1,16 +1,11 @@
 package com.hartwig.hmftools.lilac.candidates;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 import static com.hartwig.hmftools.lilac.LilacConstants.getExonGeneBoundries;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.lilac.fragment.NucleotideFragment;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import java.util.List;
@@ -29,7 +24,7 @@ public class NucleotideFiltering
     }
 
     public List<HlaSequenceLoci> filterCandidatesOnAminoAcidBoundaries(
-            final List<HlaSequenceLoci> candidates, final List<NucleotideFragment> fragments)
+            final List<HlaSequenceLoci> candidates, final List<Fragment> fragments)
     {
         List<HlaSequenceLoci> results = Lists.newArrayList();
         results.addAll(candidates);
@@ -55,11 +50,11 @@ public class NucleotideFiltering
             && seqLoci.consistentWithAny(endSequences, Lists.newArrayList(startLoci + 1, startLoci + 2));
     }
 
-    private final List<String> nucleotideSequence(final List<NucleotideFragment> fragments, final List<Integer> nucleotideIndices)
+    private final List<String> nucleotideSequence(final List<Fragment> fragments, final List<Integer> nucleotideIndices)
     {
         Map<String,Integer> sequenceCounts = Maps.newHashMap();
 
-        for(NucleotideFragment fragment : fragments)
+        for(Fragment fragment : fragments)
         {
             if(!fragment.containsAllNucleotides(nucleotideIndices))
                 continue;
