@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.candidates;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.nucFragments;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
 import java.util.List;
 import java.util.Set;
@@ -34,7 +35,7 @@ public final class Candidates
     {
         List<Integer> aminoAcidBoundary = context.AminoAcidBoundaries;
 
-        LL_LOGGER.info("determining un-phased candidate set for gene {}", context.geneName());
+        LL_LOGGER.info("gene({}) determining un-phased candidates from frags({})", context.geneName(), fragments.size());
 
         SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, fragments);
 
@@ -103,6 +104,42 @@ public final class Candidates
         }
 
         return results;
+    }
+
+    public static List<HlaSequenceLoci> filterCandidatesByAminoAcidLoci(
+            final List<HlaSequenceLoci> candidates, final SequenceCount aminoAcidCounts)
+    {
+        List<HlaSequenceLoci> candidateSequences = Lists.newArrayList();
+        candidateSequences.addAll(candidates);
+
+        for(int locus = 0; locus < aminoAcidCounts.getLength(); ++locus)
+        {
+            List<String> expectedSequences = aminoAcidCounts.getMinCountSequences(locus);
+
+            if(expectedSequences.isEmpty())
+                continue;
+
+            int index = 0;
+            while(index < candidateSequences.size())
+            {
+                HlaSequenceLoci sequence = candidateSequences.get(index);
+
+                if(locus < sequence.length())
+                {
+                    String locusSeq = sequence.sequence(locus);
+
+                    if(locusSeq.equals(WILD_STR) || expectedSequences.contains(locusSeq))
+                    {
+                        ++index;
+                        continue;
+                    }
+                }
+
+                candidateSequences.remove(index);
+            }
+        }
+
+        return candidateSequences;
     }
 
     public List<HlaAllele> phasedCandidates(

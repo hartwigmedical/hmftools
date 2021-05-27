@@ -9,6 +9,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.SequenceCount;
 import com.hartwig.hmftools.lilac.SequenceCountDiff;
+import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 
 import java.util.List;
@@ -130,21 +131,6 @@ public class AminoAcidFragmentPipeline
         return refAminoAcids;
     }
 
-    public void writeCounts(final String outputPrefix)
-    {
-        for(Map.Entry<String,SequenceCount> entry : mRefAminoAcidCounts.entrySet())
-        {
-            String gene = entry.getKey();
-            entry.getValue().writeVertically(outputPrefix + '.' + gene + ".aminoacids.txt");
-        }
-
-        for(Map.Entry<String,SequenceCount> entry : mRefNucleotideCounts.entrySet())
-        {
-            String gene = entry.getKey();
-            entry.getValue().writeVertically(outputPrefix + '.' + gene + ".nucleotides.txt");
-        }
-    }
-
     private List<AminoAcidFragment> applyQualAndSpliceChecks(final List<Integer> boundaries, final List<NucleotideFragment> fragments)
     {
         if(fragments.isEmpty())
@@ -199,6 +185,21 @@ public class AminoAcidFragmentPipeline
     private static boolean containsAminoAcidVariant(final AminoAcidFragment fragment, SequenceCountDiff variant)
     {
         return fragment.containsAminoAcid(variant.Loci) && fragment.aminoAcid(variant.Loci).equals(variant.Sequence);
+    }
+
+    public void writeCounts(final String outputPrefix)
+    {
+        for(Map.Entry<String,SequenceCount> entry : mRefAminoAcidCounts.entrySet())
+        {
+            String gene = entry.getKey();
+            entry.getValue().writeVertically(outputPrefix + '.' + gene + ".aminoacids.txt");
+        }
+
+        for(Map.Entry<String,SequenceCount> entry : mRefNucleotideCounts.entrySet())
+        {
+            String gene = entry.getKey();
+            entry.getValue().writeVertically(outputPrefix + '.' + gene + ".nucleotides.txt");
+        }
     }
 
 }
