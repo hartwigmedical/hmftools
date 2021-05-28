@@ -69,23 +69,25 @@ public class AnalysedPatientReporter {
                 sampleReport.reportViralInsertions(),
                 sampleReport.cohort().reportPeach());
 
-        GenomicAnalysis overruledAnalysis = QualityOverruleFunctions.overrule(filteredAnalysis);
+        String qcForm = determineForNumber(genomicAnalysis.hasReliablePurity(), genomicAnalysis.impliedPurity());
+
+        GenomicAnalysis overruledAnalysis = QualityOverruleFunctions.overrule(filteredAnalysis, qcForm);
 
         LOGGER.info("Loading CUPPA result from {}", new File(config.molecularTissueOriginTxt()).getParent());
         MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
                 .conclusion(MolecularTissueOriginFile.read(config.molecularTissueOriginTxt()))
                 .plotPath(config.molecularTissueOriginPlot())
                 .build();
+
         LOGGER.info(" Molecular tissue origin conclusion: {}", molecularTissueOrigin.conclusion());
 
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
-                .qsFormNumber(determineForNumber(genomicAnalysis.hasReliablePurity(), genomicAnalysis.impliedPurity()))
+                .qsFormNumber(qcForm)
                 .clinicalSummary(clinicalSummary)
                 .pipelineVersion(pipelineVersion)
                 .genomicAnalysis(overruledAnalysis)
-                .molecularTissueOrigin(
-                        genomicAnalysis.impliedPurity() >= 0.20 && genomicAnalysis.hasReliablePurity() ? molecularTissueOrigin : null)
+                .molecularTissueOrigin(qcForm.equals(QsFormNumber.FOR_080.display()) ? molecularTissueOrigin : null)
                 .circosPath(config.purpleCircosPlot())
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(config.isCorrectedReport())

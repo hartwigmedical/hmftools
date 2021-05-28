@@ -10,7 +10,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.ckb.classification.CkbClassificationConfig;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.refseq.RefSeq;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.iclusion.classification.IclusionClassificationConfig;
@@ -68,7 +67,7 @@ public class ServeAlgo {
         }
 
         if (config.useCkb()) {
-            extractions.add(extractCkbKnowledge(config.ckbDir()));
+            extractions.add(extractCkbKnowledge(config.ckbDir(), config.ckbFilterTsv()));
         }
 
         if (config.useDocm()) {
@@ -83,15 +82,15 @@ public class ServeAlgo {
             extractions.add(extractHartwigCuratedKnowledge(config.hartwigCuratedTsv(), !config.skipHotspotResolving()));
         }
 
-        refGenomeManager.evaluate();
-        missingDoidLookup.evaluate();
-
         Map<RefGenomeVersion, List<ExtractionResult>> versionedMap = refGenomeManager.makeVersioned(extractions);
 
         Map<RefGenomeVersion, ExtractionResult> refDependentExtractionMap = Maps.newHashMap();
         for (Map.Entry<RefGenomeVersion, List<ExtractionResult>> entry : versionedMap.entrySet()) {
             refDependentExtractionMap.put(entry.getKey(), ExtractionFunctions.merge(entry.getValue()));
         }
+
+        missingDoidLookup.evaluate();
+        refGenomeManager.evaluate();
 
         return refDependentExtractionMap;
     }
@@ -124,18 +123,12 @@ public class ServeAlgo {
     }
 
     @NotNull
-    private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir) throws IOException {
-        // TODO Read RefSeq mapping from a resource file rather than from an external file
-        //        LOGGER.info("Reading ref seq matching to transcript");
-        //        List<RefSeq> refSeqMappings = RefSeqFile.readingRefSeq(refseqTsv);
-        List<RefSeq> refSeqMappings = Lists.newArrayList();
-
-        List<CkbEntry> ckbEntries = CkbReader.readAndCurate(ckbDir);
+    private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir, @NotNull String ckbFilterTsv) throws IOException {
+        List<CkbEntry> ckbEntries = CkbReader.readAndCurate(ckbDir, ckbFilterTsv);
 
         EventClassifierConfig config = CkbClassificationConfig.build();
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config,
-                refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB),
-                refSeqMappings);
+                refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB));
 
         LOGGER.info("Running CKB knowledge extraction");
         return extractor.extract(ckbEntries);

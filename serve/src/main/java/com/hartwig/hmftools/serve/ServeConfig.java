@@ -33,6 +33,7 @@ public interface ServeConfig {
     String ICLUSION_TRIAL_TSV = "iclusion_trial_tsv";
     String USE_CKB = "use_ckb";
     String CKB_DIR = "ckb_dir";
+    String CKB_FILTER_TSV = "ckb_filter_tsv";
     String USE_DOCM = "use_docm";
     String DOCM_TSV = "docm_tsv";
     String USE_HARTWIG_COHORT = "use_hartwig_cohort";
@@ -71,6 +72,7 @@ public interface ServeConfig {
         options.addOption(ICLUSION_TRIAL_TSV, true, "Path to the iClusion input trial TSV");
         options.addOption(USE_CKB, false, "If provided, CKB FLEX will be used as a source in SERVE");
         options.addOption(CKB_DIR, true, "Path to the CKB FLEX json input dir");
+        options.addOption(CKB_FILTER_TSV, true, "Path to the CKB filter tsv");
         options.addOption(USE_DOCM, false, "If provided, DoCM will be used as a source in SERVE");
         options.addOption(DOCM_TSV, true, "Path to the DoCM knowledgebase input TSV");
         options.addOption(USE_HARTWIG_COHORT, false, "If provided, Hartwig Cohort will be used as a source in SERVE");
@@ -114,6 +116,9 @@ public interface ServeConfig {
 
     @NotNull
     String ckbDir();
+
+    @NotNull
+    String ckbFilterTsv();
 
     boolean useDocm();
 
@@ -184,6 +189,7 @@ public interface ServeConfig {
                 .iClusionTrialTsv(useIclusion ? nonOptionalFile(cmd, ICLUSION_TRIAL_TSV) : NOT_APPLICABLE)
                 .useCkb(useCkb)
                 .ckbDir(useCkb ? nonOptionalDir(cmd, CKB_DIR) : NOT_APPLICABLE)
+                .ckbFilterTsv(useCkb ? nonOptionalFile(cmd, CKB_FILTER_TSV) : NOT_APPLICABLE)
                 .useDocm(useDocm)
                 .docmTsv(useDocm ? nonOptionalFile(cmd, DOCM_TSV) : NOT_APPLICABLE)
                 .useHartwigCohort(useHartwigCohort)

@@ -43,10 +43,10 @@ class ConversionFilter {
 
     public void reportUnusedFilterEntries() {
         int unusedGeneCount = 0;
-        for (String gene : ConversionFilterFactory.GENES_TO_FILTER) {
+        for (String gene : ConversionFilterFactory.GENES_TO_EXCLUDE_FOR_CONVERSION) {
             if (!filteredGenes.contains(gene)) {
                 unusedGeneCount++;
-                LOGGER.warn("Gene '{}' hasn't been used ref genome conversion filtering", gene);
+                LOGGER.warn("Gene '{}' hasn't been used during ref genome conversion filtering", gene);
             }
         }
 
@@ -120,13 +120,11 @@ class ConversionFilter {
 
     @NotNull
     private Set<ActionableHotspot> filterActionableHotspots(@NotNull Set<ActionableHotspot> actionableHotspots) {
-        // TODO How to filter genes from actionable hotspots?
         return actionableHotspots;
     }
 
     @NotNull
     private Set<ActionableRange> filterActionableRanges(@NotNull Set<ActionableRange> actionableRanges) {
-        // TODO How to filter genes from actionable ranges?
         return actionableRanges;
     }
 
@@ -157,7 +155,7 @@ class ConversionFilter {
     }
 
     private boolean isBlacklistedGene(@NotNull String gene) {
-        if (ConversionFilterFactory.GENES_TO_FILTER.contains(gene)) {
+        if (ConversionFilterFactory.GENES_TO_EXCLUDE_FOR_CONVERSION.contains(gene)) {
             filteredGenes.add(gene);
             return true;
         } else {

@@ -175,6 +175,7 @@ public final class LimsFactory {
                 .reportGermlineVariants(false)
                 .shallowSeq(false)
                 .reportViralInsertions(false)
+                .biopsySite("Skin")
                 .cohort("COLO")
                 .analysisType(Strings.EMPTY).build();
     }

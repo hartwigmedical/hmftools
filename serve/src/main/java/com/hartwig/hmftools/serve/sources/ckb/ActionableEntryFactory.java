@@ -21,7 +21,9 @@ class ActionableEntryFactory {
     private static final Logger LOGGER = LogManager.getLogger(ActionableEntryFactory.class);
 
     private static final Set<String> RESPONSIVE_DIRECTIONS = Sets.newHashSet();
+    private static final Set<String> PREDICTED_RESPONSIVE_DIRECTIONS = Sets.newHashSet();
     private static final Set<String> RESISTANT_DIRECTIONS = Sets.newHashSet();
+    private static final Set<String> PREDICTED_RESISTANT_DIRECTIONS = Sets.newHashSet();
     private static final Set<String> DIRECTIONS_TO_IGNORE = Sets.newHashSet();
 
     private static final Set<String> USABLE_EVIDENCE_TYPES = Sets.newHashSet();
@@ -29,23 +31,20 @@ class ActionableEntryFactory {
 
     static {
         RESPONSIVE_DIRECTIONS.add("sensitive");
-        RESPONSIVE_DIRECTIONS.add("predicted - sensitive");
+        PREDICTED_RESPONSIVE_DIRECTIONS.add("predicted - sensitive");
 
         RESISTANT_DIRECTIONS.add("resistant");
-        RESISTANT_DIRECTIONS.add("predicted - resistant");
+        PREDICTED_RESISTANT_DIRECTIONS.add("predicted - resistant");
 
         DIRECTIONS_TO_IGNORE.add("unknown");
         DIRECTIONS_TO_IGNORE.add("not applicable");
         DIRECTIONS_TO_IGNORE.add("conflicting");
         DIRECTIONS_TO_IGNORE.add("no benefit");
         DIRECTIONS_TO_IGNORE.add("not predictive");
-
-        // TODO: Determine first what they mean with below direction
         DIRECTIONS_TO_IGNORE.add("decreased response");
 
         USABLE_EVIDENCE_TYPES.add("Actionable");
 
-        // TODO: Determine if all those can be ignored
         EVIDENCE_TYPES_TO_IGNORE.add("Prognostic");
         EVIDENCE_TYPES_TO_IGNORE.add("Emerging");
         EVIDENCE_TYPES_TO_IGNORE.add("Risk Factor");
@@ -130,7 +129,7 @@ class ActionableEntryFactory {
             return true;
         } else {
             if (!EVIDENCE_TYPES_TO_IGNORE.contains(evidenceType)) {
-                LOGGER.warn("Unrecognized CKB evidence type '{}'", evidenceType);
+                LOGGER.warn("Unrecognized CKB evidence type: '{}'", evidenceType);
             }
             return false;
         }
@@ -144,7 +143,7 @@ class ActionableEntryFactory {
 
         EvidenceLevel level = EvidenceLevel.fromString(evidenceLabel);
         if (level == null) {
-            LOGGER.warn("Could not resolve CKB evidence level '{}'", evidenceLabel);
+            LOGGER.warn("Could not resolve CKB evidence level: '{}'", evidenceLabel);
         }
         return level;
     }
@@ -157,8 +156,12 @@ class ActionableEntryFactory {
 
         if (RESPONSIVE_DIRECTIONS.contains(direction)) {
             return EvidenceDirection.RESPONSIVE;
+        } else if (PREDICTED_RESPONSIVE_DIRECTIONS.contains(direction)) {
+            return EvidenceDirection.PREDICTED_RESPONSIVE;
         } else if (RESISTANT_DIRECTIONS.contains(direction)) {
             return EvidenceDirection.RESISTANT;
+        } else if (PREDICTED_RESISTANT_DIRECTIONS.contains(direction)) {
+            return EvidenceDirection.PREDICTED_RESISTANT;
         }
 
         if (!DIRECTIONS_TO_IGNORE.contains(direction)) {

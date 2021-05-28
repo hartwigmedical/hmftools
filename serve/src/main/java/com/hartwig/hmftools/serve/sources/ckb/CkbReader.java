@@ -7,6 +7,8 @@ import com.hartwig.hmftools.ckb.CkbEntryReader;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.serve.sources.ckb.curation.CkbCurator;
 import com.hartwig.hmftools.serve.sources.ckb.filter.CkbFilter;
+import com.hartwig.hmftools.serve.sources.ckb.filter.CkbFilterEntry;
+import com.hartwig.hmftools.serve.sources.ckb.filter.CkbFilterFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,12 +22,16 @@ public final class CkbReader {
     }
 
     @NotNull
-    public static List<CkbEntry> readAndCurate(@NotNull String ckbDir) throws IOException {
+    public static List<CkbEntry> readAndCurate(@NotNull String ckbDir, @NotNull String ckbFilterTsv) throws IOException {
         LOGGER.info("Reading CKB database from {}", ckbDir);
         List<CkbEntry> ckbEntries = CkbEntryReader.read(ckbDir);
         LOGGER.info(" Read {} entries", ckbEntries.size());
 
-        return filter(curate(ckbEntries));
+        LOGGER.info("Reading CBK filter entries from {}", ckbFilterTsv);
+        List<CkbFilterEntry> ckbFilterEntries = CkbFilterFile.read(ckbFilterTsv);
+        LOGGER.info(" Read {} filter entries", ckbFilterEntries.size());
+
+        return filter(curate(ckbEntries), ckbFilterEntries);
     }
 
     @NotNull
@@ -44,8 +50,8 @@ public final class CkbReader {
     }
 
     @NotNull
-    private static List<CkbEntry> filter(@NotNull List<CkbEntry> entries) {
-        CkbFilter filter = new CkbFilter();
+    private static List<CkbEntry> filter(@NotNull List<CkbEntry> entries, @NotNull List<CkbFilterEntry> ckbFilterEntries) {
+        CkbFilter filter = new CkbFilter(ckbFilterEntries);
 
         LOGGER.info("Filtering {} CKB entries", entries.size());
         List<CkbEntry> filteredEntries = filter.run(entries);
