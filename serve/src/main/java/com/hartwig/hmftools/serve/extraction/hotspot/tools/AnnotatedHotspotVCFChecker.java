@@ -192,6 +192,15 @@ public class AnnotatedHotspotVCFChecker {
                 || changedTranscriptCheck(transcript, inputAnnotation, snpeffAnnotation);
     }
 
+    @NotNull
+    private static String curateStartCodonAnnotation(@NotNull String serveAnnotation) {
+        if (serveAnnotation.startsWith("p.M1") && serveAnnotation.length() == 5) {
+            return "p.M1?";
+        } else {
+            return serveAnnotation;
+        }
+    }
+
     private boolean transcriptWhitelist(@NotNull String transcript, @NotNull String inputAnnotation, @NotNull String snpeffAnnotation) {
         Map<String, List<String>> transcriptMapping =
                 AnnotatedHotspotCurationFactory.SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT.get(transcript);
@@ -254,26 +263,56 @@ public class AnnotatedHotspotVCFChecker {
     }
 
     private void checkForUnusedMappings() {
-        int unusedMappingCount = 0;
+        checkUnusedTranscriptMappings();
+        checkUnusedGeneMappings();
+        checkUnusedTranscriptCuration();
+    }
+
+    private void checkUnusedTranscriptMappings() {
+        int unusedTranscriptMappingCount = 0;
         Set<Map.Entry<String, Map<String, List<String>>>> transcriptEntries =
                 AnnotatedHotspotCurationFactory.SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT.entrySet();
         for (Map.Entry<String, Map<String, List<String>>> entry : transcriptEntries) {
             Set<String> requestedAnnotations = annotationsRequestedForMappingPerTranscript.get(entry.getKey());
             if (requestedAnnotations == null) {
-                LOGGER.warn("No annotation mapping requested at all for '{}'", entry.getKey());
-                unusedMappingCount += entry.getValue().keySet().size();
+                LOGGER.warn("No transcript annotation mapping requested at all for '{}'", entry.getKey());
+                unusedTranscriptMappingCount += entry.getValue().keySet().size();
             } else {
                 for (String annotationKey : entry.getValue().keySet()) {
                     if (!requestedAnnotations.contains(annotationKey)) {
-                        LOGGER.warn("Unused annotation configured for '{}': '{}'", entry.getKey(), annotationKey);
-                        unusedMappingCount++;
+                        LOGGER.warn("Unused transcript annotation configured for transcript '{}': '{}'", entry.getKey(), annotationKey);
+                        unusedTranscriptMappingCount++;
                     }
                 }
             }
         }
 
-        LOGGER.info("Analyzed usage of mapping configuration. Found {} unused mappings.", unusedMappingCount);
+        LOGGER.info("Analyzed usage of transcript mapping configuration. Found {} unused mappings.", unusedTranscriptMappingCount);
+    }
 
+    private void checkUnusedGeneMappings() {
+        int unusedGeneMappingCount = 0;
+        Set<Map.Entry<String, Map<String, List<String>>>> transcriptEntries =
+                AnnotatedHotspotCurationFactory.SERVE_TO_SNPEFF_MAPPINGS_PER_GENE.entrySet();
+        for (Map.Entry<String, Map<String, List<String>>> entry : transcriptEntries) {
+            Set<String> requestedAnnotations = annotationsRequestedForMappingPerGene.get(entry.getKey());
+            if (requestedAnnotations == null) {
+                LOGGER.warn("No gene annotation mapping requested at all for '{}'", entry.getKey());
+                unusedGeneMappingCount += entry.getValue().keySet().size();
+            } else {
+                for (String annotationKey : entry.getValue().keySet()) {
+                    if (!requestedAnnotations.contains(annotationKey)) {
+                        LOGGER.warn("Unused gene annotation configured for '{}': '{}'", entry.getKey(), annotationKey);
+                        unusedGeneMappingCount++;
+                    }
+                }
+            }
+        }
+
+        LOGGER.info("Analyzed usage of gene mapping configuration. Found {} unused mappings.", unusedGeneMappingCount);
+    }
+
+    private void checkUnusedTranscriptCuration() {
         int unusedTranscriptCurationCount = 0;
         for (String transcript : AnnotatedHotspotCurationFactory.RETIRED_TRANSCRIPTS) {
             if (!curatedTranscripts.contains(transcript)) {
@@ -290,15 +329,6 @@ public class AnnotatedHotspotVCFChecker {
         }
 
         LOGGER.info("Analyzed usage of transcript curation. Found {} unused curation keys.", unusedTranscriptCurationCount);
-    }
-
-    @NotNull
-    private static String curateStartCodonAnnotation(@NotNull String serveAnnotation) {
-        if (serveAnnotation.startsWith("p.M1") && serveAnnotation.length() == 5) {
-            return "p.M1?";
-        } else {
-            return serveAnnotation;
-        }
     }
 
     private enum MatchType {
