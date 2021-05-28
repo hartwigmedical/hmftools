@@ -137,7 +137,8 @@ public class AnnotatedHotspotVCFChecker {
             // This could be tricky in case a variant was generated from 37 and is now being evaluated on 38 with different transcript IDs.
             boolean matchFound = false;
             for (SnpEffAnnotation annotation : annotations) {
-                if (annotation.isTranscriptFeature()) {
+                // We only want to consider transcript features with coding impact.
+                if (annotation.isTranscriptFeature() && !annotation.hgvsProtein().isEmpty()) {
                     String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
                     if (isSameAnnotation(annotation.transcript(), inputProteinAnnotation, snpeffProteinAnnotation)) {
                         matchFound = true;
