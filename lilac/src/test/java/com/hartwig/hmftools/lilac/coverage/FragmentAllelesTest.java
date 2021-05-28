@@ -2,8 +2,11 @@ package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -11,6 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -23,23 +27,62 @@ public class FragmentAllelesTest
     @Test
     public void testFragmentAlleleCreation()
     {
-        /*
-        final List<Fragment> refCoverageFragments, final List<Integer> refAminoAcidHetLoci,
-        final List<HlaSequenceLoci> candidateAminoAcidSequences, final List<Set<String>> refAminoAcids,
-        final Map<String,List<Integer>> refNucleotideHetLoci, final List<HlaSequenceLoci> candidateNucleotideSequences,
-        final List<Set<String>> refNucleotides)
+        HlaAllele allele1 = HlaAllele.fromString("A*01:01");
+        HlaSequenceLoci seq1 = new HlaSequenceLoci(allele1, Lists.newArrayList("A", "B", "C", "D"));
+        List<HlaSequenceLoci> sequences = Lists.newArrayList(seq1);
 
+        String readInfo = "";
+        List<String> emptyNucs = Lists.newArrayList();
+        List<Integer> emptyQuals = Lists.newArrayList();
+        List<Integer> emptyLoci = Lists.newArrayList();
+        Set<String> aGenes = Sets.newHashSet(HLA_A);
+        Set<String> bGenes = Sets.newHashSet(HLA_B);
+        Set<String> allGenes = Sets.newHashSet(HLA_A, HLA_B);
 
+        final Map<String,Map<Integer,List<String>>> geneHetLociMap = Maps.newHashMap();
+        Map<Integer,List<String>> geneALociMap = Maps.newLinkedHashMap();
+        geneALociMap.put(1, Lists.newArrayList("A"));
+        geneALociMap.put(2, Lists.newArrayList("B"));
+        geneALociMap.put(3, Lists.newArrayList("C"));
+        geneALociMap.put(4, Lists.newArrayList("D"));
+        geneHetLociMap.put(GENE_A, geneALociMap);
 
-        List<FragmentAlleles> fragAlleles = FragmentAlleles.createFragmentAlleles(
-        final List<Fragment> refCoverageFragments, final List<Integer> refAminoAcidHetLoci,
-        final List<HlaSequenceLoci> candidateAminoAcidSequences, final List<Set<String>> refAminoAcids,
-        final Map<String,List<Integer>> refNucleotideHetLoci, final List<HlaSequenceLoci> candidateNucleotideSequences,
-        final List<Set<String>> refNucleotides)
-*/
+        Map<String,List<Integer>> refNucleotideHetLoci = Maps.newHashMap();
+        List<HlaSequenceLoci> candidateNucleotideSequences = Lists.newArrayList();
+        List<Set<String>> refNucleotides = Lists.newArrayList();
+
+        // basic match
+        Fragment frag1 = new Fragment("01", readInfo, aGenes, emptyLoci, emptyQuals, emptyNucs);
+        frag1.setAminoAcids(Lists.newArrayList(0, 2, 3), Lists.newArrayList("A", "C", "D"));
+        List<Fragment> fragments = Lists.newArrayList(frag1);
+
+        FragmentAlleleMapper mapper = new FragmentAlleleMapper(geneHetLociMap, refNucleotideHetLoci, refNucleotides);
+        List<FragmentAlleles> fragAlleles = mapper.createFragmentAlleles(fragments, sequences, candidateNucleotideSequences);
+
+        assertEquals(1, fragAlleles.size());
+        assertTrue(fragAlleles.get(0).getFull().contains(allele1));
+
+        // check non-het locations aren't checked
+        Map<Integer,List<String>> geneBLociMap = Maps.newLinkedHashMap();
+        geneBLociMap.put(1, Lists.newArrayList("B"));
+        geneBLociMap.put(3, Lists.newArrayList("G"));
+        geneHetLociMap.put(GENE_B, geneBLociMap);
+
+        HlaAllele allele2 = HlaAllele.fromString("B*01:01");
+        HlaSequenceLoci seq2 = new HlaSequenceLoci(allele2, Lists.newArrayList("A", "B", "C", "D"));
+        sequences = Lists.newArrayList(seq2);
+
+        Fragment frag2 = new Fragment("02", readInfo, bGenes, emptyLoci, emptyQuals, emptyNucs);
+        frag2.setAminoAcids(Lists.newArrayList(0, 1, 2, 3), Lists.newArrayList("B", "B", "D", "D"));
+        fragments = Lists.newArrayList(frag2);
+
+        fragAlleles = mapper.createFragmentAlleles(fragments, sequences, candidateNucleotideSequences);
+
+        assertEquals(1, fragAlleles.size());
+        assertTrue(fragAlleles.get(0).getFull().contains(allele2));
+
+        //
     }
-
-
 
     @Test
     public void testFragmentAlleleCoverage()

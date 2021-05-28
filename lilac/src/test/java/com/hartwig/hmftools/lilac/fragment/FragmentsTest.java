@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidInd
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.mergeFragments;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
 
@@ -48,6 +49,7 @@ public class FragmentsTest
                 Lists.newArrayList(1), Lists.newArrayList(30), Lists.newArrayList("A"));
 
         Fragment mergedFrag = mergeFragments(frag1, frag2);
+        assertTrue(frag1.validate());
         assertEquals(2, mergedFrag.getGenes().size());
         assertEquals(1, mergedFrag.getNucleotideLoci().size());
         assertEquals(new Integer(1), mergedFrag.getNucleotideLoci().get(0));
@@ -61,6 +63,7 @@ public class FragmentsTest
                 Lists.newArrayList("A", "A", "A", "A"));
 
         mergedFrag = mergeFragments(frag1, frag2);
+        assertTrue(frag1.validate());
         assertEquals(2, mergedFrag.getGenes().size());
         assertEquals(4, mergedFrag.getNucleotideLoci().size());
         assertEquals(new Integer(0), mergedFrag.getNucleotideLoci().get(0));
@@ -75,6 +78,7 @@ public class FragmentsTest
                 Lists.newArrayList("A", "A", "A"));
 
         mergedFrag = mergeFragments(frag1, frag2);
+        assertTrue(frag1.validate());
         assertEquals(3, mergedFrag.getGenes().size());
         assertEquals(6, mergedFrag.getNucleotideLoci().size());
         assertEquals(new Integer(0), mergedFrag.getNucleotideLoci().get(0));

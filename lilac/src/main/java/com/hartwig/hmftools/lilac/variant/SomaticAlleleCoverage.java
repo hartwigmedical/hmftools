@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.LociPosition;
+import com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper;
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.coverage.FragmentAlleles;
@@ -70,9 +71,10 @@ public class SomaticAlleleCoverage
                 variantFragments.add(fragment);
         }
 
-        List<FragmentAlleles> variantFragmentAlleles = FragmentAlleles.createFragmentAlleles(
-                variantFragments, mHetLociSansVariants, mWinners,
-                Maps.newHashMap(), Lists.newArrayList(), Lists.newArrayList());
+        FragmentAlleleMapper fragAlleleMapper = new FragmentAlleleMapper(mHetLociSansVariants, Maps.newHashMap(), Lists.newArrayList());
+
+        List<FragmentAlleles> variantFragmentAlleles = fragAlleleMapper.createFragmentAlleles(
+                variantFragments, mWinners, Lists.newArrayList());
 
         List<HlaAlleleCoverage> coverage = HlaAlleleCoverage.proteinCoverage(variantFragmentAlleles);
 

@@ -195,8 +195,8 @@ public class HlaComplexBuilder
             Integer count = uniqueSupport.get(allele);
             uniqueSupport.put(allele, count != null ? count + 1 : 1);
 
-            LL_LOGGER.debug("wildcard allele({}) unique {} from read({} {})",
-                    allele, isUniqueFrag ? "full" : "partial", fragAllele.getFragment().id(), fragAllele.getFragment().readInfo());
+            //LL_LOGGER.debug("wildcard allele({}) unique {} from read({} {})",
+            //        allele, isUniqueFrag ? "full" : "partial", fragAllele.getFragment().id(), fragAllele.getFragment().readInfo());
         }
 
         final List<HlaAllele> supportedAlleles = Lists.newArrayList();

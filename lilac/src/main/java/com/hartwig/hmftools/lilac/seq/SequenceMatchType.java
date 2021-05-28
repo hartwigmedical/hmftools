@@ -15,7 +15,7 @@ public enum SequenceMatchType
     {
         if(this == FULL) return 0;
         if(this == WILD) return 1;
-        return 3;
+        return 2;
     }
 
 }
