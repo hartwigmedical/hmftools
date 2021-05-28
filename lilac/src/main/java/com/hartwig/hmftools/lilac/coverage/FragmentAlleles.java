@@ -2,6 +2,10 @@ package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_Y_FRAGMENT_THRESHOLD;
+import static com.hartwig.hmftools.lilac.fragment.FragmentScope.CANDIDATE;
+import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
+import static com.hartwig.hmftools.lilac.fragment.FragmentScope.NO_HET_LOCI;
+import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNMATCHED_AMINO_ACID;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.filterExonBoundaryWildcards;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.filterWildcards;
 import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.FULL;
@@ -10,6 +14,7 @@ import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.WILD;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.fragment.FragmentScope;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceMatchType;
@@ -85,7 +90,27 @@ public class FragmentAlleles
 
             // drop wild-only alleles since their support can't be clearly established
             if(!fragmentAlleles.getFull().isEmpty())
+            {
                 results.add(fragmentAlleles);
+            }
+            else
+            {
+                if(!fragmentAlleles.getWild().isEmpty())
+                {
+                    fragment.setScope(CANDIDATE);
+                }
+                else
+                {
+                    if(fragment.getAminoAcidLoci().stream().noneMatch(x -> refAminoAcidHetLoci.contains(x)))
+                    {
+                        fragment.setScope(NO_HET_LOCI);
+                    }
+                    else
+                    {
+                        fragment.setScope(UNMATCHED_AMINO_ACID);
+                    }
+                }
+            }
         }
 
         return results;
@@ -103,19 +128,16 @@ public class FragmentAlleles
         refNucleotideHetLoci.entrySet().forEach(x -> fragNucleotideLociMap.put(
                 x.getKey(), fragment.getNucleotideLoci().stream().filter(y -> x.getValue().contains(y)).collect(Collectors.toList())));
 
-        final List<HlaAllele> fullNucleotideMatch = Lists.newArrayList();
-        final List<HlaAllele> wildNucleotideMatch = Lists.newArrayList();
-
         Map<HlaAllele, SequenceMatchType> nucleotideAlleleMatches = findNucleotideMatches(
                 fragment, refNucleotideHetLoci, nucleotideSequences, refNucleotides);
 
-        fullNucleotideMatch.addAll(nucleotideAlleleMatches.entrySet().stream()
-                .filter(x -> x.getValue() == FULL).map(x -> x.getKey()).collect(Collectors.toList()));
+        List<HlaAllele> fullNucleotideMatch = nucleotideAlleleMatches.entrySet().stream()
+                .filter(x -> x.getValue() == FULL).map(x -> x.getKey()).collect(Collectors.toList());
 
-        wildNucleotideMatch.addAll(nucleotideAlleleMatches.entrySet().stream()
+        List<HlaAllele> wildNucleotideMatch = nucleotideAlleleMatches.entrySet().stream()
                 .filter(x -> x.getValue() == WILD)
                 .filter(x -> !fullNucleotideMatch.contains(x))
-                .map(x -> x.getKey()).collect(Collectors.toList()));
+                .map(x -> x.getKey()).collect(Collectors.toList());
 
         Map<HlaAllele, SequenceMatchType> aminoAcidAlleleMatches = findAminoAcidMatches(
                 fragment, aminoAcidLoci, aminoAcidSequences, refAminoAcids);
@@ -136,8 +158,6 @@ public class FragmentAlleles
                 .filter(x -> !wildAminoAcidMatch.contains(x))
                 .filter(x -> wildNucleotideMatch.contains(x))
                 .forEach(x -> wildAminoAcidMatch.add(x));
-
-        // wildAminoAcidMatch.stream().filter(x -> !downgradedToWild.contains(x)).forEach(x -> do);
 
         return new FragmentAlleles(fragment, consistentFull, wildAminoAcidMatch);
     }
@@ -363,14 +383,14 @@ public class FragmentAlleles
 
     public static void checkHlaYSupport(
             final String sampleId, final List<HlaSequenceLoci> hlaYSequences, List<Integer> refAminoAcidHetLoci,
-            final List<FragmentAlleles> fragmentAlleles, final List<Fragment> refCoverageFragments)
+            final List<FragmentAlleles> fragAlleles, final List<Fragment> fragments)
     {
         // ignore fragments which don't contain any heterozygous locations
         int uniqueHlaY = 0;
 
         List<FragmentAlleles> matchedFragmentAlleles = Lists.newArrayList();
 
-        for(Fragment fragment : refCoverageFragments)
+        for(Fragment fragment : fragments)
         {
             List<Integer> fragAminoAcidLoci = fragment.getAminoAcidLoci().stream()
                     .filter(x -> refAminoAcidHetLoci.contains(x)).collect(Collectors.toList());
@@ -392,7 +412,7 @@ public class FragmentAlleles
                 {
                     matchesY = true;
 
-                    matchedFrag = fragmentAlleles.stream()
+                    matchedFrag = fragAlleles.stream()
                             .filter(x -> x.getFragment().id().equals(fragment.id())).findFirst().orElse(null);
 
                     /*
@@ -418,6 +438,7 @@ public class FragmentAlleles
             if(matchedFrag == null)
             {
                 ++uniqueHlaY;
+                fragment.setScope(HLA_Y);
             }
             else
             {
@@ -426,7 +447,7 @@ public class FragmentAlleles
         }
 
         int totalHlaYFrags = uniqueHlaY  + matchedFragmentAlleles.size();
-        double threshold = fragmentAlleles.size() * HLA_Y_FRAGMENT_THRESHOLD;
+        double threshold = fragAlleles.size() * HLA_Y_FRAGMENT_THRESHOLD;
         boolean exceedsThreshold = uniqueHlaY >= threshold;
 
         if(totalHlaYFrags > 0)
@@ -436,7 +457,8 @@ public class FragmentAlleles
 
             if(exceedsThreshold)
             {
-                matchedFragmentAlleles.forEach(x -> fragmentAlleles.remove(x));
+                matchedFragmentAlleles.forEach(x -> fragAlleles.remove(x));
+                matchedFragmentAlleles.forEach(x -> x.getFragment().setScope(HLA_Y, true));
             }
         }
     }

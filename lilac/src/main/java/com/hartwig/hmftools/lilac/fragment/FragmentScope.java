@@ -2,7 +2,11 @@ package com.hartwig.hmftools.lilac.fragment;
 
 public enum FragmentScope
 {
-    ALLOCATED,
+    BASE_QUAL_FILTERED,
+    HLA_Y,
+    NO_HET_LOCI,
+    UNMATCHED_AMINO_ACID,
     CANDIDATE,
+    SOLUTION,
     UNSET;
 }

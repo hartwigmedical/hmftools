@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.MAX_AMINO_ACID_BOUNDARY;
+import static com.hartwig.hmftools.lilac.fragment.FragmentScope.BASE_QUAL_FILTERED;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.copyNucleotideFragment;
 
 import com.google.common.collect.Lists;
@@ -27,7 +28,7 @@ public class AminoAcidFragmentPipeline
     private final Map<String,SequenceCount> mRefNucleotideCounts;
     private final Map<String,SequenceCount> mRefAminoAcidCounts;
 
-    private final List<Fragment> mRefNucleotideFragments; // copied and used for phasing only
+    private final List<Fragment> mRefNucPhasingFragments; // copied and used for phasing only
 
     public AminoAcidFragmentPipeline(
             final LilacConfig config, final List<Fragment> referenceFragments, final List<Fragment> tumorFragments)
@@ -35,7 +36,7 @@ public class AminoAcidFragmentPipeline
         mMinBaseQuality = config.MinBaseQual;
         mMinEvidence = config.MinEvidence;
 
-        mRefNucleotideFragments = referenceFragments.stream().map(x -> copyNucleotideFragment(x)).collect(Collectors.toList());
+        mRefNucPhasingFragments = referenceFragments.stream().map(x -> copyNucleotideFragment(x)).collect(Collectors.toList());
 
         mHighQualRefAminoAcidFragments = createHighQualAminoAcidFragments(referenceFragments);
         mHighQualTumorFragments = createHighQualAminoAcidFragments(tumorFragments);
@@ -57,7 +58,10 @@ public class AminoAcidFragmentPipeline
             fragment.qualityFilter(mMinBaseQuality);
 
             if(!fragment.hasNucleotides())
+            {
+                fragment.setScope(BASE_QUAL_FILTERED);
                 continue;
+            }
 
             fragment.buildAminoAcids();
             aminoAcidFragments.add(fragment);
@@ -111,7 +115,7 @@ public class AminoAcidFragmentPipeline
         String gene = context.geneName();
 
         // start with the unfiltered fragments again
-        List<Fragment> geneRefNucFrags = mRefNucleotideFragments.stream()
+        List<Fragment> geneRefNucFrags = mRefNucPhasingFragments.stream()
                 .filter(x -> x.containsGene(gene))
                 .collect(Collectors.toList());
 

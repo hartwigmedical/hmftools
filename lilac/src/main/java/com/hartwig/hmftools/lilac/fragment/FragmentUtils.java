@@ -1,11 +1,16 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -157,5 +162,40 @@ public class FragmentUtils
         }
 
         return true;
+    }
+
+    public static void writeFragmentData(final String fileName, final List<Fragment> fragments)
+    {
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(fileName, false);
+
+            writer.write("Source,ReadId,ReadInfo,Genes");
+            writer.write(",NucLociStart,NucLociEnd,AcidLociStart,AcidLociEnd,Scope");
+            writer.newLine();
+
+            for(Fragment fragment : fragments)
+            {
+                StringJoiner genesStr = new StringJoiner(ITEM_DELIM);
+                fragment.getGenes().forEach(x -> genesStr.add(x));
+
+                writer.write(String.format("REFERENCE,%s,%s,%s",
+                        fragment.id(), fragment.readInfo(), genesStr));
+
+                writer.write(String.format(",%d,%d,%d,%d,%s",
+                        fragment.minNucleotideLocus(), fragment.maxNucleotideLocus(),
+                        fragment.minAminoAcidLocus(), fragment.maxLoci(), fragment.scope()));
+
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
+            return;
+        }
+
     }
 }

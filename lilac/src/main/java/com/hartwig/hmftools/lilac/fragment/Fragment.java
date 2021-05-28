@@ -70,7 +70,25 @@ public class Fragment
     public boolean containsGene(final String gene) { return mGenes.stream().anyMatch(x -> x.equals(gene)); }
 
     public FragmentScope scope() { return mScope; }
-    public void setScope(FragmentScope scope) { mScope = scope; }
+    public boolean isScopeSet() { return mScope != UNSET; }
+
+    public void setScope(FragmentScope scope) { setScope(scope, false); }
+
+    public void setScope(FragmentScope scope, boolean override)
+    {
+        if(mScope != UNSET)
+        {
+            if(override)
+            {
+                LL_LOGGER.debug("frag({}: {}) overriding existing scope: {} -> {}", mId, mReadInfo, mScope, scope);
+                mScope = scope;
+            }
+        }
+        else
+        {
+            mScope = scope;
+        }
+    }
 
     public List<Integer> getNucleotideLoci() { return mNucleotideLoci; }
     public List<Integer> getNucleotideQuality() { return mNucleotideQuality; }

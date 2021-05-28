@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOG_UNMATCHED_HAPLOTYPE_SUPPORT;
 import static com.hartwig.hmftools.lilac.candidates.NucleotideFiltering.calcNucleotideHeterogygousLoci;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleles.createFragmentAlleles;
+import static com.hartwig.hmftools.lilac.fragment.FragmentScope.CANDIDATE;
+import static com.hartwig.hmftools.lilac.fragment.FragmentScope.SOLUTION;
 import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
 import com.google.common.collect.Lists;
@@ -28,6 +30,8 @@ import com.hartwig.hmftools.lilac.coverage.HlaComplexFile;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
+import com.hartwig.hmftools.lilac.fragment.FragmentScope;
+import com.hartwig.hmftools.lilac.fragment.FragmentUtils;
 import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
@@ -232,9 +236,9 @@ public class LilacApplication implements AutoCloseable, Runnable
                 .filter(x -> candidateAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         // calculate allele coverage
-        List<Fragment> refAminoAcidFragments = aminoAcidPipeline.getReferenceFragments();
-        SequenceCount refAminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, refAminoAcidFragments);
-        SequenceCount refNucleotideCounts = SequenceCount.nucleotides(mConfig.MinEvidence, refAminoAcidFragments);
+        List<Fragment> refAminoAcidFrags = aminoAcidPipeline.getReferenceFragments();
+        SequenceCount refAminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, refAminoAcidFrags);
+        SequenceCount refNucleotideCounts = SequenceCount.nucleotides(mConfig.MinEvidence, refAminoAcidFrags);
 
         //List<Integer> refAminoAcidHetLoci = refAminoAcidCounts.heterozygousLoci();
 
@@ -247,14 +251,14 @@ public class LilacApplication implements AutoCloseable, Runnable
             .filter(x -> candidateAlleleSpecificProteins.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
 
         List<FragmentAlleles> refFragAlleles = FragmentAlleles.createFragmentAlleles(
-                refAminoAcidFragments, refAminoAcidHetLoci, candidateSequences, aminoAcidPipeline.getReferenceAminoAcids(),
+                refAminoAcidFrags, refAminoAcidHetLoci, candidateSequences, aminoAcidPipeline.getReferenceAminoAcids(),
                 refNucleotideHetLoci, candidateNucleotideSequences, aminoAcidPipeline.getReferenceNucleotides());
 
         FragmentAlleles.applyUniqueStopLossFragments(
                 refFragAlleles, referenceBamReader.stopLossOnCIndels(), mRefData.StopLossRecoveryAlleles);
 
         FragmentAlleles.checkHlaYSupport(
-                mConfig.Sample, mRefData.HlaYNucleotideSequences, refAminoAcidHetLoci, refFragAlleles, refAminoAcidFragments);
+                mConfig.Sample, mRefData.HlaYNucleotideSequences, refAminoAcidHetLoci, refFragAlleles, refAminoAcidFrags);
 
         // build and score complexes
         HlaComplexBuilder complexBuilder = new HlaComplexBuilder(mConfig, mRefData);
@@ -390,6 +394,20 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         refAminoAcidCounts.writeVertically(String.format("%s.candidates.aminoacids.txt", mConfig.outputPrefix()));
         refNucleotideCounts.writeVertically(String.format("%s.candidates.nucleotides.txt", mConfig.outputPrefix()));
+
+        // write fragment assignment data
+        for(FragmentAlleles fragAllele : refFragAlleles)
+        {
+            if(fragAllele.getFragment().isScopeSet())
+                continue;
+
+            if(winningAlleles.stream().anyMatch(x -> fragAllele.contains(x)))
+                fragAllele.getFragment().setScope(SOLUTION);
+            else
+                fragAllele.getFragment().setScope(CANDIDATE);
+        }
+
+        FragmentUtils.writeFragmentData(String.format("%s.fragments.csv", mConfig.outputPrefix()), refNucleotideFrags);
 
         /*
         if(DatabaseAccess.hasDatabaseConfig((CommandLine) cmd))
