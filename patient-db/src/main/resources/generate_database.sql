@@ -282,6 +282,187 @@ CREATE TABLE formsMetadata
     UNIQUE KEY (id, tableName, form)
 );
 
+DROP TABLE IF EXISTS amberPatient;
+CREATE TABLE amberPatient
+(   modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    sampleId varchar(255) NOT NULL,
+    patientId int NOT NULL,
+    PRIMARY KEY (sampleId)
+);
+
+DROP TABLE IF EXISTS amberAnonymous;
+CREATE TABLE amberAnonymous
+(   modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    sampleId varchar(255) NOT NULL,
+    hmfSampleId varchar(255) NOT NULL,
+    deleted BOOLEAN NOT NULL,
+    PRIMARY KEY (sampleId),
+    INDEX(hmfSampleId)
+);
+
+DROP TABLE IF EXISTS amberMapping;
+CREATE TABLE amberMapping
+(   modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    firstSampleId varchar(255) NOT NULL,
+    secondSampleId varchar(255) NOT NULL,
+    matches int NOT NULL,
+    sites int NOT NULL,
+    likelihood DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY (firstSampleId, secondSampleId)
+);
+
+DROP TABLE IF EXISTS amberSample;
+CREATE TABLE amberSample
+(   modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    sampleId varchar(255) NOT NULL,
+    site1 TINYINT NOT NULL,
+    site2 TINYINT NOT NULL,
+    site3 TINYINT NOT NULL,
+    site4 TINYINT NOT NULL,
+    site5 TINYINT NOT NULL,
+    site6 TINYINT NOT NULL,
+    site7 TINYINT NOT NULL,
+    site8 TINYINT NOT NULL,
+    site9 TINYINT NOT NULL,
+    site10 TINYINT NOT NULL,
+    site11 TINYINT NOT NULL,
+    site12 TINYINT NOT NULL,
+    site13 TINYINT NOT NULL,
+    site14 TINYINT NOT NULL,
+    site15 TINYINT NOT NULL,
+    site16 TINYINT NOT NULL,
+    site17 TINYINT NOT NULL,
+    site18 TINYINT NOT NULL,
+    site19 TINYINT NOT NULL,
+    site20 TINYINT NOT NULL,
+    site21 TINYINT NOT NULL,
+    site22 TINYINT NOT NULL,
+    site23 TINYINT NOT NULL,
+    site24 TINYINT NOT NULL,
+    site25 TINYINT NOT NULL,
+    site26 TINYINT NOT NULL,
+    site27 TINYINT NOT NULL,
+    site28 TINYINT NOT NULL,
+    site29 TINYINT NOT NULL,
+    site30 TINYINT NOT NULL,
+    site31 TINYINT NOT NULL,
+    site32 TINYINT NOT NULL,
+    site33 TINYINT NOT NULL,
+    site34 TINYINT NOT NULL,
+    site35 TINYINT NOT NULL,
+    site36 TINYINT NOT NULL,
+    site37 TINYINT NOT NULL,
+    site38 TINYINT NOT NULL,
+    site39 TINYINT NOT NULL,
+    site40 TINYINT NOT NULL,
+    site41 TINYINT NOT NULL,
+    site42 TINYINT NOT NULL,
+    site43 TINYINT NOT NULL,
+    site44 TINYINT NOT NULL,
+    site45 TINYINT NOT NULL,
+    site46 TINYINT NOT NULL,
+    site47 TINYINT NOT NULL,
+    site48 TINYINT NOT NULL,
+    site49 TINYINT NOT NULL,
+    site50 TINYINT NOT NULL,
+    site51 TINYINT NOT NULL,
+    site52 TINYINT NOT NULL,
+    site53 TINYINT NOT NULL,
+    site54 TINYINT NOT NULL,
+    site55 TINYINT NOT NULL,
+    site56 TINYINT NOT NULL,
+    site57 TINYINT NOT NULL,
+    site58 TINYINT NOT NULL,
+    site59 TINYINT NOT NULL,
+    site60 TINYINT NOT NULL,
+    site61 TINYINT NOT NULL,
+    site62 TINYINT NOT NULL,
+    site63 TINYINT NOT NULL,
+    site64 TINYINT NOT NULL,
+    site65 TINYINT NOT NULL,
+    site66 TINYINT NOT NULL,
+    site67 TINYINT NOT NULL,
+    site68 TINYINT NOT NULL,
+    site69 TINYINT NOT NULL,
+    site70 TINYINT NOT NULL,
+    site71 TINYINT NOT NULL,
+    site72 TINYINT NOT NULL,
+    site73 TINYINT NOT NULL,
+    site74 TINYINT NOT NULL,
+    site75 TINYINT NOT NULL,
+    site76 TINYINT NOT NULL,
+    site77 TINYINT NOT NULL,
+    site78 TINYINT NOT NULL,
+    site79 TINYINT NOT NULL,
+    site80 TINYINT NOT NULL,
+    site81 TINYINT NOT NULL,
+    site82 TINYINT NOT NULL,
+    site83 TINYINT NOT NULL,
+    site84 TINYINT NOT NULL,
+    site85 TINYINT NOT NULL,
+    site86 TINYINT NOT NULL,
+    site87 TINYINT NOT NULL,
+    site88 TINYINT NOT NULL,
+    site89 TINYINT NOT NULL,
+    site90 TINYINT NOT NULL,
+    site91 TINYINT NOT NULL,
+    site92 TINYINT NOT NULL,
+    site93 TINYINT NOT NULL,
+    site94 TINYINT NOT NULL,
+    site95 TINYINT NOT NULL,
+    site96 TINYINT NOT NULL,
+    site97 TINYINT NOT NULL,
+    site98 TINYINT NOT NULL,
+    site99 TINYINT NOT NULL,
+    site100 TINYINT NOT NULL,
+    PRIMARY KEY (sampleId)
+);
+
+DROP TABLE IF EXISTS canonicalTranscript;
+CREATE TABLE canonicalTranscript
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    assembly varchar(255) NOT NULL,
+    gene varchar(255) NOT NULL,
+    geneId varchar(255) NOT NULL,
+    chromosomeBand varchar(255) NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    geneStart int not null,
+    geneEnd int not null,
+    transcriptId varchar(255) NOT NULL,
+    transcriptVersion int not null,
+    transcriptStart int not null,
+    transcriptEnd int not null,
+    exons int not null,
+    exonStart int not null,
+    exonEnd int not null,
+    exonBases int not null,
+    strand varchar(255) not null,
+    codingStart int not null,
+    codingEnd int not null,
+    codingBases int not null,
+    PRIMARY KEY (id),
+    INDEX(gene),
+    INDEX(transcriptId)
+);
+
+DROP TABLE IF EXISTS driverGenePanel;
+CREATE TABLE driverGenePanel
+(   modified DATETIME NOT NULL,
+    gene varchar(255) NOT NULL,
+    reportMissense BOOLEAN NOT NULL,
+    reportNonsense BOOLEAN NOT NULL,
+    reportSplice BOOLEAN NOT NULL,
+    reportDeletion BOOLEAN NOT NULL,
+    reportDisruption BOOLEAN NOT NULL,
+    reportAmplification BOOLEAN NOT NULL,
+    reportSomaticHotspot BOOLEAN NOT NULL,
+    reportGermlineVariant BOOLEAN NOT NULL,
+    reportGermlineHotspot BOOLEAN NOT NULL,
+    likelihoodType varchar(255) NOT NULL,
+    PRIMARY KEY (gene)
+);
+
 DROP TABLE if EXISTS metric;
 CREATE TABLE metric
 (   sampleId varchar(255) NOT NULL,
@@ -395,6 +576,79 @@ CREATE TABLE somaticVariant
     phasedInframeIndel int,
     qual double precision not null,
     reported BOOLEAN NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId),
+    INDEX(filter),
+    INDEX(type),
+    INDEX(gene)
+);
+
+DROP TABLE IF EXISTS germlineVariant;
+CREATE TABLE germlineVariant
+(   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    position int not null,
+    filter varchar(255) NOT NULL,
+    type varchar(255) NOT NULL,
+    ref varchar(255) NOT NULL,
+    alt varchar(255) NOT NULL,
+
+    ## SAGE
+    qual double precision not null,
+    tier varchar(20) NOT NULL,
+    germlineGenotype varchar(255) NOT NULL,
+    germlineAlleleReadCount int,
+    germlineTotalReadCount int,
+    rnaAlleleReadCount int,
+    rnaTotalReadCount int,
+    tumorAlleleReadCount int NOT NULL,
+    tumorTotalReadCount int NOT NULL,
+    localPhaseSet int,
+
+    ### PURPLE ENRICHMENT
+    adjustedVaf DOUBLE PRECISION NOT NULL,
+    variantCopyNumber DOUBLE PRECISION NOT NULL,
+    copyNumber DOUBLE PRECISION NOT NULL,
+    biallelic BOOLEAN NOT NULL,
+    minorAlleleCopyNumber DOUBLE PRECISION NOT NULL,
+
+    ### PATHOGENIC
+    clinvarInfo varchar(255) NOT NULL,
+    pathogenicity varchar(255) NOT NULL,
+    pathogenic BOOLEAN NOT NULL,
+
+    ## SNP EFF ENRICHMENT
+    gene varchar(255) NOT NULL,
+    genesEffected int not null,
+    worstEffectTranscript varchar(255) NOT NULL,
+    worstEffect varchar(255) NOT NULL,
+    worstCodingEffect varchar(255) NOT NULL,
+    canonicalEffect varchar(255) NOT NULL,
+    canonicalCodingEffect varchar(255) NOT NULL,
+    canonicalHgvsCodingImpact varchar(255) NOT NULL,
+    canonicalHgvsProteinImpact varchar(255) NOT NULL,
+
+    ### REF GENOME ENRICHMENT
+    microhomology varchar(255) NOT NULL,
+    repeatSequence varchar(255) NOT NULL,
+    repeatCount int NOT NULL,
+    trinucleotideContext varchar(3) NOT NULL,
+
+    ### DRIVER CATALOG
+    hotspot varchar(20) NOT NULL,
+    mappability DOUBLE PRECISION NOT NULL,
+    reported BOOLEAN NOT NULL,
+
+    ### NOT USED
+    #recovered BOOLEAN NOT NULL,
+    #germlineStatus varchar(255) NOT NULL,
+    #kataegis varchar(20) NOT NULL,
+    #localRealignmentSet int,
+    #phasedInframeIndel int,
+    #subclonalLikelihood DOUBLE PRECISION NOT NULL,
+
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(filter),
@@ -531,6 +785,31 @@ CREATE TABLE geneCopyNumber
     minRegionEndSupport varchar(255) NOT NULL,
     minRegionMethod varchar(255) NOT NULL,
     minMinorAlleleCopyNumber DOUBLE PRECISION not null,
+    PRIMARY KEY (id),
+    INDEX(sampleId, gene),
+    INDEX(gene)
+);
+
+DROP TABLE IF EXISTS driverCatalog;
+CREATE TABLE driverCatalog
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    chromosomeBand varchar(255) NOT NULL,
+    gene varchar(255) NOT NULL,
+    category varchar(255) NOT NULL,
+    driver varchar(255) NOT NULL,
+    likelihoodMethod varchar(255) NOT NULL,
+    driverLikelihood DOUBLE PRECISION NOT NULL,
+    missense int NOT NULL,
+    nonsense int NOT NULL,
+    splice int NOT NULL,
+    frameshift int NOT NULL,
+    inframe int NOT NULL,
+    biallelic BOOLEAN NOT NULL,
+    minCopyNumber DOUBLE PRECISION NOT NULL,
+    maxCopyNumber DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (id),
     INDEX(sampleId, gene),
     INDEX(gene)
@@ -765,132 +1044,6 @@ CREATE TABLE signature
     INDEX(sampleId)
 );
 
-DROP TABLE IF EXISTS canonicalTranscript;
-CREATE TABLE canonicalTranscript
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    assembly varchar(255) NOT NULL,
-    gene varchar(255) NOT NULL,
-    geneId varchar(255) NOT NULL,
-    chromosomeBand varchar(255) NOT NULL,
-    chromosome varchar(255) NOT NULL,
-    geneStart int not null,
-    geneEnd int not null,
-    transcriptId varchar(255) NOT NULL,
-    transcriptVersion int not null,
-    transcriptStart int not null,
-    transcriptEnd int not null,
-    exons int not null,
-    exonStart int not null,
-    exonEnd int not null,
-    exonBases int not null,
-    strand varchar(255) not null,
-    codingStart int not null,
-    codingEnd int not null,
-    codingBases int not null,
-    PRIMARY KEY (id),
-    INDEX(gene),
-    INDEX(transcriptId)
-);
-
-DROP TABLE IF EXISTS germlineVariant;
-CREATE TABLE germlineVariant
-(   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    chromosome varchar(255) NOT NULL,
-    position int not null,
-    filter varchar(255) NOT NULL,
-    type varchar(255) NOT NULL,
-    ref varchar(255) NOT NULL,
-    alt varchar(255) NOT NULL,
-
-    ## SAGE
-    qual double precision not null,
-    tier varchar(20) NOT NULL,
-    germlineGenotype varchar(255) NOT NULL,
-    germlineAlleleReadCount int,
-    germlineTotalReadCount int,
-    rnaAlleleReadCount int,
-    rnaTotalReadCount int,
-    tumorAlleleReadCount int NOT NULL,
-    tumorTotalReadCount int NOT NULL,
-    localPhaseSet int,
-
-    ### PURPLE ENRICHMENT
-    adjustedVaf DOUBLE PRECISION NOT NULL,
-    variantCopyNumber DOUBLE PRECISION NOT NULL,
-    copyNumber DOUBLE PRECISION NOT NULL,
-    biallelic BOOLEAN NOT NULL,
-    minorAlleleCopyNumber DOUBLE PRECISION NOT NULL,
-
-    ### PATHOGENIC
-    clinvarInfo varchar(255) NOT NULL,
-    pathogenicity varchar(255) NOT NULL,
-    pathogenic BOOLEAN NOT NULL,
-
-    ## SNP EFF ENRICHMENT
-    gene varchar(255) NOT NULL,
-    genesEffected int not null,
-    worstEffectTranscript varchar(255) NOT NULL,
-    worstEffect varchar(255) NOT NULL,
-    worstCodingEffect varchar(255) NOT NULL,
-    canonicalEffect varchar(255) NOT NULL,
-    canonicalCodingEffect varchar(255) NOT NULL,
-    canonicalHgvsCodingImpact varchar(255) NOT NULL,
-    canonicalHgvsProteinImpact varchar(255) NOT NULL,
-
-    ### REF GENOME ENRICHMENT
-    microhomology varchar(255) NOT NULL,
-    repeatSequence varchar(255) NOT NULL,
-    repeatCount int NOT NULL,
-    trinucleotideContext varchar(3) NOT NULL,
-
-    ### DRIVER CATALOG
-    hotspot varchar(20) NOT NULL,
-    mappability DOUBLE PRECISION NOT NULL,
-    reported BOOLEAN NOT NULL,
-
-    ### NOT USED
-    #recovered BOOLEAN NOT NULL,
-    #germlineStatus varchar(255) NOT NULL,
-    #kataegis varchar(20) NOT NULL,
-    #localRealignmentSet int,
-    #phasedInframeIndel int,
-    #subclonalLikelihood DOUBLE PRECISION NOT NULL,
-
-    PRIMARY KEY (id),
-    INDEX(sampleId),
-    INDEX(filter),
-    INDEX(type),
-    INDEX(gene)
-);
-
-DROP TABLE IF EXISTS driverCatalog;
-CREATE TABLE driverCatalog
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    chromosome varchar(255) NOT NULL,
-    chromosomeBand varchar(255) NOT NULL,
-    gene varchar(255) NOT NULL,
-    category varchar(255) NOT NULL,
-    driver varchar(255) NOT NULL,
-    likelihoodMethod varchar(255) NOT NULL,
-    driverLikelihood DOUBLE PRECISION NOT NULL,
-    missense int NOT NULL,
-    nonsense int NOT NULL,
-    splice int NOT NULL,
-    frameshift int NOT NULL,
-    inframe int NOT NULL,
-    biallelic BOOLEAN NOT NULL,
-    minCopyNumber DOUBLE PRECISION NOT NULL,
-    maxCopyNumber DOUBLE PRECISION NOT NULL,
-    PRIMARY KEY (id),
-    INDEX(sampleId, gene),
-    INDEX(gene)
-);
-
 DROP TABLE IF EXISTS chord;
 CREATE TABLE chord
 (   sampleId varchar(255) NOT NULL,
@@ -902,24 +1055,6 @@ CREATE TABLE chord
     remarksHrStatus varchar(255) NOT NULL,
     remarksHrdType varchar(255) NOT NULL,
     PRIMARY KEY (sampleId)
-);
-
-DROP TABLE IF EXISTS protect;
-CREATE TABLE protect
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    event varchar(255) NOT NULL,
-    germline BOOLEAN NOT NULL,
-    reported BOOLEAN NOT NULL,
-    treatment varchar(255) NOT NULL,
-    onLabel BOOLEAN NOT NULL,
-    level varchar(255) NOT NULL,
-    direction varchar(255) NOT NULL,
-    sources varchar(255) NOT NULL,
-    urls varchar(2500) NOT NULL,
-    PRIMARY KEY (id),
-    INDEX(sampleId)
 );
 
 DROP TABLE IF EXISTS peachCalls;
@@ -940,6 +1075,21 @@ CREATE TABLE peachCalls
     filterV37 varchar(255) NOT NULL,
     variantAnnotationV38 varchar(255) NOT NULL,
     filterV38 varchar(255) NOT NULL,
+    panelVersion varchar(255) NOT NULL,
+    repoVersion varchar(255) NOT NULL,
+    PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS peachGenotype;
+CREATE TABLE peachGenotype
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    gene varchar(255) NOT NULL,
+    haplotype varchar(255) NOT NULL,
+    `function` varchar(255) NOT NULL,
+    linkedDrugs varchar(255) NOT NULL,
+    urlPrescriptionInfo varchar(255) NOT NULL,
     panelVersion varchar(255) NOT NULL,
     repoVersion varchar(255) NOT NULL,
     PRIMARY KEY (id)
@@ -978,177 +1128,71 @@ CREATE TABLE virusBreakend
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS peachGenotype;
-CREATE TABLE peachGenotype
+DROP TABLE IF EXISTS cuppaResult;
+CREATE TABLE cuppaResult
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
-    gene varchar(255) NOT NULL,
-    haplotype varchar(255) NOT NULL,
-    `function` varchar(255) NOT NULL,
-    linkedDrugs varchar(255) NOT NULL,
-    urlPrescriptionInfo varchar(255) NOT NULL,
-    panelVersion varchar(255) NOT NULL,
-    repoVersion varchar(255) NOT NULL,
-    PRIMARY KEY (id)
+    cuppaResult varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    KEY(sampleId)
 );
 
-DROP TABLE IF EXISTS amberPatient;
-CREATE TABLE amberPatient
-(
-    modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    sampleId varchar(255) NOT NULL,
-    patientId int NOT NULL,
-    PRIMARY KEY (sampleId)
-);
-
-DROP TABLE IF EXISTS amberAnonymous;
-CREATE TABLE amberAnonymous
-(
-    modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    sampleId varchar(255) NOT NULL,
-    hmfSampleId varchar(255) NOT NULL,
-    deleted BOOLEAN NOT NULL,
-    PRIMARY KEY (sampleId),
-    INDEX(hmfSampleId)
-);
-
-DROP TABLE IF EXISTS amberMapping;
-CREATE TABLE amberMapping
-(
-    modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    firstSampleId varchar(255) NOT NULL,
-    secondSampleId varchar(255) NOT NULL,
-    matches int NOT NULL,
-    sites int NOT NULL,
-    likelihood DOUBLE PRECISION NOT NULL,
-    PRIMARY KEY (firstSampleId, secondSampleId)
-);
-
-DROP TABLE IF EXISTS amberSample;
-CREATE TABLE amberSample
-(
-    modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    sampleId varchar(255) NOT NULL,
-    site1 TINYINT NOT NULL,
-    site2 TINYINT NOT NULL,
-    site3 TINYINT NOT NULL,
-    site4 TINYINT NOT NULL,
-    site5 TINYINT NOT NULL,
-    site6 TINYINT NOT NULL,
-    site7 TINYINT NOT NULL,
-    site8 TINYINT NOT NULL,
-    site9 TINYINT NOT NULL,
-    site10 TINYINT NOT NULL,
-    site11 TINYINT NOT NULL,
-    site12 TINYINT NOT NULL,
-    site13 TINYINT NOT NULL,
-    site14 TINYINT NOT NULL,
-    site15 TINYINT NOT NULL,
-    site16 TINYINT NOT NULL,
-    site17 TINYINT NOT NULL,
-    site18 TINYINT NOT NULL,
-    site19 TINYINT NOT NULL,
-    site20 TINYINT NOT NULL,
-    site21 TINYINT NOT NULL,
-    site22 TINYINT NOT NULL,
-    site23 TINYINT NOT NULL,
-    site24 TINYINT NOT NULL,
-    site25 TINYINT NOT NULL,
-    site26 TINYINT NOT NULL,
-    site27 TINYINT NOT NULL,
-    site28 TINYINT NOT NULL,
-    site29 TINYINT NOT NULL,
-    site30 TINYINT NOT NULL,
-    site31 TINYINT NOT NULL,
-    site32 TINYINT NOT NULL,
-    site33 TINYINT NOT NULL,
-    site34 TINYINT NOT NULL,
-    site35 TINYINT NOT NULL,
-    site36 TINYINT NOT NULL,
-    site37 TINYINT NOT NULL,
-    site38 TINYINT NOT NULL,
-    site39 TINYINT NOT NULL,
-    site40 TINYINT NOT NULL,
-    site41 TINYINT NOT NULL,
-    site42 TINYINT NOT NULL,
-    site43 TINYINT NOT NULL,
-    site44 TINYINT NOT NULL,
-    site45 TINYINT NOT NULL,
-    site46 TINYINT NOT NULL,
-    site47 TINYINT NOT NULL,
-    site48 TINYINT NOT NULL,
-    site49 TINYINT NOT NULL,
-    site50 TINYINT NOT NULL,
-    site51 TINYINT NOT NULL,
-    site52 TINYINT NOT NULL,
-    site53 TINYINT NOT NULL,
-    site54 TINYINT NOT NULL,
-    site55 TINYINT NOT NULL,
-    site56 TINYINT NOT NULL,
-    site57 TINYINT NOT NULL,
-    site58 TINYINT NOT NULL,
-    site59 TINYINT NOT NULL,
-    site60 TINYINT NOT NULL,
-    site61 TINYINT NOT NULL,
-    site62 TINYINT NOT NULL,
-    site63 TINYINT NOT NULL,
-    site64 TINYINT NOT NULL,
-    site65 TINYINT NOT NULL,
-    site66 TINYINT NOT NULL,
-    site67 TINYINT NOT NULL,
-    site68 TINYINT NOT NULL,
-    site69 TINYINT NOT NULL,
-    site70 TINYINT NOT NULL,
-    site71 TINYINT NOT NULL,
-    site72 TINYINT NOT NULL,
-    site73 TINYINT NOT NULL,
-    site74 TINYINT NOT NULL,
-    site75 TINYINT NOT NULL,
-    site76 TINYINT NOT NULL,
-    site77 TINYINT NOT NULL,
-    site78 TINYINT NOT NULL,
-    site79 TINYINT NOT NULL,
-    site80 TINYINT NOT NULL,
-    site81 TINYINT NOT NULL,
-    site82 TINYINT NOT NULL,
-    site83 TINYINT NOT NULL,
-    site84 TINYINT NOT NULL,
-    site85 TINYINT NOT NULL,
-    site86 TINYINT NOT NULL,
-    site87 TINYINT NOT NULL,
-    site88 TINYINT NOT NULL,
-    site89 TINYINT NOT NULL,
-    site90 TINYINT NOT NULL,
-    site91 TINYINT NOT NULL,
-    site92 TINYINT NOT NULL,
-    site93 TINYINT NOT NULL,
-    site94 TINYINT NOT NULL,
-    site95 TINYINT NOT NULL,
-    site96 TINYINT NOT NULL,
-    site97 TINYINT NOT NULL,
-    site98 TINYINT NOT NULL,
-    site99 TINYINT NOT NULL,
-    site100 TINYINT NOT NULL,
-    PRIMARY KEY (sampleId)
-);
-
-DROP TABLE IF EXISTS driverGenePanel;
-CREATE TABLE driverGenePanel
-(
+DROP TABLE IF EXISTS protect;
+CREATE TABLE protect
+(   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    gene varchar(255) NOT NULL,
-    reportMissense BOOLEAN NOT NULL,
-    reportNonsense BOOLEAN NOT NULL,
-    reportSplice BOOLEAN NOT NULL,
-    reportDeletion BOOLEAN NOT NULL,
-    reportDisruption BOOLEAN NOT NULL,
-    reportAmplification BOOLEAN NOT NULL,
-    reportSomaticHotspot BOOLEAN NOT NULL,
-    reportGermlineVariant BOOLEAN NOT NULL,
-    reportGermlineHotspot BOOLEAN NOT NULL,
-    likelihoodType varchar(255) NOT NULL,
-    PRIMARY KEY (gene)
+    sampleId varchar(255) NOT NULL,
+    event varchar(255) NOT NULL,
+    germline BOOLEAN NOT NULL,
+    reported BOOLEAN NOT NULL,
+    treatment varchar(255) NOT NULL,
+    onLabel BOOLEAN NOT NULL,
+    level varchar(255) NOT NULL,
+    direction varchar(255) NOT NULL,
+    sources varchar(255) NOT NULL,
+    urls varchar(2500) NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
+DROP TABLE IF EXISTS hlaType;
+CREATE TABLE hlaType
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    status varchar(255) NOT NULL,
+    typeA1 varchar(255) NOT NULL,
+    typeA2 varchar(255) NOT NULL,
+    typeB1 varchar(255) NOT NULL,
+    typeB2 varchar(255) NOT NULL,
+    typeC1 varchar(255) NOT NULL,
+    typeC2 varchar(255) NOT NULL,
+    somaticVariants int NOT NULL,
+    PRIMARY KEY (id),
+    KEY(sampleId)
+);
+
+DROP TABLE IF EXISTS hlaTypeDetails;
+CREATE TABLE hlaTypeDetails
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    type varchar(255) NOT NULL,
+    refUniqueCoverage INT NOT NULL,
+    refSharedCoverage INT NOT NULL,
+    refWildcardCoverage INT NOT NULL,
+    tumorUniqueCoverage INT NOT NULL,
+    tumorSharedCoverage INT NOT NULL,
+    tumorWildcardCoverage INT NOT NULL,
+    tumorCopyNumber DOUBLE PRECISION NOT NULL,
+    somaticInframeIndel DOUBLE PRECISION NOT NULL,
+    somaticNonsenseOrFrameshift DOUBLE PRECISION NOT NULL,
+    somaticMissense DOUBLE PRECISION NOT NULL,
+    somaticSplice DOUBLE PRECISION NOT NULL,
+    somaticSynonymous DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY (id),
+    KEY(sampleId, type)
 );
 
 DROP TABLE IF EXISTS rnaStatistics;
@@ -1240,55 +1284,5 @@ CREATE TABLE rnaFusion
     INDEX(sampleId, name),
     INDEX(name)
 );
-
-DROP TABLE IF EXISTS hlaType;
-CREATE TABLE hlaType
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    status varchar(255) NOT NULL,
-    typeA1 varchar(255) NOT NULL,
-    typeA2 varchar(255) NOT NULL,
-    typeB1 varchar(255) NOT NULL,
-    typeB2 varchar(255) NOT NULL,
-    typeC1 varchar(255) NOT NULL,
-    typeC2 varchar(255) NOT NULL,
-    somaticVariants int NOT NULL,
-    PRIMARY KEY (id),
-    KEY(sampleId)
-);
-
-DROP TABLE IF EXISTS hlaTypeDetails;
-CREATE TABLE hlaTypeDetails
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    type varchar(255) NOT NULL,
-    refUniqueCoverage INT NOT NULL,
-    refSharedCoverage INT NOT NULL,
-    refWildcardCoverage INT NOT NULL,
-    tumorUniqueCoverage INT NOT NULL,
-    tumorSharedCoverage INT NOT NULL,
-    tumorWildcardCoverage INT NOT NULL,
-    tumorCopyNumber DOUBLE PRECISION NOT NULL,
-    somaticInframeIndel DOUBLE PRECISION NOT NULL,
-    somaticNonsenseOrFrameshift DOUBLE PRECISION NOT NULL,
-    somaticMissense DOUBLE PRECISION NOT NULL,
-    somaticSplice DOUBLE PRECISION NOT NULL,
-    somaticSynonymous DOUBLE PRECISION NOT NULL,
-    PRIMARY KEY (id),
-    KEY(sampleId, type)
-);
-
-DROP TABLE IF EXISTS cuppaResult;
-CREATE TABLE cuppaResult
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    cuppaResult varchar(255) NOT NULL,
-    PRIMARY KEY (id),
-    KEY(sampleId)
-);
-
 
 SET FOREIGN_KEY_CHECKS = 1;
