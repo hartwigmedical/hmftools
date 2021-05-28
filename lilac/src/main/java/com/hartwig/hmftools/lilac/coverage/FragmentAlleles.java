@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_Y_FRAGMENT_THRESHOLD;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.CANDIDATE;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
@@ -96,6 +97,8 @@ public class FragmentAlleles
             }
             else
             {
+                // LL_LOGGER.debug("frag({}: {}) unassigned", fragment.id(), fragment.readInfo());
+
                 if(!fragmentAlleles.getWild().isEmpty())
                 {
                     fragment.setScope(CANDIDATE);
@@ -400,16 +403,25 @@ public class FragmentAlleles
     }
 
     public static void checkHlaYSupport(
-            final String sampleId, final List<HlaSequenceLoci> hlaYSequences,
-            final List<FragmentAlleles> fragAlleles, final List<Fragment> fragments)
+            final String sampleId, final List<HlaSequenceLoci> hlaYSequences, final List<FragmentAlleles> fragAlleles,
+            final List<Fragment> fragments, final Map<String,Map<Integer,List<String>>> geneAminoAcidHetLociMap)
     {
         // ignore fragments which don't contain any heterozygous locations
         int uniqueHlaY = 0;
 
         List<FragmentAlleles> matchedFragmentAlleles = Lists.newArrayList();
 
+        // only test heterozygous locations in A since HLA-Y matches its exon boundaries
+        Set<Integer> aminoAcidHetLoci = geneAminoAcidHetLociMap.get(GENE_A).keySet();
+
         for(Fragment fragment : fragments)
         {
+            List<Integer> fragAminoAcidLoci = fragment.getAminoAcidLoci().stream()
+                    .filter(x -> aminoAcidHetLoci.contains(x)).collect(Collectors.toList());
+
+            if(fragAminoAcidLoci.isEmpty())
+                continue;
+
             List<Integer> fragNucleotideLoci = fragment.getNucleotideLoci();
 
             boolean matchesY = false;
