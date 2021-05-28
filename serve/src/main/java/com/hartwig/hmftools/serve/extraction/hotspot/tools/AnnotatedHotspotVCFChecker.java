@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
@@ -33,12 +32,9 @@ public class AnnotatedHotspotVCFChecker {
 
     private static final String NO_INPUT_PROTEIN = "-";
 
-    private static final Set<String> RETIRED_TRANSCRIPTS = createRetiredTranscriptWhitelist();
-    private static final Set<String> CHANGED_TRANSCRIPTS = createChangedTranscriptWhitelist();
-    private static final Map<String, Map<String, List<String>>> SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT = createMappings();
-
     private final Set<String> curatedTranscripts = Sets.newHashSet();
     private final Map<String, Set<String>> annotationsRequestedForMappingPerTranscript = Maps.newHashMap();
+    private final Map<String, Set<String>> annotationsRequestedForMappingPerGene = Maps.newHashMap();
 
     public static void main(String[] args) throws IOException {
         if (LOG_DEBUG) {
@@ -111,55 +107,70 @@ public class AnnotatedHotspotVCFChecker {
             @NotNull List<SnpEffAnnotation> annotations, @NotNull String formattedHotspot) {
         SnpEffAnnotation specificAnnotation = annotationForTranscript(annotations, inputTranscript);
         if (specificAnnotation != null) {
-            String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(specificAnnotation.hgvsProtein());
-            if (!isSameAnnotation(inputTranscript, inputProteinAnnotation, snpeffProteinAnnotation)) {
-                LOGGER.warn("Difference on gene '{}-{}' - {} : SERVE input protein '{}' vs SnpEff protein '{}'",
-                        inputGene,
-                        inputTranscript,
-                        formattedHotspot,
-                        inputProteinAnnotation,
-                        snpeffProteinAnnotation);
-                return MatchType.NO_MATCH;
-            } else {
-                if (snpeffProteinAnnotation.equals(inputProteinAnnotation)) {
-                    LOGGER.debug("Identical match found on {} for '{}'", inputGene, inputProteinAnnotation);
-                    return MatchType.IDENTICAL;
-                } else {
-                    LOGGER.debug("Match found on {}. '{}' and '{}' are considered identical",
-                            inputGene,
-                            inputProteinAnnotation,
-                            snpeffProteinAnnotation);
-                    return MatchType.WHITE_LIST;
-                }
-            }
+            return matchOnSpecificAnnotation(inputGene, inputTranscript, inputProteinAnnotation, specificAnnotation, formattedHotspot);
         } else {
             // In case input transcript is missing or can't be found, we try to match against any transcript.
             // This could be tricky in case a variant was generated from 37 and is now being evaluated on 38 with different transcript IDs.
-            boolean matchFound = false;
-            for (SnpEffAnnotation annotation : annotations) {
-                // We only want to consider transcript features with coding impact.
-                if (annotation.isTranscriptFeature() && !annotation.hgvsProtein().isEmpty()) {
-                    String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
-                    if (isSameAnnotation(annotation.transcript(), inputProteinAnnotation, snpeffProteinAnnotation)) {
-                        matchFound = true;
-                    }
+            return matchOnAnyTranscript(inputGene, inputProteinAnnotation, annotations);
+        }
+    }
+
+    @NotNull
+    private MatchType matchOnSpecificAnnotation(@NotNull String inputGene, @NotNull String inputTranscript,
+            @NotNull String inputProteinAnnotation, @NotNull SnpEffAnnotation specificAnnotation, @NotNull String formattedHotspot) {
+        String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(specificAnnotation.hgvsProtein());
+        if (!isSameAnnotation(inputGene, inputTranscript, inputProteinAnnotation, snpeffProteinAnnotation)) {
+            LOGGER.warn("Difference on gene '{}-{}' - {} : SERVE input protein '{}' vs SnpEff protein '{}'",
+                    inputGene,
+                    inputTranscript,
+                    formattedHotspot,
+                    inputProteinAnnotation,
+                    snpeffProteinAnnotation);
+            return MatchType.NO_MATCH;
+        } else {
+            if (snpeffProteinAnnotation.equals(inputProteinAnnotation)) {
+                LOGGER.debug("Identical match found on {} for '{}'", inputGene, inputProteinAnnotation);
+                return MatchType.IDENTICAL;
+            } else {
+                LOGGER.debug("Match found on {}. '{}' and '{}' are considered identical",
+                        inputGene,
+                        inputProteinAnnotation,
+                        snpeffProteinAnnotation);
+                return MatchType.WHITE_LIST;
+            }
+        }
+    }
+
+    @NotNull
+    private MatchType matchOnAnyTranscript(@NotNull String inputGene, @NotNull String inputProteinAnnotation,
+            @NotNull List<SnpEffAnnotation> annotations) {
+        boolean matchFound = false;
+        String matchedSnpeffProteinAnnotation = null;
+        for (SnpEffAnnotation annotation : annotations) {
+            // We only want to consider transcript features with coding impact.
+            if (annotation.isTranscriptFeature() && !annotation.hgvsProtein().isEmpty()) {
+                String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
+                if (isSameAnnotation(inputGene, annotation.transcript(), inputProteinAnnotation, snpeffProteinAnnotation)) {
+                    matchFound = true;
+                    matchedSnpeffProteinAnnotation = snpeffProteinAnnotation;
                 }
             }
+        }
 
-            if (matchFound) {
+        if (matchFound) {
+            if (inputProteinAnnotation.equals(matchedSnpeffProteinAnnotation)) {
                 LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{}", inputProteinAnnotation, inputGene);
                 return MatchType.IDENTICAL;
-            } else if (inputTranscript != null && RETIRED_TRANSCRIPTS.contains(inputTranscript)) {
-                LOGGER.debug("Transcript '{}' has retired. Whitelisting entry '{}' on '{}'",
-                        inputTranscript,
-                        inputProteinAnnotation,
-                        inputGene);
-                curatedTranscripts.add(inputTranscript);
-                return MatchType.WHITE_LIST;
             } else {
-                LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'", inputProteinAnnotation, inputGene);
-                return MatchType.NO_MATCH;
+                LOGGER.debug("Match found on {}. '{}' and '{}' are considered identical",
+                        inputGene,
+                        inputProteinAnnotation,
+                        matchedSnpeffProteinAnnotation);
+                return MatchType.WHITE_LIST;
             }
+        } else {
+            LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'", inputProteinAnnotation, inputGene);
+            return MatchType.NO_MATCH;
         }
     }
 
@@ -173,13 +184,17 @@ public class AnnotatedHotspotVCFChecker {
         return null;
     }
 
-    private boolean isSameAnnotation(@NotNull String transcript, @NotNull String inputAnnotation, @NotNull String snpeffAnnotation) {
+    private boolean isSameAnnotation(@NotNull String gene, @NotNull String transcript, @NotNull String inputAnnotation,
+            @NotNull String snpeffAnnotation) {
         String curatedInputAnnotation = curateStartCodonAnnotation(inputAnnotation);
-        if (curatedInputAnnotation.equals(snpeffAnnotation)) {
-            return true;
-        }
+        return curatedInputAnnotation.equals(snpeffAnnotation) || transcriptWhitelist(transcript, inputAnnotation, snpeffAnnotation)
+                || geneWhitelist(gene, inputAnnotation, snpeffAnnotation) || retiredTranscriptCheck(transcript, snpeffAnnotation)
+                || changedTranscriptCheck(transcript, inputAnnotation, snpeffAnnotation);
+    }
 
-        Map<String, List<String>> transcriptMapping = SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT.get(transcript);
+    private boolean transcriptWhitelist(@NotNull String transcript, @NotNull String inputAnnotation, @NotNull String snpeffAnnotation) {
+        Map<String, List<String>> transcriptMapping =
+                AnnotatedHotspotCurationFactory.SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT.get(transcript);
         if (transcriptMapping != null) {
             Set<String> requestedAnnotations = annotationsRequestedForMappingPerTranscript.get(transcript);
             if (requestedAnnotations == null) {
@@ -194,13 +209,40 @@ public class AnnotatedHotspotVCFChecker {
             }
         }
 
-        if (RETIRED_TRANSCRIPTS.contains(transcript) && snpeffAnnotation.isEmpty()) {
+        return false;
+    }
+
+    private boolean geneWhitelist(@NotNull String gene, @NotNull String inputAnnotation, @NotNull String snpeffAnnotation) {
+        Map<String, List<String>> geneMapping = AnnotatedHotspotCurationFactory.SERVE_TO_SNPEFF_MAPPINGS_PER_GENE.get(gene);
+        if (geneMapping != null) {
+            Set<String> requestedAnnotations = annotationsRequestedForMappingPerGene.get(gene);
+            if (requestedAnnotations == null) {
+                requestedAnnotations = Sets.newHashSet(inputAnnotation);
+            } else {
+                requestedAnnotations.add(inputAnnotation);
+            }
+            annotationsRequestedForMappingPerGene.put(gene, requestedAnnotations);
+            List<String> mappedAnnotations = geneMapping.get(inputAnnotation);
+            if (mappedAnnotations != null) {
+                return mappedAnnotations.contains(snpeffAnnotation);
+            }
+        }
+
+        return false;
+    }
+
+    private boolean retiredTranscriptCheck(@NotNull String transcript, @NotNull String snpeffAnnotation) {
+        if (AnnotatedHotspotCurationFactory.RETIRED_TRANSCRIPTS.contains(transcript) && snpeffAnnotation.isEmpty()) {
             // In case we know a transcript has been retired from coding duty in certain ref genomes we accept the diff when empty.
             curatedTranscripts.add(transcript);
             return true;
         }
 
-        if (CHANGED_TRANSCRIPTS.contains(transcript)) {
+        return false;
+    }
+
+    private boolean changedTranscriptCheck(@NotNull String transcript, @NotNull String inputAnnotation, @NotNull String snpeffAnnotation) {
+        if (AnnotatedHotspotCurationFactory.CHANGED_TRANSCRIPTS.contains(transcript)) {
             // In case transcripts have different versions across ref genomes we assume the AA change is the same, just a different position
             // Eg p.PxxS should match for any xx
             curatedTranscripts.add(transcript);
@@ -213,7 +255,9 @@ public class AnnotatedHotspotVCFChecker {
 
     private void checkForUnusedMappings() {
         int unusedMappingCount = 0;
-        for (Map.Entry<String, Map<String, List<String>>> entry : SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT.entrySet()) {
+        Set<Map.Entry<String, Map<String, List<String>>>> transcriptEntries =
+                AnnotatedHotspotCurationFactory.SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT.entrySet();
+        for (Map.Entry<String, Map<String, List<String>>> entry : transcriptEntries) {
             Set<String> requestedAnnotations = annotationsRequestedForMappingPerTranscript.get(entry.getKey());
             if (requestedAnnotations == null) {
                 LOGGER.warn("No annotation mapping requested at all for '{}'", entry.getKey());
@@ -231,14 +275,14 @@ public class AnnotatedHotspotVCFChecker {
         LOGGER.info("Analyzed usage of mapping configuration. Found {} unused mappings.", unusedMappingCount);
 
         int unusedTranscriptCurationCount = 0;
-        for (String transcript : RETIRED_TRANSCRIPTS) {
+        for (String transcript : AnnotatedHotspotCurationFactory.RETIRED_TRANSCRIPTS) {
             if (!curatedTranscripts.contains(transcript)) {
                 LOGGER.warn("Transcript '{}' labeled as 'retired' has not been used in curation", transcript);
                 unusedTranscriptCurationCount++;
             }
         }
 
-        for (String transcript : CHANGED_TRANSCRIPTS) {
+        for (String transcript : AnnotatedHotspotCurationFactory.CHANGED_TRANSCRIPTS) {
             if (!curatedTranscripts.contains(transcript)) {
                 LOGGER.warn("Transcript '{}' labeled as 'changed' has not been used in curation", transcript);
                 unusedTranscriptCurationCount++;
@@ -246,101 +290,6 @@ public class AnnotatedHotspotVCFChecker {
         }
 
         LOGGER.info("Analyzed usage of transcript curation. Found {} unused curation keys.", unusedTranscriptCurationCount);
-    }
-
-    @NotNull
-    private static Set<String> createRetiredTranscriptWhitelist() {
-        Set<String> transcripts = Sets.newHashSet();
-
-        // This transcript on RHOA is coding in v37 but non-coding in v38
-        transcripts.add("ENST00000431929");
-
-        // This transcript on CDKN2A has retired in v38
-        transcripts.add("ENST00000361570");
-
-        // This transcript on BCL2L12 has completely changed in 38 and can't match anymore.
-        transcripts.add("ENST00000246784");
-
-        return transcripts;
-    }
-
-    @NotNull
-    private static Set<String> createChangedTranscriptWhitelist() {
-        Set<String> transcripts = Sets.newHashSet();
-
-        // This MYC transcript is v2 in 37 and v6 in 38 and they differ by 15 AA.
-        transcripts.add("ENST00000377970");
-
-        // This TCF7L2 transcript in v1 in 37 and v5 in 38 and they differ by 5 AA.
-        transcripts.add("ENST00000543371");
-
-        // This FGFR2 transcript is v6 in 37 and v10 in 38 and they differ by 36 AA (spread across transcript).
-        transcripts.add("ENST00000351936");
-
-        // This MED12 transcript is v6 in 37 and v10 in 38 and they differ with 53 AA (spread across transcript)
-        transcripts.add("ENST00000333646");
-
-        return transcripts;
-    }
-
-    @NotNull
-    private static Map<String, Map<String, List<String>>> createMappings() {
-        Map<String, Map<String, List<String>>> serveToSnpEffMappings = Maps.newHashMap();
-
-        serveToSnpEffMappings.put("ENST00000288135", createKITMap());
-        serveToSnpEffMappings.put("ENST00000275493", createEGFRMap());
-        serveToSnpEffMappings.put("ENST00000269571", createERBB2Map());
-        serveToSnpEffMappings.put("ENST00000263967", createPIK3CAMap());
-        serveToSnpEffMappings.put("ENST00000374690", createARMap());
-        serveToSnpEffMappings.put("ENST00000231790", createMLH1Map());
-
-        return serveToSnpEffMappings;
-    }
-
-    @NotNull
-    private static Map<String, List<String>> createKITMap() {
-        Map<String, List<String>> map = Maps.newHashMap();
-        map.put("p.S501_A502insAY", Lists.newArrayList("p.A502_Y503insYA"));
-        map.put("p.V560del", Lists.newArrayList("p.V559del"));
-        return map;
-    }
-
-    @NotNull
-    private static Map<String, List<String>> createEGFRMap() {
-        Map<String, List<String>> map = Maps.newHashMap();
-        map.put("p.V769_D770insASV", Lists.newArrayList("p.A767_V769dup"));
-        return map;
-    }
-
-    @NotNull
-    private static Map<String, List<String>> createERBB2Map() {
-        Map<String, List<String>> map = Maps.newHashMap();
-        map.put("p.A771_Y772insYVMA", Lists.newArrayList("p.Y772_V773insVMAY"));
-        map.put("p.Y772_A775dup", Lists.newArrayList("p.Y772_V773insVMAY"));
-        map.put("p.M774_A775insAYVM", Lists.newArrayList("p.A775_G776insYVMA"));
-        map.put("p.G778_P780dup", Lists.newArrayList("p.G778_S779insSPG"));
-        return map;
-    }
-
-    @NotNull
-    private static Map<String, List<String>> createPIK3CAMap() {
-        Map<String, List<String>> map = Maps.newHashMap();
-        map.put("p.E109del", Lists.newArrayList("p.E110del"));
-        return map;
-    }
-
-    @NotNull
-    private static Map<String, List<String>> createARMap() {
-        Map<String, List<String>> map = Maps.newHashMap();
-        map.put("p.Q86del", Lists.newArrayList("p.Q87del", "p.Q88del", "p.Q89del", "p.Q90del", "p.Q91del"));
-        return map;
-    }
-
-    @NotNull
-    private static Map<String, List<String>> createMLH1Map() {
-        Map<String, List<String>> map = Maps.newHashMap();
-        map.put("p.K618del", Lists.newArrayList("p.K616del", "p.K617del"));
-        return map;
     }
 
     @NotNull
