@@ -4,15 +4,19 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
+import static com.hartwig.hmftools.lilac.LilacConstants.shortGeneName;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -21,7 +25,8 @@ import org.apache.commons.math3.util.Pair;
 public final class SequenceCount
 {
     private final int mMinCount;
-    private final Map<String,Integer>[] mSeqCountsList;
+
+    private final Map<String,Integer>[] mSeqCountsList; // the index into this array of maps is the locus
 
     public SequenceCount(int minCount, final Map<String,Integer>[] seqCounts)
     {
@@ -180,6 +185,31 @@ public final class SequenceCount
             seqCounts.put(aminoAcid, count + 1);
         else
             seqCounts.put(aminoAcid, 1);
+    }
+
+    public static Map<String,Map<Integer,List<String>>> extractHeterozygousLociSequences(
+            final Map<String,SequenceCount> geneCountsMap, int minCount)
+    {
+        return geneCountsMap.entrySet().stream().collect(Collectors
+            .toMap(entry -> shortGeneName(entry.getKey()), entry -> entry.getValue().extractHeterozygousLociSequences(minCount)));
+    }
+
+    public Map<Integer,List<String>> extractHeterozygousLociSequences(int minCount)
+    {
+        Map<Integer,List<String>> lociSeqMap = Maps.newLinkedHashMap();
+
+        for(int locus = 0; locus < mSeqCountsList.length; ++locus)
+        {
+            List<String> aminoAcids = mSeqCountsList[locus].entrySet().stream()
+                    .filter(x -> x.getValue() >= minCount).map(x -> x.getKey()).collect(Collectors.toList());
+
+            if(aminoAcids.size() > 1)
+            {
+                lociSeqMap.put(locus, aminoAcids);
+            }
+        }
+
+        return lociSeqMap;
     }
 
     public final void writeVertically(final String fileName)

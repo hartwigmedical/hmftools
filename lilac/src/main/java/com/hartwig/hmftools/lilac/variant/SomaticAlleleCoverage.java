@@ -13,16 +13,18 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class SomaticAlleleCoverage
 {
     private final List<Integer> mVariantLoci;
-    private final List<Integer> mHetLociSansVariants;
+    private final Map<String,Map<Integer,List<String>>> mHetLociSansVariants;
     private final LilacConfig mConfig;
     private final List<HlaSequenceLoci> mWinners;
 
-    public SomaticAlleleCoverage(final LilacConfig config, final List<Integer> hetLoci, final LociPosition lociPosition,
+    public SomaticAlleleCoverage(
+            final LilacConfig config, final Map<String, Map<Integer,List<String>>> geneAminoAcidHetLociMap, final LociPosition lociPosition,
             final List<VariantContextDecorator> variants, final List<HlaSequenceLoci> winners)
     {
         mConfig = config;
@@ -36,7 +38,18 @@ public class SomaticAlleleCoverage
                 .mapToInt(x -> x / 3)
                 .forEach(x -> mVariantLoci.add(x));
 
-        mHetLociSansVariants = hetLoci.stream().filter(x -> !mVariantLoci.contains(x)).collect(Collectors.toList());
+        mHetLociSansVariants = Maps.newHashMap();
+
+        for(Map.Entry<String,Map<Integer,List<String>>> geneEntry : geneAminoAcidHetLociMap.entrySet())
+        {
+            Map<Integer,List<String>> lociSeqMap = geneEntry.getValue().entrySet().stream()
+                    .filter(x -> !mVariantLoci.contains(x.getKey()))
+                    .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
+
+            mHetLociSansVariants.put(geneEntry.getKey(), lociSeqMap);
+        }
+
+        // mHetLociSansVariants = hetLoci.stream().filter(x -> !mVariantLoci.contains(x)).collect(Collectors.toList());
     }
 
     public final List<HlaAlleleCoverage> alleleCoverage(final VariantContextDecorator variant, final SAMRecordReader reader)
@@ -58,8 +71,8 @@ public class SomaticAlleleCoverage
         }
 
         List<FragmentAlleles> variantFragmentAlleles = FragmentAlleles.createFragmentAlleles(
-                variantFragments, mHetLociSansVariants, mWinners, Lists.newArrayList(), Maps.newHashMap(),
-                Lists.newArrayList(), Lists.newArrayList());
+                variantFragments, mHetLociSansVariants, mWinners,
+                Maps.newHashMap(), Lists.newArrayList(), Lists.newArrayList());
 
         List<HlaAlleleCoverage> coverage = HlaAlleleCoverage.proteinCoverage(variantFragmentAlleles);
 

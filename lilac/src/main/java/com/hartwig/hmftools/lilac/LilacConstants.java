@@ -33,9 +33,9 @@ public class LilacConstants
     public static final String GENE_Y = "Y";
 
     public static final String HLA_PREFIX = "HLA-";
-    public static final String HLA_A = HLA_PREFIX + GENE_A;
-    public static final String HLA_B = HLA_PREFIX + GENE_B;
-    public static final String HLA_C = HLA_PREFIX + GENE_C;
+    public static final String HLA_A = longGeneName(GENE_A);
+    public static final String HLA_B = longGeneName(GENE_B);
+    public static final String HLA_C = longGeneName(GENE_C);
 
     public static final List<String> GENE_IDS = Lists.newArrayList(GENE_A, GENE_B, GENE_C);
     public static final List<String> HLA_GENES = Lists.newArrayList(HLA_A, HLA_B, HLA_C);
@@ -72,5 +72,15 @@ public class LilacConstants
             return B_EXON_BOUNDARIES;
         else
             return C_EXON_BOUNDARIES;
+    }
+
+    public static String shortGeneName(final String gene)
+    {
+        return gene.startsWith(HLA_PREFIX) ? gene.substring(gene.length() - 1) : gene;
+    }
+
+    public static String longGeneName(final String gene)
+    {
+        return gene.length() == 1 ? HLA_PREFIX + gene : gene;
     }
 }

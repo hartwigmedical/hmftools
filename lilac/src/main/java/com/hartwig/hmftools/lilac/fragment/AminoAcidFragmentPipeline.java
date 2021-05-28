@@ -25,6 +25,7 @@ public class AminoAcidFragmentPipeline
     private final List<Fragment> mHighQualRefAminoAcidFragments;
     private final List<Fragment> mHighQualTumorFragments;
 
+    // per-gene counts of bases and amino-acids with sufficient support
     private final Map<String,SequenceCount> mRefNucleotideCounts;
     private final Map<String,SequenceCount> mRefAminoAcidCounts;
 
@@ -47,7 +48,7 @@ public class AminoAcidFragmentPipeline
 
     public List<Fragment> getReferenceFragments() { return mHighQualRefAminoAcidFragments; }
 
-    public Map<String,SequenceCount> referenceAminoAcidCounts() { return mRefAminoAcidCounts; }
+    public Map<String,SequenceCount> getReferenceAminoAcidCounts() { return mRefAminoAcidCounts; }
 
     private List<Fragment> createHighQualAminoAcidFragments(final List<Fragment> fragments)
     {
@@ -68,11 +69,6 @@ public class AminoAcidFragmentPipeline
         }
 
         return aminoAcidFragments;
-    }
-
-    public List<Set<String>> getReferenceAminoAcids()
-    {
-        return createSequenceSets(mRefAminoAcidCounts);
     }
 
     public List<Set<String>> getReferenceNucleotides()

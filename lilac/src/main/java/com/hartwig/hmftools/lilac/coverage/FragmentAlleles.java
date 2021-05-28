@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.WILD;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.lilac.SequenceCount;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.FragmentScope;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -71,13 +72,13 @@ public class FragmentAlleles
     }
 
     public static List<FragmentAlleles> createFragmentAlleles(
-            final List<Fragment> refCoverageFragments, final List<Integer> refAminoAcidHetLoci,
-            final List<HlaSequenceLoci> candidateAminoAcidSequences, final List<Set<String>> refAminoAcids,
+            final List<Fragment> refCoverageFragments, final Map<String,Map<Integer,List<String>>> geneAminoAcidHetLociMap,
+            final List<HlaSequenceLoci> candidateAminoAcidSequences,
             final Map<String,List<Integer>> refNucleotideHetLoci, final List<HlaSequenceLoci> candidateNucleotideSequences,
             final List<Set<String>> refNucleotides)
     {
-        LL_LOGGER.info("building frag-alleles from aminoAcids(frags={} hetLoci={} candSeq={} acids={}) nucFrags(hetLoci={} candSeq={} nucs={})",
-                refCoverageFragments.size(), refAminoAcidHetLoci.size(), candidateAminoAcidSequences.size(), refAminoAcids.size(),
+        LL_LOGGER.info("building frag-alleles from aminoAcids(frags={} candSeq={}) nucFrags(hetLoci={} candSeq={} nucs={})",
+                refCoverageFragments.size(), candidateAminoAcidSequences.size(),
                 refNucleotideHetLoci.size(), candidateNucleotideSequences.size(), refNucleotides.size());
 
         List<FragmentAlleles> results = Lists.newArrayList();
@@ -85,7 +86,7 @@ public class FragmentAlleles
         for(Fragment fragment : refCoverageFragments)
         {
             FragmentAlleles fragmentAlleles = create(
-                    fragment, refAminoAcidHetLoci, candidateAminoAcidSequences, refAminoAcids,
+                    fragment, geneAminoAcidHetLociMap, candidateAminoAcidSequences,
                     refNucleotideHetLoci, candidateNucleotideSequences, refNucleotides);
 
             // drop wild-only alleles since their support can't be clearly established
@@ -101,7 +102,8 @@ public class FragmentAlleles
                 }
                 else
                 {
-                    if(fragment.getAminoAcidLoci().stream().noneMatch(x -> refAminoAcidHetLoci.contains(x)))
+                    if(fragment.getAminoAcidLoci().stream()
+                            .noneMatch(x -> geneAminoAcidHetLociMap.values().stream().anyMatch(y -> y.containsKey(x))))
                     {
                         fragment.setScope(NO_HET_LOCI);
                     }
@@ -117,8 +119,8 @@ public class FragmentAlleles
     }
 
     private static FragmentAlleles create(
-            final Fragment fragment, final List<Integer> aminoAcidLoci, final List<HlaSequenceLoci> aminoAcidSequences,
-            final List<Set<String>> refAminoAcids,
+            final Fragment fragment, Map<String,Map<Integer,List<String>>> geneAminoAcidHetLociMap,
+            final List<HlaSequenceLoci> aminoAcidSequences,
             final Map<String,List<Integer>> refNucleotideHetLoci, final List<HlaSequenceLoci> nucleotideSequences,
             final List<Set<String>> refNucleotides)
     {
@@ -140,7 +142,7 @@ public class FragmentAlleles
                 .map(x -> x.getKey()).collect(Collectors.toList());
 
         Map<HlaAllele, SequenceMatchType> aminoAcidAlleleMatches = findAminoAcidMatches(
-                fragment, aminoAcidLoci, aminoAcidSequences, refAminoAcids);
+                fragment, geneAminoAcidHetLociMap, aminoAcidSequences);
 
         List<HlaAllele> fullAminoAcidMatch = aminoAcidAlleleMatches.entrySet().stream()
                 .filter(x -> x.getValue() == FULL).map(x -> x.getKey()).collect(Collectors.toList());
@@ -281,60 +283,69 @@ public class FragmentAlleles
     }
 
     private static Map<HlaAllele, SequenceMatchType> findAminoAcidMatches(
-            final Fragment fragment, final List<Integer> aminoAcidLoci, final List<HlaSequenceLoci> aminoAcidSequences,
-            final List<Set<String>> refAminoAcids)
+            final Fragment fragment, Map<String,Map<Integer,List<String>>> geneAminoAcidHetLociMap,
+            final List<HlaSequenceLoci> aminoAcidSequences)
     {
-        Map<HlaAllele, SequenceMatchType> alleleMatches = Maps.newHashMap();
+        Map<HlaAllele,SequenceMatchType> alleleMatches = Maps.newHashMap();
 
-        List<Integer> fragAminoAcidLoci = fragment.getAminoAcidLoci().stream()
-                .filter(x -> aminoAcidLoci.contains(x)).collect(Collectors.toList());
+        Map<String,List<Integer>> fragGeneLociMap = Maps.newHashMap(); // per-gene map of heterozygous locations for this fragment
+        Map<String,String> fragGeneSequenceMap = Maps.newHashMap(); // per-gene map of fragment sequences at these het loci
 
-        if(fragAminoAcidLoci.isEmpty())
-            return alleleMatches;
-
-        // also attempt to retrive amino acids from low-qual nucleotides
-        Map<Integer,String> missedAminoAcids = Maps.newHashMap();
-
-        List<Integer> missedAminoAcidLoci = aminoAcidLoci.stream()
-                .filter(x -> !fragAminoAcidLoci.contains(x)).collect(Collectors.toList());
-
-        for(Integer missedLocus : missedAminoAcidLoci)
+        for(Map.Entry<String,Map<Integer,List<String>>> geneEntry : geneAminoAcidHetLociMap.entrySet())
         {
-            if(missedLocus >= refAminoAcids.size())
+            Map<Integer,List<String>> hetLociSeqMap = geneEntry.getValue();
+
+            List<Integer> fragAminoAcidLoci = fragment.getAminoAcidLoci().stream()
+                    .filter(x -> hetLociSeqMap.containsKey(x)).collect(Collectors.toList());
+
+            if(fragAminoAcidLoci.isEmpty())
                 continue;
 
-            Set<String> candidateAminoAcids = refAminoAcids.get(missedLocus);
+            // also attempt to retrieve amino acids from low-qual nucleotides
+            Map<Integer, String> missedAminoAcids = Maps.newHashMap();
 
-            String lowQualAminoAcid = fragment.getLowQualAminoAcid(missedLocus);
+            List<Integer> missedAminoAcidLoci = hetLociSeqMap.keySet().stream()
+                    .filter(x -> !fragAminoAcidLoci.contains(x)).collect(Collectors.toList());
 
-            if(!lowQualAminoAcid.isEmpty() && candidateAminoAcids.contains(lowQualAminoAcid))
+            for(Integer missedLocus : missedAminoAcidLoci)
             {
-                fragAminoAcidLoci.add(missedLocus);
-                missedAminoAcids.put(missedLocus, lowQualAminoAcid);
-            }
-        }
+                String lowQualAminoAcid = fragment.getLowQualAminoAcid(missedLocus);
 
-        Collections.sort(fragAminoAcidLoci);
+                if(lowQualAminoAcid.isEmpty())
+                    continue;
 
-        String fragmentAminoAcids;
+                List<String> candidateAminoAcids = hetLociSeqMap.get(missedLocus);
 
-        if(missedAminoAcids.isEmpty())
-        {
-            fragmentAminoAcids = fragment.aminoAcids(fragAminoAcidLoci);
-        }
-        else
-        {
-            StringJoiner aaSj = new StringJoiner("");
-
-            for(Integer locus : fragAminoAcidLoci)
-            {
-                if(missedAminoAcids.containsKey(locus))
-                    aaSj.add(missedAminoAcids.get(locus));
-                else
-                    aaSj.add(fragment.aminoAcid(locus));
+                if(candidateAminoAcids.contains(lowQualAminoAcid))
+                {
+                    fragAminoAcidLoci.add(missedLocus);
+                    missedAminoAcids.put(missedLocus, lowQualAminoAcid);
+                }
             }
 
-            fragmentAminoAcids = aaSj.toString();
+            String fragmentAminoAcids;
+
+            if(missedAminoAcids.isEmpty())
+            {
+                fragmentAminoAcids = fragment.aminoAcids(fragAminoAcidLoci);
+            }
+            else
+            {
+                StringJoiner aaSj = new StringJoiner("");
+
+                for(Integer locus : fragAminoAcidLoci)
+                {
+                    if(missedAminoAcids.containsKey(locus))
+                        aaSj.add(missedAminoAcids.get(locus));
+                    else
+                        aaSj.add(fragment.aminoAcid(locus));
+                }
+
+                fragmentAminoAcids = aaSj.toString();
+            }
+
+            fragGeneLociMap.put(geneEntry.getKey(), fragAminoAcidLoci);
+            fragGeneSequenceMap.put(geneEntry.getKey(), fragmentAminoAcids);
         }
 
         for(HlaSequenceLoci sequence : aminoAcidSequences)
@@ -343,6 +354,13 @@ public class FragmentAlleles
 
             if(!fragment.getGenes().contains(allele.geneName()))
                 continue;
+
+            List<Integer> fragAminoAcidLoci = fragGeneLociMap.get(allele.Gene);
+
+            if(fragAminoAcidLoci == null) // not supported by this gene or homozygous in all locations
+                continue;
+
+            String fragmentAminoAcids = fragGeneSequenceMap.get(allele.Gene);
 
             // ignore any wildcard loci at an exon boundary
             List<Integer> alleleFilteredLoci = filterExonBoundaryWildcards(sequence, fragAminoAcidLoci);
@@ -382,7 +400,7 @@ public class FragmentAlleles
     }
 
     public static void checkHlaYSupport(
-            final String sampleId, final List<HlaSequenceLoci> hlaYSequences, List<Integer> refAminoAcidHetLoci,
+            final String sampleId, final List<HlaSequenceLoci> hlaYSequences,
             final List<FragmentAlleles> fragAlleles, final List<Fragment> fragments)
     {
         // ignore fragments which don't contain any heterozygous locations
@@ -392,12 +410,6 @@ public class FragmentAlleles
 
         for(Fragment fragment : fragments)
         {
-            List<Integer> fragAminoAcidLoci = fragment.getAminoAcidLoci().stream()
-                    .filter(x -> refAminoAcidHetLoci.contains(x)).collect(Collectors.toList());
-
-            if(fragAminoAcidLoci.isEmpty())
-                continue;
-
             List<Integer> fragNucleotideLoci = fragment.getNucleotideLoci();
 
             boolean matchesY = false;
