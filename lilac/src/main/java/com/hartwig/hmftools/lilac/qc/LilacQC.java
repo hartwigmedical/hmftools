@@ -20,6 +20,7 @@ import com.google.common.collect.Sets;
 public final class LilacQC
 {
     private final Set<LilacQCStatus> mStatus;
+    private final boolean mHasHlaY;
     private final AminoAcidQC mAminoAcidQC;
     private final BamQC mBamQC;
     private final CoverageQC mCoverageQC;
@@ -34,6 +35,7 @@ public final class LilacQC
         mBamQC.header().forEach(x -> sj.add(x));
         mCoverageQC.header().forEach(x -> sj.add(x));
         mHaplotypeQC.header().forEach(x -> sj.add(x));
+        sj.add("HlaY");
         mSomaticVariantQC.header().forEach(x -> sj.add(x));
 
         return sj.toString();
@@ -50,6 +52,7 @@ public final class LilacQC
         mBamQC.body().forEach(x -> sj.add(x));
         mCoverageQC.body().forEach(x -> sj.add(x));
         mHaplotypeQC.body().forEach(x -> sj.add(x));
+        sj.add(String.valueOf(mHasHlaY));
         mSomaticVariantQC.body().forEach(x -> sj.add(x));
 
         return sj.toString();
@@ -76,10 +79,12 @@ public final class LilacQC
         }
     }
 
-    public LilacQC(final Set<LilacQCStatus> status, final AminoAcidQC aminoAcidQC, final BamQC bamQC,
-            final CoverageQC coverageQC, final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
+    public LilacQC(
+            final Set<LilacQCStatus> status, final AminoAcidQC aminoAcidQC, final BamQC bamQC,
+            final CoverageQC coverageQC, final HaplotypeQC haplotypeQC, boolean hasHlaY, final SomaticVariantQC somaticVariantQC)
     {
         mStatus = status;
+        mHasHlaY = hasHlaY;
         mAminoAcidQC = aminoAcidQC;
         mBamQC = bamQC;
         mCoverageQC = coverageQC;
@@ -89,7 +94,7 @@ public final class LilacQC
 
     public static LilacQC create(
             final AminoAcidQC aminoAcidQC, final BamQC bamQC, final CoverageQC coverageQC,
-            final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC, int totalFragments)
+            final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC, boolean hasHlaY, int totalFragments)
     {
         Set<LilacQCStatus> statusList = Sets.newHashSet();
 
@@ -124,6 +129,6 @@ public final class LilacQC
             statusList.add(LilacQCStatus.PASS);
         }
 
-        return new LilacQC(statusList, aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC);
+        return new LilacQC(statusList, aminoAcidQC, bamQC, coverageQC, haplotypeQC, hasHlaY, somaticVariantQC);
     }
 }

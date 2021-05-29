@@ -25,7 +25,7 @@ public class LilacConstants
     public static final double RECOVERY_SCORE_PENALTY = 0.005;
 
     // warning thresholds
-    public static final double WARN_UNMATCHED_HAPLOTYPE_SUPPORT = 0.007;
+    public static final double WARN_UNMATCHED_HAPLOTYPE_SUPPORT = 0.008;
     public static final int LOG_UNMATCHED_HAPLOTYPE_SUPPORT = 3;
     public static final double WARN_INDEL_THRESHOLD = 0.004;
 

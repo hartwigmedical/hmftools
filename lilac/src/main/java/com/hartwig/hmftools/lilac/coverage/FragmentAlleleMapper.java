@@ -402,7 +402,7 @@ public class FragmentAlleleMapper
         return alleleMatches;
     }
 
-    public void checkHlaYSupport(
+    public boolean checkHlaYSupport(
             final List<HlaSequenceLoci> hlaYSequences, final List<FragmentAlleles> fragAlleles, final List<Fragment> fragments)
     {
         // ignore fragments which don't contain any heterozygous locations
@@ -484,6 +484,8 @@ public class FragmentAlleleMapper
                 matchedFragmentAlleles.forEach(x -> x.getFragment().setScope(HLA_Y, true));
             }
         }
+
+        return exceedsThreshold;
     }
 
     public static void applyUniqueStopLossFragments(

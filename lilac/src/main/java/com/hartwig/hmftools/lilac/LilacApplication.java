@@ -255,7 +255,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         FragmentAlleleMapper.applyUniqueStopLossFragments(
                 refFragAlleles, referenceBamReader.stopLossOnCIndels(), mRefData.StopLossRecoveryAlleles);
 
-        fragAlleleMapper.checkHlaYSupport(mRefData.HlaYNucleotideSequences, refFragAlleles, refAminoAcidFrags);
+        boolean hasHlaY = fragAlleleMapper.checkHlaYSupport(mRefData.HlaYNucleotideSequences, refFragAlleles, refAminoAcidFrags);
 
         // build and score complexes
         HlaComplexBuilder complexBuilder = new HlaComplexBuilder(mConfig, mRefData);
@@ -371,7 +371,7 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         BamQC bamQC = BamQC.create(referenceBamReader);
         CoverageQC coverageQC = CoverageQC.create(refNucleotideFrags.size(), winningRefCoverage);
-        LilacQC lilacQC = LilacQC.create(aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC, totalFragmentCount);
+        LilacQC lilacQC = LilacQC.create(aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC, hasHlaY, totalFragmentCount);
 
         LL_LOGGER.info("QC Stats:");
         LL_LOGGER.info("  {}", lilacQC.header());
