@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTOFF;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_Y;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.lilac.cohort.CohortFrequency;
@@ -35,6 +37,7 @@ public class ReferenceData
     public final List<HlaSequenceLoci> AminoAcidSequencesWithInserts;
     public final List<HlaSequenceLoci> AminoAcidSequencesWithDeletes;
     public final List<HlaSequenceLoci> HlaYNucleotideSequences;
+    public final List<HlaSequenceLoci> HlaYAminoAcidSequences;
 
     public final List<HlaAllele> CommonAlleles; // common in population
     public final List<HlaAllele> StopLossRecoveryAlleles;
@@ -72,6 +75,7 @@ public class ReferenceData
         AminoAcidSequencesWithInserts = Lists.newArrayList();
         AminoAcidSequencesWithDeletes = Lists.newArrayList();
         HlaYNucleotideSequences = Lists.newArrayList();
+        HlaYAminoAcidSequences = Lists.newArrayList();
 
         mDeflatedSequenceTemplate = null;
 
@@ -122,8 +126,30 @@ public class ReferenceData
 
         AminoAcidSequencesWithInserts.addAll(AminoAcidSequences.stream().filter(x -> x.containsInserts()).collect(Collectors.toList()));
         AminoAcidSequencesWithDeletes.addAll(AminoAcidSequences.stream().filter(x -> x.containsDeletes()).collect(Collectors.toList()));
+        buildHlaYAminoAcidSequences();
 
         return true;
+    }
+
+    private void buildHlaYAminoAcidSequences()
+    {
+        for(HlaSequenceLoci sequenceLoci : HlaYNucleotideSequences)
+        {
+            String sequence = "";
+            for(int i = 0; i < sequenceLoci.length() - 2; i = i + 3)
+            {
+                String first = sequenceLoci.getSequences().get(i);
+                String second = sequenceLoci.getSequences().get(i + 1);
+                String third = sequenceLoci.getSequences().get(i + 2);
+
+                if(first.equals(DEL_STR) || third.equals(DEL_STR) || third.equals(DEL_STR))
+                    sequence += DEL_STR;
+                else
+                    sequence += Codons.aminoAcids(first + second + third);
+            }
+
+            HlaYAminoAcidSequences.add(HlaSequenceLoci.create(sequenceLoci.Allele, sequence, mDeflatedSequenceTemplate.sequence()));
+        }
     }
 
     private void loadCommonAlleles()

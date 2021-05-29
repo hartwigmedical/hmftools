@@ -39,7 +39,8 @@ public class AminoAcidQC
     }
 
     public static AminoAcidQC create(
-            final List<HlaSequenceLoci> winners, final SequenceCount aminoAcidCount, final List<Haplotype> unmatchedHaplotypes)
+            final List<HlaSequenceLoci> winners, final List<HlaSequenceLoci> hlaYSequenceLoci,
+            final SequenceCount aminoAcidCount, final List<Haplotype> unmatchedHaplotypes)
     {
         int unused = 0;
         int largest = 0;
@@ -50,17 +51,28 @@ public class AminoAcidQC
             if(unmatchedHaplotypes.stream().anyMatch(x -> positionWithin(locus, x.StartLocus, x.EndLocus)))
                 continue;
 
+            // or those matching the winning or HLA-Y sequences
+
             Map<String,Integer> expected = aminoAcidCount.get(locus);
 
-            Set<String> actualSequences =  winners.stream()
+            Set<String> actualSequences = winners.stream()
+                    .filter(x -> locus < x.getSequences().size()).map(x -> x.sequence(locus)).collect(Collectors.toSet());
+
+            Set<String> hlaYSequences = hlaYSequenceLoci.stream()
                     .filter(x -> locus < x.getSequences().size()).map(x -> x.sequence(locus)).collect(Collectors.toSet());
 
             if(actualSequences.stream().anyMatch(x -> x.equals(WILD_STR)))
                 continue;
 
+
             for(Map.Entry<String,Integer> entry : expected.entrySet())
             {
-                if(actualSequences.contains(entry.getKey()))
+                String aminoAcid = entry.getKey();
+
+                if(actualSequences.contains(aminoAcid))
+                    continue;
+
+                if(hlaYSequences.contains(aminoAcid))
                     continue;
 
                 int count = entry.getValue();
@@ -69,7 +81,7 @@ public class AminoAcidQC
                     continue;
 
                 LL_LOGGER.warn("  UNMATCHED_AMINO_ACID - amino acid sequence({} count={} locus={}) not in winning solution",
-                        entry.getKey(), count, locus);
+                        aminoAcid, count, locus);
 
                 if(count >= WARN_UNMATCHED_HAPLOTYPE_SUPPORT)
                 {

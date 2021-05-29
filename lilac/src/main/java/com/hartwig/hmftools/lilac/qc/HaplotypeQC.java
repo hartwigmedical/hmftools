@@ -72,12 +72,15 @@ public class HaplotypeQC
     }
 
     public static HaplotypeQC create(
-            int minEvidence, final List<HlaSequenceLoci> winners, final List<PhasedEvidence> evidence, final SequenceCount aminoAcidCount)
+            final List<HlaSequenceLoci> winners, final List<HlaSequenceLoci> hlaYSequences,
+            final List<PhasedEvidence> evidence, final SequenceCount aminoAcidCount)
     {
         loadPonHaplotypes();
 
         List<Haplotype> allUnmatched = Lists.newArrayList();
-        evidence.stream().map(x -> unmatchedHaplotype(x, minEvidence, winners, aminoAcidCount)).forEach(x -> allUnmatched.addAll(x));
+        evidence.stream()
+                .map(x -> unmatchedHaplotype(x, LOG_UNMATCHED_HAPLOTYPE_SUPPORT, winners, aminoAcidCount, hlaYSequences))
+                .forEach(x -> allUnmatched.addAll(x));
 
         Collections.sort(allUnmatched, new Haplotype.HaplotypeFragmentSorter());
 
@@ -135,13 +138,14 @@ public class HaplotypeQC
     }
 
     public static List<Haplotype> unmatchedHaplotype(
-            final PhasedEvidence evidence, int minEvidence,
-            final List<HlaSequenceLoci> winners, final SequenceCount aminoAcidCount)
+            final PhasedEvidence evidence, int minEvidence, final List<HlaSequenceLoci> winners, final SequenceCount aminoAcidCount,
+            final List<HlaSequenceLoci> hlaYSequences)
     {
         // look through all phased evidence for AA sequences which are not supported by the winning alleles
         // ignore any wildcard sections
         Map<String,Integer> unmatched = evidence.getEvidence().entrySet().stream()
                 .filter(x -> !consistentWithAny(evidence, winners, x.getKey()))
+                .filter(x -> !consistentWithAny(evidence, hlaYSequences, x.getKey()))
                 .filter(x -> x.getValue() >= minEvidence)
                 .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
 

@@ -58,25 +58,25 @@ public class QualityControlTest
         HlaSequenceLoci wildCandidate = createSequenceLoci("A*01:04", "****");
 
         List<Haplotype> noMissing = HaplotypeQC.unmatchedHaplotype(
-                victim, 0, Lists.newArrayList(catCandidate, atcCandidate), aminoAcidCount);
+                victim, 0, Lists.newArrayList(catCandidate, atcCandidate), aminoAcidCount, Lists.newArrayList());
         Assert.assertEquals(0, noMissing.size());
 
         List<Haplotype> catMissing = HaplotypeQC.unmatchedHaplotype(
-                victim, 0, Lists.newArrayList(atcCandidate), aminoAcidCount);
+                victim, 0, Lists.newArrayList(atcCandidate), aminoAcidCount, Lists.newArrayList());
         Assert.assertEquals(1, catMissing.size());
         Assert.assertTrue(catMissing.get((0)).Haplotype.equals("CART"));
 
         List<Haplotype> catNotMissingBecauseOfMinEvidence = HaplotypeQC.unmatchedHaplotype(
-                victim, 5, Lists.newArrayList(atcCandidate), aminoAcidCount);
+                victim, 5, Lists.newArrayList(atcCandidate), aminoAcidCount, Lists.newArrayList());
         Assert.assertEquals(0, catNotMissingBecauseOfMinEvidence.size());
 
         List<Haplotype> wildAtcMatch = HaplotypeQC.unmatchedHaplotype(
-                victim, 0, Lists.newArrayList(wildAtcCandidate), aminoAcidCount);
+                victim, 0, Lists.newArrayList(wildAtcCandidate), aminoAcidCount, Lists.newArrayList());
         Assert.assertEquals(1, wildAtcMatch.size());
         Assert.assertTrue(wildAtcMatch.get((0)).Haplotype.equals("CART"));
 
         List<Haplotype> wildMatch = HaplotypeQC.unmatchedHaplotype(
-                victim, 0, Lists.newArrayList(wildCandidate), aminoAcidCount);
+                victim, 0, Lists.newArrayList(wildCandidate), aminoAcidCount, Lists.newArrayList());
         Assert.assertEquals(0, wildMatch.size());
     }
 
@@ -101,7 +101,7 @@ public class QualityControlTest
         // add the unmatched AAs
 
         // in wildcard sequences, so not reported
-        int warnLevel = WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
+        int warnLevel = (int)(WARN_UNMATCHED_HAPLOTYPE_SUPPORT * 1000);
         sequenceCountsMap[1].put("C", warnLevel); // expect B
         sequenceCountsMap[14].put("C", warnLevel); // expect anything
 
@@ -122,7 +122,7 @@ public class QualityControlTest
 
         List<HlaSequenceLoci> winningSequences = Lists.newArrayList(winningSeq1, winningSeq2, winningSeq3);
 
-        AminoAcidQC qc = AminoAcidQC.create(winningSequences, aminoAcidCount, unmatchedHaplotypes);
+        AminoAcidQC qc = AminoAcidQC.create(winningSequences, Lists.newArrayList(), aminoAcidCount, unmatchedHaplotypes);
         assertEquals(2, qc.UnusedAminoAcids);
     }
 
