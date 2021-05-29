@@ -25,6 +25,7 @@ import com.hartwig.hmftools.serve.util.AminoAcidFunctions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -87,17 +88,22 @@ class TransvarInterpreter {
             }
         } else {
             // We need to look up which index of the ref codon is changed (0, 1 or 2) in case of SNV/MNV.
-            int gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(snvMnv, strand);
+            Integer gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(snvMnv, strand);
 
-            for (String candidateCodon : snvMnv.candidateCodons()) {
-                hotspots.add(fromCandidateCodon(record, snvMnv.referenceCodon(), candidateCodon, gdnaCodonIndex, strand));
+            if (gdnaCodonIndex != null) {
+                for (String candidateCodon : snvMnv.candidateCodons()) {
+                    hotspots.add(fromCandidateCodon(record, snvMnv.referenceCodon(), candidateCodon, gdnaCodonIndex, strand));
+                }
+            } else {
+                LOGGER.warn("Could not resolve gdnaCodonIndex for '{}' on strand {}", record, strand);
             }
         }
 
         return hotspots;
     }
 
-    private static int findIndexInRefCodonForGdnaMatch(@NotNull TransvarSnvMnv snvMnv, @NotNull Strand strand) {
+    @Nullable
+    private static Integer findIndexInRefCodonForGdnaMatch(@NotNull TransvarSnvMnv snvMnv, @NotNull Strand strand) {
         String codonCompatibleRef = strand.equals(Strand.FORWARD) ? snvMnv.gdnaRef() : reverseAndFlip(snvMnv.gdnaRef());
         String codonCompatibleAlt = strand.equals(Strand.FORWARD) ? snvMnv.gdnaAlt() : reverseAndFlip(snvMnv.gdnaAlt());
 
@@ -127,7 +133,7 @@ class TransvarInterpreter {
             }
         }
 
-        throw new IllegalStateException("Could not find codon index for gDNA match for " + snvMnv);
+        return null;
     }
 
     @NotNull
