@@ -18,14 +18,15 @@ class TransvarCurator {
 
     private static final Map<String, String> PROTEIN_ANNOTATION_MAPPING = Maps.newHashMap();
     private static final Set<String> GENES_FOR_WHICH_TO_SKIP_38_MAPPING = Sets.newHashSet();
-    private static final Map<String, String> ADDITIONAL_GENE_MAPPING_38_TO_37 = Maps.newHashMap();
+    private static final Map<String, String> MANUAL_GENE_MAPPING_38_TO_37 = Maps.newHashMap();
 
     static {
         // Transvar can't interpret start-lost so we map it to another mutation.
         PROTEIN_ANNOTATION_MAPPING.put("M1?", "M1I");
 
-        // These genes have no mapping in HMF but should be mapped for transvar specifically.
-        ADDITIONAL_GENE_MAPPING_38_TO_37.put("EPOP", "C17orf96");
+        // These genes have to be mapped for transvar specifically.
+        MANUAL_GENE_MAPPING_38_TO_37.put("EPOP", "C17orf96");
+        MANUAL_GENE_MAPPING_38_TO_37.put("NAPB", "SEPT9");
 
         // These genes work in transvar fine and should not be mapped.
         GENES_FOR_WHICH_TO_SKIP_38_MAPPING.add("CCDC186");
@@ -45,8 +46,8 @@ class TransvarCurator {
         // Somehow can't manage to configure transvar to use typical v38 gene names.
         String v37Gene = gene;
         if (refGenomeVersion == RefGenomeVersion.V38) {
-            if (ADDITIONAL_GENE_MAPPING_38_TO_37.containsKey(gene)) {
-                v37Gene = ADDITIONAL_GENE_MAPPING_38_TO_37.get(gene);
+            if (MANUAL_GENE_MAPPING_38_TO_37.containsKey(gene)) {
+                v37Gene = MANUAL_GENE_MAPPING_38_TO_37.get(gene);
                 LOGGER.debug("Manually mapping gene '{}' to '{}' for transvar", gene, v37Gene);
             } else if (GENES_FOR_WHICH_TO_SKIP_38_MAPPING.contains(gene)) {
                 v37Gene = gene;

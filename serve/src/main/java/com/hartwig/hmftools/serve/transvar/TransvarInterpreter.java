@@ -25,6 +25,7 @@ import com.hartwig.hmftools.serve.util.AminoAcidFunctions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -77,21 +78,32 @@ class TransvarInterpreter {
             @NotNull Strand strand) {
         List<VariantHotspot> hotspots = Lists.newArrayList();
 
-        if (!record.variantSpanMultipleExons()) {
-            // We need to look up which index of the ref codon is changed (0, 1 or 2) in case of SNV/MNV.
-            int gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(snvMnv, strand);
-
-            for (String candidateCodon : snvMnv.candidateCodons()) {
-                hotspots.add(fromCandidateCodon(record, snvMnv.referenceCodon(), candidateCodon, gdnaCodonIndex, strand));
+        if (record.variantSpanMultipleExons()) {
+            // In this case we only generate hotspots for the base mutation in case it is an SNV.
+            if (snvMnv.gdnaRef().length() == 1) {
+                hotspots.add(withRefBasedChromosome(record.chromosome()).position(record.gdnaPosition())
+                        .ref(snvMnv.gdnaRef())
+                        .alt(snvMnv.gdnaAlt())
+                        .build());
             }
         } else {
-            LOGGER.debug("SnvMnv spanning multiple exons. Ignoring '{}'", record);
+            // We need to look up which index of the ref codon is changed (0, 1 or 2) in case of SNV/MNV.
+            Integer gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(snvMnv, strand);
+
+            if (gdnaCodonIndex != null) {
+                for (String candidateCodon : snvMnv.candidateCodons()) {
+                    hotspots.add(fromCandidateCodon(record, snvMnv.referenceCodon(), candidateCodon, gdnaCodonIndex, strand));
+                }
+            } else {
+                LOGGER.warn("Could not resolve gdnaCodonIndex for '{}' on strand {}", record, strand);
+            }
         }
 
         return hotspots;
     }
 
-    private static int findIndexInRefCodonForGdnaMatch(@NotNull TransvarSnvMnv snvMnv, @NotNull Strand strand) {
+    @Nullable
+    private static Integer findIndexInRefCodonForGdnaMatch(@NotNull TransvarSnvMnv snvMnv, @NotNull Strand strand) {
         String codonCompatibleRef = strand.equals(Strand.FORWARD) ? snvMnv.gdnaRef() : reverseAndFlip(snvMnv.gdnaRef());
         String codonCompatibleAlt = strand.equals(Strand.FORWARD) ? snvMnv.gdnaAlt() : reverseAndFlip(snvMnv.gdnaAlt());
 
@@ -121,7 +133,7 @@ class TransvarInterpreter {
             }
         }
 
-        throw new IllegalStateException("Could not find codon index for gDNA match for " + snvMnv);
+        return null;
     }
 
     @NotNull
@@ -267,11 +279,7 @@ class TransvarInterpreter {
             simplifiedAlt = simplifiedAlt.substring(1);
         }
 
-        return withRefBasedChromosome(complexInsDel.chromosome())
-                .position(adjustedPos)
-                .ref(simplifiedRef)
-                .alt(simplifiedAlt)
-                .build();
+        return withRefBasedChromosome(complexInsDel.chromosome()).position(adjustedPos).ref(simplifiedRef).alt(simplifiedAlt).build();
     }
 
     @NotNull

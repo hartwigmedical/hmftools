@@ -40,9 +40,6 @@ public final class CkbReader {
 
         LOGGER.info("Curating {} CKB entries", ckbEntries.size());
         List<CkbEntry> curatedEntries = curator.run(ckbEntries);
-        LOGGER.info(" Finished CKB curation. {} entries remaining, {} entries have been removed",
-                curatedEntries.size(),
-                ckbEntries.size() - curatedEntries.size());
 
         curator.reportUnusedCurationEntries();
 

@@ -88,6 +88,39 @@ public class TransvarInterpreterTest {
     }
 
     @Test
+    public void canInterpretSnvSpanningMultipleExons() {
+        TransvarRecord record = baseRecord().variantSpanMultipleExons(true)
+                .gdnaPosition(10)
+                .annotation(ImmutableTransvarSnvMnv.builder()
+                        .gdnaRef("A")
+                        .gdnaAlt("C")
+                        .referenceCodon("TTA")
+                        .addCandidateCodons("GTA", "GTC", "GTG", "GTT")
+                        .build())
+                .build();
+
+        List<VariantHotspot> hotspots = testInterpreter37().convertRecordToHotspots(record, Strand.REVERSE);
+
+        assertEquals(1, hotspots.size());
+
+        assertHotspot(baseHotspot().position(10).ref("A").alt("C").build(), hotspots.get(0));
+
+        TransvarRecord record2 = baseRecord().variantSpanMultipleExons(true)
+                .gdnaPosition(10)
+                .annotation(ImmutableTransvarSnvMnv.builder()
+                        .gdnaRef("TTA")
+                        .gdnaAlt("GTA")
+                        .referenceCodon("TTA")
+                        .addCandidateCodons("GTA")
+                        .build())
+                .build();
+
+        List<VariantHotspot> hotspots2 = testInterpreter37().convertRecordToHotspots(record2, Strand.FORWARD);
+
+        assertEquals(0, hotspots2.size());
+    }
+
+    @Test
     public void canConvertDeletionToHotspots() {
         TransvarRecord record = baseRecord().gdnaPosition(5)
                 .annotation(ImmutableTransvarDeletion.builder().deletedBaseCount(3).leftAlignedGDNAPosition(5).build())

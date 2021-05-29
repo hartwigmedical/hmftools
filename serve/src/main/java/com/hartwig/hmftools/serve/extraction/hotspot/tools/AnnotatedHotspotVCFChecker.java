@@ -2,10 +2,9 @@ package com.hartwig.hmftools.serve.extraction.hotspot.tools;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
@@ -30,11 +29,12 @@ public class AnnotatedHotspotVCFChecker {
     private static final Logger LOGGER = LogManager.getLogger(AnnotatedHotspotVCFChecker.class);
     private static final boolean LOG_DEBUG = false;
 
+    // Should be enabled when we know the hotspots have been lifted-over
+    private static final boolean ENABLE_TRANSCRIPT_REF_GENOME_CURATION = false;
+
     private static final String NO_INPUT_PROTEIN = "-";
 
     private final Set<String> curatedTranscripts = Sets.newHashSet();
-    private final Map<String, Set<String>> annotationsRequestedForMappingPerTranscript = Maps.newHashMap();
-    private final Map<String, Set<String>> annotationsRequestedForMappingPerGene = Maps.newHashMap();
 
     public static void main(String[] args) throws IOException {
         if (LOG_DEBUG) {
@@ -48,7 +48,8 @@ public class AnnotatedHotspotVCFChecker {
     public void run(@NotNull String annotatedVcfFilePath) throws IOException {
         int totalCount = 0;
         int matchCount = 0;
-        int whitelistedMatchCount = 0;
+        int approximateMatchCount = 0;
+        int transcriptChangeLiftoverCount = 0;
         int diffCount = 0;
 
         LOGGER.info("Loading hotspots from '{}'", annotatedVcfFilePath);
@@ -68,18 +69,32 @@ public class AnnotatedHotspotVCFChecker {
                 matchCount++;
             } else {
                 List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
-                MatchType match = determineMatch(inputGene, inputTranscript, inputProteinAnnotation, annotations, formattedHotspot);
+                MatchType match = determineMatch(inputTranscript, inputProteinAnnotation, annotations);
+
                 switch (match) {
-                    case WHITE_LIST: {
-                        whitelistedMatchCount++;
+                    case IDENTICAL: {
+                        LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{}", inputProteinAnnotation, inputGene);
                         matchCount++;
                         break;
                     }
-                    case IDENTICAL: {
+                    case APPROXIMATE: {
+                        LOGGER.debug("Found approximate match amongst candidate transcripts for '{}' on '{}",
+                                inputProteinAnnotation,
+                                inputGene);
+                        matchCount++;
+                        approximateMatchCount++;
+                        break;
+                    }
+                    case LIFTOVER_RETIRED_OR_CHANGED_TRANSCRIPT: {
+                        LOGGER.debug("Match considered valid because of retired or changed transcript during liftover");
+                        transcriptChangeLiftoverCount++;
                         matchCount++;
                         break;
                     }
                     case NO_MATCH: {
+                        LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'",
+                                inputProteinAnnotation,
+                                inputGene);
                         diffCount++;
                         break;
                     }
@@ -87,11 +102,8 @@ public class AnnotatedHotspotVCFChecker {
             }
         }
 
-        LOGGER.info("Done comparing {} records: {} matches (of which {} through whitelisting) and {} differences found.",
-                totalCount,
-                matchCount,
-                whitelistedMatchCount,
-                diffCount);
+        LOGGER.info("Done comparing {} records: {} matches (of which {} are approximate and {} are due to transcript liftover changes)"
+                + " and {} differences found.", totalCount, matchCount, approximateMatchCount, transcriptChangeLiftoverCount, diffCount);
 
         checkForUnusedMappings();
     }
@@ -103,75 +115,40 @@ public class AnnotatedHotspotVCFChecker {
     }
 
     @NotNull
-    private MatchType determineMatch(@NotNull String inputGene, @Nullable String inputTranscript, @NotNull String inputProteinAnnotation,
-            @NotNull List<SnpEffAnnotation> annotations, @NotNull String formattedHotspot) {
+    private MatchType determineMatch(@Nullable String inputTranscript, @NotNull String inputProteinAnnotation,
+            @NotNull List<SnpEffAnnotation> annotations) {
         SnpEffAnnotation specificAnnotation = annotationForTranscript(annotations, inputTranscript);
         if (specificAnnotation != null) {
-            return matchOnSpecificAnnotation(inputGene, inputTranscript, inputProteinAnnotation, specificAnnotation, formattedHotspot);
+            return matchOnSpecificAnnotation(inputTranscript, inputProteinAnnotation, specificAnnotation);
         } else {
             // In case input transcript is missing or can't be found, we try to match against any transcript.
             // This could be tricky in case a variant was generated from 37 and is now being evaluated on 38 with different transcript IDs.
-            return matchOnAnyTranscript(inputGene, inputProteinAnnotation, annotations);
+            return matchOnAnyTranscript(inputProteinAnnotation, annotations);
         }
     }
 
     @NotNull
-    private MatchType matchOnSpecificAnnotation(@NotNull String inputGene, @NotNull String inputTranscript,
-            @NotNull String inputProteinAnnotation, @NotNull SnpEffAnnotation specificAnnotation, @NotNull String formattedHotspot) {
+    private MatchType matchOnSpecificAnnotation(@NotNull String inputTranscript, @NotNull String inputProteinAnnotation,
+            @NotNull SnpEffAnnotation specificAnnotation) {
         String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(specificAnnotation.hgvsProtein());
-        if (!isSameAnnotation(inputGene, inputTranscript, inputProteinAnnotation, snpeffProteinAnnotation)) {
-            LOGGER.warn("Difference on gene '{}-{}' - {} : SERVE input protein '{}' vs SnpEff protein '{}'",
-                    inputGene,
-                    inputTranscript,
-                    formattedHotspot,
-                    inputProteinAnnotation,
-                    snpeffProteinAnnotation);
-            return MatchType.NO_MATCH;
-        } else {
-            if (snpeffProteinAnnotation.equals(inputProteinAnnotation)) {
-                LOGGER.debug("Identical match found on {} for '{}'", inputGene, inputProteinAnnotation);
-                return MatchType.IDENTICAL;
-            } else {
-                LOGGER.debug("Match found on {}. '{}' and '{}' are considered identical",
-                        inputGene,
-                        inputProteinAnnotation,
-                        snpeffProteinAnnotation);
-                return MatchType.WHITE_LIST;
-            }
-        }
+        return matchAnnotation(inputTranscript, inputProteinAnnotation, snpeffProteinAnnotation);
     }
 
     @NotNull
-    private MatchType matchOnAnyTranscript(@NotNull String inputGene, @NotNull String inputProteinAnnotation,
-            @NotNull List<SnpEffAnnotation> annotations) {
-        boolean matchFound = false;
-        String matchedSnpeffProteinAnnotation = null;
+    private MatchType matchOnAnyTranscript(@NotNull String inputProteinAnnotation, @NotNull List<SnpEffAnnotation> annotations) {
+        MatchType matchedMatchType = MatchType.NO_MATCH;
         for (SnpEffAnnotation annotation : annotations) {
             // We only want to consider transcript features with coding impact.
             if (annotation.isTranscriptFeature() && !annotation.hgvsProtein().isEmpty()) {
                 String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
-                if (isSameAnnotation(inputGene, annotation.transcript(), inputProteinAnnotation, snpeffProteinAnnotation)) {
-                    matchFound = true;
-                    matchedSnpeffProteinAnnotation = snpeffProteinAnnotation;
+                MatchType match = matchAnnotation(annotation.transcript(), inputProteinAnnotation, snpeffProteinAnnotation);
+                if (match != MatchType.NO_MATCH && matchedMatchType == MatchType.NO_MATCH) {
+                    matchedMatchType = match;
                 }
             }
         }
 
-        if (matchFound) {
-            if (inputProteinAnnotation.equals(matchedSnpeffProteinAnnotation)) {
-                LOGGER.debug("Found a match amongst candidate transcripts for '{}' on '{}", inputProteinAnnotation, inputGene);
-                return MatchType.IDENTICAL;
-            } else {
-                LOGGER.debug("Match found on {}. '{}' and '{}' are considered identical",
-                        inputGene,
-                        inputProteinAnnotation,
-                        matchedSnpeffProteinAnnotation);
-                return MatchType.WHITE_LIST;
-            }
-        } else {
-            LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'", inputProteinAnnotation, inputGene);
-            return MatchType.NO_MATCH;
-        }
+        return matchedMatchType;
     }
 
     @Nullable
@@ -184,12 +161,25 @@ public class AnnotatedHotspotVCFChecker {
         return null;
     }
 
-    private boolean isSameAnnotation(@NotNull String gene, @NotNull String transcript, @NotNull String inputAnnotation,
-            @NotNull String snpeffAnnotation) {
+    @NotNull
+    private MatchType matchAnnotation(@NotNull String transcript, @NotNull String inputAnnotation, @NotNull String snpeffAnnotation) {
         String curatedInputAnnotation = curateStartCodonAnnotation(inputAnnotation);
-        return curatedInputAnnotation.equals(snpeffAnnotation) || transcriptWhitelist(transcript, inputAnnotation, snpeffAnnotation)
-                || geneWhitelist(gene, inputAnnotation, snpeffAnnotation) || retiredTranscriptCheck(transcript, snpeffAnnotation)
-                || changedTranscriptCheck(transcript, inputAnnotation, snpeffAnnotation);
+        if (curatedInputAnnotation.equals(snpeffAnnotation)) {
+            return MatchType.IDENTICAL;
+        }
+
+        if (isApproximateIndelMatch(inputAnnotation, snpeffAnnotation)) {
+            return MatchType.APPROXIMATE;
+        }
+
+        if (ENABLE_TRANSCRIPT_REF_GENOME_CURATION && (retiredTranscriptCheck(transcript, snpeffAnnotation) || changedTranscriptCheck(
+                transcript,
+                inputAnnotation,
+                snpeffAnnotation))) {
+            return MatchType.LIFTOVER_RETIRED_OR_CHANGED_TRANSCRIPT;
+        }
+
+        return MatchType.NO_MATCH;
     }
 
     @NotNull
@@ -201,43 +191,46 @@ public class AnnotatedHotspotVCFChecker {
         }
     }
 
-    private boolean transcriptWhitelist(@NotNull String transcript, @NotNull String inputAnnotation, @NotNull String snpeffAnnotation) {
-        Map<String, List<String>> transcriptMapping =
-                AnnotatedHotspotCurationFactory.SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT.get(transcript);
-        if (transcriptMapping != null) {
-            Set<String> requestedAnnotations = annotationsRequestedForMappingPerTranscript.get(transcript);
-            if (requestedAnnotations == null) {
-                requestedAnnotations = Sets.newHashSet(inputAnnotation);
-            } else {
-                requestedAnnotations.add(inputAnnotation);
-            }
-            annotationsRequestedForMappingPerTranscript.put(transcript, requestedAnnotations);
-            List<String> mappedAnnotations = transcriptMapping.get(inputAnnotation);
-            if (mappedAnnotations != null) {
-                return mappedAnnotations.contains(snpeffAnnotation);
-            }
+    @VisibleForTesting
+    static boolean isApproximateIndelMatch(@NotNull String inputAnnotation, @NotNull String snpEffAnnotation) {
+        if (inputAnnotation.contains("del") || inputAnnotation.contains("ins") || inputAnnotation.contains("dup")) {
+            int inputStartCodon = extractFirstDigit(inputAnnotation);
+            int snpeffStartCodon = extractFirstDigit(snpEffAnnotation);
+            return Math.abs(inputStartCodon - snpeffStartCodon) <= 12;
         }
-
         return false;
     }
 
-    private boolean geneWhitelist(@NotNull String gene, @NotNull String inputAnnotation, @NotNull String snpeffAnnotation) {
-        Map<String, List<String>> geneMapping = AnnotatedHotspotCurationFactory.SERVE_TO_SNPEFF_MAPPINGS_PER_GENE.get(gene);
-        if (geneMapping != null) {
-            Set<String> requestedAnnotations = annotationsRequestedForMappingPerGene.get(gene);
-            if (requestedAnnotations == null) {
-                requestedAnnotations = Sets.newHashSet(inputAnnotation);
+    private static int extractFirstDigit(@NotNull String string) {
+        StringBuilder digitBuilder = new StringBuilder();
+        boolean isExtracting = false;
+        boolean hasExtracted = false;
+        for (int i = 0; i < string.length(); i++) {
+            char letter = string.charAt(i);
+            if (isInteger(letter)) {
+                if (!isExtracting && !hasExtracted) {
+                    isExtracting = true;
+                    hasExtracted = true;
+                }
+
+                if (isExtracting) {
+                    digitBuilder.append(letter);
+                }
             } else {
-                requestedAnnotations.add(inputAnnotation);
-            }
-            annotationsRequestedForMappingPerGene.put(gene, requestedAnnotations);
-            List<String> mappedAnnotations = geneMapping.get(inputAnnotation);
-            if (mappedAnnotations != null) {
-                return mappedAnnotations.contains(snpeffAnnotation);
+                isExtracting = false;
             }
         }
 
-        return false;
+        return Integer.parseInt(digitBuilder.toString());
+    }
+
+    private static boolean isInteger(char letter) {
+        try {
+            Integer.parseInt(String.valueOf(letter));
+            return true;
+        } catch (NumberFormatException exception) {
+            return false;
+        }
     }
 
     private boolean retiredTranscriptCheck(@NotNull String transcript, @NotNull String snpeffAnnotation) {
@@ -263,77 +256,30 @@ public class AnnotatedHotspotVCFChecker {
     }
 
     private void checkForUnusedMappings() {
-        checkUnusedTranscriptMappings();
-        checkUnusedGeneMappings();
-        checkUnusedTranscriptCuration();
-    }
-
-    private void checkUnusedTranscriptMappings() {
-        int unusedTranscriptMappingCount = 0;
-        Set<Map.Entry<String, Map<String, List<String>>>> transcriptEntries =
-                AnnotatedHotspotCurationFactory.SERVE_TO_SNPEFF_MAPPINGS_PER_TRANSCRIPT.entrySet();
-        for (Map.Entry<String, Map<String, List<String>>> entry : transcriptEntries) {
-            Set<String> requestedAnnotations = annotationsRequestedForMappingPerTranscript.get(entry.getKey());
-            if (requestedAnnotations == null) {
-                LOGGER.warn("No transcript annotation mapping requested at all for '{}'", entry.getKey());
-                unusedTranscriptMappingCount += entry.getValue().keySet().size();
-            } else {
-                for (String annotationKey : entry.getValue().keySet()) {
-                    if (!requestedAnnotations.contains(annotationKey)) {
-                        LOGGER.warn("Unused transcript annotation configured for transcript '{}': '{}'", entry.getKey(), annotationKey);
-                        unusedTranscriptMappingCount++;
-                    }
+        if (ENABLE_TRANSCRIPT_REF_GENOME_CURATION) {
+            int unusedTranscriptCurationCount = 0;
+            for (String transcript : AnnotatedHotspotCurationFactory.RETIRED_TRANSCRIPTS) {
+                if (!curatedTranscripts.contains(transcript)) {
+                    LOGGER.warn("Transcript '{}' labeled as 'retired' has not been used in curation", transcript);
+                    unusedTranscriptCurationCount++;
                 }
             }
-        }
 
-        LOGGER.info("Analyzed usage of transcript mapping configuration. Found {} unused mappings.", unusedTranscriptMappingCount);
-    }
-
-    private void checkUnusedGeneMappings() {
-        int unusedGeneMappingCount = 0;
-        Set<Map.Entry<String, Map<String, List<String>>>> transcriptEntries =
-                AnnotatedHotspotCurationFactory.SERVE_TO_SNPEFF_MAPPINGS_PER_GENE.entrySet();
-        for (Map.Entry<String, Map<String, List<String>>> entry : transcriptEntries) {
-            Set<String> requestedAnnotations = annotationsRequestedForMappingPerGene.get(entry.getKey());
-            if (requestedAnnotations == null) {
-                LOGGER.warn("No gene annotation mapping requested at all for '{}'", entry.getKey());
-                unusedGeneMappingCount += entry.getValue().keySet().size();
-            } else {
-                for (String annotationKey : entry.getValue().keySet()) {
-                    if (!requestedAnnotations.contains(annotationKey)) {
-                        LOGGER.warn("Unused gene annotation configured for '{}': '{}'", entry.getKey(), annotationKey);
-                        unusedGeneMappingCount++;
-                    }
+            for (String transcript : AnnotatedHotspotCurationFactory.CHANGED_TRANSCRIPTS) {
+                if (!curatedTranscripts.contains(transcript)) {
+                    LOGGER.warn("Transcript '{}' labeled as 'changed' has not been used in curation", transcript);
+                    unusedTranscriptCurationCount++;
                 }
             }
+
+            LOGGER.info("Analyzed usage of transcript curation. Found {} unused curation keys.", unusedTranscriptCurationCount);
         }
-
-        LOGGER.info("Analyzed usage of gene mapping configuration. Found {} unused mappings.", unusedGeneMappingCount);
-    }
-
-    private void checkUnusedTranscriptCuration() {
-        int unusedTranscriptCurationCount = 0;
-        for (String transcript : AnnotatedHotspotCurationFactory.RETIRED_TRANSCRIPTS) {
-            if (!curatedTranscripts.contains(transcript)) {
-                LOGGER.warn("Transcript '{}' labeled as 'retired' has not been used in curation", transcript);
-                unusedTranscriptCurationCount++;
-            }
-        }
-
-        for (String transcript : AnnotatedHotspotCurationFactory.CHANGED_TRANSCRIPTS) {
-            if (!curatedTranscripts.contains(transcript)) {
-                LOGGER.warn("Transcript '{}' labeled as 'changed' has not been used in curation", transcript);
-                unusedTranscriptCurationCount++;
-            }
-        }
-
-        LOGGER.info("Analyzed usage of transcript curation. Found {} unused curation keys.", unusedTranscriptCurationCount);
     }
 
     private enum MatchType {
         IDENTICAL,
-        WHITE_LIST,
+        APPROXIMATE,
+        LIFTOVER_RETIRED_OR_CHANGED_TRANSCRIPT,
         NO_MATCH
     }
 }
