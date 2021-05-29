@@ -3,6 +3,9 @@ package com.hartwig.hmftools.lilac.qc;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_Y_FRAGMENT_THRESHOLD;
+import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
+import static com.hartwig.hmftools.lilac.LilacConstants.WARN_INDEL_THRESHOLD;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -26,7 +29,7 @@ public final class LilacQC
     public final String header()
     {
         StringJoiner sj = new StringJoiner(DELIM);
-        sj.add("status");
+        sj.add("Status");
         mAminoAcidQC.header().forEach(x -> sj.add(x));
         mBamQC.header().forEach(x -> sj.add(x));
         mCoverageQC.header().forEach(x -> sj.add(x));
@@ -38,7 +41,7 @@ public final class LilacQC
 
     public final String body()
     {
-        StringJoiner status = new StringJoiner(",");
+        StringJoiner status = new StringJoiner(ITEM_DELIM);
         mStatus.forEach(x -> status.add(x.toString()));
 
         StringJoiner sj = new StringJoiner(DELIM);
@@ -84,10 +87,9 @@ public final class LilacQC
         mSomaticVariantQC = somaticVariantQC;
     }
 
-
     public static LilacQC create(
             final AminoAcidQC aminoAcidQC, final BamQC bamQC, final CoverageQC coverageQC,
-            final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
+            final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC, int totalFragments)
     {
         Set<LilacQCStatus> statusList = Sets.newHashSet();
 
@@ -101,7 +103,8 @@ public final class LilacQC
             statusList.add(LilacQCStatus.WARN_UNMATCHED_TYPE);
         }
 
-        if(bamQC.getDiscardedIndelFragments() > 0)
+        double indelWarnThreshold = totalFragments * WARN_INDEL_THRESHOLD;
+        if(bamQC.getDiscardedIndelFragments() >= indelWarnThreshold)
         {
             statusList.add(LilacQCStatus.WARN_UNMATCHED_INDEL);
         }

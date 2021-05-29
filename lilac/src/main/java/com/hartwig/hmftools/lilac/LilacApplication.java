@@ -137,18 +137,6 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         AminoAcidFragmentPipeline aminoAcidPipeline = new AminoAcidFragmentPipeline(mConfig, refNucleotideFrags, tumorNucleotideFrags);
 
-        /*
-        // repeat the heterozygous-loci check on all candidates
-        List<Fragment> refAminoAcidFragments = aminoAcidPipeline.referenceAminoAcidFragments();
-        SequenceCount refAminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, refAminoAcidFragments);
-        List<HlaSequenceLoci> supportedAminoAcidSequences = filterCandidatesByAminoAcidLoci(mRefData.AminoAcidSequences, refAminoAcidCounts);
-
-        List<HlaSequenceLoci> supportedAminoAcidSequences = mRefData.AminoAcidSequences;
-
-        LL_LOGGER.info("filtered amino acid sequences {} -> {} by min support",
-                mRefData.AminoAcidSequences.size(), supportedAminoAcidSequences.size());
-        */
-
         // apply special filtering and splice checks on fragments, just for use in phasing
         List<Fragment> aCandidateFrags = aminoAcidPipeline.referencePhasingFragments(hlaAContext);
         List<Fragment> bCandidateFrags = aminoAcidPipeline.referencePhasingFragments(hlaBContext);
@@ -237,6 +225,8 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         // calculate allele coverage
         List<Fragment> refAminoAcidFrags = aminoAcidPipeline.getReferenceFragments();
+        int totalFragmentCount = refAminoAcidFrags.size();
+
         SequenceCount refAminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, refAminoAcidFrags);
         SequenceCount refNucleotideCounts = SequenceCount.nucleotides(mConfig.MinEvidence, refAminoAcidFrags);
 
@@ -378,20 +368,20 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         BamQC bamQC = BamQC.create(referenceBamReader);
         CoverageQC coverageQC = CoverageQC.create(refNucleotideFrags.size(), winningRefCoverage);
-        LilacQC lilacQC = LilacQC.create(aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC);
+        LilacQC lilacQC = LilacQC.create(aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC, totalFragmentCount);
 
         LL_LOGGER.info("QC Stats:");
         LL_LOGGER.info("  {}", lilacQC.header());
         LL_LOGGER.info("  {}", lilacQC.body());
 
         LL_LOGGER.info("writing output to {}", mConfig.OutputDir);
-        String outputFile = mConfig.outputPrefix() + ".lilac.tsv";
-        String outputQCFile = mConfig.outputPrefix() + ".lilac.qc.tsv";
+        String outputFile = mConfig.outputPrefix() + ".lilac.csv";
+        String outputQCFile = mConfig.outputPrefix() + ".lilac.qc.csv";
 
         output.write(outputFile);
         lilacQC.writefile(outputQCFile);
 
-        HlaComplexFile.writeToFile(String.format("%s.candidates.coverage.tsv", mConfig.outputPrefix()), referenceRankedComplexes);
+        HlaComplexFile.writeToFile(String.format("%s.candidates.coverage.csv", mConfig.outputPrefix()), referenceRankedComplexes);
         HlaComplexFile.writeFragmentAssignment(
                 String.format("%s.candidates.fragments.csv", mConfig.outputPrefix()), referenceRankedComplexes, refFragAlleles);
 

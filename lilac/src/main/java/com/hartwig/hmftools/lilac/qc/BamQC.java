@@ -29,7 +29,7 @@ public class BamQC
 
     public final List<String> header()
     {
-        return Lists.newArrayList("discardedIndelFragments", "discardedIndelMaxCount", "discardedAlignmentFragments");
+        return Lists.newArrayList("DiscardedIndelFragments", "DiscardedIndelMaxCount", "DiscardedAlignmentFragments");
     }
 
     @NotNull

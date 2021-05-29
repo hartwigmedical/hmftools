@@ -25,7 +25,6 @@ public class HaplotypeQC
 {
     public final int UnusedHaplotypes;
     public final int UnusedHaplotypeMaxSupport;
-    public final int UnusedHaplotypeMaxLength;
     public final int UnusedHaplotypesPon;
 
     public final List<Haplotype> UnmatchedHaplotypes;
@@ -35,7 +34,7 @@ public class HaplotypeQC
     public final List<String> header()
     {
         return Lists.newArrayList(
-                "unusedHaplotypes", "unusedHaplotypeMaxSupport", "unusedHaplotypeMaxLength", "unusedHaplotypesPon");
+                "UnusedHaplotypes", "UnusedHaplotypeMaxSupport", "UnusedHaplotypesPon");
     }
 
     public final List<String> body()
@@ -43,17 +42,14 @@ public class HaplotypeQC
         return Lists.newArrayList(
                 String.valueOf(UnusedHaplotypes),
                 String.valueOf(UnusedHaplotypeMaxSupport),
-                String.valueOf(UnusedHaplotypeMaxLength),
                 String.valueOf(UnusedHaplotypesPon));
     }
 
     public HaplotypeQC(
-            int unusedHaplotypes, int unusedHaplotypeMaxSupport, int unusedHaplotypeMaxLength, int unusedHaplotypesPon,
-            final List<Haplotype> haplotypes)
+            int unusedHaplotypes, int unusedHaplotypeMaxSupport, int unusedHaplotypesPon, final List<Haplotype> haplotypes)
     {
         UnusedHaplotypes = unusedHaplotypes;
         UnusedHaplotypeMaxSupport = unusedHaplotypeMaxSupport;
-        UnusedHaplotypeMaxLength = unusedHaplotypeMaxLength;
         UnusedHaplotypesPon = unusedHaplotypesPon;
         UnmatchedHaplotypes = haplotypes;
     }
@@ -64,7 +60,7 @@ public class HaplotypeQC
             return;
 
         final List<String> ponHaplotypes = new BufferedReader(new InputStreamReader(
-                HaplotypeQC.class.getResourceAsStream("/pon/haplotypes.txt")))
+                HaplotypeQC.class.getResourceAsStream("/pon/haplotypes.csv")))
                 .lines().collect(Collectors.toList());
 
         ponHaplotypes.forEach(x -> PON_HAPLOTYPES.add(Haplotype.fromString(x)));
@@ -103,7 +99,6 @@ public class HaplotypeQC
         int pon = 0;
         int unusedCount = 0;
         int maxSupport = 0;
-        int maxLength = 0;
 
         for (Haplotype unmatched : distinctHaplotypes)
         {
@@ -124,7 +119,6 @@ public class HaplotypeQC
                 if(exceedsWarnThreshold)
                 {
                     maxSupport = max(maxSupport, unmatched.SupportingFragments);
-                    maxLength = max(maxLength, unmatched.Haplotype.length());
                     unusedCount++;
                 }
 
@@ -132,7 +126,7 @@ public class HaplotypeQC
             }
         }
 
-        return new HaplotypeQC(unusedCount, maxSupport, maxLength, pon, distinctHaplotypes);
+        return new HaplotypeQC(unusedCount, maxSupport, pon, distinctHaplotypes);
     }
 
     private static boolean consistentWithAny(final PhasedEvidence phasedEvidence, final List<HlaSequenceLoci> winners, final String sequence)
@@ -157,7 +151,9 @@ public class HaplotypeQC
         List<Haplotype> haplotypes = Lists.newArrayList();
         for(Map.Entry<String,Integer> entry : unmatched.entrySet())
         {
-            Haplotype haplotype = Haplotype.create(evidence.getAminoAcidIndexList(), new Pair(entry.getKey(), entry.getValue()), aminoAcidCount);
+            Haplotype haplotype = Haplotype.create(
+                    evidence.getAminoAcidIndexList(), new Pair(entry.getKey(), entry.getValue()), aminoAcidCount);
+
             haplotypes.add(haplotype);
         }
 

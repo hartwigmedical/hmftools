@@ -22,7 +22,7 @@ public class SomaticVariantQC
 
     public final List<String> header()
     {
-        return Lists.newArrayList("variantCount", "variantAlleleCount");
+        return Lists.newArrayList("VariantCount", "VariantAlleleCount");
     }
 
     public final List<String> body()

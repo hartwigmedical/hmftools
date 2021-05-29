@@ -30,7 +30,7 @@ public class AminoAcidQC
 
     public final List<String> header()
     {
-        return Lists.newArrayList("unusedAminoAcids", "unusedAminoAcidMaxSupport");
+        return Lists.newArrayList("UnusedAminoAcids", "UnusedAminoAcidMaxSupport");
     }
 
     public final List<String> body()

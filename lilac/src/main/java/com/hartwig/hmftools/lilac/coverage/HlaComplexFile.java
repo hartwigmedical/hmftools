@@ -20,20 +20,20 @@ public class HlaComplexFile
     public static String header()
     {
         StringJoiner sb = new StringJoiner(DELIM);
-        sb.add("score");
-        sb.add("homozygousCount");
-        sb.add("cohortFrequency");
-        sb.add("recoveryCount");
-        sb.add("totalCoverage");
-        sb.add("uniqueCoverage");
-        sb.add("sharedCoverage");
-        sb.add("wildCoverage");
-        sb.add("a1");
-        sb.add("a2");
-        sb.add("b1");
-        sb.add("b2");
-        sb.add("c1");
-        sb.add("c2");
+        sb.add("Score");
+        sb.add("HomozygousCount");
+        sb.add("CohortFrequency");
+        sb.add("RecoveryCount");
+        sb.add("TotalCoverage");
+        sb.add("UniqueCoverage");
+        sb.add("SharedCoverage");
+        sb.add("WildCoverage");
+        sb.add("A1");
+        sb.add("A2");
+        sb.add("B1");
+        sb.add("B2");
+        sb.add("C1");
+        sb.add("C2");
         return sb.toString();
     }
 
@@ -63,7 +63,7 @@ public class HlaComplexFile
 
     public static String asString(final HlaComplexCoverage coverage)
     {
-        StringJoiner sj = new StringJoiner("\t");
+        StringJoiner sj = new StringJoiner(DELIM);
 
         sj.add(String.format("%.2f", coverage.getScore()));
         sj.add(String.valueOf(coverage.homozygousCount()));
@@ -85,13 +85,13 @@ public class HlaComplexFile
         {
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            StringJoiner sb = new StringJoiner(",");
-            sb.add("complex");
-            sb.add("fragmentId");
-            sb.add("fragmentCoords");
-            sb.add("type");
-            sb.add("fullAlleles");
-            sb.add("wildAlleles");
+            StringJoiner sb = new StringJoiner(DELIM);
+            sb.add("Complex");
+            sb.add("FragmentId");
+            sb.add("FragmentCoords");
+            sb.add("Type");
+            sb.add("FullAlleles");
+            sb.add("WildAlleles");
             writer.write(sb.toString());
             writer.newLine();
 

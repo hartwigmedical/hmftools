@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.read;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
+
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 public class Indel
@@ -29,7 +31,7 @@ public class Indel
 
     public static Indel fromString(final String line)
     {
-        final String[] items = line.split("\t");
+        final String[] items = line.split(DELIM);
         return new Indel(items[0], Integer.parseInt(items[1]), items[2], items[3]);
     }
 

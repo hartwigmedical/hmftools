@@ -470,7 +470,7 @@ public class FragmentAlleleMapper
         }
 
         int totalHlaYFrags = uniqueHlaY  + matchedFragmentAlleles.size();
-        double threshold = fragAlleles.size() * HLA_Y_FRAGMENT_THRESHOLD;
+        double threshold = fragments.size() * HLA_Y_FRAGMENT_THRESHOLD;
         boolean exceedsThreshold = uniqueHlaY >= threshold;
 
         if(totalHlaYFrags > 0)

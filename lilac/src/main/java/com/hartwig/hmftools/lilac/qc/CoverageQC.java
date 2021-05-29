@@ -70,8 +70,8 @@ public class CoverageQC {
     public List<String> header()
     {
         return Lists.newArrayList(
-                "aTypes", "bTypes", "cTypes", "unusedFragments", "fittedFragments",
-                "percentUnique", "percentShared", "percentWildcard");
+                "ATypes", "BTypes", "CTypes", "UnusedFragments", "FittedFragments",
+                "PercentUnique", "PercentShared", "PercentWildcard");
     }
 
     public List<String> body()

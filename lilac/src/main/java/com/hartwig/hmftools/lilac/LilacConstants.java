@@ -14,6 +14,7 @@ public class LilacConstants
     public static final int DEFAULT_FRAGS_REMOVE_SGL = 40;
     public static final double DEFAULT_TOP_SCORE_THRESHOLD = 0.005;
 
+    // values applied as percentages
     public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.01;
     public static final double MIN_CONF_UNIQUE_GROUP_COVERAGE = 0.02;
     public static final double MIN_CONF_UNIQUE_PROTEIN_COVERAGE = 0.01;
@@ -26,6 +27,7 @@ public class LilacConstants
     // warning thresholds
     public static final int WARN_UNMATCHED_HAPLOTYPE_SUPPORT = 7;
     public static final int LOG_UNMATCHED_HAPLOTYPE_SUPPORT = 3;
+    public static final double WARN_INDEL_THRESHOLD = 0.004;
 
     public static final String GENE_A = "A";
     public static final String GENE_B = "B";
@@ -61,7 +63,7 @@ public class LilacConstants
     public static final int COMPLEX_PERMS_THRESHOLD = 100000;
 
     // technical
-    public static final String DELIM = "\t";
+    public static final String DELIM = ",";
     public static final String ITEM_DELIM = ";";
 
     public static List<Integer> getExonGeneBoundries(final String gene)

@@ -78,7 +78,7 @@ public class SAMRecordReader
 
         // load indel PON
         final List<String> ponLines = new BufferedReader(new InputStreamReader(
-                RefGenomeCoordinates.class.getResourceAsStream("/pon/indels.txt")))
+                RefGenomeCoordinates.class.getResourceAsStream("/pon/indels.csv")))
                 .lines().collect(Collectors.toList());
         ponLines.stream().map(x -> Indel.fromString(x)).forEach(x -> INDEL_PON.add(x));
     }
