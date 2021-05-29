@@ -363,10 +363,11 @@ public class LilacApplication implements AutoCloseable, Runnable
         combinedPhasedEvidence.addAll(cPhasedEvidence);
 
         HaplotypeQC haplotypeQC = HaplotypeQC.create(
-                winningSequences, mRefData.HlaYAminoAcidSequences, combinedPhasedEvidence, refAminoAcidCounts);
+                winningSequences, mRefData.HlaYAminoAcidSequences, combinedPhasedEvidence, refAminoAcidCounts, totalFragmentCount);
 
         AminoAcidQC aminoAcidQC = AminoAcidQC.create(
-                winningSequences, mRefData.HlaYAminoAcidSequences, refAminoAcidCounts, haplotypeQC.UnmatchedHaplotypes);
+                winningSequences, mRefData.HlaYAminoAcidSequences, refAminoAcidCounts,
+                haplotypeQC.UnmatchedHaplotypes, totalFragmentCount);
 
         BamQC bamQC = BamQC.create(referenceBamReader);
         CoverageQC coverageQC = CoverageQC.create(refNucleotideFrags.size(), winningRefCoverage);

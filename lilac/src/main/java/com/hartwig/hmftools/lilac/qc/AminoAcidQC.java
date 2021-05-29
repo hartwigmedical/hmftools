@@ -40,10 +40,12 @@ public class AminoAcidQC
 
     public static AminoAcidQC create(
             final List<HlaSequenceLoci> winners, final List<HlaSequenceLoci> hlaYSequenceLoci,
-            final SequenceCount aminoAcidCount, final List<Haplotype> unmatchedHaplotypes)
+            final SequenceCount aminoAcidCount, final List<Haplotype> unmatchedHaplotypes, int totalFragments)
     {
         int unused = 0;
         int largest = 0;
+
+        double warnThreshold = totalFragments * WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
 
         for(Integer locus : aminoAcidCount.heterozygousLoci())
         {
@@ -83,7 +85,7 @@ public class AminoAcidQC
                 LL_LOGGER.warn("  UNMATCHED_AMINO_ACID - amino acid sequence({} count={} locus={}) not in winning solution",
                         aminoAcid, count, locus);
 
-                if(count >= WARN_UNMATCHED_HAPLOTYPE_SUPPORT)
+                if(count >= warnThreshold)
                 {
                     ++unused;
                     largest = max(largest, count);

@@ -73,9 +73,11 @@ public class HaplotypeQC
 
     public static HaplotypeQC create(
             final List<HlaSequenceLoci> winners, final List<HlaSequenceLoci> hlaYSequences,
-            final List<PhasedEvidence> evidence, final SequenceCount aminoAcidCount)
+            final List<PhasedEvidence> evidence, final SequenceCount aminoAcidCount, int totalFragments)
     {
         loadPonHaplotypes();
+
+        double warnThreshold = totalFragments * WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
 
         List<Haplotype> allUnmatched = Lists.newArrayList();
         evidence.stream()
@@ -108,7 +110,7 @@ public class HaplotypeQC
             if(unmatched.SupportingFragments < LOG_UNMATCHED_HAPLOTYPE_SUPPORT)
                 continue;
 
-            boolean exceedsWarnThreshold = unmatched.SupportingFragments >= WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
+            boolean exceedsWarnThreshold = unmatched.SupportingFragments >= warnThreshold;
 
             if (inPon(unmatched))
             {

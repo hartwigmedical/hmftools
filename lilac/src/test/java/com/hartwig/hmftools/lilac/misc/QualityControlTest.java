@@ -122,7 +122,7 @@ public class QualityControlTest
 
         List<HlaSequenceLoci> winningSequences = Lists.newArrayList(winningSeq1, winningSeq2, winningSeq3);
 
-        AminoAcidQC qc = AminoAcidQC.create(winningSequences, Lists.newArrayList(), aminoAcidCount, unmatchedHaplotypes);
+        AminoAcidQC qc = AminoAcidQC.create(winningSequences, Lists.newArrayList(), aminoAcidCount, unmatchedHaplotypes, 1000);
         assertEquals(2, qc.UnusedAminoAcids);
     }
 
