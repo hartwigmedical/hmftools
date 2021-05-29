@@ -96,7 +96,10 @@ public class SAMRecordReader
     public final Map<Indel,Integer> unmatchedIndels(int minCount)
     {
         Map<Indel,Integer> filteredMap = Maps.newHashMap();
-        mUnmatchedIndels.entrySet().stream().filter(x -> x.getValue()>= minCount).forEach(x -> filteredMap.put(x.getKey(), x.getValue()));
+        mUnmatchedIndels.entrySet().stream()
+                .filter(x -> x.getValue()>= minCount)
+                .filter(x -> !x.getKey().equals(STOP_LOSS_ON_C))
+                .forEach(x -> filteredMap.put(x.getKey(), x.getValue()));
         return filteredMap;
     }
 

@@ -245,6 +245,7 @@ public class ReferenceData
                     return false;
 
                 String alleleStr = items[0];
+
                 HlaAllele allele = isProteinFile ? mAlleleCache.requestFourDigit(alleleStr) : mAlleleCache.request(alleleStr);
 
                 boolean isDefaultTemplate = isProteinFile && mDeflatedSequenceTemplate == null && allele.matches(DEFLATE_TEMPLATE);
@@ -253,12 +254,14 @@ public class ReferenceData
                 if(!isDefaultTemplate && excludeAllele)
                     continue;
 
-                List<String> sequences = Lists.newArrayList();
+                List<String> sequences = isProteinFile ?
+                        Lists.newArrayListWithExpectedSize(367) : Lists.newArrayListWithExpectedSize(1098);
+
                 String sequenceStr = items[1];
 
                 int index = 0;
                 String sequence = "";
-                boolean inMulti = false;
+                boolean inMulti = false; // to handle inserts, ie more than 1 char, indicated by splitting the sequence by '|' chars
                 while(index < sequenceStr.length())
                 {
                     char nextChar = sequenceStr.charAt(index);
