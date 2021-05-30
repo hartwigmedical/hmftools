@@ -118,7 +118,7 @@ public class CnDataLoader
         mChrCnDataMap.clear();
         mCnRecords.clear();
 
-        if(mDbAccess == null)
+        if(!mPurpleDataPath.isEmpty())
         {
             try
             {
