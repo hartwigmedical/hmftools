@@ -6,6 +6,9 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTOFF;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_Y;
+import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
+import static com.hartwig.hmftools.lilac.LilacConstants.getNucleotideExonBoundaries;
+import static com.hartwig.hmftools.lilac.LilacConstants.populateNucleotideExonBoundaries;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 
 import java.io.BufferedReader;
@@ -25,6 +28,7 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.lilac.cohort.CohortFrequency;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
+import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 public class ReferenceData
@@ -52,7 +56,6 @@ public class ReferenceData
 
     private HlaSequenceLoci mDeflatedSequenceTemplate;
 
-    public static final char SEQUENCE_DELIM = '|';
     public static final String NUC_REF_FILE = "hla_ref_nucleotide_sequences.csv";
     public static final String AA_REF_FILE = "hla_ref_aminoacid_sequences.csv";
 
@@ -84,6 +87,8 @@ public class ReferenceData
         // load gene definitions and other constants
         populateHlaTranscripts(HlaTranscriptData);
         LociPositionFinder = new LociPosition(HlaTranscriptData.values().stream().collect(Collectors.toList()));
+
+        populateNucleotideExonBoundaries();
 
         CommonAlleles = Lists.newArrayList();
         StopLossRecoveryAlleles = Lists.newArrayList();
@@ -124,8 +129,9 @@ public class ReferenceData
         if(!loadSequenceFile(aminoAcidFilename, AminoAcidSequences, true))
             return false;
 
-        AminoAcidSequencesWithInserts.addAll(AminoAcidSequences.stream().filter(x -> x.containsInserts()).collect(Collectors.toList()));
-        AminoAcidSequencesWithDeletes.addAll(AminoAcidSequences.stream().filter(x -> x.containsDeletes()).collect(Collectors.toList()));
+        AminoAcidSequencesWithInserts.addAll(AminoAcidSequences.stream().filter(x -> x.hasInserts()).collect(Collectors.toList()));
+        AminoAcidSequencesWithDeletes.addAll(AminoAcidSequences.stream().filter(x -> x.hasDeletes()).collect(Collectors.toList()));
+        markExonBoundaryWildcards();
         buildHlaYAminoAcidSequences();
 
         return true;
@@ -152,6 +158,21 @@ public class ReferenceData
         }
     }
 
+    private void markExonBoundaryWildcards()
+    {
+        for(HlaSequenceLoci sequence : AminoAcidSequences)
+        {
+            List<Integer> exonBoundaries = getAminoAcidExonBoundaries(sequence.Allele.Gene);
+            sequence.setExonBoundaryWildcardsWildcards(exonBoundaries);
+        }
+
+        for(HlaSequenceLoci sequence : NucleotideSequences)
+        {
+            List<Integer> exonBoundaries = getNucleotideExonBoundaries(sequence.Allele.Gene);
+            sequence.setExonBoundaryWildcardsWildcards(exonBoundaries);
+        }
+    }
+
     private void loadCommonAlleles()
     {
         mAlleleFrequencies.getAlleleFrequencies().entrySet().stream()
@@ -167,7 +188,7 @@ public class ReferenceData
 
     public List<HlaAllele> getWildcardAlleles()
     {
-        return AminoAcidSequences.stream().filter(x -> x.containsWildcards()).map(x -> x.Allele).collect(Collectors.toList());
+        return AminoAcidSequences.stream().filter(x -> x.hasWildcards()).map(x -> x.Allele).collect(Collectors.toList());
     }
 
     private boolean excludeAllele(final HlaAllele allele)
@@ -280,46 +301,10 @@ public class ReferenceData
                 if(!isDefaultTemplate && excludeAllele)
                     continue;
 
-                List<String> sequences = isProteinFile ?
-                        Lists.newArrayListWithExpectedSize(367) : Lists.newArrayListWithExpectedSize(1098);
 
                 String sequenceStr = items[1];
 
-                int index = 0;
-                String sequence = "";
-                boolean inMulti = false; // to handle inserts, ie more than 1 char, indicated by splitting the sequence by '|' chars
-                while(index < sequenceStr.length())
-                {
-                    char nextChar = sequenceStr.charAt(index);
-                    boolean isMulti = nextChar == SEQUENCE_DELIM;
-
-                    if(inMulti || isMulti)
-                    {
-                        if(inMulti && isMulti)
-                        {
-                            inMulti = false;
-                            sequences.add(sequence);
-                            sequence = "";
-                        }
-                        else if(isMulti)
-                        {
-                            // start of new multi-char sequence
-                            inMulti = true;
-                        }
-                        else
-                        {
-                            sequence += nextChar;
-                        }
-                    }
-                    else
-                    {
-                        sequences.add(String.valueOf(nextChar));
-                    }
-
-                    ++index;
-                }
-
-                HlaSequenceLoci newSequence = new HlaSequenceLoci(allele, sequences);
+                HlaSequenceLoci newSequence = HlaSequenceFile.createFromReference(allele, sequenceStr, isProteinFile);
 
                 if(isDefaultTemplate)
                     mDeflatedSequenceTemplate = newSequence;

@@ -41,7 +41,30 @@ public class LilacTestUtils
         return targetSeq.toString();
     }
 
-    public static List<Integer> buildTargetIndices(final String sequence, final String refSequence)
+    public static List<Integer> buildLoci(final String sequence)
+    {
+        List<Integer> indices = Lists.newArrayList();
+
+        for(int i = 0; i < sequence.length(); ++i)
+        {
+            indices.add(i);
+        }
+
+        return indices;
+    }
+
+
+    public static List<String> buildTargetSequences(final String sequence, final List<Integer> indices)
+    {
+        List<String> sequences = Lists.newArrayList();
+        if(indices.size() > sequence.length())
+            return sequences;
+
+        indices.forEach(x -> sequences.add(String.valueOf(sequence.charAt(x))));
+        return sequences;
+    }
+
+    public static List<Integer> buildTargetLoci(final String sequence, final String refSequence)
     {
         List<Integer> indices = Lists.newArrayList();
 

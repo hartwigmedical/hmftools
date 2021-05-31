@@ -3,7 +3,6 @@ package com.hartwig.hmftools.lilac;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -11,24 +10,16 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConfig.OUTPUT_DIR;
 import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
-import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
-import static com.hartwig.hmftools.lilac.LilacConstants.getExonGeneBoundries;
+import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.ReferenceData.AA_REF_FILE;
 import static com.hartwig.hmftools.lilac.ReferenceData.DEFLATE_TEMPLATE;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_REF_FILE;
-import static com.hartwig.hmftools.lilac.ReferenceData.SEQUENCE_DELIM;
 import static com.hartwig.hmftools.lilac.ReferenceData.populateHlaTranscripts;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.EXON_BOUNDARY;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.IDENTICAL;
+import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.SEQUENCE_DELIM;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToFourDigit;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToSixDigit;
 
@@ -133,7 +124,7 @@ public class GenerateReferenceSequences
 
     private List<HlaSequenceLoci> nucleotideLoci(final String filename)
     {
-        List<HlaSequence> sequences = HlaSequenceFile.readFile(filename);
+        List<HlaSequence> sequences = HlaSequenceFile.readDefintionFile(filename);
 
         List<HlaSequence> filteredSequences = sequences.stream()
                 .collect(Collectors.toList());
@@ -145,7 +136,7 @@ public class GenerateReferenceSequences
 
     private List<HlaSequenceLoci> aminoAcidLoci(final String filename)
     {
-        List<HlaSequence> sequences = HlaSequenceFile.readFile(filename);
+        List<HlaSequence> sequences = HlaSequenceFile.readDefintionFile(filename);
 
         List<HlaSequence> filteredSequences = sequences.stream()
                 .collect(Collectors.toList());
@@ -334,7 +325,7 @@ public class GenerateReferenceSequences
                 String alleleStr = padString(allele.toString(), alleleNameLength);
                 writer.write(alleleStr);
 
-                List<Integer> exonBoundaries = getExonGeneBoundries(allele.Gene);
+                List<Integer> exonBoundaries = getAminoAcidExonBoundaries(allele.Gene);
 
                 int nextExonIndex = 0;
                 int nextExonBoundary = exonBoundaries.get(nextExonIndex);

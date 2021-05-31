@@ -18,6 +18,8 @@ import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.cohort.CohortFrequency;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
+import org.apache.commons.compress.utils.Lists;
+
 /* Rank candidates by:
     - first calculating bonuses and penalties for being homozygous and common in the provided cohort
     - ensure known frameshift alleles have been given unique fragment counts for each fragment supporting the indel
@@ -59,8 +61,16 @@ public class HlaComplexCoverageRanking
         int topCoverage = complexes.stream().mapToInt(x -> x.TotalCoverage).max().orElse(0);
         double inclusionThreshold = topScore - mMaxScoreDifference * topCoverage;
 
-        List<HlaComplexCoverage> results = complexes.stream()
-                .filter(x -> x.getScore() >= inclusionThreshold).collect(Collectors.toList());
+        List<HlaComplexCoverage> results = Lists.newArrayList();
+
+        for(HlaComplexCoverage complexCoverage : complexes)
+        {
+            if(results.size() >= 100)
+                break;
+
+            if(complexCoverage.getScore() >= inclusionThreshold)
+                results.add(complexCoverage);
+        }
 
         Collections.sort(results, new ComplexCoverageSorter());
         return results;

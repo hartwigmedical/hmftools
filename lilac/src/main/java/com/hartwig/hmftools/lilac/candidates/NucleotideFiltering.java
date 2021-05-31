@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac.candidates;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
-import static com.hartwig.hmftools.lilac.LilacConstants.getExonGeneBoundries;
+import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -79,7 +79,7 @@ public class NucleotideFiltering
 
         for(String gene : GENE_IDS)
         {
-            List<Integer> aminoAcidExonBoundaries = getExonGeneBoundries(gene);
+            List<Integer> aminoAcidExonBoundaries = getAminoAcidExonBoundaries(gene);
 
             List<Integer> nucleotideExonBoundaries = Lists.newArrayList();
 

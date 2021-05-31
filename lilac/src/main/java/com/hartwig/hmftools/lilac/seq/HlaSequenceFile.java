@@ -17,7 +17,51 @@ import org.jetbrains.annotations.NotNull;
 
 public class HlaSequenceFile
 {
-    public static List<HlaSequence> readFile(final String filename)
+    public static final char SEQUENCE_DELIM = '|';
+
+    public static HlaSequenceLoci createFromReference(final HlaAllele allele, final String sequenceStr, boolean isProteinFile)
+    {
+        List<String> sequences = isProteinFile ?
+                Lists.newArrayListWithExpectedSize(367) : Lists.newArrayListWithExpectedSize(1098);
+
+        int index = 0;
+        String sequence = "";
+        boolean inMulti = false; // to handle inserts, ie more than 1 char, indicated by splitting the sequence by '|' chars
+        while(index < sequenceStr.length())
+        {
+            char nextChar = sequenceStr.charAt(index);
+            boolean isMulti = nextChar == SEQUENCE_DELIM;
+
+            if(inMulti || isMulti)
+            {
+                if(inMulti && isMulti)
+                {
+                    inMulti = false;
+                    sequences.add(sequence);
+                    sequence = "";
+                }
+                else if(isMulti)
+                {
+                    // start of new multi-char sequence
+                    inMulti = true;
+                }
+                else
+                {
+                    sequence += nextChar;
+                }
+            }
+            else
+            {
+                sequences.add(String.valueOf(nextChar));
+            }
+
+            ++index;
+        }
+
+        return new HlaSequenceLoci(allele, sequences);
+    }
+
+    public static List<HlaSequence> readDefintionFile(final String filename)
     {
         if(filename == null)
             return Lists.newArrayList();

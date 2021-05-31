@@ -6,6 +6,7 @@ public enum FragmentScope
     HLA_Y,
     NO_HET_LOCI,
     UNMATCHED_AMINO_ACID,
+    WILD_ONLY,
     CANDIDATE,
     SOLUTION,
     UNSET;

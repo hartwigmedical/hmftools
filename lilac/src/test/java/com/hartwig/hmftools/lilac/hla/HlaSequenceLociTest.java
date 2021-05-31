@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac.hla;
 
-import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.buildTargetIndices;
-import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.buildTargetSequence;
+import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.buildTargetLoci;
+import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.buildTargetSequences;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -10,6 +10,7 @@ import static junit.framework.TestCase.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceMatchType;
 
@@ -17,15 +18,16 @@ import org.junit.Test;
 
 public class HlaSequenceLociTest
 {
-    private HlaAllele allele = HlaAllele.fromString("A*01:01:01:01");
-    private String reference = "APRTS..MNV..EPRF";
+    private HlaAllele mAllele = HlaAllele.fromString("A*01:01:01:01");
+    private HlaAllele mProteinAllele = HlaAllele.fromString("A*01:01");
+    private String mReference = "APRTSMNVEPRF";
 
     @Test
     public void testReference()
     {
-        HlaSequenceLoci seqLoci = HlaSequenceLoci.create(allele, reference, reference);
+        HlaSequenceLoci seqLoci = HlaSequenceLoci.create(mAllele, mReference, mReference);
         assertEquals(12, seqLoci.getSequences().size());
-        assertEquals(reference.replace(".", ""), seqLoci.sequence());
+        assertEquals(mReference.replace(".", ""), seqLoci.sequence());
 
         for(String sequence : seqLoci.getSequences())
         {
@@ -33,39 +35,55 @@ public class HlaSequenceLociTest
         }
 
         assertEquals("APRTSMNVEPRF", seqLoci.sequence());
-        assertFalse(seqLoci.containsIndels());
-        assertFalse(seqLoci.containsInserts());
-        assertFalse(seqLoci.containsDeletes());
+        assertFalse(seqLoci.hasIndels());
+        assertFalse(seqLoci.hasInserts());
+        assertFalse(seqLoci.hasDeletes());
     }
 
     @Test
     public void testInsert()
     {
-        String sequence = "-----ET---..----";
-        HlaSequenceLoci seqLoci = HlaSequenceLoci.create(allele, sequence, reference);
+        String sequence = "APRT|SET|MNVEPRF";
+        HlaSequenceLoci seqLoci = HlaSequenceFile.createFromReference(mProteinAllele, sequence, true);
         assertEquals(12, seqLoci.getSequences().size());
         assertEquals("SET", seqLoci.sequence(4));
         assertEquals("APRTSETMNVEPRF", seqLoci.sequence(0, 11));
 
-        assertTrue(seqLoci.containsIndels());
-        assertTrue(seqLoci.containsInserts());
-        assertFalse(seqLoci.containsDeletes());
+        assertTrue(seqLoci.hasIndels());
+        assertTrue(seqLoci.hasInserts());
+        assertFalse(seqLoci.hasDeletes());
     }
 
     @Test
     public void testDelete()
     {
-        String sequence = ".----...--..---.";
-        HlaSequenceLoci seqLoci = HlaSequenceLoci.create(allele, sequence, reference);
+        String sequence = ".PRTS.NVEPR.";
+        HlaSequenceLoci seqLoci = HlaSequenceFile.createFromReference(mProteinAllele, sequence, true);
         assertEquals(12, seqLoci.getSequences().size());
         assertEquals(".", seqLoci.sequence(0));
         assertEquals(".", seqLoci.sequence(5));
         assertEquals(".", seqLoci.sequence(11));
-        assertEquals(".PRTS.NVEPR.", seqLoci.sequence(0, 11));
 
-        assertTrue(seqLoci.containsIndels());
-        assertFalse(seqLoci.containsInserts());
-        assertTrue(seqLoci.containsDeletes());
+        assertTrue(seqLoci.hasIndels());
+        assertFalse(seqLoci.hasInserts());
+        assertTrue(seqLoci.hasDeletes());
+    }
+
+    @Test
+    public void testWildcards()
+    {
+        String sequence = "APRT***MNV**EPRF";
+        HlaSequenceLoci seqLoci = HlaSequenceLoci.create(mAllele, sequence, mReference);
+
+        assertFalse(seqLoci.hasInserts());
+        assertFalse(seqLoci.hasDeletes());
+        assertTrue(seqLoci.hasWildcards());
+
+        seqLoci.setExonBoundaryWildcardsWildcards(Lists.newArrayList(2));
+        assertFalse(seqLoci.hasExonBoundaryWildcards());
+
+        seqLoci.setExonBoundaryWildcardsWildcards(Lists.newArrayList(5));
+        assertTrue(seqLoci.hasExonBoundaryWildcards());
     }
 
     @Test
@@ -73,29 +91,29 @@ public class HlaSequenceLociTest
     {
         String refSequence = "ABCDEFGHIJKLMNOP";
         String alleleSequence = "ABXYEFWZIJKLABOP";
-        HlaSequenceLoci seqLoci = HlaSequenceLoci.create(allele, alleleSequence, refSequence);
+        HlaSequenceLoci seqLoci = HlaSequenceLoci.create(mAllele, alleleSequence, refSequence);
 
-        List<Integer> fragmentLoci = buildTargetIndices(alleleSequence, refSequence);
-        String targetSeq = buildTargetSequence(refSequence, fragmentLoci);
+        List<Integer> fragmentLoci = buildTargetLoci(alleleSequence, refSequence);
+        List<String> targetSeq = buildTargetSequences(refSequence, fragmentLoci);
         assertEquals(SequenceMatchType.NONE, seqLoci.determineMatchType(targetSeq, fragmentLoci));
 
         // test against itself
-        targetSeq = buildTargetSequence(alleleSequence, fragmentLoci);
+        targetSeq = buildTargetSequences(alleleSequence, fragmentLoci);
         assertEquals(SequenceMatchType.FULL, seqLoci.determineMatchType(targetSeq, fragmentLoci));
 
         // test an allele with wilcards
         String wildSequence = "ABXYEFW*********";
-        HlaSequenceLoci seqLociWild = HlaSequenceLoci.create(allele, wildSequence, refSequence);
+        HlaSequenceLoci seqLociWild = HlaSequenceLoci.create(mAllele, wildSequence, refSequence);
         // fragmentLoci = buildTargetIndices(wildSequence, refSequence);
 
         String fragmentSeq = "ABXYEFWZIJKLABOP";
         fragmentLoci = Lists.newArrayList(5, 6,7,8);
-        targetSeq = buildTargetSequence(fragmentSeq, fragmentLoci);
+        targetSeq = buildTargetSequences(fragmentSeq, fragmentLoci);
         assertEquals(SequenceMatchType.WILD, seqLociWild.determineMatchType(targetSeq, fragmentLoci));
 
         // all in the wildcard region
         fragmentLoci = Lists.newArrayList(8,9,10,11);
-        targetSeq = buildTargetSequence(fragmentSeq, fragmentLoci);
+        targetSeq = buildTargetSequences(fragmentSeq, fragmentLoci);
         assertEquals(SequenceMatchType.WILD, seqLociWild.determineMatchType(targetSeq, fragmentLoci));
     }
 

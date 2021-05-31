@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.lilac;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.read.Indel;
 
 public class LilacConstants
@@ -57,8 +59,7 @@ public class LilacConstants
 
     public static final int MAX_AMINO_ACID_BOUNDARY = 298;
 
-    public static final List<Integer> ALL_PROTEIN_EXON_BOUNDARIES = Lists.newArrayList(
-            24, 114, 206, 298, 337, 348, 364, 338, 349, 365);
+    public static final Map<String,List<Integer>> NUCLEOTIDE_EXON_BOUNDARIES = Maps.newHashMap();
 
     public static final int COMPLEX_PERMS_THRESHOLD = 100000;
 
@@ -66,7 +67,9 @@ public class LilacConstants
     public static final String DELIM = ",";
     public static final String ITEM_DELIM = ";";
 
-    public static List<Integer> getExonGeneBoundries(final String gene)
+    // common routines using constants
+
+    public static List<Integer> getAminoAcidExonBoundaries(final String gene)
     {
         if(gene.equals(GENE_A))
             return A_EXON_BOUNDARIES;
@@ -74,6 +77,30 @@ public class LilacConstants
             return B_EXON_BOUNDARIES;
         else
             return C_EXON_BOUNDARIES;
+    }
+
+    public static List<Integer> getNucleotideExonBoundaries(final String gene)
+    {
+        return NUCLEOTIDE_EXON_BOUNDARIES.get(gene);
+    }
+
+    public static void populateNucleotideExonBoundaries()
+    {
+        for(String gene : GENE_IDS)
+        {
+            List<Integer> aminoAcidExonBoundaries = getAminoAcidExonBoundaries(gene);
+
+            List<Integer> nucleotideExonBoundaries = Lists.newArrayList();
+
+            for(Integer boundary : aminoAcidExonBoundaries)
+            {
+                nucleotideExonBoundaries.add(boundary * 3);
+                nucleotideExonBoundaries.add(boundary * 3 + 1);
+                nucleotideExonBoundaries.add(boundary * 3 + 2);
+            }
+
+            NUCLEOTIDE_EXON_BOUNDARIES.put(gene, nucleotideExonBoundaries);
+        }
     }
 
     public static String shortGeneName(final String gene)

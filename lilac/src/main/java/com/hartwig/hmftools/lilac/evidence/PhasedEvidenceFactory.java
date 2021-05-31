@@ -58,8 +58,7 @@ public class PhasedEvidenceFactory
             LL_LOGGER.debug("  heterozygous Indices: {}", heterozygousIndices);
         }
 
-        ExtendEvidence heterozygousEvidence =
-                new ExtendEvidence(mConfig, heterozygousIndices, fragments, expectedAlleles);
+        ExtendEvidence heterozygousEvidence = new ExtendEvidence(mConfig, heterozygousIndices, fragments, expectedAlleles);
 
         List<PhasedEvidence> finalisedEvidence = Lists.newArrayList();
         List<PhasedEvidence> unprocessedEvidence = Lists.newArrayList();

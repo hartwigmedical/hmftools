@@ -3,12 +3,13 @@ package com.hartwig.hmftools.lilac.coverage;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_Y_FRAGMENT_THRESHOLD;
-import static com.hartwig.hmftools.lilac.fragment.FragmentScope.CANDIDATE;
+import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
+import static com.hartwig.hmftools.lilac.LilacConstants.getNucleotideExonBoundaries;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.NO_HET_LOCI;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNMATCHED_AMINO_ACID;
-import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.filterExonBoundaryWildcards;
-import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.filterWildcards;
+import static com.hartwig.hmftools.lilac.fragment.FragmentScope.WILD_ONLY;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.FULL;
 import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.WILD;
 
@@ -16,7 +17,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -80,11 +80,9 @@ public class FragmentAlleleMapper
             }
             else
             {
-                // LL_LOGGER.debug("frag({}: {}) unassigned", fragment.id(), fragment.readInfo());
-
                 if(!fragmentAlleles.getWild().isEmpty())
                 {
-                    fragment.setScope(CANDIDATE);
+                    fragment.setScope(WILD_ONLY);
                 }
                 else
                 {
@@ -151,7 +149,8 @@ public class FragmentAlleleMapper
     private Map<HlaAllele, SequenceMatchType> findNucleotideMatches(
             final Fragment fragment, final List<HlaSequenceLoci> nucleotideSequences)
     {
-        Map<String,List<Integer>> fragNucleotideLociMap = Maps.newHashMap();
+        Map<String,List<Integer>> fragGeneLociMap = Maps.newHashMap();
+        Map<String,List<String>> fragGeneSequenceMap = Maps.newHashMap();
 
         Map<HlaAllele, SequenceMatchType> alleleMatches = Maps.newHashMap();
 
@@ -189,15 +188,24 @@ public class FragmentAlleleMapper
                 }
             }
 
-            fragNucleotideLociMap.put(gene, fragmentMatchedLoci);
+            Collections.sort(fragmentMatchedLoci);
+
+            final List<String> fragmentNucleotides = Lists.newArrayListWithExpectedSize(fragmentMatchedLoci.size());
+
+            for(Integer locus : fragmentMatchedLoci)
+            {
+                if(missedNucleotides.containsKey(locus))
+                    fragmentNucleotides.add(missedNucleotides.get(locus));
+                else
+                    fragmentNucleotides.add(fragment.nucleotide(locus));
+            }
+
+            fragGeneLociMap.put(gene, fragmentMatchedLoci);
+            fragGeneSequenceMap.put(gene, fragmentNucleotides);
         }
 
-        if(fragNucleotideLociMap.values().stream().allMatch(x -> x.isEmpty()))
+        if(fragGeneLociMap.values().stream().allMatch(x -> x.isEmpty()))
             return alleleMatches;
-
-        fragNucleotideLociMap.values().forEach(x -> Collections.sort(x));
-
-        Map<String,String> fragNucleotideSequences = Maps.newHashMap();
 
         for(HlaSequenceLoci sequence : nucleotideSequences)
         {
@@ -213,48 +221,52 @@ public class FragmentAlleleMapper
             if(!fragment.getGenes().contains(allele.geneName()))
                 continue;
 
-            List<Integer> fragNucleotideLoci = fragNucleotideLociMap.get(allele.Gene);
+            List<Integer> fragNucleotideLoci = fragGeneLociMap.get(allele.Gene);
             if(fragNucleotideLoci.isEmpty())
                 continue;
 
             // filter out wildcard bases at these exon boundaries
-            List<Integer> alleleNucleotideLoci = filterWildcards(sequence, fragNucleotideLoci);
+            List<String> fragmentNucleotides = fragGeneSequenceMap.get(allele.Gene);
+
+            if(sequence.hasExonBoundaryWildcards())
+            {
+                // mustn't change the original
+                fragmentNucleotides = fragmentNucleotides.stream().collect(Collectors.toList());
+                fragNucleotideLoci = fragNucleotideLoci.stream().collect(Collectors.toList());
+
+                // ignore any wildcard loci at an exon boundary
+                List<Integer> nucleotideExonBoundaries = getNucleotideExonBoundaries(sequence.Allele.Gene);
+
+                int index = 0;
+                while(index < fragNucleotideLoci.size())
+                {
+                    int locus = fragNucleotideLoci.get(index);
+                    boolean wildcardExonBoundary = nucleotideExonBoundaries.contains(locus)
+                            && locus < sequence.length() && sequence.sequence(locus).equals(WILD_STR);
+
+                    if(!wildcardExonBoundary)
+                    {
+                        ++index;
+                    }
+                    else
+                    {
+                        fragNucleotideLoci.remove(index);
+                        fragmentNucleotides.remove(index);
+                    }
+                }
+            }
+
+            // List<Integer> alleleNucleotideLoci = filterWildcards(sequence, fragNucleotideLoci);
 
             SequenceMatchType matchType;
-            if(alleleNucleotideLoci.isEmpty())
+            if(fragNucleotideLoci.isEmpty())
             {
                 // if all bases being considered a wild, the treat it as full in nucleotide space and rely on the amino acid match type
                 matchType = FULL;
             }
             else
             {
-                String fragNucleotides = fragNucleotideSequences.get(allele.Gene);
-
-                if(fragNucleotides == null)
-                {
-                    if(missedNucleotides.isEmpty())
-                    {
-                        fragNucleotides = fragment.nucleotides(alleleNucleotideLoci);
-                    }
-                    else
-                    {
-                        StringJoiner nucSj = new StringJoiner("");
-
-                        for(Integer locus : alleleNucleotideLoci)
-                        {
-                            if(missedNucleotides.containsKey(locus))
-                                nucSj.add(missedNucleotides.get(locus));
-                            else
-                                nucSj.add(fragment.nucleotide(locus));
-                        }
-
-                        fragNucleotides = nucSj.toString();
-                    }
-
-                    fragNucleotideSequences.put(allele.Gene, fragNucleotides);
-                }
-
-                matchType = sequence.determineMatchType(fragNucleotides, alleleNucleotideLoci);
+                matchType = sequence.determineMatchType(fragmentNucleotides, fragNucleotideLoci);
             }
 
             if(matchType == SequenceMatchType.NONE)
@@ -264,20 +276,6 @@ public class FragmentAlleleMapper
             {
                 alleleMatches.put(proteinAllele, matchType);
             }
-
-            /*
-            // keep or improve the best match
-            Map.Entry<HlaAllele, SequenceMatchType> entryMatch = alleleMatches.entrySet().stream()
-                    .filter(x -> x.getKey() == allele.asFourDigit()).findFirst().orElse(null);
-
-            if(entryMatch == null || matchType.isBetter(entryMatch.getValue()))
-            {
-                if(entryMatch != null)
-                    alleleMatches.remove(entryMatch.getKey());
-
-                alleleMatches.put(allele.asFourDigit(), matchType);
-            }
-            */
         }
 
         return alleleMatches;
@@ -288,7 +286,7 @@ public class FragmentAlleleMapper
         Map<HlaAllele,SequenceMatchType> alleleMatches = Maps.newHashMap();
 
         Map<String,List<Integer>> fragGeneLociMap = Maps.newHashMap(); // per-gene map of heterozygous locations for this fragment
-        Map<String,String> fragGeneSequenceMap = Maps.newHashMap(); // per-gene map of fragment sequences at these het loci
+        Map<String,List<String>> fragGeneSequenceMap = Maps.newHashMap(); // per-gene map of fragment sequences at these het loci
 
         for(Map.Entry<String,Map<Integer,List<String>>> geneEntry : mGeneAminoAcidHetLociMap.entrySet())
         {
@@ -301,7 +299,7 @@ public class FragmentAlleleMapper
                 continue;
 
             // also attempt to retrieve amino acids from low-qual nucleotides
-            Map<Integer, String> missedAminoAcids = Maps.newHashMap();
+            Map<Integer,String> missedAminoAcids = Maps.newHashMap();
 
             List<Integer> missedAminoAcidLoci = hetLociSeqMap.keySet().stream()
                     .filter(x -> !fragAminoAcidLoci.contains(x)).collect(Collectors.toList());
@@ -324,25 +322,14 @@ public class FragmentAlleleMapper
 
             Collections.sort(fragAminoAcidLoci);
 
-            String fragmentAminoAcids;
+            final List<String> fragmentAminoAcids = Lists.newArrayListWithExpectedSize(fragAminoAcidLoci.size());
 
-            if(missedAminoAcids.isEmpty())
+            for(Integer locus : fragAminoAcidLoci)
             {
-                fragmentAminoAcids = fragment.aminoAcids(fragAminoAcidLoci);
-            }
-            else
-            {
-                StringJoiner aaSj = new StringJoiner("");
-
-                for(Integer locus : fragAminoAcidLoci)
-                {
-                    if(missedAminoAcids.containsKey(locus))
-                        aaSj.add(missedAminoAcids.get(locus));
-                    else
-                        aaSj.add(fragment.aminoAcid(locus));
-                }
-
-                fragmentAminoAcids = aaSj.toString();
+                if(missedAminoAcids.containsKey(locus))
+                    fragmentAminoAcids.add(missedAminoAcids.get(locus));
+                else
+                    fragmentAminoAcids.add(fragment.aminoAcid(locus));
             }
 
             fragGeneLociMap.put(geneEntry.getKey(), fragAminoAcidLoci);
@@ -361,42 +348,41 @@ public class FragmentAlleleMapper
             if(fragAminoAcidLoci == null) // not supported by this gene or homozygous in all locations
                 continue;
 
-            String fragmentAminoAcids = fragGeneSequenceMap.get(allele.Gene);
+            List<String> fragmentAminoAcids = fragGeneSequenceMap.get(allele.Gene);
 
-            // ignore any wildcard loci at an exon boundary
-            List<Integer> alleleFilteredLoci = filterExonBoundaryWildcards(sequence, fragAminoAcidLoci);
-
-            String adjustedSequence = "";
-
-            if(fragAminoAcidLoci.size() > alleleFilteredLoci.size())
+            if(sequence.hasExonBoundaryWildcards())
             {
-                for(int i = 0; i < fragAminoAcidLoci.size(); ++i)
+                // mustn't change the original
+                fragmentAminoAcids = fragmentAminoAcids.stream().collect(Collectors.toList());
+                fragAminoAcidLoci = fragAminoAcidLoci.stream().collect(Collectors.toList());
+
+                // ignore any wildcard loci at an exon boundary
+                List<Integer> aminoAcidExonBoundaries = getAminoAcidExonBoundaries(sequence.Allele.Gene);
+
+                int index = 0;
+                while(index < fragAminoAcidLoci.size())
                 {
-                    if(alleleFilteredLoci.contains(fragAminoAcidLoci.get(i)))
-                        adjustedSequence += fragmentAminoAcids.charAt(i);
+                    int locus = fragAminoAcidLoci.get(index);
+                    boolean wildcardExonBoundary = aminoAcidExonBoundaries.contains(locus)
+                            && locus < sequence.length() && sequence.sequence(locus).equals(WILD_STR);
+
+                    if(!wildcardExonBoundary)
+                    {
+                        ++index;
+                    }
+                    else
+                    {
+                        fragAminoAcidLoci.remove(index);
+                        fragmentAminoAcids.remove(index);
+                    }
                 }
             }
-            else
-            {
-                adjustedSequence = fragmentAminoAcids;
-            }
 
-            SequenceMatchType matchType = sequence.determineMatchType(adjustedSequence, alleleFilteredLoci);
+            SequenceMatchType matchType = sequence.determineMatchType(fragmentAminoAcids, fragAminoAcidLoci);
             if(matchType == SequenceMatchType.NONE)
                 continue;
 
             alleleMatches.put(allele, matchType);
-
-            /*
-            Map.Entry<HlaAllele, SequenceMatchType> entryMatch = alleleMatches.entrySet().stream()
-                    .filter(x -> x.getKey() == allele).findFirst().orElse(null);
-
-            if(entryMatch == null || matchType.isBetter(entryMatch.getValue()))
-            {
-                if(entryMatch != null)
-                    alleleMatches.remove(entryMatch.getKey());
-            }
-             */
         }
 
         return alleleMatches;

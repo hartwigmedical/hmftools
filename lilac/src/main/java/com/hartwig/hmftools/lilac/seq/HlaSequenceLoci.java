@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.lilac.seq;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.getExonGeneBoundries;
+import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILDCARD;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
@@ -25,25 +25,50 @@ public class HlaSequenceLoci
     public final HlaAllele Allele;
 
     private final List<String> mSequences;
+    private final boolean mHasDeletes;
+    private final boolean mHasInserts;
+    private final boolean mHasWildcards;
+    private boolean mHasExonBoundaryWildcards;
 
     public HlaSequenceLoci(final HlaAllele allele, final List<String> sequences)
     {
         Allele = allele;
         mSequences = Lists.newArrayList();
         mSequences.addAll(sequences);
+
+        mHasDeletes = mSequences.stream().anyMatch(x -> x.equals(DEL_STR));
+        mHasInserts = mSequences.stream().anyMatch(x -> x.length() > 1);
+        mHasWildcards = mSequences.stream().anyMatch(x -> x.equals(WILD_STR));
+
+        mHasExonBoundaryWildcards = false;
     }
 
     public int length() { return mSequences.size(); }
 
     public List<String> getSequences() { return mSequences; }
 
-    public boolean containsInserts() { return mSequences.stream().anyMatch(x -> x.length() > 1); }
+    public boolean hasInserts() { return mHasInserts; }
+    public boolean hasDeletes() { return mHasDeletes; }
+    public boolean hasIndels() { return hasDeletes() || hasInserts(); }
+    public boolean hasWildcards() { return mHasWildcards; }
 
-    public boolean containsDeletes() { return mSequences.stream().anyMatch(x -> x.equals(DEL_STR)); }
 
-    public boolean containsIndels() { return containsDeletes() || containsInserts(); }
+    public boolean hasExonBoundaryWildcards() { return mHasExonBoundaryWildcards; }
 
-    public boolean containsWildcards() { return mSequences.stream().anyMatch(x -> x.equals(WILD_STR)); }
+    public void setExonBoundaryWildcardsWildcards(final List<Integer> exonBoundaries)
+    {
+        for(Integer locus : exonBoundaries)
+        {
+            if(locus >= mSequences.size())
+                return;
+
+            if(mSequences.get(locus).equals(WILD_STR))
+            {
+                mHasExonBoundaryWildcards = true;
+                return;
+            }
+        }
+    }
 
     public String sequence(int locus) { return mSequences.get(locus); }
 
@@ -122,25 +147,51 @@ public class HlaSequenceLoci
     public static List<Integer> filterExonBoundaryWildcards(final HlaSequenceLoci sequence, final List<Integer> loci)
     {
         // exclude any wildcard location matching an exon boundary
-        if(!sequence.containsWildcards())
+        if(!sequence.hasWildcards())
             return loci;
 
-        List<Integer> aminoAcidExonBoundaries = getExonGeneBoundries(sequence.Allele.Gene);
+        List<Integer> aminoAcidExonBoundaries = getAminoAcidExonBoundaries(sequence.Allele.Gene);
 
         return loci.stream()
-                .filter(x -> !aminoAcidExonBoundaries.contains(x) || !sequence.sequence(x).equals(WILD_STR))
+                .filter(x -> !aminoAcidExonBoundaries.contains(x)
+                        || x < sequence.length() && !sequence.sequence(x).equals(WILD_STR))
                 .collect(Collectors.toList());
     }
 
     public static List<Integer> filterWildcards(final HlaSequenceLoci sequence, final List<Integer> loci)
     {
         // exclude any wildcard location matching an exon boundary
-        if(!sequence.containsWildcards())
+        if(!sequence.hasWildcards())
             return loci;
 
         return loci.stream()
                 .filter(x -> !sequence.sequence(x).equals(WILD_STR))
                 .collect(Collectors.toList());
+    }
+
+    public SequenceMatchType determineMatchType(final List<String> targetSequences, final List<Integer> targetLoci)
+    {
+        if(targetLoci.isEmpty())
+            return SequenceMatchType.NONE;
+
+        boolean hasWildcardMatch = false;
+
+        for(int i = 0; i < targetLoci.size(); ++i)
+        {
+            Integer locus = targetLoci.get(i);
+
+            if(locus >= mSequences.size())
+                return SequenceMatchType.NONE;
+
+            String sequenceStr = mSequences.get(locus);
+
+            if(sequenceStr.equals(WILD_STR))
+                hasWildcardMatch = true;
+            else if(!sequenceStr.equals(targetSequences.get(i)))
+                return SequenceMatchType.NONE;
+        }
+
+        return hasWildcardMatch ? WILD : FULL;
     }
 
     public SequenceMatchType determineMatchType(final String targetSequence, final List<Integer> targetIndices)
