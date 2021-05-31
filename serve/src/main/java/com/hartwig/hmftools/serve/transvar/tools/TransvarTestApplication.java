@@ -31,7 +31,7 @@ public class TransvarTestApplication {
                 System.getProperty("user.home") + "/hmf/refgenomes/grch38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna";
         Transvar transvar38 = Transvar.withRefGenome(RefGenomeVersion.V38, refGenomeFastaFile38, HmfGenePanelSupplier.allGenesMap38());
 
-        extractAndPrintHotspots(transvar38, "BRAF", "ENST00000288602", "V600E");
+        extractAndPrintHotspots(transvar38, "NUAK2", null, "R618Q");
     }
 
     private static void extractAndPrintHotspots(@NotNull Transvar transvar, @NotNull String gene, @Nullable String specificTranscript,

@@ -196,7 +196,7 @@ public class AnnotatedHotspotVCFChecker {
         if (inputAnnotation.contains("del") || inputAnnotation.contains("ins") || inputAnnotation.contains("dup")) {
             int inputStartCodon = extractFirstDigit(inputAnnotation);
             int snpeffStartCodon = extractFirstDigit(snpEffAnnotation);
-            return Math.abs(inputStartCodon - snpeffStartCodon) <= 12;
+            return Math.abs(inputStartCodon - snpeffStartCodon) <= 5;
         }
         return false;
     }
