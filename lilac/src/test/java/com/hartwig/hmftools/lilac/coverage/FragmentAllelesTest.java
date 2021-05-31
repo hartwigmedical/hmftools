@@ -159,12 +159,13 @@ public class FragmentAllelesTest
         assertEquals(1, fragAlleles.size());
         assertTrue(fragAlleles.get(0).getFull().contains(allele1));
 
-        // again but with the low-qual bases not forming the correct amino acid
+        // again but with the low-qual bases not forming the correct amino acid, but still accepted as a match
         frag1.getRawNucleotides().set(1, "A");
 
         fragAlleles = mapper.createFragmentAlleles(fragments, sequences, candidateNucSequences);
 
-        assertTrue(fragAlleles.isEmpty());
+        assertEquals(1, fragAlleles.size());
+        assertTrue(fragAlleles.get(0).getFull().contains(allele1));
     }
 
     @Test
