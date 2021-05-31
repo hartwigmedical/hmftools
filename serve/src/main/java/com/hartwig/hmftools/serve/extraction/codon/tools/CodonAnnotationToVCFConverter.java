@@ -33,6 +33,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 public class CodonAnnotationToVCFConverter {
 
     private static final Logger LOGGER = LogManager.getLogger(CodonAnnotationToVCFConverter.class);
+
     private static final boolean LOG_DEBUG = true;
 
     public static void main(String[] args) throws IOException {
@@ -45,7 +46,7 @@ public class CodonAnnotationToVCFConverter {
         ServeConfig config = ServeLocalConfigProvider.create();
         IndexedFastaSequenceFile refSequence37 = new IndexedFastaSequenceFile(new File(config.refGenome37FastaFile()));
 
-        String knownCodonsTsv = System.getProperty("user.home") + "/hmf/tmp/KnownCodons.SERVE.37.tsv";
+        String knownCodonsTsv = System.getProperty("user.home") + "/hmf/tmp/KnownCodons.SERVE.38.tsv";
         String outputVcf = System.getProperty("user.home") + "/hmf/tmp/codons.vcf.gz";
         GenerateAltBase altBaseGenerator = new GenerateAltBase(RefGenomeVersion.V37, refSequence37);
 
@@ -56,10 +57,10 @@ public class CodonAnnotationToVCFConverter {
         VariantContextWriter writer = VCFWriterFactory.openVCFWriter(outputVcf, uniqueSourcesString(codons));
 
         for (KnownCodon codon : codons) {
-            long start = codon.annotation().start();
-            long end = codon.annotation().end();
-            long middle = start + 1;
-            List<Long> positions = Lists.newArrayList(start, middle, end);
+            List<Long> positions = Lists.newArrayList();
+            for (long i = codon.annotation().start(); i <= codon.annotation().end(); i++) {
+                positions.add(i);
+            }
 
             String chromosome = codon.annotation().chromosome();
             for (long position : positions) {
