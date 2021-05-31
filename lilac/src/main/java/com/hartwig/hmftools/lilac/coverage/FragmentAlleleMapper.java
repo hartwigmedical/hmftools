@@ -5,12 +5,14 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_Y_FRAGMENT_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.LilacConstants.getNucleotideExonBoundaries;
+import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.NO_HET_LOCI;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNMATCHED_AMINO_ACID;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.WILD_ONLY;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.FULL;
+import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.NO_LOCI;
 import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.WILD;
 
 import java.util.Collections;
@@ -29,7 +31,7 @@ import com.hartwig.hmftools.lilac.seq.SequenceMatchType;
 
 public class FragmentAlleleMapper
 {
-    private final Map<String, Map<Integer,List<String>>> mGeneAminoAcidHetLociMap;
+    private final Map<String,Map<Integer,List<String>>> mGeneAminoAcidHetLociMap;
     private final Map<String,List<Integer>> mRefNucleotideHetLoci;
     private final List<Set<String>> mRefNucleotides;
 
@@ -86,8 +88,22 @@ public class FragmentAlleleMapper
                 }
                 else
                 {
-                    if(fragment.getAminoAcidLoci().stream()
-                            .noneMatch(x -> mGeneAminoAcidHetLociMap.values().stream().anyMatch(y -> y.containsKey(x))))
+                    // was this fragment homozygous in the context of all genes
+                    boolean hasHetLoci = false;
+
+                    for(Map.Entry<String,Map<Integer,List<String>>> geneEntry : mGeneAminoAcidHetLociMap.entrySet())
+                    {
+                        if(!fragment.getGenes().contains(longGeneName(geneEntry.getKey())))
+                            continue;
+
+                        if(fragment.getAminoAcidLoci().stream().anyMatch(x -> geneEntry.getValue().containsKey(x)))
+                        {
+                            hasHetLoci = true;
+                            break;
+                        }
+                    }
+
+                    if(!hasHetLoci)
                     {
                         fragment.setScope(NO_HET_LOCI);
                     }
@@ -132,12 +148,25 @@ public class FragmentAlleleMapper
         List<HlaAllele> wildAminoAcidMatch = aminoAcidAlleleMatches.entrySet().stream()
                 .filter(x -> x.getValue() == WILD).map(x -> x.getKey()).collect(Collectors.toList());
 
+        // List<HlaAllele> homLociAminoAcidMatch = Lists.newArrayList();
+
+        List<HlaAllele> homLociAminoAcidMatch = aminoAcidAlleleMatches.entrySet().stream()
+                .filter(x -> x.getValue() == NO_LOCI).map(x -> x.getKey()).collect(Collectors.toList());
+
         if(fullNucleotideMatch.isEmpty() && wildNucleotideMatch.isEmpty())
+        {
+            // do not allow wild-only (ie no full) if there are homozygous matches
+            if(fullAminoAcidMatch.isEmpty() && !wildAminoAcidMatch.isEmpty() && !homLociAminoAcidMatch.isEmpty())
+                return new FragmentAlleles(fragment, Lists.newArrayList(), Lists.newArrayList());
+
             return new FragmentAlleles(fragment, fullAminoAcidMatch, wildAminoAcidMatch);
+        }
 
-        List<HlaAllele> consistentFull = fullAminoAcidMatch.stream()
-                .filter(x -> fullNucleotideMatch.contains(x)).collect(Collectors.toList());
+        // otherwise look for matching nuc and amino-acid full matches
+        List<HlaAllele> consistentFull = fullNucleotideMatch.stream()
+                .filter(x -> fullAminoAcidMatch.contains(x) || homLociAminoAcidMatch.contains(x)).collect(Collectors.toList());
 
+        // otherwise down-grade the full matches to wild
         fullAminoAcidMatch.stream()
                 .filter(x -> !wildAminoAcidMatch.contains(x))
                 .filter(x -> wildNucleotideMatch.contains(x))
@@ -154,7 +183,7 @@ public class FragmentAlleleMapper
 
         Map<HlaAllele, SequenceMatchType> alleleMatches = Maps.newHashMap();
 
-        // also attempt to retrive amino acids from low-qual nucleotides
+        // also attempt to retrieve amino acids from low-qual nucleotides
         Map<Integer,String> missedNucleotides = Maps.newHashMap();
 
         for(Map.Entry<String,List<Integer>> entry : mRefNucleotideHetLoci.entrySet())
@@ -256,8 +285,6 @@ public class FragmentAlleleMapper
                 }
             }
 
-            // List<Integer> alleleNucleotideLoci = filterWildcards(sequence, fragNucleotideLoci);
-
             SequenceMatchType matchType;
             if(fragNucleotideLoci.isEmpty())
             {
@@ -269,7 +296,7 @@ public class FragmentAlleleMapper
                 matchType = sequence.determineMatchType(fragmentNucleotides, fragNucleotideLoci);
             }
 
-            if(matchType == SequenceMatchType.NONE)
+            if(matchType == SequenceMatchType.MISMATCH)
                 continue;
 
             if(existingMatch == null || matchType.isBetter(existingMatch))
@@ -341,12 +368,18 @@ public class FragmentAlleleMapper
             HlaAllele allele = sequence.Allele;
 
             if(!fragment.getGenes().contains(allele.geneName()))
+            {
+                alleleMatches.put(allele, NO_LOCI);
                 continue;
+            }
 
             List<Integer> fragAminoAcidLoci = fragGeneLociMap.get(allele.Gene);
 
             if(fragAminoAcidLoci == null) // not supported by this gene or homozygous in all locations
+            {
+                alleleMatches.put(allele, NO_LOCI);
                 continue;
+            }
 
             List<String> fragmentAminoAcids = fragGeneSequenceMap.get(allele.Gene);
 
@@ -379,7 +412,7 @@ public class FragmentAlleleMapper
             }
 
             SequenceMatchType matchType = sequence.determineMatchType(fragmentAminoAcids, fragAminoAcidLoci);
-            if(matchType == SequenceMatchType.NONE)
+            if(matchType == SequenceMatchType.MISMATCH)
                 continue;
 
             alleleMatches.put(allele, matchType);
@@ -447,7 +480,7 @@ public class FragmentAlleleMapper
             if(matchedFrag == null)
             {
                 ++uniqueHlaY;
-                fragment.setScope(HLA_Y);
+                fragment.setScope(HLA_Y, true);
             }
             else
             {

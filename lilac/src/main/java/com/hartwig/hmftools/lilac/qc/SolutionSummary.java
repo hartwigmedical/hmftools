@@ -19,14 +19,14 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-public class HlaOut
+public class SolutionSummary
 {
     private final HlaComplexCoverage mReferenceCoverage;
     private final HlaComplexCoverage mTumorCoverage;
     private final List<HlaCopyNumber> mTumorCopyNumber;
     private final List<SomaticCodingCount> mSomaticCodingCount;
 
-    public HlaOut(
+    public SolutionSummary(
             final HlaComplexCoverage referenceCoverage, final HlaComplexCoverage tumorCoverage,
             final List<HlaCopyNumber> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount)
     {
@@ -111,7 +111,7 @@ public class HlaOut
         return header.toString();
     }
 
-    public static HlaOut create(
+    public static SolutionSummary create(
             final HlaComplexCoverage referenceCoverage, final HlaComplexCoverage tumorCoverage,
             final List<HlaCopyNumber> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount)
     {
@@ -121,7 +121,7 @@ public class HlaOut
         List<SomaticCodingCount> sortedCodingCount = somaticCodingCount.stream().collect(Collectors.toList());
         Collections.sort(sortedCodingCount, new SomaticCodingCountSorter());
 
-        return new HlaOut(referenceCoverage, tumorCoverage, sortedCopyNumber, sortedCodingCount);
+        return new SolutionSummary(referenceCoverage, tumorCoverage, sortedCopyNumber, sortedCodingCount);
     }
 
     private static class HlaCopyNumberSorter implements Comparator<HlaCopyNumber>

@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
-import static com.hartwig.hmftools.lilac.LilacConstants.LOG_UNMATCHED_HAPLOTYPE_SUPPORT;
+import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 import static com.hartwig.hmftools.lilac.SequenceCount.extractHeterozygousLociSequences;
 import static com.hartwig.hmftools.lilac.candidates.NucleotideFiltering.calcNucleotideHeterogygousLoci;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.CANDIDATE;
@@ -43,7 +43,7 @@ import com.hartwig.hmftools.lilac.qc.AminoAcidQC;
 import com.hartwig.hmftools.lilac.qc.BamQC;
 import com.hartwig.hmftools.lilac.qc.CoverageQC;
 import com.hartwig.hmftools.lilac.qc.HaplotypeQC;
-import com.hartwig.hmftools.lilac.qc.HlaOut;
+import com.hartwig.hmftools.lilac.qc.SolutionSummary;
 import com.hartwig.hmftools.lilac.qc.LilacQC;
 import com.hartwig.hmftools.lilac.qc.SomaticVariantQC;
 import com.hartwig.hmftools.lilac.coverage.FragmentAlleles;
@@ -301,6 +301,18 @@ public class LilacApplication implements AutoCloseable, Runnable
         LL_LOGGER.info("WINNERS: {},{},{},{}",
                 mConfig.Sample, referenceRankedComplexes.size(), HlaAllele.toString(winningRefCoverage.getAlleles()), totalCoverages);
 
+        // write fragment assignment data
+        for(FragmentAlleles fragAllele : refFragAlleles)
+        {
+            if(fragAllele.getFragment().isScopeSet())
+                continue;
+
+            if(winningAlleles.stream().anyMatch(x -> fragAllele.contains(x)))
+                fragAllele.getFragment().setScope(SOLUTION);
+            else
+                fragAllele.getFragment().setScope(CANDIDATE);
+        }
+
         HlaComplexCoverage winningTumorCoverage = null;
         List<HlaCopyNumber> winningTumorCopyNumber = null;
         List<VariantContextDecorator> somaticVariants = Lists.newArrayList();
@@ -351,7 +363,7 @@ public class LilacApplication implements AutoCloseable, Runnable
             winningTumorCopyNumber = HlaCopyNumber.alleleCopyNumber(winningAlleles);
         }
 
-        HlaOut output = HlaOut.create(winningRefCoverage, winningTumorCoverage, winningTumorCopyNumber, somaticCodingCounts);
+        SolutionSummary output = SolutionSummary.create(winningRefCoverage, winningTumorCoverage, winningTumorCopyNumber, somaticCodingCounts);
 
         // create various QC and other metrics
         LL_LOGGER.info("calculating QC Statistics");
@@ -370,12 +382,21 @@ public class LilacApplication implements AutoCloseable, Runnable
                 haplotypeQC.UnmatchedHaplotypes, totalFragmentCount);
 
         BamQC bamQC = BamQC.create(referenceBamReader);
-        CoverageQC coverageQC = CoverageQC.create(refNucleotideFrags.size(), winningRefCoverage);
-        LilacQC lilacQC = LilacQC.create(aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC, hasHlaY, totalFragmentCount);
+        CoverageQC coverageQC = CoverageQC.create(refAminoAcidFrags, winningRefCoverage);
 
-        LL_LOGGER.info("QC Stats:");
-        LL_LOGGER.info("  {}", lilacQC.header());
-        LL_LOGGER.info("  {}", lilacQC.body());
+        double scoreMargin = 0;
+        StringJoiner nextSolutionInfo = new StringJoiner(ITEM_DELIM);
+
+        if(referenceRankedComplexes.size() > 1)
+        {
+            HlaComplexCoverage nextSolution = referenceRankedComplexes.get(1);
+            scoreMargin = referenceRankedComplexes.get(0).getScore() - nextSolution.getScore();
+            nextSolution.getAlleles().stream().filter(x -> !winningAlleles.contains(x)).forEach(x -> nextSolutionInfo.add(x.toString()));
+        }
+
+        LilacQC lilacQC = new LilacQC(
+                hasHlaY, scoreMargin, nextSolutionInfo.toString(), aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC);
+        lilacQC.log();
 
         LL_LOGGER.info("writing output to {}", mConfig.OutputDir);
         String outputFile = mConfig.outputPrefix() + ".lilac.csv";
@@ -392,18 +413,6 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         refAminoAcidCounts.writeVertically(String.format("%s.candidates.aminoacids.txt", mConfig.outputPrefix()));
         refNucleotideCounts.writeVertically(String.format("%s.candidates.nucleotides.txt", mConfig.outputPrefix()));
-
-        // write fragment assignment data
-        for(FragmentAlleles fragAllele : refFragAlleles)
-        {
-            if(fragAllele.getFragment().isScopeSet())
-                continue;
-
-            if(winningAlleles.stream().anyMatch(x -> fragAllele.contains(x)))
-                fragAllele.getFragment().setScope(SOLUTION);
-            else
-                fragAllele.getFragment().setScope(CANDIDATE);
-        }
 
         FragmentUtils.writeFragmentData(String.format("%s.fragments.csv", mConfig.outputPrefix()), refNucleotideFrags);
 

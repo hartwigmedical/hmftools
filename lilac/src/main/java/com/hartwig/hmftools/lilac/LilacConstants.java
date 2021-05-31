@@ -68,39 +68,14 @@ public class LilacConstants
     public static final String ITEM_DELIM = ";";
 
     // common routines using constants
-
     public static List<Integer> getAminoAcidExonBoundaries(final String gene)
     {
-        if(gene.equals(GENE_A))
-            return A_EXON_BOUNDARIES;
-        else if(gene.equals(GENE_B))
-            return B_EXON_BOUNDARIES;
-        else
-            return C_EXON_BOUNDARIES;
+        return gene.equals(GENE_A) ? A_EXON_BOUNDARIES : (gene.equals(GENE_B) ? B_EXON_BOUNDARIES : C_EXON_BOUNDARIES);
     }
 
     public static List<Integer> getNucleotideExonBoundaries(final String gene)
     {
         return NUCLEOTIDE_EXON_BOUNDARIES.get(gene);
-    }
-
-    public static void populateNucleotideExonBoundaries()
-    {
-        for(String gene : GENE_IDS)
-        {
-            List<Integer> aminoAcidExonBoundaries = getAminoAcidExonBoundaries(gene);
-
-            List<Integer> nucleotideExonBoundaries = Lists.newArrayList();
-
-            for(Integer boundary : aminoAcidExonBoundaries)
-            {
-                nucleotideExonBoundaries.add(boundary * 3);
-                nucleotideExonBoundaries.add(boundary * 3 + 1);
-                nucleotideExonBoundaries.add(boundary * 3 + 2);
-            }
-
-            NUCLEOTIDE_EXON_BOUNDARIES.put(gene, nucleotideExonBoundaries);
-        }
     }
 
     public static String shortGeneName(final String gene)

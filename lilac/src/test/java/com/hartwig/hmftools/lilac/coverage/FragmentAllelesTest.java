@@ -115,9 +115,6 @@ public class FragmentAllelesTest
         List<HlaSequenceLoci> sequences = Lists.newArrayList(seq1);
 
         String readInfo = "";
-        List<String> emptyNucs = Lists.newArrayList();
-        List<Integer> emptyQuals = Lists.newArrayList();
-        List<Integer> emptyLoci = Lists.newArrayList();
         Set<String> aGenes = Sets.newHashSet(HLA_A);
 
         final Map<String,Map<Integer,List<String>>> geneHetLociMap = Maps.newHashMap();

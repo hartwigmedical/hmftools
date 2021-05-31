@@ -95,7 +95,7 @@ public class HlaSequenceLociTest
 
         List<Integer> fragmentLoci = buildTargetLoci(alleleSequence, refSequence);
         List<String> targetSeq = buildTargetSequences(refSequence, fragmentLoci);
-        assertEquals(SequenceMatchType.NONE, seqLoci.determineMatchType(targetSeq, fragmentLoci));
+        assertEquals(SequenceMatchType.MISMATCH, seqLoci.determineMatchType(targetSeq, fragmentLoci));
 
         // test against itself
         targetSeq = buildTargetSequences(alleleSequence, fragmentLoci);

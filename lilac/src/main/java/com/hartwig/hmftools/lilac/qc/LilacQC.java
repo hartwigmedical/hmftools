@@ -3,13 +3,11 @@ package com.hartwig.hmftools.lilac.qc;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_Y_FRAGMENT_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_INDEL_THRESHOLD;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -20,42 +18,93 @@ import com.google.common.collect.Sets;
 public final class LilacQC
 {
     private final Set<LilacQCStatus> mStatus;
-    private final boolean mHasHlaY;
-    private final AminoAcidQC mAminoAcidQC;
-    private final BamQC mBamQC;
-    private final CoverageQC mCoverageQC;
-    private final HaplotypeQC mHaplotypeQC;
-    private final SomaticVariantQC mSomaticVariantQC;
 
-    public final String header()
+    public final double ScoreMargin;
+    public final String NextSolutionInfo;
+    public final boolean HasHlaY;
+    public final AminoAcidQC AminoAcidQC;
+    public final BamQC BamQC;
+    public final CoverageQC CoverageQC;
+    public final HaplotypeQC HaplotypeQC;
+    public final SomaticVariantQC SomaticVariantQC;
+
+    public LilacQC(
+            boolean hasHlaY, double scoreMargin, final String nextSolutionInfo,
+            final AminoAcidQC aminoAcidQC, final BamQC bamQC,
+            final CoverageQC coverageQC, final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
+    {
+        ScoreMargin = scoreMargin;
+        NextSolutionInfo = nextSolutionInfo;
+
+        HasHlaY = hasHlaY;
+        AminoAcidQC = aminoAcidQC;
+        BamQC = bamQC;
+        CoverageQC = coverageQC;
+        HaplotypeQC = haplotypeQC;
+        SomaticVariantQC = somaticVariantQC;
+
+        mStatus = Sets.newHashSet();
+        populateStatus();
+    }
+
+    public List<String> getHeaderItems()
+    {
+        List<String> columns = Lists.newArrayList();
+        columns.add("Status");
+        columns.add("HlaY");
+        columns.add("ScoreMargin");
+        columns.add("NextSolutionAlleles");
+        columns.addAll(AminoAcidQC.header());
+        columns.addAll(BamQC.header());
+        columns.addAll(CoverageQC.header());
+        columns.addAll(HaplotypeQC.header());
+        columns.addAll(SomaticVariantQC.header());
+        return columns;
+    }
+
+    public List<String> getBodyItems()
+    {
+        List<String> columns = Lists.newArrayList();
+        columns.add(mStatus.toString());
+        columns.add(String.valueOf(HasHlaY));
+        columns.add(String.format("%.3f", ScoreMargin));
+        columns.add(NextSolutionInfo);
+        columns.addAll(AminoAcidQC.body());
+        columns.addAll(BamQC.body());
+        columns.addAll(CoverageQC.body());
+        columns.addAll(HaplotypeQC.body());
+        columns.addAll(SomaticVariantQC.body());
+        return columns;
+    }
+
+    public String header()
     {
         StringJoiner sj = new StringJoiner(DELIM);
-        sj.add("Status");
-        mAminoAcidQC.header().forEach(x -> sj.add(x));
-        mBamQC.header().forEach(x -> sj.add(x));
-        mCoverageQC.header().forEach(x -> sj.add(x));
-        mHaplotypeQC.header().forEach(x -> sj.add(x));
-        sj.add("HlaY");
-        mSomaticVariantQC.header().forEach(x -> sj.add(x));
-
+        getHeaderItems().forEach(x -> sj.add(x));
         return sj.toString();
     }
 
-    public final String body()
+    public String body()
     {
-        StringJoiner status = new StringJoiner(ITEM_DELIM);
-        mStatus.forEach(x -> status.add(x.toString()));
-
         StringJoiner sj = new StringJoiner(DELIM);
-        sj.add(status.toString());
-        mAminoAcidQC.body().forEach(x -> sj.add(x));
-        mBamQC.body().forEach(x -> sj.add(x));
-        mCoverageQC.body().forEach(x -> sj.add(x));
-        mHaplotypeQC.body().forEach(x -> sj.add(x));
-        sj.add(String.valueOf(mHasHlaY));
-        mSomaticVariantQC.body().forEach(x -> sj.add(x));
-
+        getBodyItems().forEach(x -> sj.add(x));
         return sj.toString();
+    }
+
+    public void log()
+    {
+        // LL_LOGGER.info("QC Stats:");
+        StringJoiner sj = new StringJoiner(",");
+        List<String> headerItems = getHeaderItems();
+        List<String> bodyItems = getBodyItems();
+
+        for(int i = 0; i < headerItems.size(); ++i)
+        {
+            sj.add(String.format("%s = %s", headerItems.get(i), bodyItems.get(i)));
+            // LL_LOGGER.info("  {} = {}", headerItems.get(i), bodyItems.get(i));
+        }
+
+        LL_LOGGER.info("QC Stats: {}", sj.toString());
     }
 
     public final void writefile(final String fileName)
@@ -79,47 +128,32 @@ public final class LilacQC
         }
     }
 
-    public LilacQC(
-            final Set<LilacQCStatus> status, final AminoAcidQC aminoAcidQC, final BamQC bamQC,
-            final CoverageQC coverageQC, final HaplotypeQC haplotypeQC, boolean hasHlaY, final SomaticVariantQC somaticVariantQC)
-    {
-        mStatus = status;
-        mHasHlaY = hasHlaY;
-        mAminoAcidQC = aminoAcidQC;
-        mBamQC = bamQC;
-        mCoverageQC = coverageQC;
-        mHaplotypeQC = haplotypeQC;
-        mSomaticVariantQC = somaticVariantQC;
-    }
-
-    public static LilacQC create(
-            final AminoAcidQC aminoAcidQC, final BamQC bamQC, final CoverageQC coverageQC,
-            final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC, boolean hasHlaY, int totalFragments)
+    private void populateStatus()
     {
         Set<LilacQCStatus> statusList = Sets.newHashSet();
 
-        if(haplotypeQC.UnusedHaplotypes > 0)
+        if(HaplotypeQC.UnusedHaplotypes > 0)
         {
             statusList.add(LilacQCStatus.WARN_UNMATCHED_HAPLOTYPE);
         }
 
-        if(coverageQC.ATypes == 0 || coverageQC.BTypes == 0 || coverageQC.CTypes == 0)
+        if(CoverageQC.ATypes == 0 || CoverageQC.BTypes == 0 || CoverageQC.CTypes == 0)
         {
-            statusList.add(LilacQCStatus.WARN_UNMATCHED_TYPE);
+            statusList.add(LilacQCStatus.WARN_UNMATCHED_ALLELE);
         }
 
-        double indelWarnThreshold = totalFragments * WARN_INDEL_THRESHOLD;
-        if(bamQC.getDiscardedIndelFragments() >= indelWarnThreshold)
+        double indelWarnThreshold = CoverageQC.TotalFragments * WARN_INDEL_THRESHOLD;
+        if(BamQC.getDiscardedIndelFragments() >= indelWarnThreshold)
         {
             statusList.add(LilacQCStatus.WARN_UNMATCHED_INDEL);
         }
 
-        if(somaticVariantQC.unmatchedVariants())
+        if(SomaticVariantQC.unmatchedVariants())
         {
             statusList.add(LilacQCStatus.WARN_UNMATCHED_SOMATIC_VARIANT);
         }
 
-        if(coverageQC.PercentWildcard > 0.0)
+        if(CoverageQC.PercentWildcard > 0.0)
         {
             statusList.add(LilacQCStatus.WARN_WILDCARD_MATCH);
         }
@@ -128,7 +162,5 @@ public final class LilacQC
         {
             statusList.add(LilacQCStatus.PASS);
         }
-
-        return new LilacQC(statusList, aminoAcidQC, bamQC, coverageQC, haplotypeQC, hasHlaY, somaticVariantQC);
     }
 }

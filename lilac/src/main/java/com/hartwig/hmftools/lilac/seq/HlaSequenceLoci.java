@@ -134,14 +134,14 @@ public class HlaSequenceLoci
 
     public boolean consistentWithAny(final List<String> targetSequences, final List<Integer> targetIndices)
     {
-        return targetSequences.stream().anyMatch(x -> determineMatchType(x, targetIndices) != SequenceMatchType.NONE);
+        return targetSequences.stream().anyMatch(x -> determineMatchType(x, targetIndices) != SequenceMatchType.MISMATCH);
     }
 
     public boolean consistentWith(final String targetSequence, final int[] targetIndices)
     {
         List<Integer> tiList = Lists.newArrayList();
         Arrays.stream(targetIndices).forEach(x -> tiList.add(x));
-        return determineMatchType(targetSequence, tiList) != SequenceMatchType.NONE;
+        return determineMatchType(targetSequence, tiList) != SequenceMatchType.MISMATCH;
     }
 
     public static List<Integer> filterExonBoundaryWildcards(final HlaSequenceLoci sequence, final List<Integer> loci)
@@ -172,7 +172,7 @@ public class HlaSequenceLoci
     public SequenceMatchType determineMatchType(final List<String> targetSequences, final List<Integer> targetLoci)
     {
         if(targetLoci.isEmpty())
-            return SequenceMatchType.NONE;
+            return SequenceMatchType.MISMATCH;
 
         boolean hasWildcardMatch = false;
 
@@ -181,14 +181,14 @@ public class HlaSequenceLoci
             Integer locus = targetLoci.get(i);
 
             if(locus >= mSequences.size())
-                return SequenceMatchType.NONE;
+                return SequenceMatchType.MISMATCH;
 
             String sequenceStr = mSequences.get(locus);
 
             if(sequenceStr.equals(WILD_STR))
                 hasWildcardMatch = true;
             else if(!sequenceStr.equals(targetSequences.get(i)))
-                return SequenceMatchType.NONE;
+                return SequenceMatchType.MISMATCH;
         }
 
         return hasWildcardMatch ? WILD : FULL;
@@ -197,7 +197,7 @@ public class HlaSequenceLoci
     public SequenceMatchType determineMatchType(final String targetSequence, final List<Integer> targetIndices)
     {
         if(targetIndices.isEmpty())
-            return SequenceMatchType.NONE;
+            return SequenceMatchType.MISMATCH;
 
         String hlaSequence = sequence(targetIndices);
 
@@ -205,7 +205,7 @@ public class HlaSequenceLoci
             return FULL;
 
         if(hlaSequence.length() != targetSequence.length())
-            return SequenceMatchType.NONE;
+            return SequenceMatchType.MISMATCH;
 
         int wildCardCount = 0;
 
@@ -215,7 +215,7 @@ public class HlaSequenceLoci
             char hlaSeqChr = hlaSequence.charAt(i);
 
             if(hlaSeqChr != WILDCARD && hlaSeqChr != targetChr)
-                return SequenceMatchType.NONE;
+                return SequenceMatchType.MISMATCH;
 
             if (hlaSeqChr == WILDCARD)
                 wildCardCount++;

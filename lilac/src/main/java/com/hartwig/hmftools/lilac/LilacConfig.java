@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_PER_ALLELE;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_REMOVE_SGL;
@@ -153,6 +154,12 @@ public class LilacConfig
         if(ResourceDir.isEmpty() || !Files.exists(Paths.get(ResourceDir)))
         {
             LL_LOGGER.error("missing resource file directory");
+            return false;
+        }
+
+        if(!checkCreateOutputDir(OutputDir))
+        {
+            LL_LOGGER.error("failed to create output directory: {}", OutputDir);
             return false;
         }
 

@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_Y;
 import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.LilacConstants.getNucleotideExonBoundaries;
-import static com.hartwig.hmftools.lilac.LilacConstants.populateNucleotideExonBoundaries;
+import static com.hartwig.hmftools.lilac.hla.HlaContextFactory.populateNucleotideExonBoundaries;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 
 import java.io.BufferedReader;

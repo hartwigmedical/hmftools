@@ -205,7 +205,7 @@ public class HlaComplexBuilder
             HlaAllele allele = entry.getKey();
             int fragCount = entry.getValue();
 
-            LL_LOGGER.info("sample({}) wildcard allele({}) uniqueSupport({})",
+            LL_LOGGER.debug("sample({}) wildcard allele({}) uniqueSupport({})",
                     mConfig.Sample, allele, fragCount);
 
             if(fragCount >= 5)

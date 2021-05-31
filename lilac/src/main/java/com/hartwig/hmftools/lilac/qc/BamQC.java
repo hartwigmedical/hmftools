@@ -13,18 +13,18 @@ import org.jetbrains.annotations.NotNull;
 
 public class BamQC
 {
-    private final int mDiscardedAlignmentFragments;
-    private final int mDiscardedIndelFragments;
-    private final int mDiscardedIndelMaxCount;
+    public final int DiscardedAlignmentFragments;
+    public final int DiscardedIndelFragments;
+    public final int DiscardedIndelMaxCount;
 
     private static final int MIN_SUPPORT = 3;
 
     public BamQC(
             int discardedAlignmentFragments, int discardedIndelFragments, int discardedIndelMaxCount)
     {
-        mDiscardedAlignmentFragments = discardedAlignmentFragments;
-        mDiscardedIndelFragments = discardedIndelFragments;
-        mDiscardedIndelMaxCount = discardedIndelMaxCount;
+        DiscardedAlignmentFragments = discardedAlignmentFragments;
+        DiscardedIndelFragments = discardedIndelFragments;
+        DiscardedIndelMaxCount = discardedIndelMaxCount;
     }
 
     public final List<String> header()
@@ -36,14 +36,14 @@ public class BamQC
     public final List<String> body()
     {
         return Lists.newArrayList(
-                String.valueOf(mDiscardedIndelFragments),
-                String.valueOf(mDiscardedIndelMaxCount),
-                String.valueOf(mDiscardedAlignmentFragments));
+                String.valueOf(DiscardedIndelFragments),
+                String.valueOf(DiscardedIndelMaxCount),
+                String.valueOf(DiscardedAlignmentFragments));
     }
 
     public final int getDiscardedIndelFragments()
     {
-        return mDiscardedIndelFragments;
+        return DiscardedIndelFragments;
     }
 
     public static BamQC create(final SAMRecordReader reader)

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.lilac.qc;
 public enum LilacQCStatus
 {
     PASS,
-    WARN_UNMATCHED_TYPE,
+    WARN_UNMATCHED_ALLELE,
     WARN_UNMATCHED_SOMATIC_VARIANT,
     WARN_WILDCARD_MATCH,
     WARN_UNMATCHED_HAPLOTYPE,

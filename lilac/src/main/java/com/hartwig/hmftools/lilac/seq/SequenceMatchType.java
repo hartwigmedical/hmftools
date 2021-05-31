@@ -4,7 +4,8 @@ public enum SequenceMatchType
 {
     FULL,
     WILD,
-    NONE;
+    NO_LOCI,
+    MISMATCH;
 
     public boolean isBetter(final SequenceMatchType other)
     {
@@ -15,7 +16,8 @@ public enum SequenceMatchType
     {
         if(this == FULL) return 0;
         if(this == WILD) return 1;
-        return 2;
+        if(this == NO_LOCI) return 1;
+        return 3;
     }
 
 }

@@ -184,7 +184,7 @@ public class FragmentUtils
 
                 writer.write(String.format(",%d,%d,%d,%d,%s",
                         fragment.minNucleotideLocus(), fragment.maxNucleotideLocus(),
-                        fragment.minAminoAcidLocus(), fragment.maxLoci(), fragment.scope()));
+                        fragment.minAminoAcidLocus(), fragment.maxAminoAcidLocus(), fragment.scope()));
 
                 writer.newLine();
             }
