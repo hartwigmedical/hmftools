@@ -194,26 +194,42 @@ public class AnnotatedHotspotVCFChecker {
     @VisibleForTesting
     static boolean isApproximateIndelMatch(@NotNull String inputAnnotation, @NotNull String snpEffAnnotation) {
         if (inputAnnotation.contains("del") || inputAnnotation.contains("ins") || inputAnnotation.contains("dup")) {
-            int inputStartCodon = extractFirstDigit(inputAnnotation);
-            int snpeffStartCodon = extractFirstDigit(snpEffAnnotation);
-            return Math.abs(inputStartCodon - snpeffStartCodon) <= 5;
+            int inputStartCodon = extractDigitWithIndex(inputAnnotation, 1);
+            Integer inputEndCodon = extractDigitWithIndex(inputAnnotation, 2);
+            int snpeffStartCodon = extractDigitWithIndex(snpEffAnnotation, 1);
+
+            int maxDistance = inputEndCodon != null ? 1 + inputEndCodon - inputStartCodon : 3;
+
+            boolean aminoAcidCheck = true;
+            if (inputAnnotation.endsWith("del")) {
+                // For deletes we allow for difference in alignment since they can often be realigned.
+                maxDistance = 20;
+                if (!inputAnnotation.contains("_")) {
+                    // Single AA deletes have to match on specific AA
+                    aminoAcidCheck = inputAnnotation.substring(2, 3).equals(snpEffAnnotation.substring(2, 3));
+                }
+            }
+
+            return aminoAcidCheck && Math.abs(inputStartCodon - snpeffStartCodon) <= maxDistance;
         }
+
         return false;
     }
 
-    private static int extractFirstDigit(@NotNull String string) {
+    @Nullable
+    private static Integer extractDigitWithIndex(@NotNull String string, int digitIndex) {
         StringBuilder digitBuilder = new StringBuilder();
         boolean isExtracting = false;
-        boolean hasExtracted = false;
+        int numExtracted = 0;
         for (int i = 0; i < string.length(); i++) {
             char letter = string.charAt(i);
             if (isInteger(letter)) {
-                if (!isExtracting && !hasExtracted) {
+                if (!isExtracting) {
                     isExtracting = true;
-                    hasExtracted = true;
+                    numExtracted++;
                 }
 
-                if (isExtracting) {
+                if (isExtracting && numExtracted == digitIndex) {
                     digitBuilder.append(letter);
                 }
             } else {
@@ -221,7 +237,8 @@ public class AnnotatedHotspotVCFChecker {
             }
         }
 
-        return Integer.parseInt(digitBuilder.toString());
+        String digitString = digitBuilder.toString();
+        return !digitString.isEmpty() ? Integer.parseInt(digitString) : null;
     }
 
     private static boolean isInteger(char letter) {
