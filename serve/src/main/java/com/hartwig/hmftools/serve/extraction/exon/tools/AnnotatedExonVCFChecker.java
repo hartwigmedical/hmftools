@@ -24,7 +24,8 @@ import htsjdk.variant.vcf.VCFCodec;
 public class AnnotatedExonVCFChecker {
 
     private static final Logger LOGGER = LogManager.getLogger(AnnotatedCodonVCFChecker.class);
-    private static final boolean LOG_DEBUG = true;
+
+    private static final boolean LOG_DEBUG = false;
 
     public static void main(String[] args) throws IOException {
         LOGGER.info("Running SERVE exon VCF checker");
