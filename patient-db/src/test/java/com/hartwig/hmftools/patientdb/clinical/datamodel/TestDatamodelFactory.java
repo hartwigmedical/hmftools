@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientdb.clinical.datamodel;
 
 import java.time.LocalDate;
 
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatus;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

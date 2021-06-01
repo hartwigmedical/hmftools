@@ -4,13 +4,13 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.EcrfModel;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.EcrfModel;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.patientdb.clinical.readers.ColoPatientReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.CorePatientReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.EcrfPatientReader;
@@ -63,27 +63,27 @@ public class ClinicalAlgo {
     @NotNull
     public List<Patient> interpret(@NotNull Map<String, List<SampleData>> samplesPerPatient) {
         EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
-        LOGGER.info(" Interpreting and curating data for {} CPCT patients", cpctEcrfModel.patientCount());
+        LOGGER.info("Interpreting and curating data for {} CPCT patients", cpctEcrfModel.patientCount());
         EcrfPatientReader cpctPatientReader =
                 new CpctPatientReader(primaryTumorCurator, CpctUtil.extractHospitalMap(cpctEcrfModel), biopsySiteCurator, treatmentCurator);
 
         List<Patient> cpctPatients = readEcrfPatients(cpctPatientReader, cpctEcrfModel.patients(), samplesPerPatient);
-        LOGGER.info("  Finished curation of {} CPCT patients", cpctPatients.size());
+        LOGGER.info(" Finished curation of {} CPCT patients", cpctPatients.size());
 
         EcrfModel drupEcrfModel = ecrfModels.drupModel();
-        LOGGER.info(" Interpreting and curating data for {} DRUP patients", drupEcrfModel.patientCount());
+        LOGGER.info("Interpreting and curating data for {} DRUP patients", drupEcrfModel.patientCount());
         EcrfPatientReader drupPatientReader = new DrupPatientReader(primaryTumorCurator, biopsySiteCurator);
 
         List<Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), samplesPerPatient);
-        LOGGER.info("  Finished curation of {} DRUP patients", drupPatients.size());
+        LOGGER.info(" Finished curation of {} DRUP patients", drupPatients.size());
 
-        LOGGER.info(" Interpreting and curating data for WIDE patients");
+        LOGGER.info("Interpreting and curating data for WIDE patients");
         List<Patient> widePatients = readWidePatients(samplesPerPatient);
-        LOGGER.info("  Finished curation of {} WIDE patients", widePatients.size());
+        LOGGER.info(" Finished curation of {} WIDE patients", widePatients.size());
 
-        LOGGER.info(" Interpreting and curating data for CORE patients");
+        LOGGER.info("Interpreting and curating data for CORE patients");
         List<Patient> corePatients = readCorePatients(samplesPerPatient);
-        LOGGER.info("  Finished curation of {} CORE patients", corePatients.size());
+        LOGGER.info(" Finished curation of {} CORE patients", corePatients.size());
 
         List<Patient> mergedPatients = Lists.newArrayList();
         mergedPatients.addAll(cpctPatients);
@@ -145,7 +145,7 @@ public class ClinicalAlgo {
         List<Patient> patients = Lists.newArrayList();
 
         ColoPatientReader coloPatientReader = new ColoPatientReader();
-        LOGGER.info(" Creating patient representation for COLO829");
+        LOGGER.info("Creating patient representation for COLO829");
         patients.add(coloPatientReader.read("COLO829T"));
 
         return patients;

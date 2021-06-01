@@ -12,8 +12,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.clinical.ClinicalConstants;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyData;
@@ -24,6 +22,8 @@ import com.hartwig.hmftools.patientdb.clinical.datamodel.DrugData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.TreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatus;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -31,6 +31,9 @@ import org.jetbrains.annotations.NotNull;
 public final class PatientValidator {
 
     private static final String ECRF_LEVEL = "ecrf";
+
+    private PatientValidator() {
+    }
 
     @NotNull
     public static List<ValidationFinding> validatePatient(@NotNull Patient patient) {

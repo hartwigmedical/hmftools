@@ -3,8 +3,6 @@ package com.hartwig.hmftools.patientdb.clinical.readers.drup;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
@@ -13,6 +11,8 @@ import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutablePreTreatmentDa
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.clinical.matchers.BiopsyMatcher;
 import com.hartwig.hmftools.patientdb.clinical.matchers.MatchResult;
 import com.hartwig.hmftools.patientdb.clinical.readers.EcrfPatientReader;

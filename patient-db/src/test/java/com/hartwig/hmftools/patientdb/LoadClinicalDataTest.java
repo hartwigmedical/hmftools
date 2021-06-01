@@ -14,9 +14,6 @@ import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.ecrf.EcrfModel;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
-import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.TestCuratorFactory;
@@ -28,6 +25,9 @@ import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyTreatmentResponse
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.TumorMarkerData;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.EcrfModel;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.patientdb.clinical.readers.EcrfPatientReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.cpct.CpctPatientReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.cpct.CpctUtil;
@@ -38,7 +38,7 @@ import org.junit.Test;
 
 public class LoadClinicalDataTest {
 
-    private static final String TEST_ECRF = Resources.getResource("test_cpct_ecrf.xml").getPath();
+    private static final String TEST_ECRF = Resources.getResource("ecrf/example/cpct_ecrf.xml").getPath();
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -50,7 +50,7 @@ public class LoadClinicalDataTest {
 
         EcrfModel cpctEcrfModel = EcrfModel.loadFromXMLNoFormStates(TEST_ECRF);
         assertEquals(1, cpctEcrfModel.patientCount());
-        assertEquals(1298, Lists.newArrayList(cpctEcrfModel.fields()).size());
+        assertEquals(1100, Lists.newArrayList(cpctEcrfModel.fields()).size());
 
         EcrfPatientReader cpctPatientReader = new CpctPatientReader(primaryTumorCurator,
                 CpctUtil.extractHospitalMap(cpctEcrfModel),
@@ -69,25 +69,25 @@ public class LoadClinicalDataTest {
 
     private static void assertPatient(@Nullable Patient patient) {
         assertNotNull(patient);
-        assertEquals("CPCT02000015", patient.patientIdentifier());
+        assertEquals("CPCT02252500", patient.patientIdentifier());
         assertEquals(0, patient.sequencedBiopsies().size());
 
         BaselineData baselineData = patient.baselineData();
         assertNotNull(baselineData);
-        assertEquals(new Integer(1984), baselineData.birthYear());
-        assertEquals("Gastrointestinal Stromal Tumors (GIST)", baselineData.curatedPrimaryTumor().searchTerm());
+        assertEquals(new Integer(1963), baselineData.birthYear());
+        assertEquals("Breast cancer", baselineData.curatedPrimaryTumor().searchTerm());
         assertEquals("female", baselineData.gender());
-        assertEquals(LocalDate.parse("2018-06-02", DATE_FORMATTER), baselineData.informedConsentDate());
-        assertEquals(LocalDate.parse("2018-12-10", DATE_FORMATTER), baselineData.registrationDate());
-        assertNull(baselineData.deathDate());
-        assertNull(baselineData.hospital());
+        assertEquals(LocalDate.parse("2012-02-17", DATE_FORMATTER), baselineData.informedConsentDate());
+        assertEquals(LocalDate.parse("2012-02-17", DATE_FORMATTER), baselineData.registrationDate());
+        assertEquals(LocalDate.parse("2012-06-22", DATE_FORMATTER), baselineData.deathDate());
+        assertEquals("Bernhoven uden", baselineData.hospital());
 
         PreTreatmentData preTreatmentData = patient.preTreatmentData();
         assertNotNull(preTreatmentData);
-        assertEquals("No", preTreatmentData.radiotherapyGiven());
+        assertEquals("Yes", preTreatmentData.radiotherapyGiven());
         assertEquals("Yes", preTreatmentData.treatmentGiven());
-        assertEquals(1, preTreatmentData.drugs().size());
-        assertEquals("Imatinib", preTreatmentData.drugs().get(0).name());
+        assertEquals(6, preTreatmentData.drugs().size());
+        assertEquals("Bevacizumab", preTreatmentData.drugs().get(0).name());
 
         List<TumorMarkerData> tumorMarkers = patient.tumorMarkers();
         assertEquals(0, tumorMarkers.size());
@@ -96,25 +96,22 @@ public class LoadClinicalDataTest {
         assertEquals(1, biopsies.size());
         assertNull(biopsies.get(0).biopsyEvaluable());
         assertEquals("Yes", biopsies.get(0).biopsyTaken());
-        assertEquals(LocalDate.parse("2017-07-14", DATE_FORMATTER), biopsies.get(0).date());
-        assertEquals("abdomen", biopsies.get(0).site());
-        assertEquals("left mesenterial", biopsies.get(0).location());
+        assertEquals(LocalDate.parse("2012-02-17", DATE_FORMATTER), biopsies.get(0).date());
+        assertEquals("Soft tissue", biopsies.get(0).site());
+        assertEquals("near right scapula", biopsies.get(0).location());
 
         List<BiopsyTreatmentData> treatments = patient.treatments();
         assertEquals(1, treatments.size());
         assertEquals("Yes", treatments.get(0).treatmentGiven());
         assertEquals("No", treatments.get(0).radiotherapyGiven());
-        assertEquals(1, treatments.get(0).drugs().size());
-        assertEquals(LocalDate.parse("2014-11-16", DATE_FORMATTER), treatments.get(0).drugs().get(0).startDate());
-        assertNull(treatments.get(0).drugs().get(0).endDate());
-        assertEquals("Imatinib", treatments.get(0).drugs().get(0).name());
+        assertEquals(0, treatments.get(0).drugs().size());
 
         List<BiopsyTreatmentResponseData> responses = patient.treatmentResponses();
-        assertEquals(7, responses.size());
-        assertEquals("Yes", responses.get(0).measurementDone());
+        assertEquals(4, responses.size());
+        assertNull(responses.get(0).measurementDone());
         assertNull(responses.get(0).boneOnlyDisease());
-        assertEquals(LocalDate.parse("2012-05-21", DATE_FORMATTER), responses.get(0).responseDate());
-        assertEquals(LocalDate.parse("2015-08-30", DATE_FORMATTER), responses.get(1).assessmentDate());
-        assertEquals("SD", responses.get(0).response());
+        assertNull(responses.get(0).responseDate());
+        assertEquals(LocalDate.parse("2012-03-05", DATE_FORMATTER), responses.get(1).assessmentDate());
+        assertNull(responses.get(0).response());
     }
 }

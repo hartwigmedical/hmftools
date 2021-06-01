@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientdb.clinical.datamodel;
 import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatus;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
-import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.TreatmentCurator;
@@ -18,6 +16,8 @@ import com.hartwig.hmftools.patientdb.clinical.datamodel.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.RanoMeasurementData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.TumorMarkerData;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.patientdb.clinical.matchers.BiopsyMatcher;
 import com.hartwig.hmftools.patientdb.clinical.matchers.MatchResult;
 import com.hartwig.hmftools.patientdb.clinical.matchers.TreatmentMatcher;

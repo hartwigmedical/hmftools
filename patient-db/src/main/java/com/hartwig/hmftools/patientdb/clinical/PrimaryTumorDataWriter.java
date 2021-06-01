@@ -12,11 +12,11 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
-import com.hartwig.hmftools.common.clinical.PatientTumorCurationStatus;
-import com.hartwig.hmftools.common.clinical.PatientTumorCurationStatusFile;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.reportingdb.ReportingDatabase;
 import com.hartwig.hmftools.common.reportingdb.ReportingEntry;
+import com.hartwig.hmftools.patientdb.clinical.curators.PatientTumorCurationStatus;
+import com.hartwig.hmftools.patientdb.clinical.curators.PatientTumorCurationStatusFile;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 
@@ -34,14 +34,11 @@ public final class PrimaryTumorDataWriter {
 
     public static void write(@NotNull ClinicalAlgoConfig config, @NotNull Map<String, List<SampleData>> samplesPerPatient,
             @NotNull List<Patient> patients) throws IOException {
-        LOGGER.info(" Check for missing curation tumor location when info is known");
+        LOGGER.info("Check for missing curation tumor location when info is known");
         Map<String, PatientTumorCurationStatus> patientTumorCurationStatusMap =
                 generatePatientTumorCurationStatusMap(samplesPerPatient, patients, config.reportingDbTsv());
 
-        LOGGER.info(" Writing patient tumor curation status");
         PrimaryTumorDataWriter.writePatientTumorCurationStatesToTSV(config.patientTumorCurationStatusTsv(), patientTumorCurationStatusMap);
-
-        LOGGER.info(" Writing curated primary tumors");
         PrimaryTumorDataWriter.writeCuratedPrimaryTumorsToTSV(config.curatedPrimaryTumorTsv(), patients);
     }
 
@@ -83,13 +80,13 @@ public final class PrimaryTumorDataWriter {
                 String tumorLocationSearchTerm = patient.baselineData().curatedPrimaryTumor().searchTerm();
                 if (tumorLocationSearchTerm != null && !tumorLocationSearchTerm.isEmpty()) {
                     if (patient.baselineData().curatedPrimaryTumor().location() == null) {
-                        LOGGER.warn(" Could not curate patient {} for primary tumor '{}'",
+                        LOGGER.warn("Could not curate patient {} for primary tumor '{}'",
                                 patient.patientIdentifier(),
                                 tumorLocationSearchTerm);
                     }
                 } else {
                     if (!allowExceptionsForPatient(patient.patientIdentifier())) {
-                        LOGGER.warn(" Could not find input tumor location for patient {}", patient.patientIdentifier());
+                        LOGGER.warn("Could not find input tumor location for patient {}", patient.patientIdentifier());
                     } else {
                         patientTumorCurationStatusMap.put(patient.patientIdentifier(), PatientTumorCurationStatus.MISSING_TUMOR_CURATION);
                     }
@@ -121,12 +118,15 @@ public final class PrimaryTumorDataWriter {
 
     private static void writePatientTumorCurationStatesToTSV(@NotNull String outputTsv,
             @NotNull Map<String, PatientTumorCurationStatus> patientTumorCurationStatusMap) throws IOException {
+        LOGGER.info("Writing patient tumor curation status");
         PatientTumorCurationStatusFile.write(outputTsv, patientTumorCurationStatusMap);
         LOGGER.info(" Written {} patient tumor curation states to {}", patientTumorCurationStatusMap.size(), outputTsv);
     }
 
-    private static void writeCuratedPrimaryTumorsToTSV(@NotNull String outputTsv, @NotNull Collection<Patient> patients) throws IOException {
+    private static void writeCuratedPrimaryTumorsToTSV(@NotNull String outputTsv, @NotNull Collection<Patient> patients)
+            throws IOException {
         List<PatientPrimaryTumor> primaryTumors = toPatientPrimaryTumors(patients);
+        LOGGER.info("Writing curated primary tumors");
         PatientPrimaryTumorFile.write(outputTsv, primaryTumors);
         LOGGER.info(" Written {} primary tumors to {}", primaryTumors.size(), outputTsv);
     }
@@ -165,5 +165,4 @@ public final class PrimaryTumorDataWriter {
     private static List<String> nullToEmpty(@Nullable List<String> strings) {
         return strings != null ? strings : Lists.newArrayList();
     }
-
 }

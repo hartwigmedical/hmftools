@@ -9,12 +9,12 @@ import javax.xml.stream.XMLStreamException;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.common.ecrf.EcrfModel;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusModel;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatusReader;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.TreatmentCurator;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.EcrfModel;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatusModel;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatusReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.wide.ImmutableWideEcrfModel;
 import com.hartwig.hmftools.patientdb.clinical.readers.wide.WideAvlTreatmentData;
 import com.hartwig.hmftools.patientdb.clinical.readers.wide.WideBiopsyData;
@@ -59,19 +59,19 @@ public final class ClinicalAlgoBuilder {
 
     @NotNull
     private static EcrfModel buildCpctEcrfModel(@NotNull ClinicalAlgoConfig config) throws IOException, XMLStreamException {
-        LOGGER.info(" Loading CPCT eCRF from {}", config.cpctEcrfFile());
+        LOGGER.info("Loading CPCT eCRF from {}", config.cpctEcrfFile());
         FormStatusModel cpctFormStatusModel = FormStatusReader.buildModelFromCsv(config.cpctFormStatusCsv());
         EcrfModel cpctEcrfModel = EcrfModel.loadFromXMLWithFormStates(config.cpctEcrfFile(), cpctFormStatusModel);
-        LOGGER.info("  Finished loading CPCT eCRF. Read {} patients", cpctEcrfModel.patientCount());
+        LOGGER.info(" Finished loading CPCT eCRF. Read {} patients", cpctEcrfModel.patientCount());
 
         return cpctEcrfModel;
     }
 
     @NotNull
     private static EcrfModel buildDrupEcrfModel(@NotNull ClinicalAlgoConfig config) throws FileNotFoundException, XMLStreamException {
-        LOGGER.info(" Loading DRUP eCRF from {}", config.drupEcrfFile());
+        LOGGER.info("Loading DRUP eCRF from {}", config.drupEcrfFile());
         EcrfModel drupEcrfModel = EcrfModel.loadFromXMLNoFormStates(config.drupEcrfFile());
-        LOGGER.info("  Finished loading DRUP eCRF. Read {} patients", drupEcrfModel.patientCount());
+        LOGGER.info(" Finished loading DRUP eCRF. Read {} patients", drupEcrfModel.patientCount());
 
         return drupEcrfModel;
     }
@@ -81,27 +81,27 @@ public final class ClinicalAlgoBuilder {
         WideEcrfModel wideEcrfModel;
 
         if (config.doProcessWideClinicalData()) {
-            LOGGER.info(" Loading WIDE eCRF");
+            LOGGER.info("Loading WIDE eCRF");
 
             String preAvlTreatmentCsv = config.widePreAvlTreatmentCsv();
             List<WidePreAvlTreatmentData> preAvlTreatments = WideEcrfFileReader.readPreAvlTreatments(preAvlTreatmentCsv);
-            LOGGER.info("  Loaded {} WIDE pre-AVL-treatments from {}", preAvlTreatments.size(), preAvlTreatmentCsv);
+            LOGGER.info(" Loaded {} WIDE pre-AVL-treatments from {}", preAvlTreatments.size(), preAvlTreatmentCsv);
 
             String biopsyCsv = config.wideBiopsyCsv();
             List<WideBiopsyData> biopsies = WideEcrfFileReader.readBiopsies(biopsyCsv);
-            LOGGER.info("  Loaded {} WIDE biopsies from {}", biopsies.size(), biopsyCsv);
+            LOGGER.info(" Loaded {} WIDE biopsies from {}", biopsies.size(), biopsyCsv);
 
             String avlTreatmentCsv = config.wideAvlTreatmentCsv();
             List<WideAvlTreatmentData> avlTreatments = WideEcrfFileReader.readAvlTreatments(avlTreatmentCsv);
-            LOGGER.info("  Loaded {} WIDE AVL treatments from {}", avlTreatments.size(), avlTreatmentCsv);
+            LOGGER.info(" Loaded {} WIDE AVL treatments from {}", avlTreatments.size(), avlTreatmentCsv);
 
             String wideResponseCsv = config.wideResponseCsv();
             List<WideResponseData> responses = WideEcrfFileReader.readResponses(wideResponseCsv);
-            LOGGER.info("  Loaded {} WIDE responses from {}", responses.size(), wideResponseCsv);
+            LOGGER.info(" Loaded {} WIDE responses from {}", responses.size(), wideResponseCsv);
 
             String fiveDaysCsv = config.wideFiveDaysCsv();
             List<WideFiveDays> fiveDays = WideEcrfFileReader.readFiveDays(fiveDaysCsv);
-            LOGGER.info("  Loaded {} WIDE five days entries from {}", fiveDays.size(), fiveDaysCsv);
+            LOGGER.info(" Loaded {} WIDE five days entries from {}", fiveDays.size(), fiveDaysCsv);
 
             wideEcrfModel = ImmutableWideEcrfModel.builder()
                     .preAvlTreatments(preAvlTreatments)
@@ -111,7 +111,7 @@ public final class ClinicalAlgoBuilder {
                     .fiveDays(fiveDays)
                     .build();
         } else {
-            LOGGER.info(" Skipping the loading of WIDE eCRF");
+            LOGGER.info("Skipping the loading of WIDE eCRF");
             wideEcrfModel = ImmutableWideEcrfModel.builder()
                     .preAvlTreatments(Lists.newArrayList())
                     .biopsies(Lists.newArrayList())

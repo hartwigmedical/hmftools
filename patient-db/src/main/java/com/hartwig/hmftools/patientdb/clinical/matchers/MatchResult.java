@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientdb.clinical.matchers;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.ValidationFinding;
 
 import org.jetbrains.annotations.NotNull;
 
