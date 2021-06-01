@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 import static com.hartwig.hmftools.lilac.SequenceCount.extractHeterozygousLociSequences;
 import static com.hartwig.hmftools.lilac.candidates.NucleotideFiltering.calcNucleotideHeterogygousLoci;
+import static com.hartwig.hmftools.lilac.coverage.HlaComplex.findDuplicates;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.CANDIDATE;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.SOLUTION;
 import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
@@ -57,6 +58,7 @@ import com.hartwig.hmftools.lilac.variant.SomaticVariantFinder;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -263,6 +265,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         HlaComplexBuilder complexBuilder = new HlaComplexBuilder(mConfig, mRefData);
 
         complexBuilder.filterCandidates(refFragAlleles, candidateAlleles, recoveredAlleles);
+        allValid &= validateAlleles(complexBuilder.getUniqueProteinAlleles());
 
         // reassess fragment-allele assignment with the reduced set of filtered alleles
         List<HlaAllele> confirmedRecoveredAlleles = complexBuilder.getConfirmedRecoveredAlleles();
@@ -284,6 +287,7 @@ public class LilacApplication implements AutoCloseable, Runnable
                 refAminoAcidFrags, candidateSequences, candidateNucSequences);
 
         List<HlaComplex> complexes = complexBuilder.buildComplexes(refFragAlleles, confirmedRecoveredAlleles);
+        allValid &= validateComplexes(complexes);
 
         // List<HlaComplex> complexes = complexBuilder.buildComplexes(refFragAlleles, recoveredAlleles);
 
@@ -470,6 +474,33 @@ public class LilacApplication implements AutoCloseable, Runnable
 
 
         LL_LOGGER.warn("has {} invalid fragments", invalidFragments.size());
+        return false;
+    }
+
+    private boolean validateAlleles(final List<HlaAllele> alleles)
+    {
+        // check uniqueness amongst valid candidate alleles
+        if(!mConfig.RunValidation)
+            return true;
+
+        Set<HlaAllele> duplicateAlleles = HlaAllele.findDuplicates(alleles);
+        if(duplicateAlleles.isEmpty())
+            return  true;
+
+        LL_LOGGER.warn("has {} duplicate alleles from complex building", duplicateAlleles.size());
+        return false;
+    }
+
+    private boolean validateComplexes(final List<HlaComplex> complexes)
+    {
+        if(!mConfig.RunValidation)
+            return true;
+
+        Set<HlaComplex> duplicates = findDuplicates(complexes);
+        if(duplicates.isEmpty())
+            return true;
+
+        LL_LOGGER.warn("has {} duplicate complexes", duplicates.size());
         return false;
     }
 

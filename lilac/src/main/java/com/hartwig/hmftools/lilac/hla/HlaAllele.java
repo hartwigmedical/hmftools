@@ -5,9 +5,11 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_PREFIX;
 
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class HlaAllele implements Comparable<HlaAllele>
 {
@@ -186,6 +188,24 @@ public class HlaAllele implements Comparable<HlaAllele>
         }
 
         return newList;
+    }
+
+    public static Set<HlaAllele> findDuplicates(final List<HlaAllele> alleles)
+    {
+        Set<HlaAllele> duplicates = Sets.newHashSet();
+
+        for(int i = 0; i < alleles.size() - 1; ++i)
+        {
+            for(int j = i + 1; j < alleles.size(); ++j)
+            {
+                if(alleles.get(i).matches(alleles.get(j)))
+                {
+                    duplicates.add(alleles.get(j));
+                }
+            }
+        }
+
+        return duplicates;
     }
 
 }

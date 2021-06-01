@@ -36,7 +36,7 @@ public class ComplexBuidingTest
         List<HlaAllele> confirmedGroup = confirmedProtein.stream().map(x -> x.asAlleleGroup()).collect(Collectors.toList());
         // distinct
 
-        List<HlaComplex> result = HlaComplexBuilder.buildComplexesByGene(GENE_A, confirmedGroup, confirmedProtein, all);
+        List<HlaComplex> result = HlaComplexBuilder.buildComplexesByGene(GENE_A, confirmedGroup, all);
         assertEquals(confirmedProtein, result.get(0).getAlleles());
     }
 

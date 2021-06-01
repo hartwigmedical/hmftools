@@ -175,6 +175,11 @@ public class LilacConfig
                 + "minFragmentsToRemoveSingle({}) maxDistanceFromTopScore({})",
                 MinBaseQual, MinEvidence, MinFragmentsPerAllele, MinFragmentsToRemoveSingle, TopScoreThreshold);
 
+        if(RunValidation)
+        {
+            LL_LOGGER.info("running validation routines");
+        }
+
         if(!ExpectedAlleles.isEmpty())
         {
             LL_LOGGER.info("expected alleles: {}", HlaAllele.toString(ExpectedAlleles));

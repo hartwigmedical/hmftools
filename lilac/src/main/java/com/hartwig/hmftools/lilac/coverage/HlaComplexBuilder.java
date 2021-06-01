@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.filterUns
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findUnsupportedWildcards;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findWildcardAlleles;
 import static com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage.coverageAlleles;
+import static com.hartwig.hmftools.lilac.hla.HlaAllele.findDuplicates;
 
 import java.util.Collections;
 import java.util.List;
@@ -152,9 +153,9 @@ public class HlaComplexBuilder
         unsupportedWildcards.forEach(x -> mConfirmedProteinAlleles.remove(x));
         unsupportedWildcards.forEach(x -> mUniqueProteinAlleles.remove(x));
 
-        List<HlaComplex> aOnlyComplexes = buildComplexesByGene(GENE_A, mUniqueGroupAlleles, mConfirmedProteinAlleles, mUniqueProteinAlleles);
-        List<HlaComplex> bOnlyComplexes = buildComplexesByGene(GENE_B, mUniqueGroupAlleles, mConfirmedProteinAlleles, mUniqueProteinAlleles);
-        List<HlaComplex> cOnlyComplexes = buildComplexesByGene(GENE_C, mUniqueGroupAlleles, mConfirmedProteinAlleles, mUniqueProteinAlleles);
+        List<HlaComplex> aOnlyComplexes = buildComplexesByGene(GENE_A, mUniqueGroupAlleles, mUniqueProteinAlleles);
+        List<HlaComplex> bOnlyComplexes = buildComplexesByGene(GENE_B, mUniqueGroupAlleles, mUniqueProteinAlleles);
+        List<HlaComplex> cOnlyComplexes = buildComplexesByGene(GENE_C, mUniqueGroupAlleles, mUniqueProteinAlleles);
 
         List<HlaComplex> complexes;
         long simpleComplexCount = (long)aOnlyComplexes.size() * bOnlyComplexes.size() * cOnlyComplexes.size();
@@ -185,11 +186,11 @@ public class HlaComplexBuilder
 
             LL_LOGGER.info("  discarding {} unlikely candidates: {}", rejected.size(), HlaAllele.toString(rejected));
 
-            complexes = buildAlleleComplexes(mUniqueGroupAlleles, mConfirmedProteinAlleles, topCandidates);
+            complexes = buildAlleleComplexes(mUniqueGroupAlleles, topCandidates);
         }
         else
         {
-            complexes = buildAlleleComplexes(mUniqueGroupAlleles, mConfirmedProteinAlleles, mUniqueProteinAlleles);
+            complexes = buildAlleleComplexes(mUniqueGroupAlleles, mUniqueProteinAlleles);
         }
 
         return complexes;
@@ -207,46 +208,19 @@ public class HlaComplexBuilder
         return HlaComplexCoverage.create(HlaAlleleCoverage.proteinCoverage(filteredFragments));
     }
 
-    private static List<HlaComplex> buildAlleleComplexes(
-            final List<HlaAllele> confirmedGroups, final List<HlaAllele> confirmedProteins, final List<HlaAllele> candidates)
+    private static List<HlaComplex> buildAlleleComplexes(final List<HlaAllele> confirmedGroups, final List<HlaAllele> candidates)
     {
-        List<HlaComplex> a = buildComplexesByGene(GENE_A, confirmedGroups, confirmedProteins, candidates);
-        List<HlaComplex> b = buildComplexesByGene(GENE_B, confirmedGroups, confirmedProteins, candidates);
-        List<HlaComplex> c = buildComplexesByGene(GENE_C, confirmedGroups, confirmedProteins, candidates);
+        List<HlaComplex> a = buildComplexesByGene(GENE_A, confirmedGroups, candidates);
+        List<HlaComplex> b = buildComplexesByGene(GENE_B, confirmedGroups, candidates);
+        List<HlaComplex> c = buildComplexesByGene(GENE_C, confirmedGroups, candidates);
         return combineComplexes(combineComplexes(a, b), c);
     }
 
     public static List<HlaComplex> buildComplexesByGene(
-            final String gene, final List<HlaAllele> unfilteredGroups,
-            final List<HlaAllele> unfilteredProteins, final List<HlaAllele> unfilteredCandidates)
+            final String gene, final List<HlaAllele> unfilteredGroups, final List<HlaAllele> unfilteredCandidates)
     {
         List<HlaAllele> confirmedGroups = takeN(unfilteredGroups.stream().filter(x -> x.Gene.equals(gene)).collect(Collectors.toList()), 2);
-        List<HlaAllele> confirmedProteins = takeN(unfilteredProteins.stream().filter(x -> x.Gene.equals(gene)).collect(Collectors.toList()), 2);
         List<HlaAllele> candidates = unfilteredCandidates.stream().filter(x -> x.Gene.equals(gene)).collect(Collectors.toList());
-
-        if (confirmedProteins.size() == 2)
-            return Lists.newArrayList(new HlaComplex(confirmedProteins));
-
-        if (confirmedProteins.size() == 1)
-        {
-            List<HlaAllele> confirmedProteinGroups = confirmedProteins.stream().map(x -> x.asAlleleGroup()).collect(Collectors.toList());
-            List<HlaAllele> remainingGroups = confirmedGroups.stream().filter(x -> !confirmedProteinGroups.contains(x)).collect(Collectors.toList());
-
-            List<HlaAllele> first = confirmedProteins;
-
-            List<HlaAllele> second = remainingGroups.isEmpty() ?
-                    candidates.stream().filter(x -> x != confirmedProteins.get(0)).collect(Collectors.toList()) :
-                    candidates.stream().filter(x -> remainingGroups.contains(x.asAlleleGroup())).collect(Collectors.toList());
-
-            List<HlaComplex> complexes = combineAlleles(first, second);
-            if(!remainingGroups.isEmpty())
-                return complexes;
-
-            complexes.add(new HlaComplex(first));
-            return complexes;
-
-            // return if (remainingGroups.isEmpty()) combineAlleles(first, second) + HlaComplex(first) else combineAlleles(first, second)
-        }
 
         if (confirmedGroups.size() == 2)
         {
@@ -455,7 +429,9 @@ public class HlaComplexBuilder
                 if(count1 == null)
                 {
                     pairingCount.put(allele1, 1);
-                    topRanked.add(allele1);
+
+                    if(!topRanked.contains(allele1))
+                        topRanked.add(allele1);
                 }
                 else
                 {
@@ -465,7 +441,9 @@ public class HlaComplexBuilder
                 if(count2 == null)
                 {
                     pairingCount.put(allele2, 1);
-                    topRanked.add(allele2);
+
+                    if(!topRanked.contains(allele2))
+                        topRanked.add(allele2);
                 }
                 else
                 {
@@ -491,19 +469,5 @@ public class HlaComplexBuilder
 
         return newList;
     }
-
-    /*
-    private static List<HlaAlleleCoverage> takeN(final List<HlaAlleleCoverage> list, int n)
-    {
-        List<HlaAlleleCoverage> newList = Lists.newArrayList();
-
-        for(int i = 0; i < min(list.size(), n); ++i)
-        {
-            newList.add(list.get(i));
-        }
-
-        return newList;
-    }
-    */
 
 }
