@@ -65,11 +65,10 @@ public class HlaComplexCoverageRanking
 
         for(HlaComplexCoverage complexCoverage : complexes)
         {
-            if(results.size() >= 100)
-                break;
-
-            if(complexCoverage.getScore() >= inclusionThreshold)
+            if(complexCoverage.getScore() >= inclusionThreshold || results.size() < 2)
+            {
                 results.add(complexCoverage);
+            }
         }
 
         Collections.sort(results, new ComplexCoverageSorter());

@@ -70,6 +70,7 @@ public class Fragment
     public boolean containsGene(final String gene) { return mGenes.stream().anyMatch(x -> x.equals(gene)); }
 
     public FragmentScope scope() { return mScope; }
+    public void clearScope() { mScope = UNSET; }
     public boolean isScopeSet() { return mScope != UNSET; }
 
     public void setScope(FragmentScope scope) { setScope(scope, false); }

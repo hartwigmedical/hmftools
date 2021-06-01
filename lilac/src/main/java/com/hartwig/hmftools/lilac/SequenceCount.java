@@ -11,6 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -188,13 +189,24 @@ public final class SequenceCount
     }
 
     public static Map<String,Map<Integer,List<String>>> extractHeterozygousLociSequences(
-            final Map<String,SequenceCount> geneCountsMap, int minCount)
+            final Map<String,SequenceCount> geneCountsMap, int minCount, final List<HlaSequenceLoci> extraSeqLoci)
     {
-        return geneCountsMap.entrySet().stream().collect(Collectors
-            .toMap(entry -> shortGeneName(entry.getKey()), entry -> entry.getValue().extractHeterozygousLociSequences(minCount)));
+        Map<String,Map<Integer,List<String>>> geneHetLociMap = Maps.newHashMap();
+
+        for(Map.Entry<String,SequenceCount> geneEntry : geneCountsMap.entrySet())
+        {
+            String gene = shortGeneName(geneEntry.getKey());
+            SequenceCount sequenceCounts = geneEntry.getValue();
+            List<HlaSequenceLoci> geneExtraSeqLoci = extraSeqLoci.stream().filter(x -> x.Allele.Gene.equals(gene)).collect(Collectors.toList());
+            Map<Integer,List<String>> hetLociMap = sequenceCounts.extractHeterozygousLociSequences(minCount, geneExtraSeqLoci);
+            geneHetLociMap.put(gene, hetLociMap);
+
+        }
+
+        return geneHetLociMap;
     }
 
-    public Map<Integer,List<String>> extractHeterozygousLociSequences(int minCount)
+    private Map<Integer,List<String>> extractHeterozygousLociSequences(int minCount, final List<HlaSequenceLoci> extraSequences)
     {
         Map<Integer,List<String>> lociSeqMap = Maps.newLinkedHashMap();
 
@@ -202,6 +214,16 @@ public final class SequenceCount
         {
             List<String> aminoAcids = mSeqCountsList[locus].entrySet().stream()
                     .filter(x -> x.getValue() >= minCount).map(x -> x.getKey()).collect(Collectors.toList());
+
+            for(HlaSequenceLoci extraSeqLoci : extraSequences)
+            {
+                if(locus >= extraSeqLoci.length())
+                    continue;
+
+                String lociSeq = extraSeqLoci.sequence(locus);
+                if(!aminoAcids.contains(lociSeq))
+                    aminoAcids.add(lociSeq);
+            }
 
             if(aminoAcids.size() > 1)
             {

@@ -35,9 +35,10 @@ public class FragmentAlleleMapper
     private final Map<String,List<Integer>> mRefNucleotideHetLoci;
     private final List<Set<String>> mRefNucleotides;
 
+    private int mStopLossFragments;
+    private final List<HlaAllele> mStopLossAlleles;
+
     private final PerformanceCounter mPerfCounterFrag;
-    private final PerformanceCounter mPerfCounterAcid;
-    private final PerformanceCounter mPerfCounterNuc;
 
     public FragmentAlleleMapper(
             final Map<String, Map<Integer,List<String>>> geneAminoAcidHetLociMap,
@@ -47,16 +48,15 @@ public class FragmentAlleleMapper
         mRefNucleotideHetLoci = refNucleotideHetLoci;
         mRefNucleotides = refNucleotides;
 
+        mStopLossFragments = 0;
+        mStopLossAlleles = Lists.newArrayList();
+
         mPerfCounterFrag = new PerformanceCounter("Frags");
-        mPerfCounterNuc = new PerformanceCounter("Nuc");
-        mPerfCounterAcid = new PerformanceCounter("AminoAcid");
     }
 
     public void logPerfData()
     {
         mPerfCounterFrag.logStats();
-        mPerfCounterNuc.logStats();
-        mPerfCounterAcid.logStats();
     }
 
     public List<FragmentAlleles> createFragmentAlleles(
@@ -67,55 +67,78 @@ public class FragmentAlleleMapper
                 refCoverageFragments.size(), candidateAminoAcidSequences.size(),
                 mRefNucleotideHetLoci.size(), candidateNucleotideSequences.size(), mRefNucleotides.size());
 
+        mPerfCounterFrag.reset();
+
         List<FragmentAlleles> results = Lists.newArrayList();
 
         for(Fragment fragment : refCoverageFragments)
         {
+            if(fragment.scope() == HLA_Y) // ignore if previously established
+                continue;
+
             mPerfCounterFrag.start();
-            FragmentAlleles fragmentAlleles = mapFragmentToAlleles(fragment, candidateAminoAcidSequences, candidateNucleotideSequences);
+            FragmentAlleles fragAllele = mapFragmentToAlleles(fragment, candidateAminoAcidSequences, candidateNucleotideSequences);
             mPerfCounterFrag.stop();
 
             // drop wild-only alleles since their support can't be clearly established
-            if(!fragmentAlleles.getFull().isEmpty())
+            if(!fragAllele.getFull().isEmpty())
             {
-                results.add(fragmentAlleles);
+                results.add(fragAllele);
             }
             else
             {
-                if(!fragmentAlleles.getWild().isEmpty())
-                {
-                    fragment.setScope(WILD_ONLY);
-                }
-                else
-                {
-                    // was this fragment homozygous in the context of all genes
-                    boolean hasHetLoci = false;
-
-                    for(Map.Entry<String,Map<Integer,List<String>>> geneEntry : mGeneAminoAcidHetLociMap.entrySet())
-                    {
-                        if(!fragment.getGenes().contains(longGeneName(geneEntry.getKey())))
-                            continue;
-
-                        if(fragment.getAminoAcidLoci().stream().anyMatch(x -> geneEntry.getValue().containsKey(x)))
-                        {
-                            hasHetLoci = true;
-                            break;
-                        }
-                    }
-
-                    if(!hasHetLoci)
-                    {
-                        fragment.setScope(NO_HET_LOCI);
-                    }
-                    else
-                    {
-                        fragment.setScope(UNMATCHED_AMINO_ACID);
-                    }
-                }
+                setFragmentScope(fragAllele);
             }
         }
 
+        applyUniqueStopLossFragments(results);
+
         return results;
+    }
+
+    private void setFragmentScope(final FragmentAlleles fragAllele)
+    {
+        Fragment fragment = fragAllele.getFragment();
+
+        if(fragment.scope() == HLA_Y) // ignore if previously established
+            return;
+
+        fragment.clearScope();
+
+        // will be set once solution is established
+        if(!fragAllele.getFull().isEmpty())
+            return;
+
+        if(!fragAllele.getWild().isEmpty())
+        {
+            fragment.setScope(WILD_ONLY);
+        }
+        else
+        {
+            // was this fragment homozygous in the context of all genes
+            boolean hasHetLoci = false;
+
+            for(Map.Entry<String,Map<Integer,List<String>>> geneEntry : mGeneAminoAcidHetLociMap.entrySet())
+            {
+                if(!fragment.getGenes().contains(longGeneName(geneEntry.getKey())))
+                    continue;
+
+                if(fragment.getAminoAcidLoci().stream().anyMatch(x -> geneEntry.getValue().containsKey(x)))
+                {
+                    hasHetLoci = true;
+                    break;
+                }
+            }
+
+            if(!hasHetLoci)
+            {
+                fragment.setScope(NO_HET_LOCI);
+            }
+            else
+            {
+                fragment.setScope(UNMATCHED_AMINO_ACID);
+            }
+        }
     }
 
     private FragmentAlleles mapFragmentToAlleles(
@@ -127,9 +150,7 @@ public class FragmentAlleleMapper
         mRefNucleotideHetLoci.entrySet().forEach(x -> fragNucleotideLociMap.put(
                 x.getKey(), fragment.getNucleotideLoci().stream().filter(y -> x.getValue().contains(y)).collect(Collectors.toList())));
 
-        mPerfCounterNuc.start();
         Map<HlaAllele, SequenceMatchType> nucleotideAlleleMatches = findNucleotideMatches(fragment, nucleotideSequences);
-        mPerfCounterNuc.stop();
 
         List<HlaAllele> fullNucleotideMatch = nucleotideAlleleMatches.entrySet().stream()
                 .filter(x -> x.getValue() == FULL).map(x -> x.getKey()).collect(Collectors.toList());
@@ -138,17 +159,13 @@ public class FragmentAlleleMapper
                 .filter(x -> x.getValue() == WILD)
                 .map(x -> x.getKey()).collect(Collectors.toList());
 
-        mPerfCounterAcid.start();
         Map<HlaAllele, SequenceMatchType> aminoAcidAlleleMatches = findAminoAcidMatches(fragment, aminoAcidSequences);
-        mPerfCounterAcid.stop();
 
         List<HlaAllele> fullAminoAcidMatch = aminoAcidAlleleMatches.entrySet().stream()
                 .filter(x -> x.getValue() == FULL).map(x -> x.getKey()).collect(Collectors.toList());
 
         List<HlaAllele> wildAminoAcidMatch = aminoAcidAlleleMatches.entrySet().stream()
                 .filter(x -> x.getValue() == WILD).map(x -> x.getKey()).collect(Collectors.toList());
-
-        // List<HlaAllele> homLociAminoAcidMatch = Lists.newArrayList();
 
         List<HlaAllele> homLociAminoAcidMatch = aminoAcidAlleleMatches.entrySet().stream()
                 .filter(x -> x.getValue() == NO_LOCI).map(x -> x.getKey()).collect(Collectors.toList());
@@ -375,7 +392,7 @@ public class FragmentAlleleMapper
 
             List<Integer> fragAminoAcidLoci = fragGeneLociMap.get(allele.Gene);
 
-            if(fragAminoAcidLoci == null) // not supported by this gene or homozygous in all locations
+            if(fragAminoAcidLoci == null || fragAminoAcidLoci.isEmpty()) // not supported by this gene or homozygous in all locations
             {
                 alleleMatches.put(allele, NO_LOCI);
                 continue;
@@ -424,11 +441,12 @@ public class FragmentAlleleMapper
     public boolean checkHlaYSupport(
             final List<HlaSequenceLoci> hlaYSequences, final List<FragmentAlleles> fragAlleles, final List<Fragment> fragments)
     {
-        // ignore fragments which don't contain any heterozygous locations
+        // test for presence of HLA-Y and strip out from consideration any fragment mapping to it
         int uniqueHlaY = 0;
 
         List<FragmentAlleles> matchedFragmentAlleles = Lists.newArrayList();
 
+        // ignore fragments which don't contain any heterozygous locations
         // only test heterozygous locations in A since HLA-Y matches its exon boundaries
         Set<Integer> aminoAcidHetLoci = mGeneAminoAcidHetLociMap.get(GENE_A).keySet();
 
@@ -507,20 +525,26 @@ public class FragmentAlleleMapper
         return exceedsThreshold;
     }
 
-    public static void applyUniqueStopLossFragments(
-            final List<FragmentAlleles> fragmentAlleles, int stopLossFragments, final List<HlaAllele> stopLossAlleles)
+    public void setStopLossInfo(int stopLossFragments, final List<HlaAllele> stopLossAlleles)
     {
-        if(stopLossFragments == 0)
+        mStopLossFragments = stopLossFragments;
+        mStopLossAlleles.addAll(stopLossAlleles);
+    }
+
+    private void applyUniqueStopLossFragments(final List<FragmentAlleles> fragmentAlleles)
+    {
+        // create a unique (ie FULL-only) fragment allele for any confirmed known stop-loss allele
+        if(mStopLossFragments == 0)
             return;
 
-        for(HlaAllele stopLossAllele : stopLossAlleles)
+        for(HlaAllele stopLossAllele : mStopLossAlleles)
         {
             List<FragmentAlleles> sampleFragments = fragmentAlleles.stream()
                     .filter(x -> x.contains(stopLossAllele))
                     .map(x -> new FragmentAlleles(x.getFragment(), Lists.newArrayList(stopLossAllele), Lists.newArrayList()))
                     .collect(Collectors.toList());
 
-            for(int i = 0; i < stopLossFragments; ++i)
+            for(int i = 0; i < mStopLossFragments; ++i)
             {
                 if(i >= sampleFragments.size())
                     break;

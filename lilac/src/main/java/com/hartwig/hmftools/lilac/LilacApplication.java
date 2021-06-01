@@ -235,11 +235,16 @@ public class LilacApplication implements AutoCloseable, Runnable
         List<HlaSequenceLoci> candidateNucSequences = mRefData.NucleotideSequences.stream()
                 .filter(x -> candidateAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
 
+        List<HlaSequenceLoci> recoveredSequences = mRefData.AminoAcidSequences.stream()
+                .filter(x -> recoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
+
         Map<String,Map<Integer,List<String>>> geneAminoAcidHetLociMap =
-                extractHeterozygousLociSequences(aminoAcidPipeline.getReferenceAminoAcidCounts(), mConfig.MinEvidence);
+                extractHeterozygousLociSequences(aminoAcidPipeline.getReferenceAminoAcidCounts(), mConfig.MinEvidence, recoveredSequences);
 
         FragmentAlleleMapper fragAlleleMapper = new FragmentAlleleMapper(
                 geneAminoAcidHetLociMap, refNucleotideHetLociMap, aminoAcidPipeline.getReferenceNucleotides());
+
+        fragAlleleMapper.setStopLossInfo(referenceBamReader.stopLossOnCIndels(), mRefData.StopLossRecoveryAlleles);
 
         List<FragmentAlleles> refFragAlleles = fragAlleleMapper.createFragmentAlleles(
                 refAminoAcidFrags, candidateSequences, candidateNucSequences);
@@ -252,15 +257,35 @@ public class LilacApplication implements AutoCloseable, Runnable
             System.exit(1);
         }
 
-        FragmentAlleleMapper.applyUniqueStopLossFragments(
-                refFragAlleles, referenceBamReader.stopLossOnCIndels(), mRefData.StopLossRecoveryAlleles);
-
         boolean hasHlaY = fragAlleleMapper.checkHlaYSupport(mRefData.HlaYNucleotideSequences, refFragAlleles, refAminoAcidFrags);
 
         // build and score complexes
         HlaComplexBuilder complexBuilder = new HlaComplexBuilder(mConfig, mRefData);
-        List<HlaComplex> complexes = complexBuilder.buildComplexes(
-                refFragAlleles, candidateAlleles, recoveredAlleles, mRefData.getWildcardAlleles());
+
+        complexBuilder.filterCandidates(refFragAlleles, candidateAlleles, recoveredAlleles, mRefData.getWildcardAlleles());
+
+        // reassess fragment-allele assignment with the reduced set of filtered alleles
+        List<HlaAllele> confirmedRecoveredAlleles = complexBuilder.getConfirmedRecoveredAlleles();
+        recoveredSequences = recoveredSequences.stream()
+                .filter(x -> confirmedRecoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
+
+        geneAminoAcidHetLociMap =
+                extractHeterozygousLociSequences(aminoAcidPipeline.getReferenceAminoAcidCounts(), mConfig.MinEvidence, recoveredSequences);
+
+        List<HlaAllele> confirmedAlleles = complexBuilder.getUniqueProteinAlleles();
+
+        candidateSequences = candidateSequences.stream()
+                .filter(x -> confirmedAlleles.contains(x.Allele)).collect(Collectors.toList());
+
+        candidateNucSequences = candidateNucSequences.stream()
+                .filter(x -> confirmedAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
+
+        refFragAlleles = fragAlleleMapper.createFragmentAlleles(
+                refAminoAcidFrags, candidateSequences, candidateNucSequences);
+
+        List<HlaComplex> complexes = complexBuilder.buildComplexes(refFragAlleles, confirmedRecoveredAlleles);
+
+        // List<HlaComplex> complexes = complexBuilder.buildComplexes(refFragAlleles, recoveredAlleles);
 
         LL_LOGGER.info("calculating coverage of {} complexes", complexes.size());
         ComplexCoverageCalculator complexCalculator = new ComplexCoverageCalculator(mConfig.Threads);
