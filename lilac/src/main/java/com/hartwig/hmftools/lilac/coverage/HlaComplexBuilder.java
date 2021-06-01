@@ -10,11 +10,15 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_CONF_UNIQUE_GROUP_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_CONF_UNIQUE_PROTEIN_COVERAGE;
+import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.filterUnsupportedWildcardFragments;
+import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findUnsupportedWildcards;
+import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findWildcardAlleles;
 import static com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage.coverageAlleles;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -48,11 +52,10 @@ public class HlaComplexBuilder
     public List<HlaAllele> getConfirmedRecoveredAlleles() { return mConfirmedRecoveredAlleles; }
 
     public void filterCandidates(
-            final List<FragmentAlleles> refFragAlleles,
-            final List<HlaAllele> candidateAlleles, final List<HlaAllele> recoveredAlleles, final List<HlaAllele> wildcardAlleles)
+            final List<FragmentAlleles> refFragAlleles, final List<HlaAllele> candidateAlleles, final List<HlaAllele> recoveredAlleles)
     {
-        LL_LOGGER.info("filtering candidates from fragAlleles({}) candidates({}) recovered({}) wildcards({})",
-                refFragAlleles.size(), candidateAlleles.size(), recoveredAlleles.size(), wildcardAlleles.size());
+        LL_LOGGER.info("filtering candidates from fragAlleles({}) candidates({}) recovered({})",
+                refFragAlleles.size(), candidateAlleles.size(), recoveredAlleles.size());
 
         HlaComplexCoverage groupCoverage = calcGroupCoverage(refFragAlleles, candidateAlleles);
 
@@ -106,15 +109,6 @@ public class HlaComplexBuilder
             LL_LOGGER.info("  no recovered alleles kept from unique groups");
         }
 
-        // check for unique wildcard alleles
-        List<HlaAllele> supportedWildcard = findUniqueWildcardAlleles(refFragAlleles, wildcardAlleles);
-
-        if(!supportedWildcard.isEmpty())
-        {
-            LL_LOGGER.info("  found {} uniquely supported wildcard alleles: {}",
-                    supportedWildcard.size(), HlaAllele.toString(supportedWildcard));
-        }
-
         HlaComplexCoverage proteinCoverage = calcProteinCoverage(refFragAlleles, candidatesAfterUniqueGroups);
 
         // find uniquely supported protein alleles but don't allow recovered alleles to be in the unique protein set
@@ -150,6 +144,13 @@ public class HlaComplexBuilder
 
     public List<HlaComplex> buildComplexes(final List<FragmentAlleles> refFragAlleles, final List<HlaAllele> recoveredAlleles)
     {
+        // filter out any wildcards
+        Set<HlaAllele> wildcardAlleles = findWildcardAlleles(refFragAlleles);
+        List<HlaAllele> unsupportedWildcards = findUnsupportedWildcards(refFragAlleles, wildcardAlleles);
+        filterUnsupportedWildcardFragments(refFragAlleles, unsupportedWildcards);
+
+        unsupportedWildcards.forEach(x -> mConfirmedProteinAlleles.remove(x));
+        unsupportedWildcards.forEach(x -> mUniqueProteinAlleles.remove(x));
 
         List<HlaComplex> aOnlyComplexes = buildComplexesByGene(GENE_A, mUniqueGroupAlleles, mConfirmedProteinAlleles, mUniqueProteinAlleles);
         List<HlaComplex> bOnlyComplexes = buildComplexesByGene(GENE_B, mUniqueGroupAlleles, mConfirmedProteinAlleles, mUniqueProteinAlleles);
@@ -192,49 +193,6 @@ public class HlaComplexBuilder
         }
 
         return complexes;
-    }
-
-    private List<HlaAllele> findUniqueWildcardAlleles(
-            final List<FragmentAlleles> refFragAlleles, final List<HlaAllele> wildcardAlleles)
-    {
-        Map<HlaAllele,Integer> uniqueSupport = Maps.newHashMap();
-
-        for(FragmentAlleles fragAllele : refFragAlleles)
-        {
-            //  && fragAllele.getWild().isEmpty() - don't check since shouldn't impact uniqueness
-            boolean isUniqueFrag = fragAllele.getFull().size() == 1;
-
-            if(!isUniqueFrag)
-                continue;
-
-            HlaAllele allele = fragAllele.getFull().get(0);
-
-            if(!wildcardAlleles.contains(allele))
-                continue;
-
-            Integer count = uniqueSupport.get(allele);
-            uniqueSupport.put(allele, count != null ? count + 1 : 1);
-
-            //LL_LOGGER.debug("wildcard allele({}) unique {} from read({} {})",
-            //        allele, isUniqueFrag ? "full" : "partial", fragAllele.getFragment().id(), fragAllele.getFragment().readInfo());
-        }
-
-        final List<HlaAllele> supportedAlleles = Lists.newArrayList();
-        for(Map.Entry<HlaAllele,Integer> entry : uniqueSupport.entrySet())
-        {
-            HlaAllele allele = entry.getKey();
-            int fragCount = entry.getValue();
-
-            LL_LOGGER.debug("sample({}) wildcard allele({}) uniqueSupport({})",
-                    mConfig.Sample, allele, fragCount);
-
-            if(fragCount >= 5)
-            {
-                supportedAlleles.add(allele);
-            }
-        }
-
-            return supportedAlleles;
     }
 
     private static HlaComplexCoverage calcGroupCoverage(final List<FragmentAlleles> fragAlleles, final List<HlaAllele> alleles)

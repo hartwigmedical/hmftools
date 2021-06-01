@@ -21,6 +21,7 @@ public class HlaAllele implements Comparable<HlaAllele>
     private final HlaAllele mFourDigit;
     private final HlaAllele mGroup;
     private final int mHashCode;;
+    private boolean mHasWildcards;
 
     public HlaAllele(
             final String gene, final String alleleGroup, final String protein, final String synonymous, final String synonymousNonCoding,
@@ -36,6 +37,7 @@ public class HlaAllele implements Comparable<HlaAllele>
         mGroup = group;
 
         mHashCode = toString().hashCode();
+        mHasWildcards = false;
 
         int proteinNumber = 0;
 
@@ -85,6 +87,9 @@ public class HlaAllele implements Comparable<HlaAllele>
     }
 
     public final HlaAllele asFourDigit() { return mFourDigit != null ? mFourDigit : this; }
+
+    public boolean hasWildcards() { return mHasWildcards; }
+    public void setHasWildcard(boolean toggle) { mHasWildcards = toggle; }
 
     public boolean equals(final Object other)
     {

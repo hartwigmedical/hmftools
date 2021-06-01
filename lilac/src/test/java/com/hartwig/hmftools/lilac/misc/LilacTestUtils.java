@@ -3,6 +3,8 @@ package com.hartwig.hmftools.lilac.misc;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
@@ -31,6 +33,13 @@ public class LilacTestUtils
     {
         return HlaSequenceLoci.create(sequences.Allele, sequences.getRawSequence(), sequences.getRawSequence());
     }
+
+    public static Fragment createFragment(final String id)
+    {
+        return new Fragment(
+                id, "", Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+    }
+
     public static String buildTargetSequence(final String sequence, final List<Integer> indices)
     {
         if(indices.size() >= sequence.length())

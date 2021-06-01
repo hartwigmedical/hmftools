@@ -262,7 +262,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         // build and score complexes
         HlaComplexBuilder complexBuilder = new HlaComplexBuilder(mConfig, mRefData);
 
-        complexBuilder.filterCandidates(refFragAlleles, candidateAlleles, recoveredAlleles, mRefData.getWildcardAlleles());
+        complexBuilder.filterCandidates(refFragAlleles, candidateAlleles, recoveredAlleles);
 
         // reassess fragment-allele assignment with the reduced set of filtered alleles
         List<HlaAllele> confirmedRecoveredAlleles = complexBuilder.getConfirmedRecoveredAlleles();

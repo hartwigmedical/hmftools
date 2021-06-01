@@ -3,6 +3,7 @@ package com.hartwig.hmftools.lilac.coverage;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_Y_FRAGMENT_THRESHOLD;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_WILDCARD_FRAGMENTS;
 import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.LilacConstants.getNucleotideExonBoundaries;
 import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -554,6 +556,104 @@ public class FragmentAlleleMapper
         }
     }
 
+    public static Set<HlaAllele> findWildcardAlleles(final List<FragmentAlleles> fragAlleles)
+    {
+        Set<HlaAllele> wildcardAlleles = Sets.newHashSet();
 
+        for(FragmentAlleles fragAllele : fragAlleles)
+        {
+            fragAllele.getFull().stream().filter(x -> x.hasWildcards()).forEach(x -> wildcardAlleles.add(x));
+            fragAllele.getWild().stream().filter(x -> x.hasWildcards()).forEach(x -> wildcardAlleles.add(x));
+        }
+
+        return wildcardAlleles;
+    }
+
+    public static List<HlaAllele> findUnsupportedWildcards(final List<FragmentAlleles> fragAlleles, final Set<HlaAllele> wildcardAlleles)
+    {
+        // across all the candidates, find wildcards which have 2+ non-wild fragments which don't support a non-wildcard allele
+        // remove unsupported wildcard alleles from fragments and return the list of supported wildcard alleles
+        List<HlaAllele> supportedAlleles = Lists.newArrayList();
+
+        for(HlaAllele allele : wildcardAlleles)
+        {
+            int supportCount = 0;
+
+            for(FragmentAlleles fragAllele : fragAlleles)
+            {
+                if(!fragAllele.getFull().contains(allele))
+                    continue;
+
+                // ignore fragments supporting a non-wildcard allele
+                if(fragAllele.getFull().stream().anyMatch(x -> !x.hasWildcards()))
+                    continue;
+
+                ++supportCount;
+
+                LL_LOGGER.debug("wildcard allele({}) support from read({} {})",
+                        allele, fragAllele.getFragment().id(), fragAllele.getFragment().readInfo());
+            }
+
+            if(supportCount >= MIN_WILDCARD_FRAGMENTS)
+            {
+                supportedAlleles.add(allele);
+            }
+        }
+
+        if(!supportedAlleles.isEmpty())
+        {
+            LL_LOGGER.info("filtered wildcards({} -> {}) supported alleles: {}",
+                    wildcardAlleles.size(), supportedAlleles.size(), HlaAllele.toString(supportedAlleles));
+        }
+        else
+        {
+            LL_LOGGER.info("removed all {} wildcard candidates", wildcardAlleles.size());
+        }
+
+        return wildcardAlleles.stream().filter(x -> !supportedAlleles.contains(x)).collect(Collectors.toList());
+    }
+
+    public static void filterUnsupportedWildcardFragments(final List<FragmentAlleles> fragAlleles, final List<HlaAllele> unsupportedAlleles)
+    {
+        // remove these alleles from fragment alleles
+        int index = 0;
+        int removedFragAlleles = 0;
+
+        while(index < fragAlleles.size())
+        {
+            FragmentAlleles fragAllele = fragAlleles.get(index);
+
+            removeUnsupportedWildcardAlleles(fragAllele.getFull(), unsupportedAlleles);
+            removeUnsupportedWildcardAlleles(fragAllele.getWild(), unsupportedAlleles);
+
+            if(fragAllele.getFull().isEmpty() && fragAllele.getWild().isEmpty())
+            {
+                fragAlleles.remove(index);
+                ++removedFragAlleles;
+            }
+            else
+            {
+                ++index;
+            }
+        }
+
+        LL_LOGGER.info("removed frags({}) with wildcard alleles removed", removedFragAlleles);
+    }
+
+    private static void removeUnsupportedWildcardAlleles(final List<HlaAllele> alleleList, final List<HlaAllele> unsupportedAlleles)
+    {
+        int index = 0;
+        while(index < alleleList.size())
+        {
+            if(unsupportedAlleles.contains(alleleList.get(index)))
+            {
+                alleleList.remove(index);
+            }
+            else
+            {
+                ++index;
+            }
+        }
+    }
 
 }

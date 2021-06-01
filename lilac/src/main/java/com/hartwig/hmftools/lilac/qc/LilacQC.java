@@ -5,6 +5,11 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_INDEL_THRESHOLD;
+import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_ALLELE;
+import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_HAPLOTYPE;
+import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_INDEL;
+import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_SOMATIC_VARIANT;
+import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_WILDCARD_MATCH;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -65,7 +70,11 @@ public final class LilacQC
     public List<String> getBodyItems()
     {
         List<String> columns = Lists.newArrayList();
-        columns.add(mStatus.toString());
+
+        StringJoiner sj = new StringJoiner(ITEM_DELIM);
+        mStatus.forEach(x -> sj.add(x.toString()));
+        columns.add(sj.toString());
+
         columns.add(String.valueOf(HasHlaY));
         columns.add(String.format("%.3f", ScoreMargin));
         columns.add(NextSolutionInfo);
@@ -130,37 +139,35 @@ public final class LilacQC
 
     private void populateStatus()
     {
-        Set<LilacQCStatus> statusList = Sets.newHashSet();
-
         if(HaplotypeQC.UnusedHaplotypes > 0)
         {
-            statusList.add(LilacQCStatus.WARN_UNMATCHED_HAPLOTYPE);
+            mStatus.add(WARN_UNMATCHED_HAPLOTYPE);
         }
 
         if(CoverageQC.ATypes == 0 || CoverageQC.BTypes == 0 || CoverageQC.CTypes == 0)
         {
-            statusList.add(LilacQCStatus.WARN_UNMATCHED_ALLELE);
+            mStatus.add(WARN_UNMATCHED_ALLELE);
         }
 
         double indelWarnThreshold = CoverageQC.TotalFragments * WARN_INDEL_THRESHOLD;
         if(BamQC.getDiscardedIndelFragments() >= indelWarnThreshold)
         {
-            statusList.add(LilacQCStatus.WARN_UNMATCHED_INDEL);
+            mStatus.add(WARN_UNMATCHED_INDEL);
         }
 
         if(SomaticVariantQC.unmatchedVariants())
         {
-            statusList.add(LilacQCStatus.WARN_UNMATCHED_SOMATIC_VARIANT);
+            mStatus.add(WARN_UNMATCHED_SOMATIC_VARIANT);
         }
 
         if(CoverageQC.PercentWildcard > 0.0)
         {
-            statusList.add(LilacQCStatus.WARN_WILDCARD_MATCH);
+            mStatus.add(WARN_WILDCARD_MATCH);
         }
 
-        if(statusList.isEmpty())
+        if(mStatus.isEmpty())
         {
-            statusList.add(LilacQCStatus.PASS);
+            mStatus.add(LilacQCStatus.PASS);
         }
     }
 }
