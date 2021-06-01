@@ -323,8 +323,19 @@ public class LilacApplication implements AutoCloseable, Runnable
         StringJoiner totalCoverages = new StringJoiner(",");
         winningRefCoverage.getAlleleCoverage().forEach(x -> totalCoverages.add(String.format("%.0f",x.TotalCoverage)));
 
-        LL_LOGGER.info("WINNERS: {},{},{},{}",
-                mConfig.Sample, referenceRankedComplexes.size(), HlaAllele.toString(winningRefCoverage.getAlleles()), totalCoverages);
+        double scoreMargin = 0;
+        StringJoiner nextSolutionInfo = new StringJoiner(ITEM_DELIM);
+
+        if(referenceRankedComplexes.size() > 1)
+        {
+            HlaComplexCoverage nextSolution = referenceRankedComplexes.get(1);
+            scoreMargin = referenceRankedComplexes.get(0).getScore() - nextSolution.getScore();
+            nextSolution.getAlleles().stream().filter(x -> !winningAlleles.contains(x)).forEach(x -> nextSolutionInfo.add(x.toString()));
+        }
+
+        LL_LOGGER.info("WINNERS: {}, {}, {}, {}, {}, {}",
+                mConfig.Sample, referenceRankedComplexes.size(), HlaAllele.toString(winningRefCoverage.getAlleles()),
+                String.format("%.3f", scoreMargin), nextSolutionInfo, totalCoverages);
 
         // write fragment assignment data
         for(FragmentAlleles fragAllele : refFragAlleles)
@@ -408,16 +419,6 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         BamQC bamQC = BamQC.create(referenceBamReader);
         CoverageQC coverageQC = CoverageQC.create(refAminoAcidFrags, winningRefCoverage);
-
-        double scoreMargin = 0;
-        StringJoiner nextSolutionInfo = new StringJoiner(ITEM_DELIM);
-
-        if(referenceRankedComplexes.size() > 1)
-        {
-            HlaComplexCoverage nextSolution = referenceRankedComplexes.get(1);
-            scoreMargin = referenceRankedComplexes.get(0).getScore() - nextSolution.getScore();
-            nextSolution.getAlleles().stream().filter(x -> !winningAlleles.contains(x)).forEach(x -> nextSolutionInfo.add(x.toString()));
-        }
 
         LilacQC lilacQC = new LilacQC(
                 hasHlaY, scoreMargin, nextSolutionInfo.toString(), aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC);

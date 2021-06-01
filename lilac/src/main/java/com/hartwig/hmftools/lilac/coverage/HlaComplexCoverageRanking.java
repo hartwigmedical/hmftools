@@ -61,17 +61,25 @@ public class HlaComplexCoverageRanking
         int topCoverage = complexes.stream().mapToInt(x -> x.TotalCoverage).max().orElse(0);
         double inclusionThreshold = topScore - mMaxScoreDifference * topCoverage;
 
+        // initial cull before sort
+        double baseThreshold = topScore - 0.25 * topCoverage;
+        List<HlaComplexCoverage> candidateResults = complexes.stream().filter(x -> x.getScore() >= baseThreshold).collect(Collectors.toList());
+        Collections.sort(candidateResults, new ComplexCoverageSorter());
+
         List<HlaComplexCoverage> results = Lists.newArrayList();
 
-        for(HlaComplexCoverage complexCoverage : complexes)
+        for(HlaComplexCoverage complexCoverage : candidateResults)
         {
             if(complexCoverage.getScore() >= inclusionThreshold || results.size() < 2)
             {
                 results.add(complexCoverage);
             }
+            else
+            {
+                break;
+            }
         }
 
-        Collections.sort(results, new ComplexCoverageSorter());
         return results;
     }
 
