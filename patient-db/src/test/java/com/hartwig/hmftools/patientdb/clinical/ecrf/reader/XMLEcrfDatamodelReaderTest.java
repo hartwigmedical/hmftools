@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientdb.clinical.ecrf.reader;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
@@ -16,8 +15,7 @@ import org.junit.Test;
 
 public class XMLEcrfDatamodelReaderTest {
 
-    private static final String BASE_RESOURCE_DIR = Resources.getResource("ecrf").getPath();
-    private static final String DATAMODEL_TEST = BASE_RESOURCE_DIR + File.separator + "tests" + File.separator + "datamodel.xml";
+    private static final String DATAMODEL_TEST = Resources.getResource("ecrf/datamodel.xml").getPath();
 
     @Test
     public void canExtractDatamodelFromEcrf() throws FileNotFoundException, XMLStreamException {

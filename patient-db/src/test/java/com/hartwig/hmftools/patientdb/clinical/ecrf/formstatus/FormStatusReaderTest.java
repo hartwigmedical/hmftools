@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -14,8 +13,7 @@ import org.junit.Test;
 
 public class FormStatusReaderTest {
 
-    private static final String BASE_RESOURCE_DIR = Resources.getResource("ecrf").getPath();
-    private static final String TEST_FILE = BASE_RESOURCE_DIR + File.separator + "formstatus" + File.separator + "formstatus.csv";
+    private static final String TEST_FILE = Resources.getResource("ecrf/formstatus.csv").getPath();
 
     @Test
     public void canLoadFromCsv() throws IOException {

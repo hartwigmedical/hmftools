@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.List;
@@ -30,8 +29,7 @@ import org.junit.Test;
 
 public class XMLPatientReaderTest {
 
-    private static final String BASE_RESOURCE_DIR = Resources.getResource("ecrf").getPath();
-    private static final String PATIENTS_TEST = BASE_RESOURCE_DIR + File.separator + "tests" + File.separator + "patients.xml";
+    private static final String PATIENTS_TEST = Resources.getResource("ecrf/patients.xml").getPath();
 
     private static final String PATIENT_1 = "CPCT02020202";
     private static final String PATIENT_2 = "CPCT03030303";
