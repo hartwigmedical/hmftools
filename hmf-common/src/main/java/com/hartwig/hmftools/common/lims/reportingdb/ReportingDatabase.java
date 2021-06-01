@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.reportingdb;
+package com.hartwig.hmftools.common.lims.reportingdb;
 
 import java.io.File;
 import java.io.IOException;

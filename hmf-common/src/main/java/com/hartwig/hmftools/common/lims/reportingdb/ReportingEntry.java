@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.reportingdb;
+package com.hartwig.hmftools.common.lims.reportingdb;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

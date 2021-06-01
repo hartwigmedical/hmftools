@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
-import com.hartwig.hmftools.common.reportingdb.ReportingDatabase;
-import com.hartwig.hmftools.common.reportingdb.ReportingEntry;
+import com.hartwig.hmftools.common.lims.reportingdb.ReportingDatabase;
+import com.hartwig.hmftools.common.lims.reportingdb.ReportingEntry;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
