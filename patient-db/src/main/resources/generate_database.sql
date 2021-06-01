@@ -1134,6 +1134,8 @@ CREATE TABLE cuppaResult
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
     cuppaResult varchar(255) NOT NULL,
+    cuppaTumorLocation varchar(255) NOT NULL,
+    cuppaPrediction varchar(255) NOT NULL,
     PRIMARY KEY (id),
     KEY(sampleId)
 );

@@ -21,11 +21,16 @@ public class CuppaDAO {
         deleteCuppaForSample(sample);
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
+        String tumorLocation = cuppaResult.split("\\(")[0];
+        String prediction = cuppaResult.split("\\(")[1];
+        prediction = prediction.substring(0, prediction.length()-1);
         context.insertInto(CUPPARESULT,
                 CUPPARESULT.MODIFIED,
                 CUPPARESULT.SAMPLEID,
-                CUPPARESULT.CUPPARESULT_)
-                .values(timestamp, sample, cuppaResult)
+                CUPPARESULT.CUPPARESULT_,
+                CUPPARESULT.CUPPATUMORLOCATION,
+                CUPPARESULT.CUPPAPREDICTION)
+                .values(timestamp, sample, cuppaResult, tumorLocation, prediction)
                 .execute();
     }
 
