@@ -15,7 +15,7 @@ import org.junit.Test;
 
 public class XMLEcrfDatamodelReaderTest {
 
-    private static final String DATAMODEL_TEST = Resources.getResource("ecrf/datamodel.xml").getPath();
+    private static final String DATAMODEL_TEST = Resources.getResource("ecrf/datamodel_example.xml").getPath();
 
     @Test
     public void canExtractDatamodelFromEcrf() throws FileNotFoundException, XMLStreamException {

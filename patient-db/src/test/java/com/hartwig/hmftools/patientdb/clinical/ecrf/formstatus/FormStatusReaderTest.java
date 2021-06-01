@@ -13,7 +13,7 @@ import org.junit.Test;
 
 public class FormStatusReaderTest {
 
-    private static final String TEST_FILE = Resources.getResource("ecrf/formstatus.csv").getPath();
+    private static final String TEST_FILE = Resources.getResource("ecrf/test_cpct_formstatus.csv").getPath();
 
     @Test
     public void canLoadFromCsv() throws IOException {

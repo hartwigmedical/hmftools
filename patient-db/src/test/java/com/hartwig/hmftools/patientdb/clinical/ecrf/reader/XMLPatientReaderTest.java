@@ -29,7 +29,7 @@ import org.junit.Test;
 
 public class XMLPatientReaderTest {
 
-    private static final String PATIENTS_TEST = Resources.getResource("ecrf/patients.xml").getPath();
+    private static final String PATIENTS_TEST = Resources.getResource("ecrf/patients_example.xml").getPath();
 
     private static final String PATIENT_1 = "CPCT02020202";
     private static final String PATIENT_2 = "CPCT03030303";
