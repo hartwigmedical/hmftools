@@ -80,7 +80,7 @@ CREATE TABLE flagstat
     PRIMARY KEY (sampleId)
 );
 
-CREATE TABLE cuppaResult
+CREATE TABLE cuppa
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
