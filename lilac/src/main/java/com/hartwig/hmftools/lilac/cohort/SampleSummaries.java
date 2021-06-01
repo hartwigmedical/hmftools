@@ -35,7 +35,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class CandidateScores
+public class SampleSummaries
 {
     private final CohortFrequency mCohortFrequency;
     private final SampleTruthSet mTruthSet;
@@ -45,7 +45,7 @@ public class CandidateScores
 
     private BufferedWriter mWriter;
 
-    public CandidateScores(final CommandLine cmd)
+    public SampleSummaries(final CommandLine cmd)
     {
         mCohortFrequency = new CohortFrequency(cmd);
         mTruthSet = new SampleTruthSet(cmd);
@@ -59,13 +59,7 @@ public class CandidateScores
     {
         if(mSampleIds.isEmpty())
         {
-            LL_LOGGER.error("sample IDs loading failed");
-            System.exit(1);
-        }
-
-        if(mCohortFrequency.getAlleleFrequencies().isEmpty() || mTruthSet.getSampleAlleleSet().isEmpty())
-        {
-            LL_LOGGER.error("reference data loading failed");
+            LL_LOGGER.error("sampleIds loading failed");
             System.exit(1);
         }
 
@@ -80,8 +74,7 @@ public class CandidateScores
         int sampleCount = 0;
         for(String sampleId : mSampleIds)
         {
-            List<CandidateAlleles> candidates = loadSampleCandidates(sampleId);
-            processSampleCandidates(sampleId, candidates);
+            processSampleCandidates(sampleId);
 
             ++sampleCount;
 
@@ -94,29 +87,11 @@ public class CandidateScores
         closeBufferedWriter(mWriter);
     }
 
-    private void processSampleCandidates(final String sampleId, final List<CandidateAlleles> candidates)
+    private void processSampleCandidates(final String sampleId)
     {
-        final List<HlaAllele> truthSetAlleles = mTruthSet.getSampleAlleles(sampleId);
-        double topScore = 0;
-
-        for(CandidateAlleles candidate : candidates)
-        {
-            double cohortFrequencyTotal = 0;
-
-            for(HlaAllele allele : candidate.Alleles)
-            {
-                double cohortFrequency = mCohortFrequency.getAlleleFrequency(allele);
-                cohortFrequencyTotal += log10(max(cohortFrequency,0.0001));
-            }
-
-            candidate.setCohortFrequencyTotal(cohortFrequencyTotal);
-            topScore = max(topScore, candidate.calcScore());
-        }
-
-        double maxTopScore = topScore;
-        candidates.forEach(x -> writeCandidateData(sampleId, x, maxTopScore, truthSetAlleles));
     }
 
+    /*
     private List<CandidateAlleles> loadSampleCandidates(final String sampleId)
     {
         final String filename = mCandidateFilesDir + sampleId + ".candidates.coverage.txt";
@@ -170,16 +145,17 @@ public class CandidateScores
 
         return candidates;
     }
+    */
 
     private void initialiseWriter()
     {
         try
         {
-            final String outputFileName = mOutputDir + "lilac_sample_candidate_scores.csv";
+            final String outputFileName = mOutputDir + "LILAC_COHORT.csv";
             mWriter = createBufferedWriter(outputFileName, false);
 
             mWriter.write("SampleId,");
-            mWriter.write(CandidateAlleles.header());
+            // mWriter.write(CandidateAlleles.header());
             mWriter.newLine();
 
         }
@@ -189,12 +165,11 @@ public class CandidateScores
         }
     }
 
-    private void writeCandidateData(
-            final String sampleId, final CandidateAlleles candidate, double topScore, final List<HlaAllele> truthSetAlleles)
+    private void writeSampleData(final String sampleId)
     {
         try
         {
-            mWriter.write(String.format("%s,%s", sampleId, candidate.toCsv(topScore, truthSetAlleles)));
+            // mWriter.write(String.format("%s,%s", sampleId, candidate.toCsv(topScore, truthSetAlleles)));
             mWriter.newLine();
 
         }
@@ -218,7 +193,7 @@ public class CandidateScores
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);
 
-        CandidateScores candidateScores = new CandidateScores(cmd);
+        SampleSummaries candidateScores = new SampleSummaries(cmd);
         candidateScores.run();
 
         LL_LOGGER.info("cohort processing complete");
