@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.virusintepreter;
+package com.hartwig.hmftools.virusinterpreter;
 
 public class VirusInterpreterApplication {
 
