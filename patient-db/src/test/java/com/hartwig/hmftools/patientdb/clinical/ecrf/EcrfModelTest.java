@@ -22,7 +22,7 @@ import org.junit.Test;
 public class EcrfModelTest {
 
     private static final String BASE_RESOURCE_DIR = Resources.getResource("ecrf").getPath();
-    private static final String TEST_ECRF = BASE_RESOURCE_DIR + File.separator + "example" + File.separator + "test_cpct_ecrf.xml";
+    private static final String TEST_ECRF = BASE_RESOURCE_DIR + File.separator + "test_cpct_ecrf.xml";
 
     @Test
     public void loadDataFromRealXML() throws IOException, XMLStreamException {
