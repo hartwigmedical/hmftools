@@ -50,7 +50,7 @@ class TransvarProcessImpl implements TransvarProcess {
         LOGGER.debug("Running '{}'", command);
         Process process = processBuilder.start();
         if (!process.waitFor(TRANSVAR_TIMEOUT_SEC, TimeUnit.SECONDS)) {
-            LOGGER.info("Timeout. '{}' took more than '{} {}' to execute", command, TRANSVAR_TIMEOUT_SEC, TimeUnit.SECONDS);
+            LOGGER.info("Timeout. '{}' took more than {} {} to execute", command, TRANSVAR_TIMEOUT_SEC, TimeUnit.SECONDS);
             // We still continue to wait for ever. Assume transvar will eventually succeed.
             process.waitFor();
         }
