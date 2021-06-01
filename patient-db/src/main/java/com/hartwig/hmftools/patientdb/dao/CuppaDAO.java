@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientdb.dao;
 import java.sql.Timestamp;
 import java.util.Date;
 
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CUPPARESULT;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CUPPA;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -21,15 +21,20 @@ public class CuppaDAO {
         deleteCuppaForSample(sample);
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
-        context.insertInto(CUPPARESULT,
-                CUPPARESULT.MODIFIED,
-                CUPPARESULT.SAMPLEID,
-                CUPPARESULT.CUPPARESULT_)
-                .values(timestamp, sample, cuppaResult)
+        String tumorLocation = cuppaResult.split("\\(")[0];
+        String prediction = cuppaResult.split("\\(")[1];
+        prediction = prediction.substring(0, prediction.length()-1);
+        context.insertInto(CUPPA,
+                CUPPA.MODIFIED,
+                CUPPA.SAMPLEID,
+                CUPPA.CUPPARESULT,
+                CUPPA.CUPPATUMORLOCATION,
+                CUPPA.CUPPAPREDICTION)
+                .values(timestamp, sample, cuppaResult, tumorLocation, prediction)
                 .execute();
     }
 
     void deleteCuppaForSample(@NotNull String sample) {
-        context.delete(CUPPARESULT).where(CUPPARESULT.SAMPLEID.eq(sample)).execute();
+        context.delete(CUPPA).where(CUPPA.SAMPLEID.eq(sample)).execute();
     }
 }

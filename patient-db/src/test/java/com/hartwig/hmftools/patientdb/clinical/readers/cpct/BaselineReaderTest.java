@@ -6,9 +6,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.patientdb.clinical.curators.TestCuratorFactory;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfPatient;
 
 import org.junit.Test;
 

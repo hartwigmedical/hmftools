@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.variant.structural.linx;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
@@ -10,7 +10,9 @@ import com.google.common.io.Resources;
 import org.junit.Test;
 
 public class LinxViralInsertFileTest {
-    private static final String LINX_VIRAL_INSERTIONS_FILE = Resources.getResource("variant/structural/linx/sample.linx.viral_inserts.tsv").getPath();
+
+    private static final String LINX_VIRAL_INSERTIONS_FILE =
+            Resources.getResource("variant/structural/linx/sample.linx.viral_inserts.tsv").getPath();
 
     @Test
     public void canReadViralInsertionFile() throws IOException {
@@ -34,7 +36,5 @@ public class LinxViralInsertFileTest {
         assertEquals(7, viralInsertion3.SvId);
         assertEquals("NC_001525", viralInsertion3.VirusId);
         assertEquals("Human papillomavirus type 15", viralInsertion3.VirusName);
-
     }
-
 }

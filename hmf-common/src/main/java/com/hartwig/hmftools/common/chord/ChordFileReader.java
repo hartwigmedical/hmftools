@@ -16,6 +16,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ChordFileReader {
 
+    private static final Logger LOGGER = LogManager.getLogger(ChordFileReader.class);
+
     private static final String VALUE_SEPARATOR = "\t";
 
     private static final int BRCA1_COLUMN = 1;
@@ -25,8 +27,6 @@ public final class ChordFileReader {
     private static final int HRD_TYPE_COLUMN = 5;
     private static final int REMARKS_HR_STATUS_COLUMN = 6;
     private static final int REMARKS_HRD_TYPE_COLUMN = 7;
-
-    private static final Logger LOGGER = LogManager.getLogger(ChordFileReader.class);
 
     private ChordFileReader() {
     }

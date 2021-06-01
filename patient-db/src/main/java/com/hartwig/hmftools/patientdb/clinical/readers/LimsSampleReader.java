@@ -9,7 +9,7 @@ import java.util.Set;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsAnalysisType;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
-import com.hartwig.hmftools.common.reportingdb.ReportingEntry;
+import com.hartwig.hmftools.common.lims.reportingdb.ReportingEntry;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableSampleData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 

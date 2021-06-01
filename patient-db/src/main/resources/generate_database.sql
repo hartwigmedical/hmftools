@@ -2,6 +2,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 
 -- TODO Cleanup per 1st of july 2021
 DROP TABLE IF EXISTS germlineVariant2;
+DROP TABLE IF EXISTS cuppaResult;
 
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
@@ -1128,12 +1129,14 @@ CREATE TABLE virusBreakend
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS cuppaResult;
-CREATE TABLE cuppaResult
+DROP TABLE IF EXISTS cuppa;
+CREATE TABLE cuppa
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
     cuppaResult varchar(255) NOT NULL,
+    cuppaTumorLocation varchar(255) NOT NULL,
+    cuppaPrediction varchar(255) NOT NULL,
     PRIMARY KEY (id),
     KEY(sampleId)
 );

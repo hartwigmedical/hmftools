@@ -4,14 +4,14 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedBiopsyType;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedPrimaryTumor;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfForm;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfItemGroup;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfStudyEvent;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

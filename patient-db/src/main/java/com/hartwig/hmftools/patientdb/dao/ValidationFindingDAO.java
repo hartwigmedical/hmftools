@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CLINICA
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.ValidationFinding;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

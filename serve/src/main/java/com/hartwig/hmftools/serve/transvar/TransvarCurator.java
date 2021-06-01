@@ -21,14 +21,14 @@ class TransvarCurator {
     private static final Map<String, String> MANUAL_GENE_MAPPING_38_TO_37 = Maps.newHashMap();
 
     static {
-        // Transvar can't interpret start-lost so we map it to another mutation.
+        // Transvar can't interpret start-lost so we map it to another arbitrary mutation.
         PROTEIN_ANNOTATION_MAPPING.put("M1?", "M1I");
 
-        // These genes have to be mapped for transvar specifically.
+        // These genes have to be mapped for transvar specifically since the HMF v37 gene name does not exist in transvar.
         MANUAL_GENE_MAPPING_38_TO_37.put("EPOP", "C17orf96");
         MANUAL_GENE_MAPPING_38_TO_37.put("NAPB", "SEPT9");
 
-        // These genes work in transvar fine and should not be mapped.
+        // These genes work fine in transvar and should not be mapped to the HMF v37 name.
         GENES_FOR_WHICH_TO_SKIP_38_MAPPING.add("CCDC186");
     }
 

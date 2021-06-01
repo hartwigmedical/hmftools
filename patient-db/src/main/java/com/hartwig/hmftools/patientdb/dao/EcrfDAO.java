@@ -9,8 +9,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfDatamodelField;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfDatamodelField;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfPatient;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
