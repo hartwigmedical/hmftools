@@ -48,6 +48,7 @@ public class SAMRecordReader
     private final Map<Indel,Integer> mStopLossOnC;
     private final Map<Indel,Integer> mUnmatchedIndels;
     private final Map<Indel,Integer> mUnmatchedPONIndels;
+    private final Set<String> mDiscardIndelReadIds;
     private int mFilteredRecordCount;
 
     public static final int MIN_MAPPING_QUALITY = 1;
@@ -75,6 +76,7 @@ public class SAMRecordReader
         mStopLossOnC = Maps.newHashMap();
         mUnmatchedIndels = Maps.newHashMap();
         mUnmatchedPONIndels = Maps.newHashMap();
+        mDiscardIndelReadIds = Sets.newHashSet();
 
         // load indel PON
         final List<String> ponLines = new BufferedReader(new InputStreamReader(
@@ -131,12 +133,14 @@ public class SAMRecordReader
         boolean reverseStrand = transcript.Strand == NEG_STRAND;
         final List<NamedBed> codingRegions = codingRegions(geneName, transcript);
 
-        final List<Fragment> readFragments = Lists.newArrayList();
+        List<Fragment> readFragments = Lists.newArrayList();
 
         for (NamedBed codingRegion : codingRegions)
         {
             readFragments.addAll(realign(codingRegion, reverseStrand, mBamFile));
         }
+
+        readFragments = readFragments.stream().filter(x -> !mDiscardIndelReadIds.contains(x.id())).collect(Collectors.toList());
 
         return FragmentUtils.mergeFragmentsById(readFragments);
     }
@@ -338,6 +342,12 @@ public class SAMRecordReader
             {
                 fragments.add(fragment);
                 continue;
+            }
+
+            if(codingRecord.containsIndel())
+            {
+                // the other read belonging to this fragment won't be used
+                mDiscardIndelReadIds.add(codingRecord.Id);
             }
 
             for(Indel indel : codingRecord.getIndels())

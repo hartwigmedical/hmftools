@@ -31,13 +31,13 @@ public class SAMCodingRecord
     private final SAMRecord mSamRecord;
 
     public SAMCodingRecord(
-            final String id, int softClippedStart, int softClippedEnd, final List<Indel> indels2, int positionStart,
+            final String id, int softClippedStart, int softClippedEnd, final List<Indel> indels, int positionStart,
             int positionEnd, int readStart, int readEnd, final SAMRecord record, boolean reverseStrand)
     {
         Id = id;
         SoftClippedStart = softClippedStart;
         SoftClippedEnd = softClippedEnd;
-        mIndels = indels2;
+        mIndels = indels;
         PositionStart = positionStart;
         PositionEnd = positionEnd;
         ReadStart = readStart;
