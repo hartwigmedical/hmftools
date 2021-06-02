@@ -50,6 +50,8 @@ final class FilterFactory {
 
         // Fusions that would not get reported anyways.
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("FGFR4", "FUSION"));
+        MUTATION_KEYS_TO_FILTER.add(new FilterKey("RSPO4", "FUSION"));
+        MUTATION_KEYS_TO_FILTER.add(new FilterKey("RSPO1", "FUSION"));
     }
 
     private FilterFactory() {
