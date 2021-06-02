@@ -311,6 +311,9 @@ public class Fragment
         if(index < 0 || index >= mRawNucleotideLoci.size() - 2)
             return "";
 
+        if(mRawNucleotideLoci.get(index + 1) != startNucleotideLocus + 1 || mRawNucleotideLoci.get(index + 2) != startNucleotideLocus + 2)
+            return "";
+
         return FragmentUtils.formCodonAminoAcid(locus, mRawNucleotideLoci, mRawNucleotides);
     }
 
