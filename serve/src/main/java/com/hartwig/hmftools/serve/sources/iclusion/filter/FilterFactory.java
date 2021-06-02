@@ -11,11 +11,11 @@ final class FilterFactory {
     static final Set<FilterKey> MUTATION_KEYS_TO_FILTER = Sets.newHashSet();
 
     static {
-        populateMutationToFilter();
+        populateMutationsToFilter();
         populateMutationKeysToFilter();
     }
 
-    private static void populateMutationToFilter() {
+    private static void populateMutationsToFilter() {
         // We don't interpret "expression" evidence on WGS
         MUTATIONS_TO_FILTER.add("EXPRESSION");
 
