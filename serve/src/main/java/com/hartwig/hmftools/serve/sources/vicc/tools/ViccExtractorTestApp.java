@@ -65,7 +65,7 @@ public class ViccExtractorTestApp {
         List<ViccEntry> entries = ViccReader.readAndCurateRelevantEntries(config.viccJson(), VICC_SOURCES_TO_INCLUDE, MAX_VICC_ENTRIES);
         ExtractionResult result = viccExtractor.extract(entries);
 
-        String featureTsv = config.outputDir() + File.separator + "ViccFeatures.tsv";
+        String featureTsv = config.outputDir() + File.separator + "ViccEventClassification.tsv";
         ViccUtil.writeFeaturesToTsv(featureTsv, entries);
 
         new ExtractionResultWriter(config.outputDir(), Knowledgebase.VICC_CIVIC.refGenomeVersion(), refGenomeResource.refSequence()).write(
