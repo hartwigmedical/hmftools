@@ -8,9 +8,9 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakendTestFactory;
+import com.hartwig.hmftools.common.virus.VirusBreakend;
+import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virus.VirusBreakendTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

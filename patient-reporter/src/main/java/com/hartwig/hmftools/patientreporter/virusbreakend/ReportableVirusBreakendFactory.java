@@ -3,8 +3,8 @@ package com.hartwig.hmftools.patientreporter.virusbreakend;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virus.VirusBreakend;
+import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

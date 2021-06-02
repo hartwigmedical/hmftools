@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.virusbreakend;
+package com.hartwig.hmftools.common.virus;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
