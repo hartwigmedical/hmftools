@@ -9,9 +9,9 @@ import com.hartwig.hmftools.lilac.SequenceCount;
 
 public class AminoAcidQualEnrichment
 {
-    private final int mMinEvidence;
+    private final double mMinEvidence;
 
-    public AminoAcidQualEnrichment(int minEvidence)
+    public AminoAcidQualEnrichment(double minEvidence)
     {
         mMinEvidence = minEvidence;
     }

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.lilac;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
@@ -10,6 +13,8 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_TOP_SCORE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_HIGH_QUAL_FRAGS_FACTOR;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
@@ -39,7 +44,7 @@ public class LilacConfig
     public final String RefGenome;
 
     public final int MinBaseQual;
-    public final int MinEvidence;
+    private final int MinEvidence;
     public final int MinFragmentsPerAllele;
     public final int MinFragmentsToRemoveSingle;
     public final int Threads;
@@ -114,12 +119,12 @@ public class LilacConfig
         ResourceDir = checkAddDirSeparator(cmd.getOptionValue(RESOURCE_DIR));
         RefGenome = cmd.getOptionValue(REF_GENOME, "");
 
-        MinBaseQual = ConfigUtils.getConfigValue(cmd, MIN_BASE_QUAL, DEFAULT_MIN_BASE_QUAL);
-        MinEvidence = ConfigUtils.getConfigValue(cmd, MIN_EVIDENCE, DEFAULT_MIN_EVIDENCE);
-        MinFragmentsPerAllele = ConfigUtils.getConfigValue(cmd, MIN_FRAGMENTS_PER_ALLELE, DEFAULT_FRAGS_PER_ALLELE);
-        MinFragmentsToRemoveSingle = ConfigUtils.getConfigValue(cmd, MIN_FRAGMENTS_TO_REMOVE_SINGLE, DEFAULT_FRAGS_REMOVE_SGL);
+        MinBaseQual = getConfigValue(cmd, MIN_BASE_QUAL, DEFAULT_MIN_BASE_QUAL);
+        MinEvidence = getConfigValue(cmd, MIN_EVIDENCE, DEFAULT_MIN_EVIDENCE);
+        MinFragmentsPerAllele = getConfigValue(cmd, MIN_FRAGMENTS_PER_ALLELE, DEFAULT_FRAGS_PER_ALLELE);
+        MinFragmentsToRemoveSingle = getConfigValue(cmd, MIN_FRAGMENTS_TO_REMOVE_SINGLE, DEFAULT_FRAGS_REMOVE_SGL);
 
-        TopScoreThreshold = ConfigUtils.getConfigValue(cmd, TOP_SCORE_THRESHOLD, DEFAULT_TOP_SCORE_THRESHOLD);
+        TopScoreThreshold = min(getConfigValue(cmd, TOP_SCORE_THRESHOLD, DEFAULT_TOP_SCORE_THRESHOLD), 0.5);
 
         ExpectedAlleles = parseAlleleList(cmd.getOptionValue(EXPECTED_ALLELES));
         RestrictedAlleles = parseAlleleList(cmd.getOptionValue(RESTRICTED_ALLELES));
@@ -135,7 +140,10 @@ public class LilacConfig
         return Files.exists(Paths.get(filename)) ? filename : "";
     }
 
-    public String outputPrefix() { return OutputDir + Sample;}
+    public String outputPrefix() { return OutputDir + Sample; }
+
+    public double calcMinEvidence(int totalFragments) { return max(MinEvidence, totalFragments * MIN_EVIDENCE_FACTOR); }
+    public double calcMinHighQualEvidence(int totalFragments) { return totalFragments * MIN_HIGH_QUAL_FRAGS_FACTOR; }
 
     public boolean isValid()
     {

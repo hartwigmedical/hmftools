@@ -20,7 +20,8 @@ import java.util.stream.Collectors;
 public class AminoAcidFragmentPipeline
 {
     private final int mMinBaseQuality;
-    private final int mMinEvidence;
+    private final double mMinEvidence;
+    private final double mMinHighQualEvidence;
 
     private final List<Fragment> mHighQualRefAminoAcidFragments;
     private final List<Fragment> mHighQualTumorFragments;
@@ -35,11 +36,16 @@ public class AminoAcidFragmentPipeline
             final LilacConfig config, final List<Fragment> referenceFragments, final List<Fragment> tumorFragments)
     {
         mMinBaseQuality = config.MinBaseQual;
-        mMinEvidence = config.MinEvidence;
 
         mRefNucPhasingFragments = referenceFragments.stream().map(x -> copyNucleotideFragment(x)).collect(Collectors.toList());
 
         mHighQualRefAminoAcidFragments = createHighQualAminoAcidFragments(referenceFragments);
+
+        int fragmentCount = mHighQualRefAminoAcidFragments.size();
+
+        mMinEvidence = config.calcMinEvidence(fragmentCount);
+        mMinHighQualEvidence = config.calcMinHighQualEvidence(fragmentCount);
+
         mHighQualTumorFragments = createHighQualAminoAcidFragments(tumorFragments);
 
         mRefNucleotideCounts = Maps.newHashMap();
@@ -125,7 +131,8 @@ public class AminoAcidFragmentPipeline
         highQualFrags.forEach(x -> x.qualityFilter(mMinBaseQuality));
         highQualFrags = highQualFrags.stream().filter(x -> x.hasNucleotides()).collect(Collectors.toList());
 
-        List<Fragment> qualEnrichedNucFrags = NucleotideFragmentQualEnrichment.enrich(mMinEvidence, geneRefNucFrags, highQualFrags);
+        List<Fragment> qualEnrichedNucFrags = NucleotideFragmentQualEnrichment.enrich(
+                mMinEvidence, mMinHighQualEvidence, geneRefNucFrags, highQualFrags);
 
         Set<Integer> aminoAcidBoundaries = context.AminoAcidBoundaries.stream()
                 .filter(x -> x <= MAX_AMINO_ACID_BOUNDARY).collect(Collectors.toSet());

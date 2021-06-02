@@ -16,6 +16,9 @@ public class LilacConstants
     public static final int DEFAULT_FRAGS_REMOVE_SGL = 40;
     public static final double DEFAULT_TOP_SCORE_THRESHOLD = 0.005;
 
+    public static final double MIN_HIGH_QUAL_FRAGS_FACTOR = 0.00075;
+    public static final double MIN_EVIDENCE_FACTOR = 0.0015;
+
     // values applied as percentages
     public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.01;
     public static final double MIN_CONF_UNIQUE_GROUP_COVERAGE = 0.02;

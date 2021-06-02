@@ -10,13 +10,13 @@ import java.util.stream.Collectors;
 public class NucleotideSpliceEnrichment
 {
     private final int mMinBaseQuality;
-    private final int mMinBaseCount;
+    private final double mMinEvidence;
     private final Set<Integer> mAminoAcidBoundary;
 
-    public NucleotideSpliceEnrichment(int minBaseQuality, int minBaseCount, final Set<Integer> aminoAcidBoundary)
+    public NucleotideSpliceEnrichment(int minBaseQuality, double minEvidence, final Set<Integer> aminoAcidBoundary)
     {
         mMinBaseQuality = minBaseQuality;
-        mMinBaseCount = minBaseCount;
+        mMinEvidence = minEvidence;
         mAminoAcidBoundary = aminoAcidBoundary;
     }
 
@@ -24,7 +24,7 @@ public class NucleotideSpliceEnrichment
     {
         // fragments are all in nucleotide-space
 
-        SequenceCount nucleotideCounts = SequenceCount.nucleotides(mMinBaseCount, highQualFrags);
+        SequenceCount nucleotideCounts = SequenceCount.nucleotides(mMinEvidence, highQualFrags);
         Set<Integer> nucleotideExonBoundaryStarts = mAminoAcidBoundary.stream().map(x -> x * 3).collect(Collectors.toSet());
         List<Integer> homLoci = nucleotideCounts.homozygousIndices();
 

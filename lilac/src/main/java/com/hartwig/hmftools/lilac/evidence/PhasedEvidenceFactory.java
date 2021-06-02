@@ -19,14 +19,14 @@ import java.util.Set;
 
 public class PhasedEvidenceFactory
 {
-    private final int mMinEvidence;
+    private final double mMinEvidence;
     private final boolean mDebugPhasing;
     private final LilacConfig mConfig;
 
-    public PhasedEvidenceFactory(final LilacConfig config)
+    public PhasedEvidenceFactory(final LilacConfig config, double minEvidence)
     {
         mConfig = config;
-        mMinEvidence = mConfig.MinEvidence;
+        mMinEvidence = minEvidence;
         mDebugPhasing = mConfig.DebugPhasing;
     }
 

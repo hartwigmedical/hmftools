@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 import static com.hartwig.hmftools.lilac.LilacConstants.shortGeneName;
 
 import com.google.common.collect.Lists;
@@ -28,11 +27,11 @@ import org.apache.commons.math3.util.Pair;
 
 public final class SequenceCount
 {
-    private final int mMinCount;
+    private final double mMinCount;
 
     private final Map<String,Integer>[] mSeqCountsList; // the index into this array of maps is the locus
 
-    public SequenceCount(int minCount, final Map<String,Integer>[] seqCounts)
+    public SequenceCount(double minCount, final Map<String,Integer>[] seqCounts)
     {
         mMinCount = minCount;
         mSeqCountsList = seqCounts;
@@ -54,7 +53,7 @@ public final class SequenceCount
         return mSeqCountsList[locus];
     }
 
-    public static SequenceCount nucleotides(int minCount, final List<Fragment> fragments)
+    public static SequenceCount nucleotides(double minCount, final List<Fragment> fragments)
     {
         int length = fragments.stream().mapToInt(x -> x.maxLoci()).max().orElse(0) + 1;
 
@@ -77,7 +76,7 @@ public final class SequenceCount
         return new SequenceCount(minCount, seqCountsList);
     }
 
-    public static SequenceCount aminoAcids(int minCount, final List<Fragment> fragments)
+    public static SequenceCount aminoAcids(double minCount, final List<Fragment> fragments)
     {
         int length = fragments.stream().mapToInt(x -> x.maxAminoAcidLocus()).max().orElse(0) + 1;
 
@@ -192,7 +191,7 @@ public final class SequenceCount
     }
 
     public static Map<String,Map<Integer,Set<String>>> extractHeterozygousLociSequences(
-            final Map<String,SequenceCount> geneCountsMap, int minCount, final List<HlaSequenceLoci> extraSeqLoci)
+            final Map<String,SequenceCount> geneCountsMap, double minCount, final List<HlaSequenceLoci> extraSeqLoci)
     {
         Map<String,Map<Integer,Set<String>>> geneHetLociMap = Maps.newHashMap();
 
@@ -247,7 +246,7 @@ public final class SequenceCount
         return geneHetLociMap;
     }
 
-    private Map<Integer,Set<String>> extractHeterozygousLociSequences(int minCount, final List<HlaSequenceLoci> extraSequences)
+    private Map<Integer,Set<String>> extractHeterozygousLociSequences(double minCount, final List<HlaSequenceLoci> extraSequences)
     {
         Map<Integer,Set<String>> lociSeqMap = Maps.newLinkedHashMap();
 

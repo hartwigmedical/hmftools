@@ -114,7 +114,7 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         boolean allValid = true;
 
-        LL_LOGGER.info("querying records from reference bam " + mConfig.ReferenceBam);
+        LL_LOGGER.info("querying records from reference bam {}", mConfig.ReferenceBam);
 
         NucleotideFragmentFactory nucleotideFragmentFactory = new NucleotideFragmentFactory(
                 mConfig.MinBaseQual, mRefData.AminoAcidSequencesWithInserts, mRefData.AminoAcidSequencesWithDeletes,
@@ -130,7 +130,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         final List<Fragment> tumorNucleotideFrags = Lists.newArrayList();
         if(!mConfig.TumorBam.isEmpty())
         {
-            LL_LOGGER.info("querying records from tumor bam " + mConfig.TumorBam);
+            LL_LOGGER.info("querying records from tumor bam {}", mConfig.TumorBam);
             tumorNucleotideFrags.addAll(mNucleotideGeneEnrichment.enrich(tumorBamReader.readFromBam()));
         }
 
@@ -139,19 +139,27 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         AminoAcidFragmentPipeline aminoAcidPipeline = new AminoAcidFragmentPipeline(mConfig, refNucleotideFrags, tumorNucleotideFrags);
 
+        List<Fragment> refAminoAcidFrags = aminoAcidPipeline.getReferenceFragments();
+        int totalFragmentCount = refAminoAcidFrags.size();
+
+        double minEvidence = mConfig.calcMinEvidence(totalFragmentCount);
+
+        LL_LOGGER.info(String.format("totalFrags(%d) minEvidence(%.1f) minHighQualEvidence(%.1f)",
+                totalFragmentCount, minEvidence, mConfig.calcMinHighQualEvidence(totalFragmentCount)));
+
         // apply special filtering and splice checks on fragments, just for use in phasing
         List<Fragment> aCandidateFrags = aminoAcidPipeline.referencePhasingFragments(hlaAContext);
         List<Fragment> bCandidateFrags = aminoAcidPipeline.referencePhasingFragments(hlaBContext);
         List<Fragment> cCandidateFrags = aminoAcidPipeline.referencePhasingFragments(hlaCContext);
 
         // determine un-phased Candidates
-        Candidates candidateFactory = new Candidates(mConfig, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
+        Candidates candidateFactory = new Candidates(minEvidence, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
         List<HlaAllele> aUnphasedCandidates = candidateFactory.unphasedCandidates(hlaAContext, aCandidateFrags);
         List<HlaAllele> bUnphasedCandidates = candidateFactory.unphasedCandidates(hlaBContext, bCandidateFrags);
         List<HlaAllele> cUnphasedCandidates = candidateFactory.unphasedCandidates(hlaCContext, cCandidateFrags);
 
         // determine phasing of amino acids
-        PhasedEvidenceFactory phasedEvidenceFactory = new PhasedEvidenceFactory(mConfig);
+        PhasedEvidenceFactory phasedEvidenceFactory = new PhasedEvidenceFactory(mConfig, minEvidence);
         List<PhasedEvidence> aPhasedEvidence = phasedEvidenceFactory.evidence(hlaAContext, aCandidateFrags);
         List<PhasedEvidence> bPhasedEvidence = phasedEvidenceFactory.evidence(hlaBContext, bCandidateFrags);
         List<PhasedEvidence> cPhasedEvidence = phasedEvidenceFactory.evidence(hlaCContext, cCandidateFrags);
@@ -226,11 +234,8 @@ public class LilacApplication implements AutoCloseable, Runnable
                 .filter(x -> candidateAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         // calculate allele coverage
-        List<Fragment> refAminoAcidFrags = aminoAcidPipeline.getReferenceFragments();
-        int totalFragmentCount = refAminoAcidFrags.size();
-
-        SequenceCount refAminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, refAminoAcidFrags);
-        SequenceCount refNucleotideCounts = SequenceCount.nucleotides(mConfig.MinEvidence, refAminoAcidFrags);
+        SequenceCount refAminoAcidCounts = SequenceCount.aminoAcids(minEvidence, refAminoAcidFrags);
+        SequenceCount refNucleotideCounts = SequenceCount.nucleotides(minEvidence, refAminoAcidFrags);
 
         Map<String,List<Integer>> refNucleotideHetLociMap = calcNucleotideHeterogygousLoci(refNucleotideCounts.heterozygousLoci());
 
@@ -241,7 +246,7 @@ public class LilacApplication implements AutoCloseable, Runnable
                 .filter(x -> recoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         Map<String,Map<Integer,Set<String>>> geneAminoAcidHetLociMap =
-                extractHeterozygousLociSequences(aminoAcidPipeline.getReferenceAminoAcidCounts(), mConfig.MinEvidence, recoveredSequences);
+                extractHeterozygousLociSequences(aminoAcidPipeline.getReferenceAminoAcidCounts(), minEvidence, recoveredSequences);
 
         FragmentAlleleMapper fragAlleleMapper = new FragmentAlleleMapper(
                 geneAminoAcidHetLociMap, refNucleotideHetLociMap, aminoAcidPipeline.getReferenceNucleotides());
@@ -273,7 +278,7 @@ public class LilacApplication implements AutoCloseable, Runnable
                 .filter(x -> confirmedRecoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         geneAminoAcidHetLociMap =
-                extractHeterozygousLociSequences(aminoAcidPipeline.getReferenceAminoAcidCounts(), mConfig.MinEvidence, recoveredSequences);
+                extractHeterozygousLociSequences(aminoAcidPipeline.getReferenceAminoAcidCounts(), minEvidence, recoveredSequences);
 
         fragAlleleMapper.setHetAminoAcidLoci(geneAminoAcidHetLociMap);
 

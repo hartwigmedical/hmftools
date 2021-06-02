@@ -17,14 +17,14 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 public final class Candidates
 {
-    private final LilacConfig mConfig;
+    private final double mMinEvidence;
     private final List<HlaSequenceLoci> mNucleotideSequences;
     private final List<HlaSequenceLoci> mAminoAcidSequences;
 
     public Candidates(
-            final LilacConfig config, final List<HlaSequenceLoci> nucleotideSequences, final List<HlaSequenceLoci> aminoAcidSequences)
+            double minEvidence, final List<HlaSequenceLoci> nucleotideSequences, final List<HlaSequenceLoci> aminoAcidSequences)
     {
-        mConfig = config;
+        mMinEvidence = minEvidence;
         mNucleotideSequences = nucleotideSequences;
         mAminoAcidSequences = aminoAcidSequences;
     }
@@ -35,7 +35,7 @@ public final class Candidates
 
         LL_LOGGER.info("gene({}) determining un-phased candidates from frags({})", context.geneName(), fragments.size());
 
-        SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinEvidence, fragments);
+        SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, fragments);
 
         List<HlaSequenceLoci> geneCandidates = mAminoAcidSequences.stream()
                 .filter(x -> x.Allele.Gene.equals(context.Gene)).collect(Collectors.toList());
@@ -59,7 +59,7 @@ public final class Candidates
         LL_LOGGER.info("  {} candidates after amino acid filtering", aminoAcidCandidates.size());
 
         // Nucleotide filtering
-        NucleotideFiltering nucleotideFiltering = new NucleotideFiltering(mConfig.MinEvidence, aminoAcidBoundary);
+        NucleotideFiltering nucleotideFiltering = new NucleotideFiltering(mMinEvidence, aminoAcidBoundary);
 
         List<HlaSequenceLoci> nucleotideCandidatesAfterAminoAcidFiltering = mNucleotideSequences.stream()
                 .filter(x -> aminoAcidSpecificAllelesCandidates.contains(x.Allele.asFourDigit()))

@@ -8,13 +8,13 @@ import com.hartwig.hmftools.lilac.SequenceCount;
 
 public final class NucleotideFragmentQualEnrichment
 {
-    public static List<Fragment> enrich(final int minEvidence, final List<Fragment> fragments, final List<Fragment> highQualFrags)
+    public static List<Fragment> enrich(double minEvidence, double minHighQualEvidence, final List<Fragment> fragments, final List<Fragment> highQualFrags)
     {
         // fragments are all in nucleotide-space
 
-        // filter fragments so that each nucleotide has at least 1 base at or above the min-qual threshold, and one
+        // filter fragments so that each nucleotide has at least 1 base at or above the min-qual threshold, and
         // X fragments (minEvidence) at that base with any qual
-        SequenceCount highQualCounts = SequenceCount.nucleotides(1, highQualFrags);
+        SequenceCount highQualCounts = SequenceCount.nucleotides(minHighQualEvidence, highQualFrags);
         SequenceCount rawCounts = SequenceCount.nucleotides(minEvidence, fragments);
 
         return fragments.stream().map(x -> enrich(x, highQualCounts, rawCounts)).collect(Collectors.toList());
