@@ -33,7 +33,7 @@ import com.hartwig.hmftools.lilac.seq.SequenceMatchType;
 
 public class FragmentAlleleMapper
 {
-    private final Map<String,Map<Integer,List<String>>> mGeneAminoAcidHetLociMap;
+    private final Map<String,Map<Integer,Set<String>>> mGeneAminoAcidHetLociMap;
     private final Map<String,List<Integer>> mRefNucleotideHetLoci;
     private final List<Set<String>> mRefNucleotides;
 
@@ -43,10 +43,11 @@ public class FragmentAlleleMapper
     private final PerformanceCounter mPerfCounterFrag;
 
     public FragmentAlleleMapper(
-            final Map<String, Map<Integer,List<String>>> geneAminoAcidHetLociMap,
+            final Map<String, Map<Integer,Set<String>>> geneAminoAcidHetLociMap,
             final Map<String,List<Integer>> refNucleotideHetLoci, final List<Set<String>> refNucleotides)
     {
-        mGeneAminoAcidHetLociMap = geneAminoAcidHetLociMap;
+        mGeneAminoAcidHetLociMap = Maps.newHashMap();
+        mGeneAminoAcidHetLociMap.putAll(geneAminoAcidHetLociMap);
         mRefNucleotideHetLoci = refNucleotideHetLoci;
         mRefNucleotides = refNucleotides;
 
@@ -54,6 +55,12 @@ public class FragmentAlleleMapper
         mStopLossAlleles = Lists.newArrayList();
 
         mPerfCounterFrag = new PerformanceCounter("Frags");
+    }
+
+    public void setHetAminoAcidLoci(final Map<String, Map<Integer,Set<String>>> geneAminoAcidHetLociMap)
+    {
+        mGeneAminoAcidHetLociMap.clear();
+        mGeneAminoAcidHetLociMap.putAll(geneAminoAcidHetLociMap);
     }
 
     public void logPerfData()
@@ -120,7 +127,7 @@ public class FragmentAlleleMapper
             // was this fragment homozygous in the context of all genes
             boolean hasHetLoci = false;
 
-            for(Map.Entry<String,Map<Integer,List<String>>> geneEntry : mGeneAminoAcidHetLociMap.entrySet())
+            for(Map.Entry<String,Map<Integer,Set<String>>> geneEntry : mGeneAminoAcidHetLociMap.entrySet())
             {
                 if(!fragment.getGenes().contains(longGeneName(geneEntry.getKey())))
                     continue;
@@ -334,15 +341,12 @@ public class FragmentAlleleMapper
         Map<String,List<Integer>> fragGeneLociMap = Maps.newHashMap(); // per-gene map of heterozygous locations for this fragment
         Map<String,List<String>> fragGeneSequenceMap = Maps.newHashMap(); // per-gene map of fragment sequences at these het loci
 
-        for(Map.Entry<String,Map<Integer,List<String>>> geneEntry : mGeneAminoAcidHetLociMap.entrySet())
+        for(Map.Entry<String,Map<Integer,Set<String>>> geneEntry : mGeneAminoAcidHetLociMap.entrySet())
         {
-            Map<Integer,List<String>> hetLociSeqMap = geneEntry.getValue();
+            Map<Integer,Set<String>> hetLociSeqMap = geneEntry.getValue();
 
             List<Integer> fragAminoAcidLoci = fragment.getAminoAcidLoci().stream()
                     .filter(x -> hetLociSeqMap.containsKey(x)).collect(Collectors.toList());
-
-            if(fragAminoAcidLoci.isEmpty())
-                continue;
 
             // also attempt to retrieve amino acids from low-qual nucleotides
             Map<Integer,String> missedAminoAcids = Maps.newHashMap();
@@ -357,7 +361,7 @@ public class FragmentAlleleMapper
                 if(lowQualAminoAcid.isEmpty())
                     continue;
 
-                List<String> candidateAminoAcids = hetLociSeqMap.get(missedLocus);
+                Set<String> candidateAminoAcids = hetLociSeqMap.get(missedLocus);
 
                 if(candidateAminoAcids.contains(lowQualAminoAcid))
                 {

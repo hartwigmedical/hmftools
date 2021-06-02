@@ -15,17 +15,18 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SomaticAlleleCoverage
 {
     private final List<Integer> mVariantLoci;
-    private final Map<String,Map<Integer,List<String>>> mHetLociSansVariants;
+    private final Map<String,Map<Integer,Set<String>>> mHetLociSansVariants;
     private final LilacConfig mConfig;
     private final List<HlaSequenceLoci> mWinners;
 
     public SomaticAlleleCoverage(
-            final LilacConfig config, final Map<String, Map<Integer,List<String>>> geneAminoAcidHetLociMap, final LociPosition lociPosition,
+            final LilacConfig config, final Map<String, Map<Integer, Set<String>>> geneAminoAcidHetLociMap, final LociPosition lociPosition,
             final List<VariantContextDecorator> variants, final List<HlaSequenceLoci> winners)
     {
         mConfig = config;
@@ -41,9 +42,9 @@ public class SomaticAlleleCoverage
 
         mHetLociSansVariants = Maps.newHashMap();
 
-        for(Map.Entry<String,Map<Integer,List<String>>> geneEntry : geneAminoAcidHetLociMap.entrySet())
+        for(Map.Entry<String,Map<Integer,Set<String>>> geneEntry : geneAminoAcidHetLociMap.entrySet())
         {
-            Map<Integer,List<String>> lociSeqMap = geneEntry.getValue().entrySet().stream()
+            Map<Integer,Set<String>> lociSeqMap = geneEntry.getValue().entrySet().stream()
                     .filter(x -> !mVariantLoci.contains(x.getKey()))
                     .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
 

@@ -4,6 +4,9 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 import static com.hartwig.hmftools.lilac.LilacConstants.shortGeneName;
 
@@ -188,32 +191,70 @@ public final class SequenceCount
             seqCounts.put(aminoAcid, 1);
     }
 
-    public static Map<String,Map<Integer,List<String>>> extractHeterozygousLociSequences(
+    public static Map<String,Map<Integer,Set<String>>> extractHeterozygousLociSequences(
             final Map<String,SequenceCount> geneCountsMap, int minCount, final List<HlaSequenceLoci> extraSeqLoci)
     {
-        Map<String,Map<Integer,List<String>>> geneHetLociMap = Maps.newHashMap();
+        Map<String,Map<Integer,Set<String>>> geneHetLociMap = Maps.newHashMap();
 
         for(Map.Entry<String,SequenceCount> geneEntry : geneCountsMap.entrySet())
         {
             String gene = shortGeneName(geneEntry.getKey());
             SequenceCount sequenceCounts = geneEntry.getValue();
             List<HlaSequenceLoci> geneExtraSeqLoci = extraSeqLoci.stream().filter(x -> x.Allele.Gene.equals(gene)).collect(Collectors.toList());
-            Map<Integer,List<String>> hetLociMap = sequenceCounts.extractHeterozygousLociSequences(minCount, geneExtraSeqLoci);
+            Map<Integer,Set<String>> hetLociMap = sequenceCounts.extractHeterozygousLociSequences(minCount, geneExtraSeqLoci);
             geneHetLociMap.put(gene, hetLociMap);
+        }
 
+        // for recovered alleles (the extra-seq-loci), any additional amino acid location prior to 337 needs to be evaluated against
+        // all 3 genes and added to all of them. From 338 onwards, A and B should be shared with each other, but C needs to be separate.
+        Map<Integer,Set<String>> aHetLociMap = geneHetLociMap.get(GENE_A);
+        Map<Integer,Set<String>> bHetLociMap = geneHetLociMap.get(GENE_B);
+        Map<Integer,Set<String>> cHetLociMap = geneHetLociMap.get(GENE_C);
+
+        for(int locus = 0; locus <= 348; ++locus)
+        {
+            Set<String> aSeqs = aHetLociMap.containsKey(locus) ? aHetLociMap.get(locus) : Sets.newHashSet();
+            Set<String> bSeqs = bHetLociMap.containsKey(locus) ? bHetLociMap.get(locus) : Sets.newHashSet();
+            Set<String> cSeqs = cHetLociMap.containsKey(locus) ? cHetLociMap.get(locus) : Sets.newHashSet();
+
+            if(locus <= 337)
+            {
+                if(aSeqs.isEmpty() && bSeqs.isEmpty() && cSeqs.isEmpty())
+                    continue;
+
+                Set<String> combinedSeqs = Sets.newHashSet();
+                combinedSeqs.addAll(aSeqs);
+                combinedSeqs.addAll(bSeqs);
+                combinedSeqs.addAll(cSeqs);
+                aHetLociMap.put(locus, combinedSeqs);
+                bHetLociMap.put(locus, combinedSeqs);
+                cHetLociMap.put(locus, combinedSeqs);
+            }
+            else
+            {
+                // only A and B
+                if(aSeqs.isEmpty() && bSeqs.isEmpty())
+                    continue;
+
+                Set<String> combinedSeqs = Sets.newHashSet();
+                combinedSeqs.addAll(aSeqs);
+                combinedSeqs.addAll(bSeqs);
+                aHetLociMap.put(locus, combinedSeqs);
+                bHetLociMap.put(locus, combinedSeqs);
+            }
         }
 
         return geneHetLociMap;
     }
 
-    private Map<Integer,List<String>> extractHeterozygousLociSequences(int minCount, final List<HlaSequenceLoci> extraSequences)
+    private Map<Integer,Set<String>> extractHeterozygousLociSequences(int minCount, final List<HlaSequenceLoci> extraSequences)
     {
-        Map<Integer,List<String>> lociSeqMap = Maps.newLinkedHashMap();
+        Map<Integer,Set<String>> lociSeqMap = Maps.newLinkedHashMap();
 
         for(int locus = 0; locus < mSeqCountsList.length; ++locus)
         {
-            List<String> aminoAcids = mSeqCountsList[locus].entrySet().stream()
-                    .filter(x -> x.getValue() >= minCount).map(x -> x.getKey()).collect(Collectors.toList());
+            Set<String> aminoAcids = mSeqCountsList[locus].entrySet().stream()
+                    .filter(x -> x.getValue() >= minCount).map(x -> x.getKey()).collect(Collectors.toSet());
 
             for(HlaSequenceLoci extraSeqLoci : extraSequences)
             {
@@ -221,8 +262,7 @@ public final class SequenceCount
                     continue;
 
                 String lociSeq = extraSeqLoci.sequence(locus);
-                if(!aminoAcids.contains(lociSeq))
-                    aminoAcids.add(lociSeq);
+                aminoAcids.add(lociSeq);
             }
 
             if(aminoAcids.size() > 1)

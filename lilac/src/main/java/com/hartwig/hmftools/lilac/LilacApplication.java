@@ -240,7 +240,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         List<HlaSequenceLoci> recoveredSequences = mRefData.AminoAcidSequences.stream()
                 .filter(x -> recoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
-        Map<String,Map<Integer,List<String>>> geneAminoAcidHetLociMap =
+        Map<String,Map<Integer,Set<String>>> geneAminoAcidHetLociMap =
                 extractHeterozygousLociSequences(aminoAcidPipeline.getReferenceAminoAcidCounts(), mConfig.MinEvidence, recoveredSequences);
 
         FragmentAlleleMapper fragAlleleMapper = new FragmentAlleleMapper(
@@ -274,6 +274,8 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         geneAminoAcidHetLociMap =
                 extractHeterozygousLociSequences(aminoAcidPipeline.getReferenceAminoAcidCounts(), mConfig.MinEvidence, recoveredSequences);
+
+        fragAlleleMapper.setHetAminoAcidLoci(geneAminoAcidHetLociMap);
 
         List<HlaAllele> confirmedAlleles = complexBuilder.getUniqueProteinAlleles();
 

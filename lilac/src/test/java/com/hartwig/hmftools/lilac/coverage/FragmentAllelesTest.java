@@ -42,12 +42,12 @@ public class FragmentAllelesTest
         Set<String> aGenes = Sets.newHashSet(HLA_A);
         Set<String> bGenes = Sets.newHashSet(HLA_B);
 
-        final Map<String,Map<Integer,List<String>>> geneHetLociMap = Maps.newHashMap();
-        Map<Integer,List<String>> geneALociMap = Maps.newLinkedHashMap();
-        geneALociMap.put(0, Lists.newArrayList("A"));
-        geneALociMap.put(1, Lists.newArrayList("B"));
-        geneALociMap.put(2, Lists.newArrayList("C"));
-        geneALociMap.put(3, Lists.newArrayList("D"));
+        final Map<String,Map<Integer,Set<String>>> geneHetLociMap = Maps.newHashMap();
+        Map<Integer,Set<String>> geneALociMap = Maps.newLinkedHashMap();
+        geneALociMap.put(0, Sets.newHashSet("A"));
+        geneALociMap.put(1, Sets.newHashSet("B"));
+        geneALociMap.put(2, Sets.newHashSet("C"));
+        geneALociMap.put(3, Sets.newHashSet("D"));
         geneHetLociMap.put(GENE_A, geneALociMap);
 
         Map<String,List<Integer>> refNucleotideHetLoci = Maps.newHashMap();
@@ -66,9 +66,9 @@ public class FragmentAllelesTest
         assertTrue(fragAlleles.get(0).getFull().contains(allele1));
 
         // check non-het locations aren't checked
-        Map<Integer,List<String>> geneBLociMap = Maps.newLinkedHashMap();
-        geneBLociMap.put(1, Lists.newArrayList("B"));
-        geneBLociMap.put(3, Lists.newArrayList("G"));
+        Map<Integer,Set<String>> geneBLociMap = Maps.newLinkedHashMap();
+        geneBLociMap.put(1, Sets.newHashSet("B"));
+        geneBLociMap.put(3, Sets.newHashSet("D"));
         geneHetLociMap.put(GENE_B, geneBLociMap);
 
         HlaAllele allele2 = HlaAllele.fromString("B*01:01");
@@ -76,9 +76,10 @@ public class FragmentAllelesTest
         sequences = Lists.newArrayList(seq2);
 
         Fragment frag2 = new Fragment("02", readInfo, bGenes, emptyLoci, emptyQuals, emptyNucs);
-        frag2.setAminoAcids(Lists.newArrayList(0, 1, 2, 3), Lists.newArrayList("B", "B", "D", "D"));
+        frag2.setAminoAcids(Lists.newArrayList(0, 1, 2, 3), Lists.newArrayList("L", "B", "L", "D"));
         fragments = Lists.newArrayList(frag2);
 
+        mapper.setHetAminoAcidLoci(geneHetLociMap);
         fragAlleles = mapper.createFragmentAlleles(fragments, sequences, candidateNucSequences);
 
         assertEquals(1, fragAlleles.size());
@@ -118,12 +119,12 @@ public class FragmentAllelesTest
         String readInfo = "";
         Set<String> aGenes = Sets.newHashSet(HLA_A);
 
-        final Map<String,Map<Integer,List<String>>> geneHetLociMap = Maps.newHashMap();
-        Map<Integer,List<String>> geneALociMap = Maps.newLinkedHashMap();
-        geneALociMap.put(0, Lists.newArrayList("A"));
-        geneALociMap.put(1, Lists.newArrayList("P"));
-        geneALociMap.put(2, Lists.newArrayList("C"));
-        geneALociMap.put(3, Lists.newArrayList("D"));
+        final Map<String,Map<Integer,Set<String>>> geneHetLociMap = Maps.newHashMap();
+        Map<Integer,Set<String>> geneALociMap = Maps.newLinkedHashMap();
+        geneALociMap.put(0, Sets.newHashSet("A"));
+        geneALociMap.put(1, Sets.newHashSet("P"));
+        geneALociMap.put(2, Sets.newHashSet("C"));
+        geneALociMap.put(3, Sets.newHashSet("D"));
         geneHetLociMap.put(GENE_A, geneALociMap);
 
         Map<String,List<Integer>> refNucleotideHetLoci = Maps.newHashMap();
