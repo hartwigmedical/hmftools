@@ -38,10 +38,11 @@ public class LilacConfig
     public final String Sample;
     public final String ReferenceBam;
     public final String TumorBam;
-    public final String ResourceDir;
+    public final boolean TumorOnly;
 
-    public final String OutputDir;
+    public final String ResourceDir;
     public final String RefGenome;
+    public final String OutputDir;
 
     public final int MinBaseQual;
     private final int MinEvidence;
@@ -70,6 +71,7 @@ public class LilacConfig
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
     private static final String REFERENCE_BAM = "reference_bam";
     private static final String TUMOR_BAM = "tumor_bam";
+    private static final String TUMOR_ONLY = "tumor_only";
     private static final String REF_GENOME = "ref_genome";
     private static final String MIN_BASE_QUAL = "min_base_qual";
     private static final String MIN_EVIDENCE = "min_evidence";
@@ -115,6 +117,8 @@ public class LilacConfig
             SomaticVcf = cmd.getOptionValue(SOMATIC_VCF, "");
             OutputDir = parseOutputDir(cmd);
         }
+
+        TumorOnly = cmd.hasOption(TUMOR_ONLY);
 
         ResourceDir = checkAddDirSeparator(cmd.getOptionValue(RESOURCE_DIR));
         RefGenome = cmd.getOptionValue(REF_GENOME, "");
@@ -207,6 +211,7 @@ public class LilacConfig
         TumorBam = "";
         ResourceDir = "";
         RefGenome = "";
+        TumorOnly = false;
 
         MinBaseQual = DEFAULT_MIN_BASE_QUAL;
         MinEvidence = DEFAULT_MIN_EVIDENCE;
@@ -231,8 +236,9 @@ public class LilacConfig
         Options options = new Options();
         options.addOption(SAMPLE, true, "Name of sample");
         options.addOption(SAMPLE_DATA_DIR, true,"Path to all sample files");
-        options.addOption(REFERENCE_BAM, true,"Path to reference/normal bam");
-        options.addOption(TUMOR_BAM, true,"Path to tumor bam");
+        options.addOption(REFERENCE_BAM, true,"Path to reference/normal BAM");
+        options.addOption(TUMOR_BAM, true,"Path to tumor BAM");
+        options.addOption(TUMOR_ONLY, false,"Analyse tumor BAM only");
         options.addOption(RESOURCE_DIR, true,"Path to resource files");
         options.addOption(OUTPUT_DIR, true,"Path to output");
         options.addOption(REF_GENOME, true,"Optional path to reference genome fasta file");

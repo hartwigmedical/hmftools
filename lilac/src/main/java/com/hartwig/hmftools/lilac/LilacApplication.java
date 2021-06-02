@@ -342,9 +342,9 @@ public class LilacApplication implements AutoCloseable, Runnable
             nextSolution.getAlleles().stream().filter(x -> !winningAlleles.contains(x)).forEach(x -> nextSolutionInfo.add(x.toString()));
         }
 
-        LL_LOGGER.info("WINNERS: {}, {}, {}, {}, {}, {}",
-                mConfig.Sample, referenceRankedComplexes.size(), HlaAllele.toString(winningRefCoverage.getAlleles()),
-                String.format("%.3f", scoreMargin), nextSolutionInfo, totalCoverages);
+        LL_LOGGER.info("WINNERS_{}: {}, {}, {}, {}, {}, {}",
+                mConfig.TumorOnly ? "TUMOR" : "REF", mConfig.Sample, referenceRankedComplexes.size(),
+                HlaAllele.toString(winningRefCoverage.getAlleles()), String.format("%.3f", scoreMargin), nextSolutionInfo, totalCoverages);
 
         // write fragment assignment data
         for(FragmentAlleles fragAllele : refFragAlleles)
