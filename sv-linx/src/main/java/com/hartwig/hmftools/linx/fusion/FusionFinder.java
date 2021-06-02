@@ -469,7 +469,7 @@ public class FusionFinder
         KnownFusionType knownType = NONE;
 
         final List<BreakendTransData> candidateTranscripts = downGene.transcripts().stream()
-                .filter(x -> x.codingType().equals(UTR_5P) && !x.isUpstream())
+                .filter(x -> x.CodingBases == 0 && !x.isUpstream())
                 .collect(Collectors.toList());
 
         KnownFusionData kfData = mKnownFusionCache.getDataByType(IG_KNOWN_PAIR).stream()
