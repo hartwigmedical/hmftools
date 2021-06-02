@@ -445,7 +445,8 @@ public class FragmentAlleleMapper
     }
 
     public boolean checkHlaYSupport(
-            final List<HlaSequenceLoci> hlaYSequences, final List<FragmentAlleles> fragAlleles, final List<Fragment> fragments)
+            final List<HlaSequenceLoci> hlaYSequences, final List<FragmentAlleles> fragAlleles,
+            final List<Fragment> fragments, boolean testThreshold)
     {
         // test for presence of HLA-Y and strip out from consideration any fragment mapping to it
         int uniqueHlaY = 0;
@@ -518,10 +519,13 @@ public class FragmentAlleleMapper
 
         if(totalHlaYFrags > 0)
         {
-            LL_LOGGER.info("HLA-Y fragments({} unique={}) shared={}) aboveThreshold({})",
-                    totalHlaYFrags, uniqueHlaY, matchedFragmentAlleles.size(), exceedsThreshold);
+            if(testThreshold)
+            {
+                LL_LOGGER.info("HLA-Y fragments({} unique={}) shared={}) aboveThreshold({})",
+                        totalHlaYFrags, uniqueHlaY, matchedFragmentAlleles.size(), exceedsThreshold);
+            }
 
-            if(exceedsThreshold)
+            if(exceedsThreshold || !testThreshold)
             {
                 matchedFragmentAlleles.forEach(x -> fragAlleles.remove(x));
                 matchedFragmentAlleles.forEach(x -> x.getFragment().setScope(HLA_Y, true));

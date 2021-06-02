@@ -259,7 +259,7 @@ public class LilacApplication implements AutoCloseable, Runnable
             System.exit(1);
         }
 
-        boolean hasHlaY = fragAlleleMapper.checkHlaYSupport(mRefData.HlaYNucleotideSequences, refFragAlleles, refAminoAcidFrags);
+        boolean hasHlaY = fragAlleleMapper.checkHlaYSupport(mRefData.HlaYNucleotideSequences, refFragAlleles, refAminoAcidFrags, true);
 
         // build and score complexes
         HlaComplexBuilder complexBuilder = new HlaComplexBuilder(mConfig, mRefData);
@@ -362,8 +362,12 @@ public class LilacApplication implements AutoCloseable, Runnable
         {
             LL_LOGGER.info("calculating tumor coverage of winning alleles");
 
+            List<Fragment> tumorFragments = aminoAcidPipeline.tumorCoverageFragments();
+
             List<FragmentAlleles> tumorFragAlleles = fragAlleleMapper.createFragmentAlleles(
-                    aminoAcidPipeline.tumorCoverageFragments(), candidateSequences, candidateNucSequences);
+                    tumorFragments, candidateSequences, candidateNucSequences);
+
+            fragAlleleMapper.checkHlaYSupport(mRefData.HlaYNucleotideSequences, tumorFragAlleles, tumorFragments, false);
 
             winningTumorCoverage = HlaComplexBuilder.calcProteinCoverage(tumorFragAlleles, winningAlleles).expandToSixAlleles();
 

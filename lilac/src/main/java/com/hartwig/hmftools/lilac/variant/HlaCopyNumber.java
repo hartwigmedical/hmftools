@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.variant;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
+import static com.hartwig.hmftools.lilac.LilacConstants.shortGeneName;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -47,7 +48,7 @@ public class HlaCopyNumber
 
             for(String gene : HLA_GENES)
             {
-                String geneId = gene.substring(gene.length() - 1);
+                String geneId = shortGeneName(gene);
                 hlaCopyNumbers.addAll(alleleCopyNumber(
                         hlaGeneCopyNumbers.stream().filter(x -> x.gene().equals(gene)).findFirst().orElse(null),
                         alleleCoverage.stream().filter(x -> x.Allele.Gene.equals(geneId)).collect(Collectors.toList())));
