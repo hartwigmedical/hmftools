@@ -31,7 +31,6 @@ final class FilterFactory {
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("ERBB2", "P780INS"));
 
         // Mutations which are inconsistent with our current gene panel
-        MUTATION_KEYS_TO_FILTER.add(new FilterKey("PIK3R4", "AMPLIFICATION"));
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("FLT1", "AMPLIFICATION"));
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("MST1R", "AMPLIFICATION"));
 
