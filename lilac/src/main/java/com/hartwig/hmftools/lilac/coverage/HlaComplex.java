@@ -8,14 +8,12 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 public class HlaComplex
 {
-    private final List<HlaAllele> Alleles;
+    public final List<HlaAllele> Alleles;
 
     public HlaComplex(final List<HlaAllele> alleles)
     {
         Alleles = alleles;
     }
-
-    public List<HlaAllele> getAlleles() { return Alleles; }
 
     public String toString()
     {
@@ -28,11 +26,14 @@ public class HlaComplex
 
         for(int i = 0; i < complexes.size() - 1; ++i)
         {
+            HlaComplex comp1 = complexes.get(i);
+
             for(int j = i + 1; j < complexes.size(); ++j)
             {
-                if(complexes.get(i).matches(complexes.get(j)))
+                if(comp1.matches(complexes.get(j)))
                 {
-                    duplicates.add(complexes.get(j));
+                    duplicates.add(complexes.get(i));
+                    break;
                 }
             }
         }

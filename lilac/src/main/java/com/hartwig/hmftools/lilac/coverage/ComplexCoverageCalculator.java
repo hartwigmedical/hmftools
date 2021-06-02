@@ -25,7 +25,7 @@ public class ComplexCoverageCalculator
     public List<HlaComplexCoverage> calculateComplexCoverages(final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes)
     {
         List<HlaAllele> alleles = Lists.newArrayList();
-        complexes.stream().forEach(x -> x.getAlleles().stream().filter(y -> !alleles.contains(y)).forEach(y -> alleles.add(y)));
+        complexes.stream().forEach(x -> x.Alleles.stream().filter(y -> !alleles.contains(y)).forEach(y -> alleles.add(y)));
         FragmentAlleleMatrix fragAlleleMatrix = new FragmentAlleleMatrix(fragmentAlleles, alleles);
 
         if(mThreadCount > 1 && complexes.size() >= 10000) // no point in allocating to threads if complex count is small

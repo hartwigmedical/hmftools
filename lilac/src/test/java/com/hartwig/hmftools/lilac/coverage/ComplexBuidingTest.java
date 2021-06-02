@@ -37,7 +37,7 @@ public class ComplexBuidingTest
         // distinct
 
         List<HlaComplex> result = HlaComplexBuilder.buildComplexesByGene(GENE_A, confirmedGroup, all);
-        assertEquals(confirmedProtein, result.get(0).getAlleles());
+        assertEquals(confirmedProtein, result.get(0).Alleles);
     }
 
         /* print only

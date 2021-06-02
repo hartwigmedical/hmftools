@@ -167,7 +167,7 @@ public class HlaComplexBuilder
                     .filter(x -> mUniqueProteinAlleles.contains(x))
                     .collect(Collectors.toList());
 
-            LL_LOGGER.info("candidate permutations exceeds maximum complexity, complexes(A={} B={} C={}) common({})",
+            LL_LOGGER.info("candidate permutations exceeds threshold, candidates(A={} B={} C={}) common({})",
                     aOnlyComplexes.size(), bOnlyComplexes.size(), cOnlyComplexes.size(), commonAlleles.size());
 
             List<HlaAllele> aTopCandidates = rankedGroupCoverage(10, refFragAlleles, aOnlyComplexes, recoveredAlleles);
@@ -253,8 +253,8 @@ public class HlaComplexBuilder
 
         for(List<HlaComplex> pairing : intermediatePairs)
         {
-            List<HlaAllele> combinedAlleles = pairing.get(0).getAlleles().stream().collect(Collectors.toList());
-            combinedAlleles.addAll(pairing.get(1).getAlleles());
+            List<HlaAllele> combinedAlleles = pairing.get(0).Alleles.stream().collect(Collectors.toList());
+            combinedAlleles.addAll(pairing.get(1).Alleles);
             complexes.add(new HlaComplex(combinedAlleles));
         }
 
@@ -395,7 +395,7 @@ public class HlaComplexBuilder
             int take, final List<FragmentAlleles> fragAlleles, final List<HlaComplex> complexes, final List<HlaAllele> recoveredAlleles)
     {
         List<HlaComplexCoverage> complexCoverages = complexes.stream()
-                .map(x -> calcProteinCoverage(fragAlleles, x.getAlleles())).collect(Collectors.toList());
+                .map(x -> calcProteinCoverage(fragAlleles, x.Alleles)).collect(Collectors.toList());
 
         HlaComplexCoverageRanking complexRanker = new HlaComplexCoverageRanking(0, mRefData);
         complexCoverages = complexRanker.rankCandidates(complexCoverages, recoveredAlleles);

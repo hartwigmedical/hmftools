@@ -68,7 +68,7 @@ public class FragmentAlleleMatrix
 
     public List<HlaAlleleCoverage> create(final HlaComplex complex)
     {
-        List<HlaAllele> alleles = complex.getAlleles();
+        List<HlaAllele> alleles = complex.Alleles;
         int alleleCount = alleles.size();
 
         int[] alleleIndices = new int[alleleCount];

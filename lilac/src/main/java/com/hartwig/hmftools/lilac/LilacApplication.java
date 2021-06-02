@@ -287,9 +287,7 @@ public class LilacApplication implements AutoCloseable, Runnable
                 refAminoAcidFrags, candidateSequences, candidateNucSequences);
 
         List<HlaComplex> complexes = complexBuilder.buildComplexes(refFragAlleles, confirmedRecoveredAlleles);
-        allValid &= validateComplexes(complexes);
-
-        // List<HlaComplex> complexes = complexBuilder.buildComplexes(refFragAlleles, recoveredAlleles);
+        // allValid &= validateComplexes(complexes); // too expensive in current form even for validation, address in unit tests instead
 
         LL_LOGGER.info("calculating coverage of {} complexes", complexes.size());
         ComplexCoverageCalculator complexCalculator = new ComplexCoverageCalculator(mConfig.Threads);
