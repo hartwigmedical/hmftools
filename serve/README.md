@@ -311,9 +311,10 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
-- Upcoming
+- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.4)
   - Various additional checks to ref genome lift-over (such as filtering of events on genes for which strand has flipped).
   - CKB FLEX filtering framework has been added.
+  - Solve bug when generating hotspots from MNVs that cross exon boundaries
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.3)
   - Support for merging sources that differ in ref genome version (v37 vs v38).
   - Support for generating output for both ref genome version v37 and v38.

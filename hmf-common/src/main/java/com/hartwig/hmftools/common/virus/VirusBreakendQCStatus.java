@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.virusbreakend;
+package com.hartwig.hmftools.common.virus;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
+import com.hartwig.hmftools.common.virus.VirusBreakend;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

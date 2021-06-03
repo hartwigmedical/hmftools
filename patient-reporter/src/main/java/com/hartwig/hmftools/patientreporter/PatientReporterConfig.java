@@ -75,10 +75,9 @@ public interface PatientReporterConfig {
     String LOG_DEBUG = "log_debug";
     String ONLY_CREATE_PDF = "only_create_pdf";
 
-    // paramaters for pipeline version
+    // parameters for pipeline version
     String EXPECTED_PIPELINE_VERSION = "expected_pipeline_version";
     String OVERRIDE_PIPELINE_VERSION = "override_pipeline_version";
-
 
     @NotNull
     static Options createOptions() {

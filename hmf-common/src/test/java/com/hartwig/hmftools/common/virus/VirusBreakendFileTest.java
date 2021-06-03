@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.virusbreakend;
+package com.hartwig.hmftools.common.virus;
 
 import static org.junit.Assert.assertEquals;
 
@@ -14,9 +14,9 @@ public class VirusBreakendFileTest {
     private static final double EPSILON = 1e-10;
 
     private static final String EMPTY_VIRUS_BREAKEND_TSV =
-            Resources.getResource("virusbreakend/empty.virusbreakend.vcf.summary.tsv").getPath();
+            Resources.getResource("virus/empty.virusbreakend.vcf.summary.tsv").getPath();
     private static final String SAMPLE_VIRUS_BREAKEND_TSV =
-            Resources.getResource("virusbreakend/sample.virusbreakend.vcf.summary.tsv").getPath();
+            Resources.getResource("virus/sample.virusbreakend.vcf.summary.tsv").getPath();
 
     @Test
     public void canReadEmptyVirusBreakendTsv() throws IOException {

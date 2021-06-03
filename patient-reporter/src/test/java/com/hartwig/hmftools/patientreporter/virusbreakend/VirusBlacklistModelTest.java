@@ -4,8 +4,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakendTestFactory;
+import com.hartwig.hmftools.common.virus.VirusBreakend;
+import com.hartwig.hmftools.common.virus.VirusBreakendTestFactory;
 
 import org.junit.Test;
 

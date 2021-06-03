@@ -54,7 +54,7 @@ public class CkbExtractorTestApp {
         List<CkbEntry> entries = CkbReader.readAndCurate(config.ckbDir(), config.ckbFilterTsv());
         ExtractionResult result = extractor.extract(entries);
 
-        String eventsTsv = config.outputDir() + File.separator + "CkbEvents.tsv";
+        String eventsTsv = config.outputDir() + File.separator + "CkbEventClassification.tsv";
         CkbUtil.writeEventsToTsv(eventsTsv, entries);
         CkbUtil.printExtractionResults(result);
 

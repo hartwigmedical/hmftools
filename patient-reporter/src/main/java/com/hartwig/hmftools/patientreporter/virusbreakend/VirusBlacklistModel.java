@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.virusbreakend;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
+import com.hartwig.hmftools.common.virus.VirusBreakend;
 
 import org.jetbrains.annotations.NotNull;
 
