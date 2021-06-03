@@ -89,7 +89,7 @@ abstract class LimsJsonSampleData {
     abstract String labSopVersions();
 
     @SerializedName("report_viral")
-    public abstract boolean reportViralInsertions();
+    public abstract boolean reportViralPresence();
 
     @Nullable
     @SerializedName("cohort")

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.virusbreakend;
+package com.hartwig.hmftools.virusinterpreter.algo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

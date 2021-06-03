@@ -67,7 +67,7 @@ public final class SampleReportFactory {
                 .patientPrimaryTumor(patientPrimaryTumor)
                 .biopsyLocation(curatedBiopsyLocation)
                 .germlineReportingLevel(lims.germlineReportingChoice(tumorSampleBarcode))
-                .reportViralInsertions(lims.reportViralInsertions(tumorSampleBarcode))
+                .reportViralPresence(lims.reportViralPresence(tumorSampleBarcode))
                 .refArrivalDate(arrivalDateRefSample)
                 .tumorArrivalDate(arrivalDateTumorSample)
                 .shallowSeqPurityString(lims.purityShallowSeq(tumorSampleBarcode))
@@ -90,14 +90,14 @@ public final class SampleReportFactory {
             String[] curatedBiopsyLocation = biopsyLocation.split("_");
             if (curatedBiopsyLocation.length == 2) {
                 curated = curatedBiopsyLocation[1];
-                curated = curated.substring(0,1).toUpperCase() + curated.substring(1, curated.length());
+                curated = curated.substring(0,1).toUpperCase() + curated.substring(1);
             } else if (curatedBiopsyLocation.length == 1) {
                 curated = "Other";
             }
         } else {
             if (biopsyLocation != null && !biopsyLocation.equals(Strings.EMPTY)) {
                 curated = biopsyLocation;
-                curated = curated.substring(0,1).toUpperCase() + curated.substring(1, curated.length());
+                curated = curated.substring(0,1).toUpperCase() + curated.substring(1);
             }
         }
         return curated;

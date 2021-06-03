@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.virusbreakend;
+package com.hartwig.hmftools.virusinterpreter.algo;
 
 import java.util.Set;
 

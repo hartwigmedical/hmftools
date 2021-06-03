@@ -58,16 +58,13 @@ public interface PatientReporterConfig {
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     String MOLECULAR_TISSUE_ORIGIN_TXT = "molecular_tissue_origin_txt";
     String MOLECULAR_TISSUE_ORIGIN_PLOT = "molecular_tissue_origin_plot";
-    String VIRUS_BREAKEND_TSV = "virus_breakend_tsv";
+    String INTERPRETED_VIRUS_TSV = "interpreted_virus_tsv";
     String PEACH_GENOTYPE_TSV = "peach_genotype_tsv";
     String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
 
     // Resources used for generating an analysed patient report
     String GERMLINE_REPORTING_TSV = "germline_reporting_tsv";
     String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
-    String TAXONOMY_DB_TSV = "taxonomy_db_tsv";
-    String VIRUS_INTERPRETATION_TSV = "virus_interpretation_tsv";
-    String VIRUS_BLACKLIST_TSV = "virus_blacklist_tsv";
 
     // Some additional optional params and flags
     String COMMENTS = "comments";
@@ -117,15 +114,12 @@ public interface PatientReporterConfig {
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
         options.addOption(MOLECULAR_TISSUE_ORIGIN_TXT, true, "Path towards the molecular tissue origin TXT.");
         options.addOption(MOLECULAR_TISSUE_ORIGIN_PLOT, true, "Path towards the molecular tissue origin plot.");
-        options.addOption(VIRUS_BREAKEND_TSV, true, "Path towards the virus breakend TSV.");
+        options.addOption(INTERPRETED_VIRUS_TSV, true, "Path towards the interpreted virus TSV.");
         options.addOption(PEACH_GENOTYPE_TSV, true, "Path towards the peach genotype TSV.");
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
 
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
         options.addOption(SAMPLE_SUMMARY_TSV, true, "Path towards a TSV containing the (clinical) summaries of the samples.");
-        options.addOption(TAXONOMY_DB_TSV, true, "Path towards a TSV containing a mapping from taxid to taxonomy name.");
-        options.addOption(VIRUS_INTERPRETATION_TSV, true, "Path towards a TSV containing interpretation rules for viruses.");
-        options.addOption(VIRUS_BLACKLIST_TSV, true, "Path towards a TSV containing blacklisting for specific viruses.");
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
         options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
@@ -225,7 +219,7 @@ public interface PatientReporterConfig {
     String molecularTissueOriginPlot();
 
     @NotNull
-    String virusBreakendTsv();
+    String interpretedVirusTsv();
 
     @NotNull
     String peachGenotypeTsv();
@@ -238,15 +232,6 @@ public interface PatientReporterConfig {
 
     @NotNull
     String sampleSummaryTsv();
-
-    @NotNull
-    String taxonomyDbTsv();
-
-    @NotNull
-    String virusInterpretationTsv();
-
-    @NotNull
-    String virusBlacklistTsv();
 
     @Nullable
     String comments();
@@ -276,7 +261,6 @@ public interface PatientReporterConfig {
             }
         }
 
-        String expectedPipelineVersion = Strings.EMPTY;
         String pipelineVersion = Strings.EMPTY;
         String purplePurityTsv = Strings.EMPTY;
         String purpleQcFile = Strings.EMPTY;
@@ -292,21 +276,18 @@ public interface PatientReporterConfig {
         String chordPredictionTxt = Strings.EMPTY;
         String molecularTissueOriginTxt = Strings.EMPTY;
         String molecularTissueOriginPlot = Strings.EMPTY;
-        String virusBreakendTsv = Strings.EMPTY;
+        String interpretedVirusTsv = Strings.EMPTY;
         String peachGenotypeTsv = Strings.EMPTY;
         String protectEvidenceTsv = Strings.EMPTY;
 
         String germlineReportingTsv = Strings.EMPTY;
         String sampleSummaryTsv = Strings.EMPTY;
-        String taxonomyDbTsv = Strings.EMPTY;
-        String virusInterpretationTsv = Strings.EMPTY;
-        String virusBlacklistTsv = Strings.EMPTY;
 
         if (isQCFail && qcFailReason.isDeepWGSDataAvailable()) {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
             purpleQcFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
         } else if (!isQCFail) {
-            pipelineVersion = optionalFile(cmd, PIPELINE_VERSION_FILE);
+            pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
             purpleQcFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
             purpleSomaticDriverCatalogTsv = nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVER_CATALOG_TSV);
@@ -319,17 +300,14 @@ public interface PatientReporterConfig {
             linxBreakendTsv = nonOptionalFile(cmd, LINX_BREAKEND_TSV);
             linxDriverCatalogTsv = nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV);
             chordPredictionTxt = nonOptionalFile(cmd, CHORD_PREDICTION_TXT);
-            molecularTissueOriginTxt = optionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_TXT);
-            molecularTissueOriginPlot = optionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_PLOT);
-            virusBreakendTsv = optionalFile(cmd, VIRUS_BREAKEND_TSV);
-            peachGenotypeTsv = optionalFile(cmd, PEACH_GENOTYPE_TSV);
+            molecularTissueOriginTxt = nonOptionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_TXT);
+            molecularTissueOriginPlot = nonOptionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_PLOT);
+            interpretedVirusTsv = nonOptionalFile(cmd, INTERPRETED_VIRUS_TSV);
+            peachGenotypeTsv = nonOptionalFile(cmd, PEACH_GENOTYPE_TSV);
             protectEvidenceTsv = nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV);
 
             germlineReportingTsv = nonOptionalFile(cmd, GERMLINE_REPORTING_TSV);
             sampleSummaryTsv = nonOptionalFile(cmd, SAMPLE_SUMMARY_TSV);
-            taxonomyDbTsv = nonOptionalFile(cmd, TAXONOMY_DB_TSV);
-            virusInterpretationTsv = nonOptionalFile(cmd, VIRUS_INTERPRETATION_TSV);
-            virusBlacklistTsv = nonOptionalFile(cmd, VIRUS_BLACKLIST_TSV);
         }
 
         return ImmutablePatientReporterConfig.builder()
@@ -341,13 +319,13 @@ public interface PatientReporterConfig {
                 .outputDirData(nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA))
                 .reportingDbTsv(nonOptionalFile(cmd, REPORTING_DB_TSV))
                 .primaryTumorTsv(nonOptionalFile(cmd, PRIMARY_TUMOR_TSV))
-                .pipelineVersionFile(pipelineVersion)
                 .limsDir(nonOptionalDir(cmd, LIMS_DIRECTORY))
                 .rvaLogo(nonOptionalFile(cmd, RVA_LOGO))
                 .companyLogo(nonOptionalFile(cmd, COMPANY_LOGO))
                 .signature(nonOptionalFile(cmd, SIGNATURE))
                 .qcFail(isQCFail)
                 .qcFailReason(qcFailReason)
+                .pipelineVersionFile(pipelineVersion)
                 .purplePurityTsv(purplePurityTsv)
                 .purpleQcFile(purpleQcFile)
                 .purpleSomaticDriverCatalogTsv(purpleSomaticDriverCatalogTsv)
@@ -362,14 +340,11 @@ public interface PatientReporterConfig {
                 .chordPredictionTxt(chordPredictionTxt)
                 .molecularTissueOriginTxt(molecularTissueOriginTxt)
                 .molecularTissueOriginPlot(molecularTissueOriginPlot)
-                .virusBreakendTsv(virusBreakendTsv)
+                .interpretedVirusTsv(interpretedVirusTsv)
                 .peachGenotypeTsv(peachGenotypeTsv)
                 .protectEvidenceTsv(protectEvidenceTsv)
                 .germlineReportingTsv(germlineReportingTsv)
                 .sampleSummaryTsv(sampleSummaryTsv)
-                .taxonomyDbTsv(taxonomyDbTsv)
-                .virusInterpretationTsv(virusInterpretationTsv)
-                .virusBlacklistTsv(virusBlacklistTsv)
                 .comments(cmd.getOptionValue(COMMENTS))
                 .isCorrectedReport(cmd.hasOption(CORRECTED_REPORT))
                 .onlyCreatePDF(cmd.hasOption(ONLY_CREATE_PDF))
@@ -394,17 +369,6 @@ public interface PatientReporterConfig {
 
         if (!pathExists(value) || !pathIsDirectory(value)) {
             throw new ParseException("Parameter '" + param + "' must be an existing directory: " + value);
-        }
-
-        return value;
-    }
-
-    @NotNull
-    static String optionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
-        String value = nonOptionalValue(cmd, param);
-
-        if (!pathExists(value)) {
-            value = Strings.EMPTY;
         }
 
         return value;

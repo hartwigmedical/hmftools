@@ -55,10 +55,7 @@ public class AnalysedPatientReporter {
         String pipelineVersion = MetaDataResolver.majorDotMinorVersion(new File(config.pipelineVersionFile()));
         checkPipelineVersion(pipelineVersion, config.expectedPipelineVersion(), config.overridePipelineVersion());
 
-        GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.germlineReportingModel(),
-                reportData.taxonomyDb(),
-                reportData.virusInterpretationModel(),
-                reportData.virusBlackListModel());
+        GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.germlineReportingModel());
         GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
                 sampleMetadata.refSampleId(),
                 config,
@@ -66,7 +63,7 @@ public class AnalysedPatientReporter {
 
         GenomicAnalysis filteredAnalysis = ConsentFilterFunctions.filter(genomicAnalysis,
                 sampleReport.germlineReportingLevel(),
-                sampleReport.reportViralInsertions(),
+                sampleReport.reportViralPresence(),
                 sampleReport.cohort().reportPeach());
 
         String qcForm = determineForNumber(genomicAnalysis.hasReliablePurity(), genomicAnalysis.impliedPurity());
@@ -143,7 +140,7 @@ public class AnalysedPatientReporter {
         LOGGER.info(" Gene fusions to report: {}", analysis.geneFusions().size());
         LOGGER.info(" Homozygous disruptions to report: {}", analysis.homozygousDisruptions().size());
         LOGGER.info(" Gene disruptions to report: {}", analysis.geneDisruptions().size());
-        LOGGER.info(" Virus breakend to report: {}", analysis.virusBreakends().size());
+        LOGGER.info(" Viruses to report: {}", analysis.reportableViruses().size());
         LOGGER.info(" Pharmacogenetics to report: {}", analysis.peachGenotypes().size());
 
         LOGGER.info(" CHORD analysis HRD prediction: {} ({})", analysis.chordHrdValue(), analysis.chordHrdStatus());

@@ -174,7 +174,7 @@ public final class LimsFactory {
                 .germlineReportingLevel(Strings.EMPTY)
                 .reportGermlineVariants(false)
                 .shallowSeq(false)
-                .reportViralInsertions(false)
+                .reportViralPresence(false)
                 .biopsySite("Skin")
                 .cohort("COLO")
                 .analysisType("somatic").build();

@@ -4,22 +4,22 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.virus.InterpretedVirus;
 import com.hartwig.hmftools.common.virus.VirusInterpretation;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class VirusBreakends {
+public final class InterpretedViruses {
 
-    private VirusBreakends() {
+    private InterpretedViruses() {
     }
 
     @NotNull
-    public static Set<String> virusInterpretationSummary(@NotNull List<ReportableVirusBreakend> reportableVirusBreakends) {
+    public static Set<String> virusInterpretationSummary(@NotNull List<InterpretedVirus> reportableViruses) {
         Set<VirusInterpretation> positiveInterpretations = Sets.newHashSet();
-        for (ReportableVirusBreakend virusBreakend : reportableVirusBreakends) {
-            if (virusBreakend.interpretation() != null) {
-                positiveInterpretations.add(virusBreakend.interpretation());
+        for (InterpretedVirus virus : reportableViruses) {
+            if (virus.interpretation() != null) {
+                positiveInterpretations.add(virus.interpretation());
             }
         }
 

@@ -31,7 +31,7 @@ public abstract class SampleReport {
     @NotNull
     public abstract LimsGermlineReportingLevel germlineReportingLevel();
 
-    public abstract boolean reportViralInsertions();
+    public abstract boolean reportViralPresence();
 
     @Nullable
     public abstract LocalDate refArrivalDate();
