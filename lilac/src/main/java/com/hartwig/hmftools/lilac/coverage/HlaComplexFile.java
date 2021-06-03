@@ -24,6 +24,7 @@ public class HlaComplexFile
         sb.add("HomozygousCount");
         sb.add("CohortFrequency");
         sb.add("RecoveryCount");
+        sb.add("WildcardCount");
         sb.add("TotalCoverage");
         sb.add("UniqueCoverage");
         sb.add("SharedCoverage");
@@ -69,6 +70,7 @@ public class HlaComplexFile
         sj.add(String.valueOf(coverage.homozygousCount()));
         sj.add(String.format("%.2f", coverage.cohortFrequencyTotal()));
         sj.add(String.valueOf(coverage.recoveredCount()));
+        sj.add(String.valueOf(coverage.wildcardCount()));
         sj.add(String.valueOf(coverage.TotalCoverage));
         sj.add(String.valueOf(coverage.UniqueCoverage));
         sj.add(String.valueOf(coverage.SharedCoverage));

@@ -301,7 +301,8 @@ public class LilacApplication implements AutoCloseable, Runnable
         List<HlaComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(refFragAlleles, complexes);
 
         HlaComplexCoverageRanking complexRanker = new HlaComplexCoverageRanking(mConfig.TopScoreThreshold, mRefData);
-        List<HlaComplexCoverage> referenceRankedComplexes = complexRanker.rankCandidates(calculatedComplexes, recoveredAlleles);
+        List<HlaComplexCoverage> referenceRankedComplexes = complexRanker.rankCandidates(
+                calculatedComplexes, recoveredAlleles, candidateSequences);
 
         if(referenceRankedComplexes.isEmpty())
         {

@@ -8,6 +8,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.lilac.LilacConstants.FREQUENCY_SCORE_PENALTY;
 import static com.hartwig.hmftools.lilac.LilacConstants.HOMOZYGOUS_SCORE_PENALTY;
 import static com.hartwig.hmftools.lilac.LilacConstants.RECOVERY_SCORE_PENALTY;
+import static com.hartwig.hmftools.lilac.LilacConstants.WILDCARD_SCORE_PENALTY;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.cohort.CohortFrequency;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -39,7 +41,8 @@ public class HlaComplexCoverageRanking
         mRefData = refData;
     }
 
-    public List<HlaComplexCoverage> rankCandidates(final List<HlaComplexCoverage> complexes, final List<HlaAllele> recoveredAlleles)
+    public List<HlaComplexCoverage> rankCandidates(
+            final List<HlaComplexCoverage> complexes, final List<HlaAllele> recoveredAlleles, final List<HlaSequenceLoci> sequences)
     {
         if(complexes.isEmpty())
             return complexes;
@@ -48,6 +51,7 @@ public class HlaComplexCoverageRanking
         {
             calcCohortFrequency(complexCoverage);
             calcRecoveryPenalty(complexCoverage, recoveredAlleles);
+            calcWildcardPenalty(complexCoverage, sequences);
             calcComplexScore(complexCoverage);
         }
 
@@ -92,6 +96,27 @@ public class HlaComplexCoverageRanking
         complexCoverage.setRecoveredCount(recoveredCount);
     }
 
+    private void calcWildcardPenalty(final HlaComplexCoverage complexCoverage, final List<HlaSequenceLoci> sequences)
+    {
+        if(sequences.isEmpty())
+            return;
+
+        int wildcardCount = 0;
+
+        for(HlaAllele allele : complexCoverage.getAlleles())
+        {
+            if(!allele.hasWildcards())
+                continue;
+
+            HlaSequenceLoci sequenceLoci = sequences.stream().filter(x -> x.Allele.equals(allele)).findFirst().orElse(null);
+
+            if(sequenceLoci != null)
+                wildcardCount += sequenceLoci.wildcardCount();
+        }
+
+        complexCoverage.setWildcardCount(wildcardCount);
+    }
+
     private void calcCohortFrequency(final HlaComplexCoverage complexCoverage)
     {
         final CohortFrequency cohortFrequency = mRefData.getAlleleFrequencies();
@@ -120,7 +145,8 @@ public class HlaComplexCoverageRanking
         double score = totalCoverage
                 + complexCoverage.cohortFrequencyTotal() * FREQUENCY_SCORE_PENALTY * totalCoverage
                 + complexCoverage.homozygousCount() * HOMOZYGOUS_SCORE_PENALTY * totalCoverage
-                - complexCoverage.recoveredCount() * RECOVERY_SCORE_PENALTY * totalCoverage;
+                - complexCoverage.recoveredCount() * RECOVERY_SCORE_PENALTY * totalCoverage
+                - complexCoverage.wildcardCount() * WILDCARD_SCORE_PENALTY * totalCoverage;
 
         complexCoverage.setScore(score);
     }

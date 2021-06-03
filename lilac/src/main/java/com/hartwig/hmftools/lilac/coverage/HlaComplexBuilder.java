@@ -403,7 +403,7 @@ public class HlaComplexBuilder
                 .map(x -> calcProteinCoverage(fragAlleles, x.Alleles)).collect(Collectors.toList());
 
         HlaComplexCoverageRanking complexRanker = new HlaComplexCoverageRanking(0, mRefData);
-        complexCoverages = complexRanker.rankCandidates(complexCoverages, recoveredAlleles);
+        complexCoverages = complexRanker.rankCandidates(complexCoverages, recoveredAlleles, Lists.newArrayList());
 
         // take the top N alleles but no more than 5 that pair with something in the top 10
         Map<HlaAllele,Integer> pairingCount = Maps.newHashMap();

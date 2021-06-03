@@ -25,6 +25,7 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
     private double mScore;
     private final int mHomozygousCount;
     private int mRecoveredCount;
+    private int mWildcardCount;
 
     public HlaComplexCoverage(int uniqueCoverage, int sharedCoverage, int wildCoverage, final List<HlaAlleleCoverage> alleleCoverage)
     {
@@ -37,6 +38,7 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
 
         mHomozygousCount = calcHomozygousCount();
         mRecoveredCount = 0;
+        mWildcardCount = 0;
         mCohortFrequencyTotal = 0;
         mScore = 0;
     }
@@ -55,6 +57,9 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
 
     public int recoveredCount() { return mRecoveredCount; }
     public void setRecoveredCount(int count) { mRecoveredCount = count; }
+
+    public int wildcardCount() { return mWildcardCount; }
+    public void setWildcardCount(int count) { mWildcardCount = count; }
 
     private int calcHomozygousCount()
     {

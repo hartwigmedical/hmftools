@@ -28,9 +28,10 @@ public class LilacConstants
     public static final double FREQUENCY_SCORE_PENALTY = 0.0015;
     public static final double HOMOZYGOUS_SCORE_PENALTY = 0.0045;
     public static final double RECOVERY_SCORE_PENALTY = 0.005;
+    public static final double WILDCARD_SCORE_PENALTY = 0.000015;
 
     // warning thresholds
-    public static final double WARN_UNMATCHED_HAPLOTYPE_SUPPORT = 0.007;
+    public static final double WARN_UNMATCHED_HAPLOTYPE_SUPPORT = 0.006;
     public static final int LOG_UNMATCHED_HAPLOTYPE_SUPPORT = 3;
     public static final double WARN_INDEL_THRESHOLD = 0.004;
 

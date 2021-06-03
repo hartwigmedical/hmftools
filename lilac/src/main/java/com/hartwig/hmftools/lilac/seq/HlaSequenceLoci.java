@@ -29,6 +29,7 @@ public class HlaSequenceLoci
     private final boolean mHasInserts;
     private final boolean mHasWildcards;
     private boolean mHasExonBoundaryWildcards;
+    private final int mWildcardCount;
 
     public HlaSequenceLoci(final HlaAllele allele, final List<String> sequences)
     {
@@ -38,7 +39,9 @@ public class HlaSequenceLoci
 
         mHasDeletes = mSequences.stream().anyMatch(x -> x.equals(DEL_STR));
         mHasInserts = mSequences.stream().anyMatch(x -> x.length() > 1);
-        mHasWildcards = mSequences.stream().anyMatch(x -> x.equals(WILD_STR));
+
+        mWildcardCount = (int)mSequences.stream().filter(x -> x.equals(WILD_STR)).count();
+        mHasWildcards = mWildcardCount > 0;
 
         if(mHasWildcards)
             Allele.setHasWildcard(true);
@@ -54,6 +57,7 @@ public class HlaSequenceLoci
     public boolean hasDeletes() { return mHasDeletes; }
     public boolean hasIndels() { return hasDeletes() || hasInserts(); }
     public boolean hasWildcards() { return mHasWildcards; }
+    public int wildcardCount() { return mWildcardCount; }
 
     public boolean hasExonBoundaryWildcards() { return mHasExonBoundaryWildcards; }
 
