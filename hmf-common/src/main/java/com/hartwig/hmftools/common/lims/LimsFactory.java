@@ -168,7 +168,7 @@ public final class LimsFactory {
                 .refBarcode("COLO829V003RVAL")
                 .arrivalDate(Strings.EMPTY)
                 .dnaConcentration(Strings.EMPTY)
-                .primaryTumor(Strings.EMPTY)
+                .primaryTumor("Melanoma")
                 .labSopVersions(Strings.EMPTY)
                 .submission(Strings.EMPTY)
                 .germlineReportingLevel(Strings.EMPTY)
@@ -177,7 +177,7 @@ public final class LimsFactory {
                 .reportViralInsertions(false)
                 .biopsySite("Skin")
                 .cohort("COLO")
-                .analysisType(Strings.EMPTY).build();
+                .analysisType("somatic").build();
     }
 
     @NotNull
