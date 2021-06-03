@@ -8,14 +8,16 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
+import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
-import com.hartwig.hmftools.lilac.variant.HlaCopyNumber;
+import com.hartwig.hmftools.lilac.variant.CopyNumberAssignment;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -23,12 +25,12 @@ public class SolutionSummary
 {
     private final HlaComplexCoverage mReferenceCoverage;
     private final HlaComplexCoverage mTumorCoverage;
-    private final List<HlaCopyNumber> mTumorCopyNumber;
+    private final Map<HlaAllele,Double> mTumorCopyNumber;
     private final List<SomaticCodingCount> mSomaticCodingCount;
 
     public SolutionSummary(
             final HlaComplexCoverage referenceCoverage, final HlaComplexCoverage tumorCoverage,
-            final List<HlaCopyNumber> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount)
+            final Map<HlaAllele,Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount)
     {
         mReferenceCoverage = referenceCoverage;
         mTumorCoverage = tumorCoverage;
@@ -88,11 +90,11 @@ public class SolutionSummary
         HlaAlleleCoverage tumor = !mTumorCoverage.getAlleleCoverage().isEmpty() ?
                 mTumorCoverage.getAlleleCoverage().get(index) : new HlaAlleleCoverage(ref.Allele, 0, 0, 0);
 
-        double copyNumber = mTumorCopyNumber.get(index).CopyNumber;
+        double copyNumber = mTumorCopyNumber.get(ref.Allele);
         SomaticCodingCount codingCount = mSomaticCodingCount.get(index);
 
         StringJoiner header = new StringJoiner(DELIM)
-                .add(ref.Allele.asFourDigit().toString())
+                .add(ref.Allele.toString())
                 .add(String.valueOf(round(ref.TotalCoverage)))
                 .add(String.valueOf(ref.UniqueCoverage))
                 .add(String.valueOf(round(ref.SharedCoverage)))
@@ -113,23 +115,12 @@ public class SolutionSummary
 
     public static SolutionSummary create(
             final HlaComplexCoverage referenceCoverage, final HlaComplexCoverage tumorCoverage,
-            final List<HlaCopyNumber> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount)
+            final Map<HlaAllele,Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount)
     {
-        List<HlaCopyNumber> sortedCopyNumber = tumorCopyNumber.stream().collect(Collectors.toList());
-        Collections.sort(sortedCopyNumber, new HlaCopyNumberSorter());
-
         List<SomaticCodingCount> sortedCodingCount = somaticCodingCount.stream().collect(Collectors.toList());
         Collections.sort(sortedCodingCount, new SomaticCodingCountSorter());
 
-        return new SolutionSummary(referenceCoverage, tumorCoverage, sortedCopyNumber, sortedCodingCount);
-    }
-
-    private static class HlaCopyNumberSorter implements Comparator<HlaCopyNumber>
-    {
-        public int compare(final HlaCopyNumber first, final HlaCopyNumber second)
-        {
-            return first.Allele.compareTo(second.Allele);
-        }
+        return new SolutionSummary(referenceCoverage, tumorCoverage, tumorCopyNumber, sortedCodingCount);
     }
 
     private static class SomaticCodingCountSorter implements Comparator<SomaticCodingCount>

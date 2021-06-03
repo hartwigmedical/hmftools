@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -17,7 +18,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_TOP_SCORE_THRESH
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.ConfigUtils;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -42,6 +43,7 @@ public class LilacConfig
 
     public final String ResourceDir;
     public final String RefGenome;
+    public final String SampleDataDir;
     public final String OutputDir;
 
     public final int MinBaseQual;
@@ -54,8 +56,8 @@ public class LilacConfig
     public final int Threads;
     public final double TopScoreThreshold;
 
-    public final String GeneCopyNumberFile;
-    public final String SomaticVcf;
+    public final String CopyNumberFile;
+    public final String SomaticVariantsFile;
 
     public final boolean DebugPhasing;
     public final boolean RunValidation;
@@ -68,27 +70,30 @@ public class LilacConfig
 
     // config strings
     public static final String RESOURCE_DIR = "resource_dir";
-    public static final String OUTPUT_DIR = "output_dir";
+    private static final String REF_GENOME = "ref_genome";
 
     private static final String SAMPLE = "sample";
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
     private static final String REFERENCE_BAM = "reference_bam";
     private static final String TUMOR_BAM = "tumor_bam";
     private static final String TUMOR_ONLY = "tumor_only";
-    private static final String REF_GENOME = "ref_genome";
+
+    private static final String GENE_COPY_NUMBER = "gene_copy_number_file";
+    private static final String SOMATIC_VARIANTS = "somatic_variants_file";
+
+    // constant overrides
     private static final String MIN_BASE_QUAL = "min_base_qual";
     private static final String MIN_EVIDENCE = "min_evidence";
     private static final String MIN_EVIDENCE_FACTOR = "min_evidence_factor";
     private static final String MIN_HIGH_QUAL_EVIDENCE_FACTOR = "min_high_qual_evidence_factor";
-    private static final String THREADS = "threads";
     private static final String MIN_FRAGMENTS_PER_ALLELE = "min_fragments_per_allele";
     private static final String MIN_FRAGMENTS_TO_REMOVE_SINGLE = "min_fragments_to_remove_single";
-    private static final String EXPECTED_ALLELES = "expected_alleles";
-    private static final String RESTRICTED_ALLELES = "restricted_alleles";
-    private static final String GENE_COPY_NUMBER = "gene_copy_number";
-    private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String TOP_SCORE_THRESHOLD = "top_score_threshold";
 
+    // debug and technical config
+    private static final String EXPECTED_ALLELES = "expected_alleles";
+    private static final String RESTRICTED_ALLELES = "restricted_alleles";
+    private static final String THREADS = "threads";
     private static final String DEBUG_PHASING = "debug_phasing";
     public static final String LOG_DEBUG = "log_debug";
     public static final String RUN_VALIDATION = "run_validation";
@@ -102,24 +107,28 @@ public class LilacConfig
 
         if(cmd.hasOption(SAMPLE_DATA_DIR))
         {
-            String sampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR));
+            SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR));
 
-            OutputDir = sampleDataDir;
+            OutputDir = SampleDataDir;
 
             String referenceId = Sample.substring(0, Sample.lastIndexOf('T')) + "R";
-            ReferenceBam = sampleDataDir + referenceId + ".hla.bam";
+            ReferenceBam = SampleDataDir + referenceId + ".hla.bam";
 
             // these 3 are optional so check existence before initialising
-            TumorBam = checkFileExists(sampleDataDir + Sample + ".hla.bam");
-            GeneCopyNumberFile = checkFileExists(sampleDataDir + Sample + ".purple.cnv.gene.tsv");
-            SomaticVcf = checkFileExists(sampleDataDir + Sample + ".purple.somatic.vcf.gz");
+            TumorBam = checkFileExists(SampleDataDir + Sample + ".hla.bam");
+
+            String purpleGeneCopyNumberFile = GeneCopyNumberFile.generateFilenameForReading(SampleDataDir, Sample);
+            CopyNumberFile = checkFileExists(purpleGeneCopyNumberFile);
+
+            SomaticVariantsFile = checkFileExists(SampleDataDir + Sample + ".purple.somatic.vcf.gz");
         }
         else
         {
+            SampleDataDir = "";
             ReferenceBam = cmd.getOptionValue(REFERENCE_BAM, "");
             TumorBam = cmd.getOptionValue(TUMOR_BAM, "");
-            GeneCopyNumberFile = cmd.getOptionValue(GENE_COPY_NUMBER, "");
-            SomaticVcf = cmd.getOptionValue(SOMATIC_VCF, "");
+            CopyNumberFile = cmd.getOptionValue(GENE_COPY_NUMBER, "");
+            SomaticVariantsFile = cmd.getOptionValue(SOMATIC_VARIANTS, "");
             OutputDir = parseOutputDir(cmd);
         }
 
@@ -189,7 +198,7 @@ public class LilacConfig
     public void logParams()
     {
         LL_LOGGER.info("sample({}) inputs: tumorBam({}) somaticVCF({}) geneCopyNumber({})",
-                Sample, !TumorBam.isEmpty(), !SomaticVcf.isEmpty(), !GeneCopyNumberFile.isEmpty());
+                Sample, !TumorBam.isEmpty(), !SomaticVariantsFile.isEmpty(), !CopyNumberFile.isEmpty());
 
         LL_LOGGER.info("minBaseQual({}), minEvidence({}) minFragmentsPerAllele({}) "
                 + "minFragmentsToRemoveSingle({}) maxDistanceFromTopScore({})",
@@ -218,6 +227,7 @@ public class LilacConfig
         ReferenceBam = "";
         TumorBam = "";
         ResourceDir = "";
+        SampleDataDir = "";
         RefGenome = "";
         TumorOnly = false;
 
@@ -230,8 +240,8 @@ public class LilacConfig
         MinFragmentsToRemoveSingle = DEFAULT_FRAGS_REMOVE_SGL;
         TopScoreThreshold = DEFAULT_TOP_SCORE_THRESHOLD;
 
-        GeneCopyNumberFile = "";
-        SomaticVcf = "";
+        CopyNumberFile = "";
+        SomaticVariantsFile = "";
 
         ExpectedAlleles = Lists.newArrayList();
         RestrictedAlleles = Lists.newArrayList();
@@ -264,7 +274,7 @@ public class LilacConfig
         options.addOption(EXPECTED_ALLELES, true,"Comma separated expected alleles for the sample");
         options.addOption(RESTRICTED_ALLELES, true,"Comma separated restricted analysis allele list");
         options.addOption(GENE_COPY_NUMBER, true,"Path to gene copy number file");
-        options.addOption(SOMATIC_VCF, true,"Path to somatic VCF");
+        options.addOption(SOMATIC_VARIANTS, true,"Path to somatic VCF");
         options.addOption(DEBUG_PHASING, false, "More detailed logging of phasing");
         options.addOption(RUN_VALIDATION, false, "Run validation checks");
         options.addOption(LOG_DEBUG, false, "More detailed logging of phasing");

@@ -36,7 +36,7 @@ public class SomaticVariantFinder
 
     public List<VariantContextDecorator> readSomaticVariants()
     {
-        if(mConfig.TumorBam.isEmpty() || mConfig.SomaticVcf.isEmpty())
+        if(mConfig.TumorBam.isEmpty() || mConfig.SomaticVariantsFile.isEmpty())
             return Lists.newArrayList();
 
         final List<VariantContextDecorator> results = Lists.newArrayList();
@@ -44,9 +44,9 @@ public class SomaticVariantFinder
         int minPosition = mHlaTranscriptData.values().stream().mapToInt(x -> x.TransStart).min().orElse(0);
         int maxPosition = mHlaTranscriptData.values().stream().mapToInt(x -> x.TransEnd).max().orElse(0);
 
-        LL_LOGGER.info("reading somatic vcf: ", mConfig.SomaticVcf);
+        LL_LOGGER.info("reading somatic vcf: ", mConfig.SomaticVariantsFile);
 
-        VCFFileReader fileReader = new VCFFileReader(new File(mConfig.SomaticVcf), false);
+        VCFFileReader fileReader = new VCFFileReader(new File(mConfig.SomaticVariantsFile), false);
 
         final CloseableIterator<VariantContext> variantIter = fileReader.isQueryable() ?
                 fileReader.query(HLA_CHR, minPosition, maxPosition) : fileReader.iterator();
