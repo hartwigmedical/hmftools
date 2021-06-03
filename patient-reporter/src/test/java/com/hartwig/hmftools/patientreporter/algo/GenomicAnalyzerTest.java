@@ -30,10 +30,7 @@ public class GenomicAnalyzerTest {
     public void canRunOnTestRun() throws IOException {
         AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
 
-        GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel(),
-                testReportData.taxonomyDb(),
-                testReportData.virusInterpretationModel(),
-                testReportData.virusBlackListModel());
+        GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel());
 
         PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
 
@@ -51,14 +48,12 @@ public class GenomicAnalyzerTest {
                 testReportableVariants("MUTYH", GenotypeStatus.HET, null, "MUTYH", GenotypeStatus.HET, 123);
         ReportableVariant reportableVariantToCompare2 = testReportableVariant("MUTYH", GenotypeStatus.HET, 123);
         assertTrue(GenomicAnalyzer.hasOtherGermlineVariantWithDifferentPhaseSet(reportableVariants2, reportableVariantToCompare2));
-
     }
 
     @NotNull
     public List<ReportableVariant> testReportableVariants(@NotNull String gene1, @NotNull GenotypeStatus genotypeStatus1,
             @Nullable Integer localPhaseSet1, @NotNull String gene2, @NotNull GenotypeStatus genotypeStatus2,
             @Nullable Integer localPhaseSet2) {
-
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .type(VariantType.SNP)
                 .source(ReportableVariantSource.GERMLINE)
@@ -113,7 +108,6 @@ public class GenomicAnalyzerTest {
     @NotNull
     public ReportableVariant testReportableVariant(@NotNull String gene, @NotNull GenotypeStatus genotypeStatus,
             @Nullable Integer localPhaseSet) {
-
         return ImmutableReportableVariant.builder()
                 .type(VariantType.SNP)
                 .source(ReportableVariantSource.GERMLINE)

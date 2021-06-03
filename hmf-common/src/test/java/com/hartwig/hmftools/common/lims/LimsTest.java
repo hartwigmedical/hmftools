@@ -52,7 +52,7 @@ public class LimsTest {
         String hospitalPatientId = "Henkie";
         String hospitalPathologySampleId = "Henkie's sample";
         boolean reportGermlineVariants = false;
-        boolean reportViralInsertions = false;
+        boolean reportViralPresence = false;
 
         LimsJsonSampleData sampleData = createLimsSampleDataBuilder().sampleId(TUMOR_SAMPLE_ID)
                 .patientId(patientId)
@@ -71,7 +71,7 @@ public class LimsTest {
                 .hospitalPathologySampleId(hospitalPathologySampleId)
                 .germlineReportingLevel(Strings.EMPTY)
                 .reportGermlineVariants(reportGermlineVariants)
-                .reportViralInsertions(reportViralInsertions)
+                .reportViralPresence(reportViralPresence)
                 .build();
 
         LimsJsonSubmissionData submissionData = ImmutableLimsJsonSubmissionData.builder()
@@ -124,7 +124,7 @@ public class LimsTest {
 
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING, lims.germlineReportingChoice(TUMOR_SAMPLE_BARCODE));
         assertEquals(reportGermlineVariants, lims.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
-        assertEquals(reportViralInsertions, lims.reportViralInsertions(TUMOR_SAMPLE_BARCODE));
+        assertEquals(reportViralPresence, lims.reportViralPresence(TUMOR_SAMPLE_BARCODE));
     }
 
     @Test
@@ -150,7 +150,7 @@ public class LimsTest {
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.hospitalPathologySampleId(doesNotExistSample));
         assertEquals(LimsGermlineReportingLevel.NO_REPORTING, lims.germlineReportingChoice(doesNotExistSample));
         assertFalse(lims.reportGermlineVariants(TUMOR_SAMPLE_BARCODE));
-        assertFalse(lims.reportViralInsertions(TUMOR_SAMPLE_BARCODE));
+        assertFalse(lims.reportViralPresence(TUMOR_SAMPLE_BARCODE));
     }
 
     @Test
@@ -171,7 +171,7 @@ public class LimsTest {
                 .dnaConcentration("IsNotADNAConcentration")
                 .pathologyTumorPercentage("IsNotANumber")
                 .labSopVersions("anything")
-                .reportViralInsertions(false)
+                .reportViralPresence(false)
                 .cohort("CPCT")
                 .build();
 
@@ -216,20 +216,20 @@ public class LimsTest {
         LimsJsonSampleData sampleDataTrue = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
                 .sampleId(TUMOR_SAMPLE_ID)
                 .cohort(TEST_COHORT)
-                .reportViralInsertions(true)
+                .reportViralPresence(true)
                 .build();
         LimsJsonSampleData sampleDataFalse = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
                 .sampleId(TUMOR_SAMPLE_ID)
                 .cohort(TEST_COHORT)
-                .reportViralInsertions(false)
+                .reportViralPresence(false)
                 .build();
 
         Lims limsTrue = buildTestLimsWithSample(sampleDataTrue);
         Lims limsFalse = buildTestLimsWithSample(sampleDataFalse);
 
-        assertTrue(limsTrue.reportViralInsertions(TUMOR_SAMPLE_BARCODE));
+        assertTrue(limsTrue.reportViralPresence(TUMOR_SAMPLE_BARCODE));
 
-        assertFalse(limsFalse.reportViralInsertions(TUMOR_SAMPLE_BARCODE));
+        assertFalse(limsFalse.reportViralPresence(TUMOR_SAMPLE_BARCODE));
     }
 
     @Test
@@ -237,11 +237,11 @@ public class LimsTest {
         LimsJsonSampleData sampleDataTrue = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
                 .sampleId(TUMOR_SAMPLE_ID)
                 .cohort(TEST_COHORT)
-                .reportViralInsertions(true)
+                .reportViralPresence(true)
                 .build();
         Lims limsTrue = buildTestLimsWithSample(sampleDataTrue);
 
-        assertFalse(limsTrue.reportViralInsertions("does not exist"));
+        assertFalse(limsTrue.reportViralPresence("does not exist"));
     }
 
     @Test

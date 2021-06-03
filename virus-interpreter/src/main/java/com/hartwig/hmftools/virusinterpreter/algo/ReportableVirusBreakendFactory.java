@@ -1,10 +1,11 @@
-package com.hartwig.hmftools.patientreporter.virusbreakend;
+package com.hartwig.hmftools.virusinterpreter.algo;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virus.VirusInterpretation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,7 +42,7 @@ public class ReportableVirusBreakendFactory {
         for (VirusBreakend virusBreakend : virusBreakendsFiltered) {
             String virusName = taxonomyDb.lookupName(virusBreakend.referenceTaxid());
 
-            String interpretation = null;
+            VirusInterpretation interpretation = null;
             if (virusInterpretationModel.hasInterpretation(virusBreakend.taxidSpecies())) {
                 interpretation = virusInterpretationModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
             } else {

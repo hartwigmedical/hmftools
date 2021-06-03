@@ -15,12 +15,6 @@ import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
-import com.hartwig.hmftools.patientreporter.virusbreakend.TaxonomyDb;
-import com.hartwig.hmftools.patientreporter.virusbreakend.TaxonomyDbFile;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistFile;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistModel;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusInterpretationFile;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusInterpretationModel;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -43,7 +37,7 @@ public final class PatientReporterTestFactory {
     private static final String CHORD_PREDICTION_TXT = RUN_DIRECTORY + "/chord/sample_chord_prediction.txt";
     private static final String MOLECULAR_TISSUE_ORIGIN_TXT = RUN_DIRECTORY + "/cuppa/sample.cuppa.conclusion.txt";
     private static final String MOLECULAR_TISSUE_ORIGIN_PLOT = RUN_DIRECTORY + "/cuppa/sample.cuppa.chart.png";
-    private static final String VIRUS_BREAKEND_TSV = RUN_DIRECTORY + "/virusbreakend/sample.virusbreakend.vcf.summary.tsv";
+    private static final String INTERPRETED_VIRUS_TSV = RUN_DIRECTORY + "/virusbreakend/sample.interpreted_virus.tsv";
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/sample.peach.genotype.tsv";
     private static final String PROTECT_EVIDENCE_TSV = RUN_DIRECTORY + "/protect/sample.protect.tsv";
 
@@ -53,9 +47,6 @@ public final class PatientReporterTestFactory {
 
     private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
     private static final String GERMLINE_REPORTING_TSV = Resources.getResource("germline_reporting/germline_reporting.tsv").getPath();
-    private static final String TAXONOMY_DB_TSV = Resources.getResource("viral_reporting/taxonomy_db.tsv").getPath();
-    private static final String VIRUS_INTERPRETATION_TSV = Resources.getResource("viral_reporting/virus_interpretation.tsv").getPath();
-    private static final String VIRUS_BLACKLIST_TSV = Resources.getResource("viral_reporting/virus_blacklist.tsv").getPath();
 
     private PatientReporterTestFactory() {
     }
@@ -89,14 +80,11 @@ public final class PatientReporterTestFactory {
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .molecularTissueOriginTxt(MOLECULAR_TISSUE_ORIGIN_TXT)
                 .molecularTissueOriginPlot(MOLECULAR_TISSUE_ORIGIN_PLOT)
-                .virusBreakendTsv(VIRUS_BREAKEND_TSV)
+                .interpretedVirusTsv(INTERPRETED_VIRUS_TSV)
                 .peachGenotypeTsv(PEACH_GENOTYPE_TSV)
                 .protectEvidenceTsv(PROTECT_EVIDENCE_TSV)
                 .germlineReportingTsv(Strings.EMPTY)
                 .sampleSummaryTsv(SAMPLE_SUMMARY_TSV)
-                .taxonomyDbTsv(TAXONOMY_DB_TSV)
-                .virusInterpretationTsv(VIRUS_INTERPRETATION_TSV)
-                .virusBlacklistTsv(VIRUS_BLACKLIST_TSV)
                 .isCorrectedReport(false)
                 .onlyCreatePDF(false)
                 .expectedPipelineVersion("5.22")
@@ -123,17 +111,11 @@ public final class PatientReporterTestFactory {
         try {
             GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromTsv(GERMLINE_REPORTING_TSV);
             SummaryModel summaryModel = SummaryFile.buildFromTsv(SAMPLE_SUMMARY_TSV);
-            TaxonomyDb taxonomyDb = TaxonomyDbFile.loadFromTsv(TAXONOMY_DB_TSV);
-            VirusInterpretationModel virusInterpretationModel = VirusInterpretationFile.buildFromTsv(VIRUS_INTERPRETATION_TSV);
-            VirusBlacklistModel virusBlackListModel = VirusBlacklistFile.buildFromTsv(VIRUS_BLACKLIST_TSV);
 
             return ImmutableAnalysedReportData.builder()
                     .from(loadTestReportData())
                     .germlineReportingModel(germlineReportingModel)
                     .summaryModel(summaryModel)
-                    .taxonomyDb(taxonomyDb)
-                    .virusInterpretationModel(virusInterpretationModel)
-                    .virusBlackListModel(virusBlackListModel)
                     .build();
         } catch (IOException exception) {
             throw new IllegalStateException("Could not load test analysed report data: " + exception.getMessage());

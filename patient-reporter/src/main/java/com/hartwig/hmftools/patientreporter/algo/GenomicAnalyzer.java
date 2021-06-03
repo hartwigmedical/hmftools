@@ -15,17 +15,12 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
-import com.hartwig.hmftools.common.virus.VirusBreakend;
-import com.hartwig.hmftools.common.virus.VirusBreakendFile;
+import com.hartwig.hmftools.common.virus.InterpretedVirus;
+import com.hartwig.hmftools.common.virus.InterpretedVirusFile;
 import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendFactory;
-import com.hartwig.hmftools.patientreporter.virusbreakend.TaxonomyDb;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistModel;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusInterpretationModel;
 import com.hartwig.hmftools.protect.chord.ChordDataLoader;
 import com.hartwig.hmftools.protect.linx.LinxData;
 import com.hartwig.hmftools.protect.linx.LinxDataLoader;
@@ -46,19 +41,9 @@ public class GenomicAnalyzer {
 
     @NotNull
     private final GermlineReportingModel germlineReportingModel;
-    @NotNull
-    private final TaxonomyDb taxonomyDb;
-    @NotNull
-    private final VirusInterpretationModel virusInterpretationModel;
-    @NotNull
-    private final VirusBlacklistModel virusBlackListModel;
 
-    public GenomicAnalyzer(@NotNull final GermlineReportingModel germlineReportingModel, @NotNull final TaxonomyDb taxonomyDb,
-            @NotNull final VirusInterpretationModel virusInterpretationModel, @NotNull final VirusBlacklistModel virusBlackListModel) {
+    public GenomicAnalyzer(@NotNull final GermlineReportingModel germlineReportingModel) {
         this.germlineReportingModel = germlineReportingModel;
-        this.taxonomyDb = taxonomyDb;
-        this.virusInterpretationModel = virusInterpretationModel;
-        this.virusBlackListModel = virusBlackListModel;
     }
 
     @NotNull
@@ -74,9 +59,7 @@ public class GenomicAnalyzer {
                 config.purpleSomaticCopyNumberTsv());
 
         LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
-
-        List<ReportableVirusBreakend> reportableVirusBreakend = analyseVirusBreakends(config.virusBreakendTsv());
-
+        List<InterpretedVirus> reportableViruses = loadReportableViruses(config.interpretedVirusTsv());
         List<PeachGenotype> peachGenotypes = loadPeachData(config.peachGenotypeTsv());
 
         List<ReportableVariant> reportableVariants =
@@ -114,7 +97,7 @@ public class GenomicAnalyzer {
                 .geneFusions(linxData.fusions())
                 .geneDisruptions(linxData.geneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())
-                .virusBreakends(reportableVirusBreakend)
+                .reportableViruses(reportableViruses)
                 .peachGenotypes(peachGenotypes)
                 .build();
     }
@@ -158,26 +141,28 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    private List<ReportableVirusBreakend> analyseVirusBreakends(@NotNull String virusBreakendTsv) throws IOException {
-        LOGGER.info("Loading virus breakend data {}", new File(virusBreakendTsv).getParent());
-        List<VirusBreakend> virusBreakends = VirusBreakendFile.read(virusBreakendTsv);
-
-        ReportableVirusBreakendFactory reportableVirusBreakendFactory =
-                new ReportableVirusBreakendFactory(taxonomyDb, virusInterpretationModel, virusBlackListModel);
-        List<ReportableVirusBreakend> reportableVirusBreakend = reportableVirusBreakendFactory.analyze(virusBreakends);
-
-        LOGGER.info(" Loaded {} reportable virus breakends from {}",
-                reportableVirusBreakend.size(),
-                virusBreakendTsv);
-        return reportableVirusBreakend;
-    }
-
-    @NotNull
     private static List<PeachGenotype> loadPeachData(@NotNull String peachGenotypeTsv) throws IOException {
         LOGGER.info("Loading peach genotypes from {}", new File(peachGenotypeTsv).getParent());
         List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachGenotypeTsv);
         LOGGER.info(" Loaded {} reportable genotypes from {}", peachGenotypes.size(), peachGenotypeTsv);
         return peachGenotypes;
+    }
+
+    @NotNull
+    private static List<InterpretedVirus> loadReportableViruses(@NotNull String interpretedVirusTsv) throws IOException {
+        LOGGER.info("Loading interpreted viruses from {}", new File(interpretedVirusTsv).getParent());
+        List<InterpretedVirus> viruses = InterpretedVirusFile.read(interpretedVirusTsv);
+        LOGGER.info(" Loaded {} viruses from {}", viruses.size(), interpretedVirusTsv);
+
+        List<InterpretedVirus> reportable = Lists.newArrayList();
+        for (InterpretedVirus virus : viruses) {
+            if (virus.reported()) {
+                reportable.add(virus);
+            }
+        }
+        LOGGER.info(" {} viruses selected for reporting", reportable.size());
+
+        return reportable;
     }
 
     @NotNull

@@ -349,7 +349,7 @@ public class Lims {
         return LimsChecker.checkGermlineVariants(sampleData, cohort, sampleId(sampleBarcode));
     }
 
-    public boolean reportViralInsertions(@NotNull String sampleBarcode) {
+    public boolean reportViralPresence(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         LimsCohortConfig cohort = cohortConfig(sampleBarcode);
 

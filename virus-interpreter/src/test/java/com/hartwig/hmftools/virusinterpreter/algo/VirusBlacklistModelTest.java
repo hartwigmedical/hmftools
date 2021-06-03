@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.patientreporter.virusbreakend;
+package com.hartwig.hmftools.virusinterpreter.algo;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
-import com.hartwig.hmftools.common.virus.VirusBreakendTestFactory;
+import com.hartwig.hmftools.common.virus.VirusTestFactory;
 
 import org.junit.Test;
 
@@ -15,13 +15,13 @@ public class VirusBlacklistModelTest {
     public void canMatchIdToVirus() {
         VirusBlacklistModel virusBlacklistModel = new VirusBlacklistModel(Sets.newHashSet(1), Sets.newHashSet(2));
 
-        VirusBreakend filteredGenus = VirusBreakendTestFactory.testBuilder().taxidGenus(1).build();
+        VirusBreakend filteredGenus = VirusTestFactory.testVirusBreakendBuilder().taxidGenus(1).build();
         assertTrue(virusBlacklistModel.isBlacklisted(filteredGenus));
 
-        VirusBreakend filteredSpecies = VirusBreakendTestFactory.testBuilder().taxidSpecies(2).build();
+        VirusBreakend filteredSpecies = VirusTestFactory.testVirusBreakendBuilder().taxidSpecies(2).build();
         assertTrue(virusBlacklistModel.isBlacklisted(filteredSpecies));
 
-        VirusBreakend pass = VirusBreakendTestFactory.testBuilder().taxidSpecies(1).taxidGenus(2).build();
+        VirusBreakend pass = VirusTestFactory.testVirusBreakendBuilder().taxidSpecies(1).taxidGenus(2).build();
         assertFalse(virusBlacklistModel.isBlacklisted(pass));
     }
 }

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.virusbreakend;
+package com.hartwig.hmftools.virusinterpreter.algo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.virus.VirusInterpretation;
 
 import org.junit.Test;
 
@@ -23,7 +24,7 @@ public class VirusInterpretationFileTest {
         assertTrue(virusInterpretationModel.hasInterpretation(1));
         assertFalse(virusInterpretationModel.hasInterpretation(2));
 
-        assertEquals("virus", virusInterpretationModel.interpretVirusSpecies(1));
-        assertNotEquals("virus1", virusInterpretationModel.interpretVirusSpecies(2));
+        assertEquals(VirusInterpretation.HPV, virusInterpretationModel.interpretVirusSpecies(1));
+        assertNotEquals(VirusInterpretation.HPV, virusInterpretationModel.interpretVirusSpecies(2));
     }
 }

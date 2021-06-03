@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.virusbreakend;
+package com.hartwig.hmftools.virusinterpreter.algo;
 
 import static org.junit.Assert.assertEquals;
 
@@ -10,7 +10,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.common.virus.VirusBreakendTestFactory;
+import com.hartwig.hmftools.common.virus.VirusInterpretation;
+import com.hartwig.hmftools.common.virus.VirusTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -25,9 +26,9 @@ public class ReportableVirusBreakendFactoryTest {
         taxonomyMap.put(1, "Human papillomavirus type 16");
         TaxonomyDb taxonomyDb = new TaxonomyDb(taxonomyMap);
 
-        Map<Integer, String> virusInterpretationMap = Maps.newHashMap();
-        virusInterpretationMap.put(1, "HPV");
-        virusInterpretationMap.put(2, "EBV");
+        Map<Integer, VirusInterpretation> virusInterpretationMap = Maps.newHashMap();
+        virusInterpretationMap.put(1, VirusInterpretation.HPV);
+        virusInterpretationMap.put(2, VirusInterpretation.EBV);
         VirusInterpretationModel virusInterpretationModel = new VirusInterpretationModel(virusInterpretationMap);
 
         VirusBlacklistModel virusBlacklistModel = new VirusBlacklistModel(Sets.newHashSet(1), Sets.newHashSet());
@@ -39,7 +40,7 @@ public class ReportableVirusBreakendFactoryTest {
         ReportableVirusBreakend reportableVirusbreakend = factory.analyze(virusBreakends).get(0);
         assertEquals("Human papillomavirus type 16", reportableVirusbreakend.virusName());
         assertEquals(2, reportableVirusbreakend.integrations());
-        assertEquals("HPV", reportableVirusbreakend.interpretation());
+        assertEquals(VirusInterpretation.HPV, reportableVirusbreakend.interpretation());
     }
 
     @NotNull
@@ -47,7 +48,7 @@ public class ReportableVirusBreakendFactoryTest {
         List<VirusBreakend> virusBreakends = Lists.newArrayList();
 
         // This one should be added.
-        virusBreakends.add(VirusBreakendTestFactory.testBuilder()
+        virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(1)
@@ -55,7 +56,7 @@ public class ReportableVirusBreakendFactoryTest {
                 .build());
 
         // This one has a blacklisted genus taxid
-        virusBreakends.add(VirusBreakendTestFactory.testBuilder()
+        virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(1)
                 .taxidSpecies(1)
@@ -63,7 +64,7 @@ public class ReportableVirusBreakendFactoryTest {
                 .build());
 
         // This one has a failed QC
-        virusBreakends.add(VirusBreakendTestFactory.testBuilder()
+        virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(1)
@@ -72,7 +73,7 @@ public class ReportableVirusBreakendFactoryTest {
                 .build());
 
         // This one has no integrations
-        virusBreakends.add(VirusBreakendTestFactory.testBuilder()
+        virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(1)

@@ -1,5 +1,7 @@
-package com.hartwig.hmftools.patientreporter.virusbreakend;
+package com.hartwig.hmftools.virusinterpreter.algo;
 
+
+import com.hartwig.hmftools.common.virus.VirusInterpretation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -16,5 +18,5 @@ public abstract class ReportableVirusBreakend {
     public abstract int integrations();
 
     @Nullable
-    public abstract String interpretation();
+    public abstract VirusInterpretation interpretation();
 }

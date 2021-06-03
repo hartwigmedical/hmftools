@@ -41,6 +41,9 @@ import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.common.virus.InterpretedVirus;
+import com.hartwig.hmftools.common.virus.VirusInterpretation;
+import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedPatientReport;
@@ -48,8 +51,6 @@ import com.hartwig.hmftools.patientreporter.algo.ImmutableGenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ImmutableReportableVirusBreakend;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
 import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableHomozygousDisruption;
@@ -96,7 +97,7 @@ public final class ExampleAnalysisTestFactory {
         List<LinxFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        List<ReportableVirusBreakend> virusBreakends = Lists.newArrayList();
+        List<InterpretedVirus> viruses = Lists.newArrayList();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), config.reportGermline(), config.limsCohortConfig());
@@ -147,7 +148,7 @@ public final class ExampleAnalysisTestFactory {
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
-                .virusBreakends(virusBreakends)
+                .reportableViruses(viruses)
                 .peachGenotypes(peachGenotypes)
                 .build();
 
@@ -175,7 +176,7 @@ public final class ExampleAnalysisTestFactory {
         AnalysedPatientReport coloReport = createWithCOLO829Data(config);
 
         List<LinxFusion> fusions = createTestFusions();
-        List<ReportableVirusBreakend> virusBreakends = createTestVirusBreakends();
+        List<InterpretedVirus> viruses = createTestInterpretedViruses();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
@@ -183,7 +184,7 @@ public final class ExampleAnalysisTestFactory {
                 .from(coloReport.genomicAnalysis())
                 .geneFusions(fusions)
                 .homozygousDisruptions(homozygousDisruptions)
-                .virusBreakends(virusBreakends)
+                .reportableViruses(viruses)
                 .peachGenotypes(peachGenotypes)
                 .build();
 
@@ -307,7 +308,7 @@ public final class ExampleAnalysisTestFactory {
                 .germlineReportingLevel(reportGermline
                         ? LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION
                         : LimsGermlineReportingLevel.NO_REPORTING)
-                .reportViralInsertions(cohort.reportViral())
+                .reportViralPresence(cohort.reportViral())
                 .refArrivalDate(LocalDate.parse("01-Oct-2020", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Oct-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(Lims.NOT_PERFORMED_STRING)
@@ -1018,12 +1019,13 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<ReportableVirusBreakend> createTestVirusBreakends() {
-        return Lists.newArrayList(ImmutableReportableVirusBreakend.builder()
-                .virusName("Human papillomavirus type 16")
+    private static List<InterpretedVirus> createTestInterpretedViruses() {
+        return Lists.newArrayList(VirusTestFactory.testInterpretedVirusBuilder()
+                .name("Human papillomavirus type 16")
                 .integrations(2)
+                .interpretation(VirusInterpretation.HPV)
+                .reported(true)
                 .build());
-
     }
 }
 
