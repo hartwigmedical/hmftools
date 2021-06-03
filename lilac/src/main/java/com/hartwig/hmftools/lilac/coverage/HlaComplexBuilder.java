@@ -96,6 +96,12 @@ public class HlaComplexBuilder
 
         candidatesAfterUniqueGroups.addAll(commonAllelesInDiscardedUniqueGroups);
 
+        // ensure known stop-loss alleles are kept
+        recoveredAlleles.stream()
+                .filter(x -> mRefData.StopLossRecoveryAlleles.contains(x))
+                .filter(x -> !candidatesAfterUniqueGroups.contains(x))
+                .forEach(x -> candidatesAfterUniqueGroups.add(x));
+
         mConfirmedRecoveredAlleles.addAll(recoveredAlleles.stream()
                 .filter(x -> candidatesAfterUniqueGroups.contains(x)).collect(Collectors.toList()));
 
@@ -115,7 +121,6 @@ public class HlaComplexBuilder
         // find uniquely supported protein alleles but don't allow recovered alleles to be in the unique protein set
         List<HlaAlleleCoverage> uniqueProteins = findUnique(proteinCoverage, uniqueGroupAlleles, totalFragCount).stream()
                 .filter(x -> !recoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
-        ;
 
         List<HlaAlleleCoverage> discardedProtein = proteinCoverage.getAlleleCoverage().stream()
                 .filter(x -> x.UniqueCoverage > 0 && !uniqueProteins.contains(x)).collect(Collectors.toList());
