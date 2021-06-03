@@ -33,7 +33,7 @@ public final class InterpretedVirusFile {
 
     @VisibleForTesting
     @NotNull
-    public static List<String> toLines(@NotNull List<InterpretedVirus> interpretedViruses) {
+    static List<String> toLines(@NotNull List<InterpretedVirus> interpretedViruses) {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
         interpretedViruses.stream().map(InterpretedVirusFile::toString).forEach(lines::add);
@@ -42,7 +42,7 @@ public final class InterpretedVirusFile {
 
     @VisibleForTesting
     @NotNull
-    public static List<InterpretedVirus> fromLines(@NotNull List<String> lines) {
+    static List<InterpretedVirus> fromLines(@NotNull List<String> lines) {
         return lines.stream().skip(1).map(InterpretedVirusFile::fromString).collect(toList());
     }
 
