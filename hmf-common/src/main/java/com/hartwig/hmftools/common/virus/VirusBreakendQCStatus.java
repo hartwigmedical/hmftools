@@ -11,7 +11,7 @@ public enum VirusBreakendQCStatus {
     UNCLEAR_TAXID_ASSIGNMENT;
 
     @NotNull
-    public static VirusBreakendQCStatus extractVirusBreakendQCStatus(@NotNull String qcStatusString) {
+    public static VirusBreakendQCStatus convert(@NotNull String qcStatusString) {
         if (qcStatusString.isEmpty()) {
             return NO_ABNORMALITIES;
         }

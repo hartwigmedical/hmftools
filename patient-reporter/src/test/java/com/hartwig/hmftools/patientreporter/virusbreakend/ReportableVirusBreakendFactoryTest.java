@@ -10,7 +10,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.common.virus.VirusBreakendTestFactory;
+import com.hartwig.hmftools.common.virus.VirusTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -47,7 +47,7 @@ public class ReportableVirusBreakendFactoryTest {
         List<VirusBreakend> virusBreakends = Lists.newArrayList();
 
         // This one should be added.
-        virusBreakends.add(VirusBreakendTestFactory.testBuilder()
+        virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(1)
@@ -55,7 +55,7 @@ public class ReportableVirusBreakendFactoryTest {
                 .build());
 
         // This one has a blacklisted genus taxid
-        virusBreakends.add(VirusBreakendTestFactory.testBuilder()
+        virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(1)
                 .taxidSpecies(1)
@@ -63,7 +63,7 @@ public class ReportableVirusBreakendFactoryTest {
                 .build());
 
         // This one has a failed QC
-        virusBreakends.add(VirusBreakendTestFactory.testBuilder()
+        virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(1)
@@ -72,7 +72,7 @@ public class ReportableVirusBreakendFactoryTest {
                 .build());
 
         // This one has no integrations
-        virusBreakends.add(VirusBreakendTestFactory.testBuilder()
+        virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(1)

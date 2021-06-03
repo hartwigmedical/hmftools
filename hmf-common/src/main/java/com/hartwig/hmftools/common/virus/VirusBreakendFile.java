@@ -60,7 +60,7 @@ public class VirusBreakendFile {
                 .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES);
 
         if (values.length == 25) {
-            builder.qcStatus(VirusBreakendQCStatus.extractVirusBreakendQCStatus(values[24]));
+            builder.qcStatus(VirusBreakendQCStatus.convert(values[24]));
         }
 
         return builder.build();

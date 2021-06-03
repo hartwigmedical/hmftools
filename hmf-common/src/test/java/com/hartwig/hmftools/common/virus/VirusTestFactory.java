@@ -3,13 +3,13 @@ package com.hartwig.hmftools.common.virus;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class VirusBreakendTestFactory {
+public final class VirusTestFactory {
 
-    private VirusBreakendTestFactory() {
+    private VirusTestFactory() {
     }
 
     @NotNull
-    public static ImmutableVirusBreakend.Builder testBuilder() {
+    public static ImmutableVirusBreakend.Builder testVirusBreakendBuilder() {
         return ImmutableVirusBreakend.builder()
                 .taxidGenus(0)
                 .nameGenus(Strings.EMPTY)
@@ -36,5 +36,15 @@ public final class VirusBreakendTestFactory {
                 .meanMapQ(0)
                 .integrations(0)
                 .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES);
+    }
+
+    @NotNull
+    public static ImmutableInterpretedVirus.Builder testInterpretedVirusBuilder() {
+        return ImmutableInterpretedVirus.builder()
+                .taxid(0)
+                .name(Strings.EMPTY)
+                .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
+                .integrations(0)
+                .reported(false);
     }
 }
