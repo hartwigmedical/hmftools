@@ -131,11 +131,6 @@ public class Fragment
 
     public boolean hasNucleotides() { return !mNucleotideLoci.isEmpty(); }
 
-    public int maxLoci()
-    {
-        return mNucleotideLoci.stream().mapToInt(x -> x).max().orElse(0);
-    }
-
     public boolean containsIndel()
     {
         return mNucleotides.stream().anyMatch(x -> x.equals(".") || x.length() > 1);
@@ -170,6 +165,7 @@ public class Fragment
 
     public int minNucleotideLocus() { return !mNucleotideLoci.isEmpty() ? mNucleotideLoci.get(0) : -1; }
     public int maxNucleotideLocus() { return !mNucleotideLoci.isEmpty() ? mNucleotideLoci.get(mNucleotideLoci.size() - 1) : -1; }
+    public int maxLoci() { return maxNucleotideLocus(); }
 
     public List<Integer> getAminoAcidLoci() { return mAminoAcidLoci; }
     public List<String> getAminoAcids() { return mAminoAcids; }

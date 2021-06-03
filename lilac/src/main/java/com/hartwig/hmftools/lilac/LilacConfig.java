@@ -11,10 +11,10 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_PER_ALLELE
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_REMOVE_SGL;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE_FACTOR;
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_TOP_SCORE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
-import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
-import static com.hartwig.hmftools.lilac.LilacConstants.MIN_HIGH_QUAL_FRAGS_FACTOR;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
@@ -46,6 +46,9 @@ public class LilacConfig
 
     public final int MinBaseQual;
     private final int MinEvidence;
+    private final double MinEvidenceFactor;
+    private final double MinHighQualEvidenceFactor;
+
     public final int MinFragmentsPerAllele;
     public final int MinFragmentsToRemoveSingle;
     public final int Threads;
@@ -75,6 +78,8 @@ public class LilacConfig
     private static final String REF_GENOME = "ref_genome";
     private static final String MIN_BASE_QUAL = "min_base_qual";
     private static final String MIN_EVIDENCE = "min_evidence";
+    private static final String MIN_EVIDENCE_FACTOR = "min_evidence_factor";
+    private static final String MIN_HIGH_QUAL_EVIDENCE_FACTOR = "min_high_qual_evidence_factor";
     private static final String THREADS = "threads";
     private static final String MIN_FRAGMENTS_PER_ALLELE = "min_fragments_per_allele";
     private static final String MIN_FRAGMENTS_TO_REMOVE_SINGLE = "min_fragments_to_remove_single";
@@ -125,6 +130,9 @@ public class LilacConfig
 
         MinBaseQual = getConfigValue(cmd, MIN_BASE_QUAL, DEFAULT_MIN_BASE_QUAL);
         MinEvidence = getConfigValue(cmd, MIN_EVIDENCE, DEFAULT_MIN_EVIDENCE);
+        MinEvidenceFactor = getConfigValue(cmd, MIN_EVIDENCE_FACTOR, DEFAULT_MIN_EVIDENCE_FACTOR);
+        MinHighQualEvidenceFactor = getConfigValue(cmd, MIN_HIGH_QUAL_EVIDENCE_FACTOR, DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR);
+
         MinFragmentsPerAllele = getConfigValue(cmd, MIN_FRAGMENTS_PER_ALLELE, DEFAULT_FRAGS_PER_ALLELE);
         MinFragmentsToRemoveSingle = getConfigValue(cmd, MIN_FRAGMENTS_TO_REMOVE_SINGLE, DEFAULT_FRAGS_REMOVE_SGL);
 
@@ -146,8 +154,8 @@ public class LilacConfig
 
     public String outputPrefix() { return OutputDir + Sample; }
 
-    public double calcMinEvidence(int totalFragments) { return max(MinEvidence, totalFragments * MIN_EVIDENCE_FACTOR); }
-    public double calcMinHighQualEvidence(int totalFragments) { return totalFragments * MIN_HIGH_QUAL_FRAGS_FACTOR; }
+    public double calcMinEvidence(int totalFragments) { return max(MinEvidence, totalFragments * MinEvidenceFactor); }
+    public double calcMinHighQualEvidence(int totalFragments) { return totalFragments * MinHighQualEvidenceFactor; }
 
     public boolean isValid()
     {
@@ -215,6 +223,9 @@ public class LilacConfig
 
         MinBaseQual = DEFAULT_MIN_BASE_QUAL;
         MinEvidence = DEFAULT_MIN_EVIDENCE;
+        MinEvidenceFactor = DEFAULT_MIN_EVIDENCE_FACTOR;
+        MinHighQualEvidenceFactor = DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR;
+
         MinFragmentsPerAllele = DEFAULT_FRAGS_PER_ALLELE;
         MinFragmentsToRemoveSingle = DEFAULT_FRAGS_REMOVE_SGL;
         TopScoreThreshold = DEFAULT_TOP_SCORE_THRESHOLD;
@@ -242,8 +253,10 @@ public class LilacConfig
         options.addOption(RESOURCE_DIR, true,"Path to resource files");
         options.addOption(OUTPUT_DIR, true,"Path to output");
         options.addOption(REF_GENOME, true,"Optional path to reference genome fasta file");
-        options.addOption(MIN_BASE_QUAL, true,"MIN_BASE_QUAL");
-        options.addOption(MIN_EVIDENCE, true,"MIN_EVIDENCE");
+        options.addOption(MIN_BASE_QUAL, true,"Min base quality threshold");
+        options.addOption(MIN_EVIDENCE, true,"Min fragment evidence required");
+        options.addOption(MIN_HIGH_QUAL_EVIDENCE_FACTOR, true,"Min high-qual fragment evidence factor");
+        options.addOption(MIN_EVIDENCE_FACTOR, true,"Min fragment evidence factor");
         options.addOption(MIN_FRAGMENTS_PER_ALLELE, true,"MIN_FRAGMENTS_PER_ALLELE");
         options.addOption(MIN_FRAGMENTS_TO_REMOVE_SINGLE, true,"MIN_FRAGMENTS_TO_REMOVE_SINGLE");
         options.addOption(TOP_SCORE_THRESHOLD, true,"Max distance from top score");

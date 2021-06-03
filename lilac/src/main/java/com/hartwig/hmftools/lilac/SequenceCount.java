@@ -55,7 +55,7 @@ public final class SequenceCount
 
     public static SequenceCount nucleotides(double minCount, final List<Fragment> fragments)
     {
-        int length = fragments.stream().mapToInt(x -> x.maxLoci()).max().orElse(0) + 1;
+        int length = fragments.stream().mapToInt(x -> x.maxNucleotideLocus()).max().orElse(0) + 1;
 
         Map<String,Integer>[] seqCountsList = new Map[length];
         for(int i = 0; i < length; ++i)
@@ -137,8 +137,11 @@ public final class SequenceCount
         return seqCounts.values().stream().filter(x -> x >= mMinCount).count() > 1;
     }
 
-    public List<String> getMinCountSequences(int index) // formally sequenceAt()
+    public List<String> getMinCountSequences(int index)
     {
+        if(index >= mSeqCountsList.length)
+            return Lists.newArrayList();
+
         Map<String,Integer> seqCounts = get(index);
 
         return seqCounts.entrySet().stream()
