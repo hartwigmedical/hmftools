@@ -42,7 +42,7 @@ public class VirusInterpreterApplication {
             System.exit(1);
         }
 
-        LOGGER.info("Building taxonomy db from {}", config.taxonomyDbTsv());
+        LOGGER.info("Loading taxonomy db from {}", config.taxonomyDbTsv());
         TaxonomyDb taxonomyDb = TaxonomyDbFile.loadFromTsv(config.taxonomyDbTsv());
 
         LOGGER.info("Building virus interpretation model from {}", config.virusInterpretationTsv());
