@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.clinical.readers;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedPrimaryTumor;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableBaselineData;
@@ -15,24 +16,17 @@ import org.jetbrains.annotations.NotNull;
 
 public class ColoPatientReader {
 
-    public ColoPatientReader() {
+    @NotNull
+    private final PrimaryTumorCurator primaryTumorCurator;
+
+    public ColoPatientReader(@NotNull final PrimaryTumorCurator primaryTumorCurator) {
+        this.primaryTumorCurator = primaryTumorCurator;
     }
 
     @NotNull
-    public Patient read(@NotNull String coloSampleId) {
-        boolean isColo829 = coloSampleId.equals("COLO829T");
+    public Patient read(@NotNull String patientId, @NotNull String tumorLocation) {
 
-        String patientId = isColo829 ? "COLO829" : Strings.EMPTY;
-
-        ImmutableCuratedPrimaryTumor.Builder primaryTumorBuilder =
-                ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY).isOverridden(false);
-
-        CuratedPrimaryTumor curatedPrimaryTumor = isColo829 ? primaryTumorBuilder.location("Skin")
-                .subLocation(Strings.EMPTY)
-                .type("Melanoma")
-                .subType(Strings.EMPTY)
-                .extraDetails(Strings.EMPTY)
-                .build() : primaryTumorBuilder.build();
+        CuratedPrimaryTumor curatedPrimaryTumor = primaryTumorCurator.search(patientId, tumorLocation);
 
         return new Patient(patientId,
                 toBaselineData(curatedPrimaryTumor),
