@@ -1,19 +1,24 @@
-package com.hartwig.hmftools.virusinterpreter.algo;
+package com.hartwig.hmftools.virusinterpreter;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusInterpretation;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistModel;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusInterpretationModel;
+import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class ReportableVirusBreakendFactory {
+public class VirusInterpreterAlgo {
 
-    private static final Logger LOGGER = LogManager.getLogger(ReportableVirusBreakendFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(VirusInterpreterAlgo.class);
 
     @NotNull
     private final TaxonomyDb taxonomyDb;
@@ -22,7 +27,7 @@ public class ReportableVirusBreakendFactory {
     @NotNull
     private final VirusBlacklistModel virusBlacklistModel;
 
-    public ReportableVirusBreakendFactory(@NotNull final TaxonomyDb taxonomyDb,
+    public VirusInterpreterAlgo(@NotNull final TaxonomyDb taxonomyDb,
             @NotNull final VirusInterpretationModel virusInterpretationModel, @NotNull final VirusBlacklistModel virusBlacklistModel) {
         this.taxonomyDb = taxonomyDb;
         this.virusInterpretationModel = virusInterpretationModel;
@@ -30,36 +35,29 @@ public class ReportableVirusBreakendFactory {
     }
 
     @NotNull
-    public List<ReportableVirusBreakend> analyze(@NotNull List<VirusBreakend> virusBreakends) {
-        List<VirusBreakend> virusBreakendsFiltered = Lists.newArrayList();
+    public List<AnnotatedVirus> analyze(@NotNull List<VirusBreakend> virusBreakends) {
+        List<AnnotatedVirus> annotatedViruses = Lists.newArrayList();
         for (VirusBreakend virusBreakend : virusBreakends) {
-            if (include(virusBreakend)) {
-                virusBreakendsFiltered.add(virusBreakend);
-            }
-        }
-
-        List<ReportableVirusBreakend> reportableVirusBreakends = Lists.newArrayList();
-        for (VirusBreakend virusBreakend : virusBreakendsFiltered) {
-            String virusName = taxonomyDb.lookupName(virusBreakend.referenceTaxid());
-
             VirusInterpretation interpretation = null;
             if (virusInterpretationModel.hasInterpretation(virusBreakend.taxidSpecies())) {
                 interpretation = virusInterpretationModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
-            } else {
-                LOGGER.info(" VIRUS breakend has called a non-interpreted virus: {}", virusName);
             }
 
-            reportableVirusBreakends.add(ImmutableReportableVirusBreakend.builder()
-                    .virusName(virusName)
+            int taxid = virusBreakend.referenceTaxid();
+            annotatedViruses.add(ImmutableAnnotatedVirus.builder()
+                    .taxid(taxid)
+                    .name(taxonomyDb.lookupName(taxid))
+                    .qcStatus(virusBreakend.qcStatus())
                     .integrations(virusBreakend.integrations())
                     .interpretation(interpretation)
+                    .reported(report(virusBreakend))
                     .build());
         }
 
-        return reportableVirusBreakends;
+        return annotatedViruses;
     }
 
-    private boolean include(@NotNull VirusBreakend virusBreakend) {
+    private boolean report(@NotNull VirusBreakend virusBreakend) {
         if (virusBreakend.qcStatus() == VirusBreakendQCStatus.LOW_VIRAL_COVERAGE) {
             return false;
         }

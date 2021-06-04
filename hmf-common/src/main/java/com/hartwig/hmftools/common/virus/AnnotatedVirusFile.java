@@ -16,9 +16,16 @@ import org.jetbrains.annotations.NotNull;
 
 public final class AnnotatedVirusFile {
 
+    private static final String ANNOTATED_VIRUS_EXTENSION = ".virus.annotated.tsv";
+
     private static final String DELIMITER = "\t";
 
     private AnnotatedVirusFile() {
+    }
+
+    @NotNull
+    public static String generateFileName(@NotNull String outputDir, @NotNull String sampleId) {
+        return outputDir + File.separator + sampleId + ANNOTATED_VIRUS_EXTENSION;
     }
 
     @NotNull

@@ -1,6 +1,7 @@
-package com.hartwig.hmftools.virusinterpreter.algo;
+package com.hartwig.hmftools.virusinterpreter;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -8,22 +9,27 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusInterpretation;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistModel;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusInterpretationModel;
+import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ReportableVirusBreakendFactoryTest {
+public class VirusInterpreterAlgoTest {
 
     @Test
-    public void canInterpretVirusBreakendForReportingPos() {
+    public void canAnalyzeVirusBreakends() {
         List<VirusBreakend> virusBreakends = createTestVirusBreakends();
 
+        String name = "Human papillomavirus type 16";
         Map<Integer, String> taxonomyMap = Maps.newHashMap();
-        taxonomyMap.put(1, "Human papillomavirus type 16");
+        taxonomyMap.put(1, name);
         TaxonomyDb taxonomyDb = new TaxonomyDb(taxonomyMap);
 
         Map<Integer, VirusInterpretation> virusInterpretationMap = Maps.newHashMap();
@@ -33,14 +39,22 @@ public class ReportableVirusBreakendFactoryTest {
 
         VirusBlacklistModel virusBlacklistModel = new VirusBlacklistModel(Sets.newHashSet(1), Sets.newHashSet());
 
-        ReportableVirusBreakendFactory factory =
-                new ReportableVirusBreakendFactory(taxonomyDb, virusInterpretationModel, virusBlacklistModel);
-        assertEquals(1, factory.analyze(virusBreakends).size());
+        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusInterpretationModel, virusBlacklistModel);
+        List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends);
+        assertEquals(4, annotatedViruses.size());
+        assertEquals(1, annotatedViruses.stream().filter(x -> x.reported()).count());
 
-        ReportableVirusBreakend reportableVirusbreakend = factory.analyze(virusBreakends).get(0);
-        assertEquals("Human papillomavirus type 16", reportableVirusbreakend.virusName());
-        assertEquals(2, reportableVirusbreakend.integrations());
-        assertEquals(VirusInterpretation.HPV, reportableVirusbreakend.interpretation());
+        AnnotatedVirus reportedVirus = null;
+        for (AnnotatedVirus virus : annotatedViruses) {
+            if (virus.reported()) {
+                reportedVirus = virus;
+            }
+        }
+
+        assertNotNull(reportedVirus);
+        assertEquals(name, reportedVirus.name());
+        assertEquals(2, reportedVirus.integrations());
+        assertEquals(VirusInterpretation.HPV, reportedVirus.interpretation());
     }
 
     @NotNull

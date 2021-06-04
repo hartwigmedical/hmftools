@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.virusinterpreter.algo;
+package com.hartwig.hmftools.virusinterpreter.taxonomy;
 
 import java.util.Map;
 
@@ -16,7 +16,7 @@ public class TaxonomyDb {
     @NotNull
     private final Map<Integer, String> taxidToNameMap;
 
-    TaxonomyDb(@NotNull final Map<Integer, String> taxidToNameMap) {
+    public TaxonomyDb(@NotNull final Map<Integer, String> taxidToNameMap) {
         this.taxidToNameMap = taxidToNameMap;
     }
 

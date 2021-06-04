@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.virusinterpreter.algo;
+package com.hartwig.hmftools.virusinterpreter.taxonomy;
 
 import static org.junit.Assert.assertEquals;
 

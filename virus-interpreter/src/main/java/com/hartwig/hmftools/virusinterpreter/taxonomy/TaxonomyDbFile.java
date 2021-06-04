@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.virusinterpreter.algo;
+package com.hartwig.hmftools.virusinterpreter.taxonomy;
 
 import java.io.File;
 import java.io.IOException;
