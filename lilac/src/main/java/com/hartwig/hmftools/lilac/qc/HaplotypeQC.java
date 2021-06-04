@@ -4,7 +4,6 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOG_UNMATCHED_HAPLOTYPE_SUPPORT;
-import static com.hartwig.hmftools.lilac.LilacConstants.WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -24,7 +23,7 @@ import java.util.stream.Collectors;
 public class HaplotypeQC
 {
     public final int UnusedHaplotypes;
-    public final int UnusedHaplotypeMaxSupport;
+    public final int UnusedHaplotypeMaxFrags;
     public final int UnusedHaplotypesPon;
 
     public final List<Haplotype> UnmatchedHaplotypes;
@@ -34,22 +33,21 @@ public class HaplotypeQC
     public final List<String> header()
     {
         return Lists.newArrayList(
-                "UnusedHaplotypes", "UnusedHaplotypeMaxSupport", "UnusedHaplotypesPon");
+                "UnusedHaplotypes", "UnusedHaplotypeMaxFrags");
     }
 
     public final List<String> body()
     {
         return Lists.newArrayList(
                 String.valueOf(UnusedHaplotypes),
-                String.valueOf(UnusedHaplotypeMaxSupport),
-                String.valueOf(UnusedHaplotypesPon));
+                String.valueOf(UnusedHaplotypeMaxFrags));
     }
 
     public HaplotypeQC(
-            int unusedHaplotypes, int unusedHaplotypeMaxSupport, int unusedHaplotypesPon, final List<Haplotype> haplotypes)
+            int unusedHaplotypes, int unusedHaplotypeMaxFrags, int unusedHaplotypesPon, final List<Haplotype> haplotypes)
     {
         UnusedHaplotypes = unusedHaplotypes;
-        UnusedHaplotypeMaxSupport = unusedHaplotypeMaxSupport;
+        UnusedHaplotypeMaxFrags = unusedHaplotypeMaxFrags;
         UnusedHaplotypesPon = unusedHaplotypesPon;
         UnmatchedHaplotypes = haplotypes;
     }
@@ -76,8 +74,6 @@ public class HaplotypeQC
             final List<PhasedEvidence> evidence, final SequenceCount aminoAcidCount, int totalFragments)
     {
         loadPonHaplotypes();
-
-        double warnThreshold = totalFragments * WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
 
         List<Haplotype> allUnmatched = Lists.newArrayList();
         evidence.stream()
@@ -110,23 +106,15 @@ public class HaplotypeQC
             if(unmatched.SupportingFragments < LOG_UNMATCHED_HAPLOTYPE_SUPPORT)
                 continue;
 
-            boolean exceedsWarnThreshold = unmatched.SupportingFragments >= warnThreshold;
-
             if (inPon(unmatched))
             {
-                if(exceedsWarnThreshold)
-                    pon++;
-
+                pon++;
                 LL_LOGGER.info("  UNMATCHED_PON_HAPLTOYPE - {}", unmatched);
             }
             else
             {
-                if(exceedsWarnThreshold)
-                {
-                    maxSupport = max(maxSupport, unmatched.SupportingFragments);
-                    unusedCount++;
-                }
-
+                maxSupport = max(maxSupport, unmatched.SupportingFragments);
+                unusedCount++;
                 LL_LOGGER.warn("  UNMATCHED_HAPLTOYPE {}", unmatched);
             }
         }

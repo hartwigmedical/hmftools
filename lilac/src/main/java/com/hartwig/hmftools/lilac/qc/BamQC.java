@@ -14,36 +14,31 @@ import org.jetbrains.annotations.NotNull;
 public class BamQC
 {
     public final int DiscardedAlignmentFragments;
-    public final int DiscardedIndelFragments;
-    public final int DiscardedIndelMaxCount;
+    public final int DiscardedIndels;
+    public final int DiscardedIndelMaxFrags;
 
     private static final int MIN_SUPPORT = 3;
 
     public BamQC(
-            int discardedAlignmentFragments, int discardedIndelFragments, int discardedIndelMaxCount)
+            int discardedAlignmentFragments, int discardedIndels, int discardedIndelMaxFrags)
     {
         DiscardedAlignmentFragments = discardedAlignmentFragments;
-        DiscardedIndelFragments = discardedIndelFragments;
-        DiscardedIndelMaxCount = discardedIndelMaxCount;
+        DiscardedIndels = discardedIndels;
+        DiscardedIndelMaxFrags = discardedIndelMaxFrags;
     }
 
     public final List<String> header()
     {
-        return Lists.newArrayList("DiscardedIndelFragments", "DiscardedIndelMaxCount", "DiscardedAlignmentFragments");
+        return Lists.newArrayList("DiscardedIndels", "DiscardedIndelMaxFrags", "DiscardedAlignmentFragments");
     }
 
     @NotNull
     public final List<String> body()
     {
         return Lists.newArrayList(
-                String.valueOf(DiscardedIndelFragments),
-                String.valueOf(DiscardedIndelMaxCount),
+                String.valueOf(DiscardedIndels),
+                String.valueOf(DiscardedIndelMaxFrags),
                 String.valueOf(DiscardedAlignmentFragments));
-    }
-
-    public final int getDiscardedIndelFragments()
-    {
-        return DiscardedIndelFragments;
     }
 
     public static BamQC create(final SAMRecordReader reader)
@@ -57,7 +52,9 @@ public class BamQC
         fragmentsWithUnmatchedPonIndel.entrySet().forEach(x -> LL_LOGGER.warn(
                 "  UNMATCHED_PON_INDEL - {} fragments excluded with unmatched PON indel {}", x.getValue(), x.getKey().toString()));
 
-        return new BamQC(reader.alignmentFiltered(),
-                fragmentsWithUnmatchedIndel.size(), fragmentsWithUnmatchedIndel.values().stream().mapToInt(x -> x).max().orElse(0));
+        return new BamQC(
+                reader.alignmentFiltered(),
+                fragmentsWithUnmatchedIndel.size(),
+                fragmentsWithUnmatchedIndel.values().stream().mapToInt(x -> x).max().orElse(0));
     }
 }

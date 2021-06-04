@@ -5,7 +5,9 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_INDEL_THRESHOLD;
+import static com.hartwig.hmftools.lilac.LilacConstants.WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_ALLELE;
+import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_AMINO_ACID;
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_HAPLOTYPE;
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_INDEL;
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_SOMATIC_VARIANT;
@@ -139,9 +141,15 @@ public final class LilacQC
 
     private void populateStatus()
     {
-        if(HaplotypeQC.UnusedHaplotypes > 0)
+        double haplotypeWarnThreshold = CoverageQC.TotalFragments * WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
+        if(HaplotypeQC.UnusedHaplotypeMaxFrags >= haplotypeWarnThreshold)
         {
             mStatus.add(WARN_UNMATCHED_HAPLOTYPE);
+        }
+
+        if(AminoAcidQC.UnusedAminoAcidMaxFrags >= haplotypeWarnThreshold)
+        {
+            mStatus.add(WARN_UNMATCHED_AMINO_ACID);
         }
 
         if(CoverageQC.ATypes == 0 || CoverageQC.BTypes == 0 || CoverageQC.CTypes == 0)
@@ -150,7 +158,7 @@ public final class LilacQC
         }
 
         double indelWarnThreshold = CoverageQC.TotalFragments * WARN_INDEL_THRESHOLD;
-        if(BamQC.getDiscardedIndelFragments() >= indelWarnThreshold)
+        if(BamQC.DiscardedIndelMaxFrags >= indelWarnThreshold)
         {
             mStatus.add(WARN_UNMATCHED_INDEL);
         }

@@ -5,7 +5,6 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOG_UNMATCHED_HAPLOTYPE_SUPPORT;
-import static com.hartwig.hmftools.lilac.LilacConstants.WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
 import com.google.common.collect.Lists;
@@ -20,22 +19,22 @@ import java.util.stream.Collectors;
 public class AminoAcidQC
 {
     public final int UnusedAminoAcids;
-    public final int UnusedAminoAcidMaxSupport;
+    public final int UnusedAminoAcidMaxFrags;
 
-    public AminoAcidQC(int unusedAminoAcids, int unusedAminoAcidMaxSupport)
+    public AminoAcidQC(int unusedAminoAcids, int unusedAminoAcidMaxFrags)
     {
         UnusedAminoAcids = unusedAminoAcids;
-        UnusedAminoAcidMaxSupport = unusedAminoAcidMaxSupport;
+        UnusedAminoAcidMaxFrags = unusedAminoAcidMaxFrags;
     }
 
     public final List<String> header()
     {
-        return Lists.newArrayList("UnusedAminoAcids", "UnusedAminoAcidMaxSupport");
+        return Lists.newArrayList("UnusedAminoAcids", "UnusedAminoAcidMaxFrags");
     }
 
     public final List<String> body()
     {
-        return Lists.newArrayList(String.valueOf(UnusedAminoAcids), String.valueOf(UnusedAminoAcidMaxSupport));
+        return Lists.newArrayList(String.valueOf(UnusedAminoAcids), String.valueOf(UnusedAminoAcidMaxFrags));
     }
 
     public static AminoAcidQC create(
@@ -44,8 +43,6 @@ public class AminoAcidQC
     {
         int unused = 0;
         int largest = 0;
-
-        double warnThreshold = totalFragments * WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
 
         for(Integer locus : aminoAcidCount.heterozygousLoci())
         {
@@ -85,11 +82,8 @@ public class AminoAcidQC
                 LL_LOGGER.warn("  UNMATCHED_AMINO_ACID - amino acid sequence({} count={} locus={}) not in winning solution",
                         aminoAcid, count, locus);
 
-                if(count >= warnThreshold)
-                {
-                    ++unused;
-                    largest = max(largest, count);
-                }
+                ++unused;
+                largest = max(largest, count);
             }
         }
 

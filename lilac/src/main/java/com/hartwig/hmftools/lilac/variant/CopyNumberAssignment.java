@@ -122,7 +122,9 @@ public class CopyNumberAssignment
 
     public static Map<HlaAllele,Double> formEmptyAlleleCopyNumber(final List<HlaAllele> winners)
     {
-        return winners.stream().collect(Collectors.toMap(entry -> entry, entry -> new Double(0)));
+        Map<HlaAllele,Double> alleleCN = Maps.newHashMap();
+        winners.forEach(x -> alleleCN.put(x, 0.0));
+        return  alleleCN;
     }
 
     public Map<HlaAllele,Double> assign(
