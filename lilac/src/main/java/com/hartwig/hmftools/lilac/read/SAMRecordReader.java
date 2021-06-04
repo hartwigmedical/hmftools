@@ -23,6 +23,7 @@ import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.FragmentUtils;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
+import com.hartwig.hmftools.lilac.variant.SomaticVariant;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -160,9 +161,9 @@ public class SAMRecordReader
         return regionsReversed;
     }
 
-    public final List<Fragment> readFromBam(final VariantContextDecorator variant)
+    public final List<Fragment> readFromBam(final SomaticVariant variant)
     {
-        final GenomePosition variantPosition = GenomePositions.create(variant.chromosome(), variant.position());
+        final GenomePosition variantPosition = GenomePositions.create(variant.Chromosome, variant.Position);
 
         for(String geneName : HLA_GENES)
         {
@@ -173,7 +174,7 @@ public class SAMRecordReader
             for(NamedBed codingRegion : codingRegions)
             {
                 if (codingRegion.contains(variantPosition)
-                || abs(codingRegion.start() - variant.position()) <= 5 || abs(codingRegion.end() - variant.position()) <= 5)
+                || abs(codingRegion.start() - variant.Position) <= 5 || abs(codingRegion.end() - variant.Position) <= 5)
                 {
                     List<SAMCodingRecord> regionCodingRecords = query(reverseStrand, variantPosition, codingRegion, mBamFile);
                     List<SAMCodingRecord> codingRecords = Lists.newArrayList();
@@ -206,18 +207,18 @@ public class SAMRecordReader
         return Lists.newArrayList();
     }
 
-    private final boolean recordContainsVariant(final VariantContextDecorator variant, final SAMCodingRecord record)
+    private final boolean recordContainsVariant(final SomaticVariant variant, final SAMCodingRecord record)
     {
-        if (variant.alt().length() != variant.ref().length())
+        if (variant.Alt.length() != variant.Ref.length())
         {
-            Indel expectedIndel = new Indel(variant.chromosome(), (int)variant.position(), variant.ref(), variant.alt());
+            Indel expectedIndel = new Indel(variant.Chromosome, variant.Position, variant.Ref, variant.Alt);
             return record.getIndels().stream().anyMatch(x -> x.match(expectedIndel));
         }
 
-        for (int i = 0; i < variant.alt().length(); ++i)
+        for (int i = 0; i < variant.Alt.length(); ++i)
         {
-            int position = (int)variant.position() + i;
-            char expectedBase = variant.alt().charAt(i);
+            int position = (int)variant.Position + i;
+            char expectedBase = variant.Alt.charAt(i);
 
             int readIndex = record.getSamRecord().getReadPositionAtReferencePosition(position) - 1;
 

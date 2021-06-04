@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 public class SomaticAlleleCoverage
 {
+    /*
     private final List<Integer> mVariantLoci;
     private final Map<String,Map<Integer,Set<String>>> mHetLociSansVariants;
     private final LilacConfig mConfig;
@@ -83,4 +84,5 @@ public class SomaticAlleleCoverage
 
         return coverage.stream().filter(x -> x.TotalCoverage == coverage.get(0).TotalCoverage).collect(Collectors.toList());
     }
+     */
 }

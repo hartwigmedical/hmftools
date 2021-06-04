@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.candidates.Candidates;
 import com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper;
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
@@ -53,7 +52,8 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.variant.LilacVCF;
 import com.hartwig.hmftools.lilac.variant.SomaticAlleleCoverage;
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
-import com.hartwig.hmftools.lilac.variant.SomaticVariantFinder;
+import com.hartwig.hmftools.lilac.variant.SomaticVariant;
+import com.hartwig.hmftools.lilac.variant.SomaticVariantAnnotation;
 
 import java.util.Collections;
 import java.util.List;
@@ -361,7 +361,7 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         HlaComplexCoverage winningTumorCoverage = null;
         Map<HlaAllele,Double> winningTumorCopyNumber = null;
-        List<VariantContextDecorator> somaticVariants = Lists.newArrayList();
+        List<SomaticVariant> somaticVariants = Lists.newArrayList();
         List<SomaticCodingCount> somaticCodingCounts = SomaticCodingCount.create(winningAlleles);
 
         if(!mConfig.TumorBam.isEmpty())
@@ -386,25 +386,33 @@ public class LilacApplication implements AutoCloseable, Runnable
             }
 
             // SOMATIC VARIANTS
-            SomaticVariantFinder somaticVariantFinder = new SomaticVariantFinder(mConfig, mRefData.HlaTranscriptData);
-            somaticVariants.addAll(somaticVariantFinder.readSomaticVariants());
+            SomaticVariantAnnotation variantAnnotation = new SomaticVariantAnnotation(
+                    mConfig, mRefData.HlaTranscriptData, geneAminoAcidHetLociMap, mRefData.LociPositionFinder);
+
+            somaticVariants.addAll(variantAnnotation.getSomaticVariants());
 
             if(!somaticVariants.isEmpty())
             {
                 LL_LOGGER.info("calculating somatic variant allele coverage");
 
-                String vcfFilename = mConfig.outputPrefix() + ".lilac.somatic.vcf.gz";
-                LilacVCF lilacVCF = new LilacVCF(vcfFilename, mConfig.SomaticVariantsFile).writeHeader(version.toString());
+                boolean hasVcfData = somaticVariants.stream().anyMatch(x -> x.Context != null);
+                LilacVCF lilacVCF = null;
 
-                SomaticAlleleCoverage somaticCoverageFactory = new SomaticAlleleCoverage(
-                        mConfig, geneAminoAcidHetLociMap, mRefData.LociPositionFinder, somaticVariants, winningSequences);
-
-                for(VariantContextDecorator variant : somaticVariants)
+                if(hasVcfData)
                 {
-                    List<HlaAlleleCoverage> variantCoverage = somaticCoverageFactory.alleleCoverage(variant, tumorBamReader);
+                    String vcfFilename = mConfig.outputPrefix() + ".lilac.somatic.vcf.gz";
+                    lilacVCF = new LilacVCF(vcfFilename, mConfig.SomaticVariantsFile).writeHeader(version.toString());
+                }
+
+                for(SomaticVariant variant : somaticVariants)
+                {
+                    List<HlaAlleleCoverage> variantCoverage = variantAnnotation.assignAlleleCoverage(variant, tumorBamReader, winningSequences);
                     List<HlaAllele> variantAlleles = variantCoverage.stream().map(x -> x.Allele).collect(Collectors.toList());
                     LL_LOGGER.info("  {} -> {}}", variant, variantCoverage);
-                    lilacVCF.writeVariant(variant.context(), variantAlleles);
+
+                    if(lilacVCF != null && variant.Context != null)
+                        lilacVCF.writeVariant(variant.Context, variantAlleles);
+
                     addVariant(somaticCodingCounts, variant, variantAlleles);
                 }
             }
