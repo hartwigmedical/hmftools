@@ -37,7 +37,7 @@ public final class PatientReporterTestFactory {
     private static final String CHORD_PREDICTION_TXT = RUN_DIRECTORY + "/chord/sample_chord_prediction.txt";
     private static final String MOLECULAR_TISSUE_ORIGIN_TXT = RUN_DIRECTORY + "/cuppa/sample.cuppa.conclusion.txt";
     private static final String MOLECULAR_TISSUE_ORIGIN_PLOT = RUN_DIRECTORY + "/cuppa/sample.cuppa.chart.png";
-    private static final String INTERPRETED_VIRUS_TSV = RUN_DIRECTORY + "/virusbreakend/sample.interpreted_virus.tsv";
+    private static final String ANNOTATED_VIRUS_TSV = RUN_DIRECTORY + "/virusbreakend/sample.virus.annotated.tsv";
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/sample.peach.genotype.tsv";
     private static final String PROTECT_EVIDENCE_TSV = RUN_DIRECTORY + "/protect/sample.protect.tsv";
 
@@ -80,7 +80,7 @@ public final class PatientReporterTestFactory {
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .molecularTissueOriginTxt(MOLECULAR_TISSUE_ORIGIN_TXT)
                 .molecularTissueOriginPlot(MOLECULAR_TISSUE_ORIGIN_PLOT)
-                .interpretedVirusTsv(INTERPRETED_VIRUS_TSV)
+                .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                 .peachGenotypeTsv(PEACH_GENOTYPE_TSV)
                 .protectEvidenceTsv(PROTECT_EVIDENCE_TSV)
                 .germlineReportingTsv(Strings.EMPTY)

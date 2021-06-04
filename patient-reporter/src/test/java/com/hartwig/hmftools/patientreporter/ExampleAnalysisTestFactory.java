@@ -41,7 +41,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
-import com.hartwig.hmftools.common.virus.InterpretedVirus;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusInterpretation;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
@@ -97,7 +97,7 @@ public final class ExampleAnalysisTestFactory {
         List<LinxFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        List<InterpretedVirus> viruses = Lists.newArrayList();
+        List<AnnotatedVirus> viruses = Lists.newArrayList();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), config.reportGermline(), config.limsCohortConfig());
@@ -176,7 +176,7 @@ public final class ExampleAnalysisTestFactory {
         AnalysedPatientReport coloReport = createWithCOLO829Data(config);
 
         List<LinxFusion> fusions = createTestFusions();
-        List<InterpretedVirus> viruses = createTestInterpretedViruses();
+        List<AnnotatedVirus> viruses = createTestAnnotatedViruses();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
@@ -1019,8 +1019,8 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<InterpretedVirus> createTestInterpretedViruses() {
-        return Lists.newArrayList(VirusTestFactory.testInterpretedVirusBuilder()
+    private static List<AnnotatedVirus> createTestAnnotatedViruses() {
+        return Lists.newArrayList(VirusTestFactory.testAnnotatedVirusBuilder()
                 .name("Human papillomavirus type 16")
                 .integrations(2)
                 .interpretation(VirusInterpretation.HPV)

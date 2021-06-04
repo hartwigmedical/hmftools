@@ -39,8 +39,8 @@ public final class VirusTestFactory {
     }
 
     @NotNull
-    public static ImmutableInterpretedVirus.Builder testInterpretedVirusBuilder() {
-        return ImmutableInterpretedVirus.builder()
+    public static ImmutableAnnotatedVirus.Builder testAnnotatedVirusBuilder() {
+        return ImmutableAnnotatedVirus.builder()
                 .taxid(0)
                 .name(Strings.EMPTY)
                 .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)

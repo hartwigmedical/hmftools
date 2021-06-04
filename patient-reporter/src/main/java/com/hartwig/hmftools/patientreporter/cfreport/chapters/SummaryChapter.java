@@ -26,10 +26,10 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
-import com.hartwig.hmftools.patientreporter.cfreport.data.InterpretedViruses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
+import com.hartwig.hmftools.patientreporter.cfreport.data.ViralPresence;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.Cell;
@@ -223,7 +223,7 @@ public class SummaryChapter implements ReportChapter {
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Integrated Virus").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createVirusInterpretationString(InterpretedViruses.virusInterpretationSummary(analysis().reportableViruses()),
+        table.addCell(createVirusInterpretationString(ViralPresence.virusInterpretationSummary(analysis().reportableViruses()),
                 patientReport.sampleReport().reportViralPresence()));
 
         div.add(table);

@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
-import com.hartwig.hmftools.common.virus.InterpretedVirus;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
@@ -318,7 +318,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createVirusTable(@NotNull List<InterpretedVirus> viruses, boolean reportViralPresence) {
+    private static Table createVirusTable(@NotNull List<AnnotatedVirus> viruses, boolean reportViralPresence) {
         String title = "Tumor specific viral insertions";
 
         if (!reportViralPresence) {
@@ -331,7 +331,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                             TableUtil.createHeaderCell("Number of detected integration sites").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("") });
 
-            for (InterpretedVirus virus : viruses) {
+            for (AnnotatedVirus virus : viruses) {
                 contentTable.addCell(TableUtil.createContentCell(virus.name()));
                 contentTable.addCell(TableUtil.createContentCell(Integer.toString(virus.integrations()))
                         .setTextAlignment(TextAlignment.CENTER));
