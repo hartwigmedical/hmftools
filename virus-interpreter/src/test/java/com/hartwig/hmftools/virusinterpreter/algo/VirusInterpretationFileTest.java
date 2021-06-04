@@ -14,7 +14,7 @@ import org.junit.Test;
 
 public class VirusInterpretationFileTest {
 
-    private static final String VIRUS_INTERPRETATION_TSV = Resources.getResource("virus_interpretation/virus_interpretation.tsv").getPath();
+    private static final String VIRUS_INTERPRETATION_TSV = Resources.getResource("virus_interpreter/virus_interpretation.tsv").getPath();
 
     @Test
     public void canReadVirusInterpretationTsv() throws IOException {
