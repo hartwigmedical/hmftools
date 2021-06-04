@@ -15,9 +15,7 @@ import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -124,19 +122,7 @@ public class HlaSequenceLoci
     public boolean consistentWith(final PhasedEvidence evidence)
     {
         return consistentWithAny(
-                evidence.getEvidence().keySet().stream().collect(Collectors.toList()), evidence.getAminoAcidIndices());
-    }
-
-    public boolean consistentWithAny(final Set<String> targetSequences, final int[] targetIndices)
-    {
-        return consistentWithAny(targetSequences.stream().collect(Collectors.toList()), targetIndices);
-    }
-
-    public boolean consistentWithAny(final List<String> targetSequences, final int[] targetIndices)
-    {
-        List<Integer> tiList = Lists.newArrayList();
-        Arrays.stream(targetIndices).forEach(x -> tiList.add(x));
-        return consistentWithAny(targetSequences, tiList);
+                evidence.getEvidence().keySet().stream().collect(Collectors.toList()), evidence.getAminoAcidLoci());
     }
 
     public boolean consistentWithAny(final List<String> targetSequences, final List<Integer> targetIndices)
@@ -144,11 +130,9 @@ public class HlaSequenceLoci
         return targetSequences.stream().anyMatch(x -> determineMatchType(x, targetIndices) != SequenceMatchType.MISMATCH);
     }
 
-    public boolean consistentWith(final String targetSequence, final int[] targetIndices)
+    public boolean consistentWith(final String targetSequence, final List<Integer> targetIndices)
     {
-        List<Integer> tiList = Lists.newArrayList();
-        Arrays.stream(targetIndices).forEach(x -> tiList.add(x));
-        return determineMatchType(targetSequence, tiList) != SequenceMatchType.MISMATCH;
+        return determineMatchType(targetSequence, targetIndices) != SequenceMatchType.MISMATCH;
     }
 
     public static List<Integer> filterExonBoundaryWildcards(final HlaSequenceLoci sequence, final List<Integer> loci)

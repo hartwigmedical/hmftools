@@ -86,14 +86,14 @@ public final class ExtendEvidence
     {
         // List<Integer> existingIndices = current.getAminoAcidIndexList();
 
-        int minExisting = listMin(current.getAminoAcidIndexList());
-        int maxExisting = listMax(current.getAminoAcidIndexList());
+        int minExisting = listMin(current.getAminoAcidLoci());
+        int maxExisting = listMax(current.getAminoAcidLoci());
 
         List<PhasedEvidence> othersContainingMax = others.stream()
-                .filter(x -> x != current && x.getAminoAcidIndexList().contains(maxExisting)).collect(Collectors.toList());
+                .filter(x -> x != current && x.getAminoAcidLoci().contains(maxExisting)).collect(Collectors.toList());
 
         List<PhasedEvidence> othersContainingMin = others.stream()
-                .filter(x -> x != current && x.getAminoAcidIndexList().contains(minExisting)).collect(Collectors.toList());
+                .filter(x -> x != current && x.getAminoAcidLoci().contains(minExisting)).collect(Collectors.toList());
 
         if (!othersContainingMin.isEmpty() && !othersContainingMax.isEmpty())
         {

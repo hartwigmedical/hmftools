@@ -2,7 +2,6 @@ package com.hartwig.hmftools.lilac.qc;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOG_UNMATCHED_HAPLOTYPE_SUPPORT;
@@ -129,7 +128,7 @@ public class HaplotypeQC
 
     private static boolean consistentWithAny(final PhasedEvidence phasedEvidence, final List<HlaSequenceLoci> winners, final String sequence)
     {
-        return winners.stream().anyMatch(x -> x.consistentWith(sequence, phasedEvidence.getAminoAcidIndices()));
+        return winners.stream().anyMatch(x -> x.consistentWith(sequence, phasedEvidence.getAminoAcidLoci()));
     }
 
     public static List<Haplotype> unmatchedHaplotype(
@@ -151,7 +150,7 @@ public class HaplotypeQC
         for(Map.Entry<String,Integer> entry : unmatched.entrySet())
         {
             Haplotype haplotype = Haplotype.create(
-                    evidence.getAminoAcidIndexList(), new Pair(entry.getKey(), entry.getValue()), aminoAcidCount);
+                    evidence.getAminoAcidLoci(), new Pair(entry.getKey(), entry.getValue()), aminoAcidCount);
 
             haplotypes.add(haplotype);
         }
@@ -200,8 +199,8 @@ public class HaplotypeQC
 
                 if(matches && matchCount > 0)
                 {
-                    LL_LOGGER.debug("haplotype({}) supported by fragment({} {}) matchedAAs({})",
-                            haplotype, fragment.id(), fragment.readInfo(), matchCount);
+                    //LL_LOGGER.debug("haplotype({}) supported by fragment({} {}) matchedAAs({})",
+                    //        haplotype, fragment.id(), fragment.readInfo(), matchCount);
 
                     haplotype.addMatchingFragmentCount();
                 }

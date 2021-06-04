@@ -123,7 +123,7 @@ public class QualityControlTest
 
         AminoAcidQC qc = AminoAcidQC.create(winningSequences, Lists.newArrayList(), aminoAcidCount, unmatchedHaplotypes, 1000);
         assertEquals(3, qc.UnusedAminoAcids);
-        assertEquals(6, qc.UnusedAminoAcidMaxFrags);
+        assertEquals(10, qc.UnusedAminoAcidMaxFrags);
     }
 
     private HlaSequenceLoci createSequenceLoci(final String allele, final String sequenceStr)

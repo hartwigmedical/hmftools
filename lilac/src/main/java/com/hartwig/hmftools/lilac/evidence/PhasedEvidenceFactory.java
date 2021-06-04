@@ -112,8 +112,8 @@ public class PhasedEvidenceFactory
     {
         public int compare(final PhasedEvidence first, final PhasedEvidence second)
         {
-            int firstAA = first.getAminoAcidIndexList().get(0);
-            int secondAA = second.getAminoAcidIndexList().get(0);
+            int firstAA = first.getAminoAcidLoci().get(0);
+            int secondAA = second.getAminoAcidLoci().get(0);
             if(firstAA != secondAA)
             {
                 return firstAA > secondAA ? 1 : -1;

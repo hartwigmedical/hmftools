@@ -154,7 +154,8 @@ public final class Candidates
             PhasedEvidence newEvidence = evidence.get(i);
 
             candidates = candidates.stream()
-                .filter(x -> x.consistentWithAny(newEvidence.getEvidence().keySet(), newEvidence.getAminoAcidIndices()))
+                .filter(x -> x.consistentWithAny(
+                        newEvidence.getEvidence().keySet().stream().collect(Collectors.toList()), newEvidence.getAminoAcidLoci()))
                 .collect(Collectors.toList());
         }
 

@@ -26,16 +26,16 @@ public class CombineEvidence
 
     public static boolean canCombine(final PhasedEvidence left, final PhasedEvidence right)
     {
-        List<Integer> indexIntersection = left.getAminoAcidIndexList().stream()
-                .filter(x -> right.getAminoAcidIndexList().contains(x)).collect(Collectors.toList());
+        List<Integer> indexIntersection = left.getAminoAcidLoci().stream()
+                .filter(x -> right.getAminoAcidLoci().contains(x)).collect(Collectors.toList());
 
         Collections.sort(indexIntersection);
 
         if (indexIntersection.isEmpty())
             return false;
 
-        List<Integer> uniqueToLeft = left.getAminoAcidIndexList().stream().filter(x -> !indexIntersection.contains(x)).collect(Collectors.toList());
-        List<Integer> uniqueToRight = right.getAminoAcidIndexList().stream().filter(x -> !indexIntersection.contains(x)).collect(Collectors.toList());
+        List<Integer> uniqueToLeft = left.getAminoAcidLoci().stream().filter(x -> !indexIntersection.contains(x)).collect(Collectors.toList());
+        List<Integer> uniqueToRight = right.getAminoAcidLoci().stream().filter(x -> !indexIntersection.contains(x)).collect(Collectors.toList());
 
         int rightMin = uniqueToRight.stream().mapToInt(x -> x).min().orElse(0);
         int leftMin = uniqueToLeft.stream().mapToInt(x -> x).min().orElse(0);
@@ -46,7 +46,7 @@ public class CombineEvidence
             return false;
 
         Set<String> leftCommon = left.getEvidence().keySet().stream()
-                .map(x -> x.substring(left.getAminoAcidIndexList().size() - indexIntersection.size())).collect(Collectors.toSet());
+                .map(x -> x.substring(left.getAminoAcidLoci().size() - indexIntersection.size())).collect(Collectors.toSet());
 
         Set<String> rightCommon = right.getEvidence().keySet().stream()
                 .map(x -> x.substring(0, indexIntersection.size())).collect(Collectors.toSet());
@@ -56,16 +56,16 @@ public class CombineEvidence
 
     public static PhasedEvidence combineOverlapping(final PhasedEvidence left, final PhasedEvidence right)
     {
-        List<Integer> indexUnion = left.getAminoAcidIndexList().stream().collect(Collectors.toList());
-        right.getAminoAcidIndexList().stream().filter(x -> !left.getAminoAcidIndexList().contains(x)).forEach(x -> indexUnion.add(x));
+        List<Integer> indexUnion = left.getAminoAcidLoci().stream().collect(Collectors.toList());
+        right.getAminoAcidLoci().stream().filter(x -> !left.getAminoAcidLoci().contains(x)).forEach(x -> indexUnion.add(x));
         Collections.sort(indexUnion);
 
-        List<Integer> indexIntersection = left.getAminoAcidIndexList().stream()
-                .filter(x -> right.getAminoAcidIndexList().contains(x)).collect(Collectors.toList());
+        List<Integer> indexIntersection = left.getAminoAcidLoci().stream()
+                .filter(x -> right.getAminoAcidLoci().contains(x)).collect(Collectors.toList());
 
         Collections.sort(indexIntersection);
 
-        List<Integer> uniqueToLeft = left.getAminoAcidIndexList().stream().filter(x -> !indexIntersection.contains(x)).collect(Collectors.toList());
+        List<Integer> uniqueToLeft = left.getAminoAcidLoci().stream().filter(x -> !indexIntersection.contains(x)).collect(Collectors.toList());
 
         Map<String,Integer> results = Maps.newHashMap();
 
