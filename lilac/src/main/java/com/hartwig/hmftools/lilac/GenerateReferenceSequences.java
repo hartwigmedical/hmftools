@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.lilac.seq.HlaSequence.IDENTICAL;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.SEQUENCE_DELIM;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToFourDigit;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.reduceToSixDigit;
+import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.buildAminoAcidSequenceFromNucleotides;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -108,16 +109,30 @@ public class GenerateReferenceSequences
     {
         LL_LOGGER.info("reading nucleotide files");
 
-        mNucleotideSequences.addAll(nucleotideLoci(mResourceDir + "/A_nuc.txt"));
-        mNucleotideSequences.addAll(nucleotideLoci(mResourceDir + "/B_nuc.txt"));
-        mNucleotideSequences.addAll(nucleotideLoci(mResourceDir + "/C_nuc.txt"));
-        mNucleotideSequences.addAll(nucleotideLoci(mResourceDir + "/Y_nuc.txt"));
+        mNucleotideSequences.addAll(nucleotideLoci(mResourceDir + "A_nuc.txt"));
+        mNucleotideSequences.addAll(nucleotideLoci(mResourceDir + "B_nuc.txt"));
+        mNucleotideSequences.addAll(nucleotideLoci(mResourceDir + "C_nuc.txt"));
+
+        List<HlaSequenceLoci> yNucSequences = nucleotideLoci(mResourceDir + "Y_nuc.txt");
+        List<HlaSequenceLoci> hNucSequences = nucleotideLoci(mResourceDir + "H_nuc.txt");
+        mNucleotideSequences.addAll(yNucSequences);
+        mNucleotideSequences.addAll(hNucSequences);
 
         LL_LOGGER.info("reading protein files");
 
-        mAminoAcidSequences.addAll(aminoAcidLoci(mResourceDir + "/A_prot.txt"));
-        mAminoAcidSequences.addAll(aminoAcidLoci(mResourceDir + "/B_prot.txt"));
-        mAminoAcidSequences.addAll(aminoAcidLoci(mResourceDir + "/C_prot.txt"));
+        mAminoAcidSequences.addAll(aminoAcidLoci(mResourceDir + "A_prot.txt"));
+        mAminoAcidSequences.addAll(aminoAcidLoci(mResourceDir + "B_prot.txt"));
+        mAminoAcidSequences.addAll(aminoAcidLoci(mResourceDir + "C_prot.txt"));
+
+        HlaSequenceLoci sequenceTemplate = mAminoAcidSequences.stream()
+                .filter(x -> x.Allele.matches(DEFLATE_TEMPLATE)).findFirst().orElse(null);
+
+        // build H and Y amino-acid sequences from their nucleotides
+        if(sequenceTemplate != null)
+        {
+            yNucSequences.forEach(x -> mAminoAcidSequences.add(buildAminoAcidSequenceFromNucleotides(x, sequenceTemplate)));
+            hNucSequences.forEach(x -> mAminoAcidSequences.add(buildAminoAcidSequenceFromNucleotides(x, sequenceTemplate)));
+        }
 
         return true;
     }

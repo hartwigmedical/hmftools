@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-import com.hartwig.hmftools.lilac.SequenceCount;
+import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
 import java.util.List;
 import java.util.Map;

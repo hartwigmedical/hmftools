@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac;
+package com.hartwig.hmftools.lilac.fragment;
 
 import static java.lang.Integer.min;
 
@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
 public class SequenceCountDiff
 {

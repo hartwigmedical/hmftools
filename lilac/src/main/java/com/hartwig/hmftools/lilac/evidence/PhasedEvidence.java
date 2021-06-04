@@ -44,7 +44,7 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
     public final int[] getAminoAcidIndices() { return mAminoAcidIndices; }
     public final List<Integer> getAminoAcidIndexList() { return mAminoAcidIndexList; }
 
-    public final Map<String, Integer> getEvidence()
+    public final Map<String,Integer> getEvidence()
     {
         return mEvidenceMap;
     }

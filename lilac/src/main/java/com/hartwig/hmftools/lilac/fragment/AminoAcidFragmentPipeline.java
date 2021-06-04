@@ -8,8 +8,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConfig;
-import com.hartwig.hmftools.lilac.SequenceCount;
-import com.hartwig.hmftools.lilac.SequenceCountDiff;
+import com.hartwig.hmftools.lilac.seq.SequenceCount;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 
 import java.util.List;

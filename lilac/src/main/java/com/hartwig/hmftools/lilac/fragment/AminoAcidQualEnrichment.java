@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.copyNucleotideFr
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.lilac.SequenceCount;
+import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
 public class AminoAcidQualEnrichment
 {

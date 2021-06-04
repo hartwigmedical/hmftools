@@ -10,4 +10,9 @@ public enum FragmentScope
     CANDIDATE,
     SOLUTION,
     UNSET;
+
+    public boolean isUnmatched()
+    {
+        return this == CANDIDATE || this == UNMATCHED_AMINO_ACID || this == WILD_ONLY;
+    }
 }

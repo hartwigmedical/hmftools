@@ -1,31 +1,10 @@
 package com.hartwig.hmftools.lilac.coverage;
 
-import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_Y_FRAGMENT_THRESHOLD;
-import static com.hartwig.hmftools.lilac.fragment.FragmentScope.CANDIDATE;
-import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
-import static com.hartwig.hmftools.lilac.fragment.FragmentScope.NO_HET_LOCI;
-import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNMATCHED_AMINO_ACID;
-import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.filterExonBoundaryWildcards;
-import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.filterWildcards;
-import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.FULL;
-import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.WILD;
-
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.lilac.SequenceCount;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
-import com.hartwig.hmftools.lilac.fragment.FragmentScope;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-import com.hartwig.hmftools.lilac.seq.SequenceMatchType;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 public class FragmentAlleles

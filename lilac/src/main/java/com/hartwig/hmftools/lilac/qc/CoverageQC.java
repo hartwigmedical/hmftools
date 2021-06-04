@@ -128,7 +128,7 @@ public class CoverageQC {
                 ++solutionFragments;
             else if(fragment.scope() == NO_HET_LOCI)
                 ++uninformativeFragments;
-            else if(fragment.scope() == CANDIDATE || fragment.scope() == UNMATCHED_AMINO_ACID || fragment.scope() == WILD_ONLY)
+            else if(fragment.scope().isUnmatched())
                 ++unmatchedFragments;
         }
 

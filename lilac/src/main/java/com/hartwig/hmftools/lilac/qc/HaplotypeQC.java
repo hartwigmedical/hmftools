@@ -2,14 +2,17 @@ package com.hartwig.hmftools.lilac.qc;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOG_UNMATCHED_HAPLOTYPE_SUPPORT;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
-import com.hartwig.hmftools.lilac.SequenceCount;
+import com.hartwig.hmftools.lilac.seq.SequenceCount;
 import org.apache.commons.math3.util.Pair;
 
 import java.io.BufferedReader;
@@ -71,7 +74,7 @@ public class HaplotypeQC
 
     public static HaplotypeQC create(
             final List<HlaSequenceLoci> winners, final List<HlaSequenceLoci> hlaYSequences,
-            final List<PhasedEvidence> evidence, final SequenceCount aminoAcidCount, int totalFragments)
+            final List<PhasedEvidence> evidence, final SequenceCount aminoAcidCount, final List<Fragment> unmatchedFragments)
     {
         loadPonHaplotypes();
 
@@ -95,6 +98,8 @@ public class HaplotypeQC
             distinctHaplotypes.add(haplotype);
         }
 
+        findSupportingFragmentCounts(distinctHaplotypes, unmatchedFragments);
+
         Collections.sort(distinctHaplotypes, new Haplotype.HaplotypeStartLocusSorter());
 
         int pon = 0;
@@ -103,7 +108,7 @@ public class HaplotypeQC
 
         for (Haplotype unmatched : distinctHaplotypes)
         {
-            if(unmatched.SupportingFragments < LOG_UNMATCHED_HAPLOTYPE_SUPPORT)
+            if(unmatched.matchingFragmentCount() < LOG_UNMATCHED_HAPLOTYPE_SUPPORT)
                 continue;
 
             if (inPon(unmatched))
@@ -113,7 +118,7 @@ public class HaplotypeQC
             }
             else
             {
-                maxSupport = max(maxSupport, unmatched.SupportingFragments);
+                maxSupport = max(maxSupport, unmatched.matchingFragmentCount());
                 unusedCount++;
                 LL_LOGGER.warn("  UNMATCHED_HAPLTOYPE {}", unmatched);
             }
@@ -152,5 +157,55 @@ public class HaplotypeQC
         }
 
         return haplotypes;
+    }
+
+    private static void findSupportingFragmentCounts(final List<Haplotype> haplotypes, final List<Fragment> fragments)
+    {
+        for(Haplotype haplotype : haplotypes)
+        {
+            for(Fragment fragment : fragments)
+            {
+                if(!positionsOverlap(fragment.minAminoAcidLocus(), fragment.maxAminoAcidLocus(), haplotype.StartLocus, haplotype.EndLocus))
+                    continue;
+
+                boolean matches = true;
+                int matchCount = 0;
+
+                for(int locus = haplotype.StartLocus; locus <= haplotype.EndLocus; ++locus)
+                {
+                    int index = fragment.getAminoAcidLoci().indexOf(locus);
+                    String fragmentAA = "";
+
+                    if(index >= 0)
+                    {
+                        fragmentAA = fragment.getAminoAcids().get(index);
+                    }
+                    else
+                    {
+                        // retrieve the low-qual or homozygous bases
+                        fragmentAA = fragment.getLowQualAminoAcid(locus);
+
+                        if(fragmentAA.isEmpty())
+                            continue;
+                    }
+
+                    if(!fragmentAA.equals(haplotype.sequence(locus)))
+                    {
+                        matches = false;
+                        break;
+                    }
+
+                    ++matchCount;
+                }
+
+                if(matches && matchCount > 0)
+                {
+                    LL_LOGGER.debug("haplotype({}) supported by fragment({} {}) matchedAAs({})",
+                            haplotype, fragment.id(), fragment.readInfo(), matchCount);
+
+                    haplotype.addMatchingFragmentCount();
+                }
+            }
+        }
     }
 }

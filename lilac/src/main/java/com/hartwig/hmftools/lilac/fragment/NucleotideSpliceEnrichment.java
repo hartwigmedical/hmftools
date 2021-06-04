@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac.fragment;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.lilac.SequenceCount;
+import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
 import java.util.List;
 import java.util.Set;

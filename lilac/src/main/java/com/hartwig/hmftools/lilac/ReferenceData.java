@@ -5,11 +5,13 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsInde
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTOFF;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_H;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_Y;
 import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.LilacConstants.getNucleotideExonBoundaries;
 import static com.hartwig.hmftools.lilac.hla.HlaContextFactory.populateNucleotideExonBoundaries;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
+import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.buildAminoAcidSequenceFromNucleotides;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -94,7 +96,6 @@ public class ReferenceData
         StopLossRecoveryAlleles = Lists.newArrayList();
     }
 
-    public HlaSequenceLoci getDeflatedSequenceTemplate() { return mDeflatedSequenceTemplate; }
     public CohortFrequency getAlleleFrequencies() { return mAlleleFrequencies; }
 
     public boolean load()
@@ -139,22 +140,18 @@ public class ReferenceData
 
     private void buildHlaYAminoAcidSequences()
     {
-        for(HlaSequenceLoci sequenceLoci : HlaYNucleotideSequences)
+        HlaYAminoAcidSequences.addAll(AminoAcidSequences.stream().filter(x -> x.Allele.Gene.equals(GENE_Y)).collect(Collectors.toList()));
+
+        if(!HlaYAminoAcidSequences.isEmpty())
         {
-            String sequence = "";
-            for(int i = 0; i < sequenceLoci.length() - 2; i = i + 3)
+            HlaYAminoAcidSequences.forEach(x -> AminoAcidSequences.remove(x));
+        }
+        else
+        {
+            for(HlaSequenceLoci sequenceLoci : HlaYNucleotideSequences)
             {
-                String first = sequenceLoci.getSequences().get(i);
-                String second = sequenceLoci.getSequences().get(i + 1);
-                String third = sequenceLoci.getSequences().get(i + 2);
-
-                if(first.equals(DEL_STR) || third.equals(DEL_STR) || third.equals(DEL_STR))
-                    sequence += DEL_STR;
-                else
-                    sequence += Codons.aminoAcids(first + second + third);
+                HlaYAminoAcidSequences.add(buildAminoAcidSequenceFromNucleotides(sequenceLoci, mDeflatedSequenceTemplate));
             }
-
-            HlaYAminoAcidSequences.add(HlaSequenceLoci.create(sequenceLoci.Allele, sequence, mDeflatedSequenceTemplate.sequence()));
         }
     }
 
@@ -186,13 +183,11 @@ public class ReferenceData
         StopLossRecoveryAlleles.add(mAlleleCache.requestFourDigit("C*04:09N"));
     }
 
-    public List<HlaAllele> getWildcardAlleles()
-    {
-        return AminoAcidSequences.stream().filter(x -> x.hasWildcards()).map(x -> x.Allele).collect(Collectors.toList());
-    }
-
     private boolean excludeAllele(final HlaAllele allele)
     {
+        if(allele.Gene.equals(GENE_H))
+            return true;
+
         final HlaAllele allele4d = allele.asFourDigit();
 
         if(EXCLUDED_ALLELES.stream().anyMatch(x -> allele4d.matches(x)))

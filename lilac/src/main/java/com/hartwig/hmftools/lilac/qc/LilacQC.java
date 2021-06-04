@@ -102,7 +102,7 @@ public final class LilacQC
         return sj.toString();
     }
 
-    public void log()
+    public void log(final String sampleId)
     {
         // LL_LOGGER.info("QC Stats:");
         StringJoiner sj = new StringJoiner(",");
@@ -111,11 +111,11 @@ public final class LilacQC
 
         for(int i = 0; i < headerItems.size(); ++i)
         {
-            sj.add(String.format("%s = %s", headerItems.get(i), bodyItems.get(i)));
+            sj.add(String.format("%s=%s", headerItems.get(i), bodyItems.get(i)));
             // LL_LOGGER.info("  {} = {}", headerItems.get(i), bodyItems.get(i));
         }
 
-        LL_LOGGER.info("QC Stats: {}", sj.toString());
+        LL_LOGGER.info("{} QC Stats: {}", sampleId, sj.toString());
     }
 
     public final void writefile(final String fileName)

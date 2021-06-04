@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.FULL;
 import static com.hartwig.hmftools.lilac.seq.SequenceMatchType.WILD;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
@@ -269,5 +270,24 @@ public class HlaSequenceLoci
         }
 
         return new HlaSequenceLoci(allele, sequences);
+    }
+
+    public static HlaSequenceLoci buildAminoAcidSequenceFromNucleotides(
+            final HlaSequenceLoci nucSequence, final HlaSequenceLoci sequenceTemplate)
+    {
+        String sequence = "";
+        for(int i = 0; i < nucSequence.length() - 2; i = i + 3)
+        {
+            String first = nucSequence.getSequences().get(i);
+            String second = nucSequence.getSequences().get(i + 1);
+            String third = nucSequence.getSequences().get(i + 2);
+
+            if(first.equals(DEL_STR) || third.equals(DEL_STR) || third.equals(DEL_STR))
+                sequence += DEL_STR;
+            else
+                sequence += Codons.aminoAcids(first + second + third);
+        }
+
+        return HlaSequenceLoci.create(nucSequence.Allele.asFourDigit(), sequence, sequenceTemplate.sequence());
     }
 }
