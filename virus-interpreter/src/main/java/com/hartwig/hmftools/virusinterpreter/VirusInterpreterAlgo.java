@@ -12,13 +12,9 @@ import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistModel;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusInterpretationModel;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class VirusInterpreterAlgo {
-
-    private static final Logger LOGGER = LogManager.getLogger(VirusInterpreterAlgo.class);
 
     @NotNull
     private final TaxonomyDb taxonomyDb;
