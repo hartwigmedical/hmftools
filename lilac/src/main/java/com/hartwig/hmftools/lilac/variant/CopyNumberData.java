@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.lilac.variant;
 
-import com.sun.tools.javah.Gen;
-
 public class CopyNumberData
 {
     public final String Gene;
