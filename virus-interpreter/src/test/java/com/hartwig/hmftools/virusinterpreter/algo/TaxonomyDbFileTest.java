@@ -10,7 +10,7 @@ import org.junit.Test;
 
 public class TaxonomyDbFileTest {
 
-    private static final String TAXONOMY_DB_TSV = Resources.getResource("viral_reporting/taxonomy_db.tsv").getPath();
+    private static final String TAXONOMY_DB_TSV = Resources.getResource("virus_interpretation/taxonomy_db.tsv").getPath();
 
     @Test
     public void canReadTaxonomyDbTsv() throws IOException {
