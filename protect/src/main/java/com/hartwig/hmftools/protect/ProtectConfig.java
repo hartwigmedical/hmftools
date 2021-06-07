@@ -145,7 +145,7 @@ public interface ProtectConfig {
 
     @NotNull
     static Iterable<String> toStringSet(@Nullable String paramValue, @NotNull String separator) {
-        return paramValue != null ? Sets.newHashSet(paramValue.split(separator)) : Sets.newHashSet();
+        return paramValue != null && !paramValue.isEmpty() ? Sets.newHashSet(paramValue.split(separator)) : Sets.newHashSet();
     }
 
     @Nullable
