@@ -17,7 +17,7 @@ public class VirusInterpretationModel {
     @NotNull
     private final Map<Integer, VirusInterpretation> speciesToInterpretationMap;
 
-    VirusInterpretationModel(@NotNull final Map<Integer, VirusInterpretation> speciesToInterpretationMap) {
+    public VirusInterpretationModel(@NotNull final Map<Integer, VirusInterpretation> speciesToInterpretationMap) {
         this.speciesToInterpretationMap = speciesToInterpretationMap;
     }
 
@@ -32,7 +32,7 @@ public class VirusInterpretationModel {
         return speciesHasInterpretation ? speciesToInterpretationMap.get(speciesTaxid) : null;
     }
 
-    boolean hasInterpretation(int speciesTaxid) {
+    public boolean hasInterpretation(int speciesTaxid) {
         return speciesToInterpretationMap.containsKey(speciesTaxid);
     }
 

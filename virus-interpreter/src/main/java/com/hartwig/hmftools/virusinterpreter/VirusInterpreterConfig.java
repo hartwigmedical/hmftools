@@ -8,7 +8,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -94,17 +93,6 @@ public interface VirusInterpreterConfig {
 
         if (!pathExists(value) || !pathIsDirectory(value)) {
             throw new ParseException("Parameter '" + param + "' must be an existing directory: " + value);
-        }
-
-        return value;
-    }
-
-    @NotNull
-    static String optionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
-        String value = nonOptionalValue(cmd, param);
-
-        if (!pathExists(value)) {
-            value = Strings.EMPTY;
         }
 
         return value;

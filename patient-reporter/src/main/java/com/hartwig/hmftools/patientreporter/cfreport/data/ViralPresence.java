@@ -4,20 +4,20 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.virus.InterpretedVirus;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusInterpretation;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class InterpretedViruses {
+public final class ViralPresence {
 
-    private InterpretedViruses() {
+    private ViralPresence() {
     }
 
     @NotNull
-    public static Set<String> virusInterpretationSummary(@NotNull List<InterpretedVirus> reportableViruses) {
+    public static Set<String> virusInterpretationSummary(@NotNull List<AnnotatedVirus> reportableViruses) {
         Set<VirusInterpretation> positiveInterpretations = Sets.newHashSet();
-        for (InterpretedVirus virus : reportableViruses) {
+        for (AnnotatedVirus virus : reportableViruses) {
             if (virus.interpretation() != null) {
                 positiveInterpretations.add(virus.interpretation());
             }

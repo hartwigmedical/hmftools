@@ -1134,7 +1134,6 @@ CREATE TABLE cuppa
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
-    cuppaResult varchar(255) NOT NULL,
     cuppaTumorLocation varchar(255) NOT NULL,
     cuppaPrediction varchar(255) NOT NULL,
     PRIMARY KEY (id),

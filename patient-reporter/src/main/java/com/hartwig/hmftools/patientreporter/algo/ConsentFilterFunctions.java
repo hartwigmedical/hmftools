@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.virus.InterpretedVirus;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
@@ -37,7 +37,7 @@ public final class ConsentFilterFunctions {
             notifyPerVariant.put(filtered.variant(), filtered.notifyVariant());
         }
 
-        List<InterpretedVirus> filteredViruses =
+        List<AnnotatedVirus> filteredViruses =
                 reportViralPresence ? genomicAnalysis.reportableViruses() : Lists.newArrayList();
 
         List<PeachGenotype> filteredPeachGenotypes = reportPeach ? genomicAnalysis.peachGenotypes() : Lists.newArrayList();

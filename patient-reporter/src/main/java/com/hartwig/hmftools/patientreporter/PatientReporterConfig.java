@@ -58,7 +58,7 @@ public interface PatientReporterConfig {
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     String MOLECULAR_TISSUE_ORIGIN_TXT = "molecular_tissue_origin_txt";
     String MOLECULAR_TISSUE_ORIGIN_PLOT = "molecular_tissue_origin_plot";
-    String INTERPRETED_VIRUS_TSV = "interpreted_virus_tsv";
+    String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
     String PEACH_GENOTYPE_TSV = "peach_genotype_tsv";
     String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
 
@@ -114,7 +114,7 @@ public interface PatientReporterConfig {
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
         options.addOption(MOLECULAR_TISSUE_ORIGIN_TXT, true, "Path towards the molecular tissue origin TXT.");
         options.addOption(MOLECULAR_TISSUE_ORIGIN_PLOT, true, "Path towards the molecular tissue origin plot.");
-        options.addOption(INTERPRETED_VIRUS_TSV, true, "Path towards the interpreted virus TSV.");
+        options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
         options.addOption(PEACH_GENOTYPE_TSV, true, "Path towards the peach genotype TSV.");
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
 
@@ -219,7 +219,7 @@ public interface PatientReporterConfig {
     String molecularTissueOriginPlot();
 
     @NotNull
-    String interpretedVirusTsv();
+    String annotatedVirusTsv();
 
     @NotNull
     String peachGenotypeTsv();
@@ -276,7 +276,7 @@ public interface PatientReporterConfig {
         String chordPredictionTxt = Strings.EMPTY;
         String molecularTissueOriginTxt = Strings.EMPTY;
         String molecularTissueOriginPlot = Strings.EMPTY;
-        String interpretedVirusTsv = Strings.EMPTY;
+        String annotatedVirusTsv = Strings.EMPTY;
         String peachGenotypeTsv = Strings.EMPTY;
         String protectEvidenceTsv = Strings.EMPTY;
 
@@ -302,7 +302,7 @@ public interface PatientReporterConfig {
             chordPredictionTxt = nonOptionalFile(cmd, CHORD_PREDICTION_TXT);
             molecularTissueOriginTxt = nonOptionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_TXT);
             molecularTissueOriginPlot = nonOptionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_PLOT);
-            interpretedVirusTsv = nonOptionalFile(cmd, INTERPRETED_VIRUS_TSV);
+            annotatedVirusTsv = nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV);
             peachGenotypeTsv = nonOptionalFile(cmd, PEACH_GENOTYPE_TSV);
             protectEvidenceTsv = nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV);
 
@@ -340,7 +340,7 @@ public interface PatientReporterConfig {
                 .chordPredictionTxt(chordPredictionTxt)
                 .molecularTissueOriginTxt(molecularTissueOriginTxt)
                 .molecularTissueOriginPlot(molecularTissueOriginPlot)
-                .interpretedVirusTsv(interpretedVirusTsv)
+                .annotatedVirusTsv(annotatedVirusTsv)
                 .peachGenotypeTsv(peachGenotypeTsv)
                 .protectEvidenceTsv(protectEvidenceTsv)
                 .germlineReportingTsv(germlineReportingTsv)

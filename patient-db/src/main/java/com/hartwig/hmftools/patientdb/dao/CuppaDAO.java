@@ -27,10 +27,9 @@ public class CuppaDAO {
         context.insertInto(CUPPA,
                 CUPPA.MODIFIED,
                 CUPPA.SAMPLEID,
-                CUPPA.CUPPARESULT,
                 CUPPA.CUPPATUMORLOCATION,
                 CUPPA.CUPPAPREDICTION)
-                .values(timestamp, sample, cuppaResult, tumorLocation, prediction)
+                .values(timestamp, sample, tumorLocation, prediction)
                 .execute();
     }
 

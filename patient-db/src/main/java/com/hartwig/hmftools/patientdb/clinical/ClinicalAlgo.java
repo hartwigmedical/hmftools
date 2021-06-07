@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.TreatmentCurator;
@@ -61,7 +62,7 @@ public class ClinicalAlgo {
     }
 
     @NotNull
-    public List<Patient> interpret(@NotNull Map<String, List<SampleData>> samplesPerPatient) {
+    public List<Patient> interpret(@NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull Lims lims) {
         EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
         LOGGER.info("Interpreting and curating data for {} CPCT patients", cpctEcrfModel.patientCount());
         EcrfPatientReader cpctPatientReader =
@@ -90,7 +91,7 @@ public class ClinicalAlgo {
         mergedPatients.addAll(drupPatients);
         mergedPatients.addAll(widePatients);
         mergedPatients.addAll(corePatients);
-        mergedPatients.addAll(readColoPatients());
+        mergedPatients.addAll(readColoPatients(lims));
         return mergedPatients;
     }
 
@@ -141,12 +142,15 @@ public class ClinicalAlgo {
     }
 
     @NotNull
-    private static List<Patient> readColoPatients() {
+    private List<Patient> readColoPatients(@NotNull Lims lims) {
         List<Patient> patients = Lists.newArrayList();
 
-        ColoPatientReader coloPatientReader = new ColoPatientReader();
+        String tumorLocation = lims.primaryTumor("COLO829V003TVAL");
+        String patientId = lims.patientId("COLO829V003TVAL");
+
+        ColoPatientReader coloPatientReader = new ColoPatientReader(primaryTumorCurator);
         LOGGER.info("Creating patient representation for COLO829");
-        patients.add(coloPatientReader.read("COLO829T"));
+        patients.add(coloPatientReader.read(patientId, tumorLocation));
 
         return patients;
     }

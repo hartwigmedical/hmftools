@@ -10,7 +10,7 @@ import org.junit.Test;
 
 public class VirusBlacklistFileTest {
 
-    private static final String VIRUS_BLACKLIST_TSV = Resources.getResource("viral_reporting/virus_blacklist.tsv").getPath();
+    private static final String VIRUS_BLACKLIST_TSV = Resources.getResource("virus_interpreter/virus_blacklist.tsv").getPath();
 
     @Test
     public void canReadVirusBlacklistTsv() throws IOException {

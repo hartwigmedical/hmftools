@@ -15,8 +15,8 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
-import com.hartwig.hmftools.common.virus.InterpretedVirus;
-import com.hartwig.hmftools.common.virus.InterpretedVirusFile;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
@@ -59,7 +59,7 @@ public class GenomicAnalyzer {
                 config.purpleSomaticCopyNumberTsv());
 
         LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
-        List<InterpretedVirus> reportableViruses = loadReportableViruses(config.interpretedVirusTsv());
+        List<AnnotatedVirus> reportableViruses = loadReportableViruses(config.annotatedVirusTsv());
         List<PeachGenotype> peachGenotypes = loadPeachData(config.peachGenotypeTsv());
 
         List<ReportableVariant> reportableVariants =
@@ -149,18 +149,18 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    private static List<InterpretedVirus> loadReportableViruses(@NotNull String interpretedVirusTsv) throws IOException {
-        LOGGER.info("Loading interpreted viruses from {}", new File(interpretedVirusTsv).getParent());
-        List<InterpretedVirus> viruses = InterpretedVirusFile.read(interpretedVirusTsv);
-        LOGGER.info(" Loaded {} viruses from {}", viruses.size(), interpretedVirusTsv);
+    private static List<AnnotatedVirus> loadReportableViruses(@NotNull String annotatedVirusTsv) throws IOException {
+        LOGGER.info("Loading annotated viruses from {}", new File(annotatedVirusTsv).getParent());
+        List<AnnotatedVirus> viruses = AnnotatedVirusFile.read(annotatedVirusTsv);
+        LOGGER.info(" Loaded {} viruses from {}", viruses.size(), annotatedVirusTsv);
 
-        List<InterpretedVirus> reportable = Lists.newArrayList();
-        for (InterpretedVirus virus : viruses) {
+        List<AnnotatedVirus> reportable = Lists.newArrayList();
+        for (AnnotatedVirus virus : viruses) {
             if (virus.reported()) {
                 reportable.add(virus);
             }
         }
-        LOGGER.info(" {} viruses selected for reporting", reportable.size());
+        LOGGER.info(" There have been {} viruses selected for reporting", reportable.size());
 
         return reportable;
     }
