@@ -128,7 +128,8 @@ public class CopyNumberAssignment
     }
 
     public Map<HlaAllele,Double> assign(
-            final String sampleId, final List<HlaAllele> winners, final HlaComplexCoverage tumorCoverage)
+            final String sampleId, final List<HlaAllele> winners,
+            final HlaComplexCoverage refCoverage, final HlaComplexCoverage tumorCoverage)
     {
         LL_LOGGER.info("calculating tumor copy number of winning alleles");
 
@@ -151,16 +152,21 @@ public class CopyNumberAssignment
                 continue;
             }
 
-            List<HlaAlleleCoverage> coverage = tumorCoverage.getAlleleCoverage().stream()
+            List<HlaAlleleCoverage> refGeneCoverage = refCoverage.getAlleleCoverage().stream()
                     .filter(x -> x.Allele.Gene.equals(geneId)).collect(Collectors.toList());
 
-            if(coverage.size() != 2)
+            List<HlaAlleleCoverage> tumorGeneCoverage = tumorCoverage.getAlleleCoverage().stream()
+                    .filter(x -> x.Allele.Gene.equals(geneId)).collect(Collectors.toList());
+
+            if(refGeneCoverage.size() != 2 || tumorGeneCoverage.size() != 2)
             {
                 LL_LOGGER.warn("missing gene({}) allele coverage", gene);
                 continue;
             }
 
-            alleleCopyNumber(cnData, alleleCopyNumbers, coverage.get(0), coverage.get(1));
+            alleleCopyNumber(
+                    cnData, alleleCopyNumbers, refGeneCoverage.get(0), refGeneCoverage.get(1),
+                    tumorGeneCoverage.get(0), tumorGeneCoverage.get(1));
         }
 
         return alleleCopyNumbers;
@@ -168,21 +174,25 @@ public class CopyNumberAssignment
 
     private void alleleCopyNumber(
             final CopyNumberData copyNumberData, final Map<HlaAllele,Double> alleleCopyNumbers,
-            final HlaAlleleCoverage alleleCoverage1, final HlaAlleleCoverage alleleCoverage2)
+            final HlaAlleleCoverage refCoverage1, final HlaAlleleCoverage refCoverage2,
+            final HlaAlleleCoverage tumorCoverage1, final HlaAlleleCoverage tumorCoverage2)
     {
 
         double minor = copyNumberData.MinMinorAlleleCopyNumber;
         double major = copyNumberData.MinCopyNumber - minor;
 
-        if(alleleCoverage1.TotalCoverage >= alleleCoverage2.TotalCoverage)
+        double ratio1 = tumorCoverage1.TotalCoverage / refCoverage1.TotalCoverage;
+        double ratio2 = tumorCoverage2.TotalCoverage / refCoverage2.TotalCoverage;
+
+        if(ratio1 >= ratio2)
         {
-            alleleCopyNumbers.put(alleleCoverage1.Allele, major);
-            alleleCopyNumbers.put(alleleCoverage2.Allele, minor);
+            alleleCopyNumbers.put(tumorCoverage1.Allele, major);
+            alleleCopyNumbers.put(tumorCoverage2.Allele, minor);
         }
         else
         {
-            alleleCopyNumbers.put(alleleCoverage2.Allele, major);
-            alleleCopyNumbers.put(alleleCoverage1.Allele, minor);
+            alleleCopyNumbers.put(tumorCoverage2.Allele, major);
+            alleleCopyNumbers.put(tumorCoverage1.Allele, minor);
         }
     }
 

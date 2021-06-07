@@ -27,13 +27,13 @@ public class BamQC
         DiscardedIndelMaxFrags = discardedIndelMaxFrags;
     }
 
-    public final List<String> header()
+    public List<String> header()
     {
         return Lists.newArrayList("DiscardedIndels", "DiscardedIndelMaxFrags", "DiscardedAlignmentFragments");
     }
 
     @NotNull
-    public final List<String> body()
+    public List<String> body()
     {
         return Lists.newArrayList(
                 String.valueOf(DiscardedIndels),

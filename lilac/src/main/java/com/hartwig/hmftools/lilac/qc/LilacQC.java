@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_AMINO_A
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_HAPLOTYPE;
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_INDEL;
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_SOMATIC_VARIANT;
-import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_WILDCARD_MATCH;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -118,7 +117,7 @@ public final class LilacQC
         LL_LOGGER.info("{} QC Stats: {}", sampleId, sj.toString());
     }
 
-    public final void writefile(final String fileName)
+    public void writefile(final String fileName)
     {
         try
         {
@@ -163,14 +162,9 @@ public final class LilacQC
             mStatus.add(WARN_UNMATCHED_INDEL);
         }
 
-        if(SomaticVariantQC.unmatchedVariants())
+        if(SomaticVariantQC.unmatchedVariants() > 0)
         {
             mStatus.add(WARN_UNMATCHED_SOMATIC_VARIANT);
-        }
-
-        if(CoverageQC.PercentWildcard > 0.0)
-        {
-            mStatus.add(WARN_WILDCARD_MATCH);
         }
 
         if(mStatus.isEmpty())

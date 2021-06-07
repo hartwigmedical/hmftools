@@ -72,9 +72,19 @@ public class FragmentAlleleMapper
             final List<Fragment> refCoverageFragments, final List<HlaSequenceLoci> candidateAminoAcidSequences,
             final List<HlaSequenceLoci> candidateNucleotideSequences)
     {
-        LL_LOGGER.info("building frag-alleles from aminoAcids(frags={} candSeq={}) nucFrags(hetLoci={} candSeq={} nucs={})",
-                refCoverageFragments.size(), candidateAminoAcidSequences.size(),
-                mRefNucleotideHetLoci.size(), candidateNucleotideSequences.size(), mRefNucleotides.size());
+        return createFragmentAlleles(refCoverageFragments, candidateAminoAcidSequences, candidateNucleotideSequences, false);
+    }
+
+    public List<FragmentAlleles> createFragmentAlleles(
+            final List<Fragment> refCoverageFragments, final List<HlaSequenceLoci> candidateAminoAcidSequences,
+            final List<HlaSequenceLoci> candidateNucleotideSequences, boolean logCounts)
+    {
+        if(logCounts)
+        {
+            LL_LOGGER.info("building frag-alleles from aminoAcids(frags={} candSeq={}) nucFrags(hetLoci={} candSeq={} nucs={})",
+                    refCoverageFragments.size(), candidateAminoAcidSequences.size(),
+                    mRefNucleotideHetLoci.size(), candidateNucleotideSequences.size(), mRefNucleotides.size());
+        }
 
         mPerfCounterFrag.reset();
 

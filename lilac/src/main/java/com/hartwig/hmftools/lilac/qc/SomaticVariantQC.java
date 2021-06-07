@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.lilac.qc;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.min;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
@@ -20,20 +22,19 @@ public class SomaticVariantQC
         mVariantAlleleCount = variantAlleleCount;
     }
 
-    public final List<String> header()
+    public List<String> header()
     {
-        return Lists.newArrayList("VariantCount", "VariantAlleleCount");
+        return Lists.newArrayList("SomaticVariantsMatched", "SomaticVariantsUnmatched");
     }
 
-    public final List<String> body()
+    public List<String> body()
     {
-        return Lists.newArrayList(String.valueOf(mVariantCount), String.valueOf(mVariantAlleleCount));
+        return Lists.newArrayList(String.valueOf(matchedVariants()), String.valueOf(unmatchedVariants()));
     }
 
-    public final boolean unmatchedVariants()
-    {
-        return abs((double)mVariantCount - mVariantAlleleCount) > 0.01;
-    }
+    public int matchedVariants() { return (int)round(min(mVariantAlleleCount, mVariantCount)); }
+
+    public int unmatchedVariants() { return mVariantCount - matchedVariants(); }
 
     public static SomaticVariantQC create(int variantCount, final List<SomaticCodingCount> codingCount)
     {
@@ -41,7 +42,7 @@ public class SomaticVariantQC
 
         SomaticVariantQC result = new SomaticVariantQC(variantCount, totalCount);
 
-        if(result.unmatchedVariants())
+        if(result.unmatchedVariants() > 0)
         {
             LL_LOGGER.warn("  UNASSIGNED_VARIANT - {} variants found but {} assigned", variantCount, totalCount);
         }

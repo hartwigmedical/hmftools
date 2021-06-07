@@ -12,8 +12,6 @@ import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.LociPosition;
-import com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper;
-import com.hartwig.hmftools.lilac.coverage.FragmentAlleles;
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.read.SAMRecordReader;
@@ -22,6 +20,7 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
+import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
 
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -38,8 +37,7 @@ import java.util.stream.Collectors;
 
 public class SomaticVariantAnnotation
 {
-    private final List<Integer> mVariantLoci;
-    private final Map<String,Map<Integer,Set<String>>> mHetLociSansVariants;
+    private final Map<String,List<Integer>> mGeneVariantLoci;
     private final LilacConfig mConfig;
 
     private final List<SomaticVariant> mSomaticVariants;
@@ -50,15 +48,13 @@ public class SomaticVariantAnnotation
     private final LociPosition mLociPositionFinder;
 
     public SomaticVariantAnnotation(
-            final LilacConfig config, final Map<String, TranscriptData> transcriptData,
-            final Map<String, Map<Integer, Set<String>>> geneAminoAcidHetLociMap, final LociPosition lociPositionFinder)
+            final LilacConfig config, final Map<String, TranscriptData> transcriptData, final LociPosition lociPositionFinder)
     {
         mConfig = config;
         mHlaTranscriptData = transcriptData;
         UNKNOWN_CODING_EFFECT = Sets.newHashSet(CodingEffect.NONE, CodingEffect.UNDEFINED);
 
-        mHetLociSansVariants = Maps.newHashMap();
-        mVariantLoci = Lists.newArrayList();
+        mGeneVariantLoci = Maps.newHashMap();
 
         mLociPositionFinder = lociPositionFinder;
 
@@ -66,46 +62,103 @@ public class SomaticVariantAnnotation
         loadSomaticVariants();
 
         if(!mSomaticVariants.isEmpty())
-            buildLoci(geneAminoAcidHetLociMap);
+        {
+            for(SomaticVariant variant : mSomaticVariants)
+            {
+                int variantNucleotideLoci = mLociPositionFinder.nucelotideLoci(variant.Position);
+
+                if(variantNucleotideLoci < 0)
+                    continue;
+
+                int variantAminoAcidLoci = variantNucleotideLoci / 3;
+
+                List<Integer> geneLoci = mGeneVariantLoci.get(variant.Gene);
+
+                if(geneLoci == null)
+                {
+                    geneLoci = Lists.newArrayList();
+                    mGeneVariantLoci.put(variant.Gene, geneLoci);
+                }
+
+                geneLoci.add(variantAminoAcidLoci);
+            }
+        }
     }
 
     public List<SomaticVariant> getSomaticVariants() { return mSomaticVariants; }
-
-    private void buildLoci(final Map<String, Map<Integer, Set<String>>> geneAminoAcidHetLociMap)
-    {
-        mSomaticVariants.stream()
-                .map(x -> mLociPositionFinder.nucelotideLoci(x.Position))
-                .filter(x -> x >= 0)
-                .mapToInt(x -> x / 3)
-                .forEach(x -> mVariantLoci.add(x));
-
-        for(Map.Entry<String,Map<Integer,Set<String>>> geneEntry : geneAminoAcidHetLociMap.entrySet())
-        {
-            Map<Integer,Set<String>> lociSeqMap = geneEntry.getValue().entrySet().stream()
-                    .filter(x -> !mVariantLoci.contains(x.getKey()))
-                    .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
-
-            mHetLociSansVariants.put(geneEntry.getKey(), lociSeqMap);
-        }
-    }
 
     public final List<HlaAlleleCoverage> assignAlleleCoverage(
             final SomaticVariant variant, final SAMRecordReader reader, final List<HlaSequenceLoci> winners)
     {
         List<Fragment> fragments = reader.readFromBam(variant);
-
         fragments.forEach(x -> x.qualityFilter(mConfig.MinBaseQual));
         fragments.forEach(x -> x.buildAminoAcids());
 
-        FragmentAlleleMapper fragAlleleMapper = new FragmentAlleleMapper(mHetLociSansVariants, Maps.newHashMap(), Lists.newArrayList());
+        List<HlaAlleleCoverage> coverages = Lists.newArrayList();
 
-        List<FragmentAlleles> variantFragmentAlleles = fragAlleleMapper.createFragmentAlleles(fragments, winners, Lists.newArrayList());
+        for(HlaSequenceLoci sequenceLoci : winners)
+        {
+            if(!variant.Gene.equals(longGeneName(sequenceLoci.Allele.Gene)))
+                continue;
 
-        List<HlaAlleleCoverage> coverage = HlaAlleleCoverage.proteinCoverage(variantFragmentAlleles);
+            // any variant in this gene will be skipped
+            List<Integer> variantLoci = mGeneVariantLoci.get(variant.Gene);
 
-        Collections.sort(coverage, new HlaAlleleCoverage.TotalCoverageSorter());
+            int supportCount = 0;
 
-        return coverage.stream().filter(x -> x.TotalCoverage == coverage.get(0).TotalCoverage).collect(Collectors.toList());
+            for(Fragment fragment : fragments)
+            {
+                boolean matches = true;
+                int matchCount = 0;
+
+                for(int locus = fragment.minAminoAcidLocus(); locus <= fragment.maxAminoAcidLocus(); ++locus)
+                {
+                    if(locus >= sequenceLoci.length())
+                        break;
+
+                    if(variantLoci.contains(locus))
+                        continue;
+
+                    int index = fragment.getAminoAcidLoci().indexOf(locus);
+                    String fragmentAA = "";
+
+                    if(index >= 0)
+                    {
+                        fragmentAA = fragment.getAminoAcids().get(index);
+                    }
+                    else
+                    {
+                        fragmentAA = fragment.getLowQualAminoAcid(locus);
+
+                        if(fragmentAA.isEmpty())
+                            continue;
+                    }
+
+                    if(!fragmentAA.equals(sequenceLoci.sequence(locus)))
+                    {
+                        matches = false;
+                        break;
+                    }
+
+                    ++matchCount;
+
+                }
+
+                if(matches && matchCount > 0)
+                {
+                    //LL_LOGGER.debug("allele({}) supported by fragment({} {}) matchedAAs({})",
+                    //        seq.Allele, fragment.id(), fragment.readInfo(), matchCount);
+                    ++supportCount;
+
+                }
+            }
+
+            coverages.add(new HlaAlleleCoverage(sequenceLoci.Allele, supportCount, 0, 0));
+        }
+
+        // take top allele and any matching
+        Collections.sort(coverages, new HlaAlleleCoverage.TotalCoverageSorter());
+        return coverages.stream().filter(x -> x.TotalCoverage == coverages.get(0).TotalCoverage).collect(Collectors.toList());
     }
 
     private void loadSomaticVariants()

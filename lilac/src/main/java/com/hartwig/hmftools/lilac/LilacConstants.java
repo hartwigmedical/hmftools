@@ -33,7 +33,7 @@ public class LilacConstants
     // warning thresholds
     public static final double WARN_UNMATCHED_HAPLOTYPE_SUPPORT = 0.01;
     public static final int LOG_UNMATCHED_HAPLOTYPE_SUPPORT = 3;
-    public static final double WARN_INDEL_THRESHOLD = 0.004;
+    public static final double WARN_INDEL_THRESHOLD = 0.005;
 
     public static final String GENE_A = "A";
     public static final String GENE_B = "B";

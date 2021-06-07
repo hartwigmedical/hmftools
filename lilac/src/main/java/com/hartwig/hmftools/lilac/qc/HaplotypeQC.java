@@ -32,19 +32,6 @@ public class HaplotypeQC
 
     private static final List<Haplotype> PON_HAPLOTYPES = Lists.newArrayList();
 
-    public final List<String> header()
-    {
-        return Lists.newArrayList(
-                "UnusedHaplotypes", "UnusedHaplotypeMaxFrags");
-    }
-
-    public final List<String> body()
-    {
-        return Lists.newArrayList(
-                String.valueOf(UnusedHaplotypes),
-                String.valueOf(UnusedHaplotypeMaxFrags));
-    }
-
     public HaplotypeQC(
             int unusedHaplotypes, int unusedHaplotypeMaxFrags, int unusedHaplotypesPon, final List<Haplotype> haplotypes)
     {
@@ -52,6 +39,19 @@ public class HaplotypeQC
         UnusedHaplotypeMaxFrags = unusedHaplotypeMaxFrags;
         UnusedHaplotypesPon = unusedHaplotypesPon;
         UnmatchedHaplotypes = haplotypes;
+    }
+
+    public List<String> header()
+    {
+        return Lists.newArrayList(
+                "UnusedHaplotypes", "UnusedHaplotypeMaxFrags");
+    }
+
+    public List<String> body()
+    {
+        return Lists.newArrayList(
+                String.valueOf(UnusedHaplotypes),
+                String.valueOf(UnusedHaplotypeMaxFrags));
     }
 
     private static void loadPonHaplotypes()
@@ -181,7 +181,7 @@ public class HaplotypeQC
                     }
                     else
                     {
-                        // retrieve the low-qual or homozygous bases
+                        // retrieve the low-qual acid instead
                         fragmentAA = fragment.getLowQualAminoAcid(locus);
 
                         if(fragmentAA.isEmpty())

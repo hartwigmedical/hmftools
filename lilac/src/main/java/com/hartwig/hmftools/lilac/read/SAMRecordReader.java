@@ -217,7 +217,7 @@ public class SAMRecordReader
 
         for (int i = 0; i < variant.Alt.length(); ++i)
         {
-            int position = (int)variant.Position + i;
+            int position = variant.Position + i;
             char expectedBase = variant.Alt.charAt(i);
 
             int readIndex = record.getSamRecord().getReadPositionAtReferencePosition(position) - 1;

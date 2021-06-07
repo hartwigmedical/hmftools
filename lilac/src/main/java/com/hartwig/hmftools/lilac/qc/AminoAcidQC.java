@@ -27,12 +27,12 @@ public class AminoAcidQC
         UnusedAminoAcidMaxFrags = unusedAminoAcidMaxFrags;
     }
 
-    public final List<String> header()
+    public List<String> header()
     {
         return Lists.newArrayList("UnusedAminoAcids", "UnusedAminoAcidMaxFrags");
     }
 
-    public final List<String> body()
+    public List<String> body()
     {
         return Lists.newArrayList(String.valueOf(UnusedAminoAcids), String.valueOf(UnusedAminoAcidMaxFrags));
     }

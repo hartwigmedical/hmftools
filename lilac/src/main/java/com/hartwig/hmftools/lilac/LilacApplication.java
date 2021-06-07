@@ -254,7 +254,7 @@ public class LilacApplication implements AutoCloseable, Runnable
         fragAlleleMapper.setStopLossInfo(referenceBamReader.stopLossOnCIndels(), mRefData.StopLossRecoveryAlleles);
 
         List<FragmentAlleles> refFragAlleles = fragAlleleMapper.createFragmentAlleles(
-                refAminoAcidFrags, candidateSequences, candidateNucSequences);
+                refAminoAcidFrags, candidateSequences, candidateNucSequences, true);
 
         // fragAlleleMapper.logPerfData();
 
@@ -371,7 +371,7 @@ public class LilacApplication implements AutoCloseable, Runnable
             List<Fragment> tumorFragments = aminoAcidPipeline.tumorCoverageFragments();
 
             List<FragmentAlleles> tumorFragAlleles = fragAlleleMapper.createFragmentAlleles(
-                    tumorFragments, candidateSequences, candidateNucSequences);
+                    tumorFragments, candidateSequences, candidateNucSequences, true);
 
             fragAlleleMapper.checkHlaYSupport(mRefData.HlaYNucleotideSequences, tumorFragAlleles, tumorFragments, false);
 
@@ -382,12 +382,12 @@ public class LilacApplication implements AutoCloseable, Runnable
                 CopyNumberAssignment copyNumberAssignment = new CopyNumberAssignment();
                 copyNumberAssignment.loadCopyNumberData(mConfig);
 
-                winningTumorCopyNumber = copyNumberAssignment.assign(mConfig.Sample, winningAlleles, winningTumorCoverage);
+                winningTumorCopyNumber = copyNumberAssignment.assign(mConfig.Sample, winningAlleles, winningRefCoverage, winningTumorCoverage);
             }
 
             // SOMATIC VARIANTS
             SomaticVariantAnnotation variantAnnotation = new SomaticVariantAnnotation(
-                    mConfig, mRefData.HlaTranscriptData, geneAminoAcidHetLociMap, mRefData.LociPositionFinder);
+                    mConfig, mRefData.HlaTranscriptData, mRefData.LociPositionFinder);
 
             somaticVariants.addAll(variantAnnotation.getSomaticVariants());
 
@@ -415,6 +415,9 @@ public class LilacApplication implements AutoCloseable, Runnable
 
                     addVariant(somaticCodingCounts, variant, variantAlleles);
                 }
+
+                if(lilacVCF != null)
+                    lilacVCF.close();
             }
         }
         else
