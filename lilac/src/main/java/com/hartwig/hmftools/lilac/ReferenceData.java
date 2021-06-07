@@ -7,10 +7,10 @@ import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTO
 import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_H;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_Y;
+import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.LilacConstants.getNucleotideExonBoundaries;
 import static com.hartwig.hmftools.lilac.hla.HlaContextFactory.populateNucleotideExonBoundaries;
-import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.buildAminoAcidSequenceFromNucleotides;
 
 import java.io.BufferedReader;
@@ -24,12 +24,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.lilac.cohort.CohortFrequency;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
+import com.hartwig.hmftools.lilac.read.Indel;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
@@ -46,7 +46,7 @@ public class ReferenceData
     public final List<HlaSequenceLoci> HlaYAminoAcidSequences;
 
     public final List<HlaAllele> CommonAlleles; // common in population
-    public final List<HlaAllele> StopLossRecoveryAlleles;
+    public final Map<Indel,HlaAllele> KnownStopLossIndelAlleles;
 
     private final CohortFrequency mAlleleFrequencies;
 
@@ -93,7 +93,7 @@ public class ReferenceData
         populateNucleotideExonBoundaries();
 
         CommonAlleles = Lists.newArrayList();
-        StopLossRecoveryAlleles = Lists.newArrayList();
+        KnownStopLossIndelAlleles = Maps.newHashMap();
     }
 
     public CohortFrequency getAlleleFrequencies() { return mAlleleFrequencies; }
@@ -130,8 +130,18 @@ public class ReferenceData
         if(!loadSequenceFile(aminoAcidFilename, AminoAcidSequences, true))
             return false;
 
-        AminoAcidSequencesWithInserts.addAll(AminoAcidSequences.stream().filter(x -> x.hasInserts()).collect(Collectors.toList()));
-        AminoAcidSequencesWithDeletes.addAll(AminoAcidSequences.stream().filter(x -> x.hasDeletes()).collect(Collectors.toList()));
+        for(HlaSequenceLoci sequenceLoci : AminoAcidSequences)
+        {
+            if(sequenceLoci.hasInserts())
+            {
+                AminoAcidSequencesWithInserts.add(sequenceLoci);
+            }
+            else if(sequenceLoci.hasDeletes() || KnownStopLossIndelAlleles.values().stream().anyMatch(x -> x.equals(sequenceLoci.Allele)))
+            {
+                AminoAcidSequencesWithDeletes.add(sequenceLoci);
+            }
+        }
+
         markExonBoundaryWildcards();
         buildHlaYAminoAcidSequences();
 
@@ -180,7 +190,7 @@ public class ReferenceData
 
     private void loadStopLossRecoveryAllele()
     {
-        StopLossRecoveryAlleles.add(mAlleleCache.requestFourDigit("C*04:09N"));
+        KnownStopLossIndelAlleles.put(STOP_LOSS_ON_C,mAlleleCache.requestFourDigit("C*04:09N"));
     }
 
     private boolean excludeAllele(final HlaAllele allele)

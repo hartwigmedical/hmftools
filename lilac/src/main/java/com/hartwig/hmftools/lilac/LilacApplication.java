@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.lilac.fragment.FragmentScope.SOLUTION;
 import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.lilac.evidence.Candidates;
 import com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper;
@@ -38,6 +39,7 @@ import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.hla.HlaContextFactory;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
+import com.hartwig.hmftools.lilac.read.Indel;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 import com.hartwig.hmftools.lilac.variant.CopyNumberAssignment;
 import com.hartwig.hmftools.lilac.qc.AminoAcidQC;
@@ -187,6 +189,22 @@ public class LilacApplication implements AutoCloseable, Runnable
 
         List<HlaAllele> recoveredAlleles = Lists.newArrayList();
 
+        // make special note of the known stop-loss INDEL on HLA-C
+        Map<HlaAllele,List<Fragment>> knownStopLossFragments = Maps.newHashMap();
+
+        for(Map.Entry<Indel,List<Fragment>> entry : referenceBamReader.getKnownStopLossFragments().entrySet())
+        {
+            HlaAllele allele = mRefData.KnownStopLossIndelAlleles.get(entry.getKey());
+
+            if(allele != null)
+            {
+                LL_LOGGER.info("recovering stop loss allele({}) with {} fragments", allele, entry.getValue().size());
+
+                knownStopLossFragments.put(allele, entry.getValue());
+                recoveredAlleles.add(allele);
+            }
+        }
+
         if(!mConfig.RestrictedAlleles.isEmpty())
         {
             // if using a set of restricted allels, make no concession for any missed or common alleles
@@ -194,16 +212,6 @@ public class LilacApplication implements AutoCloseable, Runnable
         }
         else
         {
-            List<HlaAllele> missedStopLossAlleles = mRefData.StopLossRecoveryAlleles.stream()
-                    .filter(x -> !candidateAlleles.contains(x)).collect(Collectors.toList());
-
-            if(referenceBamReader.stopLossOnCIndels() > 0 && !missedStopLossAlleles.isEmpty())
-            {
-                recoveredAlleles.addAll(missedStopLossAlleles);
-                LL_LOGGER.info("recovering {} stop loss alleles with {} fragments",
-                        HlaAllele.toString(missedStopLossAlleles), referenceBamReader.stopLossOnCIndels());
-            }
-
             // add common alleles - either if supported or forced for inclusion
             List<HlaAllele> missedCommonAlleles = mRefData.CommonAlleles.stream()
                     .filter(x -> !candidateAlleles.contains(x))
@@ -251,12 +259,10 @@ public class LilacApplication implements AutoCloseable, Runnable
         FragmentAlleleMapper fragAlleleMapper = new FragmentAlleleMapper(
                 geneAminoAcidHetLociMap, refNucleotideHetLociMap, aminoAcidPipeline.getReferenceNucleotides());
 
-        fragAlleleMapper.setStopLossInfo(referenceBamReader.stopLossOnCIndels(), mRefData.StopLossRecoveryAlleles);
+        fragAlleleMapper.setKnownStopLossAlleleFragments(knownStopLossFragments);
 
         List<FragmentAlleles> refFragAlleles = fragAlleleMapper.createFragmentAlleles(
                 refAminoAcidFrags, candidateSequences, candidateNucSequences, true);
-
-        // fragAlleleMapper.logPerfData();
 
         if(refFragAlleles.isEmpty())
         {

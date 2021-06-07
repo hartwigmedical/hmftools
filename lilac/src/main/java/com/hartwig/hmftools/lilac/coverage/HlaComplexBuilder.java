@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.filterUns
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findUnsupportedWildcards;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findWildcardAlleles;
 import static com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage.coverageAlleles;
-import static com.hartwig.hmftools.lilac.hla.HlaAllele.findDuplicates;
 
 import java.util.Collections;
 import java.util.List;
@@ -98,7 +97,7 @@ public class HlaComplexBuilder
 
         // ensure known stop-loss alleles are kept
         recoveredAlleles.stream()
-                .filter(x -> mRefData.StopLossRecoveryAlleles.contains(x))
+                .filter(x -> mRefData.KnownStopLossIndelAlleles.containsKey(x))
                 .filter(x -> !candidatesAfterUniqueGroups.contains(x))
                 .forEach(x -> candidatesAfterUniqueGroups.add(x));
 

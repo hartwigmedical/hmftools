@@ -37,8 +37,7 @@ public class FragmentAlleleMapper
     private final Map<String,List<Integer>> mRefNucleotideHetLoci;
     private final List<Set<String>> mRefNucleotides;
 
-    private int mStopLossFragments;
-    private final List<HlaAllele> mStopLossAlleles;
+    private final Map<HlaAllele,List<Fragment>> mStopLossAlleleFragments;
 
     private final PerformanceCounter mPerfCounterFrag;
 
@@ -51,8 +50,7 @@ public class FragmentAlleleMapper
         mRefNucleotideHetLoci = refNucleotideHetLoci;
         mRefNucleotides = refNucleotides;
 
-        mStopLossFragments = 0;
-        mStopLossAlleles = Lists.newArrayList();
+        mStopLossAlleleFragments = Maps.newHashMap();
 
         mPerfCounterFrag = new PerformanceCounter("Frags");
     }
@@ -61,6 +59,11 @@ public class FragmentAlleleMapper
     {
         mGeneAminoAcidHetLociMap.clear();
         mGeneAminoAcidHetLociMap.putAll(geneAminoAcidHetLociMap);
+    }
+
+    public void setKnownStopLossAlleleFragments(final Map<HlaAllele,List<Fragment>> knownStopLossFragments)
+    {
+        mStopLossAlleleFragments.putAll(knownStopLossFragments);
     }
 
     public void logPerfData()
@@ -81,9 +84,10 @@ public class FragmentAlleleMapper
     {
         if(logCounts)
         {
-            LL_LOGGER.info("building frag-alleles from aminoAcids(frags={} candSeq={}) nucFrags(hetLoci={} candSeq={} nucs={})",
+            LL_LOGGER.info("building frag-alleles from aminoAcids(frags={} candSeq={}) nucFrags(hetLoci={} candSeq={} nucs={}) knownIndels({})",
                     refCoverageFragments.size(), candidateAminoAcidSequences.size(),
-                    mRefNucleotideHetLoci.size(), candidateNucleotideSequences.size(), mRefNucleotides.size());
+                    mRefNucleotideHetLoci.size(), candidateNucleotideSequences.size(), mRefNucleotides.size(),
+                    mStopLossAlleleFragments.values().stream().mapToInt(x -> x.size()).sum());
         }
 
         mPerfCounterFrag.reset();
@@ -96,7 +100,10 @@ public class FragmentAlleleMapper
                 continue;
 
             mPerfCounterFrag.start();
-            FragmentAlleles fragAllele = mapFragmentToAlleles(fragment, candidateAminoAcidSequences, candidateNucleotideSequences);
+            FragmentAlleles fragAllele = checkStopLossAlleleFragments(fragment);
+
+            if(fragAllele == null)
+                fragAllele = mapFragmentToAlleles(fragment, candidateAminoAcidSequences, candidateNucleotideSequences);
             mPerfCounterFrag.stop();
 
             // drop wild-only alleles since their support can't be clearly established
@@ -109,8 +116,6 @@ public class FragmentAlleleMapper
                 setFragmentScope(fragAllele);
             }
         }
-
-        applyUniqueStopLossFragments(results);
 
         return results;
     }
@@ -545,33 +550,17 @@ public class FragmentAlleleMapper
         return exceedsThreshold;
     }
 
-    public void setStopLossInfo(int stopLossFragments, final List<HlaAllele> stopLossAlleles)
+    private FragmentAlleles checkStopLossAlleleFragments(Fragment fragment)
     {
-        mStopLossFragments = stopLossFragments;
-        mStopLossAlleles.addAll(stopLossAlleles);
-    }
-
-    private void applyUniqueStopLossFragments(final List<FragmentAlleles> fragmentAlleles)
-    {
-        // create a unique (ie FULL-only) fragment allele for any confirmed known stop-loss allele
-        if(mStopLossFragments == 0)
-            return;
-
-        for(HlaAllele stopLossAllele : mStopLossAlleles)
+        for(Map.Entry<HlaAllele,List<Fragment>> entry : mStopLossAlleleFragments.entrySet())
         {
-            List<FragmentAlleles> sampleFragments = fragmentAlleles.stream()
-                    .filter(x -> x.contains(stopLossAllele))
-                    .map(x -> new FragmentAlleles(x.getFragment(), Lists.newArrayList(stopLossAllele), Lists.newArrayList()))
-                    .collect(Collectors.toList());
-
-            for(int i = 0; i < mStopLossFragments; ++i)
+            if(entry.getValue().contains(fragment))
             {
-                if(i >= sampleFragments.size())
-                    break;
-
-                fragmentAlleles.add(sampleFragments.get(i));
+                return new FragmentAlleles(fragment, Lists.newArrayList(entry.getKey()), Lists.newArrayList());
             }
         }
+
+        return null;
     }
 
     public static Set<HlaAllele> findWildcardAlleles(final List<FragmentAlleles> fragAlleles)
@@ -655,7 +644,10 @@ public class FragmentAlleleMapper
             }
         }
 
-        LL_LOGGER.info("removed frags({}) with wildcard alleles removed", removedFragAlleles);
+        if(removedFragAlleles > 0)
+        {
+            LL_LOGGER.info("removed frags({}) with wildcard alleles removed", removedFragAlleles);
+        }
     }
 
     private static void removeUnsupportedWildcardAlleles(final List<HlaAllele> alleleList, final List<HlaAllele> unsupportedAlleles)

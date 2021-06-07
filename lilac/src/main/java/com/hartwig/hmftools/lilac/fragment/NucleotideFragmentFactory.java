@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C;
 import static com.hartwig.hmftools.lilac.LilacUtils.arrayToList;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidIndices;
@@ -118,12 +119,13 @@ public class NucleotideFragmentFactory
             }
         }
 
-        if(!matchedIndicesList.isEmpty())
+        for(int i = 0; i < matchedSeqLoci.size(); ++i)
         {
-            HlaSequenceLoci seqLoci = matchedSeqLoci.get(0);
-            List<Integer> filteredAaIndices = matchedIndicesList.get(0);
+            HlaSequenceLoci seqLoci = matchedSeqLoci.get(i);
+            List<Integer> filteredAaIndices = matchedIndicesList.get(i);
             Fragment fragment = createIndelFragment(record, codingRegion, filteredAaIndices.get(0), aminoAcids, seqLoci);
-            return !fragment.getNucleotideLoci().isEmpty() ? fragment : null;
+            if(!fragment.getNucleotideLoci().isEmpty())
+                return fragment;
         }
 
         return null;

@@ -125,6 +125,8 @@ public class CoverageQC {
                 ++uninformativeFragments;
             else if(fragment.scope().isUnmatched())
                 ++unmatchedFragments;
+            else
+                LL_LOGGER.warn("frag({} : {}) scope({}) unassigned", fragment.id(), fragment.readInfo(), fragment.scope());
         }
 
         int unassignedFragments = totalFragments - solutionFragments - hlaYFragments - uninformativeFragments - unmatchedFragments;

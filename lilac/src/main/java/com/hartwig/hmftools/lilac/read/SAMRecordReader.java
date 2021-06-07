@@ -46,7 +46,7 @@ public class SAMRecordReader
     private final SamReaderFactory mSamReaderFactory;
     private final NucleotideFragmentFactory mFragmentFactory;
 
-    private final Map<Indel,Integer> mStopLossOnC;
+    private final Map<Indel,List<Fragment>> mKnownStopLossFragments;
     private final Map<Indel,Integer> mUnmatchedIndels;
     private final Map<Indel,Integer> mUnmatchedPONIndels;
     private final Set<String> mDiscardIndelReadIds;
@@ -74,7 +74,7 @@ public class SAMRecordReader
         mFragmentFactory = factory;
         mFilteredRecordCount = 0;
 
-        mStopLossOnC = Maps.newHashMap();
+        mKnownStopLossFragments = Maps.newHashMap();
         mUnmatchedIndels = Maps.newHashMap();
         mUnmatchedPONIndels = Maps.newHashMap();
         mDiscardIndelReadIds = Sets.newHashSet();
@@ -86,17 +86,14 @@ public class SAMRecordReader
         ponLines.stream().map(x -> Indel.fromString(x)).forEach(x -> INDEL_PON.add(x));
     }
 
-    public final int alignmentFiltered()
+    public int alignmentFiltered()
     {
         return mFilteredRecordCount;
     }
 
-    public final int stopLossOnCIndels()
-    {
-        return mStopLossOnC.containsKey(STOP_LOSS_ON_C) ? mStopLossOnC.get(STOP_LOSS_ON_C) : 0;
-    }
+    public Map<Indel,List<Fragment>> getKnownStopLossFragments() { return mKnownStopLossFragments; }
 
-    public final Map<Indel,Integer> unmatchedIndels(int minCount)
+    public Map<Indel,Integer> unmatchedIndels(int minCount)
     {
         Map<Indel,Integer> filteredMap = Maps.newHashMap();
         mUnmatchedIndels.entrySet().stream()
@@ -106,14 +103,14 @@ public class SAMRecordReader
         return filteredMap;
     }
 
-    public final Map<Indel, Integer> unmatchedPonIndels(int minCount)
+    public Map<Indel, Integer> unmatchedPonIndels(int minCount)
     {
         Map<Indel,Integer> filteredMap = Maps.newHashMap();
         mUnmatchedPONIndels.entrySet().stream().filter(x -> x.getValue()>= minCount).forEach(x -> filteredMap.put(x.getKey(), x.getValue()));
         return filteredMap;
     }
 
-    public final List<Fragment> readFromBam()
+    public List<Fragment> readFromBam()
     {
         final List<Fragment> fragments = Lists.newArrayList();
 
@@ -161,7 +158,7 @@ public class SAMRecordReader
         return regionsReversed;
     }
 
-    public final List<Fragment> readFromBam(final SomaticVariant variant)
+    public List<Fragment> readFromBam(final SomaticVariant variant)
     {
         final GenomePosition variantPosition = GenomePositions.create(variant.Chromosome, variant.Position);
 
@@ -332,21 +329,25 @@ public class SAMRecordReader
 
         for(SAMCodingRecord codingRecord : codingRecords)
         {
-            if(codingRecord.getIndels().contains(STOP_LOSS_ON_C))
-            {
-                incrementIndelCounter(mStopLossOnC, STOP_LOSS_ON_C);
-            }
-
             Fragment fragment = mFragmentFactory.createFragment(codingRecord, codingRegion);
 
             if(fragment != null)
             {
                 fragments.add(fragment);
+
+                if(codingRecord.getIndels().contains(STOP_LOSS_ON_C))
+                    addKnownIndelFragment(fragment);
+
                 continue;
             }
 
             if(codingRecord.containsIndel())
             {
+                if(codingRecord.getIndels().contains(STOP_LOSS_ON_C))
+                {
+                    LL_LOGGER.debug("missing known indel fragment: {} {}", codingRecord.Id, codingRecord.readInfo());
+                }
+
                 // the other read belonging to this fragment won't be used
                 mDiscardIndelReadIds.add(codingRecord.Id);
             }
@@ -364,6 +365,19 @@ public class SAMRecordReader
         }
 
         return fragments;
+    }
+
+    private void addKnownIndelFragment(final Fragment fragment)
+    {
+        // incrementIndelCounter(mStopLossOnC, STOP_LOSS_ON_C);
+        List<Fragment> indelFrags = mKnownStopLossFragments.get(STOP_LOSS_ON_C);
+        if(indelFrags == null)
+        {
+            indelFrags = Lists.newArrayList();
+            mKnownStopLossFragments.put(STOP_LOSS_ON_C, indelFrags);
+        }
+
+        indelFrags.add(fragment);
     }
 
     private static void incrementIndelCounter(final Map<Indel,Integer> indelMap, final Indel indel)
