@@ -3,7 +3,8 @@ package com.hartwig.hmftools.lilac.qc;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.lilac.read.SAMRecordReader;
+import com.hartwig.hmftools.lilac.read.BamReader;
+import com.hartwig.hmftools.lilac.read.BamRecordReader;
 import com.hartwig.hmftools.lilac.read.Indel;
 
 import java.util.List;
@@ -41,7 +42,7 @@ public class BamQC
                 String.valueOf(DiscardedAlignmentFragments));
     }
 
-    public static BamQC create(final SAMRecordReader reader)
+    public static BamQC create(final BamReader reader)
     {
         Map<Indel,Integer> fragmentsWithUnmatchedPonIndel = reader.unmatchedPonIndels(MIN_SUPPORT);
         Map<Indel,Integer> fragmentsWithUnmatchedIndel = reader.unmatchedIndels(MIN_SUPPORT);

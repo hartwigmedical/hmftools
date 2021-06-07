@@ -18,7 +18,6 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.FragmentUtils;
@@ -37,7 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class SAMRecordReader
+public class BamRecordReader implements BamReader
 {
     private final Map<String,TranscriptData> mTranscripts;
     private final List<BaseRegion> mCodingRegions;
@@ -57,7 +56,7 @@ public class SAMRecordReader
 
     private static final Set<Indel> INDEL_PON = Sets.newHashSet();
 
-    public SAMRecordReader(
+    public BamRecordReader(
             final String bamFile, final String refGenome, final Map<String,TranscriptData> transcripts, final NucleotideFragmentFactory factory)
     {
         mBamFile = bamFile;
@@ -103,7 +102,7 @@ public class SAMRecordReader
         return filteredMap;
     }
 
-    public Map<Indel, Integer> unmatchedPonIndels(int minCount)
+    public Map<Indel,Integer> unmatchedPonIndels(int minCount)
     {
         Map<Indel,Integer> filteredMap = Maps.newHashMap();
         mUnmatchedPONIndels.entrySet().stream().filter(x -> x.getValue()>= minCount).forEach(x -> filteredMap.put(x.getKey(), x.getValue()));
@@ -173,10 +172,10 @@ public class SAMRecordReader
                 if (codingRegion.contains(variantPosition)
                 || abs(codingRegion.start() - variant.Position) <= 5 || abs(codingRegion.end() - variant.Position) <= 5)
                 {
-                    List<SAMCodingRecord> regionCodingRecords = query(reverseStrand, variantPosition, codingRegion, mBamFile);
-                    List<SAMCodingRecord> codingRecords = Lists.newArrayList();
+                    List<BamCodingRecord> regionCodingRecords = query(reverseStrand, variantPosition, codingRegion, mBamFile);
+                    List<BamCodingRecord> codingRecords = Lists.newArrayList();
 
-                    for(SAMCodingRecord record : regionCodingRecords)
+                    for(BamCodingRecord record : regionCodingRecords)
                     {
                         if(!recordContainsVariant(variant, record))
                             continue;
@@ -204,7 +203,7 @@ public class SAMRecordReader
         return Lists.newArrayList();
     }
 
-    private final boolean recordContainsVariant(final SomaticVariant variant, final SAMCodingRecord record)
+    private final boolean recordContainsVariant(final SomaticVariant variant, final BamCodingRecord record)
     {
         if (variant.Alt.length() != variant.Ref.length())
         {
@@ -230,7 +229,7 @@ public class SAMRecordReader
     }
 
     private final List<Fragment> queryMateFragments(
-            final String geneName, final TranscriptData transcript, final List<SAMCodingRecord> codingRecords)
+            final String geneName, final TranscriptData transcript, final List<BamCodingRecord> codingRecords)
     {
         SAMSlicer slicer = new SAMSlicer(MIN_MAPPING_QUALITY);
 
@@ -251,7 +250,7 @@ public class SAMRecordReader
                 if(record.getAlignmentStart() > codingRegion.end() || record.getAlignmentEnd() < codingRegion.start())
                     continue;
 
-                SAMCodingRecord codingRecord = SAMCodingRecord.create(
+                BamCodingRecord codingRecord = BamCodingRecord.create(
                         reverseStrand, BaseRegion.from(codingRegion), record, true, true);
 
                 Fragment fragment = mFragmentFactory.createAlignmentFragments(codingRecord, codingRegion);
@@ -264,7 +263,7 @@ public class SAMRecordReader
         return fragments;
     }
 
-    private List<SAMCodingRecord> query(
+    private List<BamCodingRecord> query(
             boolean reverseStrand, final GenomePosition variantRegion, final NamedBed nearestCodingRegion, final String bamFileName)
     {
         SAMSlicer slicer = new SAMSlicer(MIN_MAPPING_QUALITY);
@@ -277,13 +276,13 @@ public class SAMRecordReader
         final List<SAMRecord> records = slicer.slice(
                 variantRegion.chromosome(), (int)variantRegion.position(), (int)variantRegion.position(), samReader);
 
-        final List<SAMCodingRecord> codingRecords = Lists.newArrayList();
+        final List<BamCodingRecord> codingRecords = Lists.newArrayList();
 
         for(SAMRecord record : records)
         {
             if(bothEndsInRangeOfCodingTranscripts(record))
             {
-                codingRecords.add(SAMCodingRecord.create(reverseStrand, codingRegion, record, true, true));
+                codingRecords.add(BamCodingRecord.create(reverseStrand, codingRegion, record, true, true));
             }
             else
             {
@@ -294,7 +293,7 @@ public class SAMRecordReader
         return codingRecords;
     }
 
-    private List<SAMCodingRecord> query(boolean reverseStrand, final NamedBed bedRegion, final String bamFileName)
+    private List<BamCodingRecord> query(boolean reverseStrand, final NamedBed bedRegion, final String bamFileName)
     {
         SAMSlicer slicer = new SAMSlicer(MIN_MAPPING_QUALITY);
 
@@ -304,13 +303,13 @@ public class SAMRecordReader
 
         final List<SAMRecord> records = slicer.slice(codingRegion.Chromosome, codingRegion.start(), codingRegion.end(), samReader);
 
-        final List<SAMCodingRecord> codingRecords = Lists.newArrayList();
+        final List<BamCodingRecord> codingRecords = Lists.newArrayList();
 
         for(SAMRecord record : records)
         {
             if(bothEndsInRangeOfCodingTranscripts(record))
             {
-                codingRecords.add(SAMCodingRecord.create(reverseStrand, codingRegion, record, true, true));
+                codingRecords.add(BamCodingRecord.create(reverseStrand, codingRegion, record, true, true));
             }
             else
             {
@@ -325,9 +324,9 @@ public class SAMRecordReader
     {
         List<Fragment> fragments = Lists.newArrayList();
 
-        final List<SAMCodingRecord> codingRecords = query(reverseStrand, codingRegion, bamFileName);
+        final List<BamCodingRecord> codingRecords = query(reverseStrand, codingRegion, bamFileName);
 
-        for(SAMCodingRecord codingRecord : codingRecords)
+        for(BamCodingRecord codingRecord : codingRecords)
         {
             Fragment fragment = mFragmentFactory.createFragment(codingRecord, codingRegion);
 

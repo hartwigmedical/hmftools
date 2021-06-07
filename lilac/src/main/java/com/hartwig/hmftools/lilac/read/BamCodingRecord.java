@@ -16,7 +16,7 @@ import htsjdk.samtools.SAMRecord;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SAMCodingRecord
+public class BamCodingRecord
 {
     public final String Id;
     public final int SoftClippedStart;
@@ -30,7 +30,7 @@ public class SAMCodingRecord
     private final List<Indel> mIndels;
     private final SAMRecord mSamRecord;
 
-    public SAMCodingRecord(
+    public BamCodingRecord(
             final String id, int softClippedStart, int softClippedEnd, final List<Indel> indels, int positionStart,
             int positionEnd, int readStart, int readEnd, final SAMRecord record, boolean reverseStrand)
     {
@@ -129,7 +129,7 @@ public class SAMCodingRecord
         return readQuals;
     }
 
-    public final List<SAMCodingRecord> alignmentsOnly()
+    public final List<BamCodingRecord> alignmentsOnly()
     {
         final String chromosome = mSamRecord.getContig();
         final BaseRegion outerRegion = new BaseRegion(chromosome, PositionStart, PositionEnd);
@@ -143,7 +143,7 @@ public class SAMCodingRecord
 
     }
 
-    public static SAMCodingRecord create(
+    public static BamCodingRecord create(
             boolean reverseStrand, final BaseRegion codingRegion, final SAMRecord record,
             boolean includeSoftClips, boolean includeIndels)
     {
@@ -182,7 +182,7 @@ public class SAMCodingRecord
 
         List<Indel> indels = includeIndels ? indels(positionStart, positionEnd, record) : Lists.newArrayList();
 
-        return new SAMCodingRecord(
+        return new BamCodingRecord(
                 record.getReadName(), softClippedStart, softClippedEnd, indels,
                 positionStart, positionEnd, readIndexStart, readIndexEnd, record, reverseStrand);
     }

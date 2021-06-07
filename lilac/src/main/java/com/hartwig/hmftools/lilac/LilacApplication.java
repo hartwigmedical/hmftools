@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.lilac.evidence.Candidates;
 import com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper;
@@ -40,6 +39,7 @@ import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.hla.HlaContextFactory;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
+import com.hartwig.hmftools.lilac.read.BamReader;
 import com.hartwig.hmftools.lilac.read.Indel;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 import com.hartwig.hmftools.lilac.variant.CopyNumberAssignment;
@@ -51,14 +51,13 @@ import com.hartwig.hmftools.lilac.qc.SolutionSummary;
 import com.hartwig.hmftools.lilac.qc.LilacQC;
 import com.hartwig.hmftools.lilac.qc.SomaticVariantQC;
 import com.hartwig.hmftools.lilac.coverage.FragmentAlleles;
-import com.hartwig.hmftools.lilac.read.SAMRecordReader;
+import com.hartwig.hmftools.lilac.read.BamRecordReader;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.variant.LilacVCF;
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
 import com.hartwig.hmftools.lilac.variant.SomaticVariant;
 import com.hartwig.hmftools.lilac.variant.SomaticVariantAnnotation;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
 import java.util.Collections;
 import java.util.List;
@@ -81,6 +80,9 @@ public class LilacApplication
     private final LilacConfig mConfig;
     private final ReferenceData mRefData;
 
+    private BamReader mRefBamReader;
+    private BamReader mTumorBamReader;
+
     private AminoAcidFragmentPipeline mAminoAcidPipeline;
 
     // key state and results
@@ -100,6 +102,8 @@ public class LilacApplication
         mRefData = new ReferenceData(mConfig.ResourceDir, mConfig);
 
         mAminoAcidPipeline = null;
+        mRefBamReader = null;
+        mTumorBamReader = null;
 
         // key state and results
         mRefAminoAcidCounts = null;
@@ -108,6 +112,12 @@ public class LilacApplication
         mRankedComplexes = Lists.newArrayList();
         mRefNucleotideFrags = Lists.newArrayList();
         mRefFragAlleles = Lists.newArrayList();
+    }
+
+    public void setBamReaders(final BamReader refBamReader, final BamReader tumorBamReader)
+    {
+        mRefBamReader = refBamReader;
+        mTumorBamReader = tumorBamReader;
     }
 
     public LilacQC getSummaryMetrics() { return mSummaryMetrics; }
@@ -144,21 +154,21 @@ public class LilacApplication
                 mConfig.MinBaseQual, mRefData.AminoAcidSequencesWithInserts, mRefData.AminoAcidSequencesWithDeletes,
                 mRefData.LociPositionFinder);
 
-        SAMRecordReader tumorBamReader =
-                new SAMRecordReader(mConfig.TumorBam, mConfig.RefGenome, mRefData.HlaTranscriptData, nucleotideFragmentFactory);
+        if(mRefBamReader == null)
+            mRefBamReader = new BamRecordReader(mConfig.ReferenceBam, mConfig.RefGenome, mRefData.HlaTranscriptData, nucleotideFragmentFactory);
 
-        SAMRecordReader referenceBamReader =
-                new SAMRecordReader(mConfig.ReferenceBam, mConfig.RefGenome, mRefData.HlaTranscriptData, nucleotideFragmentFactory);
+        if(mTumorBamReader == null)
+            mTumorBamReader = new BamRecordReader(mConfig.TumorBam, mConfig.RefGenome, mRefData.HlaTranscriptData, nucleotideFragmentFactory);
 
         NucleotideGeneEnrichment nucleotideGeneEnrichment = new NucleotideGeneEnrichment(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES);
 
-        mRefNucleotideFrags.addAll(nucleotideGeneEnrichment.enrich(referenceBamReader.readFromBam()));
+        mRefNucleotideFrags.addAll(nucleotideGeneEnrichment.enrich(mRefBamReader.readFromBam()));
 
         final List<Fragment> tumorNucleotideFrags = Lists.newArrayList();
         if(!mConfig.TumorBam.isEmpty())
         {
             LL_LOGGER.info("querying records from tumor bam {}", mConfig.TumorBam);
-            tumorNucleotideFrags.addAll(nucleotideGeneEnrichment.enrich(tumorBamReader.readFromBam()));
+            tumorNucleotideFrags.addAll(nucleotideGeneEnrichment.enrich(mTumorBamReader.readFromBam()));
         }
 
         allValid &= validateFragments(mRefNucleotideFrags);
@@ -217,7 +227,7 @@ public class LilacApplication
         // make special note of the known stop-loss INDEL on HLA-C
         Map<HlaAllele,List<Fragment>> knownStopLossFragments = Maps.newHashMap();
 
-        for(Map.Entry<Indel,List<Fragment>> entry : referenceBamReader.getKnownStopLossFragments().entrySet())
+        for(Map.Entry<Indel,List<Fragment>> entry : mRefBamReader.getKnownStopLossFragments().entrySet())
         {
             HlaAllele allele = mRefData.KnownStopLossIndelAlleles.get(entry.getKey());
 
@@ -435,7 +445,7 @@ public class LilacApplication
 
                 for(SomaticVariant variant : somaticVariants)
                 {
-                    List<HlaAlleleCoverage> variantCoverage = variantAnnotation.assignAlleleCoverage(variant, tumorBamReader, winningSequences);
+                    List<HlaAlleleCoverage> variantCoverage = variantAnnotation.assignAlleleCoverage(variant, mTumorBamReader, winningSequences);
                     List<HlaAllele> variantAlleles = variantCoverage.stream().map(x -> x.Allele).collect(Collectors.toList());
                     LL_LOGGER.info("  {} -> {}}", variant, variantCoverage);
 
@@ -478,7 +488,7 @@ public class LilacApplication
                 winningSequences, mRefData.HlaYAminoAcidSequences, mRefAminoAcidCounts,
                 haplotypeQC.UnmatchedHaplotypes, totalFragmentCount);
 
-        BamQC bamQC = BamQC.create(referenceBamReader);
+        BamQC bamQC = BamQC.create(mRefBamReader);
         CoverageQC coverageQC = CoverageQC.create(refAminoAcidFrags, winningRefCoverage);
 
         mSummaryMetrics = new LilacQC(
