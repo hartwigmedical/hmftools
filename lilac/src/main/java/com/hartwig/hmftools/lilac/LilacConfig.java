@@ -227,10 +227,10 @@ public class LilacConfig
         }
     }
 
-    public LilacConfig()
+    public LilacConfig(final String sampleId)
     {
         OutputDir = "";
-        Sample = "";
+        Sample = sampleId;
         ReferenceBam = "";
         TumorBam = "";
         ResourceDir = "";
