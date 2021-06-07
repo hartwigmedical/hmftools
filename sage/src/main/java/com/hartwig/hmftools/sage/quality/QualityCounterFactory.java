@@ -18,7 +18,8 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-class QualityCounterFactory {
+class QualityCounterFactory
+{
 
     private static final Logger LOGGER = LogManager.getLogger(QualityCounterFactory.class);
 
@@ -26,29 +27,33 @@ class QualityCounterFactory {
     private final ReferenceSequenceFile refGenome;
     private final SageConfig config;
 
-    public QualityCounterFactory(final SageConfig config, final String bamFile, final ReferenceSequenceFile refGenome) {
+    public QualityCounterFactory(final SageConfig config, final String bamFile, final ReferenceSequenceFile refGenome)
+    {
         this.bamFile = bamFile;
         this.refGenome = refGenome;
         this.config = config;
     }
 
     @NotNull
-    public Collection<QualityCounter> regionCount(@NotNull final GenomeRegion bounds) {
+    public Collection<QualityCounter> regionCount(@NotNull final GenomeRegion bounds)
+    {
         LOGGER.debug("Processing bqr region {}", bounds);
 
         final RefSequence refSequence = new RefSequence(bounds, refGenome);
         final QualityCounterCigarHandler counter =
                 new QualityCounterCigarHandler(refSequence, bounds, config.baseQualityRecalibrationConfig().maxAltCount());
         final SamSlicer slicer = new SamSlicer(config.minMapQuality(), bounds);
-        try (final SamReader tumorReader = SamReaderFactory.makeDefault()
+        try(final SamReader tumorReader = SamReaderFactory.makeDefault()
                 .validationStringency(config.validationStringency())
                 .referenceSource(new ReferenceSource(refGenome))
-                .open(new File(bamFile))) {
+                .open(new File(bamFile)))
+        {
 
             // First parse
             slicer.slice(tumorReader, counter::processRecord);
 
-        } catch (Exception e) {
+        } catch(Exception e)
+        {
             throw new CompletionException(e);
         }
 

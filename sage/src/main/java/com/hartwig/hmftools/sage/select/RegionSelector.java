@@ -10,33 +10,40 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import org.jetbrains.annotations.NotNull;
 
 @NotThreadSafe
-public class RegionSelector<R extends GenomeRegion> {
+public class RegionSelector<R extends GenomeRegion>
+{
 
     private final List<R> regions;
     private int index = 0;
 
-    public RegionSelector(final List<R> regions) {
+    public RegionSelector(final List<R> regions)
+    {
         this.regions = regions;
     }
 
     @NotNull
-    public Optional<R> select(long position) {
-        if (regions.isEmpty()) {
+    public Optional<R> select(long position)
+    {
+        if(regions.isEmpty())
+        {
             return Optional.empty();
         }
 
         R current = current();
-        while (index > 0 && current.start() > position) {
+        while(index > 0 && current.start() > position)
+        {
             index--;
             current = current();
         }
 
-        while (index < regions.size() - 1 && current.end() < position) {
+        while(index < regions.size() - 1 && current.end() < position)
+        {
             index++;
             current = current();
         }
 
-        if (position >= current.start() && position <= current.end()) {
+        if(position >= current.start() && position <= current.end())
+        {
             return Optional.of(current);
         }
 
@@ -44,7 +51,8 @@ public class RegionSelector<R extends GenomeRegion> {
     }
 
     @NotNull
-    private R current() {
+    private R current()
+    {
         return regions.get(index);
     }
 

@@ -23,7 +23,8 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class SageQualityRecalibrationBedApplication implements AutoCloseable {
+public class SageQualityRecalibrationBedApplication implements AutoCloseable
+{
 
     private static final Logger LOGGER = LogManager.getLogger(SageQualityRecalibrationBedApplication.class);
 
@@ -32,11 +33,14 @@ public class SageQualityRecalibrationBedApplication implements AutoCloseable {
     private static final String OUT = "out";
     private static final int DEFAULT_BQR_SAMPLE_SIZE = 2_000_000;
 
-    public static void main(final String[] args) {
+    public static void main(final String[] args)
+    {
         final Options options = createOptions();
-        try (final SageQualityRecalibrationBedApplication application = new SageQualityRecalibrationBedApplication(options, args)) {
+        try(final SageQualityRecalibrationBedApplication application = new SageQualityRecalibrationBedApplication(options, args))
+        {
             application.run();
-        } catch (Exception e) {
+        } catch(Exception e)
+        {
             LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("SageQualityRecalibrationBedApplication", options);
@@ -49,7 +53,8 @@ public class SageQualityRecalibrationBedApplication implements AutoCloseable {
     private final String out;
 
     private SageQualityRecalibrationBedApplication(final Options options, final String... args)
-            throws ParseException, FileNotFoundException {
+            throws ParseException, FileNotFoundException
+    {
         final CommandLine cmd = createCommandLine(args, options);
 
         this.refGenome = new IndexedFastaSequenceFile(new File(cmd.getOptionValue(REF_GENOME)));
@@ -57,18 +62,21 @@ public class SageQualityRecalibrationBedApplication implements AutoCloseable {
         this.out = cmd.getOptionValue(OUT);
     }
 
-    public void run() throws IOException {
+    public void run() throws IOException
+    {
         List<GenomeRegion> regions = new QualityRecalibrationRegions(refGenome).regions(sampleSize);
         NamedBedFile.writeUnnamedBedFile(out, regions);
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() throws Exception
+    {
         refGenome.close();
     }
 
     @NotNull
-    static Options createOptions() {
+    static Options createOptions()
+    {
         final Options options = new Options();
         options.addOption(REF_GENOME, true, "Path to indexed ref genome fasta file");
         options.addOption(BQR_SAMPLE_SIZE, true, "BQR sampling size per autosome [" + DEFAULT_BQR_SAMPLE_SIZE + "]");
@@ -79,7 +87,8 @@ public class SageQualityRecalibrationBedApplication implements AutoCloseable {
     }
 
     @NotNull
-    static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
+    static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException
+    {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }

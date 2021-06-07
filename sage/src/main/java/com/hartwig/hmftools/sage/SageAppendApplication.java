@@ -50,21 +50,26 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
 
-public class SageAppendApplication implements AutoCloseable {
+public class SageAppendApplication implements AutoCloseable
+{
 
     private static final Logger LOGGER = LogManager.getLogger(SageAppendApplication.class);
     private static final double MIN_PRIOR_VERSION = 2.4;
 
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
         final Options options = SageConfig.createAddReferenceOptions();
-        try (final SageAppendApplication application = new SageAppendApplication(options, args)) {
+        try(final SageAppendApplication application = new SageAppendApplication(options, args))
+        {
             application.run();
-        } catch (ParseException e) {
+        } catch(ParseException e)
+        {
             LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("SageAppendApplication", options);
             System.exit(1);
-        } catch (Exception e) {
+        } catch(Exception e)
+        {
             LOGGER.warn(e);
             System.exit(1);
         }
@@ -78,7 +83,8 @@ public class SageAppendApplication implements AutoCloseable {
     private final AbstractFeatureReader<VariantContext, LineIterator> inputReader;
     private final long timeStamp = System.currentTimeMillis();
 
-    public SageAppendApplication(final Options options, final String... args) throws ParseException, IOException {
+    public SageAppendApplication(final Options options, final String... args) throws ParseException, IOException
+    {
         final VersionInfo version = new VersionInfo("sage.version");
         LOGGER.info("SAGE version: {}", version.version());
 
@@ -101,7 +107,8 @@ public class SageAppendApplication implements AutoCloseable {
         LOGGER.info("Writing to file: {}", config.outputFile());
     }
 
-    public void run() throws IOException, ExecutionException, InterruptedException {
+    public void run() throws IOException, ExecutionException, InterruptedException
+    {
         final ChromosomePartition chromosomePartition = new ChromosomePartition(config, refGenome);
         final List<VariantContext> existing = verifyAndReadExisting();
 
@@ -110,13 +117,16 @@ public class SageAppendApplication implements AutoCloseable {
         final Map<String, QualityRecalibrationMap> recalibrationMap = qualityRecalibrationSupplier.get();
         final AdditionalReferencePipeline pipeline = new AdditionalReferencePipeline(config, executorService, refGenome, recalibrationMap);
 
-        for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
+        for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
+        {
             final String contig = samSequenceRecord.getSequenceName();
-            if (HumanChromosome.contains(contig) || MitochondrialChromosome.contains(contig)) {
+            if(HumanChromosome.contains(contig) || MitochondrialChromosome.contains(contig))
+            {
                 final List<VariantContext> chromosomeVariants =
                         existing.stream().filter(x -> x.getContig().equals(contig)).collect(Collectors.toList());
 
-                for (GenomeRegion region : chromosomePartition.partition(contig)) {
+                for(GenomeRegion region : chromosomePartition.partition(contig))
+                {
                     final List<VariantContext> regionVariants = chromosomeVariants.stream()
                             .filter(x -> x.getStart() >= region.start() && x.getStart() <= region.end())
                             .collect(Collectors.toList());
@@ -126,14 +136,16 @@ public class SageAppendApplication implements AutoCloseable {
             }
         }
 
-        for (Future<List<VariantContext>> updatedVariantsFuture : futures) {
+        for(Future<List<VariantContext>> updatedVariantsFuture : futures)
+        {
             final List<VariantContext> updatedVariants = updatedVariantsFuture.get();
             updatedVariants.forEach(outputVCF::write);
         }
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() throws IOException
+    {
         inputReader.close();
         outputVCF.close();
         refGenome.close();
@@ -143,51 +155,63 @@ public class SageAppendApplication implements AutoCloseable {
     }
 
     @NotNull
-    public List<VariantContext> verifyAndReadExisting() throws IOException, IllegalArgumentException {
+    public List<VariantContext> verifyAndReadExisting() throws IOException, IllegalArgumentException
+    {
         VCFHeader header = (VCFHeader) inputReader.getHeader();
 
         List<VariantContext> result = Lists.newArrayList();
-        for (VariantContext variantContext : inputReader.iterator()) {
+        for(VariantContext variantContext : inputReader.iterator())
+        {
             result.add(variantContext.fullyDecode(header, false));
         }
 
         return result;
     }
 
-    public void validateInputHeader(VCFHeader header) throws IllegalArgumentException {
+    public void validateInputHeader(VCFHeader header) throws IllegalArgumentException
+    {
         double oldVersion = sageVersion(header);
-        if (Doubles.lessThan(oldVersion, MIN_PRIOR_VERSION)) {
+        if(Doubles.lessThan(oldVersion, MIN_PRIOR_VERSION))
+        {
             throw new IllegalArgumentException("Input VCF must be from SAGE version " + MIN_PRIOR_VERSION + " onwards");
         }
 
         final Set<String> samplesInExistingVcf = existingSamples(header);
-        for (String refSample : config.reference()) {
-            if (samplesInExistingVcf.contains(refSample)) {
+        for(String refSample : config.reference())
+        {
+            if(samplesInExistingVcf.contains(refSample))
+            {
                 throw new IllegalArgumentException("Sample " + refSample + " already exits in input VCF");
             }
         }
     }
 
-    private static double sageVersion(@NotNull final VCFHeader header) {
+    private static double sageVersion(@NotNull final VCFHeader header)
+    {
         VCFHeaderLine oldVersion = header.getMetaDataLine(SageVCF.VERSION_META_DATA);
-        if (oldVersion == null) {
+        if(oldVersion == null)
+        {
             return 0;
         }
 
         String oldVersionString = oldVersion.getValue();
-        try {
+        try
+        {
             return Double.parseDouble(oldVersionString);
-        } catch (Exception e) {
+        } catch(Exception e)
+        {
             return 0;
         }
     }
 
     @NotNull
-    private static Set<String> existingSamples(@NotNull final VCFHeader header) {
+    private static Set<String> existingSamples(@NotNull final VCFHeader header)
+    {
         return Sets.newHashSet(header.getGenotypeSamples());
     }
 
-    private SAMSequenceDictionary dictionary() throws IOException {
+    private SAMSequenceDictionary dictionary() throws IOException
+    {
         final String bam = config.referenceBam().isEmpty() ? config.tumorBam().get(0) : config.referenceBam().get(0);
         SamReader tumorReader = SamReaderFactory.makeDefault()
                 .validationStringency(config.validationStringency())

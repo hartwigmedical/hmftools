@@ -7,17 +7,20 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 
-public class RawContextFactory {
+public class RawContextFactory
+{
 
     private final VariantHotspot variant;
     private static final RawContext DUMMY = RawContext.inSoftClip(-1);
 
-    public RawContextFactory(final VariantHotspot variant) {
+    public RawContextFactory(final VariantHotspot variant)
+    {
         this.variant = variant;
     }
 
     @NotNull
-    public RawContext create(final int maxSkippedReferenceRegions, @NotNull final SAMRecord record) {
+    public RawContext create(final int maxSkippedReferenceRegions, @NotNull final SAMRecord record)
+    {
         RawContextCigarHandler handler = new RawContextCigarHandler(maxSkippedReferenceRegions, variant);
         CigarTraversal.traverseCigar(record, handler);
         RawContext result = handler.result();

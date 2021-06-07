@@ -18,25 +18,31 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class RightAlignMicrohomology implements Consumer<SageVariant> {
+public class RightAlignMicrohomology implements Consumer<SageVariant>
+{
 
     private final Consumer<SageVariant> consumer;
     private final RegionSelector<HmfTranscriptRegion> selector;
     private final List<SageVariant> rightAlignedList = Lists.newArrayList();
     private final Comparator<VariantHotspot> comparator = new VariantHotspotComparator();
 
-    public RightAlignMicrohomology(final Consumer<SageVariant> consumer, final List<HmfTranscriptRegion> transcripts) {
+    public RightAlignMicrohomology(final Consumer<SageVariant> consumer, final List<HmfTranscriptRegion> transcripts)
+    {
         this.selector = new RegionSelector<>(transcripts);
         this.consumer = consumer;
     }
 
     @Override
-    public void accept(final SageVariant variant) {
-        if (!realign(variant)) {
+    public void accept(final SageVariant variant)
+    {
+        if(!realign(variant))
+        {
             Iterator<SageVariant> realignedIterator = rightAlignedList.iterator();
-            while (realignedIterator.hasNext()) {
+            while(realignedIterator.hasNext())
+            {
                 final SageVariant rightAligned = realignedIterator.next();
-                if (comparator.compare(rightAligned.variant(), variant.variant()) < 0) {
+                if(comparator.compare(rightAligned.variant(), variant.variant()) < 0)
+                {
                     consumer.accept(rightAligned);
                     realignedIterator.remove();
                 }
@@ -46,47 +52,57 @@ public class RightAlignMicrohomology implements Consumer<SageVariant> {
         }
     }
 
-    boolean realign(@NotNull final SageVariant variant) {
-        if (!variant.isPassing()) {
+    boolean realign(@NotNull final SageVariant variant)
+    {
+        if(!variant.isPassing())
+        {
             return false;
         }
 
         final boolean isInframeDel = variant.variant().isInframeIndel() && variant.alt().length() == 1;
-        if (!variant.variant().isInframeIndel()) {
+        if(!variant.variant().isInframeIndel())
+        {
             return false;
         }
 
         final String microhomology = variant.microhomology();
         final int microhomologyLength = microhomology.length();
-        if (microhomologyLength == 0) {
+        if(microhomologyLength == 0)
+        {
             return false;
         }
 
         final Optional<HmfExonRegion> maybeLeftAlignedRegion = PhasedInframeIndel.selectExon(selector, variant.position() + 1);
-        if (maybeLeftAlignedRegion.isPresent()) {
+        if(maybeLeftAlignedRegion.isPresent())
+        {
             return false;
         }
 
-        final VariantHotspot rightAligned = isInframeDel ? rightAlignDel(variant.variant(), microhomology) : rightAlignIns(variant.variant(), microhomology);
+        final VariantHotspot rightAligned =
+                isInframeDel ? rightAlignDel(variant.variant(), microhomology) : rightAlignIns(variant.variant(), microhomology);
         final Optional<HmfTranscriptRegion> maybeRightAlignedTranscript = selector.select(rightAligned.position() + 1);
-        if (!maybeRightAlignedTranscript.isPresent()) {
+        if(!maybeRightAlignedTranscript.isPresent())
+        {
             return false;
         }
 
         final HmfTranscriptRegion rightAlignedTranscript = maybeRightAlignedTranscript.get();
-        if (rightAligned.position() + 1 < rightAlignedTranscript.codingStart()
-                || rightAligned.position() + 1 > rightAlignedTranscript.codingEnd()) {
+        if(rightAligned.position() + 1 < rightAlignedTranscript.codingStart()
+                || rightAligned.position() + 1 > rightAlignedTranscript.codingEnd())
+        {
             return false;
         }
 
         final Optional<HmfExonRegion> maybeRightAlignedExon =
                 Optional.ofNullable(PhasedInframeIndel.selectExon(rightAligned.position() + 1, rightAlignedTranscript));
-        if (!maybeRightAlignedExon.isPresent()) {
+        if(!maybeRightAlignedExon.isPresent())
+        {
             return false;
         }
 
         final Candidate oldCandidate = variant.candidate();
-        final Candidate newCandidate = new Candidate(oldCandidate.tier(), rightAligned, oldCandidate.readContext(), oldCandidate.maxReadDepth(), oldCandidate.minNumberOfEvents());
+        final Candidate newCandidate =
+                new Candidate(oldCandidate.tier(), rightAligned, oldCandidate.readContext(), oldCandidate.maxReadDepth(), oldCandidate.minNumberOfEvents());
 
         final SageVariant realignedVariant =
                 new SageVariant(newCandidate, variant.filters(), variant.normalAltContexts(), variant.tumorAltContexts());
@@ -97,7 +113,8 @@ public class RightAlignMicrohomology implements Consumer<SageVariant> {
     }
 
     @NotNull
-    static VariantHotspot rightAlignDel(@NotNull final VariantHotspot variant, @NotNull final String microhomology) {
+    static VariantHotspot rightAlignDel(@NotNull final VariantHotspot variant, @NotNull final String microhomology)
+    {
         int microhomologyLength = microhomology.length();
         final String alt = microhomology.substring(microhomologyLength - 1);
         final String ref = variant.ref().substring(microhomologyLength) + microhomology;
@@ -110,7 +127,8 @@ public class RightAlignMicrohomology implements Consumer<SageVariant> {
     }
 
     @NotNull
-    static VariantHotspot rightAlignIns(@NotNull final VariantHotspot variant, @NotNull final String microhomology) {
+    static VariantHotspot rightAlignIns(@NotNull final VariantHotspot variant, @NotNull final String microhomology)
+    {
         int microhomologyLength = microhomology.length();
         final String alt = variant.alt().substring(microhomologyLength) + microhomology;
         final String ref = microhomology.substring(microhomologyLength - 1);
@@ -122,7 +140,8 @@ public class RightAlignMicrohomology implements Consumer<SageVariant> {
                 .build();
     }
 
-    public void flush() {
+    public void flush()
+    {
         rightAlignedList.sort((o1, o2) -> comparator.compare(o1.variant(), o2.variant()));
         rightAlignedList.forEach(consumer);
         rightAlignedList.clear();

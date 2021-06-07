@@ -14,19 +14,22 @@ import com.hartwig.hmftools.sage.variant.SageVariantTier;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ReadContextCounterFactory {
+public class ReadContextCounterFactory
+{
 
     private static final Set<SageVariantTier> HIGH_COVERAGE = EnumSet.of(SageVariantTier.HOTSPOT, SageVariantTier.PANEL);
 
     private final SageConfig config;
     private final Map<String, QualityRecalibrationMap> qualityRecalibrationMap;
 
-    public ReadContextCounterFactory(final SageConfig config, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap) {
+    public ReadContextCounterFactory(final SageConfig config, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
+    {
         this.config = config;
         this.qualityRecalibrationMap = qualityRecalibrationMap;
     }
 
-    public List<ReadContextCounter> create(@NotNull final String sample, @NotNull final List<Candidate> candidates) {
+    public List<ReadContextCounter> create(@NotNull final String sample, @NotNull final List<Candidate> candidates)
+    {
         return candidates.stream()
                 .map(x -> new ReadContextCounter(sample,
                         x.variant(),
@@ -40,7 +43,8 @@ public class ReadContextCounterFactory {
                 .collect(Collectors.toList());
     }
 
-    private int maxCoverage(@NotNull final Candidate candidate) {
+    private int maxCoverage(@NotNull final Candidate candidate)
+    {
         return HIGH_COVERAGE.contains(candidate.tier()) || MitochondrialChromosome.contains(candidate.chromosome())
                 ? config.maxReadDepthPanel()
                 : config.maxReadDepth();

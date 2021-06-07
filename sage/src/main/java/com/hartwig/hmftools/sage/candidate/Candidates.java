@@ -14,7 +14,8 @@ import com.hartwig.hmftools.sage.select.TierSelector;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Candidates {
+public class Candidates
+{
 
     private final List<VariantHotspot> hotspots;
     private final List<GenomeRegion> panel;
@@ -22,26 +23,32 @@ public class Candidates {
     private final Map<VariantHotspot, Candidate> candidateMap = Maps.newHashMap();
     private List<Candidate> candidateList;
 
-    public Candidates(final List<VariantHotspot> hotspots, final List<GenomeRegion> panel, final List<GenomeRegion> highConfidence) {
+    public Candidates(final List<VariantHotspot> hotspots, final List<GenomeRegion> panel, final List<GenomeRegion> highConfidence)
+    {
         this.hotspots = hotspots;
         this.panel = panel;
         this.highConfidence = highConfidence;
     }
 
-    public void add(@NotNull final Collection<AltContext> altContexts) {
-        if (candidateList != null) {
+    public void add(@NotNull final Collection<AltContext> altContexts)
+    {
+        if(candidateList != null)
+        {
             throw new IllegalStateException("Cannot add more alt contexts");
         }
 
         final TierSelector tierSelector = new TierSelector(hotspots, panel, highConfidence);
-        for (final AltContext altContext : altContexts) {
+        for(final AltContext altContext : altContexts)
+        {
             candidateMap.computeIfAbsent(altContext, x -> new Candidate(tierSelector.tier(altContext), altContext)).update(altContext);
         }
     }
 
     @NotNull
-    public List<Candidate> candidates() {
-        if (candidateList == null) {
+    public List<Candidate> candidates()
+    {
+        if(candidateList == null)
+        {
             final VariantHotspotComparator variantHotspotComparator = new VariantHotspotComparator();
             candidateList = Lists.newArrayList(candidateMap.values());
             candidateList.sort((o1, o2) -> variantHotspotComparator.compare(o1.variant(), o2.variant()));

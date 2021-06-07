@@ -18,28 +18,35 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class QualityRecalibration {
+public class QualityRecalibration
+{
 
     private final ExecutorService executorService;
     private final IndexedFastaSequenceFile refGenome;
     private final SageConfig config;
 
-    public QualityRecalibration(final SageConfig config, final ExecutorService executorService, final IndexedFastaSequenceFile refGenome) {
+    public QualityRecalibration(final SageConfig config, final ExecutorService executorService, final IndexedFastaSequenceFile refGenome)
+    {
         this.executorService = executorService;
         this.refGenome = refGenome;
         this.config = config;
     }
 
     @NotNull
-    public CompletableFuture<List<QualityRecalibrationRecord>> qualityRecalibrationRecords(@NotNull final String bamFile) {
+    public CompletableFuture<List<QualityRecalibrationRecord>> qualityRecalibrationRecords(@NotNull final String bamFile)
+    {
         final Map<QualityCounterKey, QualityCounter> map = new ConcurrentHashMap<>(Maps.newHashMap());
         final List<CompletableFuture<Void>> doneList = Lists.newArrayList();
         final List<GenomeRegion> regions =
                 new QualityRecalibrationRegions(refGenome).regions(config.baseQualityRecalibrationConfig().sampleSize());
-        for (GenomeRegion region : regions) {
-            for (CompletableFuture<Collection<QualityCounter>> slice : submitAllRegions(bamFile, region)) {
-                final CompletableFuture<Void> done = slice.thenAccept(counts -> {
-                    for (QualityCounter count : counts) {
+        for(GenomeRegion region : regions)
+        {
+            for(CompletableFuture<Collection<QualityCounter>> slice : submitAllRegions(bamFile, region))
+            {
+                final CompletableFuture<Void> done = slice.thenAccept(counts ->
+                {
+                    for(QualityCounter count : counts)
+                    {
                         final QualityCounterKey key = withoutPosition(count);
                         map.computeIfAbsent(key, QualityCounter::new).increment(count.count());
                     }
@@ -48,39 +55,46 @@ public class QualityRecalibration {
             }
         }
 
-        return CompletableFuture.allOf(doneList.toArray(new CompletableFuture[0])).thenApply(aVoid -> {
+        return CompletableFuture.allOf(doneList.toArray(new CompletableFuture[0])).thenApply(aVoid ->
+        {
             final List<QualityCounter> sortedList = Lists.newArrayList(map.values());
             Collections.sort(sortedList);
             return QualityRecalibrationFactory.create(sortedList);
         });
     }
 
-    public CompletableFuture<Collection<QualityCounter>> addRegion(String bam, String contig, int start, int end) {
+    public CompletableFuture<Collection<QualityCounter>> addRegion(String bam, String contig, int start, int end)
+    {
         final GenomeRegion bounds = GenomeRegions.create(contig, start, end);
         return CompletableFuture.supplyAsync(() -> new QualityCounterFactory(config, bam, refGenome).regionCount(bounds), executorService);
     }
 
     public List<CompletableFuture<Collection<QualityCounter>>> submitAllRegions(@NotNull final String bam,
-            @NotNull final GenomeRegion region) {
+            @NotNull final GenomeRegion region)
+    {
         return submitAllRegions(bam, region.chromosome(), (int) region.start(), (int) region.end());
     }
 
     public List<CompletableFuture<Collection<QualityCounter>>> submitAllRegions(@NotNull final String bam, @NotNull final String contig,
-            int minPosition, int maxPosition) {
+            int minPosition, int maxPosition)
+    {
         final List<CompletableFuture<Collection<QualityCounter>>> result = Lists.newArrayList();
 
         final int regionSliceSize = 100_000;
-        for (int i = 0; ; i++) {
+        for(int i = 0; ; i++)
+        {
             int start = minPosition + i * regionSliceSize;
             int end = start + regionSliceSize - 1;
 
-            if (end < minPosition) {
+            if(end < minPosition)
+            {
                 continue;
             }
 
             result.add(addRegion(bam, contig, Math.max(start, minPosition), Math.min(end, maxPosition)));
 
-            if (end >= maxPosition) {
+            if(end >= maxPosition)
+            {
                 break;
             }
         }
@@ -89,7 +103,8 @@ public class QualityRecalibration {
     }
 
     @NotNull
-    private static QualityCounterKey withoutPosition(@NotNull final QualityCounter count) {
+    private static QualityCounterKey withoutPosition(@NotNull final QualityCounter count)
+    {
         return ImmutableQualityCounterKey.builder().from(count).position(0).build();
     }
 }

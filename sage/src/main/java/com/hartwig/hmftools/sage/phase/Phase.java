@@ -11,7 +11,8 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Phase implements Consumer<SageVariant> {
+public class Phase implements Consumer<SageVariant>
+{
 
     static final int PHASE_BUFFER = 150;
 
@@ -25,7 +26,8 @@ public class Phase implements Consumer<SageVariant> {
     private final PhasedInframeIndel phasedInframeIndel;
     private final RightAlignMicrohomology rightAlignMicrohomology;
 
-    public Phase(@NotNull final SageConfig config, @NotNull final String chromosome, @NotNull final Consumer<SageVariant> consumer) {
+    public Phase(@NotNull final SageConfig config, @NotNull final String chromosome, @NotNull final Consumer<SageVariant> consumer)
+    {
         final List<HmfTranscriptRegion> transcripts =
                 config.transcriptRegions().stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());
 
@@ -41,16 +43,19 @@ public class Phase implements Consumer<SageVariant> {
     }
 
     @NotNull
-    public Set<Integer> passingPhaseSets() {
+    public Set<Integer> passingPhaseSets()
+    {
         return localPhaseSet.passingPhaseSets();
     }
 
     @Override
-    public void accept(final SageVariant sageVariant) {
+    public void accept(final SageVariant sageVariant)
+    {
         localPhaseSet.accept(sageVariant);
     }
 
-    public void flush() {
+    public void flush()
+    {
         localPhaseSet.flush();
         localRealignSet.flush();
         rightAlignMicrohomology.flush();

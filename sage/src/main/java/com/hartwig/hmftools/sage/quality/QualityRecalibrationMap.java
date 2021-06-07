@@ -7,16 +7,19 @@ import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 
-public class QualityRecalibrationMap {
+public class QualityRecalibrationMap
+{
 
     @NotNull
     private final Map<QualityRecalibrationKey, QualityRecalibrationRecord> map;
 
-    public QualityRecalibrationMap(@NotNull final List<QualityRecalibrationRecord> records) {
+    public QualityRecalibrationMap(@NotNull final List<QualityRecalibrationRecord> records)
+    {
         this.map = records.stream().collect(Collectors.toMap(QualityRecalibrationRecord::key, x -> x));
     }
 
-    public double quality(byte ref, byte alt, byte[] trinucleotideContext, byte qual) {
+    public double quality(byte ref, byte alt, byte[] trinucleotideContext, byte qual)
+    {
         final QualityRecalibrationKey key =
                 ImmutableQualityRecalibrationKey.builder().ref(ref).alt(alt).qual(qual).trinucleotideContext(trinucleotideContext).build();
 

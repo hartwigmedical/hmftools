@@ -22,7 +22,8 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
-class QualityCounterCigarHandler implements CigarHandler {
+class QualityCounterCigarHandler implements CigarHandler
+{
 
     private static final CigarElement SINGLE = new CigarElement(1, CigarOperator.M);
     private static final byte N = (byte) 'N';
@@ -34,18 +35,21 @@ class QualityCounterCigarHandler implements CigarHandler {
     private final Set<Integer> indelPositions = Sets.newHashSet();
     private final Map<QualityCounterKey, QualityCounter> qualityMap = Maps.newHashMap();
 
-    public QualityCounterCigarHandler(final RefSequence refGenome, final GenomeRegion bounds, final int maxAltCount) {
+    public QualityCounterCigarHandler(final RefSequence refGenome, final GenomeRegion bounds, final int maxAltCount)
+    {
         this.refGenome = refGenome.alignment();
         this.bounds = bounds;
         this.maxAltCount = maxAltCount;
     }
 
-    public void processRecord(@NotNull final SAMRecord record) {
+    public void processRecord(@NotNull final SAMRecord record)
+    {
         CigarTraversal.traverseCigar(record, this);
     }
 
     @NotNull
-    public Collection<QualityCounter> counts() {
+    public Collection<QualityCounter> counts()
+    {
         final Set<QualityCounterKey> altsToRemove = groupByAlt(qualityMap.values()).stream()
                 .filter(x -> x.ref() != x.alt())
                 .filter(x -> x.count() > maxAltCount)
@@ -53,9 +57,11 @@ class QualityCounterCigarHandler implements CigarHandler {
                 .collect(Collectors.toSet());
 
         final Set<QualityCounter> result = Sets.newHashSet();
-        for (QualityCounter count : qualityMap.values()) {
+        for(QualityCounter count : qualityMap.values())
+        {
             final QualityCounterKey altKey = altKey(count);
-            if (!indelPositions.contains(count.position()) && !altsToRemove.contains(altKey)) {
+            if(!indelPositions.contains(count.position()) && !altsToRemove.contains(altKey))
+            {
                 result.add(count);
             }
         }
@@ -64,29 +70,35 @@ class QualityCounterCigarHandler implements CigarHandler {
     }
 
     @Override
-    public void handleInsert(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex, final int refPos) {
+    public void handleInsert(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex, final int refPos)
+    {
         // Need to add one because indel is actually AFTER this by convention
         indelPositions.add(refPos + 1);
         handleAlignment(record, SINGLE, readIndex, refPos);
     }
 
     @Override
-    public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex, final int refPos) {
+    public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex, final int refPos)
+    {
         indelPositions.add(refPos + 1);
         handleAlignment(record, SINGLE, readIndex, refPos);
     }
 
     @Override
-    public void handleAlignment(@NotNull final SAMRecord r, @NotNull final CigarElement e, final int startReadIndex, final int refPos) {
-        for (int i = 0; i < e.getLength(); i++) {
+    public void handleAlignment(@NotNull final SAMRecord r, @NotNull final CigarElement e, final int startReadIndex, final int refPos)
+    {
+        for(int i = 0; i < e.getLength(); i++)
+        {
             int readIndex = startReadIndex + i;
             int position = refPos + i;
 
-            if (position > bounds.end()) {
+            if(position > bounds.end())
+            {
                 return;
             }
 
-            if (position < bounds.start()) {
+            if(position < bounds.start())
+            {
                 continue;
             }
 
@@ -95,7 +107,8 @@ class QualityCounterCigarHandler implements CigarHandler {
             byte quality = r.getBaseQualities()[readIndex];
             byte[] trinucleotideContext = refGenome.trinucleotideContext(position);
 
-            if (alt != N && isValid(trinucleotideContext)) {
+            if(alt != N && isValid(trinucleotideContext))
+            {
                 final QualityCounterKey key = ImmutableQualityCounterKey.builder()
                         .ref(ref)
                         .alt(alt)
@@ -108,9 +121,12 @@ class QualityCounterCigarHandler implements CigarHandler {
         }
     }
 
-    private static boolean isValid(byte[] trinucleotideContext) {
-        for (byte b : trinucleotideContext) {
-            if (b == N) {
+    private static boolean isValid(byte[] trinucleotideContext)
+    {
+        for(byte b : trinucleotideContext)
+        {
+            if(b == N)
+            {
                 return false;
             }
         }
@@ -118,10 +134,12 @@ class QualityCounterCigarHandler implements CigarHandler {
     }
 
     @NotNull
-    private static List<QualityCounter> groupByAlt(final Collection<QualityCounter> quality) {
+    private static List<QualityCounter> groupByAlt(final Collection<QualityCounter> quality)
+    {
         final Map<QualityCounterKey, QualityCounter> map = Maps.newHashMap();
 
-        for (QualityCounter count : quality) {
+        for(QualityCounter count : quality)
+        {
             final QualityCounterKey key = altKey(count);
             map.computeIfAbsent(key, QualityCounter::new).increment(count.count());
         }
@@ -133,7 +151,8 @@ class QualityCounterCigarHandler implements CigarHandler {
     }
 
     @NotNull
-    public static QualityCounterKey altKey(@NotNull final QualityCounter count) {
+    public static QualityCounterKey altKey(@NotNull final QualityCounter count)
+    {
         return ImmutableQualityCounterKey.builder().from(count).qual((byte) 0).trinucleotideContext().build();
     }
 }

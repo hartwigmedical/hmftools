@@ -19,7 +19,8 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class CandidateStage {
+public class CandidateStage
+{
 
     private static final Logger LOGGER = LogManager.getLogger(CandidateStage.class);
 
@@ -31,7 +32,8 @@ public class CandidateStage {
 
     public CandidateStage(@NotNull final SageConfig config, @NotNull final ReferenceSequenceFile refGenome,
             @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
-            @NotNull final List<GenomeRegion> highConfidenceRegions, final Coverage coverage) {
+            @NotNull final List<GenomeRegion> highConfidenceRegions, final Coverage coverage)
+    {
         this.config = config;
         final SamSlicerFactory samSlicerFactory = new SamSlicerFactory(config, panelRegions);
         this.hotspots = hotspots;
@@ -42,9 +44,12 @@ public class CandidateStage {
 
     @NotNull
     public CompletableFuture<List<Candidate>> candidates(@NotNull final GenomeRegion region,
-            final CompletableFuture<RefSequence> refSequenceFuture) {
-        return refSequenceFuture.thenCompose(refSequence -> {
-            if (region.start() == 1) {
+            final CompletableFuture<RefSequence> refSequenceFuture)
+    {
+        return refSequenceFuture.thenCompose(refSequence ->
+        {
+            if(region.start() == 1)
+            {
                 LOGGER.info("Processing chromosome {}", region.chromosome());
             }
             LOGGER.debug("Processing candidates in {}:{}", region.chromosome(), region.start());
@@ -52,7 +57,8 @@ public class CandidateStage {
             final Candidates initialCandidates = new Candidates(hotspots, panelRegions, highConfidenceRegions);
 
             CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
-            for (int i = 0; i < config.tumor().size(); i++) {
+            for(int i = 0; i < config.tumor().size(); i++)
+            {
                 final String sample = config.tumor().get(i);
                 final String sampleBam = config.tumorBam().get(i);
                 done = done.thenApply(aVoid -> candidateEvidence.get(sample, sampleBam, refSequence, region))

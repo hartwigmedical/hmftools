@@ -26,7 +26,8 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class SomaticPipeline implements SageVariantPipeline {
+public class SomaticPipeline implements SageVariantPipeline
+{
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticPipeline.class);
 
@@ -40,7 +41,8 @@ public class SomaticPipeline implements SageVariantPipeline {
             @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
             @NotNull final List<GenomeRegion> highConfidenceRegions,
             @NotNull final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
-            @NotNull final Coverage coverage) {
+            @NotNull final Coverage coverage)
+    {
         this.config = config;
         this.executor = executor;
         this.refGenome = refGenome;
@@ -49,7 +51,8 @@ public class SomaticPipeline implements SageVariantPipeline {
     }
 
     @NotNull
-    public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region) {
+    public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region)
+    {
         final CompletableFuture<RefSequence> refSequenceFuture = supplyAsync(() -> new RefSequence(region, refGenome), executor);
 
         final CompletableFuture<List<Candidate>> initialCandidates = candidateState.candidates(region, refSequenceFuture);
@@ -66,14 +69,17 @@ public class SomaticPipeline implements SageVariantPipeline {
     @NotNull
     private CompletableFuture<List<SageVariant>> combine(@NotNull final GenomeRegion region,
             final CompletableFuture<List<Candidate>> candidates, final CompletableFuture<ReadContextCounters> doneTumor,
-            final CompletableFuture<ReadContextCounters> doneNormal) {
-        return doneNormal.thenCombine(doneTumor, (normalCandidates, tumorCandidates) -> {
+            final CompletableFuture<ReadContextCounters> doneNormal)
+    {
+        return doneNormal.thenCombine(doneTumor, (normalCandidates, tumorCandidates) ->
+        {
             LOGGER.debug("Gathering evidence in {}:{}", region.chromosome(), region.start());
             final SageVariantFactory variantFactory = new SageVariantFactory(config.filter());
 
             // Combine normal and tumor together and create variants
             final List<SageVariant> result = Lists.newArrayList();
-            for (Candidate candidate : candidates.join()) {
+            for(Candidate candidate : candidates.join())
+            {
                 final List<ReadContextCounter> normal = normalCandidates.readContextCounters(candidate.variant());
                 final List<ReadContextCounter> tumor = tumorCandidates.readContextCounters(candidate.variant());
                 SageVariant sageVariant = variantFactory.create(candidate, normal, tumor);
@@ -85,7 +91,8 @@ public class SomaticPipeline implements SageVariantPipeline {
     }
 
     @NotNull
-    private CompletableFuture<List<Candidate>> filteredCandidates(final CompletableFuture<ReadContextCounters> tumorEvidence) {
+    private CompletableFuture<List<Candidate>> filteredCandidates(final CompletableFuture<ReadContextCounters> tumorEvidence)
+    {
         return tumorEvidence.thenApply(x -> x.candidates(config.filter().readContextFilter()));
     }
 }

@@ -30,7 +30,8 @@ import htsjdk.samtools.ValidationStringency;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface SageConfig {
+public interface SageConfig
+{
 
     Logger LOGGER = LogManager.getLogger(SageConfig.class);
 
@@ -68,7 +69,8 @@ public interface SageConfig {
     boolean DEFAULT_MNV = true;
 
     @NotNull
-    static Options createSageOptions() {
+    static Options createSageOptions()
+    {
         final Options options = new Options();
         options.addOption(MNV, true, "Enable MNVs [" + DEFAULT_MNV + "]");
         options.addOption(REF_GENOME_VERSION, true, "Assembly, must be one of [37, 38]");
@@ -89,14 +91,16 @@ public interface SageConfig {
     }
 
     @NotNull
-    static Options createAddReferenceOptions() {
+    static Options createAddReferenceOptions()
+    {
         final Options options = new Options();
         options.addOption(INPUT_VCF, true, "Path to input vcf");
         commonOptions().getOptions().forEach(options::addOption);
         return options;
     }
 
-    static Options commonOptions() {
+    static Options commonOptions()
+    {
         final Options options = new Options();
         options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
         options.addOption(REFERENCE, true, "Name of reference sample");
@@ -154,14 +158,16 @@ public interface SageConfig {
     ValidationStringency validationStringency();
 
     @NotNull
-    default String geneCoverageFile(@NotNull final String sample) {
+    default String geneCoverageFile(@NotNull final String sample)
+    {
         String filename = sample + ".sage.gene.coverage.tsv";
         String parent = new File(outputFile()).getParent();
         return parent == null ? filename : parent + File.separator + filename;
     }
 
     @NotNull
-    default String baseQualityRecalibrationFile(@NotNull final String sample) {
+    default String baseQualityRecalibrationFile(@NotNull final String sample)
+    {
         String parent = new File(outputFile()).getParent();
         return parent == null ? sample + ".sage.bqr.tsv" : parent + File.separator + sample + ".sage.bqr.tsv";
     }
@@ -188,7 +194,8 @@ public interface SageConfig {
     @NotNull
     Set<String> chromosomes();
 
-    default int typicalReadLength() {
+    default int typicalReadLength()
+    {
         return 151;
     }
 
@@ -202,7 +209,8 @@ public interface SageConfig {
 
     int maxReadDepthPanel();
 
-    default int maxSkippedReferenceRegions() {
+    default int maxSkippedReferenceRegions()
+    {
         return 50;
     }
 
@@ -210,84 +218,105 @@ public interface SageConfig {
 
     @NotNull
     static SageConfig createConfig(boolean appendMode, @NotNull final String version, @NotNull final CommandLine cmd)
-            throws ParseException, IOException {
+            throws ParseException, IOException
+    {
         final int threads = getConfigValue(cmd, THREADS, DEFAULT_THREADS);
         final RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
 
         final List<String> referenceList = Lists.newArrayList();
-        if (cmd.hasOption(REFERENCE)) {
+        if(cmd.hasOption(REFERENCE))
+        {
             referenceList.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE).split(",")));
         }
 
         final List<String> referenceBamList = Lists.newArrayList();
-        if (cmd.hasOption(REFERENCE_BAM)) {
+        if(cmd.hasOption(REFERENCE_BAM))
+        {
             referenceBamList.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE_BAM, Strings.EMPTY).split(",")));
         }
 
-        if (referenceList.size() != referenceBamList.size()) {
+        if(referenceList.size() != referenceBamList.size())
+        {
             throw new ParseException("Each reference sample must have matching bam");
         }
 
-        for (String referenceBam : referenceBamList) {
-            if (!new File(referenceBam).exists()) {
+        for(String referenceBam : referenceBamList)
+        {
+            if(!new File(referenceBam).exists())
+            {
                 throw new ParseException("Unable to locate reference bam " + referenceBam);
             }
         }
 
-        if (!cmd.hasOption(REF_GENOME)) {
+        if(!cmd.hasOption(REF_GENOME))
+        {
             throw new ParseException(REF_GENOME + " is a mandatory argument");
         }
 
-        if (!cmd.hasOption(OUTPUT_VCF)) {
+        if(!cmd.hasOption(OUTPUT_VCF))
+        {
             throw new ParseException(OUTPUT_VCF + " is a mandatory argument");
         }
 
         final List<String> tumorList = Lists.newArrayList();
-        if (cmd.hasOption(TUMOR)) {
+        if(cmd.hasOption(TUMOR))
+        {
             tumorList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR).split(",")));
         }
 
         final List<String> tumorBamList = Lists.newArrayList();
-        if (cmd.hasOption(TUMOR_BAM)) {
+        if(cmd.hasOption(TUMOR_BAM))
+        {
             tumorBamList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR_BAM, Strings.EMPTY).split(",")));
         }
 
-        if (tumorList.size() != tumorBamList.size()) {
+        if(tumorList.size() != tumorBamList.size())
+        {
             throw new ParseException("Each tumor sample must have matching bam");
         }
 
-        for (String tumorBam : tumorBamList) {
-            if (!new File(tumorBam).exists()) {
+        for(String tumorBam : tumorBamList)
+        {
+            if(!new File(tumorBam).exists())
+            {
                 throw new ParseException("Unable to locate tumor bam " + tumorBam);
             }
         }
 
         final Set<String> chromosomes = Sets.newHashSet();
         final String chromosomeList = cmd.getOptionValue(CHR, Strings.EMPTY);
-        if (!chromosomeList.isEmpty()) {
+        if(!chromosomeList.isEmpty())
+        {
             chromosomes.addAll(Lists.newArrayList(chromosomeList.split(",")));
         }
 
         final List<HmfTranscriptRegion> transcripts;
         final String outputVcf = cmd.getOptionValue(OUTPUT_VCF);
         final String inputVcf = cmd.getOptionValue(INPUT_VCF, Strings.EMPTY);
-        if (appendMode) {
+        if(appendMode)
+        {
             transcripts = Lists.newArrayList();
-            if (!cmd.hasOption(INPUT_VCF)) {
+            if(!cmd.hasOption(INPUT_VCF))
+            {
                 throw new ParseException(INPUT_VCF + " is a mandatory argument");
             }
 
-            if (outputVcf.equals(inputVcf)) {
+            if(outputVcf.equals(inputVcf))
+            {
                 throw new ParseException("Input and output VCFs must be different");
             }
 
-            if (referenceList.isEmpty()) {
+            if(referenceList.isEmpty())
+            {
                 throw new ParseException("At least one reference must be supplied");
             }
 
-        } else {
+        }
+        else
+        {
 
-            if (tumorList.isEmpty()) {
+            if(tumorList.isEmpty())
+            {
                 throw new ParseException("At least one tumor must be supplied");
             }
 
@@ -295,7 +324,8 @@ public interface SageConfig {
         }
 
         final File outputDir = new File(outputVcf).getParentFile();
-        if (outputDir != null && !outputDir.exists() && !outputDir.mkdirs()) {
+        if(outputDir != null && !outputDir.exists() && !outputDir.mkdirs())
+        {
             throw new IOException("Unable to write directory " + outputDir.toString());
         }
 

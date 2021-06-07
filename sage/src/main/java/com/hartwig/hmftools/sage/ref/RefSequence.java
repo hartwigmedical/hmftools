@@ -9,16 +9,18 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class RefSequence {
+public class RefSequence
+{
 
     private static final int BUFFER = 1000;
-    
+
     private final int end;
     private final int start;
     private final ReferenceSequence sequence;
     private final IndexedBases indexedBases;
 
-    public RefSequence(@NotNull final GenomeRegion region, @NotNull final ReferenceSequenceFile refGenome) {
+    public RefSequence(@NotNull final GenomeRegion region, @NotNull final ReferenceSequenceFile refGenome)
+    {
         final int sequenceEnd = refGenome.getSequenceDictionary().getSequence(region.chromosome()).getSequenceLength();
         this.start = Math.max(1, (int) region.start() - BUFFER);
         this.end = Math.min(sequenceEnd, (int) region.end() + BUFFER);
@@ -27,7 +29,8 @@ public class RefSequence {
     }
 
     @VisibleForTesting
-    public RefSequence(final ReferenceSequence sequence) {
+    public RefSequence(final ReferenceSequence sequence)
+    {
         this.sequence = sequence;
         this.start = sequence.getContigIndex() + 1;
         this.end = start + sequence.getBases().length - 1;
@@ -38,7 +41,8 @@ public class RefSequence {
      * returns reference sequence spanning read with index pointing to alignment start
      */
     @NotNull
-    public IndexedBases alignment() {
+    public IndexedBases alignment()
+    {
         return indexedBases;
     }
 

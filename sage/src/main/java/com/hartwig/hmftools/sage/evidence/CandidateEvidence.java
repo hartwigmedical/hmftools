@@ -29,7 +29,8 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class CandidateEvidence {
+public class CandidateEvidence
+{
 
     private static final Logger LOGGER = LogManager.getLogger(CandidateEvidence.class);
 
@@ -41,7 +42,8 @@ public class CandidateEvidence {
     private final Coverage coverage;
 
     public CandidateEvidence(@NotNull final SageConfig config, @NotNull final List<VariantHotspot> hotspots, final List<GenomeRegion> panel,
-            @NotNull final SamSlicerFactory samSlicerFactory, @NotNull final ReferenceSequenceFile refGenome, final Coverage coverage) {
+            @NotNull final SamSlicerFactory samSlicerFactory, @NotNull final ReferenceSequenceFile refGenome, final Coverage coverage)
+    {
         this.config = config;
         this.panel = panel;
         this.samSlicerFactory = samSlicerFactory;
@@ -52,15 +54,18 @@ public class CandidateEvidence {
 
     @NotNull
     public List<AltContext> get(@NotNull final String sample, @NotNull final String bamFile, @NotNull final RefSequence refSequence,
-            @NotNull final GenomeRegion bounds) {
+            @NotNull final GenomeRegion bounds)
+    {
         LOGGER.debug("Variant candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
         final List<GeneCoverage> geneCoverage = coverage.coverage(sample, bounds.chromosome());
         final RefContextFactory candidates = new RefContextFactory(config, sample, hotspots, panel);
         final RefContextConsumer refContextConsumer = new RefContextConsumer(config, bounds, refSequence, candidates);
 
-        final Consumer<SAMRecord> consumer = record -> {
+        final Consumer<SAMRecord> consumer = record ->
+        {
             refContextConsumer.accept(record);
-            if (!geneCoverage.isEmpty()) {
+            if(!geneCoverage.isEmpty())
+            {
                 final GenomeRegion alignment =
                         GenomeRegions.create(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd());
                 geneCoverage.forEach(x -> x.accept(alignment));
@@ -72,21 +77,24 @@ public class CandidateEvidence {
 
     @NotNull
     private List<AltContext> get(@NotNull final String bamFile, @NotNull final GenomeRegion bounds,
-            @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final RefContextFactory candidates) {
+            @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final RefContextFactory candidates)
+    {
         final List<AltContext> altContexts = Lists.newArrayList();
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
-        try (final SamReader tumorReader = SamReaderFactory.makeDefault()
+        try(final SamReader tumorReader = SamReaderFactory.makeDefault()
                 .validationStringency(config.validationStringency())
                 .referenceSource(new ReferenceSource(refGenome))
-                .open(new File(bamFile))) {
+                .open(new File(bamFile)))
+        {
 
             // First parse
             slicer.slice(tumorReader, recordConsumer);
 
             // Add all valid alt contexts
             altContexts.addAll(candidates.altContexts());
-        } catch (Exception e) {
+        } catch(Exception e)
+        {
             throw new CompletionException(e);
         }
 

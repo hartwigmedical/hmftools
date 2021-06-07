@@ -18,7 +18,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface FilterConfig {
+public interface FilterConfig
+{
 
     String SOFT_FILTER = "soft_filter_enabled";
     String HARD_FILTER = "hard_filter_enabled";
@@ -97,11 +98,13 @@ public interface FilterConfig {
 
     int filteredMaxNormalAltSupport();
 
-    default double hotspotMinTumorVafToSkipQualCheck() {
+    default double hotspotMinTumorVafToSkipQualCheck()
+    {
         return 0.08;
     }
 
-    default int hotspotMinTumorAltSupportToSkipQualCheck() {
+    default int hotspotMinTumorAltSupportToSkipQualCheck()
+    {
         return 8;
     }
 
@@ -118,15 +121,18 @@ public interface FilterConfig {
     SoftFilterConfig softLowConfidenceFilter();
 
     @NotNull
-    static Options createOptions() {
+    static Options createOptions()
+    {
         final Options options = new Options();
 
         options.addOption(SOFT_FILTER, false, "Enable soft filters [" + DEFAULT_SOFT_FILTER_ENABLED + "]");
         options.addOption(HARD_FILTER, false, "All filters are hard [" + DEFAULT_HARD_FILTER_ENABLED + "]");
         options.addOption(MNV_FILTER, false, "Enable max_germline_alt_support mnv filter [" + DEFAULT_MNV_FILTER_ENABLED + "]");
         options.addOption(HARD_MIN_TUMOR_QUAL, true, "Hard minimum tumor quality [" + DEFAULT_HARD_MIN_TUMOR_QUAL + "]");
-        options.addOption(HARD_MIN_TUMOR_RAW_ALT_SUPPORT, true, "Hard minimum tumor raw alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
-        options.addOption(HARD_MIN_TUMOR_RAW_BASE_QUALITY, true, "Hard minimum tumor raw base quality [" + DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY + "]");
+        options.addOption(HARD_MIN_TUMOR_RAW_ALT_SUPPORT, true,
+                "Hard minimum tumor raw alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
+        options.addOption(HARD_MIN_TUMOR_RAW_BASE_QUALITY, true,
+                "Hard minimum tumor raw base quality [" + DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY + "]");
 
         SoftFilterConfig.createOptions("hotspot", DEFAULT_HOTSPOT_FILTER).getOptions().forEach(options::addOption);
         SoftFilterConfig.createOptions("panel", DEFAULT_PANEL_FILTER).getOptions().forEach(options::addOption);
@@ -137,7 +143,8 @@ public interface FilterConfig {
     }
 
     @NotNull
-    static FilterConfig createConfig(@NotNull final CommandLine cmd) {
+    static FilterConfig createConfig(@NotNull final CommandLine cmd)
+    {
         return ImmutableFilterConfig.builder()
                 .softFilter(getConfigValue(cmd, SOFT_FILTER, DEFAULT_SOFT_FILTER_ENABLED))
                 .hardFilter(getConfigValue(cmd, HARD_FILTER, DEFAULT_HARD_FILTER_ENABLED))
@@ -154,8 +161,10 @@ public interface FilterConfig {
     }
 
     @NotNull
-    default SoftFilterConfig softConfig(@NotNull final SageVariantTier tier) {
-        switch (tier) {
+    default SoftFilterConfig softConfig(@NotNull final SageVariantTier tier)
+    {
+        switch(tier)
+        {
             case HOTSPOT:
                 return softHotspotFilter();
             case PANEL:
@@ -168,9 +177,12 @@ public interface FilterConfig {
     }
 
     @NotNull
-    default Predicate<AltContext> altContextFilter(@NotNull final HotspotSelector hotspotSelector) {
-        return altContext -> {
-            if (hotspotSelector.isHotspot(altContext)) {
+    default Predicate<AltContext> altContextFilter(@NotNull final HotspotSelector hotspotSelector)
+    {
+        return altContext ->
+        {
+            if(hotspotSelector.isHotspot(altContext))
+            {
                 return true;
             }
             return altContext.rawAltBaseQuality() >= hardMinTumorRawBaseQuality()
@@ -179,9 +191,12 @@ public interface FilterConfig {
     }
 
     @NotNull
-    default Predicate<ReadContextCounter> readContextFilter() {
-        return readContextCounter -> {
-            if (readContextCounter.tier().equals(SageVariantTier.HOTSPOT)) {
+    default Predicate<ReadContextCounter> readContextFilter()
+    {
+        return readContextCounter ->
+        {
+            if(readContextCounter.tier().equals(SageVariantTier.HOTSPOT))
+            {
                 return true;
             }
             return readContextCounter.rawAltBaseQuality() >= hardMinTumorRawBaseQuality()

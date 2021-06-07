@@ -13,7 +13,8 @@ import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class PonVCF implements AutoCloseable {
+public class PonVCF implements AutoCloseable
+{
 
     public static final String PON_COUNT = "PON_COUNT";
     public static final String PON_TOTAL = "PON_TOTAL";
@@ -21,7 +22,8 @@ public class PonVCF implements AutoCloseable {
 
     private final VariantContextWriter writer;
 
-    PonVCF(final String output, int sampleSize) {
+    PonVCF(final String output, int sampleSize)
+    {
         writer = new VariantContextWriterBuilder().setOutputFile(output)
                 .modifyOption(Options.INDEX_ON_THE_FLY, false)
                 .modifyOption(Options.USE_ASYNC_IO, false)
@@ -36,12 +38,14 @@ public class PonVCF implements AutoCloseable {
         writer.writeHeader(header);
     }
 
-    public void write(@NotNull final List<VariantContext> contexts) {
+    public void write(@NotNull final List<VariantContext> contexts)
+    {
         contexts.forEach(writer::add);
     }
 
     @Override
-    public void close() {
+    public void close()
+    {
         writer.close();
     }
 

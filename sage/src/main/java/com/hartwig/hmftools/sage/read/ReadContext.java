@@ -6,7 +6,8 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 
-public class ReadContext {
+public class ReadContext
+{
 
     private static final int BONUS_FLANK = 50;
 
@@ -21,7 +22,8 @@ public class ReadContext {
 
     @VisibleForTesting
     ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
-            final int flankSize, final byte[] readBases, final String microhomology) {
+            final int flankSize, final byte[] readBases, final String microhomology)
+    {
 
         int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
         int adjRightCentreIndex = Math.min(rightCentreIndex, readBases.length - 1);
@@ -36,8 +38,10 @@ public class ReadContext {
     }
 
     public ReadContext(final IndexedBases refBases, final IndexedBases readBases, final int repeatCount, final String repeat,
-            final String microhomology) {
-        if (refBases.bases().length < readBases.bases().length) {
+            final String microhomology)
+    {
+        if(refBases.bases().length < readBases.bases().length)
+        {
             throw new IllegalArgumentException();
         }
 
@@ -52,7 +56,8 @@ public class ReadContext {
 
     ReadContext(final String microhomology, int repeatCount, final String repeat, final int refPosition, final int readIndex,
             final int leftCentreIndex, final int rightCentreIndex, final int flankSize, @NotNull final IndexedBases refSequence,
-            @NotNull final SAMRecord record) {
+            @NotNull final SAMRecord record)
+    {
         int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
         int adjRightCentreIndex = Math.min(rightCentreIndex, record.getReadBases().length - 1);
 
@@ -73,7 +78,8 @@ public class ReadContext {
         this.incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
     }
 
-    private ReadContext(int leftCentreIndex, int rightCentreIndex, @NotNull final ReadContext readContext) {
+    private ReadContext(int leftCentreIndex, int rightCentreIndex, @NotNull final ReadContext readContext)
+    {
         this.position = readContext.position;
         this.repeat = readContext.repeat;
         this.repeatCount = readContext.repeatCount;
@@ -100,7 +106,8 @@ public class ReadContext {
         this.incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
     }
 
-    private ReadContext(@NotNull final ReadContext clone) {
+    private ReadContext(@NotNull final ReadContext clone)
+    {
         this.position = clone.position;
         this.repeat = clone.repeat;
         this.repeatCount = clone.repeatCount;
@@ -125,24 +132,29 @@ public class ReadContext {
     }
 
     @NotNull
-    public ReadContext extend(int leftCentreIndex, int rightCentreIndex) {
+    public ReadContext extend(int leftCentreIndex, int rightCentreIndex)
+    {
         return new ReadContext(leftCentreIndex, rightCentreIndex, this);
     }
 
     @NotNull
-    public ReadContext minimiseFootprint() {
+    public ReadContext minimiseFootprint()
+    {
         return new ReadContext(this);
     }
 
-    public boolean incompleteFlanks() {
+    public boolean incompleteFlanks()
+    {
         return !readBases.flanksComplete();
     }
 
-    public boolean incompleteCore() {
+    public boolean incompleteCore()
+    {
         return incompleteCore;
     }
 
-    int minCentreQuality(int readIndex, SAMRecord record) {
+    int minCentreQuality(int readIndex, SAMRecord record)
+    {
         int leftOffset = this.readIndex() - readBases.leftCentreIndex();
         int rightOffset = readBases.rightCentreIndex() - this.readIndex();
 
@@ -150,13 +162,15 @@ public class ReadContext {
         int rightIndex = readIndex + rightOffset;
 
         int quality = Integer.MAX_VALUE;
-        for (int i = leftIndex; i <= rightIndex; i++) {
+        for(int i = leftIndex; i <= rightIndex; i++)
+        {
             quality = Math.min(quality, record.getBaseQualities()[i]);
         }
         return quality;
     }
 
-    int avgCentreQuality(int readIndex, @NotNull final SAMRecord record) {
+    int avgCentreQuality(int readIndex, @NotNull final SAMRecord record)
+    {
         int leftOffset = this.readIndex() - readBases.leftCentreIndex();
         int rightOffset = readBases.rightCentreIndex() - this.readIndex();
 
@@ -164,111 +178,134 @@ public class ReadContext {
         int rightIndex = readIndex + rightOffset;
 
         float quality = 0;
-        for (int i = leftIndex; i <= rightIndex; i++) {
+        for(int i = leftIndex; i <= rightIndex; i++)
+        {
             quality += record.getBaseQualities()[i];
         }
         return Math.round(quality / (rightIndex - leftIndex + 1));
     }
 
-    public boolean phased(int offset, @NotNull final ReadContext other) {
+    public boolean phased(int offset, @NotNull final ReadContext other)
+    {
         return readBases.phased(offset, other.readBases);
     }
 
-    public boolean isCentreCovered(int otherReadIndex, byte[] otherBases) {
+    public boolean isCentreCovered(int otherReadIndex, byte[] otherBases)
+    {
         return readBases.isCentreCovered(otherReadIndex, otherBases);
     }
 
     @NotNull
-    public ReadContextMatch matchAtPosition(boolean wildcardAllowedInCoreMatch, int otherReadIndex, byte[] otherBases) {
+    public ReadContextMatch matchAtPosition(boolean wildcardAllowedInCoreMatch, int otherReadIndex, byte[] otherBases)
+    {
         return readBases.matchAtPosition(wildcardAllowedInCoreMatch, otherReadIndex, otherBases);
     }
 
     @NotNull
-    public ReadContextMatch matchAtPosition(@NotNull final ReadContext other) {
+    public ReadContextMatch matchAtPosition(@NotNull final ReadContext other)
+    {
         return readBases.matchAtPosition(false, other.readBases);
     }
 
-
-    public int readBasesPositionIndex() {
+    public int readBasesPositionIndex()
+    {
         return readBases.index();
     }
 
-    public int readBasesLeftFlankIndex() {
+    public int readBasesLeftFlankIndex()
+    {
         return readBases.leftFlankIndex();
     }
 
-    public int readBasesRightFlankIndex() {
+    public int readBasesRightFlankIndex()
+    {
         return readBases.rightFlankIndex();
     }
 
-    public int readBasesLeftCentreIndex() {
+    public int readBasesLeftCentreIndex()
+    {
         return readBases.leftCentreIndex();
     }
 
-    public int readBasesRightCentreIndex() {
+    public int readBasesRightCentreIndex()
+    {
         return readBases.rightCentreIndex();
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return readBases.centerString();
     }
 
     @VisibleForTesting
     @NotNull
-    public String centerBases() {
+    public String centerBases()
+    {
         return readBases.centerString();
     }
 
     @NotNull
-    public String microhomology() {
+    public String microhomology()
+    {
         return microhomology;
     }
 
     @NotNull
-    public String repeat() {
+    public String repeat()
+    {
         return repeat;
     }
 
-    public int repeatCount() {
+    public int repeatCount()
+    {
         return repeatCount;
     }
 
-    public byte[] readBases() {
+    public byte[] readBases()
+    {
         return readBases.bases();
     }
 
-    private int readIndex() {
+    private int readIndex()
+    {
         return readBases.index();
     }
 
-    private int flankSize() {
+    private int flankSize()
+    {
         return readBases.flankSize();
     }
 
-    public int maxFlankLength() {
+    public int maxFlankLength()
+    {
         return readBases.maxFlankLength();
     }
 
-    public byte[] refTrinucleotideContext(int position) {
+    public byte[] refTrinucleotideContext(int position)
+    {
         return refBases.trinucleotideContext(position);
     }
 
-    public int length() {
+    public int length()
+    {
         return readBasesRightFlankIndex() - readBasesLeftFlankIndex() + 1;
     }
 
-    public int coreLength() {
+    public int coreLength()
+    {
         return readBasesRightCentreIndex() - readBasesLeftCentreIndex() + 1;
     }
 
     @NotNull
-    public String leftFlankString() {
+    public String leftFlankString()
+    {
         return readBases.leftFlankString();
     }
 
     @NotNull
-    public String rightFlankString() {
+    public String rightFlankString()
+    {
         return readBases.rightFlankString();
     }
 

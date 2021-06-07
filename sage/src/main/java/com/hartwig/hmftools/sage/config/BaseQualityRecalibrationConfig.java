@@ -10,7 +10,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface BaseQualityRecalibrationConfig {
+public interface BaseQualityRecalibrationConfig
+{
 
     String BQR_PLOT = "bqr_plot";
     String BQR_ENABLED = "bqr_enabled";
@@ -35,7 +36,8 @@ public interface BaseQualityRecalibrationConfig {
     int minMapQuality();
 
     @NotNull
-    static Options createOptions() {
+    static Options createOptions()
+    {
         final Options options = new Options();
         options.addOption(BQR_ENABLED, true, "BQR (Base Quality Recalibration) enabled [" + DEFAULT_BQR_ENABLED + "]");
         options.addOption(BQR_PLOT, true, "BQR plots [" + DEFAULT_BQR_PLOT + "]");
@@ -46,7 +48,8 @@ public interface BaseQualityRecalibrationConfig {
     }
 
     @NotNull
-    static BaseQualityRecalibrationConfig createConfig(@NotNull final CommandLine cmd) {
+    static BaseQualityRecalibrationConfig createConfig(@NotNull final CommandLine cmd)
+    {
         return ImmutableBaseQualityRecalibrationConfig.builder()
                 .enabled(getConfigValue(cmd, BQR_ENABLED, DEFAULT_BQR_ENABLED))
                 .plot(getConfigValue(cmd, BQR_PLOT, DEFAULT_BQR_PLOT))

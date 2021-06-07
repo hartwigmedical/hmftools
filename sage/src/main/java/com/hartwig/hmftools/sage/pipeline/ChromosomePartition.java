@@ -11,33 +11,39 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class ChromosomePartition {
+public class ChromosomePartition
+{
 
     private final SageConfig config;
     private final ReferenceSequenceFile refGenome;
 
-    public ChromosomePartition(final SageConfig config, final ReferenceSequenceFile refGenome) {
+    public ChromosomePartition(final SageConfig config, final ReferenceSequenceFile refGenome)
+    {
         this.config = config;
         this.refGenome = refGenome;
     }
 
     @NotNull
-    public List<GenomeRegion> partition(String contig) {
+    public List<GenomeRegion> partition(String contig)
+    {
         return partition(contig, 1, refGenome.getSequence(contig).length());
     }
 
     @NotNull
-    public List<GenomeRegion> partition(String contig, int minPosition, int maxPosition) {
+    public List<GenomeRegion> partition(String contig, int minPosition, int maxPosition)
+    {
         final List<GenomeRegion> results = Lists.newArrayList();
 
         int dynamicSliceSize = maxPosition / Math.min(config.threads(), 4) + 1;
 
         final int regionSliceSize = Math.min(dynamicSliceSize, config.regionSliceSize());
-        for (int i = 0; ; i++) {
+        for(int i = 0; ; i++)
+        {
             int start = minPosition + i * regionSliceSize;
             int end = Math.min(start + regionSliceSize - 1, maxPosition);
             results.add(GenomeRegions.create(contig, start, end));
-            if (end >= maxPosition) {
+            if(end >= maxPosition)
+            {
                 break;
             }
         }

@@ -14,25 +14,31 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class EvidenceStage {
+public class EvidenceStage
+{
 
     private final ReadContextEvidence readContextEvidence;
 
     public EvidenceStage(@NotNull final SageConfig config, @NotNull final ReferenceSequenceFile refGenome,
-            @NotNull final Map<String, QualityRecalibrationMap> qualityRecalibrationMap) {
+            @NotNull final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
+    {
         this.readContextEvidence = new ReadContextEvidence(config, refGenome, qualityRecalibrationMap);
     }
 
     @NotNull
-    public CompletableFuture<ReadContextCounters> evidence(@NotNull final List<String> samples, @NotNull final List<String> sampleBams, @NotNull final CompletableFuture<List<Candidate>> candidates) {
+    public CompletableFuture<ReadContextCounters> evidence(@NotNull final List<String> samples, @NotNull final List<String> sampleBams,
+            @NotNull final CompletableFuture<List<Candidate>> candidates)
+    {
         // Scan tumors for evidence
-        return candidates.thenCompose(initialCandidates -> {
+        return candidates.thenCompose(initialCandidates ->
+        {
             final String primarySample = samples.isEmpty() ? "PRIMARY" : samples.get(0);
 
             final ReadContextCounters result = new ReadContextCounters(primarySample, initialCandidates);
 
             CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
-            for (int i = 0; i < samples.size(); i++) {
+            for(int i = 0; i < samples.size(); i++)
+            {
                 final String sample = samples.get(i);
                 final String sampleBam = sampleBams.get(i);
 

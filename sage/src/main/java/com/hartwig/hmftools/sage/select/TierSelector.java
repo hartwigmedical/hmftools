@@ -11,28 +11,34 @@ import com.hartwig.hmftools.sage.variant.SageVariantTier;
 import org.jetbrains.annotations.NotNull;
 
 @NotThreadSafe
-public class TierSelector extends HotspotSelector {
+public class TierSelector extends HotspotSelector
+{
 
     private final PanelSelector<GenomeRegion> panelRegionSelector;
     private final PanelSelector<GenomeRegion> highConfidenceRegionSelector;
 
-    public TierSelector(final List<VariantHotspot> hotspots, final List<GenomeRegion> panel, final List<GenomeRegion> highConfidence) {
+    public TierSelector(final List<VariantHotspot> hotspots, final List<GenomeRegion> panel, final List<GenomeRegion> highConfidence)
+    {
         super(hotspots);
         this.panelRegionSelector = new PanelSelector<>(panel);
         this.highConfidenceRegionSelector = new PanelSelector<>(highConfidence);
     }
 
     @NotNull
-    public SageVariantTier tier(@NotNull final VariantHotspot variant) {
-        if (isHotspot(variant)) {
+    public SageVariantTier tier(@NotNull final VariantHotspot variant)
+    {
+        if(isHotspot(variant))
+        {
             return SageVariantTier.HOTSPOT;
         }
 
-        if (panelRegionSelector.inPanel(variant.position(), variant.end())) {
+        if(panelRegionSelector.inPanel(variant.position(), variant.end()))
+        {
             return SageVariantTier.PANEL;
         }
 
-        if (highConfidenceRegionSelector.inPanel(variant.position(), variant.end())) {
+        if(highConfidenceRegionSelector.inPanel(variant.position(), variant.end()))
+        {
             return SageVariantTier.HIGH_CONFIDENCE;
         }
 

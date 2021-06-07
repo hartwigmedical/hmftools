@@ -16,7 +16,8 @@ import com.hartwig.hmftools.sage.select.PanelSelector;
 
 import org.jetbrains.annotations.NotNull;
 
-public class RefContextFactory {
+public class RefContextFactory
+{
 
     private final SageConfig config;
     private final String sample;
@@ -25,7 +26,8 @@ public class RefContextFactory {
     private final List<AltContext> savedCandidates = Lists.newArrayList();
 
     public RefContextFactory(@NotNull final SageConfig config, @NotNull final String sample, final List<VariantHotspot> hotspots,
-            final List<GenomeRegion> panel) {
+            final List<GenomeRegion> panel)
+    {
         this.sample = sample;
         this.config = config;
         this.panelSelector = new PanelSelector<>(panel);
@@ -41,28 +43,34 @@ public class RefContextFactory {
     }
 
     @NotNull
-    public RefContext refContext(@NotNull final String chromosome, final long position) {
+    public RefContext refContext(@NotNull final String chromosome, final long position)
+    {
         int maxDepth = maxReadDepth(chromosome, position);
         return rollingCandidates.computeIfAbsent(position, aLong -> new RefContext(sample, chromosome, position, maxDepth));
     }
 
     @NotNull
-    public List<AltContext> altContexts() {
+    public List<AltContext> altContexts()
+    {
         rollingCandidates.evictAll();
         Collections.sort(savedCandidates);
         return savedCandidates;
     }
 
-    private int maxReadDepth(final String chromosome, final long position) {
+    private int maxReadDepth(final String chromosome, final long position)
+    {
         return MitochondrialChromosome.contains(chromosome) || panelSelector.inPanel(position, position)
                 ? config.maxReadDepthPanel()
                 : config.maxReadDepth();
     }
 
-    private boolean refPredicate(@NotNull final AltContext altContext) {
-        for (int i = 0; i < altContext.ref().length(); i++) {
+    private boolean refPredicate(@NotNull final AltContext altContext)
+    {
+        for(int i = 0; i < altContext.ref().length(); i++)
+        {
             char base = altContext.ref().charAt(i);
-            if (base != 'G' && base != 'A' && base != 'T' && base != 'C') {
+            if(base != 'G' && base != 'A' && base != 'T' && base != 'C')
+            {
                 return false;
             }
         }

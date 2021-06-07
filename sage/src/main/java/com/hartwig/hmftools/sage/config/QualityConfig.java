@@ -18,7 +18,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface QualityConfig {
+public interface QualityConfig
+{
 
     String JITTER_PENALTY = "jitter_penalty";
     String JITTER_MIN_REPEAT_COUNT = "jitter_min_repeat_count";
@@ -56,9 +57,12 @@ public interface QualityConfig {
 
     int mapQualityImproperPairPenalty();
 
-    default boolean isHighlyPolymorphic(@NotNull final GenomePosition position) {
-        for (HmfTranscriptRegion highlyPolymorphicGene : highlyPolymorphicGenes()) {
-            if (highlyPolymorphicGene.contains(position)) {
+    default boolean isHighlyPolymorphic(@NotNull final GenomePosition position)
+    {
+        for(HmfTranscriptRegion highlyPolymorphicGene : highlyPolymorphicGenes())
+        {
+            if(highlyPolymorphicGene.contains(position))
+            {
                 return true;
             }
         }
@@ -66,8 +70,10 @@ public interface QualityConfig {
         return false;
     }
 
-    default int modifiedMapQuality(@NotNull final GenomePosition position, int mapQuality, int readEvents, boolean properPairFlag) {
-        if (isHighlyPolymorphic(position)) {
+    default int modifiedMapQuality(@NotNull final GenomePosition position, int mapQuality, int readEvents, boolean properPairFlag)
+    {
+        if(isHighlyPolymorphic(position))
+        {
             return Math.min(MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, mapQuality - mapQualityFixedPenalty());
         }
 
@@ -76,16 +82,19 @@ public interface QualityConfig {
         return mapQuality - mapQualityFixedPenalty() - improperPairPenalty - distancePenalty;
     }
 
-    default double modifiedBaseQuality(double baseQuality, int distanceFromReadEdge) {
+    default double modifiedBaseQuality(double baseQuality, int distanceFromReadEdge)
+    {
         return Math.min(baseQuality - baseQualityFixedPenalty(), 3 * distanceFromReadEdge - distanceFromReadEdgeFixedPenalty());
     }
 
-    default double jitterPenalty(int repeatCount) {
+    default double jitterPenalty(int repeatCount)
+    {
         return (jitterPenalty() * Math.max(0, repeatCount - jitterMinRepeatCount()));
     }
 
     @NotNull
-    static Options createOptions() {
+    static Options createOptions()
+    {
         final Options options = new Options();
         options.addOption(HIGHLY_POLYMORPHIC_GENES,
                 true,
@@ -116,7 +125,8 @@ public interface QualityConfig {
     }
 
     @NotNull
-    static QualityConfig createConfig(@NotNull final CommandLine cmd, @NotNull final List<HmfTranscriptRegion> allTranscripts) {
+    static QualityConfig createConfig(@NotNull final CommandLine cmd, @NotNull final List<HmfTranscriptRegion> allTranscripts)
+    {
         final Set<String> highlyPolymorphicGeneNames =
                 Arrays.stream(cmd.getOptionValue(HIGHLY_POLYMORPHIC_GENES, DEFAULT_HIGHLY_POLYMORPHIC_GENES).split(","))
                         .collect(Collectors.toSet());

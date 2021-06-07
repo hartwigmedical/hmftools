@@ -6,7 +6,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface GeneDepth {
+public interface GeneDepth
+{
 
     @NotNull
     String gene();

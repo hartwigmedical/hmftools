@@ -21,7 +21,8 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class QualityRecalibrationSupplier implements Supplier<Map<String, QualityRecalibrationMap> > {
+public class QualityRecalibrationSupplier implements Supplier<Map<String, QualityRecalibrationMap>>
+{
 
     private static final Logger LOGGER = LogManager.getLogger(QualityRecalibrationSupplier.class);
 
@@ -29,16 +30,20 @@ public class QualityRecalibrationSupplier implements Supplier<Map<String, Qualit
     private final IndexedFastaSequenceFile refGenome;
     private final SageConfig config;
 
-    public QualityRecalibrationSupplier(final ExecutorService executorService, final IndexedFastaSequenceFile refGenome, final SageConfig config) {
+    public QualityRecalibrationSupplier(final ExecutorService executorService, final IndexedFastaSequenceFile refGenome,
+            final SageConfig config)
+    {
         this.executorService = executorService;
         this.refGenome = refGenome;
         this.config = config;
     }
 
     @NotNull
-    public Map<String, QualityRecalibrationMap> get() {
+    public Map<String, QualityRecalibrationMap> get()
+    {
         BaseQualityRecalibrationConfig bqrConfig = config.baseQualityRecalibrationConfig();
-        if (!bqrConfig.enabled()) {
+        if(!bqrConfig.enabled())
+        {
             return disableQualityRecalibration(config);
         }
 
@@ -49,26 +54,32 @@ public class QualityRecalibrationSupplier implements Supplier<Map<String, Qualit
         final List<CompletableFuture<Void>> done = Lists.newArrayList();
 
         final BiFunction<String, String, CompletableFuture<Void>> processSample =
-                (sample, sampleBam) -> qualityRecalibration.qualityRecalibrationRecords(sampleBam).thenAccept(records -> {
-                    try {
+                (sample, sampleBam) -> qualityRecalibration.qualityRecalibrationRecords(sampleBam).thenAccept(records ->
+                {
+                    try
+                    {
 
                         final String tsvFile = config.baseQualityRecalibrationFile(sample);
                         QualityRecalibrationFile.write(tsvFile, records);
                         result.put(sample, new QualityRecalibrationMap(records));
                         LOGGER.info("Writing base quality recalibration file: {}", tsvFile);
-                        if (bqrConfig.plot()) {
+                        if(bqrConfig.plot())
+                        {
                             RExecutor.executeFromClasspath("r/baseQualityRecalibrationPlot.R", tsvFile);
                         }
-                    } catch (Exception e) {
+                    } catch(Exception e)
+                    {
                         throw new CompletionException(e);
                     }
                 });
 
-        for (int i = 0; i < config.reference().size(); i++) {
+        for(int i = 0; i < config.reference().size(); i++)
+        {
             done.add(processSample.apply(config.reference().get(i), config.referenceBam().get(i)));
         }
 
-        for (int i = 0; i < config.tumor().size(); i++) {
+        for(int i = 0; i < config.tumor().size(); i++)
+        {
             done.add(processSample.apply(config.tumor().get(i), config.tumorBam().get(i)));
         }
 
@@ -78,13 +89,16 @@ public class QualityRecalibrationSupplier implements Supplier<Map<String, Qualit
         return result;
     }
 
-    private Map<String, QualityRecalibrationMap> disableQualityRecalibration(SageConfig config) {
+    private Map<String, QualityRecalibrationMap> disableQualityRecalibration(SageConfig config)
+    {
         final Map<String, QualityRecalibrationMap> result = Maps.newHashMap();
 
-        for (String sample : config.reference()) {
+        for(String sample : config.reference())
+        {
             result.put(sample, new QualityRecalibrationMap(Collections.emptyList()));
         }
-        for (String sample : config.tumor()) {
+        for(String sample : config.tumor())
+        {
             result.put(sample, new QualityRecalibrationMap(Collections.emptyList()));
 
         }

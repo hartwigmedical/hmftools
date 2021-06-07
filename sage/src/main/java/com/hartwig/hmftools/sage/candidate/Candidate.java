@@ -9,7 +9,8 @@ import com.hartwig.hmftools.sage.variant.SageVariantTier;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Candidate implements GenomePosition {
+public class Candidate implements GenomePosition
+{
 
     private final SageVariantTier tier;
     private final VariantHotspot variant;
@@ -20,7 +21,8 @@ public class Candidate implements GenomePosition {
     private ReadContext readContext;
 
     public Candidate(final SageVariantTier tier, final VariantHotspot variant, final ReadContext readContext, int maxDepth,
-            int minNumberOfEvents) {
+            int minNumberOfEvents)
+    {
         this.tier = tier;
         this.variant = variant;
         this.readContext = readContext;
@@ -28,7 +30,8 @@ public class Candidate implements GenomePosition {
         this.minNumberOfEvents = minNumberOfEvents;
     }
 
-    public Candidate(final SageVariantTier tier, final AltContext altContext) {
+    public Candidate(final SageVariantTier tier, final AltContext altContext)
+    {
         this.tier = tier;
         this.variant = ImmutableVariantHotspotImpl.builder().from(altContext).build();
         this.maxDepth = altContext.rawDepth();
@@ -37,9 +40,11 @@ public class Candidate implements GenomePosition {
         this.minNumberOfEvents = altContext.minNumberOfEvents();
     }
 
-    public void update(final AltContext altContext) {
+    public void update(final AltContext altContext)
+    {
         int altContextSupport = altContext.readContextSupport();
-        if (altContextSupport > readContextSupport) {
+        if(altContextSupport > readContextSupport)
+        {
             readContextSupport = altContextSupport;
             readContext = altContext.readContext();
             minNumberOfEvents = Math.min(minNumberOfEvents, altContext.minNumberOfEvents());
@@ -48,36 +53,43 @@ public class Candidate implements GenomePosition {
     }
 
     @NotNull
-    public SageVariantTier tier() {
+    public SageVariantTier tier()
+    {
         return tier;
     }
 
     @NotNull
-    public VariantHotspot variant() {
+    public VariantHotspot variant()
+    {
         return variant;
     }
 
-    public int maxReadDepth() {
+    public int maxReadDepth()
+    {
         return maxDepth;
     }
 
     @NotNull
-    public ReadContext readContext() {
+    public ReadContext readContext()
+    {
         return readContext;
     }
 
-    public int minNumberOfEvents() {
+    public int minNumberOfEvents()
+    {
         return minNumberOfEvents;
     }
 
     @NotNull
     @Override
-    public String chromosome() {
+    public String chromosome()
+    {
         return variant.chromosome();
     }
 
     @Override
-    public long position() {
+    public long position()
+    {
         return variant.position();
     }
 }

@@ -12,18 +12,21 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class QualityRecalibrationFile {
+public final class QualityRecalibrationFile
+{
 
     private static final String DELIMITER = "\t";
     private static final DecimalFormat FORMAT = new DecimalFormat("0.00");
 
     public static void write(@NotNull final String filename, @NotNull final Collection<QualityRecalibrationRecord> counts)
-            throws IOException {
+            throws IOException
+    {
         Files.write(new File(filename).toPath(), toLines(counts));
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull final Collection<QualityRecalibrationRecord> bafs) {
+    private static List<String> toLines(@NotNull final Collection<QualityRecalibrationRecord> bafs)
+    {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         bafs.stream().map(QualityRecalibrationFile::toString).forEach(lines::add);
@@ -31,13 +34,15 @@ public final class QualityRecalibrationFile {
     }
 
     @NotNull
-    private static String toString(@NotNull final QualityRecalibrationRecord baf) {
+    private static String toString(@NotNull final QualityRecalibrationRecord baf)
+    {
         return (char) baf.key().alt() + DELIMITER + (char) baf.key().ref() + DELIMITER + new String(baf.key().trinucleotideContext())
                 + DELIMITER + baf.count() + DELIMITER + baf.key().qual() + DELIMITER + FORMAT.format(baf.recalibratedQual());
     }
 
     @NotNull
-    private static String header() {
+    private static String header()
+    {
         return new StringJoiner(DELIMITER, "", "").add("alt")
                 .add("ref")
                 .add("trinucleotideContext")

@@ -12,8 +12,9 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.jetbrains.annotations.NotNull;
 
-public class GeneCoverage implements Consumer<GenomeRegion> {
-    
+public class GeneCoverage implements Consumer<GenomeRegion>
+{
+
     private static final int MAX_BUCKET = 37;
 
     private final String chromosome;
@@ -22,7 +23,8 @@ public class GeneCoverage implements Consumer<GenomeRegion> {
     private final long minPosition;
     private final long maxPosition;
 
-    public GeneCoverage(final List<NamedBed> exons) {
+    public GeneCoverage(final List<NamedBed> exons)
+    {
         assert (!exons.isEmpty());
         this.chromosome = exons.get(0).chromosome();
         this.gene = exons.get(0).name();
@@ -31,7 +33,8 @@ public class GeneCoverage implements Consumer<GenomeRegion> {
         long tmpMin = exons.get(0).start();
         long tmpMax = exons.get(0).end();
 
-        for (NamedBed exon : exons) {
+        for(NamedBed exon : exons)
+        {
             tmpMin = Math.min(tmpMin, exon.start());
             tmpMax = Math.max(tmpMax, exon.end());
         }
@@ -41,20 +44,25 @@ public class GeneCoverage implements Consumer<GenomeRegion> {
     }
 
     @Override
-    public void accept(final GenomeRegion alignment) {
-        if (alignment.chromosome().equals(chromosome)) {
-            if (alignment.start() <= maxPosition && alignment.end() >= minPosition) {
+    public void accept(final GenomeRegion alignment)
+    {
+        if(alignment.chromosome().equals(chromosome))
+        {
+            if(alignment.start() <= maxPosition && alignment.end() >= minPosition)
+            {
                 exonCoverage.forEach(x -> x.accept(alignment));
             }
         }
     }
 
-    public String chromosome() {
+    public String chromosome()
+    {
         return chromosome;
     }
 
     @NotNull
-    public GeneDepth geneDepth() {
+    public GeneDepth geneDepth()
+    {
         int[] depthCounts = baseCoverageSummary(exonCoverage);
 
         return ImmutableGeneDepth.builder()
@@ -64,10 +72,13 @@ public class GeneCoverage implements Consumer<GenomeRegion> {
                 .build();
     }
 
-    static int[] baseCoverageSummary(@NotNull Collection<ExonCoverage> exons) {
+    static int[] baseCoverageSummary(@NotNull Collection<ExonCoverage> exons)
+    {
         int[] geneDepth = new int[MAX_BUCKET + 1];
-        for (ExonCoverage exon : exons) {
-            for (int baseDepth : exon.coverage()) {
+        for(ExonCoverage exon : exons)
+        {
+            for(int baseDepth : exon.coverage())
+            {
                 geneDepth[bucket(baseDepth)]++;
             }
         }
@@ -75,20 +86,26 @@ public class GeneCoverage implements Consumer<GenomeRegion> {
         return geneDepth;
     }
 
-    static double missedVariantLikelihood(int[] baseCoverage) {
+    static double missedVariantLikelihood(int[] baseCoverage)
+    {
         int totalCoverage = Arrays.stream(baseCoverage).sum();
         double totalLikelihood = 0;
 
-        for (int i = 0; i < baseCoverage.length; i++) {
+        for(int i = 0; i < baseCoverage.length; i++)
+        {
             int depth = depth(i);
             int coverage = baseCoverage[i];
 
-            if (coverage > 0) {
+            if(coverage > 0)
+            {
                 final double proportion = 1d * coverage / totalCoverage;
                 final double likelihoodOfMissing;
-                if (depth == 0) {
+                if(depth == 0)
+                {
                     likelihoodOfMissing = 1;
-                } else {
+                }
+                else
+                {
                     final PoissonDistribution distribution = new PoissonDistribution(depth / 2d);
                     likelihoodOfMissing = distribution.cumulativeProbability(2);
                 }
@@ -100,26 +117,33 @@ public class GeneCoverage implements Consumer<GenomeRegion> {
         return totalLikelihood;
     }
 
-    static int depth(int bucket) {
-        if (bucket < 30) {
+    static int depth(int bucket)
+    {
+        if(bucket < 30)
+        {
             return bucket;
         }
 
-        if (bucket <= 36) {
+        if(bucket <= 36)
+        {
             return (bucket - 30) * 10 + 35;
         }
 
         return 100;
     }
 
-    static int bucket(int depth) {
-        if (depth <= 30) {
+    static int bucket(int depth)
+    {
+        if(depth <= 30)
+        {
             return depth;
         }
 
-        for (int i = 0; i < 7; i++) {
+        for(int i = 0; i < 7; i++)
+        {
             int maxDepth = 40 + 10 * i;
-            if (depth < maxDepth) {
+            if(depth < maxDepth)
+            {
                 return 30 + i;
             }
         }

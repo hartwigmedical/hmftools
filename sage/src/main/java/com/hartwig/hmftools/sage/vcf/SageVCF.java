@@ -31,7 +31,8 @@ import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
-public class SageVCF implements AutoCloseable {
+public class SageVCF implements AutoCloseable
+{
 
     public static final String VERSION_META_DATA = "sageVersion";
     public static final String READ_CONTEXT = "RC";
@@ -48,7 +49,8 @@ public class SageVCF implements AutoCloseable {
     private static final String READ_CONTEXT_EVENTS_DESCRIPTION = "Minimum number of events in read";
 
     public static final String READ_CONTEXT_COUNT = "RC_CNT";
-    private static final String READ_CONTEXT_COUNT_DESCRIPTION = "Read context counts [Full, Partial, Core, Realigned, Alt, Reference, Total]";
+    private static final String READ_CONTEXT_COUNT_DESCRIPTION =
+            "Read context counts [Full, Partial, Core, Realigned, Alt, Reference, Total]";
     public static final String READ_CONTEXT_REPEAT_COUNT = "RC_REPC";
     private static final String READ_CONTEXT_REPEAT_COUNT_DESCRIPTION = "Repeat count at read context";
     public static final String READ_CONTEXT_REPEAT_SEQUENCE = "RC_REPS";
@@ -76,7 +78,8 @@ public class SageVCF implements AutoCloseable {
     private final VariantContextWriter writer;
     private final Consumer<VariantContext> consumer;
 
-    public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config) {
+    public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config)
+    {
         final SAMSequenceDictionary sequenceDictionary = reference.getSequenceDictionary();
 
         writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile())
@@ -90,8 +93,10 @@ public class SageVCF implements AutoCloseable {
         final VCFHeader header = enrichment.enrichHeader(header(config));
 
         final SAMSequenceDictionary condensedDictionary = new SAMSequenceDictionary();
-        for (SAMSequenceRecord sequence : sequenceDictionary.getSequences()) {
-            if (HumanChromosome.contains(sequence.getContig()) || MitochondrialChromosome.contains(sequence.getContig())) {
+        for(SAMSequenceRecord sequence : sequenceDictionary.getSequences())
+        {
+            if(HumanChromosome.contains(sequence.getContig()) || MitochondrialChromosome.contains(sequence.getContig()))
+            {
                 condensedDictionary.addSequence(sequence);
             }
         }
@@ -101,7 +106,8 @@ public class SageVCF implements AutoCloseable {
     }
 
     public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config,
-            @NotNull final VCFHeader existingHeader) {
+            @NotNull final VCFHeader existingHeader)
+    {
 
         Set<VCFHeaderLine> headerLines = existingHeader.getMetaDataInInputOrder();
         List<String> samples = Lists.newArrayList(existingHeader.getGenotypeSamples());
@@ -118,12 +124,14 @@ public class SageVCF implements AutoCloseable {
         writer.writeHeader(newHeader);
     }
 
-    public void write(@NotNull final VariantContext context) {
+    public void write(@NotNull final VariantContext context)
+    {
         consumer.accept(context);
     }
 
     @NotNull
-    static VCFHeader header(@NotNull final SageConfig config) {
+    static VCFHeader header(@NotNull final SageConfig config)
+    {
         final List<String> samples = Lists.newArrayList();
         samples.addAll(config.reference());
         samples.addAll(config.tumor());
@@ -131,7 +139,8 @@ public class SageVCF implements AutoCloseable {
     }
 
     @NotNull
-    private static VCFHeader header(@NotNull final String version, @NotNull final List<String> allSamples) {
+    private static VCFHeader header(@NotNull final String version, @NotNull final List<String> allSamples)
+    {
         VCFHeader header = SageMetaData.addSageMetaData(new VCFHeader(Collections.emptySet(), allSamples));
 
         header.addMetaDataLine(new VCFHeaderLine(VERSION_META_DATA, version));
@@ -198,7 +207,8 @@ public class SageVCF implements AutoCloseable {
     }
 
     @Override
-    public void close() {
+    public void close()
+    {
         writer.close();
     }
 

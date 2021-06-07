@@ -17,23 +17,28 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 
-public class SamSlicer {
+public class SamSlicer
+{
 
     private final int minMappingQuality;
     private final Collection<GenomeRegion> regions;
 
-    public SamSlicer(final int minMappingQuality, @NotNull final GenomeRegion slice) {
+    public SamSlicer(final int minMappingQuality, @NotNull final GenomeRegion slice)
+    {
         this.minMappingQuality = minMappingQuality;
         this.regions = Collections.singletonList(slice);
     }
 
-    public SamSlicer(final int minMappingQuality, @NotNull final GenomeRegion slice, @NotNull final List<? extends GenomeRegion> panel) {
+    public SamSlicer(final int minMappingQuality, @NotNull final GenomeRegion slice, @NotNull final List<? extends GenomeRegion> panel)
+    {
         this.minMappingQuality = minMappingQuality;
         this.regions = Lists.newArrayList();
 
-        for (final GenomeRegion panelRegion : panel) {
-            if (slice.chromosome().equals(panelRegion.chromosome()) && panelRegion.start() <= slice.end()
-                    && panelRegion.end() >= slice.start()) {
+        for(final GenomeRegion panelRegion : panel)
+        {
+            if(slice.chromosome().equals(panelRegion.chromosome()) && panelRegion.start() <= slice.end()
+                    && panelRegion.end() >= slice.start())
+            {
 
                 final GenomeRegion overlap = GenomeRegions.create(slice.chromosome(),
                         Math.max(panelRegion.start(), slice.start()),
@@ -44,13 +49,17 @@ public class SamSlicer {
         }
     }
 
-    public void slice(@NotNull final SamReader samReader, @NotNull final Consumer<SAMRecord> consumer) {
+    public void slice(@NotNull final SamReader samReader, @NotNull final Consumer<SAMRecord> consumer)
+    {
         final QueryInterval[] queryIntervals = createIntervals(regions, samReader.getFileHeader());
 
-        try (final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals)) {
-            while (iterator.hasNext()) {
+        try(final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals))
+        {
+            while(iterator.hasNext())
+            {
                 final SAMRecord record = iterator.next();
-                if (samRecordMeetsQualityRequirements(record)) {
+                if(samRecordMeetsQualityRequirements(record))
+                {
                     consumer.accept(record);
                 }
             }
@@ -58,18 +67,22 @@ public class SamSlicer {
     }
 
     @NotNull
-    private static QueryInterval[] createIntervals(@NotNull final Collection<GenomeRegion> regions, @NotNull final SAMFileHeader header) {
+    private static QueryInterval[] createIntervals(@NotNull final Collection<GenomeRegion> regions, @NotNull final SAMFileHeader header)
+    {
         final List<QueryInterval> queryIntervals = Lists.newArrayList();
-        for (final GenomeRegion region : regions) {
+        for(final GenomeRegion region : regions)
+        {
             int sequenceIndex = header.getSequenceIndex(region.chromosome());
-            if (sequenceIndex > -1) {
+            if(sequenceIndex > -1)
+            {
                 queryIntervals.add(new QueryInterval(sequenceIndex, (int) region.start(), (int) region.end()));
             }
         }
         return QueryInterval.optimizeIntervals(queryIntervals.toArray(new QueryInterval[queryIntervals.size()]));
     }
 
-    private boolean samRecordMeetsQualityRequirements(@NotNull final SAMRecord record) {
+    private boolean samRecordMeetsQualityRequirements(@NotNull final SAMRecord record)
+    {
         return record.getMappingQuality() >= minMappingQuality && !record.getReadUnmappedFlag() && !record.getDuplicateReadFlag() && !record
                 .isSecondaryOrSupplementary();
     }

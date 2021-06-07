@@ -9,23 +9,28 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
-public final class Rearrangement {
+public final class Rearrangement
+{
 
     private static final int MAX_MNV_LENGTH = 2;
 
     public static List<VariantHotspot> rearrangeInsert(int position, int indelLength, int readIndex, byte[] readBases, int refIndex,
-            byte[] refBases) {
+            byte[] refBases)
+    {
         final List<VariantHotspot> left = moveLeft(false, position, indelLength, readIndex, readBases, refIndex, refBases);
-        if (!left.isEmpty()) {
+        if(!left.isEmpty())
+        {
             return left;
         }
         return moveRight(false, position, indelLength, readIndex, readBases, refIndex, refBases);
     }
 
     public static List<VariantHotspot> rearrangeDelete(int position, int indelLength, int readIndex, byte[] readBases, int refIndex,
-            byte[] refBases) {
+            byte[] refBases)
+    {
         final List<VariantHotspot> left = moveLeft(true, position, indelLength, refIndex, refBases, readIndex, readBases);
-        if (!left.isEmpty()) {
+        if(!left.isEmpty())
+        {
             return left;
         }
         return moveRight(true, position, indelLength, refIndex, refBases, readIndex, readBases);
@@ -33,7 +38,8 @@ public final class Rearrangement {
 
     @NotNull
     public static List<VariantHotspot> moveLeft(boolean delete, int position, int indelLength, int readIndex, byte[] readBases,
-            int refIndex, byte[] refBases) {
+            int refIndex, byte[] refBases)
+    {
         int absIndelLength = Math.abs(indelLength);
         int minReadIndex = Math.max(0, readIndex - absIndelLength);
         int maxRefIndex = Math.max(0, refIndex - absIndelLength);
@@ -41,27 +47,31 @@ public final class Rearrangement {
         int indelIndex = readIndex + absIndelLength - 1;
 
         int sameBases = 0;
-        while (refIndex >= maxRefIndex && indelIndex >= minReadIndex && readBases[indelIndex] == refBases[refIndex]) {
+        while(refIndex >= maxRefIndex && indelIndex >= minReadIndex && readBases[indelIndex] == refBases[refIndex])
+        {
             sameBases++;
             indelIndex--;
             refIndex--;
         }
 
         int snvLength = 0;
-        while (refIndex >= maxRefIndex && indelIndex >= minReadIndex && readBases[indelIndex] != refBases[refIndex]) {
+        while(refIndex >= maxRefIndex && indelIndex >= minReadIndex && readBases[indelIndex] != refBases[refIndex])
+        {
             snvLength++;
             indelIndex--;
             refIndex--;
         }
 
         int sameBases2 = 0;
-        while (refIndex >= maxRefIndex && indelIndex >= minReadIndex && readBases[indelIndex] == refBases[refIndex]) {
+        while(refIndex >= maxRefIndex && indelIndex >= minReadIndex && readBases[indelIndex] == refBases[refIndex])
+        {
             sameBases2++;
             indelIndex--;
             refIndex--;
         }
 
-        if (sameBases == 0 || snvLength == 0 || sameBases2 == 0 || snvLength > MAX_MNV_LENGTH) {
+        if(sameBases == 0 || snvLength == 0 || sameBases2 == 0 || snvLength > MAX_MNV_LENGTH)
+        {
             return Collections.emptyList();
         }
 
@@ -96,7 +106,8 @@ public final class Rearrangement {
 
     @NotNull
     public static List<VariantHotspot> moveRight(boolean delete, int position, int indelLength, int readIndex, byte[] readBases,
-            int refIndex, byte[] refBases) {
+            int refIndex, byte[] refBases)
+    {
         int absIndelLength = Math.abs(indelLength);
         int maxReadIndex = Math.min(readBases.length - 1, readIndex + 2 * absIndelLength + 1);
         int maxRefIndex = Math.min(refBases.length - 1, refIndex + 2 * absIndelLength + 1);
@@ -109,14 +120,16 @@ public final class Rearrangement {
         int snvPosition = position;
         int snvReadIndex = readIndex;
         int snvRefIndex = refIndex;
-        while (readIndex <= maxReadIndex && refIndex <= maxRefIndex && readBases[readIndex] != refBases[refIndex]) {
+        while(readIndex <= maxReadIndex && refIndex <= maxRefIndex && readBases[readIndex] != refBases[refIndex])
+        {
             readIndex++;
             refIndex++;
             position++;
         }
 
         int gapPosition = position;
-        while (readIndex <= maxReadIndex && refIndex <= maxRefIndex && readBases[readIndex] == refBases[refIndex]) {
+        while(readIndex <= maxReadIndex && refIndex <= maxRefIndex && readBases[readIndex] == refBases[refIndex])
+        {
             readIndex++;
             refIndex++;
             position++;
@@ -125,7 +138,8 @@ public final class Rearrangement {
         int snvLength = gapPosition - snvPosition;
         int gapLength = position - gapPosition;
 
-        if (snvLength == 0 || gapLength == 0 || snvLength > MAX_MNV_LENGTH) {
+        if(snvLength == 0 || gapLength == 0 || snvLength > MAX_MNV_LENGTH)
+        {
             return Collections.emptyList();
         }
 

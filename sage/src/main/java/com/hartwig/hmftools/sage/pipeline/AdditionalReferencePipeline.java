@@ -27,7 +27,8 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class AdditionalReferencePipeline {
+public class AdditionalReferencePipeline
+{
 
     private static final Logger LOGGER = LogManager.getLogger(AdditionalReferencePipeline.class);
 
@@ -37,7 +38,8 @@ public class AdditionalReferencePipeline {
     private final Executor executor;
 
     public AdditionalReferencePipeline(@NotNull final SageConfig config, @NotNull final Executor executor, ReferenceSequenceFile refGenome,
-            @NotNull final Map<String, QualityRecalibrationMap> qualityRecalibrationMap) {
+            @NotNull final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
+    {
         this.config = config;
         this.refGenome = refGenome;
         this.evidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap);
@@ -46,13 +48,17 @@ public class AdditionalReferencePipeline {
 
     @NotNull
     public CompletableFuture<List<VariantContext>> appendReference(@NotNull final GenomeRegion region,
-            @NotNull final List<VariantContext> variants) {
-        if (variants.isEmpty()) {
+            @NotNull final List<VariantContext> variants)
+    {
+        if(variants.isEmpty())
+        {
             return CompletableFuture.completedFuture(Lists.newArrayList());
         }
 
-        final CompletableFuture<RefSequence> refSequenceFuture = supplyAsync(() -> {
-            if (region.start() == 1) {
+        final CompletableFuture<RefSequence> refSequenceFuture = supplyAsync(() ->
+        {
+            if(region.start() == 1)
+            {
                 LOGGER.info("Processing chromosome {}", region.chromosome());
             }
             return new RefSequence(region, refGenome);
@@ -68,9 +74,11 @@ public class AdditionalReferencePipeline {
         return evidenceFutures.thenApply(x -> update(x, variants));
     }
 
-    public List<VariantContext> update(final ReadContextCounters readContextCounters, final List<VariantContext> variantContexts) {
+    public List<VariantContext> update(final ReadContextCounters readContextCounters, final List<VariantContext> variantContexts)
+    {
         final List<VariantContext> result = Lists.newArrayList();
-        for (VariantContext old : variantContexts) {
+        for(VariantContext old : variantContexts)
+        {
             VariantHotspot variant = CandidateSerialization.toVariantHotspot(old);
             List<ReadContextCounter> counters = readContextCounters.readContextCounters(variant);
             result.add(SageVariantContextFactory.addGenotype(old, counters));

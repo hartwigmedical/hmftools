@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.realign;
 
-public enum RealignedType {
+public enum RealignedType
+{
     NONE,
     EXACT,
     LENGTHENED,

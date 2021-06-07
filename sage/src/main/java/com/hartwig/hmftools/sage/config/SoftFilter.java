@@ -6,7 +6,8 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum SoftFilter {
+public enum SoftFilter
+{
 
     MIN_TUMOR_QUAL("min_tumor_qual", true, false),
     MIN_TUMOR_VAF("min_tumor_vaf", true, false),
@@ -19,12 +20,16 @@ public enum SoftFilter {
     private static final Set<String> TUMOR_FILTERS = Sets.newHashSet();
     private static final Set<String> GERMLINE_FILTERS = Sets.newHashSet();
 
-    static {
-        for (SoftFilter softFilter : SoftFilter.values()) {
-            if (softFilter.germline) {
+    static
+    {
+        for(SoftFilter softFilter : SoftFilter.values())
+        {
+            if(softFilter.germline)
+            {
                 GERMLINE_FILTERS.add(softFilter.toString());
             }
-            if (softFilter.tumor) {
+            if(softFilter.tumor)
+            {
                 TUMOR_FILTERS.add(softFilter.toString());
             }
         }
@@ -34,19 +39,24 @@ public enum SoftFilter {
     private final boolean tumor;
     private final boolean germline;
 
-    SoftFilter(@NotNull final String filter, boolean tumor, boolean germline) {
+    SoftFilter(@NotNull final String filter, boolean tumor, boolean germline)
+    {
         this.filter = filter;
         this.tumor = tumor;
         this.germline = germline;
     }
 
-    public static boolean isGermlineAndNotTumorFiltered(@NotNull final Set<String> softFilters) {
-        for (final String softFilter : softFilters) {
-            if (TUMOR_FILTERS.contains(softFilter)) {
+    public static boolean isGermlineAndNotTumorFiltered(@NotNull final Set<String> softFilters)
+    {
+        for(final String softFilter : softFilters)
+        {
+            if(TUMOR_FILTERS.contains(softFilter))
+            {
                 return false;
             }
 
-            if (!GERMLINE_FILTERS.contains(softFilter)) {
+            if(!GERMLINE_FILTERS.contains(softFilter))
+            {
                 return false;
             }
         }
@@ -55,7 +65,8 @@ public enum SoftFilter {
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return filter;
     }
 }

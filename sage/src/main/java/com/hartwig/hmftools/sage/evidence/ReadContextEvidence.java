@@ -25,7 +25,8 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class ReadContextEvidence {
+public class ReadContextEvidence
+{
 
     private final int typicalReadLength;
     private final SageConfig sageConfig;
@@ -33,7 +34,8 @@ public class ReadContextEvidence {
     private final ReadContextCounterFactory factory;
 
     public ReadContextEvidence(@NotNull final SageConfig config, @NotNull final ReferenceSequenceFile refGenome,
-            final Map<String, QualityRecalibrationMap> qualityRecalibrationMap) {
+            final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
+    {
         this.sageConfig = config;
         this.refGenome = refGenome;
         this.factory = new ReadContextCounterFactory(config, qualityRecalibrationMap);
@@ -42,9 +44,11 @@ public class ReadContextEvidence {
 
     @NotNull
     public List<ReadContextCounter> get(@NotNull final List<Candidate> candidates, @NotNull final String sample,
-            @NotNull final String bam) {
+            @NotNull final String bam)
+    {
         final List<ReadContextCounter> counters = factory.create(sample, candidates);
-        if (candidates.isEmpty()) {
+        if(candidates.isEmpty())
+        {
             return counters;
         }
 
@@ -59,17 +63,20 @@ public class ReadContextEvidence {
         final SamRecordSelector<ReadContextCounter> consumerSelector = new SamRecordSelector<>(counters);
 
         final RefSequence refSequence = new RefSequence(bounds, refGenome);
-        try (final SamReader tumorReader = SamReaderFactory.makeDefault()
+        try(final SamReader tumorReader = SamReaderFactory.makeDefault()
                 .validationStringency(sageConfig.validationStringency())
                 .referenceSource(new ReferenceSource(refGenome))
-                .open(new File(bam))) {
-            slicer.slice(tumorReader, samRecord -> {
+                .open(new File(bam)))
+        {
+            slicer.slice(tumorReader, samRecord ->
+            {
 
                 int numberOfEvents = NumberEvents.numberOfEvents(samRecord, refSequence);
                 consumerSelector.select(samRecord, x -> x.accept(samRecord, sageConfig, numberOfEvents));
 
             });
-        } catch (IOException e) {
+        } catch(IOException e)
+        {
             throw new CompletionException(e);
         }
 

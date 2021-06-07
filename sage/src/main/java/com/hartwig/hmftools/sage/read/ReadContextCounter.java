@@ -17,7 +17,8 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
-public class ReadContextCounter implements VariantHotspot {
+public class ReadContextCounter implements VariantHotspot
+{
 
     private static final Logger LOGGER = LogManager.getLogger(ReadContextCounter.class);
 
@@ -63,7 +64,8 @@ public class ReadContextCounter implements VariantHotspot {
 
     public ReadContextCounter(@NotNull final String sample, @NotNull final VariantHotspot variant, @NotNull final ReadContext readContext,
             final QualityRecalibrationMap recalibrationMap, final SageVariantTier tier, final int maxCoverage, final int minNumberOfEvents,
-            final int maxSkippedReferenceRegions, boolean realign) {
+            final int maxSkippedReferenceRegions, boolean realign)
+    {
         this.sample = sample;
         this.tier = tier;
         this.variant = variant;
@@ -77,137 +79,169 @@ public class ReadContextCounter implements VariantHotspot {
     }
 
     @NotNull
-    public String sample() {
+    public String sample()
+    {
         return sample;
     }
 
-    public VariantHotspot variant() {
+    public VariantHotspot variant()
+    {
         return variant;
     }
 
     @NotNull
     @Override
-    public String chromosome() {
+    public String chromosome()
+    {
         return variant.chromosome();
     }
 
     @NotNull
-    public SageVariantTier tier() {
+    public SageVariantTier tier()
+    {
         return tier;
     }
 
     @Override
-    public long position() {
+    public long position()
+    {
         return variant.position();
     }
 
     @NotNull
     @Override
-    public String ref() {
+    public String ref()
+    {
         return variant.ref();
     }
 
     @NotNull
     @Override
-    public String alt() {
+    public String alt()
+    {
         return variant.alt();
     }
 
-    public int altSupport() {
+    public int altSupport()
+    {
         return full + partial + core + alt + realigned;
     }
 
-    public int refSupport() {
+    public int refSupport()
+    {
         return reference;
     }
 
-    public int coverage() {
+    public int coverage()
+    {
         return coverage;
     }
 
-    public int depth() {
+    public int depth()
+    {
         return coverage;
     }
 
-    public double vaf() {
+    public double vaf()
+    {
         return af(altSupport());
     }
 
-    public double refAllelicFrequency() {
+    public double refAllelicFrequency()
+    {
         return af(refSupport());
     }
 
-    private double af(double support) {
+    private double af(double support)
+    {
         return coverage == 0 ? 0d : support / coverage;
     }
 
-    public int tumorQuality() {
+    public int tumorQuality()
+    {
         int tumorQuality = fullQuality + partialQuality;
         return Math.max(0, tumorQuality - (int) jitterPenalty);
     }
 
-    public int[] counts() {
+    public int[] counts()
+    {
         return new int[] { full, partial, core, realigned, alt, reference, coverage };
     }
 
-    public int[] jitter() {
+    public int[] jitter()
+    {
         return new int[] { shortened, lengthened, qualityJitterPenalty() };
     }
 
-    public int[] quality() {
+    public int[] quality()
+    {
         return new int[] { fullQuality, partialQuality, coreQuality, realignedQuality, altQuality, referenceQuality, totalQuality };
     }
 
-    public int improperPair() {
+    public int improperPair()
+    {
         return improperPair;
     }
 
-    public int rawDepth() {
+    public int rawDepth()
+    {
         return rawDepth;
     }
 
-    public int rawAltSupport() {
+    public int rawAltSupport()
+    {
         return rawAltSupport;
     }
 
-    public int rawRefSupport() {
+    public int rawRefSupport()
+    {
         return rawRefSupport;
     }
 
-    public int rawAltBaseQuality() {
+    public int rawAltBaseQuality()
+    {
         return rawAltBaseQuality;
     }
 
-    public int rawRefBaseQuality() {
+    public int rawRefBaseQuality()
+    {
         return rawRefBaseQuality;
     }
 
-    public int minNumberOfEvents() {
+    public int minNumberOfEvents()
+    {
         return minNumberOfEvents;
     }
 
     @NotNull
-    public ReadContext readContext() {
+    public ReadContext readContext()
+    {
         return readContext;
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return readContext.toString();
     }
 
-    public void accept(final SAMRecord record, final SageConfig sageConfig, final int rawNumberOfEvents) {
-        try {
-            if (coverage >= maxCoverage) {
+    public void accept(final SAMRecord record, final SageConfig sageConfig, final int rawNumberOfEvents)
+    {
+        try
+        {
+            if(coverage >= maxCoverage)
+            {
                 return;
             }
 
-            if (!tier.equals(SageVariantTier.HOTSPOT) && record.getMappingQuality() < sageConfig.minMapQuality()) {
+            if(!tier.equals(SageVariantTier.HOTSPOT) && record.getMappingQuality() < sageConfig.minMapQuality())
+            {
                 return;
             }
 
             final RawContext rawContext = rawFactory.create(sageConfig.maxSkippedReferenceRegions(), record);
-            if (rawContext.isReadIndexInSkipped()) {
+            if(rawContext.isReadIndexInSkipped())
+            {
                 return;
             }
 
@@ -220,12 +254,14 @@ public class ReadContextCounter implements VariantHotspot {
             rawAltBaseQuality += rawContext.altQuality();
             rawRefBaseQuality += rawContext.refQuality();
 
-            if (readIndex < 0) {
+            if(readIndex < 0)
+            {
                 return;
             }
 
             boolean covered = readContext.isCentreCovered(readIndex, record.getReadBases());
-            if (!covered) {
+            if(!covered)
+            {
                 return;
             }
 
@@ -235,14 +271,17 @@ public class ReadContextCounter implements VariantHotspot {
             double quality = calculateQualityScore(readIndex, record, qualityConfig, numberOfEvents);
 
             // Check if FULL, PARTIAL, OR CORE
-            if (!baseDeleted) {
+            if(!baseDeleted)
+            {
                 final boolean wildcardMatchInCore = variant.isSNV() && readContext().microhomology().isEmpty();
                 final IndexedBases expandedBases = expandedBasesFactory.expand((int) position(), readIndex, record);
                 final ReadContextMatch match =
                         readContext.matchAtPosition(wildcardMatchInCore, expandedBases.index(), expandedBases.bases());
 
-                if (!match.equals(ReadContextMatch.NONE)) {
-                    switch (match) {
+                if(!match.equals(ReadContextMatch.NONE))
+                {
+                    switch(match)
+                    {
                         case FULL:
                             incrementQualityFlags(record);
                             full++;
@@ -269,7 +308,8 @@ public class ReadContextCounter implements VariantHotspot {
             // Check if REALIGNED
             final RealignedContext realignment = realignmentContext(realign, readIndex, record);
             final RealignedType realignmentType = realignment.type();
-            if (realignmentType.equals(RealignedType.EXACT)) {
+            if(realignmentType.equals(RealignedType.EXACT))
+            {
                 realigned++;
                 realignedQuality += quality;
                 coverage++;
@@ -277,22 +317,27 @@ public class ReadContextCounter implements VariantHotspot {
                 return;
             }
 
-            if (realignmentType.equals(RealignedType.NONE) && rawContext.isReadIndexInSoftClip()) {
+            if(realignmentType.equals(RealignedType.NONE) && rawContext.isReadIndexInSoftClip())
+            {
                 return;
             }
 
             coverage++;
             totalQuality += quality;
-            if (rawContext.isRefSupport()) {
+            if(rawContext.isRefSupport())
+            {
                 reference++;
                 referenceQuality += quality;
-            } else if (rawContext.isAltSupport()) {
+            }
+            else if(rawContext.isAltSupport())
+            {
                 alt++;
                 altQuality++;
             }
 
             // Jitter Penalty
-            switch (realignmentType) {
+            switch(realignmentType)
+            {
                 case LENGTHENED:
                     jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
                     lengthened++;
@@ -303,15 +348,18 @@ public class ReadContextCounter implements VariantHotspot {
                     break;
             }
 
-        } catch (Exception e) {
+        } catch(Exception e)
+        {
             LOGGER.error("Error at chromosome: {}, position: {}", chromosome(), position());
             throw e;
         }
     }
 
     @NotNull
-    private RealignedContext realignmentContext(boolean realign, int readIndex, SAMRecord record) {
-        if (!realign) {
+    private RealignedContext realignmentContext(boolean realign, int readIndex, SAMRecord record)
+    {
+        if(!realign)
+        {
             return new RealignedContext(RealignedType.NONE, 0);
         }
 
@@ -329,7 +377,8 @@ public class ReadContextCounter implements VariantHotspot {
                 Math.max(indelLength + Math.max(leftOffset, rightOffset), Realigned.MAX_REPEAT_SIZE));
     }
 
-    private double calculateQualityScore(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig, int numberOfEvents) {
+    private double calculateQualityScore(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig, int numberOfEvents)
+    {
         final double baseQuality = baseQuality(readBaseIndex, record);
         final int distanceFromReadEdge = readDistanceFromEdge(readBaseIndex, record);
 
@@ -340,18 +389,21 @@ public class ReadContextCounter implements VariantHotspot {
         return Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
     }
 
-    private double baseQuality(int readBaseIndex, SAMRecord record) {
+    private double baseQuality(int readBaseIndex, SAMRecord record)
+    {
         return variant.ref().length() == variant.alt().length()
                 ? baseQuality(readBaseIndex, record, variant.ref().length())
                 : readContext.avgCentreQuality(readBaseIndex, record);
     }
 
-    private double baseQuality(int startReadIndex, @NotNull final SAMRecord record, int length) {
+    private double baseQuality(int startReadIndex, @NotNull final SAMRecord record, int length)
+    {
         int maxIndex = Math.min(startReadIndex + length, record.getBaseQualities().length) - 1;
         int maxLength = maxIndex - startReadIndex + 1;
 
         double quality = Integer.MAX_VALUE;
-        for (int i = 0; i < maxLength; i++) {
+        for(int i = 0; i < maxLength; i++)
+        {
             int refPosition = (int) position() + i;
             int readIndex = startReadIndex + i;
             byte rawQuality = record.getBaseQualities()[readIndex];
@@ -364,20 +416,26 @@ public class ReadContextCounter implements VariantHotspot {
         return quality;
     }
 
-    private int qualityJitterPenalty() {
+    private int qualityJitterPenalty()
+    {
         return (int) jitterPenalty;
     }
 
-    private void incrementQualityFlags(@NotNull final SAMRecord record) {
-        if (!record.getProperPairFlag()) {
+    private void incrementQualityFlags(@NotNull final SAMRecord record)
+    {
+        if(!record.getProperPairFlag())
+        {
             improperPair++;
         }
     }
 
-    private int indelLength(@NotNull final SAMRecord record) {
+    private int indelLength(@NotNull final SAMRecord record)
+    {
         int result = 0;
-        for (CigarElement cigarElement : record.getCigar()) {
-            switch (cigarElement.getOperator()) {
+        for(CigarElement cigarElement : record.getCigar())
+        {
+            switch(cigarElement.getOperator())
+            {
                 case I:
                 case D:
                     result += cigarElement.getLength();
@@ -388,7 +446,8 @@ public class ReadContextCounter implements VariantHotspot {
         return result;
     }
 
-    private int readDistanceFromEdge(int readIndex, @NotNull final SAMRecord record) {
+    private int readDistanceFromEdge(int readIndex, @NotNull final SAMRecord record)
+    {
         int index = readContext.readBasesPositionIndex();
         int leftIndex = readContext.readBasesLeftCentreIndex();
         int rightIndex = readContext.readBasesRightCentreIndex();

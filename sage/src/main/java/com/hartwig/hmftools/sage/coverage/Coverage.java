@@ -14,11 +14,13 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
-public class Coverage {
+public class Coverage
+{
 
     private final Map<String, List<GeneCoverage>> geneCoverage;
 
-    public Coverage(final Set<String> samples, final Collection<NamedBed> panel) {
+    public Coverage(final Set<String> samples, final Collection<NamedBed> panel)
+    {
         this.geneCoverage = Maps.newHashMap();
         final Set<String> genes = panel.stream().map(NamedBed::name).collect(Collectors.toSet());
 
@@ -26,12 +28,14 @@ public class Coverage {
     }
 
     @NotNull
-    public Set<String> samples() {
+    public Set<String> samples()
+    {
         return geneCoverage.keySet();
     }
 
     @NotNull
-    public List<GeneDepth> depth(@NotNull final String sample) {
+    public List<GeneDepth> depth(@NotNull final String sample)
+    {
         return coverage(sample).stream()
                 .map(GeneCoverage::geneDepth)
                 .sorted(Comparator.comparing(GeneDepth::gene))
@@ -39,21 +43,26 @@ public class Coverage {
     }
 
     @NotNull
-    public List<GeneCoverage> coverage(@NotNull final String sample) {
+    public List<GeneCoverage> coverage(@NotNull final String sample)
+    {
         return geneCoverage.getOrDefault(sample, Collections.emptyList());
     }
 
     @NotNull
-    public List<GeneCoverage> coverage(@NotNull final String sample, @NotNull final String chromosome) {
+    public List<GeneCoverage> coverage(@NotNull final String sample, @NotNull final String chromosome)
+    {
         return coverage(sample).stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());
     }
 
     @NotNull
-    private List<GeneCoverage> createGeneCoverage(@NotNull Set<String> genes, @NotNull Collection<NamedBed> panel) {
+    private List<GeneCoverage> createGeneCoverage(@NotNull Set<String> genes, @NotNull Collection<NamedBed> panel)
+    {
         final List<GeneCoverage> result = Lists.newArrayList();
-        for (String gene : genes) {
+        for(String gene : genes)
+        {
             List<NamedBed> exons = panel.stream().filter(x -> x.name().equals(gene)).collect(Collectors.toList());
-            if (!exons.isEmpty()) {
+            if(!exons.isEmpty())
+            {
                 result.add(new GeneCoverage(exons));
             }
         }

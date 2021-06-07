@@ -8,15 +8,19 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.SequenceUtil;
 
-public final class NumberEvents {
+public final class NumberEvents
+{
 
-    public static int numberOfEvents(@NotNull final SAMRecord record, @NotNull final RefSequence refGenome) {
+    public static int numberOfEvents(@NotNull final SAMRecord record, @NotNull final RefSequence refGenome)
+    {
         int nm = rawNM(record, refGenome);
 
         int additionalIndels = 0;
         int softClips = 0;
-        for (CigarElement cigarElement : record.getCigar()) {
-            switch (cigarElement.getOperator()) {
+        for(CigarElement cigarElement : record.getCigar())
+        {
+            switch(cigarElement.getOperator())
+            {
                 case D:
                 case I:
                     additionalIndels += (cigarElement.getLength() - 1);
@@ -30,9 +34,11 @@ public final class NumberEvents {
         return nm - additionalIndels + softClips;
     }
 
-    public static int rawNM(@NotNull final SAMRecord record, @NotNull final RefSequence refGenome) {
+    public static int rawNM(@NotNull final SAMRecord record, @NotNull final RefSequence refGenome)
+    {
         Object nm = record.getAttribute("NM");
-        if (nm instanceof Integer) {
+        if(nm instanceof Integer)
+        {
             return (int) nm;
         }
 
@@ -40,12 +46,16 @@ public final class NumberEvents {
         return SequenceUtil.calculateSamNmTag(record, refGenome.alignment().bases(), offset);
     }
 
-    public static int numberOfEventsWithMNV(int rawNumberEvents, @NotNull final String ref, @NotNull final String alt) {
-        if (ref.length() == alt.length() && ref.length() > 1) {
+    public static int numberOfEventsWithMNV(int rawNumberEvents, @NotNull final String ref, @NotNull final String alt)
+    {
+        if(ref.length() == alt.length() && ref.length() > 1)
+        {
             // Number of events includes each SNV as an additional event. This unfairly penalises MNVs.
             int differentBases = 0;
-            for (int i = 0; i < alt.length(); i++) {
-                if (alt.charAt(i) != ref.charAt(i)) {
+            for(int i = 0; i < alt.length(); i++)
+            {
+                if(alt.charAt(i) != ref.charAt(i))
+                {
                     differentBases++;
                 }
             }

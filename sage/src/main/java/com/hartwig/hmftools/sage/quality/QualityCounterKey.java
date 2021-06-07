@@ -6,7 +6,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-interface QualityCounterKey {
+interface QualityCounterKey
+{
 
     byte ref();
 
