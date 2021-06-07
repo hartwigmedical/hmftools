@@ -126,7 +126,7 @@ public interface ProtectConfig {
 
         return ImmutableProtectConfig.builder()
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
-                .primaryTumorDoids(toStringSet(optionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
+                .primaryTumorDoids(toStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
@@ -144,17 +144,8 @@ public interface ProtectConfig {
     }
 
     @NotNull
-    static Iterable<String> toStringSet(@Nullable String paramValue, @NotNull String separator) {
-        return paramValue != null && !paramValue.isEmpty() ? Sets.newHashSet(paramValue.split(separator)) : Sets.newHashSet();
-    }
-
-    @Nullable
-    static String optionalValue(@NotNull CommandLine cmd, @NotNull String param) {
-        if (cmd.hasOption(param)) {
-            return cmd.getOptionValue(param);
-        } else {
-            return null;
-        }
+    static Iterable<String> toStringSet(@NotNull String paramValue, @NotNull String separator) {
+        return !paramValue.isEmpty() ? Sets.newHashSet(paramValue.split(separator)) : Sets.newHashSet();
     }
 
     @NotNull
@@ -181,7 +172,7 @@ public interface ProtectConfig {
     @NotNull
     static String outputDir(@NotNull CommandLine cmd, @NotNull String param) throws ParseException, IOException {
         String value = nonOptionalValue(cmd, param);
-        final File outputDir = new File(value);
+        File outputDir = new File(value);
         if (!outputDir.exists() && !outputDir.mkdirs()) {
             throw new IOException("Unable to write to directory " + value);
         }
