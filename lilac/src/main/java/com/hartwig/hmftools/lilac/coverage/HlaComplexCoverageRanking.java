@@ -90,7 +90,7 @@ public class HlaComplexCoverageRanking
     private void calcRecoveryPenalty(final HlaComplexCoverage complexCoverage, final List<HlaAllele> recoveredAlleles)
     {
         int recoveredCount = (int)complexCoverage.getAlleles().stream()
-                .filter(x -> !mRefData.KnownStopLossIndelAlleles.containsKey(x))
+                .filter(x -> !mRefData.KnownStopLossIndelAlleles.containsValue(x))
                 .filter(x -> recoveredAlleles.contains(x))
                 .count();
         complexCoverage.setRecoveredCount(recoveredCount);
