@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.candidates;
+package com.hartwig.hmftools.lilac.evidence;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
-import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaContext;

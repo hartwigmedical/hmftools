@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac.candidates;
+package com.hartwig.hmftools.lilac.evidence;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;

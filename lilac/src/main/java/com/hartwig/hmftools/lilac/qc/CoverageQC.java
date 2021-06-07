@@ -93,11 +93,6 @@ public class CoverageQC {
             LL_LOGGER.warn("  UNMATCHED ALLELE: {} A alleles, {} B alleles, {} C alleles", aTypes, bTypes, cTypes);
         }
 
-        if (winner.WildCoverage > 0)
-        {
-            LL_LOGGER.warn("  WILDCARD ALLELE: winning solution contains wildcards");
-        }
-
         /*
         - total fragments - of fragments overlapping a coding base of HLA-A, HLA-B or HLA-C with sufficient MAPQ
         - FittedFragments - total fragments allocated exactly to solution (ie. exact or wildcard match at every heterozygous location)

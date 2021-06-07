@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
 import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -98,8 +99,8 @@ public class SomaticVariantAnnotation
 
         for(HlaSequenceLoci sequenceLoci : winners)
         {
-            if(!variant.Gene.equals(longGeneName(sequenceLoci.Allele.Gene)))
-                continue;
+            //if(!variant.Gene.equals(longGeneName(sequenceLoci.Allele.Gene)))
+            //    continue;
 
             // any variant in this gene will be skipped
             List<Integer> variantLoci = mGeneVariantLoci.get(variant.Gene);
@@ -134,7 +135,9 @@ public class SomaticVariantAnnotation
                             continue;
                     }
 
-                    if(!fragmentAA.equals(sequenceLoci.sequence(locus)))
+                    String sequence = sequenceLoci.sequence(locus);
+
+                    if(!fragmentAA.equals(sequence) && !sequence.equals(WILD_STR))
                     {
                         matches = false;
                         break;
@@ -153,7 +156,8 @@ public class SomaticVariantAnnotation
                 }
             }
 
-            coverages.add(new HlaAlleleCoverage(sequenceLoci.Allele, supportCount, 0, 0));
+            if(supportCount > 0)
+                coverages.add(new HlaAlleleCoverage(sequenceLoci.Allele, supportCount, 0, 0));
         }
 
         // take top allele and any matching
