@@ -239,7 +239,9 @@ public class LilacApplication
                 LL_LOGGER.info("recovering stop loss allele({}) with {} fragments", allele, entry.getValue().size());
 
                 knownStopLossFragments.put(allele, entry.getValue());
-                recoveredAlleles.add(allele);
+
+                if(!candidateAlleles.contains(allele))
+                    recoveredAlleles.add(allele);
             }
         }
 

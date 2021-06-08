@@ -57,7 +57,7 @@ public class LilacConstants
 
     // common INDEL associated with allele C*04:09N
     public static final String STOP_LOSS_ON_C_ALLELE = "C*04:09N";
-    public static final Indel STOP_LOSS_ON_C = new Indel("6", 31237115, "CN", "C");
+    public static final Indel STOP_LOSS_ON_C_INDEL = new Indel("6", 31237115, "CN", "C");
 
     public static final List<Integer> A_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348, 364);
     public static final List<Integer> B_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348);

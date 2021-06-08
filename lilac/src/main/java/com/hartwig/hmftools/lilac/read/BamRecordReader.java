@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
-import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C;
+import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_INDEL;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -97,7 +97,7 @@ public class BamRecordReader implements BamReader
         Map<Indel,Integer> filteredMap = Maps.newHashMap();
         mUnmatchedIndels.entrySet().stream()
                 .filter(x -> x.getValue()>= minCount)
-                .filter(x -> !x.getKey().equals(STOP_LOSS_ON_C))
+                .filter(x -> !x.getKey().equals(STOP_LOSS_ON_C_INDEL))
                 .forEach(x -> filteredMap.put(x.getKey(), x.getValue()));
         return filteredMap;
     }
@@ -334,7 +334,7 @@ public class BamRecordReader implements BamReader
             {
                 fragments.add(fragment);
 
-                if(codingRecord.getIndels().contains(STOP_LOSS_ON_C))
+                if(codingRecord.getIndels().contains(STOP_LOSS_ON_C_INDEL))
                     addKnownIndelFragment(fragment);
 
                 continue;
@@ -342,7 +342,7 @@ public class BamRecordReader implements BamReader
 
             if(codingRecord.containsIndel())
             {
-                if(codingRecord.getIndels().contains(STOP_LOSS_ON_C))
+                if(codingRecord.getIndels().contains(STOP_LOSS_ON_C_INDEL))
                 {
                     LL_LOGGER.debug("missing known indel fragment: {} {}", codingRecord.Id, codingRecord.readInfo());
                 }
@@ -369,11 +369,11 @@ public class BamRecordReader implements BamReader
     private void addKnownIndelFragment(final Fragment fragment)
     {
         // incrementIndelCounter(mStopLossOnC, STOP_LOSS_ON_C);
-        List<Fragment> indelFrags = mKnownStopLossFragments.get(STOP_LOSS_ON_C);
+        List<Fragment> indelFrags = mKnownStopLossFragments.get(STOP_LOSS_ON_C_INDEL);
         if(indelFrags == null)
         {
             indelFrags = Lists.newArrayList();
-            mKnownStopLossFragments.put(STOP_LOSS_ON_C, indelFrags);
+            mKnownStopLossFragments.put(STOP_LOSS_ON_C_INDEL, indelFrags);
         }
 
         indelFrags.add(fragment);

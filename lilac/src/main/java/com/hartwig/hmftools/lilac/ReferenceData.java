@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTO
 import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_H;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_Y;
-import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C;
+import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_INDEL;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_ALLELE;
 import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.LilacConstants.getNucleotideExonBoundaries;
@@ -199,7 +199,7 @@ public class ReferenceData
 
     private void loadStopLossRecoveryAllele()
     {
-        KnownStopLossIndelAlleles.put(STOP_LOSS_ON_C, mAlleleCache.requestFourDigit(STOP_LOSS_ON_C_ALLELE));
+        KnownStopLossIndelAlleles.put(STOP_LOSS_ON_C_INDEL, mAlleleCache.requestFourDigit(STOP_LOSS_ON_C_ALLELE));
     }
 
     private boolean excludeAllele(final HlaAllele allele)
