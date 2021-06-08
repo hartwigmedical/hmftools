@@ -21,6 +21,7 @@ public class ProtectAlgoTest {
 
     private static final String PURPLE_PURITY_TSV = Resources.getResource("test_run/purple/sample.purple.purity.tsv").getPath();
     private static final String PURPLE_QC_FILE = Resources.getResource("test_run/purple/sample.purple.qc").getPath();
+    private static final String PURPLE_GENE_COPY_NUMBER_TSV = Resources.getResource("test_run/purple/sample.purple.cnv.gene.tsv").getPath();
     private static final String PURPLE_SOMATIC_DRIVER_CATALOG_TSV =
             Resources.getResource("test_run/purple/sample.driver.catalog.somatic.tsv").getPath();
     private static final String PURPLE_GERMLINE_DRIVER_CATALOG_TSV =
@@ -37,12 +38,14 @@ public class ProtectAlgoTest {
     public void canRunProtectAlgo() throws IOException {
         ProtectConfig config = ImmutableProtectConfig.builder()
                 .tumorSampleId("sample")
+                .referenceSampleId(null)
                 .outputDir(Strings.EMPTY)
                 .serveActionabilityDir(SERVE_DIR)
                 .refGenomeVersion(RefGenomeVersion.V37)
                 .doidJsonFile(DOID_JSON)
                 .purplePurityTsv(PURPLE_PURITY_TSV)
                 .purpleQcFile(PURPLE_QC_FILE)
+                .purpleGeneCopyNumberTsv(PURPLE_GENE_COPY_NUMBER_TSV)
                 .purpleSomaticDriverCatalogTsv(PURPLE_SOMATIC_DRIVER_CATALOG_TSV)
                 .purpleGermlineDriverCatalogTsv(PURPLE_GERMLINE_DRIVER_CATALOG_TSV)
                 .purpleSomaticVariantVcf(PURPLE_SOMATIC_VARIANT_VCF)

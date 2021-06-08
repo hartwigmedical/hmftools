@@ -3,10 +3,10 @@ package com.hartwig.hmftools.protect.purple;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.purple.cnchromosome.ChromosomeArmKey;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
-import com.hartwig.hmftools.common.purple.cnchromosome.ChromosomeArmKey;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -43,7 +43,10 @@ public interface PurpleData {
     List<ReportableVariant> germlineVariants();
 
     @NotNull
-    List<ReportableGainLoss> copyNumberAlterations();
+    List<ReportableGainLoss> reportableGainsLosses();
+
+    @NotNull
+    List<ReportableGainLoss> unreportedGainsLosses();
 
     @NotNull
     Map<ChromosomeArmKey, Double> cnPerChromosome();

@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.A;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.B;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.C;
 import static com.hartwig.hmftools.protect.EvidenceReportingFunctions.highestReportableLevel;
-import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestBuilder;
+import static com.hartwig.hmftools.protect.ProtectTestFactory.testEvidenceBuilder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -96,12 +96,12 @@ public class EvidenceReportingFunctionsTest {
         String event4 = "event4";
 
         ProtectEvidence evidence1 =
-                createTestBuilder().genomicEvent(event1).addSources(Knowledgebase.ICLUSION).reported(true).onLabel(true).build();
+                testEvidenceBuilder().genomicEvent(event1).addSources(Knowledgebase.ICLUSION).reported(true).onLabel(true).build();
         ProtectEvidence evidence2 =
-                createTestBuilder().genomicEvent(event2).addSources(Knowledgebase.ICLUSION).reported(true).onLabel(false).build();
+                testEvidenceBuilder().genomicEvent(event2).addSources(Knowledgebase.ICLUSION).reported(true).onLabel(false).build();
         ProtectEvidence evidence3 =
-                createTestBuilder().genomicEvent(event3).addSources(Knowledgebase.VICC_CGI).reported(true).onLabel(false).build();
-        ProtectEvidence evidence4 = createTestBuilder().genomicEvent(event4)
+                testEvidenceBuilder().genomicEvent(event3).addSources(Knowledgebase.VICC_CGI).reported(true).onLabel(false).build();
+        ProtectEvidence evidence4 = testEvidenceBuilder().genomicEvent(event4)
                 .addSources(Knowledgebase.VICC_CGI, Knowledgebase.ICLUSION)
                 .reported(true)
                 .onLabel(false)
@@ -132,6 +132,6 @@ public class EvidenceReportingFunctionsTest {
 
     @NotNull
     private static ProtectEvidence createTestEvidence(boolean onLabel, @NotNull EvidenceDirection direction, @NotNull EvidenceLevel level) {
-        return createTestBuilder().onLabel(onLabel).level(level).direction(direction).build();
+        return testEvidenceBuilder().onLabel(onLabel).level(level).direction(direction).build();
     }
 }

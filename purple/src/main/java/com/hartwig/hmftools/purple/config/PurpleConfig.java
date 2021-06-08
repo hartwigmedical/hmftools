@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.config;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
@@ -9,6 +10,7 @@ import java.io.File;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -18,6 +20,7 @@ public class PurpleConfig
 {
     public final String ReferenceId;
     public final String TumorId;
+    public final RefGenomeVersion RG_VERSION;
 
     public final String Version;
     public final String OutputDir;
@@ -108,6 +111,12 @@ public class PurpleConfig
         else
         {
             PPL_LOGGER.info("Reference Sample: {}, Tumor Sample: {}", ReferenceId, TumorId);
+        }
+
+        if(cmd.hasOption(REF_GENOME_VERSION)) {
+            RG_VERSION = RefGenomeVersion.from(parameter(cmd, REF_GENOME_VERSION, missingJoiner));
+        } else {
+            RG_VERSION = null;
         }
 
         PPL_LOGGER.info("Output Directory: {}", OutputDir);

@@ -20,7 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class ProtectApplication  {
+public class ProtectApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(ProtectApplication.class);
     private static final String VERSION = ProtectApplication.class.getPackage().getImplementationVersion();
@@ -45,29 +45,23 @@ public class ProtectApplication  {
     }
 
     @NotNull
-    private final ProtectConfig protectConfig;
+    private final ProtectConfig config;
 
-    private ProtectApplication(@NotNull final ProtectConfig protectConfig) {
-        this.protectConfig = protectConfig;
+    private ProtectApplication(@NotNull final ProtectConfig config) {
+        this.config = config;
     }
 
     public void run() throws IOException {
-        List<ProtectEvidence> evidences = protectEvidence(protectConfig);
-
-        String filename = ProtectEvidenceFile.generateFilename(protectConfig.outputDir(), protectConfig.tumorSampleId());
-        LOGGER.info("Writing {} evidence items to file: {}", evidences.size(), filename);
-        ProtectEvidenceFile.write(filename, evidences);
-    }
-
-    @NotNull
-    private static List<ProtectEvidence> protectEvidence(@NotNull ProtectConfig config) throws IOException {
+        LOGGER.info("Running PROTECT algo on sample {} (with reference sample {})", config.tumorSampleId(), config.referenceSampleId());
         Set<String> patientTumorDoids = patientTumorDoids(config);
-
         ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), config.refGenomeVersion());
 
         ProtectAlgo algo = ProtectAlgo.build(actionableEvents, patientTumorDoids);
+        List<ProtectEvidence> evidences = algo.run(config);
 
-        return algo.run(config);
+        String filename = ProtectEvidenceFile.generateFilename(config.outputDir(), config.tumorSampleId());
+        LOGGER.info("Writing {} evidence items to file: {}", evidences.size(), filename);
+        ProtectEvidenceFile.write(filename, evidences);
     }
 
     @NotNull

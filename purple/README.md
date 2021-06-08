@@ -1079,6 +1079,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 ## Version History and Download Links
 - Upcoming
   - Add AmberMeanDepth to QC file
+  - Add calculation of CN per chromsome arm
 - [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.0)
 - [2.54](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.54) 
   - Germline VAF = 0 for negative copy numbers

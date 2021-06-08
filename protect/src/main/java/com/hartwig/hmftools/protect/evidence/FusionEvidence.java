@@ -54,7 +54,7 @@ public class FusionEvidence {
 
     @NotNull
     private ProtectEvidence evidence(@NotNull LinxFusion reportable, @NotNull ActionableEvent actionable) {
-        return personalizedEvidenceFactory.somaticallyReportableEvidence(actionable).genomicEvent(reportable.genomicEvent()).build();
+        return personalizedEvidenceFactory.somaticReportableEvidence(actionable).genomicEvent(reportable.genomicEvent()).build();
     }
 
     private static boolean match(@NotNull ActionableGene actionable, @NotNull LinxFusion reportable) {

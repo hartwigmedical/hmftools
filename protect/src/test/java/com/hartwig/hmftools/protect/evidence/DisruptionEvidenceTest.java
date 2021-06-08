@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.protect.evidence;
 
-import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvent;
-import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvidenceFactory;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -10,8 +7,10 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.protect.ProtectTestFactory;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
@@ -25,12 +24,19 @@ public class DisruptionEvidenceTest {
     @Test
     public void canDetermineEvidenceForHomozygousDisruptions() {
         String gene = "gene";
-        ActionableGene amp =
-                ImmutableActionableGene.builder().from(createTestEvent()).gene(gene).event(GeneLevelEvent.AMPLIFICATION).build();
-        ActionableGene inactivation =
-                ImmutableActionableGene.builder().from(createTestEvent()).gene(gene).event(GeneLevelEvent.INACTIVATION).build();
+        ActionableGene amp = ImmutableActionableGene.builder()
+                .from(ServeTestFactory.createTestActionableGene())
+                .gene(gene)
+                .event(GeneLevelEvent.AMPLIFICATION)
+                .build();
+        ActionableGene inactivation = ImmutableActionableGene.builder()
+                .from(ServeTestFactory.createTestActionableGene())
+                .gene(gene)
+                .event(GeneLevelEvent.INACTIVATION)
+                .build();
 
-        DisruptionEvidence disruptionEvidence = new DisruptionEvidence(createTestEvidenceFactory(), Lists.newArrayList(amp, inactivation));
+        DisruptionEvidence disruptionEvidence =
+                new DisruptionEvidence(ProtectTestFactory.createTestEvidenceFactory(), Lists.newArrayList(amp, inactivation));
 
         ReportableHomozygousDisruption match = create(gene);
         ReportableHomozygousDisruption nonMatch = create("other gene");

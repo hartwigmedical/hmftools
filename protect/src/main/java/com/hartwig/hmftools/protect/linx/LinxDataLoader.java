@@ -26,8 +26,8 @@ public final class LinxDataLoader {
     }
 
     @NotNull
-    public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv,
-            @NotNull String linxDriverCatalogTsv) throws IOException {
+    public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxDriverCatalogTsv)
+            throws IOException {
         LOGGER.info("Loading LINX data from {}", new File(linxFusionTsv).getParent());
         List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv).stream().filter(LinxFusion::reported).collect(Collectors.toList());
         LOGGER.info(" Loaded {} reportable fusions from {}", linxFusions.size(), linxFusionTsv);
@@ -35,9 +35,10 @@ public final class LinxDataLoader {
         List<LinxBreakend> linxBreakends =
                 LinxBreakend.read(linxBreakendTsv).stream().filter(LinxBreakend::reportedDisruption).collect(Collectors.toList());
         List<ReportableGeneDisruption> reportableGeneDisruptions = ReportableGeneDisruptionFactory.convert(linxBreakends);
+        LOGGER.debug(" Generated {} reportable disruptions based on {} breakends", reportableGeneDisruptions.size(), linxBreakends.size());
         LOGGER.info(" Loaded {} reportable disruptions from {}", reportableGeneDisruptions.size(), linxBreakendTsv);
 
-                List<ReportableHomozygousDisruption> reportableHomozygousDisruptions =
+        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions =
                 ReportableHomozygousDisruptionFactory.extractFromLinxDriverCatalogTsv(linxDriverCatalogTsv);
         LOGGER.info(" Loaded {} reportable homozygous disruptions from {}", reportableHomozygousDisruptions.size(), linxDriverCatalogTsv);
 

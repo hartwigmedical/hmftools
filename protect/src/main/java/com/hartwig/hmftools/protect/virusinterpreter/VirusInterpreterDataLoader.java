@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.protect.ProtectConfig;
@@ -20,15 +21,30 @@ public final class VirusInterpreterDataLoader {
     }
 
     @NotNull
-    public static List<AnnotatedVirus> load(@NotNull ProtectConfig config) throws IOException {
+    public static VirusInterpreterData load(@NotNull ProtectConfig config) throws IOException {
         return load(config.annotatedVirusTsv());
     }
 
     @NotNull
-    public static List<AnnotatedVirus> load(@NotNull String annotatedVirusTsv) throws IOException {
+    public static VirusInterpreterData load(@NotNull String annotatedVirusTsv) throws IOException {
         LOGGER.info("Loading annotated virus data from {}", new File(annotatedVirusTsv).getParent());
-        List<AnnotatedVirus> annotatedViruses = AnnotatedVirusFile.read(annotatedVirusTsv);
-        LOGGER.info(" Loaded {} annotated viruses from {}", annotatedViruses.size(), annotatedVirusTsv);
-        return annotatedViruses;
+        List<AnnotatedVirus> viruses = AnnotatedVirusFile.read(annotatedVirusTsv);
+
+        List<AnnotatedVirus> reportable = Lists.newArrayList();
+        List<AnnotatedVirus> unreported = Lists.newArrayList();
+        for (AnnotatedVirus virus : viruses) {
+            if (virus.reported()) {
+                reportable.add(virus);
+            } else {
+                unreported.add(virus);
+            }
+        }
+
+        LOGGER.info(" Loaded {} annotated viruses (of which {} are reportable) from {}",
+                viruses.size(),
+                reportable.size(),
+                annotatedVirusTsv);
+
+        return ImmutableVirusInterpreterData.builder().unreportedViruses(unreported).reportableViruses(reportable).build();
     }
 }
