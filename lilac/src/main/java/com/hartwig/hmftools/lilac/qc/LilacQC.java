@@ -23,8 +23,7 @@ import com.google.common.collect.Sets;
 
 public final class LilacQC
 {
-    private final Set<LilacQCStatus> mStatus;
-
+    public final Set<LilacQCStatus> Status;
     public final double ScoreMargin;
     public final String NextSolutionInfo;
     public final boolean HasHlaY;
@@ -49,7 +48,7 @@ public final class LilacQC
         HaplotypeQC = haplotypeQC;
         SomaticVariantQC = somaticVariantQC;
 
-        mStatus = Sets.newHashSet();
+        Status = Sets.newHashSet();
         populateStatus();
     }
 
@@ -73,7 +72,7 @@ public final class LilacQC
         List<String> columns = Lists.newArrayList();
 
         StringJoiner sj = new StringJoiner(ITEM_DELIM);
-        mStatus.forEach(x -> sj.add(x.toString()));
+        Status.forEach(x -> sj.add(x.toString()));
         columns.add(sj.toString());
 
         columns.add(String.valueOf(HasHlaY));
@@ -143,33 +142,33 @@ public final class LilacQC
         double haplotypeWarnThreshold = CoverageQC.TotalFragments * WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
         if(HaplotypeQC.UnusedHaplotypeMaxFrags >= haplotypeWarnThreshold)
         {
-            mStatus.add(WARN_UNMATCHED_HAPLOTYPE);
+            Status.add(WARN_UNMATCHED_HAPLOTYPE);
         }
 
         if(AminoAcidQC.UnusedAminoAcidMaxFrags >= haplotypeWarnThreshold)
         {
-            mStatus.add(WARN_UNMATCHED_AMINO_ACID);
+            Status.add(WARN_UNMATCHED_AMINO_ACID);
         }
 
         if(CoverageQC.ATypes == 0 || CoverageQC.BTypes == 0 || CoverageQC.CTypes == 0)
         {
-            mStatus.add(WARN_UNMATCHED_ALLELE);
+            Status.add(WARN_UNMATCHED_ALLELE);
         }
 
         double indelWarnThreshold = CoverageQC.TotalFragments * WARN_INDEL_THRESHOLD;
         if(BamQC.DiscardedIndelMaxFrags >= indelWarnThreshold)
         {
-            mStatus.add(WARN_UNMATCHED_INDEL);
+            Status.add(WARN_UNMATCHED_INDEL);
         }
 
         if(SomaticVariantQC.unmatchedVariants() > 0)
         {
-            mStatus.add(WARN_UNMATCHED_SOMATIC_VARIANT);
+            Status.add(WARN_UNMATCHED_SOMATIC_VARIANT);
         }
 
-        if(mStatus.isEmpty())
+        if(Status.isEmpty())
         {
-            mStatus.add(LilacQCStatus.PASS);
+            Status.add(LilacQCStatus.PASS);
         }
     }
 }

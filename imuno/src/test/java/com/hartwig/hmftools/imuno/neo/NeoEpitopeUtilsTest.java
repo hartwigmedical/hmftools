@@ -19,10 +19,10 @@ import static junit.framework.TestCase.assertTrue;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
 
-import org.apache.commons.compress.utils.Lists;
 import org.junit.Assert;
 import org.junit.Test;
 

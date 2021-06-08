@@ -32,7 +32,7 @@ public class PhasedEvidenceFactory
 
     public List<PhasedEvidence> evidence(final HlaContext context, final List<Fragment> fragments)
     {
-        LL_LOGGER.info("phasing {} records:", context.geneName());
+        LL_LOGGER.debug("phasing {} records:", context.geneName());
 
         List<PhasedEvidence> result = evidence(context.ExpectedAlleles, fragments);
 

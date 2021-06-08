@@ -120,8 +120,11 @@ public class LilacApplication
         mTumorBamReader = tumorBamReader;
     }
 
+    public ReferenceData getReferenceData() { return mRefData; }
+
     public LilacQC getSummaryMetrics() { return mSummaryMetrics; }
     public SolutionSummary getSolutionSummary() { return mSolutionSummary; }
+    public List<HlaComplexCoverage> getRankedComplexes() { return mRankedComplexes; }
 
     public void run()
     {
@@ -497,7 +500,7 @@ public class LilacApplication
         mSolutionSummary = SolutionSummary.create(winningRefCoverage, winningTumorCoverage, winningTumorCopyNumber, somaticCodingCounts);
     }
 
-    public void writFileOutputs()
+    public void writeFileOutputs()
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -597,12 +600,13 @@ public class LilacApplication
         long startTime = System.currentTimeMillis();
 
         lilac.run();
-
-        long endTime = System.currentTimeMillis();
-        double runTime = (endTime - startTime) / 1000.0;
+        lilac.writeFileOutputs();
 
         if(DatabaseAccess.hasDatabaseConfig(cmd))
             lilac.writeDatabaseResults(cmd);
+
+        long endTime = System.currentTimeMillis();
+        double runTime = (endTime - startTime) / 1000.0;
 
         LL_LOGGER.info("Lilac complete, run time({}s)", String.format("%.2f", runTime));
     }

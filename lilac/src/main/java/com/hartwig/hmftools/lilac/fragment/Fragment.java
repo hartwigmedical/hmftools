@@ -34,19 +34,19 @@ public class Fragment
 
     public Fragment(
             final String id, final String readInfo, final Set<String> genes, final List<Integer> nucleotideLoci,
-            final List<Integer> nucleotideQuality, final List<String> nucleotides)
+            final List<Integer> qualities, final List<String> nucleotides)
     {
         mId = id;
         mReadInfo = readInfo;
         mGenes = genes;
 
         mNucleotideLoci = nucleotideLoci.stream().collect(Collectors.toList());
-        mNucleotideQuality = nucleotideQuality.stream().collect(Collectors.toList());
+        mNucleotideQuality = qualities.stream().collect(Collectors.toList());
         mNucleotides = nucleotides.stream().collect(Collectors.toList());
 
         // independent copies
         mRawNucleotideLoci = nucleotideLoci.stream().collect(Collectors.toList());
-        mRawNucleotideQuality = nucleotideQuality.stream().collect(Collectors.toList());
+        mRawNucleotideQuality = qualities.stream().collect(Collectors.toList());
         mRawNucleotides = nucleotides.stream().collect(Collectors.toList());
 
         mIsQualFiltered = false;

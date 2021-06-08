@@ -602,7 +602,7 @@ public class FragmentAlleleMapper
             LL_LOGGER.info("filtered wildcards({} -> {}) supported alleles: {}",
                     wildcardAlleles.size(), supportedAlleles.size(), HlaAllele.toString(supportedAlleles));
         }
-        else
+        else if(!wildcardAlleles.isEmpty())
         {
             LL_LOGGER.info("removed all {} wildcard candidates", wildcardAlleles.size());
         }

@@ -10,7 +10,6 @@ import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
-import com.hartwig.hmftools.lilac.variant.CopyNumberAssignment;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -23,19 +22,19 @@ import java.util.stream.Collectors;
 
 public class SolutionSummary
 {
-    private final HlaComplexCoverage mReferenceCoverage;
-    private final HlaComplexCoverage mTumorCoverage;
-    private final Map<HlaAllele,Double> mTumorCopyNumber;
-    private final List<SomaticCodingCount> mSomaticCodingCount;
+    public final HlaComplexCoverage ReferenceCoverage;
+    public final HlaComplexCoverage TumorCoverage;
+    public final Map<HlaAllele,Double> TumorCopyNumber;
+    public final List<SomaticCodingCount> SomaticCodingCount;
 
     public SolutionSummary(
             final HlaComplexCoverage referenceCoverage, final HlaComplexCoverage tumorCoverage,
             final Map<HlaAllele,Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount)
     {
-        mReferenceCoverage = referenceCoverage;
-        mTumorCoverage = tumorCoverage;
-        mTumorCopyNumber = tumorCopyNumber;
-        mSomaticCodingCount = somaticCodingCount;
+        ReferenceCoverage = referenceCoverage;
+        TumorCoverage = tumorCoverage;
+        TumorCopyNumber = tumorCopyNumber;
+        SomaticCodingCount = somaticCodingCount;
     }
 
     public final void write(final String fileName)
@@ -85,13 +84,13 @@ public class SolutionSummary
 
     private final String generateAlleleBody(int index)
     {
-        HlaAlleleCoverage ref = mReferenceCoverage.getAlleleCoverage().get(index);
+        HlaAlleleCoverage ref = ReferenceCoverage.getAlleleCoverage().get(index);
 
-        HlaAlleleCoverage tumor = !mTumorCoverage.getAlleleCoverage().isEmpty() ?
-                mTumorCoverage.getAlleleCoverage().get(index) : new HlaAlleleCoverage(ref.Allele, 0, 0, 0);
+        HlaAlleleCoverage tumor = !TumorCoverage.getAlleleCoverage().isEmpty() ?
+                TumorCoverage.getAlleleCoverage().get(index) : new HlaAlleleCoverage(ref.Allele, 0, 0, 0);
 
-        double copyNumber = mTumorCopyNumber.get(ref.Allele);
-        SomaticCodingCount codingCount = mSomaticCodingCount.get(index);
+        double copyNumber = TumorCopyNumber.get(ref.Allele);
+        SomaticCodingCount codingCount = SomaticCodingCount.get(index);
 
         StringJoiner header = new StringJoiner(DELIM)
                 .add(ref.Allele.toString())

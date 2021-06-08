@@ -36,6 +36,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class LilacConfig
 {
+    private final CommandLine mCmdLineArgs;
+
     public final String Sample;
     public final String ReferenceBam;
     public final String TumorBam;
@@ -103,6 +105,8 @@ public class LilacConfig
 
     public LilacConfig(final CommandLine cmd)
     {
+        mCmdLineArgs = cmd;
+
         Sample = cmd.getOptionValue(SAMPLE);
 
         if(cmd.hasOption(SAMPLE_DATA_DIR))
@@ -168,6 +172,9 @@ public class LilacConfig
 
     public boolean isValid()
     {
+        if(mCmdLineArgs == null)
+            return true;
+
         if(ReferenceBam.isEmpty() || !Files.exists(Paths.get(ReferenceBam)))
         {
             LL_LOGGER.error("missing or invalid reference BAM");
@@ -229,6 +236,8 @@ public class LilacConfig
 
     public LilacConfig(final String sampleId)
     {
+        mCmdLineArgs = null;
+
         OutputDir = "";
         Sample = sampleId;
         ReferenceBam = "";

@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.lilac.misc;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
+import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -38,6 +42,15 @@ public class LilacTestUtils
     {
         return new Fragment(
                 id, "", Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+    }
+
+    public static Fragment createFragment(final String id, final String gene, final String sequence, int locusStart, int locusEnd)
+    {
+        List<Integer> loci = formRange(locusStart, locusEnd);
+        List<String> sequences = buildTargetSequences(sequence, loci);
+        List<Integer> qualities = loci.stream().map(x -> DEFAULT_MIN_BASE_QUAL).collect(Collectors.toList());
+
+        return new Fragment(id, "", Sets.newHashSet(gene), loci, qualities, sequences);
     }
 
     public static String buildTargetSequence(final String sequence, final List<Integer> indices)

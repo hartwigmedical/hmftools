@@ -13,6 +13,8 @@ import org.apache.commons.math3.util.Pair;
 public class HlaAlleleCache
 {
     // ensure the same HlaAlle is not created twice, allowing for object matching instead of string matching
+
+    // map of group alleles to protein/4-digit alleles to list of synonymous/6-digit alleles
     private final Map<HlaAllele,Map<HlaAllele,List<HlaAllele>>> mAlleleMap;
 
     public HlaAlleleCache()
@@ -125,6 +127,35 @@ public class HlaAlleleCache
         List<HlaAllele> allAlleles = Lists.newArrayList();
         mAlleleMap.values().stream().forEach(x -> x.values().stream().forEach(y -> allAlleles.addAll(y)));
         return allAlleles;
+    }
+
+    public HlaAllele findFourDigitAllele(final String alleleStr)
+    {
+        // assumes four-digit
+        for(Map<HlaAllele,List<HlaAllele>> proteinEntry : mAlleleMap.values())
+        {
+            HlaAllele matchedAllele = proteinEntry.keySet().stream().filter(x -> x.matches(alleleStr)).findFirst().orElse(null);
+            if(matchedAllele != null)
+                return matchedAllele;
+        }
+
+        return null;
+    }
+
+    public HlaAllele findAllele(final String alleleStr)
+    {
+        // assumes four-digit
+        for(Map<HlaAllele,List<HlaAllele>> proteinEntry : mAlleleMap.values())
+        {
+            for(List<HlaAllele> alleles : proteinEntry.values())
+            {
+                HlaAllele matchedAllele = alleles.stream().filter(x -> x.matches(alleleStr)).findFirst().orElse(null);
+                if(matchedAllele != null)
+                    return matchedAllele;
+            }
+        }
+
+        return null;
     }
 
 }
