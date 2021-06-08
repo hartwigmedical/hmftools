@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_ALLELE;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_INDEL;
 import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createFragment;
+import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.disableLogging;
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.PASS;
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_HAPLOTYPE;
 
@@ -42,6 +43,8 @@ public class LilacAppTest
     @Test
     public void basicApplicationTest()
     {
+        disableLogging();
+
         LilacApplication lilac = new LilacApplication(new LilacConfig(SAMPLE_TEST));
 
         MockBamReader refBamReader = new MockBamReader();
@@ -183,6 +186,8 @@ public class LilacAppTest
     @Test
     public void wildcardTest()
     {
+        disableLogging();
+
         LilacApplication lilac = new LilacApplication(new LilacConfig(SAMPLE_TEST));
 
         MockBamReader refBamReader = new MockBamReader();

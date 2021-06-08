@@ -12,10 +12,18 @@ import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+
 import htsjdk.samtools.SAMRecord;
 
 public class LilacTestUtils
 {
+    public static void disableLogging()
+    {
+        Configurator.setRootLevel(Level.ERROR);
+    }
+
     public static SAMRecord buildSamRecord(int alignmentStart, String cigar, String readString, String qualities)
     {
         SAMRecord record = new SAMRecord(null);
