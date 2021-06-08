@@ -104,7 +104,7 @@ public class ProtectAlgo {
         List<ProtectEvidence> variantEvidence =
                 variantEvidenceFactory.evidence(purpleData.germlineVariants(), purpleData.somaticVariants());
         printExtraction("somatic and germline variants", variantEvidence);
-        List<ProtectEvidence> copyNumberEvidence = copyNumberEvidenceFactory.evidence(purpleData.copyNumberAlterations());
+        List<ProtectEvidence> copyNumberEvidence = copyNumberEvidenceFactory.evidence(purpleData.reportableGainsLosses());
         printExtraction("amplifications and deletions", copyNumberEvidence);
         List<ProtectEvidence> disruptionEvidence = disruptionEvidenceFactory.evidence(linxData.homozygousDisruptions());
         printExtraction("homozygous disruptions", disruptionEvidence);

@@ -62,7 +62,8 @@ public class SomaticVariantFactory implements VariantContextFilter {
     }
 
     @NotNull
-    public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @NotNull final String reference, @NotNull final String vcfFile) throws IOException {
+    public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @NotNull final String reference, @NotNull final String vcfFile)
+            throws IOException {
         return fromVCFFileWithoutCheck(tumor, reference, null, vcfFile);
     }
 
@@ -75,15 +76,15 @@ public class SomaticVariantFactory implements VariantContextFilter {
     }
 
     @NotNull
-    public List<SomaticVariant> fromVCFFileWithoutCheck(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
-            @NotNull final String vcfFile) throws IOException {
+    public List<SomaticVariant> fromVCFFileWithoutCheck(@NotNull final String tumor, @Nullable final String reference,
+            @Nullable final String rna, @NotNull final String vcfFile) throws IOException {
         final List<SomaticVariant> result = Lists.newArrayList();
         fromVCFFile(tumor, reference, rna, vcfFile, false, result::add);
         return result;
     }
 
     public void fromVCFFile(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
-            @NotNull final String vcfFile,  boolean useCheckReference, Consumer<SomaticVariant> consumer) throws IOException {
+            @NotNull final String vcfFile, boolean useCheckReference, @NotNull Consumer<SomaticVariant> consumer) throws IOException {
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
             final VCFHeader header = (VCFHeader) reader.getHeader();
             if (!sampleInFile(tumor, header)) {
@@ -123,7 +124,7 @@ public class SomaticVariantFactory implements VariantContextFilter {
         final Genotype genotype = context.getGenotype(sample);
 
         final VariantContextDecorator decorator = new VariantContextDecorator(context);
-        GenotypeStatus genotypeStatus  = decorator.genotypeStatus(reference);
+        GenotypeStatus genotypeStatus = decorator.genotypeStatus(reference);
 
         if (filter.test(context) && AllelicDepth.containsAllelicDepth(genotype)) {
             final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));

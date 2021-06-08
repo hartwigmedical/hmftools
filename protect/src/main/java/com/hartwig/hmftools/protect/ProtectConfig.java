@@ -25,6 +25,7 @@ public interface ProtectConfig {
 
     // General params needed for every analysis
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
+    String REFERENCE_SAMPLE_ID = "reference_sample_id";
     String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
     String OUTPUT_DIRECTORY = "output_dir";
 
@@ -35,6 +36,7 @@ public interface ProtectConfig {
     // Files containing the actual genomic results for this sample.
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
     String PURPLE_QC_FILE = "purple_qc_file";
+    String PURPLE_GENE_COPY_NUMBER_TSV = "purple_gene_copy_number_tsv";
     String PURPLE_SOMATIC_DRIVER_CATALOG_TSV = "purple_somatic_driver_catalog_tsv";
     String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = "purple_germline_driver_catalog_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
@@ -53,6 +55,7 @@ public interface ProtectConfig {
         Options options = new Options();
 
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which PROTECT will run.");
+        options.addOption(REFERENCE_SAMPLE_ID, true, "(Optional) The reference sample of the tumor sample for which PROTECT will run.");
         options.addOption(PRIMARY_TUMOR_DOIDS, true, "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PROTECT output data will be written to.");
         options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to use (either '37' or '38')");
@@ -62,6 +65,7 @@ public interface ProtectConfig {
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
+        options.addOption(PURPLE_GENE_COPY_NUMBER_TSV, true, "Path towards the purple gene copynumber TSV.");
         options.addOption(PURPLE_SOMATIC_DRIVER_CATALOG_TSV, true, "Path towards the purple somatic driver catalog TSV.");
         options.addOption(PURPLE_GERMLINE_DRIVER_CATALOG_TSV, true, "Path towards the purple germline driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
@@ -79,6 +83,9 @@ public interface ProtectConfig {
 
     @NotNull
     String tumorSampleId();
+
+    @Nullable
+    String referenceSampleId();
 
     @NotNull
     Set<String> primaryTumorDoids();
@@ -100,6 +107,9 @@ public interface ProtectConfig {
 
     @NotNull
     String purpleQcFile();
+
+    @NotNull
+    String purpleGeneCopyNumberTsv();
 
     @NotNull
     String purpleSomaticDriverCatalogTsv();
@@ -136,6 +146,7 @@ public interface ProtectConfig {
 
         return ImmutableProtectConfig.builder()
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
+                .referenceSampleId(optionalValue(cmd, REFERENCE_SAMPLE_ID))
                 .primaryTumorDoids(toStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .refGenomeVersion(RefGenomeVersion.from(nonOptionalValue(cmd, RefGenomeVersion.REF_GENOME_VERSION)))
@@ -143,6 +154,7 @@ public interface ProtectConfig {
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
+                .purpleGeneCopyNumberTsv(nonOptionalFile(cmd, PURPLE_GENE_COPY_NUMBER_TSV))
                 .purpleSomaticDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVER_CATALOG_TSV))
                 .purpleGermlineDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV))
                 .purpleSomaticVariantVcf(nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF))
@@ -167,6 +179,19 @@ public interface ProtectConfig {
             throw new ParseException("Parameter must be provided: " + param);
         }
 
+        return value;
+    }
+
+    @Nullable
+    static String optionalValue(@NotNull CommandLine cmd, @NotNull String param) {
+        String value = null;
+        if (cmd.hasOption(param)) {
+            value = cmd.getOptionValue(param);
+        }
+
+        if (value != null && value.isEmpty()) {
+            value = null;
+        }
         return value;
     }
 

@@ -18,21 +18,21 @@ public final class ReportableVariantFactory {
     }
 
     @NotNull
-    public static List<ReportableVariant> reportableGermlineVariants(@NotNull List<SomaticVariant> variants,
+    public static List<ReportableVariant> toReportableGermlineVariants(@NotNull List<SomaticVariant> variants,
             @NotNull List<DriverCatalog> germlineDriverCatalog) {
-        return reportableVariants(variants, germlineDriverCatalog, ReportableVariantSource.GERMLINE);
+        return toReportableVariants(variants, germlineDriverCatalog, ReportableVariantSource.GERMLINE);
     }
 
     @NotNull
-    public static List<ReportableVariant> reportableSomaticVariants(@NotNull List<SomaticVariant> variants,
+    public static List<ReportableVariant> toReportableSomaticVariants(@NotNull List<SomaticVariant> variants,
             @NotNull List<DriverCatalog> somaticDriverCatalog) {
         List<DriverCatalog> somaticMutationCatalog =
                 somaticDriverCatalog.stream().filter(x -> x.driver() == DriverType.MUTATION).collect(Collectors.toList());
-        return reportableVariants(variants, somaticMutationCatalog, ReportableVariantSource.SOMATIC);
+        return toReportableVariants(variants, somaticMutationCatalog, ReportableVariantSource.SOMATIC);
     }
 
     @NotNull
-    private static List<ReportableVariant> reportableVariants(@NotNull List<SomaticVariant> variants,
+    private static List<ReportableVariant> toReportableVariants(@NotNull List<SomaticVariant> variants,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull ReportableVariantSource source) {
         Map<String, DriverCatalog> geneDriverMap = driverCatalog.stream().collect(Collectors.toMap(DriverCatalog::gene, x -> x));
 

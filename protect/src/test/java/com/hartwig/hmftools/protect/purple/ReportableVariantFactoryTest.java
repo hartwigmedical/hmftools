@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.protect.purple;
 
-import static com.hartwig.hmftools.protect.purple.ReportableVariantFactory.reportableSomaticVariants;
+import static com.hartwig.hmftools.protect.purple.ReportableVariantFactory.toReportableSomaticVariants;
 
 import static org.junit.Assert.assertEquals;
 
@@ -34,7 +34,7 @@ public class ReportableVariantFactoryTest {
         DriverCatalog driverGene1 = createMutationEntryForGene(gene1, likelihood);
 
         List<ReportableVariant> reportable =
-                reportableSomaticVariants(Lists.newArrayList(variant1, variant2), Lists.newArrayList(driverGene1));
+                toReportableSomaticVariants(Lists.newArrayList(variant1, variant2), Lists.newArrayList(driverGene1));
 
         assertEquals(1, reportable.size());
         assertEquals(likelihood, reportable.get(0).driverLikelihood(), EPSILON);
