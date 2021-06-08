@@ -65,16 +65,15 @@ public class VirusEvidenceTest {
     @NotNull
     private static VirusInterpreterData createTestVirusInterpreterData() {
         List<AnnotatedVirus> reportable = Lists.newArrayList();
-        List<AnnotatedVirus> unreported = Lists.newArrayList();
-
         reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation(VirusInterpretation.HPV).reported(true).build());
-        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation(VirusInterpretation.EBV).reported(false).build());
-        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation(VirusInterpretation.EBV).reported(false).build());
         reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation(VirusInterpretation.MCV).reported(true).build());
         reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation(null).reported(true).build());
+
+        List<AnnotatedVirus> unreported = Lists.newArrayList();
+        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation(VirusInterpretation.EBV).reported(false).build());
+        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation(VirusInterpretation.EBV).reported(false).build());
         unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation(null).reported(false).build());
 
         return ImmutableVirusInterpreterData.builder().unreportedViruses(unreported).reportableViruses(reportable).build();
     }
-
 }
