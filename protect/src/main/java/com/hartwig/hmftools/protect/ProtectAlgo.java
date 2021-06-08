@@ -44,8 +44,7 @@ public class ProtectAlgo {
     private final ChordEvidence chordEvidenceFactory;
 
     @NotNull
-    public static ProtectAlgo buildAlgoFromServeActionability(@NotNull ActionableEvents actionableEvents,
-            @NotNull Set<String> patientTumorDoids) {
+    public static ProtectAlgo build(@NotNull ActionableEvents actionableEvents, @NotNull Set<String> patientTumorDoids) {
         PersonalizedEvidenceFactory personalizedEvidenceFactory = new PersonalizedEvidenceFactory(patientTumorDoids);
 
         VariantEvidence variantEvidenceFactory = new VariantEvidence(personalizedEvidenceFactory,

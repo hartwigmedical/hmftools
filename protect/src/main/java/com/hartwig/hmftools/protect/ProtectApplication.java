@@ -7,13 +7,11 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidParents;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -27,20 +25,21 @@ public class ProtectApplication  {
     private static final Logger LOGGER = LogManager.getLogger(ProtectApplication.class);
     private static final String VERSION = ProtectApplication.class.getPackage().getImplementationVersion();
 
-    private static final RefGenomeVersion REF_GENOME_VERSION = RefGenomeVersion.V37;
-
     public static void main(@NotNull String[] args) throws IOException {
         LOGGER.info("Running PROTECT v{}", VERSION);
 
         Options options = ProtectConfig.createOptions();
 
+        ProtectConfig config = null;
         try {
-            new ProtectApplication(options, args).run();
+            config = ProtectConfig.createConfig(new DefaultParser().parse(options, args));
         } catch (ParseException exception) {
             LOGGER.warn(exception);
             new HelpFormatter().printHelp("PROTECT", options);
             System.exit(1);
         }
+
+        new ProtectApplication(config).run();
 
         LOGGER.info("Complete");
     }
@@ -48,9 +47,8 @@ public class ProtectApplication  {
     @NotNull
     private final ProtectConfig protectConfig;
 
-    private ProtectApplication(final Options options, final String... args) throws ParseException, IOException {
-        CommandLine cmd = new DefaultParser().parse(options, args);
-        this.protectConfig = ProtectConfig.createConfig(cmd);
+    private ProtectApplication(@NotNull final ProtectConfig protectConfig) {
+        this.protectConfig = protectConfig;
     }
 
     public void run() throws IOException {
@@ -65,9 +63,9 @@ public class ProtectApplication  {
     private static List<ProtectEvidence> protectEvidence(@NotNull ProtectConfig config) throws IOException {
         Set<String> patientTumorDoids = patientTumorDoids(config);
 
-        ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), REF_GENOME_VERSION);
+        ActionableEvents actionableEvents = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), config.refGenomeVersion());
 
-        ProtectAlgo algo = ProtectAlgo.buildAlgoFromServeActionability(actionableEvents, patientTumorDoids);
+        ProtectAlgo algo = ProtectAlgo.build(actionableEvents, patientTumorDoids);
 
         return algo.run(config);
     }

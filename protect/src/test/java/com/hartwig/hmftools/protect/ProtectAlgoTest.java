@@ -30,6 +30,7 @@ public class ProtectAlgoTest {
     private static final String LINX_FUSION_TSV = Resources.getResource("test_run/linx/sample.linx.fusion.tsv").getPath();
     private static final String LINX_BREAKEND_TSV = Resources.getResource("test_run/linx/sample.linx.breakend.tsv").getPath();
     private static final String LINX_DRIVER_CATALOG_TSV = Resources.getResource("test_run/linx/sample.linx.driver.catalog.tsv").getPath();
+    private static final String ANNOTATED_VIRUS_TSV = Resources.getResource("test_run/virusbreakend/sample.virus.annotated.tsv").getPath();
     private static final String CHORD_PREDICTION_TXT = Resources.getResource("test_run/chord/sample_chord_prediction.txt").getPath();
 
     @Test
@@ -38,6 +39,7 @@ public class ProtectAlgoTest {
                 .tumorSampleId("sample")
                 .outputDir(Strings.EMPTY)
                 .serveActionabilityDir(SERVE_DIR)
+                .refGenomeVersion(RefGenomeVersion.V37)
                 .doidJsonFile(DOID_JSON)
                 .purplePurityTsv(PURPLE_PURITY_TSV)
                 .purpleQcFile(PURPLE_QC_FILE)
@@ -48,11 +50,12 @@ public class ProtectAlgoTest {
                 .linxFusionTsv(LINX_FUSION_TSV)
                 .linxBreakendTsv(LINX_BREAKEND_TSV)
                 .linxDriverCatalogTsv(LINX_DRIVER_CATALOG_TSV)
+                .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .build();
 
-        ActionableEvents events = ActionableEventsLoader.readFromDir(SERVE_DIR, RefGenomeVersion.V37);
-        ProtectAlgo algo = ProtectAlgo.buildAlgoFromServeActionability(events, Sets.newHashSet());
+        ActionableEvents events = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), config.refGenomeVersion());
+        ProtectAlgo algo = ProtectAlgo.build(events, Sets.newHashSet());
 
         assertNotNull(algo.run(config));
     }

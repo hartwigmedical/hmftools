@@ -5,27 +5,23 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
 import com.hartwig.hmftools.protect.ProtectConfig;
-import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class LinxDataLoader {
 
-    private static final Logger LOGGER = LogManager.getLogger(PurpleDataLoader.class);
+    private static final Logger LOGGER = LogManager.getLogger(LinxDataLoader.class);
 
     private LinxDataLoader() {
     }
 
     @NotNull
-    public static LinxData load(ProtectConfig config) throws IOException {
+    public static LinxData load(@NotNull ProtectConfig config) throws IOException {
         return load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
     }
 

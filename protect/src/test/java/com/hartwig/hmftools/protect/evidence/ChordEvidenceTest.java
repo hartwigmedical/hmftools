@@ -24,7 +24,7 @@ import org.junit.Test;
 public class ChordEvidenceTest {
 
     @Test
-    public void canDetermineEvidenceForCHORD() {
+    public void canDetermineEvidenceForChord() {
         ActionableCharacteristic signature1 = ImmutableActionableCharacteristic.builder()
                 .from(createTestEvent())
                 .name(TumorCharacteristic.HOMOLOGOUS_RECOMBINATION_DEFICIENT)

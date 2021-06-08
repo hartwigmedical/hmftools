@@ -29,7 +29,7 @@ public final class ActionableEventsLoader {
     @NotNull
     public static ActionableEvents readFromDir(@NotNull String actionabilityDir, @NotNull RefGenomeVersion refGenomeVersion)
             throws IOException {
-        LOGGER.info("Loading SERVE actionability files from {}", actionabilityDir);
+        LOGGER.info("Loading SERVE actionability files from {} using ref genome version '{}'", actionabilityDir, refGenomeVersion);
 
         String actionableHotspotTsv = ActionableHotspotFile.actionableHotspotTsvPath(actionabilityDir, refGenomeVersion);
         List<ActionableHotspot> hotspots = ActionableHotspotFile.read(actionableHotspotTsv);

@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -41,6 +42,7 @@ public interface ProtectConfig {
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
+    String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
 
     // Some additional optional params and flags
@@ -53,6 +55,7 @@ public interface ProtectConfig {
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which PROTECT will run.");
         options.addOption(PRIMARY_TUMOR_DOIDS, true, "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PROTECT output data will be written to.");
+        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to use (either '37' or '38')");
 
         options.addOption(SERVE_ACTIONABILITY_DIRECTORY, true, "Path towards the SERVE actionability directory.");
         options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
@@ -66,6 +69,7 @@ public interface ProtectConfig {
         options.addOption(LINX_FUSION_TSV, true, "Path towards the LINX fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the LINX breakend TSV.");
         options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
+        options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
 
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
@@ -81,6 +85,9 @@ public interface ProtectConfig {
 
     @NotNull
     String outputDir();
+
+    @NotNull
+    RefGenomeVersion refGenomeVersion();
 
     @NotNull
     String serveActionabilityDir();
@@ -116,6 +123,9 @@ public interface ProtectConfig {
     String linxDriverCatalogTsv();
 
     @NotNull
+    String annotatedVirusTsv();
+
+    @NotNull
     String chordPredictionTxt();
 
     @NotNull
@@ -128,6 +138,7 @@ public interface ProtectConfig {
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .primaryTumorDoids(toStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
+                .refGenomeVersion(RefGenomeVersion.from(nonOptionalValue(cmd, RefGenomeVersion.REF_GENOME_VERSION)))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
@@ -139,6 +150,7 @@ public interface ProtectConfig {
                 .linxFusionTsv(nonOptionalFile(cmd, LINX_FUSION_TSV))
                 .linxBreakendTsv(nonOptionalFile(cmd, LINX_BREAKEND_TSV))
                 .linxDriverCatalogTsv(nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
+                .annotatedVirusTsv(nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
                 .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
                 .build();
     }
