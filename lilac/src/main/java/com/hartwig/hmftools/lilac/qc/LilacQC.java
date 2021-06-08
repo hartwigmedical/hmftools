@@ -59,9 +59,9 @@ public final class LilacQC
         columns.add("HlaY");
         columns.add("ScoreMargin");
         columns.add("NextSolutionAlleles");
-        columns.addAll(AminoAcidQC.header());
         columns.addAll(BamQC.header());
         columns.addAll(CoverageQC.header());
+        columns.addAll(AminoAcidQC.header());
         columns.addAll(HaplotypeQC.header());
         columns.addAll(SomaticVariantQC.header());
         return columns;
@@ -78,9 +78,9 @@ public final class LilacQC
         columns.add(String.valueOf(HasHlaY));
         columns.add(String.format("%.3f", ScoreMargin));
         columns.add(NextSolutionInfo);
-        columns.addAll(AminoAcidQC.body());
         columns.addAll(BamQC.body());
         columns.addAll(CoverageQC.body());
+        columns.addAll(AminoAcidQC.body());
         columns.addAll(HaplotypeQC.body());
         columns.addAll(SomaticVariantQC.body());
         return columns;
