@@ -21,7 +21,7 @@ public final class LinxDataLoader {
     }
 
     @NotNull
-    public static LinxData load(ProtectConfig config) throws IOException {
+    public static LinxData load(@NotNull ProtectConfig config) throws IOException {
         return load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
     }
 
