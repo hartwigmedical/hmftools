@@ -110,7 +110,7 @@ public class RefSomatics implements RefClassifier
 
     public static boolean requiresBuild(final RefDataConfig config)
     {
-        return config.DbAccess != null || !config.RefSigContribsFile.isEmpty() && !config.RefSnvCountsFile.isEmpty();
+        return config.DbAccess != null || (!config.RefSigContribsFile.isEmpty() && !config.RefSnvCountsFile.isEmpty());
     }
 
     public static void addCmdLineArgs(@NotNull Options options)

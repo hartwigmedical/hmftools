@@ -77,6 +77,9 @@ public class FeatureClassifier implements CuppaClassifier
         mIsValid &= loadRefCancerFeatureAvg(config.RefDriverAvgFile, mCancerFeatureAvg);
         formFeaturePrevalenceTotals();
 
+        CUP_LOGGER.info("loaded ref data for {} features from file({})",
+                mFeaturePrevalenceTotals.size(), config.RefFeaturePrevFile);
+
         mIsValid &= loadSampleFeatures();
     }
 
