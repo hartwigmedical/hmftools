@@ -20,8 +20,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class CnPerChromosomeFactory {
 
-    private static final RefGenomeCoordinates REF_GENOME_COORDINATES = RefGenomeCoordinates.COORDS_37;
-
     private CnPerChromosomeFactory() {
     }
 
@@ -29,17 +27,18 @@ public final class CnPerChromosomeFactory {
     public static Map<ChromosomeArmKey, Double> fromPurpleSomaticCopynumberTsv(@NotNull String purpleSomaticCopynumberTsv)
             throws IOException {
         List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(purpleSomaticCopynumberTsv);
-        return extractCnPerChromosomeArm(copyNumbers);
+        return extractCnPerChromosomeArm(copyNumbers, RefGenomeCoordinates.COORDS_37);
     }
 
     @NotNull
-    public static Map<ChromosomeArmKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
+    public static Map<ChromosomeArmKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers,
+            final RefGenomeCoordinates ref_genome_coordinates) {
         Map<ChromosomeArmKey, Double> cnPerChromosomeArm = Maps.newHashMap();
         Set<String> chomosomeSet = Sets.newHashSet();
 
-        for (Chromosome chr : REF_GENOME_COORDINATES.lengths().keySet()) {
+        for (Chromosome chr : ref_genome_coordinates.lengths().keySet()) {
             HumanChromosome chromosome = (HumanChromosome) chr;
-            Map<ChromosomeArm, GenomeRegion> genomeRegion = determineArmRegion(chromosome);
+            Map<ChromosomeArm, GenomeRegion> genomeRegion = determineArmRegion(chromosome, ref_genome_coordinates);
 
             for (Map.Entry<ChromosomeArm, GenomeRegion> entry : genomeRegion.entrySet()) {
                 GenomeRegion region = entry.getValue();
@@ -66,9 +65,10 @@ public final class CnPerChromosomeFactory {
     }
 
     @NotNull
-    private static Map<ChromosomeArm, GenomeRegion> determineArmRegion(@NotNull Chromosome chromosome) {
-        long centromerePos = REF_GENOME_COORDINATES.centromeres().get(chromosome);
-        long chrLength = REF_GENOME_COORDINATES.lengths().get(chromosome);
+    private static Map<ChromosomeArm, GenomeRegion> determineArmRegion(@NotNull Chromosome chromosome,
+            final RefGenomeCoordinates ref_genome_coordinates) {
+        long centromerePos = ref_genome_coordinates.centromeres().get(chromosome);
+        long chrLength = ref_genome_coordinates.lengths().get(chromosome);
 
         long lengthPastCentromere = chrLength - (centromerePos + 1);
         long lengthBeforeCentromere = centromerePos;

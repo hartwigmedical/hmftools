@@ -9,6 +9,7 @@ import java.util.Map;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
@@ -36,7 +37,8 @@ public class CnPerChromosomeFactoryTest {
         copyNumbers.add(PurpleTestUtils.createCopyNumber("1", 123035435, 124035434, 300).build());
         copyNumbers.add(PurpleTestUtils.createCopyNumber("1", 124035435, 249250621, 3).build());
 
-        Map<ChromosomeArmKey, Double> cnPerChromosomeArm = CnPerChromosomeFactory.extractCnPerChromosomeArm(copyNumbers);
+        Map<ChromosomeArmKey, Double> cnPerChromosomeArm =
+                CnPerChromosomeFactory.extractCnPerChromosomeArm(copyNumbers, RefGenomeCoordinates.COORDS_37);
         assertEquals(2D, cnPerChromosomeArm.get(new ChromosomeArmKey(HumanChromosome._1, ChromosomeArm.P_ARM)), EPSILON);
         assertEquals(5.35312, cnPerChromosomeArm.get(new ChromosomeArmKey(HumanChromosome._1, ChromosomeArm.Q_ARM)), EPSILON);
     }
