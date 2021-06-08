@@ -91,7 +91,8 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class PurpleApplication {
+public class PurpleApplication
+{
     private final VersionInfo mPurpleVersion;
     private final ExecutorService mExecutorService;
     private final ReferenceData mReferenceData;
@@ -107,17 +108,20 @@ public class PurpleApplication {
     private static final String VERSION = "version";
     private static final String LOG_DEBUG = "log_debug";
 
-    private PurpleApplication(final Options options, final String... args) throws ParseException, IOException {
+    private PurpleApplication(final Options options, final String... args) throws ParseException, IOException
+    {
         mPurpleVersion = new VersionInfo("purple.version");
         PPL_LOGGER.info("PURPLE version: {}", mPurpleVersion.version());
 
         mCmdLineArgs = createCommandLine(options, args);
 
-        if (mCmdLineArgs.hasOption(VERSION)) {
+        if(mCmdLineArgs.hasOption(VERSION))
+        {
             System.exit(0);
         }
 
-        if (mCmdLineArgs.hasOption(LOG_DEBUG)) {
+        if(mCmdLineArgs.hasOption(LOG_DEBUG))
+        {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
@@ -137,26 +141,32 @@ public class PurpleApplication {
 
         mCharts = new Charts(mConfig, mExecutorService, mReferenceData.RefGenVersion.is38());
 
-        if (!mConfig.isValid() || !mReferenceData.isValid()) {
+        if(!mConfig.isValid() || !mReferenceData.isValid())
+        {
             PPL_LOGGER.error("initialisation error, exiting");
             mExecutorService.shutdown();
             System.exit(1);
         }
     }
 
-    public void run() {
-        try {
+    public void run()
+    {
+        try
+        {
             processSample(mConfig.ReferenceId, mConfig.TumorId, mConfig.RG_VERSION);
 
-        } finally {
+        } finally
+        {
             mExecutorService.shutdown();
         }
 
         PPL_LOGGER.info("Complete");
     }
 
-    private SampleData loadSampleData(final String referenceId, final String tumorSample, final SampleDataFiles sampleDataFiles) {
-        try {
+    private SampleData loadSampleData(final String referenceId, final String tumorSample, final SampleDataFiles sampleDataFiles)
+    {
+        try
+        {
             // load amber and cobalt sample data
             final AmberData amberData = new AmberData(tumorSample, sampleDataFiles.AmberDirectory);
 
@@ -174,23 +184,27 @@ public class PurpleApplication {
             sampleData.loadSomatics(sampleDataFiles.SomaticVcfFile, mReferenceData, mConfig.TumorOnlyMode);
 
             return sampleData;
-        } catch (Exception e) {
+        } catch(Exception e)
+        {
             PPL_LOGGER.error("failed processing sample({}): {}", tumorSample, e.toString());
             return null;
         }
     }
 
-    private void processSample(final String referenceId, final String tumorSample, final RefGenomeVersion refGenomeVersion) {
+    private void processSample(final String referenceId, final String tumorSample, final RefGenomeVersion refGenomeVersion)
+    {
         PPL_LOGGER.info("Processing sample(ref={} tumor={})", referenceId, tumorSample);
 
         final String outputDir = checkAddDirSeparator(mConfig.OutputDir);
 
-        try {
+        try
+        {
             final SampleDataFiles sampleDataFiles = new SampleDataFiles(mCmdLineArgs, tumorSample);
 
             final SampleData sampleData = loadSampleData(referenceId, tumorSample, sampleDataFiles);
 
-            if (sampleData == null) {
+            if(sampleData == null)
+            {
                 return;
             }
 
@@ -201,9 +215,12 @@ public class PurpleApplication {
             final Gender cobaltGender = cobaltData.gender();
             final CobaltChromosomes cobaltChromosomes = cobaltData.CobaltChromosomes;
 
-            if (cobaltGender.equals(amberGender)) {
+            if(cobaltGender.equals(amberGender))
+            {
                 PPL_LOGGER.info("Sample gender is {}", cobaltGender.toString().toLowerCase());
-            } else {
+            }
+            else
+            {
                 PPL_LOGGER.warn("COBALT gender {} does not match AMBER gender {}", cobaltGender, amberGender);
             }
 
@@ -235,7 +252,8 @@ public class PurpleApplication {
             final int recoveredSVCount =
                     recoverStructuralVariants(sampleData, sampleDataFiles, purityAdjuster, copyNumberFactory.copyNumbers());
 
-            if (recoveredSVCount > 0) {
+            if(recoveredSVCount > 0)
+            {
                 PPL_LOGGER.info("Reapplying segmentation with {} recovered structural variants", recoveredSVCount);
                 final List<ObservedRegion> recoveredObservedRegions =
                         mSegmentation.createSegments(sampleData.SvCache.variants(), amberData, cobaltData);
@@ -292,7 +310,8 @@ public class PurpleApplication {
 
             final Set<String> reportedGenes = somaticStream.reportedGenes();
 
-            if (!sampleDataFiles.GermlineVcfFile.isEmpty()) {
+            if(!sampleDataFiles.GermlineVcfFile.isEmpty())
+            {
                 mGermlineVariants.processAndWrite(referenceId,
                         tumorSample,
                         sampleDataFiles.GermlineVcfFile,
@@ -322,7 +341,8 @@ public class PurpleApplication {
             final List<DriverCatalog> somaticDriverCatalog = Lists.newArrayList();
             final List<DriverCatalog> germlineDriverCatalog = Lists.newArrayList();
 
-            if (mConfig.DriverEnabled) {
+            if(mConfig.DriverEnabled)
+            {
                 PPL_LOGGER.info("Generating driver catalog");
                 somaticDriverCatalog.addAll(somaticStream.drivers(geneCopyNumbers));
 
@@ -349,7 +369,8 @@ public class PurpleApplication {
             sampleData.SvCache.write(purityAdjuster, copyNumbers);
             PeakModelFile.write(PeakModelFile.generateFilename(outputDir, tumorSample), somaticPeaks);
 
-            if (hasDatabaseConfig(mCmdLineArgs)) {
+            if(hasDatabaseConfig(mCmdLineArgs))
+            {
                 final DatabaseAccess dbAccess = databaseAccess(mCmdLineArgs);
                 PPL_LOGGER.info("Writing purple data to database: {}", mCmdLineArgs.getOptionValue(DB_URL));
 
@@ -365,7 +386,8 @@ public class PurpleApplication {
                         germlineDriverCatalog);
             }
 
-            if (mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent()) {
+            if(mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent())
+            {
                 PPL_LOGGER.info("Generating charts");
 
                 mCharts.write(referenceId,
@@ -378,27 +400,32 @@ public class PurpleApplication {
                         fittedRegions,
                         Lists.newArrayList(amberData.ChromosomeBafs.values()));
             }
-        } catch (Exception e) {
+        } catch(Exception e)
+        {
             PPL_LOGGER.error("failed processing sample({}): {}", tumorSample, e.toString());
             e.printStackTrace();
         }
     }
 
     private int recoverStructuralVariants(final SampleData sampleData, final SampleDataFiles sampleDataFiles,
-            final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException {
-        if (sampleDataFiles.RecoveredSvVcfFile.isEmpty()) {
+            final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException
+    {
+        if(sampleDataFiles.RecoveredSvVcfFile.isEmpty())
+        {
             return 0;
         }
 
         PPL_LOGGER.info("Loading recovery candidates from {}", sampleDataFiles.RecoveredSvVcfFile);
 
-        try (final RecoverStructuralVariants recovery = new RecoverStructuralVariants(mConfig.Misc,
+        try(final RecoverStructuralVariants recovery = new RecoverStructuralVariants(mConfig.Misc,
                 purityAdjuster,
                 sampleDataFiles.RecoveredSvVcfFile,
-                copyNumbers)) {
+                copyNumbers))
+        {
             final Collection<VariantContext> recoveredVariants = recovery.recoverVariants(sampleData.SvCache.variants());
 
-            if (!recoveredVariants.isEmpty()) {
+            if(!recoveredVariants.isEmpty())
+            {
                 recoveredVariants.forEach(x -> sampleData.SvCache.addVariant(x));
             }
 
@@ -408,7 +435,8 @@ public class PurpleApplication {
 
     private BestFit fitPurity(final SampleData sampleData, final List<ObservedRegion> observedRegions,
             final FittedRegionFactory fittedRegionFactory, final List<StructuralVariant> structuralVariants)
-            throws ExecutionException, InterruptedException {
+            throws ExecutionException, InterruptedException
+    {
         final FittingConfig fittingConfig = mConfig.Fitting;
         final SomaticFitConfig somaticFitConfig = mConfig.SomaticFitting;
 
@@ -444,7 +472,8 @@ public class PurpleApplication {
     }
 
     private FittedRegionFactory createFittedRegionFactory(final int averageTumorDepth, final CobaltChromosomes cobaltChromosomes,
-            final FittingConfig fitScoreConfig) {
+            final FittingConfig fitScoreConfig)
+    {
         return new FittedRegionFactoryV2(cobaltChromosomes,
                 averageTumorDepth,
                 fitScoreConfig.PloidyPenaltyFactor,
@@ -456,8 +485,10 @@ public class PurpleApplication {
     }
 
     @NotNull
-    private StructuralVariantCache createStructuralVariantCache(final String tumorSample, final SampleDataFiles sampleDataFiles) {
-        if (sampleDataFiles.SvVcfFile.isEmpty()) {
+    private StructuralVariantCache createStructuralVariantCache(final String tumorSample, final SampleDataFiles sampleDataFiles)
+    {
+        if(sampleDataFiles.SvVcfFile.isEmpty())
+        {
             return new StructuralVariantCache();
         }
 
@@ -468,13 +499,16 @@ public class PurpleApplication {
         return new StructuralVariantCache(mPurpleVersion.version(), sampleDataFiles.SvVcfFile, outputVcf, mReferenceData);
     }
 
-    public static void main(final String... args) throws IOException, SQLException, ExecutionException, InterruptedException {
+    public static void main(final String... args) throws IOException, SQLException, ExecutionException, InterruptedException
+    {
         final Options options = createOptions();
 
-        try {
+        try
+        {
             PurpleApplication purpleApplication = new PurpleApplication(options, args);
             purpleApplication.run();
-        } catch (ParseException e) {
+        } catch(ParseException e)
+        {
             PPL_LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("PurpleApplication", options);
@@ -483,7 +517,8 @@ public class PurpleApplication {
     }
 
     @NotNull
-    private static Options createOptions() {
+    private static Options createOptions()
+    {
         final Options options = new Options();
         PurpleConfig.addOptions(options);
 
@@ -495,7 +530,8 @@ public class PurpleApplication {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
+    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException
+    {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
