@@ -88,6 +88,8 @@ public class SampleTraitClassifier implements CuppaClassifier
             return;
         }
 
+        CUP_LOGGER.info("loaded sample-traits ref data");
+
         if(!loadSampleTraitsData())
         {
             CUP_LOGGER.error("invalid sample trait percentile data");
