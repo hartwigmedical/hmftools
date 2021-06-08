@@ -30,8 +30,8 @@ public class VirusEvidence {
 
     @NotNull
     public List<ProtectEvidence> evidence(@NotNull VirusInterpreterData virusInterpreterData) {
-        List<AnnotatedVirus> hpv = virusesWithInterpretation(virusInterpreterData.allViruses(), VirusInterpretation.HPV);
-        List<AnnotatedVirus> ebv = virusesWithInterpretation(virusInterpreterData.allViruses(), VirusInterpretation.EBV);
+        List<AnnotatedVirus> hpv = virusesWithInterpretation(virusInterpreterData, VirusInterpretation.HPV);
+        List<AnnotatedVirus> ebv = virusesWithInterpretation(virusInterpreterData, VirusInterpretation.EBV);
 
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableCharacteristic virus : actionableViruses) {
@@ -63,10 +63,16 @@ public class VirusEvidence {
     }
 
     @NotNull
-    private static List<AnnotatedVirus> virusesWithInterpretation(@NotNull List<AnnotatedVirus> viruses,
+    private static List<AnnotatedVirus> virusesWithInterpretation(@NotNull VirusInterpreterData virusInterpreterData,
             @NotNull VirusInterpretation interpretationToInclude) {
         List<AnnotatedVirus> virusesWithInterpretation = Lists.newArrayList();
-        for (AnnotatedVirus virus : viruses) {
+        for (AnnotatedVirus virus : virusInterpreterData.reportableViruses()) {
+            if (virus.interpretation() != null && virus.interpretation() == interpretationToInclude) {
+                virusesWithInterpretation.add(virus);
+            }
+        }
+
+        for (AnnotatedVirus virus : virusInterpreterData.unreportedViruses()) {
             if (virus.interpretation() != null && virus.interpretation() == interpretationToInclude) {
                 virusesWithInterpretation.add(virus);
             }
