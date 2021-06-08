@@ -24,13 +24,11 @@ public class CnPerChromosomeFactoryTest {
     private static final double EPSILON = 1.0E-3;
 
     @Test
-    @Ignore
     public void extractCopyNumberPerChromosomeArm() throws IOException {
         assertNotNull(CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(PURPLE_COPYNUMBER_TSV));
     }
 
     @Test
-    @Ignore
     public void canDetermineCnPerChromosomeArm() {
         List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
         // Chromosome 1: 1-123035434-249250621

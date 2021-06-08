@@ -3,8 +3,10 @@ package com.hartwig.hmftools.common.purple.cnchromosome;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -33,6 +35,7 @@ public final class CnPerChromosomeFactory {
     @NotNull
     public static Map<ChromosomeArmKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
         Map<ChromosomeArmKey, Double> cnPerChromosomeArm = Maps.newHashMap();
+        Set<String> chomosomeSet = Sets.newHashSet();
 
         for (Chromosome chr : REF_GENOME_COORDINATES.lengths().keySet()) {
             HumanChromosome chromosome = (HumanChromosome) chr;
@@ -41,26 +44,24 @@ public final class CnPerChromosomeFactory {
             for (Map.Entry<ChromosomeArm, GenomeRegion> entry : genomeRegion.entrySet()) {
                 GenomeRegion region = entry.getValue();
 
-                Double copyNumberArm = 0.0;
+                double copyNumberArm = 0;
                 for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
                     Chromosome copyNumberChromosome = HumanChromosome.fromString(purpleCopyNumber.chromosome());
+                    chomosomeSet.add(purpleCopyNumber.chromosome());
 
                     if (copyNumberChromosome.equals(chromosome) && region.overlaps(purpleCopyNumber)) {
                         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
                         long totalLengthSegment = purpleCopyNumber.bases();
                         copyNumberArm += (copyNumber * totalLengthSegment) / region.bases();
-                    } else {
-                        copyNumberArm = null;
                     }
                 }
 
-                // if copyNumberArm is null assume chromosome arm isn't present
-                if (copyNumberArm != null) {
+                // if chromsome not present in copyNumber file, the chromosome arm isn't calculated
+                if (chomosomeSet.contains(chromosome.toString())) {
                     cnPerChromosomeArm.put(new ChromosomeArmKey(chromosome, entry.getKey()), copyNumberArm);
                 }
             }
         }
-
         return cnPerChromosomeArm;
     }
 
