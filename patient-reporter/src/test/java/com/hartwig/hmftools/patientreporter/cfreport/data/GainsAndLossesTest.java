@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.common.utils.DataUtil;
-import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
+import com.hartwig.hmftools.common.purple.cnchromosome.ChromosomeArmKey;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

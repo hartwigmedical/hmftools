@@ -6,7 +6,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
-import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
+import com.hartwig.hmftools.common.purple.cnchromosome.ChromosomeArmKey;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 

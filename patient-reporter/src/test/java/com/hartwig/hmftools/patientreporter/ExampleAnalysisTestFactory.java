@@ -51,7 +51,7 @@ import com.hartwig.hmftools.patientreporter.algo.ImmutableGenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
-import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
+import com.hartwig.hmftools.common.purple.cnchromosome.ChromosomeArmKey;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;

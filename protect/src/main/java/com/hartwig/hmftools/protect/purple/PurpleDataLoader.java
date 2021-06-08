@@ -21,8 +21,8 @@ import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.protect.ProtectConfig;
-import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
-import com.hartwig.hmftools.protect.cnchromosome.CnPerChromosomeFactory;
+import com.hartwig.hmftools.common.purple.cnchromosome.ChromosomeArmKey;
+import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

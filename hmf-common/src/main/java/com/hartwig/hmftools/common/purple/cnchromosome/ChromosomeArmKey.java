@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.cnchromosome;
+package com.hartwig.hmftools.common.purple.cnchromosome;
 
 import java.util.Objects;
 

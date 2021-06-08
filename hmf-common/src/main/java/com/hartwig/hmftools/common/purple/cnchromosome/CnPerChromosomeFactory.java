@@ -1,10 +1,9 @@
-package com.hartwig.hmftools.protect.cnchromosome;
+package com.hartwig.hmftools.common.purple.cnchromosome;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -32,8 +31,7 @@ public final class CnPerChromosomeFactory {
     }
 
     @NotNull
-    @VisibleForTesting
-    static Map<ChromosomeArmKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
+    public static Map<ChromosomeArmKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
         Map<ChromosomeArmKey, Double> cnPerChromosomeArm = Maps.newHashMap();
 
         for (Chromosome chr : REF_GENOME_COORDINATES.lengths().keySet()) {
@@ -43,7 +41,7 @@ public final class CnPerChromosomeFactory {
             for (Map.Entry<ChromosomeArm, GenomeRegion> entry : genomeRegion.entrySet()) {
                 GenomeRegion region = entry.getValue();
 
-                double copyNumberArm = 0;
+                Double copyNumberArm = 0.0;
                 for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
                     Chromosome copyNumberChromosome = HumanChromosome.fromString(purpleCopyNumber.chromosome());
 
@@ -51,11 +49,15 @@ public final class CnPerChromosomeFactory {
                         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
                         long totalLengthSegment = purpleCopyNumber.bases();
                         copyNumberArm += (copyNumber * totalLengthSegment) / region.bases();
+                    } else {
+                        copyNumberArm = null;
                     }
                 }
 
-                // if chromosome arm don't exist we call them 0.0 but this is not reported
-                cnPerChromosomeArm.put(new ChromosomeArmKey(chromosome, entry.getKey()), copyNumberArm);
+                // if copyNumberArm is null assume chromosome arm isn't present
+                if (copyNumberArm != null) {
+                    cnPerChromosomeArm.put(new ChromosomeArmKey(chromosome, entry.getKey()), copyNumberArm);
+                }
             }
         }
 
