@@ -7,12 +7,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
+import com.hartwig.hmftools.common.purple.cnchromosome.ChromosomeArmKey;
+import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeFactory;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
@@ -21,8 +22,6 @@ import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.protect.ProtectConfig;
-import com.hartwig.hmftools.common.purple.cnchromosome.ChromosomeArmKey;
-import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -80,7 +79,7 @@ public final class PurpleDataLoader {
             cnPerChromosome = CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(purpleSomaticCopynumberTsv);
         }
 
-        List<SomaticVariant> germlineVariants = Lists.newArrayList();
+        List<SomaticVariant> germlineVariants;
         if (reference != null) {
             germlineVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, reference, germlineVcf);
         } else {

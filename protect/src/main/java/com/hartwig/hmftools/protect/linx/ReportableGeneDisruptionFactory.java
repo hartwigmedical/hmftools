@@ -61,7 +61,7 @@ public final class ReportableGeneDisruptionFactory {
             }
         }
 
-        LOGGER.debug("  Generated {} reportable disruptions based on {} disruptions", reportableDisruptions.size(), disruptions.size());
+        LOGGER.debug("Generated {} reportable disruptions based on {} disruptions", reportableDisruptions.size(), disruptions.size());
         return reportableDisruptions;
     }
 

@@ -38,6 +38,7 @@ public class ProtectAlgoTest {
                 .tumorSampleId("sample")
                 .outputDir(Strings.EMPTY)
                 .serveActionabilityDir(SERVE_DIR)
+                .refGenomeVersion(RefGenomeVersion.V37)
                 .doidJsonFile(DOID_JSON)
                 .purplePurityTsv(PURPLE_PURITY_TSV)
                 .purpleQcFile(PURPLE_QC_FILE)
@@ -51,8 +52,8 @@ public class ProtectAlgoTest {
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .build();
 
-        ActionableEvents events = ActionableEventsLoader.readFromDir(SERVE_DIR, RefGenomeVersion.V37);
-        ProtectAlgo algo = ProtectAlgo.buildAlgoFromServeActionability(events, Sets.newHashSet());
+        ActionableEvents events = ActionableEventsLoader.readFromDir(config.serveActionabilityDir(), config.refGenomeVersion());
+        ProtectAlgo algo = ProtectAlgo.build(events, Sets.newHashSet());
 
         assertNotNull(algo.run(config));
     }

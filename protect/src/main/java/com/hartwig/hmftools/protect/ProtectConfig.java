@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -53,6 +54,7 @@ public interface ProtectConfig {
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which PROTECT will run.");
         options.addOption(PRIMARY_TUMOR_DOIDS, true, "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PROTECT output data will be written to.");
+        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to use (either '37' or '38')");
 
         options.addOption(SERVE_ACTIONABILITY_DIRECTORY, true, "Path towards the SERVE actionability directory.");
         options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
@@ -81,6 +83,9 @@ public interface ProtectConfig {
 
     @NotNull
     String outputDir();
+
+    @NotNull
+    RefGenomeVersion refGenomeVersion();
 
     @NotNull
     String serveActionabilityDir();
@@ -128,6 +133,7 @@ public interface ProtectConfig {
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .primaryTumorDoids(toStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
+                .refGenomeVersion(RefGenomeVersion.from(nonOptionalValue(cmd, RefGenomeVersion.REF_GENOME_VERSION)))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
