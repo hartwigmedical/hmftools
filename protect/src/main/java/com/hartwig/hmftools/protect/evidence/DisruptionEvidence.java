@@ -40,7 +40,7 @@ public class DisruptionEvidence {
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableGene actionable : actionableGenes) {
             if (actionable.gene().equals(reportable.gene())) {
-                ProtectEvidence evidence = personalizedEvidenceFactory.somaticallyReportableEvidence(actionable)
+                ProtectEvidence evidence = personalizedEvidenceFactory.somaticReportableEvidence(actionable)
                         .genomicEvent(reportable.genomicEvent())
                         .build();
                 result.add(evidence);

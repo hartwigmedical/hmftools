@@ -15,8 +15,6 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
@@ -29,6 +27,8 @@ import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariantFactory;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
+import com.hartwig.hmftools.protect.virusinterpreter.VirusInterpreterData;
+import com.hartwig.hmftools.protect.virusinterpreter.VirusInterpreterDataLoader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -59,7 +59,7 @@ public class GenomicAnalyzer {
                 config.purpleSomaticCopyNumberTsv());
 
         LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
-        List<AnnotatedVirus> reportableViruses = loadReportableViruses(config.annotatedVirusTsv());
+        VirusInterpreterData virusInterpreterData = VirusInterpreterDataLoader.load(config.annotatedVirusTsv());
         List<PeachGenotype> peachGenotypes = loadPeachData(config.peachGenotypeTsv());
 
         List<ReportableVariant> reportableVariants =
@@ -97,7 +97,7 @@ public class GenomicAnalyzer {
                 .geneFusions(linxData.fusions())
                 .geneDisruptions(linxData.geneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())
-                .reportableViruses(reportableViruses)
+                .reportableViruses(virusInterpreterData.reportableViruses())
                 .peachGenotypes(peachGenotypes)
                 .build();
     }
@@ -146,23 +146,6 @@ public class GenomicAnalyzer {
         List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachGenotypeTsv);
         LOGGER.info(" Loaded {} reportable genotypes from {}", peachGenotypes.size(), peachGenotypeTsv);
         return peachGenotypes;
-    }
-
-    @NotNull
-    private static List<AnnotatedVirus> loadReportableViruses(@NotNull String annotatedVirusTsv) throws IOException {
-        LOGGER.info("Loading annotated viruses from {}", new File(annotatedVirusTsv).getParent());
-        List<AnnotatedVirus> viruses = AnnotatedVirusFile.read(annotatedVirusTsv);
-        LOGGER.info(" Loaded {} viruses from {}", viruses.size(), annotatedVirusTsv);
-
-        List<AnnotatedVirus> reportable = Lists.newArrayList();
-        for (AnnotatedVirus virus : viruses) {
-            if (virus.reported()) {
-                reportable.add(virus);
-            }
-        }
-        LOGGER.info(" There have been {} viruses selected for reporting", reportable.size());
-
-        return reportable;
     }
 
     @NotNull

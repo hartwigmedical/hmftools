@@ -78,7 +78,7 @@ public class VariantEvidence {
 
     @NotNull
     private ProtectEvidence evidence(boolean report, @NotNull ReportableVariant reportable, @NotNull ActionableEvent actionable) {
-        return personalizedEvidenceFactory.patientEvidenceBuilder(actionable)
+        return personalizedEvidenceFactory.evidenceBuilder(actionable)
                 .genomicEvent(reportable.genomicEvent())
                 .germline(reportable.source() == ReportableVariantSource.GERMLINE)
                 .reported(report)

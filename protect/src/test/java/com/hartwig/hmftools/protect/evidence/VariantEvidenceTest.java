@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.protect.evidence;
 
-import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvent;
-import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvidenceFactory;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -15,9 +12,11 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.protect.ProtectTestFactory;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
 import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
+import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
@@ -41,15 +40,17 @@ public class VariantEvidenceTest {
         String alt = "T";
 
         ActionableHotspot hotspot = ImmutableActionableHotspot.builder()
-                .from(createTestEvent())
+                .from(ServeTestFactory.createTestActionableHotspot())
                 .chromosome(chromosome)
                 .position(position)
                 .ref(ref)
                 .alt(alt)
                 .build();
 
-        VariantEvidence variantEvidence =
-                new VariantEvidence(createTestEvidenceFactory(), Lists.newArrayList(hotspot), Lists.newArrayList(), Lists.newArrayList());
+        VariantEvidence variantEvidence = new VariantEvidence(ProtectTestFactory.createTestEvidenceFactory(),
+                Lists.newArrayList(hotspot),
+                Lists.newArrayList(),
+                Lists.newArrayList());
 
         ReportableVariant variantMatch =
                 createTestReportableVariantBuilder().chromosome(chromosome).position(position).ref(ref).alt(alt).build();
@@ -73,7 +74,7 @@ public class VariantEvidenceTest {
         MutationTypeFilter mutationTypeFilter = MutationTypeFilter.MISSENSE;
 
         ActionableRange range = ImmutableActionableRange.builder()
-                .from(createTestEvent())
+                .from(ServeTestFactory.createTestActionableRange())
                 .chromosome(chromosome)
                 .start(start)
                 .end(end)
@@ -81,8 +82,10 @@ public class VariantEvidenceTest {
                 .mutationType(mutationTypeFilter)
                 .build();
 
-        VariantEvidence variantEvidence =
-                new VariantEvidence(createTestEvidenceFactory(), Lists.newArrayList(), Lists.newArrayList(range), Lists.newArrayList());
+        VariantEvidence variantEvidence = new VariantEvidence(ProtectTestFactory.createTestEvidenceFactory(),
+                Lists.newArrayList(),
+                Lists.newArrayList(range),
+                Lists.newArrayList());
 
         ReportableVariant variantMatch = createTestReportableVariantBuilder().chromosome(chromosome)
                 .position(start + 1)
@@ -120,14 +123,23 @@ public class VariantEvidenceTest {
         String gene2 = "gene2";
         String gene3 = "gene3";
 
-        ActionableGene actionableGene1 =
-                ImmutableActionableGene.builder().from(createTestEvent()).gene(gene1).event(GeneLevelEvent.ACTIVATION).build();
-        ActionableGene actionableGene2 =
-                ImmutableActionableGene.builder().from(createTestEvent()).gene(gene2).event(GeneLevelEvent.INACTIVATION).build();
-        ActionableGene actionableGene3 =
-                ImmutableActionableGene.builder().from(createTestEvent()).gene(gene3).event(GeneLevelEvent.AMPLIFICATION).build();
+        ActionableGene actionableGene1 = ImmutableActionableGene.builder()
+                .from(ServeTestFactory.createTestActionableGene())
+                .gene(gene1)
+                .event(GeneLevelEvent.ACTIVATION)
+                .build();
+        ActionableGene actionableGene2 = ImmutableActionableGene.builder()
+                .from(ServeTestFactory.createTestActionableGene())
+                .gene(gene2)
+                .event(GeneLevelEvent.INACTIVATION)
+                .build();
+        ActionableGene actionableGene3 = ImmutableActionableGene.builder()
+                .from(ServeTestFactory.createTestActionableGene())
+                .gene(gene3)
+                .event(GeneLevelEvent.AMPLIFICATION)
+                .build();
 
-        VariantEvidence variantEvidence = new VariantEvidence(createTestEvidenceFactory(),
+        VariantEvidence variantEvidence = new VariantEvidence(ProtectTestFactory.createTestEvidenceFactory(),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
                 Lists.newArrayList(actionableGene1, actionableGene2, actionableGene3));
