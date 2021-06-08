@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
-import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_INDEL;
+import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

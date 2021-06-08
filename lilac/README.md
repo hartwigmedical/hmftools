@@ -40,6 +40,7 @@ NOTE: Lilac handles BAMs which have been sliced for the HLA gene regions.
 
 Argument | Description 
 ---|---
+ref_genome_version | V37 (default), V38 or HG19 (ie 37 with 'chr' prefix)
 tumor_bam | Sample's tumor BAM
 gene_copy_number | Sample gene copy number file from Purple
 somatic_variants_file | Sample's somatic variant VCF file, for annotation of HLA gene variants

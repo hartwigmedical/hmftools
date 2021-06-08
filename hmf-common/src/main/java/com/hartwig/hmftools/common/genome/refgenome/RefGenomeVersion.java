@@ -47,8 +47,8 @@ public enum RefGenomeVersion
 
     RefGenomeVersion(@NotNull final String identifier, final boolean is37)
     {
-        this.mIdentifier = identifier;
-        this.mIs37 = is37;
+        mIdentifier = identifier;
+        mIs37 = is37;
     }
 
     public boolean is37() { return mIs37; }

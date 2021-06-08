@@ -1,13 +1,15 @@
 package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_DELIM;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTOFF;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_H;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_Y;
-import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_INDEL;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_ALLELE;
 import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.LilacConstants.getNucleotideExonBoundaries;
@@ -27,6 +29,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.lilac.cohort.CohortFrequency;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
@@ -67,6 +70,8 @@ public class ReferenceData
     // sequence used to printing amino acid sequences to file
     public static final HlaAllele DEFLATE_TEMPLATE = HlaAllele.fromString("A*01:01");
 
+    public static Indel STOP_LOSS_ON_C_INDEL = null;
+
     public ReferenceData(final String resourceDir, final LilacConfig config)
     {
         mResourceDir = resourceDir;
@@ -85,16 +90,27 @@ public class ReferenceData
 
         mDeflatedSequenceTemplate = null;
 
+        setKnownStopLossIndels(config.RefGenVersion);
+
         HlaTranscriptData = Maps.newHashMap();
 
         // load gene definitions and other constants
-        populateHlaTranscripts(HlaTranscriptData);
+        populateHlaTranscripts(HlaTranscriptData, config.RefGenVersion);
         LociPositionFinder = new LociPosition(HlaTranscriptData.values().stream().collect(Collectors.toList()));
 
         populateNucleotideExonBoundaries();
 
         CommonAlleles = Lists.newArrayList();
         KnownStopLossIndelAlleles = Maps.newHashMap();
+    }
+
+    public static void setKnownStopLossIndels(final RefGenomeVersion version)
+    {
+        int position = version.is37() ? 31237115 : 31269338;
+        STOP_LOSS_ON_C_INDEL = new Indel("6", position, "CN", "C");
+
+        if(version == V38 || version == HG19)
+            LilacConstants.HLA_CHR = "chr6"; // should be abe to get from transcript info at time of use when get rid of NamedBed
     }
 
     public CohortFrequency getAlleleFrequencies() { return mAlleleFrequencies; }
@@ -227,11 +243,12 @@ public class ReferenceData
         return false;
     }
 
-    public static void populateHlaTranscripts(final Map<String,TranscriptData> hlaTranscriptMap)
+    public static void populateHlaTranscripts(final Map<String,TranscriptData> hlaTranscriptMap, final RefGenomeVersion version)
     {
+        String transcriptsFile = version.is37() ? "/alleles/hla_transcripts_v37.csv" : "/alleles/hla_transcripts_v38.csv";
+
         final List<String> hlaTranscriptData = new BufferedReader(new InputStreamReader(
-                ReferenceData.class.getResourceAsStream("/alleles/hla_transcripts_v37.csv")))
-                .lines().collect(Collectors.toList());
+                ReferenceData.class.getResourceAsStream(transcriptsFile))).lines().collect(Collectors.toList());
 
         final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(hlaTranscriptData.get(0), ENSEMBL_DELIM);
         hlaTranscriptData.remove(0);

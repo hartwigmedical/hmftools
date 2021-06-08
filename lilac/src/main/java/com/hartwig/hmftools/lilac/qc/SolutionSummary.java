@@ -89,7 +89,7 @@ public class SolutionSummary
         HlaAlleleCoverage tumor = !TumorCoverage.getAlleleCoverage().isEmpty() ?
                 TumorCoverage.getAlleleCoverage().get(index) : new HlaAlleleCoverage(ref.Allele, 0, 0, 0);
 
-        double copyNumber = TumorCopyNumber.get(ref.Allele);
+        double copyNumber = TumorCopyNumber.containsKey(ref.Allele) ? TumorCopyNumber.get(ref.Allele) : 0;
         SomaticCodingCount codingCount = SomaticCodingCount.get(index);
 
         StringJoiner header = new StringJoiner(DELIM)

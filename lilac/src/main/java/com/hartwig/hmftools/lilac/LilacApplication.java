@@ -428,6 +428,10 @@ public class LilacApplication
 
                 winningTumorCopyNumber = copyNumberAssignment.assign(mConfig.Sample, winningAlleles, winningRefCoverage, winningTumorCoverage);
             }
+            else
+            {
+                winningTumorCopyNumber = CopyNumberAssignment.formEmptyAlleleCopyNumber(winningAlleles);
+            }
 
             // SOMATIC VARIANTS
             SomaticVariantAnnotation variantAnnotation = new SomaticVariantAnnotation(

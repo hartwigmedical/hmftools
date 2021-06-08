@@ -3,6 +3,8 @@ package com.hartwig.hmftools.lilac;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
@@ -18,6 +20,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_TOP_SCORE_THRESH
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -45,6 +48,7 @@ public class LilacConfig
 
     public final String ResourceDir;
     public final String RefGenome;
+    public final RefGenomeVersion RefGenVersion;
     public final String SampleDataDir;
     public final String OutputDir;
 
@@ -140,6 +144,8 @@ public class LilacConfig
 
         ResourceDir = checkAddDirSeparator(cmd.getOptionValue(RESOURCE_DIR));
         RefGenome = cmd.getOptionValue(REF_GENOME, "");
+
+        RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
 
         MinBaseQual = getConfigValue(cmd, MIN_BASE_QUAL, DEFAULT_MIN_BASE_QUAL);
         MinEvidence = getConfigValue(cmd, MIN_EVIDENCE, DEFAULT_MIN_EVIDENCE);
@@ -245,6 +251,7 @@ public class LilacConfig
         ResourceDir = "";
         SampleDataDir = "";
         RefGenome = "";
+        RefGenVersion = V37;
         TumorOnly = false;
 
         MinBaseQual = DEFAULT_MIN_BASE_QUAL;
@@ -279,6 +286,7 @@ public class LilacConfig
         options.addOption(RESOURCE_DIR, true,"Path to resource files");
         options.addOption(OUTPUT_DIR, true,"Path to output");
         options.addOption(REF_GENOME, true,"Optional path to reference genome fasta file");
+        options.addOption(REF_GENOME_VERSION, true,"Ref genome version V37 (default) or V38");
         options.addOption(MIN_BASE_QUAL, true,"Min base quality threshold");
         options.addOption(MIN_EVIDENCE, true,"Min fragment evidence required");
         options.addOption(MIN_HIGH_QUAL_EVIDENCE_FACTOR, true,"Min high-qual fragment evidence factor");
