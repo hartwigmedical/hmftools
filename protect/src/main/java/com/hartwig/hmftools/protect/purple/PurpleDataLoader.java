@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -82,13 +83,17 @@ public final class PurpleDataLoader {
         List<ReportableGainLoss> reportableGainsLosses = extractGainsLosses(somaticDriverCatalog);
         LOGGER.info("  Extracted {} reportable gains and losses from driver catalog", reportableGainsLosses.size());
 
-        List<ReportableGainLoss> allGainsLosses = Lists.newArrayList();
+        List<ReportableGainLoss> unreportedGainsLosses = Lists.newArrayList();
         if (purpleGeneCopyNumberTsv != null) {
             List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCopyNumberTsv);
             LOGGER.info(" Loaded {} gene copy numbers entries from {}", geneCopyNumbers.size(), purpleGeneCopyNumberTsv);
 
-            allGainsLosses = extractAllGainsLosses(purityContext.qc().status(), purityContext.bestFit().ploidy(), geneCopyNumbers);
-            LOGGER.info("  Extracted {} gains and losses from gene copy numbers", allGainsLosses.size());
+            List<ReportableGainLoss> allGainsLosses =
+                    extractAllGainsLosses(purityContext.qc().status(), purityContext.bestFit().ploidy(), geneCopyNumbers);
+            LOGGER.debug("  Extracted {} gains and losses from gene copy numbers", allGainsLosses.size());
+
+            unreportedGainsLosses = removeReported(allGainsLosses, reportableGainsLosses);
+            LOGGER.info("  Extracted {} additional unreported gains and losses", unreportedGainsLosses.size());
         }
 
         List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(driverCatalogGermlineTsv);
@@ -127,10 +132,23 @@ public final class PurpleDataLoader {
                 .tumorMutationalLoadStatus(purityContext.tumorMutationalLoadStatus())
                 .somaticVariants(reportableSomaticVariants)
                 .germlineVariants(reportableGermlineVariants)
-                .allGainsLosses(allGainsLosses)
+                .unreportedGainsLosses(unreportedGainsLosses)
                 .reportableGainsLosses(reportableGainsLosses)
                 .cnPerChromosome(cnPerChromosome)
                 .build();
+    }
+
+    @VisibleForTesting
+    @NotNull
+    static List<ReportableGainLoss> removeReported(@NotNull List<ReportableGainLoss> allGainsLosses,
+            @NotNull List<ReportableGainLoss> reportableGainsLosses) {
+        List<ReportableGainLoss> unreportedGainsLosses = Lists.newArrayList();
+        for (ReportableGainLoss gainLoss : allGainsLosses) {
+            if (!reportableGainsLosses.contains(gainLoss)) {
+                unreportedGainsLosses.add(gainLoss);
+            }
+        }
+        return unreportedGainsLosses;
     }
 
     @NotNull

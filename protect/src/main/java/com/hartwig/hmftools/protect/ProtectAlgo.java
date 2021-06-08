@@ -62,7 +62,7 @@ public class ProtectAlgo {
                 new FusionEvidence(personalizedEvidenceFactory, actionableEvents.genes(), actionableEvents.fusions());
         PurpleSignatureEvidence purpleSignatureEvidenceFactory =
                 new PurpleSignatureEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
-        VirusEvidence virusEvidence = new VirusEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
+        VirusEvidence virusEvidenceFactory = new VirusEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
         ChordEvidence chordEvidenceFactory = new ChordEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
 
         return new ProtectAlgo(variantEvidenceFactory,
@@ -70,7 +70,7 @@ public class ProtectAlgo {
                 disruptionEvidenceFactory,
                 fusionEvidenceFactory,
                 purpleSignatureEvidenceFactory,
-                virusEvidence,
+                virusEvidenceFactory,
                 chordEvidenceFactory);
     }
 
@@ -104,7 +104,8 @@ public class ProtectAlgo {
         List<ProtectEvidence> variantEvidence =
                 variantEvidenceFactory.evidence(purpleData.germlineVariants(), purpleData.somaticVariants());
         printExtraction("somatic and germline variants", variantEvidence);
-        List<ProtectEvidence> copyNumberEvidence = copyNumberEvidenceFactory.evidence(purpleData.reportableGainsLosses());
+        List<ProtectEvidence> copyNumberEvidence =
+                copyNumberEvidenceFactory.evidence(purpleData.reportableGainsLosses(), purpleData.unreportedGainsLosses());
         printExtraction("amplifications and deletions", copyNumberEvidence);
         List<ProtectEvidence> disruptionEvidence = disruptionEvidenceFactory.evidence(linxData.homozygousDisruptions());
         printExtraction("homozygous disruptions", disruptionEvidence);

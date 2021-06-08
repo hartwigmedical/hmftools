@@ -43,10 +43,10 @@ public interface PurpleData {
     List<ReportableVariant> germlineVariants();
 
     @NotNull
-    List<ReportableGainLoss> allGainsLosses();
+    List<ReportableGainLoss> reportableGainsLosses();
 
     @NotNull
-    List<ReportableGainLoss> reportableGainsLosses();
+    List<ReportableGainLoss> unreportedGainsLosses();
 
     @NotNull
     Map<ChromosomeArmKey, Double> cnPerChromosome();
