@@ -3,8 +3,10 @@ package com.hartwig.hmftools.common.purple.cnchromosome;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -18,8 +20,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class CnPerChromosomeFactory {
 
-    private static final RefGenomeCoordinates REF_GENOME_COORDINATES = RefGenomeCoordinates.COORDS_37;
-
     private CnPerChromosomeFactory() {
     }
 
@@ -27,47 +27,48 @@ public final class CnPerChromosomeFactory {
     public static Map<ChromosomeArmKey, Double> fromPurpleSomaticCopynumberTsv(@NotNull String purpleSomaticCopynumberTsv)
             throws IOException {
         List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(purpleSomaticCopynumberTsv);
-        return extractCnPerChromosomeArm(copyNumbers);
+        return extractCnPerChromosomeArm(copyNumbers, RefGenomeCoordinates.COORDS_37);
     }
 
     @NotNull
-    public static Map<ChromosomeArmKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers) {
+    public static Map<ChromosomeArmKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers,
+            final RefGenomeCoordinates ref_genome_coordinates) {
         Map<ChromosomeArmKey, Double> cnPerChromosomeArm = Maps.newHashMap();
+        Set<String> chomosomeSet = Sets.newHashSet();
 
-        for (Chromosome chr : REF_GENOME_COORDINATES.lengths().keySet()) {
+        for (Chromosome chr : ref_genome_coordinates.lengths().keySet()) {
             HumanChromosome chromosome = (HumanChromosome) chr;
-            Map<ChromosomeArm, GenomeRegion> genomeRegion = determineArmRegion(chromosome);
+            Map<ChromosomeArm, GenomeRegion> genomeRegion = determineArmRegion(chromosome, ref_genome_coordinates);
 
             for (Map.Entry<ChromosomeArm, GenomeRegion> entry : genomeRegion.entrySet()) {
                 GenomeRegion region = entry.getValue();
 
-                Double copyNumberArm = 0.0;
+                double copyNumberArm = 0;
                 for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
                     Chromosome copyNumberChromosome = HumanChromosome.fromString(purpleCopyNumber.chromosome());
+                    chomosomeSet.add(purpleCopyNumber.chromosome());
 
                     if (copyNumberChromosome.equals(chromosome) && region.overlaps(purpleCopyNumber)) {
                         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
                         long totalLengthSegment = purpleCopyNumber.bases();
                         copyNumberArm += (copyNumber * totalLengthSegment) / region.bases();
-                    } else {
-                        copyNumberArm = null;
                     }
                 }
 
-                // if copyNumberArm is null assume chromosome arm isn't present
-                if (copyNumberArm != null) {
+                // if chromsome not present in copyNumber file, the chromosome arm isn't calculated
+                if (chomosomeSet.contains(chromosome.toString())) {
                     cnPerChromosomeArm.put(new ChromosomeArmKey(chromosome, entry.getKey()), copyNumberArm);
                 }
             }
         }
-
         return cnPerChromosomeArm;
     }
 
     @NotNull
-    private static Map<ChromosomeArm, GenomeRegion> determineArmRegion(@NotNull Chromosome chromosome) {
-        long centromerePos = REF_GENOME_COORDINATES.centromeres().get(chromosome);
-        long chrLength = REF_GENOME_COORDINATES.lengths().get(chromosome);
+    private static Map<ChromosomeArm, GenomeRegion> determineArmRegion(@NotNull Chromosome chromosome,
+            final RefGenomeCoordinates ref_genome_coordinates) {
+        long centromerePos = ref_genome_coordinates.centromeres().get(chromosome);
+        long chrLength = ref_genome_coordinates.lengths().get(chromosome);
 
         long lengthPastCentromere = chrLength - (centromerePos + 1);
         long lengthBeforeCentromere = centromerePos;
