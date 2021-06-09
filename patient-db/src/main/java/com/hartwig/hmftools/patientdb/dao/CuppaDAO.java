@@ -5,6 +5,8 @@ import java.util.Date;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CUPPA;
 
+import com.hartwig.hmftools.common.cuppa.MolecularTissueOrginData;
+
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
@@ -17,19 +19,12 @@ public class CuppaDAO {
         this.context = context;
     }
 
-    void writeCuppa(@NotNull String sample, @NotNull String cuppaResult) {
+    void writeCuppa(@NotNull String sample, @NotNull MolecularTissueOrginData molecularTissueOrginData) {
         deleteCuppaForSample(sample);
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
-        String tumorLocation = cuppaResult.split("\\(")[0];
-        String prediction = cuppaResult.split("\\(")[1];
-        prediction = prediction.substring(0, prediction.length()-1);
-        context.insertInto(CUPPA,
-                CUPPA.MODIFIED,
-                CUPPA.SAMPLEID,
-                CUPPA.CUPPATUMORLOCATION,
-                CUPPA.CUPPAPREDICTION)
-                .values(timestamp, sample, tumorLocation, prediction)
+        context.insertInto(CUPPA, CUPPA.MODIFIED, CUPPA.SAMPLEID, CUPPA.CUPPATUMORLOCATION, CUPPA.CUPPAPREDICTION)
+                .values(timestamp, sample, molecularTissueOrginData.predictedOrigin(), molecularTissueOrginData.predictionLikelihood())
                 .execute();
     }
 
