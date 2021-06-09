@@ -40,6 +40,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
@@ -127,6 +128,8 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final VirusBreakendDAO virusBreakendDAO;
     @NotNull
+    private final VirusInterpreterDAO virusInterpreterDAO;
+    @NotNull
     private final HlaTypeDAO hlaTypeDAO;
     @NotNull
     private final ProtectDAO protectDAO;
@@ -163,6 +166,7 @@ public class DatabaseAccess implements AutoCloseable {
         this.cuppaDAO = new CuppaDAO(context);
         this.chordDAO = new ChordDAO(context);
         this.virusBreakendDAO = new VirusBreakendDAO(context);
+        this.virusInterpreterDAO = new VirusInterpreterDAO(context);
         this.hlaTypeDAO = new HlaTypeDAO(context);
         this.protectDAO = new ProtectDAO(context);
     }
@@ -461,6 +465,10 @@ public class DatabaseAccess implements AutoCloseable {
         virusBreakendDAO.writeVirusBreakend(sample, virusBreakends);
     }
 
+    public void writeVirusInterpreter(@NotNull String sample, @NotNull List<AnnotatedVirus> virusAnnotations) {
+        virusInterpreterDAO.writeVirusInterpreter(sample, virusAnnotations);
+    }
+
     public void writeProtectEvidence(@NotNull String sample, @NotNull List<ProtectEvidence> evidence) {
         protectDAO.write(sample, evidence);
     }
@@ -581,6 +589,9 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting virus breakend data for sample: {}", sample);
         virusBreakendDAO.deleteVirusBreakendForSample(sample);
+
+        LOGGER.info("Deleting virus annotation data for sample: {}", sample);
+        virusInterpreterDAO.deleteVirusAnnotationForSample(sample);
 
         LOGGER.info("Deleting CUPPA result for sample: {}", sample);
         cuppaDAO.deleteCuppaForSample(sample);
