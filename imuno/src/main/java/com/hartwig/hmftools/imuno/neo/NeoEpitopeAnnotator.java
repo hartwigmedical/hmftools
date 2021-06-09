@@ -525,8 +525,15 @@ public class NeoEpitopeAnnotator
             final List<PeptideData> peptides = generatePeptides(
                     neData.UpstreamAcids, neData.NovelAcid, neData.DownstreamAcids, mConfig.PeptideLengths, mConfig.PeptideFlanks);
 
+            Set<String> uniqueHlaTypes = Sets.newHashSet();
+
             for(String hlaType : mCurrentSample.HlaTypes)
             {
+                if(uniqueHlaTypes.contains(hlaType))
+                    continue;
+
+                uniqueHlaTypes.add(hlaType);
+
                 final String predictionHlaType = convertHlaTypeForPredictions(hlaType);
 
                 if(predictionHlaType == null)
