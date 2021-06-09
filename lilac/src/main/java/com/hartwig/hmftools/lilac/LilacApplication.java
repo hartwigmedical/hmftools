@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
+import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.seq.SequenceCount.extractHeterozygousLociSequences;
 import static com.hartwig.hmftools.lilac.evidence.NucleotideFiltering.calcNucleotideHeterogygousLoci;
 import static com.hartwig.hmftools.lilac.coverage.HlaComplex.findDuplicates;
@@ -312,6 +313,19 @@ public class LilacApplication
 
         boolean hasHlaY = fragAlleleMapper.checkHlaYSupport(mRefData.HlaYNucleotideSequences, mRefFragAlleles, refAminoAcidFrags, true);
 
+        if(mConfig.HlaYOnly)
+        {
+            List<Fragment> hlaYFrags = refAminoAcidFrags.stream().filter(x -> x.scope() == HLA_Y).collect(Collectors.toList());
+            LL_LOGGER.info("sample({}) HLA-Y frags({})", mConfig.Sample, hlaYFrags.size());
+
+            if(!mConfig.OutputDir.isEmpty())
+            {
+                FragmentUtils.writeFragmentData(String.format("%s.fragments.csv", mConfig.outputPrefix()), hlaYFrags);
+            }
+
+            return;
+        }
+
         // build and score complexes
         HlaComplexBuilder complexBuilder = new HlaComplexBuilder(mConfig, mRefData);
 
@@ -504,7 +518,7 @@ public class LilacApplication
 
     public void writeFileOutputs()
     {
-        if(mConfig.OutputDir.isEmpty())
+        if(mConfig.OutputDir.isEmpty() || mConfig.HlaYOnly)
             return;
 
         mSummaryMetrics.log(mConfig.Sample);

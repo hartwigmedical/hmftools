@@ -45,6 +45,7 @@ public class LilacConfig
     public final String ReferenceBam;
     public final String TumorBam;
     public final boolean TumorOnly;
+    public final boolean HlaYOnly;
 
     public final String ResourceDir;
     public final String RefGenome;
@@ -83,6 +84,7 @@ public class LilacConfig
     private static final String REFERENCE_BAM = "reference_bam";
     private static final String TUMOR_BAM = "tumor_bam";
     private static final String TUMOR_ONLY = "tumor_only";
+    private static final String HLAY_ONLY = "hlay_only";
 
     private static final String GENE_COPY_NUMBER = "gene_copy_number_file";
     private static final String SOMATIC_VARIANTS = "somatic_variants_file";
@@ -141,6 +143,7 @@ public class LilacConfig
         }
 
         TumorOnly = cmd.hasOption(TUMOR_ONLY);
+        HlaYOnly = cmd.hasOption(HLAY_ONLY);
 
         ResourceDir = checkAddDirSeparator(cmd.getOptionValue(RESOURCE_DIR));
         RefGenome = cmd.getOptionValue(REF_GENOME, "");
@@ -253,6 +256,7 @@ public class LilacConfig
         RefGenome = "";
         RefGenVersion = V37;
         TumorOnly = false;
+        HlaYOnly = false;
 
         MinBaseQual = DEFAULT_MIN_BASE_QUAL;
         MinEvidence = DEFAULT_MIN_EVIDENCE;
@@ -283,6 +287,7 @@ public class LilacConfig
         options.addOption(REFERENCE_BAM, true,"Path to reference/normal BAM");
         options.addOption(TUMOR_BAM, true,"Path to tumor BAM");
         options.addOption(TUMOR_ONLY, false,"Analyse tumor BAM only");
+        options.addOption(HLAY_ONLY, false,"Only search for HLA-Y fragments");
         options.addOption(RESOURCE_DIR, true,"Path to resource files");
         options.addOption(OUTPUT_DIR, true,"Path to output");
         options.addOption(REF_GENOME, true,"Optional path to reference genome fasta file");
