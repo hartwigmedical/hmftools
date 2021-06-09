@@ -110,7 +110,7 @@ public class ProtectAlgo {
         printExtraction("amplifications and deletions", copyNumberEvidence);
         List<ProtectEvidence> disruptionEvidence = disruptionEvidenceFactory.evidence(linxData.homozygousDisruptions());
         printExtraction("homozygous disruptions", disruptionEvidence);
-        List<ProtectEvidence> fusionEvidence = fusionEvidenceFactory.evidence(linxData.fusions());
+        List<ProtectEvidence> fusionEvidence = fusionEvidenceFactory.evidence(linxData.reportableFusions(), linxData.unreportedFusions());
         printExtraction("fusions", fusionEvidence);
         List<ProtectEvidence> purpleSignatureEvidence = purpleSignatureEvidenceFactory.evidence(purpleData);
         printExtraction("purple signatures", purpleSignatureEvidence);

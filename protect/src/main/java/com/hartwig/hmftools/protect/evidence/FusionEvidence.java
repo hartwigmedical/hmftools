@@ -31,62 +31,73 @@ public class FusionEvidence {
     }
 
     @NotNull
-    public List<ProtectEvidence> evidence(@NotNull List<LinxFusion> fusions) {
-        return fusions.stream().flatMap(x -> evidence(x).stream()).collect(Collectors.toList());
+    public List<ProtectEvidence> evidence(@NotNull List<LinxFusion> reportableFusions, @NotNull List<LinxFusion> unreportedFusions) {
+        List<ProtectEvidence> evidences = Lists.newArrayList();
+        for (LinxFusion reportable : reportableFusions) {
+            evidences.addAll(evidence(reportable));
+        }
+
+        for (LinxFusion unreported : unreportedFusions) {
+            evidences.addAll(evidence(unreported));
+        }
+        return evidences;
     }
 
     @NotNull
-    public List<ProtectEvidence> evidence(@NotNull LinxFusion reportable) {
-        List<ProtectEvidence> geneEvidence = actionablePromiscuous.stream()
-                .filter(x -> match(x, reportable))
-                .map(x -> evidence(reportable, x))
-                .collect(Collectors.toList());
+    private List<ProtectEvidence> evidence(@NotNull LinxFusion fusion) {
+        List<ProtectEvidence> evidences = Lists.newArrayList();
+        for (ActionableGene promiscuous : actionablePromiscuous) {
+            if (match(fusion, promiscuous)) {
+                evidences.add(evidence(fusion, promiscuous));
+            }
+        }
 
-        List<ProtectEvidence> fusionEvidence =
-                actionableFusions.stream().filter(x -> match(x, reportable)).map(x -> evidence(reportable, x)).collect(Collectors.toList());
-
-        List<ProtectEvidence> result = Lists.newArrayList();
-        result.addAll(geneEvidence);
-        result.addAll(fusionEvidence);
-
-        return result;
+        for (ActionableFusion actionableFusion : actionableFusions) {
+            if (match(fusion, actionableFusion)) {
+                evidences.add(evidence(fusion, actionableFusion));
+            }
+        }
+        return evidences;
     }
 
     @NotNull
-    private ProtectEvidence evidence(@NotNull LinxFusion reportable, @NotNull ActionableEvent actionable) {
-        return personalizedEvidenceFactory.somaticReportableEvidence(actionable).genomicEvent(reportable.genomicEvent()).build();
+    private ProtectEvidence evidence(@NotNull LinxFusion fusion, @NotNull ActionableEvent actionable) {
+        return personalizedEvidenceFactory.somaticEvidence(actionable)
+                .reported(fusion.reported())
+                .genomicEvent(fusion.genomicEvent())
+                .build();
     }
 
-    private static boolean match(@NotNull ActionableGene actionable, @NotNull LinxFusion reportable) {
-        return actionable.gene().equals(reportable.geneStart()) || actionable.gene().equals(reportable.geneEnd());
+    private static boolean match(@NotNull LinxFusion fusion, @NotNull ActionableGene actionable) {
+        return actionable.gene().equals(fusion.geneStart()) || actionable.gene().equals(fusion.geneEnd());
     }
 
-    private static boolean match(@NotNull ActionableFusion actionable, @NotNull LinxFusion reportable) {
-        if (!actionable.geneDown().equals(reportable.geneEnd())) {
+    private static boolean match(@NotNull LinxFusion fusion, @NotNull ActionableFusion actionable) {
+        if (!actionable.geneDown().equals(fusion.geneEnd())) {
             return false;
         }
 
-        if (!actionable.geneUp().equals(reportable.geneStart())) {
+        if (!actionable.geneUp().equals(fusion.geneStart())) {
             return false;
         }
 
         Integer actionableMinExonDown = actionable.minExonDown();
-        if (actionableMinExonDown != null && reportable.fusedExonDown() < actionableMinExonDown) {
+        if (actionableMinExonDown != null && fusion.fusedExonDown() < actionableMinExonDown) {
             return false;
         }
 
         Integer actionableMaxExonDown = actionable.maxExonDown();
-        if (actionableMaxExonDown != null && reportable.fusedExonDown() > actionableMaxExonDown) {
+        if (actionableMaxExonDown != null && fusion.fusedExonDown() > actionableMaxExonDown) {
             return false;
         }
 
         Integer actionableMinExonUp = actionable.minExonUp();
-        if (actionableMinExonUp != null && reportable.fusedExonUp() < actionableMinExonUp) {
+        if (actionableMinExonUp != null && fusion.fusedExonUp() < actionableMinExonUp) {
             return false;
         }
 
         Integer actionableMaxExonUp = actionable.maxExonUp();
-        if (actionableMaxExonUp != null && reportable.fusedExonUp() > actionableMaxExonUp) {
+        if (actionableMaxExonUp != null && fusion.fusedExonUp() > actionableMaxExonUp) {
             return false;
         }
 

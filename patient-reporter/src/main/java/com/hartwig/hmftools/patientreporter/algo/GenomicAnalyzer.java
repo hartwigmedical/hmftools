@@ -95,7 +95,7 @@ public class GenomicAnalyzer {
                 .chordHrdStatus(chordAnalysis.hrStatus())
                 .gainsAndLosses(purpleData.reportableGainsLosses())
                 .cnPerChromosome(purpleData.cnPerChromosome())
-                .geneFusions(linxData.fusions())
+                .geneFusions(linxData.reportableFusions())
                 .geneDisruptions(linxData.geneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())
                 .reportableViruses(virusInterpreterData.reportableViruses())
