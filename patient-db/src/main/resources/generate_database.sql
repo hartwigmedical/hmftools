@@ -1129,13 +1129,27 @@ CREATE TABLE virusBreakend
     PRIMARY KEY (id)
 );
 
+DROP TABLE IF EXISTS virusAnnotation;
+CREATE TABLE virusAnnotation
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    taxid int NOT NULL,
+    virusName varchar(255) NOT NULL,
+    qcStatus varchar(255) NOT NULL,
+    integrations int NOT NULL,
+    interpretation varchar(255),
+    reported BOOLEAN NOT NULL,
+    PRIMARY KEY (id)
+);
+
 DROP TABLE IF EXISTS cuppa;
 CREATE TABLE cuppa
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
     cuppaTumorLocation varchar(255) NOT NULL,
-    cuppaPrediction varchar(255) NOT NULL,
+    cuppaPrediction varchar(255),
     PRIMARY KEY (id),
     KEY(sampleId)
 );

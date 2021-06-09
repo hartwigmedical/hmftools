@@ -64,7 +64,7 @@ public class GenomicAnalyzer {
         List<PeachGenotype> peachGenotypes = loadPeachData(config.peachGenotypeTsv());
 
         List<ReportableVariant> reportableVariants =
-                ReportableVariantFactory.mergeVariantLists(purpleData.germlineVariants(), purpleData.somaticVariants());
+                ReportableVariantFactory.mergeVariantLists(purpleData.reportableGermlineVariants(), purpleData.reportableSomaticVariants());
 
         Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant =
                 determineNotify(reportableVariants, germlineReportingModel, germlineReportingLevel);
@@ -95,7 +95,7 @@ public class GenomicAnalyzer {
                 .chordHrdStatus(chordAnalysis.hrStatus())
                 .gainsAndLosses(purpleData.reportableGainsLosses())
                 .cnPerChromosome(purpleData.cnPerChromosome())
-                .geneFusions(linxData.fusions())
+                .geneFusions(linxData.reportableFusions())
                 .geneDisruptions(linxData.geneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())
                 .reportableViruses(virusInterpreterData.reportableViruses())

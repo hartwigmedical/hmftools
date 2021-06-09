@@ -92,7 +92,7 @@ public final class PurpleDataLoader {
                     extractAllGainsLosses(purityContext.qc().status(), purityContext.bestFit().ploidy(), geneCopyNumbers);
             LOGGER.debug("  Extracted {} gains and losses from gene copy numbers", allGainsLosses.size());
 
-            unreportedGainsLosses = removeReported(allGainsLosses, reportableGainsLosses);
+            unreportedGainsLosses = selectUnreportedGainsLosses(allGainsLosses, reportableGainsLosses);
             LOGGER.info("  Extracted {} additional unreported gains and losses", unreportedGainsLosses.size());
         }
 
@@ -120,6 +120,9 @@ public final class PurpleDataLoader {
                 ReportableVariantFactory.toReportableSomaticVariants(somaticVariants, somaticDriverCatalog);
         LOGGER.info(" Loaded {} reportable somatic variants from {}", reportableSomaticVariants.size(), somaticVcf);
 
+        List<SomaticVariant> unreportedSomaticVariants = selectUnreportedVariants(somaticVariants);
+        LOGGER.info(" Loaded {} unreported somatic variants from {}", unreportedSomaticVariants.size(), somaticVcf);
+
         return ImmutablePurpleData.builder()
                 .purity(purityContext.bestFit().purity())
                 .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
@@ -130,17 +133,29 @@ public final class PurpleDataLoader {
                 .tumorMutationalBurdenPerMb(purityContext.tumorMutationalBurdenPerMb())
                 .tumorMutationalLoad(purityContext.tumorMutationalLoad())
                 .tumorMutationalLoadStatus(purityContext.tumorMutationalLoadStatus())
-                .somaticVariants(reportableSomaticVariants)
-                .germlineVariants(reportableGermlineVariants)
+                .reportableSomaticVariants(reportableSomaticVariants)
+                .unreportedSomaticVariants(unreportedSomaticVariants)
+                .reportableGermlineVariants(reportableGermlineVariants)
                 .unreportedGainsLosses(unreportedGainsLosses)
                 .reportableGainsLosses(reportableGainsLosses)
                 .cnPerChromosome(cnPerChromosome)
                 .build();
     }
 
+    @NotNull
+    private static List<SomaticVariant> selectUnreportedVariants(@NotNull List<SomaticVariant> somaticVariants) {
+        List<SomaticVariant> variants = Lists.newArrayList();
+        for (SomaticVariant variant : somaticVariants) {
+            if (!variant.reported()) {
+                variants.add(variant);
+            }
+        }
+        return variants;
+    }
+
     @VisibleForTesting
     @NotNull
-    static List<ReportableGainLoss> removeReported(@NotNull List<ReportableGainLoss> allGainsLosses,
+    static List<ReportableGainLoss> selectUnreportedGainsLosses(@NotNull List<ReportableGainLoss> allGainsLosses,
             @NotNull List<ReportableGainLoss> reportableGainsLosses) {
         List<ReportableGainLoss> unreportedGainsLosses = Lists.newArrayList();
         for (ReportableGainLoss gainLoss : allGainsLosses) {

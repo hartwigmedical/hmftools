@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.protect.ProtectConfig;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -29,23 +30,34 @@ public final class LinxDataLoader {
     public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxDriverCatalogTsv)
             throws IOException {
         LOGGER.info("Loading LINX data from {}", new File(linxFusionTsv).getParent());
-        List<LinxFusion> linxFusions = LinxFusion.read(linxFusionTsv).stream().filter(LinxFusion::reported).collect(Collectors.toList());
-        LOGGER.info(" Loaded {} reportable fusions from {}", linxFusions.size(), linxFusionTsv);
+        List<LinxFusion> fusions = LinxFusion.read(linxFusionTsv);
+
+        List<LinxFusion> reportableFusions = Lists.newArrayList();
+        List<LinxFusion> unreportedFusions = Lists.newArrayList();
+        for (LinxFusion fusion : fusions) {
+            if (fusion.reported()) {
+                reportableFusions.add(fusion);
+            } else {
+                unreportedFusions.add(fusion);
+            }
+        }
+        LOGGER.info(" Loaded {} fusions (of which {} are reportable) from {}", fusions.size(), reportableFusions.size(), linxFusionTsv);
 
         List<LinxBreakend> linxBreakends =
                 LinxBreakend.read(linxBreakendTsv).stream().filter(LinxBreakend::reportedDisruption).collect(Collectors.toList());
-        List<ReportableGeneDisruption> reportableGeneDisruptions = ReportableGeneDisruptionFactory.convert(linxBreakends);
-        LOGGER.debug(" Generated {} reportable disruptions based on {} breakends", reportableGeneDisruptions.size(), linxBreakends.size());
-        LOGGER.info(" Loaded {} reportable disruptions from {}", reportableGeneDisruptions.size(), linxBreakendTsv);
+        List<ReportableGeneDisruption> geneDisruptions = ReportableGeneDisruptionFactory.convert(linxBreakends);
+        LOGGER.debug(" Generated {} reportable disruptions based on {} breakends", geneDisruptions.size(), linxBreakends.size());
+        LOGGER.info(" Loaded {} reportable disruptions from {}", geneDisruptions.size(), linxBreakendTsv);
 
-        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions =
+        List<ReportableHomozygousDisruption> homozygousDisruptions =
                 ReportableHomozygousDisruptionFactory.extractFromLinxDriverCatalogTsv(linxDriverCatalogTsv);
-        LOGGER.info(" Loaded {} reportable homozygous disruptions from {}", reportableHomozygousDisruptions.size(), linxDriverCatalogTsv);
+        LOGGER.info(" Loaded {} reportable homozygous disruptions from {}", homozygousDisruptions.size(), linxDriverCatalogTsv);
 
         return ImmutableLinxData.builder()
-                .addAllFusions(linxFusions)
-                .addAllGeneDisruptions(reportableGeneDisruptions)
-                .addAllHomozygousDisruptions(reportableHomozygousDisruptions)
+                .reportableFusions(reportableFusions)
+                .unreportedFusions(unreportedFusions)
+                .geneDisruptions(geneDisruptions)
+                .homozygousDisruptions(homozygousDisruptions)
                 .build();
     }
 }

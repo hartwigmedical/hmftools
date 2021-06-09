@@ -101,15 +101,16 @@ public class ProtectAlgo {
     private List<ProtectEvidence> determineEvidence(@NotNull PurpleData purpleData, @NotNull LinxData linxData,
             @NotNull VirusInterpreterData virusInterpreterData, @NotNull ChordAnalysis chordAnalysis) {
         LOGGER.info("Evidence extraction started");
-        List<ProtectEvidence> variantEvidence =
-                variantEvidenceFactory.evidence(purpleData.germlineVariants(), purpleData.somaticVariants());
+        List<ProtectEvidence> variantEvidence = variantEvidenceFactory.evidence(purpleData.reportableGermlineVariants(),
+                purpleData.reportableSomaticVariants(),
+                purpleData.unreportedSomaticVariants());
         printExtraction("somatic and germline variants", variantEvidence);
         List<ProtectEvidence> copyNumberEvidence =
                 copyNumberEvidenceFactory.evidence(purpleData.reportableGainsLosses(), purpleData.unreportedGainsLosses());
         printExtraction("amplifications and deletions", copyNumberEvidence);
         List<ProtectEvidence> disruptionEvidence = disruptionEvidenceFactory.evidence(linxData.homozygousDisruptions());
         printExtraction("homozygous disruptions", disruptionEvidence);
-        List<ProtectEvidence> fusionEvidence = fusionEvidenceFactory.evidence(linxData.fusions());
+        List<ProtectEvidence> fusionEvidence = fusionEvidenceFactory.evidence(linxData.reportableFusions(), linxData.unreportedFusions());
         printExtraction("fusions", fusionEvidence);
         List<ProtectEvidence> purpleSignatureEvidence = purpleSignatureEvidenceFactory.evidence(purpleData);
         printExtraction("purple signatures", purpleSignatureEvidence);

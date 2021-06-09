@@ -23,7 +23,7 @@ public class PurpleDataLoaderTest {
         List<ReportableGainLoss> reportable = Lists.newArrayList(gain);
         List<ReportableGainLoss> all = Lists.newArrayList(gain, loss);
 
-        List<ReportableGainLoss> unreported = PurpleDataLoader.removeReported(all, reportable);
+        List<ReportableGainLoss> unreported = PurpleDataLoader.selectUnreportedGainsLosses(all, reportable);
         assertEquals(1, unreported.size());
         assertTrue(unreported.contains(loss));
         assertFalse(unreported.contains(gain));

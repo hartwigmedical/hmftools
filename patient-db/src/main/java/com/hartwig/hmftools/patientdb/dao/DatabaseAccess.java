@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.amber.AmberMapping;
 import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberSample;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.cuppa.MolecularTissueOrginData;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoad;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
@@ -39,6 +40,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
@@ -126,6 +128,8 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final VirusBreakendDAO virusBreakendDAO;
     @NotNull
+    private final VirusInterpreterDAO virusInterpreterDAO;
+    @NotNull
     private final HlaTypeDAO hlaTypeDAO;
     @NotNull
     private final ProtectDAO protectDAO;
@@ -162,6 +166,7 @@ public class DatabaseAccess implements AutoCloseable {
         this.cuppaDAO = new CuppaDAO(context);
         this.chordDAO = new ChordDAO(context);
         this.virusBreakendDAO = new VirusBreakendDAO(context);
+        this.virusInterpreterDAO = new VirusInterpreterDAO(context);
         this.hlaTypeDAO = new HlaTypeDAO(context);
         this.protectDAO = new ProtectDAO(context);
     }
@@ -452,12 +457,16 @@ public class DatabaseAccess implements AutoCloseable {
         peachDAO.writePeach(sample, peachGenotypes, peachCalls);
     }
 
-    public void writeCuppa(@NotNull String sample, @NotNull String cuppaResult) {
-        cuppaDAO.writeCuppa(sample, cuppaResult);
+    public void writeCuppa(@NotNull String sample, @NotNull MolecularTissueOrginData molecularTissueOrginData) {
+        cuppaDAO.writeCuppa(sample, molecularTissueOrginData);
     }
 
     public void writeVirusBreakend(@NotNull String sample, @NotNull List<VirusBreakend> virusBreakends) {
         virusBreakendDAO.writeVirusBreakend(sample, virusBreakends);
+    }
+
+    public void writeVirusInterpreter(@NotNull String sample, @NotNull List<AnnotatedVirus> virusAnnotations) {
+        virusInterpreterDAO.writeVirusInterpreter(sample, virusAnnotations);
     }
 
     public void writeProtectEvidence(@NotNull String sample, @NotNull List<ProtectEvidence> evidence) {
@@ -580,6 +589,9 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting virus breakend data for sample: {}", sample);
         virusBreakendDAO.deleteVirusBreakendForSample(sample);
+
+        LOGGER.info("Deleting virus annotation data for sample: {}", sample);
+        virusInterpreterDAO.deleteVirusAnnotationForSample(sample);
 
         LOGGER.info("Deleting CUPPA result for sample: {}", sample);
         cuppaDAO.deleteCuppaForSample(sample);

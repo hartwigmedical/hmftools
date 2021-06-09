@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.protect.purple.DriverInterpretation;
 import com.hartwig.hmftools.protect.purple.ReportableVariant;
@@ -48,54 +50,68 @@ public class VariantEvidence {
     }
 
     @NotNull
-    public List<ProtectEvidence> evidence(@NotNull List<ReportableVariant> germline, @NotNull List<ReportableVariant> somatic) {
-        List<ReportableVariant> variants = ReportableVariantFactory.mergeVariantLists(germline, somatic);
-        return variants.stream().flatMap(x -> evidence(x).stream()).collect(Collectors.toList());
+    public List<ProtectEvidence> evidence(@NotNull List<ReportableVariant> germline, @NotNull List<ReportableVariant> somatic,
+            @NotNull List<SomaticVariant> unreportedSomaticVariants) {
+        List<ProtectEvidence> evidences = Lists.newArrayList();
+        for (ReportableVariant reportableVariant : ReportableVariantFactory.mergeVariantLists(germline, somatic)) {
+            evidences.addAll(evidence(reportableVariant,
+                    reportableVariant.driverLikelihoodInterpretation(),
+                    reportableVariant.source() == ReportableVariantSource.GERMLINE,
+                    true));
+        }
+
+        for (SomaticVariant unreportedVariant : unreportedSomaticVariants) {
+            evidences.addAll(evidence(unreportedVariant, DriverInterpretation.LOW, false, false));
+        }
+
+        return evidences;
     }
 
     @NotNull
-    private List<ProtectEvidence> evidence(@NotNull ReportableVariant reportable) {
-        List<ProtectEvidence> hotspotEvidence = hotspots.stream()
-                .filter(x -> hotspotMatch(x, reportable))
-                .map(x -> evidence(true, reportable, x))
-                .collect(Collectors.toList());
+    private List<ProtectEvidence> evidence(@NotNull Variant variant, @NotNull DriverInterpretation driverInterpretation, boolean germline,
+            boolean mayReport) {
+        List<ProtectEvidence> evidences = Lists.newArrayList();
+        for (ActionableHotspot hotspot : hotspots) {
+            if (hotspotMatch(variant, hotspot)) {
+                evidences.add(evidence(variant, germline, mayReport, hotspot));
+            }
+        }
 
-        List<ProtectEvidence> rangeEvidence =
-                ranges.stream().filter(x -> rangeMatch(x, reportable)).map(x -> evidence(true, reportable, x)).collect(Collectors.toList());
+        for (ActionableRange range : ranges) {
+            if (rangeMatch(variant, range)) {
+                evidences.add(evidence(variant, germline, mayReport, range));
+            }
+        }
 
-        List<ProtectEvidence> geneEvidence = genes.stream()
-                .filter(x -> geneMatch(x, reportable))
-                .map(x -> evidence(reportable.driverLikelihoodInterpretation() == DriverInterpretation.HIGH, reportable, x))
-                .collect(Collectors.toList());
+        for (ActionableGene gene : genes) {
+            if (geneMatch(variant, gene)) {
+                evidences.add(evidence(variant, germline, mayReport && driverInterpretation == DriverInterpretation.HIGH, gene));
+            }
+        }
 
-        List<ProtectEvidence> result = Lists.newArrayList();
-        result.addAll(hotspotEvidence);
-        result.addAll(rangeEvidence);
-        result.addAll(geneEvidence);
-
-        return result;
+        return evidences;
     }
 
     @NotNull
-    private ProtectEvidence evidence(boolean report, @NotNull ReportableVariant reportable, @NotNull ActionableEvent actionable) {
+    private ProtectEvidence evidence(@NotNull Variant variant, boolean germline, boolean report, @NotNull ActionableEvent actionable) {
         return personalizedEvidenceFactory.evidenceBuilder(actionable)
-                .genomicEvent(reportable.genomicEvent())
-                .germline(reportable.source() == ReportableVariantSource.GERMLINE)
+                .genomicEvent(variant.genomicEvent())
+                .germline(germline)
                 .reported(report)
                 .build();
     }
 
-    private static boolean hotspotMatch(@NotNull ActionableHotspot hotspot, @NotNull ReportableVariant variant) {
+    private static boolean hotspotMatch(@NotNull Variant variant, @NotNull ActionableHotspot hotspot) {
         return variant.chromosome().equals(hotspot.chromosome()) && hotspot.position() == variant.position() && hotspot.ref()
                 .equals(variant.ref()) && hotspot.alt().equals(hotspot.alt());
     }
 
-    private static boolean rangeMatch(@NotNull ActionableRange range, @NotNull ReportableVariant variant) {
+    private static boolean rangeMatch(@NotNull Variant variant, @NotNull ActionableRange range) {
         return variant.chromosome().equals(range.chromosome()) && variant.gene().equals(range.gene()) && variant.position() >= range.start()
-                && variant.position() <= range.end() && meetsMutationTypeFilter(range.mutationType(), variant);
+                && variant.position() <= range.end() && meetsMutationTypeFilter(variant, range.mutationType());
     }
 
-    private static boolean meetsMutationTypeFilter(@NotNull MutationTypeFilter filter, @NotNull ReportableVariant variant) {
+    private static boolean meetsMutationTypeFilter(@NotNull Variant variant, @NotNull MutationTypeFilter filter) {
         CodingEffect effect = variant.canonicalCodingEffect();
         switch (filter) {
             case NONSENSE_OR_FRAMESHIFT:
@@ -119,15 +135,15 @@ public class VariantEvidence {
         }
     }
 
-    private static boolean isInsert(@NotNull ReportableVariant variant) {
+    private static boolean isInsert(@NotNull Variant variant) {
         return variant.type() == VariantType.INDEL && variant.alt().length() > variant.ref().length();
     }
 
-    private static boolean isDelete(@NotNull ReportableVariant variant) {
+    private static boolean isDelete(@NotNull Variant variant) {
         return variant.type() == VariantType.INDEL && variant.alt().length() < variant.ref().length();
     }
 
-    private static boolean geneMatch(@NotNull ActionableGene gene, @NotNull ReportableVariant variant) {
+    private static boolean geneMatch(@NotNull Variant variant, @NotNull ActionableGene gene) {
         assert gene.event() == GeneLevelEvent.ACTIVATION || gene.event() == GeneLevelEvent.INACTIVATION
                 || gene.event() == GeneLevelEvent.ANY_MUTATION;
 

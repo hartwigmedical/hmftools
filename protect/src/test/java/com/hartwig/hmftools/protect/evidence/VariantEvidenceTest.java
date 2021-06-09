@@ -11,6 +11,8 @@ import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.protect.ProtectTestFactory;
 import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
@@ -53,16 +55,40 @@ public class VariantEvidenceTest {
                 Lists.newArrayList());
 
         ReportableVariant variantMatch =
-                createTestReportableVariantBuilder().chromosome(chromosome).position(position).ref(ref).alt(alt).build();
+                createTestReportableVariantBuilder().gene("reportable").chromosome(chromosome).position(position).ref(ref).alt(alt).build();
         ReportableVariant variantNonMatch =
                 createTestReportableVariantBuilder().chromosome(chromosome).position(position + 1).ref(ref).alt(alt).build();
+        SomaticVariant unreportedMatch = SomaticVariantTestBuilderFactory.create()
+                .gene("unreported")
+                .chromosome(chromosome)
+                .position(position)
+                .ref(ref)
+                .alt(alt)
+                .build();
 
-        List<ProtectEvidence> evidenceItems =
-                variantEvidence.evidence(Lists.newArrayList(variantMatch, variantNonMatch), Lists.newArrayList());
+        List<ProtectEvidence> evidences = variantEvidence.evidence(Lists.newArrayList(variantMatch, variantNonMatch),
+                Lists.newArrayList(),
+                Lists.newArrayList(unreportedMatch));
 
-        assertEquals(1, evidenceItems.size());
-        assertTrue(evidenceItems.get(0).reported());
-        assertEquals(variantMatch.genomicEvent(), evidenceItems.get(0).genomicEvent());
+        assertEquals(2, evidences.size());
+        ProtectEvidence reportedEvidence = findByGene(evidences, "reportable");
+        assertTrue(reportedEvidence.reported());
+        assertEquals(variantMatch.genomicEvent(), reportedEvidence.genomicEvent());
+
+        ProtectEvidence unreportedEvidence = findByGene(evidences, "unreported");
+        assertFalse(unreportedEvidence.reported());
+        assertEquals(unreportedMatch.genomicEvent(), unreportedEvidence.genomicEvent());
+    }
+
+    @NotNull
+    private static ProtectEvidence findByGene(@NotNull List<ProtectEvidence> evidences, @NotNull String gene) {
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.genomicEvent().contains(gene)) {
+                return evidence;
+            }
+        }
+
+        throw new IllegalStateException("Could not find evidence based on gene: " + gene);
     }
 
     @Test
@@ -110,6 +136,7 @@ public class VariantEvidenceTest {
 
         List<ProtectEvidence> evidenceItems =
                 variantEvidence.evidence(Lists.newArrayList(variantMatch, variantOutsideRange, variantWrongGene, variantWrongMutationType),
+                        Lists.newArrayList(),
                         Lists.newArrayList());
 
         assertEquals(1, evidenceItems.size());
@@ -151,6 +178,7 @@ public class VariantEvidenceTest {
 
         List<ProtectEvidence> evidenceItems =
                 variantEvidence.evidence(Lists.newArrayList(variantMatchGene1, variantLowDriverGene2, variantMatchGene3, variantOtherGene),
+                        Lists.newArrayList(),
                         Lists.newArrayList());
 
         assertEquals(2, evidenceItems.size());
@@ -185,4 +213,5 @@ public class VariantEvidenceTest {
                 .driverLikelihood(0D)
                 .biallelic(false);
     }
+
 }
