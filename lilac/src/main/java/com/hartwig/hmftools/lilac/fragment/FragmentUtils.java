@@ -99,7 +99,14 @@ public class FragmentUtils
 
             if(add)
             {
-                frag1.addNucleotide(index1, locus2, frag2.getNucleotides().get(index2), frag2.getNucleotideQuality().get(index2));
+                try
+                {
+                    frag1.addNucleotide(index1, locus2, frag2.getNucleotides().get(index2), frag2.getNucleotideQuality().get(index2));
+                }
+                catch(Exception e)
+                {
+                    LL_LOGGER.error("merging frag({}: {}) with frag({}: {})", frag1.id(), frag1.readInfo(), frag2.id(), frag2.readInfo());
+                }
             }
         }
 

@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LOG_LEVEL;
 import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.LilacConstants.EXPECTED_ALLELE_COUNT;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
@@ -404,7 +405,7 @@ public class LilacApplication
         }
 
         HlaComplexCoverage winningTumorCoverage = null;
-        Map<HlaAllele,Double> winningTumorCopyNumber = null;
+        List<Double> winningTumorCopyNumber = Lists.newArrayList(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
         List<SomaticVariant> somaticVariants = Lists.newArrayList();
         List<SomaticCodingCount> somaticCodingCounts = SomaticCodingCount.create(winningAlleles);
 
@@ -427,10 +428,6 @@ public class LilacApplication
                 copyNumberAssignment.loadCopyNumberData(mConfig);
 
                 winningTumorCopyNumber = copyNumberAssignment.assign(mConfig.Sample, winningAlleles, winningRefCoverage, winningTumorCoverage);
-            }
-            else
-            {
-                winningTumorCopyNumber = CopyNumberAssignment.formEmptyAlleleCopyNumber(winningAlleles);
             }
 
             // SOMATIC VARIANTS
@@ -471,7 +468,6 @@ public class LilacApplication
         else
         {
             winningTumorCoverage = HlaComplexCoverage.create(Lists.newArrayList());
-            winningTumorCopyNumber = CopyNumberAssignment.formEmptyAlleleCopyNumber(winningAlleles);
         }
 
         if(!allValid)
