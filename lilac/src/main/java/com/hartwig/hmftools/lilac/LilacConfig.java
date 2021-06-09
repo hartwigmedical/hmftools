@@ -294,7 +294,6 @@ public class LilacConfig
         options.addOption(MIN_FRAGMENTS_PER_ALLELE, true,"MIN_FRAGMENTS_PER_ALLELE");
         options.addOption(MIN_FRAGMENTS_TO_REMOVE_SINGLE, true,"MIN_FRAGMENTS_TO_REMOVE_SINGLE");
         options.addOption(TOP_SCORE_THRESHOLD, true,"Max distance from top score");
-        options.addOption(THREADS, true,"Number of threads");
         options.addOption(EXPECTED_ALLELES, true,"Comma separated expected alleles for the sample");
         options.addOption(RESTRICTED_ALLELES, true,"Comma separated restricted analysis allele list");
         options.addOption(GENE_COPY_NUMBER, true,"Path to gene copy number file");
@@ -303,6 +302,7 @@ public class LilacConfig
         options.addOption(RUN_VALIDATION, false, "Run validation checks");
         options.addOption(LOG_DEBUG, false, "More detailed logging of phasing");
         options.addOption(LOG_LEVEL, true, "Specify log level WARN, INFO, DEBUG or TRACE");
+        options.addOption(THREADS, true,"Number of threads");
         DatabaseAccess.addDatabaseCmdLineArgs((Options) options);
         return options;
     }

@@ -42,7 +42,7 @@ Argument | Description
 ---|---
 ref_genome_version | V37 (default), V38 or HG19 (ie 37 with 'chr' prefix)
 tumor_bam | Sample's tumor BAM
-gene_copy_number | Sample gene copy number file from Purple
+gene_copy_number_file | Sample gene copy number file from Purple
 somatic_variants_file | Sample's somatic variant VCF file, for annotation of HLA gene variants
 
 ### Optional Arguments

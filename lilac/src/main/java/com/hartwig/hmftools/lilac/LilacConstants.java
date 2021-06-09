@@ -52,8 +52,7 @@ public class LilacConstants
 
     public static final int EXPECTED_ALLELE_COUNT = 6;
 
-    public static final List<String> EXCLUDED_ALLELES = Lists.newArrayList(
-            "A*01:81", "A*01:237", "A*11:126", "A*11:353", "A*25:68", "A*30:95", "A*30:136", "A*31:135", "A*33:191");
+    public static final List<String> EXCLUDED_ALLELES = Lists.newArrayList();
 
     // common INDEL associated with allele C*04:09N
     public static final String STOP_LOSS_ON_C_ALLELE = "C*04:09N";
