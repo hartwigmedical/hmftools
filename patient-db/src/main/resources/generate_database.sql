@@ -1138,7 +1138,7 @@ CREATE TABLE virusAnnotation
     virusName varchar(255) NOT NULL,
     qcStatus varchar(255) NOT NULL,
     integrations int NOT NULL,
-    interpretation varchar(255) NOT NULL,
+    interpretation varchar(255),
     reported BOOLEAN NOT NULL,
     PRIMARY KEY (id)
 );
