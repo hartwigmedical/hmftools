@@ -30,4 +30,9 @@ public interface Variant extends GenomePosition, AllelicDepth {
     @NotNull
     String canonicalHgvsProteinImpact();
 
+    @NotNull
+    default String genomicEvent() {
+        String description = canonicalCodingEffect() == CodingEffect.SPLICE ? canonicalHgvsCodingImpact() : canonicalHgvsProteinImpact();
+        return this.gene() + " " + description;
+    }
 }

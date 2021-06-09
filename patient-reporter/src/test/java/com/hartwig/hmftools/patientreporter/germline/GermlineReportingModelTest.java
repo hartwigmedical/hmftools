@@ -19,14 +19,12 @@ import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class GermlineReportingModelTest {
 
     @Test
     public void canDetermineNotifyForGermlineVariants() {
-
         LimsGermlineReportingLevel germlineReportingLevel = LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION;
         AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
 
@@ -49,8 +47,7 @@ public class GermlineReportingModelTest {
     }
 
     @NotNull
-    public ReportableVariant testReportableVariant(@NotNull String gene, @NotNull GenotypeStatus genotypeStatus) {
-
+    private static ReportableVariant testReportableVariant(@NotNull String gene, @NotNull GenotypeStatus genotypeStatus) {
         return ImmutableReportableVariant.builder()
                 .type(VariantType.SNP)
                 .source(ReportableVariantSource.GERMLINE)
