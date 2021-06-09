@@ -126,7 +126,7 @@ public class NeoEpitopeAnnotator
             final List<NeoEpitopeFusion> fusions = getSvFusions();
             final List<PointMutationData> pointMutations = getSomaticVariants();
 
-            IM_LOGGER.debug("sample({}) loaded {} fusions and {} point mutations",
+            IM_LOGGER.info("sample({}) loaded {} fusions and {} point mutations",
                     sample.Id, fusions.size(), pointMutations.size());
 
             addSvFusions(fusions);
@@ -609,7 +609,7 @@ public class NeoEpitopeAnnotator
                 ++neCount;
             }
 
-            IM_LOGGER.info("loaded {} Linx neo-epitope candidates from file: {}", neCount, filename);
+            IM_LOGGER.debug("loaded {} Linx neo-epitope candidates from file: {}", neCount, filename);
         }
         catch(IOException exception)
         {

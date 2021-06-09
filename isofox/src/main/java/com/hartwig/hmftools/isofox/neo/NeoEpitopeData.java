@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.generateMappedCoords;
+import static com.hartwig.hmftools.common.bam.BamRecordUtils.generateMappedCoords;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.cigarFromStr;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.EXACT_MATCH;
 

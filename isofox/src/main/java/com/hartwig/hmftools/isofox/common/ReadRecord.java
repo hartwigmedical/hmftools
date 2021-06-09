@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.BamRecordUtils.generateMappedCoords;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
@@ -257,58 +258,6 @@ public class ReadRecord
     public int getCoordsBoundary(int se)
     {
         return se == SE_START ? mMappedCoords.get(0)[SE_START] : mMappedCoords.get(mMappedCoords.size() - 1)[SE_END];
-    }
-
-    public static final List<int[]> generateMappedCoords(final Cigar cigar, int posStart)
-    {
-        final List<int[]> mappedCoords = Lists.newArrayList();
-
-        // first establish whether the read is split across 2 distant regions, and if so which it maps to
-        int posOffset = 0;
-        boolean continueRegion = false;
-
-        for(CigarElement element : cigar.getCigarElements())
-        {
-            if(element.getOperator() == CigarOperator.S)
-            {
-                // nothing to skip
-            }
-            else if(element.getOperator() == D)
-            {
-                posOffset += element.getLength();
-                continueRegion = true;
-            }
-            else if(element.getOperator() == CigarOperator.I)
-            {
-                // nothing to skip
-                continueRegion = true;
-            }
-            else if(element.getOperator() == CigarOperator.N)
-            {
-                posOffset += element.getLength();
-                continueRegion = false;
-            }
-            else if(element.getOperator() == CigarOperator.M)
-            {
-                int readStartPos = posStart + posOffset;
-                int readEndPos = readStartPos + element.getLength() - 1;
-
-                if(continueRegion && !mappedCoords.isEmpty())
-                {
-                    int[] lastRegion = mappedCoords.get(mappedCoords.size() - 1);
-                    lastRegion[SE_END] = readEndPos;
-                }
-                else
-                {
-                    mappedCoords.add(new int[] { readStartPos, readEndPos });
-                }
-
-                posOffset += element.getLength();
-                continueRegion = false;
-            }
-        }
-
-        return mappedCoords;
     }
 
     public void processOverlappingRegions(final List<RegionReadData> regions)

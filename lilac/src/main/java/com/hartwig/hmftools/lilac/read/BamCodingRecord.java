@@ -4,6 +4,10 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.BamRecordUtils.generateMappedCoords;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
@@ -153,8 +157,28 @@ public class BamCodingRecord
         int alignmentEnd = record.getAlignmentEnd();
         int recordStart = alignmentStart - softClipStart;
         int recordEnd = alignmentEnd + softClipEnd;
+
         int positionStart = max(codingRegion.start(), alignmentStart);
         int positionEnd = min(codingRegion.end(), alignmentEnd);
+
+        if(record.getCigar().containsOperator(CigarOperator.N))
+        {
+            // handle splits which do not align with exon boundaries (which the coding region represents)
+            List<int[]> mappedCoords = generateMappedCoords(record.getCigar(), record.getAlignmentStart());
+
+            for(int[] mappedCoord : mappedCoords)
+            {
+                if(mappedCoord[SE_END] < codingRegion.start())
+                    continue;
+
+                if(mappedCoord[SE_START] > codingRegion.end())
+                    break;
+
+                positionStart = max(max(positionStart, mappedCoord[SE_START]), codingRegion.start());
+                positionEnd = min(min(positionEnd, mappedCoord[SE_END]), codingRegion.end());
+                break;
+            }
+        }
 
         int readIndexStart = record.getReadPositionAtReferencePosition(positionStart, true) - 1;
         int readIndexEnd = record.getReadPositionAtReferencePosition(positionEnd, true) - 1;

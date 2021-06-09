@@ -24,12 +24,12 @@ public class SolutionSummary
 {
     public final HlaComplexCoverage ReferenceCoverage;
     public final HlaComplexCoverage TumorCoverage;
-    public final Map<HlaAllele,Double> TumorCopyNumber;
+    public final List<Double> TumorCopyNumber;
     public final List<SomaticCodingCount> SomaticCodingCount;
 
     public SolutionSummary(
             final HlaComplexCoverage referenceCoverage, final HlaComplexCoverage tumorCoverage,
-            final Map<HlaAllele,Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount)
+            final List<Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount)
     {
         ReferenceCoverage = referenceCoverage;
         TumorCoverage = tumorCoverage;
@@ -89,7 +89,7 @@ public class SolutionSummary
         HlaAlleleCoverage tumor = !TumorCoverage.getAlleleCoverage().isEmpty() ?
                 TumorCoverage.getAlleleCoverage().get(index) : new HlaAlleleCoverage(ref.Allele, 0, 0, 0);
 
-        double copyNumber = TumorCopyNumber.get(ref.Allele);
+        double copyNumber = TumorCopyNumber.get(index);
         SomaticCodingCount codingCount = SomaticCodingCount.get(index);
 
         StringJoiner header = new StringJoiner(DELIM)
@@ -114,7 +114,7 @@ public class SolutionSummary
 
     public static SolutionSummary create(
             final HlaComplexCoverage referenceCoverage, final HlaComplexCoverage tumorCoverage,
-            final Map<HlaAllele,Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount)
+            final List<Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount)
     {
         List<SomaticCodingCount> sortedCodingCount = somaticCodingCount.stream().collect(Collectors.toList());
         Collections.sort(sortedCodingCount, new SomaticCodingCountSorter());
