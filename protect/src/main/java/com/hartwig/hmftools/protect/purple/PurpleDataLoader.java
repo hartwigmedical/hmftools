@@ -118,8 +118,10 @@ public final class PurpleDataLoader {
         List<SomaticVariant> somaticVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSample, somaticVcf);
         List<ReportableVariant> reportableSomaticVariants =
                 ReportableVariantFactory.toReportableSomaticVariants(somaticVariants, somaticDriverCatalog);
-        List<SomaticVariant> unreportedSomaticExonicVariants = selectUnreportedExonicVariants(somaticVariants);
         LOGGER.info(" Loaded {} reportable somatic variants from {}", reportableSomaticVariants.size(), somaticVcf);
+
+        List<SomaticVariant> unreportedSomaticVariants = selectUnreportedVariants(somaticVariants);
+        LOGGER.info(" Loaded {} unreported somatic variants from {}", unreportedSomaticVariants.size(), somaticVcf);
 
         return ImmutablePurpleData.builder()
                 .purity(purityContext.bestFit().purity())
@@ -132,7 +134,7 @@ public final class PurpleDataLoader {
                 .tumorMutationalLoad(purityContext.tumorMutationalLoad())
                 .tumorMutationalLoadStatus(purityContext.tumorMutationalLoadStatus())
                 .reportableSomaticVariants(reportableSomaticVariants)
-                .unreportedSomaticExonicVariants(unreportedSomaticExonicVariants)
+                .unreportedSomaticVariants(unreportedSomaticVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
                 .unreportedGainsLosses(unreportedGainsLosses)
                 .reportableGainsLosses(reportableGainsLosses)
@@ -141,11 +143,10 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static List<SomaticVariant> selectUnreportedExonicVariants(@NotNull List<SomaticVariant> somaticVariants) {
+    private static List<SomaticVariant> selectUnreportedVariants(@NotNull List<SomaticVariant> somaticVariants) {
         List<SomaticVariant> variants = Lists.newArrayList();
-
         for (SomaticVariant variant : somaticVariants) {
-            if (!variant.gene().isEmpty() && !variant.reported()) {
+            if (!variant.reported()) {
                 variants.add(variant);
             }
         }

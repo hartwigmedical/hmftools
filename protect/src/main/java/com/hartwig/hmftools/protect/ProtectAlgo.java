@@ -103,7 +103,7 @@ public class ProtectAlgo {
         LOGGER.info("Evidence extraction started");
         List<ProtectEvidence> variantEvidence = variantEvidenceFactory.evidence(purpleData.reportableGermlineVariants(),
                 purpleData.reportableSomaticVariants(),
-                purpleData.unreportedSomaticExonicVariants());
+                purpleData.unreportedSomaticVariants());
         printExtraction("somatic and germline variants", variantEvidence);
         List<ProtectEvidence> copyNumberEvidence =
                 copyNumberEvidenceFactory.evidence(purpleData.reportableGainsLosses(), purpleData.unreportedGainsLosses());

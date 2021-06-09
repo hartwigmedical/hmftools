@@ -41,7 +41,7 @@ public interface PurpleData {
     List<ReportableVariant> reportableSomaticVariants();
 
     @NotNull
-    List<SomaticVariant> unreportedSomaticExonicVariants();
+    List<SomaticVariant> unreportedSomaticVariants();
 
     @NotNull
     List<ReportableVariant> reportableGermlineVariants();
