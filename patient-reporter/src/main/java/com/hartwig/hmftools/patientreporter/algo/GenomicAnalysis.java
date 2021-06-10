@@ -6,6 +6,7 @@ import java.util.Map;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
@@ -69,7 +70,7 @@ public abstract class GenomicAnalysis {
     public abstract List<ReportableGainLoss> gainsAndLosses();
 
     @NotNull
-    public abstract Map<ChromosomeArmKey, Double> cnPerChromosome();
+    public abstract List<CnPerChromosomeArmData> cnPerChromosome();
 
     @NotNull
     public abstract List<LinxFusion> geneFusions();
