@@ -28,7 +28,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
@@ -103,6 +102,11 @@ public class GenerateBedRegions
             formGeneCodingRegions(geneData);
         }
 
+        for(RegionData region : mSpecificRegions)
+        {
+            integrateSpecificRegion(region);
+        }
+
         for(List<RegionData> regions : mCombinedRegions.values())
         {
             if(!validate(regions))
@@ -142,17 +146,30 @@ public class GenerateBedRegions
         }
     }
 
-    private void addRegion(final RegionData newRegionData)
+    private void addRegion(final RegionData region)
     {
-        List<RegionData> regions = mCombinedRegions.get(newRegionData.Region.Chromosome);
+        List<RegionData> regions = mCombinedRegions.get(region.Region.Chromosome);
 
         if(regions == null)
         {
-            mCombinedRegions.put(newRegionData.Region.Chromosome, Lists.newArrayList(newRegionData));
+            mCombinedRegions.put(region.Region.Chromosome, Lists.newArrayList(region));
             return;
         }
 
-        RegionData.addRegion(regions, newRegionData);
+        RegionData.mergeRegion(regions, region);
+    }
+
+    private void integrateSpecificRegion(final RegionData region)
+    {
+        List<RegionData> regions = mCombinedRegions.get(region.Region.Chromosome);
+
+        if(regions == null)
+        {
+            mCombinedRegions.put(region.Region.Chromosome, Lists.newArrayList(region));
+            return;
+        }
+
+        RegionData.integrateRegion(regions, region);
     }
 
     private void loadSpecificRegions(final String filename)
@@ -213,7 +230,9 @@ public class GenerateBedRegions
 
                 for(RegionData region : regions)
                 {
-                    writer.write(String.format("%s\t%d\t%d\t%s", chrStr, region.Region.start(), region.Region.end(), region.name()));
+                    // BED file positions require a +1 offset
+                    writer.write(String.format("%s\t%d\t%d\t%s",
+                            chrStr, region.Region.start() + 1, region.Region.end() + 1, region.name()));
                     writer.newLine();
                 }
             }

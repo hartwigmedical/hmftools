@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svtools.bed_regions;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import java.util.List;
 
@@ -21,14 +22,12 @@ public class RegionData
         mExtraInfo = "";
     }
 
-    public void setExtraInfo(final String extraInfo)
-    {
-        mExtraInfo = extraInfo;
-    }
+    public void setExtraInfo(final String extraInfo) { mExtraInfo = extraInfo; }
+    public String getExtraInfo() { return mExtraInfo; }
 
     public String name()
     {
-        if(Type == RegionType.CODING)
+        if(Type == RegionType.CODING || mExtraInfo.isEmpty())
             return String.format("%s_%s", GeneName, Type);
         else
             return String.format("%s_%s_%s", GeneName, Type, mExtraInfo);
@@ -41,7 +40,7 @@ public class RegionData
 
     public static RegionData fromSpecificRegionCsv(final String data)
     {
-        final String[] items = data.split(",");
+        final String[] items = data.split(",", -1   );
 
         // Chromosome,PosStart,PosEnd,GeneName,Type,Info
         BaseRegion region = new BaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
@@ -50,28 +49,33 @@ public class RegionData
         return regionData;
     }
 
-    public static void addRegion(final List<RegionData> regions, final RegionData newRegionData)
+    public static void mergeRegion(final List<RegionData> regions, final RegionData newRegion)
     {
+        // insert regions in ascending order by position
+        // merge any overlapping regions
         int index = 0;
 
         while(index < regions.size())
         {
             RegionData region = regions.get(index);
 
-            if(newRegionData.Region.start() > region.Region.end())
+            if(newRegion.Region.start() > region.Region.end())
             {
                 ++index;
                 continue;
             }
 
-            if(region.Region.start() > newRegionData.Region.end())
+            if(region.Region.start() > newRegion.Region.end())
                 break;
 
+            if(newRegion.Region.matches(region.Region))
+                return;
+
             // handle merges
-            int startPosition = max(region.Region.start(), newRegionData.Region.start());
+            int startPosition = min(region.Region.start(), newRegion.Region.start());
             region.Region.setStart(startPosition);
 
-            int endPosition = max(region.Region.end(), newRegionData.Region.end());
+            int endPosition = max(region.Region.end(), newRegion.Region.end());
             region.Region.setEnd(endPosition);
 
             ++index;
@@ -91,22 +95,68 @@ public class RegionData
             return;
         }
 
-        regions.add(index, newRegionData);
+        regions.add(index, newRegion);
+    }
+
+    public static void integrateRegion(final List<RegionData> regions, final RegionData newRegion)
+    {
+        // split these new regions if they overlap an existing coding region
+        int index = 0;
+
+        while(index < regions.size())
+        {
+            RegionData region = regions.get(index);
+
+            if(newRegion.Region.start() > region.Region.end())
+            {
+                ++index;
+                continue;
+            }
+
+            if(region.Region.start() > newRegion.Region.end())
+                break;
+
+            if(newRegion.Region.matches(region.Region))
+                return;
+
+            if(newRegion.Region.start() < region.Region.start())
+            {
+                RegionData preRegion = new RegionData(
+                        newRegion.GeneName,
+                        new BaseRegion(newRegion.Region.Chromosome, newRegion.Region.start(), region.Region.start() - 1),
+                        newRegion.Type);
+
+                preRegion.setExtraInfo(newRegion.getExtraInfo());
+
+                regions.add(index, preRegion);
+                ++index; // for the additional insert
+
+                // adjust for remaining segment
+                if(newRegion.Region.end() <= region.Region.end())
+                    return;
+
+                newRegion.Region.setStart(region.Region.end() + 1);
+            }
+            else
+            {
+                newRegion.Region.setStart(region.Region.end() + 1);
+            }
+
+            ++index;
+        }
+
+        regions.add(index, newRegion);
     }
 
     public static boolean validate(final List<RegionData> regions)
     {
-        for(int i = 0; i < regions.size(); ++i)
+        for(int i = 0; i < regions.size() - 1; ++i)
         {
-            RegionData region1 = regions.get(i);
+            RegionData region = regions.get(i);
+            RegionData nextRegion = regions.get(i + 1);
 
-            for(int j = i + 1; j < regions.size(); ++j)
-            {
-                RegionData region2 = regions.get(j);
-
-                if(region1.Region.overlaps(region2.Region))
-                    return false;
-            }
+            if(nextRegion.Region.start() <= region.Region.end())
+                return false;
         }
 
         return true;
