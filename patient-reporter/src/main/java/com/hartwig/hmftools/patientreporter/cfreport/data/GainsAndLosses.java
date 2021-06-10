@@ -75,7 +75,7 @@ public final class GainsAndLosses {
         Double copyNumber = null;
 
         for (CnPerChromosomeArmData cnPerChromosome : cnPerChromosomeData) {
-            ChromosomeArmKey key = new ChromosomeArmKey(cnPerChromosome.chromosome(), cnPerChromosome.chromosomeArm());
+            ChromosomeArmKey key = cnPerChromosome.chromosomeArmKey();
             if (reportableKey.equals(key)) {
                 copyNumber = cnPerChromosome.copyNumber();
             }
