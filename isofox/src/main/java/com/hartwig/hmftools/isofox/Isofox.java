@@ -47,7 +47,7 @@ import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.common.BamReadCounter;
 import com.hartwig.hmftools.isofox.common.FragmentType;
-import com.hartwig.hmftools.isofox.common.TaskExecutor;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.isofox.expression.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.expression.ExpressionCacheTask;
 import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
@@ -208,7 +208,7 @@ public class Isofox
 
         chrTasks.forEach(x -> x.setTaskType(TRANSCRIPT_COUNTS));
 
-        if(!TaskExecutor.executeChromosomeTask(callableList, mConfig.Threads))
+        if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             return false;
 
         int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.totalReadCount()).sum();
@@ -322,7 +322,7 @@ public class Isofox
 
         // now re-fit all transcripts
         chrTasks.forEach(x -> x.setTaskType(APPLY_GC_ADJUSTMENT));
-        TaskExecutor.executeChromosomeTask(callableList, mConfig.Threads);
+        TaskExecutor.executeTasks(callableList, mConfig.Threads);
     }
 
     private Map<String,List<EnsemblGeneData>> getChromosomeGeneLists()
@@ -370,7 +370,7 @@ public class Isofox
         }
 
         final List<Callable> callableList = fragSizeCalcs.stream().collect(Collectors.toList());
-        boolean validExecution = TaskExecutor.executeChromosomeTask(callableList, mConfig.Threads);
+        boolean validExecution = TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
         if(!validExecution)
             return;
@@ -421,7 +421,7 @@ public class Isofox
             callableList.add(gcCalcs);
         }
 
-        boolean taskStatus = TaskExecutor.executeChromosomeTask(callableList, mConfig.Threads);
+        boolean taskStatus = TaskExecutor.executeTasks(callableList, mConfig.Threads);
         mGcTranscriptCalcs.close();
         return taskStatus;
     }
@@ -441,7 +441,7 @@ public class Isofox
             callableList.add(expressionTask);
         }
 
-        return TaskExecutor.executeChromosomeTask(callableList, mConfig.Threads);
+        return TaskExecutor.executeTasks(callableList, mConfig.Threads);
     }
 
     private boolean countBamReads(final Map<String,List<EnsemblGeneData>> chrGeneMap)
@@ -459,7 +459,7 @@ public class Isofox
             callableList.add(bamReaderTask);
         }
 
-        return TaskExecutor.executeChromosomeTask(callableList, mConfig.Threads);
+        return TaskExecutor.executeTasks(callableList, mConfig.Threads);
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.isofox.common;
-
-import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+package com.hartwig.hmftools.common.utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,9 +10,14 @@ import java.util.concurrent.ThreadFactory;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class TaskExecutor
 {
-    public static boolean executeChromosomeTask(final List<Callable> tasks, int threadCount)
+    private static final Logger LOGGER = LogManager.getLogger(TaskExecutor.class);
+
+    public static boolean executeTasks(final List<Callable> tasks, int threadCount)
     {
         if(threadCount <= 1)
         {
@@ -26,7 +29,7 @@ public class TaskExecutor
                 }
                 catch(Exception e)
                 {
-                    ISF_LOGGER.error("task execution error: {} stack: {}", e.toString());
+                    LOGGER.error("task execution error: {} stack: {}", e.toString());
                     e.printStackTrace();
                 }
             }
@@ -34,7 +37,7 @@ public class TaskExecutor
             return true;
         }
 
-        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Isofox-%d").build();
+        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Thread-%d").build();
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory);
         List<FutureTask> threadTaskList = new ArrayList<FutureTask>();
@@ -49,7 +52,7 @@ public class TaskExecutor
 
         if(!checkThreadCompletion(threadTaskList))
         {
-            ISF_LOGGER.info("shutting down reamining tasks");
+            LOGGER.info("shutting down remaining tasks");
             threadTaskList.forEach(x -> x.cancel(true));
             executorService.shutdown();
             return false;
@@ -70,7 +73,7 @@ public class TaskExecutor
         }
         catch (Exception e)
         {
-            ISF_LOGGER.error("task execution error: {}", e.toString());
+            LOGGER.error("task execution error: {}", e.toString());
             e.printStackTrace();
             return false;
         }
