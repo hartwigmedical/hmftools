@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
@@ -66,7 +67,6 @@ public class LinxConfig
     public static final String SAMPLE_DATA_DIR = "sample_data_dir";
     public static final String PURPLE_DATA_DIR = "purple_dir";
     public static final String SAMPLE = "sample";
-    public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String UPLOAD_TO_DB = "upload_to_db"; // true by default when in single-sample mode, false for batch
 
     public static final String CHECK_DRIVERS = "check_drivers";

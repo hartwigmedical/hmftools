@@ -2,7 +2,7 @@ package com.hartwig.hmftools.linx.visualiser;
 
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiser.VIS_LOGGER;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiserConfig.parameter;

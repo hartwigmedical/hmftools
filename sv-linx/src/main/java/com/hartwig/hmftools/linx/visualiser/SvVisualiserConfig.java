@@ -1,47 +1,10 @@
 package com.hartwig.hmftools.linx.visualiser;
 
-import static java.util.stream.Collectors.toList;
-
-import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
-import static com.hartwig.hmftools.linx.visualiser.SvVisualiser.VIS_LOGGER;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.GENE_TRANSCRIPTS_DIR;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
-
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
-import com.hartwig.hmftools.linx.visualiser.data.Exon;
-import com.hartwig.hmftools.linx.visualiser.data.Fusion;
-import com.hartwig.hmftools.linx.visualiser.data.ImmutableFusion;
-import com.hartwig.hmftools.linx.visualiser.data.VisSvData;
-import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
-import com.hartwig.hmftools.linx.visualiser.data.Segment;
-import com.hartwig.hmftools.linx.visualiser.data.VisCopyNumbers;
-import com.hartwig.hmftools.linx.visualiser.data.VisExons;
-import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
-import com.hartwig.hmftools.linx.visualiser.data.VisProteinDomains;
-import com.hartwig.hmftools.linx.visualiser.data.VisSegments;
-import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumberFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisGeneExonFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisSegmentFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
