@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.purple.cnchromosome;
 
-import java.util.Map;
-
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 

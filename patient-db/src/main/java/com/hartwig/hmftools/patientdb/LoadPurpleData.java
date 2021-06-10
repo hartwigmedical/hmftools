@@ -11,6 +11,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
+import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -53,17 +55,18 @@ public class LoadPurpleData {
 
         List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(purpleDir, sample));
         List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(purpleDir, sample));
+        List<CnPerChromosomeArmData> cnPerChromosomeArmData =
+                CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(PurpleCopyNumberFile.generateFilenameForReading(purpleDir, sample));
 
         List<PurpleCopyNumber> germlineCopyNumbers =
                 PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateGermlineFilenameForReading(purpleDir, sample));
 
-        List<DriverCatalog> somaticDriverCatalog =
-                DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purpleDir, sample));
+        List<DriverCatalog> somaticDriverCatalog = DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purpleDir, sample));
 
         final String germlineDriverFile = DriverCatalogFile.generateGermlineFilename(purpleDir, sample);
 
-        List<DriverCatalog> germlineDriverCatalog = Files.exists(Paths.get(germlineDriverFile)) ?
-                DriverCatalogFile.read(germlineDriverFile) : Lists.newArrayList();
+        List<DriverCatalog> germlineDriverCatalog =
+                Files.exists(Paths.get(germlineDriverFile)) ? DriverCatalogFile.read(germlineDriverFile) : Lists.newArrayList();
 
         LOGGER.info("Persisting purple data to db for {}", sample);
         persistToDatabase(dbAccess,
@@ -75,7 +78,7 @@ public class LoadPurpleData {
                 purityContext.qc(),
                 geneCopyNumbers,
                 somaticDriverCatalog,
-                germlineDriverCatalog);
+                germlineDriverCatalog, cnPerChromosomeArmData);
 
         LOGGER.info("Complete");
     }
@@ -93,10 +96,11 @@ public class LoadPurpleData {
             @NotNull List<FittedPurity> bestFitPerPurity, @NotNull List<PurpleCopyNumber> copyNumbers,
             @NotNull List<PurpleCopyNumber> germlineDeletions, @NotNull PurityContext purityContext, @NotNull PurpleQC qcChecks,
             @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<DriverCatalog> somaticDriverCatalog,
-            @NotNull List<DriverCatalog> germlineDriverCatalog) {
+            @NotNull List<DriverCatalog> germlineDriverCatalog, @NotNull List<CnPerChromosomeArmData> cnPerChromosomeArmData) {
         dbAccess.writePurity(tumorSample, purityContext, qcChecks);
         dbAccess.writeBestFitPerPurity(tumorSample, bestFitPerPurity);
         dbAccess.writeCopynumbers(tumorSample, copyNumbers);
+        dbAccess.writeCopynumbersPerCnArm(tumorSample, cnPerChromosomeArmData);
         dbAccess.writeGermlineCopynumbers(tumorSample, germlineDeletions);
         dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
         dbAccess.writePurpleDriverCatalog(tumorSample, somaticDriverCatalog, germlineDriverCatalog);

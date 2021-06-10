@@ -13,3 +13,14 @@ CREATE TABLE virusAnnotation
     reported BOOLEAN NOT NULL,
     PRIMARY KEY (id)
 );
+
+CREATE TABLE copyNumberChromosomeArm
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    chromosomeArm varchar(255) NOT NULL,
+    copyNumber DOUBLE PRECISION not null,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
