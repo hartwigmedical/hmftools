@@ -116,7 +116,6 @@ public class LinxConfig
 
         if(cmd.hasOption(SAMPLE_DATA_DIR))
         {
-            // /DO52664T.purple.sv.vcf.gz
             SampleDataPath = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR));
             PurpleDataPath = SampleDataPath;
 

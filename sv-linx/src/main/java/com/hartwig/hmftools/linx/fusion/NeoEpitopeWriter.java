@@ -73,6 +73,8 @@ public class NeoEpitopeWriter
 
         mSampleId = sampleId;
         mFusions.clear();
+
+        initialiseWriter();
     }
 
     public void processFusionCandidate(
@@ -291,7 +293,7 @@ public class NeoEpitopeWriter
         return false;
     }
 
-    private void writeData(final NeoEpitopeFusion fusion)
+    private void initialiseWriter()
     {
         try
         {
@@ -308,7 +310,20 @@ public class NeoEpitopeWriter
                 mWriter.write(NeoEpitopeFusion.header());
                 mWriter.newLine();
             }
+        }
+        catch (final IOException e)
+        {
+            LNX_LOGGER.error("error initialising neo-epitope output file: {}", e.toString());
+        }
+    }
 
+    private void writeData(final NeoEpitopeFusion fusion)
+    {
+        if(mWriter == null)
+            return;
+
+        try
+        {
             if(mIsMultiSample)
                 mWriter.write(String.format("%s,",mSampleId));
 
