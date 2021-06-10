@@ -384,7 +384,7 @@ public class PurpleApplication
                         qcChecks,
                         geneCopyNumbers,
                         somaticDriverCatalog,
-                        germlineDriverCatalog);
+                        germlineDriverCatalog, cnPerChromosome);
             }
 
             if(mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent())
