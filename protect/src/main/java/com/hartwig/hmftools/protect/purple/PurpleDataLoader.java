@@ -17,6 +17,8 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
@@ -56,14 +58,14 @@ public final class PurpleDataLoader {
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
                 config.purpleGeneCopyNumberTsv(),
-                null);
+                null, config.refGenomeVersion());
     }
 
     @NotNull
     public static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @NotNull String qcFile,
             @NotNull String purityTsv, @NotNull String driverCatalogSomaticTsv, @NotNull String somaticVcf,
             @NotNull String driverCatalogGermlineTsv, @NotNull String germlineVcf, @Nullable String purpleGeneCopyNumberTsv,
-            @Nullable String purpleSomaticCopynumberTsv) throws IOException {
+            @Nullable String purpleSomaticCopynumberTsv, @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
         LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
 
         PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
@@ -97,9 +99,11 @@ public final class PurpleDataLoader {
         List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(driverCatalogGermlineTsv);
         LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDriverCatalog.size(), driverCatalogGermlineTsv);
 
+        final RefGenomeCoordinates refGenomeCoordinates =
+                refGenomeVersion == RefGenomeVersion.V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
         List<CnPerChromosomeArmData> cnPerChromosome = Lists.newArrayList();
         if (purpleSomaticCopynumberTsv != null) {
-            cnPerChromosome = CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(purpleSomaticCopynumberTsv);
+            cnPerChromosome = CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(purpleSomaticCopynumberTsv, refGenomeCoordinates);
             LOGGER.info(" Loaded chromosomal arm copy numbers from {}", purpleSomaticCopynumberTsv);
         }
 

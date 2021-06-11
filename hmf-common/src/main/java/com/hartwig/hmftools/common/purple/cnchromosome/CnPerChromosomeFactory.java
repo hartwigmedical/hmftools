@@ -25,10 +25,10 @@ public final class CnPerChromosomeFactory {
     }
 
     @NotNull
-    public static List<CnPerChromosomeArmData> fromPurpleSomaticCopynumberTsv(@NotNull String purpleSomaticCopynumberTsv)
-            throws IOException {
+    public static List<CnPerChromosomeArmData> fromPurpleSomaticCopynumberTsv(@NotNull String purpleSomaticCopynumberTsv,
+            @NotNull RefGenomeCoordinates refGenomeCoordinates) throws IOException {
         List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(purpleSomaticCopynumberTsv);
-        return extractCnPerChromosomeArm(copyNumbers, RefGenomeCoordinates.COORDS_37);
+        return extractCnPerChromosomeArm(copyNumbers, refGenomeCoordinates);
     }
 
     @NotNull

@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
@@ -48,7 +49,7 @@ public class GenomicAnalyzer {
 
     @NotNull
     public GenomicAnalysis run(@NotNull String tumorSampleId, @Nullable String referenceSampleId, @NotNull PatientReporterConfig config,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel) throws IOException {
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel, @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleId, referenceSampleId,
                 config.purpleQcFile(),
                 config.purplePurityTsv(),
@@ -57,7 +58,7 @@ public class GenomicAnalyzer {
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
                 null,
-                config.purpleSomaticCopyNumberTsv());
+                config.purpleSomaticCopyNumberTsv(), refGenomeVersion);
 
         LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
         VirusInterpreterData virusInterpreterData = VirusInterpreterDataLoader.load(config.annotatedVirusTsv());

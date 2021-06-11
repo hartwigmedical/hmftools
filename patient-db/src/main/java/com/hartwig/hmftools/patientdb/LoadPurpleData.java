@@ -11,6 +11,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -56,7 +57,8 @@ public class LoadPurpleData {
         List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(purpleDir, sample));
         List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(purpleDir, sample));
         List<CnPerChromosomeArmData> cnPerChromosomeArmData =
-                CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(PurpleCopyNumberFile.generateFilenameForReading(purpleDir, sample));
+                CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(PurpleCopyNumberFile.generateFilenameForReading(purpleDir, sample),
+                        RefGenomeCoordinates.COORDS_37);
 
         List<PurpleCopyNumber> germlineCopyNumbers =
                 PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateGermlineFilenameForReading(purpleDir, sample));
@@ -78,7 +80,8 @@ public class LoadPurpleData {
                 purityContext.qc(),
                 geneCopyNumbers,
                 somaticDriverCatalog,
-                germlineDriverCatalog, cnPerChromosomeArmData);
+                germlineDriverCatalog,
+                cnPerChromosomeArmData);
 
         LOGGER.info("Complete");
     }
