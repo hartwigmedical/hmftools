@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class CnPerChromosomeArmFile {
 
-    private CnPerChromosomeArmFile(){
+    private CnPerChromosomeArmFile() {
 
     }
 
@@ -24,27 +24,25 @@ public class CnPerChromosomeArmFile {
     private static final String COPYNUMBER_PER_CHROMOSOME_ARM_EXTENSION = ".cnv.chromosomearm.somatic.tsv";
     private static final String DELIMITER = "\t";
 
-
     @NotNull
     public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + COPYNUMBER_PER_CHROMOSOME_ARM_EXTENSION;
     }
 
-    public static void write(@NotNull final String filename, @NotNull Map<ChromosomeArmKey, Double> cnPerChromosomeArm) throws IOException {
+    public static void write(@NotNull final String filename, @NotNull List<CnPerChromosomeArmData> cnPerChromosomeArm) throws IOException {
         Files.write(new File(filename).toPath(), toLines(cnPerChromosomeArm));
     }
 
     @VisibleForTesting
     @NotNull
-    public static List<String> toLines(@NotNull final Map<ChromosomeArmKey, Double> cnPerChromosomeArm) {
+    public static List<String> toLines(@NotNull final List<CnPerChromosomeArmData> cnPerChromosomeArm) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
 
-        Set<ChromosomeArmKey> chromsomeArmSet = cnPerChromosomeArm.keySet();
-
-        for (ChromosomeArmKey chromsomeArm: chromsomeArmSet) {
-            lines.add(new StringJoiner(DELIMITER).add(chromsomeArm.toString())
-                    .add(FORMAT.format(cnPerChromosomeArm.get(chromsomeArm)))
+        for (CnPerChromosomeArmData chromsomeArm : cnPerChromosomeArm) {
+            lines.add(new StringJoiner(DELIMITER).add(chromsomeArm.chromosome().toString())
+                    .add(chromsomeArm.chromosomeArm().name())
+                    .add(FORMAT.format(chromsomeArm.copyNumber()))
                     .toString());
         }
         return lines;
@@ -52,10 +50,6 @@ public class CnPerChromosomeArmFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("chromosomeArm")
-                .add("copyNumber")
-                .toString();
+        return new StringJoiner(DELIMITER, "", "").add("chromosome").add("chromosomeArm").add("copyNumber").toString();
     }
-
-
 }

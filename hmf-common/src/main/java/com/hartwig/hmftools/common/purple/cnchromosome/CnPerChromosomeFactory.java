@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -24,18 +25,17 @@ public final class CnPerChromosomeFactory {
     }
 
     @NotNull
-    public static Map<ChromosomeArmKey, Double> fromPurpleSomaticCopynumberTsv(@NotNull String purpleSomaticCopynumberTsv)
+    public static List<CnPerChromosomeArmData> fromPurpleSomaticCopynumberTsv(@NotNull String purpleSomaticCopynumberTsv)
             throws IOException {
         List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(purpleSomaticCopynumberTsv);
         return extractCnPerChromosomeArm(copyNumbers, RefGenomeCoordinates.COORDS_37);
     }
 
     @NotNull
-    public static Map<ChromosomeArmKey, Double> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers,
+    public static List<CnPerChromosomeArmData> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers,
             final RefGenomeCoordinates ref_genome_coordinates) {
-        Map<ChromosomeArmKey, Double> cnPerChromosomeArm = Maps.newHashMap();
         Set<String> chomosomeSet = Sets.newHashSet();
-
+        List<CnPerChromosomeArmData> CnPerChromosomeArmData = Lists.newArrayList();
         for (Chromosome chr : ref_genome_coordinates.lengths().keySet()) {
             HumanChromosome chromosome = (HumanChromosome) chr;
             Map<ChromosomeArm, GenomeRegion> genomeRegion = determineArmRegion(chromosome, ref_genome_coordinates);
@@ -57,11 +57,15 @@ public final class CnPerChromosomeFactory {
 
                 // if chromsome not present in copyNumber file, the chromosome arm isn't calculated
                 if (chomosomeSet.contains(chromosome.toString())) {
-                    cnPerChromosomeArm.put(new ChromosomeArmKey(chromosome, entry.getKey()), copyNumberArm);
+                    CnPerChromosomeArmData.add(ImmutableCnPerChromosomeArmData.builder()
+                            .chromosomeArmKey(new ChromosomeArmKey(chromosome, entry.getKey()))
+                            .chromosome(chromosome)
+                            .chromosomeArm(entry.getKey())
+                            .copyNumber(copyNumberArm)
+                            .build());
                 }
             }
-        }
-        return cnPerChromosomeArm;
+        } return CnPerChromosomeArmData;
     }
 
     @NotNull

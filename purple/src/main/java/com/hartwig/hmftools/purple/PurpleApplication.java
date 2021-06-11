@@ -36,6 +36,7 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurityAdjusterAbnormalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.cnchromosome.ChromosomeArmKey;
+import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmFile;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeFactory;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -276,7 +277,7 @@ public class PurpleApplication
             final RefGenomeCoordinates ref_genome_coordinates =
                     refGenomeVersion == RefGenomeVersion.V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
-            Map<ChromosomeArmKey, Double> cnPerChromosome =
+            List<CnPerChromosomeArmData> cnPerChromosome =
                     CnPerChromosomeFactory.extractCnPerChromosomeArm(copyNumbers, ref_genome_coordinates);
 
             PPL_LOGGER.info("Generating QC Stats");
@@ -383,7 +384,7 @@ public class PurpleApplication
                         qcChecks,
                         geneCopyNumbers,
                         somaticDriverCatalog,
-                        germlineDriverCatalog);
+                        germlineDriverCatalog, cnPerChromosome);
             }
 
             if(mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent())

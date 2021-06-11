@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.purple.cnchromosome.ChromosomeArmKey;
+import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
@@ -53,5 +54,5 @@ public interface PurpleData {
     List<ReportableGainLoss> unreportedGainsLosses();
 
     @NotNull
-    Map<ChromosomeArmKey, Double> cnPerChromosome();
+    List<CnPerChromosomeArmData> cnPerChromosome();
 }
