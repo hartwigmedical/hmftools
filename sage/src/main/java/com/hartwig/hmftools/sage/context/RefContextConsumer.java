@@ -37,7 +37,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         mBounds = bounds;
         mRefGenome = refGenome;
         mCandidates = candidates;
-        mReadContextFactory = new ReadContextFactory(config.readContextFlankSize());
+        mReadContextFactory = new ReadContextFactory(config.ReadContextFlankSize);
 
         mConfig = config;
     }
@@ -131,7 +131,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             final IndexedBases refBases, int numberOfEvents)
     {
         int refIndex = refBases.index(refPosition);
-        boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.minMapQuality();
+        boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
         if(refPosition <= mBounds.end() && refPosition >= mBounds.start())
         {
@@ -157,7 +157,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             final IndexedBases refBases, int numberOfEvents)
     {
         int refIndex = refBases.index(refPosition);
-        boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.minMapQuality();
+        boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
         if(refPosition <= mBounds.end() && refPosition >= mBounds.start())
         {
@@ -183,7 +183,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             int alignmentLength, final IndexedBases refBases, int numberOfEvents)
     {
         final List<AltRead> result = Lists.newArrayList();
-        boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.minMapQuality();
+        boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
         int refIndex = refBases.index(refPositionStart);
 
@@ -215,7 +215,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
                     result.add(new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext));
 
-                    if(mConfig.mnvEnabled())
+                    if(mConfig.MnvEnabled)
                     {
                         int mnvMaxLength = mnvLength(readBaseIndex, refBaseIndex, record.getReadBases(), refBases.Bases);
                         for(int mnvLength = 2; mnvLength <= mnvMaxLength; mnvLength++)
@@ -257,7 +257,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
     private boolean findReadContext(int readIndex, @NotNull final SAMRecord record)
     {
-        return readIndex >= mConfig.readContextFlankSize() && readIndex < record.getReadLength() - mConfig.readContextFlankSize();
+        return readIndex >= mConfig.ReadContextFlankSize && readIndex < record.getReadLength() - mConfig.ReadContextFlankSize;
     }
 
     @VisibleForTesting

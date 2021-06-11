@@ -28,7 +28,7 @@ public class Phase implements Consumer<SageVariant>
     public Phase(@NotNull final SageConfig config, @NotNull final String chromosome, @NotNull final Consumer<SageVariant> consumer)
     {
         final List<HmfTranscriptRegion> transcripts =
-                config.transcriptRegions().stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());
+                config.TranscriptRegions.stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());
 
         mDedupRealign = new DedupRealign(consumer);
         mDedupIndel = new DedupIndel(mDedupRealign);

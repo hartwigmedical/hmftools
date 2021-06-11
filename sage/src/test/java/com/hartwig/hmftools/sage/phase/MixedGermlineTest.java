@@ -12,6 +12,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.config.SageConfigTest;
 import com.hartwig.hmftools.sage.config.SoftFilter;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
@@ -27,7 +28,6 @@ import org.junit.Test;
 
 public class MixedGermlineTest
 {
-
     @Test
     public void testNonCodingMnv()
     {
@@ -81,7 +81,7 @@ public class MixedGermlineTest
     private void process(String chromosome, SageVariant... variants)
     {
         final List<SageVariant> consumer = Lists.newArrayList();
-        final Phase victim = new Phase(SageConfigTest.testConfig(), chromosome, consumer::add);
+        final Phase victim = new Phase(new SageConfig(), chromosome, consumer::add);
 
         for(SageVariant variant : variants)
         {

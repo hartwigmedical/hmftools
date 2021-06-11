@@ -37,7 +37,7 @@ public class SageVariantFactory
         final SageVariantTier tier = candidate.tier();
         final SoftFilterConfig softConfig = mConfig.softConfig(tier);
 
-        if(!mConfig.softFilter())
+        if(!mConfig.SoftFilter)
         {
             return new SageVariant(candidate, filters, normal, tumor);
         }
@@ -77,12 +77,12 @@ public class SageVariantFactory
 
         // TUMOR Tests
         final boolean skipTumorTests = skipMinTumorQualTest(tier, primaryTumor);
-        if(!skipTumorTests && primaryTumor.tumorQuality() < config.minTumorQual())
+        if(!skipTumorTests && primaryTumor.tumorQuality() < config.MinTumorQual)
         {
             result.add(SoftFilter.MIN_TUMOR_QUAL.toString());
         }
 
-        if(!skipTumorTests && Doubles.lessThan(primaryTumor.vaf(), config.minTumorVaf()))
+        if(!skipTumorTests && Doubles.lessThan(primaryTumor.vaf(), config.MinTumorVaf))
         {
             result.add(SoftFilter.MIN_TUMOR_VAF.toString());
         }
@@ -100,13 +100,13 @@ public class SageVariantFactory
         final boolean chromosomeIsAllosome =
                 HumanChromosome.contains(normal.chromosome()) && HumanChromosome.fromString(normal.chromosome()).isAllosome();
         int minGermlineCoverage =
-                chromosomeIsAllosome ? config.minGermlineReadContextCoverageAllosome() : config.minGermlineReadContextCoverage();
+                chromosomeIsAllosome ? config.MinGermlineReadContextCoverageAllosome : config.MinGermlineReadContextCoverage;
         if(normal.coverage() < minGermlineCoverage)
         {
             result.add(SoftFilter.MIN_GERMLINE_DEPTH.toString());
         }
 
-        if(Doubles.greaterThan(normal.vaf(), config.maxGermlineVaf()))
+        if(Doubles.greaterThan(normal.vaf(), config.MaxGermlineVaf))
         {
             result.add(SoftFilter.MAX_GERMLINE_VAF.toString());
         }
@@ -116,14 +116,14 @@ public class SageVariantFactory
         double germlineQual = normal.rawAltBaseQuality();
         if(Doubles.positive(tumorQual))
         {
-            if(Doubles.greaterThan(germlineQual / tumorQual, config.maxGermlineRelativeQual()))
+            if(Doubles.greaterThan(germlineQual / tumorQual, config.MaxGermlineRelativeQual))
             {
                 result.add(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.toString());
             }
         }
 
         // MNV Tests
-        if(tier != SageVariantTier.HOTSPOT && normal.variant().isMNV() && this.mConfig.mnvFilter())
+        if(tier != SageVariantTier.HOTSPOT && normal.variant().isMNV() && this.mConfig.MnvFilter)
         {
             if(normal.altSupport() != 0)
             {

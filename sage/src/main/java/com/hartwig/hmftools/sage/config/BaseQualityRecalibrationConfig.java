@@ -8,35 +8,46 @@ import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface BaseQualityRecalibrationConfig
+public class BaseQualityRecalibrationConfig
 {
+    public final boolean Enabled;
+    public final boolean Plot;
+    public final int MaxAltCount;
+    public final int SampleSize;
+    public final int MinMapQuality;
 
-    String BQR_PLOT = "bqr_plot";
-    String BQR_ENABLED = "bqr_enabled";
-    String BQR_SAMPLE_SIZE = "bqr_sample_size";
-    String BQR_MAX_ALT_COUNT = "bqr_max_alt_count";
-    String BQR_MIN_MAP_QUAL = "bqr_min_map_qual";
+    private static final String BQR_PLOT = "bqr_plot";
+    private static final String BQR_ENABLED = "bqr_enabled";
+    private static final String BQR_SAMPLE_SIZE = "bqr_sample_size";
+    private static final String BQR_MAX_ALT_COUNT = "bqr_max_alt_count";
+    private static final String BQR_MIN_MAP_QUAL = "bqr_min_map_qual";
 
-    boolean DEFAULT_BQR_PLOT = true;
-    boolean DEFAULT_BQR_ENABLED = true;
-    int DEFAULT_BQR_MAX_ALT_COUNT = 3;
-    int DEFAULT_BQR_SAMPLE_SIZE = 2_000_000;
-    int DEFAULT_BQR_MIN_MAP_QUAL = 10;
+    private static final boolean DEFAULT_BQR_PLOT = true;
+    private static final boolean DEFAULT_BQR_ENABLED = true;
+    private static final int DEFAULT_BQR_MAX_ALT_COUNT = 3;
+    private static final int DEFAULT_BQR_SAMPLE_SIZE = 2_000_000;
+    private static final int DEFAULT_BQR_MIN_MAP_QUAL = 10;
 
-    boolean enabled();
+    public BaseQualityRecalibrationConfig(final CommandLine cmd)
+    {
+        Enabled = getConfigValue(cmd, BQR_ENABLED, DEFAULT_BQR_ENABLED);
+        Plot = getConfigValue(cmd, BQR_PLOT, DEFAULT_BQR_PLOT);
+        MaxAltCount = getConfigValue(cmd, BQR_MAX_ALT_COUNT, DEFAULT_BQR_MAX_ALT_COUNT);
+        SampleSize = getConfigValue(cmd, BQR_SAMPLE_SIZE, DEFAULT_BQR_SAMPLE_SIZE);
+        MinMapQuality = getConfigValue(cmd, BQR_MIN_MAP_QUAL, DEFAULT_BQR_MIN_MAP_QUAL);
+    }
 
-    boolean plot();
-
-    int maxAltCount();
-
-    int sampleSize();
-
-    int minMapQuality();
+    public BaseQualityRecalibrationConfig()
+    {
+        Enabled = false;
+        Plot = false;
+        MaxAltCount = DEFAULT_BQR_MAX_ALT_COUNT;
+        SampleSize = DEFAULT_BQR_SAMPLE_SIZE;
+        MinMapQuality = DEFAULT_BQR_MIN_MAP_QUAL;
+    }
 
     @NotNull
-    static Options createOptions()
+    public static Options createOptions()
     {
         final Options options = new Options();
         options.addOption(BQR_ENABLED, true, "BQR (Base Quality Recalibration) enabled [" + DEFAULT_BQR_ENABLED + "]");
@@ -45,17 +56,5 @@ public interface BaseQualityRecalibrationConfig
         options.addOption(BQR_SAMPLE_SIZE, true, "BQR sampling size per autosome [" + DEFAULT_BQR_SAMPLE_SIZE + "]");
         options.addOption(BQR_MIN_MAP_QUAL, true, "BQR min base quality remap qual [" + DEFAULT_BQR_MIN_MAP_QUAL + "]");
         return options;
-    }
-
-    @NotNull
-    static BaseQualityRecalibrationConfig createConfig(@NotNull final CommandLine cmd)
-    {
-        return ImmutableBaseQualityRecalibrationConfig.builder()
-                .enabled(getConfigValue(cmd, BQR_ENABLED, DEFAULT_BQR_ENABLED))
-                .plot(getConfigValue(cmd, BQR_PLOT, DEFAULT_BQR_PLOT))
-                .maxAltCount(getConfigValue(cmd, BQR_MAX_ALT_COUNT, DEFAULT_BQR_MAX_ALT_COUNT))
-                .sampleSize(getConfigValue(cmd, BQR_SAMPLE_SIZE, DEFAULT_BQR_SAMPLE_SIZE))
-                .minMapQuality(getConfigValue(cmd, BQR_MIN_MAP_QUAL, DEFAULT_BQR_MIN_MAP_QUAL))
-                .build();
     }
 }

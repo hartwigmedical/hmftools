@@ -23,7 +23,7 @@ public class ReadContextCounterTest
     private static final String SAMPLE = "sample";
     private static final int MAX_COVERAGE = 1000;
     private static final SageVariantTier TIER = SageVariantTier.PANEL;
-    private static final SageConfig CONFIG = SageConfigTest.testConfig();
+    private static final SageConfig CONFIG = new SageConfig();
     private static final QualityRecalibrationMap RECALIBRATION = new QualityRecalibrationMap(Collections.emptyList());
 
     @Test

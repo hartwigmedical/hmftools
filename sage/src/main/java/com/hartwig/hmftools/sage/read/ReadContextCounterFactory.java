@@ -38,14 +38,13 @@ public class ReadContextCounterFactory
                         maxCoverage(x),
                         x.minNumberOfEvents(),
                         mConfig.maxSkippedReferenceRegions(),
-                        x.maxReadDepth() < mConfig.maxRealignmentDepth()))
+                        x.maxReadDepth() < mConfig.MaxRealignmentDepth))
                 .collect(Collectors.toList());
     }
 
     private int maxCoverage(@NotNull final Candidate candidate)
     {
         return HIGH_COVERAGE.contains(candidate.tier()) || MitochondrialChromosome.contains(candidate.chromosome())
-                ? mConfig.maxReadDepthPanel()
-                : mConfig.maxReadDepth();
+                ? mConfig.MaxReadDepthPanel : mConfig.MaxReadDepth;
     }
 }

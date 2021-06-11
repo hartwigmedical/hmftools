@@ -79,12 +79,12 @@ public class CandidateEvidence
         final List<AltContext> altContexts = Lists.newArrayList();
 
         final SamSlicer slicer = mSamSlicerFactory.create(bounds);
+
         try(final SamReader tumorReader = SamReaderFactory.makeDefault()
-                .validationStringency(mConfig.validationStringency())
+                .validationStringency(mConfig.Stringency)
                 .referenceSource(new ReferenceSource(mRefGenome))
                 .open(new File(bamFile)))
         {
-
             // First parse
             slicer.slice(tumorReader, recordConsumer);
 

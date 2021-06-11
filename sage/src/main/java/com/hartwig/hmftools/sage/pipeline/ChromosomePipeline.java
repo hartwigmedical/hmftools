@@ -55,7 +55,7 @@ public class ChromosomePipeline implements AutoCloseable
     {
         this.chromosome = chromosome;
         this.config = config;
-        this.refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
+        this.refGenome = new IndexedFastaSequenceFile(new File(config.RefGenomeFile));
         this.consumer = consumer;
         this.sageVariantPipeline = new SomaticPipeline(config,
                 executor,
@@ -140,7 +140,7 @@ public class ChromosomePipeline implements AutoCloseable
 
     private boolean include(@NotNull final SageVariant entry, @NotNull final Set<Integer> passingPhaseSets)
     {
-        if(config.panelOnly() && !PANEL_ONLY_TIERS.contains(entry.tier()))
+        if(config.PanelOnly && !PANEL_ONLY_TIERS.contains(entry.tier()))
         {
             return false;
         }
@@ -150,7 +150,7 @@ public class ChromosomePipeline implements AutoCloseable
             return true;
         }
 
-        if(config.filter().hardFilter())
+        if(config.Filter.HardFilter)
         {
             return false;
         }
@@ -170,7 +170,7 @@ public class ChromosomePipeline implements AutoCloseable
                 && !passingPhaseSets.contains(entry.localPhaseSet()))
         {
             final ReadContextCounter normal = entry.normalAltContexts().get(0);
-            if(normal.altSupport() > config.filter().filteredMaxNormalAltSupport())
+            if(normal.altSupport() > config.Filter.FilteredMaxNormalAltSupport)
             {
                 return false;
             }

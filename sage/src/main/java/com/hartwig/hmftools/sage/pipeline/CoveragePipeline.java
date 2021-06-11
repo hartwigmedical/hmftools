@@ -48,8 +48,8 @@ public class CoveragePipeline
         mExecutorService = executorService;
 
         final Set<String> samples = Sets.newHashSet();
-        samples.addAll(config.reference());
-        samples.addAll(config.tumor());
+        samples.addAll(config.ReferenceIds);
+        samples.addAll(config.TumorIds);
 
         mConfig = config;
         mPartition = new ChromosomePartition(config, refGenome);
@@ -67,25 +67,17 @@ public class CoveragePipeline
         for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
         {
             final String contig = samSequenceRecord.getSequenceName();
-            if(mConfig.chromosomes().isEmpty() || mConfig.chromosomes().contains(contig))
+            if(mConfig.Chromosomes.isEmpty() || mConfig.Chromosomes.contains(contig))
             {
                 for(GenomeRegion region : mPartition.partition(contig))
                 {
-
-                    //                    for (int i = 0; i < config.tumor().size(); i++) {
-                    //                        final String sample = config.tumor().get(i);
-                    //                        final String sampleBam = config.tumorBam().get(i);
-                    //                        futures.add(submit(sample, sampleBam, region));
-                    //                    }
-
-                    for(int i = 0; i < mConfig.reference().size(); i++)
+                    for(int i = 0; i < mConfig.ReferenceIds.size(); i++)
                     {
-                        final String sample = mConfig.reference().get(i);
-                        final String sampleBam = mConfig.referenceBam().get(i);
+                        final String sample = mConfig.ReferenceIds.get(i);
+                        final String sampleBam = mConfig.ReferenceBams.get(i);
                         futures.add(submit(sample, sampleBam, region));
                     }
                 }
-
             }
         }
 
@@ -117,13 +109,15 @@ public class CoveragePipeline
 
             final HumanChromosome chrom = HumanChromosome.fromString(bounds.chromosome());
             final SamSlicer slicer = new SamSlicer(1, bounds, mPanel.get(chrom));
+
             try(final SamReader samReader = SamReaderFactory.makeDefault()
-                    .validationStringency(mConfig.validationStringency())
+                    .validationStringency(mConfig.Stringency)
                     .referenceSource(new ReferenceSource(mRefGenome))
                     .open(new File(bam)))
             {
                 slicer.slice(samReader, consumer);
-            } catch(IOException e)
+            }
+            catch(IOException e)
             {
                 throw new CompletionException(e);
             }

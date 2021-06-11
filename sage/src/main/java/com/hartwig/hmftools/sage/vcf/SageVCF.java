@@ -82,7 +82,7 @@ public class SageVCF implements AutoCloseable
     {
         final SAMSequenceDictionary sequenceDictionary = reference.getSequenceDictionary();
 
-        mWriter = new VariantContextWriterBuilder().setOutputFile(config.outputFile())
+        mWriter = new VariantContextWriterBuilder().setOutputFile(config.OutputFile)
                 .modifyOption(Options.INDEX_ON_THE_FLY, true)
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(sequenceDictionary)
@@ -111,11 +111,11 @@ public class SageVCF implements AutoCloseable
 
         Set<VCFHeaderLine> headerLines = existingHeader.getMetaDataInInputOrder();
         List<String> samples = Lists.newArrayList(existingHeader.getGenotypeSamples());
-        samples.addAll(config.reference());
+        samples.addAll(config.ReferenceIds);
 
         final VCFHeader newHeader = new VCFHeader(headerLines, samples);
 
-        mWriter = new VariantContextWriterBuilder().setOutputFile(config.outputFile())
+        mWriter = new VariantContextWriterBuilder().setOutputFile(config.OutputFile)
                 .modifyOption(Options.INDEX_ON_THE_FLY, true)
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(reference.getSequenceDictionary())
@@ -133,9 +133,9 @@ public class SageVCF implements AutoCloseable
     static VCFHeader header(@NotNull final SageConfig config)
     {
         final List<String> samples = Lists.newArrayList();
-        samples.addAll(config.reference());
-        samples.addAll(config.tumor());
-        return header(config.version(), samples);
+        samples.addAll(config.ReferenceIds);
+        samples.addAll(config.TumorIds);
+        return header(config.Version, samples);
     }
 
     @NotNull

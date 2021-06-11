@@ -233,7 +233,7 @@ public class ReadContextCounter implements VariantHotspot
                 return;
             }
 
-            if(!tier.equals(SageVariantTier.HOTSPOT) && record.getMappingQuality() < sageConfig.minMapQuality())
+            if(!tier.equals(SageVariantTier.HOTSPOT) && record.getMappingQuality() < sageConfig.MinMapQuality)
             {
                 return;
             }
@@ -264,7 +264,7 @@ public class ReadContextCounter implements VariantHotspot
                 return;
             }
 
-            final QualityConfig qualityConfig = sageConfig.qualityConfig();
+            final QualityConfig qualityConfig = sageConfig.Quality;
             int numberOfEvents =
                     Math.max(minNumberOfEvents, NumberEvents.numberOfEventsWithMNV(rawNumberOfEvents, variant.ref(), variant.alt()));
             double quality = calculateQualityScore(readIndex, record, qualityConfig, numberOfEvents);

@@ -8,7 +8,6 @@ import org.jetbrains.annotations.NotNull;
 
 public enum SoftFilter
 {
-
     MIN_TUMOR_QUAL("min_tumor_qual", true, false),
     MIN_TUMOR_VAF("min_tumor_vaf", true, false),
     MIN_GERMLINE_DEPTH("min_germline_depth", false, true),
@@ -24,26 +23,26 @@ public enum SoftFilter
     {
         for(SoftFilter softFilter : SoftFilter.values())
         {
-            if(softFilter.germline)
+            if(softFilter.mGermline)
             {
                 GERMLINE_FILTERS.add(softFilter.toString());
             }
-            if(softFilter.tumor)
+            if(softFilter.mTumor)
             {
                 TUMOR_FILTERS.add(softFilter.toString());
             }
         }
     }
 
-    private final String filter;
-    private final boolean tumor;
-    private final boolean germline;
+    private final String mFilter;
+    private final boolean mTumor;
+    private final boolean mGermline;
 
     SoftFilter(@NotNull final String filter, boolean tumor, boolean germline)
     {
-        this.filter = filter;
-        this.tumor = tumor;
-        this.germline = germline;
+        mFilter = filter;
+        mTumor = tumor;
+        mGermline = germline;
     }
 
     public static boolean isGermlineAndNotTumorFiltered(@NotNull final Set<String> softFilters)
@@ -67,7 +66,7 @@ public enum SoftFilter
     @Override
     public String toString()
     {
-        return filter;
+        return mFilter;
     }
 }
 

@@ -30,7 +30,7 @@ public class RefContextFactory
         mSample = sample;
         mConfig = config;
         mPanelSelector = new PanelSelector<>(panel);
-        final Predicate<AltContext> altContextPredicate = config.filter().altContextFilter(new HotspotSelector(hotspots));
+        final Predicate<AltContext> altContextPredicate = config.Filter.altContextFilter(new HotspotSelector(hotspots));
         final Consumer<RefContext> evictionHandler = (refContext) -> refContext.alts()
                 .stream()
                 .filter(AltContext::finaliseAndValidate)
@@ -59,8 +59,7 @@ public class RefContextFactory
     private int maxReadDepth(final String chromosome, final long position)
     {
         return MitochondrialChromosome.contains(chromosome) || mPanelSelector.inPanel(position, position)
-                ? mConfig.maxReadDepthPanel()
-                : mConfig.maxReadDepth();
+                ? mConfig.MaxReadDepthPanel : mConfig.MaxReadDepth;
     }
 
     private boolean refPredicate(@NotNull final AltContext altContext)

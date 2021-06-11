@@ -33,9 +33,9 @@ public class ChromosomePartition
     {
         final List<GenomeRegion> results = Lists.newArrayList();
 
-        int dynamicSliceSize = maxPosition / Math.min(mConfig.threads(), 4) + 1;
+        int dynamicSliceSize = maxPosition / Math.min(mConfig.Threads, 4) + 1;
 
-        final int regionSliceSize = Math.min(dynamicSliceSize, mConfig.regionSliceSize());
+        final int regionSliceSize = Math.min(dynamicSliceSize, mConfig.RegionSliceSize);
         for(int i = 0; ; i++)
         {
             int start = minPosition + i * regionSliceSize;

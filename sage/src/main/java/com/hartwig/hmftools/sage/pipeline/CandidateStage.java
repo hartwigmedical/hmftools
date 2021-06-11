@@ -54,10 +54,12 @@ public class CandidateStage
             final Candidates initialCandidates = new Candidates(mHotspots, mPanelRegions, mHighConfidenceRegions);
 
             CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
-            for(int i = 0; i < mConfig.tumor().size(); i++)
+
+            for(int i = 0; i < mConfig.TumorIds.size(); i++)
             {
-                final String sample = mConfig.tumor().get(i);
-                final String sampleBam = mConfig.tumorBam().get(i);
+                final String sample = mConfig.TumorIds.get(i);
+                final String sampleBam = mConfig.TumorBams.get(i);
+
                 done = done.thenApply(aVoid -> mCandidateEvidence.get(sample, sampleBam, refSequence, region))
                         .thenAccept(initialCandidates::add);
             }

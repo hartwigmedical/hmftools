@@ -87,23 +87,23 @@ public class SageApplication implements AutoCloseable
         SG_LOGGER.info("SAGE version: {}", version.version());
 
         final CommandLine cmd = createCommandLine(args, options);
-        this.mConfig = SageConfig.createConfig(false, version.version(), cmd);
-        mCoveragePanel = readNamedBed(mConfig.coverageBed());
-        final ListMultimap<Chromosome, GenomeRegion> panelWithoutHotspots = readUnnamedBed(mConfig.panelBed());
+        mConfig = new SageConfig(false, version.version(), cmd);
+        mCoveragePanel = readNamedBed(mConfig.CoverageBed);
+        final ListMultimap<Chromosome, GenomeRegion> panelWithoutHotspots = readUnnamedBed(mConfig.PanelBed);
         mHotspots = readHotspots();
         mPanelWithHotspots = panelWithHotspots(panelWithoutHotspots, mHotspots);
-        mHighConfidence = readUnnamedBed(mConfig.highConfidenceBed());
+        mHighConfidence = readUnnamedBed(mConfig.HighConfidenceBed);
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
-        mExecutorService = Executors.newFixedThreadPool(mConfig.threads(), namedThreadFactory);
-        mRefGenome = new IndexedFastaSequenceFile(new File(mConfig.refGenome()));
+        mExecutorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
+        mRefGenome = new IndexedFastaSequenceFile(new File(mConfig.RefGenomeFile));
         mQualityRecalibrationSupplier = new QualityRecalibrationSupplier(mExecutorService, mRefGenome, mConfig);
 
         mVcfFile = new SageVCF(mRefGenome, mConfig);
-        SG_LOGGER.info("Writing to file: {}", mConfig.outputFile());
+        SG_LOGGER.info("Writing to file: {}", mConfig.OutputFile);
 
         // Validate Coverage Bed
-        if(mConfig.panelOnly() && !mCoveragePanel.isEmpty())
+        if(mConfig.PanelOnly && !mCoveragePanel.isEmpty())
         {
             if(!GenomeRegionsValidation.isSubset(mPanelWithHotspots.values(), mCoveragePanel.values()))
             {
@@ -116,9 +116,9 @@ public class SageApplication implements AutoCloseable
     private Coverage createCoverage()
     {
         Set<String> samples = Sets.newHashSet();
-        if(!mConfig.coverageBed().isEmpty())
+        if(!mConfig.CoverageBed.isEmpty())
         {
-            samples.addAll(mConfig.tumor());
+            samples.addAll(mConfig.TumorIds);
         }
         return new Coverage(samples, mCoveragePanel.values());
     }
@@ -133,7 +133,7 @@ public class SageApplication implements AutoCloseable
         for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
         {
             final String contig = samSequenceRecord.getSequenceName();
-            if(mConfig.chromosomes().isEmpty() || mConfig.chromosomes().contains(contig))
+            if(mConfig.Chromosomes.isEmpty() || mConfig.Chromosomes.contains(contig))
             {
                 if(HumanChromosome.contains(contig) || MitochondrialChromosome.contains(contig))
                 {
@@ -161,13 +161,17 @@ public class SageApplication implements AutoCloseable
 
     private SAMSequenceDictionary dictionary() throws IOException
     {
-        final String bam = mConfig.referenceBam().isEmpty() ? mConfig.tumorBam().get(0) : mConfig.referenceBam().get(0);
+        final String bam = mConfig.ReferenceBams.isEmpty() ? mConfig.TumorBams.get(0) : mConfig.ReferenceBams.get(0);
+
         SamReader tumorReader = SamReaderFactory.makeDefault()
-                .validationStringency(mConfig.validationStringency())
+                .validationStringency(mConfig.Stringency)
                 .referenceSource(new ReferenceSource(mRefGenome))
                 .open(new File(bam));
+
         SAMSequenceDictionary dictionary = tumorReader.getFileHeader().getSequenceDictionary();
+
         tumorReader.close();
+
         return dictionary;
     }
 
@@ -176,15 +180,10 @@ public class SageApplication implements AutoCloseable
     {
         final Chromosome chromosome =
                 HumanChromosome.contains(contig) ? HumanChromosome.fromString(contig) : MitochondrialChromosome.fromString(contig);
-        return new ChromosomePipeline(contig,
-                mConfig,
-                mExecutorService,
-                mHotspots.get(chromosome),
-                mPanelWithHotspots.get(chromosome),
-                mHighConfidence.get(chromosome),
-                qualityRecalibrationMap,
-                coverage,
-                mVcfFile::write);
+
+        return new ChromosomePipeline(
+                contig, mConfig, mExecutorService, mHotspots.get(chromosome), mPanelWithHotspots.get(chromosome),
+                mHighConfidence.get(chromosome), qualityRecalibrationMap, coverage, mVcfFile::write);
     }
 
     @Override
@@ -205,10 +204,10 @@ public class SageApplication implements AutoCloseable
     @NotNull
     private ListMultimap<Chromosome, VariantHotspot> readHotspots() throws IOException
     {
-        if(!mConfig.hotspots().isEmpty())
+        if(!mConfig.Hotspots.isEmpty())
         {
-            SG_LOGGER.info("Reading hotspot vcf: {}", mConfig.hotspots());
-            return VariantHotspotFile.readFromVCF(mConfig.hotspots());
+            SG_LOGGER.info("Reading hotspot vcf: {}", mConfig.Hotspots);
+            return VariantHotspotFile.readFromVCF(mConfig.Hotspots);
         }
         else
         {

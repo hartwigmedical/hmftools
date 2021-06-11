@@ -40,8 +40,8 @@ public class QualityRecalibrationSupplier implements Supplier<Map<String, Qualit
     @NotNull
     public Map<String, QualityRecalibrationMap> get()
     {
-        BaseQualityRecalibrationConfig bqrConfig = config.baseQualityRecalibrationConfig();
-        if(!bqrConfig.enabled())
+        BaseQualityRecalibrationConfig bqrConfig = config.BaseQualityRecalibration;
+        if(!bqrConfig.Enabled)
         {
             return disableQualityRecalibration(config);
         }
@@ -62,7 +62,7 @@ public class QualityRecalibrationSupplier implements Supplier<Map<String, Qualit
                         QualityRecalibrationFile.write(tsvFile, records);
                         result.put(sample, new QualityRecalibrationMap(records));
                         SG_LOGGER.info("Writing base quality recalibration file: {}", tsvFile);
-                        if(bqrConfig.plot())
+                        if(bqrConfig.Plot)
                         {
                             RExecutor.executeFromClasspath("r/baseQualityRecalibrationPlot.R", tsvFile);
                         }
@@ -72,14 +72,14 @@ public class QualityRecalibrationSupplier implements Supplier<Map<String, Qualit
                     }
                 });
 
-        for(int i = 0; i < config.reference().size(); i++)
+        for(int i = 0; i < config.ReferenceIds.size(); i++)
         {
-            done.add(processSample.apply(config.reference().get(i), config.referenceBam().get(i)));
+            done.add(processSample.apply(config.ReferenceIds.get(i), config.ReferenceBams.get(i)));
         }
 
-        for(int i = 0; i < config.tumor().size(); i++)
+        for(int i = 0; i < config.TumorIds.size(); i++)
         {
-            done.add(processSample.apply(config.tumor().get(i), config.tumorBam().get(i)));
+            done.add(processSample.apply(config.TumorIds.get(i), config.TumorBams.get(i)));
         }
 
         // Wait for all tasks to be finished
@@ -92,11 +92,11 @@ public class QualityRecalibrationSupplier implements Supplier<Map<String, Qualit
     {
         final Map<String, QualityRecalibrationMap> result = Maps.newHashMap();
 
-        for(String sample : config.reference())
+        for(String sample : config.ReferenceIds)
         {
             result.put(sample, new QualityRecalibrationMap(Collections.emptyList()));
         }
-        for(String sample : config.tumor())
+        for(String sample : config.TumorIds)
         {
             result.put(sample, new QualityRecalibrationMap(Collections.emptyList()));
 

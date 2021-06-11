@@ -11,8 +11,6 @@ import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SamReader;
@@ -22,15 +20,15 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 class QualityCounterFactory
 {
-    private final String bamFile;
-    private final ReferenceSequenceFile refGenome;
-    private final SageConfig config;
+    private final String mBamFile;
+    private final ReferenceSequenceFile mRefGenome;
+    private final SageConfig mConfig;
 
     public QualityCounterFactory(final SageConfig config, final String bamFile, final ReferenceSequenceFile refGenome)
     {
-        this.bamFile = bamFile;
-        this.refGenome = refGenome;
-        this.config = config;
+        mBamFile = bamFile;
+        mRefGenome = refGenome;
+        mConfig = config;
     }
 
     @NotNull
@@ -38,14 +36,17 @@ class QualityCounterFactory
     {
         SG_LOGGER.debug("Processing bqr region {}", bounds);
 
-        final RefSequence refSequence = new RefSequence(bounds, refGenome);
-        final QualityCounterCigarHandler counter =
-                new QualityCounterCigarHandler(refSequence, bounds, config.baseQualityRecalibrationConfig().maxAltCount());
-        final SamSlicer slicer = new SamSlicer(config.minMapQuality(), bounds);
+        final RefSequence refSequence = new RefSequence(bounds, mRefGenome);
+
+        final QualityCounterCigarHandler counter = new QualityCounterCigarHandler(
+                refSequence, bounds, mConfig.BaseQualityRecalibration.MaxAltCount);
+
+        final SamSlicer slicer = new SamSlicer(mConfig.MinMapQuality, bounds);
+
         try(final SamReader tumorReader = SamReaderFactory.makeDefault()
-                .validationStringency(config.validationStringency())
-                .referenceSource(new ReferenceSource(refGenome))
-                .open(new File(bamFile)))
+                .validationStringency(mConfig.Stringency)
+                .referenceSource(new ReferenceSource(mRefGenome))
+                .open(new File(mBamFile)))
         {
 
             // First parse

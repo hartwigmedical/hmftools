@@ -89,14 +89,14 @@ public class SageAppendApplication implements AutoCloseable
         SG_LOGGER.info("SAGE version: {}", version.version());
 
         final CommandLine cmd = createCommandLine(args, options);
-        this.config = SageConfig.createConfig(true, version.version(), cmd);
+        config = new SageConfig(true, version.version(), cmd);
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
-        executorService = Executors.newFixedThreadPool(config.threads(), namedThreadFactory);
-        refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
+        executorService = Executors.newFixedThreadPool(config.Threads, namedThreadFactory);
+        refGenome = new IndexedFastaSequenceFile(new File(config.RefGenomeFile));
         qualityRecalibrationSupplier = new QualityRecalibrationSupplier(executorService, refGenome, config);
 
-        final String inputVcf = config.inputFile();
+        final String inputVcf = config.InputFile;
         inputReader = AbstractFeatureReader.getFeatureReader(inputVcf, new VCFCodec(), false);
 
         VCFHeader inputHeader = (VCFHeader) inputReader.getHeader();
@@ -104,7 +104,7 @@ public class SageAppendApplication implements AutoCloseable
         validateInputHeader(inputHeader);
 
         outputVCF = new SageVCF(refGenome, config, inputHeader);
-        SG_LOGGER.info("Writing to file: {}", config.outputFile());
+        SG_LOGGER.info("Writing to file: {}", config.OutputFile);
     }
 
     public void run() throws IOException, ExecutionException, InterruptedException
@@ -177,7 +177,7 @@ public class SageAppendApplication implements AutoCloseable
         }
 
         final Set<String> samplesInExistingVcf = existingSamples(header);
-        for(String refSample : config.reference())
+        for(String refSample : config.ReferenceIds)
         {
             if(samplesInExistingVcf.contains(refSample))
             {
@@ -212,9 +212,9 @@ public class SageAppendApplication implements AutoCloseable
 
     private SAMSequenceDictionary dictionary() throws IOException
     {
-        final String bam = config.referenceBam().isEmpty() ? config.tumorBam().get(0) : config.referenceBam().get(0);
+        final String bam = config.ReferenceBams.isEmpty() ? config.TumorBams.get(0) : config.ReferenceBams.get(0);
         SamReader tumorReader = SamReaderFactory.makeDefault()
-                .validationStringency(config.validationStringency())
+                .validationStringency(config.Stringency)
                 .referenceSource(new ReferenceSource(refGenome)).open(new File(bam));
         SAMSequenceDictionary dictionary = tumorReader.getFileHeader().getSequenceDictionary();
         tumorReader.close();

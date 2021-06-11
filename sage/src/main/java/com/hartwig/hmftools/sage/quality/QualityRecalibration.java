@@ -35,9 +35,11 @@ public class QualityRecalibration
     public CompletableFuture<List<QualityRecalibrationRecord>> qualityRecalibrationRecords(@NotNull final String bamFile)
     {
         final Map<QualityCounterKey, QualityCounter> map = new ConcurrentHashMap<>(Maps.newHashMap());
+
         final List<CompletableFuture<Void>> doneList = Lists.newArrayList();
         final List<GenomeRegion> regions =
-                new QualityRecalibrationRegions(mRefGenome).regions(mConfig.baseQualityRecalibrationConfig().sampleSize());
+                new QualityRecalibrationRegions(mRefGenome).regions(mConfig.BaseQualityRecalibration.SampleSize);
+
         for(GenomeRegion region : regions)
         {
             for(CompletableFuture<Collection<QualityCounter>> slice : submitAllRegions(bamFile, region))

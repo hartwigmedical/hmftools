@@ -62,14 +62,14 @@ public class ReadContextEvidence
         final SamRecordSelector<ReadContextCounter> consumerSelector = new SamRecordSelector<>(counters);
 
         final RefSequence refSequence = new RefSequence(bounds, mRefGenome);
+
         try(final SamReader tumorReader = SamReaderFactory.makeDefault()
-                .validationStringency(mSageConfig.validationStringency())
+                .validationStringency(mSageConfig.Stringency)
                 .referenceSource(new ReferenceSource(mRefGenome))
                 .open(new File(bam)))
         {
             slicer.slice(tumorReader, samRecord ->
             {
-
                 int numberOfEvents = NumberEvents.numberOfEvents(samRecord, refSequence);
                 consumerSelector.select(samRecord, x -> x.accept(samRecord, mSageConfig, numberOfEvents));
 
