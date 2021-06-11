@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.protect;
 
+import static com.hartwig.hmftools.common.serve.actionability.EvidenceDirection.PREDICTED_RESPONSIVE;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceDirection.RESPONSIVE;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.A;
 import static com.hartwig.hmftools.common.serve.actionability.EvidenceLevel.B;
@@ -41,19 +42,67 @@ public class EvidenceReportingFunctionsTest {
     }
 
     @Test
-    public void doNotReportC() {
-        List<ProtectEvidence> evidences = Lists.newArrayList(onLabelResponsiveC, offLabelResponsiveC);
-        List<ProtectEvidence> filtered = EvidenceReportingFunctions.reportHighestLevelEvidence(evidences);
-        assertEquals(2, filtered.size());
-        for (ProtectEvidence evidence : filtered) {
-            assertFalse(evidence.reported());
-        }
+    public void respectMaxReportingLevel() {
+        List<ProtectEvidence> hartwigEvidences = Lists.newArrayList(ImmutableProtectEvidence.builder()
+                        .from(onLabelResponsiveB)
+                        .addSources(Knowledgebase.HARTWIG_CURATED)
+                        .build(),
+                ImmutableProtectEvidence.builder()
+                        .from(onLabelResponsiveC)
+                        .direction(RESPONSIVE)
+                        .addSources(Knowledgebase.HARTWIG_CURATED)
+                        .build(),
+                ImmutableProtectEvidence.builder()
+                        .from(offLabelResponsiveC)
+                        .direction(PREDICTED_RESPONSIVE)
+                        .addSources(Knowledgebase.HARTWIG_CURATED)
+                        .build());
+        List<ProtectEvidence> hartwigFiltered = EvidenceReportingFunctions.applyReportingAlgo(hartwigEvidences);
+        assertEquals(3, hartwigFiltered.size());
+        assertEquals(0, hartwigFiltered.stream().filter(x -> x.reported()).count());
+
+        List<ProtectEvidence> viccEvidences = Lists.newArrayList(ImmutableProtectEvidence.builder()
+                        .from(onLabelResponsiveB)
+                        .addSources(Knowledgebase.VICC_CGI)
+                        .build(),
+                ImmutableProtectEvidence.builder()
+                        .from(onLabelResponsiveC)
+                        .direction(RESPONSIVE)
+                        .addSources(Knowledgebase.VICC_CGI)
+                        .build(),
+                ImmutableProtectEvidence.builder()
+                        .from(offLabelResponsiveC)
+                        .direction(PREDICTED_RESPONSIVE)
+                        .addSources(Knowledgebase.VICC_CGI)
+                        .build());
+        List<ProtectEvidence> viccFiltered = EvidenceReportingFunctions.applyReportingAlgo(viccEvidences);
+        assertEquals(3, viccFiltered.size());
+        assertEquals(1, viccFiltered.stream().filter(x -> x.reported()).count());
+
+        List<ProtectEvidence> ckbEvidences = Lists.newArrayList(ImmutableProtectEvidence.builder()
+                        .from(onLabelResponsiveB)
+                        .addSources(Knowledgebase.CKB)
+                        .build(),
+                ImmutableProtectEvidence.builder()
+                        .from(onLabelResponsiveC)
+                        .direction(RESPONSIVE)
+                        .addSources(Knowledgebase.CKB)
+                        .build(),
+                ImmutableProtectEvidence.builder()
+                        .from(offLabelResponsiveC)
+                        .direction(PREDICTED_RESPONSIVE)
+                        .addSources(Knowledgebase.CKB)
+                        .build());
+        List<ProtectEvidence> ckbFiltered = EvidenceReportingFunctions.applyReportingAlgo(ckbEvidences);
+        assertEquals(3, ckbFiltered.size());
+        assertEquals(2, ckbFiltered.stream().filter(x -> x.reported()).count());
+
     }
 
     @Test
     public void doNoReportOffLabelAtSameLevelAsOnLabel() {
         List<ProtectEvidence> evidence = Lists.newArrayList(onLabelResponsiveA, offLabelResponsiveA);
-        List<ProtectEvidence> filtered = EvidenceReportingFunctions.reportHighestLevelEvidence(evidence);
+        List<ProtectEvidence> filtered = EvidenceReportingFunctions.applyReportingAlgo(evidence);
         assertEquals(2, filtered.size());
         assertTrue(filtered.contains(onLabelResponsiveA));
         assertFalse(filtered.contains(offLabelResponsiveA));
@@ -62,7 +111,7 @@ public class EvidenceReportingFunctionsTest {
     @Test
     public void reportHighestOffLabelIfHigherThanOnLabel() {
         List<ProtectEvidence> evidence = Lists.newArrayList(onLabelResponsiveC, offLabelResponsiveA, offLabelResponsiveB);
-        List<ProtectEvidence> filtered = EvidenceReportingFunctions.reportHighestLevelEvidence(evidence);
+        List<ProtectEvidence> filtered = EvidenceReportingFunctions.applyReportingAlgo(evidence);
         assertEquals(3, filtered.size());
         assertTrue(filtered.contains(offLabelResponsiveA));
         assertFalse(filtered.contains(offLabelResponsiveB));
@@ -72,18 +121,18 @@ public class EvidenceReportingFunctionsTest {
     @Test
     public void neverSetReportToTrue() {
         ProtectEvidence reported = onLabelResponsiveA;
-        ProtectEvidence reportedFiltered = EvidenceReportingFunctions.reportHighestLevelEvidence(Lists.newArrayList(reported)).get(0);
+        ProtectEvidence reportedFiltered = EvidenceReportingFunctions.applyReportingAlgo(Lists.newArrayList(reported)).get(0);
         assertTrue(reportedFiltered.reported());
 
         ProtectEvidence notReported = ImmutableProtectEvidence.builder().from(reported).reported(false).build();
-        ProtectEvidence notReportedFiltered = EvidenceReportingFunctions.reportHighestLevelEvidence(Lists.newArrayList(notReported)).get(0);
+        ProtectEvidence notReportedFiltered = EvidenceReportingFunctions.applyReportingAlgo(Lists.newArrayList(notReported)).get(0);
         assertFalse(notReportedFiltered.reported());
 
         ProtectEvidence evidence1 =
                 ImmutableProtectEvidence.builder().from(createTestEvidence(true, RESPONSIVE, A)).reported(false).build();
         ProtectEvidence evidence2 = createTestEvidence(false, RESPONSIVE, A);
 
-        List<ProtectEvidence> filtered = EvidenceReportingFunctions.reportHighestLevelEvidence(Lists.newArrayList(evidence1, evidence2));
+        List<ProtectEvidence> filtered = EvidenceReportingFunctions.applyReportingAlgo(Lists.newArrayList(evidence1, evidence2));
         assertTrue(filtered.contains(evidence1));
         assertTrue(filtered.contains(evidence2));
     }
