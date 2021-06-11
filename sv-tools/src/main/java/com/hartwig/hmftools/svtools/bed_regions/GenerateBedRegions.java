@@ -52,10 +52,11 @@ public class GenerateBedRegions
     private final List<RegionData> mSpecificRegions;
 
     private final Map<String,List<RegionData>> mCombinedRegions; // combined, non-overlapping regions
-    private final String mOutputDir;
+    private final String mOutputFile;
 
     private static final String SPECIFIC_REGIONS_FILE = "specific_regions_file";
     private static final String CODING_GENE_FILE = "coding_genes_file";
+    private static final String OUTPUT_FILE = "output_file";
 
     private static final Logger LOGGER = LogManager.getLogger(GenerateBedRegions.class);
 
@@ -88,7 +89,7 @@ public class GenerateBedRegions
         final List<String> geneIds = mCodingGenes.stream().map(x -> x.GeneId).collect(Collectors.toList());
         mEnsemblDataCache.loadTranscriptData(geneIds);
 
-        mOutputDir = parseOutputDir(cmd);
+        mOutputFile = cmd.getOptionValue(OUTPUT_FILE);
     }
 
     public void run()
@@ -128,6 +129,9 @@ public class GenerateBedRegions
         {
             if(transData.CodingStart == null)
                 continue;
+
+            //if(transData.BioType.equals("nonsense_mediated_decay"))
+            //    continue;
 
             for(ExonData exon : transData.exons())
             {
@@ -212,9 +216,7 @@ public class GenerateBedRegions
     {
         try
         {
-            String outputFileName = mOutputDir + "bed_regions.bed";
-
-            final BufferedWriter writer = createBufferedWriter(outputFileName, false);
+            final BufferedWriter writer = createBufferedWriter(mOutputFile, false);
 
             for(HumanChromosome chromosome : HumanChromosome.values())
             {
@@ -251,7 +253,7 @@ public class GenerateBedRegions
 
         options.addOption(SPECIFIC_REGIONS_FILE, true, "Path to the Linx cohort SVs file");
         options.addOption(CODING_GENE_FILE, true, "External LINE data sample counts");
-        options.addOption(OUTPUT_DIR, true, "Path to write results");
+        options.addOption(OUTPUT_FILE, true, "Output BED filename");
         options.addOption(ENSEMBL_DATA_DIR, true, "Path to the Ensembl data cache directory");
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version, 37 or 38 (default = 38)");
         options.addOption(LOG_DEBUG, false, "Log verbose");

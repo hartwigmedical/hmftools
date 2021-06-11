@@ -27,10 +27,14 @@ public class RegionData
 
     public String name()
     {
-        if(Type == RegionType.CODING || mExtraInfo.isEmpty())
+        if(Type == RegionType.CODING)
             return String.format("%s_%s", GeneName, Type);
-        else
+
+        if(Type == RegionType.INTRONIC)
             return String.format("%s_%s_%s", GeneName, Type, mExtraInfo);
+
+        int posMidpoint = (Region.start() + Region.end()) / 2;
+        return String.format("%s_%s_%d", GeneName, Region.Chromosome, posMidpoint);
     }
 
     public String toString()
