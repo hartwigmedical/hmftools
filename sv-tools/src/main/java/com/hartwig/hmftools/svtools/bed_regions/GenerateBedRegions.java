@@ -232,7 +232,7 @@ public class GenerateBedRegions
                 {
                     // BED file positions require a +1 offset
                     writer.write(String.format("%s\t%d\t%d\t%s",
-                            chrStr, region.Region.start() + 1, region.Region.end() + 1, region.name()));
+                            chrStr, region.Region.start() - 1, region.Region.end(), region.name()));
                     writer.newLine();
                 }
             }
