@@ -13,20 +13,19 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class ChromosomePartition
 {
-
-    private final SageConfig config;
-    private final ReferenceSequenceFile refGenome;
+    private final SageConfig mConfig;
+    private final ReferenceSequenceFile mRefGenome;
 
     public ChromosomePartition(final SageConfig config, final ReferenceSequenceFile refGenome)
     {
-        this.config = config;
-        this.refGenome = refGenome;
+        mConfig = config;
+        mRefGenome = refGenome;
     }
 
     @NotNull
     public List<GenomeRegion> partition(String contig)
     {
-        return partition(contig, 1, refGenome.getSequence(contig).length());
+        return partition(contig, 1, mRefGenome.getSequence(contig).length());
     }
 
     @NotNull
@@ -34,9 +33,9 @@ public class ChromosomePartition
     {
         final List<GenomeRegion> results = Lists.newArrayList();
 
-        int dynamicSliceSize = maxPosition / Math.min(config.threads(), 4) + 1;
+        int dynamicSliceSize = maxPosition / Math.min(mConfig.threads(), 4) + 1;
 
-        final int regionSliceSize = Math.min(dynamicSliceSize, config.regionSliceSize());
+        final int regionSliceSize = Math.min(dynamicSliceSize, mConfig.regionSliceSize());
         for(int i = 0; ; i++)
         {
             int start = minPosition + i * regionSliceSize;

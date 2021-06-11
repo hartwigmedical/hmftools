@@ -13,15 +13,14 @@ import org.jetbrains.annotations.NotNull;
 @NotThreadSafe
 public class TierSelector extends HotspotSelector
 {
-
-    private final PanelSelector<GenomeRegion> panelRegionSelector;
-    private final PanelSelector<GenomeRegion> highConfidenceRegionSelector;
+    private final PanelSelector<GenomeRegion> mPanelRegionSelector;
+    private final PanelSelector<GenomeRegion> mHighConfidenceRegionSelector;
 
     public TierSelector(final List<VariantHotspot> hotspots, final List<GenomeRegion> panel, final List<GenomeRegion> highConfidence)
     {
         super(hotspots);
-        this.panelRegionSelector = new PanelSelector<>(panel);
-        this.highConfidenceRegionSelector = new PanelSelector<>(highConfidence);
+        this.mPanelRegionSelector = new PanelSelector<>(panel);
+        this.mHighConfidenceRegionSelector = new PanelSelector<>(highConfidence);
     }
 
     @NotNull
@@ -32,12 +31,12 @@ public class TierSelector extends HotspotSelector
             return SageVariantTier.HOTSPOT;
         }
 
-        if(panelRegionSelector.inPanel(variant.position(), variant.end()))
+        if(mPanelRegionSelector.inPanel(variant.position(), variant.end()))
         {
             return SageVariantTier.PANEL;
         }
 
-        if(highConfidenceRegionSelector.inPanel(variant.position(), variant.end()))
+        if(mHighConfidenceRegionSelector.inPanel(variant.position(), variant.end()))
         {
             return SageVariantTier.HIGH_CONFIDENCE;
         }

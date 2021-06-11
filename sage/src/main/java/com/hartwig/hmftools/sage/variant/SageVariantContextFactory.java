@@ -31,7 +31,6 @@ import htsjdk.variant.vcf.VCFConstants;
 
 public final class SageVariantContextFactory
 {
-
     private static final List<Allele> NO_CALL = Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL);
 
     @NotNull

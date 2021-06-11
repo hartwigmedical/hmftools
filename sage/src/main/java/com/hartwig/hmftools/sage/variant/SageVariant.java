@@ -13,31 +13,29 @@ import org.jetbrains.annotations.NotNull;
 
 public class SageVariant implements GenomePosition
 {
+    private final Candidate mCandidate;
+    private final Set<String> mFilters;
+    private final List<ReadContextCounter> mNormalAltContexts;
+    private final List<ReadContextCounter> mTumorAltContexts;
 
-    private final Candidate candidate;
-    private final Set<String> filters;
-    private final List<ReadContextCounter> normalAltContexts;
-    private final List<ReadContextCounter> tumorAltContexts;
-
-    private int localPhaseSet;
-    private int localRealignSet;
-    private int mixedImpact;
-    private int phasedInframeIndel;
-    private boolean realigned;
+    private int mLocalPhaseSet;
+    private int mLocalRealignSet;
+    private int mMixedImpact;
+    private int mPhasedInframeIndel;
+    private boolean mRealigned;
 
     public SageVariant(@NotNull final Candidate candidate, @NotNull final Set<String> filters,
             final List<ReadContextCounter> normal, final List<ReadContextCounter> tumorAltContexts)
     {
-        assert (!tumorAltContexts.isEmpty());
-        this.candidate = candidate;
-        this.normalAltContexts = normal;
-        this.tumorAltContexts = tumorAltContexts;
-        this.filters = filters;
+        mCandidate = candidate;
+        mNormalAltContexts = normal;
+        mTumorAltContexts = tumorAltContexts;
+        mFilters = filters;
     }
 
     public Candidate candidate()
     {
-        return candidate;
+        return mCandidate;
     }
 
     @NotNull
@@ -54,12 +52,12 @@ public class SageVariant implements GenomePosition
 
     public boolean isRealigned()
     {
-        return realigned;
+        return mRealigned;
     }
 
     public void realigned(final boolean realigned)
     {
-        this.realigned = realigned;
+        mRealigned = realigned;
     }
 
     public long end()
@@ -74,12 +72,12 @@ public class SageVariant implements GenomePosition
 
     public int phasedInframeIndel()
     {
-        return phasedInframeIndel;
+        return mPhasedInframeIndel;
     }
 
     public void phasedInframeIndel(final int phasedInframeIndel)
     {
-        this.phasedInframeIndel = phasedInframeIndel;
+        mPhasedInframeIndel = phasedInframeIndel;
     }
 
     public boolean isMnv()
@@ -104,71 +102,71 @@ public class SageVariant implements GenomePosition
 
     public int localPhaseSet()
     {
-        return localPhaseSet;
+        return mLocalPhaseSet;
     }
 
     public void localPhaseSet(int localPhaseSet)
     {
-        this.localPhaseSet = localPhaseSet;
+        mLocalPhaseSet = localPhaseSet;
     }
 
     public int localRealignSet()
     {
-        return localRealignSet;
+        return mLocalRealignSet;
     }
 
     public void localRealignSet(int localRealignSet)
     {
-        this.localRealignSet = localRealignSet;
+        mLocalRealignSet = localRealignSet;
     }
 
     public int mixedGermlineImpact()
     {
-        return mixedImpact;
+        return mMixedImpact;
     }
 
     public void mixedGermlineImpact(final int mixedImpact)
     {
-        this.mixedImpact = mixedImpact;
+        mMixedImpact = mixedImpact;
     }
 
     public boolean isPassing()
     {
-        return filters.isEmpty();
+        return mFilters.isEmpty();
     }
 
     public boolean isTumorEmpty()
     {
-        return tumorAltContexts.isEmpty();
+        return mTumorAltContexts.isEmpty();
     }
 
     public boolean isNormalEmpty()
     {
-        return normalAltContexts.isEmpty();
+        return mNormalAltContexts.isEmpty();
     }
 
     @NotNull
     public VariantHotspot variant()
     {
-        return candidate.variant();
+        return mCandidate.variant();
     }
 
     @NotNull
     public SageVariantTier tier()
     {
-        return candidate.tier();
+        return mCandidate.tier();
     }
 
     @NotNull
     public Set<String> filters()
     {
-        return filters;
+        return mFilters;
     }
 
     @NotNull
     public ReadContext readContext()
     {
-        return tumorAltContexts.get(0).readContext();
+        return mTumorAltContexts.get(0).readContext();
     }
 
     @NotNull
@@ -180,13 +178,13 @@ public class SageVariant implements GenomePosition
     @NotNull
     public List<ReadContextCounter> normalAltContexts()
     {
-        return normalAltContexts;
+        return mNormalAltContexts;
     }
 
     @NotNull
     public List<ReadContextCounter> tumorAltContexts()
     {
-        return tumorAltContexts;
+        return mTumorAltContexts;
     }
 
     @NotNull
@@ -204,12 +202,12 @@ public class SageVariant implements GenomePosition
 
     public int totalQuality()
     {
-        return tumorAltContexts.stream().mapToInt(ReadContextCounter::tumorQuality).sum();
+        return mTumorAltContexts.stream().mapToInt(ReadContextCounter::tumorQuality).sum();
     }
 
     public int maxQuality()
     {
-        return tumorAltContexts.stream().mapToInt(ReadContextCounter::tumorQuality).max().orElse(0);
+        return mTumorAltContexts.stream().mapToInt(ReadContextCounter::tumorQuality).max().orElse(0);
     }
 
 }

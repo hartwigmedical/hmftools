@@ -15,16 +15,15 @@ import org.jetbrains.annotations.NotNull;
 
 public abstract class BufferedPostProcessor implements Consumer<SageVariant>
 {
-
-    private final int maxDistance;
+    private final int mMaxDistance;
 
     private final ArrayDeque<SageVariant> buffer = new ArrayDeque<>();
-    private final Consumer<SageVariant> consumer;
+    private final Consumer<SageVariant> mConsumer;
 
     public BufferedPostProcessor(int maxDistance, final Consumer<SageVariant> consumer)
     {
-        this.maxDistance = maxDistance;
-        this.consumer = consumer;
+        mMaxDistance = maxDistance;
+        mConsumer = consumer;
     }
 
     @Override
@@ -65,7 +64,7 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
     public void flush()
     {
         preFlush(buffer);
-        buffer.forEach(consumer);
+        buffer.forEach(mConsumer);
         buffer.clear();
     }
 
@@ -77,7 +76,7 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
         {
             final SageVariant entry = iterator.next();
             long entryEnd = entry.position() + entry.ref().length() - 1;
-            if(!entry.chromosome().equals(position.chromosome()) || entryEnd < position.position() - maxDistance)
+            if(!entry.chromosome().equals(position.chromosome()) || entryEnd < position.position() - mMaxDistance)
             {
                 iterator.remove();
                 flushed.add(entry);
@@ -93,7 +92,7 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
             preFlush(flushed);
         }
 
-        flushed.forEach(consumer);
+        flushed.forEach(mConsumer);
         flushed.clear();
     }
 

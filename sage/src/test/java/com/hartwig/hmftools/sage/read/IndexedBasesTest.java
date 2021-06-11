@@ -8,12 +8,14 @@ import org.apache.logging.log4j.util.Strings;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class IndexedBasesTest {
+public class IndexedBasesTest
+{
 
     private final IndexedBases victim = new IndexedBases(1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
 
     @Test
-    public void testMaxFlankLength() {
+    public void testMaxFlankLength()
+    {
         IndexedBases constrainedOnLeft = new IndexedBases(1000, 5, 2, 6, 3, "GATCTCCTCA".getBytes());
         IndexedBases constrainedOnRight = new IndexedBases(1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
 
@@ -22,7 +24,8 @@ public class IndexedBasesTest {
     }
 
     @Test
-    public void testRightFlankMatchingBases() {
+    public void testRightFlankMatchingBases()
+    {
         assertEquals(-1, victim.rightFlankMatchingBases(3, "TCTCCTCG".getBytes()));
 
         assertEquals(3, victim.rightFlankMatchingBases(3, "TCTCCTCAG".getBytes()));
@@ -33,7 +36,8 @@ public class IndexedBasesTest {
     }
 
     @Test
-    public void testLeftFlankMatchingBases() {
+    public void testLeftFlankMatchingBases()
+    {
         assertEquals(-1, victim.leftFlankMatchingBases(5, "TTCTCCTCA".getBytes()));
 
         assertEquals(3, victim.leftFlankMatchingBases(5, "GATCTCCTCA".getBytes()));
@@ -44,7 +48,8 @@ public class IndexedBasesTest {
     }
 
     @Test
-    public void testCoreMatch() {
+    public void testCoreMatch()
+    {
         assertTrue(victim.coreMatch(true, 5, "GATCT.CTCA".getBytes()));
         assertFalse(victim.coreMatch(false, 5, "GATCT.CTCA".getBytes()));
 
@@ -59,7 +64,8 @@ public class IndexedBasesTest {
     }
 
     @Test
-    public void testPartialMatchMustHaveAtLeastOneFullSide() {
+    public void testPartialMatchMustHaveAtLeastOneFullSide()
+    {
         ReadContext victim = new ReadContext("", 1000, 2, 2, 2, 2, "GGTAA".getBytes(), Strings.EMPTY);
         Assert.assertEquals(ReadContextMatch.FULL, victim.matchAtPosition(false, 2, "GGTAA".getBytes()));
 
@@ -74,14 +80,16 @@ public class IndexedBasesTest {
     }
 
     @Test
-    public void testNegativeReadIndex() {
+    public void testNegativeReadIndex()
+    {
         ReadContext victim = new ReadContext("", 1000, 2, 2, 2, 2, "GGTAA".getBytes(), Strings.EMPTY);
         assertEquals(ReadContextMatch.FULL, victim.matchAtPosition(false, 2, "GGTAA".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(false, -1, "GGTAA".getBytes()));
     }
 
     @Test
-    public void testPhasedMNV() {
+    public void testPhasedMNV()
+    {
         ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "GATCTTGAT".getBytes(), Strings.EMPTY);
         ReadContext victim2 = new ReadContext(Strings.EMPTY, 1001, 5, 5, 5, 4, "GATCTTGATC".getBytes(), Strings.EMPTY);
 
@@ -90,7 +98,8 @@ public class IndexedBasesTest {
     }
 
     @Test
-    public void testPhasedReadLongEnoughOnAtLeastOneSide() {
+    public void testPhasedReadLongEnoughOnAtLeastOneSide()
+    {
         ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "GATCTTGA".getBytes(), Strings.EMPTY);
         ReadContext victim2 = new ReadContext(Strings.EMPTY, 1001, 5, 5, 5, 4, "GATCTTGATCT".getBytes(), Strings.EMPTY);
 
@@ -99,7 +108,8 @@ public class IndexedBasesTest {
     }
 
     @Test
-    public void testLongReadShortFlanks() {
+    public void testLongReadShortFlanks()
+    {
         final String read = "TACCACAAATACATATACGTGTATCTGTCTGTGTGTTATGAACTTATATAAACCATCAC";
         ReadContext victim1 = new ReadContext(Strings.EMPTY, 1010, 10, 9, 11, 3, read.getBytes(), Strings.EMPTY);
         ReadContext victim2 = new ReadContext(Strings.EMPTY, 1030, 40, 39, 41, 3, read.getBytes(), Strings.EMPTY);
@@ -109,7 +119,8 @@ public class IndexedBasesTest {
     }
 
     @Test
-    public void testBothCentreMatches() {
+    public void testBothCentreMatches()
+    {
         ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "AAAATGGGG".getBytes(), Strings.EMPTY);
         ReadContext victim2 = new ReadContext(Strings.EMPTY, 1005, 5, 5, 5, 4, "TGGGGACCCC".getBytes(), Strings.EMPTY);
         assertFalse(victim1.phased(-5, victim2));
@@ -117,7 +128,8 @@ public class IndexedBasesTest {
     }
 
     @Test
-    public void testStrings() {
+    public void testStrings()
+    {
         ReadContext victim = new ReadContext(Strings.EMPTY, 1000, 4, 3, 5, 2, "AACATGAGG".getBytes(), Strings.EMPTY);
         assertEquals("ATG", victim.centerBases());
         assertEquals("AC", victim.leftFlankString());
@@ -125,10 +137,11 @@ public class IndexedBasesTest {
     }
 
     @Test
-    public void testCreate() {
+    public void testCreate()
+    {
         IndexedBases victimWithExtra = create(1000, 1, "AA", "TA", "ATG", "CG", "TT");
         assertEquals(1, victimWithExtra.indexInCore());
-        assertEquals(5, victimWithExtra.index());
+        assertEquals(5, victimWithExtra.Index);
         assertEquals("TA", victimWithExtra.leftFlankString());
         assertEquals("ATG", victimWithExtra.centerString());
         assertEquals("CG", victimWithExtra.rightFlankString());
@@ -141,7 +154,8 @@ public class IndexedBasesTest {
     }
 
     public static IndexedBases create(int position, int indexInCore, String leftExtra, String leftFlank, String core, String rightFlank,
-            String rightExtra) {
+            String rightExtra)
+    {
         assertTrue(indexInCore <= core.length());
 
         int flankSize = Math.max(leftFlank.length(), rightFlank.length());

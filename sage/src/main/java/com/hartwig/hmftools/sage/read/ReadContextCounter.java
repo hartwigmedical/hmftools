@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.read;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -19,9 +21,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContextCounter implements VariantHotspot
 {
-
-    private static final Logger LOGGER = LogManager.getLogger(ReadContextCounter.class);
-
     private final String sample;
     private final VariantHotspot variant;
     private final ReadContext readContext;
@@ -276,7 +275,7 @@ public class ReadContextCounter implements VariantHotspot
                 final boolean wildcardMatchInCore = variant.isSNV() && readContext().microhomology().isEmpty();
                 final IndexedBases expandedBases = expandedBasesFactory.expand((int) position(), readIndex, record);
                 final ReadContextMatch match =
-                        readContext.matchAtPosition(wildcardMatchInCore, expandedBases.index(), expandedBases.bases());
+                        readContext.matchAtPosition(wildcardMatchInCore, expandedBases.Index, expandedBases.Bases);
 
                 if(!match.equals(ReadContextMatch.NONE))
                 {
@@ -307,7 +306,7 @@ public class ReadContextCounter implements VariantHotspot
 
             // Check if REALIGNED
             final RealignedContext realignment = realignmentContext(realign, readIndex, record);
-            final RealignedType realignmentType = realignment.type();
+            final RealignedType realignmentType = realignment.Type;
             if(realignmentType.equals(RealignedType.EXACT))
             {
                 realigned++;
@@ -339,18 +338,18 @@ public class ReadContextCounter implements VariantHotspot
             switch(realignmentType)
             {
                 case LENGTHENED:
-                    jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
+                    jitterPenalty += qualityConfig.jitterPenalty(realignment.RepeatCount);
                     lengthened++;
                     break;
                 case SHORTENED:
-                    jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
+                    jitterPenalty += qualityConfig.jitterPenalty(realignment.RepeatCount);
                     shortened++;
                     break;
             }
 
         } catch(Exception e)
         {
-            LOGGER.error("Error at chromosome: {}, position: {}", chromosome(), position());
+            SG_LOGGER.error("Error at chromosome: {}, position: {}", chromosome(), position());
             throw e;
         }
     }

@@ -16,21 +16,20 @@ import org.jetbrains.annotations.NotNull;
 
 public class Coverage
 {
-
-    private final Map<String, List<GeneCoverage>> geneCoverage;
+    private final Map<String, List<GeneCoverage>> mGeneCoverage;
 
     public Coverage(final Set<String> samples, final Collection<NamedBed> panel)
     {
-        this.geneCoverage = Maps.newHashMap();
+        mGeneCoverage = Maps.newHashMap();
         final Set<String> genes = panel.stream().map(NamedBed::name).collect(Collectors.toSet());
 
-        samples.forEach(sample -> geneCoverage.put(sample, createGeneCoverage(genes, panel)));
+        samples.forEach(sample -> mGeneCoverage.put(sample, createGeneCoverage(genes, panel)));
     }
 
     @NotNull
     public Set<String> samples()
     {
-        return geneCoverage.keySet();
+        return mGeneCoverage.keySet();
     }
 
     @NotNull
@@ -45,7 +44,7 @@ public class Coverage
     @NotNull
     public List<GeneCoverage> coverage(@NotNull final String sample)
     {
-        return geneCoverage.getOrDefault(sample, Collections.emptyList());
+        return mGeneCoverage.getOrDefault(sample, Collections.emptyList());
     }
 
     @NotNull

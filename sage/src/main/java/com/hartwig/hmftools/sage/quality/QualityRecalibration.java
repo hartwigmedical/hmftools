@@ -20,16 +20,15 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class QualityRecalibration
 {
-
-    private final ExecutorService executorService;
-    private final IndexedFastaSequenceFile refGenome;
-    private final SageConfig config;
+    private final ExecutorService mExecutorService;
+    private final IndexedFastaSequenceFile mRefGenome;
+    private final SageConfig mConfig;
 
     public QualityRecalibration(final SageConfig config, final ExecutorService executorService, final IndexedFastaSequenceFile refGenome)
     {
-        this.executorService = executorService;
-        this.refGenome = refGenome;
-        this.config = config;
+        mExecutorService = executorService;
+        mRefGenome = refGenome;
+        mConfig = config;
     }
 
     @NotNull
@@ -38,7 +37,7 @@ public class QualityRecalibration
         final Map<QualityCounterKey, QualityCounter> map = new ConcurrentHashMap<>(Maps.newHashMap());
         final List<CompletableFuture<Void>> doneList = Lists.newArrayList();
         final List<GenomeRegion> regions =
-                new QualityRecalibrationRegions(refGenome).regions(config.baseQualityRecalibrationConfig().sampleSize());
+                new QualityRecalibrationRegions(mRefGenome).regions(mConfig.baseQualityRecalibrationConfig().sampleSize());
         for(GenomeRegion region : regions)
         {
             for(CompletableFuture<Collection<QualityCounter>> slice : submitAllRegions(bamFile, region))
@@ -66,7 +65,7 @@ public class QualityRecalibration
     public CompletableFuture<Collection<QualityCounter>> addRegion(String bam, String contig, int start, int end)
     {
         final GenomeRegion bounds = GenomeRegions.create(contig, start, end);
-        return CompletableFuture.supplyAsync(() -> new QualityCounterFactory(config, bam, refGenome).regionCount(bounds), executorService);
+        return CompletableFuture.supplyAsync(() -> new QualityCounterFactory(mConfig, bam, mRefGenome).regionCount(bounds), mExecutorService);
     }
 
     public List<CompletableFuture<Collection<QualityCounter>>> submitAllRegions(@NotNull final String bam,

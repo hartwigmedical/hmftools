@@ -2,6 +2,8 @@ package com.hartwig.hmftools.sage.pipeline;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -28,9 +30,6 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class SomaticPipeline implements SageVariantPipeline
 {
-
-    private static final Logger LOGGER = LogManager.getLogger(SomaticPipeline.class);
-
     private final SageConfig config;
     private final Executor executor;
     private final ReferenceSequenceFile refGenome;
@@ -73,7 +72,7 @@ public class SomaticPipeline implements SageVariantPipeline
     {
         return doneNormal.thenCombine(doneTumor, (normalCandidates, tumorCandidates) ->
         {
-            LOGGER.debug("Gathering evidence in {}:{}", region.chromosome(), region.start());
+            SG_LOGGER.debug("Gathering evidence in {}:{}", region.chromosome(), region.start());
             final SageVariantFactory variantFactory = new SageVariantFactory(config.filter());
 
             // Combine normal and tumor together and create variants

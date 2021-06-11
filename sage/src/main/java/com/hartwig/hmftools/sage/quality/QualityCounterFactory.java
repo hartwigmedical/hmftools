@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.concurrent.CompletionException;
@@ -20,9 +22,6 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 class QualityCounterFactory
 {
-
-    private static final Logger LOGGER = LogManager.getLogger(QualityCounterFactory.class);
-
     private final String bamFile;
     private final ReferenceSequenceFile refGenome;
     private final SageConfig config;
@@ -37,7 +36,7 @@ class QualityCounterFactory
     @NotNull
     public Collection<QualityCounter> regionCount(@NotNull final GenomeRegion bounds)
     {
-        LOGGER.debug("Processing bqr region {}", bounds);
+        SG_LOGGER.debug("Processing bqr region {}", bounds);
 
         final RefSequence refSequence = new RefSequence(bounds, refGenome);
         final QualityCounterCigarHandler counter =

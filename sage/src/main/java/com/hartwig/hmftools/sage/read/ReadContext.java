@@ -8,7 +8,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContext
 {
-
     private static final int BONUS_FLANK = 50;
 
     private final int position;
@@ -40,14 +39,14 @@ public class ReadContext
     public ReadContext(final IndexedBases refBases, final IndexedBases readBases, final int repeatCount, final String repeat,
             final String microhomology)
     {
-        if(refBases.bases().length < readBases.bases().length)
+        if(refBases.Bases.length < readBases.Bases.length)
         {
             throw new IllegalArgumentException();
         }
 
         this.readBases = readBases;
         this.refBases = refBases;
-        this.position = refBases.position();
+        this.position = refBases.Position;
         this.incompleteCore = false;
         this.repeatCount = repeatCount;
         this.repeat = repeat;
@@ -73,7 +72,7 @@ public class ReadContext
                 refIndex + adjLeftCentreIndex - readIndex,
                 refIndex + adjRightCentreIndex - readIndex,
                 0,
-                refSequence.bases());
+                refSequence.Bases);
 
         this.incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
     }
@@ -86,13 +85,13 @@ public class ReadContext
         this.microhomology = readContext.microhomology;
 
         int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
-        int adjRightCentreIndex = Math.min(rightCentreIndex, readContext.readBases.bases().length - 1);
-        int readIndex = readContext.readBases.index();
+        int adjRightCentreIndex = Math.min(rightCentreIndex, readContext.readBases.Bases.length - 1);
+        int readIndex = readContext.readBases.Index;
         this.readBases = new IndexedBases(position,
                 readIndex,
                 adjLeftCentreIndex,
                 adjRightCentreIndex,
-                readContext.readBases.flankSize(),
+                readContext.readBases.FlankSize,
                 readContext.readBases());
 
         int refIndex = readContext.refBases.index(position);
@@ -101,7 +100,7 @@ public class ReadContext
                 refIndex + adjLeftCentreIndex - readIndex,
                 refIndex + adjRightCentreIndex - readIndex,
                 0,
-                readContext.refBases.bases());
+                readContext.refBases.Bases);
 
         this.incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
     }
@@ -115,20 +114,20 @@ public class ReadContext
         this.incompleteCore = clone.incompleteCore;
 
         this.refBases = IndexedBases.resize(position,
-                clone.refBases.index(),
-                clone.refBases.leftCentreIndex(),
-                clone.refBases.rightCentreIndex(),
-                clone.refBases.flankSize(),
+                clone.refBases.Index,
+                clone.refBases.LeftCoreIndex,
+                clone.refBases.RightCoreIndex,
+                clone.refBases.FlankSize,
                 0,
-                clone.refBases.bases());
+                clone.refBases.Bases);
 
         this.readBases = IndexedBases.resize(position,
-                clone.readBases.index(),
-                clone.readBases.leftCentreIndex(),
-                clone.readBases.rightCentreIndex(),
-                clone.readBases.flankSize(),
+                clone.readBases.Index,
+                clone.readBases.LeftCoreIndex,
+                clone.readBases.RightCoreIndex,
+                clone.readBases.FlankSize,
                 BONUS_FLANK,
-                clone.readBases.bases());
+                clone.readBases.Bases);
     }
 
     @NotNull
@@ -155,8 +154,8 @@ public class ReadContext
 
     int minCentreQuality(int readIndex, SAMRecord record)
     {
-        int leftOffset = this.readIndex() - readBases.leftCentreIndex();
-        int rightOffset = readBases.rightCentreIndex() - this.readIndex();
+        int leftOffset = this.readIndex() - readBases.LeftCoreIndex;
+        int rightOffset = readBases.RightCoreIndex - this.readIndex();
 
         int leftIndex = readIndex - leftOffset;
         int rightIndex = readIndex + rightOffset;
@@ -171,8 +170,8 @@ public class ReadContext
 
     int avgCentreQuality(int readIndex, @NotNull final SAMRecord record)
     {
-        int leftOffset = this.readIndex() - readBases.leftCentreIndex();
-        int rightOffset = readBases.rightCentreIndex() - this.readIndex();
+        int leftOffset = this.readIndex() - readBases.LeftCoreIndex;
+        int rightOffset = readBases.RightCoreIndex - this.readIndex();
 
         int leftIndex = readIndex - leftOffset;
         int rightIndex = readIndex + rightOffset;
@@ -209,27 +208,27 @@ public class ReadContext
 
     public int readBasesPositionIndex()
     {
-        return readBases.index();
+        return readBases.Index;
     }
 
     public int readBasesLeftFlankIndex()
     {
-        return readBases.leftFlankIndex();
+        return readBases.LeftFlankIndex;
     }
 
     public int readBasesRightFlankIndex()
     {
-        return readBases.rightFlankIndex();
+        return readBases.RightFlankIndex;
     }
 
     public int readBasesLeftCentreIndex()
     {
-        return readBases.leftCentreIndex();
+        return readBases.LeftCoreIndex;
     }
 
     public int readBasesRightCentreIndex()
     {
-        return readBases.rightCentreIndex();
+        return readBases.RightCoreIndex;
     }
 
     @Override
@@ -264,17 +263,12 @@ public class ReadContext
 
     public byte[] readBases()
     {
-        return readBases.bases();
+        return readBases.Bases;
     }
 
     private int readIndex()
     {
-        return readBases.index();
-    }
-
-    private int flankSize()
-    {
-        return readBases.flankSize();
+        return readBases.Index;
     }
 
     public int maxFlankLength()
@@ -290,11 +284,6 @@ public class ReadContext
     public int length()
     {
         return readBasesRightFlankIndex() - readBasesLeftFlankIndex() + 1;
-    }
-
-    public int coreLength()
-    {
-        return readBasesRightCentreIndex() - readBasesLeftCentreIndex() + 1;
     }
 
     @NotNull

@@ -14,14 +14,13 @@ import htsjdk.samtools.SAMRecord;
 
 public class ExpandedBasesFactory
 {
-
-    private final int maxSkippedReferenceRegions;
-    private final int referenceRegionReplacementLength;
+    private final int mMaxSkippedReferenceRegions;
+    private final int mReferenceRegionReplacementLength;
 
     public ExpandedBasesFactory(final int maxSkippedReferenceRegions, final int referenceRegionReplacementLength)
     {
-        this.maxSkippedReferenceRegions = maxSkippedReferenceRegions;
-        this.referenceRegionReplacementLength = referenceRegionReplacementLength;
+        mMaxSkippedReferenceRegions = maxSkippedReferenceRegions;
+        mReferenceRegionReplacementLength = referenceRegionReplacementLength;
     }
 
     @NotNull
@@ -37,12 +36,12 @@ public class ExpandedBasesFactory
             public void handleSkippedReference(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int cigarIndex,
                     final int refPosition)
             {
-                if(e.getLength() >= maxSkippedReferenceRegions && referenceRegionReplacementLength > 0)
+                if(e.getLength() >= mMaxSkippedReferenceRegions && mReferenceRegionReplacementLength > 0)
                 {
                     indexes.add(cigarIndex);
                     if(cigarIndex < readIndex)
                     {
-                        indexAdjustment.addAndGet(referenceRegionReplacementLength);
+                        indexAdjustment.addAndGet(mReferenceRegionReplacementLength);
                     }
                 }
             }
@@ -55,7 +54,7 @@ public class ExpandedBasesFactory
             return new IndexedBases(position, readIndex, record.getReadBases());
         }
 
-        byte[] dest = new byte[src.length + indexes.size() * referenceRegionReplacementLength];
+        byte[] dest = new byte[src.length + indexes.size() * mReferenceRegionReplacementLength];
         int srcPos = 0;
         int destPos = 0;
         for(Integer index : indexes)
@@ -68,7 +67,7 @@ public class ExpandedBasesFactory
             srcPos += length;
 
             // Create skipped reference substitute
-            for(int j = 0; j < referenceRegionReplacementLength; j++)
+            for(int j = 0; j < mReferenceRegionReplacementLength; j++)
             {
                 dest[destPos++] = IndexedBases.MATCH_WILDCARD;
             }

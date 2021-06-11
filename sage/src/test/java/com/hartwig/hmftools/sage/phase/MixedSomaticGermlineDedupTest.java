@@ -11,10 +11,12 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.junit.Test;
 
-public class MixedSomaticGermlineDedupTest {
+public class MixedSomaticGermlineDedupTest
+{
 
     @Test
-    public void testCodonDifferences() {
+    public void testCodonDifferences()
+    {
         final GenomeRegion codon = GenomeRegions.create("1", 100, 102);
 
         final VariantHotspot snvBefore = create(99, "A", "T");

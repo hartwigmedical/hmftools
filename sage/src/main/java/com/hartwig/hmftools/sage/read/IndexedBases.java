@@ -12,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class IndexedBases
 {
-
     public static final byte MATCH_WILDCARD = (byte) '.';
 
     @NotNull
@@ -29,69 +28,69 @@ public class IndexedBases
         return new IndexedBases(position, index, recordLeftFlankLength, rightCentreIndex, flankSize, bases);
     }
 
-    private final int position;
-    private final int index;
-    private final int flankSize;
-    private final int leftFlankIndex;
-    private final int leftCoreIndex;
-    private final int rightCoreIndex;
-    private final int rightFlankIndex;
-    private final byte[] bases;
+    public final int Position;
+    public final int Index;
+    public final int FlankSize;
+    public final int LeftFlankIndex;
+    public final int LeftCoreIndex;
+    public final int RightCoreIndex;
+    public final int RightFlankIndex;
+    public final byte[] Bases;
 
     public IndexedBases(final int position, final int index, final byte[] bases)
     {
-        this.position = position;
-        this.index = index;
-        this.leftCoreIndex = index;
-        this.rightCoreIndex = index;
-        this.bases = bases;
-        this.leftFlankIndex = index;
-        this.rightFlankIndex = index;
-        this.flankSize = 0;
+        this.Position = position;
+        Index = index;
+        LeftCoreIndex = index;
+        RightCoreIndex = index;
+        Bases = bases;
+        LeftFlankIndex = index;
+        RightFlankIndex = index;
+        FlankSize = 0;
     }
 
     public IndexedBases(final int position, final int index, final int leftCoreIndex, int rightCoreIndex, int flankSize,
             final byte[] bases)
     {
-        this.position = position;
-        this.index = index;
-        this.leftCoreIndex = leftCoreIndex;
-        this.rightCoreIndex = rightCoreIndex;
-        this.bases = bases;
-        this.leftFlankIndex = Math.max(0, leftCoreIndex - flankSize);
-        this.rightFlankIndex = Math.min(bases.length - 1, rightCoreIndex + flankSize);
-        this.flankSize = flankSize;
+        Position = position;
+        Index = index;
+        LeftCoreIndex = leftCoreIndex;
+        RightCoreIndex = rightCoreIndex;
+        Bases = bases;
+        LeftFlankIndex = Math.max(0, leftCoreIndex - flankSize);
+        RightFlankIndex = Math.min(bases.length - 1, rightCoreIndex + flankSize);
+        FlankSize = flankSize;
     }
 
     boolean flanksComplete()
     {
-        return leftFlankLength() == flankSize && rightFlankLength() == flankSize;
+        return leftFlankLength() == FlankSize && rightFlankLength() == FlankSize;
     }
 
     public boolean phased(int offset, @NotNull final IndexedBases other)
     {
-        int otherReadIndex = other.index + offset;
+        int otherReadIndex = other.Index + offset;
 
-        boolean centreMatch = coreMatch(false, otherReadIndex, other.bases);
+        boolean centreMatch = coreMatch(false, otherReadIndex, other.Bases);
         if(!centreMatch)
         {
             return false;
         }
 
-        boolean otherCentreMatch = other.coreMatch(false, index - offset, bases);
+        boolean otherCentreMatch = other.coreMatch(false, Index - offset, Bases);
         if(!otherCentreMatch)
         {
             return false;
         }
 
-        int leftFlankingBases = leftFlankMatchingBases(otherReadIndex, other.bases);
+        int leftFlankingBases = leftFlankMatchingBases(otherReadIndex, other.Bases);
         if(leftFlankingBases < 0)
         {
             return false;
         }
 
-        int rightFlankingBases = rightFlankMatchingBases(otherReadIndex, other.bases);
-        return rightFlankingBases >= 0 && (rightFlankingBases >= flankSize || leftFlankingBases >= flankSize);
+        int rightFlankingBases = rightFlankMatchingBases(otherReadIndex, other.Bases);
+        return rightFlankingBases >= 0 && (rightFlankingBases >= FlankSize || leftFlankingBases >= FlankSize);
     }
 
     public boolean isCentreCovered(int otherReadIndex, byte[] otherBases)
@@ -109,7 +108,7 @@ public class IndexedBases
     @NotNull
     public ReadContextMatch matchAtPosition(boolean wildcardAllowedInCore, @NotNull final IndexedBases other)
     {
-        return matchAtPosition(wildcardAllowedInCore, other.index(), other.length(), other.bases());
+        return matchAtPosition(wildcardAllowedInCore, other.Index, other.length(), other.Bases);
     }
 
     @NotNull
@@ -171,7 +170,7 @@ public class IndexedBases
 
         for(int i = 0; i < centreLength(); i++)
         {
-            byte ourByte = bases[leftCoreIndex + i];
+            byte ourByte = Bases[LeftCoreIndex + i];
             byte otherByte = otherBases[otherLeftCentreIndex + i];
             if(!bytesMatch(wildcardAllowed, ourByte, otherByte))
             {
@@ -189,14 +188,14 @@ public class IndexedBases
 
     int rightFlankMatchingBases(int otherRefIndex, byte[] otherBases)
     {
-        int otherRightCentreIndex = otherRefIndex + rightCoreIndex - index;
-        int otherRightFlankLength = Math.min(otherBases.length - 1, otherRightCentreIndex + this.flankSize) - otherRightCentreIndex;
+        int otherRightCentreIndex = otherRefIndex + RightCoreIndex - Index;
+        int otherRightFlankLength = Math.min(otherBases.length - 1, otherRightCentreIndex + FlankSize) - otherRightCentreIndex;
         int maxLength = Math.min(rightFlankLength(), otherRightFlankLength);
 
         for(int i = 1; i <= maxLength; i++)
         {
             byte otherByte = otherBases[otherRightCentreIndex + i];
-            if(bases[rightCoreIndex + i] != otherByte && otherByte != MATCH_WILDCARD)
+            if(Bases[RightCoreIndex + i] != otherByte && otherByte != MATCH_WILDCARD)
             {
                 return -1;
             }
@@ -207,14 +206,14 @@ public class IndexedBases
 
     int leftFlankMatchingBases(int otherRefIndex, byte[] otherBases)
     {
-        int otherLeftCentreIndex = otherRefIndex + leftCoreIndex - index;
-        int otherLeftFlankLength = otherLeftCentreIndex - Math.max(0, otherLeftCentreIndex - this.flankSize);
+        int otherLeftCentreIndex = otherRefIndex + LeftCoreIndex - Index;
+        int otherLeftFlankLength = otherLeftCentreIndex - Math.max(0, otherLeftCentreIndex - FlankSize);
         int totalLength = Math.min(leftFlankLength(), otherLeftFlankLength);
 
         for(int i = 1; i <= totalLength; i++)
         {
             byte otherByte = otherBases[otherLeftCentreIndex - i];
-            if(bases[leftCoreIndex - i] != otherByte && otherByte != MATCH_WILDCARD)
+            if(Bases[LeftCoreIndex - i] != otherByte && otherByte != MATCH_WILDCARD)
             {
                 return -1;
             }
@@ -225,117 +224,77 @@ public class IndexedBases
 
     private int otherLeftCentreIndex(int otherRefIndex)
     {
-        return otherRefIndex + leftCoreIndex - index;
+        return otherRefIndex + LeftCoreIndex - Index;
     }
 
     private int otherRightCentreIndex(int otherRefIndex)
     {
-        return otherRefIndex + rightCoreIndex - index;
+        return otherRefIndex + RightCoreIndex - Index;
     }
 
     @NotNull
     public String centerString()
     {
-        return bases.length == 0 ? Strings.EMPTY : new String(bases, leftCoreIndex, centreLength());
+        return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftCoreIndex, centreLength());
     }
 
     @NotNull
     public String leftFlankString()
     {
-        return bases.length == 0 ? Strings.EMPTY : new String(bases, leftFlankIndex, leftFlankLength());
+        return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftFlankIndex, leftFlankLength());
     }
 
     @NotNull
     public String rightFlankString()
     {
         int rightFlankLength = rightFlankLength();
-        return rightFlankLength == 0 ? Strings.EMPTY : new String(bases, rightCoreIndex + 1, rightFlankLength);
+        return rightFlankLength == 0 ? Strings.EMPTY : new String(Bases, RightCoreIndex + 1, rightFlankLength);
     }
 
     @Override
     public String toString()
     {
-        return bases.length == 0 ? Strings.EMPTY : new String(bases, leftFlankIndex, length());
-    }
-
-    public int flankSize()
-    {
-        return flankSize;
-    }
-
-    public int index()
-    {
-        return index;
+        return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftFlankIndex, length());
     }
 
     public int indexInCore()
     {
-        return index - leftCoreIndex;
+        return Index - LeftCoreIndex;
     }
 
     public int index(int position)
     {
-        return position - this.position + index();
-    }
-
-    public byte[] bases()
-    {
-        return bases;
+        return position - Position + Index;
     }
 
     private int length()
     {
-        return rightFlankIndex - leftFlankIndex + 1;
+        return RightFlankIndex - LeftFlankIndex + 1;
     }
 
     private int leftFlankLength()
     {
-        return leftCoreIndex - leftFlankIndex;
+        return LeftCoreIndex - LeftFlankIndex;
     }
 
     private int rightFlankLength()
     {
-        return rightFlankIndex - rightCoreIndex;
+        return RightFlankIndex - RightCoreIndex;
     }
 
     private int centreLength()
     {
-        return rightCoreIndex - leftCoreIndex + 1;
-    }
-
-    public int leftCentreIndex()
-    {
-        return leftCoreIndex;
-    }
-
-    public int rightCentreIndex()
-    {
-        return rightCoreIndex;
-    }
-
-    public int position()
-    {
-        return position;
-    }
-
-    public int leftFlankIndex()
-    {
-        return leftFlankIndex;
-    }
-
-    public int rightFlankIndex()
-    {
-        return rightFlankIndex;
+        return RightCoreIndex - LeftCoreIndex + 1;
     }
 
     public byte base(int position)
     {
-        return bases[position - this.position + index];
+        return Bases[position - Position + Index];
     }
 
     public int maxFlankLength()
     {
-        return Math.min(leftCoreIndex, bases.length - rightCoreIndex - 1);
+        return Math.min(LeftCoreIndex, Bases.length - RightCoreIndex - 1);
     }
 
     public byte[] trinucleotideContext(int position)

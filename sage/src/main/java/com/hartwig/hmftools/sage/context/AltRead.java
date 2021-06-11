@@ -7,73 +7,73 @@ import org.jetbrains.annotations.Nullable;
 
 class AltRead
 {
-
     @Nullable
-    private ReadContext readContext;
-    private final RefContext refContext;
-    private final String ref;
-    private final String alt;
-    private final int baseQuality;
-    private final int numberOfEvents;
-    private final boolean sufficientMapQuality;
+    public final RefContext RefContext;
+    public final String Ref;
+    public final String Alt;
+    public final int BaseQuality;
+    public final int NumberOfEvents;
+    public final boolean SufficientMapQuality;
+    
+    private ReadContext mReadContext;
 
     AltRead(final RefContext refContext, final String ref, final String alt, final int baseQuality, final int numberOfEvents,
             final boolean sufficientMapQuality,
             @Nullable final ReadContext readContext)
     {
-        this.refContext = refContext;
-        this.ref = ref;
-        this.alt = alt;
-        this.baseQuality = baseQuality;
-        this.readContext = readContext;
-        this.numberOfEvents = numberOfEvents;
-        this.sufficientMapQuality = sufficientMapQuality;
+        RefContext = refContext;
+        Ref = ref;
+        Alt = alt;
+        BaseQuality = baseQuality;
+        mReadContext = readContext;
+        NumberOfEvents = numberOfEvents;
+        SufficientMapQuality = sufficientMapQuality;
     }
 
     public boolean containsReadContext()
     {
-        return readContext != null;
+        return mReadContext != null;
     }
 
     public long position()
     {
-        return refContext.position();
+        return RefContext.position();
     }
 
     public boolean isIndel()
     {
-        return ref.length() != alt.length();
+        return Ref.length() != Alt.length();
     }
 
     public int length()
     {
-        return Math.abs(ref.length() - alt.length());
+        return Math.abs(Ref.length() - Alt.length());
     }
 
     public int rightCoreIndex()
     {
-        return readContext.readBasesRightCentreIndex();
+        return mReadContext.readBasesRightCentreIndex();
     }
 
     public int leftCoreIndex()
     {
-        return readContext.readBasesLeftCentreIndex();
+        return mReadContext.readBasesLeftCentreIndex();
     }
 
     public void extend(@NotNull final AltRead other)
     {
-        assert (readContext != null);
-        assert (other.readContext != null);
+        assert (mReadContext != null);
+        assert (other.mReadContext != null);
 
-        int leftIndex = Math.min(readContext.readBasesLeftCentreIndex(), other.readContext.readBasesLeftCentreIndex());
-        int rightIndex = Math.max(readContext.readBasesRightCentreIndex(), other.readContext.readBasesRightCentreIndex());
+        int leftIndex = Math.min(mReadContext.readBasesLeftCentreIndex(), other.mReadContext.readBasesLeftCentreIndex());
+        int rightIndex = Math.max(mReadContext.readBasesRightCentreIndex(), other.mReadContext.readBasesRightCentreIndex());
 
-        readContext = readContext.extend(leftIndex, rightIndex);
+        mReadContext = mReadContext.extend(leftIndex, rightIndex);
     }
 
     public void updateRefContext()
     {
-        refContext.altRead(ref, alt, baseQuality, sufficientMapQuality, numberOfEvents, readContext);
+        RefContext.altRead(Ref, Alt, BaseQuality, SufficientMapQuality, NumberOfEvents, mReadContext);
     }
 
 }

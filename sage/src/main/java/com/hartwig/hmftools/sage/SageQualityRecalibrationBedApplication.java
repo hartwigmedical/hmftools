@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -25,9 +26,6 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class SageQualityRecalibrationBedApplication implements AutoCloseable
 {
-
-    private static final Logger LOGGER = LogManager.getLogger(SageQualityRecalibrationBedApplication.class);
-
     private static final String BQR_SAMPLE_SIZE = "bqr_sample_size";
     private static final String REF_GENOME = "ref_genome";
     private static final String OUT = "out";
@@ -39,9 +37,10 @@ public class SageQualityRecalibrationBedApplication implements AutoCloseable
         try(final SageQualityRecalibrationBedApplication application = new SageQualityRecalibrationBedApplication(options, args))
         {
             application.run();
-        } catch(Exception e)
+        }
+        catch(Exception e)
         {
-            LOGGER.warn(e);
+            SG_LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("SageQualityRecalibrationBedApplication", options);
             System.exit(1);

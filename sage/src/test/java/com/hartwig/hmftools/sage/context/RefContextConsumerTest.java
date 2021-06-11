@@ -4,10 +4,12 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class RefContextConsumerTest {
+public class RefContextConsumerTest
+{
 
     @Test
-    public void testMnvLength() {
+    public void testMnvLength()
+    {
         assertEquals(1, RefContextConsumer.mnvLength(0, 0, "A".getBytes(), "CC".getBytes()));
         assertEquals(1, RefContextConsumer.mnvLength(0, 0, "AA".getBytes(), "C".getBytes()));
 

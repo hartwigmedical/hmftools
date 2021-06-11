@@ -4,10 +4,12 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class QualityRecalibrationFactoryTest {
+public class QualityRecalibrationFactoryTest
+{
 
     @Test
-    public void testQual() {
+    public void testQual()
+    {
         assertEquals(40, QualityRecalibrationFactory.recalibratedQual(9999, 1), 0.1);
         assertEquals(30, QualityRecalibrationFactory.recalibratedQual(9990, 10), 0.1);
         assertEquals(20, QualityRecalibrationFactory.recalibratedQual(9900, 100), 0.1);

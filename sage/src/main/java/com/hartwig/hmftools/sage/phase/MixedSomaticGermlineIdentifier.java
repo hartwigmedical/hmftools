@@ -10,10 +10,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class MixedSomaticGermlineIdentifier extends BufferedPostProcessor
 {
-
     private static final int MAX_DISTANCE = 10;
 
-    private int combinedImpact;
+    private int mCombinedImpact;
 
     public MixedSomaticGermlineIdentifier(final Consumer<SageVariant> consumer)
     {
@@ -50,7 +49,7 @@ public class MixedSomaticGermlineIdentifier extends BufferedPostProcessor
         {
             if(mnv.mixedGermlineImpact() == 0)
             {
-                mnv.mixedGermlineImpact(++combinedImpact);
+                mnv.mixedGermlineImpact(++mCombinedImpact);
             }
             germlineSnv.mixedGermlineImpact(mnv.mixedGermlineImpact());
         }

@@ -10,7 +10,6 @@ import htsjdk.samtools.util.SequenceUtil;
 
 public final class NumberEvents
 {
-
     public static int numberOfEvents(@NotNull final SAMRecord record, @NotNull final RefSequence refGenome)
     {
         int nm = rawNM(record, refGenome);
@@ -42,8 +41,8 @@ public final class NumberEvents
             return (int) nm;
         }
 
-        int offset = refGenome.alignment().position() - refGenome.alignment().index() - 1;
-        return SequenceUtil.calculateSamNmTag(record, refGenome.alignment().bases(), offset);
+        int offset = refGenome.alignment().Position - refGenome.alignment().Index - 1;
+        return SequenceUtil.calculateSamNmTag(record, refGenome.alignment().Bases, offset);
     }
 
     public static int numberOfEventsWithMNV(int rawNumberEvents, @NotNull final String ref, @NotNull final String alt)

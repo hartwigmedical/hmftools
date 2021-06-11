@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.pon;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,9 +33,6 @@ import htsjdk.variant.vcf.VCFFileReader;
 
 public class PonApplication implements AutoCloseable
 {
-
-    private static final Logger LOGGER = LogManager.getLogger(PonApplication.class);
-
     private static final String THREADS = "threads";
     private static final String IN_VCF = "in";
     private static final String OUT_VCF = "out";
@@ -68,8 +66,8 @@ public class PonApplication implements AutoCloseable
 
     private PonApplication(int threads, @NotNull final String input, @NotNull final String output) throws IOException
     {
-        LOGGER.info("Input: {}", input);
-        LOGGER.info("Output: {}", output);
+        SG_LOGGER.info("Input: {}", input);
+        SG_LOGGER.info("Output: {}", output);
 
         executorService = Executors.newFixedThreadPool(threads);
         this.input = input;
@@ -96,7 +94,7 @@ public class PonApplication implements AutoCloseable
 
         for(SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
         {
-            LOGGER.info("Processing sequence {}", samSequenceRecord.getSequenceName());
+            SG_LOGGER.info("Processing sequence {}", samSequenceRecord.getSequenceName());
             final PonBuilder ponBuilder = new PonBuilder();
             final RunnableTaskCompletion runnableTaskCompletion = new RunnableTaskCompletion();
 
@@ -153,6 +151,6 @@ public class PonApplication implements AutoCloseable
     {
         executorService.shutdown();
         vcf.close();
-        LOGGER.info("PON complete");
+        SG_LOGGER.info("PON complete");
     }
 }

@@ -10,10 +10,12 @@ import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class RearrangementTest {
+public class RearrangementTest
+{
 
     @Test
-    public void testRearrangement1() {
+    public void testRearrangement1()
+    {
         final String snv1 = ("          x      ");
         final String ref1 = ("CCT      TATGGTTT").replace(" ", "");
         final String alt1 = ("CCTGATGGGTCTGGTTT");
@@ -37,7 +39,8 @@ public class RearrangementTest {
     }
 
     @Test
-    public void testRearrangement2() {
+    public void testRearrangement2()
+    {
         final String snv1 = ("          x      ");
         final String ref1 = ("CCT      TATGTTTT").replace(" ", "");
         final String alt1 = ("CCTGATGGGTCTGTTTT");
@@ -61,7 +64,8 @@ public class RearrangementTest {
     }
 
     @Test
-    public void testMnv1() {
+    public void testMnv1()
+    {
         final String snv1 = ("          xx     ");
         final String ref1 = ("CCT      TATGGTTT").replace(" ", "");
         final String alt1 = ("CCTGATGGGTCAGGTTT");
@@ -85,7 +89,8 @@ public class RearrangementTest {
     }
 
     @Test
-    public void testMnv2() {
+    public void testMnv2()
+    {
         final String snv1 = ("          x      ");
         final String ref1 = ("CCT      TATGGTTT").replace(" ", "");
         final String alt1 = ("CCTGTTGGGTCTGGTTT");
@@ -109,7 +114,8 @@ public class RearrangementTest {
     }
 
     @Test
-    public void testLongIndelRearrangedMNVTooLong() {
+    public void testLongIndelRearrangedMNVTooLong()
+    {
         final String ref1 = ("CCT      TATGGTTT").replace(" ", "");
         final String alt1 = ("CCTCCCCCCTATGGTTT");
 
@@ -118,7 +124,8 @@ public class RearrangementTest {
     }
 
     @Test
-    public void testShortIndel() {
+    public void testShortIndel()
+    {
         final String ref1 = ("CCT  TATGGTTT").replace(" ", "");
         final String alt1 = ("CCTCCTCTGGTTT");
 
@@ -128,7 +135,8 @@ public class RearrangementTest {
         assertVariant(1005, "T", "TCT", victims.get(1));
     }
 
-    private List<VariantHotspot> assertRearrangement(String ref, String read, int indelLength, int indelIndexLeft, int indelIndexRight) {
+    private List<VariantHotspot> assertRearrangement(String ref, String read, int indelLength, int indelIndexLeft, int indelIndexRight)
+    {
         List<VariantHotspot> result = Lists.newArrayList();
         int refPosition = 1000;
 
@@ -185,13 +193,16 @@ public class RearrangementTest {
         return result;
     }
 
-    private String constructRead(int refPosition, @NotNull final String ref, @NotNull final List<VariantHotspot> variants) {
+    private String constructRead(int refPosition, @NotNull final String ref, @NotNull final List<VariantHotspot> variants)
+    {
         int refIndex = 0;
         StringBuilder builder = new StringBuilder();
 
-        for (VariantHotspot variant : variants) {
+        for(VariantHotspot variant : variants)
+        {
             int refLength = (int) variant.position() - refPosition;
-            if (refLength > 0) {
+            if(refLength > 0)
+            {
                 builder.append(ref, refIndex, refIndex + refLength);
                 refIndex += refLength;
                 refPosition += refLength;
@@ -207,7 +218,8 @@ public class RearrangementTest {
         return builder.toString();
     }
 
-    private static void assertVariant(long position, String ref, String alt, VariantHotspot victim) {
+    private static void assertVariant(long position, String ref, String alt, VariantHotspot victim)
+    {
         assertEquals(position, victim.position());
         assertEquals(ref, victim.ref());
         assertEquals(alt, victim.alt());

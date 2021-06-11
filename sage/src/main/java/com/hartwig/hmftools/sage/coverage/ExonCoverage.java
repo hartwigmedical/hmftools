@@ -9,20 +9,19 @@ import org.jetbrains.annotations.NotNull;
 
 class ExonCoverage implements GenomeRegion, Consumer<GenomeRegion>
 {
-
-    private final NamedBed exon;
-    private final int[] baseCoverage;
+    private final NamedBed mExon;
+    private final int[] mBaseCoverage;
 
     ExonCoverage(final NamedBed exon)
     {
-        this.exon = exon;
-        this.baseCoverage = new int[(int) exon.bases()];
+        mExon = exon;
+        mBaseCoverage = new int[(int) exon.bases()];
     }
 
     @Override
     public void accept(final GenomeRegion alignment)
     {
-        if(alignment.start() <= exon.end() && alignment.end() >= exon.start())
+        if(alignment.start() <= mExon.end() && alignment.end() >= mExon.start())
         {
             int startPosition = (int) Math.max(start(), alignment.start());
             int endPosition = (int) Math.min(end(), alignment.end());
@@ -30,11 +29,11 @@ class ExonCoverage implements GenomeRegion, Consumer<GenomeRegion>
             int startIndex = index(startPosition);
             int endIndex = index(endPosition);
 
-            synchronized (baseCoverage)
+            synchronized (mBaseCoverage)
             {
                 for(int i = startIndex; i <= endIndex; i++)
                 {
-                    baseCoverage[i] += 1;
+                    mBaseCoverage[i] += 1;
                 }
             }
         }
@@ -43,32 +42,32 @@ class ExonCoverage implements GenomeRegion, Consumer<GenomeRegion>
     @NotNull
     public int[] coverage()
     {
-        return baseCoverage;
+        return mBaseCoverage;
     }
 
     @NotNull
     public String gene()
     {
-        return exon.name();
+        return mExon.name();
     }
 
     @NotNull
     @Override
     public String chromosome()
     {
-        return exon.chromosome();
+        return mExon.chromosome();
     }
 
     @Override
     public long start()
     {
-        return exon.start();
+        return mExon.start();
     }
 
     @Override
     public long end()
     {
-        return exon.end();
+        return mExon.end();
     }
 
     private int index(int position)

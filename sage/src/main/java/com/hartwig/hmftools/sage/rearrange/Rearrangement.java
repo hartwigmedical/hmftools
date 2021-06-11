@@ -11,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class Rearrangement
 {
-
     private static final int MAX_MNV_LENGTH = 2;
 
     public static List<VariantHotspot> rearrangeInsert(int position, int indelLength, int readIndex, byte[] readBases, int refIndex,

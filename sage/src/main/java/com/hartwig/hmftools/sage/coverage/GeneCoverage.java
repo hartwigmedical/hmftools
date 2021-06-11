@@ -14,21 +14,19 @@ import org.jetbrains.annotations.NotNull;
 
 public class GeneCoverage implements Consumer<GenomeRegion>
 {
-
     private static final int MAX_BUCKET = 37;
 
-    private final String chromosome;
-    private final String gene;
-    private final List<ExonCoverage> exonCoverage;
-    private final long minPosition;
-    private final long maxPosition;
+    private final String mChromosome;
+    private final String mGene;
+    private final List<ExonCoverage> mExonCoverage;
+    private final long mMinPosition;
+    private final long mMaxPosition;
 
     public GeneCoverage(final List<NamedBed> exons)
     {
-        assert (!exons.isEmpty());
-        this.chromosome = exons.get(0).chromosome();
-        this.gene = exons.get(0).name();
-        this.exonCoverage = exons.stream().map(ExonCoverage::new).collect(Collectors.toList());
+        mChromosome = exons.get(0).chromosome();
+        mGene = exons.get(0).name();
+        mExonCoverage = exons.stream().map(ExonCoverage::new).collect(Collectors.toList());
 
         long tmpMin = exons.get(0).start();
         long tmpMax = exons.get(0).end();
@@ -39,34 +37,34 @@ public class GeneCoverage implements Consumer<GenomeRegion>
             tmpMax = Math.max(tmpMax, exon.end());
         }
 
-        minPosition = tmpMin;
-        maxPosition = tmpMax;
+        mMinPosition = tmpMin;
+        mMaxPosition = tmpMax;
     }
 
     @Override
     public void accept(final GenomeRegion alignment)
     {
-        if(alignment.chromosome().equals(chromosome))
+        if(alignment.chromosome().equals(mChromosome))
         {
-            if(alignment.start() <= maxPosition && alignment.end() >= minPosition)
+            if(alignment.start() <= mMaxPosition && alignment.end() >= mMinPosition)
             {
-                exonCoverage.forEach(x -> x.accept(alignment));
+                mExonCoverage.forEach(x -> x.accept(alignment));
             }
         }
     }
 
     public String chromosome()
     {
-        return chromosome;
+        return mChromosome;
     }
 
     @NotNull
     public GeneDepth geneDepth()
     {
-        int[] depthCounts = baseCoverageSummary(exonCoverage);
+        int[] depthCounts = baseCoverageSummary(mExonCoverage);
 
         return ImmutableGeneDepth.builder()
-                .gene(gene)
+                .gene(mGene)
                 .depthCounts(depthCounts)
                 .missedVariantLikelihood(missedVariantLikelihood(depthCounts))
                 .build();

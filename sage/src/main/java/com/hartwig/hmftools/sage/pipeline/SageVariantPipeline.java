@@ -10,7 +10,6 @@ import org.jetbrains.annotations.NotNull;
 
 public interface SageVariantPipeline
 {
-
     @NotNull
     CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region);
 }

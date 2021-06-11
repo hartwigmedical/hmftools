@@ -12,10 +12,12 @@ import com.google.common.collect.Sets;
 
 import org.junit.Test;
 
-public class SoftFilterTest {
+public class SoftFilterTest
+{
 
     @Test
-    public void testIsGermlineAndNotTumorFiltered() {
+    public void testIsGermlineAndNotTumorFiltered()
+    {
         assertTrue(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_RAW_BASE_QUAL.toString())));
         assertTrue(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_RAW_BASE_QUAL.toString(), MAX_GERMLINE_VAF.toString())));
 

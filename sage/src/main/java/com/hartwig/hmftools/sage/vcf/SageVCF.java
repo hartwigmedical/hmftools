@@ -75,20 +75,20 @@ public class SageVCF implements AutoCloseable
     public static final String RIGHT_ALIGNED_MICROHOMOLOGY = "RAM";
     public static final String RIGHT_ALIGNED_MICROHOMOLOGY_DESCRIPTION = "Right aligned microhomology";
 
-    private final VariantContextWriter writer;
-    private final Consumer<VariantContext> consumer;
+    private final VariantContextWriter mWriter;
+    private final Consumer<VariantContext> mConsumer;
 
     public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config)
     {
         final SAMSequenceDictionary sequenceDictionary = reference.getSequenceDictionary();
 
-        writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile())
+        mWriter = new VariantContextWriterBuilder().setOutputFile(config.outputFile())
                 .modifyOption(Options.INDEX_ON_THE_FLY, true)
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(sequenceDictionary)
                 .build();
-        SomaticRefContextEnrichment enrichment = new SomaticRefContextEnrichment(reference, writer::add);
-        this.consumer = enrichment;
+        SomaticRefContextEnrichment enrichment = new SomaticRefContextEnrichment(reference, mWriter::add);
+        mConsumer = enrichment;
 
         final VCFHeader header = enrichment.enrichHeader(header(config));
 
@@ -102,7 +102,7 @@ public class SageVCF implements AutoCloseable
         }
 
         header.setSequenceDictionary(condensedDictionary);
-        writer.writeHeader(header);
+        mWriter.writeHeader(header);
     }
 
     public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config,
@@ -115,18 +115,18 @@ public class SageVCF implements AutoCloseable
 
         final VCFHeader newHeader = new VCFHeader(headerLines, samples);
 
-        writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile())
+        mWriter = new VariantContextWriterBuilder().setOutputFile(config.outputFile())
                 .modifyOption(Options.INDEX_ON_THE_FLY, true)
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(reference.getSequenceDictionary())
                 .build();
-        this.consumer = writer::add;
-        writer.writeHeader(newHeader);
+        mConsumer = mWriter::add;
+        mWriter.writeHeader(newHeader);
     }
 
     public void write(@NotNull final VariantContext context)
     {
-        consumer.accept(context);
+        mConsumer.accept(context);
     }
 
     @NotNull
@@ -209,7 +209,7 @@ public class SageVCF implements AutoCloseable
     @Override
     public void close()
     {
-        writer.close();
+        mWriter.close();
     }
 
 }

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.pon;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import com.google.common.base.Strings;
 
 import org.apache.logging.log4j.LogManager;
@@ -8,9 +10,6 @@ import org.jetbrains.annotations.NotNull;
 
 class RunnableTaskCompletion
 {
-
-    private static final Logger LOGGER = LogManager.getLogger(RunnableTaskCompletion.class);
-
     private int expected = 0;
     private int complete = 0;
     private double previousPercentComplete = 0;
@@ -31,7 +30,7 @@ class RunnableTaskCompletion
         double percentComplete = ((double) ++complete) / expected;
         if(expected == complete || percentComplete > previousPercentComplete + 0.1)
         {
-            LOGGER.info("{}", complete(percentComplete));
+            SG_LOGGER.info("{}", complete(percentComplete));
             previousPercentComplete = percentComplete;
         }
     }

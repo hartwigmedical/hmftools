@@ -9,19 +9,18 @@ import org.jetbrains.annotations.NotNull;
 
 public class HotspotSelector
 {
-
-    private final PositionSelector<VariantHotspot> hotspotSelector;
+    private final PositionSelector<VariantHotspot> mHotspotSelector;
 
     public HotspotSelector(final List<VariantHotspot> hotspots)
     {
-        this.hotspotSelector = new PositionSelector<>(hotspots);
+        this.mHotspotSelector = new PositionSelector<>(hotspots);
     }
 
     public boolean isHotspot(@NotNull final VariantHotspot variant)
     {
         final AtomicBoolean hotspotMatch = new AtomicBoolean(false);
 
-        hotspotSelector.select(variant.position(), variant.position(), hotspot ->
+        mHotspotSelector.select(variant.position(), variant.position(), hotspot ->
         {
             if(hotspot.alt().equals(variant.alt()) && hotspot.ref().equals(variant.ref()))
             {

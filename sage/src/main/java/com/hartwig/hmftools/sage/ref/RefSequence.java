@@ -11,30 +11,29 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class RefSequence
 {
+    public final int End;
+    public final int Start;
+    public final ReferenceSequence Sequence;
+    public final IndexedBases IndexedBases;
 
     private static final int BUFFER = 1000;
-
-    private final int end;
-    private final int start;
-    private final ReferenceSequence sequence;
-    private final IndexedBases indexedBases;
 
     public RefSequence(@NotNull final GenomeRegion region, @NotNull final ReferenceSequenceFile refGenome)
     {
         final int sequenceEnd = refGenome.getSequenceDictionary().getSequence(region.chromosome()).getSequenceLength();
-        this.start = Math.max(1, (int) region.start() - BUFFER);
-        this.end = Math.min(sequenceEnd, (int) region.end() + BUFFER);
-        this.sequence = refGenome.getSubsequenceAt(region.chromosome(), start, end);
-        this.indexedBases = new IndexedBases(start, 0, sequence.getBases());
+        Start = Math.max(1, (int) region.start() - BUFFER);
+        End = Math.min(sequenceEnd, (int) region.end() + BUFFER);
+        Sequence = refGenome.getSubsequenceAt(region.chromosome(), Start, End);
+        IndexedBases = new IndexedBases(Start, 0, Sequence.getBases());
     }
 
     @VisibleForTesting
     public RefSequence(final ReferenceSequence sequence)
     {
-        this.sequence = sequence;
-        this.start = sequence.getContigIndex() + 1;
-        this.end = start + sequence.getBases().length - 1;
-        this.indexedBases = new IndexedBases(start, 0, sequence.getBases());
+        Sequence = sequence;
+        Start = sequence.getContigIndex() + 1;
+        End = Start + sequence.getBases().length - 1;
+        IndexedBases = new IndexedBases(Start, 0, sequence.getBases());
     }
 
     /**
@@ -43,7 +42,7 @@ public class RefSequence
     @NotNull
     public IndexedBases alignment()
     {
-        return indexedBases;
+        return IndexedBases;
     }
 
 }

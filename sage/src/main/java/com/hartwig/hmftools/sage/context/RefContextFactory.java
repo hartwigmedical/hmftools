@@ -18,50 +18,49 @@ import org.jetbrains.annotations.NotNull;
 
 public class RefContextFactory
 {
-
-    private final SageConfig config;
-    private final String sample;
-    private final EvictingArray<RefContext> rollingCandidates;
-    private final PanelSelector<GenomeRegion> panelSelector;
-    private final List<AltContext> savedCandidates = Lists.newArrayList();
+    private final SageConfig mConfig;
+    private final String mSample;
+    private final EvictingArray<RefContext> mRollingCandidates;
+    private final PanelSelector<GenomeRegion> mPanelSelector;
+    private final List<AltContext> mSavedCandidates = Lists.newArrayList();
 
     public RefContextFactory(@NotNull final SageConfig config, @NotNull final String sample, final List<VariantHotspot> hotspots,
             final List<GenomeRegion> panel)
     {
-        this.sample = sample;
-        this.config = config;
-        this.panelSelector = new PanelSelector<>(panel);
+        mSample = sample;
+        mConfig = config;
+        mPanelSelector = new PanelSelector<>(panel);
         final Predicate<AltContext> altContextPredicate = config.filter().altContextFilter(new HotspotSelector(hotspots));
         final Consumer<RefContext> evictionHandler = (refContext) -> refContext.alts()
                 .stream()
                 .filter(AltContext::finaliseAndValidate)
                 .filter(this::refPredicate)
                 .filter(altContextPredicate)
-                .forEach(savedCandidates::add);
+                .forEach(mSavedCandidates::add);
 
-        this.rollingCandidates = new EvictingArray<>(256, evictionHandler);
+        mRollingCandidates = new EvictingArray<>(256, evictionHandler);
     }
 
     @NotNull
     public RefContext refContext(@NotNull final String chromosome, final long position)
     {
         int maxDepth = maxReadDepth(chromosome, position);
-        return rollingCandidates.computeIfAbsent(position, aLong -> new RefContext(sample, chromosome, position, maxDepth));
+        return mRollingCandidates.computeIfAbsent(position, aLong -> new RefContext(mSample, chromosome, position, maxDepth));
     }
 
     @NotNull
     public List<AltContext> altContexts()
     {
-        rollingCandidates.evictAll();
-        Collections.sort(savedCandidates);
-        return savedCandidates;
+        mRollingCandidates.evictAll();
+        Collections.sort(mSavedCandidates);
+        return mSavedCandidates;
     }
 
     private int maxReadDepth(final String chromosome, final long position)
     {
-        return MitochondrialChromosome.contains(chromosome) || panelSelector.inPanel(position, position)
-                ? config.maxReadDepthPanel()
-                : config.maxReadDepth();
+        return MitochondrialChromosome.contains(chromosome) || mPanelSelector.inPanel(position, position)
+                ? mConfig.maxReadDepthPanel()
+                : mConfig.maxReadDepth();
     }
 
     private boolean refPredicate(@NotNull final AltContext altContext)

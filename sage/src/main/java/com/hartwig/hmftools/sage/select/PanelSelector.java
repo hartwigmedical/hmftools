@@ -11,32 +11,31 @@ import org.jetbrains.annotations.NotNull;
 @NotThreadSafe
 public class PanelSelector<R extends GenomeRegion>
 {
-
-    private final List<R> regions;
-    private int index = 0;
+    private final List<R> mRegions;
+    private int mIndex = 0;
 
     public PanelSelector(final List<R> regions)
     {
-        this.regions = regions;
+        this.mRegions = regions;
     }
 
     public boolean inPanel(long start, long end)
     {
-        if(regions.isEmpty())
+        if(mRegions.isEmpty())
         {
             return false;
         }
 
         R current = current();
-        while(index > 0 && current.start() > end)
+        while(mIndex > 0 && current.start() > end)
         {
-            index--;
+            mIndex--;
             current = current();
         }
 
-        while(index < regions.size() - 1 && current.end() < start)
+        while(mIndex < mRegions.size() - 1 && current.end() < start)
         {
-            index++;
+            mIndex++;
             current = current();
         }
 
@@ -51,7 +50,7 @@ public class PanelSelector<R extends GenomeRegion>
     @NotNull
     private R current()
     {
-        return regions.get(index);
+        return mRegions.get(mIndex);
     }
 
 }

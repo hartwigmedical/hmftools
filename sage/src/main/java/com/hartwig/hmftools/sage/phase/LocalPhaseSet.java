@@ -15,9 +15,8 @@ import org.jetbrains.annotations.NotNull;
 
 class LocalPhaseSet extends BufferedPostProcessor
 {
-
-    private int phase;
-    private final Set<Integer> passingPhaseSets = Sets.newHashSet();
+    private int mPhase;
+    private final Set<Integer> mPassingPhaseSets = Sets.newHashSet();
 
     LocalPhaseSet(@NotNull final Consumer<SageVariant> consumer)
     {
@@ -27,7 +26,7 @@ class LocalPhaseSet extends BufferedPostProcessor
     @NotNull
     public Set<Integer> passingPhaseSets()
     {
-        return passingPhaseSets;
+        return mPassingPhaseSets;
     }
 
     @Override
@@ -38,7 +37,7 @@ class LocalPhaseSet extends BufferedPostProcessor
         {
             if(variant.isPassing() && variant.localPhaseSet() > 0)
             {
-                passingPhaseSets.add(variant.localPhaseSet());
+                mPassingPhaseSets.add(variant.localPhaseSet());
             }
         }
     }
@@ -66,9 +65,9 @@ class LocalPhaseSet extends BufferedPostProcessor
                     }
                     else
                     {
-                        phase++;
-                        oldEntry.localPhaseSet(phase);
-                        newEntry.localPhaseSet(phase);
+                        mPhase++;
+                        oldEntry.localPhaseSet(mPhase);
+                        newEntry.localPhaseSet(mPhase);
                     }
                 }
             }

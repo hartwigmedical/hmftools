@@ -32,9 +32,6 @@ import htsjdk.samtools.ValidationStringency;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface SageConfig
 {
-
-    Logger LOGGER = LogManager.getLogger(SageConfig.class);
-
     String THREADS = "threads";
     String REFERENCE = "reference";
     String REFERENCE_BAM = "reference_bam";

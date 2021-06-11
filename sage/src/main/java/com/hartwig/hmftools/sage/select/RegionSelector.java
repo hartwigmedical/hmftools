@@ -12,33 +12,32 @@ import org.jetbrains.annotations.NotNull;
 @NotThreadSafe
 public class RegionSelector<R extends GenomeRegion>
 {
-
-    private final List<R> regions;
-    private int index = 0;
+    private final List<R> mRegions;
+    private int mIndex = 0;
 
     public RegionSelector(final List<R> regions)
     {
-        this.regions = regions;
+        this.mRegions = regions;
     }
 
     @NotNull
     public Optional<R> select(long position)
     {
-        if(regions.isEmpty())
+        if(mRegions.isEmpty())
         {
             return Optional.empty();
         }
 
         R current = current();
-        while(index > 0 && current.start() > position)
+        while(mIndex > 0 && current.start() > position)
         {
-            index--;
+            mIndex--;
             current = current();
         }
 
-        while(index < regions.size() - 1 && current.end() < position)
+        while(mIndex < mRegions.size() - 1 && current.end() < position)
         {
-            index++;
+            mIndex++;
             current = current();
         }
 
@@ -53,7 +52,7 @@ public class RegionSelector<R extends GenomeRegion>
     @NotNull
     private R current()
     {
-        return regions.get(index);
+        return mRegions.get(mIndex);
     }
 
 }

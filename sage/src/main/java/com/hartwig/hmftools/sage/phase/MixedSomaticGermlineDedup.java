@@ -16,15 +16,14 @@ import org.jetbrains.annotations.NotNull;
 
 public class MixedSomaticGermlineDedup extends BufferedPostProcessor
 {
-
     private static final int MAX_DISTANCE = 10;
-
-    private final RegionSelector<HmfTranscriptRegion> selector;
+    
+    private final RegionSelector<HmfTranscriptRegion> mSelector;
 
     public MixedSomaticGermlineDedup(final Consumer<SageVariant> consumer, final List<HmfTranscriptRegion> transcripts)
     {
         super(MAX_DISTANCE, consumer);
-        this.selector = new RegionSelector<>(transcripts);
+        mSelector = new RegionSelector<>(transcripts);
     }
 
     @Override
@@ -79,7 +78,7 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
     @NotNull
     private Optional<GenomeRegion> codon(long position)
     {
-        final Optional<HmfTranscriptRegion> maybeTranscript = selector.select(position);
+        final Optional<HmfTranscriptRegion> maybeTranscript = mSelector.select(position);
         if(maybeTranscript.isPresent())
         {
             final List<GenomeRegion> codons = maybeTranscript.get().codonRangeAtGenomicPosition(position);

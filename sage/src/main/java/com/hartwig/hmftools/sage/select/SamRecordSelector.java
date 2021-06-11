@@ -12,7 +12,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class SamRecordSelector<P extends GenomePosition> extends PositionSelector<P>
 {
-
     public SamRecordSelector(@NotNull final List<P> positions)
     {
         super(positions);

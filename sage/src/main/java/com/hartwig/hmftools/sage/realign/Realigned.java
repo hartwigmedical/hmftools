@@ -10,7 +10,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class Realigned
 {
-
     private static final int MIN_REPEAT_COUNT = 4;
     public static final int MAX_REPEAT_SIZE = 5;
     private static final RealignedContext NONE = new RealignedContext(RealignedType.NONE, 0);
@@ -37,7 +36,7 @@ public class Realigned
         if(otherBaseIndex >= 0)
         {
             final RealignedContext context = realigned(baseStartIndex, baseEndIndex, bases, otherBaseIndex, otherBases);
-            if(context.type() != RealignedType.NONE)
+            if(context.Type != RealignedType.NONE)
             {
                 return context;
             }
@@ -50,9 +49,9 @@ public class Realigned
             if(i != 0 && otherBaseIndexWithOffset >= 0)
             {
                 final RealignedContext context = realigned(baseStartIndex, baseEndIndex, bases, otherBaseIndexWithOffset, otherBases);
-                if(context.type() != RealignedType.NONE)
+                if(context.Type != RealignedType.NONE)
                 {
-                    if(context.type() == RealignedType.EXACT)
+                    if(context.Type == RealignedType.EXACT)
                     {
                         return context;
                     }

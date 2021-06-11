@@ -11,14 +11,16 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 
 import org.junit.Test;
 
-public class PanelSelectorTest {
+public class PanelSelectorTest
+{
 
     private final List<GenomeRegion> panel =
             Lists.newArrayList(region(995, 995), region(998, 1102), region(1995, 1995), region(1998, 2102));
     private final PanelSelector<GenomeRegion> victim = new PanelSelector<>(panel);
 
     @Test
-    public void testOverlap() {
+    public void testOverlap()
+    {
         assertTrue(victim.inPanel(995, 995));
         assertTrue(victim.inPanel(994, 996));
         assertTrue(victim.inPanel(1102, 1102));
@@ -32,12 +34,14 @@ public class PanelSelectorTest {
     }
 
     @Test
-    public void testOutOfOrder() {
+    public void testOutOfOrder()
+    {
         testOverlap();
         testOverlap();
     }
 
-    private static GenomeRegion region(long start, long end) {
+    private static GenomeRegion region(long start, long end)
+    {
         return GenomeRegions.create("1", start, end);
     }
 

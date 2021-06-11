@@ -31,7 +31,6 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public final class CandidateSerialization
 {
-
     @NotNull
     public static VariantHotspot toVariantHotspot(@NotNull final VariantContext context)
     {

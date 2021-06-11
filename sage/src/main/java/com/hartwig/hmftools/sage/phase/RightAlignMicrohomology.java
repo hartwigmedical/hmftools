@@ -20,16 +20,15 @@ import org.jetbrains.annotations.NotNull;
 
 public class RightAlignMicrohomology implements Consumer<SageVariant>
 {
-
-    private final Consumer<SageVariant> consumer;
-    private final RegionSelector<HmfTranscriptRegion> selector;
-    private final List<SageVariant> rightAlignedList = Lists.newArrayList();
-    private final Comparator<VariantHotspot> comparator = new VariantHotspotComparator();
+    private final Consumer<SageVariant> mConsumer;
+    private final RegionSelector<HmfTranscriptRegion> mSelector;
+    private final List<SageVariant> mRightAlignedList = Lists.newArrayList();
+    private final Comparator<VariantHotspot> mComparator = new VariantHotspotComparator();
 
     public RightAlignMicrohomology(final Consumer<SageVariant> consumer, final List<HmfTranscriptRegion> transcripts)
     {
-        this.selector = new RegionSelector<>(transcripts);
-        this.consumer = consumer;
+        mSelector = new RegionSelector<>(transcripts);
+        mConsumer = consumer;
     }
 
     @Override
@@ -37,18 +36,18 @@ public class RightAlignMicrohomology implements Consumer<SageVariant>
     {
         if(!realign(variant))
         {
-            Iterator<SageVariant> realignedIterator = rightAlignedList.iterator();
+            Iterator<SageVariant> realignedIterator = mRightAlignedList.iterator();
             while(realignedIterator.hasNext())
             {
                 final SageVariant rightAligned = realignedIterator.next();
-                if(comparator.compare(rightAligned.variant(), variant.variant()) < 0)
+                if(mComparator.compare(rightAligned.variant(), variant.variant()) < 0)
                 {
-                    consumer.accept(rightAligned);
+                    mConsumer.accept(rightAligned);
                     realignedIterator.remove();
                 }
             }
 
-            consumer.accept(variant);
+            mConsumer.accept(variant);
         }
     }
 
@@ -72,7 +71,7 @@ public class RightAlignMicrohomology implements Consumer<SageVariant>
             return false;
         }
 
-        final Optional<HmfExonRegion> maybeLeftAlignedRegion = PhasedInframeIndel.selectExon(selector, variant.position() + 1);
+        final Optional<HmfExonRegion> maybeLeftAlignedRegion = PhasedInframeIndel.selectExon(mSelector, variant.position() + 1);
         if(maybeLeftAlignedRegion.isPresent())
         {
             return false;
@@ -80,7 +79,7 @@ public class RightAlignMicrohomology implements Consumer<SageVariant>
 
         final VariantHotspot rightAligned =
                 isInframeDel ? rightAlignDel(variant.variant(), microhomology) : rightAlignIns(variant.variant(), microhomology);
-        final Optional<HmfTranscriptRegion> maybeRightAlignedTranscript = selector.select(rightAligned.position() + 1);
+        final Optional<HmfTranscriptRegion> maybeRightAlignedTranscript = mSelector.select(rightAligned.position() + 1);
         if(!maybeRightAlignedTranscript.isPresent())
         {
             return false;
@@ -107,7 +106,7 @@ public class RightAlignMicrohomology implements Consumer<SageVariant>
         final SageVariant realignedVariant =
                 new SageVariant(newCandidate, variant.filters(), variant.normalAltContexts(), variant.tumorAltContexts());
         realignedVariant.realigned(true);
-        rightAlignedList.add(realignedVariant);
+        mRightAlignedList.add(realignedVariant);
 
         return true;
     }
@@ -142,8 +141,8 @@ public class RightAlignMicrohomology implements Consumer<SageVariant>
 
     public void flush()
     {
-        rightAlignedList.sort((o1, o2) -> comparator.compare(o1.variant(), o2.variant()));
-        rightAlignedList.forEach(consumer);
-        rightAlignedList.clear();
+        mRightAlignedList.sort((o1, o2) -> mComparator.compare(o1.variant(), o2.variant()));
+        mRightAlignedList.forEach(mConsumer);
+        mRightAlignedList.clear();
     }
 }

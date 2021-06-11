@@ -4,10 +4,12 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class GeneCoverageTest {
+public class GeneCoverageTest
+{
 
     @Test
-    public void testMissedVariantLikelihood() {
+    public void testMissedVariantLikelihood()
+    {
         int[] baseCoverage = new int[37];
         baseCoverage[15] = 100;
         baseCoverage[20] = 100;
@@ -17,7 +19,8 @@ public class GeneCoverageTest {
     }
 
     @Test
-    public void testMissedVariantLikelihoodNoCoverage() {
+    public void testMissedVariantLikelihoodNoCoverage()
+    {
         int[] baseCoverage = new int[37];
         baseCoverage[0] = 1;
 
@@ -25,8 +28,10 @@ public class GeneCoverageTest {
     }
 
     @Test
-    public void testBucket() {
-        for (int depth = 0; depth < 30; depth++) {
+    public void testBucket()
+    {
+        for(int depth = 0; depth < 30; depth++)
+        {
             assertEquals(depth, GeneCoverage.bucket(depth));
         }
 
@@ -40,8 +45,10 @@ public class GeneCoverageTest {
         assertBucketAndDepth(100, 1000, 37, 100);
     }
 
-    private static void assertBucketAndDepth(int minDepth, int maxDepth, int expectedBucket, int expectedDepth) {
-        for (int depth = minDepth; depth < maxDepth; depth++) {
+    private static void assertBucketAndDepth(int minDepth, int maxDepth, int expectedBucket, int expectedDepth)
+    {
+        for(int depth = minDepth; depth < maxDepth; depth++)
+        {
             assertEquals(expectedBucket, GeneCoverage.bucket(depth));
         }
 

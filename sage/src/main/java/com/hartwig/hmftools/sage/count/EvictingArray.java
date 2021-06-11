@@ -7,46 +7,45 @@ import org.jetbrains.annotations.NotNull;
 
 public class EvictingArray<T>
 {
+    private final Object[] mElements;
+    private final Consumer<T> mEvictionHandler;
+    private int mMinPosition = 0;
+    private int mMinPositionIndex = 0;
 
-    private final Object[] elements;
-    private final Consumer<T> evictionHandler;
-    private int minPosition = 0;
-    private int minPositionIndex = 0;
-
-    private final int capacity;
+    private final int mCapacity;
 
     public EvictingArray(int minCapacity, Consumer<T> evictionHandler)
     {
-        this.evictionHandler = evictionHandler;
-        this.capacity = calculateSize(minCapacity);
-        this.elements = new Object[this.capacity];
+        mEvictionHandler = evictionHandler;
+        mCapacity = calculateSize(minCapacity);
+        mElements = new Object[mCapacity];
     }
 
     public T computeIfAbsent(long position, @NotNull final Function<Long, T> supplier)
     {
-        if(minPosition == 0)
+        if(mMinPosition == 0)
         {
-            minPosition = (int) position - capacity + 1;
+            mMinPosition = (int) position - mCapacity + 1;
         }
 
-        int distanceFromMinPosition = (int) position - minPosition;
+        int distanceFromMinPosition = (int) position - mMinPosition;
         if(distanceFromMinPosition < 0)
         {
-            throw new IllegalArgumentException("Cannot add position: " + position + " before min position: " + minPosition);
+            throw new IllegalArgumentException("Cannot add position: " + position + " before min position: " + mMinPosition);
         }
 
-        if(distanceFromMinPosition >= capacity)
+        if(distanceFromMinPosition >= mCapacity)
         {
-            flush((int) position - minPosition - capacity + 1);
+            flush((int) position - mMinPosition - mCapacity + 1);
         }
 
-        distanceFromMinPosition = (int) position - minPosition;
-        int index = (minPositionIndex + distanceFromMinPosition) & (elements.length - 1);
-        T element = (T) elements[index];
+        distanceFromMinPosition = (int) position - mMinPosition;
+        int index = (mMinPositionIndex + distanceFromMinPosition) & (mElements.length - 1);
+        T element = (T) mElements[index];
         if(element == null)
         {
             element = supplier.apply(position);
-            elements[index] = element;
+            mElements[index] = element;
         }
 
         return element;
@@ -54,31 +53,31 @@ public class EvictingArray<T>
 
     public int capacity()
     {
-        return capacity;
+        return mCapacity;
     }
 
     int minPosition()
     {
-        return minPosition;
+        return mMinPosition;
     }
 
     public void evictAll()
     {
-        flush(capacity);
+        flush(mCapacity);
     }
 
     private void flush(int count)
     {
         for(int i = 0; i < count; i++)
         {
-            T element = (T) elements[minPositionIndex];
+            T element = (T) mElements[mMinPositionIndex];
             if(element != null)
             {
-                evictionHandler.accept(element);
-                elements[minPositionIndex] = null;
+                mEvictionHandler.accept(element);
+                mElements[mMinPositionIndex] = null;
             }
-            minPosition++;
-            minPositionIndex = (minPositionIndex + 1) & (elements.length - 1);
+            mMinPosition++;
+            mMinPositionIndex = (mMinPositionIndex + 1) & (mElements.length - 1);
         }
     }
 

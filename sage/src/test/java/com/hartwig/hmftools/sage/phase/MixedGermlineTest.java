@@ -25,15 +25,18 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class MixedGermlineTest {
+public class MixedGermlineTest
+{
 
     @Test
-    public void testNonCodingMnv() {
+    public void testNonCodingMnv()
+    {
         testMixed(100, false);
     }
 
     @Test
-    public void testCodingMnv() {
+    public void testCodingMnv()
+    {
         testMixed(115251156, true);
         testMixed(115251157, false);
         testMixed(115251158, false);
@@ -41,7 +44,8 @@ public class MixedGermlineTest {
     }
 
     @Test
-    public void testPsg1() {
+    public void testPsg1()
+    {
         final SageVariant somaticSnv = createGermline("19", 43382367, "G", "A");
         final SageVariant mixedMnv = create("19", 43382367, "GT", "AG");
         final SageVariant germlineSnv = create("19", 43382368, "T", "G");
@@ -57,7 +61,8 @@ public class MixedGermlineTest {
         assertTrue(mixedMnv.isPassing());
     }
 
-    private void testMixed(int germlinePosition, boolean mvnPass) {
+    private void testMixed(int germlinePosition, boolean mvnPass)
+    {
         final SageVariant germlineSnv = createGermline("1", germlinePosition, "A", "G");
         final SageVariant somaticSnv = create("1", germlinePosition + 2, "A", "G");
         final SageVariant mixedMnv = create("1", germlinePosition, "ACA", "GCG");
@@ -73,11 +78,13 @@ public class MixedGermlineTest {
         assertEquals(mvnPass, mixedMnv.isPassing());
     }
 
-    private void process(String chromosome, SageVariant... variants) {
+    private void process(String chromosome, SageVariant... variants)
+    {
         final List<SageVariant> consumer = Lists.newArrayList();
         final Phase victim = new Phase(SageConfigTest.testConfig(), chromosome, consumer::add);
 
-        for (SageVariant variant : variants) {
+        for(SageVariant variant : variants)
+        {
             variant.localPhaseSet(1);
             victim.accept(variant);
         }
@@ -87,14 +94,16 @@ public class MixedGermlineTest {
     }
 
     @NotNull
-    private static SageVariant createGermline(String chromosome, long position, @NotNull String ref, @NotNull String alt) {
+    private static SageVariant createGermline(String chromosome, long position, @NotNull String ref, @NotNull String alt)
+    {
         SageVariant result = create(chromosome, position, ref, alt);
         result.filters().add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.toString());
         return result;
     }
 
     @NotNull
-    private static SageVariant create(String chromosome, long position, @NotNull String ref, @NotNull String alt) {
+    private static SageVariant create(String chromosome, long position, @NotNull String ref, @NotNull String alt)
+    {
         VariantHotspot variant = ImmutableVariantHotspotImpl.builder().chromosome(chromosome).ref(ref).alt(alt).position(position).build();
         ReadContextCounter counter = dummyCounter(variant, Strings.EMPTY);
         final Candidate candidate = new Candidate(SageVariantTier.PANEL, variant, counter.readContext(), 0, 0);
@@ -102,7 +111,8 @@ public class MixedGermlineTest {
     }
 
     @NotNull
-    static ReadContextCounter dummyCounter(@NotNull VariantHotspot variant, @NotNull final String microhomology) {
+    static ReadContextCounter dummyCounter(@NotNull VariantHotspot variant, @NotNull final String microhomology)
+    {
         ReadContext dummyReadContext = ReadContextCounterTest.readContext(100, 0, 0, 0, "AAA", microhomology);
         return new ReadContextCounter("SAMPLE",
                 variant,

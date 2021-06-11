@@ -10,7 +10,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class DedupIndel extends BufferedPostProcessor
 {
-
     DedupIndel(final Consumer<SageVariant> consumer)
     {
         super(0, consumer);

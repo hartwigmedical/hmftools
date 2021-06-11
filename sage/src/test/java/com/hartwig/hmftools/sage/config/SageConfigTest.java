@@ -35,10 +35,12 @@ import org.junit.Test;
 
 import htsjdk.samtools.ValidationStringency;
 
-public class SageConfigTest {
+public class SageConfigTest
+{
 
     @Test
-    public void testBqrFile() {
+    public void testBqrFile()
+    {
         SageConfig config = testConfig();
         assertEquals("SAMPLE.sage.bqr.tsv", config.baseQualityRecalibrationFile("SAMPLE"));
 
@@ -47,7 +49,8 @@ public class SageConfigTest {
     }
 
     @NotNull
-    public static SageConfig testConfig() {
+    public static SageConfig testConfig()
+    {
         return ImmutableSageConfig.builder()
                 .panelOnly(false)
                 .version("2.2")
@@ -78,7 +81,8 @@ public class SageConfigTest {
                 .build();
     }
 
-    public static QualityConfig defaultQualityConfig() {
+    public static QualityConfig defaultQualityConfig()
+    {
         return ImmutableQualityConfig.builder()
                 .highlyPolymorphicGenes(Lists.newArrayList())
                 .jitterPenalty(DEFAULT_JITTER_PENALTY)
@@ -91,7 +95,8 @@ public class SageConfigTest {
                 .build();
     }
 
-    public static FilterConfig defaultFilterConfig() {
+    public static FilterConfig defaultFilterConfig()
+    {
         return ImmutableFilterConfig.builder()
                 .hardFilter(false)
                 .softFilter(true)
@@ -107,7 +112,8 @@ public class SageConfigTest {
                 .build();
     }
 
-    public static BaseQualityRecalibrationConfig defaultQualityRecalibrationConfig() {
+    public static BaseQualityRecalibrationConfig defaultQualityRecalibrationConfig()
+    {
         return ImmutableBaseQualityRecalibrationConfig.builder()
                 .enabled(false)
                 .plot(false)

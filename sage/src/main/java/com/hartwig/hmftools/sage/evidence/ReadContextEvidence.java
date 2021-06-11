@@ -27,26 +27,25 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class ReadContextEvidence
 {
-
-    private final int typicalReadLength;
-    private final SageConfig sageConfig;
-    private final ReferenceSequenceFile refGenome;
-    private final ReadContextCounterFactory factory;
+    private final int mTypicalReadLength;
+    private final SageConfig mSageConfig;
+    private final ReferenceSequenceFile mRefGenome;
+    private final ReadContextCounterFactory mFactory;
 
     public ReadContextEvidence(@NotNull final SageConfig config, @NotNull final ReferenceSequenceFile refGenome,
             final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
     {
-        this.sageConfig = config;
-        this.refGenome = refGenome;
-        this.factory = new ReadContextCounterFactory(config, qualityRecalibrationMap);
-        this.typicalReadLength = config.typicalReadLength();
+        mSageConfig = config;
+        mRefGenome = refGenome;
+        mFactory = new ReadContextCounterFactory(config, qualityRecalibrationMap);
+        mTypicalReadLength = config.typicalReadLength();
     }
 
     @NotNull
     public List<ReadContextCounter> get(@NotNull final List<Candidate> candidates, @NotNull final String sample,
             @NotNull final String bam)
     {
-        final List<ReadContextCounter> counters = factory.create(sample, candidates);
+        final List<ReadContextCounter> counters = mFactory.create(sample, candidates);
         if(candidates.isEmpty())
         {
             return counters;
@@ -56,23 +55,23 @@ public class ReadContextEvidence
         final Candidate lastCandidate = candidates.get(candidates.size() - 1);
 
         final GenomeRegion bounds = GenomeRegions.create(firstCandidate.chromosome(),
-                Math.max(firstCandidate.position() - typicalReadLength, 1),
-                lastCandidate.position() + typicalReadLength);
+                Math.max(firstCandidate.position() - mTypicalReadLength, 1),
+                lastCandidate.position() + mTypicalReadLength);
         final SamSlicer slicer = new SamSlicer(0, bounds);
 
         final SamRecordSelector<ReadContextCounter> consumerSelector = new SamRecordSelector<>(counters);
 
-        final RefSequence refSequence = new RefSequence(bounds, refGenome);
+        final RefSequence refSequence = new RefSequence(bounds, mRefGenome);
         try(final SamReader tumorReader = SamReaderFactory.makeDefault()
-                .validationStringency(sageConfig.validationStringency())
-                .referenceSource(new ReferenceSource(refGenome))
+                .validationStringency(mSageConfig.validationStringency())
+                .referenceSource(new ReferenceSource(mRefGenome))
                 .open(new File(bam)))
         {
             slicer.slice(tumorReader, samRecord ->
             {
 
                 int numberOfEvents = NumberEvents.numberOfEvents(samRecord, refSequence);
-                consumerSelector.select(samRecord, x -> x.accept(samRecord, sageConfig, numberOfEvents));
+                consumerSelector.select(samRecord, x -> x.accept(samRecord, mSageConfig, numberOfEvents));
 
             });
         } catch(IOException e)

@@ -21,12 +21,14 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
 
-public class CandidateSerializationTest {
+public class CandidateSerializationTest
+{
 
     private static final VCFCodec CODEC = createTestCodec();
 
     @NotNull
-    private static VCFCodec createTestCodec() {
+    private static VCFCodec createTestCodec()
+    {
         VCFCodec codec = new VCFCodec();
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet("normal", "tumor"));
         codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
@@ -34,14 +36,16 @@ public class CandidateSerializationTest {
     }
 
     @NotNull
-    public static Candidate decode(String line) {
+    public static Candidate decode(String line)
+    {
         VariantContext context = CODEC.decode(line);
         IndexedBases cheatRefBases = CandidateSerialization.readBases(context);
         return CandidateSerialization.toCandidate(context, cheatRefBases, cheatRefBases);
     }
 
     @Test
-    public void testSerialization() {
+    public void testSerialization()
+    {
         final SageVariantTier expectedTier = SageVariantTier.HOTSPOT;
         final String expectedRepeat = "AT";
         final int expectedRepeatCount = 2;
@@ -65,7 +69,8 @@ public class CandidateSerializationTest {
         assertEquals(3, deserialized.readContext().readBasesPositionIndex());
     }
 
-    private static void assertEqual(Candidate expected, Candidate victim) {
+    private static void assertEqual(Candidate expected, Candidate victim)
+    {
         assertEquals(expected.tier(), victim.tier());
         assertEquals(expected.position(), victim.position());
         assertEquals(expected.chromosome(), victim.chromosome());
@@ -79,7 +84,8 @@ public class CandidateSerializationTest {
         assertEquals(expected.readContext().rightFlankString(), victim.readContext().rightFlankString());
     }
 
-    private static VariantContext toContext(Candidate candidate) {
+    private static VariantContext toContext(Candidate candidate)
+    {
         VariantContextBuilder builder = CandidateSerialization.toContext(candidate);
 
         Genotype genotype = new GenotypeBuilder("SAMPLE").DP(candidate.maxReadDepth()).make();

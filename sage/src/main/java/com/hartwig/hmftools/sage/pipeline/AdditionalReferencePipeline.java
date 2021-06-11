@@ -2,6 +2,8 @@ package com.hartwig.hmftools.sage.pipeline;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -20,8 +22,6 @@ import com.hartwig.hmftools.sage.read.ReadContextCounters;
 import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.ReferenceSequenceFile;
@@ -29,21 +29,18 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class AdditionalReferencePipeline
 {
-
-    private static final Logger LOGGER = LogManager.getLogger(AdditionalReferencePipeline.class);
-
-    private final SageConfig config;
-    private final EvidenceStage evidenceStage;
-    private final ReferenceSequenceFile refGenome;
-    private final Executor executor;
+    private final SageConfig mConfig;
+    private final EvidenceStage mEvidenceStage;
+    private final ReferenceSequenceFile mRefGenome;
+    private final Executor mExecutor;
 
     public AdditionalReferencePipeline(@NotNull final SageConfig config, @NotNull final Executor executor, ReferenceSequenceFile refGenome,
             @NotNull final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
     {
-        this.config = config;
-        this.refGenome = refGenome;
-        this.evidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap);
-        this.executor = executor;
+        mConfig = config;
+        mRefGenome = refGenome;
+        mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap);
+        mExecutor = executor;
     }
 
     @NotNull
@@ -59,17 +56,17 @@ public class AdditionalReferencePipeline
         {
             if(region.start() == 1)
             {
-                LOGGER.info("Processing chromosome {}", region.chromosome());
+                SG_LOGGER.info("Processing chromosome {}", region.chromosome());
             }
-            return new RefSequence(region, refGenome);
-        }, executor);
+            return new RefSequence(region, mRefGenome);
+        }, mExecutor);
 
         final CompletableFuture<List<Candidate>> candidateFutures = refSequenceFuture.thenApply(x -> variants.stream()
                 .map(y -> CandidateSerialization.toCandidate(y, x))
                 .collect(Collectors.toList()));
 
         final CompletableFuture<ReadContextCounters> evidenceFutures =
-                evidenceStage.evidence(config.reference(), config.referenceBam(), candidateFutures);
+                mEvidenceStage.evidence(mConfig.reference(), mConfig.referenceBam(), candidateFutures);
 
         return evidenceFutures.thenApply(x -> update(x, variants));
     }

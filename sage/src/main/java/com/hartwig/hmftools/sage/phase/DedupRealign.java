@@ -15,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class DedupRealign extends BufferedPostProcessor
 {
-
     public DedupRealign(final Consumer<SageVariant> consumer)
     {
         super(PHASE_BUFFER, consumer);

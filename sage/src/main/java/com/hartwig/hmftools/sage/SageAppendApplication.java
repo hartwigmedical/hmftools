@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.sage.SageApplication.createCommandLine;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,8 +53,6 @@ import htsjdk.variant.vcf.VCFHeaderLine;
 
 public class SageAppendApplication implements AutoCloseable
 {
-
-    private static final Logger LOGGER = LogManager.getLogger(SageAppendApplication.class);
     private static final double MIN_PRIOR_VERSION = 2.4;
 
     public static void main(String[] args)
@@ -62,15 +61,16 @@ public class SageAppendApplication implements AutoCloseable
         try(final SageAppendApplication application = new SageAppendApplication(options, args))
         {
             application.run();
-        } catch(ParseException e)
+        }
+        catch(ParseException e)
         {
-            LOGGER.warn(e);
+            SG_LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("SageAppendApplication", options);
             System.exit(1);
         } catch(Exception e)
         {
-            LOGGER.warn(e);
+            SG_LOGGER.warn(e);
             System.exit(1);
         }
     }
@@ -86,7 +86,7 @@ public class SageAppendApplication implements AutoCloseable
     public SageAppendApplication(final Options options, final String... args) throws ParseException, IOException
     {
         final VersionInfo version = new VersionInfo("sage.version");
-        LOGGER.info("SAGE version: {}", version.version());
+        SG_LOGGER.info("SAGE version: {}", version.version());
 
         final CommandLine cmd = createCommandLine(args, options);
         this.config = SageConfig.createConfig(true, version.version(), cmd);
@@ -100,11 +100,11 @@ public class SageAppendApplication implements AutoCloseable
         inputReader = AbstractFeatureReader.getFeatureReader(inputVcf, new VCFCodec(), false);
 
         VCFHeader inputHeader = (VCFHeader) inputReader.getHeader();
-        LOGGER.info("Reading and validating file: {}", inputVcf);
+        SG_LOGGER.info("Reading and validating file: {}", inputVcf);
         validateInputHeader(inputHeader);
 
         outputVCF = new SageVCF(refGenome, config, inputHeader);
-        LOGGER.info("Writing to file: {}", config.outputFile());
+        SG_LOGGER.info("Writing to file: {}", config.outputFile());
     }
 
     public void run() throws IOException, ExecutionException, InterruptedException
@@ -151,7 +151,7 @@ public class SageAppendApplication implements AutoCloseable
         refGenome.close();
         executorService.shutdown();
         long timeTaken = System.currentTimeMillis() - timeStamp;
-        LOGGER.info("Completed in {} seconds", timeTaken / 1000);
+        SG_LOGGER.info("Completed in {} seconds", timeTaken / 1000);
     }
 
     @NotNull

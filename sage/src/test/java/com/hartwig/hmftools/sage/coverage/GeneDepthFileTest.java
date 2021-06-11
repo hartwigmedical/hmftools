@@ -4,10 +4,12 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-public class GeneDepthFileTest {
+public class GeneDepthFileTest
+{
 
     @Test
-    public void testFormat() {
+    public void testFormat()
+    {
         int[] baseCoverage = new int[37];
         baseCoverage[15] = 100;
         baseCoverage[20] = 100;

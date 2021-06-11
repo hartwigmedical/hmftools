@@ -9,20 +9,19 @@ import org.jetbrains.annotations.NotNull;
 
 public class SamSlicerFactory
 {
-
-    private final SageConfig config;
-    private final List<GenomeRegion> panel;
+    private final SageConfig mConfig;
+    private final List<GenomeRegion> mPanel;
 
     public SamSlicerFactory(@NotNull final SageConfig config, @NotNull final List<GenomeRegion> panel)
     {
-        this.config = config;
-        this.panel = panel;
+        mConfig = config;
+        mPanel = panel;
     }
 
     @NotNull
     public SamSlicer create(@NotNull final GenomeRegion slice)
     {
-        return config.panelOnly() ? panelOnly(slice) : fullSlice(slice);
+        return mConfig.panelOnly() ? panelOnly(slice) : fullSlice(slice);
     }
 
     @NotNull
@@ -34,6 +33,6 @@ public class SamSlicerFactory
     @NotNull
     private SamSlicer panelOnly(@NotNull final GenomeRegion slice)
     {
-        return new SamSlicer(0, slice, panel);
+        return new SamSlicer(0, slice, mPanel);
     }
 }

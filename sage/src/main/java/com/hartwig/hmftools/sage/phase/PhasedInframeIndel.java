@@ -16,17 +16,15 @@ import org.jetbrains.annotations.Nullable;
 
 public class PhasedInframeIndel extends BufferedPostProcessor
 {
-
     private static final int MAX_DISTANCE = 50;
 
-    private int phase;
-
-    private final RegionSelector<HmfTranscriptRegion> selector;
+    private int mPhase;
+    private final RegionSelector<HmfTranscriptRegion> mSelector;
 
     public PhasedInframeIndel(final Consumer<SageVariant> consumer, final List<HmfTranscriptRegion> transcripts)
     {
         super(MAX_DISTANCE, consumer);
-        this.selector = new RegionSelector<>(transcripts);
+        mSelector = new RegionSelector<>(transcripts);
     }
 
     @Override
@@ -66,9 +64,9 @@ public class PhasedInframeIndel extends BufferedPostProcessor
                     }
                     else
                     {
-                        phase++;
-                        newVariant.phasedInframeIndel(phase);
-                        other.phasedInframeIndel(phase);
+                        mPhase++;
+                        newVariant.phasedInframeIndel(mPhase);
+                        other.phasedInframeIndel(mPhase);
                     }
                 }
             }
@@ -78,7 +76,7 @@ public class PhasedInframeIndel extends BufferedPostProcessor
     @NotNull
     private Optional<HmfExonRegion> frameshiftExon(@Nullable final VariantHotspot hotspot)
     {
-        return Optional.ofNullable(hotspot).filter(VariantHotspot::isFrameshiftIndel).flatMap(x -> selectExon(selector, x.position() + 1));
+        return Optional.ofNullable(hotspot).filter(VariantHotspot::isFrameshiftIndel).flatMap(x -> selectExon(mSelector, x.position() + 1));
     }
 
     @NotNull

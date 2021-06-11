@@ -12,8 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 class LocalRealignSet extends BufferedPostProcessor
 {
-
-    private int realign;
+    private int mRealign;
 
     LocalRealignSet(@NotNull final Consumer<SageVariant> consumer)
     {
@@ -47,9 +46,9 @@ class LocalRealignSet extends BufferedPostProcessor
                     }
                     else
                     {
-                        realign++;
-                        oldEntry.localRealignSet(realign);
-                        newEntry.localRealignSet(realign);
+                        mRealign++;
+                        oldEntry.localRealignSet(mRealign);
+                        newEntry.localRealignSet(mRealign);
                     }
                 }
             }

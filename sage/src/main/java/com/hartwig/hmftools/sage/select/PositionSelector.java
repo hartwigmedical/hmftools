@@ -13,34 +13,33 @@ import org.jetbrains.annotations.NotNull;
 @NotThreadSafe
 public class PositionSelector<P extends GenomePosition>
 {
-
     @NotNull
-    private final List<P> positions;
-    private int index = 0;
+    private final List<P> mPositions;
+    private int mIndex = 0;
 
     public PositionSelector(@NotNull final List<P> positions)
     {
-        this.positions = positions;
+        this.mPositions = positions;
     }
 
     @NotNull
     public Optional<P> select(long position)
     {
-        if(positions.isEmpty())
+        if(mPositions.isEmpty())
         {
             return Optional.empty();
         }
 
         int currentCompare = Long.compare(current().position(), position);
-        while(currentCompare >= 0 && index > 0)
+        while(currentCompare >= 0 && mIndex > 0)
         {
-            index--;
+            mIndex--;
             currentCompare = Long.compare(current().position(), position);
         }
 
-        while(currentCompare < 0 && index < positions.size() - 1)
+        while(currentCompare < 0 && mIndex < mPositions.size() - 1)
         {
-            index++;
+            mIndex++;
             currentCompare = Long.compare(current().position(), position);
         }
 
@@ -49,7 +48,7 @@ public class PositionSelector<P extends GenomePosition>
 
     public void select(final long start, final long end, final Consumer<P> handler)
     {
-        if(positions.isEmpty())
+        if(mPositions.isEmpty())
         {
             return;
         }
@@ -57,13 +56,13 @@ public class PositionSelector<P extends GenomePosition>
         // Line up index to start
         select(start);
 
-        while(index < positions.size() && inRegion(current(), start, end))
+        while(mIndex < mPositions.size() && inRegion(current(), start, end))
         {
             handler.accept(current());
-            index++;
+            mIndex++;
         }
 
-        index = Math.min(index, positions.size() - 1);
+        mIndex = Math.min(mIndex, mPositions.size() - 1);
     }
 
     private boolean inRegion(P current, long start, long end)
@@ -74,6 +73,6 @@ public class PositionSelector<P extends GenomePosition>
     @NotNull
     private P current()
     {
-        return positions.get(index);
+        return mPositions.get(mIndex);
     }
 }

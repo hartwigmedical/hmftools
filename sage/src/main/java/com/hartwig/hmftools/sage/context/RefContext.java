@@ -14,40 +14,40 @@ import org.jetbrains.annotations.NotNull;
 
 public class RefContext implements GenomePosition
 {
-
-    private final String sample;
-    private final String chromosome;
-    private final int maxDepth;
-    private final long position;
-    private final Map<String, AltContext> alts;
+    public final String Sample;
+    public final String Chromosome;
+    public final int MaxDepth;
+    public final long Position;
+    
+    private final Map<String, AltContext> mAlts;
 
     private int rawDepth;
 
     public RefContext(final String sample, final String chromosome, final long position, final int maxDepth)
     {
-        this.sample = sample;
-        this.chromosome = chromosome;
-        this.position = position;
-        this.maxDepth = maxDepth;
-        this.alts = new HashMap<>();
+        Sample = sample;
+        Chromosome = chromosome;
+        Position = position;
+        MaxDepth = maxDepth;
+        mAlts = new HashMap<>();
     }
 
     @NotNull
     public Collection<AltContext> alts()
     {
-        return alts.values();
+        return mAlts.values();
     }
 
     public boolean reachedLimit()
     {
-        return rawDepth >= maxDepth;
+        return rawDepth >= MaxDepth;
     }
 
     public void refRead(boolean sufficientMapQuality)
     {
         if(sufficientMapQuality)
         {
-            this.rawDepth++;
+            rawDepth++;
         }
     }
 
@@ -59,7 +59,7 @@ public class RefContext implements GenomePosition
         altContext.incrementAltRead(baseQuality);
         if(sufficientMapQuality)
         {
-            this.rawDepth++;
+            rawDepth++;
         }
 
         if(readContext != null && !readContext.incompleteCore())
@@ -72,13 +72,13 @@ public class RefContext implements GenomePosition
     @Override
     public String chromosome()
     {
-        return chromosome;
+        return Chromosome;
     }
 
     @Override
     public long position()
     {
-        return position;
+        return Position;
     }
 
     public int rawDepth()
@@ -89,7 +89,7 @@ public class RefContext implements GenomePosition
     @NotNull
     public String sample()
     {
-        return sample;
+        return Sample;
     }
 
     @Override
@@ -120,6 +120,6 @@ public class RefContext implements GenomePosition
     private AltContext altContext(@NotNull final String ref, @NotNull final String alt)
     {
         final String refAltKey = ref + "|" + alt;
-        return alts.computeIfAbsent(refAltKey, key -> new AltContext(this, ref, alt));
+        return mAlts.computeIfAbsent(refAltKey, key -> new AltContext(this, ref, alt));
     }
 }

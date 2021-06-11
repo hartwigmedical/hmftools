@@ -11,10 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class DedupMnv extends BufferedPostProcessor
 {
-
     private static final int BUFFER = 10;
-
-    private final ArrayDeque<SageVariant> buffer = new ArrayDeque<>();
 
     public DedupMnv(final Consumer<SageVariant> consumer)
     {

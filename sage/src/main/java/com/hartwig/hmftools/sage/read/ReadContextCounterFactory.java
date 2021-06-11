@@ -16,16 +16,15 @@ import org.jetbrains.annotations.NotNull;
 
 public class ReadContextCounterFactory
 {
-
     private static final Set<SageVariantTier> HIGH_COVERAGE = EnumSet.of(SageVariantTier.HOTSPOT, SageVariantTier.PANEL);
 
-    private final SageConfig config;
-    private final Map<String, QualityRecalibrationMap> qualityRecalibrationMap;
+    private final SageConfig mConfig;
+    private final Map<String, QualityRecalibrationMap> mQualityRecalibrationMap;
 
     public ReadContextCounterFactory(final SageConfig config, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
     {
-        this.config = config;
-        this.qualityRecalibrationMap = qualityRecalibrationMap;
+        mConfig = config;
+        mQualityRecalibrationMap = qualityRecalibrationMap;
     }
 
     public List<ReadContextCounter> create(@NotNull final String sample, @NotNull final List<Candidate> candidates)
@@ -34,19 +33,19 @@ public class ReadContextCounterFactory
                 .map(x -> new ReadContextCounter(sample,
                         x.variant(),
                         x.readContext(),
-                        qualityRecalibrationMap.get(sample),
+                        mQualityRecalibrationMap.get(sample),
                         x.tier(),
                         maxCoverage(x),
                         x.minNumberOfEvents(),
-                        config.maxSkippedReferenceRegions(),
-                        x.maxReadDepth() < config.maxRealignmentDepth()))
+                        mConfig.maxSkippedReferenceRegions(),
+                        x.maxReadDepth() < mConfig.maxRealignmentDepth()))
                 .collect(Collectors.toList());
     }
 
     private int maxCoverage(@NotNull final Candidate candidate)
     {
         return HIGH_COVERAGE.contains(candidate.tier()) || MitochondrialChromosome.contains(candidate.chromosome())
-                ? config.maxReadDepthPanel()
-                : config.maxReadDepth();
+                ? mConfig.maxReadDepthPanel()
+                : mConfig.maxReadDepth();
     }
 }

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.pipeline;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
@@ -35,8 +37,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class ChromosomePipeline implements AutoCloseable
 {
-
-    private static final Logger LOGGER = LogManager.getLogger(ChromosomePipeline.class);
     private static final EnumSet<SageVariantTier> PANEL_ONLY_TIERS = EnumSet.of(SageVariantTier.HOTSPOT, SageVariantTier.PANEL);
 
     private final String chromosome;
@@ -125,7 +125,7 @@ public class ChromosomePipeline implements AutoCloseable
         return done.thenApply(aVoid ->
         {
             phase.flush();
-            LOGGER.info("Processing chromosome {} complete", chromosome);
+            SG_LOGGER.info("Processing chromosome {} complete", chromosome);
             return ChromosomePipeline.this;
         });
     }

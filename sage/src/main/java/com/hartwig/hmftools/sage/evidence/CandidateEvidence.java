@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.CompletionException;
@@ -19,8 +21,6 @@ import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
@@ -31,35 +31,32 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class CandidateEvidence
 {
-
-    private static final Logger LOGGER = LogManager.getLogger(CandidateEvidence.class);
-
-    private final SageConfig config;
-    private final List<VariantHotspot> hotspots;
-    private final List<GenomeRegion> panel;
-    private final ReferenceSequenceFile refGenome;
-    private final SamSlicerFactory samSlicerFactory;
-    private final Coverage coverage;
+    private final SageConfig mConfig;
+    private final List<VariantHotspot> mHotspots;
+    private final List<GenomeRegion> mPanel;
+    private final ReferenceSequenceFile mRefGenome;
+    private final SamSlicerFactory mSamSlicerFactory;
+    private final Coverage mCoverage;
 
     public CandidateEvidence(@NotNull final SageConfig config, @NotNull final List<VariantHotspot> hotspots, final List<GenomeRegion> panel,
             @NotNull final SamSlicerFactory samSlicerFactory, @NotNull final ReferenceSequenceFile refGenome, final Coverage coverage)
     {
-        this.config = config;
-        this.panel = panel;
-        this.samSlicerFactory = samSlicerFactory;
-        this.hotspots = hotspots;
-        this.refGenome = refGenome;
-        this.coverage = coverage;
+        mConfig = config;
+        mPanel = panel;
+        mSamSlicerFactory = samSlicerFactory;
+        mHotspots = hotspots;
+        mRefGenome = refGenome;
+        mCoverage = coverage;
     }
 
     @NotNull
     public List<AltContext> get(@NotNull final String sample, @NotNull final String bamFile, @NotNull final RefSequence refSequence,
             @NotNull final GenomeRegion bounds)
     {
-        LOGGER.debug("Variant candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
-        final List<GeneCoverage> geneCoverage = coverage.coverage(sample, bounds.chromosome());
-        final RefContextFactory candidates = new RefContextFactory(config, sample, hotspots, panel);
-        final RefContextConsumer refContextConsumer = new RefContextConsumer(config, bounds, refSequence, candidates);
+        SG_LOGGER.debug("Variant candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
+        final List<GeneCoverage> geneCoverage = mCoverage.coverage(sample, bounds.chromosome());
+        final RefContextFactory candidates = new RefContextFactory(mConfig, sample, mHotspots, mPanel);
+        final RefContextConsumer refContextConsumer = new RefContextConsumer(mConfig, bounds, refSequence, candidates);
 
         final Consumer<SAMRecord> consumer = record ->
         {
@@ -81,10 +78,10 @@ public class CandidateEvidence
     {
         final List<AltContext> altContexts = Lists.newArrayList();
 
-        final SamSlicer slicer = samSlicerFactory.create(bounds);
+        final SamSlicer slicer = mSamSlicerFactory.create(bounds);
         try(final SamReader tumorReader = SamReaderFactory.makeDefault()
-                .validationStringency(config.validationStringency())
-                .referenceSource(new ReferenceSource(refGenome))
+                .validationStringency(mConfig.validationStringency())
+                .referenceSource(new ReferenceSource(mRefGenome))
                 .open(new File(bamFile)))
         {
 

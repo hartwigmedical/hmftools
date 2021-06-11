@@ -16,13 +16,12 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class EvidenceStage
 {
-
-    private final ReadContextEvidence readContextEvidence;
+    private final ReadContextEvidence mReadContextEvidence;
 
     public EvidenceStage(@NotNull final SageConfig config, @NotNull final ReferenceSequenceFile refGenome,
             @NotNull final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
     {
-        this.readContextEvidence = new ReadContextEvidence(config, refGenome, qualityRecalibrationMap);
+        mReadContextEvidence = new ReadContextEvidence(config, refGenome, qualityRecalibrationMap);
     }
 
     @NotNull
@@ -42,7 +41,7 @@ public class EvidenceStage
                 final String sample = samples.get(i);
                 final String sampleBam = sampleBams.get(i);
 
-                done = done.thenApply(x -> readContextEvidence.get(initialCandidates, sample, sampleBam)).thenAccept(result::addCounters);
+                done = done.thenApply(x -> mReadContextEvidence.get(initialCandidates, sample, sampleBam)).thenAccept(result::addCounters);
             }
 
             return done.thenApply(x -> result);

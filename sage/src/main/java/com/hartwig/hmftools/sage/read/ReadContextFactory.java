@@ -17,15 +17,14 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContextFactory
 {
-
     private static final int MIN_CORE_DISTANCE = 2;
     private static final int MIN_REPEAT_COUNT = 3;
 
-    private final int flankSize;
+    private final int mFlankSize;
 
     public ReadContextFactory(final int flankSize)
     {
-        this.flankSize = flankSize;
+        mFlankSize = flankSize;
     }
 
     @NotNull
@@ -42,7 +41,7 @@ public class ReadContextFactory
         int endIndex = Math.max(
                 microhomologyContextWithRepeats.position() + MIN_CORE_DISTANCE, microhomologyContextWithRepeats.position() + length);
 
-        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refBases.bases());
+        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refBases.Bases);
         if(refRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = refRepeatContext.get();
@@ -67,7 +66,7 @@ public class ReadContextFactory
                 readIndex,
                 startIndex,
                 endIndex,
-                flankSize,
+                mFlankSize,
                 refBases,
                 record);
     }
@@ -86,7 +85,7 @@ public class ReadContextFactory
         int endIndex = Math.max(
                 microhomologyContextWithRepeats.position() + MIN_CORE_DISTANCE, microhomologyContextWithRepeats.position() + length);
 
-        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refBases.bases());
+        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refBases.Bases);
         if(refRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = refRepeatContext.get();
@@ -111,7 +110,7 @@ public class ReadContextFactory
                 readIndex,
                 startIndex,
                 endIndex,
-                flankSize,
+                mFlankSize,
                 refBases,
                 record);
     }
@@ -130,7 +129,7 @@ public class ReadContextFactory
         int startIndex = readIndex - MIN_CORE_DISTANCE;
         int endIndex = readIndex + length - 1 + MIN_CORE_DISTANCE;
 
-        final Optional<RepeatContext> refPriorRepeatContext = RepeatContextFactory.repeats(refIndex - 1, refBases.bases());
+        final Optional<RepeatContext> refPriorRepeatContext = RepeatContextFactory.repeats(refIndex - 1, refBases.Bases);
         if(refPriorRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = refPriorRepeatContext.get();
@@ -140,7 +139,7 @@ public class ReadContextFactory
             endIndex = Math.max(endIndex, repeatEndIndexInReadSpace + 1);
         }
 
-        final Optional<RepeatContext> refPostRepeatContext = RepeatContextFactory.repeats(refIndex + length, refBases.bases());
+        final Optional<RepeatContext> refPostRepeatContext = RepeatContextFactory.repeats(refIndex + length, refBases.Bases);
         if(refPostRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = refPostRepeatContext.get();
@@ -165,7 +164,7 @@ public class ReadContextFactory
                 readIndex,
                 startIndex,
                 endIndex,
-                flankSize,
+                mFlankSize,
                 refBases,
                 record);
     }

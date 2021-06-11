@@ -12,7 +12,8 @@ import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import org.junit.Before;
 import org.junit.Test;
 
-public class EvictingArrayTest {
+public class EvictingArrayTest
+{
 
     private static final int CAPACITY = 256;
 
@@ -20,13 +21,15 @@ public class EvictingArrayTest {
     private EvictionHandler handler;
 
     @Before
-    public void setup() {
+    public void setup()
+    {
         handler = new EvictionHandler();
         victim = new EvictingArray<>(CAPACITY, handler);
     }
 
     @Test
-    public void testCapacity() {
+    public void testCapacity()
+    {
         victim = new EvictingArray<>(151, handler);
         assertEquals(256, victim.capacity());
 
@@ -38,14 +41,17 @@ public class EvictingArrayTest {
     }
 
     @Test
-    public void testInitialPosition() {
+    public void testInitialPosition()
+    {
         victim.computeIfAbsent(512, EvictingArrayTest::create);
         assertEquals(257, victim.minPosition());
     }
 
     @Test
-    public void testFillCapacity() {
-        for (int i = 0; i < CAPACITY; i++) {
+    public void testFillCapacity()
+    {
+        for(int i = 0; i < CAPACITY; i++)
+        {
             victim.computeIfAbsent(1000 + i, EvictingArrayTest::create);
         }
 
@@ -54,14 +60,17 @@ public class EvictingArrayTest {
     }
 
     @Test
-    public void testSelectFromExistingDoesNotEvict() {
+    public void testSelectFromExistingDoesNotEvict()
+    {
         testFillCapacity();
         testFillCapacity();
     }
 
     @Test
-    public void testCapacityOverflow() {
-        for (int i = 0; i < CAPACITY + 100; i++) {
+    public void testCapacityOverflow()
+    {
+        for(int i = 0; i < CAPACITY + 100; i++)
+        {
             victim.computeIfAbsent(1000 + i, EvictingArrayTest::create);
         }
 
@@ -72,22 +81,26 @@ public class EvictingArrayTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testInsertEarlierThanMinCausesException() {
+    public void testInsertEarlierThanMinCausesException()
+    {
         testCapacityOverflow();
         victim.computeIfAbsent(1000, EvictingArrayTest::create);
     }
 
-    static class EvictionHandler implements Consumer<GenomePosition> {
+    static class EvictionHandler implements Consumer<GenomePosition>
+    {
 
         private final List<GenomePosition> list = Lists.newArrayList();
 
         @Override
-        public void accept(final GenomePosition position) {
+        public void accept(final GenomePosition position)
+        {
             list.add(position);
         }
     }
 
-    private static GenomePosition create(long pos) {
+    private static GenomePosition create(long pos)
+    {
         return GenomePositions.create("CHROM", pos);
     }
 }

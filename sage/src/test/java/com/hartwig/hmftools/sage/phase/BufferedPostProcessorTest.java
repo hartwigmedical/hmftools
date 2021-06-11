@@ -8,10 +8,12 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.junit.Test;
 
-public class BufferedPostProcessorTest {
+public class BufferedPostProcessorTest
+{
 
     @Test
-    public void testLongerContainsShorter() {
+    public void testLongerContainsShorter()
+    {
         final VariantHotspot mnv = create(100, "CAC", "TGT");
 
         assertTrue(BufferedPostProcessor.longerContainsShorter(create(100, "C", "T"), mnv));
@@ -26,7 +28,8 @@ public class BufferedPostProcessorTest {
         assertTrue(BufferedPostProcessor.longerContainsShorter(create(100, "CAC", "TGT"), mnv));
     }
 
-    static VariantHotspot create(long position, String ref, String alt) {
+    static VariantHotspot create(long position, String ref, String alt)
+    {
         return ImmutableVariantHotspotImpl.builder().chromosome("1").position(position).ref(ref).alt(alt).build();
     }
 }

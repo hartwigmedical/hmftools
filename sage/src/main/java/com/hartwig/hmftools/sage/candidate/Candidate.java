@@ -11,85 +11,84 @@ import org.jetbrains.annotations.NotNull;
 
 public class Candidate implements GenomePosition
 {
+    private final SageVariantTier mTier;
+    private final VariantHotspot mVariant;
 
-    private final SageVariantTier tier;
-    private final VariantHotspot variant;
-
-    private int maxDepth;
-    private int minNumberOfEvents;
-    private int readContextSupport;
-    private ReadContext readContext;
+    private int mMaxDepth;
+    private int mMinNumberOfEvents;
+    private int mReadContextSupport;
+    private ReadContext mReadContext;
 
     public Candidate(final SageVariantTier tier, final VariantHotspot variant, final ReadContext readContext, int maxDepth,
             int minNumberOfEvents)
     {
-        this.tier = tier;
-        this.variant = variant;
-        this.readContext = readContext;
-        this.maxDepth = maxDepth;
-        this.minNumberOfEvents = minNumberOfEvents;
+        mTier = tier;
+        mVariant = variant;
+        mReadContext = readContext;
+        mMaxDepth = maxDepth;
+        mMinNumberOfEvents = minNumberOfEvents;
     }
 
     public Candidate(final SageVariantTier tier, final AltContext altContext)
     {
-        this.tier = tier;
-        this.variant = ImmutableVariantHotspotImpl.builder().from(altContext).build();
-        this.maxDepth = altContext.rawDepth();
-        this.readContext = altContext.readContext();
-        this.readContextSupport = altContext.readContextSupport();
-        this.minNumberOfEvents = altContext.minNumberOfEvents();
+        mTier = tier;
+        mVariant = ImmutableVariantHotspotImpl.builder().from(altContext).build();
+        mMaxDepth = altContext.rawDepth();
+        mReadContext = altContext.readContext();
+        mReadContextSupport = altContext.readContextSupport();
+        mMinNumberOfEvents = altContext.minNumberOfEvents();
     }
 
     public void update(final AltContext altContext)
     {
         int altContextSupport = altContext.readContextSupport();
-        if(altContextSupport > readContextSupport)
+        if(altContextSupport > mReadContextSupport)
         {
-            readContextSupport = altContextSupport;
-            readContext = altContext.readContext();
-            minNumberOfEvents = Math.min(minNumberOfEvents, altContext.minNumberOfEvents());
+            mReadContextSupport = altContextSupport;
+            mReadContext = altContext.readContext();
+            mMinNumberOfEvents = Math.min(mMinNumberOfEvents, altContext.minNumberOfEvents());
         }
-        maxDepth = Math.max(maxDepth, altContext.rawDepth());
+        mMaxDepth = Math.max(mMaxDepth, altContext.rawDepth());
     }
 
     @NotNull
     public SageVariantTier tier()
     {
-        return tier;
+        return mTier;
     }
 
     @NotNull
     public VariantHotspot variant()
     {
-        return variant;
+        return mVariant;
     }
 
     public int maxReadDepth()
     {
-        return maxDepth;
+        return mMaxDepth;
     }
 
     @NotNull
     public ReadContext readContext()
     {
-        return readContext;
+        return mReadContext;
     }
 
     public int minNumberOfEvents()
     {
-        return minNumberOfEvents;
+        return mMinNumberOfEvents;
     }
 
     @NotNull
     @Override
     public String chromosome()
     {
-        return variant.chromosome();
+        return mVariant.chromosome();
     }
 
     @Override
     public long position()
     {
-        return variant.position();
+        return mVariant.position();
     }
 }

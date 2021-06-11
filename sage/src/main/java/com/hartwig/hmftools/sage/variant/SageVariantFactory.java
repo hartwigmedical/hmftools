@@ -19,12 +19,11 @@ import org.jetbrains.annotations.NotNull;
 @NotThreadSafe
 public class SageVariantFactory
 {
-
-    private final FilterConfig config;
+    private final FilterConfig mConfig;
 
     public SageVariantFactory(@NotNull final FilterConfig config)
     {
-        this.config = config;
+        this.mConfig = config;
     }
 
     @NotNull
@@ -36,9 +35,9 @@ public class SageVariantFactory
         final boolean isNormalEmpty = normal.isEmpty();
 
         final SageVariantTier tier = candidate.tier();
-        final SoftFilterConfig softConfig = config.softConfig(tier);
+        final SoftFilterConfig softConfig = mConfig.softConfig(tier);
 
-        if(!config.softFilter())
+        if(!mConfig.softFilter())
         {
             return new SageVariant(candidate, filters, normal, tumor);
         }
@@ -124,7 +123,7 @@ public class SageVariantFactory
         }
 
         // MNV Tests
-        if(tier != SageVariantTier.HOTSPOT && normal.variant().isMNV() && this.config.mnvFilter())
+        if(tier != SageVariantTier.HOTSPOT && normal.variant().isMNV() && this.mConfig.mnvFilter())
         {
             if(normal.altSupport() != 0)
             {
@@ -137,7 +136,7 @@ public class SageVariantFactory
 
     private boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final ReadContextCounter primaryTumor)
     {
-        return tier.equals(SageVariantTier.HOTSPOT) && primaryTumor.altSupport() >= config.hotspotMinTumorAltSupportToSkipQualCheck()
-                && Doubles.greaterOrEqual(primaryTumor.vaf(), config.hotspotMinTumorVafToSkipQualCheck());
+        return tier.equals(SageVariantTier.HOTSPOT) && primaryTumor.altSupport() >= mConfig.hotspotMinTumorAltSupportToSkipQualCheck()
+                && Doubles.greaterOrEqual(primaryTumor.vaf(), mConfig.hotspotMinTumorVafToSkipQualCheck());
     }
 }
