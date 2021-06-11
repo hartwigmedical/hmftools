@@ -21,17 +21,6 @@ public class SAMSlicer
         mMinMappingQuality = minMappingQuality;
     }
 
-    public void slice(final GenomeRegion region, final SamReader samReader, final Consumer<SAMRecord> consumer)
-    {
-        String string = region.chromosome();
-        slice(string, (int) region.start(), (int) region.end(), samReader, consumer);
-    }
-
-    public void slice(final BaseRegion region, final SamReader samReader, final Consumer<SAMRecord> consumer)
-    {
-        slice(region.Chromosome, region.start(), region.end(), samReader, consumer);
-    }
-
     public void slice(final String contig, int start, int end, final SamReader samReader, final Consumer<SAMRecord> consumer)
     {
         SAMRecordIterator sAMRecordIterator = samReader.query(contig, start, end, false);

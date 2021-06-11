@@ -18,24 +18,25 @@ public class PurpleSignatureEvidence {
     @NotNull
     private final PersonalizedEvidenceFactory personalizedEvidenceFactory;
     @NotNull
-    private final List<ActionableCharacteristic> actionableCharacteristics;
+    private final List<ActionableCharacteristic> actionableSignatures;
 
     public PurpleSignatureEvidence(@NotNull final PersonalizedEvidenceFactory personalizedEvidenceFactory,
             @NotNull final List<ActionableCharacteristic> actionableCharacteristics) {
         this.personalizedEvidenceFactory = personalizedEvidenceFactory;
-        this.actionableCharacteristics = actionableCharacteristics.stream()
-                .filter(x -> x.name() == TumorCharacteristic.MICROSATELLITE_UNSTABLE || x.name() == TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD)
+        this.actionableSignatures = actionableCharacteristics.stream()
+                .filter(x -> x.name() == TumorCharacteristic.MICROSATELLITE_UNSTABLE
+                        || x.name() == TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD)
                 .collect(Collectors.toList());
     }
 
     @NotNull
     public List<ProtectEvidence> evidence(@NotNull PurpleData purpleData) {
         List<ProtectEvidence> result = Lists.newArrayList();
-        for (ActionableCharacteristic signature : actionableCharacteristics) {
+        for (ActionableCharacteristic signature : actionableSignatures) {
             switch (signature.name()) {
                 case MICROSATELLITE_UNSTABLE: {
                     if (purpleData.microsatelliteStatus() == MicrosatelliteStatus.MSI) {
-                        ProtectEvidence evidence = personalizedEvidenceFactory.somaticallyReportableEvidence(signature)
+                        ProtectEvidence evidence = personalizedEvidenceFactory.somaticReportableEvidence(signature)
                                 .genomicEvent("Microsatellite unstable")
                                 .build();
                         result.add(evidence);
@@ -44,7 +45,7 @@ public class PurpleSignatureEvidence {
                 }
                 case HIGH_TUMOR_MUTATIONAL_LOAD: {
                     if (purpleData.tumorMutationalLoadStatus() == TumorMutationalStatus.HIGH) {
-                        ProtectEvidence evidence = personalizedEvidenceFactory.somaticallyReportableEvidence(signature)
+                        ProtectEvidence evidence = personalizedEvidenceFactory.somaticReportableEvidence(signature)
                                 .genomicEvent("High tumor mutation load")
                                 .build();
                         result.add(evidence);

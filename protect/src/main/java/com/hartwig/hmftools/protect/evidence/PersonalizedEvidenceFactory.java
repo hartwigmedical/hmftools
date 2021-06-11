@@ -17,12 +17,17 @@ public class PersonalizedEvidenceFactory {
     }
 
     @NotNull
-    public ImmutableProtectEvidence.Builder somaticallyReportableEvidence(@NotNull ActionableEvent event) {
-        return patientEvidenceBuilder(event).reported(true).germline(false);
+    public ImmutableProtectEvidence.Builder somaticEvidence(@NotNull ActionableEvent event) {
+        return evidenceBuilder(event).reported(false).germline(false);
     }
 
     @NotNull
-    public ImmutableProtectEvidence.Builder patientEvidenceBuilder(@NotNull ActionableEvent actionable) {
+    public ImmutableProtectEvidence.Builder somaticReportableEvidence(@NotNull ActionableEvent event) {
+        return evidenceBuilder(event).reported(true).germline(false);
+    }
+
+    @NotNull
+    public ImmutableProtectEvidence.Builder evidenceBuilder(@NotNull ActionableEvent actionable) {
         return ImmutableProtectEvidence.builder()
                 .treatment(actionable.treatment())
                 .level(actionable.level())

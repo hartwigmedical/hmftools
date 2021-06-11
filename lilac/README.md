@@ -1,7 +1,7 @@
 # Lilac
 
 ## Introduction
-TODO - copy across documentation from the Lilac Google doc
+See the Lilac Google doc
 
 
 ## Configuration
@@ -19,46 +19,59 @@ Nucleotide and amino acid allele defintions are available here:
 - https://www.ebi.ac.uk/ipd/imgt/hla/download.html
 - ftp://ftp.ebi.ac.uk/pub/databases/ipd/imgt/hla/
 
+Convert these definition files to the reference files used by Lilac with the following command:
+```
+java -cp lilac.jar com.hartwig.hmftools.lilac.GenerateReferenceSequences \
+   -resource_dir /path_to_definition_files/ \ 
+   -output_dir /output_dir/ \
+```
 
 ### Mandatory Arguments
 
 Argument | Description 
 ---|---
 sample | Sample ID
-reference_bam | Sample germline BAM
+ref_genome | Reference genome fasta file
+reference_bam | Sample's germline BAM 
+
+NOTE: Lilac handles BAMs which have been sliced for the HLA gene regions.
 
 ### Optional Inputs
 
 Argument | Description 
 ---|---
-tumor_bam | Sample tumor BAM
-gene_copy_number | Sample gene copy number file from Purple
-expected_alleles | List of alleless separated by ';'. These alleles will have their coverage and ranking reported even if not in the winning solution
-restricted_alleles | List of alleless separated by ';'. Restrict evaluation to these alleles only.
+ref_genome_version | V37 (default), V38 or HG19 (ie 37 with 'chr' prefix)
+tumor_bam | Sample's tumor BAM
+gene_copy_number_file | Sample gene copy number file from Purple
+somatic_variants_file | Sample's somatic variant VCF file, for annotation of HLA gene variants
 
 ### Optional Arguments
 
 Argument | Default | Description 
 ---|---|---
-min_base_qual|30| Min base quality for BAM reads, see documentation for details 
-min_evidence|2|Min evidence in terms of supporting fragments (1 high-quality, 1 other) 
-min_fragments_per_allele|7|See documentation for details 
-min_fragments_to_remove_single|40|See documentation for details 
-top_score_threshold|5|Write results for solutions lower than the top solution by this difference in score 
-threads|1|Number of threads to use
+min_base_qual | 30 | Min base quality for BAM reads, see documentation for details 
+min_evidence | 2 | Min absolute required fragments for evidence phase
+min_evidence_factor | 0.00075 | Min relative required fragments for evidence phase, as a fraction of total fragments
+min_high_qual_evidence_factor | 0.000375 | Minimum relative required high base-quality fragments for evidence phase, as a fraction of total fragments
+min_fragments_per_allele | 7 | See documentation for details 
+min_fragments_to_remove_single | 40 | See documentation for details 
+top_score_threshold | 5 | Maximum difference in candidate solution score vs top score as a percentage of total fragments 
+log_debug | Off (logs at INFO) | Logs in verbose mode 
+debug_phasing | Off | Logs phasing evidence construction 
+expected_alleles | Not applied | List of alleles separated by ';'. These alleles will have their coverage and ranking reported even if not in the winning solution
+restricted_alleles | Not applied | List of alleles separated by ';'. Restrict evaluation to only these alleles.
+threads | 1 | Number of threads to use for complex evaluation
 
-NOTE: Lilac handles BAMs which have been sliced for the HLA gene regions.
 
 ### Example Usage
 
 ```
 java -jar lilac.jar \
    -sample COLO829T 
-   -reference_bam /sample_data_path/COLO829R.bam \
    -ref_genome /path_to_ref_genome_fasta_file/ \
    -resource_dir /path_to_lilac_resource_files/ \ 
+   -reference_bam /sample_data_path/COLO829R.bam \
    -output_dir /output_dir/ \
-   -threads 16 \
 ```
 
 Or with tumor BAM, somatic variants VCF and Purple gene copy number inputs:
@@ -66,28 +79,80 @@ Or with tumor BAM, somatic variants VCF and Purple gene copy number inputs:
 ```
 java -jar lilac.jar \
    -sample COLO829T 
+   -ref_genome /path_to_ref_genome_fasta_file/ \
+   -resource_dir /path_to_lilac_resource_files/ \ 
    -reference_bam /sample_data_path/COLO829R.bam \
    -tumor_bam /sample_data_path/COLO829T.bam \
    -somatic_vcf /sample_data_path/COLO829T.purple.somatic.vcf.gz \
    -gene_copy_number /sample_data_path/COLO829T.purple.cnv.gene.tsv \
-   -ref_genome /path_to_ref_genome_fasta_file/ \
-   -resource_dir /path_to_lilac_resource_files/ \ 
    -output_dir /output_dir/ \
-   -threads 16 \
 ```
 
 ## Output
 
-The following tab delimited files are written:
+The following files are written:
+
+### Solution Summary
+
+Field | Description 
+--- | ---
+Allele | Allele ID
+RefTotal | Total assigned fragments from reference BAM
+RefUnique | Fragments uniquely assigned to allele
+RefShared | Fragments assigned to allele and others in this solution
+RefWild | Fragments matched to a wildcard allele
+TumorTotal | As above for tumor BAM
+TumorUnique | As above for tumor BAM
+TumorShared | As above for tumor BAM
+TumorWild | As above for tumor BAM
+TumorCopyNumber | Copy number from Tumor/Ref fragment ratio and Purple copy number
+SomaticMissense | Matched missense variants
+SomaticNonsenseOrFrameshift | Matched nonsense or frameshift variants
+SomaticSplice | Matched splice variants
+SomaticSynonymous | Matched synonymous variants
+SomaticInframeIndel | Matched inframe indels
+
+### QC Metrics
+
+Field | Description 
+--- | ---
+Status | PASS, otherwise 1 or more warnings
+HlaY | true/false, if exceeds HLA threshold (10% of total fragments)
+ScoreMargin | Difference in score to second-top solution
+NextSolutionAlleles | Allele difference in second-top solution
+DiscardedIndels | Discarded fragments due to unknown INDELs
+DiscardedIndelMaxFrags | Maximum fragments assigned to any particular unknown INDEL
+DiscardedAlignmentFragments | 
+ATypes | Number of HLA-A alleles
+BTypes | Number of HLA-B alleles
+CTypes | Number of HLA-C alleles
+TotalFragments | Total fragments used to fit candidate solutions
+FittedFragments | Total fragments used in top solution
+UnmatchedFragments | Fragments fitted to other solutions
+UninformativeFragments | Fragments covering only homozygous or wildcard regions
+HlaYFragments | Fragments assigned to HLA-Y
+PercentUnique | Percent of unique fragments in solution
+PercentShared | Percent of shared fragments in solution
+PercentWildcard | Percent of wildcard-allele-only fragments in solution
+UnusedAminoAcids | Distinct unmatched amino acids
+UnusedAminoAcidMaxFrags | Maximum fragments assigned to a distinct unmatched amino acids
+UnusedHaplotypes | Distinct unmatched haplotypes
+UnusedHaplotypeMaxFrags | Maximum fragments assigned to a distinct unmatched haplotype
+SomaticVariantsMatched | Somatic variants supported by solution allele
+SomaticVariantsUnmatched | Somatic variants not supported by solution allele
+
+Additional output files
 
 File | Description
 --- | ---
+SAMPLE_ID.lilac.somatic.vcf.gz | Annotation of HLA gene somatic variants if somatic VCF provided
+SAMPLE_ID.fragments.csv | Read details for all BAM fragments
+SAMPLE_ID.candidate.coverage.csv | Coverage for all candidate solutions within X% of the top solution's score 
+SAMPLE_ID.candidate.fragments.csv | Allocation of each fragment to one or more solutions and which alleles they support 
 SAMPLE_ID.HLA-A.aminoacids.txt|Fragment support for each amino acid by HLA gene
 SAMPLE_ID.HLA-A.nucleotides.txt|Fragment support for each nucleotide by HLA gene
 SAMPLE_ID.candidates.aminoacids.txt|Fragment support for amino acids in the candidate alleles
 SAMPLE_ID.candidates.nucleotides.txt|Fragment support for nucleotides in the candidate alleles
-SAMPLE_ID.lilac.qc.tsv|QC metrics
-SAMPLE_ID.lilac.tsv|Summary coverage for the HLA gene solution
 
 
 # Version History and Download Links

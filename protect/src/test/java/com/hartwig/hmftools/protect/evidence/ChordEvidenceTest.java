@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.protect.evidence;
 
-import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvent;
-import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvidenceFactory;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -13,6 +10,8 @@ import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.protect.ProtectTestFactory;
+import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableCharacteristic;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
@@ -24,16 +23,19 @@ import org.junit.Test;
 public class ChordEvidenceTest {
 
     @Test
-    public void canDetermineEvidenceForCHORD() {
+    public void canDetermineEvidenceForChord() {
         ActionableCharacteristic signature1 = ImmutableActionableCharacteristic.builder()
-                .from(createTestEvent())
+                .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristic.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
                 .build();
 
-        ActionableCharacteristic signature2 =
-                ImmutableActionableCharacteristic.builder().from(createTestEvent()).name(TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD).build();
+        ActionableCharacteristic signature2 = ImmutableActionableCharacteristic.builder()
+                .from(ServeTestFactory.createTestActionableCharacteristic())
+                .name(TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD)
+                .build();
 
-        ChordEvidence chordEvidence = new ChordEvidence(createTestEvidenceFactory(), Lists.newArrayList(signature1, signature2));
+        ChordEvidence chordEvidence =
+                new ChordEvidence(ProtectTestFactory.createTestEvidenceFactory(), Lists.newArrayList(signature1, signature2));
 
         ChordAnalysis hrDeficient = chordAnalysisWithStatus(ChordStatus.HR_DEFICIENT);
         List<ProtectEvidence> evidence = chordEvidence.evidence(hrDeficient);

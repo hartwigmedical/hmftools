@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.isofox.fusion.ReadGroup.mergeChimericReadMaps
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -21,7 +20,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
-import com.hartwig.hmftools.isofox.common.TaskExecutor;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 
 public class FusionTaskManager
 {
@@ -251,7 +250,7 @@ public class FusionTaskManager
         else
         {
             final List<Callable> callableList = mFusionTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeChromosomeTask(callableList, mConfig.Threads);
+            TaskExecutor.executeTasks(callableList, mConfig.Threads);
             logPerformanceStats();
         }
 

@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import static com.hartwig.hmftools.lilac.cohort.CohortCommon.SAMPLE_FILES_DIR;
 import static com.hartwig.hmftools.lilac.cohort.CohortCommon.SAMPLE_IDS_FILE;
 import static com.hartwig.hmftools.lilac.cohort.CohortCommon.loadSampleIds;
+import static com.hartwig.hmftools.lilac.cohort.CohortFrequency.ALLELE_FREQUENCY_FILE;
 import static com.hartwig.hmftools.lilac.coverage.HlaComplexFile.parseCandidateCoverageData;
 
 import java.io.BufferedWriter;
@@ -47,7 +48,7 @@ public class CandidateScores
 
     public CandidateScores(final CommandLine cmd)
     {
-        mCohortFrequency = new CohortFrequency(cmd);
+        mCohortFrequency = new CohortFrequency(cmd.getOptionValue(ALLELE_FREQUENCY_FILE));
         mTruthSet = new SampleTruthSet(cmd);
         mOutputDir = parseOutputDir(cmd);
         mCandidateFilesDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_FILES_DIR));

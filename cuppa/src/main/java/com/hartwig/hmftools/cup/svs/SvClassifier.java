@@ -56,6 +56,9 @@ public class SvClassifier implements CuppaClassifier
             return;
 
         mIsValid &= loadRefPercentileData(mConfig.RefSvPercFile, mRefSvTypePercentiles);
+
+        CUP_LOGGER.info("loaded SV ref data from file({})", config.RefSvPercFile);
+
         mIsValid &= loadCohortSvData();
     }
 

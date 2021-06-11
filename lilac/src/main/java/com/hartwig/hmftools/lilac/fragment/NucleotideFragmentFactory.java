@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.lilac.fragment;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C;
 import static com.hartwig.hmftools.lilac.LilacUtils.arrayToList;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidIndices;
@@ -13,7 +12,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.utils.SuffixTree;
-import com.hartwig.hmftools.lilac.read.SAMCodingRecord;
+import com.hartwig.hmftools.lilac.read.BamCodingRecord;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.LociPosition;
 
@@ -42,7 +41,7 @@ public class NucleotideFragmentFactory
         deletes.stream().forEach(x -> mDeleteSuffixTrees.put(x, new SuffixTree(x.sequence())));
     }
 
-    public final Fragment createFragment(final SAMCodingRecord record, final NamedBed codingRegion)
+    public final Fragment createFragment(final BamCodingRecord record, final NamedBed codingRegion)
     {
         boolean reverseStrand = record.ReverseStrand;
 
@@ -96,7 +95,7 @@ public class NucleotideFragmentFactory
     }
 
     private Fragment checkMatchedInsertDeleteSequence(
-            final SAMCodingRecord record, final NamedBed codingRegion,
+            final BamCodingRecord record, final NamedBed codingRegion,
             final String aminoAcids, int matchRangeAllowedStart, int matchRangeAllowedEnd,
             final LinkedHashMap<HlaSequenceLoci,SuffixTree> sequenceMap)
     {
@@ -132,7 +131,7 @@ public class NucleotideFragmentFactory
     }
 
     private Fragment createIndelFragment(
-            final SAMCodingRecord record, final NamedBed codingRegion, final int startLoci,
+            final BamCodingRecord record, final NamedBed codingRegion, final int startLoci,
             final String bamSequence, final HlaSequenceLoci hlaSequence)
     {
         int endLoci = endLoci(startLoci, bamSequence, hlaSequence);
@@ -177,7 +176,7 @@ public class NucleotideFragmentFactory
                 String.valueOf(codons.charAt(0)), String.valueOf(codons.charAt(1)), codons.substring(2));
     }
 
-    public Fragment createAlignmentFragments(final SAMCodingRecord record, final NamedBed codingRegion)
+    public Fragment createAlignmentFragments(final BamCodingRecord record, final NamedBed codingRegion)
     {
         List<Fragment> fragments = record.alignmentsOnly().stream()
                 .filter(x -> x != null)

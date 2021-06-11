@@ -14,13 +14,13 @@ import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
-import com.hartwig.hmftools.lilac.read.SAMRecordReader;
+import com.hartwig.hmftools.lilac.read.BamReader;
+import com.hartwig.hmftools.lilac.read.BamRecordReader;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
-import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
 import htsjdk.samtools.util.CloseableIterator;
@@ -89,7 +89,7 @@ public class SomaticVariantAnnotation
     public List<SomaticVariant> getSomaticVariants() { return mSomaticVariants; }
 
     public final List<HlaAlleleCoverage> assignAlleleCoverage(
-            final SomaticVariant variant, final SAMRecordReader reader, final List<HlaSequenceLoci> winners)
+            final SomaticVariant variant, final BamReader reader, final List<HlaSequenceLoci> winners)
     {
         List<Fragment> fragments = reader.readFromBam(variant);
         fragments.forEach(x -> x.qualityFilter(mConfig.MinBaseQual));

@@ -7,11 +7,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.common.utils.DataUtil;
-import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
+import com.hartwig.hmftools.common.purple.cnchromosome.ChromosomeArmKey;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -59,7 +60,7 @@ public final class GainsAndLosses {
     }
 
     @NotNull
-    public static String chromosomeArmCopyNumber(@NotNull Map<ChromosomeArmKey, Double> cnPerChromosome,
+    public static String chromosomeArmCopyNumber(@NotNull List<CnPerChromosomeArmData> cnPerChromosomeData,
             @NotNull ReportableGainLoss gainLoss) {
         ChromosomeArm chromosomeArm;
         if (gainLoss.chromosomeBand().startsWith("p")) {
@@ -70,13 +71,14 @@ public final class GainsAndLosses {
             throw new IllegalArgumentException("Chromosome arm could not be resolved from band: " + gainLoss.chromosomeBand() + "!");
         }
 
-        ChromosomeArmKey key = new ChromosomeArmKey(HumanChromosome.fromString(gainLoss.chromosome()), chromosomeArm);
+        ChromosomeArmKey reportableKey = new ChromosomeArmKey(HumanChromosome.fromString(gainLoss.chromosome()), chromosomeArm);
+        Double copyNumber = null;
 
-        Double copyNumber;
-        if (!cnPerChromosome.containsKey(key)) {
-            copyNumber = null;
-        } else {
-            copyNumber = cnPerChromosome.get(key);
+        for (CnPerChromosomeArmData cnPerChromosome : cnPerChromosomeData) {
+            ChromosomeArmKey key = cnPerChromosome.chromosomeArmKey();
+            if (reportableKey.equals(key)) {
+                copyNumber = cnPerChromosome.copyNumber();
+            }
         }
 
         return copyNumber != null ? String.valueOf(Math.round(Math.max(0, copyNumber))) : DataUtil.NA_STRING;

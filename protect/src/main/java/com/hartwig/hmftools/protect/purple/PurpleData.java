@@ -3,10 +3,12 @@ package com.hartwig.hmftools.protect.purple;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.purple.cnchromosome.ChromosomeArmKey;
+import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
-import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -37,14 +39,20 @@ public interface PurpleData {
     TumorMutationalStatus tumorMutationalLoadStatus();
 
     @NotNull
-    List<ReportableVariant> somaticVariants();
+    List<ReportableVariant> reportableSomaticVariants();
 
     @NotNull
-    List<ReportableVariant> germlineVariants();
+    List<SomaticVariant> unreportedSomaticVariants();
 
     @NotNull
-    List<ReportableGainLoss> copyNumberAlterations();
+    List<ReportableVariant> reportableGermlineVariants();
 
     @NotNull
-    Map<ChromosomeArmKey, Double> cnPerChromosome();
+    List<ReportableGainLoss> reportableGainsLosses();
+
+    @NotNull
+    List<ReportableGainLoss> unreportedGainsLosses();
+
+    @NotNull
+    List<CnPerChromosomeArmData> cnPerChromosome();
 }

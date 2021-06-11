@@ -25,8 +25,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class SampleSummaries
 {
-    private final CohortFrequency mCohortFrequency;
-    private final SampleTruthSet mTruthSet;
     private final String mOutputDir;
     private final String mCandidateFilesDir;
     private final List<String> mSampleIds;
@@ -35,8 +33,6 @@ public class SampleSummaries
 
     public SampleSummaries(final CommandLine cmd)
     {
-        mCohortFrequency = new CohortFrequency(cmd);
-        mTruthSet = new SampleTruthSet(cmd);
         mOutputDir = parseOutputDir(cmd);
         mCandidateFilesDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_FILES_DIR));
 

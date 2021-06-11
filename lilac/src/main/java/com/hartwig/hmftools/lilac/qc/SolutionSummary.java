@@ -10,7 +10,6 @@ import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
-import com.hartwig.hmftools.lilac.variant.CopyNumberAssignment;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -23,19 +22,21 @@ import java.util.stream.Collectors;
 
 public class SolutionSummary
 {
-    private final HlaComplexCoverage mReferenceCoverage;
-    private final HlaComplexCoverage mTumorCoverage;
-    private final Map<HlaAllele,Double> mTumorCopyNumber;
-    private final List<SomaticCodingCount> mSomaticCodingCount;
+    public final HlaComplexCoverage ReferenceCoverage;
+    public final HlaComplexCoverage TumorCoverage;
+    public final List<Double> TumorCopyNumber;
+    public final List<SomaticCodingCount> SomaticCodingCount;
+    public final HlaComplexCoverage RnaCoverage;
 
     public SolutionSummary(
             final HlaComplexCoverage referenceCoverage, final HlaComplexCoverage tumorCoverage,
-            final Map<HlaAllele,Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount)
+            final List<Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount, final HlaComplexCoverage rnaCoverage)
     {
-        mReferenceCoverage = referenceCoverage;
-        mTumorCoverage = tumorCoverage;
-        mTumorCopyNumber = tumorCopyNumber;
-        mSomaticCodingCount = somaticCodingCount;
+        ReferenceCoverage = referenceCoverage;
+        TumorCoverage = tumorCoverage;
+        TumorCopyNumber = tumorCopyNumber;
+        SomaticCodingCount = somaticCodingCount;
+        RnaCoverage = rnaCoverage;
     }
 
     public final void write(final String fileName)
@@ -75,6 +76,10 @@ public class SolutionSummary
                 .add("TumorShared")
                 .add("TumorWild")
                 .add("TumorCopyNumber")
+                .add("RnaTotal")
+                .add("RnaUnique")
+                .add("RnaShared")
+                .add("RnaWild")
                 .add("SomaticMissense")
                 .add("SomaticNonsenseOrFrameshift")
                 .add("SomaticSplice")
@@ -85,13 +90,16 @@ public class SolutionSummary
 
     private final String generateAlleleBody(int index)
     {
-        HlaAlleleCoverage ref = mReferenceCoverage.getAlleleCoverage().get(index);
+        HlaAlleleCoverage ref = ReferenceCoverage.getAlleleCoverage().get(index);
 
-        HlaAlleleCoverage tumor = !mTumorCoverage.getAlleleCoverage().isEmpty() ?
-                mTumorCoverage.getAlleleCoverage().get(index) : new HlaAlleleCoverage(ref.Allele, 0, 0, 0);
+        HlaAlleleCoverage tumor = !TumorCoverage.getAlleleCoverage().isEmpty() ?
+                TumorCoverage.getAlleleCoverage().get(index) : new HlaAlleleCoverage(ref.Allele, 0, 0, 0);
 
-        double copyNumber = mTumorCopyNumber.get(ref.Allele);
-        SomaticCodingCount codingCount = mSomaticCodingCount.get(index);
+        HlaAlleleCoverage rna = !RnaCoverage.getAlleleCoverage().isEmpty() ?
+                RnaCoverage.getAlleleCoverage().get(index) : new HlaAlleleCoverage(ref.Allele, 0, 0, 0);
+
+        double copyNumber = TumorCopyNumber.get(index);
+        SomaticCodingCount codingCount = SomaticCodingCount.get(index);
 
         StringJoiner header = new StringJoiner(DELIM)
                 .add(ref.Allele.toString())
@@ -104,6 +112,10 @@ public class SolutionSummary
                 .add(String.valueOf(round(tumor.SharedCoverage)))
                 .add(String.valueOf(round(tumor.WildCoverage)))
                 .add(String.format("%.2f", copyNumber))
+                .add(String.valueOf(round(rna.TotalCoverage)))
+                .add(String.valueOf(rna.UniqueCoverage))
+                .add(String.valueOf(round(rna.SharedCoverage)))
+                .add(String.valueOf(round(rna.WildCoverage)))
                 .add(String.format("%.2f", codingCount.missense()))
                 .add(String.format("%.2f", codingCount.nonsense()))
                 .add(String.format("%.2f", codingCount.splice()))
@@ -115,12 +127,12 @@ public class SolutionSummary
 
     public static SolutionSummary create(
             final HlaComplexCoverage referenceCoverage, final HlaComplexCoverage tumorCoverage,
-            final Map<HlaAllele,Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount)
+            final List<Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount, final HlaComplexCoverage rnaCoverage)
     {
         List<SomaticCodingCount> sortedCodingCount = somaticCodingCount.stream().collect(Collectors.toList());
         Collections.sort(sortedCodingCount, new SomaticCodingCountSorter());
 
-        return new SolutionSummary(referenceCoverage, tumorCoverage, tumorCopyNumber, sortedCodingCount);
+        return new SolutionSummary(referenceCoverage, tumorCoverage, tumorCopyNumber, sortedCodingCount, rnaCoverage);
     }
 
     private static class SomaticCodingCountSorter implements Comparator<SomaticCodingCount>

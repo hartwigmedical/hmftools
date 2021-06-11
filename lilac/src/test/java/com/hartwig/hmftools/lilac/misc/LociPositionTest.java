@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.misc;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.ReferenceData.populateHlaTranscripts;
@@ -55,7 +56,7 @@ public class LociPositionTest
     public void testA()
     {
         Map<String, TranscriptData> hlaTranscriptMap = Maps.newHashMap();
-        populateHlaTranscripts(hlaTranscriptMap);
+        populateHlaTranscripts(hlaTranscriptMap, V37);
         LociPosition lociPosition = new LociPosition(hlaTranscriptMap.values().stream().collect(Collectors.toList()));
 
         TranscriptData aTranscript = hlaTranscriptMap.get(HLA_A);
@@ -76,7 +77,7 @@ public class LociPositionTest
     public void testB()
     {
         Map<String,TranscriptData> hlaTranscriptMap = Maps.newHashMap();
-        populateHlaTranscripts(hlaTranscriptMap);
+        populateHlaTranscripts(hlaTranscriptMap, V37);
         TranscriptData bTranscript = hlaTranscriptMap.get(HLA_B);
         LociPosition lociPosition = new LociPosition(hlaTranscriptMap.values().stream().collect(Collectors.toList()));
 

@@ -130,7 +130,7 @@ public final class Candidates
     public List<HlaAllele> phasedCandidates(
             final HlaContext context, final List<HlaAllele> unphasedCandidateAlleles, final List<PhasedEvidence> phasedEvidence)
     {
-        LL_LOGGER.info("determining phased candidate set for gene {}", context.geneName());
+        LL_LOGGER.debug("determining phased candidate set for gene {}", context.geneName());
 
         List<HlaSequenceLoci> unphasedCandidates = mAminoAcidSequences.stream()
                 .filter(x -> unphasedCandidateAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
@@ -138,7 +138,7 @@ public final class Candidates
         List<HlaSequenceLoci> phasedCandidates = filterCandidates(unphasedCandidates, phasedEvidence);
         List<HlaAllele> phasedAlleles = phasedCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
 
-        LL_LOGGER.info("  {} candidates after phasing: {}", phasedCandidates.size(), phasedAlleles);
+        LL_LOGGER.info("gene({}) has phased {} candidates after phasing: {}", context.geneName(), phasedCandidates.size(), phasedAlleles);
 
         return phasedAlleles;
     }

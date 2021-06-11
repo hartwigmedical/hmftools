@@ -75,20 +75,10 @@ public class FragmentAlleleMapper
             final List<Fragment> refCoverageFragments, final List<HlaSequenceLoci> candidateAminoAcidSequences,
             final List<HlaSequenceLoci> candidateNucleotideSequences)
     {
-        return createFragmentAlleles(refCoverageFragments, candidateAminoAcidSequences, candidateNucleotideSequences, false);
-    }
-
-    public List<FragmentAlleles> createFragmentAlleles(
-            final List<Fragment> refCoverageFragments, final List<HlaSequenceLoci> candidateAminoAcidSequences,
-            final List<HlaSequenceLoci> candidateNucleotideSequences, boolean logCounts)
-    {
-        if(logCounts)
-        {
-            LL_LOGGER.info("building frag-alleles from aminoAcids(frags={} candSeq={}) nucFrags(hetLoci={} candSeq={} nucs={}) knownIndels({})",
-                    refCoverageFragments.size(), candidateAminoAcidSequences.size(),
-                    mRefNucleotideHetLoci.size(), candidateNucleotideSequences.size(), mRefNucleotides.size(),
-                    mStopLossAlleleFragments.values().stream().mapToInt(x -> x.size()).sum());
-        }
+        LL_LOGGER.info("building frag-alleles from aminoAcids(frags={} candSeq={}) nucFrags(hetLoci={} candSeq={} nucs={}) knownIndels({})",
+                refCoverageFragments.size(), candidateAminoAcidSequences.size(),
+                mRefNucleotideHetLoci.size(), candidateNucleotideSequences.size(), mRefNucleotides.size(),
+                mStopLossAlleleFragments.values().stream().mapToInt(x -> x.size()).sum());
 
         mPerfCounterFrag.reset();
 
@@ -100,10 +90,12 @@ public class FragmentAlleleMapper
                 continue;
 
             mPerfCounterFrag.start();
+
             FragmentAlleles fragAllele = checkStopLossAlleleFragments(fragment);
 
             if(fragAllele == null)
                 fragAllele = mapFragmentToAlleles(fragment, candidateAminoAcidSequences, candidateNucleotideSequences);
+
             mPerfCounterFrag.stop();
 
             // drop wild-only alleles since their support can't be clearly established
@@ -461,7 +453,7 @@ public class FragmentAlleleMapper
 
     public boolean checkHlaYSupport(
             final List<HlaSequenceLoci> hlaYSequences, final List<FragmentAlleles> fragAlleles,
-            final List<Fragment> fragments, boolean testThreshold)
+            final List<Fragment> fragments, boolean testThreshold, final String source)
     {
         // test for presence of HLA-Y and strip out from consideration any fragment mapping to it
         int uniqueHlaY = 0;
@@ -534,11 +526,9 @@ public class FragmentAlleleMapper
 
         if(totalHlaYFrags > 0)
         {
-            if(testThreshold)
-            {
-                LL_LOGGER.info("HLA-Y fragments({} unique={}) shared={}) aboveThreshold({})",
-                        totalHlaYFrags, uniqueHlaY, matchedFragmentAlleles.size(), exceedsThreshold);
-            }
+            LL_LOGGER.info("HLA-Y {} fragments({} unique={}) shared={}) {}",
+                    source, totalHlaYFrags, uniqueHlaY, matchedFragmentAlleles.size(),
+                    testThreshold ? (exceedsThreshold ? "above threshold" : "below threshold") : "");
 
             if(exceedsThreshold || !testThreshold)
             {
@@ -612,7 +602,7 @@ public class FragmentAlleleMapper
             LL_LOGGER.info("filtered wildcards({} -> {}) supported alleles: {}",
                     wildcardAlleles.size(), supportedAlleles.size(), HlaAllele.toString(supportedAlleles));
         }
-        else
+        else if(!wildcardAlleles.isEmpty())
         {
             LL_LOGGER.info("removed all {} wildcard candidates", wildcardAlleles.size());
         }
@@ -635,6 +625,7 @@ public class FragmentAlleleMapper
 
             if(fragAllele.getFull().isEmpty() && fragAllele.getWild().isEmpty())
             {
+                fragAllele.getFragment().setScope(WILD_ONLY);
                 fragAlleles.remove(index);
                 ++removedFragAlleles;
             }

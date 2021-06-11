@@ -2,7 +2,6 @@ package com.hartwig.hmftools.lilac.misc;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.lilac.read.SAMCodingRecord;
 
 import htsjdk.samtools.SAMRecord;
 

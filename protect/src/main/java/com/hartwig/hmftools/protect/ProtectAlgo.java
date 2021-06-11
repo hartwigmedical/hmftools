@@ -16,10 +16,13 @@ import com.hartwig.hmftools.protect.evidence.FusionEvidence;
 import com.hartwig.hmftools.protect.evidence.PersonalizedEvidenceFactory;
 import com.hartwig.hmftools.protect.evidence.PurpleSignatureEvidence;
 import com.hartwig.hmftools.protect.evidence.VariantEvidence;
+import com.hartwig.hmftools.protect.evidence.VirusEvidence;
 import com.hartwig.hmftools.protect.linx.LinxData;
 import com.hartwig.hmftools.protect.linx.LinxDataLoader;
 import com.hartwig.hmftools.protect.purple.PurpleData;
 import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
+import com.hartwig.hmftools.protect.virusinterpreter.VirusInterpreterData;
+import com.hartwig.hmftools.protect.virusinterpreter.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 
 import org.apache.logging.log4j.LogManager;
@@ -41,11 +44,12 @@ public class ProtectAlgo {
     @NotNull
     private final PurpleSignatureEvidence purpleSignatureEvidenceFactory;
     @NotNull
+    private final VirusEvidence virusEvidenceFactory;
+    @NotNull
     private final ChordEvidence chordEvidenceFactory;
 
     @NotNull
-    public static ProtectAlgo buildAlgoFromServeActionability(@NotNull ActionableEvents actionableEvents,
-            @NotNull Set<String> patientTumorDoids) {
+    public static ProtectAlgo build(@NotNull ActionableEvents actionableEvents, @NotNull Set<String> patientTumorDoids) {
         PersonalizedEvidenceFactory personalizedEvidenceFactory = new PersonalizedEvidenceFactory(patientTumorDoids);
 
         VariantEvidence variantEvidenceFactory = new VariantEvidence(personalizedEvidenceFactory,
@@ -58,6 +62,7 @@ public class ProtectAlgo {
                 new FusionEvidence(personalizedEvidenceFactory, actionableEvents.genes(), actionableEvents.fusions());
         PurpleSignatureEvidence purpleSignatureEvidenceFactory =
                 new PurpleSignatureEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
+        VirusEvidence virusEvidenceFactory = new VirusEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
         ChordEvidence chordEvidenceFactory = new ChordEvidence(personalizedEvidenceFactory, actionableEvents.characteristics());
 
         return new ProtectAlgo(variantEvidenceFactory,
@@ -65,17 +70,20 @@ public class ProtectAlgo {
                 disruptionEvidenceFactory,
                 fusionEvidenceFactory,
                 purpleSignatureEvidenceFactory,
+                virusEvidenceFactory,
                 chordEvidenceFactory);
     }
 
     private ProtectAlgo(@NotNull final VariantEvidence variantEvidenceFactory, @NotNull final CopyNumberEvidence copyNumberEvidenceFactory,
             @NotNull final DisruptionEvidence disruptionEvidenceFactory, @NotNull final FusionEvidence fusionEvidenceFactory,
-            @NotNull final PurpleSignatureEvidence purpleSignatureEvidenceFactory, @NotNull final ChordEvidence chordEvidenceFactory) {
+            @NotNull final PurpleSignatureEvidence purpleSignatureEvidenceFactory, @NotNull final VirusEvidence virusEvidenceFactory,
+            @NotNull final ChordEvidence chordEvidenceFactory) {
         this.variantEvidenceFactory = variantEvidenceFactory;
         this.copyNumberEvidenceFactory = copyNumberEvidenceFactory;
         this.disruptionEvidenceFactory = disruptionEvidenceFactory;
         this.fusionEvidenceFactory = fusionEvidenceFactory;
         this.purpleSignatureEvidenceFactory = purpleSignatureEvidenceFactory;
+        this.virusEvidenceFactory = virusEvidenceFactory;
         this.chordEvidenceFactory = chordEvidenceFactory;
     }
 
@@ -83,26 +91,31 @@ public class ProtectAlgo {
     public List<ProtectEvidence> run(@NotNull ProtectConfig config) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(config);
         LinxData linxData = LinxDataLoader.load(config);
+        VirusInterpreterData virusInterpreterData = VirusInterpreterDataLoader.load(config);
         ChordAnalysis chordAnalysis = ChordDataLoader.load(config);
 
-        return determineEvidence(purpleData, linxData, chordAnalysis);
+        return determineEvidence(purpleData, linxData, virusInterpreterData, chordAnalysis);
     }
 
     @NotNull
     private List<ProtectEvidence> determineEvidence(@NotNull PurpleData purpleData, @NotNull LinxData linxData,
-            @NotNull ChordAnalysis chordAnalysis) {
+            @NotNull VirusInterpreterData virusInterpreterData, @NotNull ChordAnalysis chordAnalysis) {
         LOGGER.info("Evidence extraction started");
-        List<ProtectEvidence> variantEvidence =
-                variantEvidenceFactory.evidence(purpleData.germlineVariants(), purpleData.somaticVariants());
+        List<ProtectEvidence> variantEvidence = variantEvidenceFactory.evidence(purpleData.reportableGermlineVariants(),
+                purpleData.reportableSomaticVariants(),
+                purpleData.unreportedSomaticVariants());
         printExtraction("somatic and germline variants", variantEvidence);
-        List<ProtectEvidence> copyNumberEvidence = copyNumberEvidenceFactory.evidence(purpleData.copyNumberAlterations());
+        List<ProtectEvidence> copyNumberEvidence =
+                copyNumberEvidenceFactory.evidence(purpleData.reportableGainsLosses(), purpleData.unreportedGainsLosses());
         printExtraction("amplifications and deletions", copyNumberEvidence);
         List<ProtectEvidence> disruptionEvidence = disruptionEvidenceFactory.evidence(linxData.homozygousDisruptions());
         printExtraction("homozygous disruptions", disruptionEvidence);
-        List<ProtectEvidence> fusionEvidence = fusionEvidenceFactory.evidence(linxData.fusions());
+        List<ProtectEvidence> fusionEvidence = fusionEvidenceFactory.evidence(linxData.reportableFusions(), linxData.unreportedFusions());
         printExtraction("fusions", fusionEvidence);
         List<ProtectEvidence> purpleSignatureEvidence = purpleSignatureEvidenceFactory.evidence(purpleData);
         printExtraction("purple signatures", purpleSignatureEvidence);
+        List<ProtectEvidence> virusEvidence = virusEvidenceFactory.evidence(virusInterpreterData);
+        printExtraction("viruses", virusEvidence);
         List<ProtectEvidence> chordEvidence = chordEvidenceFactory.evidence(chordAnalysis);
         printExtraction("chord", chordEvidence);
 
@@ -112,6 +125,7 @@ public class ProtectAlgo {
         result.addAll(disruptionEvidence);
         result.addAll(fusionEvidence);
         result.addAll(purpleSignatureEvidence);
+        result.addAll(virusEvidence);
         result.addAll(chordEvidence);
 
         List<ProtectEvidence> consolidated = EvidenceConsolidation.consolidate(result);

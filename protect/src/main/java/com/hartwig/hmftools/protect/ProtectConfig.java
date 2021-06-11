@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -24,6 +25,7 @@ public interface ProtectConfig {
 
     // General params needed for every analysis
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
+    String REFERENCE_SAMPLE_ID = "reference_sample_id";
     String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
     String OUTPUT_DIRECTORY = "output_dir";
 
@@ -34,6 +36,7 @@ public interface ProtectConfig {
     // Files containing the actual genomic results for this sample.
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
     String PURPLE_QC_FILE = "purple_qc_file";
+    String PURPLE_GENE_COPY_NUMBER_TSV = "purple_gene_copy_number_tsv";
     String PURPLE_SOMATIC_DRIVER_CATALOG_TSV = "purple_somatic_driver_catalog_tsv";
     String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = "purple_germline_driver_catalog_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
@@ -41,6 +44,7 @@ public interface ProtectConfig {
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
+    String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
 
     // Some additional optional params and flags
@@ -51,14 +55,17 @@ public interface ProtectConfig {
         Options options = new Options();
 
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which PROTECT will run.");
+        options.addOption(REFERENCE_SAMPLE_ID, true, "(Optional) The reference sample of the tumor sample for which PROTECT will run.");
         options.addOption(PRIMARY_TUMOR_DOIDS, true, "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PROTECT output data will be written to.");
+        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to use (either '37' or '38')");
 
         options.addOption(SERVE_ACTIONABILITY_DIRECTORY, true, "Path towards the SERVE actionability directory.");
         options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
+        options.addOption(PURPLE_GENE_COPY_NUMBER_TSV, true, "Path towards the purple gene copynumber TSV.");
         options.addOption(PURPLE_SOMATIC_DRIVER_CATALOG_TSV, true, "Path towards the purple somatic driver catalog TSV.");
         options.addOption(PURPLE_GERMLINE_DRIVER_CATALOG_TSV, true, "Path towards the purple germline driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
@@ -66,6 +73,7 @@ public interface ProtectConfig {
         options.addOption(LINX_FUSION_TSV, true, "Path towards the LINX fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the LINX breakend TSV.");
         options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
+        options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
 
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
@@ -76,11 +84,17 @@ public interface ProtectConfig {
     @NotNull
     String tumorSampleId();
 
+    @Nullable
+    String referenceSampleId();
+
     @NotNull
     Set<String> primaryTumorDoids();
 
     @NotNull
     String outputDir();
+
+    @NotNull
+    RefGenomeVersion refGenomeVersion();
 
     @NotNull
     String serveActionabilityDir();
@@ -93,6 +107,9 @@ public interface ProtectConfig {
 
     @NotNull
     String purpleQcFile();
+
+    @NotNull
+    String purpleGeneCopyNumberTsv();
 
     @NotNull
     String purpleSomaticDriverCatalogTsv();
@@ -116,6 +133,9 @@ public interface ProtectConfig {
     String linxDriverCatalogTsv();
 
     @NotNull
+    String annotatedVirusTsv();
+
+    @NotNull
     String chordPredictionTxt();
 
     @NotNull
@@ -126,12 +146,15 @@ public interface ProtectConfig {
 
         return ImmutableProtectConfig.builder()
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
-                .primaryTumorDoids(toStringSet(optionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
+                .referenceSampleId(optionalValue(cmd, REFERENCE_SAMPLE_ID))
+                .primaryTumorDoids(toStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
+                .refGenomeVersion(RefGenomeVersion.from(nonOptionalValue(cmd, RefGenomeVersion.REF_GENOME_VERSION)))
                 .serveActionabilityDir(nonOptionalDir(cmd, SERVE_ACTIONABILITY_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
+                .purpleGeneCopyNumberTsv(nonOptionalFile(cmd, PURPLE_GENE_COPY_NUMBER_TSV))
                 .purpleSomaticDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVER_CATALOG_TSV))
                 .purpleGermlineDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV))
                 .purpleSomaticVariantVcf(nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF))
@@ -139,22 +162,14 @@ public interface ProtectConfig {
                 .linxFusionTsv(nonOptionalFile(cmd, LINX_FUSION_TSV))
                 .linxBreakendTsv(nonOptionalFile(cmd, LINX_BREAKEND_TSV))
                 .linxDriverCatalogTsv(nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
+                .annotatedVirusTsv(nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
                 .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
                 .build();
     }
 
     @NotNull
-    static Iterable<String> toStringSet(@Nullable String paramValue, @NotNull String separator) {
-        return paramValue != null ? Sets.newHashSet(paramValue.split(separator)) : Sets.newHashSet();
-    }
-
-    @Nullable
-    static String optionalValue(@NotNull CommandLine cmd, @NotNull String param) {
-        if (cmd.hasOption(param)) {
-            return cmd.getOptionValue(param);
-        } else {
-            return null;
-        }
+    static Iterable<String> toStringSet(@NotNull String paramValue, @NotNull String separator) {
+        return !paramValue.isEmpty() ? Sets.newHashSet(paramValue.split(separator)) : Sets.newHashSet();
     }
 
     @NotNull
@@ -164,6 +179,19 @@ public interface ProtectConfig {
             throw new ParseException("Parameter must be provided: " + param);
         }
 
+        return value;
+    }
+
+    @Nullable
+    static String optionalValue(@NotNull CommandLine cmd, @NotNull String param) {
+        String value = null;
+        if (cmd.hasOption(param)) {
+            value = cmd.getOptionValue(param);
+        }
+
+        if (value != null && value.isEmpty()) {
+            value = null;
+        }
         return value;
     }
 
@@ -181,7 +209,7 @@ public interface ProtectConfig {
     @NotNull
     static String outputDir(@NotNull CommandLine cmd, @NotNull String param) throws ParseException, IOException {
         String value = nonOptionalValue(cmd, param);
-        final File outputDir = new File(value);
+        File outputDir = new File(value);
         if (!outputDir.exists() && !outputDir.mkdirs()) {
             throw new IOException("Unable to write to directory " + value);
         }

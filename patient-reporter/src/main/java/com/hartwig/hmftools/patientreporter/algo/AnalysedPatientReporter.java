@@ -72,7 +72,7 @@ public class AnalysedPatientReporter {
 
         LOGGER.info("Loading CUPPA result from {}", new File(config.molecularTissueOriginTxt()).getParent());
         MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
-                .conclusion(MolecularTissueOriginFile.read(config.molecularTissueOriginTxt()))
+                .conclusion(MolecularTissueOriginFile.read(config.molecularTissueOriginTxt()).conclusion())
                 .plotPath(config.molecularTissueOriginPlot())
                 .build();
 

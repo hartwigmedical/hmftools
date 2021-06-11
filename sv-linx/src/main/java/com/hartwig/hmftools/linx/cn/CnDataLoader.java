@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROME
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
@@ -57,10 +58,7 @@ public class CnDataLoader
 
     public CnDataLoader(final String purpleDataPath, DatabaseAccess dbAccess)
     {
-        if(purpleDataPath.endsWith(File.separator))
-            mPurpleDataPath = purpleDataPath;
-        else
-            mPurpleDataPath = purpleDataPath + File.separator;
+        mPurpleDataPath = !purpleDataPath.isEmpty() ? checkAddDirSeparator(purpleDataPath) : "";
 
         mDbAccess = dbAccess;
         mChrCnDataMap = Maps.newHashMap();

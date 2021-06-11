@@ -16,22 +16,16 @@ import org.apache.commons.cli.Options;
 
 public class CohortFrequency
 {
-    private final Map<HlaAllele, Double> mAlleleFrequencies;
+    private final Map<HlaAllele,Double> mAlleleFrequencies;
 
-    private static final String ALLELE_FREQUENCY_FILE = "allele_freq_file";
-
-    public CohortFrequency(final CommandLine cmd)
-    {
-        mAlleleFrequencies = Maps.newHashMap();
-
-        if(cmd != null)
-            loadData(cmd.getOptionValue(ALLELE_FREQUENCY_FILE));
-    }
+    public static final String ALLELE_FREQUENCY_FILE = "allele_freq_file";
 
     public CohortFrequency(final String freqFile)
     {
         mAlleleFrequencies = Maps.newHashMap();
-        loadData(freqFile);
+
+        if(!freqFile.isEmpty())
+            loadData(freqFile);
     }
 
     public Map<HlaAllele, Double> getAlleleFrequencies()
@@ -52,9 +46,6 @@ public class CohortFrequency
 
     private void loadData(final String filename)
     {
-        if(filename == null)
-            return;
-
         try
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());

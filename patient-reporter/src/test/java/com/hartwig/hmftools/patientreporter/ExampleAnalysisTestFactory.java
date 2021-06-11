@@ -25,6 +25,8 @@ import com.hartwig.hmftools.common.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
+import com.hartwig.hmftools.common.purple.cnchromosome.ImmutableCnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
@@ -51,7 +53,7 @@ import com.hartwig.hmftools.patientreporter.algo.ImmutableGenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
-import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
+import com.hartwig.hmftools.common.purple.cnchromosome.ChromosomeArmKey;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.protect.linx.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
@@ -152,8 +154,10 @@ public final class ExampleAnalysisTestFactory {
                 .peachGenotypes(peachGenotypes)
                 .build();
 
-        MolecularTissueOrigin molecularTissueOrigin =
-                ImmutableMolecularTissueOrigin.builder().conclusion("Melanoma (likelihood=99.7%)").plotPath(REPORTER_CONFIG.molecularTissueOriginPlot()).build();
+        MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
+                .conclusion("Melanoma (likelihood=99.7%)")
+                .plotPath(REPORTER_CONFIG.molecularTissueOriginPlot())
+                .build();
 
         return ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
@@ -218,56 +222,211 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static Map<ChromosomeArmKey, Double> extractCnPerChromosome() {
-        Map<ChromosomeArmKey, Double> cnPerChromosomeArm = Maps.newHashMap();
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("1"), ChromosomeArm.P_ARM), 2.5764959002046512);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("1"), ChromosomeArm.Q_ARM), 3.922154509665307);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("2"), ChromosomeArm.P_ARM), 3.0171634513146657);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("2"), ChromosomeArm.Q_ARM), 3.0219000202305364);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("3"), ChromosomeArm.P_ARM), 3.5912655243657037);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("3"), ChromosomeArm.Q_ARM), 4.000405698398538);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("4"), ChromosomeArm.P_ARM), 2.0229999604574793);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("4"), ChromosomeArm.Q_ARM), 3.8454729078639636);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("5"), ChromosomeArm.P_ARM), 2.002090592970043);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("5"), ChromosomeArm.Q_ARM), 2.011425950136734);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("6"), ChromosomeArm.P_ARM), 3.845563676541185);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("6"), ChromosomeArm.Q_ARM), 2.9144758693840416);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("7"), ChromosomeArm.P_ARM), 4.024705530627151);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("7"), ChromosomeArm.Q_ARM), 4.169394819739314);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("8"), ChromosomeArm.P_ARM), 3.33329992648033);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("8"), ChromosomeArm.Q_ARM), 3.344172929126994);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("9"), ChromosomeArm.P_ARM), 2.7299876766236433);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("9"), ChromosomeArm.Q_ARM), 3.706061264689252);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("10"), ChromosomeArm.P_ARM), 2.502865993794371);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("10"), ChromosomeArm.Q_ARM), 2.0093221707856945);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("11"), ChromosomeArm.P_ARM), 3.1662562322138417);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("11"), ChromosomeArm.Q_ARM), 2.911332199188708);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("12"), ChromosomeArm.P_ARM), 3.0119999171541836);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("12"), ChromosomeArm.Q_ARM), 3.0024718089108817);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("13"), ChromosomeArm.P_ARM), 3.157299819582857);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("13"), ChromosomeArm.Q_ARM), 3.1479621008464864);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("14"), ChromosomeArm.P_ARM), 3.03029982684);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("14"), ChromosomeArm.Q_ARM), 3.0134803904104572);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("15"), ChromosomeArm.P_ARM), 3.7027997998486484);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("15"), ChromosomeArm.Q_ARM), 2.5464224756588587);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("16"), ChromosomeArm.P_ARM), 3.187989400854891);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("16"), ChromosomeArm.Q_ARM), 1.9895662504676845);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("17"), ChromosomeArm.P_ARM), 2.988699874228875);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("17"), ChromosomeArm.Q_ARM), 3.04380005299814);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("18"), ChromosomeArm.P_ARM), 2.370029828320411);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("18"), ChromosomeArm.Q_ARM), 2.850749440994104);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("19"), ChromosomeArm.P_ARM), 2.885974468288675);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("19"), ChromosomeArm.Q_ARM), 2.9279000888664264);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("20"), ChromosomeArm.P_ARM), 4.016485962287397);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("20"), ChromosomeArm.Q_ARM), 4.00558480110238);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("21"), ChromosomeArm.P_ARM), 2.9929997659548166);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("21"), ChromosomeArm.Q_ARM), 3.0001645829865997);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("22"), ChromosomeArm.P_ARM), 3.9840997252344827);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("22"), ChromosomeArm.Q_ARM), 3.9767647179863497);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("X"), ChromosomeArm.P_ARM), 1.9504007026407164);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("X"), ChromosomeArm.Q_ARM), 1.9559000205584387);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("Y"), ChromosomeArm.P_ARM), -0.007499999353701948);
-        cnPerChromosomeArm.put(new ChromosomeArmKey(HumanChromosome.fromString("Y"), ChromosomeArm.Q_ARM), -0.00590000012351103);
+    public static CnPerChromosomeArmData buildCnPerChromosomeArmData(@NotNull ChromosomeArmKey chromosomeArmKey,
+            @NotNull HumanChromosome chromosome, @NotNull ChromosomeArm chromosomeArm, double copyNumber) {
+        return ImmutableCnPerChromosomeArmData.builder()
+                .chromosomeArmKey(chromosomeArmKey)
+                .chromosome(chromosome)
+                .chromosomeArm(chromosomeArm)
+                .copyNumber(copyNumber)
+                .build();
+    }
+
+    @NotNull
+    public static List<CnPerChromosomeArmData> extractCnPerChromosome() {
+        List<CnPerChromosomeArmData> cnPerChromosomeArm = Lists.newArrayList();
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("1"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("1"),
+                ChromosomeArm.P_ARM,
+                2.5764959002046512));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("1"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("1"),
+                ChromosomeArm.Q_ARM,
+                3.922154509665307));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("2"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("2"),
+                ChromosomeArm.P_ARM,
+                3.0171634513146657));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("2"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("2"),
+                ChromosomeArm.Q_ARM,
+                3.0219000202305364));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("3"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("3"),
+                ChromosomeArm.P_ARM,
+                3.5912655243657037));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("3"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("3"),
+                ChromosomeArm.Q_ARM,
+                4.000405698398538));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("4"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("4"),
+                ChromosomeArm.P_ARM,
+                2.0229999604574793));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("4"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("4"),
+                ChromosomeArm.Q_ARM,
+                3.8454729078639636));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("5"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("5"),
+                ChromosomeArm.P_ARM,
+                2.002090592970043));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("5"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("5"),
+                ChromosomeArm.Q_ARM,
+                2.011425950136734));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("6"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("6"),
+                ChromosomeArm.P_ARM,
+                3.845563676541185));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("6"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("6"),
+                ChromosomeArm.Q_ARM,
+                2.9144758693840416));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("7"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("7"),
+                ChromosomeArm.P_ARM,
+                4.024705530627151));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("7"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("7"),
+                ChromosomeArm.Q_ARM,
+                4.169394819739314));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("8"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("8"),
+                ChromosomeArm.P_ARM,
+                3.33329992648033));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("8"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("8"),
+                ChromosomeArm.Q_ARM,
+                3.344172929126994));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("9"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("9"),
+                ChromosomeArm.P_ARM,
+                2.7299876766236433));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("9"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("9"),
+                ChromosomeArm.Q_ARM,
+                3.706061264689252));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("10"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("10"),
+                ChromosomeArm.P_ARM,
+                2.502865993794371));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("10"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("10"),
+                ChromosomeArm.Q_ARM,
+                2.0093221707856945));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("11"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("11"),
+                ChromosomeArm.P_ARM,
+                3.1662562322138417));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("11"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("11"),
+                ChromosomeArm.Q_ARM,
+                2.911332199188708));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("12"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("12"),
+                ChromosomeArm.P_ARM,
+                3.0119999171541836));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("12"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("12"),
+                ChromosomeArm.Q_ARM,
+                3.0024718089108817));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("13"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("13"),
+                ChromosomeArm.P_ARM,
+                3.157299819582857));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("13"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("13"),
+                ChromosomeArm.Q_ARM,
+                3.1479621008464864));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("14"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("14"),
+                ChromosomeArm.P_ARM,
+                3.03029982684));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("14"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("14"),
+                ChromosomeArm.Q_ARM,
+                3.0134803904104572));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("15"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("15"),
+                ChromosomeArm.P_ARM,
+                3.7027997998486484));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("15"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("15"),
+                ChromosomeArm.Q_ARM,
+                2.5464224756588587));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("16"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("16"),
+                ChromosomeArm.P_ARM,
+                3.187989400854891));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("16"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("16"),
+                ChromosomeArm.Q_ARM,
+                1.9895662504676845));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("17"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("17"),
+                ChromosomeArm.P_ARM,
+                2.988699874228875));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("17"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("17"),
+                ChromosomeArm.Q_ARM,
+                3.04380005299814));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("18"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("18"),
+                ChromosomeArm.P_ARM,
+                2.370029828320411));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("18"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("18"),
+                ChromosomeArm.Q_ARM,
+                2.850749440994104));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("19"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("19"),
+                ChromosomeArm.P_ARM,
+                2.885974468288675));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("19"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("19"),
+                ChromosomeArm.Q_ARM,
+                2.9279000888664264));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("20"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("20"),
+                ChromosomeArm.P_ARM,
+                4.016485962287397));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("20"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("20"),
+                ChromosomeArm.Q_ARM,
+                4.00558480110238));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("21"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("21"),
+                ChromosomeArm.P_ARM,
+                2.9929997659548166));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("21"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("21"),
+                ChromosomeArm.Q_ARM,
+                3.0001645829865997));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("22"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("22"),
+                ChromosomeArm.P_ARM,
+                3.9840997252344827));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("22"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("22"),
+                ChromosomeArm.Q_ARM,
+                3.9767647179863497));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("X"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("X"),
+                ChromosomeArm.P_ARM,
+                1.9504007026407164));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("X"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("X"),
+                ChromosomeArm.Q_ARM,
+                1.9559000205584387));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("Y"), ChromosomeArm.P_ARM),
+                HumanChromosome.fromString("Y"),
+                ChromosomeArm.P_ARM,
+                -0.007499999353701948));
+        cnPerChromosomeArm.add(buildCnPerChromosomeArmData(new ChromosomeArmKey(HumanChromosome.fromString("Y"), ChromosomeArm.Q_ARM),
+                HumanChromosome.fromString("Y"),
+                ChromosomeArm.Q_ARM,
+                -0.00590000012351103));
         return cnPerChromosomeArm;
     }
 

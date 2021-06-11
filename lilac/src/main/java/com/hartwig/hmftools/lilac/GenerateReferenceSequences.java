@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -241,7 +242,7 @@ public class GenerateReferenceSequences
         }
 
         final Map<String,TranscriptData> hlaTranscriptMap = Maps.newHashMap();
-        populateHlaTranscripts(hlaTranscriptMap);
+        populateHlaTranscripts(hlaTranscriptMap, V37);
 
         List<Integer> sequenceMaxLengths = Lists.newArrayList();
         int sequenceLociMax = sequenceData.stream().mapToInt(x -> x.length()).max().orElse(0);

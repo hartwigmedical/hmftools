@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.amber.AmberMapping;
 import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberSample;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.cuppa.MolecularTissueOrginData;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoad;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
@@ -24,6 +25,7 @@ import com.hartwig.hmftools.common.peach.PeachCalls;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleQC;
+import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -39,6 +41,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
@@ -126,9 +129,13 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final VirusBreakendDAO virusBreakendDAO;
     @NotNull
+    private final VirusInterpreterDAO virusInterpreterDAO;
+    @NotNull
     private final HlaTypeDAO hlaTypeDAO;
     @NotNull
     private final ProtectDAO protectDAO;
+    @NotNull
+    private final CnPerChromosomeArmDAO cnPerChromosomeArmDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // Disable annoying jooq self-ad message
@@ -162,8 +169,10 @@ public class DatabaseAccess implements AutoCloseable {
         this.cuppaDAO = new CuppaDAO(context);
         this.chordDAO = new ChordDAO(context);
         this.virusBreakendDAO = new VirusBreakendDAO(context);
+        this.virusInterpreterDAO = new VirusInterpreterDAO(context);
         this.hlaTypeDAO = new HlaTypeDAO(context);
         this.protectDAO = new ProtectDAO(context);
+        this.cnPerChromosomeArmDAO = new CnPerChromosomeArmDAO(context);
     }
 
     public static void addDatabaseCmdLineArgs(@NotNull Options options) {
@@ -347,6 +356,10 @@ public class DatabaseAccess implements AutoCloseable {
         copyNumberDAO.writeCopyNumber(sample, copyNumbers);
     }
 
+    public void writeCopynumbersPerCnArm(@NotNull String sample, List<CnPerChromosomeArmData> cnPerChromosomeArmData) {
+        cnPerChromosomeArmDAO.writeChromosomeCopyNumber(sample, cnPerChromosomeArmData);
+    }
+
     public void writeAmberMapping(@NotNull String sample, List<AmberMapping> mapping) {
         amberDAO.writeMapping(sample, mapping);
     }
@@ -452,12 +465,16 @@ public class DatabaseAccess implements AutoCloseable {
         peachDAO.writePeach(sample, peachGenotypes, peachCalls);
     }
 
-    public void writeCuppa(@NotNull String sample, @NotNull String cuppaResult) {
-        cuppaDAO.writeCuppa(sample, cuppaResult);
+    public void writeCuppa(@NotNull String sample, @NotNull MolecularTissueOrginData molecularTissueOrginData) {
+        cuppaDAO.writeCuppa(sample, molecularTissueOrginData);
     }
 
     public void writeVirusBreakend(@NotNull String sample, @NotNull List<VirusBreakend> virusBreakends) {
         virusBreakendDAO.writeVirusBreakend(sample, virusBreakends);
+    }
+
+    public void writeVirusInterpreter(@NotNull String sample, @NotNull List<AnnotatedVirus> virusAnnotations) {
+        virusInterpreterDAO.writeVirusInterpreter(sample, virusAnnotations);
     }
 
     public void writeProtectEvidence(@NotNull String sample, @NotNull List<ProtectEvidence> evidence) {
@@ -544,6 +561,9 @@ public class DatabaseAccess implements AutoCloseable {
         LOGGER.info("Deleting copy number data for sample: {}", sample);
         copyNumberDAO.deleteCopyNumberForSample(sample);
 
+        LOGGER.info("Deleting copy number chromosome arm data for sample: {}", sample);
+        cnPerChromosomeArmDAO.deleteCopyNumberChromosomeArmForSample(sample);
+
         LOGGER.info("Deleting gene copy numbers for sample: {}", sample);
         geneCopyNumberDAO.deleteGeneCopyNumberForSample(sample);
 
@@ -580,6 +600,9 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting virus breakend data for sample: {}", sample);
         virusBreakendDAO.deleteVirusBreakendForSample(sample);
+
+        LOGGER.info("Deleting virus annotation data for sample: {}", sample);
+        virusInterpreterDAO.deleteVirusAnnotationForSample(sample);
 
         LOGGER.info("Deleting CUPPA result for sample: {}", sample);
         cuppaDAO.deleteCuppaForSample(sample);

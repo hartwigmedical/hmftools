@@ -19,13 +19,6 @@ public abstract class ReportableVariant implements Variant {
     public abstract ReportableVariantSource source();
 
     @NotNull
-    @Value.Derived
-    public String genomicEvent() {
-        String description = canonicalCodingEffect() == CodingEffect.SPLICE ? canonicalHgvsCodingImpact() : canonicalHgvsProteinImpact();
-        return this.gene() + " " + description;
-    }
-
-    @NotNull
     @Override
     public abstract String gene();
 

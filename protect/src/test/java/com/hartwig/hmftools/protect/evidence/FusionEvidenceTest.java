@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.protect.evidence;
 
-import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvent;
-import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvidenceFactory;
-
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -14,6 +12,8 @@ import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
+import com.hartwig.hmftools.protect.ProtectTestFactory;
+import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
@@ -31,32 +31,56 @@ public class FusionEvidenceTest {
         String geneUp = "geneUp";
         String geneDown = "geneDown";
         String genePromiscuous = "genePromiscuous";
-        ActionableGene promiscuous =
-                ImmutableActionableGene.builder().from(createTestEvent()).gene(genePromiscuous).event(GeneLevelEvent.FUSION).build();
+        ActionableGene promiscuous = ImmutableActionableGene.builder()
+                .from(ServeTestFactory.createTestActionableGene())
+                .gene(genePromiscuous)
+                .event(GeneLevelEvent.FUSION)
+                .build();
         ActionableGene amp = ImmutableActionableGene.builder()
-                .from(createTestEvent())
+                .from(ServeTestFactory.createTestActionableGene())
                 .gene(genePromiscuous)
                 .event(GeneLevelEvent.AMPLIFICATION)
                 .build();
-        ActionableFusion fusion = ImmutableActionableFusion.builder().from(createTestEvent()).geneUp(geneUp).geneDown(geneDown).build();
+        ActionableFusion fusion = ImmutableActionableFusion.builder()
+                .from(ServeTestFactory.createTestActionableFusion())
+                .geneUp(geneUp)
+                .geneDown(geneDown)
+                .build();
 
-        FusionEvidence fusionEvidence =
-                new FusionEvidence(createTestEvidenceFactory(), Lists.newArrayList(promiscuous, amp), Lists.newArrayList(fusion));
+        FusionEvidence fusionEvidence = new FusionEvidence(ProtectTestFactory.createTestEvidenceFactory(),
+                Lists.newArrayList(promiscuous, amp),
+                Lists.newArrayList(fusion));
 
-        LinxFusion fusionMatch = linxFusionBuilder().geneStart(geneUp).geneEnd(geneDown).build();
-        LinxFusion promiscuousMatch = linxFusionBuilder().geneStart(genePromiscuous).geneEnd("other gene").build();
-        LinxFusion promiscuousNonMatch = linxFusionBuilder().geneStart("other gene").geneEnd(geneDown).build();
+        LinxFusion reportedFusionMatch = linxFusionBuilder().reported(true).geneStart(geneUp).geneEnd(geneDown).build();
+        LinxFusion reportedPromiscuousMatch = linxFusionBuilder().reported(true).geneStart(genePromiscuous).geneEnd("other gene").build();
+        LinxFusion reportedPromiscuousNonMatch = linxFusionBuilder().reported(true).geneStart("other gene").geneEnd(geneDown).build();
+        LinxFusion unreportedPromiscuousMatch =
+                linxFusionBuilder().reported(false).geneStart("other gene").geneEnd(genePromiscuous).build();
+        List<ProtectEvidence> evidences =
+                fusionEvidence.evidence(Lists.newArrayList(reportedFusionMatch, reportedPromiscuousMatch, reportedPromiscuousNonMatch),
+                        Lists.newArrayList(unreportedPromiscuousMatch));
 
-        List<ProtectEvidence> evidenceItems =
-                fusionEvidence.evidence(Lists.newArrayList(fusionMatch, promiscuousMatch, promiscuousNonMatch));
+        assertEquals(3, evidences.size());
 
-        assertEquals(2, evidenceItems.size());
+        ProtectEvidence evidence1 = findByEvent(evidences, reportedFusionMatch.genomicEvent());
+        assertTrue(evidence1.reported());
 
-        assertTrue(evidenceItems.get(0).reported());
-        assertEquals(fusionMatch.genomicEvent(), evidenceItems.get(0).genomicEvent());
+        ProtectEvidence evidence2 = findByEvent(evidences, reportedPromiscuousMatch.genomicEvent());
+        assertTrue(evidence2.reported());
 
-        assertTrue(evidenceItems.get(1).reported());
-        assertEquals(promiscuousMatch.genomicEvent(), evidenceItems.get(1).genomicEvent());
+        ProtectEvidence evidence3 = findByEvent(evidences, unreportedPromiscuousMatch.genomicEvent());
+        assertFalse(evidence3.reported());
+    }
+
+    @NotNull
+    private static ProtectEvidence findByEvent(@NotNull List<ProtectEvidence> evidences, @NotNull String event) {
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.genomicEvent().equals(event)) {
+                return evidence;
+            }
+        }
+
+        throw new IllegalStateException("Cannot find evidence with event: " + event);
     }
 
     @Test
@@ -69,7 +93,7 @@ public class FusionEvidenceTest {
         int maxExonDown = 4;
 
         ActionableFusion fusion = ImmutableActionableFusion.builder()
-                .from(createTestEvent())
+                .from(ServeTestFactory.createTestActionableFusion())
                 .geneUp(geneUp)
                 .minExonUp(minExonUp)
                 .maxExonUp(maxExonUp)
@@ -78,33 +102,28 @@ public class FusionEvidenceTest {
                 .maxExonDown(maxExonDown)
                 .build();
 
-        FusionEvidence fusionEvidence = new FusionEvidence(createTestEvidenceFactory(), Lists.newArrayList(), Lists.newArrayList(fusion));
+        FusionEvidence fusionEvidence =
+                new FusionEvidence(ProtectTestFactory.createTestEvidenceFactory(), Lists.newArrayList(), Lists.newArrayList(fusion));
 
-        ImmutableLinxFusion.Builder builder = linxFusionBuilder().geneStart(geneUp).geneEnd(geneDown);
+        ImmutableLinxFusion.Builder builder = linxFusionBuilder().reported(true).geneStart(geneUp).geneEnd(geneDown);
 
-        // On min range
-        assertEquals(1,
-                fusionEvidence.evidence(Lists.newArrayList(builder.fusedExonUp(minExonUp).fusedExonDown(minExonDown).build())).size());
+        List<LinxFusion> onMinRange = Lists.newArrayList(builder.fusedExonUp(minExonUp).fusedExonDown(minExonDown).build());
+        assertEquals(1, fusionEvidence.evidence(onMinRange, Lists.newArrayList()).size());
 
-        // On max range
-        assertEquals(1,
-                fusionEvidence.evidence(Lists.newArrayList(builder.fusedExonUp(maxExonUp).fusedExonDown(maxExonDown).build())).size());
+        List<LinxFusion> onMaxRange = Lists.newArrayList(builder.fusedExonUp(maxExonUp).fusedExonDown(maxExonDown).build());
+        assertEquals(1, fusionEvidence.evidence(onMaxRange, Lists.newArrayList()).size());
 
-        // Up gene exon too low
-        assertEquals(0,
-                fusionEvidence.evidence(Lists.newArrayList(builder.fusedExonUp(minExonUp - 1).fusedExonDown(minExonDown).build())).size());
+        List<LinxFusion> upGeneExonTooLow = Lists.newArrayList(builder.fusedExonUp(minExonUp - 1).fusedExonDown(minExonDown).build());
+        assertEquals(0, fusionEvidence.evidence(upGeneExonTooLow, Lists.newArrayList()).size());
 
-        // Up gene exon too high
-        assertEquals(0,
-                fusionEvidence.evidence(Lists.newArrayList(builder.fusedExonUp(maxExonUp + 1).fusedExonDown(minExonDown).build())).size());
+        List<LinxFusion> upGeneExonTooHigh = Lists.newArrayList(builder.fusedExonUp(maxExonUp + 1).fusedExonDown(minExonDown).build());
+        assertEquals(0, fusionEvidence.evidence(upGeneExonTooHigh, Lists.newArrayList()).size());
 
-        // Down gene exon too low
-        assertEquals(0,
-                fusionEvidence.evidence(Lists.newArrayList(builder.fusedExonUp(minExonUp).fusedExonDown(minExonDown - 1).build())).size());
+        List<LinxFusion> downGeneExonTooLow = Lists.newArrayList(builder.fusedExonUp(minExonUp).fusedExonDown(minExonDown - 1).build());
+        assertEquals(0, fusionEvidence.evidence(downGeneExonTooLow, Lists.newArrayList()).size());
 
-        // Down gene exon too high
-        assertEquals(0,
-                fusionEvidence.evidence(Lists.newArrayList(builder.fusedExonUp(maxExonUp).fusedExonDown(maxExonDown + 1).build())).size());
+        List<LinxFusion> downGeneExonTooHigh = Lists.newArrayList(builder.fusedExonUp(maxExonUp).fusedExonDown(maxExonDown + 1).build());
+        assertEquals(0, fusionEvidence.evidence(downGeneExonTooHigh, Lists.newArrayList()).size());
     }
 
     @NotNull
@@ -113,7 +132,6 @@ public class FusionEvidenceTest {
                 .fivePrimeBreakendId(0)
                 .threePrimeBreakendId(0)
                 .name(Strings.EMPTY)
-                .reported(true)
                 .reportedType(Strings.EMPTY)
                 .phased(FusionPhasedType.INFRAME)
                 .likelihood(FusionLikelihoodType.HIGH)

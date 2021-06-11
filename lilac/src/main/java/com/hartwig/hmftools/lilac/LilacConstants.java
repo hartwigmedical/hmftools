@@ -48,15 +48,16 @@ public class LilacConstants
 
     public static final List<String> GENE_IDS = Lists.newArrayList(GENE_A, GENE_B, GENE_C);
     public static final List<String> HLA_GENES = Lists.newArrayList(HLA_A, HLA_B, HLA_C);
-    public static final String HLA_CHR = "6";
+    public static String HLA_CHR = "6";
 
     public static final int EXPECTED_ALLELE_COUNT = 6;
 
-    public static final List<String> EXCLUDED_ALLELES = Lists.newArrayList(
-            "A*01:81", "A*01:237", "A*11:126", "A*11:353", "A*25:68", "A*30:95", "A*30:136", "A*31:135", "A*33:191");
+    public static final List<String> EXCLUDED_ALLELES = Lists.newArrayList();
+    // previous PON list
+    // A*01:81", "A*01:237", "A*11:126", "A*11:353", "A*25:68", "A*30:95", "A*30:136", "A*31:135", "A*33:191"
 
     // common INDEL associated with allele C*04:09N
-    public static final Indel STOP_LOSS_ON_C = new Indel("6", 31237115, "CN", "C");
+    public static final String STOP_LOSS_ON_C_ALLELE = "C*04:09N";
 
     public static final List<Integer> A_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348, 364);
     public static final List<Integer> B_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348);

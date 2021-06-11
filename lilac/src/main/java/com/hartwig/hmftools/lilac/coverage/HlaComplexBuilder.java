@@ -97,7 +97,7 @@ public class HlaComplexBuilder
 
         // ensure known stop-loss alleles are kept
         recoveredAlleles.stream()
-                .filter(x -> mRefData.KnownStopLossIndelAlleles.containsKey(x))
+                .filter(x -> mRefData.KnownStopLossIndelAlleles.containsValue(x))
                 .filter(x -> !candidatesAfterUniqueGroups.contains(x))
                 .forEach(x -> candidatesAfterUniqueGroups.add(x));
 

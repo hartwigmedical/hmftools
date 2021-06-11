@@ -55,7 +55,8 @@ public class EnsemblDataCache
     private final List<EnsemblGeneData> mAlternativeGeneData;
     private final List<String> mRestrictedGeneIdList = Lists.newArrayList();
 
-    private static final Logger LOGGER = LogManager.getLogger(EnsemblDataCache.class);
+    public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
+    public static final String ENSEMBL_DATA_DIR = "ensembl_data_dir";
 
     public EnsemblDataCache(final String dataPath, final RefGenomeVersion refGenomeVersion)
     {

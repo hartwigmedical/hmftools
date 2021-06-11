@@ -13,7 +13,10 @@ import org.jetbrains.annotations.Nullable;
 public interface LinxData {
 
     @NotNull
-    List<LinxFusion> fusions();
+    List<LinxFusion> reportableFusions();
+
+    @NotNull
+    List<LinxFusion> unreportedFusions();
 
     @NotNull
     List<ReportableGeneDisruption> geneDisruptions();

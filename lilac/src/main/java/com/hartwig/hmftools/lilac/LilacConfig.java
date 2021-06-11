@@ -3,6 +3,8 @@ package com.hartwig.hmftools.lilac;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
@@ -18,6 +20,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_TOP_SCORE_THRESH
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -36,13 +39,17 @@ import org.jetbrains.annotations.NotNull;
 
 public class LilacConfig
 {
+    private final CommandLine mCmdLineArgs;
+
     public final String Sample;
     public final String ReferenceBam;
     public final String TumorBam;
-    public final boolean TumorOnly;
+    public final String RnaBam;
+    public final String RunId;
 
     public final String ResourceDir;
     public final String RefGenome;
+    public final RefGenomeVersion RefGenVersion;
     public final String SampleDataDir;
     public final String OutputDir;
 
@@ -76,7 +83,8 @@ public class LilacConfig
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
     private static final String REFERENCE_BAM = "reference_bam";
     private static final String TUMOR_BAM = "tumor_bam";
-    private static final String TUMOR_ONLY = "tumor_only";
+    private static final String RNA_BAM = "rna_bam";
+    private static final String RUN_ID = "run_id";
 
     private static final String GENE_COPY_NUMBER = "gene_copy_number_file";
     private static final String SOMATIC_VARIANTS = "somatic_variants_file";
@@ -103,6 +111,8 @@ public class LilacConfig
 
     public LilacConfig(final CommandLine cmd)
     {
+        mCmdLineArgs = cmd;
+
         Sample = cmd.getOptionValue(SAMPLE);
 
         if(cmd.hasOption(SAMPLE_DATA_DIR))
@@ -116,6 +126,7 @@ public class LilacConfig
 
             // these 3 are optional so check existence before initialising
             TumorBam = checkFileExists(SampleDataDir + Sample + ".hla.bam");
+            RnaBam = checkFileExists(SampleDataDir + Sample + ".rna.hla.bam");
 
             String purpleGeneCopyNumberFile = GeneCopyNumberFile.generateFilenameForReading(SampleDataDir, Sample);
             CopyNumberFile = checkFileExists(purpleGeneCopyNumberFile);
@@ -127,15 +138,18 @@ public class LilacConfig
             SampleDataDir = "";
             ReferenceBam = cmd.getOptionValue(REFERENCE_BAM, "");
             TumorBam = cmd.getOptionValue(TUMOR_BAM, "");
+            RnaBam = cmd.getOptionValue(RNA_BAM, "");
             CopyNumberFile = cmd.getOptionValue(GENE_COPY_NUMBER, "");
             SomaticVariantsFile = cmd.getOptionValue(SOMATIC_VARIANTS, "");
             OutputDir = parseOutputDir(cmd);
         }
 
-        TumorOnly = cmd.hasOption(TUMOR_ONLY);
+        RunId = cmd.getOptionValue(RUN_ID, "");
 
         ResourceDir = checkAddDirSeparator(cmd.getOptionValue(RESOURCE_DIR));
         RefGenome = cmd.getOptionValue(REF_GENOME, "");
+
+        RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
 
         MinBaseQual = getConfigValue(cmd, MIN_BASE_QUAL, DEFAULT_MIN_BASE_QUAL);
         MinEvidence = getConfigValue(cmd, MIN_EVIDENCE, DEFAULT_MIN_EVIDENCE);
@@ -168,6 +182,9 @@ public class LilacConfig
 
     public boolean isValid()
     {
+        if(mCmdLineArgs == null)
+            return true;
+
         if(ReferenceBam.isEmpty() || !Files.exists(Paths.get(ReferenceBam)))
         {
             LL_LOGGER.error("missing or invalid reference BAM");
@@ -197,15 +214,8 @@ public class LilacConfig
 
     public void logParams()
     {
-        if(TumorOnly)
-        {
-            LL_LOGGER.info("sample({}) tumor only", Sample);
-        }
-        else
-        {
-            LL_LOGGER.info("sample({}) inputs: tumorBam({}) somaticVCF({}) geneCopyNumber({})",
-                    Sample, !TumorBam.isEmpty(), !SomaticVariantsFile.isEmpty(), !CopyNumberFile.isEmpty());
-        }
+        LL_LOGGER.info("sample({}) inputs: tumorBam({}) somaticVCF({}) geneCopyNumber({}) rnaBam({})",
+                Sample, !TumorBam.isEmpty(), !SomaticVariantsFile.isEmpty(), !CopyNumberFile.isEmpty(), !RnaBam.isEmpty());
 
         LL_LOGGER.info("minBaseQual({}), minEvidence({}) minFragmentsPerAllele({}) "
                 + "minFragmentsToRemoveSingle({}) maxDistanceFromTopScore({})",
@@ -227,16 +237,20 @@ public class LilacConfig
         }
     }
 
-    public LilacConfig()
+    public LilacConfig(final String sampleId)
     {
+        mCmdLineArgs = null;
+
         OutputDir = "";
-        Sample = "";
+        Sample = sampleId;
         ReferenceBam = "";
         TumorBam = "";
+        RnaBam = "";
         ResourceDir = "";
         SampleDataDir = "";
         RefGenome = "";
-        TumorOnly = false;
+        RefGenVersion = V37;
+        RunId = "";
 
         MinBaseQual = DEFAULT_MIN_BASE_QUAL;
         MinEvidence = DEFAULT_MIN_EVIDENCE;
@@ -266,10 +280,12 @@ public class LilacConfig
         options.addOption(SAMPLE_DATA_DIR, true,"Path to all sample files");
         options.addOption(REFERENCE_BAM, true,"Path to reference/normal BAM");
         options.addOption(TUMOR_BAM, true,"Path to tumor BAM");
-        options.addOption(TUMOR_ONLY, false,"Analyse tumor BAM only");
+        options.addOption(RNA_BAM, true,"Analyse tumor BAM only");
+        options.addOption(RUN_ID, false,"Only search for HLA-Y fragments");
         options.addOption(RESOURCE_DIR, true,"Path to resource files");
         options.addOption(OUTPUT_DIR, true,"Path to output");
         options.addOption(REF_GENOME, true,"Optional path to reference genome fasta file");
+        options.addOption(REF_GENOME_VERSION, true,"Ref genome version V37 (default) or V38");
         options.addOption(MIN_BASE_QUAL, true,"Min base quality threshold");
         options.addOption(MIN_EVIDENCE, true,"Min fragment evidence required");
         options.addOption(MIN_HIGH_QUAL_EVIDENCE_FACTOR, true,"Min high-qual fragment evidence factor");
@@ -277,7 +293,6 @@ public class LilacConfig
         options.addOption(MIN_FRAGMENTS_PER_ALLELE, true,"MIN_FRAGMENTS_PER_ALLELE");
         options.addOption(MIN_FRAGMENTS_TO_REMOVE_SINGLE, true,"MIN_FRAGMENTS_TO_REMOVE_SINGLE");
         options.addOption(TOP_SCORE_THRESHOLD, true,"Max distance from top score");
-        options.addOption(THREADS, true,"Number of threads");
         options.addOption(EXPECTED_ALLELES, true,"Comma separated expected alleles for the sample");
         options.addOption(RESTRICTED_ALLELES, true,"Comma separated restricted analysis allele list");
         options.addOption(GENE_COPY_NUMBER, true,"Path to gene copy number file");
@@ -286,6 +301,7 @@ public class LilacConfig
         options.addOption(RUN_VALIDATION, false, "Run validation checks");
         options.addOption(LOG_DEBUG, false, "More detailed logging of phasing");
         options.addOption(LOG_LEVEL, true, "Specify log level WARN, INFO, DEBUG or TRACE");
+        options.addOption(THREADS, true,"Number of threads");
         DatabaseAccess.addDatabaseCmdLineArgs((Options) options);
         return options;
     }

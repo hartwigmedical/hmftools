@@ -23,7 +23,6 @@ public class AminoAcidFragmentPipeline
     private final double mMinHighQualEvidence;
 
     private final List<Fragment> mHighQualRefAminoAcidFragments;
-    private final List<Fragment> mHighQualTumorFragments;
 
     // per-gene counts of bases and amino-acids with sufficient support
     private final Map<String,SequenceCount> mRefNucleotideCounts;
@@ -31,8 +30,7 @@ public class AminoAcidFragmentPipeline
 
     private final List<Fragment> mRefNucPhasingFragments; // copied and used for phasing only
 
-    public AminoAcidFragmentPipeline(
-            final LilacConfig config, final List<Fragment> referenceFragments, final List<Fragment> tumorFragments)
+    public AminoAcidFragmentPipeline(final LilacConfig config, final List<Fragment> referenceFragments)
     {
         mMinBaseQuality = config.MinBaseQual;
 
@@ -44,8 +42,6 @@ public class AminoAcidFragmentPipeline
 
         mMinEvidence = config.calcMinEvidence(fragmentCount);
         mMinHighQualEvidence = config.calcMinHighQualEvidence(fragmentCount);
-
-        mHighQualTumorFragments = createHighQualAminoAcidFragments(tumorFragments);
 
         mRefNucleotideCounts = Maps.newHashMap();
         mRefAminoAcidCounts = Maps.newHashMap();
@@ -152,16 +148,18 @@ public class AminoAcidFragmentPipeline
         return enrichedAminoAcidFrags;
     }
 
-    public List<Fragment> tumorCoverageFragments()
+    public List<Fragment> calcComparisonCoverageFragments(final List<Fragment> comparisonFragments)
     {
-        if(mHighQualTumorFragments.isEmpty())
+        List<Fragment> highQualFragments = createHighQualAminoAcidFragments(comparisonFragments);
+
+        if(highQualFragments.isEmpty())
             return Lists.newArrayList();
 
         SequenceCount referenceNucleotideCounts = SequenceCount.nucleotides(mMinEvidence, mHighQualRefAminoAcidFragments);
         SequenceCount referenceAminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, mHighQualRefAminoAcidFragments);
 
-        SequenceCount tumorNucleotideCounts = SequenceCount.nucleotides(mMinEvidence, mHighQualTumorFragments);
-        SequenceCount tumorAminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, mHighQualTumorFragments);
+        SequenceCount tumorNucleotideCounts = SequenceCount.nucleotides(mMinEvidence, highQualFragments);
+        SequenceCount tumorAminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, highQualFragments);
 
         final List<SequenceCountDiff> nucleotideDifferences = SequenceCountDiff.create(referenceNucleotideCounts, tumorNucleotideCounts)
                 .stream().filter(x -> x.TumorCount > 0).collect(Collectors.toList());
@@ -169,7 +167,7 @@ public class AminoAcidFragmentPipeline
         final List<SequenceCountDiff> aminoAcidDifferences = SequenceCountDiff.create(referenceAminoAcidCounts, tumorAminoAcidCounts)
                 .stream().filter(x -> x.TumorCount > 0).collect(Collectors.toList());
 
-        final List<Fragment> variantFilteredTumorAminoAcids = mHighQualTumorFragments.stream()
+        final List<Fragment> variantFilteredTumorAminoAcids = highQualFragments.stream()
                 .filter(x -> !containsVariant(x, nucleotideDifferences, aminoAcidDifferences)).collect(Collectors.toList());
 
         return variantFilteredTumorAminoAcids;
