@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -34,7 +35,7 @@ public class GenomicAnalyzerTest {
 
         PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
 
-        assertNotNull(analyzer.run("sample", "reference", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
+        assertNotNull(analyzer.run("sample", "reference", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION, RefGenomeVersion.V37));
     }
 
     @Test

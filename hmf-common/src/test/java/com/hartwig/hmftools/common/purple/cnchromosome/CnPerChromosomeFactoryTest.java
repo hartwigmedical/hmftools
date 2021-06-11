@@ -25,7 +25,7 @@ public class CnPerChromosomeFactoryTest {
 
     @Test
     public void canExtractCopyNumberPerChromosomeArmFromFile() throws IOException {
-        assertNotNull(CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(PURPLE_COPYNUMBER_TSV));
+        assertNotNull(CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(PURPLE_COPYNUMBER_TSV, RefGenomeCoordinates.COORDS_37));
     }
 
     @Test
