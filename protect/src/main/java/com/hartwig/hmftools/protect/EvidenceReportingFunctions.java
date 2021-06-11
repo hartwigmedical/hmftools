@@ -63,7 +63,6 @@ public final class EvidenceReportingFunctions {
         return !lowestMaxReportingLevel.isHigher(evidence.level());
     }
 
-
     @NotNull
     private static List<ProtectEvidence> onlyReportHighestLevelForTreatmentAndEvent(@NotNull List<ProtectEvidence> evidences) {
         Set<String> events = evidences.stream().map(ProtectEvidence::genomicEvent).collect(Collectors.toSet());

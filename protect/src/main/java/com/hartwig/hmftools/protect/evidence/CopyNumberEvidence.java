@@ -69,7 +69,8 @@ public class CopyNumberEvidence {
                 return reportable.interpretation() == CopyNumberInterpretation.FULL_LOSS
                         || reportable.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS;
             default:
-                return false;
+                throw new IllegalStateException(
+                        "Actionable event found in copy number evidence that should not exist: " + actionable.event());
         }
     }
 }
