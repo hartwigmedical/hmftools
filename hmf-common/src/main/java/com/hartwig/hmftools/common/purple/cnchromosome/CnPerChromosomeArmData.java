@@ -12,9 +12,6 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CnPerChromosomeArmData {
 
     @NotNull
-    public abstract ChromosomeArmKey chromosomeArmKey();
-
-    @NotNull
     public abstract HumanChromosome chromosome();
 
     @NotNull
