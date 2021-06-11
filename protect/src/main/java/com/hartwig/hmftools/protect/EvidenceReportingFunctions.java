@@ -53,10 +53,10 @@ public final class EvidenceReportingFunctions {
         for (Knowledgebase source : evidence.sources()) {
             EvidenceLevel maxLevelForSource = evidence.direction().isCertain()
                     ? source.maxCertainEvidenceReportingLevel()
-                    : source.maxCertainEvidenceReportingLevel();
+                    : source.maxPredictedEvidenceReportingLevel();
 
             if (lowestMaxReportingLevel.isHigher(maxLevelForSource)) {
-                lowestMaxReportingLevel = source.maxCertainEvidenceReportingLevel();
+                lowestMaxReportingLevel = maxLevelForSource;
             }
         }
 
