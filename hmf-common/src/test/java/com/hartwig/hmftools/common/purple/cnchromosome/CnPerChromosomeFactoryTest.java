@@ -40,13 +40,12 @@ public class CnPerChromosomeFactoryTest {
                 CnPerChromosomeFactory.extractCnPerChromosomeArm(copyNumbers, RefGenomeCoordinates.COORDS_37);
 
         assertEquals(2, cnPerChromosomeArm.size());
-        CnPerChromosomeArmData cnPerChromosomeArmData1 = cnPerChromosomeArm.get(0);
+        CnPerChromosomeArmData cnPerChromosomeArmData1 = cnPerChromosomeArm.get(1);
         assertEquals(HumanChromosome.fromString("1"), cnPerChromosomeArmData1.chromosome());
         assertEquals(ChromosomeArm.P_ARM, cnPerChromosomeArmData1.chromosomeArm());
         assertEquals(2D, cnPerChromosomeArmData1.copyNumber(), EPSILON);
 
-
-        CnPerChromosomeArmData cnPerChromosomeArmData2 = cnPerChromosomeArm.get(1);
+        CnPerChromosomeArmData cnPerChromosomeArmData2 = cnPerChromosomeArm.get(0);
         assertEquals(HumanChromosome.fromString("1"), cnPerChromosomeArmData2.chromosome());
         assertEquals(ChromosomeArm.Q_ARM, cnPerChromosomeArmData2.chromosomeArm());
         assertEquals(5.35312, cnPerChromosomeArmData2.copyNumber(), EPSILON);

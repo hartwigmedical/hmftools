@@ -592,6 +592,7 @@ ERBB2	0	0	0	...	0	0	0	0	0	18	257	590	1311	1111	611
 TP53	0	0	0	...	0	0	0	0	0	0	0	90	423	343	376
 ```
 
+A 'missed variant likelihood' is calculated using poisson as the mean probability of not finding at least 3 reads coverage for an allele given the depth distribution over the whole gene.
 
 # Variant Pipeline
 A number of post processing steps are applied to the SAGE output.
