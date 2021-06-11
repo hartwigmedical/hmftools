@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class GeneDepthFile
 {
-    private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("0.00'%'");
+    // private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("0.00'%'");
 
     public static void write(@NotNull final String filename, @NotNull final List<GeneDepth> depths) throws IOException
     {
@@ -62,10 +62,10 @@ public final class GeneDepthFile
     static String toString(@NotNull final GeneDepth depth)
     {
         StringJoiner joiner = new StringJoiner(DELIM);
-        joiner.add(depth.gene());
-        joiner.add(PERCENTAGE_FORMAT.format(depth.missedVariantLikelihood() * 100));
+        joiner.add(depth.Gene);
+        joiner.add(String.format("%.4f", depth.MissedVariantLikelihood * 100));
 
-        for(int i : depth.depthCounts())
+        for(int i : depth.DepthCounts)
         {
             joiner.add(String.valueOf(i));
         }

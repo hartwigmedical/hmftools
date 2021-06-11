@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.containsFlag;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.defaultEnumValue;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH_PANEL;
@@ -16,22 +16,18 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_THREADS;
 import static htsjdk.samtools.ValidationStringency.DEFAULT_STRINGENCY;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -43,6 +39,9 @@ public class SageConfig
     public final List<String> ReferenceBams;
     public final List<String> TumorIds;
     public final List<String> TumorBams;
+
+    public final String SampleDataDir;
+    public final String ResourceDir;
 
     public final String PanelBed;
     public final boolean PanelOnly;
@@ -80,6 +79,9 @@ public class SageConfig
     }
     public int maxSkippedReferenceRegions() { return 50; }
 
+    private static final String SAMPLE_DATA_DIR = "sample_data_dir";
+    private static final String RESOURCE_DIR = "resource_dir";
+    
     private static final String THREADS = "threads";
     private static final String REFERENCE = "reference";
     private static final String REFERENCE_BAM = "reference_bam";
@@ -107,7 +109,7 @@ public class SageConfig
     public SageConfig(boolean appendMode, @NotNull final String version, @NotNull final CommandLine cmd)
     {
         Version = version;
-
+        
         mAppendMode = appendMode;
 
         final RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
@@ -118,22 +120,28 @@ public class SageConfig
             ReferenceIds.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE).split(",")));
         }
 
-        ReferenceBams = Lists.newArrayList();
-        if(cmd.hasOption(REFERENCE_BAM))
-        {
-            ReferenceBams.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE_BAM, Strings.EMPTY).split(",")));
-        }
-
         TumorIds = Lists.newArrayList();
         if(cmd.hasOption(TUMOR))
         {
             TumorIds.addAll(Arrays.asList(cmd.getOptionValue(TUMOR).split(",")));
         }
 
+        SampleDataDir = cmd.hasOption(SAMPLE_DATA_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR)) : "";
+        ResourceDir = cmd.hasOption(RESOURCE_DIR) ? checkAddDirSeparator(cmd.getOptionValue(RESOURCE_DIR)) : "";
+
+        ReferenceBams = Lists.newArrayList();
         TumorBams = Lists.newArrayList();
+
+        if(cmd.hasOption(REFERENCE_BAM))
+        {
+            Arrays.stream(cmd.getOptionValue(REFERENCE_BAM, Strings.EMPTY).split(","))
+                    .forEach(x -> ReferenceBams.add(SampleDataDir + x));
+        }
+
         if(cmd.hasOption(TUMOR_BAM))
         {
-            TumorBams.addAll(Arrays.asList(cmd.getOptionValue(TUMOR_BAM, Strings.EMPTY).split(",")));
+            Arrays.stream(cmd.getOptionValue(TUMOR_BAM, Strings.EMPTY).split(","))
+                    .forEach(x -> TumorBams.add(SampleDataDir + x));
         }
 
         Chromosomes = Sets.newHashSet();
@@ -150,13 +158,17 @@ public class SageConfig
             TranscriptRegions.addAll(refGenomeVersion.is37() ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38());
         }
 
-        OutputFile = cmd.getOptionValue(OUTPUT_VCF);
-        InputFile = cmd.getOptionValue(INPUT_VCF, "");
+        OutputFile = SampleDataDir + cmd.getOptionValue(OUTPUT_VCF);
+        InputFile = SampleDataDir + cmd.getOptionValue(INPUT_VCF, "");
+
+        PanelBed = ResourceDir + cmd.getOptionValue(PANEL_BED, Strings.EMPTY);
+        CoverageBed = ResourceDir + cmd.getOptionValue(COVERAGE_BED, Strings.EMPTY);
+        HighConfidenceBed = ResourceDir + cmd.getOptionValue(HIGH_CONFIDENCE_BED, Strings.EMPTY);
+        Hotspots = ResourceDir +  cmd.getOptionValue(HOTSPOTS, Strings.EMPTY);
+        RefGenomeFile = ResourceDir + cmd.getOptionValue(REF_GENOME);
 
         Stringency = ValidationStringency.valueOf(cmd.getOptionValue(VALIDATION_STRINGENCY, DEFAULT_STRINGENCY.toString()));
-
         MnvEnabled = getConfigValue(cmd, MNV, DEFAULT_MNV);
-        RefGenomeFile = cmd.getOptionValue(REF_GENOME);
         RegionSliceSize = getConfigValue(cmd, SLICE_SIZE, DEFAULT_SLICE_SIZE);
         ReadContextFlankSize = getConfigValue(cmd, READ_CONTEXT_FLANK_SIZE, DEFAULT_READ_CONTEXT_FLANK_SIZE);
         MinMapQuality = getConfigValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY);
@@ -164,17 +176,13 @@ public class SageConfig
         MaxReadDepthPanel = getConfigValue(cmd, MAX_READ_DEPTH_PANEL, DEFAULT_MAX_READ_DEPTH_PANEL);
         MaxRealignmentDepth = getConfigValue(cmd, MAX_REALIGNMENT_DEPTH, DEFAULT_MAX_REALIGNMENT_DEPTH);
 
-        PanelBed = cmd.getOptionValue(PANEL_BED, Strings.EMPTY);
-        CoverageBed = cmd.getOptionValue(COVERAGE_BED, Strings.EMPTY);
-        HighConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED, Strings.EMPTY);
-        Hotspots = cmd.getOptionValue(HOTSPOTS, Strings.EMPTY);
-
-        Threads = getConfigValue(cmd, THREADS, DEFAULT_THREADS);
-
         Filter = new FilterConfig(cmd);
         Quality = new QualityConfig(cmd, TranscriptRegions);
         BaseQualityRecalibration = new BaseQualityRecalibrationConfig(cmd);
+
         PanelOnly = containsFlag(cmd, PANEL_ONLY);
+
+        Threads = getConfigValue(cmd, THREADS, DEFAULT_THREADS);
     }
 
     public boolean isValid()
@@ -266,8 +274,8 @@ public class SageConfig
         final Options options = new Options();
         options.addOption(MNV, true, "Enable MNVs [" + DEFAULT_MNV + "]");
         options.addOption(REF_GENOME_VERSION, true, "Assembly, must be one of [37, 38]");
-        options.addOption(TUMOR, true, "Name of tumor sample");
-        options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
+        options.addOption(TUMOR, true, "Tumor sample, or collection separated by ',\"");
+        options.addOption(TUMOR_BAM, true, "Tumor bam file");
         options.addOption(READ_CONTEXT_FLANK_SIZE, true, "Size of read context flank [" + DEFAULT_READ_CONTEXT_FLANK_SIZE + "]");
 
         options.addOption(HIGH_CONFIDENCE_BED, true, "High confidence regions bed file");
@@ -294,10 +302,12 @@ public class SageConfig
     {
         final Options options = new Options();
         options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
-        options.addOption(REFERENCE, true, "Name of reference sample");
-        options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
-        options.addOption(REF_GENOME, true, "Path to indexed ref genome fasta file");
-        options.addOption(OUTPUT_VCF, true, "Path to output vcf");
+        options.addOption(REFERENCE, true, "Reference sample, or collection separated by ',");
+        options.addOption(RESOURCE_DIR, true, "Resource files");
+        options.addOption(SAMPLE_DATA_DIR, true, "Path to sample data files");
+        options.addOption(REFERENCE_BAM, true, "Reference bam file");
+        options.addOption(REF_GENOME, true, "Indexed ref genome fasta file");
+        options.addOption(OUTPUT_VCF, true, "Output vcf");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
         options.addOption(CHR, true, "Run for single chromosome");
         options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
@@ -325,6 +335,8 @@ public class SageConfig
 
     public SageConfig()
     {
+        SampleDataDir = "";
+        ResourceDir = "";
         ReferenceIds = Lists.newArrayList("referencIds");
         ReferenceBams = Lists.newArrayList("referenceBams");
         TumorIds = Lists.newArrayList("tumorIds");

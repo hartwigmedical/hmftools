@@ -4,9 +4,7 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class BaseQualityRecalibrationConfig
 {

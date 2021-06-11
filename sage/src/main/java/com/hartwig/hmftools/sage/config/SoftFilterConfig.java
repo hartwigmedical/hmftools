@@ -10,9 +10,7 @@ import static com.hartwig.hmftools.sage.config.SoftFilter.MIN_TUMOR_VAF;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class SoftFilterConfig
 {

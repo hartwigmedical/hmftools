@@ -18,6 +18,33 @@ class ExonCoverage implements GenomeRegion, Consumer<GenomeRegion>
         mBaseCoverage = new int[(int) exon.bases()];
     }
 
+    public int[] coverage()
+    {
+        return mBaseCoverage;
+    }
+    public String gene()
+    {
+        return mExon.name();
+    }
+
+    @Override
+    public String chromosome()
+    {
+        return mExon.chromosome();
+    }
+
+    @Override
+    public long start()
+    {
+        return mExon.start();
+    }
+
+    @Override
+    public long end()
+    {
+        return mExon.end();
+    }
+
     @Override
     public void accept(final GenomeRegion alignment)
     {
@@ -39,36 +66,6 @@ class ExonCoverage implements GenomeRegion, Consumer<GenomeRegion>
         }
     }
 
-    @NotNull
-    public int[] coverage()
-    {
-        return mBaseCoverage;
-    }
-
-    @NotNull
-    public String gene()
-    {
-        return mExon.name();
-    }
-
-    @NotNull
-    @Override
-    public String chromosome()
-    {
-        return mExon.chromosome();
-    }
-
-    @Override
-    public long start()
-    {
-        return mExon.start();
-    }
-
-    @Override
-    public long end()
-    {
-        return mExon.end();
-    }
 
     private int index(int position)
     {

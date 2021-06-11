@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 
 import java.util.function.Predicate;
 
@@ -12,9 +11,7 @@ import com.hartwig.hmftools.sage.variant.SageVariantTier;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class FilterConfig
 {

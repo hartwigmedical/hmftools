@@ -78,7 +78,7 @@ public class SageVCF implements AutoCloseable
     private final VariantContextWriter mWriter;
     private final Consumer<VariantContext> mConsumer;
 
-    public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config)
+    public SageVCF(final IndexedFastaSequenceFile reference, final SageConfig config)
     {
         final SAMSequenceDictionary sequenceDictionary = reference.getSequenceDictionary();
 

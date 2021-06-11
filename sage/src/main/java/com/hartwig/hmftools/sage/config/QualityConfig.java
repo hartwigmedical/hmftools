@@ -13,9 +13,7 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.compress.utils.Lists;
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class QualityConfig
 {

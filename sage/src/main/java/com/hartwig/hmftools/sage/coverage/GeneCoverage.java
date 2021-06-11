@@ -14,13 +14,20 @@ import org.jetbrains.annotations.NotNull;
 
 public class GeneCoverage implements Consumer<GenomeRegion>
 {
-    private static final int MAX_BUCKET = 37;
-
     private final String mChromosome;
     private final String mGene;
     private final List<ExonCoverage> mExonCoverage;
     private final long mMinPosition;
     private final long mMaxPosition;
+
+    private static final int MAX_BUCKET = 37;
+
+    /*
+        in units of 50 up to 500  (8 regions)
+        in units of 100 up to 2000 (15 regions)
+        in units of 1000 up to 10000 (8 regions)
+        10000+ (1 region)
+    */
 
     public GeneCoverage(final List<NamedBed> exons)
     {
@@ -58,16 +65,11 @@ public class GeneCoverage implements Consumer<GenomeRegion>
         return mChromosome;
     }
 
-    @NotNull
     public GeneDepth geneDepth()
     {
         int[] depthCounts = baseCoverageSummary(mExonCoverage);
 
-        return ImmutableGeneDepth.builder()
-                .gene(mGene)
-                .depthCounts(depthCounts)
-                .missedVariantLikelihood(missedVariantLikelihood(depthCounts))
-                .build();
+        return new GeneDepth(mGene, missedVariantLikelihood(depthCounts), depthCounts);
     }
 
     static int[] baseCoverageSummary(@NotNull Collection<ExonCoverage> exons)
