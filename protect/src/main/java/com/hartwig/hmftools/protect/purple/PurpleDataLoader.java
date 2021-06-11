@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
@@ -30,6 +31,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.protect.ProtectConfig;
@@ -43,6 +45,8 @@ import org.jetbrains.annotations.Nullable;
 public final class PurpleDataLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(PurpleDataLoader.class);
+    private static final Set<CodingEffect> CODING_EFFECTS_TO_INCLUDE_FOR_UNREPORTED =
+            Sets.newHashSet(CodingEffect.MISSENSE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.SPLICE);
 
     private PurpleDataLoader() {
     }
@@ -58,7 +62,8 @@ public final class PurpleDataLoader {
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
                 config.purpleGeneCopyNumberTsv(),
-                null, config.refGenomeVersion());
+                null,
+                config.refGenomeVersion());
     }
 
     @NotNull
@@ -122,7 +127,7 @@ public final class PurpleDataLoader {
                 ReportableVariantFactory.toReportableSomaticVariants(somaticVariants, somaticDriverCatalog);
         LOGGER.info(" Loaded {} reportable somatic variants from {}", reportableSomaticVariants.size(), somaticVcf);
 
-        List<SomaticVariant> unreportedSomaticVariants = selectUnreportedVariants(somaticVariants);
+        List<SomaticVariant> unreportedSomaticVariants = selectUnreportedCodingVariants(somaticVariants);
         LOGGER.info(" Loaded {} unreported somatic variants from {}", unreportedSomaticVariants.size(), somaticVcf);
 
         return ImmutablePurpleData.builder()
@@ -145,10 +150,10 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static List<SomaticVariant> selectUnreportedVariants(@NotNull List<SomaticVariant> somaticVariants) {
+    private static List<SomaticVariant> selectUnreportedCodingVariants(@NotNull List<SomaticVariant> somaticVariants) {
         List<SomaticVariant> variants = Lists.newArrayList();
         for (SomaticVariant variant : somaticVariants) {
-            if (!variant.reported()) {
+            if (!variant.reported() && CODING_EFFECTS_TO_INCLUDE_FOR_UNREPORTED.contains(variant.canonicalCodingEffect())) {
                 variants.add(variant);
             }
         }
