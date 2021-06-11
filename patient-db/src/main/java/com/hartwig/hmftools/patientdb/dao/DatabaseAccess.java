@@ -134,8 +134,6 @@ public class DatabaseAccess implements AutoCloseable {
     private final HlaTypeDAO hlaTypeDAO;
     @NotNull
     private final ProtectDAO protectDAO;
-    @NotNull
-    private final CnPerChromosomeArmDAO cnPerChromosomeArmDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // Disable annoying jooq self-ad message
@@ -172,7 +170,6 @@ public class DatabaseAccess implements AutoCloseable {
         this.virusInterpreterDAO = new VirusInterpreterDAO(context);
         this.hlaTypeDAO = new HlaTypeDAO(context);
         this.protectDAO = new ProtectDAO(context);
-        this.cnPerChromosomeArmDAO = new CnPerChromosomeArmDAO(context);
     }
 
     public static void addDatabaseCmdLineArgs(@NotNull Options options) {
@@ -354,10 +351,6 @@ public class DatabaseAccess implements AutoCloseable {
 
     public void writeCopynumbers(@NotNull String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
         copyNumberDAO.writeCopyNumber(sample, copyNumbers);
-    }
-
-    public void writeCopynumbersPerCnArm(@NotNull String sample, List<CnPerChromosomeArmData> cnPerChromosomeArmData) {
-        cnPerChromosomeArmDAO.writeChromosomeCopyNumber(sample, cnPerChromosomeArmData);
     }
 
     public void writeAmberMapping(@NotNull String sample, List<AmberMapping> mapping) {
@@ -560,9 +553,6 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting copy number data for sample: {}", sample);
         copyNumberDAO.deleteCopyNumberForSample(sample);
-
-        LOGGER.info("Deleting copy number chromosome arm data for sample: {}", sample);
-        cnPerChromosomeArmDAO.deleteCopyNumberChromosomeArmForSample(sample);
 
         LOGGER.info("Deleting gene copy numbers for sample: {}", sample);
         geneCopyNumberDAO.deleteGeneCopyNumberForSample(sample);
