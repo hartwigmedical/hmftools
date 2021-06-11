@@ -124,8 +124,7 @@ public class BamRecordReader implements BamReader
 
     private List<Fragment> readFromBam(final String geneName, final TranscriptData transcript)
     {
-        LL_LOGGER.info("  querying {} coding region({}: {} -> {})",
-                geneName, HLA_CHR, transcript.CodingStart, transcript.CodingEnd);
+        LL_LOGGER.debug("  querying {} coding region({}: {} -> {})", geneName, HLA_CHR, transcript.CodingStart, transcript.CodingEnd);
 
         boolean reverseStrand = transcript.Strand == NEG_STRAND;
         final List<NamedBed> codingRegions = codingRegions(geneName, transcript);

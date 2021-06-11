@@ -44,8 +44,8 @@ public class LilacConfig
     public final String Sample;
     public final String ReferenceBam;
     public final String TumorBam;
-    public final boolean TumorOnly;
-    public final boolean HlaYOnly;
+    public final String RnaBam;
+    public final String RunId;
 
     public final String ResourceDir;
     public final String RefGenome;
@@ -83,8 +83,8 @@ public class LilacConfig
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
     private static final String REFERENCE_BAM = "reference_bam";
     private static final String TUMOR_BAM = "tumor_bam";
-    private static final String TUMOR_ONLY = "tumor_only";
-    private static final String HLAY_ONLY = "hlay_only";
+    private static final String RNA_BAM = "rna_bam";
+    private static final String RUN_ID = "run_id";
 
     private static final String GENE_COPY_NUMBER = "gene_copy_number_file";
     private static final String SOMATIC_VARIANTS = "somatic_variants_file";
@@ -126,6 +126,7 @@ public class LilacConfig
 
             // these 3 are optional so check existence before initialising
             TumorBam = checkFileExists(SampleDataDir + Sample + ".hla.bam");
+            RnaBam = checkFileExists(SampleDataDir + Sample + ".rna.hla.bam");
 
             String purpleGeneCopyNumberFile = GeneCopyNumberFile.generateFilenameForReading(SampleDataDir, Sample);
             CopyNumberFile = checkFileExists(purpleGeneCopyNumberFile);
@@ -137,13 +138,13 @@ public class LilacConfig
             SampleDataDir = "";
             ReferenceBam = cmd.getOptionValue(REFERENCE_BAM, "");
             TumorBam = cmd.getOptionValue(TUMOR_BAM, "");
+            RnaBam = cmd.getOptionValue(RNA_BAM, "");
             CopyNumberFile = cmd.getOptionValue(GENE_COPY_NUMBER, "");
             SomaticVariantsFile = cmd.getOptionValue(SOMATIC_VARIANTS, "");
             OutputDir = parseOutputDir(cmd);
         }
 
-        TumorOnly = cmd.hasOption(TUMOR_ONLY);
-        HlaYOnly = cmd.hasOption(HLAY_ONLY);
+        RunId = cmd.getOptionValue(RUN_ID, "");
 
         ResourceDir = checkAddDirSeparator(cmd.getOptionValue(RESOURCE_DIR));
         RefGenome = cmd.getOptionValue(REF_GENOME, "");
@@ -213,15 +214,8 @@ public class LilacConfig
 
     public void logParams()
     {
-        if(TumorOnly)
-        {
-            LL_LOGGER.info("sample({}) tumor only", Sample);
-        }
-        else
-        {
-            LL_LOGGER.info("sample({}) inputs: tumorBam({}) somaticVCF({}) geneCopyNumber({})",
-                    Sample, !TumorBam.isEmpty(), !SomaticVariantsFile.isEmpty(), !CopyNumberFile.isEmpty());
-        }
+        LL_LOGGER.info("sample({}) inputs: tumorBam({}) somaticVCF({}) geneCopyNumber({}) rnaBam({})",
+                Sample, !TumorBam.isEmpty(), !SomaticVariantsFile.isEmpty(), !CopyNumberFile.isEmpty(), !RnaBam.isEmpty());
 
         LL_LOGGER.info("minBaseQual({}), minEvidence({}) minFragmentsPerAllele({}) "
                 + "minFragmentsToRemoveSingle({}) maxDistanceFromTopScore({})",
@@ -251,12 +245,12 @@ public class LilacConfig
         Sample = sampleId;
         ReferenceBam = "";
         TumorBam = "";
+        RnaBam = "";
         ResourceDir = "";
         SampleDataDir = "";
         RefGenome = "";
         RefGenVersion = V37;
-        TumorOnly = false;
-        HlaYOnly = false;
+        RunId = "";
 
         MinBaseQual = DEFAULT_MIN_BASE_QUAL;
         MinEvidence = DEFAULT_MIN_EVIDENCE;
@@ -286,8 +280,8 @@ public class LilacConfig
         options.addOption(SAMPLE_DATA_DIR, true,"Path to all sample files");
         options.addOption(REFERENCE_BAM, true,"Path to reference/normal BAM");
         options.addOption(TUMOR_BAM, true,"Path to tumor BAM");
-        options.addOption(TUMOR_ONLY, false,"Analyse tumor BAM only");
-        options.addOption(HLAY_ONLY, false,"Only search for HLA-Y fragments");
+        options.addOption(RNA_BAM, true,"Analyse tumor BAM only");
+        options.addOption(RUN_ID, false,"Only search for HLA-Y fragments");
         options.addOption(RESOURCE_DIR, true,"Path to resource files");
         options.addOption(OUTPUT_DIR, true,"Path to output");
         options.addOption(REF_GENOME, true,"Optional path to reference genome fasta file");

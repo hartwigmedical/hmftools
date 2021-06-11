@@ -90,10 +90,12 @@ public class FragmentAlleleMapper
                 continue;
 
             mPerfCounterFrag.start();
+
             FragmentAlleles fragAllele = checkStopLossAlleleFragments(fragment);
 
             if(fragAllele == null)
                 fragAllele = mapFragmentToAlleles(fragment, candidateAminoAcidSequences, candidateNucleotideSequences);
+
             mPerfCounterFrag.stop();
 
             // drop wild-only alleles since their support can't be clearly established
@@ -451,7 +453,7 @@ public class FragmentAlleleMapper
 
     public boolean checkHlaYSupport(
             final List<HlaSequenceLoci> hlaYSequences, final List<FragmentAlleles> fragAlleles,
-            final List<Fragment> fragments, boolean testThreshold)
+            final List<Fragment> fragments, boolean testThreshold, final String source)
     {
         // test for presence of HLA-Y and strip out from consideration any fragment mapping to it
         int uniqueHlaY = 0;
@@ -524,11 +526,9 @@ public class FragmentAlleleMapper
 
         if(totalHlaYFrags > 0)
         {
-            if(testThreshold)
-            {
-                LL_LOGGER.info("HLA-Y fragments({} unique={}) shared={}) aboveThreshold({})",
-                        totalHlaYFrags, uniqueHlaY, matchedFragmentAlleles.size(), exceedsThreshold);
-            }
+            LL_LOGGER.info("HLA-Y {} fragments({} unique={}) shared={}) {}",
+                    source, totalHlaYFrags, uniqueHlaY, matchedFragmentAlleles.size(),
+                    testThreshold ? (exceedsThreshold ? "above threshold" : "below threshold") : "");
 
             if(exceedsThreshold || !testThreshold)
             {
@@ -625,6 +625,7 @@ public class FragmentAlleleMapper
 
             if(fragAllele.getFull().isEmpty() && fragAllele.getWild().isEmpty())
             {
+                fragAllele.getFragment().setScope(WILD_ONLY);
                 fragAlleles.remove(index);
                 ++removedFragAlleles;
             }
