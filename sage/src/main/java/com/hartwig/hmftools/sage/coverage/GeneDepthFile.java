@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.sage.coverage;
 
 import static com.hartwig.hmftools.sage.SageCommon.DELIM;
+import static com.hartwig.hmftools.sage.coverage.GeneCoverage.DEPTH_BUCKETS;
+import static com.hartwig.hmftools.sage.coverage.GeneCoverage.MAX_DEPTH_BUCKET;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,8 +18,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class GeneDepthFile
 {
-    // private static final DecimalFormat PERCENTAGE_FORMAT = new DecimalFormat("0.00'%'");
-
     public static void write(@NotNull final String filename, @NotNull final List<GeneDepth> depths) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(depths));
@@ -43,17 +43,22 @@ public final class GeneDepthFile
 
         joiner.add("gene").add("missedVariantLikelihood");
 
-        for(int i = 0; i < 30; i++)
+        for(int bucket = 0; bucket < DEPTH_BUCKETS.size() - 1; ++bucket)
         {
-            joiner.add(String.valueOf(i));
+            int depth = DEPTH_BUCKETS.get(bucket);
+            int depthNext = DEPTH_BUCKETS.get(bucket + 1);
+
+            if(depthNext == depth + 1)
+            {
+                joiner.add(String.valueOf(depth));
+            }
+            else
+            {
+                joiner.add(String.format("%d_%d", depth, depthNext - 1));
+            }
         }
 
-        for(int i = 30; i < 100; i += 10)
-        {
-            joiner.add(i + "-" + (i + 9));
-        }
-
-        joiner.add("100+");
+        joiner.add(String.format("%d+", MAX_DEPTH_BUCKET - 1));
 
         return joiner.toString();
     }
@@ -63,7 +68,7 @@ public final class GeneDepthFile
     {
         StringJoiner joiner = new StringJoiner(DELIM);
         joiner.add(depth.Gene);
-        joiner.add(String.format("%.4f", depth.MissedVariantLikelihood * 100));
+        joiner.add(String.format("%.4f", depth.MissedVariantLikelihood));
 
         for(int i : depth.DepthCounts)
         {

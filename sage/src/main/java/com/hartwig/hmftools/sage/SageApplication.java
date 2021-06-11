@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.coverage.GeneCoverage.populateCoverageBuckets;
 
 import java.io.File;
 import java.io.IOException;
@@ -88,6 +89,13 @@ public class SageApplication implements AutoCloseable
 
         final CommandLine cmd = createCommandLine(args, options);
         mConfig = new SageConfig(false, version.version(), cmd);
+
+        if(!mConfig.isValid())
+        {
+            System.exit(1);
+            SG_LOGGER.error("invalid config, exiting");
+        }
+
         mCoveragePanel = readNamedBed(mConfig.CoverageBed);
         final ListMultimap<Chromosome, GenomeRegion> panelWithoutHotspots = readUnnamedBed(mConfig.PanelBed);
         mHotspots = readHotspots();
@@ -112,14 +120,16 @@ public class SageApplication implements AutoCloseable
         }
     }
 
-    @NotNull
     private Coverage createCoverage()
     {
+        populateCoverageBuckets();
+
         Set<String> samples = Sets.newHashSet();
         if(!mConfig.CoverageBed.isEmpty())
         {
             samples.addAll(mConfig.TumorIds);
         }
+
         return new Coverage(samples, mCoveragePanel.values());
     }
 
@@ -145,8 +155,6 @@ public class SageApplication implements AutoCloseable
                 }
             }
         }
-
-        //                createChromosomePipeline("10", recalibrationMap).process(130404941, 130405950);
 
         // Write out coverage
         for(String sample : coverage.samples())

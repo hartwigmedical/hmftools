@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.math3.distribution.PoissonDistribution;
-import org.jetbrains.annotations.NotNull;
 
 public class GeneCoverage implements Consumer<GenomeRegion>
 {
@@ -20,14 +20,54 @@ public class GeneCoverage implements Consumer<GenomeRegion>
     private final long mMinPosition;
     private final long mMaxPosition;
 
-    private static final int MAX_BUCKET = 37;
+    public static final List<Integer> DEPTH_BUCKETS = Lists.newArrayList();
+    public static final int MAX_DEPTH_BUCKET = 10001;
 
-    /*
-        in units of 50 up to 500  (8 regions)
-        in units of 100 up to 2000 (15 regions)
-        in units of 1000 up to 10000 (8 regions)
-        10000+ (1 region)
+        /* frequency distribution of depth in units of:
+        - 1 up to 30
+        - 5 up to 100
+        - 50 up to 500  (8 regions)
+        - 100 up to 2000 (15 regions)
+        - 1000 up to 10000 (8 regions)
+        - 10000+ (1 region)
     */
+
+    public static void populateCoverageBuckets()
+    {
+        if(!DEPTH_BUCKETS.isEmpty())
+            return;
+
+        int depthBucket = 0;
+        int increment = 1;
+        for(; depthBucket < 30; depthBucket += increment)
+        {
+            DEPTH_BUCKETS.add(depthBucket);
+        }
+
+        increment = 10;
+        for(; depthBucket < 100; depthBucket += increment)
+        {
+            DEPTH_BUCKETS.add(depthBucket);
+        }
+
+        increment = 50;
+        for(; depthBucket < 500; depthBucket += increment)
+        {
+            DEPTH_BUCKETS.add(depthBucket);
+        }
+
+        increment = 100;
+        for(; depthBucket < 2000; depthBucket += increment)
+        {
+            DEPTH_BUCKETS.add(depthBucket);
+        }
+
+        increment = 1000;
+        for(; depthBucket <= 10000; depthBucket += increment)
+        {
+            DEPTH_BUCKETS.add(depthBucket);
+        }
+    }
 
     public GeneCoverage(final List<NamedBed> exons)
     {
@@ -72,9 +112,10 @@ public class GeneCoverage implements Consumer<GenomeRegion>
         return new GeneDepth(mGene, missedVariantLikelihood(depthCounts), depthCounts);
     }
 
-    static int[] baseCoverageSummary(@NotNull Collection<ExonCoverage> exons)
+    private static int[] baseCoverageSummary(final Collection<ExonCoverage> exons)
     {
-        int[] geneDepth = new int[MAX_BUCKET + 1];
+        int[] geneDepth = new int[DEPTH_BUCKETS.size() + 1];
+
         for(ExonCoverage exon : exons)
         {
             for(int baseDepth : exon.coverage())
@@ -86,7 +127,37 @@ public class GeneCoverage implements Consumer<GenomeRegion>
         return geneDepth;
     }
 
-    static double missedVariantLikelihood(int[] baseCoverage)
+    public static int depth(int bucket)
+    {
+        if(bucket >= DEPTH_BUCKETS.size())
+            return MAX_DEPTH_BUCKET;
+
+        if(bucket == DEPTH_BUCKETS.size() - 1)
+            return DEPTH_BUCKETS.get(DEPTH_BUCKETS.size() - 1);
+
+        int depth = DEPTH_BUCKETS.get(bucket);
+        int depthNext = DEPTH_BUCKETS.get(bucket + 1);
+
+        if(depthNext == depth + 1)
+            return depth;
+
+        return (depth + depthNext) / 2;
+    }
+
+    public static int bucket(int depth)
+    {
+        for(int i = 0; i < DEPTH_BUCKETS.size(); ++i)
+        {
+            int depthBucket = DEPTH_BUCKETS.get(i);
+
+            if(depth <= depthBucket)
+                return depth < depthBucket ? i - 1 : i;
+        }
+
+        return DEPTH_BUCKETS.size();
+    }
+
+    public static double missedVariantLikelihood(int[] baseCoverage)
     {
         int totalCoverage = Arrays.stream(baseCoverage).sum();
         double totalLikelihood = 0;
@@ -115,39 +186,5 @@ public class GeneCoverage implements Consumer<GenomeRegion>
         }
 
         return totalLikelihood;
-    }
-
-    static int depth(int bucket)
-    {
-        if(bucket < 30)
-        {
-            return bucket;
-        }
-
-        if(bucket <= 36)
-        {
-            return (bucket - 30) * 10 + 35;
-        }
-
-        return 100;
-    }
-
-    static int bucket(int depth)
-    {
-        if(depth <= 30)
-        {
-            return depth;
-        }
-
-        for(int i = 0; i < 7; i++)
-        {
-            int maxDepth = 40 + 10 * i;
-            if(depth < maxDepth)
-            {
-                return 30 + i;
-            }
-        }
-
-        return MAX_BUCKET;
     }
 }

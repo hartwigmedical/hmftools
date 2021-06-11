@@ -26,14 +26,12 @@ public class Coverage
         samples.forEach(sample -> mGeneCoverage.put(sample, createGeneCoverage(genes, panel)));
     }
 
-    @NotNull
     public Set<String> samples()
     {
         return mGeneCoverage.keySet();
     }
 
-    @NotNull
-    public List<GeneDepth> depth(@NotNull final String sample)
+    public List<GeneDepth> depth(final String sample)
     {
         return coverage(sample).stream()
                 .map(GeneCoverage::geneDepth)
@@ -41,20 +39,17 @@ public class Coverage
                 .collect(Collectors.toList());
     }
 
-    @NotNull
-    public List<GeneCoverage> coverage(@NotNull final String sample)
+    public List<GeneCoverage> coverage(final String sample)
     {
         return mGeneCoverage.getOrDefault(sample, Collections.emptyList());
     }
 
-    @NotNull
-    public List<GeneCoverage> coverage(@NotNull final String sample, @NotNull final String chromosome)
+    public List<GeneCoverage> coverage(final String sample, final String chromosome)
     {
         return coverage(sample).stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());
     }
 
-    @NotNull
-    private List<GeneCoverage> createGeneCoverage(@NotNull Set<String> genes, @NotNull Collection<NamedBed> panel)
+    private List<GeneCoverage> createGeneCoverage(final Set<String> genes, final Collection<NamedBed> panel)
     {
         final List<GeneCoverage> result = Lists.newArrayList();
         for(String gene : genes)
