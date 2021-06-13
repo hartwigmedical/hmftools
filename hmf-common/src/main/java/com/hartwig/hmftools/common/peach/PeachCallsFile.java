@@ -17,17 +17,17 @@ public final class PeachCallsFile {
     }
 
     @NotNull
-    public static List<PeachCalls> read(@NotNull final String filename) throws IOException {
+    public static List<PeachCalls> read(@NotNull String filename) throws IOException {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
     @NotNull
-    private static List<PeachCalls> fromLines(@NotNull final List<String> lines) {
+    private static List<PeachCalls> fromLines(@NotNull List<String> lines) {
         return lines.stream().skip(1).map(PeachCallsFile::fromString).collect(toList());
     }
 
     @NotNull
-    private static PeachCalls fromString(@NotNull final String line) {
+    private static PeachCalls fromString(@NotNull String line) {
         String[] values = line.split(DELIMITER);
 
         return ImmutablePeachCalls.builder()

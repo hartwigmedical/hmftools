@@ -6,6 +6,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportData;
@@ -89,6 +90,7 @@ public final class PatientReporterTestFactory {
                 .onlyCreatePDF(false)
                 .expectedPipelineVersion("5.22")
                 .overridePipelineVersion(false)
+                .refGenomeVersion(RefGenomeVersion.V37)
                 .build();
     }
 

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -12,7 +11,6 @@ import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.common.utils.DataUtil;
-import com.hartwig.hmftools.common.purple.cnchromosome.ChromosomeArmKey;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -71,12 +69,10 @@ public final class GainsAndLosses {
             throw new IllegalArgumentException("Chromosome arm could not be resolved from band: " + gainLoss.chromosomeBand() + "!");
         }
 
-        ChromosomeArmKey reportableKey = new ChromosomeArmKey(HumanChromosome.fromString(gainLoss.chromosome()), chromosomeArm);
         Double copyNumber = null;
-
         for (CnPerChromosomeArmData cnPerChromosome : cnPerChromosomeData) {
-            ChromosomeArmKey key = cnPerChromosome.chromosomeArmKey();
-            if (reportableKey.equals(key)) {
+            if (HumanChromosome.fromString(gainLoss.chromosome()) == cnPerChromosome.chromosome()
+                    && chromosomeArm == cnPerChromosome.chromosomeArm()) {
                 copyNumber = cnPerChromosome.copyNumber();
             }
         }

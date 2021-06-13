@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 
 import org.apache.commons.compress.utils.Lists;
-import org.junit.Ignore;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class CnPerChromosomeFactoryTest {
@@ -24,8 +24,8 @@ public class CnPerChromosomeFactoryTest {
     private static final double EPSILON = 1.0E-3;
 
     @Test
-    public void extractCopyNumberPerChromosomeArm() throws IOException {
-        assertNotNull(CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(PURPLE_COPYNUMBER_TSV));
+    public void canExtractCopyNumberPerChromosomeArmFromFile() throws IOException {
+        assertNotNull(CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(PURPLE_COPYNUMBER_TSV, RefGenomeCoordinates.COORDS_37));
     }
 
     @Test
@@ -40,14 +40,24 @@ public class CnPerChromosomeFactoryTest {
                 CnPerChromosomeFactory.extractCnPerChromosomeArm(copyNumbers, RefGenomeCoordinates.COORDS_37);
 
         assertEquals(2, cnPerChromosomeArm.size());
-        CnPerChromosomeArmData cnPerChromosomeArmData1 = cnPerChromosomeArm.get(1);
-        assertEquals(HumanChromosome.fromString("1"), cnPerChromosomeArmData1.chromosome());
-        assertEquals(ChromosomeArm.P_ARM, cnPerChromosomeArmData1.chromosomeArm());
+        CnPerChromosomeArmData cnPerChromosomeArmData1 =
+                findByChromosomeAndArm(cnPerChromosomeArm, HumanChromosome._1, ChromosomeArm.P_ARM);
         assertEquals(2D, cnPerChromosomeArmData1.copyNumber(), EPSILON);
 
-        CnPerChromosomeArmData cnPerChromosomeArmData2 = cnPerChromosomeArm.get(0);
-        assertEquals(HumanChromosome.fromString("1"), cnPerChromosomeArmData2.chromosome());
-        assertEquals(ChromosomeArm.Q_ARM, cnPerChromosomeArmData2.chromosomeArm());
+        CnPerChromosomeArmData cnPerChromosomeArmData2 =
+                findByChromosomeAndArm(cnPerChromosomeArm, HumanChromosome._1, ChromosomeArm.Q_ARM);
         assertEquals(5.35312, cnPerChromosomeArmData2.copyNumber(), EPSILON);
+    }
+
+    @NotNull
+    private static CnPerChromosomeArmData findByChromosomeAndArm(@NotNull List<CnPerChromosomeArmData> dataList,
+            @NotNull HumanChromosome chromosome, @NotNull ChromosomeArm arm) {
+        for (CnPerChromosomeArmData data : dataList) {
+            if (data.chromosome() == chromosome && data.chromosomeArm() == arm) {
+                return data;
+            }
+        }
+
+        throw new IllegalStateException("Could not find data with chromosome " + chromosome + " and arm " + arm);
     }
 }

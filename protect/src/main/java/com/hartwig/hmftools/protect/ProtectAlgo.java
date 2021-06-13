@@ -141,7 +141,7 @@ public class ProtectAlgo {
                 reportedCount(updatedForBlacklist),
                 reportedCount(updatedForTrials));
 
-        List<ProtectEvidence> highestReported = EvidenceReportingFunctions.reportHighestLevelEvidence(updatedForTrials);
+        List<ProtectEvidence> highestReported = EvidenceReportingFunctions.applyReportingAlgo(updatedForTrials);
         LOGGER.debug("Reduced reported evidence from {} items to {} items by reporting highest level evidence only",
                 reportedCount(updatedForTrials),
                 reportedCount(highestReported));

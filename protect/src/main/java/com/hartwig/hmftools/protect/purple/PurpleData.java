@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.protect.purple;
 
 import java.util.List;
-import java.util.Map;
 
-import com.hartwig.hmftools.common.purple.cnchromosome.ChromosomeArmKey;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.SomaticVariant;

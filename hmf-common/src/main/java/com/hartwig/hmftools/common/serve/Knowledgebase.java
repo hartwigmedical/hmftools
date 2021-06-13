@@ -6,6 +6,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,15 +14,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum Knowledgebase {
-    CKB(RefGenomeVersion.V38, "ckb", "CKB"),
-    DOCM(RefGenomeVersion.V37, "docm", "DoCM"),
-    HARTWIG_COHORT(RefGenomeVersion.V37, "hartwig_cohort", "HMF Cohort"),
-    HARTWIG_CURATED(RefGenomeVersion.V37, "hartwig_curated", "HMF Curated"),
-    ICLUSION(RefGenomeVersion.V37, "iclusion", "iClusion"),
-    VICC_CGI(RefGenomeVersion.V37, "vicc_cgi", "CGI"),
-    VICC_CIVIC(RefGenomeVersion.V37, "vicc_civic", "CIViC"),
-    VICC_JAX(RefGenomeVersion.V37, "vicc_jax", "CKB Core"),
-    VICC_ONCOKB(RefGenomeVersion.V37, "vicc_oncokb", "OncoKB");
+    CKB(RefGenomeVersion.V38, "ckb", "CKB", EvidenceLevel.C, EvidenceLevel.B),
+    DOCM(RefGenomeVersion.V37, "docm", "DoCM", EvidenceLevel.A, EvidenceLevel.A),
+    HARTWIG_COHORT(RefGenomeVersion.V37, "hartwig_cohort", "HMF Cohort", EvidenceLevel.A, EvidenceLevel.A),
+    HARTWIG_CURATED(RefGenomeVersion.V37, "hartwig_curated", "HMF Curated", EvidenceLevel.A, EvidenceLevel.A),
+    ICLUSION(RefGenomeVersion.V37, "iclusion", "iClusion", EvidenceLevel.B, EvidenceLevel.B),
+    VICC_CGI(RefGenomeVersion.V37, "vicc_cgi", "CGI", EvidenceLevel.B, EvidenceLevel.B),
+    VICC_CIVIC(RefGenomeVersion.V37, "vicc_civic", "CIViC", EvidenceLevel.B, EvidenceLevel.B),
+    VICC_JAX(RefGenomeVersion.V37, "vicc_jax", "CKB Core", EvidenceLevel.B, EvidenceLevel.B),
+    VICC_ONCOKB(RefGenomeVersion.V37, "vicc_oncokb", "OncoKB", EvidenceLevel.B, EvidenceLevel.B);
 
     private static final Logger LOGGER = LogManager.getLogger(Knowledgebase.class);
 
@@ -31,12 +32,19 @@ public enum Knowledgebase {
     private final String technicalDisplay;
     @NotNull
     private final String reportDisplay;
+    @NotNull
+    private final EvidenceLevel maxCertainEvidenceReportingLevel;
+    @NotNull
+    private final EvidenceLevel maxPredictedEvidenceReportingLevel;
 
     Knowledgebase(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final String technicalDisplay,
-            @NotNull final String reportDisplay) {
+            @NotNull final String reportDisplay, @NotNull final EvidenceLevel maxCertainEvidenceReportingLevel,
+            @NotNull final EvidenceLevel maxPredictedEvidenceReportingLevel) {
         this.refGenomeVersion = refGenomeVersion;
         this.technicalDisplay = technicalDisplay;
         this.reportDisplay = reportDisplay;
+        this.maxCertainEvidenceReportingLevel = maxCertainEvidenceReportingLevel;
+        this.maxPredictedEvidenceReportingLevel = maxPredictedEvidenceReportingLevel;
     }
 
     @NotNull
@@ -52,6 +60,16 @@ public enum Knowledgebase {
     @NotNull
     public String reportDisplay() {
         return reportDisplay;
+    }
+
+    @NotNull
+    public EvidenceLevel maxCertainEvidenceReportingLevel() {
+        return maxCertainEvidenceReportingLevel;
+    }
+
+    @NotNull
+    public EvidenceLevel maxPredictedEvidenceReportingLevel() {
+        return maxPredictedEvidenceReportingLevel;
     }
 
     @NotNull

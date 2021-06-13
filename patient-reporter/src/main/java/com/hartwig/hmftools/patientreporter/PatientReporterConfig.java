@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Files;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.apache.commons.cli.CommandLine;
@@ -129,6 +130,8 @@ public interface PatientReporterConfig {
         options.addOption(EXPECTED_PIPELINE_VERSION, true, "String of the expected pipeline version");
         options.addOption(OVERRIDE_PIPELINE_VERSION, true, "if true, the expected pipeline version is overriden");
 
+        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to use (either '37' or '38')");
+
         return options;
     }
 
@@ -246,6 +249,9 @@ public interface PatientReporterConfig {
     boolean overridePipelineVersion();
 
     @NotNull
+    RefGenomeVersion refGenomeVersion();
+
+    @NotNull
     static PatientReporterConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
@@ -350,6 +356,7 @@ public interface PatientReporterConfig {
                 .onlyCreatePDF(cmd.hasOption(ONLY_CREATE_PDF))
                 .expectedPipelineVersion(cmd.getOptionValue(EXPECTED_PIPELINE_VERSION))
                 .overridePipelineVersion(cmd.hasOption(OVERRIDE_PIPELINE_VERSION))
+                .refGenomeVersion(RefGenomeVersion.from(nonOptionalValue(cmd, RefGenomeVersion.REF_GENOME_VERSION)))
                 .build();
     }
 

@@ -3,6 +3,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- TODO Cleanup per 1st of july 2021
 DROP TABLE IF EXISTS germlineVariant2;
 DROP TABLE IF EXISTS cuppaResult;
+DROP TABLE IF EXISTS copyNumberChromosomeArm;
+
 
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
@@ -733,18 +735,6 @@ CREATE TABLE copyNumber
     gcContent DOUBLE PRECISION not null,
     minStart int not null,
     maxStart int not null,
-    PRIMARY KEY (id),
-    INDEX(sampleId)
-);
-
-DROP TABLE IF EXISTS copyNumberChromosomeArm;
-CREATE TABLE copyNumberChromosomeArm
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    chromosome varchar(255) NOT NULL,
-    chromosomeArm varchar(255) NOT NULL,
-    copyNumber DOUBLE PRECISION not null,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );

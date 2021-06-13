@@ -9,6 +9,10 @@ public enum EvidenceLevel {
     C,
     D;
 
+    public boolean isHigher(@NotNull EvidenceLevel other) {
+        return this.ordinal() < other.ordinal();
+    }
+
     @Nullable
     public static EvidenceLevel fromString(@NotNull String string) {
         switch (string) {

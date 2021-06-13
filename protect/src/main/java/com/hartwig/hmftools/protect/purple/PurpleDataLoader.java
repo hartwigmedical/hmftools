@@ -4,12 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
@@ -19,9 +18,10 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.purple.cnchromosome.ChromosomeArmKey;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeFactory;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
@@ -31,6 +31,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.protect.ProtectConfig;
@@ -44,6 +45,8 @@ import org.jetbrains.annotations.Nullable;
 public final class PurpleDataLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(PurpleDataLoader.class);
+    private static final Set<CodingEffect> CODING_EFFECTS_TO_INCLUDE_FOR_UNREPORTED =
+            Sets.newHashSet(CodingEffect.MISSENSE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.SPLICE);
 
     private PurpleDataLoader() {
     }
@@ -59,14 +62,15 @@ public final class PurpleDataLoader {
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
                 config.purpleGeneCopyNumberTsv(),
-                null);
+                null,
+                config.refGenomeVersion());
     }
 
     @NotNull
     public static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @NotNull String qcFile,
             @NotNull String purityTsv, @NotNull String driverCatalogSomaticTsv, @NotNull String somaticVcf,
             @NotNull String driverCatalogGermlineTsv, @NotNull String germlineVcf, @Nullable String purpleGeneCopyNumberTsv,
-            @Nullable String purpleSomaticCopynumberTsv) throws IOException {
+            @Nullable String purpleSomaticCopynumberTsv, @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
         LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
 
         PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
@@ -100,9 +104,11 @@ public final class PurpleDataLoader {
         List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(driverCatalogGermlineTsv);
         LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDriverCatalog.size(), driverCatalogGermlineTsv);
 
+        final RefGenomeCoordinates refGenomeCoordinates =
+                refGenomeVersion == RefGenomeVersion.V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
         List<CnPerChromosomeArmData> cnPerChromosome = Lists.newArrayList();
         if (purpleSomaticCopynumberTsv != null) {
-            cnPerChromosome = CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(purpleSomaticCopynumberTsv);
+            cnPerChromosome = CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(purpleSomaticCopynumberTsv, refGenomeCoordinates);
             LOGGER.info(" Loaded chromosomal arm copy numbers from {}", purpleSomaticCopynumberTsv);
         }
 
@@ -121,7 +127,7 @@ public final class PurpleDataLoader {
                 ReportableVariantFactory.toReportableSomaticVariants(somaticVariants, somaticDriverCatalog);
         LOGGER.info(" Loaded {} reportable somatic variants from {}", reportableSomaticVariants.size(), somaticVcf);
 
-        List<SomaticVariant> unreportedSomaticVariants = selectUnreportedVariants(somaticVariants);
+        List<SomaticVariant> unreportedSomaticVariants = selectUnreportedCodingVariants(somaticVariants);
         LOGGER.info(" Loaded {} unreported somatic variants from {}", unreportedSomaticVariants.size(), somaticVcf);
 
         return ImmutablePurpleData.builder()
@@ -144,10 +150,10 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static List<SomaticVariant> selectUnreportedVariants(@NotNull List<SomaticVariant> somaticVariants) {
+    private static List<SomaticVariant> selectUnreportedCodingVariants(@NotNull List<SomaticVariant> somaticVariants) {
         List<SomaticVariant> variants = Lists.newArrayList();
         for (SomaticVariant variant : somaticVariants) {
-            if (!variant.reported()) {
+            if (!variant.reported() && CODING_EFFECTS_TO_INCLUDE_FOR_UNREPORTED.contains(variant.canonicalCodingEffect())) {
                 variants.add(variant);
             }
         }
