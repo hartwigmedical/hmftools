@@ -45,15 +45,18 @@ public class EvidenceReportingFunctionsTest {
     public void respectMaxReportingLevel() {
         List<ProtectEvidence> hartwigEvidences = Lists.newArrayList(ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveB)
+                        .treatment("treatment A")
                         .addSources(Knowledgebase.HARTWIG_CURATED)
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveC)
+                        .treatment("treatment B")
                         .direction(RESPONSIVE)
                         .addSources(Knowledgebase.HARTWIG_CURATED)
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(offLabelResponsiveC)
+                        .treatment("treatment C")
                         .direction(PREDICTED_RESPONSIVE)
                         .addSources(Knowledgebase.HARTWIG_CURATED)
                         .build());
@@ -63,15 +66,18 @@ public class EvidenceReportingFunctionsTest {
 
         List<ProtectEvidence> viccEvidences = Lists.newArrayList(ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveB)
+                        .treatment("treatment A")
                         .addSources(Knowledgebase.VICC_CGI)
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveC)
+                        .treatment("treatment B")
                         .direction(RESPONSIVE)
                         .addSources(Knowledgebase.VICC_CGI)
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(offLabelResponsiveC)
+                        .treatment("treatment C")
                         .direction(PREDICTED_RESPONSIVE)
                         .addSources(Knowledgebase.VICC_CGI)
                         .build());
@@ -81,22 +87,24 @@ public class EvidenceReportingFunctionsTest {
 
         List<ProtectEvidence> ckbEvidences = Lists.newArrayList(ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveB)
+                        .treatment("treatment A")
                         .addSources(Knowledgebase.CKB)
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(onLabelResponsiveC)
+                        .treatment("treatment B")
                         .direction(RESPONSIVE)
                         .addSources(Knowledgebase.CKB)
                         .build(),
                 ImmutableProtectEvidence.builder()
                         .from(offLabelResponsiveC)
+                        .treatment("treatment C")
                         .direction(PREDICTED_RESPONSIVE)
                         .addSources(Knowledgebase.CKB)
                         .build());
         List<ProtectEvidence> ckbFiltered = EvidenceReportingFunctions.applyReportingAlgo(ckbEvidences);
         assertEquals(3, ckbFiltered.size());
         assertEquals(2, ckbFiltered.stream().filter(x -> x.reported()).count());
-
     }
 
     @Test
