@@ -131,22 +131,22 @@ public class ProtectAlgo {
         List<ProtectEvidence> consolidated = EvidenceConsolidation.consolidate(result);
         LOGGER.debug("Consolidated {} evidence items to {} unique evidence items", result.size(), consolidated.size());
 
-        List<ProtectEvidence> updatedForBlacklist = EvidenceReportingCuration.applyReportingBlacklist(consolidated);
-        LOGGER.debug("Reduced reported evidence from {} items to {} items by blacklisting specific evidence for reporting",
+        List<ProtectEvidence> reported = EvidenceReportingFunctions.applyReportingAlgo(consolidated);
+        LOGGER.debug("Reduced reported evidence from {} items to {} items after applying reporting algo",
                 reportedCount(consolidated),
-                reportedCount(updatedForBlacklist));
+                reportedCount(reported));
 
-        List<ProtectEvidence> updatedForTrials = EvidenceReportingFunctions.reportOnLabelTrialsOnly(updatedForBlacklist);
+        List<ProtectEvidence> updatedForTrials = EvidenceReportingFunctions.reportOnLabelTrialsOnly(reported);
         LOGGER.debug("Reduced reported evidence from {} items to {} items by removing off-label trials",
-                reportedCount(updatedForBlacklist),
+                reportedCount(reported),
                 reportedCount(updatedForTrials));
 
-        List<ProtectEvidence> highestReported = EvidenceReportingFunctions.applyReportingAlgo(updatedForTrials);
-        LOGGER.debug("Reduced reported evidence from {} items to {} items by reporting highest level evidence only",
+        List<ProtectEvidence> updatedForBlacklist = EvidenceReportingCuration.applyReportingBlacklist(updatedForTrials);
+        LOGGER.debug("Reduced reported evidence from {} items to {} items by blacklisting specific evidence for reporting",
                 reportedCount(updatedForTrials),
-                reportedCount(highestReported));
+                reportedCount(updatedForBlacklist));
 
-        return highestReported;
+        return updatedForBlacklist;
     }
 
     private static void printExtraction(@NotNull String title, @NotNull List<ProtectEvidence> evidences) {

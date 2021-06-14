@@ -17,8 +17,7 @@ Genomic events are categorized in five categories and evidence is matched for ev
 
 #### SNVs and (small) INDELs
 
-For small variants (SNVs and INDELs) that are considered reportable by [PURPLE](../purple/README.md) the following matching 
-is performed:
+For small variants (SNVs and INDELs) determined by [PURPLE](../purple/README.md) the following matching is performed:
  - If the evidence is defined on the exact variant (hotspot) then evidence is always considered applicable
  - If the variant falls within the range in which the evidence is applicable then the evidence is applicable if the variant mutation type
  passes the filter defined as part of the SERVE evidence rule.
@@ -47,6 +46,11 @@ For fusions that are deemed reportable according to [LINX](../sv-linx/README.md)
  - Evidence that is applicable on an exact fusion pair has to match with the actual fusion pair, and also has to match the (optional) 
  exonic range defined as a restriction on the evidence.
 
+#### Viral presence
+
+For matching viral presence to evidence, the interpretation by [Virus Interpreter](../virus-interpreter/README.md) is used. If virus 
+interpreter classified at least one viral presence as "HPV" then any evidence for "HPV Positive" will match for this sample.
+
 #### Signatures
 
 Evidence on signatures is matched based on the interpretation of the algorithm producing the signature. For example, when CHORD suggests a
@@ -73,13 +77,17 @@ evidence is consolidated and evaluated for reporting. The following steps are ex
  1. Evidence is consolidated on source level. If the exact same evidence for the same event is found across multiple sources, 
  this evidence is consolidated in a single instance of applicable evidence. PROTECT has no preference for any source, though sorts sources 
  alphabetically for consistency.
+ 1. Evidence based on genomic events that are not reportable are filtered for reporting.
+ 1. Evidence is filtered for reporting based on the maximum configured reporting level for the evidence.
+     - For CKB C evidence is reported, or up to B for predicted evidence
+     - For VICC and iClusion evidence is reported up to B level.
+     - For all other sources evidence is reported for A level only.
+ 1. For every event/treatment/direction combination only the highest level of evidence is reported:
+     - Off-label evidence is only reported in case the evidence level is higher than the highest on-label evidence.
+ 1. Clinical trials are only reported when they are on-label.
  1. There is some evidence that is never reported regardless of what event caused them or what their evidence level is. These are:
     - Evidence based on an event affecting TP53.
     - Evidence for non-specific chemotherapy, aspirin or steroids. 
- 1. Clinical trials are only reported when they are on-label.
- 1. Evidence is only reported when the level is either A or B. 
- 1. For every event/treatment/direction combination only the highest level of evidence is reported:
-    - Off-label evidence is only reported in case the evidence level is higher than the highest on-label evidence.
     
 ## PROTECT output
 
@@ -98,6 +106,11 @@ sources | A list of sources from where the evidence has been extracted | cgi,civ
 urls | A list of urls with additional information about the evidence | https://pubmed.ncbi.nlm.nih.gov
 
 ## Version History and Download Links
+- Upcoming
+  - Output of virus interpreter is loaded by PROTECT and matched against viral evidence
+  - Evidence is determined for non-reported genomic events (amps, dels, variants, fusions, viral presence).
+  - Maximum reporting levels are configured per SERVE source (C for CKB, B for iClusion/VICC, A for all others)
+  - Ref genome version should be configured externally rather than be inferred by PROTECT  
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.3)
   - Renamed actionable signatures to actionable characteristics
   - Switch from BACHELOR germline variants to SAGE/PURPLE germline variants
