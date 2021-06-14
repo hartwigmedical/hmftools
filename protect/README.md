@@ -77,7 +77,7 @@ evidence is consolidated and evaluated for reporting. The following steps are ex
  1. Evidence is consolidated on source level. If the exact same evidence for the same event is found across multiple sources, 
  this evidence is consolidated in a single instance of applicable evidence. PROTECT has no preference for any source, though sorts sources 
  alphabetically for consistency.
- 1. Evidence based on genomic events that are not reportable are filtered for reporting.
+ 1. Evidence is filtered for reporting in case they are based on genomic events that are not reportable.
  1. Evidence is filtered for reporting based on the maximum configured reporting level for the evidence.
      - For CKB C evidence is reported, or up to B for predicted evidence
      - For VICC and iClusion evidence is reported up to B level.
