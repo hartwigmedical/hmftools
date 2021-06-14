@@ -60,29 +60,29 @@ public class SomaticVariantAnnotation
         mLociPositionFinder = lociPositionFinder;
 
         mSomaticVariants = Lists.newArrayList();
-        loadSomaticVariants();
 
-        if(!mSomaticVariants.isEmpty())
+        List<SomaticVariant> variants = loadSomaticVariants();
+
+        for(SomaticVariant variant : mSomaticVariants)
         {
-            for(SomaticVariant variant : mSomaticVariants)
+            int variantNucleotideLoci = mLociPositionFinder.nucelotideLoci(variant.Position);
+
+            if(variantNucleotideLoci < 0)
+                continue;
+
+            mSomaticVariants.add(variant);
+
+            int variantAminoAcidLoci = variantNucleotideLoci / 3;
+
+            List<Integer> geneLoci = mGeneVariantLoci.get(variant.Gene);
+
+            if(geneLoci == null)
             {
-                int variantNucleotideLoci = mLociPositionFinder.nucelotideLoci(variant.Position);
-
-                if(variantNucleotideLoci < 0)
-                    continue;
-
-                int variantAminoAcidLoci = variantNucleotideLoci / 3;
-
-                List<Integer> geneLoci = mGeneVariantLoci.get(variant.Gene);
-
-                if(geneLoci == null)
-                {
-                    geneLoci = Lists.newArrayList();
-                    mGeneVariantLoci.put(variant.Gene, geneLoci);
-                }
-
-                geneLoci.add(variantAminoAcidLoci);
+                geneLoci = Lists.newArrayList();
+                mGeneVariantLoci.put(variant.Gene, geneLoci);
             }
+
+            geneLoci.add(variantAminoAcidLoci);
         }
     }
 
@@ -99,11 +99,14 @@ public class SomaticVariantAnnotation
 
         for(HlaSequenceLoci sequenceLoci : winners)
         {
-            //if(!variant.Gene.equals(longGeneName(sequenceLoci.Allele.Gene)))
-            //    continue;
-
             // any variant in this gene will be skipped
             List<Integer> variantLoci = mGeneVariantLoci.get(variant.Gene);
+
+            if(variantLoci == null || variantLoci.isEmpty())
+            {
+                LL_LOGGER.error("no sequences found for variant({})", variant.toString());
+                continue;
+            }
 
             int supportCount = 0;
 
@@ -165,14 +168,16 @@ public class SomaticVariantAnnotation
         return coverages.stream().filter(x -> x.TotalCoverage == coverages.get(0).TotalCoverage).collect(Collectors.toList());
     }
 
-    private void loadSomaticVariants()
+    private List<SomaticVariant> loadSomaticVariants()
     {
+        List<SomaticVariant> variants = Lists.newArrayList();
+
         if(mConfig == null || mConfig.SomaticVariantsFile.isEmpty())
-            return;
+            return variants;
 
         if(mConfig.SomaticVariantsFile.contains(mConfig.Sample))
         {
-            LL_LOGGER.info("reading somatic vcf: ", mConfig.SomaticVariantsFile);
+            LL_LOGGER.info("reading somatic vcf: {}", mConfig.SomaticVariantsFile);
 
             int minPosition = mHlaTranscriptData.values().stream().mapToInt(x -> x.TransStart).min().orElse(0);
             int maxPosition = mHlaTranscriptData.values().stream().mapToInt(x -> x.TransEnd).max().orElse(0);
@@ -190,7 +195,7 @@ public class SomaticVariantAnnotation
                 if(HLA_GENES.contains(enriched.gene()) && enriched.isPass()
                         && !UNKNOWN_CODING_EFFECT.contains(enriched.canonicalCodingEffect()))
                 {
-                    mSomaticVariants.add(new SomaticVariant(
+                    variants.add(new SomaticVariant(
                             enriched.gene(), enriched.chromosome(), (int)enriched.position(), enriched.ref(), enriched.alt(),
                             enriched.filter(), enriched.canonicalCodingEffect(), enriched.context()));
                 }
@@ -238,7 +243,7 @@ public class SomaticVariantAnnotation
                     if(!filter.equals(SomaticVariantFactory.PASS_FILTER))
                         continue;
 
-                    mSomaticVariants.add(new SomaticVariant(
+                    variants.add(new SomaticVariant(
                             gene, items[chrIndex], Integer.parseInt(items[posIndex]), items[refIndex], items[altIndex],
                             filter, codingEffect, null));
                 }
@@ -249,7 +254,8 @@ public class SomaticVariantAnnotation
             }
         }
 
-        LL_LOGGER.info("  found {} HLA variants", mSomaticVariants.size());
+        LL_LOGGER.info("  found {} HLA variants", variants.size());
+        return variants;
     }
 
 }

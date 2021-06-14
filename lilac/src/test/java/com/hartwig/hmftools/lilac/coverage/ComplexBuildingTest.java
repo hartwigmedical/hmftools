@@ -13,7 +13,7 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import org.junit.Test;
 
-public class ComplexBuidingTest
+public class ComplexBuildingTest
 {
     HlaAllele a11 = createA(1, 1);
     HlaAllele a12 = createA(1, 2);

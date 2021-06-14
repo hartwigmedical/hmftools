@@ -370,8 +370,10 @@ public class LilacApplication
             LL_LOGGER.info("expected allele coverage: {}", expectedCoverage);
         }
 
-        HlaComplexCoverage winningRefCoverage = mRankedComplexes.get(0).expandToSixAlleles();
-        List<HlaAllele> winningAlleles = winningRefCoverage.getAlleleCoverage().stream().map(x -> x.Allele).collect(Collectors.toList());
+        HlaComplexCoverage winningRefCoverage = mRankedComplexes.get(0);
+        winningRefCoverage.expandToSixAlleles();
+
+        List<HlaAllele> winningAlleles = winningRefCoverage.getAlleles();
 
         List<HlaSequenceLoci> winningSequences = candidateSequences.stream()
                 .filter(x -> winningAlleles.contains(x.Allele)).collect(Collectors.toList());
@@ -473,7 +475,9 @@ public class LilacApplication
 
         fragAlleleMapper.checkHlaYSupport(mRefData.HlaYNucleotideSequences, tumorFragAlleles, tumorFragments, false, "tumor");
 
-        mTumorCoverage = HlaComplexBuilder.calcProteinCoverage(tumorFragAlleles, winningAlleles).expandToSixAlleles();
+        mTumorCoverage = HlaComplexBuilder.calcProteinCoverage(tumorFragAlleles, winningAlleles);
+
+        mTumorCoverage.populateMissingCoverage(winningAlleles);
 
         if(!mConfig.CopyNumberFile.isEmpty())
         {
@@ -542,7 +546,9 @@ public class LilacApplication
 
         fragAlleleMapper.checkHlaYSupport(mRefData.HlaYNucleotideSequences, rnaFragAlleles, rnaFragments, false, "rna");
 
-        mRnaCoverage = HlaComplexBuilder.calcProteinCoverage(rnaFragAlleles, winningAlleles).expandToSixAlleles();
+        mRnaCoverage = HlaComplexBuilder.calcProteinCoverage(rnaFragAlleles, winningAlleles);
+
+        mRnaCoverage.populateMissingCoverage(winningAlleles);
     }
 
     public void writeFileOutputs()

@@ -56,27 +56,6 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
         return sj.toString();
     }
 
-    public static List<HlaAlleleCoverage> expand(final List<HlaAlleleCoverage> coverage)
-    {
-        if(coverage.size() == EXPECTED_ALLELE_COUNT)
-            return coverage;
-
-        List<HlaAlleleCoverage> expandedCoverage = Lists.newArrayList();
-
-        for(String gene : GENE_IDS)
-        {
-            List<HlaAlleleCoverage> geneCoverage = coverage.stream().filter(x -> x.Allele.Gene.equals(gene)).collect(Collectors.toList());
-
-            if(geneCoverage.size() == 2)
-                expandedCoverage.addAll(geneCoverage);
-            else
-                expandedCoverage.addAll(splitHomozygousCoverage(geneCoverage));
-        }
-
-        Collections.sort(expandedCoverage, new AlleleSorter());
-        return expandedCoverage;
-    }
-
     public static List<HlaAlleleCoverage> proteinCoverage(final List<FragmentAlleles> fragAlleles)
     {
         return buildCoverage(fragAlleles, false);
@@ -161,27 +140,6 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
         }
 
         entry.setValue(entry.getValue() + value);
-    }
-
-    private static List<HlaAlleleCoverage> splitHomozygousCoverage(final List<HlaAlleleCoverage> coverage)
-    {
-        if (coverage.size() != 1)
-            return coverage;
-
-        HlaAlleleCoverage single = coverage.get(0);
-        HlaAlleleCoverage first = new HlaAlleleCoverage(
-                single.Allele,
-                single.UniqueCoverage / 2,
-                single.SharedCoverage / 2,
-                single.WildCoverage / 2);
-
-        HlaAlleleCoverage remainder = new HlaAlleleCoverage(single.Allele,
-                single.UniqueCoverage - first.UniqueCoverage,
-                single.SharedCoverage - first.SharedCoverage,
-                single.WildCoverage - single.WildCoverage);
-
-        List<HlaAlleleCoverage> newCoverage = Lists.newArrayList(first, remainder);
-        return newCoverage;
     }
 
     public static List<HlaAllele> coverageAlleles(final List<HlaAlleleCoverage> coverage)

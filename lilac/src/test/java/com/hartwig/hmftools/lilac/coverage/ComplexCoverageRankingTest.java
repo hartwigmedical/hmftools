@@ -10,7 +10,7 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import org.junit.Test;
 
-public class HlaComplexCoverageRankingTest
+public class ComplexCoverageRankingTest
 {
     @Test
     public void testHomozygousCounts()

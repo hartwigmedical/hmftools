@@ -3,12 +3,13 @@ package com.hartwig.hmftools.lilac.coverage;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.EXPECTED_ALLELE_COUNT;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
@@ -86,9 +87,74 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
     public void setScore(double score) { mScore = score; }
     public double getScore() { return mScore; }
 
-    public final HlaComplexCoverage expandToSixAlleles()
+    public void expandToSixAlleles()
     {
-        return create(HlaAlleleCoverage.expand(mAlleleCoverage));
+        if(mAlleleCoverage.size() == EXPECTED_ALLELE_COUNT)
+            return;
+
+        // split homozygous allele coverage, and fill any missing allele if there was zero support
+
+        List<HlaAlleleCoverage> existingCoverage = mAlleleCoverage.stream().collect(Collectors.toList());
+        mAlleleCoverage.clear();
+
+        for(String gene : GENE_IDS)
+        {
+            List<HlaAlleleCoverage> geneCoverage = existingCoverage.stream().filter(x -> x.Allele.Gene.equals(gene)).collect(Collectors.toList());
+
+            if(geneCoverage.size() == 2)
+            {
+                mAlleleCoverage.addAll(geneCoverage);
+            }
+            else
+            {
+                mAlleleCoverage.addAll(splitHomozygousCoverage(geneCoverage));
+            }
+        }
+    }
+
+    private static List<HlaAlleleCoverage> splitHomozygousCoverage(final List<HlaAlleleCoverage> coverage)
+    {
+        if (coverage.size() != 1)
+            return coverage;
+
+        HlaAlleleCoverage single = coverage.get(0);
+        HlaAlleleCoverage first = new HlaAlleleCoverage(
+                single.Allele,
+                single.UniqueCoverage / 2,
+                single.SharedCoverage / 2,
+                single.WildCoverage / 2);
+
+        HlaAlleleCoverage remainder = new HlaAlleleCoverage(single.Allele,
+                single.UniqueCoverage - first.UniqueCoverage,
+                single.SharedCoverage - first.SharedCoverage,
+                single.WildCoverage - single.WildCoverage);
+
+        List<HlaAlleleCoverage> newCoverage = Lists.newArrayList(first, remainder);
+        return newCoverage;
+    }
+
+    public void populateMissingCoverage(final List<HlaAllele> alleles)
+    {
+        if(mAlleleCoverage.size() == EXPECTED_ALLELE_COUNT)
+            return;
+
+        // fill any missing allele if there was zero support
+        List<HlaAlleleCoverage> existingCoverage = mAlleleCoverage.stream().collect(Collectors.toList());
+        mAlleleCoverage.clear();
+
+        for(HlaAllele allele : alleles)
+        {
+            HlaAlleleCoverage coverage = existingCoverage.stream().filter(x -> x.Allele.equals(allele)).findFirst().orElse(null);
+
+            if(coverage == null)
+            {
+                mAlleleCoverage.add(new HlaAlleleCoverage(allele, 0, 0, 0));
+            }
+            else
+            {
+                mAlleleCoverage.add(coverage);
+            }
+        }
     }
 
     @Override
@@ -131,17 +197,4 @@ public final class HlaComplexCoverage implements Comparable<HlaComplexCoverage>
     {
         return String.format("alleles(%s) coverage(%d) score(%.2f)", HlaAllele.toString(getAlleles()), TotalCoverage, mScore);
     }
-
-    public static class TotalCoverageSorter implements Comparator<HlaComplexCoverage>
-    {
-        // sorts by total coverage descending
-        public int compare(final HlaComplexCoverage first, final HlaComplexCoverage second)
-        {
-            if(first.TotalCoverage != second.TotalCoverage)
-                return first.TotalCoverage < second.TotalCoverage ? 1 : -1;
-
-            return 0;
-        }
-    }
-
 }
