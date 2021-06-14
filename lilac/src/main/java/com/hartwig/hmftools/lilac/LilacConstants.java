@@ -25,9 +25,9 @@ public class LilacConstants
     public static final double HLA_Y_FRAGMENT_THRESHOLD = 0.01;
     public static final int MIN_WILDCARD_FRAGMENTS = 2;
 
-    public static final double FREQUENCY_SCORE_PENALTY = 0.0015;
-    public static final double HOMOZYGOUS_SCORE_PENALTY = 0.0045;
-    public static final double RECOVERY_SCORE_PENALTY = 0.005;
+    public static final double FREQUENCY_SCORE_PENALTY = 0.0018;
+    public static final double HOMOZYGOUS_SCORE_PENALTY = 0.0036;
+    public static final double RECOVERY_SCORE_PENALTY = 0.0055;
     public static final double WILDCARD_SCORE_PENALTY = 0.000015;
 
     // warning thresholds
@@ -52,7 +52,7 @@ public class LilacConstants
 
     public static final int EXPECTED_ALLELE_COUNT = 6;
 
-    public static final List<String> EXCLUDED_ALLELES = Lists.newArrayList();
+    public static final List<String> EXCLUDED_ALLELES = Lists.newArrayList("A*31:135", "A*33:191");
     // previous PON list
     // A*01:81", "A*01:237", "A*11:126", "A*11:353", "A*25:68", "A*30:95", "A*30:136", "A*31:135", "A*33:191"
 
