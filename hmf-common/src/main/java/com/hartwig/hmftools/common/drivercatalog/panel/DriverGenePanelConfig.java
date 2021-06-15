@@ -11,26 +11,30 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
 
-public final class DriverGenePanelConfig {
-
+public final class DriverGenePanelConfig
+{
     public static final String DRIVER_GENE_PANEL_OPTION = "driver_gene_panel";
     public static final String DRIVER_GENE_PANEL_OPTION_DESC = "Path to driver gene panel";
 
-    private DriverGenePanelConfig() {
+    private DriverGenePanelConfig()
+    {
     }
 
-    public static void addGenePanelOption(boolean isRequired, final Options options) {
+    public static void addGenePanelOption(boolean isRequired, final Options options)
+    {
         Option genePanelOption = new Option(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
         genePanelOption.setRequired(isRequired);
         options.addOption(genePanelOption);
     }
 
-    public static boolean isConfigured(@NotNull final CommandLine cmd) {
+    public static boolean isConfigured(@NotNull final CommandLine cmd)
+    {
         return cmd.hasOption(DRIVER_GENE_PANEL_OPTION);
     }
 
     @NotNull
-    public static List<DriverGene> driverGenes(@NotNull final CommandLine cmd) throws IOException {
+    public static List<DriverGene> driverGenes(@NotNull final CommandLine cmd) throws IOException
+    {
         return DriverGeneFile.read(cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION));
     }
 }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
-public enum DriverCategory {
+public enum DriverCategory
+{
     ONCO,
     TSG
 }

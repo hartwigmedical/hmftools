@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.tools;
 
+import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+
 import java.io.File;
 import java.util.List;
 
@@ -11,8 +13,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Genotype;
@@ -25,8 +25,6 @@ import htsjdk.variant.vcf.VCFFileReader;
 
 public class PositiveAllelicDepth implements AutoCloseable
 {
-    private static final Logger LOGGER = LogManager.getLogger(PositiveAllelicDepth.class);
-
     private static final String IN_VCF = "in";
     private static final String OUT_VCF = "out";
 
@@ -50,19 +48,19 @@ public class PositiveAllelicDepth implements AutoCloseable
         }
     }
 
-    private final VCFFileReader fileReader;
-    private final VariantContextWriter fileWriter;
+    private final VCFFileReader mFileReader;
+    private final VariantContextWriter mFileWriter;
 
     private PositiveAllelicDepth(final String inputVCF, final String outputVCF)
     {
-        this.fileReader = new VCFFileReader(new File(inputVCF), false);
-        this.fileWriter = new VariantContextWriterBuilder().setOutputFile(outputVCF).build();
+        mFileReader = new VCFFileReader(new File(inputVCF), false);
+        mFileWriter = new VariantContextWriterBuilder().setOutputFile(outputVCF).build();
     }
 
     private void run()
     {
-        fileWriter.writeHeader(fileReader.getFileHeader());
-        for(final VariantContext context : fileReader)
+        mFileWriter.writeHeader(mFileReader.getFileHeader());
+        for(final VariantContext context : mFileReader)
         {
 
             final VariantContextBuilder builder = new VariantContextBuilder(context);
@@ -90,7 +88,7 @@ public class PositiveAllelicDepth implements AutoCloseable
 
                     if(updateRecord)
                     {
-                        LOGGER.info("Updated entry at {}:{}", context.getContig(), context.getStart());
+                        PPL_LOGGER.info("Updated entry at {}:{}", context.getContig(), context.getStart());
                         Genotype updated = new GenotypeBuilder(genotype).AD(ad).DP(total).make();
                         genotypes.add(updated);
                     }
@@ -102,15 +100,15 @@ public class PositiveAllelicDepth implements AutoCloseable
             }
 
             builder.genotypes(genotypes);
-            fileWriter.add(builder.make());
+            mFileWriter.add(builder.make());
         }
     }
 
     @Override
     public void close()
     {
-        fileReader.close();
-        fileWriter.close();
+        mFileReader.close();
+        mFileWriter.close();
     }
 
     @NotNull

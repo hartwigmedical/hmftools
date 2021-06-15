@@ -8,7 +8,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface DriverGene extends Comparable<DriverGene> {
+public interface DriverGene extends Comparable<DriverGene>
+{
 
     @NotNull
     String gene();
@@ -37,15 +38,18 @@ public interface DriverGene extends Comparable<DriverGene> {
     DriverCategory likelihoodType();
 
     @Override
-    default int compareTo(@NotNull final DriverGene o) {
+    default int compareTo(@NotNull final DriverGene o)
+    {
         return gene().compareTo(o.gene());
     }
 
-    default boolean reportSomatic() {
+    default boolean reportSomatic()
+    {
         return reportMissenseAndInframe() || reportNonsenseAndFrameshift() || reportSplice() || reportSomaticHotspot();
     }
 
-    default boolean reportGermline() {
+    default boolean reportGermline()
+    {
         return reportGermlineVariant() != DriverGeneGermlineReporting.NONE || reportGermlineHotspot() != DriverGeneGermlineReporting.NONE;
     }
 }

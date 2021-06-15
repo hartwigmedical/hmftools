@@ -14,38 +14,50 @@ import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SomaticVariantDrivers {
+public class SomaticVariantDrivers
+{
+    private final DriverGenePanel mGenePanel;
 
-    private final DriverGenePanel genePanel;
+    private final List<SomaticVariant> mTsgVariants;
+    private final List<SomaticVariant> mOncoVariants;
+    private final Map<VariantType, Long> mVariantTypeCounts;
+    private final Map<VariantType, Long> mVariantTypeCountsBiallelic;
 
-    private final List<SomaticVariant> tsgVariants = Lists.newArrayList();
-    private final List<SomaticVariant> oncoVariants = Lists.newArrayList();
-    private final Map<VariantType, Long> variantTypeCounts = Maps.newHashMap();
-    private final Map<VariantType, Long> variantTypeCountsBiallelic = Maps.newHashMap();
+    private final Predicate<SomaticVariant> mOncoPredicate;
+    private final Predicate<SomaticVariant> mTsgPredicate;
 
-    private final Predicate<SomaticVariant> oncoPredicate;
-    private final Predicate<SomaticVariant> tsgPredicate;
+    public SomaticVariantDrivers(@NotNull final DriverGenePanel panel)
+    {
+        mGenePanel = panel;
 
-    public SomaticVariantDrivers(@NotNull final DriverGenePanel panel) {
-        this.genePanel = panel;
-        oncoPredicate = new ReportablePredicate(DriverCategory.ONCO, panel);
-        tsgPredicate = new ReportablePredicate(DriverCategory.TSG, panel);
+        mTsgVariants = Lists.newArrayList();
+        mOncoVariants = Lists.newArrayList();
+        mVariantTypeCounts = Maps.newHashMap();
+        mVariantTypeCountsBiallelic = Maps.newHashMap();
+
+        mOncoPredicate = new ReportablePredicate(DriverCategory.ONCO, panel);
+        mTsgPredicate = new ReportablePredicate(DriverCategory.TSG, panel);
     }
 
-    public boolean add(@NotNull final SomaticVariant variant) {
-        if (!variant.isFiltered()) {
-            variantTypeCounts.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0L) + 1);
-            if (variant.biallelic()) {
-                variantTypeCountsBiallelic.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0L) + 1);
+    public boolean add(@NotNull final SomaticVariant variant)
+    {
+        if(!variant.isFiltered())
+        {
+            mVariantTypeCounts.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0L) + 1);
+            if(variant.biallelic())
+            {
+                mVariantTypeCountsBiallelic.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0L) + 1);
             }
 
-            if (oncoPredicate.test(variant)) {
-                oncoVariants.add(variant);
+            if(mOncoPredicate.test(variant))
+            {
+                mOncoVariants.add(variant);
                 return true;
             }
 
-            if (tsgPredicate.test(variant)) {
-                tsgVariants.add(variant);
+            if(mTsgPredicate.test(variant))
+            {
+                mTsgVariants.add(variant);
                 return true;
             }
         }
@@ -54,13 +66,14 @@ public class SomaticVariantDrivers {
     }
 
     @NotNull
-    public List<DriverCatalog> build(@NotNull final List<GeneCopyNumber> geneCopyNumbers) {
-        final OncoDrivers oncoDrivers = new OncoDrivers(genePanel);
-        final TsgDrivers tsgDrivers = new TsgDrivers(genePanel);
+    public List<DriverCatalog> build(@NotNull final List<GeneCopyNumber> geneCopyNumbers)
+    {
+        final OncoDrivers oncoDrivers = new OncoDrivers(mGenePanel);
+        final TsgDrivers tsgDrivers = new TsgDrivers(mGenePanel);
 
         final List<DriverCatalog> result = Lists.newArrayList();
-        result.addAll(oncoDrivers.drivers(oncoVariants, geneCopyNumbers, variantTypeCounts));
-        result.addAll(tsgDrivers.drivers(tsgVariants, geneCopyNumbers, variantTypeCounts, variantTypeCountsBiallelic));
+        result.addAll(oncoDrivers.drivers(mOncoVariants, geneCopyNumbers, mVariantTypeCounts));
+        result.addAll(tsgDrivers.drivers(mTsgVariants, geneCopyNumbers, mVariantTypeCounts, mVariantTypeCountsBiallelic));
 
         return result;
     }

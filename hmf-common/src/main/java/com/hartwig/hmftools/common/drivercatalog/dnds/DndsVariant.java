@@ -9,7 +9,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface DndsVariant extends GenomePosition {
+public interface DndsVariant extends GenomePosition
+{
 
     @NotNull
     String sampleId();

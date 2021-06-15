@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.tools;
 
+import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+
 import java.io.File;
 
 import com.hartwig.hmftools.common.variant.strelka.StrelkaAllelicDepth;
@@ -10,8 +12,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.index.tabix.TabixFormat;
@@ -25,16 +25,14 @@ import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class AnnotateStrelkaWithAllelicDepth implements AutoCloseable
 {
-    private static final Logger LOGGER = LogManager.getLogger(AnnotateStrelkaWithAllelicDepth.class);
-
     private static final String VCF_IN = "in";
     private static final String VCF_OUT = "out";
 
-    private final String inputVCF;
-    private final String outputVCF;
-    private final VCFHeader header;
-    private final VCFFileReader vcfReader;
-    private final VariantContextWriter vcfWriter;
+    private final String mInputVCF;
+    private final String mOutputVCF;
+    private final VCFHeader mHeader;
+    private final VCFFileReader mVcfReader;
+    private final VariantContextWriter mVcfWriter;
 
     public static void main(final String... args)
     {
@@ -42,9 +40,10 @@ public class AnnotateStrelkaWithAllelicDepth implements AutoCloseable
         try (final AnnotateStrelkaWithAllelicDepth application = new AnnotateStrelkaWithAllelicDepth(options, args))
         {
             application.addAllelicDepthField();
-        } catch (ParseException e)
+        }
+        catch (ParseException e)
         {
-            LOGGER.warn(e);
+            PPL_LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("AnnotateStrelkaWithAllelicDepth", options);
             System.exit(1);
@@ -64,27 +63,27 @@ public class AnnotateStrelkaWithAllelicDepth implements AutoCloseable
             throw new ParseException(VCF_OUT + " is a mandatory argument");
         }
 
-        inputVCF = cmd.getOptionValue(VCF_IN);
-        outputVCF = cmd.getOptionValue(VCF_OUT);
+        mInputVCF = cmd.getOptionValue(VCF_IN);
+        mOutputVCF = cmd.getOptionValue(VCF_OUT);
 
-        vcfReader = new VCFFileReader(new File(inputVCF), false);
-        header = generateOutputHeader(vcfReader.getFileHeader());
-        vcfWriter = new VariantContextWriterBuilder().setOutputFile(outputVCF)
-                .setReferenceDictionary(header.getSequenceDictionary())
-                .setIndexCreator(new TabixIndexCreator(header.getSequenceDictionary(), new TabixFormat()))
+        mVcfReader = new VCFFileReader(new File(mInputVCF), false);
+        mHeader = generateOutputHeader(mVcfReader.getFileHeader());
+        mVcfWriter = new VariantContextWriterBuilder().setOutputFile(mOutputVCF)
+                .setReferenceDictionary(mHeader.getSequenceDictionary())
+                .setIndexCreator(new TabixIndexCreator(mHeader.getSequenceDictionary(), new TabixFormat()))
                 .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                 .build();
     }
 
     private void addAllelicDepthField()
     {
-        LOGGER.info("Reading input VCF: {}", inputVCF);
-        vcfWriter.writeHeader(header);
-        for(final VariantContext variant : vcfReader)
+        PPL_LOGGER.info("Reading input VCF: {}", mInputVCF);
+        mVcfWriter.writeHeader(mHeader);
+        for(final VariantContext variant : mVcfReader)
         {
-            vcfWriter.add(StrelkaAllelicDepth.enrich(variant));
+            mVcfWriter.add(StrelkaAllelicDepth.enrich(variant));
         }
-        LOGGER.info("Writing output VCF: {}", outputVCF);
+        PPL_LOGGER.info("Writing output VCF: {}", mOutputVCF);
     }
 
     @NotNull
@@ -114,8 +113,8 @@ public class AnnotateStrelkaWithAllelicDepth implements AutoCloseable
     @Override
     public void close()
     {
-        vcfReader.close();
-        vcfWriter.close();
-        LOGGER.info("Complete");
+        mVcfReader.close();
+        mVcfWriter.close();
+        PPL_LOGGER.info("Complete");
     }
 }

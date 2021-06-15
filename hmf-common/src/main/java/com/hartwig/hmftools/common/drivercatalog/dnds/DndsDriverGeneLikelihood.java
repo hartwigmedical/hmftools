@@ -9,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Modifiable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DndsDriverGeneLikelihood {
-
+public abstract class DndsDriverGeneLikelihood
+{
     @NotNull
     public abstract String gene();
 
@@ -27,8 +27,10 @@ public abstract class DndsDriverGeneLikelihood {
     public abstract DndsDriverImpactLikelihood indel();
 
     @NotNull
-    public DndsDriverImpactLikelihood select(@NotNull DriverImpact impact) {
-        switch (impact) {
+    public DndsDriverImpactLikelihood select(@NotNull DriverImpact impact)
+    {
+        switch(impact)
+        {
             case NONSENSE:
                 return nonsense();
             case MISSENSE:

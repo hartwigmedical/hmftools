@@ -6,7 +6,8 @@ import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum DriverImpact {
+public enum DriverImpact
+{
     MISSENSE,
     NONSENSE,
     SPLICE,
@@ -15,64 +16,85 @@ public enum DriverImpact {
     UNKNOWN;
 
     @NotNull
-    public static DriverImpact select(@NotNull SomaticVariant variant) {
+    public static DriverImpact select(@NotNull SomaticVariant variant)
+    {
         return select(variant.type(), variant.canonicalCodingEffect());
     }
 
     @NotNull
-    public static DriverImpact select(VariantType variantType, CodingEffect canonicalCodingEffect) {
-        if (isFrameshift(variantType, canonicalCodingEffect)) {
+    public static DriverImpact select(VariantType variantType, CodingEffect canonicalCodingEffect)
+    {
+        if(isFrameshift(variantType, canonicalCodingEffect))
+        {
             return FRAMESHIFT;
-        } else if (isNonsense(variantType, canonicalCodingEffect)) {
+        }
+        else if(isNonsense(variantType, canonicalCodingEffect))
+        {
             return NONSENSE;
-        } else if (isMissense(variantType, canonicalCodingEffect)) {
+        }
+        else if(isMissense(variantType, canonicalCodingEffect))
+        {
             return MISSENSE;
-        } else if (isSplice(canonicalCodingEffect)) {
+        }
+        else if(isSplice(canonicalCodingEffect))
+        {
             return SPLICE;
-        } else if (isInframe(variantType, canonicalCodingEffect)) {
+        }
+        else if(isInframe(variantType, canonicalCodingEffect))
+        {
             return INFRAME;
         }
 
         return UNKNOWN;
     }
 
-    static boolean isFrameshift(SomaticVariant variant) {
+    static boolean isFrameshift(SomaticVariant variant)
+    {
         return isFrameshift(variant.type(), variant.canonicalCodingEffect());
     }
 
-    static boolean isNonsense(SomaticVariant variant) {
+    static boolean isNonsense(SomaticVariant variant)
+    {
         return isNonsense(variant.type(), variant.canonicalCodingEffect());
     }
 
-    static boolean isMissense(SomaticVariant variant) {
+    static boolean isMissense(SomaticVariant variant)
+    {
         return isMissense(variant.type(), variant.canonicalCodingEffect());
     }
 
-    static boolean isInframe(SomaticVariant variant) {
+    static boolean isInframe(SomaticVariant variant)
+    {
         return isInframe(variant.type(), variant.canonicalCodingEffect());
     }
 
-    static boolean isSplice(SomaticVariant variant) {
+    static boolean isSplice(SomaticVariant variant)
+    {
         return isSplice(variant.canonicalCodingEffect());
     }
 
-    static boolean isFrameshift(VariantType variantType, CodingEffect canonicalCodingEffect) {
+    static boolean isFrameshift(VariantType variantType, CodingEffect canonicalCodingEffect)
+    {
         return variantType == VariantType.INDEL && canonicalCodingEffect == CodingEffect.NONSENSE_OR_FRAMESHIFT;
     }
 
-    static boolean isNonsense(VariantType variantType, CodingEffect canonicalCodingEffect) {
+    static boolean isNonsense(VariantType variantType, CodingEffect canonicalCodingEffect)
+    {
         return variantType != VariantType.INDEL && canonicalCodingEffect == CodingEffect.NONSENSE_OR_FRAMESHIFT;
     }
 
-    static boolean isMissense(VariantType variantType, CodingEffect canonicalCodingEffect) {
+    static boolean isMissense(VariantType variantType, CodingEffect canonicalCodingEffect)
+    {
         return variantType != VariantType.INDEL && canonicalCodingEffect == CodingEffect.MISSENSE;
     }
 
-    static boolean isInframe(VariantType variantType, CodingEffect canonicalCodingEffect) {
+    static boolean isInframe(VariantType variantType, CodingEffect canonicalCodingEffect)
+    {
         return variantType == VariantType.INDEL && canonicalCodingEffect == CodingEffect.MISSENSE;
     }
 
-    static boolean isSplice(CodingEffect canonicalCodingEffect) {
+    static boolean isSplice(CodingEffect canonicalCodingEffect)
+    {
         return canonicalCodingEffect == CodingEffect.SPLICE;
     }
 }

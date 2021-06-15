@@ -12,14 +12,16 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-final class GermlineBlacklistVCF {
+final class GermlineBlacklistVCF
+{
+    private static final String BLACKLIST_FLAG = "BLACKLIST";
 
-    static final String BLACKLIST_FLAG = "BLACKLIST";
-
-    private GermlineBlacklistVCF() {
+    private GermlineBlacklistVCF()
+    {
     }
 
-    public static void process(@NotNull String outputFile, @NotNull List<VariantContext> variants) {
+    public static void process(@NotNull String outputFile, @NotNull List<VariantContext> variants)
+    {
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputFile)
                 .modifyOption(Options.INDEX_ON_THE_FLY, true)
                 .modifyOption(Options.USE_ASYNC_IO, false)

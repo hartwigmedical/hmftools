@@ -2,7 +2,8 @@ package com.hartwig.hmftools.common.drivercatalog;
 
 import java.util.EnumSet;
 
-public enum DriverType {
+public enum DriverType
+{
     AMP,
     PARTIAL_AMP,
     DEL,

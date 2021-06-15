@@ -15,8 +15,8 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class DriverCatalogFile {
-
+public final class DriverCatalogFile
+{
     static final DecimalFormat FORMAT = new DecimalFormat("0.0000", new DecimalFormatSymbols(Locale.ENGLISH));
 
     private static final String DELIMITER = "\t";
@@ -24,27 +24,32 @@ public final class DriverCatalogFile {
     private static final String GERMLINE_DRIVER_CATALOG_EXTENSION = ".driver.catalog.germline.tsv";
 
     @NotNull
-    public static String generateSomaticFilename(@NotNull final String basePath, @NotNull final String sample) {
+    public static String generateSomaticFilename(@NotNull final String basePath, @NotNull final String sample)
+    {
         return basePath + File.separator + sample + SOMATIC_DRIVER_CATALOG_EXTENSION;
     }
 
     @NotNull
-    public static String generateGermlineFilename(@NotNull final String basePath, @NotNull final String sample) {
+    public static String generateGermlineFilename(@NotNull final String basePath, @NotNull final String sample)
+    {
         return basePath + File.separator + sample + GERMLINE_DRIVER_CATALOG_EXTENSION;
     }
 
     @NotNull
-    public static List<DriverCatalog> read(@NotNull final String fileName) throws IOException {
+    public static List<DriverCatalog> read(@NotNull final String fileName) throws IOException
+    {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull final List<DriverCatalog> catalog) throws IOException {
+    public static void write(@NotNull final String filename, @NotNull final List<DriverCatalog> catalog) throws IOException
+    {
         Files.write(new File(filename).toPath(), toLines(catalog));
     }
 
     @VisibleForTesting
     @NotNull
-    static List<String> toLines(@NotNull final List<DriverCatalog> catalog) {
+    static List<String> toLines(@NotNull final List<DriverCatalog> catalog)
+    {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         catalog.stream().map(DriverCatalogFile::toString).forEach(lines::add);
@@ -53,12 +58,14 @@ public final class DriverCatalogFile {
 
     @VisibleForTesting
     @NotNull
-    static List<DriverCatalog> fromLines(@NotNull final List<String> lines) {
+    static List<DriverCatalog> fromLines(@NotNull final List<String> lines)
+    {
         return lines.stream().skip(1).map(x -> fromString(x)).collect(Collectors.toList());
     }
 
     @NotNull
-    private static String header() {
+    private static String header()
+    {
         // TODO Can remove "NA" column as described in DEV-1924
         return new StringJoiner(DELIMITER).add("chromosome")
                 .add("chromosomeBand")
@@ -80,7 +87,8 @@ public final class DriverCatalogFile {
     }
 
     @NotNull
-    private static String toString(@NotNull final DriverCatalog driverCatalog) {
+    private static String toString(@NotNull final DriverCatalog driverCatalog)
+    {
         // TODO Can remove "0" column as described in DEV-1924
         return new StringJoiner(DELIMITER).add(driverCatalog.chromosome())
                 .add(driverCatalog.chromosomeBand())
@@ -102,11 +110,13 @@ public final class DriverCatalogFile {
     }
 
     @NotNull
-    private static DriverCatalog fromString(@NotNull final String line) {
+    private static DriverCatalog fromString(@NotNull final String line)
+    {
         // TODO: Clean up the version with 16 entries. This is the entry that contains dndsDriverLikelihood
         //      This can be cleaned up following the instructions in DEV-1924
         String[] values = line.split(DELIMITER);
-        if (values.length == 16) {
+        if(values.length == 16)
+        {
             return ImmutableDriverCatalog.builder().chromosome(values[0])
                     .chromosomeBand(values[1])
                     .gene(values[2])
@@ -122,7 +132,9 @@ public final class DriverCatalogFile {
                     .biallelic(Boolean.parseBoolean(values[13]))
                     .minCopyNumber(Double.parseDouble(values[14]))
                     .maxCopyNumber(Double.parseDouble(values[15])).build();
-        } else if (values.length == 15) {
+        }
+        else if(values.length == 15)
+        {
             return ImmutableDriverCatalog.builder().chromosome(values[0])
                     .chromosomeBand(values[1])
                     .gene(values[2])
@@ -139,7 +151,9 @@ public final class DriverCatalogFile {
                     .minCopyNumber(Double.parseDouble(values[13]))
                     .maxCopyNumber(Double.parseDouble(values[14]))
                     .build();
-        } else {
+        }
+        else
+        {
             throw new IllegalStateException("Invalid driver catalog entry found: '" + line + "'");
         }
     }

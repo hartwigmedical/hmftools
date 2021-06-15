@@ -6,10 +6,10 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DndsDriverImpactLikelihood {
-
+public abstract class DndsDriverImpactLikelihood
+{
     public abstract double driversPerSample();
 
     public abstract double passengersPerMutation();
-    
+
 }

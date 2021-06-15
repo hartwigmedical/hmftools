@@ -16,18 +16,21 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class DriverGenePanelFactory {
-
-    private DriverGenePanelFactory() {
+public final class DriverGenePanelFactory
+{
+    private DriverGenePanelFactory()
+    {
     }
 
     @NotNull
-    public static DriverGenePanel empty() {
+    public static DriverGenePanel empty()
+    {
         return create(RefGenomeVersion.V37, Collections.emptyList());
     }
 
     @NotNull
-    public static DriverGenePanel create(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final List<DriverGene> genes) {
+    public static DriverGenePanel create(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final List<DriverGene> genes)
+    {
         final Map<String, String> dndsTsGenes = Maps.newHashMap();
         final Map<String, String> dndsOncoGenes = Maps.newHashMap();
 
@@ -35,18 +38,22 @@ public final class DriverGenePanelFactory {
         final Set<String> dndsGenes = oncoLikelihoodList.stream().map(DndsDriverGeneLikelihood::gene).collect(Collectors.toSet());
         final DndsGeneName dndsGeneName = new DndsGeneName(refGenomeVersion, dndsGenes);
 
-        for (DriverGene gene : genes) {
-            if (gene.reportMissenseAndInframe() || gene.reportNonsenseAndFrameshift() || gene.reportSplice()) {
+        for(DriverGene gene : genes)
+        {
+            if(gene.reportMissenseAndInframe() || gene.reportNonsenseAndFrameshift() || gene.reportSplice())
+            {
                 boolean isValidGene = dndsGeneName.isValid(gene);
-                if (!isValidGene) {
-                    throw new IllegalArgumentException(
-                            "dNdS not available for " + gene.likelihoodType() + " gene " + gene.gene() + " in driver gene panel");
-                }
+
+                if(!isValidGene)
+                    continue;
 
                 final String dndsName = dndsGeneName.dndsGeneName(gene);
-                if (gene.likelihoodType().equals(DriverCategory.TSG)) {
+                if(gene.likelihoodType().equals(DriverCategory.TSG))
+                {
                     dndsTsGenes.put(dndsName, gene.gene());
-                } else {
+                }
+                else
+                {
                     dndsOncoGenes.put(dndsName, gene.gene());
                 }
             }
@@ -56,6 +63,7 @@ public final class DriverGenePanelFactory {
                 .filter(x -> dndsTsGenes.containsKey(x.gene()))
                 .map(x -> ImmutableDndsDriverGeneLikelihood.builder().from(x).gene(dndsTsGenes.get(x.gene())).build())
                 .collect(Collectors.toMap(DndsDriverGeneLikelihood::gene, x -> x));
+
         Map<String, DndsDriverGeneLikelihood> oncoLikelihood = oncoLikelihoodList.stream()
                 .filter(x -> dndsOncoGenes.containsKey(x.gene()))
                 .map(x -> ImmutableDndsDriverGeneLikelihood.builder().from(x).gene(dndsOncoGenes.get(x.gene())).build())
@@ -65,17 +73,20 @@ public final class DriverGenePanelFactory {
     }
 
     @NotNull
-    public static List<DndsDriverGeneLikelihood> tsgLikelihood() {
+    public static List<DndsDriverGeneLikelihood> tsgLikelihood()
+    {
         return DndsDriverGeneLikelihoodFile.fromInputStream(resource("/dnds/DndsDriverLikelihoodTsg.tsv"));
     }
 
     @NotNull
-    public static List<DndsDriverGeneLikelihood> oncoLikelihood() {
+    public static List<DndsDriverGeneLikelihood> oncoLikelihood()
+    {
         return DndsDriverGeneLikelihoodFile.fromInputStream(resource("/dnds/DndsDriverLikelihoodOnco.tsv"));
     }
 
     @NotNull
-    private static InputStream resource(@NotNull final String resource) {
+    private static InputStream resource(@NotNull final String resource)
+    {
         return DriverGenePanelFactory.class.getResourceAsStream(resource);
     }
 }

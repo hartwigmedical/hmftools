@@ -6,7 +6,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface DndsMutationalLoad {
+public interface DndsMutationalLoad
+{
 
     @NotNull
     String sampleId();
@@ -15,7 +16,8 @@ public interface DndsMutationalLoad {
 
     int snvNonBiallelic();
 
-    default int snvTotal() {
+    default int snvTotal()
+    {
         return snvBiallelic() + snvNonBiallelic();
     }
 
@@ -23,7 +25,8 @@ public interface DndsMutationalLoad {
 
     int indelNonBiallelic();
 
-    default int indelTotal() {
+    default int indelTotal()
+    {
         return indelBiallelic() + indelNonBiallelic();
     }
 }

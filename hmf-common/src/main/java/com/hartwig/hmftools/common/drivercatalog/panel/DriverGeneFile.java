@@ -12,20 +12,23 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class DriverGeneFile {
-
+public final class DriverGeneFile
+{
     private static final String DELIMITER = "\t";
 
-    private DriverGeneFile() {
+    private DriverGeneFile()
+    {
     }
 
-    public static void write(@NotNull final String filename, @NotNull final List<DriverGene> driverGenes) throws IOException {
+    public static void write(@NotNull final String filename, @NotNull final List<DriverGene> driverGenes) throws IOException
+    {
         List<DriverGene> sorted = Lists.newArrayList(driverGenes);
         Files.write(new File(filename).toPath(), toLines(sorted));
     }
 
     @NotNull
-    public static List<DriverGene> read(@NotNull final String filename) throws IOException {
+    public static List<DriverGene> read(@NotNull final String filename) throws IOException
+    {
         return Files.readAllLines(new File(filename).toPath())
                 .stream()
                 .filter(x -> !x.startsWith("gene") && !x.startsWith("HG") && !x.toLowerCase().startsWith("v37"))
@@ -34,7 +37,8 @@ public final class DriverGeneFile {
     }
 
     @NotNull
-    private static String header() {
+    private static String header()
+    {
         return new StringJoiner(DELIMITER).add("gene")
                 .add("reportMissense")
                 .add("reportNonsense")
@@ -50,7 +54,8 @@ public final class DriverGeneFile {
     }
 
     @NotNull
-    private static String toString(@NotNull final DriverGene gene) {
+    private static String toString(@NotNull final DriverGene gene)
+    {
         return new StringJoiner(DELIMITER).add(gene.gene())
                 .add(String.valueOf(gene.reportMissenseAndInframe()))
                 .add(String.valueOf(gene.reportNonsenseAndFrameshift()))
@@ -66,7 +71,8 @@ public final class DriverGeneFile {
     }
 
     @NotNull
-    public static DriverGene fromString(@NotNull final String line) {
+    public static DriverGene fromString(@NotNull final String line)
+    {
         String[] values = line.split(DELIMITER);
         ImmutableDriverGene.Builder builder = ImmutableDriverGene.builder()
                 .gene(values[0])
@@ -81,7 +87,8 @@ public final class DriverGeneFile {
                 .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE);
 
-        if (values.length == 11) {
+        if(values.length == 11)
+        {
             builder.reportGermlineVariant(DriverGeneGermlineReporting.valueOf(values[9].toUpperCase()))
                     .reportGermlineHotspot(DriverGeneGermlineReporting.valueOf(values[10].toUpperCase()));
         }
@@ -90,7 +97,8 @@ public final class DriverGeneFile {
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull final List<DriverGene> driverGenes) {
+    private static List<String> toLines(@NotNull final List<DriverGene> driverGenes)
+    {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         driverGenes.stream().map(DriverGeneFile::toString).forEach(lines::add);
