@@ -21,7 +21,7 @@ public class GeneCoverage implements Consumer<GenomeRegion>
     private final long mMaxPosition;
 
     public static final List<Integer> DEPTH_BUCKETS = Lists.newArrayList();
-    public static final int MAX_DEPTH_BUCKET = 10001;
+    public static final int MAX_DEPTH_BUCKET = 10000;
 
         /* frequency distribution of depth in units of:
         - 1 up to 30
@@ -114,7 +114,7 @@ public class GeneCoverage implements Consumer<GenomeRegion>
 
     private static int[] baseCoverageSummary(final Collection<ExonCoverage> exons)
     {
-        int[] geneDepth = new int[DEPTH_BUCKETS.size() + 1];
+        int[] geneDepth = new int[DEPTH_BUCKETS.size()];
 
         for(ExonCoverage exon : exons)
         {
@@ -154,7 +154,7 @@ public class GeneCoverage implements Consumer<GenomeRegion>
                 return depth < depthBucket ? i - 1 : i;
         }
 
-        return DEPTH_BUCKETS.size();
+        return DEPTH_BUCKETS.size() - 1;
     }
 
     public static double missedVariantLikelihood(int[] baseCoverage)

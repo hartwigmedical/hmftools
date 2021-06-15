@@ -50,15 +50,15 @@ public final class GeneDepthFile
 
             if(depthNext == depth + 1)
             {
-                joiner.add(String.valueOf(depth));
+                joiner.add(String.format("DR_%d", depth));
             }
             else
             {
-                joiner.add(String.format("%d_%d", depth, depthNext - 1));
+                joiner.add(String.format("DR_%d_%d", depth, depthNext - 1));
             }
         }
 
-        joiner.add(String.format("%d+", MAX_DEPTH_BUCKET - 1));
+        joiner.add(String.format("DR_%d", MAX_DEPTH_BUCKET));
 
         return joiner.toString();
     }

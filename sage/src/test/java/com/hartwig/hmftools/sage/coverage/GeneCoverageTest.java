@@ -57,9 +57,9 @@ public class GeneCoverageTest
         assertBucketAndDepth(9000, 10000, 67, 9500);
 
         assertEquals(68, GeneCoverage.bucket(10000));
-        assertEquals(69, GeneCoverage.bucket(MAX_DEPTH_BUCKET));
+        assertEquals(68, GeneCoverage.bucket(MAX_DEPTH_BUCKET));
         assertEquals(10000, GeneCoverage.depth(68));
-        assertEquals(MAX_DEPTH_BUCKET, GeneCoverage.depth(69));
+        assertEquals(MAX_DEPTH_BUCKET, GeneCoverage.depth(68));
     }
 
     private static void assertBucketAndDepth(int minDepth, int maxDepth, int expectedBucket, int expectedDepth)
