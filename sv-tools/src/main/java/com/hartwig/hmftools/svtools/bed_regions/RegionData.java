@@ -44,7 +44,7 @@ public class RegionData
 
     public static RegionData fromSpecificRegionCsv(final String data)
     {
-        final String[] items = data.split(",", -1   );
+        final String[] items = data.split(",", -1);
 
         // Chromosome,PosStart,PosEnd,GeneName,Type,Info
         BaseRegion region = new BaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));

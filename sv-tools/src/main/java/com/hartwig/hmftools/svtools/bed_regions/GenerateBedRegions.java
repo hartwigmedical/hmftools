@@ -8,9 +8,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.en
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.svtools.bed_regions.RegionData.validate;
 import static com.hartwig.hmftools.svtools.bed_regions.RegionType.CODING;
 
@@ -50,12 +48,15 @@ public class GenerateBedRegions
     
     private final List<EnsemblGeneData> mCodingGenes;
     private final List<RegionData> mSpecificRegions;
+    private final List<BaseRegion> mComparisonRegions;
 
     private final Map<String,List<RegionData>> mCombinedRegions; // combined, non-overlapping regions
     private final String mOutputFile;
+    private final String mCompareOutputFile;
 
     private static final String SPECIFIC_REGIONS_FILE = "specific_regions_file";
     private static final String CODING_GENE_FILE = "coding_genes_file";
+    private static final String COMPARISON_BED_FILE = "comparison_bed_file";
     private static final String OUTPUT_FILE = "output_file";
 
     private static final Logger LOGGER = LogManager.getLogger(GenerateBedRegions.class);
@@ -64,6 +65,7 @@ public class GenerateBedRegions
     {
         mCodingGenes = Lists.newArrayList();
         mSpecificRegions = Lists.newArrayList();
+        mComparisonRegions = Lists.newArrayList();
 
         mCombinedRegions = Maps.newHashMap();
 
@@ -84,12 +86,23 @@ public class GenerateBedRegions
             LOGGER.error("failed to load coding genes file({})", cmd.getOptionValue(CODING_GENE_FILE));
         }
 
-        loadSpecificRegions(cmd.getOptionValue(SPECIFIC_REGIONS_FILE));
+        loadSpecificRegions(cmd.getOptionValue(SPECIFIC_REGIONS_FILE, ""));
 
         final List<String> geneIds = mCodingGenes.stream().map(x -> x.GeneId).collect(Collectors.toList());
         mEnsemblDataCache.loadTranscriptData(geneIds);
 
         mOutputFile = cmd.getOptionValue(OUTPUT_FILE);
+
+        if(cmd.hasOption(COMPARISON_BED_FILE))
+        {
+            String comparisonFile = cmd.getOptionValue(COMPARISON_BED_FILE);
+            loadComparisonRegions(comparisonFile);
+            mCompareOutputFile = mOutputFile.replace(".bed", "") + "_vs_" + comparisonFile;
+        }
+        else
+        {
+            mCompareOutputFile = null;
+        }
     }
 
     public void run()
@@ -119,6 +132,8 @@ public class GenerateBedRegions
 
         LOGGER.info("write {} combined regions", mCombinedRegions.values().stream().mapToInt(x -> x.size()).sum());
         writeBedRegions();
+
+        writeMissingComparisonRegions();
     }
 
     private void formGeneCodingRegions(final EnsemblGeneData geneData)
@@ -206,9 +221,35 @@ public class GenerateBedRegions
 
             LOGGER.info("loaded {} specific region entries from file: {}", mSpecificRegions.size(), filename);
         }
-        catch(IOException exception)
+        catch(IOException e)
         {
-            LOGGER.error("Failed to specific region file({})", filename);
+            LOGGER.error("failed to load specific region file({}): {}", filename, e.toString());
+        }
+    }
+
+    private void loadComparisonRegions(final String filename)
+    {
+        if(filename.isEmpty())
+            return;
+
+        try
+        {
+            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
+
+            for(final String line : fileContents)
+            {
+                final String[] items = line.split("\t", -1);
+                String chromosome = items[0];
+                int posStart = Integer.parseInt(items[1]) + 1;
+                int posEnd = Integer.parseInt(items[2]);
+                mComparisonRegions.add(new BaseRegion(chromosome, posStart, posEnd));
+            }
+
+            LOGGER.info("loaded {} comparison regions from file: {}", mComparisonRegions.size(), filename);
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to load comparison regions file({}): {}", filename, e.toString());
         }
     }
 
@@ -247,12 +288,93 @@ public class GenerateBedRegions
         }
     }
 
+    private void writeMissingComparisonRegions()
+    {
+        if(mComparisonRegions.isEmpty() || mCompareOutputFile == null)
+            return;
+
+        try
+        {
+            final BufferedWriter writer = createBufferedWriter(mCompareOutputFile, false);
+
+            for(HumanChromosome chromosome : HumanChromosome.values())
+            {
+                String chrStr = chromosome.toString();
+
+                if(mRefGenVersion.is38())
+                    chrStr = enforceChrPrefix(chrStr);
+
+                List<RegionData> regions = mCombinedRegions.get(chrStr);
+
+                if(regions == null || regions.isEmpty())
+                    continue;
+
+                for(RegionData region : regions)
+                {
+                    List<BaseRegion> overlaps = mComparisonRegions.stream().filter(x -> x.overlaps(region.Region)).collect(Collectors.toList());
+
+                    if(overlaps.size() == 1 && overlaps.get(0).matches(region.Region))
+                        continue;
+
+                    if(overlaps.isEmpty())
+                    {
+                        // LOGGER.info("region({}) entirely missed", region);
+
+                        writer.write(String.format("%s\t%d\t%d\t%s",
+                                chrStr, region.Region.start() - 1, region.Region.end(), region.name()));
+                        writer.newLine();
+                    }
+                    else
+                    {
+                        List<BaseRegion> missedRegions = Lists.newArrayList();
+                        BaseRegion currentSegment = null;
+
+                        for(int i = region.Region.start(); i <= region.Region.end(); ++i)
+                        {
+                            final int position = i;
+
+                            if(!overlaps.stream().anyMatch(x -> x.containsPosition(position)))
+                            {
+                                if(currentSegment == null || currentSegment.end() != i - 1)
+                                {
+                                    currentSegment = new BaseRegion(region.Region.Chromosome, i, i);
+                                    missedRegions.add(currentSegment);
+                                }
+                                else
+                                {
+                                    currentSegment.setEnd(i);
+                                }
+                            }
+                        }
+
+                        // LOGGER.info("region({}) partially missed", region);
+
+                        for(BaseRegion missedRegion : missedRegions)
+                        {
+                            // LOGGER.info("missed region({})", missedRegion);
+
+                            writer.write(String.format("%s\t%d\t%d\t%s",
+                                    chrStr, missedRegion.start() - 1, missedRegion.end(), region.name()));
+                            writer.newLine();
+                        }
+                    }
+                }
+            }
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to write comparison BED: {}", e.toString());
+        }
+    }
+
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
 
         options.addOption(SPECIFIC_REGIONS_FILE, true, "Path to the Linx cohort SVs file");
         options.addOption(CODING_GENE_FILE, true, "External LINE data sample counts");
+        options.addOption(COMPARISON_BED_FILE, true, "Comparison BED file");
         options.addOption(OUTPUT_FILE, true, "Output BED filename");
         options.addOption(ENSEMBL_DATA_DIR, true, "Path to the Ensembl data cache directory");
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version, 37 or 38 (default = 38)");
