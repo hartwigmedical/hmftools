@@ -3,11 +3,9 @@ package com.hartwig.hmftools.common.purple.cnchromosome;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -34,30 +32,27 @@ public final class CnPerChromosomeFactory {
     @NotNull
     public static List<CnPerChromosomeArmData> extractCnPerChromosomeArm(@NotNull List<PurpleCopyNumber> copyNumbers,
             @NotNull RefGenomeCoordinates refGenomeCoordinates) {
-        Set<String> chromosomeSet = Sets.newHashSet();
-        List<CnPerChromosomeArmData> CnPerChromosomeArmData = Lists.newArrayList();
+        List<CnPerChromosomeArmData> cnPerChromosomeArmData = Lists.newArrayList();
         for (Chromosome chr : refGenomeCoordinates.lengths().keySet()) {
             HumanChromosome chromosome = (HumanChromosome) chr;
-            Map<ChromosomeArm, GenomeRegion> genomeRegion = determineArmRegion(chromosome, refGenomeCoordinates);
+            Map<ChromosomeArm, GenomeRegion> genomeRegion = determineArmRegions(chromosome, refGenomeCoordinates);
 
             for (Map.Entry<ChromosomeArm, GenomeRegion> entry : genomeRegion.entrySet()) {
-                GenomeRegion region = entry.getValue();
+                GenomeRegion arm = entry.getValue();
 
                 double copyNumberArm = 0;
                 for (PurpleCopyNumber purpleCopyNumber : copyNumbers) {
                     Chromosome copyNumberChromosome = HumanChromosome.fromString(purpleCopyNumber.chromosome());
-                    chromosomeSet.add(purpleCopyNumber.chromosome());
 
-                    if (copyNumberChromosome.equals(chromosome) && region.overlaps(purpleCopyNumber)) {
+                    if (copyNumberChromosome.equals(chromosome) && arm.overlaps(purpleCopyNumber)) {
                         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
                         long totalLengthSegment = purpleCopyNumber.bases();
-                        copyNumberArm += (copyNumber * totalLengthSegment) / region.bases();
+                        copyNumberArm += (copyNumber * totalLengthSegment) / arm.bases();
                     }
                 }
 
-                // if chromosome not present in copyNumber file, the chromosome arm isn't calculated
-                if (chromosomeSet.contains(chromosome.toString())) {
-                    CnPerChromosomeArmData.add(ImmutableCnPerChromosomeArmData.builder()
+                if (copyNumberArm > 0) {
+                    cnPerChromosomeArmData.add(ImmutableCnPerChromosomeArmData.builder()
                             .chromosome(chromosome)
                             .chromosomeArm(entry.getKey())
                             .copyNumber(copyNumberArm)
@@ -65,29 +60,26 @@ public final class CnPerChromosomeFactory {
                 }
             }
         }
-        return CnPerChromosomeArmData;
+        return cnPerChromosomeArmData;
     }
 
     @NotNull
-    private static Map<ChromosomeArm, GenomeRegion> determineArmRegion(@NotNull Chromosome chromosome,
+    private static Map<ChromosomeArm, GenomeRegion> determineArmRegions(@NotNull Chromosome chromosome,
             @NotNull RefGenomeCoordinates refGenomeCoordinates) {
         long centromerePos = refGenomeCoordinates.centromeres().get(chromosome);
         long chrLength = refGenomeCoordinates.lengths().get(chromosome);
 
-        long lengthPastCentromere = chrLength - (centromerePos + 1);
-        long lengthBeforeCentromere = centromerePos;
-
         Map<ChromosomeArm, GenomeRegion> chromosomeArmGenomeRegionMap = Maps.newHashMap();
 
+        GenomeRegion partBeforeCentromere = GenomeRegions.create(chromosome.toString(), 1, centromerePos);
+        GenomeRegion partAfterCentromere = GenomeRegions.create(chromosome.toString(), centromerePos + 1, chrLength);
         // The smallest part of a chromosome is the P arm.
-        if (lengthBeforeCentromere < lengthPastCentromere) {
-            chromosomeArmGenomeRegionMap.put(ChromosomeArm.P_ARM, GenomeRegions.create(chromosome.toString(), 1, centromerePos));
-            chromosomeArmGenomeRegionMap.put(ChromosomeArm.Q_ARM,
-                    GenomeRegions.create(chromosome.toString(), centromerePos + 1, chrLength));
+        if (partBeforeCentromere.bases() < partAfterCentromere.bases()) {
+            chromosomeArmGenomeRegionMap.put(ChromosomeArm.P_ARM, partBeforeCentromere);
+            chromosomeArmGenomeRegionMap.put(ChromosomeArm.Q_ARM, partAfterCentromere);
         } else {
-            chromosomeArmGenomeRegionMap.put(ChromosomeArm.Q_ARM, GenomeRegions.create(chromosome.toString(), 1, centromerePos));
-            chromosomeArmGenomeRegionMap.put(ChromosomeArm.P_ARM,
-                    GenomeRegions.create(chromosome.toString(), centromerePos + 1, chrLength));
+            chromosomeArmGenomeRegionMap.put(ChromosomeArm.P_ARM, partAfterCentromere);
+            chromosomeArmGenomeRegionMap.put(ChromosomeArm.Q_ARM, partBeforeCentromere);
         }
         return chromosomeArmGenomeRegionMap;
     }
