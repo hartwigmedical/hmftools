@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.en
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.svtools.bed_regions.RegionData.validate;
 import static com.hartwig.hmftools.svtools.bed_regions.RegionType.CODING;
@@ -16,6 +17,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -48,15 +50,16 @@ public class GenerateBedRegions
     
     private final List<EnsemblGeneData> mCodingGenes;
     private final List<RegionData> mSpecificRegions;
-    private final List<BaseRegion> mComparisonRegions;
+    private final List<String> mComparisonFiles;
 
     private final Map<String,List<RegionData>> mCombinedRegions; // combined, non-overlapping regions
+    private final String mSourceDir;
     private final String mOutputFile;
-    private final String mCompareOutputFile;
 
     private static final String SPECIFIC_REGIONS_FILE = "specific_regions_file";
     private static final String CODING_GENE_FILE = "coding_genes_file";
-    private static final String COMPARISON_BED_FILE = "comparison_bed_file";
+    private static final String COMPARISON_BED_FILES = "comparison_bed_files";
+    private static final String SOURCE_DIR = "source_dir";
     private static final String OUTPUT_FILE = "output_file";
 
     private static final Logger LOGGER = LogManager.getLogger(GenerateBedRegions.class);
@@ -65,7 +68,7 @@ public class GenerateBedRegions
     {
         mCodingGenes = Lists.newArrayList();
         mSpecificRegions = Lists.newArrayList();
-        mComparisonRegions = Lists.newArrayList();
+        mComparisonFiles = Lists.newArrayList();
 
         mCombinedRegions = Maps.newHashMap();
 
@@ -74,9 +77,11 @@ public class GenerateBedRegions
         mEnsemblDataCache.setRequiredData(true, false, false, false);
         mEnsemblDataCache.load(true);
 
+        mSourceDir = checkAddDirSeparator(cmd.getOptionValue(SOURCE_DIR));
+
         try
         {
-            final List<String> geneNames = Files.readAllLines(new File(cmd.getOptionValue(CODING_GENE_FILE)).toPath());
+            final List<String> geneNames = Files.readAllLines(new File(mSourceDir + cmd.getOptionValue(CODING_GENE_FILE)).toPath());
             geneNames.stream()
                     .filter(x -> !x.equals("GeneName"))
                     .forEach(x -> mCodingGenes.add(mEnsemblDataCache.getGeneDataByName(x)));
@@ -86,22 +91,16 @@ public class GenerateBedRegions
             LOGGER.error("failed to load coding genes file({})", cmd.getOptionValue(CODING_GENE_FILE));
         }
 
-        loadSpecificRegions(cmd.getOptionValue(SPECIFIC_REGIONS_FILE, ""));
+        loadSpecificRegions(mSourceDir + cmd.getOptionValue(SPECIFIC_REGIONS_FILE, ""));
 
         final List<String> geneIds = mCodingGenes.stream().map(x -> x.GeneId).collect(Collectors.toList());
         mEnsemblDataCache.loadTranscriptData(geneIds);
 
-        mOutputFile = cmd.getOptionValue(OUTPUT_FILE);
+        mOutputFile = mSourceDir + cmd.getOptionValue(OUTPUT_FILE);
 
-        if(cmd.hasOption(COMPARISON_BED_FILE))
+        if(cmd.hasOption(COMPARISON_BED_FILES))
         {
-            String comparisonFile = cmd.getOptionValue(COMPARISON_BED_FILE);
-            loadComparisonRegions(comparisonFile);
-            mCompareOutputFile = mOutputFile.replace(".bed", "") + "_vs_" + comparisonFile;
-        }
-        else
-        {
-            mCompareOutputFile = null;
+            mComparisonFiles.addAll(Arrays.stream(cmd.getOptionValue(COMPARISON_BED_FILES).split(";", -1)).collect(Collectors.toList()));
         }
     }
 
@@ -214,7 +213,7 @@ public class GenerateBedRegions
                 }
                 catch(Exception e)
                 {
-                    LOGGER.error(" invalid specific region data: {}", line);
+                    LOGGER.error("invalid specific region data: {}", line);
                     continue;
                 }
             }
@@ -227,37 +226,13 @@ public class GenerateBedRegions
         }
     }
 
-    private void loadComparisonRegions(final String filename)
-    {
-        if(filename.isEmpty())
-            return;
-
-        try
-        {
-            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
-
-            for(final String line : fileContents)
-            {
-                final String[] items = line.split("\t", -1);
-                String chromosome = items[0];
-                int posStart = Integer.parseInt(items[1]) + 1;
-                int posEnd = Integer.parseInt(items[2]);
-                mComparisonRegions.add(new BaseRegion(chromosome, posStart, posEnd));
-            }
-
-            LOGGER.info("loaded {} comparison regions from file: {}", mComparisonRegions.size(), filename);
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to load comparison regions file({}): {}", filename, e.toString());
-        }
-    }
-
     private void writeBedRegions()
     {
         try
         {
             final BufferedWriter writer = createBufferedWriter(mOutputFile, false);
+
+            int regionId = 0;
 
             for(HumanChromosome chromosome : HumanChromosome.values())
             {
@@ -273,9 +248,11 @@ public class GenerateBedRegions
 
                 for(RegionData region : regions)
                 {
+                    region.setId(regionId++);
+
                     // BED file positions require a +1 offset
                     writer.write(String.format("%s\t%d\t%d\t%s",
-                            chrStr, region.Region.start() - 1, region.Region.end(), region.name()));
+                            chrStr, region.Region.start() - 1, region.Region.end(), region.idName()));
                     writer.newLine();
                 }
             }
@@ -290,81 +267,123 @@ public class GenerateBedRegions
 
     private void writeMissingComparisonRegions()
     {
-        if(mComparisonRegions.isEmpty() || mCompareOutputFile == null)
+        if(mComparisonFiles.isEmpty())
             return;
 
-        try
+        for(String comparisonFile : mComparisonFiles)
         {
-            final BufferedWriter writer = createBufferedWriter(mCompareOutputFile, false);
-
-            for(HumanChromosome chromosome : HumanChromosome.values())
+            try
             {
-                String chrStr = chromosome.toString();
+                List<BaseRegion> comparisonRegions = Lists.newArrayList();
 
-                if(mRefGenVersion.is38())
-                    chrStr = enforceChrPrefix(chrStr);
+                final List<String> fileContents = Files.readAllLines(new File(mSourceDir + comparisonFile).toPath());
 
-                List<RegionData> regions = mCombinedRegions.get(chrStr);
-
-                if(regions == null || regions.isEmpty())
-                    continue;
-
-                for(RegionData region : regions)
+                for(final String line : fileContents)
                 {
-                    List<BaseRegion> overlaps = mComparisonRegions.stream().filter(x -> x.overlaps(region.Region)).collect(Collectors.toList());
+                    final String[] items = line.split("\t", -1);
+                    String chromosome = items[0];
+                    int posStart = Integer.parseInt(items[1]) + 1;
+                    int posEnd = Integer.parseInt(items[2]);
+                    comparisonRegions.add(new BaseRegion(chromosome, posStart, posEnd));
+                }
 
-                    if(overlaps.size() == 1 && overlaps.get(0).matches(region.Region))
+                LOGGER.info("loaded {} comparison regions from file: {}", comparisonRegions.size(), comparisonFile);
+
+                String outputFile = mOutputFile.replace(".bed", "") + "_vs_"
+                        + comparisonFile.replace(".bed", ".csv");
+
+                final BufferedWriter writer = createBufferedWriter(outputFile, false);
+                writer.write("RegionName,Chromosome,PosStart,PosEnd,PercCoverage");
+                writer.newLine();
+
+                for(HumanChromosome chromosome : HumanChromosome.values())
+                {
+                    String chrStr = chromosome.toString();
+
+                    if(mRefGenVersion.is38())
+                        chrStr = enforceChrPrefix(chrStr);
+
+                    List<RegionData> regions = mCombinedRegions.get(chrStr);
+
+                    if(regions == null || regions.isEmpty())
                         continue;
 
-                    if(overlaps.isEmpty())
+                    for(RegionData region : regions)
                     {
-                        // LOGGER.info("region({}) entirely missed", region);
+                        List<BaseRegion> overlaps =
+                                comparisonRegions.stream().filter(x -> x.overlaps(region.Region)).collect(Collectors.toList());
 
-                        writer.write(String.format("%s\t%d\t%d\t%s",
-                                chrStr, region.Region.start() - 1, region.Region.end(), region.name()));
-                        writer.newLine();
-                    }
-                    else
-                    {
-                        List<BaseRegion> missedRegions = Lists.newArrayList();
-                        BaseRegion currentSegment = null;
-
-                        for(int i = region.Region.start(); i <= region.Region.end(); ++i)
+                        if(overlaps.size() == 1 && overlaps.get(0).matches(region.Region))
                         {
-                            final int position = i;
+                            writer.write(String.format("%s,%s,%d,%d,%.3f",
+                                    region.idName(), chrStr, region.Region.start(), region.Region.end(), 1.0));
+                            writer.newLine();
+                            continue;
+                        }
 
-                            if(!overlaps.stream().anyMatch(x -> x.containsPosition(position)))
+                        if(overlaps.isEmpty())
+                        {
+                            // LOGGER.info("region({}) entirely missed", region);
+
+                            //writer.write(String.format("%s\t%d\t%d\t%s",chrStr, region.Region.start() - 1, region.Region.end(), region.name()));
+                            writer.write(String.format("%s,%s,%d,%d,%.3f",
+                                    region.idName(), chrStr, region.Region.start(), region.Region.end(), 0.0));
+                            writer.newLine();
+                        }
+                        else
+                        {
+                            List<BaseRegion> missedRegions = Lists.newArrayList();
+                            BaseRegion currentSegment = null;
+                            int basesCovered = 0;
+
+                            for(int i = region.Region.start(); i <= region.Region.end(); ++i)
                             {
-                                if(currentSegment == null || currentSegment.end() != i - 1)
+                                final int position = i;
+
+                                if(overlaps.stream().anyMatch(x -> x.containsPosition(position)))
                                 {
-                                    currentSegment = new BaseRegion(region.Region.Chromosome, i, i);
-                                    missedRegions.add(currentSegment);
+                                    ++basesCovered;
                                 }
                                 else
                                 {
-                                    currentSegment.setEnd(i);
+                                    if(currentSegment == null || currentSegment.end() != i - 1)
+                                    {
+                                        currentSegment = new BaseRegion(region.Region.Chromosome, i, i);
+                                        missedRegions.add(currentSegment);
+                                    }
+                                    else
+                                    {
+                                        currentSegment.setEnd(i);
+                                    }
                                 }
                             }
-                        }
 
-                        // LOGGER.info("region({}) partially missed", region);
+                            // LOGGER.info("region({}) partially missed", region);
+                            double coverage = basesCovered / (double) region.Region.baseLength();
 
-                        for(BaseRegion missedRegion : missedRegions)
-                        {
-                            // LOGGER.info("missed region({})", missedRegion);
-
-                            writer.write(String.format("%s\t%d\t%d\t%s",
-                                    chrStr, missedRegion.start() - 1, missedRegion.end(), region.name()));
+                            writer.write(String.format("%s,%s,%d,%d,%.3f",
+                                    region.idName(), chrStr, region.Region.start(), region.Region.end(), coverage));
                             writer.newLine();
+
+                            /*
+                            for(BaseRegion missedRegion : missedRegions)
+                            {
+                                // LOGGER.info("missed region({})", missedRegion);
+
+                                writer.write(String.format("%s\t%d\t%d\t%s",
+                                        chrStr, missedRegion.start() - 1, missedRegion.end(), region.name()));
+                                writer.newLine();
+                            }
+                            */
                         }
                     }
                 }
+                writer.close();
             }
-            writer.close();
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to write comparison BED: {}", e.toString());
+            catch(IOException e)
+            {
+                LOGGER.error("failed to write comparison BED: {}", e.toString());
+            }
         }
     }
 
@@ -372,9 +391,10 @@ public class GenerateBedRegions
     {
         final Options options = new Options();
 
+        options.addOption(SOURCE_DIR, true, "Path to all input and output files");
         options.addOption(SPECIFIC_REGIONS_FILE, true, "Path to the Linx cohort SVs file");
         options.addOption(CODING_GENE_FILE, true, "External LINE data sample counts");
-        options.addOption(COMPARISON_BED_FILE, true, "Comparison BED file");
+        options.addOption(COMPARISON_BED_FILES, true, "Comparison BED file");
         options.addOption(OUTPUT_FILE, true, "Output BED filename");
         options.addOption(ENSEMBL_DATA_DIR, true, "Path to the Ensembl data cache directory");
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version, 37 or 38 (default = 38)");

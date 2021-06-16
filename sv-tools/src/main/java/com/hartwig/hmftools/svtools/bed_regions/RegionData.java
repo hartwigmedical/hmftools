@@ -12,7 +12,9 @@ public class RegionData
     public final String GeneName;
     public final BaseRegion Region;
     public final RegionType Type;
+
     private String mExtraInfo;
+    private int mId;
 
     public RegionData(final String geneName, final BaseRegion region, final RegionType type)
     {
@@ -20,10 +22,14 @@ public class RegionData
         Region = region;
         Type = type;
         mExtraInfo = "";
+        mId = 0;
     }
 
     public void setExtraInfo(final String extraInfo) { mExtraInfo = extraInfo; }
     public String getExtraInfo() { return mExtraInfo; }
+
+    public void setId(int id) { mId = id; }
+    public int id() { return mId; }
 
     public String name()
     {
@@ -36,6 +42,8 @@ public class RegionData
         int posMidpoint = (Region.start() + Region.end()) / 2;
         return String.format("%s_%s_%d", GeneName, Region.Chromosome, posMidpoint);
     }
+
+    public String idName() { return String.format("%d_%s", mId, name()); }
 
     public String toString()
     {
