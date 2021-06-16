@@ -34,19 +34,26 @@ public class DisruptionEvidenceTest {
                 .gene(gene)
                 .event(GeneLevelEvent.INACTIVATION)
                 .build();
+        ActionableGene deletion = ImmutableActionableGene.builder()
+                .from(ServeTestFactory.createTestActionableGene())
+                .gene(gene)
+                .event(GeneLevelEvent.DELETION)
+                .build();
 
         DisruptionEvidence disruptionEvidence =
-                new DisruptionEvidence(ProtectTestFactory.createTestEvidenceFactory(), Lists.newArrayList(amp, inactivation));
+                new DisruptionEvidence(ProtectTestFactory.createTestEvidenceFactory(), Lists.newArrayList(amp, inactivation, deletion));
 
         ReportableHomozygousDisruption match = create(gene);
         ReportableHomozygousDisruption nonMatch = create("other gene");
 
         List<ProtectEvidence> evidenceItems = disruptionEvidence.evidence(Lists.newArrayList(match, nonMatch));
 
-        assertEquals(1, evidenceItems.size());
+        assertEquals(2, evidenceItems.size());
 
         assertTrue(evidenceItems.get(0).reported());
+        assertTrue(evidenceItems.get(1).reported());
         assertEquals(match.genomicEvent(), evidenceItems.get(0).genomicEvent());
+        assertEquals(match.genomicEvent(), evidenceItems.get(1).genomicEvent());
     }
 
     @NotNull

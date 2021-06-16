@@ -6,7 +6,7 @@ It is intended to allow both prediction of primary tumor location for Cancer of 
 
 The key inputs to Cuppa are:
 - a collection of reference data files which define rates of various DNA and RNA features and characteristics
-- the measurements of those same DNA and RNAS features for the sample or samples being evaluated
+- the measurements of those same DNA and RNA features for the sample or samples being evaluated
 
 Cuppa then runs 1 or more of the following 'classifiers' to make its assessment of a sample:
 
@@ -27,15 +27,15 @@ Each classifier is optional and run if enabled by config.
 ## Reference Data
 Cuppa can be used to produce reference data files itself - see instructions below.
 
-Otherwise they can be obtained from the HMF Resources page  [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/):
+Otherwise they can be obtained from the HMF Resources page: [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/).
 
-Cuppa will attempt to load these files from a reference directory supplied in its commamnd-line arguments. The files are:
+Cuppa will attempt to load these files from a reference directory supplied in its command-line arguments. The files are:
 
 Data Type | Source | Filename | Description 
----|---
+---|---|---|---
 Sample Set | ALL | cup_ref_sample_data | List of the reference samples - SampleId and CancerType
 Features | DNA | cup_ref_feature_prev.csv | Prevalence of fusions, viral insertions, drivers and known INDELs per cancer type
-Features | DNA cup_ref_driver_avg.csv | Average driver counts per cancer types 
+Features | DNA | cup_ref_driver_avg.csv | Average driver counts per cancer types 
 Sample Traits | DNA | cup_ref_sample_trait_percentiles.csv | Percentiles for purity, ploidy and MS Indels per cancer type
 Sample Traits | DNA | cup_ref_sample_trait_rates.csv | Whole genome duplicate and gender rates per cancer type
 Sample Traits | DNA | cup_ref_gender_rates.csv | Optional overrides for expected rates of gender per cancer type 
@@ -72,7 +72,7 @@ Cuppa also accepts CSV inputs files conforming to the same file format as produc
 This can be handy and much more efficient when testing a large cohort in a single run.
 
 Data Type | Cohort Filename | Fields & Comments
----|---
+---|---|---
 Features | cup_ref_cohort_feature_data.csv | SampleId,Name,Type(DRIVER,FUSION,VIRUS or INDEL),Likelihood,ExtraInfo
 SNVs | cup_ref_snv_counts.csv | Matrix of trinucleotide counts in rows, SampleIds in columns 
 SNVs | cup_ref_sample_pos_freq_counts.csv | Matrix of genomic position frequency counts in rows, SampleIds in columns
