@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
@@ -201,7 +203,8 @@ public class NucleotideFragmentFactory
 
     public int calculateMedianBaseQuality(final List<Fragment> fragments)
     {
-        int[] baseQualFrequeny = new int[mMinBaseQuality + 1];
+        int maxBaseQual = mMinBaseQuality * 2; // for purpose of data capture only
+        int[] baseQualFrequeny = new int[maxBaseQual + 1];
         long totalBases = 0;
 
         for(Fragment fragment : fragments)
@@ -209,11 +212,7 @@ public class NucleotideFragmentFactory
             for(Integer baseQual : fragment.getRawNucleotideQuality())
             {
                 ++totalBases;
-
-                if(baseQual >= mMinBaseQuality)
-                    ++baseQualFrequeny[mMinBaseQuality];
-                else
-                    ++baseQualFrequeny[baseQual];
+                ++baseQualFrequeny[min(baseQual, maxBaseQual)];
             }
         }
 
@@ -235,9 +234,6 @@ public class NucleotideFragmentFactory
     public static Map<String,int[]> calculateGeneCoverage(final List<Fragment> fragments)
     {
         final Map<String,int[]> geneBaseDepth = Maps.newHashMap();
-
-        int maxNucleotides = fragments.stream()
-                .mapToInt(x -> x.getRawNucleotideLoci().get(x.getRawNucleotideLoci().size() - 1)).max().orElse(0);
 
         geneBaseDepth.put(HLA_A, new int[NUC_LENGTH_A]);
         geneBaseDepth.put(HLA_B, new int[NUC_LENGTH_B]);

@@ -637,7 +637,7 @@ public class FragmentAlleleMapper
 
         if(removedFragAlleles > 0)
         {
-            LL_LOGGER.info("removed frags({}) with wildcard alleles removed", removedFragAlleles);
+            LL_LOGGER.debug("removed frags({}) with wildcard alleles removed", removedFragAlleles);
         }
     }
 
