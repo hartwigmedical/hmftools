@@ -51,6 +51,7 @@ public class GenerateBedRegions
     private final List<EnsemblGeneData> mCodingGenes;
     private final List<RegionData> mSpecificRegions;
     private final List<String> mComparisonFiles;
+    private final List<Integer> mTranscriptValidTSLs;
 
     private final Map<String,List<RegionData>> mCombinedRegions; // combined, non-overlapping regions
     private final String mSourceDir;
@@ -58,6 +59,7 @@ public class GenerateBedRegions
 
     private static final String SPECIFIC_REGIONS_FILE = "specific_regions_file";
     private static final String CODING_GENE_FILE = "coding_genes_file";
+    private static final String TRANS_TSL_FILE = "trans_tsl_file";
     private static final String COMPARISON_BED_FILES = "comparison_bed_files";
     private static final String SOURCE_DIR = "source_dir";
     private static final String OUTPUT_FILE = "output_file";
@@ -69,6 +71,7 @@ public class GenerateBedRegions
         mCodingGenes = Lists.newArrayList();
         mSpecificRegions = Lists.newArrayList();
         mComparisonFiles = Lists.newArrayList();
+        mTranscriptValidTSLs = Lists.newArrayList();
 
         mCombinedRegions = Maps.newHashMap();
 
@@ -86,9 +89,25 @@ public class GenerateBedRegions
                     .filter(x -> !x.equals("GeneName"))
                     .forEach(x -> mCodingGenes.add(mEnsemblDataCache.getGeneDataByName(x)));
         }
-        catch(IOException exception)
+        catch(IOException e)
         {
-            LOGGER.error("failed to load coding genes file({})", cmd.getOptionValue(CODING_GENE_FILE));
+            LOGGER.error("failed to load coding genes file({}): {}", cmd.getOptionValue(CODING_GENE_FILE), e.toString());
+        }
+
+        if(cmd.hasOption(TRANS_TSL_FILE))
+        {
+            try
+            {
+                final List<String> transData = Files.readAllLines(new File(mSourceDir + cmd.getOptionValue(TRANS_TSL_FILE)).toPath());
+                transData.remove(0); // header
+
+                transData.stream().map(x -> x.split(",")).filter(x -> x.length == 2)
+                        .forEach(x -> mTranscriptValidTSLs.add(Integer.parseInt(x[0])));
+            }
+            catch(IOException e)
+            {
+                LOGGER.error("failed to load Ensembl TSL file({}): {}", cmd.getOptionValue(TRANS_TSL_FILE), e.toString());
+            }
         }
 
         loadSpecificRegions(mSourceDir + cmd.getOptionValue(SPECIFIC_REGIONS_FILE, ""));
@@ -102,6 +121,8 @@ public class GenerateBedRegions
         {
             mComparisonFiles.addAll(Arrays.stream(cmd.getOptionValue(COMPARISON_BED_FILES).split(";", -1)).collect(Collectors.toList()));
         }
+
+        // ensembl_trans_tsl.csv
     }
 
     public void run()
@@ -142,6 +163,9 @@ public class GenerateBedRegions
         for(TranscriptData transData : transcripts)
         {
             if(transData.CodingStart == null)
+                continue;
+
+            if(!mTranscriptValidTSLs.isEmpty() && !mTranscriptValidTSLs.contains(transData.TransId))
                 continue;
 
             //if(transData.BioType.equals("nonsense_mediated_decay"))
@@ -394,6 +418,7 @@ public class GenerateBedRegions
         options.addOption(SOURCE_DIR, true, "Path to all input and output files");
         options.addOption(SPECIFIC_REGIONS_FILE, true, "Path to the Linx cohort SVs file");
         options.addOption(CODING_GENE_FILE, true, "External LINE data sample counts");
+        options.addOption(TRANS_TSL_FILE, true, "Ensembl valid TSL transcript IDs");
         options.addOption(COMPARISON_BED_FILES, true, "Comparison BED file");
         options.addOption(OUTPUT_FILE, true, "Output BED filename");
         options.addOption(ENSEMBL_DATA_DIR, true, "Path to the Ensembl data cache directory");
