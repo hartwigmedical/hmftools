@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.lilac.LilacConfig;
+import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -38,7 +40,7 @@ public final class Candidates
         List<HlaSequenceLoci> geneCandidates = mAminoAcidSequences.stream()
                 .filter(x -> x.Allele.Gene.equals(context.Gene)).collect(Collectors.toList());
 
-        LL_LOGGER.info("  {} candidates before filtering", geneCandidates.size());
+        LL_LOGGER.debug("  {} candidates before filtering", geneCandidates.size());
 
         // Amino acid filtering
         List<HlaSequenceLoci> aminoAcidCandidates = filterSequencesByMinSupport(geneCandidates, aminoAcidCounts, context.AminoAcidBoundaries);
@@ -50,7 +52,7 @@ public final class Candidates
 
         if (aminoAcidSpecificAllelesCandidates.isEmpty())
         {
-            LL_LOGGER.warn("  0 candidates after amino acid filtering - reverting to all gene candidates");
+            LL_LOGGER.warn("  no candidates after amino acid filtering - reverting to all gene candidates");
             return geneCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
         }
 
@@ -138,7 +140,8 @@ public final class Candidates
         List<HlaSequenceLoci> phasedCandidates = filterCandidates(unphasedCandidates, phasedEvidence);
         List<HlaAllele> phasedAlleles = phasedCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
 
-        LL_LOGGER.info("gene({}) has phased {} candidates after phasing: {}", context.geneName(), phasedCandidates.size(), phasedAlleles);
+        LL_LOGGER.info("gene({}) has {} candidates after phasing: {}",
+                context.geneName(), phasedCandidates.size(), HlaAllele.toString(phasedAlleles, 100));
 
         return phasedAlleles;
     }
@@ -159,6 +162,24 @@ public final class Candidates
         }
 
         return candidates;
+    }
+
+    public static void addPhasedCandidates(
+            final List<HlaAllele> allAlleles, List<HlaAllele> geneCandidates, final LilacConfig config, final ReferenceData refData)
+    {
+        if(geneCandidates.isEmpty())
+            return;
+
+        if(config.MaxEliminationCandidates == 0 || geneCandidates.size() <= config.MaxEliminationCandidates)
+        {
+            allAlleles.addAll(geneCandidates);
+            return;
+        }
+
+        final String gene = geneCandidates.get(0).Gene;
+
+        refData.getAlleleFrequencies().getAlleleFrequencies().keySet().stream()
+                .filter(x -> x.Gene.equals(gene)).forEach(x -> allAlleles.add(x));
     }
 
 }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNSET;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.validateLociBases;
 
@@ -81,7 +82,11 @@ public class Fragment
         {
             if(override)
             {
-                LL_LOGGER.debug("frag({}: {}) overriding existing scope: {} -> {}", mId, mReadInfo, mScope, scope);
+                if(scope != HLA_Y)
+                {
+                    LL_LOGGER.debug("frag({}: {}) overriding existing scope: {} -> {}", mId, mReadInfo, mScope, scope);
+                }
+
                 mScope = scope;
             }
         }

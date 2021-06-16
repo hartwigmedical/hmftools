@@ -68,6 +68,7 @@ public class LilacConfig
 
     public final boolean DebugPhasing;
     public final boolean RunValidation;
+    public final int MaxEliminationCandidates;
 
     // pre-determined sample alleles, always kept and scored, primarily for testing
     public final List<HlaAllele> ExpectedAlleles;
@@ -105,6 +106,7 @@ public class LilacConfig
     private static final String DEBUG_PHASING = "debug_phasing";
     public static final String LOG_DEBUG = "log_debug";
     public static final String RUN_VALIDATION = "run_validation";
+    public static final String MAX_ELIM_CANDIDATES = "max_elim_candidates";
     public static final String LOG_LEVEL = "log_level";
 
     public static final Logger LL_LOGGER = LogManager.getLogger(LilacConfig.class);;
@@ -163,6 +165,7 @@ public class LilacConfig
 
         ExpectedAlleles = parseAlleleList(cmd.getOptionValue(EXPECTED_ALLELES));
         RestrictedAlleles = parseAlleleList(cmd.getOptionValue(RESTRICTED_ALLELES));
+        MaxEliminationCandidates = Integer.parseInt(cmd.getOptionValue(MAX_ELIM_CANDIDATES, "0"));
 
         Threads = getConfigValue(cmd, THREADS, 1);
 
@@ -266,6 +269,7 @@ public class LilacConfig
 
         ExpectedAlleles = Lists.newArrayList();
         RestrictedAlleles = Lists.newArrayList();
+        MaxEliminationCandidates = 0;
 
         Threads = 0;
         DebugPhasing = false;
@@ -295,6 +299,7 @@ public class LilacConfig
         options.addOption(TOP_SCORE_THRESHOLD, true,"Max distance from top score");
         options.addOption(EXPECTED_ALLELES, true,"Comma separated expected alleles for the sample");
         options.addOption(RESTRICTED_ALLELES, true,"Comma separated restricted analysis allele list");
+        options.addOption(MAX_ELIM_CANDIDATES, true, "Revert to only common alleles if candidate allele count exceeds this after elimination");
         options.addOption(GENE_COPY_NUMBER, true,"Path to gene copy number file");
         options.addOption(SOMATIC_VARIANTS, true,"Path to somatic VCF");
         options.addOption(DEBUG_PHASING, false, "More detailed logging of phasing");

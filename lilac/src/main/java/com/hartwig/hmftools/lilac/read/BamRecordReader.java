@@ -82,6 +82,7 @@ public class BamRecordReader implements BamReader
         final List<String> ponLines = new BufferedReader(new InputStreamReader(
                 RefGenomeCoordinates.class.getResourceAsStream("/pon/indels.csv")))
                 .lines().collect(Collectors.toList());
+
         ponLines.stream().map(x -> Indel.fromString(x)).forEach(x -> INDEL_PON.add(x));
     }
 
@@ -230,7 +231,7 @@ public class BamRecordReader implements BamReader
     private final List<Fragment> queryMateFragments(
             final String geneName, final TranscriptData transcript, final List<BamCodingRecord> codingRecords)
     {
-        SAMSlicer slicer = new SAMSlicer(MIN_MAPPING_QUALITY);
+        SAMSlicer slicer = new SAMSlicer(MIN_MAPPING_QUALITY, false);
 
         SamReader samReader = mSamReaderFactory.open(new File(mBamFile));
 
@@ -265,7 +266,7 @@ public class BamRecordReader implements BamReader
     private List<BamCodingRecord> query(
             boolean reverseStrand, final GenomePosition variantRegion, final NamedBed nearestCodingRegion, final String bamFileName)
     {
-        SAMSlicer slicer = new SAMSlicer(MIN_MAPPING_QUALITY);
+        SAMSlicer slicer = new SAMSlicer(MIN_MAPPING_QUALITY, false);
 
         SamReader samReader = mSamReaderFactory.open(new File(bamFileName));
 
@@ -294,13 +295,13 @@ public class BamRecordReader implements BamReader
 
     private List<BamCodingRecord> query(boolean reverseStrand, final NamedBed bedRegion, final String bamFileName)
     {
-        SAMSlicer slicer = new SAMSlicer(MIN_MAPPING_QUALITY);
+        SAMSlicer slicer = new SAMSlicer(MIN_MAPPING_QUALITY, false);
 
         SamReader samReader = mSamReaderFactory.open(new File(bamFileName));
 
         BaseRegion codingRegion = new BaseRegion(bedRegion.chromosome(), (int)bedRegion.start(), (int)bedRegion.end());
 
-        final List<SAMRecord> records = slicer.slice(codingRegion.Chromosome, codingRegion.start(), codingRegion.end(), samReader);
+        List<SAMRecord> records = slicer.slice(codingRegion.Chromosome, codingRegion.start(), codingRegion.end(), samReader);
 
         final List<BamCodingRecord> codingRecords = Lists.newArrayList();
 

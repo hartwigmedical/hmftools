@@ -15,25 +15,12 @@ import java.util.stream.Collectors;
 public class SAMSlicer
 {
     private final int mMinMappingQuality;
+    private final boolean mProcessSupplementaries;
 
-    public SAMSlicer(int minMappingQuality)
+    public SAMSlicer(int minMappingQuality, boolean processSupplementaries)
     {
         mMinMappingQuality = minMappingQuality;
-    }
-
-    public void slice(final String contig, int start, int end, final SamReader samReader, final Consumer<SAMRecord> consumer)
-    {
-        SAMRecordIterator sAMRecordIterator = samReader.query(contig, start, end, false);
-
-        while(sAMRecordIterator.hasNext())
-        {
-            SAMRecord samRecord = sAMRecordIterator.next();
-
-            if(!meetsQualityRequirements(samRecord))
-                continue;
-
-            consumer.accept(samRecord);
-        }
+        mProcessSupplementaries = processSupplementaries;
     }
 
     public List<SAMRecord> slice(final String contig, int start, int end, final SamReader samReader)
@@ -55,7 +42,7 @@ public class SAMSlicer
         return records;
     }
 
-    public final List<SAMRecord> queryMates(final SamReader samReader, final List<SAMRecord> records)
+    public List<SAMRecord> queryMates(final SamReader samReader, final List<SAMRecord> records)
     {
         return records.stream().map(x -> samReader.queryMate(x))
                 .filter(x -> x != null)
@@ -63,12 +50,18 @@ public class SAMSlicer
                 .collect(Collectors.toList());
     }
 
-    private final boolean meetsQualityRequirements(SAMRecord record)
+    private boolean meetsQualityRequirements(SAMRecord record)
     {
-        return record.getMappingQuality() >= mMinMappingQuality
-            && !record.getReadUnmappedFlag()
-            && !record.getDuplicateReadFlag()
-            && !record.isSecondaryOrSupplementary();
+        if(record.getMappingQuality() < mMinMappingQuality)
+            return false;
+
+        if(record.getReadUnmappedFlag() || record.getDuplicateReadFlag() || record.isSecondaryAlignment())
+            return false;
+
+        if(record.getSupplementaryAlignmentFlag() && !mProcessSupplementaries)
+            return false;
+
+        return true;
     }
 
 }

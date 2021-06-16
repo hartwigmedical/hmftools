@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
+import static com.hartwig.hmftools.lilac.evidence.Candidates.addPhasedCandidates;
 import static com.hartwig.hmftools.lilac.seq.SequenceCount.extractHeterozygousLociSequences;
 import static com.hartwig.hmftools.lilac.evidence.NucleotideFiltering.calcNucleotideHeterogygousLoci;
 import static com.hartwig.hmftools.lilac.coverage.HlaComplex.findDuplicates;
@@ -229,9 +230,10 @@ public class LilacApplication
         List<HlaAllele> aCandidates = candidateFactory.phasedCandidates(hlaAContext, aUnphasedCandidates, aPhasedEvidence);
         List<HlaAllele> bCandidates = candidateFactory.phasedCandidates(hlaBContext, bUnphasedCandidates, bPhasedEvidence);
         List<HlaAllele> cCandidates = candidateFactory.phasedCandidates(hlaCContext, cUnphasedCandidates, cPhasedEvidence);
-        candidateAlleles.addAll(aCandidates);
-        candidateAlleles.addAll(bCandidates);
-        candidateAlleles.addAll(cCandidates);
+
+        addPhasedCandidates(candidateAlleles, aCandidates, mConfig, mRefData);
+        addPhasedCandidates(candidateAlleles, bCandidates, mConfig, mRefData);
+        addPhasedCandidates(candidateAlleles, cCandidates, mConfig, mRefData);
 
         List<HlaAllele> recoveredAlleles = Lists.newArrayList();
 

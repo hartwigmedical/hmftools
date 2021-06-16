@@ -171,9 +171,22 @@ public class HlaAllele implements Comparable<HlaAllele>
 
     public static String toString(final List<HlaAllele> alleles)
     {
+        return toString(alleles, 0);
+    }
+
+    public static String toString(final List<HlaAllele> alleles, int maxToInclude)
+    {
         StringJoiner sj = new StringJoiner(", ");
-        alleles.forEach(x -> sj.add(x.toString()));
+
+        int max = maxToInclude > 0 ? min(alleles.size(), maxToInclude) : alleles.size();
+
+        for(int i = 0; i < max; ++i)
+        {
+            sj.add(alleles.get(i).toString());
+        }
+
         return sj.toString();
+
     }
 
     public static List<HlaAllele> dedup(final List<HlaAllele> alleles)
