@@ -15,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class FittedPurityScoreFactory
 {
-
     private static final double POLYCLONAL_DISTANCE = 0.25;
 
     @NotNull

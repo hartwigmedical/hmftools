@@ -100,7 +100,7 @@ public class CircosCharts
     }
 
     @Nullable
-    private Integer generateCircos(@NotNull final String executable, @NotNull final String type) throws IOException, InterruptedException
+    private Integer generateCircos(final String executable, final String type) throws IOException, InterruptedException
     {
         CircosExecution execution = new CircosExecution(executable);
 
@@ -112,17 +112,17 @@ public class CircosCharts
     }
 
     @NotNull
-    private String confFile(@NotNull final String type)
+    private String confFile(final String type)
     {
         return mBaseCircosTumorSample + "." + type + "." + "conf";
     }
 
-    private void writeStructuralVariants(@NotNull final List<StructuralVariant> structuralVariants) throws IOException
+    private void writeStructuralVariants(final List<StructuralVariant> structuralVariants) throws IOException
     {
         CircosLinkWriter.writeVariants(mBaseCircosTumorSample + ".link.circos", structuralVariants);
     }
 
-    private void writeFittedRegions(@NotNull final List<FittedRegion> fittedRegions) throws IOException
+    private void writeFittedRegions(final List<FittedRegion> fittedRegions) throws IOException
     {
         CircosFileWriter.writeRegions(mBaseCircosReferenceSample + ".ratio.circos",
                 fittedRegions.stream().filter(x -> Doubles.positive(x.unnormalisedObservedNormalRatio())).collect(Collectors.toList()),
@@ -132,26 +132,26 @@ public class CircosCharts
                 ObservedRegion::observedTumorRatio);
     }
 
-    private void writeBafs(@NotNull final List<AmberBAF> bafs) throws IOException
+    private void writeBafs(final List<AmberBAF> bafs) throws IOException
     {
         CircosFileWriter.writePositions(mBaseCircosTumorSample + ".baf.circos", bafs, AmberBAF::tumorBAF);
     }
 
-    private void writeCopyNumbers(@NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException
+    private void writeCopyNumbers(final List<PurpleCopyNumber> copyNumbers) throws IOException
     {
         CircosFileWriter.writeRegions(mBaseCircosTumorSample + ".map.circos", copyNumbers, x -> x.minorAlleleCopyNumber() - 1);
         CircosFileWriter.writeRegions(mBaseCircosTumorSample + ".cnv.circos", copyNumbers, x -> x.averageTumorCopyNumber() - 2);
         CircosFileWriter.writeRegions(mBaseCircosTumorSample + ".baf.circos", copyNumbers, PurpleCopyNumber::averageActualBAF);
     }
 
-    private void writeEnrichedSomatics(@NotNull final List<VariantContextDecorator> somaticVariants) throws IOException
+    private void writeEnrichedSomatics(final List<VariantContextDecorator> somaticVariants) throws IOException
     {
         CircosSNPWriter.writePositions(mBaseCircosTumorSample + ".snp.circos", Downsample.downsample(MAX_PLOT_POINTS, snp(somaticVariants)));
         CircosINDELWriter.writePositions(mBaseCircosTumorSample + ".indel.circos",
                 Downsample.downsample(MAX_PLOT_POINTS, indel(somaticVariants)));
     }
 
-    private void writeConfig(@NotNull final Gender gender) throws IOException
+    private void writeConfig(final Gender gender) throws IOException
     {
         writeConfig(gender, "circos");
         writeConfig(gender, "input");
@@ -165,7 +165,7 @@ public class CircosCharts
         }
     }
 
-    private void writeConfig(@NotNull final Gender gender, @NotNull final String type) throws IOException
+    private void writeConfig(final Gender gender, final String type) throws IOException
     {
         final Charset charset = StandardCharsets.UTF_8;
         String content = readResource("/circos/" + type + ".template");
@@ -177,7 +177,7 @@ public class CircosCharts
         Files.write(new File(confFile(type)).toPath(), content.getBytes(charset));
     }
 
-    private void copyResourceToCircos(@NotNull final String inputName, @NotNull final String outputName) throws IOException
+    private void copyResourceToCircos(final String inputName, final String outputName) throws IOException
     {
         Charset charset = StandardCharsets.UTF_8;
         final String content = readResource("/circos/" + inputName);
@@ -186,7 +186,7 @@ public class CircosCharts
     }
 
     @NotNull
-    private String readResource(@NotNull final String resource) throws IOException
+    private String readResource(final String resource) throws IOException
     {
         InputStream in = getClass().getResourceAsStream(resource);
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
@@ -194,7 +194,7 @@ public class CircosCharts
     }
 
     @NotNull
-    private List<VariantContextDecorator> snp(@NotNull final List<VariantContextDecorator> somaticVariants)
+    private List<VariantContextDecorator> snp(final List<VariantContextDecorator> somaticVariants)
     {
         return somaticVariants.stream()
                 .filter(x -> x.type() == VariantType.SNP)
@@ -203,7 +203,7 @@ public class CircosCharts
     }
 
     @NotNull
-    private List<VariantContextDecorator> indel(@NotNull final List<VariantContextDecorator> somaticVariants)
+    private List<VariantContextDecorator> indel(final List<VariantContextDecorator> somaticVariants)
     {
         return somaticVariants.stream()
                 .filter(x -> x.type() == VariantType.INDEL)

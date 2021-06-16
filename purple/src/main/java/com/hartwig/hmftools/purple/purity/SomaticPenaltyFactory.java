@@ -13,12 +13,12 @@ import org.jetbrains.annotations.NotNull;
 
 final class SomaticPenaltyFactory
 {
-
     private SomaticPenaltyFactory()
     {
     }
 
-    static double penalty(@NotNull PurityAdjuster purityAdjuster, @NotNull Collection<FittedRegion> regions,
+    public static double penalty(
+            @NotNull PurityAdjuster purityAdjuster, @NotNull Collection<FittedRegion> regions,
             @NotNull Collection<SomaticVariant> variants)
     {
         final SomaticDeviation somaticDeviation = SomaticDeviation.INSTANCE;
@@ -40,36 +40,35 @@ final class SomaticPenaltyFactory
 
     private static class SomaticVariantConsumer implements Consumer<SomaticVariant>
     {
-
-        final PurityAdjuster purityAdjuster;
-        private final SomaticDeviation somaticDeviation;
-        private final FittedRegion region;
-        private double score;
-        private int variants;
+        final PurityAdjuster mPurityAdjuster;
+        private final SomaticDeviation mSomaticDeviation;
+        private final FittedRegion mRegion;
+        private double mScore;
+        private int mVariants;
 
         private SomaticVariantConsumer(final PurityAdjuster purityAdjuster, final SomaticDeviation somaticDeviation,
                 final FittedRegion region)
         {
-            this.purityAdjuster = purityAdjuster;
-            this.somaticDeviation = somaticDeviation;
-            this.region = region;
+            mPurityAdjuster = purityAdjuster;
+            mSomaticDeviation = somaticDeviation;
+            mRegion = region;
         }
 
         @Override
         public void accept(final SomaticVariant variant)
         {
-            score += somaticDeviation.deviationFromMax(purityAdjuster, region, variant);
-            variants++;
+            mScore += mSomaticDeviation.deviationFromMax(mPurityAdjuster, mRegion, variant);
+            mVariants++;
         }
 
         public int variants()
         {
-            return variants;
+            return mVariants;
         }
 
         public double score()
         {
-            return score;
+            return mScore;
         }
     }
 }
