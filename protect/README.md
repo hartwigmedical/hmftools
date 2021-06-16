@@ -106,10 +106,10 @@ sources | A list of sources from where the evidence has been extracted | vicc_cg
 urls | A list of urls with additional information about the evidence | https://pubmed.ncbi.nlm.nih.gov
 
 ## Version History and Download Links
-- Upcoming
+- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.4)
   - Output of virus interpreter is loaded by PROTECT and matched against viral evidence
   - Evidence is determined for non-reported genomic events (amps, dels, variants, fusions, viral presence).
-  - Evidence on gene DELETION are considered applicable for homozygous disruptions
+  - Evidence on gene DELETION is considered applicable for homozygous disruptions
   - Maximum reporting levels are configured per SERVE source (C for CKB, B for iClusion/VICC, A for all others)
   - Ref genome version should be configured externally rather than be inferred by PROTECT  
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.3)
