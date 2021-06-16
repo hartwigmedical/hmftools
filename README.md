@@ -9,11 +9,12 @@ More detailed descriptions of the following algorithms are available from the li
  - [COBALT](./cobalt/README.md)
  - [GRIPSS](./gripss/README.md)
  - [PURPLE](./purple/README.md)
- - [LINX](./sv-linx/README.md)
- - [ISOFOX](./isofox/README.md)
+ - [Linx](./sv-linx/README.md)
+ - [Isofox](./isofox/README.md)
  - [SERVE](./serve/README.md)
  - [PROTECT](./protect/README.md)
- - [CUPPA](./cuppa/README.md)
+ - [Cuppa](./cuppa/README.md)
+ - [Virus Interpreter](./virus-interpreter/README.md)
 
 ## Acknowledgements
 
