@@ -34,6 +34,8 @@ public class LilacConstants
     public static final double WARN_UNMATCHED_HAPLOTYPE_SUPPORT = 0.01;
     public static final int LOG_UNMATCHED_HAPLOTYPE_SUPPORT = 3;
     public static final double WARN_INDEL_THRESHOLD = 0.005;
+    public static final double WARN_LOW_COVERAGE_THRESHOLD = 15;
+    public static final double FATAL_LOW_COVERAGE_THRESHOLD = 300;
 
     public static final String GENE_A = "A";
     public static final String GENE_B = "B";

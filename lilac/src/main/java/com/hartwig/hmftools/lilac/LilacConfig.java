@@ -285,7 +285,7 @@ public class LilacConfig
         options.addOption(REFERENCE_BAM, true,"Path to reference/normal BAM");
         options.addOption(TUMOR_BAM, true,"Path to tumor BAM");
         options.addOption(RNA_BAM, true,"Analyse tumor BAM only");
-        options.addOption(RUN_ID, false,"Only search for HLA-Y fragments");
+        options.addOption(RUN_ID, true,"Only search for HLA-Y fragments");
         options.addOption(RESOURCE_DIR, true,"Path to resource files");
         options.addOption(OUTPUT_DIR, true,"Path to output");
         options.addOption(REF_GENOME, true,"Optional path to reference genome fasta file");
