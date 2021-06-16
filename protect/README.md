@@ -36,7 +36,7 @@ gene inactivation is considered applicable in case of a deletion.
 #### Homozygous disruptions
 
 When a gene has been homozygously disrupted according to [LINX](../sv-linx/README.md), evidence is applicable when it has been defined 
-on a gene level with event either inactivation or any mutation. 
+on a gene level with event either inactivation, deletion or any mutation. 
 
 #### Fusions
 

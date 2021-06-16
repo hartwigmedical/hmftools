@@ -22,7 +22,8 @@ public class DisruptionEvidence {
             @NotNull final List<ActionableGene> actionableGenes) {
         this.personalizedEvidenceFactory = personalizedEvidenceFactory;
         this.actionableGenes = actionableGenes.stream()
-                .filter(x -> x.event() == GeneLevelEvent.ANY_MUTATION || x.event() == GeneLevelEvent.INACTIVATION)
+                .filter(x -> x.event() == GeneLevelEvent.ANY_MUTATION || x.event() == GeneLevelEvent.INACTIVATION
+                        || x.event() == GeneLevelEvent.DELETION)
                 .collect(Collectors.toList());
     }
 
@@ -40,9 +41,8 @@ public class DisruptionEvidence {
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableGene actionable : actionableGenes) {
             if (actionable.gene().equals(reportable.gene())) {
-                ProtectEvidence evidence = personalizedEvidenceFactory.somaticReportableEvidence(actionable)
-                        .genomicEvent(reportable.genomicEvent())
-                        .build();
+                ProtectEvidence evidence =
+                        personalizedEvidenceFactory.somaticReportableEvidence(actionable).genomicEvent(reportable.genomicEvent()).build();
                 result.add(evidence);
             }
         }
