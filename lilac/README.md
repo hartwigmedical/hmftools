@@ -21,7 +21,7 @@ Nucleotide and amino acid allele defintions are available here:
 
 Convert these definition files to the reference files used by Lilac with the following command:
 ```
-java -cp lilac.jar com.hartwig.hmftools.lilac.GenerateReferenceSequences \
+java -cp lilac.jar com.hartwig.hmftools.lilac.utils.GenerateReferenceSequences \
    -resource_dir /path_to_definition_files/ \ 
    -output_dir /output_dir/ \
 ```

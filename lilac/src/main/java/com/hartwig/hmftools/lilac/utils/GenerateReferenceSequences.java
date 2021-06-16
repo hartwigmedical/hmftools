@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.lilac;
+package com.hartwig.hmftools.lilac.utils;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;

@@ -165,7 +165,7 @@ public class GenerateBedRegions
             if(transData.CodingStart == null)
                 continue;
 
-            if(!mTranscriptValidTSLs.isEmpty() && !mTranscriptValidTSLs.contains(transData.TransId))
+            if(!transData.IsCanonical && !mTranscriptValidTSLs.isEmpty() && !mTranscriptValidTSLs.contains(transData.TransId))
                 continue;
 
             //if(transData.BioType.equals("nonsense_mediated_decay"))
