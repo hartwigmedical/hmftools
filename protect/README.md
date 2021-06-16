@@ -109,6 +109,7 @@ urls | A list of urls with additional information about the evidence | https://p
 - Upcoming
   - Output of virus interpreter is loaded by PROTECT and matched against viral evidence
   - Evidence is determined for non-reported genomic events (amps, dels, variants, fusions, viral presence).
+  - Evidence on gene DELETION are considered applicable for homozygous disruptions
   - Maximum reporting levels are configured per SERVE source (C for CKB, B for iClusion/VICC, A for all others)
   - Ref genome version should be configured externally rather than be inferred by PROTECT  
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.3)
