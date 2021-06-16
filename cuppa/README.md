@@ -27,7 +27,7 @@ Each classifier is optional and run if enabled by config.
 ## Reference Data
 Cuppa can be used to produce reference data files itself - see instructions below.
 
-Otherwise they can be obtained from the HMF Resources page  [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/).
+Otherwise they can be obtained from the HMF Resources page: [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/).
 
 Cuppa will attempt to load these files from a reference directory supplied in its command-line arguments. The files are:
 
@@ -35,7 +35,7 @@ Data Type | Source | Filename | Description
 ---|---|---|---
 Sample Set | ALL | cup_ref_sample_data | List of the reference samples - SampleId and CancerType
 Features | DNA | cup_ref_feature_prev.csv | Prevalence of fusions, viral insertions, drivers and known INDELs per cancer type
-Features | DNA cup_ref_driver_avg.csv | Average driver counts per cancer types 
+Features | DNA | cup_ref_driver_avg.csv | Average driver counts per cancer types 
 Sample Traits | DNA | cup_ref_sample_trait_percentiles.csv | Percentiles for purity, ploidy and MS Indels per cancer type
 Sample Traits | DNA | cup_ref_sample_trait_rates.csv | Whole genome duplicate and gender rates per cancer type
 Sample Traits | DNA | cup_ref_gender_rates.csv | Optional overrides for expected rates of gender per cancer type 
