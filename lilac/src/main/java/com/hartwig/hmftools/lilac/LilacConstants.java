@@ -65,6 +65,10 @@ public class LilacConstants
     public static final List<Integer> B_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348);
     public static final List<Integer> C_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 338, 349, 365);
 
+    public static final int NUC_LENGTH_A = 1098;
+    public static final int NUC_LENGTH_B = 1089;
+    public static final int NUC_LENGTH_C = 1101;
+
     public static final int MAX_AMINO_ACID_BOUNDARY = 298;
 
     public static final Map<String,List<Integer>> NUCLEOTIDE_EXON_BOUNDARIES = Maps.newHashMap();

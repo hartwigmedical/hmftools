@@ -3,6 +3,9 @@ package com.hartwig.hmftools.lilac.fragment;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
+import static com.hartwig.hmftools.lilac.LilacConstants.NUC_LENGTH_A;
+import static com.hartwig.hmftools.lilac.LilacConstants.NUC_LENGTH_B;
+import static com.hartwig.hmftools.lilac.LilacConstants.NUC_LENGTH_C;
 import static com.hartwig.hmftools.lilac.LilacUtils.arrayToList;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidIndices;
@@ -232,12 +235,13 @@ public class NucleotideFragmentFactory
     public static Map<String,int[]> calculateGeneCoverage(final List<Fragment> fragments)
     {
         final Map<String,int[]> geneBaseDepth = Maps.newHashMap();
+
         int maxNucleotides = fragments.stream()
                 .mapToInt(x -> x.getRawNucleotideLoci().get(x.getRawNucleotideLoci().size() - 1)).max().orElse(0);
 
-        geneBaseDepth.put(HLA_A, new int[maxNucleotides + 1]);
-        geneBaseDepth.put(HLA_B, new int[maxNucleotides + 1]);
-        geneBaseDepth.put(HLA_C, new int[maxNucleotides + 1]);
+        geneBaseDepth.put(HLA_A, new int[NUC_LENGTH_A]);
+        geneBaseDepth.put(HLA_B, new int[NUC_LENGTH_B]);
+        geneBaseDepth.put(HLA_C, new int[NUC_LENGTH_C]);
 
         for(Fragment fragment : fragments)
         {
