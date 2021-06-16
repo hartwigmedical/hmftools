@@ -19,13 +19,16 @@ import org.junit.Test;
 
 public class CnPerChromosomeFactoryTest {
 
-    private static final String PURPLE_COPYNUMBER_TSV = Resources.getResource("purple/sample_purple.cnv.somatic.tsv").getPath();
+    private static final String PURPLE_COPYNUMBER_TSV = Resources.getResource("purple/sample.purple.cnv.somatic.tsv").getPath();
 
     private static final double EPSILON = 1.0E-3;
 
     @Test
     public void canExtractCopyNumberPerChromosomeArmFromFile() throws IOException {
-        assertNotNull(CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(PURPLE_COPYNUMBER_TSV, RefGenomeCoordinates.COORDS_37));
+        List<CnPerChromosomeArmData> cnPerChromosomeArmData =
+                CnPerChromosomeFactory.fromPurpleSomaticCopynumberTsv(PURPLE_COPYNUMBER_TSV, RefGenomeCoordinates.COORDS_37);
+
+        assertNotNull(cnPerChromosomeArmData);
     }
 
     @Test
