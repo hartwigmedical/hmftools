@@ -13,6 +13,7 @@ More detailed descriptions of the following algorithms are available from the li
  - [ISOFOX](./isofox/README.md)
  - [SERVE](./serve/README.md)
  - [PROTECT](./protect/README.md)
+ - [CUPPA](./cuppa/README.md)
 
 ## Acknowledgements
 
