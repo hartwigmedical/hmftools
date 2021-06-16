@@ -27,6 +27,8 @@ public final class LilacQC
     public final double ScoreMargin;
     public final String NextSolutionInfo;
     public final boolean HasHlaY;
+    public final int MedianBaseQual;
+
     public final AminoAcidQC AminoAcidQC;
     public final BamQC BamQC;
     public final CoverageQC CoverageQC;
@@ -34,12 +36,13 @@ public final class LilacQC
     public final SomaticVariantQC SomaticVariantQC;
 
     public LilacQC(
-            boolean hasHlaY, double scoreMargin, final String nextSolutionInfo,
+            boolean hasHlaY, double scoreMargin, final String nextSolutionInfo, int medianBaseQual,
             final AminoAcidQC aminoAcidQC, final BamQC bamQC,
             final CoverageQC coverageQC, final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
     {
         ScoreMargin = scoreMargin;
         NextSolutionInfo = nextSolutionInfo;
+        MedianBaseQual = medianBaseQual;
 
         HasHlaY = hasHlaY;
         AminoAcidQC = aminoAcidQC;
@@ -59,6 +62,7 @@ public final class LilacQC
         columns.add("HlaY");
         columns.add("ScoreMargin");
         columns.add("NextSolutionAlleles");
+        columns.add("MedianBaseQuality");
         columns.addAll(BamQC.header());
         columns.addAll(CoverageQC.header());
         columns.addAll(AminoAcidQC.header());
@@ -78,6 +82,7 @@ public final class LilacQC
         columns.add(String.valueOf(HasHlaY));
         columns.add(String.format("%.3f", ScoreMargin));
         columns.add(NextSolutionInfo);
+        columns.add(String.valueOf(MedianBaseQual));
         columns.addAll(BamQC.body());
         columns.addAll(CoverageQC.body());
         columns.addAll(AminoAcidQC.body());

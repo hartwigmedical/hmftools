@@ -193,4 +193,37 @@ public class NucleotideFragmentFactory
         return FragmentUtils.mergeFragmentsById(fragments).get(0);
     }
 
+    public int calculateMedianBaseQuality(final List<Fragment> fragments)
+    {
+        int[] baseQualFrequeny = new int[mMinBaseQuality + 1];
+        long totalBases = 0;
+
+        for(Fragment fragment : fragments)
+        {
+            for(Integer baseQual : fragment.getRawNucleotideQuality())
+            {
+                ++totalBases;
+
+                if(baseQual >= mMinBaseQuality)
+                    ++baseQualFrequeny[mMinBaseQuality];
+                else
+                    ++baseQualFrequeny[baseQual];
+            }
+        }
+
+        // calculate median
+        long medianEntry = totalBases / 2;
+        long cumulativeTotal = 0;
+
+        for(int i = 0; i < baseQualFrequeny.length; ++i)
+        {
+            cumulativeTotal += baseQualFrequeny[i];
+
+            if(cumulativeTotal >= medianEntry)
+                return i;
+        }
+
+        return mMinBaseQuality;
+    }
+
 }

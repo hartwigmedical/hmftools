@@ -53,7 +53,7 @@ public class LilacConfig
     public final String SampleDataDir;
     public final String OutputDir;
 
-    public final int MinBaseQual;
+    public int MinBaseQual;
     private final int MinEvidence;
     private final double MinEvidenceFactor;
     private final double MinHighQualEvidenceFactor;

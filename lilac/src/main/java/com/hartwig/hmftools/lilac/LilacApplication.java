@@ -184,6 +184,14 @@ public class LilacApplication
 
         mRefNucleotideFrags.addAll(mNucleotideGeneEnrichment.enrich(mRefBamReader.readFromBam()));
 
+        int medianBaseQuality = mNucleotideFragFactory.calculateMedianBaseQuality(mRefNucleotideFrags);
+
+        if(medianBaseQuality < mConfig.MinBaseQual)
+        {
+            LL_LOGGER.info("lowering min base quality({}) to median({})", mConfig.MinBaseQual, medianBaseQuality);
+            mConfig.MinBaseQual = medianBaseQuality;
+        }
+
         allValid &= validateFragments(mRefNucleotideFrags);
 
         mAminoAcidPipeline = new AminoAcidFragmentPipeline(mConfig, mRefNucleotideFrags);
@@ -452,7 +460,8 @@ public class LilacApplication
         CoverageQC coverageQC = CoverageQC.create(refAminoAcidFrags, winningRefCoverage);
 
         mSummaryMetrics = new LilacQC(
-                hasHlaY, scoreMargin, nextSolutionInfo.toString(), aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC);
+                hasHlaY, scoreMargin, nextSolutionInfo.toString(), medianBaseQuality,
+                aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC);
 
         mSolutionSummary = SolutionSummary.create(winningRefCoverage, mTumorCoverage, mTumorCopyNumber, mSomaticCodingCounts, mRnaCoverage);
     }
