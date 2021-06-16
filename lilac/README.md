@@ -36,12 +36,15 @@ reference_bam | Sample's germline BAM
 
 NOTE: Lilac handles BAMs which have been sliced for the HLA gene regions.
 
+If a sample's tumor BAM is provided in place of the reference BAM, then Lilac will determine the allele solution from it instead.
+
 ### Optional Inputs
 
 Argument | Description 
 ---|---
 ref_genome_version | V37 (default), V38 or HG19 (ie 37 with 'chr' prefix)
 tumor_bam | Sample's tumor BAM
+rna_bam | Sample's RNA BAM if available
 gene_copy_number_file | Sample gene copy number file from Purple
 somatic_variants_file | Sample's somatic variant VCF file, for annotation of HLA gene variants
 
@@ -101,11 +104,15 @@ RefTotal | Total assigned fragments from reference BAM
 RefUnique | Fragments uniquely assigned to allele
 RefShared | Fragments assigned to allele and others in this solution
 RefWild | Fragments matched to a wildcard allele
+TumorCopyNumber | Copy number from Tumor/Ref fragment ratio and Purple copy number
 TumorTotal | As above for tumor BAM
 TumorUnique | As above for tumor BAM
 TumorShared | As above for tumor BAM
 TumorWild | As above for tumor BAM
-TumorCopyNumber | Copy number from Tumor/Ref fragment ratio and Purple copy number
+RnaTotal | As above for RNA BAM
+RnaUnique | As above for RNA BAM
+RnaShared | As above for RNA BAM
+RnaWild | As above for RNA BAM
 SomaticMissense | Matched missense variants
 SomaticNonsenseOrFrameshift | Matched nonsense or frameshift variants
 SomaticSplice | Matched splice variants
@@ -120,9 +127,11 @@ Status | PASS, otherwise 1 or more warnings
 HlaY | true/false, if exceeds HLA threshold (10% of total fragments)
 ScoreMargin | Difference in score to second-top solution
 NextSolutionAlleles | Allele difference in second-top solution
+MedianBaseQuality | Median base quality across all coding bases from all fragments
 DiscardedIndels | Discarded fragments due to unknown INDELs
 DiscardedIndelMaxFrags | Maximum fragments assigned to any particular unknown INDEL
 DiscardedAlignmentFragments | 
+A_LowCoverageBases | Number of bases with less than 15-depth coverage across all coding bases, also for B and C genes
 ATypes | Number of HLA-A alleles
 BTypes | Number of HLA-B alleles
 CTypes | Number of HLA-C alleles
