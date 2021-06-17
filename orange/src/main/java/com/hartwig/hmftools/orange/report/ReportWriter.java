@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 
 import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -14,6 +15,7 @@ import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Text;
 
@@ -40,6 +42,8 @@ public class ReportWriter {
 
         doc.getPdfDocument().addNewPage();
         renderTitle(doc.getPdfDocument().getFirstPage());
+        Image circosImage = new Image(ImageDataFactory.create(report.plots().purpleCircosPlot()));
+        doc.add(circosImage);
 
         doc.close();
 
