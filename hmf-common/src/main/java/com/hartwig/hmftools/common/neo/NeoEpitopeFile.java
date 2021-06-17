@@ -47,7 +47,7 @@ public class NeoEpitopeFile
     public final double[] CohortTpmTotal;
     public final boolean WildtypeNovelAAMatch;
 
-    public static final String DELIMITER = ",";
+    public static final String  DELIMITER = ",";
     public static final String ITEM_DELIM = ";";
     public static final String VAR_INFO_DELIM = ":";
     public static final String FUSION_INFO_DELIM = ";";

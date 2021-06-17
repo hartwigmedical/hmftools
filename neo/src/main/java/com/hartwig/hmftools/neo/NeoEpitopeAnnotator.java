@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.neo.NeoCommon.IM_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.NeoCommon.LOG_DEBUG;
 
 import java.io.BufferedReader;
@@ -86,11 +86,11 @@ public class NeoEpitopeAnnotator
 
         if(mConfig.Samples.size() == 1)
         {
-            IM_LOGGER.info("processing sample({})", mConfig.Samples.get(0).Id);
+            NE_LOGGER.info("processing sample({})", mConfig.Samples.get(0).Id);
         }
         else
         {
-            IM_LOGGER.info("processing {} samples", mConfig.Samples.size());
+            NE_LOGGER.info("processing {} samples", mConfig.Samples.size());
 
             if(mConfig.WriteCohortFiles)
             {
@@ -161,7 +161,7 @@ public class NeoEpitopeAnnotator
         }
         catch (IOException e)
         {
-            IM_LOGGER.warn("failed to load common HLA types file({}): {}", mConfig.MutationsFile, e.toString());
+            NE_LOGGER.warn("failed to load common HLA types file({}): {}", mConfig.MutationsFile, e.toString());
         }
 
         return pointMutations;
@@ -219,7 +219,7 @@ public class NeoEpitopeAnnotator
 
             if (line == null)
             {
-                IM_LOGGER.error("empty Linx neo-epitope file({})", filename);
+                NE_LOGGER.error("empty Linx neo-epitope file({})", filename);
                 return;
             }
 
@@ -247,11 +247,11 @@ public class NeoEpitopeAnnotator
                 ++neCount;
             }
 
-            IM_LOGGER.debug("loaded {} Linx neo-epitope candidates from file: {}", neCount, filename);
+            NE_LOGGER.debug("loaded {} Linx neo-epitope candidates from file: {}", neCount, filename);
         }
         catch(IOException exception)
         {
-            IM_LOGGER.error("failed to read Linx neo-epitope file({})", filename, exception.toString());
+            NE_LOGGER.error("failed to read Linx neo-epitope file({})", filename, exception.toString());
         }
     }
 
@@ -280,7 +280,7 @@ public class NeoEpitopeAnnotator
         }
         catch (final IOException e)
         {
-            IM_LOGGER.error("error initialising neo-epitope output file: {}", e.toString());
+            NE_LOGGER.error("error initialising neo-epitope output file: {}", e.toString());
             return null;
         }
     }
@@ -307,7 +307,7 @@ public class NeoEpitopeAnnotator
         }
         catch (final IOException e)
         {
-            IM_LOGGER.error("error writing neo-epitope output file: {}", e.toString());
+            NE_LOGGER.error("error writing neo-epitope output file: {}", e.toString());
         }
     }
 
@@ -333,7 +333,7 @@ public class NeoEpitopeAnnotator
         }
         catch (final IOException e)
         {
-            IM_LOGGER.error("error initialising HLA peptide output file: {}", e.toString());
+            NE_LOGGER.error("error initialising HLA peptide output file: {}", e.toString());
         }
 
         return null;
@@ -375,7 +375,7 @@ public class NeoEpitopeAnnotator
 
                 if(predictionHlaType == null)
                 {
-                    IM_LOGGER.error("sample({} skipping invalid HLA type: {}", sampleData.Id, hlaType);
+                    NE_LOGGER.error("sample({} skipping invalid HLA type: {}", sampleData.Id, hlaType);
                     continue;
                 }
 
@@ -397,7 +397,7 @@ public class NeoEpitopeAnnotator
         }
         catch (final IOException e)
         {
-            IM_LOGGER.error("error writing HLA peptide output file: {}", e.toString());
+            NE_LOGGER.error("error writing HLA peptide output file: {}", e.toString());
         }
     }
 
@@ -415,7 +415,7 @@ public class NeoEpitopeAnnotator
         NeoEpitopeAnnotator neoEpitopeAnnotator = new NeoEpitopeAnnotator(cmd);
         neoEpitopeAnnotator.run();
 
-        IM_LOGGER.info("Neo-epitope annotations complete");
+        NE_LOGGER.info("Neo-epitope annotations complete");
     }
 
     @NotNull

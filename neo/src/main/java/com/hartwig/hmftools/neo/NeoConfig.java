@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.neo.NeoCommon.IM_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.NeoCommon.LOG_DEBUG;
 import static com.hartwig.hmftools.neo.NeoCommon.loadGeneIdsFile;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleDataFile;
@@ -85,7 +85,7 @@ public class NeoConfig
 
                 if(sample == null)
                 {
-                    IM_LOGGER.error("invalid sample data: {}", sampleIdConfig);
+                    NE_LOGGER.error("invalid sample data: {}", sampleIdConfig);
                 }
                 else
                 {
@@ -115,7 +115,7 @@ public class NeoConfig
             }
             else
             {
-                IM_LOGGER.error("invalid peptide lengths: {}", cmd.getOptionValue(PEPTIDE_LENGTHS));
+                NE_LOGGER.error("invalid peptide lengths: {}", cmd.getOptionValue(PEPTIDE_LENGTHS));
             }
         }
 
@@ -193,7 +193,7 @@ public class NeoConfig
     {
         if (!Files.exists(Paths.get(filename)))
         {
-            IM_LOGGER.warn("invalid HLA types file({})", filename);
+            NE_LOGGER.warn("invalid HLA types file({})", filename);
             return;
         }
 
@@ -211,7 +211,7 @@ public class NeoConfig
         }
         catch (IOException e)
         {
-            IM_LOGGER.warn("failed to load common HLA types file({}): {}", filename, e.toString());
+            NE_LOGGER.warn("failed to load common HLA types file({}): {}", filename, e.toString());
         }
     }
 

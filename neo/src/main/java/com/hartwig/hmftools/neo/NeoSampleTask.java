@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.neo.NeoCommon.DOWNSTREAM_PRE_GENE_DISTANCE;
-import static com.hartwig.hmftools.neo.NeoCommon.IM_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.NeoEpitopeAnnotator.initialiseNeoepitopeWriter;
 import static com.hartwig.hmftools.neo.NeoEpitopeAnnotator.initialisePeptideWriter;
 import static com.hartwig.hmftools.neo.NeoEpitopeAnnotator.writeNeoepitopes;
@@ -99,7 +99,7 @@ public class NeoSampleTask implements Callable
         final List<NeoEpitopeFusion> fusions = getSvFusions();
         final List<PointMutationData> pointMutations = getSomaticVariants();
 
-        IM_LOGGER.info("sample({}) loaded {} fusions and {} point mutations",
+        NE_LOGGER.info("sample({}) loaded {} fusions and {} point mutations",
                 mSampleData.Id, fusions.size(), pointMutations.size());
 
         addSvFusions(fusions);
@@ -156,7 +156,7 @@ public class NeoSampleTask implements Callable
 
         if(!Files.exists(Paths.get(filename)))
         {
-            IM_LOGGER.warn("Linx neo-epitope file({}) not found", filename);
+            NE_LOGGER.warn("Linx neo-epitope file({}) not found", filename);
             return fusions;
         }
 
@@ -168,7 +168,7 @@ public class NeoSampleTask implements Callable
 
             if (line == null)
             {
-                IM_LOGGER.error("empty Linx neo-epitope file({})", filename);
+                NE_LOGGER.error("empty Linx neo-epitope file({})", filename);
                 return fusions;
             }
 
@@ -182,11 +182,11 @@ public class NeoSampleTask implements Callable
                 ++neCount;
             }
 
-            IM_LOGGER.debug("loaded {} Linx neo-epitope candidates from file: {}", neCount, filename);
+            NE_LOGGER.debug("loaded {} Linx neo-epitope candidates from file: {}", neCount, filename);
         }
         catch(IOException exception)
         {
-            IM_LOGGER.error("failed to read Linx neo-epitope file({})", filename, exception.toString());
+            NE_LOGGER.error("failed to read Linx neo-epitope file({})", filename, exception.toString());
         }
 
         return fusions;
@@ -314,7 +314,7 @@ public class NeoSampleTask implements Callable
 
             if(!neData.Valid)
             {
-                IM_LOGGER.debug("skipping invalid neo: {}", neData);
+                NE_LOGGER.debug("skipping invalid neo: {}", neData);
                 continue;
             }
 

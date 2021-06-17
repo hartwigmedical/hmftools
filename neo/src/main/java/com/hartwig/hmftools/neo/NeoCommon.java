@@ -19,13 +19,13 @@ public class NeoCommon
     public static final String IM_FILE_ID = ".imu.";
     public static final String LOG_DEBUG = "log_debug";
 
-    public static final Logger IM_LOGGER = LogManager.getLogger(NeoCommon.class);
+    public static final Logger NE_LOGGER = LogManager.getLogger(NeoCommon.class);
 
     public static void loadGeneIdsFile(final String filename, final List<String> geneIdList)
     {
         if (!Files.exists(Paths.get(filename)))
         {
-            IM_LOGGER.warn("invalid gene ID file({})", filename);
+            NE_LOGGER.warn("invalid gene ID file({})", filename);
             return;
         }
 
@@ -50,7 +50,7 @@ public class NeoCommon
         }
         catch (IOException e)
         {
-            IM_LOGGER.warn("failed to load gene ID file({}): {}", filename, e.toString());
+            NE_LOGGER.warn("failed to load gene ID file({}): {}", filename, e.toString());
         }
     }
 
@@ -58,7 +58,7 @@ public class NeoCommon
     {
         if (!Files.exists(Paths.get(filename)))
         {
-            IM_LOGGER.warn("invalid sampleId file({})", filename);
+            NE_LOGGER.warn("invalid sampleId file({})", filename);
             return;
         }
 
@@ -87,7 +87,7 @@ public class NeoCommon
         }
         catch (IOException e)
         {
-            IM_LOGGER.warn("failed to load sampleId file({}): {}", filename, e.toString());
+            NE_LOGGER.warn("failed to load sampleId file({}): {}", filename, e.toString());
         }
     }
 
@@ -95,7 +95,7 @@ public class NeoCommon
     {
         if (!Files.exists(Paths.get(filename)))
         {
-            IM_LOGGER.warn("invalid sampleId file({})", filename);
+            NE_LOGGER.warn("invalid sampleId file({})", filename);
             return;
         }
 
@@ -115,7 +115,7 @@ public class NeoCommon
 
                 if(sample == null)
                 {
-                    IM_LOGGER.error("invalid sample data record: {}", data);
+                    NE_LOGGER.error("invalid sample data record: {}", data);
                     continue;
                 }
 
@@ -124,7 +124,7 @@ public class NeoCommon
         }
         catch (IOException e)
         {
-            IM_LOGGER.warn("failed to load sample data file({}): {}", filename, e.toString());
+            NE_LOGGER.warn("failed to load sample data file({}): {}", filename, e.toString());
         }
     }
 

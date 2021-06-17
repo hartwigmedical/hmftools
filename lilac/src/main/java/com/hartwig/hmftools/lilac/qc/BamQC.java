@@ -41,7 +41,7 @@ public class BamQC
     public List<String> header()
     {
         return Lists.newArrayList("DiscardedIndels", "DiscardedIndelMaxFrags", "DiscardedAlignmentFragments",
-                "A_LowCoverageBases", "B_LowCoverageBases", "HLA_C_LowCoverageBases");
+                "A_LowCoverageBases", "B_LowCoverageBases", "C_LowCoverageBases");
     }
 
     @NotNull

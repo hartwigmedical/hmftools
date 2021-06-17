@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.neo;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.neo.NeoCommon.IM_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -60,7 +60,7 @@ public class CohortTpmData
         // GeneId,GeneName,TransName,Mesothelium,etc
         if(!Files.exists(Paths.get(filename)))
         {
-            IM_LOGGER.error("invalid cohort TPM file({})", filename);
+            NE_LOGGER.error("invalid cohort TPM file({})", filename);
             return;
         }
 
@@ -96,11 +96,11 @@ public class CohortTpmData
                 }
             }
 
-            IM_LOGGER.info("loaded {} cohort TPM median data", mTransCancerTpmMap.size());
+            NE_LOGGER.info("loaded {} cohort TPM median data", mTransCancerTpmMap.size());
         }
         catch(IOException e)
         {
-            IM_LOGGER.error("failed to load cohort TPM median data file({}): {}", filename, e.toString());
+            NE_LOGGER.error("failed to load cohort TPM median data file({}): {}", filename, e.toString());
             return;
         }
 

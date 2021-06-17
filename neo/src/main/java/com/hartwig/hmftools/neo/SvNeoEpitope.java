@@ -18,7 +18,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.neo.NeoCommon.IM_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -223,7 +223,7 @@ public class SvNeoEpitope extends NeoEpitope
         ExtCodingBases[FS_DOWN] = cbExcerpt.Bases;
         ExtCigars[FS_DOWN] = cbExcerpt.CigarRef;
 
-        IM_LOGGER.trace("ne({}) phased({} up={} down={}) reqBases(up={} down={}) insSeqLen({})",
+        NE_LOGGER.trace("ne({}) phased({} up={} down={}) reqBases(up={} down={}) insSeqLen({})",
                 toString(), phaseMatched(), upExtraBases, downExtraBases, upRequiredBases, downRequiredBases, codingInsSeqLen);
     }
 

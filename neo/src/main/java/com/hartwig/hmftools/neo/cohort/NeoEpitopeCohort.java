@@ -18,7 +18,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.neo.NeoCommon.IM_FILE_ID;
-import static com.hartwig.hmftools.neo.NeoCommon.IM_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.NeoCommon.LOG_DEBUG;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleIdsFile;
 import static com.hartwig.hmftools.neo.predict.NeoPredictionsConfig.PREDICTIONS_FILE_ID;
@@ -50,14 +50,14 @@ import org.jetbrains.annotations.NotNull;
 public class NeoEpitopeCohort
 {
     private final String mOutputDir;
-    private final String mSampleDataDir;
+    private final String mNeoDataDir;
     private final String mPredictionsDataDir;
     private final List<String> mSampleIds;
 
     private BufferedWriter mCohortWriter;
 
     public static final String SAMPLE_ID_FILE = "sample_id_file";
-    public static final String SAMPLE_DATA_DIR = "sample_data_dir";
+    public static final String NEO_DATA_DIR = "neo_data_dir";
     public static final String PREDICTION_DATA_DIR = "prediction_data_dir";
 
     private static final double PREDICTION_FACTOR = 2;
@@ -67,7 +67,7 @@ public class NeoEpitopeCohort
         mSampleIds = Lists.newArrayList();
         loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE), mSampleIds);
 
-        mSampleDataDir = cmd.getOptionValue(SAMPLE_DATA_DIR);
+        mNeoDataDir = cmd.getOptionValue(NEO_DATA_DIR);
         mPredictionsDataDir = cmd.getOptionValue(PREDICTION_DATA_DIR);
         mOutputDir = parseOutputDir(cmd);
         mCohortWriter = null;
@@ -80,7 +80,7 @@ public class NeoEpitopeCohort
 
         initialiseWriter();
 
-        IM_LOGGER.info("processing {} samples", mSampleIds.size());
+        NE_LOGGER.info("processing {} samples", mSampleIds.size());
 
         // check required inputs and config
         int processed = 0;
@@ -92,7 +92,7 @@ public class NeoEpitopeCohort
 
             if(processed > 0 && (processed % 100) == 0)
             {
-                IM_LOGGER.info("processed {} samples", processed);
+                NE_LOGGER.info("processed {} samples", processed);
             }
         }
 
@@ -103,7 +103,7 @@ public class NeoEpitopeCohort
     {
         try
         {
-            String neoEpitopeFile = NeoEpitopeFile.generateFilename(mSampleDataDir, sampleId);
+            String neoEpitopeFile = NeoEpitopeFile.generateFilename(mNeoDataDir, sampleId);
             String rnaNeoEpitopeFile = neoEpitopeFile.replace(IM_FILE_ID, ISF_FILE_ID);
 
             boolean hasRnaData = Files.exists(Paths.get(rnaNeoEpitopeFile));
@@ -130,7 +130,7 @@ public class NeoEpitopeCohort
                 }
                 catch(Exception e)
                 {
-                    IM_LOGGER.error("sample({}) error({}) parsing neo data: {}", sampleId, e.toString(), line);
+                    NE_LOGGER.error("sample({}) error({}) parsing neo data: {}", sampleId, e.toString(), line);
                     continue;
                 }
 
@@ -150,11 +150,11 @@ public class NeoEpitopeCohort
                 writeData(sampleId, neoData, hasRnaData, rnaFragCount, rnaBaseDepth, peptideValues);
             }
 
-            IM_LOGGER.debug("sample({}) loaded {} neo-epitopes {}", sampleId, lines.size(), hasRnaData ? "with RNA" : "");
+            NE_LOGGER.debug("sample({}) loaded {} neo-epitopes {}", sampleId, lines.size(), hasRnaData ? "with RNA" : "");
         }
         catch(IOException exception)
         {
-            IM_LOGGER.error("failed to read sample({}) neo-epitope file: {}", sampleId, exception.toString());
+            NE_LOGGER.error("failed to read sample({}) neo-epitope file: {}", sampleId, exception.toString());
         }
     }
 
@@ -220,7 +220,7 @@ public class NeoEpitopeCohort
         }
         catch (IOException e)
         {
-            IM_LOGGER.warn("failed to load sample predictions: {}", e.toString());
+            NE_LOGGER.warn("failed to load sample predictions: {}", e.toString());
         }
 
 
@@ -245,7 +245,7 @@ public class NeoEpitopeCohort
         }
         catch (IOException e)
         {
-            IM_LOGGER.error("failed to create neo-epitope writer: {}", e.toString());
+            NE_LOGGER.error("failed to create neo-epitope writer: {}", e.toString());
         }
     }
 
@@ -300,14 +300,14 @@ public class NeoEpitopeCohort
         }
         catch (IOException e)
         {
-            IM_LOGGER.error("failed to write neo-epitope data: {}", e.toString());
+            NE_LOGGER.error("failed to write neo-epitope data: {}", e.toString());
         }
     }
 
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(SAMPLE_ID_FILE, true, "SampleId file");
-        options.addOption(SAMPLE_DATA_DIR, true, "Directory for sample neo-epitope files");
+        options.addOption(NEO_DATA_DIR, true, "Directory for sample neo-epitope files");
         options.addOption(PREDICTION_DATA_DIR, true, "Directory for sample prediction result files");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
@@ -327,7 +327,7 @@ public class NeoEpitopeCohort
         NeoEpitopeCohort neoEpitopeCohort = new NeoEpitopeCohort(cmd);
         neoEpitopeCohort.run();
 
-        IM_LOGGER.info("Neo-epitope annotations complete");
+        NE_LOGGER.info("Neo-epitope annotations complete");
     }
 
     @NotNull

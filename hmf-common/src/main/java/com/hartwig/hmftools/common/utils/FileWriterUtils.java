@@ -84,7 +84,7 @@ public final class FileWriterUtils
     public static Map<String,Integer> createFieldsIndexMap(final String fieldsHeader, final String delimiter)
     {
         final String[] items = fieldsHeader.split(delimiter,-1);
-        final Map<String,Integer> fieldsIndexMap = Maps.newHashMap();
+        final Map<String,Integer> fieldsIndexMap = Maps.newLinkedHashMap();
 
         for(int i = 0; i < items.length; ++i)
         {

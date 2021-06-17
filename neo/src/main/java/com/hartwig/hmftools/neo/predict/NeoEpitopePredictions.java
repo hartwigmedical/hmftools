@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.neo.NeoCommon.IM_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.NeoCommon.LOG_DEBUG;
 import static com.hartwig.hmftools.neo.NeoConfig.NEO_EPITOPE_FILE_ID;
 import static com.hartwig.hmftools.neo.predict.NeoPredictionsConfig.PREDICTIONS_FILE_ID;
@@ -50,11 +50,11 @@ public class NeoEpitopePredictions
 
         if(mConfig.Samples.size() == 1)
         {
-            IM_LOGGER.info("processing sample({})", mConfig.Samples.get(0).Id);
+            NE_LOGGER.info("processing sample({})", mConfig.Samples.get(0).Id);
         }
         else
         {
-            IM_LOGGER.info("processing {} samples", mConfig.Samples.size());
+            NE_LOGGER.info("processing {} samples", mConfig.Samples.size());
         }
 
         // check required inputs and config
@@ -68,7 +68,7 @@ public class NeoEpitopePredictions
             final List<NeoPredictionData> predictions = loadPredictionData(sample.Id);
             final List<NeoEpitopeFile> neoEpitopes = loadNeoEpitopeData(sample.Id);
 
-            IM_LOGGER.debug("sample({}) loaded {} fusions and {} point mutations",
+            NE_LOGGER.debug("sample({}) loaded {} fusions and {} point mutations",
                     sample.Id, predictions.size());
 
             if(!mConfig.WriteCohortFile)
@@ -125,7 +125,7 @@ public class NeoEpitopePredictions
         }
         catch (IOException e)
         {
-            IM_LOGGER.warn("failed to load sample predictions: {}", e.toString());
+            NE_LOGGER.warn("failed to load sample predictions: {}", e.toString());
         }
 
         return predictions;
@@ -161,7 +161,7 @@ public class NeoEpitopePredictions
         }
         catch (final IOException e)
         {
-            IM_LOGGER.error("error writing neo-epitope output file: {}", e.toString());
+            NE_LOGGER.error("error writing neo-epitope output file: {}", e.toString());
         }
     }
 
@@ -176,7 +176,7 @@ public class NeoEpitopePredictions
         }
         catch(IOException exception)
         {
-            IM_LOGGER.error("failed to read neo-epitope file:", exception.toString());
+            NE_LOGGER.error("failed to read neo-epitope file:", exception.toString());
         }
 
         return neDataList;
@@ -196,7 +196,7 @@ public class NeoEpitopePredictions
         NeoEpitopePredictions neoEpitopePredictions = new NeoEpitopePredictions(cmd);
         neoEpitopePredictions.run();
 
-        IM_LOGGER.info("Neo-epitope prediction analysis complete");
+        NE_LOGGER.info("Neo-epitope prediction analysis complete");
     }
 
     @NotNull

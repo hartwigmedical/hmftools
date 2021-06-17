@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.neo.NeoCommon.IM_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.common.codon.AminoAcidConverter.STOP_SYMBOL;
 
 import java.util.Set;
@@ -129,7 +129,7 @@ public abstract class NeoEpitope
 
         if(novelUpstreamBases < 0 || novelDownstreamBases < 0)
         {
-            IM_LOGGER.error("ne({}) invalid upBases({} noveBases={}) or downBases({} noveBases={})",
+            NE_LOGGER.error("ne({}) invalid upBases({} noveBases={}) or downBases({} noveBases={})",
                     this, CodingBases[FS_UP], novelUpstreamBases, CodingBases[FS_DOWN], novelDownstreamBases);
             return;
         }
@@ -142,7 +142,7 @@ public abstract class NeoEpitope
 
             if(novelUpstreamBases > upstreamBases.length() || novelDownstreamBases > downstreamBases.length())
             {
-                IM_LOGGER.debug("ne({}) invalid upBases({} noveBases={}) or downBases({} noveBases={})",
+                NE_LOGGER.debug("ne({}) invalid upBases({} noveBases={}) or downBases({} noveBases={})",
                         this, upstreamBases, novelUpstreamBases, downstreamBases, novelDownstreamBases);
                 Valid = false;
                 return;
@@ -173,7 +173,7 @@ public abstract class NeoEpitope
         if(CodingBases[FS_UP].length() > requiredLength)
             CodingBases[FS_UP] = CodingBases[FS_UP].substring(CodingBases[FS_UP].length() - requiredLength);
 
-        IM_LOGGER.trace("ne({}) upBases({}) novelCodon({}) downBases({}) downNmdBases({})",
+        NE_LOGGER.trace("ne({}) upBases({}) novelCodon({}) downBases({}) downNmdBases({})",
                 this, CodingBases[FS_UP], NeoUtils.checkTrimBases(NovelCodonBases),
                 NeoUtils.checkTrimBases(CodingBases[FS_DOWN]), NmdBasesMin);
     }
@@ -232,7 +232,7 @@ public abstract class NeoEpitope
             UpstreamWildTypeAcids = NeoUtils.getAminoAcids(trimIncompleteCodons(upWildtypeBases), true);
         }
 
-        IM_LOGGER.trace("ne({}) upAA({}) novel({}) downAA({})",
+        NE_LOGGER.trace("ne({}) upAA({}) novel({}) downAA({})",
                 this, UpstreamAcids, NeoUtils.checkTrimBases(NovelAcid), NeoUtils.checkTrimBases(DownstreamAcids));
 
         checkStopLost(refGenome, reqWildtypeAminoAcids);
