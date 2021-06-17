@@ -19,7 +19,7 @@ public class LilacConstants
     public static final double DEFAULT_MIN_EVIDENCE_FACTOR = 0.00075;
 
     // values applied as percentages
-    public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.01;
+    public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.001;
     public static final double MIN_CONF_UNIQUE_GROUP_COVERAGE = 0.02;
     public static final double MIN_CONF_UNIQUE_PROTEIN_COVERAGE = 0.01;
     public static final double HLA_Y_FRAGMENT_THRESHOLD = 0.01;
@@ -34,7 +34,7 @@ public class LilacConstants
     public static final double WARN_UNMATCHED_HAPLOTYPE_SUPPORT = 0.01;
     public static final int LOG_UNMATCHED_HAPLOTYPE_SUPPORT = 3;
     public static final double WARN_INDEL_THRESHOLD = 0.005;
-    public static final double WARN_LOW_COVERAGE_THRESHOLD = 15;
+    public static final double WARN_LOW_COVERAGE_THRESHOLD = 10;
     public static final double FATAL_LOW_COVERAGE_THRESHOLD = 300;
 
     public static final String GENE_A = "A";

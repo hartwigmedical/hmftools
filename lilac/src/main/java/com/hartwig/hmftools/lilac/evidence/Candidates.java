@@ -29,7 +29,7 @@ public final class Candidates
         mAminoAcidSequences = aminoAcidSequences;
     }
 
-    public final List<HlaAllele> unphasedCandidates(final HlaContext context, final List<Fragment> fragments)
+    public final List<HlaAllele> unphasedCandidates(final HlaContext context, final List<Fragment> fragments, final List<HlaAllele> commonAllles)
     {
         List<Integer> aminoAcidBoundary = context.AminoAcidBoundaries;
 
@@ -52,8 +52,8 @@ public final class Candidates
 
         if (aminoAcidSpecificAllelesCandidates.isEmpty())
         {
-            LL_LOGGER.warn("  no candidates after amino acid filtering - reverting to all gene candidates");
-            return geneCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
+            LL_LOGGER.warn("  no candidates after amino acid filtering - reverting to common allele gene candidates");
+            return commonAllles.stream().filter(x -> x.Gene.equals(context.Gene)).collect(Collectors.toList());
         }
 
         LL_LOGGER.info("  {} candidates after amino acid filtering", aminoAcidCandidates.size());

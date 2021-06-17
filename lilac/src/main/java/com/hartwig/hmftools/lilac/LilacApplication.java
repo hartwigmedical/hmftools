@@ -200,16 +200,7 @@ public class LilacApplication
         }
 
         final Map<String,int[]> geneBaseDepth = calculateGeneCoverage(mRefNucleotideFrags);
-
-        int aLowCoverage = (int) Arrays.stream(geneBaseDepth.get(HLA_A)).filter(x -> x < WARN_LOW_COVERAGE_THRESHOLD).count();
-        int bLowCoverage = (int)Arrays.stream(geneBaseDepth.get(HLA_B)).filter(x -> x < WARN_LOW_COVERAGE_THRESHOLD).count();
-        int cLowCoverage = (int)Arrays.stream(geneBaseDepth.get(HLA_C)).filter(x -> x < WARN_LOW_COVERAGE_THRESHOLD).count();
-
-        if(!mConfig.ReferenceBam.isEmpty() && aLowCoverage + bLowCoverage + cLowCoverage >= FATAL_LOW_COVERAGE_THRESHOLD)
-        {
-            LL_LOGGER.error("gene depth coverage(A={} B={} C={}) too low, exiting", aLowCoverage, bLowCoverage, cLowCoverage);
-            System.exit(1);
-        }
+        validateGeneDepth(geneBaseDepth);
 
         allValid &= validateFragments(mRefNucleotideFrags);
 
@@ -230,9 +221,9 @@ public class LilacApplication
 
         // determine un-phased Candidates
         Candidates candidateFactory = new Candidates(minEvidence, mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
-        List<HlaAllele> aUnphasedCandidates = candidateFactory.unphasedCandidates(hlaAContext, aCandidateFrags);
-        List<HlaAllele> bUnphasedCandidates = candidateFactory.unphasedCandidates(hlaBContext, bCandidateFrags);
-        List<HlaAllele> cUnphasedCandidates = candidateFactory.unphasedCandidates(hlaCContext, cCandidateFrags);
+        List<HlaAllele> aUnphasedCandidates = candidateFactory.unphasedCandidates(hlaAContext, aCandidateFrags, mRefData.CommonAlleles);
+        List<HlaAllele> bUnphasedCandidates = candidateFactory.unphasedCandidates(hlaBContext, bCandidateFrags, mRefData.CommonAlleles);
+        List<HlaAllele> cUnphasedCandidates = candidateFactory.unphasedCandidates(hlaCContext, cCandidateFrags, mRefData.CommonAlleles);
 
         // determine phasing of amino acids
         PhasedEvidenceFactory phasedEvidenceFactory = new PhasedEvidenceFactory(mConfig, minEvidence);
@@ -646,6 +637,19 @@ public class LilacApplication
 
         LL_LOGGER.warn("has {} duplicate complexes", duplicates.size());
         return false;
+    }
+
+    private void validateGeneDepth(final Map<String,int[]> geneBaseDepth)
+    {
+        int aLowCoverage = (int) Arrays.stream(geneBaseDepth.get(HLA_A)).filter(x -> x < WARN_LOW_COVERAGE_THRESHOLD).count();
+        int bLowCoverage = (int)Arrays.stream(geneBaseDepth.get(HLA_B)).filter(x -> x < WARN_LOW_COVERAGE_THRESHOLD).count();
+        int cLowCoverage = (int)Arrays.stream(geneBaseDepth.get(HLA_C)).filter(x -> x < WARN_LOW_COVERAGE_THRESHOLD).count();
+
+        if(!mConfig.ReferenceBam.isEmpty() && aLowCoverage + bLowCoverage + cLowCoverage >= FATAL_LOW_COVERAGE_THRESHOLD)
+        {
+            LL_LOGGER.error("gene depth coverage(A={} B={} C={}) too low, exiting", aLowCoverage, bLowCoverage, cLowCoverage);
+            System.exit(1);
+        }
     }
 
     public void writeDatabaseResults(final CommandLine cmd)
