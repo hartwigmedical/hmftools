@@ -2,6 +2,10 @@ package com.hartwig.hmftools.orange;
 
 import java.io.IOException;
 
+import com.hartwig.hmftools.orange.algo.OrangeAlgo;
+import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.orange.report.ReportWriter;
+
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -40,7 +44,14 @@ public class OrangeApplication {
         this.config = config;
     }
 
-    private void run() {
-        LOGGER.info(config);
+    private void run() throws IOException {
+        LOGGER.info("Generating ORANGE report data");
+        OrangeReport report = new OrangeAlgo().run(config);
+
+        LOGGER.info("Writing report");
+        ReportWriter writer = new ReportWriter(config.outputDir());
+        writer.write(report);
+
+        LOGGER.info("Done!");
     }
 }
