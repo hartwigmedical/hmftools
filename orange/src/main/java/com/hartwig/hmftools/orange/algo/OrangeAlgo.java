@@ -8,6 +8,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFile;
+import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -32,7 +33,14 @@ public class OrangeAlgo {
     @NotNull
     private final DoidEntry doidEntry;
 
-    public OrangeAlgo(@NotNull final DoidEntry doidEntry) {
+    @NotNull
+    public static OrangeAlgo fromConfig(@NotNull OrangeConfig config) throws IOException {
+        LOGGER.info("Loading DOID from {}", config.doidJsonFile());
+        DoidEntry doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJsonFile());
+        return new OrangeAlgo(doidEntry);
+    }
+
+    private OrangeAlgo(@NotNull final DoidEntry doidEntry) {
         this.doidEntry = doidEntry;
     }
 

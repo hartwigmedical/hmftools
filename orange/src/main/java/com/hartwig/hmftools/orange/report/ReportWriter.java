@@ -1,6 +1,21 @@
 package com.hartwig.hmftools.orange.report;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+
 import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.geom.Rectangle;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfPage;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
+import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
+import com.itextpdf.layout.Canvas;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Text;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,64 +32,54 @@ public class ReportWriter {
         this.outputDir = outputDir;
     }
 
-    public void write(@NotNull OrangeReport report) {
+    public void write(@NotNull OrangeReport report, boolean writeToFile) throws IOException {
         LOGGER.info("Writing {}", report);
-//        Document doc = initializeReport(outputFilePath, writeToFile);
-//        PdfDocument pdfDocument = doc.getPdfDocument();
-//
-//        PageEventHandler pageEventHandler = new PageEventHandler(patientReport);
-//        pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
-//
-//        for (int i = 0; i < chapters.length; i++) {
-//            ReportChapter chapter = chapters[i];
-//
-//            pageEventHandler.chapterTitle(chapter.name());
-//            pageEventHandler.resetChapterPageCounter();
-//            pageEventHandler.sidebarType(!chapter.isFullWidth(), chapter.hasCompleteSidebar());
-//
-//            if (i > 0) {
-//                doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-//            }
-//            chapter.render(doc);
-//        }
-//
-//        pageEventHandler.writeDynamicTextParts(doc.getPdfDocument());
-//
-//        doc.close();
-//        pdfDocument.close();
-//
-//        if (writeToFile) {
-//            LOGGER.info("Created patient report at {}", outputFilePath);
-//        } else {
-//            LOGGER.info("Successfully generated in-memory patient report");
-//        }
-//    }
-//
-//    @NotNull
-//    private static Document initializeReport(@NotNull String outputFilePath, boolean writeToFile) throws IOException {
-//        PdfWriter writer;
-//        if (writeToFile) {
-//            if (Files.exists(new File(outputFilePath).toPath())) {
-//                throw new IOException("Could not write " + outputFilePath + " as it already exists.");
-//            }
-//
-//            writer = new PdfWriter(outputFilePath);
-//        } else {
-//            // Write output to output stream where it is effectively ignored.
-//            writer = new PdfWriter(new ByteArrayOutputStream());
-//        }
-//
-//        PdfDocument pdf = new PdfDocument(writer);
-//        pdf.setDefaultPageSize(PageSize.A4);
-//        pdf.getDocumentInfo().setTitle(ReportResources.METADATA_TITLE);
-//        pdf.getDocumentInfo().setAuthor(ReportResources.METADATA_AUTHOR);
-//
-//        Document document = new Document(pdf);
-//        document.setMargins(ReportResources.PAGE_MARGIN_TOP,
-//                ReportResources.PAGE_MARGIN_RIGHT,
-//                ReportResources.PAGE_MARGIN_BOTTOM,
-//                ReportResources.PAGE_MARGIN_LEFT);
-//
-//        return document;
+        String outputFilePath = outputDir + File.separator + report.sampleId() + ".orange.pdf";
+
+        Document doc = initializeReport(outputFilePath, writeToFile);
+
+        doc.getPdfDocument().addNewPage();
+        renderTitle(doc.getPdfDocument().getFirstPage());
+
+        doc.close();
+
+        if (writeToFile) {
+            LOGGER.info("Created ORANGE report at {}", outputFilePath);
+        } else {
+            LOGGER.info("Successfully generated in-memory ORANGE report");
+        }
+    }
+
+    private void renderTitle(@NotNull PdfPage page) {
+        PdfCanvas pdfCanvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
+        Canvas cv = new Canvas(pdfCanvas, page.getDocument(), page.getPageSize());
+
+        cv.add(new Paragraph().add(new Text("ORANGE Report").setFontSize(11).setFixedPosition(230, 791, 300)));
+
+        PdfFormXObject chapterTitleTemplate = new PdfFormXObject(new Rectangle(0, 0, 500, 30));
+        pdfCanvas.addXObject(chapterTitleTemplate, 29, 721);
+
+        pdfCanvas.release();
+    }
+
+    @NotNull
+    private static Document initializeReport(@NotNull String outputFilePath, boolean writeToFile) throws IOException {
+        PdfWriter writer;
+        if (writeToFile) {
+            writer = new PdfWriter(outputFilePath);
+        } else {
+            // Write output to output stream where it is effectively ignored.
+            writer = new PdfWriter(new ByteArrayOutputStream());
+        }
+
+        PdfDocument pdf = new PdfDocument(writer);
+        pdf.setDefaultPageSize(PageSize.A4);
+        pdf.getDocumentInfo().setTitle("ORANGE Report");
+        pdf.getDocumentInfo().setAuthor("Platinum");
+
+        Document document = new Document(pdf);
+        document.setMargins(62, 29, 62, 55.5F);
+
+        return document;
     }
 }

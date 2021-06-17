@@ -2,8 +2,6 @@ package com.hartwig.hmftools.orange;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.doid.DiseaseOntology;
-import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportWriter;
@@ -47,15 +45,13 @@ public class OrangeApplication {
     }
 
     private void run() throws IOException {
-        LOGGER.info("Loading DOID from {}", config.doidJsonFile());
-        DoidEntry doid = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJsonFile());
-
         LOGGER.info("Generating ORANGE report data");
-        OrangeReport report = new OrangeAlgo(doid).run(config);
+        OrangeAlgo algo = OrangeAlgo.fromConfig(config);
+        OrangeReport report = algo.run(config);
 
         LOGGER.info("Writing report");
         ReportWriter writer = new ReportWriter(config.outputDir());
-        writer.write(report);
+        writer.write(report, true);
 
         LOGGER.info("Done!");
     }
