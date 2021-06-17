@@ -3,6 +3,8 @@ package com.hartwig.hmftools.linx.visualiser;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiser.VIS_LOGGER;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiserConfig.parameter;
@@ -148,8 +150,11 @@ public class SampleData
             {
                 if(Clusters.contains(svAnnotation.clusterId()))
                 {
-                    Arrays.stream(svAnnotation.geneStart().split(ITEM_DELIM)).forEach(x -> geneList.add(x));
-                    Arrays.stream(svAnnotation.geneEnd().split(ITEM_DELIM)).forEach(x -> geneList.add(x));
+                    if(!svAnnotation.geneStart().isEmpty())
+                        Arrays.stream(svAnnotation.geneStart().split(ITEM_DELIM)).forEach(x -> geneList.add(x));
+
+                    if(!svAnnotation.geneEnd().isEmpty())
+                        Arrays.stream(svAnnotation.geneEnd().split(ITEM_DELIM)).forEach(x -> geneList.add(x));
                 }
             }
         }
@@ -179,6 +184,7 @@ public class SampleData
         options.addOption(EXON, true, "Path to exon file - eg 'COLO829T.linx.vis_gene_exon.tsv'");
         options.addOption(GENE, true, "Add canonical transcriptions of supplied comma separated genes to image");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache files");
+        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default), or 38");
         options.addOption(CLUSTERS, true, "Only generate image for specified comma separated clusters");
         options.addOption(CHROMOSOMES, true, "Only generate image for specified comma separated chromosomes");
 
@@ -300,18 +306,20 @@ public class SampleData
         final String sampleId = cmd.getOptionValue(SAMPLE);
         final List<Integer> allClusterIds = clusterIds.isEmpty() ? Lists.newArrayList(0) : clusterIds;
 
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+
         EnsemblDataCache geneTransCache = null;
         Map<String, HmfTranscriptRegion> geneMap = null;
 
         if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
         {
-            geneTransCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.V37);
+            geneTransCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), refGenomeVersion);
             geneTransCache.setRequiredData(true, false, false, true);
             geneTransCache.load(false);
         }
         else
         {
-            geneMap = HmfGenePanelSupplier.allGenesMap37();
+            geneMap = refGenomeVersion.is37() ? HmfGenePanelSupplier.allGenesMap37() : HmfGenePanelSupplier.allGenesMap38();
         }
 
         for (final String geneName : geneList)
