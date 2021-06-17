@@ -47,8 +47,10 @@ public interface OrangeConfig {
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
-    String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
+    String CUPPA_CONCLUSION_TXT = "cuppa_conclusion_txt";
+    String CUPPA_RESULT_CSV = "cuppa_result_csv";
+    String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
     String PEACH_GENOTYPE_TSV = "peach_genotype_tsv";
     String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
 
@@ -77,8 +79,10 @@ public interface OrangeConfig {
         options.addOption(LINX_FUSION_TSV, true, "Path towards the LINX fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the LINX breakend TSV.");
         options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
-        options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
+        options.addOption(CUPPA_CONCLUSION_TXT, true, "Path towards the Cuppa conclusion TXT.");
+        options.addOption(CUPPA_RESULT_CSV, true, "Path towards the Cuppa result CSV.");
+        options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
         options.addOption(PEACH_GENOTYPE_TSV, true, "Path towards the peach genotype TSV.");
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
 
@@ -136,10 +140,16 @@ public interface OrangeConfig {
     String linxDriverCatalogTsv();
 
     @NotNull
-    String annotatedVirusTsv();
+    String chordPredictionTxt();
 
     @NotNull
-    String chordPredictionTxt();
+    String cuppaConclusionTxt();
+
+    @NotNull
+    String cuppaResultCsv();
+
+    @NotNull
+    String annotatedVirusTsv();
 
     @NotNull
     String peachGenotypeTsv();
@@ -171,8 +181,10 @@ public interface OrangeConfig {
                 .linxFusionTsv(nonOptionalFile(cmd, LINX_FUSION_TSV))
                 .linxBreakendTsv(nonOptionalFile(cmd, LINX_BREAKEND_TSV))
                 .linxDriverCatalogTsv(nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
-                .annotatedVirusTsv(nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
                 .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
+                .cuppaConclusionTxt(nonOptionalFile(cmd, CUPPA_CONCLUSION_TXT))
+                .cuppaResultCsv(nonOptionalFile(cmd, CUPPA_RESULT_CSV))
+                .annotatedVirusTsv(nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
                 .peachGenotypeTsv(nonOptionalFile(cmd, PEACH_GENOTYPE_TSV))
                 .protectEvidenceTsv(nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV))
                 .build();
