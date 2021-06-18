@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.lilac.coverage;
 
+import static java.lang.Math.exp;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -8,21 +14,29 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
 public class CoverageCalcTask implements Callable
 {
+    private final int mId;
     private final List<HlaComplex> mComplexes;
     private List<HlaComplexCoverage> mCoverageResults;
 
     private final FragmentAlleleMatrix mFragAlleleMatrix;
+    private final double mTopScorePercDiff;
+    private int mMaxFragments;
+    private int mLowScoreCount;
 
-    private final PerformanceCounter mPerfCounter;
+    private static final int CULL_COMPLEX_COUNT = 500000;
+    private static final int LOG_COMPLEX_COUNT = 250000;
+    private static final int MIN_FRAG_DIFF = 40;
 
-    public CoverageCalcTask(final List<HlaComplex> complexes, FragmentAlleleMatrix fragAlleleMatrix)
+    public CoverageCalcTask(final int id, final List<HlaComplex> complexes, FragmentAlleleMatrix fragAlleleMatrix, double topScoreThreshold)
     {
+        mId = id;
         mComplexes = complexes;
         mCoverageResults = Lists.newArrayList();
 
         mFragAlleleMatrix = fragAlleleMatrix;
-
-        mPerfCounter = new PerformanceCounter("ComplexCalcs");
+        mTopScorePercDiff = min(topScoreThreshold * 5, 0.99);
+        mMaxFragments = 0;
+        mLowScoreCount = 0;
     }
 
     public HlaComplexCoverage getCoverage() { return mCoverageResults.get(0); }
@@ -31,8 +45,43 @@ public class CoverageCalcTask implements Callable
     @Override
     public Long call()
     {
-        mComplexes.forEach(x -> mCoverageResults.add(calcCoverage(x)));
+        boolean checkCull = mComplexes.size() >= CULL_COMPLEX_COUNT;
+
+        for(int i = 0; i < mComplexes.size(); ++i)
+        {
+            if(checkCull && i > 0 && (i % LOG_COMPLEX_COUNT) == 0)
+            {
+                LL_LOGGER.info(String.format("thread %d: complexes(%d) processed, discard(%d, %.0f%%)",
+                        mId, i, mLowScoreCount, 100.0 * mLowScoreCount / i));
+            }
+
+            HlaComplexCoverage result = calcCoverage(mComplexes.get(i));
+
+            if(checkCull && canCull(result))
+                continue;
+
+            mCoverageResults.add(result);
+        }
+
         return (long)0;
+    }
+
+    private boolean canCull(final HlaComplexCoverage result)
+    {
+        if(result.TotalCoverage > mMaxFragments)
+        {
+            mMaxFragments = result.TotalCoverage;
+            return false;
+        }
+
+        if(mMaxFragments - result.TotalCoverage < MIN_FRAG_DIFF)
+            return false;
+
+        if(result.TotalCoverage > mMaxFragments * (1 - mTopScorePercDiff))
+            return false;
+
+        ++mLowScoreCount;
+        return true;
     }
 
     private HlaComplexCoverage calcCoverage(final HlaComplex complex)

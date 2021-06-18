@@ -31,10 +31,13 @@ public class LilacConstants
     public static final double WILDCARD_SCORE_PENALTY = 0.000015;
 
     // warning thresholds
+    public static int FAIL_LOW_COVERAGE_THRESHOLD = 200;
+    public static double WARN_LOW_COVERAGE_THRESHOLD = 50;
+    public static final double WARN_LOW_BASE_QUAL_THRESHOLD = 25;
     public static final double WARN_UNMATCHED_HAPLOTYPE_SUPPORT = 0.01;
     public static final int LOG_UNMATCHED_HAPLOTYPE_SUPPORT = 3;
     public static final double WARN_INDEL_THRESHOLD = 0.005;
-    public static final double WARN_LOW_COVERAGE_THRESHOLD = 10;
+    public static final double WARN_LOW_COVERAGE_DEPTH = 10;
     public static final double FATAL_LOW_COVERAGE_THRESHOLD = 300;
 
     public static final String GENE_A = "A";

@@ -3,9 +3,15 @@ package com.hartwig.hmftools.lilac.qc;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
+import static com.hartwig.hmftools.lilac.LilacConstants.FAIL_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_INDEL_THRESHOLD;
+import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
+import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.FAIL;
+import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_LOW_BASE_QUAL;
+import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_LOW_COVERAGE;
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_ALLELE;
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_AMINO_ACID;
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_HAPLOTYPE;
@@ -144,6 +150,22 @@ public final class LilacQC
 
     private void populateStatus()
     {
+        if(BamQC.totalLowCoverage() >= FAIL_LOW_COVERAGE_THRESHOLD)
+        {
+            Status.add(FAIL);
+            return;
+        }
+
+        if(MedianBaseQual < WARN_LOW_BASE_QUAL_THRESHOLD)
+        {
+            Status.add(WARN_LOW_BASE_QUAL);
+        }
+
+        if(BamQC.totalLowCoverage() >= WARN_LOW_COVERAGE_THRESHOLD)
+        {
+            Status.add(WARN_LOW_COVERAGE);
+        }
+
         double haplotypeWarnThreshold = CoverageQC.TotalFragments * WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
         if(HaplotypeQC.UnusedHaplotypeMaxFrags >= haplotypeWarnThreshold)
         {

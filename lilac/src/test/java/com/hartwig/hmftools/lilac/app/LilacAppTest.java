@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.lilac.app;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.EXPECTED_ALLELE_COUNT;
+import static com.hartwig.hmftools.lilac.LilacConstants.FAIL_LOW_COVERAGE_THRESHOLD;
+import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_ALLELE;
 import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
 import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
@@ -40,10 +42,17 @@ public class LilacAppTest
 
     private int mReadIdCounter = 0;
 
+    private static void disableCoverageThresholds()
+    {
+        FAIL_LOW_COVERAGE_THRESHOLD = 500;
+        WARN_LOW_COVERAGE_THRESHOLD = 500.0;
+    }
+
     @Test
     public void basicApplicationTest()
     {
         disableLogging();
+        disableCoverageThresholds();
 
         LilacApplication lilac = new LilacApplication(new LilacConfig(SAMPLE_TEST));
 
@@ -113,6 +122,8 @@ public class LilacAppTest
     public void knownStopLossTest()
     {
         LilacApplication lilac = new LilacApplication(new LilacConfig(SAMPLE_TEST));
+
+        disableCoverageThresholds();
 
         MockBamReader refBamReader = new MockBamReader();
         MockBamReader tumorBamReader = new MockBamReader();
@@ -187,6 +198,7 @@ public class LilacAppTest
     public void wildcardTest()
     {
         disableLogging();
+        disableCoverageThresholds();
 
         LilacApplication lilac = new LilacApplication(new LilacConfig(SAMPLE_TEST));
 

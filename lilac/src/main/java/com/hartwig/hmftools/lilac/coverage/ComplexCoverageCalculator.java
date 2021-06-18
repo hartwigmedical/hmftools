@@ -16,10 +16,12 @@ import java.util.concurrent.ThreadFactory;
 public class ComplexCoverageCalculator
 {
     private final int mThreadCount;
+    private final double mTopScoreThreshold;
 
-    public ComplexCoverageCalculator(int threadCount)
+    public ComplexCoverageCalculator(int threadCount, double topScoreThreshold)
     {
         mThreadCount = threadCount;
+        mTopScoreThreshold = topScoreThreshold;
     }
 
     public List<HlaComplexCoverage> calculateComplexCoverages(final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes)
@@ -33,7 +35,7 @@ public class ComplexCoverageCalculator
             return calcMultiThreadResults(complexes, fragAlleleMatrix);
         }
 
-        CoverageCalcTask calcTask  = new CoverageCalcTask(complexes, fragAlleleMatrix);
+        CoverageCalcTask calcTask  = new CoverageCalcTask(0, complexes, fragAlleleMatrix, mTopScoreThreshold);
         calcTask.call();
         return calcTask.getCoverageResults();
     }
@@ -63,9 +65,10 @@ public class ComplexCoverageCalculator
                 listIndex = 0;
         }
 
+        int threadIndex = 0;
         for(List<HlaComplex> complexList : complexLists)
         {
-            CoverageCalcTask coverageTask = new CoverageCalcTask(complexList, fragAlleleMatrix);
+            CoverageCalcTask coverageTask = new CoverageCalcTask(threadIndex++, complexList, fragAlleleMatrix, mTopScoreThreshold);
             coverageCalcTasks.add(coverageTask);
 
             FutureTask futureTask = new FutureTask(coverageTask);
