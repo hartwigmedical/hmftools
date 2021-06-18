@@ -7,7 +7,6 @@ import static java.lang.Math.pow;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.NeoCommon.LOG_DEBUG;
@@ -16,23 +15,20 @@ import static com.hartwig.hmftools.neo.cohort.AlleleCoverage.EXPECTED_ALLELE_COU
 import static com.hartwig.hmftools.neo.cohort.AlleleCoverage.getGeneStatus;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadAlleleCoverage;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadPredictionData;
-import static com.hartwig.hmftools.neo.cohort.PredictionData.DELIM;
+import static com.hartwig.hmftools.neo.cohort.PredictionData.expandHomozygous;
 import static com.hartwig.hmftools.neo.cohort.StatusResults.NORMAL;
 import static com.hartwig.hmftools.neo.cohort.StatusResults.SIM_TUMOR;
 import static com.hartwig.hmftools.neo.cohort.StatusResults.STATUS_MAX;
 import static com.hartwig.hmftools.neo.cohort.StatusResults.TUMOR;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -57,6 +53,7 @@ public class SamplePeptidePredictions
     private final double mAffinitySumFactor;
     private final int mAffinityLowCountThreshold;
     private final int mAffinityMediumCountThreshold;
+    private final double mWritePeptideAffinityThreshold;
 
     public static final String SAMPLE_ID_FILE = "sample_id_file";
     public static final String NEO_DATA_DIR = "neo_data_dir";
@@ -68,6 +65,7 @@ public class SamplePeptidePredictions
     private static final String AFF_MED_THRESHOLD = "affinity_med_threshold";
 
     private static final String WRITE_PEPTIDES = "write_peptides";
+    private static final String WRITE_PEPTIDE_AFF_THRESHOLD = "write_pep_aff_threshold";
 
     // constants
     private static final double PREDICTION_FACTOR = 2;
@@ -84,6 +82,7 @@ public class SamplePeptidePredictions
         mAffinityLowCountThreshold = Integer.parseInt(cmd.getOptionValue(AFF_LOW_THRESHOLD, "25"));
         mAffinityMediumCountThreshold = Integer.parseInt(cmd.getOptionValue(AFF_MED_THRESHOLD, "50"));
         mAffinitySumFactor = Double.parseDouble(cmd.getOptionValue(AFF_SUM_FACTOR, "2"));
+        mWritePeptideAffinityThreshold = Double.parseDouble(cmd.getOptionValue(WRITE_PEPTIDE_AFF_THRESHOLD, "0"));
 
         mOutputDir = parseOutputDir(cmd);
         mSummaryWriter = null;
@@ -154,14 +153,18 @@ public class SamplePeptidePredictions
             }
         }
 
+        boolean allValid = true;
         for(Map.Entry<String,List<PredictionData>> entry : peptidePredictions.entrySet())
         {
             String peptide = entry.getKey();
             List<PredictionData> predictions = entry.getValue();
 
+            expandHomozygous(predictions);
+
             if(predictions.size() != EXPECTED_ALLELE_COUNT)
             {
                 NE_LOGGER.error("peptide({}) has incorrect allele prediction count({})", peptide, predictions.size());
+                continue;
             }
 
             // process the 6 alleles using the coverage
@@ -176,6 +179,13 @@ public class SamplePeptidePredictions
 
                 PredictionData allelePrediction = predictions.stream()
                         .filter(x -> x.Allele.equals(alleleCoverage.Allele)).findFirst().orElse(null);
+
+                if(allelePrediction == null)
+                {
+                    NE_LOGGER.error("peptide({}) missing allele({}) prediction", peptide, alleleCoverage.Allele);
+                    allValid = false;
+                    break;
+                }
 
                 scores.Affinity[NORMAL] = min(scores.Affinity[NORMAL], allelePrediction.Affinity);
                 scores.Presentation[NORMAL] = max(scores.Presentation[NORMAL], allelePrediction.Presentation);
@@ -193,7 +203,16 @@ public class SamplePeptidePredictions
                 }
             }
 
+            if(!allValid)
+                break;
+
             peptideScores.put(peptide, scores);
+        }
+
+        if(!allValid)
+        {
+            NE_LOGGER.warn("sampleId({}) has consistent allele coverage vs prediction alleles", sampleId);
+            return;
         }
 
         SampleSummary sampleSummary = new SampleSummary(peptideScores.size());
@@ -205,7 +224,7 @@ public class SamplePeptidePredictions
 
             for(int i = 0; i < STATUS_MAX; ++i)
             {
-                sampleSummary.Results[i].AffinityTotal += pow(scores.Affinity[i], mAffinitySumFactor);
+                sampleSummary.Results[i].AffinityTotal += pow(1 / scores.Affinity[i], mAffinitySumFactor);
 
                 if(scores.Affinity[i] <= mAffinityLowCountThreshold)
                     ++sampleSummary.Results[i].AffinityLowCount;
@@ -288,6 +307,9 @@ public class SamplePeptidePredictions
         if(mPeptideWriter == null)
             return;
 
+        if(mWritePeptideAffinityThreshold > 0 &&  Arrays.stream(scores.Affinity).noneMatch(x -> x < mWritePeptideAffinityThreshold))
+            return;
+
         try
         {
             mPeptideWriter.write(String.format("%s,%s", sampleId, peptide));
@@ -323,6 +345,7 @@ public class SamplePeptidePredictions
         options.addOption(AFF_SUM_FACTOR, true, "Affinity sum factor");
         options.addOption(AFF_LOW_THRESHOLD, true, "Affinity low count threshold");
         options.addOption(AFF_MED_THRESHOLD, true, "Affinity median count threshold");
+        options.addOption(WRITE_PEPTIDE_AFF_THRESHOLD, true, "Only write peptides with affinity less than this if > 0");
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

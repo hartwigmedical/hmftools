@@ -27,7 +27,7 @@ public class SampleSummary
 
     public static String header()
     {
-        List<String> columns = Lists.newArrayList("AffTotal", "AffLowCount", "AffyMedCount", "PresTotal", "PresCount");
+        List<String> columns = Lists.newArrayList("AffTotal", "AffLowCount", "AffMedCount", "PresTotal", "PresCount");
         List<String> statusGroups = Lists.newArrayList("Norm", "Tumor", "SimTumor");
 
         StringJoiner sj = new StringJoiner(DELIM);
