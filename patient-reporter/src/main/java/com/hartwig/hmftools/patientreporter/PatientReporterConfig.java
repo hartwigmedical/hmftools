@@ -11,6 +11,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
@@ -20,6 +22,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface PatientReporterConfig {
+
+    Logger LOGGER = LogManager.getLogger(PatientReporterConfig.class);
 
     // General params needed for every report
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
@@ -128,7 +132,7 @@ public interface PatientReporterConfig {
         options.addOption(ONLY_CREATE_PDF, false, "If provided, just the PDF will be generated and no additional data will be updated.");
 
         options.addOption(EXPECTED_PIPELINE_VERSION, true, "String of the expected pipeline version");
-        options.addOption(OVERRIDE_PIPELINE_VERSION, true, "if true, the expected pipeline version is overriden");
+        options.addOption(OVERRIDE_PIPELINE_VERSION, true, "if true, the expected pipeline version is overridden");
 
         options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to use (either '37' or '38')");
 
@@ -255,6 +259,7 @@ public interface PatientReporterConfig {
     static PatientReporterConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
+            LOGGER.debug("Switched root level logging to DEBUG");
         }
 
         boolean isQCFail = cmd.hasOption(QC_FAIL);

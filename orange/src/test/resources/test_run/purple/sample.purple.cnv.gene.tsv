@@ -1,0 +1,2 @@
+chromosome	start	end	gene	minCopyNumber	maxCopyNumber	unused	somaticRegions	germlineHomDeletionRegions	germlineHetToHomDeletionRegions	transcriptId	transcriptVersion	chromosomeBand	minRegions	minRegionStart	minRegionEnd	minRegionStartSupport	minRegionEndSupport	minRegionMethod	minMinorAlleleCopyNumber
+1	100	200	XXX	50	50		1	0	0	ENST	1	q12	0	0	0	BND	BND	UNKNOWN	0
