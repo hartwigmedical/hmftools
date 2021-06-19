@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.lilac.LilacConfig.LOG_LEVEL;
 import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.LilacConstants.BASE_QUAL_PERCENTILE;
 import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.FATAL_LOW_COVERAGE_THRESHOLD;
@@ -191,7 +192,7 @@ public class LilacApplication
 
         mRefNucleotideFrags.addAll(mNucleotideGeneEnrichment.enrich(mRefBamReader.readFromBam()));
 
-        int medianBaseQuality = mNucleotideFragFactory.calculateMedianBaseQuality(mRefNucleotideFrags);
+        int medianBaseQuality = mNucleotideFragFactory.calculatePercentileBaseQuality(mRefNucleotideFrags, BASE_QUAL_PERCENTILE);
 
         if(medianBaseQuality < mConfig.MinBaseQual)
         {

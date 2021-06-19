@@ -18,6 +18,8 @@ public class LilacConstants
     public static final double DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR = 0.000375;
     public static final double DEFAULT_MIN_EVIDENCE_FACTOR = 0.00075;
 
+    public static final double BASE_QUAL_PERCENTILE = 0.5;
+
     // values applied as percentages
     public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.001;
     public static final double MIN_CONF_UNIQUE_GROUP_COVERAGE = 0.02;
@@ -30,7 +32,7 @@ public class LilacConstants
     public static final double RECOVERY_SCORE_PENALTY = 0.0055;
     public static final double WILDCARD_SCORE_PENALTY = 0.000015;
 
-    // warning thresholds
+    // QC thresholds
     public static int FAIL_LOW_COVERAGE_THRESHOLD = 200;
     public static double WARN_LOW_COVERAGE_THRESHOLD = 50;
     public static final double WARN_LOW_BASE_QUAL_THRESHOLD = 25;

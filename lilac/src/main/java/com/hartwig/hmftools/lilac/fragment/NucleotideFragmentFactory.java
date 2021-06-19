@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.fragment;
 
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
@@ -201,7 +202,7 @@ public class NucleotideFragmentFactory
         return FragmentUtils.mergeFragmentsById(fragments).get(0);
     }
 
-    public int calculateMedianBaseQuality(final List<Fragment> fragments)
+    public int calculatePercentileBaseQuality(final List<Fragment> fragments, double percentile)
     {
         int maxBaseQual = mMinBaseQuality * 2; // for purpose of data capture only
         int[] baseQualFrequeny = new int[maxBaseQual + 1];
@@ -217,14 +218,14 @@ public class NucleotideFragmentFactory
         }
 
         // calculate median
-        long medianEntry = totalBases / 2;
+        long percentileEntry = (long)round(totalBases * percentile);
         long cumulativeTotal = 0;
 
         for(int i = 0; i < baseQualFrequeny.length; ++i)
         {
             cumulativeTotal += baseQualFrequeny[i];
 
-            if(cumulativeTotal >= medianEntry)
+            if(cumulativeTotal >= percentileEntry)
                 return i;
         }
 
