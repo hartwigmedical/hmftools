@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.neo;
 
 import static com.hartwig.hmftools.neo.cohort.AlleleCoverage.EXPECTED_ALLELE_COUNT;
+import static com.hartwig.hmftools.neo.cohort.AllelePredictions.buildPercentiles;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -45,5 +47,21 @@ public class CohortTest
         PredictionData.expandHomozygous(predictions);
         assertEquals(EXPECTED_ALLELE_COUNT, predictions.size());
         assertEquals(2, predictions.stream().filter(x -> x.Allele.equals("C0101")).count());
+    }
+
+    @Test
+    public void testAllelePercentiles()
+    {
+        int[] frequencies = new int[] {10, 50, 410, 40, 0, 50, 500, 900, 150, 50};
+        int total = Arrays.stream(frequencies).sum();
+
+        int[] percentiles = buildPercentiles(frequencies, total, 6);
+
+        assertEquals(2, percentiles[0]);
+        assertEquals(6, percentiles[1]);
+        assertEquals(7, percentiles[2]);
+        assertEquals(7, percentiles[3]);
+        assertEquals(7, percentiles[4]);
+        assertEquals(9, percentiles[5]);
     }
 }

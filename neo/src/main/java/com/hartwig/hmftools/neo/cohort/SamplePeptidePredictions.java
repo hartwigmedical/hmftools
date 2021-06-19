@@ -4,6 +4,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
 
+import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
+import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
+import static com.hartwig.hmftools.common.stats.Percentiles.buildPercentiles;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -47,6 +50,8 @@ public class SamplePeptidePredictions
     private final String mPredictionsDataDir;
     private final List<String> mSampleIds;
 
+    private final Map<String,AllelePredictions> mAllelePredictions;
+
     private BufferedWriter mSummaryWriter;
     private BufferedWriter mPeptideWriter;
 
@@ -84,6 +89,8 @@ public class SamplePeptidePredictions
         mAffinitySumFactor = Double.parseDouble(cmd.getOptionValue(AFF_SUM_FACTOR, "2"));
         mWritePeptideAffinityThreshold = Double.parseDouble(cmd.getOptionValue(WRITE_PEPTIDE_AFF_THRESHOLD, "0"));
 
+        mAllelePredictions = Maps.newHashMap();
+
         mOutputDir = parseOutputDir(cmd);
         mSummaryWriter = null;
         mPeptideWriter = null;
@@ -117,6 +124,8 @@ public class SamplePeptidePredictions
             }
         }
 
+        writeAllelePredictions();
+
         closeBufferedWriter(mSummaryWriter);
         closeBufferedWriter(mPeptideWriter);
     }
@@ -137,6 +146,8 @@ public class SamplePeptidePredictions
         for(int i = 0; i < allPredictions.size(); ++i)
         {
             PredictionData predData = allPredictions.get(i);
+
+            addAllelePrediction(predData);
 
             List<PredictionData> predictions = peptidePredictions.get(predData.Peptide);
 
@@ -244,6 +255,19 @@ public class SamplePeptidePredictions
         writeSampleSummary(sampleId, sampleSummary);
     }
 
+    private void addAllelePrediction(PredictionData predData)
+    {
+        AllelePredictions predictions = mAllelePredictions.get(predData.Allele);
+
+        if(predictions == null)
+        {
+            predictions = new AllelePredictions(predData.Allele);
+            mAllelePredictions.put(predData.Allele, predictions);
+        }
+
+        predictions.addPeptide(predData.Peptide, predData.Affinity);
+    }
+
     private void initialiseSampleWriter()
     {
         try
@@ -281,6 +305,81 @@ public class SamplePeptidePredictions
         catch (IOException e)
         {
             NE_LOGGER.error("failed to write neo-epitope data: {}", e.toString());
+        }
+    }
+
+    private void writeAllelePredictions()
+    {
+        try
+        {
+            /*
+            final String outputFileName = mOutputDir + "NEO_ALLELE_PERCENTILES.csv";
+
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
+            writer.write("Allele");
+
+            for(int i = 0; i < PERCENTILE_COUNT; ++i)
+            {
+                writer.write(String.format(",Pct_%.2f", i * 0.01));
+            }
+
+            writer.newLine();
+
+            for(Map.Entry<String,AllelePredictions> entry : mAllelePredictions.entrySet())
+            {
+                String allele = entry.getKey();
+
+                writer.write(allele);
+
+                AllelePredictions predictions = entry.getValue();
+                int[] percentiles = predictions.buildPercentiles();
+
+                for(int i = 0; i < percentiles.length; ++i)
+                {
+                    writer.write(String.format(",%d", percentiles[i]));
+                }
+
+                writer.newLine();
+            }
+
+            */
+
+            final String outputFileName = mOutputDir + "NEO_ALLELE_FREQUENCIES.csv";
+
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
+            writer.write("Allele,Total");
+
+            int maxBucket = 500;
+
+            for(int i = 0; i < maxBucket; ++i)
+            {
+                writer.write(String.format(",Fq_%d", i));
+            }
+
+            writer.newLine();
+
+            for(Map.Entry<String,AllelePredictions> entry : mAllelePredictions.entrySet())
+            {
+                String allele = entry.getKey();
+                AllelePredictions predictions = entry.getValue();
+
+                writer.write(String.format("%s,%d", allele, predictions.getTotal()));
+
+                int[] affinityFrequencies = predictions.getFrequencies();
+
+                for(int i = 0; i < maxBucket; ++i)
+                {
+                    writer.write(String.format(",%d", affinityFrequencies[i]));
+                }
+
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch (IOException e)
+        {
+            NE_LOGGER.error("failed to write allele percentiles: {}", e.toString());
         }
     }
 
