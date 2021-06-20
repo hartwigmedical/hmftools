@@ -11,7 +11,7 @@ import java.nio.file.Files;
 import java.util.StringJoiner;
 import java.util.function.Function;
 
-import com.hartwig.hmftools.linx.visualiser.SvCircosConfig;
+import com.hartwig.hmftools.linx.visualiser.CircosConfig;
 
 import org.apache.logging.log4j.core.util.IOUtils;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +21,7 @@ public class CircosConfigWriter
     private final String sample;
     private final String outputDir;
     private final CircosData circosData;
-    private final SvCircosConfig config;
+    private final CircosConfig config;
 
     private final double exonOuterRadius;
     private final double exonInnerRadius;
@@ -40,7 +40,7 @@ public class CircosConfigWriter
     private final double mapInnerRadius;
     private final double labelSize;
 
-    public CircosConfigWriter(@NotNull final String sample, @NotNull final String outputDir, @NotNull final CircosData data, @NotNull final SvCircosConfig config)
+    public CircosConfigWriter(@NotNull final String sample, @NotNull final String outputDir, @NotNull final CircosData data, @NotNull final CircosConfig config)
     {
         this.sample = sample;
         this.circosData = data;
@@ -48,18 +48,18 @@ public class CircosConfigWriter
         this.outputDir = outputDir;
         this.labelSize = data.labelSize();
 
-        double gapSize = config.gapRadius();
+        double gapSize = config.GapRadius;
         boolean displayGenes = data.displayGenes();
 
-        double geneRelativeSize = displayGenes ? config.geneRelativeSize() : 0;
-        double segmentRelativeSize = config.segmentRelativeSize();
-        double copyNumberRelativeSize = config.copyNumberRelativeSize();
+        double geneRelativeSize = displayGenes ? config.GeneRelativeSize : 0;
+        double segmentRelativeSize = config.SegmentRelativeSize;
+        double copyNumberRelativeSize = config.CopyNumberRelativeSize;
 
         double totalRelativeSize = geneRelativeSize + segmentRelativeSize + copyNumberRelativeSize;
 
         int numberOfGaps = displayGenes ? 5 : 3;
 
-        double totalSpaceAvailable = 1 - numberOfGaps * gapSize - config.innerRadius();
+        double totalSpaceAvailable = 1 - numberOfGaps * gapSize - config.InnerRadius;
         double purpleSpaceAvailable = copyNumberRelativeSize / totalRelativeSize * totalSpaceAvailable;
         int cnaGainTracks = Math.max(2, (int) Math.round(Math.ceil(data.maxCopyNumber() - 2)));
         int mapGainTracks = Math.max(1, (int) Math.round(Math.ceil(data.maxMinorAllelePloidy() - 1)));
@@ -67,7 +67,7 @@ public class CircosConfigWriter
 
         if (displayGenes)
         {
-            exonOuterRadius = 1 - gapSize - config.exonRankRadius();
+            exonOuterRadius = 1 - gapSize - config.ExonRankRadius;
             exonInnerRadius = exonOuterRadius - geneRelativeSize / totalRelativeSize * totalSpaceAvailable;
             segmentOuterRadius = exonInnerRadius - gapSize;
         }
@@ -127,7 +127,7 @@ public class CircosConfigWriter
         final String template =
                 readResource("/visualisation/cluster.template")
                         .replaceAll("SUBSTITUTE_CURRENT_FRAME", String.valueOf(frame))
-                        .replaceAll("SUBSTITUTE_IDEOGRAM_RADIUS", String.valueOf(config.outerRadius()))
+                        .replaceAll("SUBSTITUTE_IDEOGRAM_RADIUS", String.valueOf(config.OuterRadius))
                         .replaceAll("SUBSTITUTE_IDEOGRAM_SPACING", chromosomeCount > 1 ? "0.005r" : 0.005 * totalContigLength + "u")
 
                         .replaceAll("SUBSTITUTE_EXON_INNER_RADIUS", String.valueOf(exonInnerRadius))

@@ -9,7 +9,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.linx.visualiser.SvCircosConfig;
+import com.hartwig.hmftools.linx.visualiser.CircosConfig;
 import com.hartwig.hmftools.linx.visualiser.data.Connector;
 import com.hartwig.hmftools.linx.visualiser.data.Connectors;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
@@ -45,7 +45,7 @@ public class CircosData
     private final Set<String> upstreamGenes;
     private final Set<String> downstreamGenes;
 
-    private final SvCircosConfig config;
+    private final CircosConfig config;
 
     private final int maxTracks;
     private final double maxPloidy;
@@ -57,7 +57,7 @@ public class CircosData
 
     public CircosData(
             boolean showSimpleSvSegments,
-            @NotNull final SvCircosConfig config,
+            @NotNull final CircosConfig config,
             @NotNull final List<Segment> unadjustedSegments,
             @NotNull final List<VisSvData> unadjustedLinks,
             @NotNull final List<CopyNumberAlteration> unadjustedAlterations,
@@ -78,10 +78,10 @@ public class CircosData
         final List<GenomePosition> positionsToScale = Lists.newArrayList();
         positionsToScale.addAll(VisLinks.allPositions(unadjustedLinks));
         positionsToScale.addAll(Span.allPositions(unadjustedSegments));
-        positionsToScale.addAll(config.interpolateCopyNumberPositions()
+        positionsToScale.addAll(config.InterpolateCopyNumberPositions
                 ? Span.minMaxPositions(unadjustedAlterations)
                 : Span.allPositions(unadjustedAlterations));
-        if (!config.interpolateExonPositions())
+        if (!config.InterpolateExonPositions)
         {
             positionsToScale.addAll(Span.allPositions(unadjustedGeneExons));
         }
@@ -115,8 +115,8 @@ public class CircosData
         labelSize = config.labelSize(untruncatedCopyNumberAlterationsCount());
 
         int actualMaxGeneCharacters = genes.stream().mapToInt(x -> x.name().length()).max().orElse(0);
-        geneLabelSize = actualMaxGeneCharacters > config.maxGeneCharacters()
-                ? 0.9d * config.maxGeneCharacters() / actualMaxGeneCharacters * labelSize
+        geneLabelSize = actualMaxGeneCharacters > config.MaxGeneCharacters
+                ? 0.9d * config.MaxGeneCharacters / actualMaxGeneCharacters * labelSize
                 : labelSize;
 
         maxFrame = segments.stream().mapToInt(Segment::frame).max().orElse(0);
@@ -147,7 +147,7 @@ public class CircosData
 
     public boolean displayGenes()
     {
-        return !exons.isEmpty() && Doubles.positive(config.geneRelativeSize());
+        return !exons.isEmpty() && Doubles.positive(config.GeneRelativeSize);
     }
 
     public int maxTracks()

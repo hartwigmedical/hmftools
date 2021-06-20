@@ -60,7 +60,7 @@ public class SvVisualiser implements AutoCloseable
     {
         final Options options = SvVisualiserConfig.createOptions();
         SampleData.addCmdLineOptions(options);
-        SvCircosConfig.addOptions(options);
+        CircosConfig.addOptions(options);
 
         try (final SvVisualiser application = new SvVisualiser(options, args))
         {
@@ -77,7 +77,7 @@ public class SvVisualiser implements AutoCloseable
 
     private final SvVisualiserConfig mConfig;
     private final SampleData mSampleData;
-    private final SvCircosConfig mCircosConfig;
+    private final CircosConfig mCircosConfig;
     private final ExecutorService mExecutorService;
 
     private final List<Callable<Object>> mCallableImages;
@@ -88,7 +88,7 @@ public class SvVisualiser implements AutoCloseable
         final CommandLine cmd = createCommandLine(args, options);
         VIS_LOGGER.info("Loading data");
 
-        mCircosConfig = SvCircosConfig.createConfig(cmd);
+        mCircosConfig = new CircosConfig(cmd);
         mConfig = new SvVisualiserConfig(cmd);
         mSampleData = new SampleData(cmd);
         mExecutorService = Executors.newFixedThreadPool(mConfig.Threads);
@@ -293,7 +293,7 @@ public class SvVisualiser implements AutoCloseable
             mCallableConfigs.add(() -> fusionDataWriter.write(sample, mConfig.OutputConfPath));
         }
 
-        int minFrame = mCircosConfig.step() ? 0 : circosData.maxFrame();
+        int minFrame = mCircosConfig.Step ? 0 : circosData.maxFrame();
         for (int frame = minFrame; frame <= circosData.maxFrame(); frame++)
         {
             boolean plotFusion = !fusionDataWriter.finalExons().isEmpty();

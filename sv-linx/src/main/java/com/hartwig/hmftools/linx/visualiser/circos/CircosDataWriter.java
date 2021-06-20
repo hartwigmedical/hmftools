@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.linx.visualiser.SvCircosConfig;
+import com.hartwig.hmftools.linx.visualiser.CircosConfig;
 import com.hartwig.hmftools.linx.visualiser.data.AdjustedPosition;
 import com.hartwig.hmftools.linx.visualiser.data.AdjustedPositions;
 import com.hartwig.hmftools.linx.visualiser.data.Connector;
@@ -50,20 +50,20 @@ public class CircosDataWriter
 
     private final String filePrefix;
     private final ColorPicker colorPicker;
-    private final SvCircosConfig circosConfig;
+    private final CircosConfig circosConfig;
     private final CircosConfigWriter configWriter;
     private final CircosData data;
     private final Thickness thickness;
 
     public CircosDataWriter(@NotNull final ColorPicker colorPicker, @NotNull final String sample, @NotNull final String outputDir,
-            @NotNull final SvCircosConfig circosConfig, @NotNull final CircosConfigWriter configWriter, @NotNull final CircosData data)
+            @NotNull final CircosConfig circosConfig, @NotNull final CircosConfigWriter configWriter, @NotNull final CircosData data)
     {
         this.data = data;
         this.colorPicker = colorPicker;
         this.configWriter = configWriter;
         this.circosConfig = circosConfig;
         this.filePrefix = outputDir + File.separator + sample;
-        this.thickness = new Thickness(circosConfig.minLineSize(), circosConfig.maxLineSize(), data.connectors());
+        this.thickness = new Thickness(circosConfig.MinLineSize, circosConfig.MaxLineSize, data.connectors());
     }
 
     public Object write() throws IOException
@@ -298,7 +298,7 @@ public class CircosDataWriter
     {
         final List<String> result = Lists.newArrayList();
         long unadjustedSegments = segments.stream().filter(x -> !x.truncated()).count();
-        if (unadjustedSegments <= circosConfig.maxNumberOfDistanceLabels())
+        if (unadjustedSegments <= circosConfig.MaxNumberOfDistanceLabels)
         {
             for (int i = 0; i < unadjustedSegment.size(); i++)
             {
@@ -357,8 +357,8 @@ public class CircosDataWriter
     @NotNull
     private List<String> createScatter(@NotNull final List<Segment> segments, @NotNull final List<VisSvData> links)
     {
-        int glyphSize = circosConfig.glyphSize();
-        int glyphSizeInner = (int) Math.floor(circosConfig.glyphSize() * 14d / 20d);
+        int glyphSize = circosConfig.GlyphSize;
+        int glyphSizeInner = (int) Math.floor(circosConfig.GlyphSize * 14d / 20d);
 
         final List<String> result = Lists.newArrayList();
         for (Segment segment : segments)
@@ -391,8 +391,8 @@ public class CircosDataWriter
     @NotNull
     private List<String> createSglScatter(@NotNull final List<VisSvData> links)
     {
-        int glyphSize = circosConfig.glyphSize();
-        int glyphSizeInner = (int) Math.floor(circosConfig.glyphSize() * 14d / 20d);
+        int glyphSize = circosConfig.GlyphSize;
+        int glyphSizeInner = (int) Math.floor(circosConfig.GlyphSize * 14d / 20d);
 
         final List<String> result = Lists.newArrayList();
 
@@ -551,19 +551,19 @@ public class CircosDataWriter
     private List<String> createPositionText(@NotNull final List<VisSvData> originalLinks, @NotNull final List<VisSvData> scaledLinks)
     {
         final List<AdjustedPosition> positions = AdjustedPositions.create(originalLinks, scaledLinks);
-        if (circosConfig.exactPosition())
+        if (circosConfig.ExactPosition)
         {
             return createPositionText(1, positions, POSITION_FORMAT::format);
         }
 
         final List<String> positionsEvery100k = createPositionText(100_000, positions, CircosDataWriter::shorthand);
-        if (positionsEvery100k.size() < circosConfig.maxNumberOfPositionLabels())
+        if (positionsEvery100k.size() < circosConfig.MaxNumberOfPositionLabels)
         {
             return positionsEvery100k;
         }
 
         final List<String> positionsEvery1M = createPositionText(1_000_000, positions, CircosDataWriter::shorthand);
-        if (positionsEvery1M.size() < circosConfig.maxNumberOfPositionLabels())
+        if (positionsEvery1M.size() < circosConfig.MaxNumberOfPositionLabels)
         {
             return positionsEvery1M;
         }
@@ -591,7 +591,7 @@ public class CircosDataWriter
                     {
                         String positionLabel = formatter.apply(adjustedPosition.unadjustedPosition());
 
-                        if (circosConfig.showSvId())
+                        if (circosConfig.ShowSvId)
                         {
                             positionLabel += String.format(":%d", adjustedPosition.svId());
                         }
