@@ -317,7 +317,6 @@ public class SvVisualiser implements AutoCloseable
             boolean plotFusion,
             boolean plotChromosome) throws IOException, InterruptedException
     {
-
         final String confFileName = sample + ".circos." + String.format("%03d", frame) + ".conf";
         final String outputFileName = sample + "." + String.format("%03d", frame) + ".png";
 

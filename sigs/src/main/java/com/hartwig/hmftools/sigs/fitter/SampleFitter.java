@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.sigs.DataUtils.round;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_EXCESS;
+import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_MISALLOCATED;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_UNALLOCATED;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
@@ -293,15 +294,9 @@ public class SampleFitter
                 residuals.Percent, sizeToStr(residuals.Total), sizeToStr(residuals.Excess)));
 
         sigAllocations.add(ImmutableSignatureAllocation.builder()
-                .signature(SIG_UNALLOCATED)
+                .signature(SIG_MISALLOCATED)
                 .allocation(round(residualsUnalloc,ALLOC_ROUND))
                 .percent(round(residualsUnalloc/sampleTotal, PERC_ROUND))
-                .build());
-
-        sigAllocations.add(ImmutableSignatureAllocation.builder()
-                .signature(SIG_EXCESS)
-                .allocation(round(residuals.Excess,ALLOC_ROUND))
-                .percent(round(residuals.Excess/sampleTotal, PERC_ROUND))
                 .build());
 
         writeSigAllocations(sampleId, sigAllocations);

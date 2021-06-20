@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.common.genotype.GenotypeStatus.UNKNOWN;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
 import static org.jooq.impl.DSL.count;
@@ -209,6 +210,7 @@ class SomaticVariantDAO {
                     .localPhaseSet(record.get(SOMATICVARIANT.LOCALPHASESET))
                     .localRealignmentSet(record.get(SOMATICVARIANT.LOCALREALIGNMENTSET))
                     .phasedInframeIndelIdentifier(record.get(SOMATICVARIANT.PHASEDINFRAMEINDEL))
+                    .genotypeStatus(UNKNOWN)
                     .build());
         }
         return variants;
