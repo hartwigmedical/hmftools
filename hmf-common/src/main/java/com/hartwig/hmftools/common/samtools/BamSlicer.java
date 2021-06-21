@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.common.samtools;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import org.jetbrains.annotations.NotNull;
@@ -85,7 +88,7 @@ public class BamSlicer
             {
                 final SAMRecord record = iterator.next();
 
-                if (passesFilters(record))
+                if(passesFilters(record))
                 {
                     records.add(record);
                 }
@@ -93,6 +96,31 @@ public class BamSlicer
         }
 
         return records;
+    }
+
+    public void sliceNoDups(@NotNull final SamReader samReader, final List<GenomeRegion> regions, final Consumer<SAMRecord> consumer)
+    {
+        // skips duplicate reads
+        List<BaseRegion> baseRegions = regions.stream().map(x -> BaseRegion.from(x)).collect(Collectors.toList());
+
+        final QueryInterval[] queryIntervals = QueryInterval.optimizeIntervals(createIntervals(baseRegions, samReader.getFileHeader()));
+
+        Set<String> processed = Sets.newHashSet();
+        try (final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals))
+        {
+            while (iterator.hasNext())
+            {
+                final SAMRecord record = iterator.next();
+
+                if(passesFilters(record))
+                {
+                    if (processed.add(record.toString()))
+                    {
+                        consumer.accept(record);
+                    }
+                }
+            }
+        }
     }
 
     public List<SAMRecord> queryMates(final SamReader samReader, final List<SAMRecord> records)

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
@@ -21,6 +22,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
+import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.samtools.SamRecordUtils;
 
@@ -38,12 +40,12 @@ public class VariantHotspotEvidenceFactory {
 
     private final int minBaseQuality;
     private final Collection<VariantHotspot> hotspots;
-    private final SAMSlicer samSlicer;
+    private final BamSlicer samSlicer;
 
     public VariantHotspotEvidenceFactory(int minMappingQuality, int minBaseQuality, @NotNull final Set<VariantHotspot> hotspots) {
         this.minBaseQuality = minBaseQuality;
         this.hotspots = hotspots;
-        this.samSlicer = new SAMSlicer(minMappingQuality, asRegions(hotspots));
+        this.samSlicer = new BamSlicer(minMappingQuality);
     }
 
     @NotNull
@@ -84,7 +86,8 @@ public class VariantHotspotEvidenceFactory {
             }
         };
 
-        samSlicer.slice(samReader, samRecordConsumer);
+
+        samSlicer.sliceNoDups(samReader, asRegions(hotspots.stream().collect(Collectors.toSet())), samRecordConsumer);
         return new ArrayList<>(evidenceMap.values());
     }
 
