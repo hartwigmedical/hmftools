@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.lilac.coverage;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.EXPECTED_ALLELE_COUNT;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
-
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;

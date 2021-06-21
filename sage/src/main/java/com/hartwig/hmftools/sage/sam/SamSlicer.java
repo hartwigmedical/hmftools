@@ -8,6 +8,8 @@ import java.util.function.Consumer;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -19,38 +21,45 @@ import htsjdk.samtools.SamReader;
 
 public class SamSlicer
 {
-    private final int minMappingQuality;
-    private final Collection<GenomeRegion> regions;
+    private final List<BaseRegion> mRegions;
 
-    public SamSlicer(final int minMappingQuality, @NotNull final GenomeRegion slice)
+    private final BamSlicer mBamSlicer;
+
+    public SamSlicer(final int minMappingQuality, final BaseRegion slice)
     {
-        this.minMappingQuality = minMappingQuality;
-        this.regions = Collections.singletonList(slice);
+        mBamSlicer = new BamSlicer(minMappingQuality);
+        mRegions = Collections.singletonList(slice);
     }
 
-    public SamSlicer(final int minMappingQuality, @NotNull final GenomeRegion slice, @NotNull final List<? extends GenomeRegion> panel)
+    public SamSlicer(final int minMappingQuality, final BaseRegion slice, final List<BaseRegion> panel)
     {
-        this.minMappingQuality = minMappingQuality;
-        this.regions = Lists.newArrayList();
+        mBamSlicer = new BamSlicer(minMappingQuality);
+        mRegions = Lists.newArrayList();
 
-        for(final GenomeRegion panelRegion : panel)
+        for(final BaseRegion panelRegion : panel)
         {
-            if(slice.chromosome().equals(panelRegion.chromosome()) && panelRegion.start() <= slice.end()
+            if(slice.Chromosome.equals(panelRegion.Chromosome) && panelRegion.start() <= slice.end()
                     && panelRegion.end() >= slice.start())
             {
-
-                final GenomeRegion overlap = GenomeRegions.create(slice.chromosome(),
+                BaseRegion overlap = new BaseRegion(slice.Chromosome,
                         Math.max(panelRegion.start(), slice.start()),
                         Math.min(panelRegion.end(), slice.end()));
 
-                regions.add(overlap);
+                mRegions.add(overlap);
             }
         }
     }
 
-    public void slice(@NotNull final SamReader samReader, @NotNull final Consumer<SAMRecord> consumer)
+    public void slice(final SamReader samReader, @NotNull final Consumer<SAMRecord> consumer)
     {
-        final QueryInterval[] queryIntervals = createIntervals(regions, samReader.getFileHeader());
+        mBamSlicer.slice(samReader, mRegions, consumer);
+
+        // TODO: is this required or are regions already exclusive??
+        // return QueryInterval.optimizeIntervals(queryIntervals.toArray(new QueryInterval[queryIntervals.size()]));
+
+
+        /*
+        final QueryInterval[] queryIntervals = createIntervals(mRegions, samReader.getFileHeader());
 
         try(final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals))
         {
@@ -63,26 +72,6 @@ public class SamSlicer
                 }
             }
         }
-    }
-
-    @NotNull
-    private static QueryInterval[] createIntervals(@NotNull final Collection<GenomeRegion> regions, @NotNull final SAMFileHeader header)
-    {
-        final List<QueryInterval> queryIntervals = Lists.newArrayList();
-        for(final GenomeRegion region : regions)
-        {
-            int sequenceIndex = header.getSequenceIndex(region.chromosome());
-            if(sequenceIndex > -1)
-            {
-                queryIntervals.add(new QueryInterval(sequenceIndex, (int) region.start(), (int) region.end()));
-            }
-        }
-        return QueryInterval.optimizeIntervals(queryIntervals.toArray(new QueryInterval[queryIntervals.size()]));
-    }
-
-    private boolean samRecordMeetsQualityRequirements(@NotNull final SAMRecord record)
-    {
-        return record.getMappingQuality() >= minMappingQuality && !record.getReadUnmappedFlag() && !record.getDuplicateReadFlag() && !record
-                .isSecondaryOrSupplementary();
+        */
     }
 }

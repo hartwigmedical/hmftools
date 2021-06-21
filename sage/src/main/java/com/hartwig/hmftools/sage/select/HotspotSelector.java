@@ -13,7 +13,7 @@ public class HotspotSelector
 
     public HotspotSelector(final List<VariantHotspot> hotspots)
     {
-        this.mHotspotSelector = new PositionSelector<>(hotspots);
+        mHotspotSelector = new PositionSelector<>(hotspots);
     }
 
     public boolean isHotspot(@NotNull final VariantHotspot variant)

@@ -3,8 +3,7 @@ package com.hartwig.hmftools.sage.pipeline;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 
 import org.jetbrains.annotations.NotNull;
@@ -23,15 +22,15 @@ public class ChromosomePartition
     }
 
     @NotNull
-    public List<GenomeRegion> partition(String contig)
+    public List<BaseRegion> partition(String contig)
     {
         return partition(contig, 1, mRefGenome.getSequence(contig).length());
     }
 
     @NotNull
-    public List<GenomeRegion> partition(String contig, int minPosition, int maxPosition)
+    public List<BaseRegion> partition(String contig, int minPosition, int maxPosition)
     {
-        final List<GenomeRegion> results = Lists.newArrayList();
+        final List<BaseRegion> results = Lists.newArrayList();
 
         int dynamicSliceSize = maxPosition / Math.min(mConfig.Threads, 4) + 1;
 
@@ -40,7 +39,7 @@ public class ChromosomePartition
         {
             int start = minPosition + i * regionSliceSize;
             int end = Math.min(start + regionSliceSize - 1, maxPosition);
-            results.add(GenomeRegions.create(contig, start, end));
+            results.add(new BaseRegion(contig, start, end));
             if(end >= maxPosition)
             {
                 break;

@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.count.EvictingArray;
@@ -21,11 +22,11 @@ public class RefContextFactory
     private final SageConfig mConfig;
     private final String mSample;
     private final EvictingArray<RefContext> mRollingCandidates;
-    private final PanelSelector<GenomeRegion> mPanelSelector;
+    private final PanelSelector<BaseRegion> mPanelSelector;
     private final List<AltContext> mSavedCandidates = Lists.newArrayList();
 
-    public RefContextFactory(@NotNull final SageConfig config, @NotNull final String sample, final List<VariantHotspot> hotspots,
-            final List<GenomeRegion> panel)
+    public RefContextFactory(
+            final SageConfig config, final String sample, final List<VariantHotspot> hotspots, final List<BaseRegion> panel)
     {
         mSample = sample;
         mConfig = config;
@@ -42,7 +43,7 @@ public class RefContextFactory
     }
 
     @NotNull
-    public RefContext refContext(@NotNull final String chromosome, final long position)
+    public RefContext refContext(final String chromosome, final long position)
     {
         int maxDepth = maxReadDepth(chromosome, position);
         return mRollingCandidates.computeIfAbsent(position, aLong -> new RefContext(mSample, chromosome, position, maxDepth));
@@ -62,7 +63,7 @@ public class RefContextFactory
                 ? mConfig.MaxReadDepthPanel : mConfig.MaxReadDepth;
     }
 
-    private boolean refPredicate(@NotNull final AltContext altContext)
+    private boolean refPredicate(final AltContext altContext)
     {
         for(int i = 0; i < altContext.ref().length(); i++)
         {

@@ -6,9 +6,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.read.ReadContext;
@@ -26,13 +26,13 @@ import htsjdk.samtools.SAMRecord;
 public class RefContextConsumer implements Consumer<SAMRecord>
 {
     private final SageConfig mConfig;
-    private final GenomeRegion mBounds;
+    private final BaseRegion mBounds;
     private final RefSequence mRefGenome;
     private final RefContextFactory mCandidates;
     private final ReadContextFactory mReadContextFactory;
 
-    public RefContextConsumer(@NotNull final SageConfig config, @NotNull final GenomeRegion bounds, @NotNull final RefSequence refGenome,
-            @NotNull final RefContextFactory candidates)
+    public RefContextConsumer(
+            final SageConfig config, final BaseRegion bounds, final RefSequence refGenome, final RefContextFactory candidates)
     {
         mBounds = bounds;
         mRefGenome = refGenome;
@@ -43,7 +43,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
     }
 
     @Override
-    public void accept(@NotNull final SAMRecord record)
+    public void accept(final SAMRecord record)
     {
         if(inBounds(record) && !reachedDepthLimit(record))
         {
@@ -55,7 +55,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             final CigarHandler handler = new CigarHandler()
             {
                 @Override
-                public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
+                public void handleAlignment(final SAMRecord record, final CigarElement element, final int readIndex,
                         final int refPosition)
                 {
                     altReads.addAll(processAlignment(record, readIndex, refPosition, element.getLength(), refBases, numberOfEvents));
@@ -63,7 +63,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
                 }
 
                 @Override
-                public void handleInsert(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
+                public void handleInsert(final SAMRecord record, final CigarElement element, final int readIndex,
                         final int refPosition)
                 {
                     Optional.ofNullable(processInsert(element, record, readIndex, refPosition, refBases, numberOfEvents))
@@ -71,7 +71,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
                 }
 
                 @Override
-                public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
+                public void handleDelete(final SAMRecord record, final CigarElement element, final int readIndex,
                         final int refPosition)
                 {
                     Optional.ofNullable(processDel(element, record, readIndex, refPosition, refBases, numberOfEvents))
@@ -127,7 +127,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
     }
 
     @Nullable
-    private AltRead processInsert(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
+    private AltRead processInsert(final CigarElement e, final SAMRecord record, int readIndex, int refPosition,
             final IndexedBases refBases, int numberOfEvents)
     {
         int refIndex = refBases.index(refPosition);
@@ -153,7 +153,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
     }
 
     @Nullable
-    private AltRead processDel(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
+    private AltRead processDel(final CigarElement e, final SAMRecord record, int readIndex, int refPosition,
             final IndexedBases refBases, int numberOfEvents)
     {
         int refIndex = refBases.index(refPosition);
@@ -179,7 +179,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
     }
 
     @NotNull
-    private List<AltRead> processAlignment(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart,
+    private List<AltRead> processAlignment(final SAMRecord record, int readBasesStartIndex, int refPositionStart,
             int alignmentLength, final IndexedBases refBases, int numberOfEvents)
     {
         final List<AltRead> result = Lists.newArrayList();
@@ -255,7 +255,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         return result;
     }
 
-    private boolean findReadContext(int readIndex, @NotNull final SAMRecord record)
+    private boolean findReadContext(int readIndex, final SAMRecord record)
     {
         return readIndex >= mConfig.ReadContextFlankSize && readIndex < record.getReadLength() - mConfig.ReadContextFlankSize;
     }
@@ -296,13 +296,13 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         return position >= mBounds.start() && position <= mBounds.end();
     }
 
-    private boolean reachedDepthLimit(@NotNull final SAMRecord record)
+    private boolean reachedDepthLimit(final SAMRecord record)
     {
         int alignmentStart = record.getAlignmentStart();
         int alignmentEnd = record.getAlignmentEnd();
 
-        RefContext startRefContext = mCandidates.refContext(mBounds.chromosome(), alignmentStart);
-        RefContext endRefContext = mCandidates.refContext(mBounds.chromosome(), alignmentEnd);
+        RefContext startRefContext = mCandidates.refContext(mBounds.Chromosome, alignmentStart);
+        RefContext endRefContext = mCandidates.refContext(mBounds.Chromosome, alignmentEnd);
 
         return startRefContext.reachedLimit() && endRefContext.reachedLimit();
     }

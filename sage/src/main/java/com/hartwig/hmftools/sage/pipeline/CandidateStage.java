@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.Candidates;
@@ -23,16 +23,18 @@ public class CandidateStage
 {
     private final SageConfig mConfig;
     private final List<VariantHotspot> mHotspots;
-    private final List<GenomeRegion> mPanelRegions;
+    private final List<BaseRegion> mPanelRegions;
     private final CandidateEvidence mCandidateEvidence;
-    private final List<GenomeRegion> mHighConfidenceRegions;
+    private final List<BaseRegion> mHighConfidenceRegions;
 
-    public CandidateStage(@NotNull final SageConfig config, @NotNull final ReferenceSequenceFile refGenome,
-            @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
-            @NotNull final List<GenomeRegion> highConfidenceRegions, final Coverage coverage)
+    public CandidateStage(final SageConfig config, final ReferenceSequenceFile refGenome,
+            final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions,
+            final List<BaseRegion> highConfidenceRegions, final Coverage coverage)
     {
         mConfig = config;
+
         final SamSlicerFactory samSlicerFactory = new SamSlicerFactory(config, panelRegions);
+
         mHotspots = hotspots;
         mPanelRegions = panelRegions;
         mHighConfidenceRegions = highConfidenceRegions;
@@ -40,16 +42,15 @@ public class CandidateStage
     }
 
     @NotNull
-    public CompletableFuture<List<Candidate>> candidates(@NotNull final GenomeRegion region,
-            final CompletableFuture<RefSequence> refSequenceFuture)
+    public CompletableFuture<List<Candidate>> candidates(final BaseRegion region, final CompletableFuture<RefSequence> refSequenceFuture)
     {
         return refSequenceFuture.thenCompose(refSequence ->
         {
             if(region.start() == 1)
             {
-                SG_LOGGER.info("Processing chromosome {}", region.chromosome());
+                SG_LOGGER.info("processing chromosome {}", region.Chromosome);
             }
-            SG_LOGGER.debug("Processing candidates in {}:{}", region.chromosome(), region.start());
+            SG_LOGGER.debug("processing candidates in {}:{}", region.Chromosome, region.start());
 
             final Candidates initialCandidates = new Candidates(mHotspots, mPanelRegions, mHighConfidenceRegions);
 

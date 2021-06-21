@@ -3,10 +3,13 @@ package com.hartwig.hmftools.common.utils.sv;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
+import com.hartwig.hmftools.common.genome.chromosome.ContigComparator;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
-public class BaseRegion
+import org.jetbrains.annotations.NotNull;
+
+public class BaseRegion implements Comparable<BaseRegion>
 {
     public final String Chromosome;
     public final int[] Positions;
@@ -27,6 +30,7 @@ public class BaseRegion
 
     public int start() { return Positions[SE_START]; }
     public int end() { return Positions[SE_END]; }
+    public String chromosome() { return Chromosome; }
 
     public void setPosition(int position, int index) { Positions[index] = position; }
     public void setStart(int pos) { setPosition(pos, SE_START); }
@@ -59,6 +63,23 @@ public class BaseRegion
     }
 
     public String toString() { return String.format("%s:%d-%d", Chromosome, Positions[SE_START], Positions[SE_END]); }
+
+    @Override
+    public int compareTo(@NotNull final BaseRegion other)
+    {
+        if(Chromosome.equals(other.Chromosome))
+        {
+            if (start() < other.start())
+            {
+                return -1;
+            } else if (start() == other.start()) {
+                return 0;
+            }
+            return 1;
+        }
+
+        return ContigComparator.INSTANCE.compare(Chromosome, other.Chromosome);
+    }
 
     // utility methods relating to position comparisons
     public static boolean positionsOverlap(int posStart1, int posEnd1, int posStart2, int posEnd2)
