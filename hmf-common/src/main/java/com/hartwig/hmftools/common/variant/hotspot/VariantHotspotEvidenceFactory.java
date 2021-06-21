@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.common.variant.hotspot;
 
-import static com.hartwig.hmftools.common.utils.sam.SAMRecords.basesDeletedAfterPosition;
-import static com.hartwig.hmftools.common.utils.sam.SAMRecords.basesInsertedAfterPosition;
-import static com.hartwig.hmftools.common.utils.sam.SAMRecords.containsDelete;
-import static com.hartwig.hmftools.common.utils.sam.SAMRecords.containsInsert;
-import static com.hartwig.hmftools.common.utils.sam.SAMRecords.getAvgBaseQuality;
-import static com.hartwig.hmftools.common.utils.sam.SAMRecords.getBaseQuality;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.basesDeletedAfterPosition;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.basesInsertedAfterPosition;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.containsDelete;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.containsInsert;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getAvgBaseQuality;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getBaseQuality;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,7 +22,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
-import com.hartwig.hmftools.common.utils.sam.SAMRecords;
+import com.hartwig.hmftools.common.samtools.SamRecordUtils;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -177,7 +177,7 @@ public class VariantHotspotEvidenceFactory {
         int hotspotLength = Math.max(hotspot.ref().length(), hotspot.alt().length());
 
         int recordStartPosition = record.getReadPositionAtReferencePosition(hotspotStartPosition);
-        int recordStartQuality = SAMRecords.getBaseQuality(record, recordStartPosition);
+        int recordStartQuality = SamRecordUtils.getBaseQuality(record, recordStartPosition);
 
         if (isVariantPartOfLargerMNV(start, refSequence, hotspot, record)) {
             return recordStartQuality < minBaseQuality ? builder : builder.setReadDepth(builder.readDepth() + 1);

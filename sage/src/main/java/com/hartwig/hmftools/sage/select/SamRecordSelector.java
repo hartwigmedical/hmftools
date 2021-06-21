@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.utils.sam.SAMRecords;
+import com.hartwig.hmftools.common.samtools.SamRecordUtils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -19,8 +19,8 @@ public class SamRecordSelector<P extends GenomePosition> extends PositionSelecto
 
     public void select(final SAMRecord record, final Consumer<P> handler)
     {
-        long startWithSoftClip = record.getAlignmentStart() - SAMRecords.leftSoftClip(record);
-        long endWithSoftClip = record.getAlignmentEnd() + SAMRecords.rightSoftClip(record);
+        long startWithSoftClip = record.getAlignmentStart() - SamRecordUtils.leftSoftClip(record);
+        long endWithSoftClip = record.getAlignmentEnd() + SamRecordUtils.rightSoftClip(record);
 
         super.select(startWithSoftClip, endWithSoftClip, handler);
     }

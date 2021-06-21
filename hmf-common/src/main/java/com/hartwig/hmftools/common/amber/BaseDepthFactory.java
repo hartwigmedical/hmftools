@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.amber;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.utils.sam.SAMRecords;
+import com.hartwig.hmftools.common.samtools.SamRecordUtils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -114,7 +114,7 @@ public class BaseDepthFactory
             int readPosition = samRecord.getReadPositionAtReferencePosition(pos);
             if(readPosition != 0)
             {
-                return SAMRecords.getBaseQuality(samRecord, readPosition);
+                return SamRecordUtils.getBaseQuality(samRecord, readPosition);
             }
         }
 

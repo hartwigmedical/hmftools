@@ -1,33 +1,34 @@
 package com.hartwig.hmftools.common.samtools;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
-public final class CigarTraversal {
-
-    private CigarTraversal() {
-    }
-
-    public static void traverseCigar(@NotNull final SAMRecord record, @NotNull final CigarHandler handler) {
+public final class CigarTraversal
+{
+    public static void traverseCigar(final SAMRecord record, final CigarHandler handler)
+    {
         final Cigar cigar = record.getCigar();
 
         int readIndex = 0;
         int refBase = record.getAlignmentStart();
 
-        for (int i = 0; i < cigar.numCigarElements(); i++) {
+        for(int i = 0; i < cigar.numCigarElements(); i++)
+        {
             final CigarElement e = cigar.getCigarElement(i);
-            switch (e.getOperator()) {
+            switch(e.getOperator())
+            {
                 case H:
                     break; // ignore hard clips
                 case P:
                     break; // ignore pads
                 case S:
-                    if (i == 0) {
+                    if(i == 0)
+                    {
                         handler.handleLeftSoftClip(record, e);
-                    } else if (i == cigar.numCigarElements() - 1) {
+                    }
+                    else if(i == cigar.numCigarElements() - 1)
+                    {
                         handler.handleRightSoftClip(record, e, readIndex, refBase);
                     }
                     readIndex += e.getLength();
@@ -43,7 +44,8 @@ public final class CigarTraversal {
                 case I:
                     // TODO: Handle 1I150M
                     int refIndex = refBase - 1 - record.getAlignmentStart();
-                    if (refIndex >= 0) {
+                    if(refIndex >= 0)
+                    {
                         handler.handleInsert(record, e, readIndex - 1, refBase - 1);
                     }
                     readIndex += e.getLength();
