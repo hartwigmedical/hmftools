@@ -8,15 +8,17 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import org.junit.Test;
 
 public class PanelSelectorTest
 {
 
-    private final List<GenomeRegion> panel =
+    private final List<BaseRegion> panel =
             Lists.newArrayList(region(995, 995), region(998, 1102), region(1995, 1995), region(1998, 2102));
-    private final PanelSelector<GenomeRegion> victim = new PanelSelector<>(panel);
+
+    private final PanelSelector<BaseRegion> victim = new PanelSelector<>(panel);
 
     @Test
     public void testOverlap()
@@ -40,9 +42,9 @@ public class PanelSelectorTest
         testOverlap();
     }
 
-    private static GenomeRegion region(long start, long end)
+    private static BaseRegion region(int start, int end)
     {
-        return GenomeRegions.create("1", start, end);
+        return new BaseRegion("1", start, end);
     }
 
 }

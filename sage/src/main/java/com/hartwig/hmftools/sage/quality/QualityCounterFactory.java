@@ -6,7 +6,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.concurrent.CompletionException;
 
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
@@ -32,9 +32,9 @@ class QualityCounterFactory
     }
 
     @NotNull
-    public Collection<QualityCounter> regionCount(@NotNull final GenomeRegion bounds)
+    public Collection<QualityCounter> regionCount(@NotNull final BaseRegion bounds)
     {
-        SG_LOGGER.debug("Processing bqr region {}", bounds);
+        SG_LOGGER.debug("processing bqr region {}", bounds);
 
         final RefSequence refSequence = new RefSequence(bounds, mRefGenome);
 

@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.ref.RefSequence;
 
@@ -28,18 +28,18 @@ class QualityCounterCigarHandler implements CigarHandler
     private static final CigarElement SINGLE = new CigarElement(1, CigarOperator.M);
     private static final byte N = (byte) 'N';
 
-    private final IndexedBases refGenome;
-    private final GenomeRegion bounds;
-    private final int maxAltCount;
+    private final IndexedBases mRefGenome;
+    private final BaseRegion mBounds;
+    private final int mMaxAltCount;
 
     private final Set<Integer> indelPositions = Sets.newHashSet();
     private final Map<QualityCounterKey, QualityCounter> qualityMap = Maps.newHashMap();
 
-    public QualityCounterCigarHandler(final RefSequence refGenome, final GenomeRegion bounds, final int maxAltCount)
+    public QualityCounterCigarHandler(final RefSequence refGenome, final BaseRegion bounds, final int maxAltCount)
     {
-        this.refGenome = refGenome.alignment();
-        this.bounds = bounds;
-        this.maxAltCount = maxAltCount;
+        mRefGenome = refGenome.alignment();
+        mBounds = bounds;
+        mMaxAltCount = maxAltCount;
     }
 
     public void processRecord(@NotNull final SAMRecord record)
@@ -52,7 +52,7 @@ class QualityCounterCigarHandler implements CigarHandler
     {
         final Set<QualityCounterKey> altsToRemove = groupByAlt(qualityMap.values()).stream()
                 .filter(x -> x.ref() != x.alt())
-                .filter(x -> x.count() > maxAltCount)
+                .filter(x -> x.count() > mMaxAltCount)
                 .map(QualityCounter::key)
                 .collect(Collectors.toSet());
 
@@ -92,20 +92,20 @@ class QualityCounterCigarHandler implements CigarHandler
             int readIndex = startReadIndex + i;
             int position = refPos + i;
 
-            if(position > bounds.end())
+            if(position > mBounds.end())
             {
                 return;
             }
 
-            if(position < bounds.start())
+            if(position < mBounds.start())
             {
                 continue;
             }
 
-            byte ref = refGenome.base(position);
+            byte ref = mRefGenome.base(position);
             byte alt = r.getReadBases()[readIndex];
             byte quality = r.getBaseQualities()[readIndex];
-            byte[] trinucleotideContext = refGenome.trinucleotideContext(position);
+            byte[] trinucleotideContext = mRefGenome.trinucleotideContext(position);
 
             if(alt != N && isValid(trinucleotideContext))
             {

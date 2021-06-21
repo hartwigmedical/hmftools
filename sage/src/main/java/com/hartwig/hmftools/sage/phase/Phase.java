@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class Phase implements Consumer<SageVariant>
 {
-    static final int PHASE_BUFFER = 150;
+    public static final int PHASE_BUFFER = 150;
 
     private final DedupRealign mDedupRealign;
     private final DedupMnv mDedupMnv;

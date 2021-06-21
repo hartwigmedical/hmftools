@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.pipeline.AdditionalReferencePipeline;
@@ -125,7 +126,7 @@ public class SageAppendApplication implements AutoCloseable
                 final List<VariantContext> chromosomeVariants =
                         existing.stream().filter(x -> x.getContig().equals(contig)).collect(Collectors.toList());
 
-                for(GenomeRegion region : chromosomePartition.partition(contig))
+                for(BaseRegion region : chromosomePartition.partition(contig))
                 {
                     final List<VariantContext> regionVariants = chromosomeVariants.stream()
                             .filter(x -> x.getStart() >= region.start() && x.getStart() <= region.end())

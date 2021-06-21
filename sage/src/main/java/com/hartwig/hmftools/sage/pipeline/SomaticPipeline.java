@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -34,9 +34,10 @@ public class SomaticPipeline implements SageVariantPipeline
     private final CandidateStage mCandidateState;
     private final EvidenceStage mEvidenceStage;
 
-    public SomaticPipeline(final SageConfig config, final Executor executor, final ReferenceSequenceFile refGenome,
-            final List<VariantHotspot> hotspots, final List<GenomeRegion> panelRegions,
-            final List<GenomeRegion> highConfidenceRegions,
+    public SomaticPipeline(
+            final SageConfig config, final Executor executor, final ReferenceSequenceFile refGenome,
+            final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions,
+            final List<BaseRegion> highConfidenceRegions,
             final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
             final Coverage coverage)
     {
@@ -48,7 +49,7 @@ public class SomaticPipeline implements SageVariantPipeline
     }
 
     @NotNull
-    public CompletableFuture<List<SageVariant>> variants(final GenomeRegion region)
+    public CompletableFuture<List<SageVariant>> variants(final BaseRegion region)
     {
         final CompletableFuture<RefSequence> refSequenceFuture = supplyAsync(() -> new RefSequence(region, mRefGenome), mExecutor);
 
@@ -64,13 +65,14 @@ public class SomaticPipeline implements SageVariantPipeline
     }
 
     @NotNull
-    private CompletableFuture<List<SageVariant>> combine(final GenomeRegion region,
+    private CompletableFuture<List<SageVariant>> combine(
+            final BaseRegion region,
             final CompletableFuture<List<Candidate>> candidates, final CompletableFuture<ReadContextCounters> doneTumor,
             final CompletableFuture<ReadContextCounters> doneNormal)
     {
         return doneNormal.thenCombine(doneTumor, (normalCandidates, tumorCandidates) ->
         {
-            SG_LOGGER.debug("Gathering evidence in {}:{}", region.chromosome(), region.start());
+            SG_LOGGER.debug("Gathering evidence in {}:{}", region.Chromosome, region.start());
             final SageVariantFactory variantFactory = new SageVariantFactory(mConfig.Filter);
 
             // Combine normal and tumor together and create variants

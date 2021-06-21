@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 
 import org.jetbrains.annotations.NotNull;
@@ -66,7 +67,7 @@ public class QualityRecalibration
 
     public CompletableFuture<Collection<QualityCounter>> addRegion(String bam, String contig, int start, int end)
     {
-        final GenomeRegion bounds = GenomeRegions.create(contig, start, end);
+        BaseRegion bounds = new BaseRegion(contig, start, end);
         return CompletableFuture.supplyAsync(() -> new QualityCounterFactory(mConfig, bam, mRefGenome).regionCount(bounds), mExecutorService);
     }
 

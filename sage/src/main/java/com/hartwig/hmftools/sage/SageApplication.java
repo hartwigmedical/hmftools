@@ -60,27 +60,7 @@ public class SageApplication implements AutoCloseable
     private final IndexedFastaSequenceFile mRefGenome;
     private final QualityRecalibrationSupplier mQualityRecalibrationSupplier;
 
-    private final ListMultimap<Chromosome, NamedBed> mCoveragePanel;
-    private final ListMultimap<Chromosome, GenomeRegion> mPanelWithHotspots;
-    private final ListMultimap<Chromosome, VariantHotspot> mHotspots;
-    private final ListMultimap<Chromosome, GenomeRegion> mHighConfidence;
-
-    public static void main(final String... args) throws IOException, InterruptedException, ExecutionException
-    {
-        final Options options = SageConfig.createSageOptions();
-
-        try(final SageApplication application = new SageApplication(options, args))
-        {
-            application.run();
-        }
-        catch(ParseException e)
-        {
-            SG_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("SageApplication", options);
-            System.exit(1);
-        }
-    }
+    private final ReferenceData mRefData;
 
     private SageApplication(final Options options, final String... args) throws IOException, ParseException
     {
@@ -96,11 +76,13 @@ public class SageApplication implements AutoCloseable
             SG_LOGGER.error("invalid config, exiting");
         }
 
-        mCoveragePanel = readNamedBed(mConfig.CoverageBed);
-        final ListMultimap<Chromosome, GenomeRegion> panelWithoutHotspots = readUnnamedBed(mConfig.PanelBed);
-        mHotspots = readHotspots();
-        mPanelWithHotspots = panelWithHotspots(panelWithoutHotspots, mHotspots);
-        mHighConfidence = readUnnamedBed(mConfig.HighConfidenceBed);
+        mRefData = new ReferenceData(mConfig);
+
+        if(!mRefData.load())
+        {
+            System.exit(1);
+            SG_LOGGER.error("invalid reference data, exiting");
+        }
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
         mExecutorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
@@ -109,15 +91,6 @@ public class SageApplication implements AutoCloseable
 
         mVcfFile = new SageVCF(mRefGenome, mConfig);
         SG_LOGGER.info("Writing to file: {}", mConfig.OutputFile);
-
-        // Validate Coverage Bed
-        if(mConfig.PanelOnly && !mCoveragePanel.isEmpty())
-        {
-            if(!GenomeRegionsValidation.isSubset(mPanelWithHotspots.values(), mCoveragePanel.values()))
-            {
-                throw new IOException("Coverage bed must be a subset of panel bed when running in panel only mode");
-            }
-        }
     }
 
     private void run() throws InterruptedException, ExecutionException, IOException
@@ -177,8 +150,8 @@ public class SageApplication implements AutoCloseable
                 HumanChromosome.contains(contig) ? HumanChromosome.fromString(contig) : MitochondrialChromosome.fromString(contig);
 
         return new ChromosomePipeline(
-                contig, mConfig, mExecutorService, mHotspots.get(chromosome), mPanelWithHotspots.get(chromosome),
-                mHighConfidence.get(chromosome), qualityRecalibrationMap, coverage, mVcfFile::write);
+                contig, mConfig, mExecutorService, mRefData.Hotspots.get(chromosome), mRefData.PanelWithHotspots.get(chromosome),
+                mRefData.HighConfidence.get(chromosome), qualityRecalibrationMap, coverage, mVcfFile::write);
     }
 
     private Coverage createCoverage()
@@ -191,7 +164,7 @@ public class SageApplication implements AutoCloseable
             samples.addAll(mConfig.TumorIds);
         }
 
-        return new Coverage(samples, mCoveragePanel.values());
+        return new Coverage(samples, mRefData.CoveragePanel.values());
     }
 
     @Override
@@ -202,84 +175,26 @@ public class SageApplication implements AutoCloseable
         mExecutorService.shutdown();
     }
 
+    public static void main(final String... args) throws IOException, InterruptedException, ExecutionException
+    {
+        final Options options = SageConfig.createSageOptions();
+
+        try(final SageApplication application = new SageApplication(options, args))
+        {
+            application.run();
+        }
+        catch(ParseException e)
+        {
+            SG_LOGGER.warn(e);
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("SageApplication", options);
+            System.exit(1);
+        }
+    }
+
     static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException
     {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-
-    private ListMultimap<Chromosome, VariantHotspot> readHotspots() throws IOException
-    {
-        if(!mConfig.Hotspots.isEmpty())
-        {
-            SG_LOGGER.info("Reading hotspot vcf: {}", mConfig.Hotspots);
-            return VariantHotspotFile.readFromVCF(mConfig.Hotspots);
-        }
-        else
-        {
-            return ArrayListMultimap.create();
-        }
-    }
-
-    private ListMultimap<Chromosome, GenomeRegion> panelWithHotspots(
-            final ListMultimap<Chromosome, GenomeRegion> panelWithoutHotspots,
-            final ListMultimap<Chromosome, VariantHotspot> hotspots)
-    {
-        final ListMultimap<Chromosome, GenomeRegion> result = ArrayListMultimap.create();
-
-        for(HumanChromosome chromosome : HumanChromosome.values())
-        {
-            final GenomeRegionsBuilder builder = new GenomeRegionsBuilder();
-            if(panelWithoutHotspots.containsKey(chromosome))
-            {
-                panelWithoutHotspots.get(chromosome).forEach(builder::addRegion);
-            }
-            if(hotspots.containsKey(chromosome))
-            {
-                hotspots.get(chromosome).forEach(builder::addPosition);
-            }
-
-            result.putAll(chromosome, builder.build());
-        }
-
-        return result;
-    }
-
-    private static ListMultimap<Chromosome, NamedBed> readNamedBed(final String panelBed) throws IOException
-    {
-        final ListMultimap<Chromosome, NamedBed> panel = ArrayListMultimap.create();
-        if(!panelBed.isEmpty())
-        {
-            SG_LOGGER.info("Reading bed file: {}", panelBed);
-            for(NamedBed bed : NamedBedFile.readBedFile(panelBed))
-            {
-                if(HumanChromosome.contains(bed.chromosome()))
-                {
-                    panel.put(HumanChromosome.fromString(bed.chromosome()), bed);
-                }
-            }
-        }
-
-        return panel;
-    }
-
-    private static ListMultimap<Chromosome, GenomeRegion> readUnnamedBed(final String panelBed) throws IOException
-    {
-        final ListMultimap<Chromosome, GenomeRegion> panel = ArrayListMultimap.create();
-        if(!panelBed.isEmpty())
-        {
-            SG_LOGGER.info("Reading bed file: {}", panelBed);
-            SortedSetMultimap<String, GenomeRegion> bed = BEDFileLoader.fromBedFile(panelBed);
-            for(String contig : bed.keySet())
-            {
-                if(HumanChromosome.contains(contig))
-                {
-                    panel.putAll(HumanChromosome.fromString(contig), bed.get(contig));
-                }
-            }
-        }
-
-        return panel;
-    }
-
 }

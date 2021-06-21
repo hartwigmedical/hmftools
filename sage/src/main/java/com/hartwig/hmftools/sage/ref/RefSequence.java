@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.ref;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,12 +19,12 @@ public class RefSequence
 
     private static final int BUFFER = 1000;
 
-    public RefSequence(@NotNull final GenomeRegion region, @NotNull final ReferenceSequenceFile refGenome)
+    public RefSequence(final BaseRegion region, final ReferenceSequenceFile refGenome)
     {
-        final int sequenceEnd = refGenome.getSequenceDictionary().getSequence(region.chromosome()).getSequenceLength();
+        final int sequenceEnd = refGenome.getSequenceDictionary().getSequence(region.Chromosome).getSequenceLength();
         Start = Math.max(1, (int) region.start() - BUFFER);
         End = Math.min(sequenceEnd, (int) region.end() + BUFFER);
-        Sequence = refGenome.getSubsequenceAt(region.chromosome(), Start, End);
+        Sequence = refGenome.getSubsequenceAt(region.Chromosome, Start, End);
         IndexedBases = new IndexedBases(Start, 0, Sequence.getBases());
     }
 

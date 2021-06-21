@@ -4,10 +4,11 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-class ExonCoverage implements GenomeRegion, Consumer<GenomeRegion>
+public class ExonCoverage implements Consumer<BaseRegion>
 {
     private final NamedBed mExon;
     private final int[] mBaseCoverage;
@@ -27,26 +28,23 @@ class ExonCoverage implements GenomeRegion, Consumer<GenomeRegion>
         return mExon.name();
     }
 
-    @Override
     public String chromosome()
     {
         return mExon.chromosome();
     }
 
-    @Override
     public long start()
     {
         return mExon.start();
     }
 
-    @Override
     public long end()
     {
         return mExon.end();
     }
 
     @Override
-    public void accept(final GenomeRegion alignment)
+    public void accept(final BaseRegion alignment)
     {
         if(alignment.start() <= mExon.end() && alignment.end() >= mExon.start())
         {

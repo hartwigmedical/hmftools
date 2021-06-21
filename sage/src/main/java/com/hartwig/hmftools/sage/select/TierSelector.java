@@ -4,7 +4,7 @@ import java.util.List;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.variant.SageVariantTier;
 
@@ -13,14 +13,14 @@ import org.jetbrains.annotations.NotNull;
 @NotThreadSafe
 public class TierSelector extends HotspotSelector
 {
-    private final PanelSelector<GenomeRegion> mPanelRegionSelector;
-    private final PanelSelector<GenomeRegion> mHighConfidenceRegionSelector;
+    private final PanelSelector<BaseRegion> mPanelRegionSelector;
+    private final PanelSelector<BaseRegion> mHighConfidenceRegionSelector;
 
-    public TierSelector(final List<VariantHotspot> hotspots, final List<GenomeRegion> panel, final List<GenomeRegion> highConfidence)
+    public TierSelector(final List<VariantHotspot> hotspots, final List<BaseRegion> panel, final List<BaseRegion> highConfidence)
     {
         super(hotspots);
-        this.mPanelRegionSelector = new PanelSelector<>(panel);
-        this.mHighConfidenceRegionSelector = new PanelSelector<>(highConfidence);
+        mPanelRegionSelector = new PanelSelector<>(panel);
+        mHighConfidenceRegionSelector = new PanelSelector<>(highConfidence);
     }
 
     @NotNull

@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.genome.bed.ImmutableNamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -86,9 +87,9 @@ public class ExonCoverageTest
     }
 
     @NotNull
-    private GenomeRegion alignment(long start, long end)
+    private BaseRegion alignment(int start, int end)
     {
-        return GenomeRegions.create("1", start, end);
+        return new BaseRegion("1", start, end);
     }
 
     @NotNull
