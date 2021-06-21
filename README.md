@@ -9,7 +9,7 @@ More detailed descriptions of the following algorithms are available from the li
  - [COBALT](./cobalt/README.md)
  - [GRIPSS](./gripss/README.md)
  - [PURPLE](./purple/README.md)
- - [Linx](./sv-linx/README.md)
+ - [Linx](./linx/README.md)
  - [Isofox](./isofox/README.md)
  - [SERVE](./serve/README.md)
  - [PROTECT](./protect/README.md)

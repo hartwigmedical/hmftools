@@ -23,7 +23,7 @@
         <module>cobalt</module>
         <module>purple</module>
         <module>sage</module>
-        <module>sv-linx</module>
+        <module>linx</module>
         <module>sv-tools</module>
         <module>virus-interpreter</module>
         <module>neo</module>
@@ -63,7 +63,7 @@
         <purple.version>3.1</purple.version>
         <gripss.version>1.11</gripss.version>
         <lilac.version>1.0</lilac.version>
-        <sv-linx.version>1.16</sv-linx.version>
+        <linx.version>1.16</linx.version>
         <sv-tools.version>1.0</sv-tools.version>
         <virus-interpreter.version>1.0</virus-interpreter.version>
         <health-checker.version>3.2</health-checker.version>
@@ -196,8 +196,8 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>sv-linx</artifactId>
-                <version>${sv-linx.version}</version>
+                <artifactId>linx</artifactId>
+                <version>${linx.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>

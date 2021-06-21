@@ -8,9 +8,9 @@
         <version>local-SNAPSHOT</version>
     </parent>
 
-    <artifactId>sv-linx</artifactId>
+    <artifactId>linx</artifactId>
     <packaging>jar</packaging>
-    <version>${sv-linx.version}</version>
+    <version>${linx.version}</version>
     <name>HMF Tools - Linx</name>
 
     <dependencies>

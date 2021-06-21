@@ -35,12 +35,12 @@ gene inactivation is considered applicable in case of a deletion.
 
 #### Homozygous disruptions
 
-When a gene has been homozygously disrupted according to [LINX](../sv-linx/README.md), evidence is applicable when it has been defined 
+When a gene has been homozygously disrupted according to [LINX](../linx/README.md), evidence is applicable when it has been defined 
 on a gene level with event either inactivation, deletion or any mutation. 
 
 #### Fusions
 
-For fusions that are deemed reportable according to [LINX](../sv-linx/README.md) the following matching is performed:
+For fusions that are deemed reportable according to [LINX](../linx/README.md) the following matching is performed:
  - Evidence defined on a promiscuous gene level is always considered applicable if a fusion with that gene is reported either in 5' or 3' 
  position.
  - Evidence that is applicable on an exact fusion pair has to match with the actual fusion pair, and also has to match the (optional) 

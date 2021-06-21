@@ -100,7 +100,7 @@ log_debug | logs in debug mode
 Single sample - Load SVs and purple data from file, upload Linx results to database:
 
 ```
-java -jar sv-linx.jar 
+java -jar linx.jar 
     -sample SAMPLE_ID 
     -ref_genome_version 37
     -sv_vcf /path_to_purple_vcf/
@@ -121,7 +121,7 @@ java -jar sv-linx.jar
 Single sample - query SVs and purple data from database, upload Linx results to database:
 
 ```
-java -jar sv-linx.jar 
+java -jar linx.jar 
     -sample SAMPLE_ID 
     -db_url [db_url] -db_user [username] -db_pass [password] 
     -output_dir /path_to_sample_data/ 
@@ -141,7 +141,7 @@ Cohort analysis - run all samples by sampleId in provided file, query SVs and pu
 Write Linx results to cohort files, no upload to database:
 
 ```
-java -jar sv-linx.jar 
+java -jar linx.jar 
     -sample cohort_sample_ids.csv
     -db_url [db_url] -db_user [username] -db_pass [password] 
     -output_dir /path_to_sample_data/ 
@@ -162,7 +162,7 @@ To improve performance, this data is first extracted into 4 CSV data files and t
 To generate these 4 data files, first run Linx with these command line options:
 
 ```
-java -cp sv-linx.jar com.hartwig.hmftools.linx.gene.GenerateEnsemblDataCache
+java -cp linx.jar com.hartwig.hmftools.linx.gene.GenerateEnsemblDataCache
     -ensembl_db [see below] -ensembl_user "anonymous" -ensembl_pass "" 
     -output_dir /path_to_write_data_files/ -ref_genome_version [37 or 38]
 ```
