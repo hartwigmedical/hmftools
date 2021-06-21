@@ -5,13 +5,13 @@ import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContext;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.jetbrains.annotations.NotNull;
 
 public class Candidate implements GenomePosition
 {
-    private final SageVariantTier mTier;
+    private final VariantTier mTier;
     private final VariantHotspot mVariant;
 
     private int mMaxDepth;
@@ -20,7 +20,7 @@ public class Candidate implements GenomePosition
     private ReadContext mReadContext;
 
     public Candidate(
-            final SageVariantTier tier, final VariantHotspot variant, final ReadContext readContext, int maxDepth, int minNumberOfEvents)
+            final VariantTier tier, final VariantHotspot variant, final ReadContext readContext, int maxDepth, int minNumberOfEvents)
     {
         mTier = tier;
         mVariant = variant;
@@ -29,7 +29,7 @@ public class Candidate implements GenomePosition
         mMinNumberOfEvents = minNumberOfEvents;
     }
 
-    public Candidate(final SageVariantTier tier, final AltContext altContext)
+    public Candidate(final VariantTier tier, final AltContext altContext)
     {
         mTier = tier;
         mVariant = ImmutableVariantHotspotImpl.builder().from(altContext).build();
@@ -51,13 +51,8 @@ public class Candidate implements GenomePosition
         mMaxDepth = Math.max(mMaxDepth, altContext.rawDepth());
     }
 
-    @NotNull
-    public SageVariantTier tier()
-    {
-        return mTier;
-    }
+    public VariantTier tier() { return mTier; }
 
-    @NotNull
     public VariantHotspot variant()
     {
         return mVariant;
@@ -68,7 +63,6 @@ public class Candidate implements GenomePosition
         return mMaxDepth;
     }
 
-    @NotNull
     public ReadContext readContext()
     {
         return mReadContext;
@@ -79,7 +73,6 @@ public class Candidate implements GenomePosition
         return mMinNumberOfEvents;
     }
 
-    @NotNull
     @Override
     public String chromosome()
     {

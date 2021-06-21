@@ -50,15 +50,15 @@ public class SomaticPipeline
     {
         final CompletableFuture<RefSequence> refSequenceFuture = supplyAsync(() -> new RefSequence(region, mRefGenome), mExecutor);
 
-        final CompletableFuture<List<Candidate>> initialCandidates = mCandidateState.candidates(region, refSequenceFuture);
+        final CompletableFuture<List<Candidate>> initialCandidates = mCandidateState.findCandidates(region, refSequenceFuture);
 
         final CompletableFuture<ReadContextCounters> tumorEvidence =
-                mEvidenceStage.evidence(mConfig.TumorIds, mConfig.TumorBams, initialCandidates);
+                mEvidenceStage.findEvidence(mConfig.TumorIds, mConfig.TumorBams, initialCandidates);
 
         final CompletableFuture<List<Candidate>> finalCandidates = filteredCandidates(tumorEvidence);
 
         final CompletableFuture<ReadContextCounters> normalEvidence =
-                mEvidenceStage.evidence(mConfig.ReferenceIds, mConfig.ReferenceBams, finalCandidates);
+                mEvidenceStage.findEvidence(mConfig.ReferenceIds, mConfig.ReferenceBams, finalCandidates);
 
         return combine(region, finalCandidates, tumorEvidence, normalEvidence);
     }
@@ -70,7 +70,7 @@ public class SomaticPipeline
     {
         return doneNormal.thenCombine(doneTumor, (normalCandidates, tumorCandidates) ->
         {
-            SG_LOGGER.debug("Gathering evidence in {}:{}", region.Chromosome, region.start());
+            SG_LOGGER.debug("gathering evidence in {}:{}", region.Chromosome, region.start());
             final SageVariantFactory variantFactory = new SageVariantFactory(mConfig.Filter);
 
             // Combine normal and tumor together and create variants

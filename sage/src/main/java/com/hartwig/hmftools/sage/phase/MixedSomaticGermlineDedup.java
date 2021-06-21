@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.select.RegionSelector;
 import com.hartwig.hmftools.sage.variant.SageVariant;
-import com.hartwig.hmftools.sage.vcf.SageVCF;
+import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -66,11 +66,11 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
             final Optional<GenomeRegion> maybeCodon = codon(snv.position());
             if(maybeCodon.filter(x -> keepMnv(x, snv.variant(), mnv.variant())).isPresent())
             {
-                snv.filters().add(SageVCF.DEDUP_FILTER);
+                snv.filters().add(VariantVCF.DEDUP_FILTER);
             }
             else
             {
-                mnv.filters().add(SageVCF.DEDUP_FILTER);
+                mnv.filters().add(VariantVCF.DEDUP_FILTER);
             }
         }
     }

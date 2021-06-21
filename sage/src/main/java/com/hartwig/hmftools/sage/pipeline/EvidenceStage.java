@@ -18,15 +18,15 @@ public class EvidenceStage
 {
     private final ReadContextEvidence mReadContextEvidence;
 
-    public EvidenceStage(@NotNull final SageConfig config, @NotNull final ReferenceSequenceFile refGenome,
-            @NotNull final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
+    public EvidenceStage(
+            final SageConfig config, final ReferenceSequenceFile refGenome,
+            final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
     {
         mReadContextEvidence = new ReadContextEvidence(config, refGenome, qualityRecalibrationMap);
     }
 
-    @NotNull
-    public CompletableFuture<ReadContextCounters> evidence(@NotNull final List<String> samples, @NotNull final List<String> sampleBams,
-            @NotNull final CompletableFuture<List<Candidate>> candidates)
+    public CompletableFuture<ReadContextCounters> findEvidence(
+            final List<String> samples, final List<String> sampleBams, final CompletableFuture<List<Candidate>> candidates)
     {
         // Scan tumors for evidence
         return candidates.thenCompose(initialCandidates ->

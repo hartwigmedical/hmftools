@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.sage.variant.SageVariant;
-import com.hartwig.hmftools.sage.vcf.SageVCF;
+import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -61,7 +61,7 @@ public class DedupIndel extends BufferedPostProcessor
 
         if(longer.ref().substring(0, shorter.ref().length()).equals(shorter.ref()))
         {
-            longer.filters().add(SageVCF.DEDUP_FILTER);
+            longer.filters().add(VariantVCF.DEDUP_FILTER);
         }
     }
 
@@ -87,7 +87,7 @@ public class DedupIndel extends BufferedPostProcessor
 
         if(longer.alt().substring(0, shorter.alt().length()).equals(shorter.alt()))
         {
-            longer.filters().add(SageVCF.DEDUP_FILTER);
+            longer.filters().add(VariantVCF.DEDUP_FILTER);
         }
     }
 

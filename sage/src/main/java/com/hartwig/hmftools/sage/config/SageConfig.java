@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.config;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.containsFlag;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
@@ -63,6 +64,7 @@ public class SageConfig
     public final String CoverageBed;
     public final String InputFile;
     public final String OutputFile;
+    public final boolean WriteCsv;
 
     public final String Version;
     public final int Threads;
@@ -90,6 +92,7 @@ public class SageConfig
     private static final String REF_GENOME = "ref_genome";
     private static final String OUTPUT_VCF = "out";
     private static final String INPUT_VCF = "input_vcf";
+    private static final String WRITE_CSV = "write_csv";
     private static final String MIN_MAP_QUALITY = "min_map_quality";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     private static final String PANEL_BED = "panel_bed";
@@ -159,6 +162,8 @@ public class SageConfig
         }
 
         OutputFile = SampleDataDir + cmd.getOptionValue(OUTPUT_VCF);
+        WriteCsv = cmd.hasOption(WRITE_CSV);
+
         InputFile = SampleDataDir + cmd.getOptionValue(INPUT_VCF, "");
 
         PanelBed = ResourceDir + cmd.getOptionValue(PANEL_BED, Strings.EMPTY);
@@ -232,7 +237,7 @@ public class SageConfig
         final File outputDir = new File(OutputFile).getParentFile();
         if(outputDir != null && !outputDir.exists() && !outputDir.mkdirs())
         {
-            SG_LOGGER.error("Unable to write directory({})", outputDir.toString());
+            SG_LOGGER.error("unable to write directory({})", outputDir.toString());
             return false;
         }
 
@@ -240,19 +245,19 @@ public class SageConfig
         {
             if(InputFile.isEmpty())
             {
-                SG_LOGGER.error("No input VCF file specified");
+                SG_LOGGER.error("no input VCF file specified");
                 return false;
             }
 
             if(InputFile.equals(OutputFile))
             {
-                SG_LOGGER.error("Input and output VCFs must be different");
+                SG_LOGGER.error("input and output VCFs must be different");
                 return false;
             }
 
             if(ReferenceIds.isEmpty())
             {
-                SG_LOGGER.error("At least one reference must be supplied");
+                SG_LOGGER.error("at least one reference must be supplied");
                 return false;
             }
         }
@@ -284,6 +289,7 @@ public class SageConfig
         options.addOption(HOTSPOTS, true, "Hotspots");
         options.addOption(COVERAGE_BED, true, "Coverage is calculated for optionally supplied bed");
         options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
+        options.addOption(LOG_DEBUG, false, "Log verbose");
 
         commonOptions().getOptions().forEach(options::addOption);
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
@@ -308,6 +314,7 @@ public class SageConfig
         options.addOption(REFERENCE_BAM, true, "Reference bam file");
         options.addOption(REF_GENOME, true, "Indexed ref genome fasta file");
         options.addOption(OUTPUT_VCF, true, "Output vcf");
+        options.addOption(WRITE_CSV, false, "Write variant data to CSV as well as VCF");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
         options.addOption(CHR, true, "Run for single chromosome");
         options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
@@ -360,6 +367,7 @@ public class SageConfig
         CoverageBed = "coverage";
         InputFile = "in.vcf";
         OutputFile = "out.vcf";
+        WriteCsv = false;
         Version = "1.0";
         Threads = DEFAULT_THREADS;
         TranscriptRegions = HmfGenePanelSupplier.allGeneList37();

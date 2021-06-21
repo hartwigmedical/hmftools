@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.variant;
 
-public enum SageVariantTier
+public enum VariantTier
 {
     HOTSPOT,
     PANEL,

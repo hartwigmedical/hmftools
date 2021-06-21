@@ -37,10 +37,7 @@ public class RefSequence
         IndexedBases = new IndexedBases(Start, 0, sequence.getBases());
     }
 
-    /**
-     * returns reference sequence spanning read with index pointing to alignment start
-     */
-    @NotNull
+    // returns reference sequence spanning read with index pointing to alignment start
     public IndexedBases alignment()
     {
         return IndexedBases;

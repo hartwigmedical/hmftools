@@ -39,7 +39,7 @@ public class IndexedBases
 
     public IndexedBases(final int position, final int index, final byte[] bases)
     {
-        this.Position = position;
+        Position = position;
         Index = index;
         LeftCoreIndex = index;
         RightCoreIndex = index;
@@ -49,8 +49,8 @@ public class IndexedBases
         FlankSize = 0;
     }
 
-    public IndexedBases(final int position, final int index, final int leftCoreIndex, int rightCoreIndex, int flankSize,
-            final byte[] bases)
+    public IndexedBases(
+            final int position, final int index, final int leftCoreIndex, int rightCoreIndex, int flankSize, final byte[] bases)
     {
         Position = position;
         Index = index;
@@ -154,7 +154,7 @@ public class IndexedBases
         return length() == otherLength && leftFlankingBases == leftFlankLength && rightFlankingBases == rightFlankLength ? FULL : PARTIAL;
     }
 
-    boolean coreMatch(final boolean wildcardAllowed, final int otherRefIndex, final byte[] otherBases)
+    protected boolean coreMatch(final boolean wildcardAllowed, final int otherRefIndex, final byte[] otherBases)
     {
         int otherLeftCentreIndex = otherLeftCentreIndex(otherRefIndex);
         if(otherLeftCentreIndex < 0)

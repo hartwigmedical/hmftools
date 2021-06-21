@@ -23,7 +23,8 @@ public class SageVariant
     private int mPhasedInframeIndel;
     private boolean mRealigned;
 
-    public SageVariant(final Candidate candidate, final Set<String> filters,
+    public SageVariant(
+            final Candidate candidate, final Set<String> filters,
             final List<ReadContextCounter> normal, final List<ReadContextCounter> tumorAltContexts)
     {
         mCandidate = candidate;
@@ -149,7 +150,7 @@ public class SageVariant
     }
 
     @NotNull
-    public SageVariantTier tier()
+    public VariantTier tier()
     {
         return mCandidate.tier();
     }

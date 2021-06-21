@@ -13,14 +13,13 @@ import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.config.SageConfigTest;
 import com.hartwig.hmftools.sage.config.SoftFilter;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.read.ReadContextCounterTest;
 import com.hartwig.hmftools.sage.variant.SageVariant;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -106,7 +105,7 @@ public class MixedGermlineTest
     {
         VariantHotspot variant = ImmutableVariantHotspotImpl.builder().chromosome(chromosome).ref(ref).alt(alt).position(position).build();
         ReadContextCounter counter = dummyCounter(variant, Strings.EMPTY);
-        final Candidate candidate = new Candidate(SageVariantTier.PANEL, variant, counter.readContext(), 0, 0);
+        final Candidate candidate = new Candidate(VariantTier.PANEL, variant, counter.readContext(), 0, 0);
         return new SageVariant(candidate, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));
     }
 
@@ -118,7 +117,7 @@ public class MixedGermlineTest
                 variant,
                 dummyReadContext,
                 new QualityRecalibrationMap(Collections.emptyList()),
-                SageVariantTier.PANEL,
+                VariantTier.PANEL,
                 1000,
                 0,
                 50,

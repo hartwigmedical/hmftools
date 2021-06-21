@@ -20,7 +20,6 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -29,14 +28,12 @@ import com.hartwig.hmftools.sage.pipeline.AdditionalReferencePipeline;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePartition;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationSupplier;
-import com.hartwig.hmftools.sage.vcf.SageVCF;
+import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -76,7 +73,7 @@ public class SageAppendApplication implements AutoCloseable
         }
     }
 
-    private final SageVCF outputVCF;
+    private final VariantVCF outputVCF;
     private final SageConfig config;
     private final ExecutorService executorService;
     private final IndexedFastaSequenceFile refGenome;
@@ -104,7 +101,7 @@ public class SageAppendApplication implements AutoCloseable
         SG_LOGGER.info("Reading and validating file: {}", inputVcf);
         validateInputHeader(inputHeader);
 
-        outputVCF = new SageVCF(refGenome, config, inputHeader);
+        outputVCF = new VariantVCF(refGenome, config, inputHeader);
         SG_LOGGER.info("Writing to file: {}", config.OutputFile);
     }
 
@@ -189,7 +186,7 @@ public class SageAppendApplication implements AutoCloseable
 
     private static double sageVersion(@NotNull final VCFHeader header)
     {
-        VCFHeaderLine oldVersion = header.getMetaDataLine(SageVCF.VERSION_META_DATA);
+        VCFHeaderLine oldVersion = header.getMetaDataLine(VariantVCF.VERSION_META_DATA);
         if(oldVersion == null)
         {
             return 0;

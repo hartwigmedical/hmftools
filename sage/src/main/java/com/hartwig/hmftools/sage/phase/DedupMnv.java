@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.sage.phase;
 
-import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.sage.variant.SageVariant;
-import com.hartwig.hmftools.sage.vcf.SageVCF;
+import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -48,7 +47,7 @@ public class DedupMnv extends BufferedPostProcessor
                         }
                         if(longerContainsShorter(shorter, longer))
                         {
-                            shorter.filters().add(SageVCF.DEDUP_FILTER);
+                            shorter.filters().add(VariantVCF.DEDUP_FILTER);
                         }
                     }
                 }

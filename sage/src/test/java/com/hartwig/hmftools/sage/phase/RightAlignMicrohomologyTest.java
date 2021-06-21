@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.junit.Test;
 
@@ -63,7 +63,7 @@ public class RightAlignMicrohomologyTest
                 .build();
 
         ReadContextCounter counter = MixedGermlineTest.dummyCounter(leftAligned, "AG");
-        Candidate candidate = new Candidate(SageVariantTier.PANEL, leftAligned, counter.readContext(), 0, 0);
+        Candidate candidate = new Candidate(VariantTier.PANEL, leftAligned, counter.readContext(), 0, 0);
 
         SageVariant variant =
                 new SageVariant(candidate, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));
@@ -88,7 +88,7 @@ public class RightAlignMicrohomologyTest
                 .build();
 
         ReadContextCounter counter = MixedGermlineTest.dummyCounter(leftAligned, "TCCAGGAAGCCT");
-        Candidate candidate = new Candidate(SageVariantTier.PANEL, leftAligned, counter.readContext(), 0, 0);
+        Candidate candidate = new Candidate(VariantTier.PANEL, leftAligned, counter.readContext(), 0, 0);
 
         SageVariant variant =
                 new SageVariant(candidate, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));

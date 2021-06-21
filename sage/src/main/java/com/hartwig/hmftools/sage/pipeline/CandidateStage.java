@@ -42,7 +42,7 @@ public class CandidateStage
     }
 
     @NotNull
-    public CompletableFuture<List<Candidate>> candidates(final BaseRegion region, final CompletableFuture<RefSequence> refSequenceFuture)
+    public CompletableFuture<List<Candidate>> findCandidates(final BaseRegion region, final CompletableFuture<RefSequence> refSequenceFuture)
     {
         return refSequenceFuture.thenCompose(refSequence ->
         {
@@ -62,7 +62,7 @@ public class CandidateStage
                 final String sample = mConfig.TumorIds.get(i);
                 final String sampleBam = mConfig.TumorBams.get(i);
 
-                done = done.thenApply(aVoid -> mCandidateEvidence.get(sample, sampleBam, refSequence, region))
+                done = done.thenApply(aVoid -> mCandidateEvidence.readBam(sample, sampleBam, refSequence, region))
                         .thenAccept(initialCandidates::add);
             }
             return done.thenApply(y -> initialCandidates.candidates());

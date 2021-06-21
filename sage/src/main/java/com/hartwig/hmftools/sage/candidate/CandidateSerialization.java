@@ -1,15 +1,15 @@
 package com.hartwig.hmftools.sage.candidate;
 
 import static com.hartwig.hmftools.common.sage.SageMetaData.TIER;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_DEPTH;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_EVENTS;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_INDEX;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_LEFT_FLANK;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_MICRO_HOMOLOGY;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_REPEAT_COUNT;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_REPEAT_SEQUENCE;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_RIGHT_FLANK;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_DEPTH;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_EVENTS;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_INDEX;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_LEFT_FLANK;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_MICRO_HOMOLOGY;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_REPEAT_COUNT;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_REPEAT_SEQUENCE;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_RIGHT_FLANK;
 
 import java.util.List;
 
@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.ref.RefSequence;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -81,7 +81,7 @@ public final class CandidateSerialization
     {
         final VariantHotspot variant = toVariantHotspot(context);
 
-        final SageVariantTier tier = SageVariantTier.valueOf(context.getAttributeAsString(TIER, "LOW_CONFIDENCE"));
+        final VariantTier tier = VariantTier.valueOf(context.getAttributeAsString(TIER, "LOW_CONFIDENCE"));
         final int repeatCount = context.getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0);
         final String repeat = context.getAttributeAsString(READ_CONTEXT_REPEAT_SEQUENCE, Strings.EMPTY);
         final String mh = context.getAttributeAsString(READ_CONTEXT_MICRO_HOMOLOGY, Strings.EMPTY);

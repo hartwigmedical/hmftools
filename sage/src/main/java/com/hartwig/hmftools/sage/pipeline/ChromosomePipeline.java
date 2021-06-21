@@ -26,9 +26,7 @@ import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -40,17 +38,17 @@ public class ChromosomePipeline implements AutoCloseable
     private final List<RegionFuture<List<SageVariant>>> mRegions = Lists.newArrayList();
     private final IndexedFastaSequenceFile mRefGenome;
     private final SomaticPipeline mSomaticPipeline;
-    private final Consumer<VariantContext> mConsumer;
+    private final Consumer<SageVariant> mConsumer;
     private final ChromosomePartition mPartition;
     private final Phase mPhase;
 
-    private static final EnumSet<SageVariantTier> PANEL_ONLY_TIERS = EnumSet.of(SageVariantTier.HOTSPOT, SageVariantTier.PANEL);
+    private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
 
     public ChromosomePipeline(
             final String chromosome, final SageConfig config, final Executor executor,
             final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions,
             final List<BaseRegion> highConfidenceRegions, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
-            final Coverage coverage, final Consumer<VariantContext> consumer) throws IOException
+            final Coverage coverage, final Consumer<SageVariant> consumer) throws IOException
     {
         mChromosome = chromosome;
         mConfig = config;
@@ -81,7 +79,6 @@ public class ChromosomePipeline implements AutoCloseable
         submit().get();
     }
 
-    @NotNull
     private CompletableFuture<ChromosomePipeline> submit()
     {
         // Even if regions were executed out of order, they must be phased in order
@@ -96,7 +93,6 @@ public class ChromosomePipeline implements AutoCloseable
             CompletableFuture<List<SageVariant>> region = regionsIterator.next().future();
             done = done.thenCombine(region, (aVoid, sageVariants) ->
             {
-
                 sageVariants.forEach(mPhase);
                 return null;
             });
@@ -107,7 +103,7 @@ public class ChromosomePipeline implements AutoCloseable
         return done.thenApply(aVoid ->
         {
             mPhase.flush();
-            SG_LOGGER.info("Processing chromosome {} complete", mChromosome);
+            SG_LOGGER.info("processing chromosome {} complete", mChromosome);
             return ChromosomePipeline.this;
         });
     }
@@ -116,7 +112,7 @@ public class ChromosomePipeline implements AutoCloseable
     {
         if(include(entry, mPhase.passingPhaseSets()))
         {
-            mConsumer.accept(SageVariantContextFactory.create(entry));
+            mConsumer.accept(entry);
         }
     }
 
@@ -137,12 +133,12 @@ public class ChromosomePipeline implements AutoCloseable
             return false;
         }
 
-        if(entry.tier() == SageVariantTier.HOTSPOT)
+        if(entry.tier() == VariantTier.HOTSPOT)
         {
             return true;
         }
 
-        // Its not always 100% transparent whats happening with the mixed germline dedup logic unless we keep all the associated records.
+        // Its not always 100% transparent whats happening with the mixed germline dedup logic unless we keep all the associated records
         if(entry.mixedGermlineImpact() > 0)
         {
             return true;

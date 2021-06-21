@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.read.IndexedBasesTest;
 import com.hartwig.hmftools.sage.read.ReadContext;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -46,7 +46,7 @@ public class CandidateSerializationTest
     @Test
     public void testSerialization()
     {
-        final SageVariantTier expectedTier = SageVariantTier.HOTSPOT;
+        final VariantTier expectedTier = VariantTier.HOTSPOT;
         final String expectedRepeat = "AT";
         final int expectedRepeatCount = 2;
         final String expectedMH = "ATGA";
