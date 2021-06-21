@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.utils.sam;
+package com.hartwig.hmftools.common.samtools;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -7,18 +7,18 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
-public final class SAMRecords {
-
+public final class SamRecordUtils
+{
     public static final int PHRED_OFFSET = 33;
 
-    private SAMRecords() {
-    }
-
-    public static int leftSoftClip(@NotNull final SAMRecord record) {
+    public static int leftSoftClip(@NotNull final SAMRecord record)
+    {
         Cigar cigar = record.getCigar();
-        if (cigar.numCigarElements() > 0) {
+        if(cigar.numCigarElements() > 0)
+        {
             CigarElement firstElement = cigar.getCigarElement(0);
-            if (firstElement.getOperator() == CigarOperator.S) {
+            if(firstElement.getOperator() == CigarOperator.S)
+            {
                 return firstElement.getLength();
             }
         }
@@ -26,11 +26,14 @@ public final class SAMRecords {
         return 0;
     }
 
-    public static int rightSoftClip(@NotNull final SAMRecord record) {
+    public static int rightSoftClip(@NotNull final SAMRecord record)
+    {
         Cigar cigar = record.getCigar();
-        if (cigar.numCigarElements() > 0) {
+        if(cigar.numCigarElements() > 0)
+        {
             CigarElement lastElement = cigar.getCigarElement(cigar.numCigarElements() - 1);
-            if (lastElement.getOperator() == CigarOperator.S) {
+            if(lastElement.getOperator() == CigarOperator.S)
+            {
                 return lastElement.getLength();
             }
         }
@@ -38,39 +41,32 @@ public final class SAMRecords {
         return 0;
     }
 
-    public static int getBaseQuality(final char quality) {
+    public static int getBaseQuality(final char quality)
+    {
         return quality - PHRED_OFFSET;
     }
 
-    public static int getBaseQuality(@NotNull final SAMRecord record, int readPosition) {
+    public static int getBaseQuality(@NotNull final SAMRecord record, int readPosition)
+    {
         return getAvgBaseQuality(record, readPosition, 1);
     }
 
-    public static int getAvgBaseQuality(@NotNull final SAMRecord record, int readPosition, int length) {
+    public static int getAvgBaseQuality(@NotNull final SAMRecord record, int readPosition, int length)
+    {
         assert (readPosition > 0);
 
         int score = 0;
         final String baseQualities = record.getBaseQualityString();
-        for (int index = readPosition - 1; index < Math.min(readPosition - 1 + length, baseQualities.length()); index++) {
+        for(int index = readPosition - 1; index < Math.min(readPosition - 1 + length, baseQualities.length()); index++)
+        {
             int baseScore = getBaseQuality(baseQualities.charAt(index));
             score += baseScore;
         }
         return score / length;
     }
 
-    public static int getMinBaseQuality(@NotNull final SAMRecord record, int readPosition, int length) {
-        assert (readPosition > 0);
-
-        int score = Integer.MAX_VALUE;
-        final String baseQualities = record.getBaseQualityString();
-        for (int index = readPosition - 1; index < Math.min(readPosition - 1 + length, baseQualities.length()); index++) {
-            int baseScore = getBaseQuality(baseQualities.charAt(index));
-            score = Math.min(baseScore, score);
-        }
-        return score == Integer.MAX_VALUE ? 0 : score;
-    }
-
-    public static boolean containsInsert(@NotNull final SAMRecord record, int position, @NotNull final String alt) {
+    public static boolean containsInsert(@NotNull final SAMRecord record, int position, @NotNull final String alt)
+    {
         int recordIdxOfVariantStart = record.getReadPositionAtReferencePosition(position);
 
         int insertedBases = basesInsertedAfterPosition(record, position);
@@ -79,12 +75,14 @@ public final class SAMRecords {
                 .equals(alt);
     }
 
-    public static boolean containsDelete(@NotNull final SAMRecord record, int position, @NotNull final String ref) {
+    public static boolean containsDelete(@NotNull final SAMRecord record, int position, @NotNull final String ref)
+    {
         int deletedBases = basesDeletedAfterPosition(record, position);
         return deletedBases == ref.length() - 1;
     }
 
-    public static int basesInsertedAfterPosition(@NotNull final SAMRecord record, int position) {
+    public static int basesInsertedAfterPosition(@NotNull final SAMRecord record, int position)
+    {
         int startReadPosition = record.getReadPositionAtReferencePosition(position);
         assert (startReadPosition != 0);
         int nextReadPosition = record.getReadPositionAtReferencePosition(position + 1);
@@ -94,7 +92,8 @@ public final class SAMRecords {
                 : Math.max(0, nextReadPosition - startReadPosition - 1);
     }
 
-    public static int basesDeletedAfterPosition(@NotNull final SAMRecord record, int position) {
+    public static int basesDeletedAfterPosition(@NotNull final SAMRecord record, int position)
+    {
         int startReadPosition = record.getReadPositionAtReferencePosition(position);
         assert (startReadPosition != 0);
 

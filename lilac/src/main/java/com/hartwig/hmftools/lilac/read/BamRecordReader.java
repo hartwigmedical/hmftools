@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
+import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
@@ -232,7 +233,7 @@ public class BamRecordReader implements BamReader
     private final List<Fragment> queryMateFragments(
             final String geneName, final TranscriptData transcript, final List<BamCodingRecord> codingRecords)
     {
-        SAMSlicer slicer = new SAMSlicer(MIN_MAPPING_QUALITY, false);
+        BamSlicer slicer = new BamSlicer(MIN_MAPPING_QUALITY);
 
         SamReader samReader = mSamReaderFactory.open(new File(mBamFile));
 
@@ -267,15 +268,14 @@ public class BamRecordReader implements BamReader
     private List<BamCodingRecord> query(
             boolean reverseStrand, final GenomePosition variantRegion, final NamedBed nearestCodingRegion, final String bamFileName)
     {
-        SAMSlicer slicer = new SAMSlicer(MIN_MAPPING_QUALITY, false);
+        BamSlicer slicer = new BamSlicer(MIN_MAPPING_QUALITY);
 
         SamReader samReader = mSamReaderFactory.open(new File(bamFileName));
 
         BaseRegion codingRegion = new BaseRegion(
                 nearestCodingRegion.chromosome(), (int)nearestCodingRegion.start(), (int)nearestCodingRegion.end());
 
-        final List<SAMRecord> records = slicer.slice(
-                variantRegion.chromosome(), (int)variantRegion.position(), (int)variantRegion.position(), samReader);
+        final List<SAMRecord> records = slicer.slice(samReader, variantRegion);
 
         final List<BamCodingRecord> codingRecords = Lists.newArrayList();
 
@@ -296,13 +296,13 @@ public class BamRecordReader implements BamReader
 
     private List<BamCodingRecord> query(boolean reverseStrand, final NamedBed bedRegion, final String bamFileName)
     {
-        SAMSlicer slicer = new SAMSlicer(MIN_MAPPING_QUALITY, false);
+        BamSlicer slicer = new BamSlicer(MIN_MAPPING_QUALITY);
 
         SamReader samReader = mSamReaderFactory.open(new File(bamFileName));
 
         BaseRegion codingRegion = new BaseRegion(bedRegion.chromosome(), (int)bedRegion.start(), (int)bedRegion.end());
 
-        List<SAMRecord> records = slicer.slice(codingRegion.Chromosome, codingRegion.start(), codingRegion.end(), samReader);
+        List<SAMRecord> records = slicer.slice(samReader, codingRegion);
 
         final List<BamCodingRecord> codingRecords = Lists.newArrayList();
 

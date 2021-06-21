@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.variant.hotspot;
 
-import static com.hartwig.hmftools.common.utils.sam.SAMRecords.PHRED_OFFSET;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.PHRED_OFFSET;
 import static com.hartwig.hmftools.common.variant.hotspot.VariantHotspotEvidenceFactory.create;
 import static com.hartwig.hmftools.common.variant.hotspot.VariantHotspotEvidenceFactory.isVariantPartOfLargerMNV;
 

@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.common.variant.hotspot;
 
-import static com.hartwig.hmftools.common.utils.sam.SAMRecords.basesDeletedAfterPosition;
-import static com.hartwig.hmftools.common.utils.sam.SAMRecords.basesInsertedAfterPosition;
-import static com.hartwig.hmftools.common.utils.sam.SAMRecords.containsDelete;
-import static com.hartwig.hmftools.common.utils.sam.SAMRecords.containsInsert;
-import static com.hartwig.hmftools.common.utils.sam.SAMRecords.getAvgBaseQuality;
-import static com.hartwig.hmftools.common.utils.sam.SAMRecords.getBaseQuality;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.basesDeletedAfterPosition;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.basesInsertedAfterPosition;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.containsDelete;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.containsInsert;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getAvgBaseQuality;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getBaseQuality;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
@@ -21,8 +22,9 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
+import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
-import com.hartwig.hmftools.common.utils.sam.SAMRecords;
+import com.hartwig.hmftools.common.samtools.SamRecordUtils;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -38,12 +40,12 @@ public class VariantHotspotEvidenceFactory {
 
     private final int minBaseQuality;
     private final Collection<VariantHotspot> hotspots;
-    private final SAMSlicer samSlicer;
+    private final BamSlicer samSlicer;
 
     public VariantHotspotEvidenceFactory(int minMappingQuality, int minBaseQuality, @NotNull final Set<VariantHotspot> hotspots) {
         this.minBaseQuality = minBaseQuality;
         this.hotspots = hotspots;
-        this.samSlicer = new SAMSlicer(minMappingQuality, asRegions(hotspots));
+        this.samSlicer = new BamSlicer(minMappingQuality);
     }
 
     @NotNull
@@ -84,7 +86,8 @@ public class VariantHotspotEvidenceFactory {
             }
         };
 
-        samSlicer.slice(samReader, samRecordConsumer);
+
+        samSlicer.sliceNoDups(samReader, asRegions(hotspots.stream().collect(Collectors.toSet())), samRecordConsumer);
         return new ArrayList<>(evidenceMap.values());
     }
 
@@ -177,7 +180,7 @@ public class VariantHotspotEvidenceFactory {
         int hotspotLength = Math.max(hotspot.ref().length(), hotspot.alt().length());
 
         int recordStartPosition = record.getReadPositionAtReferencePosition(hotspotStartPosition);
-        int recordStartQuality = SAMRecords.getBaseQuality(record, recordStartPosition);
+        int recordStartQuality = SamRecordUtils.getBaseQuality(record, recordStartPosition);
 
         if (isVariantPartOfLargerMNV(start, refSequence, hotspot, record)) {
             return recordStartQuality < minBaseQuality ? builder : builder.setReadDepth(builder.readDepth() + 1);

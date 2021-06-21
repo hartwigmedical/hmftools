@@ -120,19 +120,6 @@ public class SageApplication implements AutoCloseable
         }
     }
 
-    private Coverage createCoverage()
-    {
-        populateCoverageBuckets();
-
-        Set<String> samples = Sets.newHashSet();
-        if(!mConfig.CoverageBed.isEmpty())
-        {
-            samples.addAll(mConfig.TumorIds);
-        }
-
-        return new Coverage(samples, mCoveragePanel.values());
-    }
-
     private void run() throws InterruptedException, ExecutionException, IOException
     {
         long timeStamp = System.currentTimeMillis();
@@ -156,7 +143,6 @@ public class SageApplication implements AutoCloseable
             }
         }
 
-        // Write out coverage
         for(String sample : coverage.samples())
         {
             String filename = mConfig.geneCoverageFile(sample);
@@ -183,8 +169,9 @@ public class SageApplication implements AutoCloseable
         return dictionary;
     }
 
-    private ChromosomePipeline createChromosomePipeline(@NotNull final String contig, @NotNull final Coverage coverage,
-            @NotNull Map<String, QualityRecalibrationMap> qualityRecalibrationMap) throws IOException
+    private ChromosomePipeline createChromosomePipeline(
+            final String contig, @NotNull final Coverage coverage,
+            Map<String, QualityRecalibrationMap> qualityRecalibrationMap) throws IOException
     {
         final Chromosome chromosome =
                 HumanChromosome.contains(contig) ? HumanChromosome.fromString(contig) : MitochondrialChromosome.fromString(contig);
@@ -192,6 +179,19 @@ public class SageApplication implements AutoCloseable
         return new ChromosomePipeline(
                 contig, mConfig, mExecutorService, mHotspots.get(chromosome), mPanelWithHotspots.get(chromosome),
                 mHighConfidence.get(chromosome), qualityRecalibrationMap, coverage, mVcfFile::write);
+    }
+
+    private Coverage createCoverage()
+    {
+        populateCoverageBuckets();
+
+        Set<String> samples = Sets.newHashSet();
+        if(!mConfig.CoverageBed.isEmpty())
+        {
+            samples.addAll(mConfig.TumorIds);
+        }
+
+        return new Coverage(samples, mCoveragePanel.values());
     }
 
     @Override
@@ -202,14 +202,12 @@ public class SageApplication implements AutoCloseable
         mExecutorService.shutdown();
     }
 
-    @NotNull
     static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException
     {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 
-    @NotNull
     private ListMultimap<Chromosome, VariantHotspot> readHotspots() throws IOException
     {
         if(!mConfig.Hotspots.isEmpty())
@@ -223,9 +221,9 @@ public class SageApplication implements AutoCloseable
         }
     }
 
-    @NotNull
-    private ListMultimap<Chromosome, GenomeRegion> panelWithHotspots(final ListMultimap<Chromosome, GenomeRegion> panelWithoutHotspots,
-            @NotNull final ListMultimap<Chromosome, VariantHotspot> hotspots)
+    private ListMultimap<Chromosome, GenomeRegion> panelWithHotspots(
+            final ListMultimap<Chromosome, GenomeRegion> panelWithoutHotspots,
+            final ListMultimap<Chromosome, VariantHotspot> hotspots)
     {
         final ListMultimap<Chromosome, GenomeRegion> result = ArrayListMultimap.create();
 
@@ -247,8 +245,7 @@ public class SageApplication implements AutoCloseable
         return result;
     }
 
-    @NotNull
-    private static ListMultimap<Chromosome, NamedBed> readNamedBed(@NotNull final String panelBed) throws IOException
+    private static ListMultimap<Chromosome, NamedBed> readNamedBed(final String panelBed) throws IOException
     {
         final ListMultimap<Chromosome, NamedBed> panel = ArrayListMultimap.create();
         if(!panelBed.isEmpty())
@@ -266,8 +263,7 @@ public class SageApplication implements AutoCloseable
         return panel;
     }
 
-    @NotNull
-    private static ListMultimap<Chromosome, GenomeRegion> readUnnamedBed(@NotNull final String panelBed) throws IOException
+    private static ListMultimap<Chromosome, GenomeRegion> readUnnamedBed(final String panelBed) throws IOException
     {
         final ListMultimap<Chromosome, GenomeRegion> panel = ArrayListMultimap.create();
         if(!panelBed.isEmpty())
