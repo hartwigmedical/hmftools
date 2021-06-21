@@ -17,7 +17,6 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -40,7 +39,7 @@ public class ChromosomePipeline implements AutoCloseable
     private final SageConfig mConfig;
     private final List<RegionFuture<List<SageVariant>>> mRegions = Lists.newArrayList();
     private final IndexedFastaSequenceFile mRefGenome;
-    private final SageVariantPipeline mSageVariantPipeline;
+    private final SomaticPipeline mSomaticPipeline;
     private final Consumer<VariantContext> mConsumer;
     private final ChromosomePartition mPartition;
     private final Phase mPhase;
@@ -57,19 +56,14 @@ public class ChromosomePipeline implements AutoCloseable
         mConfig = config;
         mRefGenome = new IndexedFastaSequenceFile(new File(config.RefGenomeFile));
         mConsumer = consumer;
-        mSageVariantPipeline = new SomaticPipeline(config,
-                executor,
-                mRefGenome,
-                hotspots,
-                panelRegions,
-                highConfidenceRegions,
-                qualityRecalibrationMap,
-                coverage);
+
+        mSomaticPipeline = new SomaticPipeline(
+                config, executor, mRefGenome, hotspots, panelRegions, highConfidenceRegions, qualityRecalibrationMap, coverage);
+
         mPartition = new ChromosomePartition(config, mRefGenome);
         mPhase = new Phase(config, chromosome, this::write);
     }
 
-    @NotNull
     public String chromosome()
     {
         return mChromosome;
@@ -79,19 +73,7 @@ public class ChromosomePipeline implements AutoCloseable
     {
         for(BaseRegion region : mPartition.partition(mChromosome))
         {
-            final CompletableFuture<List<SageVariant>> future = mSageVariantPipeline.variants(region);
-            final RegionFuture<List<SageVariant>> regionFuture = new RegionFuture<>(region, future);
-            mRegions.add(regionFuture);
-        }
-
-        submit().get();
-    }
-
-    public void process(int minPosition, int maxPosition) throws ExecutionException, InterruptedException
-    {
-        for(BaseRegion region : mPartition.partition(mChromosome, minPosition, maxPosition))
-        {
-            final CompletableFuture<List<SageVariant>> future = mSageVariantPipeline.variants(region);
+            final CompletableFuture<List<SageVariant>> future = mSomaticPipeline.findVariants(region);
             final RegionFuture<List<SageVariant>> regionFuture = new RegionFuture<>(region, future);
             mRegions.add(regionFuture);
         }

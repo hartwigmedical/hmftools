@@ -22,11 +22,9 @@ import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class SomaticPipeline implements SageVariantPipeline
+public class SomaticPipeline
 {
     private final SageConfig mConfig;
     private final Executor mExecutor;
@@ -48,23 +46,23 @@ public class SomaticPipeline implements SageVariantPipeline
         mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap);
     }
 
-    @NotNull
-    public CompletableFuture<List<SageVariant>> variants(final BaseRegion region)
+    public CompletableFuture<List<SageVariant>> findVariants(final BaseRegion region)
     {
         final CompletableFuture<RefSequence> refSequenceFuture = supplyAsync(() -> new RefSequence(region, mRefGenome), mExecutor);
 
         final CompletableFuture<List<Candidate>> initialCandidates = mCandidateState.candidates(region, refSequenceFuture);
+
         final CompletableFuture<ReadContextCounters> tumorEvidence =
                 mEvidenceStage.evidence(mConfig.TumorIds, mConfig.TumorBams, initialCandidates);
 
         final CompletableFuture<List<Candidate>> finalCandidates = filteredCandidates(tumorEvidence);
+
         final CompletableFuture<ReadContextCounters> normalEvidence =
                 mEvidenceStage.evidence(mConfig.ReferenceIds, mConfig.ReferenceBams, finalCandidates);
 
         return combine(region, finalCandidates, tumorEvidence, normalEvidence);
     }
 
-    @NotNull
     private CompletableFuture<List<SageVariant>> combine(
             final BaseRegion region,
             final CompletableFuture<List<Candidate>> candidates, final CompletableFuture<ReadContextCounters> doneTumor,
@@ -89,7 +87,6 @@ public class SomaticPipeline implements SageVariantPipeline
         });
     }
 
-    @NotNull
     private CompletableFuture<List<Candidate>> filteredCandidates(final CompletableFuture<ReadContextCounters> tumorEvidence)
     {
         return tumorEvidence.thenApply(x -> x.candidates(mConfig.Filter.readContextFilter()));
