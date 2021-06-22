@@ -17,8 +17,6 @@ import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.sage.config.BaseQualityRecalibrationConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -47,7 +45,7 @@ public class QualityRecalibrationSupplier implements Supplier<Map<String, Qualit
         }
 
         final Map<String, QualityRecalibrationMap> result = Maps.newHashMap();
-        SG_LOGGER.info("Beginning quality recalibration");
+        SG_LOGGER.info("beginning quality recalibration");
 
         final QualityRecalibration qualityRecalibration = new QualityRecalibration(config, executorService, refGenome);
         final List<CompletableFuture<Void>> done = Lists.newArrayList();
@@ -61,7 +59,7 @@ public class QualityRecalibrationSupplier implements Supplier<Map<String, Qualit
                         final String tsvFile = config.baseQualityRecalibrationFile(sample);
                         QualityRecalibrationFile.write(tsvFile, records);
                         result.put(sample, new QualityRecalibrationMap(records));
-                        SG_LOGGER.info("Writing base quality recalibration file: {}", tsvFile);
+                        SG_LOGGER.debug("writing base quality recalibration file: {}", tsvFile);
                         if(bqrConfig.Plot)
                         {
                             RExecutor.executeFromClasspath("r/baseQualityRecalibrationPlot.R", tsvFile);

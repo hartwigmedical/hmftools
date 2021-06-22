@@ -3,7 +3,6 @@ package com.hartwig.hmftools.sage.variant;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.read.ReadContext;
@@ -11,7 +10,7 @@ import com.hartwig.hmftools.sage.read.ReadContextCounter;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SageVariant implements GenomePosition
+public class SageVariant
 {
     private final Candidate mCandidate;
     private final Set<String> mFilters;
@@ -24,7 +23,8 @@ public class SageVariant implements GenomePosition
     private int mPhasedInframeIndel;
     private boolean mRealigned;
 
-    public SageVariant(@NotNull final Candidate candidate, @NotNull final Set<String> filters,
+    public SageVariant(
+            final Candidate candidate, final Set<String> filters,
             final List<ReadContextCounter> normal, final List<ReadContextCounter> tumorAltContexts)
     {
         mCandidate = candidate;
@@ -38,13 +38,11 @@ public class SageVariant implements GenomePosition
         return mCandidate;
     }
 
-    @NotNull
     public String ref()
     {
         return variant().ref();
     }
 
-    @NotNull
     public String alt()
     {
         return variant().alt();
@@ -152,7 +150,7 @@ public class SageVariant implements GenomePosition
     }
 
     @NotNull
-    public SageVariantTier tier()
+    public VariantTier tier()
     {
         return mCandidate.tier();
     }
@@ -188,13 +186,11 @@ public class SageVariant implements GenomePosition
     }
 
     @NotNull
-    @Override
     public String chromosome()
     {
         return variant().chromosome();
     }
 
-    @Override
     public long position()
     {
         return variant().position();

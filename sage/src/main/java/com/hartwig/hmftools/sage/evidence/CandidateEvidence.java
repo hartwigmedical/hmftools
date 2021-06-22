@@ -8,8 +8,6 @@ import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -52,10 +50,10 @@ public class CandidateEvidence
     }
 
     @NotNull
-    public List<AltContext> get(
+    public List<AltContext> readBam(
             final String sample, final String bamFile, final RefSequence refSequence, final BaseRegion bounds)
     {
-        SG_LOGGER.debug("Variant candidates {} position {}:{}", sample, bounds.Chromosome, bounds.start());
+        SG_LOGGER.debug("variant candidates {} position {}:{}", sample, bounds.Chromosome, bounds.start());
         final List<GeneCoverage> geneCoverage = mCoverage.coverage(sample, bounds.Chromosome);
         final RefContextFactory candidates = new RefContextFactory(mConfig, sample, mHotspots, mPanel);
         final RefContextConsumer refContextConsumer = new RefContextConsumer(mConfig, bounds, refSequence, candidates);
@@ -70,13 +68,12 @@ public class CandidateEvidence
             }
         };
 
-        return get(bamFile, bounds, consumer, candidates);
+        return readBam(bamFile, bounds, consumer, candidates);
     }
 
     @NotNull
-    private List<AltContext> get(
-            final String bamFile, final BaseRegion bounds,
-            final Consumer<SAMRecord> recordConsumer, final RefContextFactory candidates)
+    private List<AltContext> readBam(
+            final String bamFile, final BaseRegion bounds, final Consumer<SAMRecord> recordConsumer, final RefContextFactory candidates)
     {
         final List<AltContext> altContexts = Lists.newArrayList();
 

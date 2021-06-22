@@ -7,7 +7,7 @@ import java.util.function.Predicate;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -121,7 +121,7 @@ public class FilterConfig
     }
 
 
-    public SoftFilterConfig softConfig(@NotNull final SageVariantTier tier)
+    public SoftFilterConfig softConfig(@NotNull final VariantTier tier)
     {
         switch(tier)
         {
@@ -153,7 +153,7 @@ public class FilterConfig
     {
         return readContextCounter ->
         {
-            if(readContextCounter.tier().equals(SageVariantTier.HOTSPOT))
+            if(readContextCounter.tier().equals(VariantTier.HOTSPOT))
             {
                 return true;
             }

@@ -14,27 +14,23 @@ import com.hartwig.hmftools.sage.config.SoftFilter;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 
-import org.jetbrains.annotations.NotNull;
-
 @NotThreadSafe
 public class SageVariantFactory
 {
     private final FilterConfig mConfig;
 
-    public SageVariantFactory(@NotNull final FilterConfig config)
+    public SageVariantFactory(final FilterConfig config)
     {
         this.mConfig = config;
     }
 
-    @NotNull
-    public SageVariant create(@NotNull final Candidate candidate, @NotNull final List<ReadContextCounter> normal,
-            @NotNull final List<ReadContextCounter> tumor)
+    public SageVariant create(final Candidate candidate, final List<ReadContextCounter> normal, final List<ReadContextCounter> tumor)
     {
         assert (!tumor.isEmpty());
         final Set<String> filters = Sets.newHashSet();
         final boolean isNormalEmpty = normal.isEmpty();
 
-        final SageVariantTier tier = candidate.tier();
+        final VariantTier tier = candidate.tier();
         final SoftFilterConfig softConfig = mConfig.softConfig(tier);
 
         if(!mConfig.SoftFilter)
@@ -69,9 +65,7 @@ public class SageVariantFactory
         return new SageVariant(candidate, filters, normal, tumor);
     }
 
-    @NotNull
-    private Set<String> tumorFilters(@NotNull final SageVariantTier tier, @NotNull final SoftFilterConfig config,
-            @NotNull final ReadContextCounter primaryTumor)
+    private Set<String> tumorFilters(final VariantTier tier, final SoftFilterConfig config, final ReadContextCounter primaryTumor)
     {
         final Set<String> result = Sets.newHashSet();
 
@@ -90,9 +84,9 @@ public class SageVariantFactory
         return result;
     }
 
-    @NotNull
-    private Set<String> somaticFilters(@NotNull final SageVariantTier tier, @NotNull final SoftFilterConfig config,
-            @NotNull final ReadContextCounter normal, @NotNull final ReadContextCounter primaryTumor)
+    private Set<String> somaticFilters(
+            final VariantTier tier, final SoftFilterConfig config,
+            final ReadContextCounter normal, final ReadContextCounter primaryTumor)
     {
         Set<String> result = Sets.newHashSet();
 
@@ -123,7 +117,7 @@ public class SageVariantFactory
         }
 
         // MNV Tests
-        if(tier != SageVariantTier.HOTSPOT && normal.variant().isMNV() && this.mConfig.MnvFilter)
+        if(tier != VariantTier.HOTSPOT && normal.variant().isMNV() && this.mConfig.MnvFilter)
         {
             if(normal.altSupport() != 0)
             {
@@ -134,9 +128,9 @@ public class SageVariantFactory
         return result;
     }
 
-    private boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final ReadContextCounter primaryTumor)
+    private boolean skipMinTumorQualTest(final VariantTier tier, final ReadContextCounter primaryTumor)
     {
-        return tier.equals(SageVariantTier.HOTSPOT) && primaryTumor.altSupport() >= mConfig.hotspotMinTumorAltSupportToSkipQualCheck()
+        return tier.equals(VariantTier.HOTSPOT) && primaryTumor.altSupport() >= mConfig.hotspotMinTumorAltSupportToSkipQualCheck()
                 && Doubles.greaterOrEqual(primaryTumor.vaf(), mConfig.hotspotMinTumorVafToSkipQualCheck());
     }
 }

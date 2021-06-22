@@ -68,7 +68,7 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
         buffer.clear();
     }
 
-    protected void flush(@NotNull final GenomePosition position)
+    protected void flush(final SageVariant position)
     {
         final List<SageVariant> flushed = Lists.newArrayList();
         final Iterator<SageVariant> iterator = buffer.iterator();

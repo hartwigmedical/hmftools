@@ -10,10 +10,8 @@ import com.hartwig.hmftools.sage.realign.Realigned;
 import com.hartwig.hmftools.sage.realign.RealignedContext;
 import com.hartwig.hmftools.sage.realign.RealignedType;
 import com.hartwig.hmftools.sage.samtools.NumberEvents;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.CigarElement;
@@ -26,7 +24,7 @@ public class ReadContextCounter implements VariantHotspot
     private final ReadContext readContext;
     private final RawContextFactory rawFactory;
     private final QualityRecalibrationMap qualityRecalibrationMap;
-    private final SageVariantTier tier;
+    private final VariantTier tier;
     private final boolean realign;
     private final int maxCoverage;
     private final int minNumberOfEvents;
@@ -62,7 +60,7 @@ public class ReadContextCounter implements VariantHotspot
     private int rawRefBaseQuality;
 
     public ReadContextCounter(@NotNull final String sample, @NotNull final VariantHotspot variant, @NotNull final ReadContext readContext,
-            final QualityRecalibrationMap recalibrationMap, final SageVariantTier tier, final int maxCoverage, final int minNumberOfEvents,
+            final QualityRecalibrationMap recalibrationMap, final VariantTier tier, final int maxCoverage, final int minNumberOfEvents,
             final int maxSkippedReferenceRegions, boolean realign)
     {
         this.sample = sample;
@@ -96,7 +94,7 @@ public class ReadContextCounter implements VariantHotspot
     }
 
     @NotNull
-    public SageVariantTier tier()
+    public VariantTier tier()
     {
         return tier;
     }
@@ -233,7 +231,7 @@ public class ReadContextCounter implements VariantHotspot
                 return;
             }
 
-            if(!tier.equals(SageVariantTier.HOTSPOT) && record.getMappingQuality() < sageConfig.MinMapQuality)
+            if(!tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < sageConfig.MinMapQuality)
             {
                 return;
             }

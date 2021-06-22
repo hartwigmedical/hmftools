@@ -65,7 +65,7 @@ public class AdditionalReferencePipeline
                 .collect(Collectors.toList()));
 
         final CompletableFuture<ReadContextCounters> evidenceFutures =
-                mEvidenceStage.evidence(mConfig.ReferenceIds, mConfig.ReferenceBams, candidateFutures);
+                mEvidenceStage.findEvidence(mConfig.ReferenceIds, mConfig.ReferenceBams, candidateFutures);
 
         return evidenceFutures.thenApply(x -> update(x, variants));
     }

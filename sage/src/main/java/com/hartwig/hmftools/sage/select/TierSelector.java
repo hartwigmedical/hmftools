@@ -6,7 +6,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,23 +24,23 @@ public class TierSelector extends HotspotSelector
     }
 
     @NotNull
-    public SageVariantTier tier(@NotNull final VariantHotspot variant)
+    public VariantTier tier(@NotNull final VariantHotspot variant)
     {
         if(isHotspot(variant))
         {
-            return SageVariantTier.HOTSPOT;
+            return VariantTier.HOTSPOT;
         }
 
         if(mPanelRegionSelector.inPanel(variant.position(), variant.end()))
         {
-            return SageVariantTier.PANEL;
+            return VariantTier.PANEL;
         }
 
         if(mHighConfidenceRegionSelector.inPanel(variant.position(), variant.end()))
         {
-            return SageVariantTier.HIGH_CONFIDENCE;
+            return VariantTier.HIGH_CONFIDENCE;
         }
 
-        return SageVariantTier.LOW_CONFIDENCE;
+        return VariantTier.LOW_CONFIDENCE;
     }
 }

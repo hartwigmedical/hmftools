@@ -1,13 +1,10 @@
 package com.hartwig.hmftools.sage.sam;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 

@@ -7,9 +7,8 @@ import java.util.Collections;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.config.SageConfigTest;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +21,7 @@ public class ReadContextCounterTest
 
     private static final String SAMPLE = "sample";
     private static final int MAX_COVERAGE = 1000;
-    private static final SageVariantTier TIER = SageVariantTier.PANEL;
+    private static final VariantTier TIER = VariantTier.PANEL;
     private static final SageConfig CONFIG = new SageConfig();
     private static final QualityRecalibrationMap RECALIBRATION = new QualityRecalibrationMap(Collections.emptyList());
 

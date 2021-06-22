@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.sage.variant.SageVariant;
-import com.hartwig.hmftools.sage.vcf.SageVCF;
+import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -66,7 +66,7 @@ public class DedupRealign extends BufferedPostProcessor
                         sageVariant.equals(keeper) || (keeper.localPhaseSet() > 0 && keeper.localPhaseSet() == sageVariant.localPhaseSet());
                 if(!keep)
                 {
-                    sageVariant.filters().add(SageVCF.DEDUP_FILTER);
+                    sageVariant.filters().add(VariantVCF.DEDUP_FILTER);
                 }
             }
         }

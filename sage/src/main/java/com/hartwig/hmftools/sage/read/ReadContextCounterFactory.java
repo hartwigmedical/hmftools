@@ -10,13 +10,13 @@ import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.jetbrains.annotations.NotNull;
 
 public class ReadContextCounterFactory
 {
-    private static final Set<SageVariantTier> HIGH_COVERAGE = EnumSet.of(SageVariantTier.HOTSPOT, SageVariantTier.PANEL);
+    private static final Set<VariantTier> HIGH_COVERAGE = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
 
     private final SageConfig mConfig;
     private final Map<String, QualityRecalibrationMap> mQualityRecalibrationMap;

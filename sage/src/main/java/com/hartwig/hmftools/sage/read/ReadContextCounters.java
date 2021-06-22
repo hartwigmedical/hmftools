@@ -25,14 +25,10 @@ public class ReadContextCounters
         mComparator = (o1, o2) ->
         {
             if(o1.sample().equals(primarySample))
-            {
                 return -1;
-            }
 
             if(o2.sample().equals(primarySample))
-            {
                 return 1;
-            }
 
             return o1.sample().compareTo(o2.sample());
         };
@@ -53,11 +49,6 @@ public class ReadContextCounters
         {
             mMap.put(counter.variant(), counter);
         }
-    }
-
-    public List<Candidate> allCandidates()
-    {
-        return mCandidates;
     }
 
     @NotNull

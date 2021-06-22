@@ -67,7 +67,7 @@ public class ReferenceData
             if(!mConfig.HighConfidenceBed.isEmpty())
             {
                 HighConfidence.putAll(readUnnamedBedFile(mConfig.HighConfidenceBed));
-                SG_LOGGER.info("read {} high-confidence entries from bed file: {}", HighConfidence.size(), mConfig.CoverageBed);
+                SG_LOGGER.info("read {} high-confidence entries from bed file: {}", HighConfidence.size(), mConfig.HighConfidenceBed);
             }
         }
         catch(IOException e)
@@ -133,13 +133,10 @@ public class ReferenceData
         final ListMultimap<Chromosome,NamedBed> panel = ArrayListMultimap.create();
         if(!panelBed.isEmpty())
         {
-            int entryCount = 0;
-
             for(NamedBed bed : NamedBedFile.readBedFile(panelBed))
             {
                 if(HumanChromosome.contains(bed.chromosome()))
                 {
-                    ++entryCount;
                     panel.put(HumanChromosome.fromString(bed.chromosome()), bed);
                 }
             }

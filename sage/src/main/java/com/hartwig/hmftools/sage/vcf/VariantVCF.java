@@ -31,9 +31,8 @@ import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
-public class SageVCF implements AutoCloseable
+public class VariantVCF implements AutoCloseable
 {
-
     public static final String VERSION_META_DATA = "sageVersion";
     public static final String READ_CONTEXT = "RC";
     public static final String READ_CONTEXT_LEFT_FLANK = "RC_LF";
@@ -78,7 +77,7 @@ public class SageVCF implements AutoCloseable
     private final VariantContextWriter mWriter;
     private final Consumer<VariantContext> mConsumer;
 
-    public SageVCF(final IndexedFastaSequenceFile reference, final SageConfig config)
+    public VariantVCF(final IndexedFastaSequenceFile reference, final SageConfig config)
     {
         final SAMSequenceDictionary sequenceDictionary = reference.getSequenceDictionary();
 
@@ -105,7 +104,7 @@ public class SageVCF implements AutoCloseable
         mWriter.writeHeader(header);
     }
 
-    public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config,
+    public VariantVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config,
             @NotNull final VCFHeader existingHeader)
     {
 
@@ -138,8 +137,7 @@ public class SageVCF implements AutoCloseable
         return header(config.Version, samples);
     }
 
-    @NotNull
-    private static VCFHeader header(@NotNull final String version, @NotNull final List<String> allSamples)
+    private static VCFHeader header(final String version, final List<String> allSamples)
     {
         VCFHeader header = SageMetaData.addSageMetaData(new VCFHeader(Collections.emptySet(), allSamples));
 
