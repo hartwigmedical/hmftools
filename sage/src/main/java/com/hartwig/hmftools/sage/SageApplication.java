@@ -63,7 +63,7 @@ public class SageApplication implements AutoCloseable
     private SageApplication(final CommandLine cmd) throws IOException
     {
         final VersionInfo version = new VersionInfo("sage.version");
-        SG_LOGGER.info("SAGE version: {}", version.version());
+        SG_LOGGER.info("Sage version: {}", version.version());
 
         mConfig = new SageConfig(false, version.version(), cmd);
 

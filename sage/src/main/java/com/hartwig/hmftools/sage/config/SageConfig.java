@@ -166,11 +166,11 @@ public class SageConfig
 
         InputFile = SampleDataDir + cmd.getOptionValue(INPUT_VCF, "");
 
-        PanelBed = ResourceDir + cmd.getOptionValue(PANEL_BED, Strings.EMPTY);
-        CoverageBed = ResourceDir + cmd.getOptionValue(COVERAGE_BED, Strings.EMPTY);
-        HighConfidenceBed = ResourceDir + cmd.getOptionValue(HIGH_CONFIDENCE_BED, Strings.EMPTY);
-        Hotspots = ResourceDir +  cmd.getOptionValue(HOTSPOTS, Strings.EMPTY);
-        RefGenomeFile = ResourceDir + cmd.getOptionValue(REF_GENOME);
+        PanelBed = getReferenceFile(cmd, PANEL_BED);
+        CoverageBed = getReferenceFile(cmd, COVERAGE_BED);
+        HighConfidenceBed = getReferenceFile(cmd, HIGH_CONFIDENCE_BED);
+        Hotspots = getReferenceFile(cmd, HOTSPOTS);
+        RefGenomeFile = getReferenceFile(cmd, REF_GENOME);
 
         Stringency = ValidationStringency.valueOf(cmd.getOptionValue(VALIDATION_STRINGENCY, DEFAULT_STRINGENCY.toString()));
         MnvEnabled = getConfigValue(cmd, MNV, DEFAULT_MNV);
@@ -188,6 +188,17 @@ public class SageConfig
         PanelOnly = containsFlag(cmd, PANEL_ONLY);
 
         Threads = getConfigValue(cmd, THREADS, DEFAULT_THREADS);
+    }
+
+    private String getReferenceFile(final CommandLine cmd, final String config)
+    {
+        if(!cmd.hasOption(config))
+            return "";
+
+        if(ResourceDir.isEmpty())
+            return cmd.getOptionValue(config);
+
+        return ResourceDir + cmd.getOptionValue(config);
     }
 
     public boolean isValid()
