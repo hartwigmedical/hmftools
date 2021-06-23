@@ -1,12 +1,15 @@
-package com.hartwig.hmftools.sage.config;
+package com.hartwig.hmftools.sage.quality;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MAX_ALT_COUNT;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MIN_MAP_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_SAMPLE_SIZE;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
 
-public class BaseQualityRecalibrationConfig
+public class QualityRecalibrationConfig
 {
     public final boolean Enabled;
     public final boolean Plot;
@@ -22,11 +25,8 @@ public class BaseQualityRecalibrationConfig
 
     private static final boolean DEFAULT_BQR_PLOT = true;
     private static final boolean DEFAULT_BQR_ENABLED = true;
-    private static final int DEFAULT_BQR_MAX_ALT_COUNT = 3;
-    private static final int DEFAULT_BQR_SAMPLE_SIZE = 2_000_000;
-    private static final int DEFAULT_BQR_MIN_MAP_QUAL = 10;
 
-    public BaseQualityRecalibrationConfig(final CommandLine cmd)
+    public QualityRecalibrationConfig(final CommandLine cmd)
     {
         Enabled = getConfigValue(cmd, BQR_ENABLED, DEFAULT_BQR_ENABLED);
         Plot = getConfigValue(cmd, BQR_PLOT, DEFAULT_BQR_PLOT);
@@ -35,7 +35,7 @@ public class BaseQualityRecalibrationConfig
         MinMapQuality = getConfigValue(cmd, BQR_MIN_MAP_QUAL, DEFAULT_BQR_MIN_MAP_QUAL);
     }
 
-    public BaseQualityRecalibrationConfig()
+    public QualityRecalibrationConfig()
     {
         Enabled = false;
         Plot = false;

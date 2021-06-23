@@ -11,11 +11,11 @@ import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles.PAN_CANCER;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.PASS_FUSION_FILE_ID;
@@ -408,10 +408,7 @@ public class IsofoxDataLoader
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);
 
-        if (cmd.hasOption(LOG_DEBUG))
-        {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
+        setLogLevel(cmd);
 
         IsofoxDataLoader dataLoader = new IsofoxDataLoader(cmd);
 

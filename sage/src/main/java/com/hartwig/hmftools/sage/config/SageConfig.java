@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_LEVEL;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.containsFlag;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
@@ -26,6 +27,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.sage.quality.QualityRecalibrationConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -50,7 +52,7 @@ public class SageConfig
     public final String Hotspots;
     public final FilterConfig Filter;
     public final QualityConfig Quality;
-    public final BaseQualityRecalibrationConfig BaseQualityRecalibration;
+    public final QualityRecalibrationConfig QualityRecalibration;
     public final Set<String> Chromosomes;
     public final int RegionSliceSize;
     public final int MinMapQuality;
@@ -115,7 +117,7 @@ public class SageConfig
         
         mAppendMode = appendMode;
 
-        final RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
 
         ReferenceIds = Lists.newArrayList();
         if(cmd.hasOption(REFERENCE))
@@ -183,7 +185,7 @@ public class SageConfig
 
         Filter = new FilterConfig(cmd);
         Quality = new QualityConfig(cmd, TranscriptRegions);
-        BaseQualityRecalibration = new BaseQualityRecalibrationConfig(cmd);
+        QualityRecalibration = new QualityRecalibrationConfig(cmd);
 
         PanelOnly = containsFlag(cmd, PANEL_ONLY);
 
@@ -301,6 +303,7 @@ public class SageConfig
         options.addOption(COVERAGE_BED, true, "Coverage is calculated for optionally supplied bed");
         options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
         options.addOption(LOG_DEBUG, false, "Log verbose");
+        options.addOption(LOG_LEVEL, false, "Log level");
 
         commonOptions().getOptions().forEach(options::addOption);
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
@@ -334,7 +337,7 @@ public class SageConfig
         options.addOption(MAX_READ_DEPTH_PANEL, true, "Max depth to look for evidence in panel [" + DEFAULT_MAX_READ_DEPTH_PANEL + "]");
         options.addOption(MAX_REALIGNMENT_DEPTH, true, "Max depth to check for realignment [" + DEFAULT_MAX_REALIGNMENT_DEPTH + "]");
         QualityConfig.createOptions().getOptions().forEach(options::addOption);
-        BaseQualityRecalibrationConfig.createOptions().getOptions().forEach(options::addOption);
+        QualityRecalibrationConfig.createOptions().getOptions().forEach(options::addOption);
         return options;
     }
 
@@ -365,7 +368,7 @@ public class SageConfig
         Hotspots = "hotspots";
         Filter = new FilterConfig();
         Quality = new QualityConfig();
-        BaseQualityRecalibration = new BaseQualityRecalibrationConfig();
+        QualityRecalibration = new QualityRecalibrationConfig();
         Chromosomes = Sets.newHashSet();
         RegionSliceSize = 500_000;
         MinMapQuality = DEFAULT_MIN_MAP_QUALITY;

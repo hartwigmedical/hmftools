@@ -7,10 +7,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationRegions;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -18,10 +24,9 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class SageQualityRecalibrationBedApplication implements AutoCloseable
@@ -63,9 +68,42 @@ public class SageQualityRecalibrationBedApplication implements AutoCloseable
 
     public void run() throws IOException
     {
-        List<GenomeRegion> regions = new QualityRecalibrationRegions(refGenome).regions(sampleSize);
-        NamedBedFile.writeUnnamedBedFile(out, regions);
+        List<BaseRegion> regions = createRegions(refGenome, Sets.newHashSet(), sampleSize);
+        List<GenomeRegion> genRegions = regions.stream().map(x -> GenomeRegions.create(x.Chromosome, x.start(), x.end())).collect(Collectors.toList());
+        NamedBedFile.writeUnnamedBedFile(out, genRegions);
     }
+
+    private static final int END_BUFFER = 1000000;
+    private static final int REGION_SIZE = 100000;
+
+    private static List<BaseRegion> createRegions(
+            final IndexedFastaSequenceFile refGenome, final Set<String> chromosomes, int regionSubsetSize)
+    {
+        List<BaseRegion> result = Lists.newArrayList();
+
+        for(final SAMSequenceRecord sequenceRecord : refGenome.getSequenceDictionary().getSequences())
+        {
+            final String chromosome = sequenceRecord.getSequenceName();
+
+            if(!chromosomes.isEmpty() && !chromosomes.contains(chromosome))
+                continue;
+
+            if(!HumanChromosome.contains(chromosome) || !HumanChromosome.fromString(chromosome).isAutosome())
+                continue;
+
+            int start = sequenceRecord.getSequenceLength() - END_BUFFER - regionSubsetSize;
+            int end = sequenceRecord.getSequenceLength() - (END_BUFFER + 1);
+
+            while(start < end)
+            {
+                result.add(new BaseRegion(chromosome, start, start + REGION_SIZE - 1));
+                start += REGION_SIZE;
+            }
+
+        }
+        return result;
+    }
+
 
     @Override
     public void close() throws Exception

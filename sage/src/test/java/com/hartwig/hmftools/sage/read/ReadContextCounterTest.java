@@ -18,7 +18,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContextCounterTest
 {
-
     private static final String SAMPLE = "sample";
     private static final int MAX_COVERAGE = 1000;
     private static final VariantTier TIER = VariantTier.PANEL;

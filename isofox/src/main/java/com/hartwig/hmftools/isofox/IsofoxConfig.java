@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_LEVEL;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
@@ -105,8 +107,6 @@ public class IsofoxConfig
     private static final String RUN_VALIDATIONS = "validate";
     private static final String PERF_CHECKS = "perf_checks";
     private static final String THREADS = "threads";
-    public static final String LOG_DEBUG = "log_debug";
-    public static final String LOG_LEVEL = "log_level";
 
     public final String SampleId;
     public final List<String> RestrictedGeneIds; // specific set of genes to process

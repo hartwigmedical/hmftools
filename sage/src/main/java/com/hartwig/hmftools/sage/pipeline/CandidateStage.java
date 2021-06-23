@@ -51,7 +51,7 @@ public class CandidateStage
                 SG_LOGGER.info("processing chromosome {}", region.Chromosome);
             }
 
-            SG_LOGGER.debug("processing candidates in {}:{}", region.Chromosome, region.start());
+            SG_LOGGER.trace("processing candidates in {}:{}", region.Chromosome, region.start());
 
             final Candidates initialCandidates = new Candidates(mHotspots, mPanelRegions, mHighConfidenceRegions);
 

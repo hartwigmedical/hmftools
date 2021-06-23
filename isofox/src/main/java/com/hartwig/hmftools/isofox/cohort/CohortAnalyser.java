@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.isofox.cohort;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.SUMMARY;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.isValid;
@@ -34,8 +34,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class CohortAnalyser
@@ -191,10 +189,7 @@ public class CohortAnalyser
             return;
         }
 
-        if (cmd.hasOption(LOG_DEBUG))
-        {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
+        setLogLevel(cmd);
 
         CohortAnalyser cohortAnalyser = new CohortAnalyser(cmd);
 

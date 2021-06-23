@@ -26,8 +26,8 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.pipeline.AdditionalReferencePipeline;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePartition;
+import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationSupplier;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.apache.commons.cli.CommandLine;
@@ -53,33 +53,12 @@ public class SageAppendApplication implements AutoCloseable
 {
     private static final double MIN_PRIOR_VERSION = 2.4;
 
-    public static void main(String[] args)
-    {
-        final Options options = SageConfig.createAddReferenceOptions();
-        try(final SageAppendApplication application = new SageAppendApplication(options, args))
-        {
-            application.run();
-        }
-        catch(ParseException e)
-        {
-            SG_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("SageAppendApplication", options);
-            System.exit(1);
-        } catch(Exception e)
-        {
-            SG_LOGGER.warn(e);
-            System.exit(1);
-        }
-    }
-
-    private final VariantVCF outputVCF;
-    private final SageConfig config;
-    private final ExecutorService executorService;
-    private final IndexedFastaSequenceFile refGenome;
-    private final QualityRecalibrationSupplier qualityRecalibrationSupplier;
-    private final AbstractFeatureReader<VariantContext, LineIterator> inputReader;
-    private final long timeStamp = System.currentTimeMillis();
+    private final VariantVCF mOutputVCF;
+    private final SageConfig mConfig;
+    private final ExecutorService mExecutorService;
+    private final IndexedFastaSequenceFile mRefGenome;
+    private final AbstractFeatureReader<VariantContext, LineIterator> mInputReader;
+    private final long mTimeStamp = System.currentTimeMillis();
 
     public SageAppendApplication(final Options options, final String... args) throws ParseException, IOException
     {
@@ -87,33 +66,36 @@ public class SageAppendApplication implements AutoCloseable
         SG_LOGGER.info("SAGE version: {}", version.version());
 
         final CommandLine cmd = createCommandLine(args, options);
-        config = new SageConfig(true, version.version(), cmd);
+        mConfig = new SageConfig(true, version.version(), cmd);
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
-        executorService = Executors.newFixedThreadPool(config.Threads, namedThreadFactory);
-        refGenome = new IndexedFastaSequenceFile(new File(config.RefGenomeFile));
-        qualityRecalibrationSupplier = new QualityRecalibrationSupplier(executorService, refGenome, config);
+        mExecutorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
+        mRefGenome = new IndexedFastaSequenceFile(new File(mConfig.RefGenomeFile));
 
-        final String inputVcf = config.InputFile;
-        inputReader = AbstractFeatureReader.getFeatureReader(inputVcf, new VCFCodec(), false);
+        final String inputVcf = mConfig.InputFile;
+        mInputReader = AbstractFeatureReader.getFeatureReader(inputVcf, new VCFCodec(), false);
 
-        VCFHeader inputHeader = (VCFHeader) inputReader.getHeader();
+        VCFHeader inputHeader = (VCFHeader) mInputReader.getHeader();
         SG_LOGGER.info("Reading and validating file: {}", inputVcf);
         validateInputHeader(inputHeader);
 
-        outputVCF = new VariantVCF(refGenome, config, inputHeader);
-        SG_LOGGER.info("Writing to file: {}", config.OutputFile);
+        mOutputVCF = new VariantVCF(mRefGenome, mConfig, inputHeader);
+        SG_LOGGER.info("Writing to file: {}", mConfig.OutputFile);
     }
 
     public void run() throws IOException, ExecutionException, InterruptedException
     {
-        final ChromosomePartition chromosomePartition = new ChromosomePartition(config, refGenome);
+        final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig, mRefGenome);
         final List<VariantContext> existing = verifyAndReadExisting();
 
         final SAMSequenceDictionary dictionary = dictionary();
         final List<Future<List<VariantContext>>> futures = Lists.newArrayList();
-        final Map<String, QualityRecalibrationMap> recalibrationMap = qualityRecalibrationSupplier.get();
-        final AdditionalReferencePipeline pipeline = new AdditionalReferencePipeline(config, executorService, refGenome, recalibrationMap);
+
+        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(mConfig, mExecutorService, mRefGenome);
+        baseQualityRecalibration.produceRecalibrationMap();
+        final Map<String,QualityRecalibrationMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
+
+        final AdditionalReferencePipeline pipeline = new AdditionalReferencePipeline(mConfig, mExecutorService, mRefGenome, recalibrationMap);
 
         for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
         {
@@ -137,28 +119,28 @@ public class SageAppendApplication implements AutoCloseable
         for(Future<List<VariantContext>> updatedVariantsFuture : futures)
         {
             final List<VariantContext> updatedVariants = updatedVariantsFuture.get();
-            updatedVariants.forEach(outputVCF::write);
+            updatedVariants.forEach(mOutputVCF::write);
         }
     }
 
     @Override
     public void close() throws IOException
     {
-        inputReader.close();
-        outputVCF.close();
-        refGenome.close();
-        executorService.shutdown();
-        long timeTaken = System.currentTimeMillis() - timeStamp;
+        mInputReader.close();
+        mOutputVCF.close();
+        mRefGenome.close();
+        mExecutorService.shutdown();
+        long timeTaken = System.currentTimeMillis() - mTimeStamp;
         SG_LOGGER.info("Completed in {} seconds", timeTaken / 1000);
     }
 
     @NotNull
     public List<VariantContext> verifyAndReadExisting() throws IOException, IllegalArgumentException
     {
-        VCFHeader header = (VCFHeader) inputReader.getHeader();
+        VCFHeader header = (VCFHeader) mInputReader.getHeader();
 
         List<VariantContext> result = Lists.newArrayList();
-        for(VariantContext variantContext : inputReader.iterator())
+        for(VariantContext variantContext : mInputReader.iterator())
         {
             result.add(variantContext.fullyDecode(header, false));
         }
@@ -175,7 +157,7 @@ public class SageAppendApplication implements AutoCloseable
         }
 
         final Set<String> samplesInExistingVcf = existingSamples(header);
-        for(String refSample : config.ReferenceIds)
+        for(String refSample : mConfig.ReferenceIds)
         {
             if(samplesInExistingVcf.contains(refSample))
             {
@@ -210,13 +192,33 @@ public class SageAppendApplication implements AutoCloseable
 
     private SAMSequenceDictionary dictionary() throws IOException
     {
-        final String bam = config.ReferenceBams.isEmpty() ? config.TumorBams.get(0) : config.ReferenceBams.get(0);
+        final String bam = mConfig.ReferenceBams.isEmpty() ? mConfig.TumorBams.get(0) : mConfig.ReferenceBams.get(0);
         SamReader tumorReader = SamReaderFactory.makeDefault()
-                .validationStringency(config.Stringency)
-                .referenceSource(new ReferenceSource(refGenome)).open(new File(bam));
+                .validationStringency(mConfig.Stringency)
+                .referenceSource(new ReferenceSource(mRefGenome)).open(new File(bam));
         SAMSequenceDictionary dictionary = tumorReader.getFileHeader().getSequenceDictionary();
         tumorReader.close();
         return dictionary;
+    }
+
+    public static void main(String[] args)
+    {
+        final Options options = SageConfig.createAddReferenceOptions();
+        try(final SageAppendApplication application = new SageAppendApplication(options, args))
+        {
+            application.run();
+        }
+        catch(ParseException e)
+        {
+            SG_LOGGER.warn(e);
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("SageAppendApplication", options);
+            System.exit(1);
+        } catch(Exception e)
+        {
+            SG_LOGGER.warn(e);
+            System.exit(1);
+        }
     }
 
 }

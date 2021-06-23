@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_LEVEL;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.coverage.GeneCoverage.populateCoverageBuckets;
 
@@ -23,8 +25,8 @@ import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.coverage.GeneDepthFile;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
+import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationSupplier;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
 import com.hartwig.hmftools.sage.vcf.VariantFile;
@@ -36,8 +38,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -46,7 +46,6 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.variant.variantcontext.VariantContext;
 
 public class SageApplication implements AutoCloseable
 {
@@ -55,7 +54,6 @@ public class SageApplication implements AutoCloseable
 
     private final ExecutorService mExecutorService;
     private final IndexedFastaSequenceFile mRefGenome;
-    private final QualityRecalibrationSupplier mQualityRecalibrationSupplier;
 
     private final VariantVCF mVcfFile;
     private final VariantFile mVariantFile;
@@ -84,7 +82,6 @@ public class SageApplication implements AutoCloseable
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
         mExecutorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
         mRefGenome = new IndexedFastaSequenceFile(new File(mConfig.RefGenomeFile));
-        mQualityRecalibrationSupplier = new QualityRecalibrationSupplier(mExecutorService, mRefGenome, mConfig);
 
         mVcfFile = new VariantVCF(mRefGenome, mConfig);
 
@@ -105,7 +102,10 @@ public class SageApplication implements AutoCloseable
         long startTime = System.currentTimeMillis();
         final Coverage coverage = createCoverage();
 
-        final Map<String, QualityRecalibrationMap> recalibrationMap = mQualityRecalibrationSupplier.get();
+        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(mConfig, mExecutorService, mRefGenome);
+        baseQualityRecalibration.produceRecalibrationMap();
+        final Map<String,QualityRecalibrationMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
+
         final SAMSequenceDictionary dictionary = dictionary();
         for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
         {
@@ -204,8 +204,7 @@ public class SageApplication implements AutoCloseable
         {
             final CommandLine cmd = createCommandLine(args, options);
 
-            if (cmd.hasOption(LOG_DEBUG))
-                Configurator.setRootLevel(Level.DEBUG);
+            setLogLevel(cmd);
 
             final SageApplication application = new SageApplication(cmd);
             application.run();

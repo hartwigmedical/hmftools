@@ -5,15 +5,30 @@ import java.io.IOException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class ConfigUtils
 {
     public static final String LOG_DEBUG = "log_debug";
+    public static final String LOG_LEVEL = "log_level";
 
     private static final Logger LOGGER = LogManager.getLogger(ConfigUtils.class);
+
+    public static void setLogLevel(final CommandLine cmd)
+    {
+        if (cmd.hasOption(LOG_DEBUG))
+        {
+            Configurator.setRootLevel(Level.DEBUG);
+        }
+        else if(cmd.hasOption(LOG_LEVEL))
+        {
+            Configurator.setRootLevel(Level.valueOf(cmd.getOptionValue(LOG_LEVEL)));
+        }
+    }
 
     public static double getConfigValue(final CommandLine cmd, final String configName, double defaultValue)
     {

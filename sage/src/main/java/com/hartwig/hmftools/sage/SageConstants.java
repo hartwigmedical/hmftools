@@ -11,4 +11,9 @@ public class SageConstants
     public static final int DEFAULT_READ_CONTEXT_FLANK_SIZE = 10;
     public static final boolean DEFAULT_MNV = true;
 
+    // base quality recalibration
+    public static final int DEFAULT_BQR_MAX_ALT_COUNT = 3;
+    public static final int DEFAULT_BQR_SAMPLE_SIZE = 2_000_000;
+    public static final int DEFAULT_BQR_MIN_MAP_QUAL = 10;
+
 }
