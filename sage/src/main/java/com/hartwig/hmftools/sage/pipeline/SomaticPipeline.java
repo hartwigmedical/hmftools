@@ -70,7 +70,7 @@ public class SomaticPipeline
     {
         return doneNormal.thenCombine(doneTumor, (normalCandidates, tumorCandidates) ->
         {
-            SG_LOGGER.debug("gathering evidence in {}:{}", region.Chromosome, region.start());
+            SG_LOGGER.trace("gathering evidence in {}:{}", region.Chromosome, region.start());
             final SageVariantFactory variantFactory = new SageVariantFactory(mConfig.Filter);
 
             // Combine normal and tumor together and create variants

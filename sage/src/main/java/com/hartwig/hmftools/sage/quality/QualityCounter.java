@@ -2,16 +2,15 @@ package com.hartwig.hmftools.sage.quality;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.jetbrains.annotations.NotNull;
-
-class QualityCounter implements QualityCounterKey, Comparable<QualityCounter>
+class QualityCounter implements Comparable<QualityCounter>
 {
-    private final QualityCounterKey mKey;
+    public final QualityCounterKey Key;
+
     private final AtomicInteger mCount = new AtomicInteger();
 
     public QualityCounter(final QualityCounterKey key)
     {
-        mKey = key;
+        Key = key;
     }
 
     public int count()
@@ -23,88 +22,35 @@ class QualityCounter implements QualityCounterKey, Comparable<QualityCounter>
     {
         increment(1);
     }
-
     public void increment(int increment)
     {
         mCount.addAndGet(increment);
     }
 
-    public int position()
-    {
-        return mKey.position();
-    }
+    public int position() { return Key.Position; }
 
-    public byte ref()
-    {
-        return mKey.ref();
-    }
-
+    public byte ref() { return Key.Ref; }
     public byte alt()
     {
-        return mKey.alt();
+        return Key.Alt;
     }
-
     public byte qual()
     {
-        return mKey.qual();
+        return Key.Quality;
     }
 
-    @Override
     public byte[] trinucleotideContext()
     {
-        return mKey.trinucleotideContext();
-    }
-
-    @NotNull
-    public QualityCounterKey key()
-    {
-        return mKey;
+        return Key.TrinucleotideContext;
     }
 
     @Override
-    public int compareTo(@NotNull final QualityCounter o2)
+    public int compareTo(final QualityCounter other)
     {
-        int countCompare = Integer.compare(o2.count(), count());
+        int countCompare = Integer.compare(other.count(), count());
         if(countCompare != 0)
-        {
             return countCompare;
-        }
 
-        int refCompare = Byte.compare(ref(), o2.ref());
-        if(refCompare != 0)
-        {
-            return refCompare;
-        }
-
-        int altCompare = Byte.compare(alt(), o2.alt());
-        if(altCompare != 0)
-        {
-            return altCompare;
-        }
-
-        if(trinucleotideContext().length < 3 || o2.trinucleotideContext().length < 3)
-        {
-            return 0;
-        }
-
-        int triOne = Byte.compare(trinucleotideContext()[0], o2.trinucleotideContext()[0]);
-        if(triOne != 0)
-        {
-            return triOne;
-        }
-
-        int triTwo = Byte.compare(trinucleotideContext()[1], o2.trinucleotideContext()[1]);
-        if(triTwo != 0)
-        {
-            return triTwo;
-        }
-
-        int triThree = Byte.compare(trinucleotideContext()[2], o2.trinucleotideContext()[2]);
-        if(triThree != 0)
-        {
-            return triThree;
-        }
-
-        return 0;
+        return Key.compareTo(other.Key, false);
     }
 }

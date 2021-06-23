@@ -81,7 +81,7 @@ public class ChromosomePipeline implements AutoCloseable
 
     private CompletableFuture<ChromosomePipeline> submit()
     {
-        // Even if regions were executed out of order, they must be phased in order
+        // even if regions were executed out of order, they must be phased in order
         mRegions.sort(Comparator.comparing(RegionFuture::region));
 
         // Phasing must be done in order but we can do it eagerly as each new region comes in.
@@ -119,30 +119,20 @@ public class ChromosomePipeline implements AutoCloseable
     private boolean include(final SageVariant entry, final Set<Integer> passingPhaseSets)
     {
         if(mConfig.PanelOnly && !PANEL_ONLY_TIERS.contains(entry.tier()))
-        {
             return false;
-        }
 
         if(entry.isPassing())
-        {
             return true;
-        }
 
         if(mConfig.Filter.HardFilter)
-        {
             return false;
-        }
 
         if(entry.tier() == VariantTier.HOTSPOT)
-        {
             return true;
-        }
 
         // Its not always 100% transparent whats happening with the mixed germline dedup logic unless we keep all the associated records
         if(entry.mixedGermlineImpact() > 0)
-        {
             return true;
-        }
 
         if(!entry.isNormalEmpty() && !entry.isTumorEmpty() && !MitochondrialChromosome.contains(entry.chromosome())
                 && !passingPhaseSets.contains(entry.localPhaseSet()))

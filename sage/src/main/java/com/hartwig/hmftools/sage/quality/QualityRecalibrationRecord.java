@@ -1,18 +1,16 @@
 package com.hartwig.hmftools.sage.quality;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface QualityRecalibrationRecord
+public class QualityRecalibrationRecord
 {
+    public final QualityRecalibrationKey Key;
 
-    @NotNull
-    QualityRecalibrationKey key();
+    public final int Count;
+    public final double RecalibratedQuality;
 
-    int count();
-
-    double recalibratedQual();
+    public QualityRecalibrationRecord(final QualityRecalibrationKey key, final int count, final double recalibratedQual)
+    {
+        Key = key;
+        Count = count;
+        RecalibratedQuality = recalibratedQual;
+    }
 }

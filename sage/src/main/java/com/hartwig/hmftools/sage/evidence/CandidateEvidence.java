@@ -53,7 +53,7 @@ public class CandidateEvidence
     public List<AltContext> readBam(
             final String sample, final String bamFile, final RefSequence refSequence, final BaseRegion bounds)
     {
-        SG_LOGGER.debug("variant candidates {} position {}:{}", sample, bounds.Chromosome, bounds.start());
+        SG_LOGGER.trace("variant candidates {} position {}:{}", sample, bounds.Chromosome, bounds.start());
         final List<GeneCoverage> geneCoverage = mCoverage.coverage(sample, bounds.Chromosome);
         final RefContextFactory candidates = new RefContextFactory(mConfig, sample, mHotspots, mPanel);
         final RefContextConsumer refContextConsumer = new RefContextConsumer(mConfig, bounds, refSequence, candidates);

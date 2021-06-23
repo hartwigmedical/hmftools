@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static com.hartwig.hmftools.sage.SageCommon.DELIM;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,22 +12,14 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class QualityRecalibrationFile
 {
-
-    private static final String DELIMITER = "\t";
-    private static final DecimalFormat FORMAT = new DecimalFormat("0.00");
-
-    public static void write(@NotNull final String filename, @NotNull final Collection<QualityRecalibrationRecord> counts)
-            throws IOException
+    public static void write(final String filename, final Collection<QualityRecalibrationRecord> counts) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(counts));
     }
 
-    @NotNull
-    private static List<String> toLines(@NotNull final Collection<QualityRecalibrationRecord> bafs)
+    private static List<String> toLines(final Collection<QualityRecalibrationRecord> bafs)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -33,17 +27,25 @@ public final class QualityRecalibrationFile
         return lines;
     }
 
-    @NotNull
-    private static String toString(@NotNull final QualityRecalibrationRecord baf)
+    private static String toString(final QualityRecalibrationRecord baf)
     {
-        return (char) baf.key().alt() + DELIMITER + (char) baf.key().ref() + DELIMITER + new String(baf.key().trinucleotideContext())
-                + DELIMITER + baf.count() + DELIMITER + baf.key().qual() + DELIMITER + FORMAT.format(baf.recalibratedQual());
+        StringJoiner sj = new StringJoiner(DELIM);
+        sj.add(String.valueOf((char)baf.Key.Alt));
+        sj.add(String.valueOf((char)baf.Key.Ref));
+        sj.add(new String(baf.Key.TrinucleotideContext));
+        sj.add(String.valueOf(baf.Count));
+        sj.add(String.valueOf(baf.Key.Quality));
+        sj.add(String.format("%.2f", baf.RecalibratedQuality));
+        return sj.toString();
+
+        //return (char) baf.Key.Alt + DELIMITER + (char) baf.key().ref() + DELIMITER + new String(baf.key().trinucleotideContext())
+        //        + DELIMITER + baf.count() + DELIMITER + baf.key().qual() + DELIMITER + FORMAT.format(baf.recalibratedQual());
     }
 
-    @NotNull
     private static String header()
     {
-        return new StringJoiner(DELIMITER, "", "").add("alt")
+        return new StringJoiner(DELIM, "", "")
+                .add("alt")
                 .add("ref")
                 .add("trinucleotideContext")
                 .add("count")

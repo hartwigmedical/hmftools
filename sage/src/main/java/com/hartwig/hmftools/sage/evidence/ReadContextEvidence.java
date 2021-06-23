@@ -33,7 +33,7 @@ public class ReadContextEvidence
     private final ReferenceSequenceFile mRefGenome;
     private final ReadContextCounterFactory mFactory;
 
-    public ReadContextEvidence(@NotNull final SageConfig config, @NotNull final ReferenceSequenceFile refGenome,
+    public ReadContextEvidence(final SageConfig config, final ReferenceSequenceFile refGenome,
             final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
     {
         mSageConfig = config;
@@ -43,14 +43,12 @@ public class ReadContextEvidence
     }
 
     @NotNull
-    public List<ReadContextCounter> get(@NotNull final List<Candidate> candidates, @NotNull final String sample,
-            @NotNull final String bam)
+    public List<ReadContextCounter> get(final List<Candidate> candidates, final String sample, final String bam)
     {
         final List<ReadContextCounter> counters = mFactory.create(sample, candidates);
+
         if(candidates.isEmpty())
-        {
             return counters;
-        }
 
         final Candidate firstCandidate = candidates.get(0);
         final Candidate lastCandidate = candidates.get(candidates.size() - 1);

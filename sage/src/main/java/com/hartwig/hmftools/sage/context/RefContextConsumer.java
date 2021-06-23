@@ -80,7 +80,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             };
             CigarTraversal.traverseCigar(record, handler);
 
-            // If an snv core overlaps an indel core, then extend the cores of both.
+            // if an SNV core overlaps an indel core, then extend the cores of both
             for(int i = 0; i < altReads.size(); i++)
             {
                 final AltRead snv = altReads.get(i);

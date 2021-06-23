@@ -33,17 +33,16 @@ public class ChromosomePartition
         final List<BaseRegion> results = Lists.newArrayList();
 
         int dynamicSliceSize = maxPosition / Math.min(mConfig.Threads, 4) + 1;
+        int regionSliceSize = Math.min(dynamicSliceSize, mConfig.RegionSliceSize);
 
-        final int regionSliceSize = Math.min(dynamicSliceSize, mConfig.RegionSliceSize);
         for(int i = 0; ; i++)
         {
             int start = minPosition + i * regionSliceSize;
             int end = Math.min(start + regionSliceSize - 1, maxPosition);
             results.add(new BaseRegion(contig, start, end));
+
             if(end >= maxPosition)
-            {
                 break;
-            }
         }
         return results;
     }

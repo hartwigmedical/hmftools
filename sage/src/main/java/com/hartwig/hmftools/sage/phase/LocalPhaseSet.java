@@ -13,12 +13,12 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-class LocalPhaseSet extends BufferedPostProcessor
+public class LocalPhaseSet extends BufferedPostProcessor
 {
     private int mPhase;
     private final Set<Integer> mPassingPhaseSets = Sets.newHashSet();
 
-    LocalPhaseSet(@NotNull final Consumer<SageVariant> consumer)
+    public LocalPhaseSet(@NotNull final Consumer<SageVariant> consumer)
     {
         super(PHASE_BUFFER, consumer);
     }
@@ -30,7 +30,7 @@ class LocalPhaseSet extends BufferedPostProcessor
     }
 
     @Override
-    protected void preFlush(@NotNull final Collection<SageVariant> variants)
+    protected void preFlush(final Collection<SageVariant> variants)
     {
         super.preFlush(variants);
         for(SageVariant variant : variants)
@@ -43,7 +43,7 @@ class LocalPhaseSet extends BufferedPostProcessor
     }
 
     @Override
-    protected void processSageVariant(@NotNull final SageVariant newEntry, @NotNull final Collection<SageVariant> buffer)
+    protected void processSageVariant(final SageVariant newEntry, final Collection<SageVariant> buffer)
     {
         final ReadContext newReadContext = newEntry.readContext();
         for(final SageVariant oldEntry : buffer)
@@ -74,13 +74,13 @@ class LocalPhaseSet extends BufferedPostProcessor
         }
     }
 
-    static int positionOffset(@NotNull final VariantHotspot left, @NotNull final VariantHotspot right)
+    static int positionOffset(final VariantHotspot left, final VariantHotspot right)
     {
         long positionOffset = left.position() - right.position();
         return (int) (positionOffset);
     }
 
-    static int adjustedOffset(@NotNull final VariantHotspot left, @NotNull final VariantHotspot right)
+    static int adjustedOffset(final VariantHotspot left, final VariantHotspot right)
     {
         long positionOffset = positionOffset(left, right);
         if(positionOffset == 0)
@@ -92,7 +92,7 @@ class LocalPhaseSet extends BufferedPostProcessor
                 left.alt().length() - left.ref().length()));
     }
 
-    static boolean rightInLeftDel(@NotNull final VariantHotspot left, @NotNull final VariantHotspot right)
+    static boolean rightInLeftDel(final VariantHotspot left, final VariantHotspot right)
     {
         if(left.ref().length() > left.alt().length())
         {

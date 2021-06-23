@@ -22,8 +22,8 @@ public class RefSequence
     public RefSequence(final BaseRegion region, final ReferenceSequenceFile refGenome)
     {
         final int sequenceEnd = refGenome.getSequenceDictionary().getSequence(region.Chromosome).getSequenceLength();
-        Start = Math.max(1, (int) region.start() - BUFFER);
-        End = Math.min(sequenceEnd, (int) region.end() + BUFFER);
+        Start = Math.max(1, region.start() - BUFFER);
+        End = Math.min(sequenceEnd, region.end() + BUFFER);
         Sequence = refGenome.getSubsequenceAt(region.Chromosome, Start, End);
         IndexedBases = new IndexedBases(Start, 0, Sequence.getBases());
     }
