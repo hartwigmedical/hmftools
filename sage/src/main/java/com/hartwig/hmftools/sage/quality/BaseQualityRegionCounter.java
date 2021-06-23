@@ -22,8 +22,6 @@ import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.ref.RefSequence;
-import com.hartwig.hmftools.sage.sam.SamSlicer;
-import com.sun.org.apache.regexp.internal.recompile;
 
 import org.jetbrains.annotations.NotNull;
 
