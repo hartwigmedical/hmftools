@@ -50,7 +50,7 @@ public class CreateShallowSeqDB {
         if (!checkInputs(cmd)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-DB - Create Shallow Seq DB ", options);
-            System.exit(1);
+            throw new IllegalArgumentException("Unexpected error, check inputs");
         }
 
         LOGGER.info("Loading shallow seq runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
