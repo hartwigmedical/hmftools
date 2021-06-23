@@ -7,23 +7,18 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.FutureTask;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
-
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -36,7 +31,7 @@ public class BaseQualityRecalibration
 
     private final Map<String,QualityRecalibrationMap> mSampleRecalibrationMap;
 
-    final Map<QualityCounterKey,QualityCounter> mCounters;
+    private final PerformanceCounter mPerfCounter;
 
     public BaseQualityRecalibration(
             final SageConfig config, final ExecutorService executorService, final IndexedFastaSequenceFile refGenome)
@@ -47,8 +42,8 @@ public class BaseQualityRecalibration
 
         mSampleRecalibrationMap = Maps.newHashMap();
 
-        mCounters = new ConcurrentHashMap<>(Maps.newHashMap());
-    }
+        mPerfCounter = new PerformanceCounter("BaseQualRecal");
+     }
 
     public Map<String,QualityRecalibrationMap> getSampleRecalibrationMap() { return mSampleRecalibrationMap; }
 
@@ -67,10 +62,14 @@ public class BaseQualityRecalibration
             processSample(mConfig.ReferenceIds.get(i), mConfig.ReferenceBams.get(i), regions);
         }
 
+        mPerfCounter.logStats();
+
         for(int i = 0; i < mConfig.TumorIds.size(); i++)
         {
             processSample(mConfig.TumorIds.get(i), mConfig.TumorBams.get(i), regions);
         }
+
+        mPerfCounter.logStats();
     }
 
     private void processSample(final String sampleId, final String bamFile, final List<BaseRegion> regions)
@@ -101,8 +100,12 @@ public class BaseQualityRecalibration
             e.printStackTrace();
         }
 
+        // regionCounters.forEach(x -> x.logPerfs());
+
+        mPerfCounter.start();
+
         // merge results for this sample across all regions
-        final Map<QualityCounterKey,QualityCounter> allQualityCounts = Maps.newHashMap();
+        final Map<BaseQualityKey,Integer> allQualityCounts = Maps.newHashMap();
 
         for(BaseQualityRegionCounter regionCounter : regionCounters)
         {
@@ -115,6 +118,8 @@ public class BaseQualityRecalibration
 
         // write results to file
         writeSampleData(sampleId, records);
+
+        mPerfCounter.stop();
     }
 
     private void buildEmptyRecalibrations()
@@ -130,46 +135,37 @@ public class BaseQualityRecalibration
         }
     }
 
-    private void mergeQualityCounts(final Map<QualityCounterKey,QualityCounter> allQualityCounts, final Collection<QualityCounter> qualityCounts)
+    private void mergeQualityCounts(final Map<BaseQualityKey,Integer> allQualityCounts, final Collection<QualityCounter> qualityCounts)
     {
-        for(QualityCounter count : qualityCounts)
+        for(QualityCounter counter : qualityCounts)
         {
-            QualityCounterKey key = withoutPosition(count);
-            QualityCounter counter = allQualityCounts.get(key);
-            if(counter == null)
-            {
-                counter = new QualityCounter(key);
-                allQualityCounts.put(key, counter);
-            }
+            BaseQualityKey key = counter.Key; //withoutPosition(counter);
+            Integer count = allQualityCounts.get(key);
 
-            counter.increment(count.count());
+            allQualityCounts.put(key, count != null ? count + counter.count() : counter.count());
         }
     }
 
-    private List<QualityRecalibrationRecord> convertToRecords(final Map<QualityCounterKey,QualityCounter> allQualityCounts)
+    private List<QualityRecalibrationRecord> convertToRecords(final Map<BaseQualityKey,Integer> allQualityCounts)
     {
-        final List<QualityCounter> sortedList = Lists.newArrayList(allQualityCounts.values());
-        Collections.sort(sortedList);
-
         final List<QualityRecalibrationRecord> result = Lists.newArrayList();
 
-        final Map<QualityRecalibrationKey,Integer> refCountMap = sortedList.stream()
-                .filter(x -> x.ref() == x.alt())
-                .collect(Collectors.toMap(x -> QualityRecalibrationKey.from(x.Key), x -> x.count()));
+        final Map<BaseQualityKey,Integer> refCountMap = allQualityCounts.entrySet().stream()
+                .filter(x -> x.getKey().Ref == x.getKey().Alt)
+                .collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue()));
 
-        for(QualityCounter cleanedRecord : sortedList)
+        for(Map.Entry<BaseQualityKey,Integer> entry : allQualityCounts.entrySet())
         {
-            final QualityRecalibrationKey key = QualityRecalibrationKey.from(cleanedRecord.Key);
-            final QualityRecalibrationKey refKey = new QualityRecalibrationKey(key.Ref, cleanedRecord.ref(), key.TrinucleotideContext, key.Quality);
+            BaseQualityKey key = entry.getKey();
+            BaseQualityKey refKey = new BaseQualityKey(key.Ref, key.Ref, key.TrinucleotideContext, key.Quality);
 
             int refCount = refCountMap.getOrDefault(refKey, 0);
             if(refCount > 0)
             {
-                double recalibratedQual = cleanedRecord.alt() == cleanedRecord.ref()
-                        ? cleanedRecord.qual()
-                        : recalibratedQual(refCount, cleanedRecord.count());
+                double recalibratedQual = key.Alt == key.Ref
+                        ? key.Quality : recalibratedQual(refCount, entry.getValue());
 
-                result.add(new QualityRecalibrationRecord(key, cleanedRecord.count(), recalibratedQual));
+                result.add(new QualityRecalibrationRecord(key, entry.getValue(), recalibratedQual));
             }
         }
 
@@ -189,7 +185,6 @@ public class BaseQualityRecalibration
     {
         List<BaseRegion> result = Lists.newArrayList();
 
-        // mRefGenome, mConfig.Chromosomes, mConfig.QualityRecalibration.SampleSize
         for(final SAMSequenceRecord sequenceRecord : mRefGenome.getSequenceDictionary().getSequences())
         {
             final String chromosome = sequenceRecord.getSequenceName();
@@ -212,11 +207,6 @@ public class BaseQualityRecalibration
         return result;
     }
 
-    private static QualityCounterKey withoutPosition(final QualityCounter count)
-    {
-        return new QualityCounterKey(count.ref(), count.alt(), count.qual(), 0, count.trinucleotideContext());
-    }
-
     private void writeSampleData(final String sampleId, final Collection<QualityRecalibrationRecord> records)
     {
         try
@@ -224,7 +214,7 @@ public class BaseQualityRecalibration
             final String tsvFile = mConfig.baseQualityRecalibrationFile(sampleId);
             SG_LOGGER.debug("writing base quality recalibration file: {}", tsvFile);
 
-            QualityRecalibrationFile.write(tsvFile, records);
+            QualityRecalibrationFile.write(tsvFile, records.stream().collect(Collectors.toList()));
 
             if(mConfig.QualityRecalibration.Plot)
             {

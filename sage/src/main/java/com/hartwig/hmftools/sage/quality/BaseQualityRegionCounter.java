@@ -4,8 +4,6 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -18,12 +16,11 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.ref.RefSequence;
-import com.hartwig.hmftools.sage.sam.SamSlicer;
-import com.sun.org.apache.regexp.internal.recompile;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -45,12 +42,16 @@ class BaseQualityRegionCounter implements CigarHandler, Callable
 
     private final Set<Integer> mIndelPositions = Sets.newHashSet();
 
-    private final Set<QualityCounter> mQualityCounts;
+    private final Set<QualityCounter> mQualityCounts; // summarised counts with position removed
 
-    private final Map<QualityCounterKey,QualityCounter> mQualityMap = Maps.newHashMap();
+    private final Map<Integer,Map<BaseQualityKey,Integer>> mQualityMap; // counts by position then location context
 
     private static final CigarElement SINGLE = new CigarElement(1, CigarOperator.M);
     private static final byte N = (byte) 'N';
+
+    private int mReadCounter;
+    private final PerformanceCounter mReadsPc;
+    private final PerformanceCounter mSummaryPc;
 
     public BaseQualityRegionCounter(
             final SageConfig config, final String bamFile, final ReferenceSequenceFile refGenome, final BaseRegion region)
@@ -61,10 +62,22 @@ class BaseQualityRegionCounter implements CigarHandler, Callable
         mRegion = region;
         mRefGenome = refGenome;
 
-        final RefSequence refSequence = new RefSequence(mRegion, mRefGenome);
-        mIndexedBases = refSequence.alignment();
+        if(mRefGenome != null)
+        {
+            final RefSequence refSequence = new RefSequence(mRegion, mRefGenome);
+            mIndexedBases = refSequence.alignment();
+        }
+        else
+        {
+            mIndexedBases = null;
+        }
 
+        mQualityMap = Maps.newHashMap();
         mQualityCounts = Sets.newHashSet();
+
+        mReadCounter = 0;
+        mReadsPc = new PerformanceCounter("BqrReads");
+        mSummaryPc = new PerformanceCounter("BqrSummary");
     }
 
     @Override
@@ -76,9 +89,72 @@ class BaseQualityRegionCounter implements CigarHandler, Callable
 
     public Collection<QualityCounter> getQualityCounts() { return mQualityCounts; }
 
+    protected Map<Integer,Map<BaseQualityKey,Integer>> getQualityMap() { return mQualityMap; }
+
+    public void logPerfs()
+    {
+        SG_LOGGER.debug(String.format("region(%s) readCount(%d) time(read=%.3f summary=%.3f)",
+                mRegion, mReadCounter, mReadsPc.getMaxTime(), mSummaryPc.getMaxTime()));
+    }
+
     public void produceRegionCounts()
     {
         SG_LOGGER.trace("processing BQR region {}", mRegion);
+
+        readBam();
+
+        mSummaryPc.start();
+
+        // remove locations where the alt count exceeds the configured limit
+        Map<Integer,Set<BaseQualityKey>> repeatedAltLocations = findRepeatedAltLocations();
+
+        if(!repeatedAltLocations.isEmpty())
+        {
+            SG_LOGGER.trace("region({}) has {} repeated alt locations", mRegion, repeatedAltLocations.size());
+        }
+
+        // form a set of counts by variant, no longer taking position into account
+        Map<BaseQualityKey,Integer> countsMap = Maps.newHashMap();
+
+        for(Map.Entry<Integer,Map<BaseQualityKey,Integer>> posEntry : mQualityMap.entrySet())
+        {
+            int position = posEntry.getKey();
+
+            if(mIndelPositions.contains(position))
+                continue;
+
+            Set<BaseQualityKey> repeatedAlts = repeatedAltLocations.get(position);
+
+            for(Map.Entry<BaseQualityKey,Integer> entry : posEntry.getValue().entrySet())
+            {
+                if(repeatedAlts != null && repeatedAlts.contains(altKey(entry.getKey())))
+                {
+                    SG_LOGGER.trace("skipped repeated alt location({})", entry.getKey());
+                    continue;
+                }
+
+                BaseQualityKey key = entry.getKey();
+                Integer count = countsMap.get(key);
+                countsMap.put(key, count != null ? count + entry.getValue() : entry.getValue());
+            }
+        }
+
+        for(Map.Entry<BaseQualityKey,Integer> entry : countsMap.entrySet())
+        {
+            QualityCounter counter = new QualityCounter(entry.getKey());
+            counter.increment(entry.getValue());
+            mQualityCounts.add(counter);
+        }
+
+        mSummaryPc.stop();
+    }
+
+    private void readBam()
+    {
+        if(mBamFile == null)
+            return;
+
+        mReadsPc.start();
 
         BamSlicer slicer = new BamSlicer(mConfig.MinMapQuality);
 
@@ -96,27 +172,50 @@ class BaseQualityRegionCounter implements CigarHandler, Callable
             throw new CompletionException(e);
         }
 
-        // remove locations where the alt count exceeds the configured limit
-        List<QualityCounter> countsByAlt = groupByAlt(mQualityMap.values());
+        mReadsPc.stop();
+    }
 
-        final Set<QualityCounterKey> altsToRemove = countsByAlt.stream()
-                .filter(x -> x.ref() != x.alt())
-                .filter(x -> x.count() > mConfig.QualityRecalibration.MaxAltCount)
-                .map(x -> x.Key)
-                .collect(Collectors.toSet());
+    private Map<Integer,Set<BaseQualityKey>> findRepeatedAltLocations()
+    {
+        // at each position, find any alt repeated more than X times at any base quality or context
+        Map<Integer,Set<BaseQualityKey>> repeatedAlts = Maps.newHashMap();
 
-        for(QualityCounter count : mQualityMap.values())
+        for(Map.Entry<Integer,Map<BaseQualityKey,Integer>> posEntry : mQualityMap.entrySet())
         {
-            final QualityCounterKey altKey = altKey(count);
-            if(!mIndelPositions.contains(count.position()) && !altsToRemove.contains(altKey))
+            int position = posEntry.getKey();
+
+            Map<BaseQualityKey,Integer> altCounts = Maps.newHashMap();
+
+            for(Map.Entry<BaseQualityKey,Integer> entry : posEntry.getValue().entrySet())
             {
-                mQualityCounts.add(count);
+                BaseQualityKey altKey = altKey(entry.getKey());
+
+                Integer count = altCounts.get(altKey);
+                int newCount = entry.getValue();
+                altCounts.put(altKey, count != null ? count + newCount : newCount);
+            }
+
+            Set<BaseQualityKey> repeatedAltKeys = altCounts.entrySet().stream()
+                    .filter(x -> x.getKey().Ref != x.getKey().Alt)
+                    .filter(x -> x.getValue() > mConfig.QualityRecalibration.MaxAltCount).map(x -> x.getKey()).collect(Collectors.toSet());
+
+            if(!repeatedAltKeys.isEmpty())
+            {
+                repeatedAlts.put(position, repeatedAltKeys);
             }
         }
+
+        return repeatedAlts;
+    }
+
+    private static BaseQualityKey altKey(final BaseQualityKey key)
+    {
+        return new BaseQualityKey(key.Ref, key.Alt, null, (byte)0);
     }
 
     public void processRecord(@NotNull final SAMRecord record)
     {
+        ++mReadCounter;
         CigarTraversal.traverseCigar(record, this);
     }
 
@@ -154,27 +253,33 @@ class BaseQualityRegionCounter implements CigarHandler, Callable
             byte quality = record.getBaseQualities()[readIndex];
             byte[] trinucleotideContext = mIndexedBases.trinucleotideContext(position);
 
-            if(alt != N && isValid(trinucleotideContext))
+            if(alt == N || !isValid(trinucleotideContext))
+                continue;
+
+            Map<BaseQualityKey,Integer> posCounts = mQualityMap.get(position);
+
+            if(posCounts == null)
             {
-                QualityCounterKey key = new QualityCounterKey(ref, alt, quality, position, trinucleotideContext);
-                QualityCounter counter = mQualityMap.get(key);
+                posCounts = Maps.newHashMap();
+                mQualityMap.put(position, posCounts);
+            }
 
-                if(counter == null)
+            boolean matched = false;
+            for(Map.Entry<BaseQualityKey,Integer> entry : posCounts.entrySet())
+            {
+                BaseQualityKey key = entry.getKey();
+
+                if(key.matches(ref, alt, quality, trinucleotideContext))
                 {
-                    counter = new QualityCounter(key);
-                    mQualityMap.put(key, counter);
+                    entry.setValue(entry.getValue() + 1);
+                    matched = true;
+                    break;
                 }
-                else
-                {
-                    if(key.compareTo(counter.Key) != 0)
-                    {
-                        SG_LOGGER.info("invalid: key({}) vs key2({})", key.toString(), counter.Key.toString());
-                    }
-                }
+            }
 
-                counter.increment();
-
-                // mQualityMap.computeIfAbsent(key, QualityCounter::new).increment();
+            if(!matched)
+            {
+                posCounts.put(new BaseQualityKey(ref, alt, trinucleotideContext, quality), 1);
             }
         }
     }
@@ -189,35 +294,4 @@ class BaseQualityRegionCounter implements CigarHandler, Callable
 
         return trinucleotideContext.length == 3;
     }
-
-    private static List<QualityCounter> groupByAlt(final Collection<QualityCounter> quality)
-    {
-        // determine counts but only comparing by ref, alt and position, not trinucleotide context
-        final Map<QualityCounterKey,QualityCounter> map = Maps.newHashMap();
-
-        for(QualityCounter count : quality)
-        {
-            QualityCounterKey altKey = altKey(count);
-            QualityCounter counter = map.get(altKey);
-
-            if(counter == null)
-            {
-                counter = new QualityCounter(altKey(count));
-                map.put(altKey, counter);
-            }
-
-            counter.increment(count.count());
-        }
-
-        final List<QualityCounter> result = Lists.newArrayList(map.values());
-        Collections.sort(result);
-
-        return result;
-    }
-
-    private static QualityCounterKey altKey(final QualityCounter count)
-    {
-        return new QualityCounterKey(count.ref(), count.alt(), (byte)0, count.position(), null);
-    }
-
 }

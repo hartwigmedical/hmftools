@@ -1,42 +1,29 @@
 package com.hartwig.hmftools.sage.quality;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-class QualityCounter implements Comparable<QualityCounter>
+class QualityCounter
 {
-    public final QualityCounterKey Key;
+    public final BaseQualityKey Key;
 
-    private final AtomicInteger mCount = new AtomicInteger();
+    private int mCount;
 
-    public QualityCounter(final QualityCounterKey key)
+    public QualityCounter(final BaseQualityKey key)
     {
         Key = key;
+        mCount = 0;
     }
 
     public int count()
     {
-        return mCount.get();
+        return mCount;
     }
 
-    public void increment()
-    {
-        increment(1);
-    }
-    public void increment(int increment)
-    {
-        mCount.addAndGet(increment);
-    }
-
-    public int position() { return Key.Position; }
+    public void increment() { ++mCount; }
+    public void increment(int increment) { mCount += increment;}
 
     public byte ref() { return Key.Ref; }
     public byte alt()
     {
         return Key.Alt;
-    }
-    public byte qual()
-    {
-        return Key.Quality;
     }
 
     public byte[] trinucleotideContext()
@@ -44,13 +31,4 @@ class QualityCounter implements Comparable<QualityCounter>
         return Key.TrinucleotideContext;
     }
 
-    @Override
-    public int compareTo(final QualityCounter other)
-    {
-        int countCompare = Integer.compare(other.count(), count());
-        if(countCompare != 0)
-            return countCompare;
-
-        return Key.compareTo(other.Key, false);
-    }
 }

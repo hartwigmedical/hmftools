@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import com.google.common.primitives.Bytes;
 
-public class QualityRecalibrationKey
+public class BaseQualityKey
 {
     public final byte Ref;
     public final byte Alt;
@@ -13,7 +13,7 @@ public class QualityRecalibrationKey
 
     private int mHashCode;
 
-    public QualityRecalibrationKey(final byte ref, final byte alt, final byte[] trinucleotideContext, final byte quality)
+    public BaseQualityKey(final byte ref, final byte alt, final byte[] trinucleotideContext, final byte quality)
     {
         Ref = ref;
         Alt = alt;
@@ -23,11 +23,6 @@ public class QualityRecalibrationKey
         mHashCode = calcHashCode();
     }
 
-    public static QualityRecalibrationKey from(final QualityCounterKey key)
-    {
-        return new QualityRecalibrationKey(key.Ref, key.Alt, key.TrinucleotideContext, key.Quality);
-    }
-
     public int hashCode() { return mHashCode; }
 
     public boolean equals(final Object other)
@@ -35,14 +30,23 @@ public class QualityRecalibrationKey
         if(this == other)
             return true;
 
-        if (!(other instanceof QualityRecalibrationKey))
+        if (!(other instanceof BaseQualityKey))
             return false;
 
         return hashCode() == other.hashCode();
     }
 
+    public boolean matches(byte ref, byte alt, byte quality, byte[] trinucleotideContext)
+    {
+        if(Ref != ref || Alt != alt || Quality != quality)
+            return false;
+
+        return (trinucleotideContext[0] == TrinucleotideContext[0] && trinucleotideContext[1] == TrinucleotideContext[1]
+                &&  trinucleotideContext[2] == TrinucleotideContext[2]);
+    }
+
     public String toString() { return String.format("var(%c->%c) cxt(%s) qual(%d)",
-            (char)Ref, (char)Alt, new String(TrinucleotideContext), Quality);}
+            (char)Ref, (char)Alt, TrinucleotideContext != null ? new String(TrinucleotideContext) : "", (int)Quality);}
 
     private int calcHashCode()
     {

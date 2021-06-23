@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -14,8 +15,9 @@ import com.google.common.collect.Lists;
 
 public final class QualityRecalibrationFile
 {
-    public static void write(final String filename, final Collection<QualityRecalibrationRecord> counts) throws IOException
+    public static void write(final String filename, final List<QualityRecalibrationRecord> counts) throws IOException
     {
+        Collections.sort(counts);
         Files.write(new File(filename).toPath(), toLines(counts));
     }
 
@@ -37,9 +39,6 @@ public final class QualityRecalibrationFile
         sj.add(String.valueOf(baf.Key.Quality));
         sj.add(String.format("%.2f", baf.RecalibratedQuality));
         return sj.toString();
-
-        //return (char) baf.Key.Alt + DELIMITER + (char) baf.key().ref() + DELIMITER + new String(baf.key().trinucleotideContext())
-        //        + DELIMITER + baf.count() + DELIMITER + baf.key().qual() + DELIMITER + FORMAT.format(baf.recalibratedQual());
     }
 
     private static String header()
