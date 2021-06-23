@@ -106,7 +106,7 @@ class ActionableEntryFactory {
                 return id;
             } else if (source.equalsIgnoreCase("jax")) {
                 if (id.equals("10000003")) {
-                    return "0050686";
+                    return "162";
                 } else {
                     // CKB uses 10000005 for configuring "Not a cancer". We can ignore these.
                     if (!id.equals("10000005")) {
