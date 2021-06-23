@@ -4,12 +4,13 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_LEVEL;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.BamFragmentReader.PERF_FIT;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_LEVEL;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.createCmdLineOptions;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.validConfigPaths;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_GC_COUNTS;
@@ -470,14 +471,7 @@ public class Isofox
         final Options options = createCmdLineOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
-        if (cmd.hasOption(LOG_DEBUG))
-        {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
-        else if(cmd.hasOption(LOG_LEVEL))
-        {
-            Configurator.setRootLevel(Level.valueOf(cmd.getOptionValue(LOG_LEVEL)));
-        }
+        setLogLevel(cmd);
 
         if(!validConfigPaths(cmd))
         {

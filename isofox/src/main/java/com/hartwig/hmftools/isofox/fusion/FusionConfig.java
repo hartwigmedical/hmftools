@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 
