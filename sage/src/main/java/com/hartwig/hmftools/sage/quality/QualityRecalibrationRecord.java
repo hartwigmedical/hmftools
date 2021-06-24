@@ -54,7 +54,5 @@ public class QualityRecalibrationRecord implements Comparable<QualityRecalibrati
             return triThree;
 
         return 0;
-
     }
-
 }

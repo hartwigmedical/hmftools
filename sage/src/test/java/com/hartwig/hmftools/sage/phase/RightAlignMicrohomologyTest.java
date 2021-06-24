@@ -63,7 +63,7 @@ public class RightAlignMicrohomologyTest
                 .build();
 
         ReadContextCounter counter = MixedGermlineTest.dummyCounter(leftAligned, "AG");
-        Candidate candidate = new Candidate(VariantTier.PANEL, leftAligned, counter.readContext(), 0, 0);
+        Candidate candidate = new Candidate(VariantTier.PANEL, leftAligned, counter.ReadContext, 0, 0);
 
         SageVariant variant =
                 new SageVariant(candidate, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));
@@ -88,7 +88,7 @@ public class RightAlignMicrohomologyTest
                 .build();
 
         ReadContextCounter counter = MixedGermlineTest.dummyCounter(leftAligned, "TCCAGGAAGCCT");
-        Candidate candidate = new Candidate(VariantTier.PANEL, leftAligned, counter.readContext(), 0, 0);
+        Candidate candidate = new Candidate(VariantTier.PANEL, leftAligned, counter.ReadContext, 0, 0);
 
         SageVariant variant =
                 new SageVariant(candidate, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));

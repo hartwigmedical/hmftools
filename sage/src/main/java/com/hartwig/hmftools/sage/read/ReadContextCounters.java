@@ -24,13 +24,13 @@ public class ReadContextCounters
         mCandidates = candidates;
         mComparator = (o1, o2) ->
         {
-            if(o1.sample().equals(primarySample))
+            if(o1.Sample.equals(primarySample))
                 return -1;
 
-            if(o2.sample().equals(primarySample))
+            if(o2.Sample.equals(primarySample))
                 return 1;
 
-            return o1.sample().compareTo(o2.sample());
+            return o1.Sample.compareTo(o2.Sample);
         };
     }
 
@@ -47,7 +47,7 @@ public class ReadContextCounters
     {
         for(ReadContextCounter counter : counters)
         {
-            mMap.put(counter.variant(), counter);
+            mMap.put(counter.Variant, counter);
         }
     }
 

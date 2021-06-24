@@ -117,7 +117,7 @@ public class SageVariantFactory
         }
 
         // MNV Tests
-        if(tier != VariantTier.HOTSPOT && normal.variant().isMNV() && this.mConfig.MnvFilter)
+        if(tier != VariantTier.HOTSPOT && normal.Variant.isMNV() && this.mConfig.MnvFilter)
         {
             if(normal.altSupport() != 0)
             {
