@@ -73,15 +73,16 @@ final class TherapyDetailsChapterFunctions {
     static Paragraph createChapterFootnote() {
         return new Paragraph().setKeepTogether(true)
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
-                .add("The Cancer Genome Interpreter (CGI) and CIViC knowledgebases are used to "
+                .add("The Clinical Knowledgebase (CKB) are used to "
                         + "annotate variants of all types with clinical evidence. Only treatment associated evidence with a high "
                         + "level of evidence ( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_A))
                 .add(" validated association; ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_B))
-                .add(" strong clinical evidence) are reported here. Potential evidence items with a lower level of evidence ( ")
+                .add(" strong clinical evidence; ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_C))
-                .add(" case study, limited clinical evidence; ")
+                .add(" case study, limited clinical evidence) are reported here.")
+                .add(" Potential evidence items with a lower level of evidence ( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_D))
                 .add(" pre-clinical) are not reported.")
                 .addStyle(ReportResources.subTextStyle());
