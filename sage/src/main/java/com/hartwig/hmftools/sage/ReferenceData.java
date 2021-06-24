@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -14,8 +15,10 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
@@ -23,12 +26,18 @@ import com.hartwig.hmftools.sage.config.SageConfig;
 
 import org.apache.commons.compress.utils.Lists;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
 public class ReferenceData
 {
     public final ListMultimap<Chromosome,NamedBed> CoveragePanel;
     public final ListMultimap<Chromosome, BaseRegion> PanelWithHotspots;
     public final ListMultimap<Chromosome,VariantHotspot> Hotspots;
     public final ListMultimap<Chromosome,BaseRegion> HighConfidence;
+
+    public final List<HmfTranscriptRegion> TranscriptRegions;
+
+    public final IndexedFastaSequenceFile RefGenome;
 
     private final SageConfig mConfig;
 
@@ -40,10 +49,34 @@ public class ReferenceData
         PanelWithHotspots = ArrayListMultimap.create();
         Hotspots = ArrayListMultimap.create();
         HighConfidence = ArrayListMultimap.create();
+
+        TranscriptRegions = Lists.newArrayList();
+
+        if(!config.AppendMode)
+        {
+            TranscriptRegions.addAll(config.RefGenVersion.is37() ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38());
+            config.Quality.populateGeneData(TranscriptRegions);
+        }
+
+        IndexedFastaSequenceFile indexFasta = null;
+
+        try
+        {
+            indexFasta = new IndexedFastaSequenceFile(new File(config.RefGenomeFile));
+        }
+        catch(IOException e)
+        {
+            SG_LOGGER.error("failed to load ref genome: {}", e.toString());
+        }
+
+        RefGenome = indexFasta;
     }
 
     public boolean load()
     {
+        if(RefGenome == null)
+            return false;
+
         try
         {
             if(!mConfig.CoverageBed.isEmpty())
@@ -86,7 +119,6 @@ public class ReferenceData
             }
             */
         }
-
 
         return true;
     }

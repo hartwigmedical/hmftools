@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.select.RegionSelector;
+import com.hartwig.hmftools.sage.select.TranscriptRegionSelector;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -19,12 +19,12 @@ public class PhasedInframeIndel extends BufferedPostProcessor
     private static final int MAX_DISTANCE = 50;
 
     private int mPhase;
-    private final RegionSelector<HmfTranscriptRegion> mSelector;
+    private final TranscriptRegionSelector mSelector;
 
     public PhasedInframeIndel(final Consumer<SageVariant> consumer, final List<HmfTranscriptRegion> transcripts)
     {
         super(MAX_DISTANCE, consumer);
-        mSelector = new RegionSelector<>(transcripts);
+        mSelector = new TranscriptRegionSelector(transcripts);
     }
 
     @Override
@@ -80,7 +80,7 @@ public class PhasedInframeIndel extends BufferedPostProcessor
     }
 
     @NotNull
-    static Optional<HmfExonRegion> selectExon(@NotNull final RegionSelector<HmfTranscriptRegion> selector, long position)
+    static Optional<HmfExonRegion> selectExon(@NotNull final TranscriptRegionSelector selector, long position)
     {
         return selector.select(position).map(x -> selectExon(position, x));
     }

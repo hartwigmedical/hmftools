@@ -10,23 +10,25 @@ import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import org.jetbrains.annotations.NotNull;
 
 @NotThreadSafe
-public class PanelSelector<R extends BaseRegion>
+public class PanelSelector
 {
-    private final List<R> mRegions;
+    private final List<BaseRegion> mRegions;
     private int mIndex;
 
-    public PanelSelector(final List<R> regions)
+    public PanelSelector(final List<BaseRegion> regions)
     {
         mRegions = regions;
         mIndex = 0;
     }
 
-    public boolean inPanel(long start, long end)
+    public boolean inPanel(long start, long end) { return inPanel((int)start, (int)end); }
+
+    public boolean inPanel(int start, int end)
     {
         if(mRegions.isEmpty())
             return false;
 
-        R current = current();
+        BaseRegion current = current();
         while(mIndex > 0 && current.start() > end)
         {
             mIndex--;
@@ -45,8 +47,7 @@ public class PanelSelector<R extends BaseRegion>
         return false;
     }
 
-    @NotNull
-    private R current()
+    private BaseRegion current()
     {
         return mRegions.get(mIndex);
     }

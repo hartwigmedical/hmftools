@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.sage.candidate.Candidate;
-import com.hartwig.hmftools.sage.select.RegionSelector;
+import com.hartwig.hmftools.sage.select.TranscriptRegionSelector;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,13 +21,13 @@ import org.jetbrains.annotations.NotNull;
 public class RightAlignMicrohomology implements Consumer<SageVariant>
 {
     private final Consumer<SageVariant> mConsumer;
-    private final RegionSelector<HmfTranscriptRegion> mSelector;
+    private final TranscriptRegionSelector mSelector;
     private final List<SageVariant> mRightAlignedList = Lists.newArrayList();
     private final Comparator<VariantHotspot> mComparator = new VariantHotspotComparator();
 
     public RightAlignMicrohomology(final Consumer<SageVariant> consumer, final List<HmfTranscriptRegion> transcripts)
     {
-        mSelector = new RegionSelector<>(transcripts);
+        mSelector = new TranscriptRegionSelector(transcripts);
         mConsumer = consumer;
     }
 

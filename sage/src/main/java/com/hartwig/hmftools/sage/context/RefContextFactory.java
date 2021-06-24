@@ -22,7 +22,7 @@ public class RefContextFactory
     private final SageConfig mConfig;
     private final String mSample;
     private final EvictingArray<RefContext> mRollingCandidates;
-    private final PanelSelector<BaseRegion> mPanelSelector;
+    private final PanelSelector mPanelSelector;
     private final List<AltContext> mSavedCandidates = Lists.newArrayList();
 
     public RefContextFactory(
@@ -30,8 +30,10 @@ public class RefContextFactory
     {
         mSample = sample;
         mConfig = config;
-        mPanelSelector = new PanelSelector<>(panel);
+        mPanelSelector = new PanelSelector(panel);
+
         final Predicate<AltContext> altContextPredicate = config.Filter.altContextFilter(new HotspotSelector(hotspots));
+
         final Consumer<RefContext> evictionHandler = (refContext) -> refContext.alts()
                 .stream()
                 .filter(AltContext::finaliseAndValidate)

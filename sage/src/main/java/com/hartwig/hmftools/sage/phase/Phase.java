@@ -25,11 +25,8 @@ public class Phase implements Consumer<SageVariant>
     private final PhasedInframeIndel mPhasedInframeIndel;
     private final RightAlignMicrohomology mRrightAlignMicrohomology;
 
-    public Phase(@NotNull final SageConfig config, @NotNull final String chromosome, @NotNull final Consumer<SageVariant> consumer)
+    public Phase(final List<HmfTranscriptRegion> transcripts, final Consumer<SageVariant> consumer)
     {
-        final List<HmfTranscriptRegion> transcripts =
-                config.TranscriptRegions.stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());
-
         mDedupRealign = new DedupRealign(consumer);
         mDedupIndel = new DedupIndel(mDedupRealign);
         mDedupMnv = new DedupMnv(mDedupIndel);
