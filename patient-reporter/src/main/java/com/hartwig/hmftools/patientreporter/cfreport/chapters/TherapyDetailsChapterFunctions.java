@@ -74,15 +74,15 @@ final class TherapyDetailsChapterFunctions {
         return new Paragraph().setKeepTogether(true)
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add("The Clinical Knowledgebase (CKB) is used to "
-                        + "annotate variants of all types with clinical evidence. Only treatment associated evidence with a high "
-                        + "level of evidence \n( ")
+                        + "annotate variants of all types with clinical evidence. Only treatment associated evidence with "
+                        + "evidence levels \n( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_A))
                 .add(" FDA approved therapy and/or guidelines; ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_B))
                 .add(" late clinical trials; ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_C))
-                .add(" early clinical trials) are reported here.")
-                .add(" Potential evidence items with a lower level of evidence \n( ")
+                .add(" early clinical trials) can be reported.")
+                .add(" Potential evidence items with evidence level \n( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_D))
                 .add(" case reports and preclinical evidence) are not reported.")
                 .addStyle(ReportResources.subTextStyle());
@@ -93,23 +93,22 @@ final class TherapyDetailsChapterFunctions {
         return new Paragraph().setKeepTogether(true)
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add("The Clinical Knowledgebase (CKB) is used to "
-                        + "annotate variants of all types with clinical evidence. Only treatment associated evidence with a high "
-                        + "level of evidence \n( ")
+                        + "annotate variants of all types with clinical evidence. Only treatment associated evidence with "
+                        + "evidence levels \n( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_A))
                 .add(" FDA approved therapy and/or guidelines; ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_B))
                 .add(" late clinical trials; ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_C))
-                .add(" early clinical trials) are reported here.")
-                .add(" Potential evidence items with a lower level of evidence \n( ")
+                .add(" early clinical trials) can be reported.")
+                .add(" Potential evidence items with evidence level \n( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_D))
                 .add(" case reports and preclinical evidence) are not reported.")
                 .add("\n")
                 .add("\n")
-                .add("The iClusion knowledgebase is used to annotate variants of all types with clinical evidence. Only"
-                        + " treatment associated evidence with a high level of evidence ( ")
-                .add(Icon.createIcon(Icon.IconType.LEVEL_B))
-                .add(" late/early clinical trials in NL) are reported here. ")
+                .add("The iClusion knowledgebase is used to annotate DNA aberrations for potential clinical study eligibility. Of note, "
+                        + "clinical study eligibility depends on multiple patient and tumor characteristics of which on the DNA "
+                        + "aberrations are considered in this report.")
                 .addStyle(ReportResources.subTextStyle());
     }
 }
