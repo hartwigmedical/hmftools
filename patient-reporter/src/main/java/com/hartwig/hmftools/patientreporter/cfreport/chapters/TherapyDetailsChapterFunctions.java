@@ -107,7 +107,7 @@ final class TherapyDetailsChapterFunctions {
                 .add("\n")
                 .add("\n")
                 .add("The iClusion knowledgebase is used to annotate DNA aberrations for potential clinical study eligibility. Of note, "
-                        + "clinical study eligibility depends on multiple patient and tumor characteristics of which on the DNA "
+                        + "clinical study eligibility depends on multiple patient and tumor characteristics of which only the DNA "
                         + "aberrations are considered in this report.")
                 .addStyle(ReportResources.subTextStyle());
     }
