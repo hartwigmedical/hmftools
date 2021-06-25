@@ -73,18 +73,18 @@ final class TherapyDetailsChapterFunctions {
     static Paragraph createChapterFootnote() {
         return new Paragraph().setKeepTogether(true)
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
-                .add("The Clinical Knowledgebase (CKB) are used to "
+                .add("The Clinical Knowledgebase (CKB) is used to "
                         + "annotate variants of all types with clinical evidence. Only treatment associated evidence with a high "
                         + "level of evidence ( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_A))
-                .add(" validated association; ")
+                .add(" FDA approved therapy and/or guidelines; ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_B))
-                .add(" strong clinical evidence; ")
+                .add(" late clinical trials; ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_C))
-                .add(" case study, limited clinical evidence) are reported here.")
+                .add(" early clinical trials) are reported here.")
                 .add(" Potential evidence items with a lower level of evidence ( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_D))
-                .add(" pre-clinical) are not reported.")
+                .add(" case reports and preclinical evidence) are not reported.")
                 .addStyle(ReportResources.subTextStyle());
     }
 }
