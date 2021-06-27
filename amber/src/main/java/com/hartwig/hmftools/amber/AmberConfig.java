@@ -201,16 +201,4 @@ public class AmberConfig
 
         return options;
     }
-
-    @NotNull
-    static String parameter(@NotNull final CommandLine cmd, @NotNull final String parameter, @NotNull final StringJoiner missing)
-    {
-        final String value = cmd.getOptionValue(parameter);
-        if(value == null)
-        {
-            missing.add(parameter);
-            return "";
-        }
-        return value;
-    }
 }

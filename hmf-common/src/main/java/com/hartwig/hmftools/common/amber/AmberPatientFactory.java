@@ -8,45 +8,47 @@ import com.google.common.collect.Maps;
 
 public class AmberPatientFactory
 {
-    private int nextPatientId;
-    private final Collection<AmberMapping> mappings;
-    private final Map<String, Integer> patientMap = Maps.newHashMap();
+    private int mNextPatientId;
+    private final Collection<AmberMapping> mMappings;
+    private final Map<String, Integer> mPatientMap;
 
     public AmberPatientFactory(final List<AmberPatient> currentPatients, final Collection<AmberMapping> mappings)
     {
-        this.mappings = mappings;
+        mPatientMap = Maps.newHashMap();
+
+        mMappings = mappings;
         for(AmberPatient patient : currentPatients)
         {
-            patientMap.put(patient.sample(), patient.patientId());
+            mPatientMap.put(patient.sample(), patient.patientId());
         }
 
-        nextPatientId = currentPatients.stream().mapToInt(AmberPatient::patientId).max().orElse(0) + 1;
+        mNextPatientId = currentPatients.stream().mapToInt(AmberPatient::patientId).max().orElse(0) + 1;
     }
 
     public AmberPatient createPatient(AmberSample sample)
     {
         final String sampleId = sample.sampleId();
-        if(patientMap.containsKey(sampleId))
+        if(mPatientMap.containsKey(sampleId))
         {
-            return create(sampleId, patientMap.get(sampleId));
+            return create(sampleId, mPatientMap.get(sampleId));
         }
 
-        for(AmberMapping mapping : mappings)
+        for(AmberMapping mapping : mMappings)
         {
-            if(mapping.firstSample().equals(sampleId) && patientMap.containsKey(mapping.secondSample()))
+            if(mapping.firstSample().equals(sampleId) && mPatientMap.containsKey(mapping.secondSample()))
             {
-                return create(sampleId, patientMap.get(mapping.secondSample()));
+                return create(sampleId, mPatientMap.get(mapping.secondSample()));
             }
 
-            if(mapping.secondSample().equals(sampleId) && patientMap.containsKey(mapping.firstSample()))
+            if(mapping.secondSample().equals(sampleId) && mPatientMap.containsKey(mapping.firstSample()))
             {
-                return create(sampleId, patientMap.get(mapping.firstSample()));
+                return create(sampleId, mPatientMap.get(mapping.firstSample()));
             }
         }
 
-        patientMap.put(sampleId, nextPatientId);
-        AmberPatient result = create(sampleId, nextPatientId);
-        nextPatientId++;
+        mPatientMap.put(sampleId, mNextPatientId);
+        AmberPatient result = create(sampleId, mNextPatientId);
+        mNextPatientId++;
         return result;
     }
 

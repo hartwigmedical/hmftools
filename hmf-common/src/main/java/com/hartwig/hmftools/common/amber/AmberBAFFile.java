@@ -20,17 +20,12 @@ import org.jetbrains.annotations.NotNull;
 
 public final class AmberBAFFile
 {
-
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final Logger LOGGER = LogManager.getLogger(AmberBAFFile.class);
 
     private static final String DELIMITER = "\t";
     private static final String AMBER_EXTENSION = ".amber.baf.tsv";
     private static final String AMBER_EXTENSION_OLD = ".amber.baf";
-
-    private AmberBAFFile()
-    {
-    }
 
     @NotNull
     public static String generateAmberFilenameForWriting(@NotNull final String basePath, @NotNull final String sample)

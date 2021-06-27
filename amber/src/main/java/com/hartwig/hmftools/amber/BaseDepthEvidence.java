@@ -32,10 +32,11 @@ public class BaseDepthEvidence implements Callable<BaseDepthEvidence>
     private final List<ModifiableBaseDepth> mEvidenceMap;
     private final GenomePositionSelector<ModifiableBaseDepth> mSelector;
     private final BaseDepthFactory mBafFactory;
-    private final BamSlicer mSamSlicer;
+    private final BamSlicer mBamSlicer;
     private final List<GenomeRegion> mBafRegions;
 
-    public BaseDepthEvidence(int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
+    public BaseDepthEvidence(
+            int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
             final SamReaderFactory samReaderFactory, final List<AmberSite> bafRegions)
     {
         mBafFactory = new BaseDepthFactory(minBaseQuality);
@@ -49,7 +50,7 @@ public class BaseDepthEvidence implements Callable<BaseDepthEvidence>
 
         mEvidenceMap = bafRegions.stream().map(BaseDepthFactory::fromAmberSite).collect(Collectors.toList());
         mSelector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(mEvidenceMap));
-        mSamSlicer = new BamSlicer(minMappingQuality);
+        mBamSlicer = new BamSlicer(minMappingQuality);
     }
 
     @NotNull
@@ -69,7 +70,7 @@ public class BaseDepthEvidence implements Callable<BaseDepthEvidence>
     {
         try(SamReader reader = mSamReaderFactory.open(new File(mBamFile)))
         {
-            mSamSlicer.sliceNoDups(reader, mBafRegions, this::record);
+            mBamSlicer.sliceNoDups(reader, mBafRegions, this::record);
         }
 
         return this;

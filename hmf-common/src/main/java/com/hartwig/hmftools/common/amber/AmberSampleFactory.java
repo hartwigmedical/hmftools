@@ -6,13 +6,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class AmberSampleFactory
 {
-    private final int minReadDepth;
-    private final NormalHeterozygousFilter heterozygousFilter;
+    private final int mMminReadDepth;
+    private final NormalHeterozygousFilter mHeterozygousFilter;
 
     public AmberSampleFactory(final int minReadDepth, final double minHetAFPercentage, final double maxHetAFPercentage)
     {
-        this.minReadDepth = minReadDepth;
-        this.heterozygousFilter = new NormalHeterozygousFilter(minHetAFPercentage, maxHetAFPercentage);
+        mMminReadDepth = minReadDepth;
+        mHeterozygousFilter = new NormalHeterozygousFilter(minHetAFPercentage, maxHetAFPercentage);
     }
 
     public AmberSample fromBaseDepth(@NotNull final String sample, @NotNull final List<BaseDepth> baseDepths)
@@ -28,7 +28,7 @@ public class AmberSampleFactory
 
     public byte asByte(BaseDepth depth)
     {
-        if(!depth.isValid() || depth.readDepth() < minReadDepth)
+        if(!depth.isValid() || depth.readDepth() < mMminReadDepth)
         {
             return AmberSample.DO_NOT_MATCH;
         }
@@ -38,7 +38,7 @@ public class AmberSampleFactory
             return (byte) 1;
         }
 
-        if(heterozygousFilter.test(depth))
+        if(mHeterozygousFilter.test(depth))
         {
             return (byte) 2;
         }
