@@ -16,16 +16,13 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.cram.ref.ReferenceSource;
-
 public class TeloApplication
 {
     private final TeloConfig mConfig;
 
     public TeloApplication(final Options options, final String... args) throws ParseException, IOException
     {
-        VersionInfo versionInfo = new VersionInfo("cobalt.version");
+        VersionInfo versionInfo = new VersionInfo("telo.version");
         TE_LOGGER.info("Telo version: {}", versionInfo.version());
 
         final CommandLine cmd = createCommandLine(args, options);

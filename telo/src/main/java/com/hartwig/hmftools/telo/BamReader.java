@@ -128,6 +128,7 @@ public class BamReader
                     record.getMateReferenceName(), record.getMateAlignmentStart(), hasTeloContent));
 
             String suppAlignmentData = record.hasAttribute("SA") ? record.getStringAttribute("SA") : "";
+            suppAlignmentData = suppAlignmentData.replace(",",";");
 
             mReadWriter.write(String.format(",%s,%d,%s,%s,%s,%d",
                     record.getCigarString(), record.getInferredInsertSize(), record.getFirstOfPairFlag(),
