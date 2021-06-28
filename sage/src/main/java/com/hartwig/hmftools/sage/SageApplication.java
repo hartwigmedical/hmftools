@@ -53,7 +53,6 @@ public class SageApplication implements AutoCloseable
     private final ReferenceData mRefData;
 
     private final ExecutorService mExecutorService;
-    private final IndexedFastaSequenceFile mRefGenome;
 
     private final VariantVCF mVcfFile;
     private final VariantFile mVariantFile;
@@ -81,9 +80,8 @@ public class SageApplication implements AutoCloseable
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
         mExecutorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
-        mRefGenome = new IndexedFastaSequenceFile(new File(mConfig.RefGenomeFile));
 
-        mVcfFile = new VariantVCF(mRefGenome, mConfig);
+        mVcfFile = new VariantVCF(mRefData.RefGenome, mConfig);
 
         if(mConfig.WriteCsv && !mConfig.TumorIds.isEmpty())
         {
@@ -102,7 +100,7 @@ public class SageApplication implements AutoCloseable
         long startTime = System.currentTimeMillis();
         final Coverage coverage = createCoverage();
 
-        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(mConfig, mExecutorService, mRefGenome);
+        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(mConfig, mExecutorService, mRefData.RefGenome);
         baseQualityRecalibration.produceRecalibrationMap();
         final Map<String,QualityRecalibrationMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
 
@@ -141,7 +139,7 @@ public class SageApplication implements AutoCloseable
 
         SamReader tumorReader = SamReaderFactory.makeDefault()
                 .validationStringency(mConfig.Stringency)
-                .referenceSource(new ReferenceSource(mRefGenome))
+                .referenceSource(new ReferenceSource(mRefData.RefGenome))
                 .open(new File(bam));
 
         SAMSequenceDictionary dictionary = tumorReader.getFileHeader().getSequenceDictionary();
@@ -155,12 +153,8 @@ public class SageApplication implements AutoCloseable
             final String contig, @NotNull final Coverage coverage,
             Map<String, QualityRecalibrationMap> qualityRecalibrationMap) throws IOException
     {
-        final Chromosome chromosome =
-                HumanChromosome.contains(contig) ? HumanChromosome.fromString(contig) : MitochondrialChromosome.fromString(contig);
-
         return new ChromosomePipeline(
-                contig, mConfig, mExecutorService, mRefData.Hotspots.get(chromosome), mRefData.PanelWithHotspots.get(chromosome),
-                mRefData.HighConfidence.get(chromosome), qualityRecalibrationMap, coverage, this::writeVariant);
+                contig, mConfig, mExecutorService, mRefData, qualityRecalibrationMap, coverage, this::writeVariant);
     }
 
     public void writeVariant(final SageVariant variant)
@@ -192,7 +186,7 @@ public class SageApplication implements AutoCloseable
         if(mVariantFile != null)
             mVariantFile.close();
 
-        mRefGenome.close();
+        mRefData.RefGenome.close();
         mExecutorService.shutdown();
     }
 

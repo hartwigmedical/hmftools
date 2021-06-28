@@ -22,29 +22,27 @@ import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.gc.GCMedianReadCountFile;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.bed.BEDFeature;
 
 public class RatioSupplier
 {
-    private final String tumor;
-    private final String reference;
-    private final String outputDirectory;
+    private final String mTumorId;
+    private final String mReferenceId;
+    private final String mOutputDir;
 
     public RatioSupplier(final String reference, final String tumor, final String outputDirectory)
     {
-        this.tumor = tumor;
-        this.reference = reference;
-        this.outputDirectory = outputDirectory;
+        mTumorId = tumor;
+        mReferenceId = reference;
+        mOutputDir = outputDirectory;
     }
 
     @NotNull
-    public Multimap<Chromosome, CobaltRatio> tumorOnly(final List<BEDFeature> bedFile,
-            @NotNull final Multimap<Chromosome, GCProfile> gcProfiles, @NotNull final Multimap<Chromosome, CobaltCount> readCounts)
-            throws IOException
+    public Multimap<Chromosome, CobaltRatio> tumorOnly(
+            final List<BEDFeature> bedFile, final Multimap<Chromosome, GCProfile> gcProfiles,
+            final Multimap<Chromosome, CobaltCount> readCounts) throws IOException
     {
         CB_LOGGER.info("Applying ratio gc normalization");
         final GCRatioSupplier gcRatioSupplier = new GCRatioSupplier(gcProfiles, readCounts);
@@ -52,16 +50,17 @@ public class RatioSupplier
 
         final ListMultimap<Chromosome, ReadRatio> diploidRatio = new DiploidRatioBuilder(bedFile).build();
 
-        CB_LOGGER.info("Persisting gc read count to {}", outputDirectory);
-        final String tumorGCMedianFilename = GCMedianReadCountFile.generateFilename(outputDirectory, tumor);
+        CB_LOGGER.info("Persisting gc read count to {}", mOutputDir);
+        final String tumorGCMedianFilename = GCMedianReadCountFile.generateFilename(mOutputDir, mTumorId);
         GCMedianReadCountFile.write(tumorGCMedianFilename, gcRatioSupplier.tumorGCMedianReadCount());
 
         return CobaltRatioFactory.merge(readCounts, diploidRatio, tumorGCRatio, diploidRatio);
     }
 
     @NotNull
-    public Multimap<Chromosome, CobaltRatio> tumorNormalPair(@NotNull final Multimap<Chromosome, GCProfile> gcProfiles,
-            @NotNull final Multimap<Chromosome, CobaltCount> readCounts) throws IOException
+    public Multimap<Chromosome, CobaltRatio> tumorNormalPair(
+            final Multimap<Chromosome, GCProfile> gcProfiles,
+            final Multimap<Chromosome, CobaltCount> readCounts) throws IOException
     {
         CB_LOGGER.info("Applying ratio gc normalization");
         final GCRatioSupplier gcRatioSupplier = new GCRatioSupplier(gcProfiles, readCounts);
@@ -81,10 +80,10 @@ public class RatioSupplier
         CB_LOGGER.info("Applying ratio diploid normalization");
         final ListMultimap<Chromosome, ReadRatio> referenceGCDiploidRatio = calcDiploidRatioResults(chromosomes, referenceGCRatio);
 
-        CB_LOGGER.info("Persisting gc read count and reference ratio medians to {}", outputDirectory);
-        final String tumorGCMedianFilename = GCMedianReadCountFile.generateFilename(outputDirectory, tumor);
-        final String referenceGCMedianFilename = GCMedianReadCountFile.generateFilename(outputDirectory, reference);
-        final String ratioMedianFilename = MedianRatioFile.generateFilename(outputDirectory, reference);
+        CB_LOGGER.info("Persisting gc read count and reference ratio medians to {}", mOutputDir);
+        final String tumorGCMedianFilename = GCMedianReadCountFile.generateFilename(mOutputDir, mTumorId);
+        final String referenceGCMedianFilename = GCMedianReadCountFile.generateFilename(mOutputDir, mReferenceId);
+        final String ratioMedianFilename = MedianRatioFile.generateFilename(mOutputDir, mReferenceId);
         GCMedianReadCountFile.write(tumorGCMedianFilename, gcRatioSupplier.tumorGCMedianReadCount());
         GCMedianReadCountFile.write(referenceGCMedianFilename, gcRatioSupplier.referenceGCMedianReadCount());
         MedianRatioFile.write(ratioMedianFilename, medianRatios);

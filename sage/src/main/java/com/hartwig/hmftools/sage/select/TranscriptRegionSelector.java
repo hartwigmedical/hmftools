@@ -6,29 +6,30 @@ import java.util.Optional;
 import javax.annotation.concurrent.NotThreadSafe;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 
 import org.jetbrains.annotations.NotNull;
 
 @NotThreadSafe
-public class RegionSelector<R extends GenomeRegion>
+public class TranscriptRegionSelector
 {
-    private final List<R> mRegions;
+    private final List<HmfTranscriptRegion> mRegions;
     private int mIndex = 0;
 
-    public RegionSelector(final List<R> regions)
+    public TranscriptRegionSelector(final List<HmfTranscriptRegion> regions)
     {
-        this.mRegions = regions;
+        mRegions = regions;
     }
 
     @NotNull
-    public Optional<R> select(long position)
+    public Optional<HmfTranscriptRegion> select(long position)
     {
         if(mRegions.isEmpty())
         {
             return Optional.empty();
         }
 
-        R current = current();
+        HmfTranscriptRegion current = current();
         while(mIndex > 0 && current.start() > position)
         {
             mIndex--;
@@ -49,8 +50,7 @@ public class RegionSelector<R extends GenomeRegion>
         return Optional.empty();
     }
 
-    @NotNull
-    private R current()
+    private HmfTranscriptRegion current()
     {
         return mRegions.get(mIndex);
     }

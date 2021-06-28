@@ -51,7 +51,7 @@ public class PatientReporterApplication {
         } catch (ParseException exception) {
             LOGGER.warn(exception);
             new HelpFormatter().printHelp("PatientReporter", options);
-            System.exit(1);
+            throw new IllegalArgumentException("Unexpected error, check inputs");
         }
 
         new PatientReporterApplication(config).run();

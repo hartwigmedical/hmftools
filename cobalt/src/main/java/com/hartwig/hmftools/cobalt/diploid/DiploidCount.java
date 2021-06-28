@@ -22,7 +22,7 @@ class DiploidCount implements Comparable<DiploidCount>
     private int mDiploid;
     private int mCount;
 
-    private DiploidCount(@NotNull String line)
+    private DiploidCount(final String line)
     {
         final String[] values = line.split(DELIMITER);
         Position = GenomePositions.create(values[0], Long.parseLong(values[1]));
@@ -67,7 +67,6 @@ class DiploidCount implements Comparable<DiploidCount>
         return 1d * getDiploid() / count;
     }
 
-    @NotNull
     public String toString()
     {
         return new StringJoiner(DELIMITER).add(Position.chromosome())
@@ -83,7 +82,6 @@ class DiploidCount implements Comparable<DiploidCount>
         return Position.compareTo(o.Position);
     }
 
-    @NotNull
     public static Map<GenomePosition, DiploidCount> readDiploidCountAsMap(final String inputFile) throws IOException
     {
         return Files.readAllLines(new File(inputFile).toPath())
@@ -92,7 +90,6 @@ class DiploidCount implements Comparable<DiploidCount>
                 .collect(Collectors.toMap(x -> x.Position, x -> x));
     }
 
-    @NotNull
     public static List<DiploidCount> readDiploidCountAsList(final String inputFile) throws IOException
     {
         return Files.readAllLines(new File(inputFile).toPath()).stream().map(DiploidCount::new).collect(Collectors.toList());

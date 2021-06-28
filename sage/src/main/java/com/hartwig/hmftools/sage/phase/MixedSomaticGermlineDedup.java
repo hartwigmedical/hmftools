@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.select.RegionSelector;
+import com.hartwig.hmftools.sage.select.TranscriptRegionSelector;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
@@ -18,12 +18,12 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
 {
     private static final int MAX_DISTANCE = 10;
     
-    private final RegionSelector<HmfTranscriptRegion> mSelector;
+    private final TranscriptRegionSelector mSelector;
 
     public MixedSomaticGermlineDedup(final Consumer<SageVariant> consumer, final List<HmfTranscriptRegion> transcripts)
     {
         super(MAX_DISTANCE, consumer);
-        mSelector = new RegionSelector<>(transcripts);
+        mSelector = new TranscriptRegionSelector(transcripts);
     }
 
     @Override

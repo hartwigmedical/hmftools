@@ -14,11 +14,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.phase.Phase;
@@ -46,20 +51,28 @@ public class ChromosomePipeline implements AutoCloseable
 
     public ChromosomePipeline(
             final String chromosome, final SageConfig config, final Executor executor,
-            final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions,
-            final List<BaseRegion> highConfidenceRegions, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
-            final Coverage coverage, final Consumer<SageVariant> consumer) throws IOException
+            final ReferenceData refData, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
+            final Coverage coverage, final Consumer<SageVariant> consumer)
     {
         mChromosome = chromosome;
         mConfig = config;
-        mRefGenome = new IndexedFastaSequenceFile(new File(config.RefGenomeFile));
+        mRefGenome = refData.RefGenome;
         mConsumer = consumer;
 
+        final Chromosome chr = HumanChromosome.contains(chromosome)
+                ? HumanChromosome.fromString(chromosome) : MitochondrialChromosome.fromString(chromosome);
+
         mSomaticPipeline = new SomaticPipeline(
-                config, executor, mRefGenome, hotspots, panelRegions, highConfidenceRegions, qualityRecalibrationMap, coverage);
+                config, executor, mRefGenome,
+                refData.Hotspots.get(chr), refData.PanelWithHotspots.get(chr),
+                refData.HighConfidence.get(chr), qualityRecalibrationMap, coverage);
 
         mPartition = new ChromosomePartition(config, mRefGenome);
-        mPhase = new Phase(config, chromosome, this::write);
+
+        final List<HmfTranscriptRegion> transcripts =
+                refData.TranscriptRegions.stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());
+
+        mPhase = new Phase(transcripts, this::write);
     }
 
     public String chromosome()

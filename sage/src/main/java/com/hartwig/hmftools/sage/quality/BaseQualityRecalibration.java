@@ -225,7 +225,5 @@ public class BaseQualityRecalibration
         {
             SG_LOGGER.error(" sample({}) failed to write base recalibration: {}", sampleId, e.toString());
         }
-
     }
-
 }

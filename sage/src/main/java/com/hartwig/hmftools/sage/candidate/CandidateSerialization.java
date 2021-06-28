@@ -121,10 +121,10 @@ public final class CandidateSerialization
             builder.attribute(READ_CONTEXT_MICRO_HOMOLOGY, readContext.microhomology());
         }
 
-        if(readContext.repeatCount() > 0)
+        if(readContext.RepeatCount > 0)
         {
-            builder.attribute(READ_CONTEXT_REPEAT_COUNT, readContext.repeatCount())
-                    .attribute(READ_CONTEXT_REPEAT_SEQUENCE, readContext.repeat());
+            builder.attribute(READ_CONTEXT_REPEAT_COUNT, readContext.RepeatCount)
+                    .attribute(READ_CONTEXT_REPEAT_SEQUENCE, readContext.Repeat);
         }
 
         return builder;

@@ -18,10 +18,6 @@ import htsjdk.variant.vcf.VCFCodec;
 
 public final class AmberSiteFactory
 {
-    private AmberSiteFactory()
-    {
-    }
-
     @NotNull
     public static AmberSite tumorSite(@NotNull final TumorBAF baseDepth)
     {

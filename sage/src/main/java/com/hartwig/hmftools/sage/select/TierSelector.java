@@ -13,14 +13,14 @@ import org.jetbrains.annotations.NotNull;
 @NotThreadSafe
 public class TierSelector extends HotspotSelector
 {
-    private final PanelSelector<BaseRegion> mPanelRegionSelector;
-    private final PanelSelector<BaseRegion> mHighConfidenceRegionSelector;
+    private final PanelSelector mPanelRegionSelector;
+    private final PanelSelector mHighConfidenceRegionSelector;
 
     public TierSelector(final List<VariantHotspot> hotspots, final List<BaseRegion> panel, final List<BaseRegion> highConfidence)
     {
         super(hotspots);
-        mPanelRegionSelector = new PanelSelector<>(panel);
-        mHighConfidenceRegionSelector = new PanelSelector<>(highConfidence);
+        mPanelRegionSelector = new PanelSelector(panel);
+        mHighConfidenceRegionSelector = new PanelSelector(highConfidence);
     }
 
     @NotNull

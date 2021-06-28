@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 
@@ -25,6 +26,8 @@ public class QualityConfig
     public final int MapQualityReadEventsPenalty;
     public final List<HmfTranscriptRegion> HighlyPolymorphicGenes;
     public final int MapQualityImproperPairPenalty;
+
+    private final Set<String> mHighlyPolymorphicGeneNames;
 
     private static final String JITTER_PENALTY = "jitter_penalty";
     private static final String JITTER_MIN_REPEAT_COUNT = "jitter_min_repeat_count";
@@ -45,14 +48,12 @@ public class QualityConfig
     private static final String DEFAULT_HIGHLY_POLYMORPHIC_GENES = "HLA-A,HLA-B,HLA-C,HLA-DQA1,HLA-DQB1,HLA-DRB1";
     private static final int MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY = 10;
 
-    public QualityConfig(final CommandLine cmd, final List<HmfTranscriptRegion> allTranscripts)
+    public QualityConfig(final CommandLine cmd)
     {
-        final Set<String> highlyPolymorphicGeneNames =
-                Arrays.stream(cmd.getOptionValue(HIGHLY_POLYMORPHIC_GENES, DEFAULT_HIGHLY_POLYMORPHIC_GENES).split(","))
-                        .collect(Collectors.toSet());
+        mHighlyPolymorphicGeneNames = Arrays.stream(cmd.getOptionValue(HIGHLY_POLYMORPHIC_GENES, DEFAULT_HIGHLY_POLYMORPHIC_GENES)
+                .split(",")).collect(Collectors.toSet());
 
-        HighlyPolymorphicGenes = allTranscripts.stream()
-                .filter(x -> highlyPolymorphicGeneNames.contains(x.gene())).collect(Collectors.toList());
+        HighlyPolymorphicGenes = Lists.newArrayList();
 
         JitterPenalty = getConfigValue(cmd, JITTER_PENALTY, DEFAULT_JITTER_PENALTY);
         JitterMinRepeatCount = getConfigValue(cmd, JITTER_MIN_REPEAT_COUNT, DEFAULT_JITTER_MIN_REPEAT_COUNT);
@@ -61,6 +62,12 @@ public class QualityConfig
         MapQualityFixedPenalty = getConfigValue(cmd, MAP_QUAL_FIXED_PENALTY, DEFAULT_MAP_QUAL_FIXED_PENALTY);
         MapQualityReadEventsPenalty = getConfigValue(cmd, MAP_QUAL_READ_EVENTS_PENALTY, DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY);
         MapQualityImproperPairPenalty = getConfigValue(cmd, MAP_QUAL_IMPROPER_PAIR_PENALTY, DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY);
+    }
+
+    public void populateGeneData(final List<HmfTranscriptRegion> allTranscripts)
+    {
+        HighlyPolymorphicGenes.addAll(allTranscripts.stream()
+                .filter(x -> mHighlyPolymorphicGeneNames.contains(x.gene())).collect(Collectors.toList()));
     }
 
     public QualityConfig()
@@ -72,6 +79,7 @@ public class QualityConfig
         MapQualityFixedPenalty = DEFAULT_MAP_QUAL_FIXED_PENALTY;
         MapQualityReadEventsPenalty = DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY;
         HighlyPolymorphicGenes = Lists.newArrayList();
+        mHighlyPolymorphicGeneNames = Sets.newHashSet();
         MapQualityImproperPairPenalty = DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
     }
 

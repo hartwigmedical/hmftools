@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.config;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_LEVEL;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.containsFlag;
@@ -26,7 +27,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationConfig;
 
 import org.apache.commons.cli.CommandLine;
@@ -46,6 +46,7 @@ public class SageConfig
     public final String SampleDataDir;
     public final String ResourceDir;
 
+    public final boolean AppendMode;
     public final String PanelBed;
     public final boolean PanelOnly;
     public final boolean MnvEnabled;
@@ -62,6 +63,7 @@ public class SageConfig
     public final int ReadContextFlankSize;
 
     public final String RefGenomeFile;
+    public final RefGenomeVersion RefGenVersion;
     public final String HighConfidenceBed;
     public final String CoverageBed;
     public final String InputFile;
@@ -71,11 +73,7 @@ public class SageConfig
     public final String Version;
     public final int Threads;
 
-    public final List<HmfTranscriptRegion> TranscriptRegions;
-
     public final ValidationStringency Stringency;
-
-    private final boolean mAppendMode;
 
     public int typicalReadLength()
     {
@@ -115,9 +113,9 @@ public class SageConfig
     {
         Version = version;
         
-        mAppendMode = appendMode;
+        AppendMode = appendMode;
 
-        RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
+        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
 
         ReferenceIds = Lists.newArrayList();
         if(cmd.hasOption(REFERENCE))
@@ -156,13 +154,6 @@ public class SageConfig
             Chromosomes.addAll(Lists.newArrayList(chromosomeList.split(",")));
         }
 
-        TranscriptRegions = Lists.newArrayList();
-
-        if(!appendMode)
-        {
-            TranscriptRegions.addAll(refGenomeVersion.is37() ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38());
-        }
-
         OutputFile = SampleDataDir + cmd.getOptionValue(OUTPUT_VCF);
         WriteCsv = cmd.hasOption(WRITE_CSV);
 
@@ -184,7 +175,7 @@ public class SageConfig
         MaxRealignmentDepth = getConfigValue(cmd, MAX_REALIGNMENT_DEPTH, DEFAULT_MAX_REALIGNMENT_DEPTH);
 
         Filter = new FilterConfig(cmd);
-        Quality = new QualityConfig(cmd, TranscriptRegions);
+        Quality = new QualityConfig(cmd);
         QualityRecalibration = new QualityRecalibrationConfig(cmd);
 
         PanelOnly = containsFlag(cmd, PANEL_ONLY);
@@ -254,7 +245,7 @@ public class SageConfig
             return false;
         }
 
-        if(mAppendMode)
+        if(AppendMode)
         {
             if(InputFile.isEmpty())
             {
@@ -384,8 +375,8 @@ public class SageConfig
         WriteCsv = false;
         Version = "1.0";
         Threads = DEFAULT_THREADS;
-        TranscriptRegions = HmfGenePanelSupplier.allGeneList37();
+        RefGenVersion = V37;
         Stringency = ValidationStringency.DEFAULT_STRINGENCY;
-        mAppendMode = false;
+        AppendMode = false;
     }
 }

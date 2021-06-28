@@ -35,7 +35,8 @@ public class CountSupplier
     private final ExecutorService mExecutorService;
     private final SamReaderFactory mReaderFactory;
 
-    public CountSupplier(final String tumorId, final String outputDir, final int windowSize, final int minMappingQuality,
+    public CountSupplier(
+            final String tumorId, final String outputDir, final int windowSize, final int minMappingQuality,
             final ExecutorService executorService, final SamReaderFactory readerFactory)
     {
         mTumorId = tumorId;
@@ -46,9 +47,8 @@ public class CountSupplier
         mReaderFactory = readerFactory;
     }
 
-    @NotNull
     public Multimap<Chromosome, CobaltCount> pairedTumorNormal(
-            @NotNull final String referenceBam, @NotNull final String tumorBam) 
+            final String referenceBam, final String tumorBam)
             throws IOException, ExecutionException, InterruptedException
     {
         final File tumorFile = new File(tumorBam);
@@ -75,8 +75,7 @@ public class CountSupplier
         return CobaltCountFactory.pairedTumorNormal(referenceCounts, tumorCounts);
     }
 
-    @NotNull
-    public Multimap<Chromosome, CobaltCount> tumorOnly(@NotNull final String tumorBam)
+    public Multimap<Chromosome, CobaltCount> tumorOnly(final String tumorBam)
             throws IOException, ExecutionException, InterruptedException
     {
         final File tumorFile = new File(tumorBam);
@@ -104,12 +103,9 @@ public class CountSupplier
         final List<Future<ChromosomeReadCount>> futures = Lists.newArrayList();
         for(ChromosomeLength chromosome : lengths)
         {
-            final ChromosomeReadCount callable = new ChromosomeReadCount(file,
-                    readerFactory,
-                    chromosome.chromosome(),
-                    chromosome.length(),
-                    mWindowSize,
-                    mMinMappingQuality);
+            final ChromosomeReadCount callable = new ChromosomeReadCount(
+                    file, readerFactory, chromosome.chromosome(), chromosome.length(), mWindowSize, mMinMappingQuality);
+
             futures.add(mExecutorService.submit(callable));
         }
 

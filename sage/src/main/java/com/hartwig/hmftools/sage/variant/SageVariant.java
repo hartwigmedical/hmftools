@@ -164,7 +164,7 @@ public class SageVariant
     @NotNull
     public ReadContext readContext()
     {
-        return mTumorAltContexts.get(0).readContext();
+        return mTumorAltContexts.get(0).ReadContext;
     }
 
     @NotNull

@@ -28,7 +28,8 @@ public class ReadContextFactory
     }
 
     @NotNull
-    public ReadContext createDelContext(@NotNull final String ref, int refPosition, int readIndex, @NotNull final SAMRecord record,
+    public ReadContext createDelContext(
+            @NotNull final String ref, int refPosition, int readIndex, @NotNull final SAMRecord record,
             final IndexedBases refBases)
     {
         int refIndex = refBases.index(refPosition);
@@ -72,7 +73,8 @@ public class ReadContextFactory
     }
 
     @NotNull
-    public ReadContext createInsertContext(@NotNull final String alt, int refPosition, int readIndex,
+    public ReadContext createInsertContext(
+            @NotNull final String alt, int refPosition, int readIndex,
             @NotNull final SAMRecord record, final IndexedBases refBases)
     {
         int refIndex = refBases.index(refPosition);
@@ -122,8 +124,8 @@ public class ReadContextFactory
     }
 
     @NotNull
-    public ReadContext createMNVContext(int refPosition, int readIndex, int length, @NotNull final SAMRecord record,
-            final IndexedBases refBases)
+    public ReadContext createMNVContext(
+            int refPosition, int readIndex, int length, @NotNull final SAMRecord record, final IndexedBases refBases)
     {
         int refIndex = refBases.index(refPosition);
         int startIndex = readIndex - MIN_CORE_DISTANCE;

@@ -33,8 +33,9 @@ public class ReadContextEvidence
     private final ReferenceSequenceFile mRefGenome;
     private final ReadContextCounterFactory mFactory;
 
-    public ReadContextEvidence(final SageConfig config, final ReferenceSequenceFile refGenome,
-            final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
+    public ReadContextEvidence(
+            final SageConfig config, final ReferenceSequenceFile refGenome,
+            final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
     {
         mSageConfig = config;
         mRefGenome = refGenome;
@@ -56,6 +57,7 @@ public class ReadContextEvidence
         final BaseRegion bounds = new BaseRegion(firstCandidate.chromosome(),
                 Math.max((int)firstCandidate.position() - mTypicalReadLength, 1),
                 (int)lastCandidate.position() + mTypicalReadLength);
+
         final SamSlicer slicer = new SamSlicer(0, bounds);
 
         final SamRecordSelector<ReadContextCounter> consumerSelector = new SamRecordSelector<>(counters);

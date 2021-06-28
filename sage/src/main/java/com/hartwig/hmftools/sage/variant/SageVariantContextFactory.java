@@ -106,7 +106,7 @@ public final class SageVariantContextFactory
     @NotNull
     private static Genotype createGenotype(@NotNull final ReadContextCounter counter)
     {
-        return new GenotypeBuilder(counter.sample()).DP(counter.depth())
+        return new GenotypeBuilder(counter.Sample).DP(counter.depth())
                 .AD(new int[] { counter.refSupport(), counter.altSupport() })
                 .attribute(READ_CONTEXT_QUALITY, counter.quality())
                 .attribute(READ_CONTEXT_COUNT, counter.counts())

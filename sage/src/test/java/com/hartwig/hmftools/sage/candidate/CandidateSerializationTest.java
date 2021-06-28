@@ -76,8 +76,8 @@ public class CandidateSerializationTest
         assertEquals(expected.chromosome(), victim.chromosome());
         assertEquals(expected.maxReadDepth(), victim.maxReadDepth());
         assertEquals(expected.minNumberOfEvents(), victim.minNumberOfEvents());
-        assertEquals(expected.readContext().repeat(), victim.readContext().repeat());
-        assertEquals(expected.readContext().repeatCount(), victim.readContext().repeatCount());
+        assertEquals(expected.readContext().Repeat, victim.readContext().Repeat);
+        assertEquals(expected.readContext().RepeatCount, victim.readContext().RepeatCount);
         assertEquals(expected.readContext().microhomology(), victim.readContext().microhomology());
         assertEquals(expected.readContext().leftFlankString(), victim.readContext().leftFlankString());
         assertEquals(expected.readContext().centerBases(), victim.readContext().centerBases());

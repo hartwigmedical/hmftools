@@ -14,11 +14,10 @@ import org.junit.Test;
 
 public class PanelSelectorTest
 {
-
     private final List<BaseRegion> panel =
             Lists.newArrayList(region(995, 995), region(998, 1102), region(1995, 1995), region(1998, 2102));
 
-    private final PanelSelector<BaseRegion> victim = new PanelSelector<>(panel);
+    private final PanelSelector victim = new PanelSelector(panel);
 
     @Test
     public void testOverlap()

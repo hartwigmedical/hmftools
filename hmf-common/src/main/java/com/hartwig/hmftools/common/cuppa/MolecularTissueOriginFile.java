@@ -17,7 +17,7 @@ public final class MolecularTissueOriginFile {
 
     private static final Logger LOGGER = LogManager.getLogger(MolecularTissueOriginFile.class);
 
-    public MolecularTissueOriginFile(){
+    public MolecularTissueOriginFile() {
     }
 
     @NotNull
@@ -44,18 +44,22 @@ public final class MolecularTissueOriginFile {
     public static MolecularTissueOrginData extractPedictionDataOrigin(@NotNull String cuppaResult) {
         String orgin = Strings.EMPTY;
         String prediction = null;
-        String [] lengthCuppaResult = cuppaResult.split("\\(");
+        String[] lengthCuppaResult = cuppaResult.split("\\(");
 
-        if (lengthCuppaResult.length ==2) {
-            orgin =  cuppaResult.split(" \\(")[0];
+        if (lengthCuppaResult.length == 2) {
+            orgin = cuppaResult.split(" \\(")[0];
             prediction = cuppaResult.split("\\(")[1];
-            prediction = prediction.substring(0, prediction.length()-1);
-        } else if (lengthCuppaResult.length == 1){
-            orgin =  cuppaResult.split("\\(")[0];
+            prediction = prediction.substring(0, prediction.length() - 1);
+        } else if (lengthCuppaResult.length == 1) {
+            orgin = cuppaResult.split("\\(")[0];
         } else {
             LOGGER.warn("Cuppa result is Empty");
         }
 
-        return ImmutableMolecularTissueOrginData.builder().conclusion(cuppaResult).predictedOrigin(orgin).predictionLikelihood(prediction).build();
+        return ImmutableMolecularTissueOrginData.builder()
+                .conclusion(cuppaResult)
+                .predictedOrigin(orgin)
+                .predictionLikelihood(prediction)
+                .build();
     }
 }

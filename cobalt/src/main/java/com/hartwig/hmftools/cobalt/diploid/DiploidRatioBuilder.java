@@ -20,14 +20,16 @@ import htsjdk.tribble.bed.BEDFeature;
 
 public class DiploidRatioBuilder implements Consumer<Locatable>
 {
-    private final ListMultimap<Chromosome, ReadRatio> result = ArrayListMultimap.create();
-    private final List<ReadRatio> contigResult = Lists.newArrayList();
+    private final ListMultimap<Chromosome, ReadRatio> mResult;
+    private final List<ReadRatio> mContigResult;
 
     private String mChromosome;
     private int mStart;
 
     public DiploidRatioBuilder()
     {
+        mResult = ArrayListMultimap.create();
+        mContigResult = Lists.newArrayList();
         mChromosome = "";
         mStart = 0;
     }
@@ -57,7 +59,7 @@ public class DiploidRatioBuilder implements Consumer<Locatable>
         int position = start;
         while(position < end)
         {
-            contigResult.add(create(contig, position));
+            mContigResult.add(create(contig, position));
             position += WINDOW_SIZE;
         }
     }
@@ -71,16 +73,16 @@ public class DiploidRatioBuilder implements Consumer<Locatable>
     {
         if(mStart > 0)
         {
-            result.putAll(HumanChromosome.fromString(mChromosome), contigResult);
+            mResult.putAll(HumanChromosome.fromString(mChromosome), mContigResult);
         }
 
-        contigResult.clear();
+        mContigResult.clear();
     }
 
     @NotNull
     public ListMultimap<Chromosome, ReadRatio> build()
     {
         finaliseCurrent();
-        return result;
+        return mResult;
     }
 }

@@ -153,7 +153,7 @@ public class FilterConfig
     {
         return readContextCounter ->
         {
-            if(readContextCounter.tier().equals(VariantTier.HOTSPOT))
+            if(readContextCounter.Tier.equals(VariantTier.HOTSPOT))
             {
                 return true;
             }
