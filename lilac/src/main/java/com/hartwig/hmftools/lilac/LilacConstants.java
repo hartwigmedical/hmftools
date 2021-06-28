@@ -18,7 +18,7 @@ public class LilacConstants
     public static final double DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR = 0.000375;
     public static final double DEFAULT_MIN_EVIDENCE_FACTOR = 0.00075;
 
-    public static final double BASE_QUAL_PERCENTILE = 0.5;
+    public static final double BASE_QUAL_PERCENTILE = 0.25;
 
     // values applied as percentages
     public static final double COMMON_ALLELES_FREQ_CUTOFF = 0.001;
