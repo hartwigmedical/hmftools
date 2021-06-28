@@ -7,8 +7,10 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
@@ -77,6 +79,38 @@ public class HlaAlleleTest
         assertEquals(group1, fourDigit1.asAlleleGroup());
         assertEquals(2, cache.fourDigitCount());
         assertEquals(1, cache.groupCount());
+    }
+
+    @Test
+    public void testAlleleMaps()
+    {
+        Map<HlaAllele,Integer> map = Maps.newHashMap();
+
+        HlaAllele allele1 = HlaAllele.fromString("A*01:01");
+        HlaAllele allele2 = HlaAllele.fromString("A*01:01");
+        HlaAllele allele3 = HlaAllele.fromString("A*01:01:01");
+        HlaAllele allele4 = HlaAllele.fromString("A*01:02");
+
+        map.put(allele1, 1);
+        map.put(allele2, 2);
+        map.put(allele3, 3);
+        map.put(allele4, 4);
+
+        assertEquals(map.size(), 3);
+
+        Integer val1 = map.get(allele1);
+        Integer val2 = map.get(allele2);
+
+        assertEquals(val1, val2);
+
+        map.remove(allele1);
+        assertEquals(map.size(), 2);
+
+        map.remove(allele3);
+        assertEquals(map.size(), 1);
+
+        map.remove(allele4);
+        assertTrue(map.isEmpty());
     }
 
     private void assertContig(String expected, String contig)

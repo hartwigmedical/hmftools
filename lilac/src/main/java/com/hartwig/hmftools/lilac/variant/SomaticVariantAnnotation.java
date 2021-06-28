@@ -15,7 +15,6 @@ import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.read.BamReader;
-import com.hartwig.hmftools.lilac.read.BamRecordReader;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
@@ -65,7 +64,7 @@ public class SomaticVariantAnnotation
 
         for(SomaticVariant variant : mSomaticVariants)
         {
-            int variantNucleotideLoci = mLociPositionFinder.nucelotideLoci(variant.Position);
+            int variantNucleotideLoci = mLociPositionFinder.calcNucelotideLocus(variant.Position);
 
             if(variantNucleotideLoci < 0)
                 continue;

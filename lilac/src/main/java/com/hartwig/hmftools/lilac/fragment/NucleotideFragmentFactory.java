@@ -55,10 +55,10 @@ public class NucleotideFragmentFactory
         boolean reverseStrand = record.ReverseStrand;
 
         int samCodingStartLoci = reverseStrand
-                ? mLociPosition.nucelotideLoci(record.PositionEnd) : mLociPosition.nucelotideLoci(record.PositionStart);
+                ? mLociPosition.calcNucelotideLocus(record.PositionEnd) : mLociPosition.calcNucelotideLocus(record.PositionStart);
 
         int samCodingEndLoci = reverseStrand
-                ? mLociPosition.nucelotideLoci(record.PositionStart) : mLociPosition.nucelotideLoci(record.PositionEnd);
+                ? mLociPosition.calcNucelotideLocus(record.PositionStart) : mLociPosition.calcNucelotideLocus(record.PositionEnd);
 
         final char[] codingRegionRead = record.codingRegionRead(reverseStrand);
         final int[] codingRegionQuality = record.codingRegionQuality(reverseStrand);

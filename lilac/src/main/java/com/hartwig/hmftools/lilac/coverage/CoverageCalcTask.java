@@ -51,7 +51,7 @@ public class CoverageCalcTask implements Callable
         {
             if(checkCull && i > 0 && (i % LOG_COMPLEX_COUNT) == 0)
             {
-                LL_LOGGER.info(String.format("thread %d: complexes(%d) processed, discard(%d, %.0f%%)",
+                LL_LOGGER.debug(String.format("thread %d: complexes(%d) processed, discard(%d, %.0f%%)",
                         mId, i, mLowScoreCount, 100.0 * mLowScoreCount / i));
             }
 
