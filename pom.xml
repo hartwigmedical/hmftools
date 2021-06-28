@@ -38,6 +38,7 @@
         <module>protect</module>
         <module>patient-reporter</module>
         <module>orange</module>
+        <module>telo</module>
     </modules>
 
     <properties>
@@ -80,6 +81,7 @@
         <protect.version>1.4</protect.version>
         <patient-reporter.version>7.23</patient-reporter.version>
         <orange.version>0.1</orange.version>
+        <telo.version>1.0</telo.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
         <immutables.version>2.4.4</immutables.version>
