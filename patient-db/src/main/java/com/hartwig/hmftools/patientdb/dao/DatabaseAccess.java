@@ -25,7 +25,6 @@ import com.hartwig.hmftools.common.peach.PeachCalls;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleQC;
-import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -95,8 +94,6 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final FlagstatDAO flagstatDAO;
     @NotNull
-    private final RNADAO rnaDAO;
-    @NotNull
     private final SnpCheckDAO snpCheckDAO;
     @NotNull
     private final SomaticVariantDAO somaticVariantDAO;
@@ -150,7 +147,6 @@ public class DatabaseAccess implements AutoCloseable {
         this.canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
         this.metricDAO = new MetricDAO(context);
         this.flagstatDAO = new FlagstatDAO(context);
-        this.rnaDAO = new RNADAO(context);
         this.snpCheckDAO = new SnpCheckDAO(context);
         this.somaticVariantDAO = new SomaticVariantDAO(context);
         this.germlineVariantDAO = new GermlineVariantDAO(context);
@@ -476,10 +472,6 @@ public class DatabaseAccess implements AutoCloseable {
 
     public void writeChord(@NotNull String sample, @NotNull ChordAnalysis chordAnalysis) {
         chordDAO.writeChord(sample, chordAnalysis);
-    }
-
-    public void writeRNA(@NotNull Set<String> samples) {
-        rnaDAO.write(samples);
     }
 
     public void writeSnpCheck(@NotNull String sample, boolean isPass) {
