@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.DB_BATCH_INSERT_SIZE;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GENEEXPRESSION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.NOVELSPLICEJUNCTION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.RNAFUSION;
@@ -111,7 +112,7 @@ public class IsofoxDAO
         inserter.values(
                 timestamp,
                 sampleId,
-                geneExpression.geneName(),
+                checkStringLength(geneExpression.geneName(), GENEEXPRESSION.GENE),
                 geneExpression.tpm(),
                 geneExpression.splicedFragments(),
                 geneExpression.unsplicedFragments(),
@@ -157,7 +158,7 @@ public class IsofoxDAO
         inserter.values(
                 timestamp,
                 sampleId,
-                novelJunction.geneName(),
+                checkStringLength(novelJunction.geneName(), NOVELSPLICEJUNCTION.GENE),
                 novelJunction.chromosome(),
                 novelJunction.junctionStart(),
                 novelJunction.junctionEnd(),
@@ -213,7 +214,7 @@ public class IsofoxDAO
         inserter.values(
                 timestamp,
                 sampleId,
-                rnaFusion.name(),
+                checkStringLength(rnaFusion.name(), RNAFUSION.NAME),
                 rnaFusion.chromosomeUp(),
                 rnaFusion.chromosomeDown(),
                 rnaFusion.positionUp(),

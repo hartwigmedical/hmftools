@@ -1239,7 +1239,7 @@ CREATE TABLE geneExpression
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
-    gene VARCHAR(20) NOT NULL,
+    gene VARCHAR(30) NOT NULL,
     tpm DOUBLE PRECISION NOT NULL,
     splicedFragments int NOT NULL,
     unsplicedFragments int NOT NULL,

@@ -267,7 +267,14 @@ public class ExpressionCohortDistribution
 
             for (int i = 0; i < PERCENTILE_COUNT; ++i)
             {
-                mWriter.write(String.format(",%6.3e", percentileValues[i]));
+                double value = percentileValues[i];
+
+                if(value == 0)
+                    mWriter.write(",0");
+                else if(value > 999 || value < 0.001)
+                    mWriter.write(String.format(",%6.3e", value));
+                else
+                    mWriter.write(String.format(",%.4g", value));
             }
 
             mWriter.newLine();
