@@ -2,7 +2,12 @@ package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.genome.bed.ImmutableNamedBed;
+import com.hartwig.hmftools.common.genome.bed.NamedBed;
+
 import java.util.List;
 
 public class LociPosition
@@ -27,4 +32,26 @@ public class LociPosition
         return -1;
     }
 
+    public static List<NamedBed> codingRegions(final String geneName, final String chromosome, final TranscriptData transcript)
+    {
+        final List<NamedBed> result = Lists.newArrayList();
+
+        int codingStart = transcript.CodingStart;
+        int codingEnd = transcript.CodingEnd;
+
+        for (ExonData exon : transcript.exons())
+        {
+            if (codingStart <= exon.End && codingEnd >= exon.Start)
+            {
+                result.add(ImmutableNamedBed.builder()
+                        .chromosome(chromosome)
+                        .start(Math.max(codingStart, exon.Start))
+                        .end(Math.min(codingEnd, exon.End))
+                        .name(geneName)
+                        .build());
+            }
+        }
+
+        return result;
+    }
 }
