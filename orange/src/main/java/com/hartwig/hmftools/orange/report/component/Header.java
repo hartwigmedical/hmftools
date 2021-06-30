@@ -45,7 +45,7 @@ public class Header {
         Canvas cv = new Canvas(pdfCanvas, page.getDocument(), page.getPageSize());
 
         if (orangeImageObj != null) {
-            pdfCanvas.addXObject(orangeImageObj, 52, 772, 44, false);
+            pdfCanvas.addXObject(orangeImageObj, 52, 772, 60, false);
         }
 
         cv.add(new Paragraph().add(new Text("O").setFont(ReportResources.fontBold())
