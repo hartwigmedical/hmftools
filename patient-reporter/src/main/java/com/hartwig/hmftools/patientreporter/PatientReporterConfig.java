@@ -132,7 +132,7 @@ public interface PatientReporterConfig {
         options.addOption(ONLY_CREATE_PDF, false, "If provided, just the PDF will be generated and no additional data will be updated.");
 
         options.addOption(EXPECTED_PIPELINE_VERSION, true, "String of the expected pipeline version");
-        options.addOption(OVERRIDE_PIPELINE_VERSION, true, "if true, the expected pipeline version is overridden");
+        options.addOption(OVERRIDE_PIPELINE_VERSION, false, "if set, the check for pipeline version is overridden");
 
         options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to use (either '37' or '38')");
 
