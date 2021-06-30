@@ -100,7 +100,8 @@ public class NucleotideFragmentFactory
         List<String> nucleotides = arrayToList(codingRegionRead);
         List<Integer> qualities = arrayToList(codingRegionQuality);
 
-        return new Fragment(record.Id, record.readInfo(), Sets.newHashSet(codingRegion.name()), lociRange, qualities, nucleotides);
+        return new Fragment(
+                record.Id, record.readInfo(), codingRegion.name(), Sets.newHashSet(codingRegion.name()), lociRange, qualities, nucleotides);
     }
 
     private Fragment checkMatchedInsertDeleteSequence(
@@ -157,7 +158,8 @@ public class NucleotideFragmentFactory
         List<Integer> qualities = nucleotideLoci.stream().map(x -> mMinBaseQuality).collect(Collectors.toList());
 
         return new Fragment(
-                record.Id, record.readInfo(), Sets.newHashSet(codingRegion.name()), nucleotideLoci, qualities, nucleotides);
+                record.Id, record.readInfo(), codingRegion.name(), Sets.newHashSet(codingRegion.name()),
+                nucleotideLoci, qualities, nucleotides);
     }
 
     private int endLoci(int startLoci, final String bamSequence, final HlaSequenceLoci hlaSequence)
@@ -242,15 +244,12 @@ public class NucleotideFragmentFactory
 
         for(Fragment fragment : fragments)
         {
-            for(String gene : fragment.getGenes())
-            {
-                int[] baseDepth = geneBaseDepth.get(gene);
+            int[] baseDepth = geneBaseDepth.get(fragment.readGene());
 
-                for(int locus : fragment.getRawNucleotideLoci())
-                {
-                    if(locus < baseDepth.length)
-                        ++baseDepth[locus];
-                }
+            for(int locus : fragment.getRawNucleotideLoci())
+            {
+                if(locus < baseDepth.length)
+                    ++baseDepth[locus];
             }
         }
 

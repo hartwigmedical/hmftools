@@ -112,9 +112,9 @@ public class EnsemblDAO
     {
         final String version = mRefGenomeVersion.is37() ? "GRCh37" : "GRCh38";
 
-        final String queryStr = "select coord_system_id from coord_system"
+        final String queryStr = "select coord_system_id from coord_system c"
                 + " where version = '" + version + "'"
-                + " order by rank limit 1";
+                + " order by c.rank limit 1";
 
         LNX_LOGGER.debug("gene query: {}", queryStr);
 

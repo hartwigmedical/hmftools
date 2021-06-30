@@ -22,12 +22,15 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.lilac.cohort.CohortFrequency;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -71,6 +74,8 @@ public class ReferenceData
 
     public static Indel STOP_LOSS_ON_C_INDEL = null;
 
+    public static final List<Indel> INDEL_PON = Lists.newArrayList();
+
     public ReferenceData(final String resourceDir, final LilacConfig config)
     {
         mResourceDir = resourceDir;
@@ -90,6 +95,7 @@ public class ReferenceData
         mDeflatedSequenceTemplate = null;
 
         setKnownStopLossIndels(config.RefGenVersion);
+        setPonIndels(config.RefGenVersion);
 
         HlaTranscriptData = Maps.newHashMap();
 
@@ -103,7 +109,19 @@ public class ReferenceData
         KnownStopLossIndelAlleles = Maps.newHashMap();
     }
 
-    public static void setKnownStopLossIndels(final RefGenomeVersion version)
+    private static void setPonIndels(final RefGenomeVersion version)
+    {
+        // load indel PON
+        String refFile = version.is37() ? "/pon/indels_v37.csv" : "/pon/indels_v38.csv";
+
+        final List<String> ponLines = new BufferedReader(new InputStreamReader(
+                RefGenomeCoordinates.class.getResourceAsStream(refFile)))
+                .lines().collect(Collectors.toList());
+
+        ponLines.stream().map(x -> Indel.fromString(x)).forEach(x -> INDEL_PON.add(x));
+    }
+
+    private static void setKnownStopLossIndels(final RefGenomeVersion version)
     {
         int position = version.is37() ? 31237115 : 31269338;
         STOP_LOSS_ON_C_INDEL = new Indel("6", position, "CN", "C");

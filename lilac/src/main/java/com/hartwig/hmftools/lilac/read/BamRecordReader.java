@@ -5,10 +5,10 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
 import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
+import static com.hartwig.hmftools.lilac.ReferenceData.INDEL_PON;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -17,7 +17,6 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.lilac.LociPosition;
@@ -30,9 +29,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,8 +53,6 @@ public class BamRecordReader implements BamReader
     public static final int MIN_MAPPING_QUALITY = 1;
     public static final int MAX_DISTANCE = 1000;
 
-    private static final Set<Indel> INDEL_PON = Sets.newHashSet();
-
     public BamRecordReader(
             final String bamFile, final String refGenome, final Map<String,TranscriptData> transcripts, final NucleotideFragmentFactory factory)
     {
@@ -79,13 +74,6 @@ public class BamRecordReader implements BamReader
         mUnmatchedIndels = Maps.newHashMap();
         mUnmatchedPONIndels = Maps.newHashMap();
         mDiscardIndelReadIds = Sets.newHashSet();
-
-        // load indel PON
-        final List<String> ponLines = new BufferedReader(new InputStreamReader(
-                RefGenomeCoordinates.class.getResourceAsStream("/pon/indels.csv")))
-                .lines().collect(Collectors.toList());
-
-        ponLines.stream().map(x -> Indel.fromString(x)).forEach(x -> INDEL_PON.add(x));
     }
 
     public int alignmentFiltered()
@@ -369,7 +357,6 @@ public class BamRecordReader implements BamReader
 
     private void addKnownIndelFragment(final Fragment fragment)
     {
-        // incrementIndelCounter(mStopLossOnC, STOP_LOSS_ON_C);
         List<Fragment> indelFrags = mKnownStopLossFragments.get(STOP_LOSS_ON_C_INDEL);
         if(indelFrags == null)
         {
