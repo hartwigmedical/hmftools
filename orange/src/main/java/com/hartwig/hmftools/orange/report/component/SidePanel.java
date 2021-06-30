@@ -13,10 +13,14 @@ import org.jetbrains.annotations.NotNull;
 
 public final class SidePanel {
 
-    private static final float ROW_SPACING = 42;
     private static final float CONTENT_X_START = 455;
+    private static final float CONTENT_Y_START = 820;
+    private static final float ROW_SPACING = 35;
+    private static final float VALUE_TEXT_Y_OFFSET = 18;
+    private static final float MAX_WIDTH = 120;
+
     private static final float RECTANGLE_WIDTH = 170;
-    private static final float RECTANGLE_HEIGHT_SHORT = 110;
+    private static final float RECTANGLE_HEIGHT = 84;
 
     private SidePanel() {
     }
@@ -36,29 +40,25 @@ public final class SidePanel {
     }
 
     private static void renderBackgroundRect(@NotNull PdfCanvas canvas, @NotNull Rectangle pageSize) {
-        canvas.rectangle(pageSize.getWidth(), pageSize.getHeight(), -RECTANGLE_WIDTH, -RECTANGLE_HEIGHT_SHORT);
+        canvas.rectangle(pageSize.getWidth(), pageSize.getHeight(), -RECTANGLE_WIDTH, -RECTANGLE_HEIGHT);
         canvas.setFillColor(ReportResources.PALETTE_ORANGE);
         canvas.fill();
     }
 
     @NotNull
     private static Div createSidePanelDiv(int index, @NotNull String label, @NotNull String value) {
-        float yStart = 802;
-        float valueTextYOffset = 18;
-        float maxWidth = 120;
-
         Div div = new Div();
         div.setKeepTogether(true);
 
-        float yPos = yStart - index * ROW_SPACING;
+        float yPos = CONTENT_Y_START - index * ROW_SPACING;
         div.add(new Paragraph(label.toUpperCase()).addStyle(ReportResources.sidePanelLabelStyle())
-                .setFixedPosition(CONTENT_X_START, yPos, maxWidth));
+                .setFixedPosition(CONTENT_X_START, yPos, MAX_WIDTH));
 
-        float valueFontSize = ReportResources.maxPointSizeForWidth(ReportResources.fontBold(), 11, 6, value, maxWidth);
-        yPos -= valueTextYOffset;
+        float valueFontSize = ReportResources.maxPointSizeForWidth(ReportResources.fontBold(), 11, 6, value, MAX_WIDTH);
+        yPos -= VALUE_TEXT_Y_OFFSET;
         div.add(new Paragraph(value).addStyle(ReportResources.sidePanelValueStyle().setFontSize(valueFontSize))
                 .setHeight(15)
-                .setFixedPosition(CONTENT_X_START, yPos, maxWidth)
+                .setFixedPosition(CONTENT_X_START, yPos, MAX_WIDTH)
                 .setFixedLeading(valueFontSize));
 
         return div;

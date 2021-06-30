@@ -40,7 +40,7 @@ public final class ReportResources {
     public static final DeviceRgb PALETTE_PINK = new DeviceRgb(230, 21, 124);
     public static final DeviceRgb PALETTE_VIOLET = new DeviceRgb(156, 97, 168);
 
-    public static final DeviceRgb PALETTE_ORANGE = new DeviceRgb(240, 160, 20);
+    public static final DeviceRgb PALETTE_ORANGE = new DeviceRgb(240, 150, 30);
 
     public static final DeviceRgb PALETTE_ORANGE_1 = new DeviceRgb(255, 165, 0);
     public static final DeviceRgb PALETTE_ORANGE_2 = new DeviceRgb(235, 155, 0);

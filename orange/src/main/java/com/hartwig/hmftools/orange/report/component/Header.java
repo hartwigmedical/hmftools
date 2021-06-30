@@ -57,7 +57,7 @@ public class Header {
                 .add(new Text("G").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_5))
                 .add(new Text("E").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_6))
                 .add(new Text(" Report").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLACK))
-                .setFixedPosition(200, 791, 300));
+                .setFixedPosition(200, 800, 300));
 
         if (firstPageOfChapter) {
             chapterPageCounters.add(new ChapterPageCounter(chapterTitle));
