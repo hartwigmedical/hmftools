@@ -13,21 +13,22 @@
         <module>patient-db</module>
         <module>hmf-ensembl-resources</module>
         <module>hmf-id-generator</module>
-        <module>gripss</module>
-        <module>lilac</module>
-        <module>paddle</module>
-        <module>health-checker</module>
         <module>fastq-stats</module>
+        <module>health-checker</module>
+        <module>paddle</module>
         <module>compar</module>
         <module>amber</module>
         <module>cobalt</module>
-        <module>purple</module>
         <module>sage</module>
+        <module>gripss</module>
+        <module>purple</module>
         <module>linx</module>
         <module>sv-tools</module>
         <module>virus-interpreter</module>
+        <module>lilac</module>
         <module>neo</module>
         <module>sigs</module>
+        <module>telo</module>
         <module>cuppa</module>
         <module>isofox</module>
         <module>stat-calcs</module>
@@ -36,9 +37,8 @@
         <module>vicc-importer</module>
         <module>serve</module>
         <module>protect</module>
-        <module>patient-reporter</module>
         <module>orange</module>
-        <module>telo</module>
+        <module>patient-reporter</module>
     </modules>
 
     <properties>
