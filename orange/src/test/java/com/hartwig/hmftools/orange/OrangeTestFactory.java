@@ -9,6 +9,9 @@ public final class OrangeTestFactory {
 
     private static final String MELANOMA_DOID = "8923";
 
+    private static final String REFERENCE_SAMPLE_ID = "ref_sample";
+    private static final String TUMOR_SAMPLE_ID = "tumor_sample";
+
     private static final String RUN_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String PURPLE_PURITY_TSV = RUN_DIRECTORY + "/purple/tumor_sample.purple.purity.tsv";
     private static final String PURPLE_QC_FILE = RUN_DIRECTORY + "/purple/tumor_sample.purple.qc";
@@ -35,8 +38,8 @@ public final class OrangeTestFactory {
     @NotNull
     public static OrangeConfig createTestOrangeConfig() {
         return ImmutableOrangeConfig.builder()
-                .tumorSampleId("tumor_sample")
-                .referenceSampleId("ref_sample")
+                .tumorSampleId(TUMOR_SAMPLE_ID)
+                .referenceSampleId(REFERENCE_SAMPLE_ID)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
                 .outputDir(Strings.EMPTY)
                 .doidJsonFile(DOID_JSON)

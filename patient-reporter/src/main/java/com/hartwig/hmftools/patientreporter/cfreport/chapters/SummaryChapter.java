@@ -40,8 +40,6 @@ import com.itextpdf.layout.property.TextAlignment;
 import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class SummaryChapter implements ReportChapter {
@@ -49,7 +47,6 @@ public class SummaryChapter implements ReportChapter {
     private static final float TABLE_SPACER_HEIGHT = 5;
     private static final DecimalFormat SINGLE_DECIMAL_FORMAT = ReportResources.decimalFormat("#.#");
     private static final DecimalFormat DOUBLE_DECIMAL_FORMAT = ReportResources.decimalFormat("#.##");
-    private static final Logger LOGGER = LogManager.getLogger(SummaryChapter.class);
 
     @NotNull
     private final AnalysedPatientReport patientReport;

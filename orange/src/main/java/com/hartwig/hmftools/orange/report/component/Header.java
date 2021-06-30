@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.patientreporter.cfreport.components;
+package com.hartwig.hmftools.orange.report.component;
 
 import java.net.MalformedURLException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.orange.report.ReportResources;
 import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.geom.Rectangle;
