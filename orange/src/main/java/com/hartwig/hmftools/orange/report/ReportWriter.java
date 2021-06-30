@@ -49,7 +49,6 @@ public class ReportWriter {
 
             pageEventHandler.chapterTitle(chapter.name());
             pageEventHandler.resetChapterPageCounter();
-            pageEventHandler.sidebarType(!chapter.isFullWidth(), chapter.hasCompleteSidebar());
 
             if (i > 0) {
                 doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));

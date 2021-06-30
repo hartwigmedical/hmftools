@@ -1,24 +1,17 @@
 package com.hartwig.hmftools.orange.report.chapter;
 
 import java.net.MalformedURLException;
-import java.text.DecimalFormat;
 
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.report.ReportResources;
 import com.itextpdf.io.IOException;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
-import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.property.HorizontalAlignment;
 
 import org.jetbrains.annotations.NotNull;
 
 public class SummaryChapter implements ReportChapter {
-
-    private static final float TABLE_SPACER_HEIGHT = 5;
-    private static final DecimalFormat SINGLE_DECIMAL_FORMAT = ReportResources.decimalFormat("#.#");
-    private static final DecimalFormat DOUBLE_DECIMAL_FORMAT = ReportResources.decimalFormat("#.##");
 
     @NotNull
     private final OrangeReport report;
@@ -30,22 +23,12 @@ public class SummaryChapter implements ReportChapter {
     @NotNull
     @Override
     public String name() {
-        return "ORANGE Report";
-    }
-
-    @Override
-    public boolean isFullWidth() {
-        return false;
-    }
-
-    @Override
-    public boolean hasCompleteSidebar() {
-        return true;
+        return "";
     }
 
     @Override
     public void render(@NotNull Document reportDocument) {
-        reportDocument.add(new Paragraph("Summary").addStyle(ReportResources.chapterTitleStyle()));
+//        reportDocument.add(new Paragraph("Circos Plot").addStyle(ReportResources.chapterTitleStyle()));
 
         String circosPath = report.plots().purpleCircosPlot();
         try {

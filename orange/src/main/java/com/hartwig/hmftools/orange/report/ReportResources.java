@@ -3,10 +3,8 @@ package com.hartwig.hmftools.orange.report;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.time.LocalDate;
 import java.util.Locale;
 
-import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.orange.OrangeApplication;
 import com.itextpdf.io.font.FontProgram;
 import com.itextpdf.io.font.FontProgramFactory;
@@ -20,35 +18,18 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ReportResources {
 
-    private static final String HARTWIG_NAME = "Hartwig Medical Foundation";
-    public static final String HARTWIG_ADDRESS = HARTWIG_NAME + ", Science Park 408, 1098XH Amsterdam";
-    public static final String CONTACT_EMAIL_GENERAL = "diagnosticssupport@hartwigmedicalfoundation.nl";
-    public static final String CONTACT_EMAIL_QA = "qualitysystem@hartwigmedicalfoundation.nl";
-    public static final String SIGNATURE_NAME = "Edwin Cuppen";
-    public static final String SIGNATURE_TITLE = "Director " + HARTWIG_NAME;
-    public static final String VERSION_REPORT = "version " + OrangeApplication.VERSION;
-    public static final String UDI_DI = "(01)8720299486003(8012)v5.22";
-    public static final String MANUAL = "https://www.oncoact.nl/manual";
-
-    public static final double PURITY_CUTOFF = 0.195;
-
-    static final String METADATA_TITLE = "HMF Sequencing Report v" + OrangeApplication.VERSION;
-    static final String METADATA_AUTHOR = HARTWIG_NAME;
-    public static final String REPORT_DATE = DataUtil.formatDate(LocalDate.now());
+    static final String METADATA_TITLE = "HMF ORANGE Report v" + OrangeApplication.VERSION;
+    static final String METADATA_AUTHOR = "Hartwig Platinum Pipeline";
 
     static final float PAGE_MARGIN_TOP = 150; // Top margin also excludes the chapter title, which is rendered in the header
-    public static final float PAGE_MARGIN_LEFT = 55.5f;
+    public static final float PAGE_MARGIN_LEFT = 55.5F;
     static final float PAGE_MARGIN_RIGHT = 29;
     static final float PAGE_MARGIN_BOTTOM = 62;
-
-    public static final float CONTENT_WIDTH_NARROW = 330; // Width of the content on a narrow page (page with full side panel)
-    public static final float CONTENT_WIDTH_WIDE = 510; // Width of the content on a narrow page (page without full side panel)
-    public static final float CONTENT_WIDTH_WIDE_SUMMARY = 320; // Width of the content on a narrow page (page without full side panel)
-    public static final float CONTENT_WIDTH_WIDE_SMALL = 240; // Width of the content on a narrow page (page with full side panel)
 
     public static final DeviceRgb PALETTE_WHITE = new DeviceRgb(255, 255, 255);
     public static final DeviceRgb PALETTE_BLACK = new DeviceRgb(0, 0, 0);
     public static final DeviceRgb PALETTE_BLUE = new DeviceRgb(38, 90, 166);
+
     public static final DeviceRgb PALETTE_MID_BLUE = new DeviceRgb(110, 139, 189);
     public static final DeviceRgb PALETTE_DARK_BLUE = new DeviceRgb(93, 85, 164);
     public static final DeviceRgb PALETTE_RED = new DeviceRgb(232, 60, 55);
@@ -58,6 +39,15 @@ public final class ReportResources {
     public static final DeviceRgb PALETTE_LIGHT_GREY = new DeviceRgb(205, 206, 207);
     public static final DeviceRgb PALETTE_PINK = new DeviceRgb(230, 21, 124);
     public static final DeviceRgb PALETTE_VIOLET = new DeviceRgb(156, 97, 168);
+
+    public static final DeviceRgb PALETTE_ORANGE = new DeviceRgb(240, 200, 150);
+
+    public static final DeviceRgb PALETTE_ORANGE_1 = new DeviceRgb(255, 165, 0);
+    public static final DeviceRgb PALETTE_ORANGE_2 = new DeviceRgb(235, 155, 0);
+    public static final DeviceRgb PALETTE_ORANGE_3 = new DeviceRgb(215, 145, 0);
+    public static final DeviceRgb PALETTE_ORANGE_4 = new DeviceRgb(195, 135, 0);
+    public static final DeviceRgb PALETTE_ORANGE_5 = new DeviceRgb(175, 125, 0);
+    public static final DeviceRgb PALETTE_ORANGE_6 = new DeviceRgb(155, 115, 0);
 
     private static final String FONT_REGULAR_PATH = "fonts/nimbus-sans/NimbusSansL-Regular.ttf";
     private static final String FONT_BOLD_PATH = "fonts/nimbus-sans/NimbusSansL-Bold.ttf";

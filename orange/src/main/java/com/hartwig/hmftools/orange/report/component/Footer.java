@@ -19,15 +19,13 @@ public class Footer {
 
     private final List<PageNumberTemplate> pageNumberTemplates = Lists.newArrayList();
 
-    public void renderFooter(@NotNull PdfPage page, boolean fullWidth) {
+    public void renderFooter(@NotNull PdfPage page) {
         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
 
         int pageNumber = page.getDocument().getPageNumber(page);
         PdfFormXObject pageNumberTemplate = new PdfFormXObject(new Rectangle(0, 0, 200, 20));
         canvas.addXObject(pageNumberTemplate, 58, 20);
         pageNumberTemplates.add(new PageNumberTemplate(pageNumber, pageNumberTemplate));
-
-        BaseMarker.renderMarkerGrid(fullWidth ? 5 : 3, 1, 156, 87, 22, 0, .2f, 0, canvas);
 
         canvas.release();
     }

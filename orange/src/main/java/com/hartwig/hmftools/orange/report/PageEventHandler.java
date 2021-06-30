@@ -25,9 +25,6 @@ public class PageEventHandler implements IEventHandler {
     @NotNull
     private final Header header;
 
-    private boolean fullSidebar;
-    private boolean fullSidebarContent;
-
     private String chapterTitle = "Undefined";
     private boolean firstPageOfChapter = true;
 
@@ -53,18 +50,13 @@ public class PageEventHandler implements IEventHandler {
                 createChapterBookmark(documentEvent.getDocument(), chapterTitle);
             }
 
-            SidePanel.renderSidePanel(page, report, fullSidebar, fullSidebarContent);
-            footer.renderFooter(page, !fullSidebar);
+            SidePanel.renderSidePanel(page, report);
+            footer.renderFooter(page);
         }
     }
 
     void chapterTitle(@NotNull String chapterTitle) {
         this.chapterTitle = chapterTitle;
-    }
-
-    void sidebarType(boolean full, boolean fullContent) {
-        fullSidebar = full;
-        fullSidebarContent = fullSidebar && fullContent;
     }
 
     void resetChapterPageCounter() {

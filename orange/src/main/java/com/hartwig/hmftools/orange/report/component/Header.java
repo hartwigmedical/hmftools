@@ -27,33 +27,37 @@ public class Header {
     private static final Logger LOGGER = LogManager.getLogger(Header.class);
 
     @Nullable
-    private final PdfImageXObject companyLogoObj;
+    private final PdfImageXObject orangeImageObj;
     private final List<ChapterPageCounter> chapterPageCounters = Lists.newArrayList();
 
-    public Header(@NotNull String logoCompanyPath) {
-        ImageData companyLogoImage = null;
+    public Header(@NotNull String orangeImagePath) {
+        ImageData orangeImage = null;
         try {
-            companyLogoImage = ImageDataFactory.create(logoCompanyPath);
+            orangeImage = ImageDataFactory.create(orangeImagePath);
         } catch (MalformedURLException e) {
-            LOGGER.warn("Could not load company logo image from {}", logoCompanyPath);
+            LOGGER.warn("Could not orange image from {}", orangeImagePath);
         }
-        companyLogoObj = companyLogoImage != null ? new PdfImageXObject(companyLogoImage) : null;
+        orangeImageObj = orangeImage != null ? new PdfImageXObject(orangeImage) : null;
     }
 
     public void renderHeader(@NotNull String chapterTitle, boolean firstPageOfChapter, @NotNull PdfPage page) {
         PdfCanvas pdfCanvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Canvas cv = new Canvas(pdfCanvas, page.getDocument(), page.getPageSize());
 
-        if (companyLogoObj != null) {
-            pdfCanvas.addXObject(companyLogoObj, 52, 772, 44, false);
+        if (orangeImageObj != null) {
+            pdfCanvas.addXObject(orangeImageObj, 52, 772, 44, false);
         }
 
-        cv.add(new Paragraph().add(new Text("Hartwig Medical").setFont(ReportResources.fontBold())
+        cv.add(new Paragraph().add(new Text("O").setFont(ReportResources.fontBold())
                 .setFontSize(11)
-                .setFontColor(ReportResources.PALETTE_BLUE))
-                .add(new Text(" Onco").setFont(ReportResources.fontRegular()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLUE))
-                .add(new Text("Act").setFont(ReportResources.fontRegular()).setFontSize(11).setFontColor(ReportResources.PALETTE_RED))
-                .setFixedPosition(230, 791, 300));
+                .setFontColor(ReportResources.PALETTE_ORANGE_1))
+                .add(new Text("R").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_2))
+                .add(new Text("A").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_3))
+                .add(new Text("N").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_4))
+                .add(new Text("G").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_5))
+                .add(new Text("E").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_6))
+                .add(new Text(" Report").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLACK))
+                .setFixedPosition(200, 791, 300));
 
         if (firstPageOfChapter) {
             chapterPageCounters.add(new ChapterPageCounter(chapterTitle));
