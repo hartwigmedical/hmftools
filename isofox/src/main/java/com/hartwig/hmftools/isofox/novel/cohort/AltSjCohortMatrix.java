@@ -122,15 +122,13 @@ public class AltSjCohortMatrix
 
         int nextLog = LOG_CHECK;
 
-        final Map<String,Integer> fieldsMap = Maps.newHashMap();
-
         // load each sample's alt SJs and consolidate into a single list
         for(int i = 0; i < mConfig.SampleData.SampleIds.size(); ++i)
         {
             final String sampleId = mConfig.SampleData.SampleIds.get(i);
             final Path altSJFile = filenames.get(i);
 
-            loadFile(sampleId, altSJFile, fieldsMap);
+            loadFile(sampleId, altSJFile);
 
             if(i >= nextLog)
             {
@@ -189,14 +187,13 @@ public class AltSjCohortMatrix
         }
     }
 
-    public void loadFile(final String sampleId, final Path filename, final Map<String,Integer> fieldsIndexMap)
+    public void loadFile(final String sampleId, final Path filename)
     {
         try
         {
             final List<String> lines = Files.readAllLines(filename);
 
-            if(fieldsIndexMap.isEmpty())
-                fieldsIndexMap.putAll(createFieldsIndexMap(lines.get(0), DELIMITER));
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
 
             int geneIndex = fieldsIndexMap.get(FLD_GENE_ID);
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
@@ -212,8 +209,19 @@ public class AltSjCohortMatrix
 
             for(int i = 1; i < lines.size(); ++i)
             {
-                final String[] items = lines.get(i).split(DELIMITER);
-                final AltSjLocation altSJ = AltSjLocation.fromCsv(items, geneIndex, chrIndex, posStartIndex, posEndIndex);
+                final String[] items = lines.get(i).split(DELIMITER,-1);
+
+                AltSjLocation altSJ = null;
+
+                try
+                {
+                    altSJ = AltSjLocation.fromCsv(items, geneIndex, chrIndex, posStartIndex, posEndIndex);
+                }
+                catch(Exception e)
+                {
+                    ISF_LOGGER.error("sample({}) invalid alt-SJ line: {}", sampleId, lines.get(i));
+                    return;
+                }
 
                 Integer asjMatrixIndex = mAltSjMatrixIndexMap.get(altSJ.Key);
 
