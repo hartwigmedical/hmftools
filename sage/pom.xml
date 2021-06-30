@@ -11,7 +11,7 @@
     <artifactId>sage</artifactId>
     <packaging>jar</packaging>
     <version>${sage.version}</version>
-    <name>HMF Tools - Somatic Alterations in Genome</name>
+    <name>HMF Tools - SAGE</name>
 
     <dependencies>
         <dependency>
