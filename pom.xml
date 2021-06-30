@@ -10,8 +10,8 @@
 
     <modules>
         <module>hmf-common</module>
-        <module>stat-calcs</module>
         <module>patient-db</module>
+        <module>stat-calcs</module>
         <module>hmf-ensembl-resources</module>
         <module>hmf-id-generator</module>
         <module>fastq-stats</module>
