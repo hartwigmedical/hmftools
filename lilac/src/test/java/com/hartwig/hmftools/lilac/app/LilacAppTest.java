@@ -65,13 +65,13 @@ public class LilacAppTest
         loadTestReferenceData(refData);
 
         // build support for the 3 common alleles
-        int fragCount = 50;
+        int fragCount = 200;
         int startLoci = 20;
         int endLoci = 1050;
         int length = 150;
         int gap = 20;
         HlaAllele a1 = refData.findAllele("A*01:01:01", false);
-        refBamReader.Fragments.addAll(createFragments(refData, a1, fragCount, startLoci, endLoci, length, gap));
+        refBamReader.Fragments.addAll(createFragments(refData, a1, 50, startLoci, endLoci, length, gap));
 
         HlaAllele a2 = refData.findAllele("A*02:01:01", false);
         refBamReader.Fragments.addAll(createFragments(refData, a2, fragCount, startLoci, endLoci, length, gap));
@@ -114,8 +114,8 @@ public class LilacAppTest
         assertFalse(qcMetrics.HasHlaY);
         assertEquals(0, qcMetrics.AminoAcidQC.UnusedAminoAcids);
         assertTrue(qcMetrics.HaplotypeQC.UnmatchedHaplotypes.isEmpty());
-        assertEquals(fragCount * EXPECTED_ALLELE_COUNT, qcMetrics.CoverageQC.TotalFragments);
-        assertEquals(fragCount * EXPECTED_ALLELE_COUNT, qcMetrics.CoverageQC.FittedFragments);
+        assertEquals(fragCount * EXPECTED_ALLELE_COUNT - 150, qcMetrics.CoverageQC.TotalFragments);
+        assertEquals(fragCount * EXPECTED_ALLELE_COUNT - 150, qcMetrics.CoverageQC.FittedFragments);
     }
 
     @Test

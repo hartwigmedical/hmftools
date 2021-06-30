@@ -52,7 +52,7 @@ public class NucleotideGeneEnrichmentTest
     {
         List<Integer> qualities = Lists.newArrayList();
         qualities.add(0);
-        return new Fragment("id", "", Sets.newHashSet(gene), indices, qualities, Lists.newArrayList("G"));
+        return new Fragment("id", "", gene, Sets.newHashSet(gene), indices, qualities, Lists.newArrayList("G"));
     }
 
 }

@@ -17,6 +17,7 @@ public class Fragment
     private final String mId; // BAM read Id
     private final String mReadInfo; // BAM read chr, start, end, gene, cigar
 
+    private final String mReadGene; // mapped gene
     private final Set<String> mGenes;
     private final List<Integer> mNucleotideLoci;
     private final List<Integer> mNucleotideQuality;
@@ -34,12 +35,14 @@ public class Fragment
     private FragmentScope mScope;
 
     public Fragment(
-            final String id, final String readInfo, final Set<String> genes, final List<Integer> nucleotideLoci,
+            final String id, final String readInfo, final String readGene, final Set<String> genes, final List<Integer> nucleotideLoci,
             final List<Integer> qualities, final List<String> nucleotides)
     {
         mId = id;
         mReadInfo = readInfo;
+
         mGenes = genes;
+        mReadGene = readGene;
 
         mNucleotideLoci = nucleotideLoci.stream().collect(Collectors.toList());
         mNucleotideQuality = qualities.stream().collect(Collectors.toList());
@@ -68,6 +71,7 @@ public class Fragment
     public String id() { return mId; }
     public String readInfo() { return mReadInfo; }
     public Set<String> getGenes() { return mGenes; }
+    public String readGene() { return mReadGene; }
     public boolean containsGene(final String gene) { return mGenes.stream().anyMatch(x -> x.equals(gene)); }
 
     public FragmentScope scope() { return mScope; }
