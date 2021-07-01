@@ -74,7 +74,7 @@ public class HospitalModelFactoryTest {
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_actin.tsv", 2, "ACTIN");
         assertEquals(1, hospitalContactACTIN.size());
 
-       HospitalPersons actin2 = hospitalContactACTIN.get("02");
+        HospitalPersons actin2 = hospitalContactACTIN.get("02");
         assertEquals("Someone", actin2.hospitalPI());
         assertNull(actin2.requesterName());
         assertNull(actin2.requesterEmail());
