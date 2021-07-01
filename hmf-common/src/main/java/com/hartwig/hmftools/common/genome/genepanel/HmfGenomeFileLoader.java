@@ -80,7 +80,7 @@ public final class HmfGenomeFileLoader {
 
                 HmfExonRegion exonRegion = ImmutableHmfExonRegion.builder()
                         .chromosome(chromosome)
-                        .exonID(values[EXON_ID_COLUMN])
+                        .exonRank(geneRegion.exome().size() + 1)
                         .start(Long.parseLong(values[EXON_START_COLUMN]))
                         .end(Long.parseLong(values[EXON_END_COLUMN]))
                         .build();

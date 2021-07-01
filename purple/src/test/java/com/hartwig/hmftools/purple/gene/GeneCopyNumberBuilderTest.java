@@ -124,7 +124,7 @@ public class GeneCopyNumberBuilderTest
     @NotNull
     private static HmfExonRegion exon(long start, long end)
     {
-        return ImmutableHmfExonRegion.builder().exonID("ID").chromosome(CHROMOSOME).start(start).end(end).build();
+        return ImmutableHmfExonRegion.builder().exonRank(1).chromosome(CHROMOSOME).start(start).end(end).build();
     }
 
     @NotNull

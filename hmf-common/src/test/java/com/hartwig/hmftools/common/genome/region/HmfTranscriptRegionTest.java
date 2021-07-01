@@ -27,15 +27,15 @@ public class HmfTranscriptRegionTest {
 
         HmfExonRegion exon1 = transcript.exonByIndex(1);
         assertNotNull(exon1);
-        assertEquals("1", exon1.exonID());
+        assertEquals(1, exon1.exonRank());
 
         HmfExonRegion exon2 = transcript.exonByIndex(2);
         assertNotNull(exon2);
-        assertEquals("2", exon2.exonID());
+        assertEquals(2, exon2.exonRank());
 
         HmfExonRegion exon3 = transcript.exonByIndex(3);
         assertNotNull(exon3);
-        assertEquals("3", exon3.exonID());
+        assertEquals(3, exon3.exonRank());
 
         assertNull(transcript.exonByIndex(4));
     }
@@ -48,15 +48,15 @@ public class HmfTranscriptRegionTest {
 
         HmfExonRegion exon1 = transcript.exonByIndex(1);
         assertNotNull(exon1);
-        assertEquals("3", exon1.exonID());
+        assertEquals(3, exon1.exonRank());
 
         HmfExonRegion exon2 = transcript.exonByIndex(2);
         assertNotNull(exon2);
-        assertEquals("2", exon2.exonID());
+        assertEquals(2, exon2.exonRank());
 
         HmfExonRegion exon3 = transcript.exonByIndex(3);
         assertNotNull(exon3);
-        assertEquals("1", exon3.exonID());
+        assertEquals(1, exon3.exonRank());
 
         assertNull(transcript.exonByIndex(4));
     }
@@ -313,9 +313,9 @@ public class HmfTranscriptRegionTest {
     @NotNull
     private static HmfTranscriptRegion create(@NotNull Strand strand) {
         List<HmfExonRegion> exome = Lists.newArrayList(
-                ImmutableHmfExonRegion.builder().chromosome("1").exonID("1").start(1).end(5).build(),
-                ImmutableHmfExonRegion.builder().chromosome("1").exonID("2").start(7).end(16).build(),
-                ImmutableHmfExonRegion.builder().chromosome("1").exonID("3").start(18).end(20).build());
+                ImmutableHmfExonRegion.builder().chromosome("1").exonRank(1).start(1).end(5).build(),
+                ImmutableHmfExonRegion.builder().chromosome("1").exonRank(2).start(7).end(16).build(),
+                ImmutableHmfExonRegion.builder().chromosome("1").exonRank(3).start(18).end(20).build());
 
         return ImmutableHmfTranscriptRegion.builder()
                 .chromosome("1")
