@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.variant;
 
+import static com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils.isAcceptorPlusThree;
+import static com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils.isDonorMinusOne;
+import static com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils.isDonorPlusFive;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
@@ -53,15 +56,15 @@ public class CodingEffectFactory {
                 int end = variant.context().getEnd();
                 while (position <= end) {
                     String acceptorPlusThreeSpliceAlt = transcript.strand() == Strand.FORWARD ? "G" : "C";
-                    if (consequences.contains(SPLICE_REGION_VARIANT) && alt.equals(acceptorPlusThreeSpliceAlt) && transcript.isAcceptorPlusThree(position)) {
+                    if (consequences.contains(SPLICE_REGION_VARIANT) && alt.equals(acceptorPlusThreeSpliceAlt) && isAcceptorPlusThree(transcript, position)) {
                         return SPLICE;
                     }
 
-                    if (consequences.contains(SPLICE_REGION_VARIANT) && transcript.isDonorMinusOne(position)) {
+                    if (consequences.contains(SPLICE_REGION_VARIANT) && isDonorMinusOne(transcript, position)) {
                         return SPLICE;
                     }
 
-                    if (consequences.contains(SPLICE_REGION_VARIANT) && transcript.isDonorPlusFive(position)) {
+                    if (consequences.contains(SPLICE_REGION_VARIANT) && isDonorPlusFive(transcript, position)) {
                         return SPLICE;
                     }
 

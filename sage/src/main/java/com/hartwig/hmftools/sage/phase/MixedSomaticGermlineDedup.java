@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.phase;
 
+import static com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils.codonRangeAtGenomicPosition;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 public class MixedSomaticGermlineDedup extends BufferedPostProcessor
 {
     private static final int MAX_DISTANCE = 10;
-    
+
     private final TranscriptRegionSelector mSelector;
 
     public MixedSomaticGermlineDedup(final Consumer<SageVariant> consumer, final List<HmfTranscriptRegion> transcripts)
@@ -81,7 +83,7 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
         final Optional<HmfTranscriptRegion> maybeTranscript = mSelector.select(position);
         if(maybeTranscript.isPresent())
         {
-            final List<GenomeRegion> codons = maybeTranscript.get().codonRangeAtGenomicPosition(position);
+            final List<GenomeRegion> codons = codonRangeAtGenomicPosition(maybeTranscript.get(), position);
             for(GenomeRegion codon : codons)
             {
                 if(position >= codon.start() && position <= codon.end())
