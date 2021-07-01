@@ -69,6 +69,18 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
+    public void canReadHospitalContactACTIN() throws IOException {
+        Map<String, HospitalPersons> hospitalContactACTIN =
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_actin.tsv", 2, "ACTIN");
+        assertEquals(1, hospitalContactACTIN.size());
+
+       HospitalPersons actin2 = hospitalContactACTIN.get("02");
+        assertEquals("Someone", actin2.hospitalPI());
+        assertNull(actin2.requesterName());
+        assertNull(actin2.requesterEmail());
+    }
+
+    @Test
     public void canReadHospitalContactWIDE() throws IOException {
         Map<String, HospitalPersons> hospitalContactWIDE =
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv", 4, "WIDE");

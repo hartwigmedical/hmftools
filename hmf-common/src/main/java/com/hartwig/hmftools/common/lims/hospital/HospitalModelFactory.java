@@ -56,6 +56,7 @@ public final class HospitalModelFactory {
         String hospitalPersonsDRUPTsv = limsDirectory + File.separator + HOSPITAL_DRUP_TSV;
         String hospitalPersonsWIDETsv = limsDirectory + File.separator + HOSPITAL_WIDE_TSV;
         String hospitalPersonsCOREDBTsv = limsDirectory + File.separator + HOSPITAL_COREDB_TSV;
+        String hospitalPersonsACTINTsv = limsDirectory + File.separator + HOSPITAL_ACTIN_TSV;
 
         String sampleHospitalMappingTsv = limsDirectory + File.separator + SAMPLE_HOSPITAL_MAPPING_TSV;
 
@@ -69,7 +70,7 @@ public final class HospitalModelFactory {
         Map<String, HospitalPersons> hospitalPersonsCOREDB =
                 readFromHospitalPersonsTsv(hospitalPersonsCOREDBTsv, HOSPITAL_PERSONS_FIELD_COUNT_COREDB, "COREDB");
         Map<String, HospitalPersons> hospitalPersonsACTIN =
-                readFromHospitalPersonsTsv(hospitalPersonsCOREDBTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "ACTIN");
+                readFromHospitalPersonsTsv(hospitalPersonsACTINTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "ACTIN");
         Map<String, String> sampleHospitalMapping = readFromSampleToHospitalMappingTsv(sampleHospitalMappingTsv);
 
         HospitalModel hospitalModel = ImmutableHospitalModel.builder()
