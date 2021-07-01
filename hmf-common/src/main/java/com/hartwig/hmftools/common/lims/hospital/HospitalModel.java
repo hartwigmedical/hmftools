@@ -30,6 +30,9 @@ public abstract class HospitalModel {
     abstract Map<String, HospitalPersons> hospitalPersonsCOREDB();
 
     @NotNull
+    abstract Map<String, HospitalPersons> hospitalPersonsACTIN();
+
+    @NotNull
     abstract Map<String, String> sampleToHospitalMapping();
 
     @Nullable
@@ -82,6 +85,8 @@ public abstract class HospitalModel {
                 return hospitalPersonsWIDE().get(hospitalId);
             case "COREDB":
                 return hospitalPersonsCOREDB().get(hospitalId);
+            case "ACTIN":
+                return hospitalPersonsACTIN().get(hospitalId);
             default:
                 return null;
         }
