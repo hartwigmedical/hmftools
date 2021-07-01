@@ -43,7 +43,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.ensembl.HmfEnsemblResourceBuilder</mainClass>
+                            <mainClass>com.hartwig.hmftools.geneutils.ensembl.HmfEnsemblResourceBuilder</mainClass>
                         </manifest>
                     </archive>
 

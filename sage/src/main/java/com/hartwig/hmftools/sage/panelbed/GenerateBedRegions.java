@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svtools.bed_regions;
+package com.hartwig.hmftools.sage.panelbed;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.svtools.bed_regions.RegionData.validate;
-import static com.hartwig.hmftools.svtools.bed_regions.RegionType.CODING;
+import static com.hartwig.hmftools.sage.panelbed.RegionData.validate;
+import static com.hartwig.hmftools.sage.panelbed.RegionType.CODING;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -42,6 +42,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
+
+// Generate the panel BED file as targets for panel sequencing
 
 public class GenerateBedRegions
 {

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.svtools.bed_regions;
+package com.hartwig.hmftools.sage.panelbed;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;

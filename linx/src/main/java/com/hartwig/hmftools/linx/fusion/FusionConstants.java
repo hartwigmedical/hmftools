@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIO
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROCESSED_TRANS;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_RETAINED_INTRON;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.DEFAULT_PRE_GENE_PROMOTOR_DISTANCE;
 
 import java.util.List;
 
@@ -13,7 +14,6 @@ import com.google.common.collect.Lists;
 public class FusionConstants
 {
     // the maximum distance upstream of a gene for a breakend to be consider a fusion candidate
-    public static final int DEFAULT_PRE_GENE_PROMOTOR_DISTANCE = 100000;
 
     public static int PRE_GENE_PROMOTOR_DISTANCE = DEFAULT_PRE_GENE_PROMOTOR_DISTANCE; // can be overridden in config
 

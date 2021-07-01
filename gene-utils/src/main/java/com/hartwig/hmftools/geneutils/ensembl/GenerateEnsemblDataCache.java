@@ -1,15 +1,17 @@
-package com.hartwig.hmftools.linx.gene;
+package com.hartwig.hmftools.geneutils.ensembl;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.DEFAULT_PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.linx.gene.EnsemblDAO.ENSEMBL_TRANS_SPLICE_DATA_FILE;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+import static com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO.ENSEMBL_TRANS_SPLICE_DATA_FILE;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -35,9 +37,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class GenerateEnsemblDataCache
 {
-    private static final String LOG_DEBUG = "log_debug";
-    private static final String OUTPUT_DIR = "output_dir";
-
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = createBasicOptions();
@@ -57,7 +56,7 @@ public class GenerateEnsemblDataCache
 
         final RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(V37)));
 
-        LNX_LOGGER.info("writing Ensembl data files to {}", outputDir);
+        GU_LOGGER.info("writing Ensembl data files to {}", outputDir);
 
         if(EnsemblDAO.hasDatabaseConfig(cmd))
         {
@@ -65,23 +64,23 @@ public class GenerateEnsemblDataCache
 
             if(!ensemblDAO.isValid())
             {
-                LNX_LOGGER.info("invalid Ensembl DAO");
+                GU_LOGGER.info("invalid Ensembl DAO");
                 return;
             }
 
             ensemblDAO.writeDataCacheFiles(outputDir);
         }
 
-        LNX_LOGGER.debug("reloading transcript data to generate splice acceptor positions");
+        GU_LOGGER.debug("reloading transcript data to generate splice acceptor positions");
 
         // create the transcript splice acceptor position data
         EnsemblDataCache geneTransCache = new EnsemblDataCache(outputDir, refGenomeVersion);
         geneTransCache.load(false);
 
         createTranscriptPreGenePositionData(
-                geneTransCache.getChrGeneDataMap(), geneTransCache.getTranscriptDataMap(), PRE_GENE_PROMOTOR_DISTANCE, outputDir);
+                geneTransCache.getChrGeneDataMap(), geneTransCache.getTranscriptDataMap(), DEFAULT_PRE_GENE_PROMOTOR_DISTANCE, outputDir);
 
-        LNX_LOGGER.info("Ensembl data cache complete");
+        GU_LOGGER.info("Ensembl data cache complete");
     }
 
     private static void createTranscriptPreGenePositionData(
@@ -107,7 +106,7 @@ public class GenerateEnsemblDataCache
             {
                 final String chromosome = entry.getKey();
 
-                LNX_LOGGER.debug("calculating pre-gene positions for chromosome({})", chromosome);
+                GU_LOGGER.debug("calculating pre-gene positions for chromosome({})", chromosome);
 
                 final List<EnsemblGeneData> geneList = entry.getValue();
 
@@ -172,12 +171,12 @@ public class GenerateEnsemblDataCache
                 }
             }
 
-            LNX_LOGGER.info("pre-gene positions written to file: {}", outputFile);
+            GU_LOGGER.info("pre-gene positions written to file: {}", outputFile);
             closeBufferedWriter(writer);
         }
         catch(IOException e)
         {
-            LNX_LOGGER.error("error writing Ensembl trans splice data file: {}", e.toString());
+            GU_LOGGER.error("error writing Ensembl trans splice data file: {}", e.toString());
         }
     }
 

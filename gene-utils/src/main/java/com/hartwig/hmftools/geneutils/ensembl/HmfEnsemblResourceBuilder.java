@@ -1,4 +1,5 @@
-package com.hartwig.hmftools.ensembl;
+package com.hartwig.hmftools.geneutils.ensembl;
+
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -24,6 +25,8 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+
+/*
 import org.jooq.CSVFormat;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -31,6 +34,7 @@ import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import org.jooq.tools.StringUtils;
+ */
 
 public class HmfEnsemblResourceBuilder {
 
@@ -60,15 +64,19 @@ public class HmfEnsemblResourceBuilder {
         final String database = refGenomeVersion.is37() ? ENSEMBL_DB_URL_37 : ENSEMBL_DB_URL_38;
 
         LOGGER.info("Running hmf-ensembl-resource-builder with version {}", refGenomeVersion);
+
+        /*
         final DSLContext context = connectEnsemblDb(database);
         LOGGER.info(" Connected to {}", database);
 
         generateGenes(context, geneTsv, refGenomeVersion);
         generateRefSeqMapping(context, refseqMappingTsv);
+         */
 
         LOGGER.info("Complete");
     }
 
+    /*
     private static void generateGenes(@NotNull final DSLContext context, @NotNull final String outputTsv,
             @NotNull final RefGenomeVersion refGenomeVersion) throws IOException {
         final Result<Record> geneResult = context.fetch(read(Resources.getResource("sql/ensembl_gene_query.sql")));
@@ -100,15 +108,6 @@ public class HmfEnsemblResourceBuilder {
     }
 
     @NotNull
-    private static Options createOptions() {
-        final Options options = new Options();
-        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to generate files for");
-        options.addOption(GENE_TSV, true, "Path towards the gene tsv output file.");
-        options.addOption(REFSEQ_MAPPING_TSV, true, "Path towards the refseq mapping tsv output file.");
-        return options;
-    }
-
-    @NotNull
     private static DSLContext connectEnsemblDb(@NotNull final String database) throws SQLException {
         // Disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
@@ -129,4 +128,15 @@ public class HmfEnsemblResourceBuilder {
         writer.write(records.formatCSV(format));
         writer.close();
     }
+     */
+
+    @NotNull
+    private static Options createOptions() {
+        final Options options = new Options();
+        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to generate files for");
+        options.addOption(GENE_TSV, true, "Path towards the gene tsv output file.");
+        options.addOption(REFSEQ_MAPPING_TSV, true, "Path towards the refseq mapping tsv output file.");
+        return options;
+    }
+
 }

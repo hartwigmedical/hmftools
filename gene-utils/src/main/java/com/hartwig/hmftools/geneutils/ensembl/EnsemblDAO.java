@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.linx.gene;
+package com.hartwig.hmftools.geneutils.ensembl;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -59,7 +59,7 @@ public class EnsemblDAO
         }
 
         mCoordSystemId = findCoordSystemId();
-        LNX_LOGGER.info("Ref genome version({}), coord system Id({})", mRefGenomeVersion, mCoordSystemId);
+        GU_LOGGER.info("Ref genome version({}), coord system Id({})", mRefGenomeVersion, mCoordSystemId);
     }
 
     public static void addCmdLineArgs(Options options)
@@ -101,7 +101,7 @@ public class EnsemblDAO
         }
         catch(SQLException e)
         {
-            LNX_LOGGER.error("failed to connect to DB: {}", e.toString());
+            GU_LOGGER.error("failed to connect to DB: {}", e.toString());
             return false;
         }
 
@@ -116,7 +116,7 @@ public class EnsemblDAO
                 + " where version = '" + version + "'"
                 + " order by c.rank limit 1";
 
-        LNX_LOGGER.debug("gene query: {}", queryStr);
+        GU_LOGGER.debug("gene query: {}", queryStr);
 
         Result<?> results = mDbContext.fetch(queryStr);
 
@@ -133,7 +133,7 @@ public class EnsemblDAO
     {
         if(mDbContext == null)
         {
-            LNX_LOGGER.error("failed to establish Ensembl DB connection");
+            GU_LOGGER.error("failed to establish Ensembl DB connection");
             return;
         }
 
@@ -149,7 +149,7 @@ public class EnsemblDAO
 
     private void writeGeneData(final String outputFile)
     {
-        LNX_LOGGER.info("caching gene data to {}", outputFile);
+        GU_LOGGER.info("caching gene data to {}", outputFile);
 
         try
         {
@@ -230,7 +230,7 @@ public class EnsemblDAO
         }
         catch (final IOException e)
         {
-            LNX_LOGGER.error("error writing Ensembl gene data file: {}", e.toString());
+            GU_LOGGER.error("error writing Ensembl gene data file: {}", e.toString());
         }
     }
 
@@ -256,14 +256,14 @@ public class EnsemblDAO
                 + " group by GeneId, GeneName, EntrezId, ExtDbId, Chromosome, Strand, GeneStart, GeneEnd"
                 + " order by GeneName, ExtDbId desc;";
 
-        LNX_LOGGER.debug("gene query: {}", queryStr);
+        GU_LOGGER.debug("gene query: {}", queryStr);
 
         return mDbContext.fetch(queryStr);
     }
 
     private void writeTranscriptExonData(final String outputFile)
     {
-        LNX_LOGGER.info("caching transcript & exon data to {}", outputFile);
+        GU_LOGGER.info("caching transcript & exon data to {}", outputFile);
 
         try
         {
@@ -317,7 +317,7 @@ public class EnsemblDAO
         }
         catch (final IOException e)
         {
-            LNX_LOGGER.error("error writing Ensembl trans-exon data file: {}", e.toString());
+            GU_LOGGER.error("error writing Ensembl trans-exon data file: {}", e.toString());
         }
     }
 
@@ -340,14 +340,14 @@ public class EnsemblDAO
                 + " left join exon ce on ce.exon_id = tl.end_exon_id"
                 + " order by GeneId, TransId, ExonStart";
 
-        LNX_LOGGER.debug("transcript query: {}", queryStr);
+        GU_LOGGER.debug("transcript query: {}", queryStr);
 
         return mDbContext.fetch(queryStr);
     }
 
     private void writeTranscriptProteinData(final String outputFile)
     {
-        LNX_LOGGER.info("caching protein data to {}", outputFile);
+        GU_LOGGER.info("caching protein data to {}", outputFile);
 
         try
         {
@@ -380,7 +380,7 @@ public class EnsemblDAO
         }
         catch (final IOException e)
         {
-            LNX_LOGGER.error("error writing Ensembl trans-protein data file: {}", e.toString());
+            GU_LOGGER.error("error writing Ensembl trans-protein data file: {}", e.toString());
         }
     }
 
