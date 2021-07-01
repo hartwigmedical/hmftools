@@ -39,6 +39,7 @@
         <module>patient-reporter</module>
         <module>orange</module>
         <module>telo</module>
+        <module>gene-utils</module>
     </modules>
 
     <properties>
@@ -82,6 +83,7 @@
         <patient-reporter.version>7.24</patient-reporter.version>
         <orange.version>0.1</orange.version>
         <telo.version>1.0</telo.version>
+        <gene-utils.version>1.0</gene-utils.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
         <immutables.version>2.4.4</immutables.version>
