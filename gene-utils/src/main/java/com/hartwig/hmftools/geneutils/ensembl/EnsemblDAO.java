@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.geneutils.ensembl;
 
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_GENE_DATA_FILE;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_PROTEIN_FEATURE_DATA_FILE;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_TRANS_EXON_DATA_FILE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
@@ -9,6 +12,8 @@ import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -19,13 +24,14 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
+import org.jooq.SQLDialect;
+import org.jooq.impl.DSL;
 import org.jooq.types.UInteger;
 import org.jooq.types.ULong;
 
@@ -34,11 +40,6 @@ public class EnsemblDAO
     private static final String DB_URL = "ensembl_db";
     private static final String DB_USER = "ensembl_user";
     private static final String DB_PASS = "ensembl_pass";
-
-    public static final String ENSEMBL_GENE_DATA_FILE = "ensembl_gene_data.csv";
-    public static final String ENSEMBL_TRANS_EXON_DATA_FILE = "ensembl_trans_exon_data.csv";
-    public static final String ENSEMBL_TRANS_SPLICE_DATA_FILE = "ensembl_trans_splice_data.csv";
-    public static final String ENSEMBL_PROTEIN_FEATURE_DATA_FILE = "ensembl_protein_features.csv";
 
     private DSLContext mDbContext;
     private final int mCoordSystemId;
@@ -52,26 +53,27 @@ public class EnsemblDAO
         mGeneIds = Sets.newHashSet();
         mTranscriptIds = Sets.newHashSet();
 
-        if(!connectDB(cmd))
+        mDbContext = createEnsemblDbConnection(cmd);
+
+        if(mDbContext == null)
         {
             mCoordSystemId = -1;
             return;
         }
 
         mCoordSystemId = findCoordSystemId();
-        GU_LOGGER.info("Ref genome version({}), coord system Id({})", mRefGenomeVersion, mCoordSystemId);
+        GU_LOGGER.info("using coord system Id({})", mRefGenomeVersion, mCoordSystemId);
     }
 
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version - 37 (default) or 38");
-        options.addOption(DB_PASS, true, "Ensembl DB password");
+        options.addOption(DB_PASS, true, "Ensembl DB password, leave out for anonymous connection");
         options.addOption(DB_URL, true, "Ensembl DB URL");
         options.addOption(DB_USER, true, "Ensembl DB username");
     }
 
     public boolean isValid() { return mDbContext != null && mCoordSystemId > 0; }
-    public RefGenomeVersion refGenomeVersion() { return mRefGenomeVersion; }
 
     private boolean ignoreTranscript(final String transName)
     {
@@ -86,26 +88,27 @@ public class EnsemblDAO
         return cmd.hasOption(DB_URL) && cmd.hasOption(DB_USER) && cmd.hasOption(DB_PASS);
     }
 
-    private boolean connectDB(final CommandLine cmd)
+    public static DSLContext createEnsemblDbConnection(final CommandLine cmd)
     {
-        mDbContext = null;
-
         try
         {
             final String userName = cmd.getOptionValue(DB_USER);
-            final String password = cmd.getOptionValue(DB_PASS);
+            final String password = cmd.getOptionValue(DB_PASS, ""); // can be empty for an anonymous connection
             final String databaseUrl = cmd.getOptionValue(DB_URL);
             final String jdbcUrl = "jdbc:" + databaseUrl;
-            DatabaseAccess dbAccess = new DatabaseAccess(userName, password, jdbcUrl);
-            mDbContext = dbAccess.context();
+
+            System.setProperty("org.jooq.no-logo", "true");
+            Connection conn = DriverManager.getConnection(jdbcUrl, userName, password);
+            String catalog = conn.getCatalog();
+
+            GU_LOGGER.debug("connecting to database {}", catalog);
+            return DSL.using(conn, SQLDialect.MYSQL);
         }
         catch(SQLException e)
         {
             GU_LOGGER.error("failed to connect to DB: {}", e.toString());
-            return false;
+            return null;
         }
-
-        return true;
     }
 
     private int findCoordSystemId()

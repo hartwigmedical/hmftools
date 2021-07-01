@@ -1,17 +1,19 @@
 package com.hartwig.hmftools.geneutils.ensembl;
 
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_TRANS_SPLICE_DATA_FILE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.DEFAULT_PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
-import static com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO.ENSEMBL_TRANS_SPLICE_DATA_FILE;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -31,32 +33,17 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class GenerateEnsemblDataCache
 {
-    public static void main(@NotNull final String[] args) throws ParseException
-    {
-        final Options options = createBasicOptions();
-        final CommandLine cmd = createCommandLine(args, options);
-
-        if(cmd.hasOption(LOG_DEBUG))
-        {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
-
-        writeEnsemblDataFiles(cmd);
-    }
-
     public static void writeEnsemblDataFiles(final CommandLine cmd)
     {
-        final String outputDir = cmd.getOptionValue(OUTPUT_DIR);
+        String outputDir = parseOutputDir(cmd);
 
-        final RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(V37)));
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(V37)));
 
-        GU_LOGGER.info("writing Ensembl data files to {}", outputDir);
+        GU_LOGGER.info("writing Ensembl version({}) data files to {}", refGenomeVersion, outputDir);
 
         if(EnsemblDAO.hasDatabaseConfig(cmd))
         {
@@ -65,7 +52,7 @@ public class GenerateEnsemblDataCache
             if(!ensemblDAO.isValid())
             {
                 GU_LOGGER.info("invalid Ensembl DAO");
-                return;
+                System.exit(1);
             }
 
             ensemblDAO.writeDataCacheFiles(outputDir);
@@ -223,6 +210,15 @@ public class GenerateEnsemblDataCache
         return closestPosition;
     }
 
+    public static void main(@NotNull final String[] args) throws ParseException
+    {
+        final Options options = createBasicOptions();
+        final CommandLine cmd = createCommandLine(args, options);
+
+        setLogLevel(cmd);
+        writeEnsemblDataFiles(cmd);
+    }
+
     @NotNull
     private static Options createBasicOptions()
     {
@@ -240,6 +236,4 @@ public class GenerateEnsemblDataCache
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-
-
 }
