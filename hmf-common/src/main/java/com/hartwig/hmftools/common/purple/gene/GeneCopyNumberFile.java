@@ -25,7 +25,6 @@ public final class GeneCopyNumberFile {
     private static final String DELIMITER = "\t";
 
     private static final String EXTENSION = ".purple.cnv.gene.tsv";
-    private static final String EXTENSION_OLD = ".purple.gene.cnv";
 
     private GeneCopyNumberFile() {
     }
@@ -37,8 +36,7 @@ public final class GeneCopyNumberFile {
 
     @NotNull
     public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
-        String filename = basePath + File.separator + sample + EXTENSION;
-        return (new File(filename).exists()) ? filename : basePath + File.separator + sample + EXTENSION_OLD;
+        return basePath + File.separator + sample + EXTENSION;
     }
 
     @NotNull
@@ -122,7 +120,6 @@ public final class GeneCopyNumberFile {
         int geneIndex = fieldsIndexMap.get("gene");
         int minCnIndex = fieldsIndexMap.get("minCopyNumber");
         int maxCnIndex = fieldsIndexMap.get("maxCopyNumber");
-        //int Index = fieldsIndexMap.get("unused");
         int somRegionsIndex = fieldsIndexMap.get("somaticRegions");
         int germHmDelRegionsIndex = fieldsIndexMap.get("germlineHomDeletionRegions");
         int germHtHDelRegionsIndex = fieldsIndexMap.get("germlineHetToHomDeletionRegions");
@@ -138,8 +135,7 @@ public final class GeneCopyNumberFile {
 
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
 
-        for(final String line : lines)
-        {
+        for(final String line : lines) {
             String[] values = line.split(DELIMITER, -1);
 
             final ImmutableGeneCopyNumber.Builder builder = ImmutableGeneCopyNumber.builder()
@@ -166,47 +162,5 @@ public final class GeneCopyNumberFile {
         }
 
         return geneCopyNumbers;
-    }
-
-    @VisibleForTesting
-    @NotNull
-    static GeneCopyNumber fromString(@NotNull final String line) {
-
-        String[] values = line.split(DELIMITER);
-
-
-        final ImmutableGeneCopyNumber.Builder builder = ImmutableGeneCopyNumber.builder()
-                .chromosome(values[0])
-                .start(Long.parseLong(values[1]))
-                .end(Long.parseLong(values[2]))
-                .gene(values[3])
-                .minCopyNumber(Double.parseDouble(values[4]))
-                .maxCopyNumber(Double.parseDouble(values[5]))
-                .somaticRegions(Integer.parseInt(values[7]))
-                .germlineHomRegions(Integer.parseInt(values[8]))
-                .germlineHet2HomRegions(Integer.parseInt(values[9]))
-                .transcriptID(values[10])
-                .chromosomeBand(values[12]);
-
-        builder.minRegions(0)
-                .minRegionStart(Long.parseLong(values[1]))
-                .minRegionEnd(Long.parseLong(values[2]))
-                .minRegionMethod(CopyNumberMethod.UNKNOWN)
-                .minRegionStartSupport(SegmentSupport.NONE)
-                .minRegionEndSupport(SegmentSupport.NONE)
-                .minMinorAlleleCopyNumber(0);
-
-        if (values.length >= 19) {
-            builder.minRegions(Integer.parseInt(values[13]))
-                    .minRegionStart(Long.parseLong(values[14]))
-                    .minRegionEnd(Long.parseLong(values[15]))
-                    .minRegionStartSupport(SegmentSupport.valueOf(values[16]))
-                    .minRegionEndSupport(SegmentSupport.valueOf(values[17]))
-                    .minRegionMethod(CopyNumberMethod.valueOf(values[18]));
-        }
-
-        builder.minMinorAlleleCopyNumber(Double.parseDouble(values[values.length - 1]));
-
-        return builder.build();
     }
 }
