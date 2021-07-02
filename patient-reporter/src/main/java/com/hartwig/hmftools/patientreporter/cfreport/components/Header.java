@@ -22,7 +22,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class Header {
+public class Header {
 
     private static final Logger LOGGER = LogManager.getLogger(Header.class);
 

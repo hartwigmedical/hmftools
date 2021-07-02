@@ -11,7 +11,7 @@
     <artifactId>sigs</artifactId>
     <packaging>jar</packaging>
     <version>${sigs.version}</version>
-    <name>HMF Tools - Signature Routines</name>
+    <name>HMF Tools - Sigs</name>
 
     <dependencies>
         <dependency>

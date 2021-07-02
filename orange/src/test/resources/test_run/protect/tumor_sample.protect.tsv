@@ -1,0 +1,129 @@
+event	germline	reported	treatment	onLabel	level	direction	sources	urls
+BRAF p.Val600Glu	false	true	Cobimetinib + Vemurafenib	true	A	RESPONSIVE	vicc_cgi	https://www.google.com/#q=FDA
+BRAF p.Val600Glu	false	true	Dabrafenib	true	A	RESPONSIVE	vicc_cgi	https://www.google.com/#q=FDA
+BRAF p.Val600Glu	false	true	Dabrafenib + Trametinib	true	A	RESPONSIVE	vicc_cgi,vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/25399551,https://www.google.com/#q=FDA
+BRAF p.Val600Glu	false	true	Trametinib	true	A	RESPONSIVE	vicc_cgi	https://www.google.com/#q=FDA
+BRAF p.Val600Glu	false	true	Vemurafenib	true	A	RESPONSIVE	vicc_cgi,vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/21639808,https://www.google.com/#q=FDA,https://www.google.com/#q=NCCN
+BRAF p.Val600Glu	false	true	CI-1040	false	B	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/18682506,http://www.ncbi.nlm.nih.gov/pubmed/21882184
+BRAF p.Val600Glu	false	true	Cetuximab	false	B	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/25673558
+BRAF p.Val600Glu	false	true	Cetuximab	false	B	RESISTANT	vicc_cgi,vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/19001320,http://www.ncbi.nlm.nih.gov/pubmed/19884556,http://www.ncbi.nlm.nih.gov/pubmed/20619739,http://www.ncbi.nlm.nih.gov/pubmed/21163703,http://www.ncbi.nlm.nih.gov/pubmed/23325582,http://www.ncbi.nlm.nih.gov/pubmed/25666295,http://www.ncbi.nlm.nih.gov/pubmed/25989278
+BRAF p.Val600Glu	false	true	Cetuximab + Irinotecan + Vemurafenib	false	B	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/27729313
+BRAF p.Val600Glu	false	true	Cetuximab + Vemurafenib	false	B	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/26287849
+BRAF p.Val600Glu	false	true	Fluorouracil	false	B	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/19603024
+BRAF p.Val600Glu	false	true	Irinotecan	false	B	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/19603024
+BRAF p.Val600Glu	false	true	Oxaliplatin	false	B	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/19603024
+BRAF p.Val600Glu	false	true	Panitumumab	false	B	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/25673558
+BRAF p.Val600Glu	false	true	Panitumumab	false	B	RESISTANT	vicc_cgi,vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/19001320,http://www.ncbi.nlm.nih.gov/pubmed/20619739,http://www.ncbi.nlm.nih.gov/pubmed/21163703,http://www.ncbi.nlm.nih.gov/pubmed/23325582,http://www.ncbi.nlm.nih.gov/pubmed/25989278
+BRAF p.Val600Glu	false	true	Panitumumab + Vemurafenib	false	B	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/25589621
+BRAF p.Val600Glu	false	true	Selumetinib	false	B	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/22492957
+BRAF p.Val600Glu	false	true	Sorafenib	false	B	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/18682506,http://www.ncbi.nlm.nih.gov/pubmed/21882184
+BRAF p.Val600Glu	false	true	Vemurafenib	false	B	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/26287849
+PTEN partial loss	false	true	Cetuximab	false	B	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/21163703
+PTEN partial loss	false	false	Chemotherapy	false	B	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/15900596
+PTEN partial loss	false	true	Everolimus	false	B	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/23989949
+PTEN partial loss	false	true	Lapatinib + Trastuzumab	false	B	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/25300346
+PTEN partial loss	false	true	Ridaforolimus	false	B	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/24166148
+PTEN partial loss	false	true	Temsirolimus	false	B	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/24166148
+PTEN partial loss	false	true	Trastuzumab	false	B	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/20813970,http://www.ncbi.nlm.nih.gov/pubmed/24387334
+BRAF p.Val600Glu	false	false	Dabrafenib	false	A	RESPONSIVE	vicc_cgi	https://www.google.com/#q=NCCN
+BRAF p.Val600Glu	false	false	Dabrafenib + Trametinib	false	A	RESPONSIVE	vicc_cgi,vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/27283860
+BRAF p.Val600Glu	false	false	Vemurafenib	false	A	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/26287849
+BRAF p.Val600Glu	false	false	Cobimetinib + Vemurafenib	true	B	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/25265494
+BRAF p.Val600Glu	false	false	Dabrafenib	true	B	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/21343559,http://www.ncbi.nlm.nih.gov/pubmed/22608338,http://www.ncbi.nlm.nih.gov/pubmed/22735384
+BRAF p.Val600Glu	false	false	Dabrafenib + Trametinib	true	B	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/23020132,http://www.ncbi.nlm.nih.gov/pubmed/24583796
+BRAF p.Val600Glu	false	false	Trametinib	true	B	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/22663011
+BRAF p.Val600Glu	false	false	Vemurafenib	true	B	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/20818844,http://www.ncbi.nlm.nih.gov/pubmed/22356324,http://www.ncbi.nlm.nih.gov/pubmed/23569304,http://www.ncbi.nlm.nih.gov/pubmed/24508103,http://www.ncbi.nlm.nih.gov/pubmed/25399551,http://www.ncbi.nlm.nih.gov/pubmed/25524477,http://www.ncbi.nlm.nih.gov/pubmed/26557775
+BRAF p.Val600Glu	false	false	Dabrafenib	false	B	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/22608338
+BRAF p.Val600Glu	false	false	Dabrafenib + Trametinib	false	B	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/26392102
+BRAF p.Val600Glu	false	false	Vemurafenib	false	B	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/20068183,http://www.ncbi.nlm.nih.gov/pubmed/21274720,http://www.ncbi.nlm.nih.gov/pubmed/22492957,http://www.ncbi.nlm.nih.gov/pubmed/26200454,http://www.ncbi.nlm.nih.gov/pubmed/26287849,http://www.ncbi.nlm.nih.gov/pubmed/26352686,http://www.ncbi.nlm.nih.gov/pubmed/26460303,http://www.ncbi.nlm.nih.gov/pubmed/27460442
+BRAF p.Val600Glu	false	false	Bay	true	C	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/23434733
+BRAF p.Val600Glu	false	false	Pictilisib	true	C	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/25370471
+BRAF p.Val600Glu	false	false	Raffinose	true	C	RESPONSIVE	vicc_cgi	https://www.google.com/#q=AACR 2016 (abstr CT005),https://www.google.com/#q=AACR 2017 (abstr  CT002),https://www.google.com/#q=ESMO 2015 (abstract 300)
+BRAF p.Val600Glu	false	false	Vemurafenib	true	C	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/24463458,http://www.ncbi.nlm.nih.gov/pubmed/24616537
+BRAF p.Val600Glu	false	false	2-butanone	false	C	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/22241789,https://www.google.com/#q=ASCO 2013 (abstr 9029)
+BRAF p.Val600Glu	false	false	Braf	false	C	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/22608338
+BRAF p.Val600Glu	false	false	Cetuximab	false	C	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/19603018,http://www.ncbi.nlm.nih.gov/pubmed/19603024,http://www.ncbi.nlm.nih.gov/pubmed/26989027
+BRAF p.Val600Glu	false	false	Cetuximab + Irinotecan + Mab + Vemurafenib	false	C	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/27729313
+BRAF p.Val600Glu	false	false	Dabrafenib	false	C	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/20818844,http://www.ncbi.nlm.nih.gov/pubmed/22608338,http://www.ncbi.nlm.nih.gov/pubmed/23470635,http://www.ncbi.nlm.nih.gov/pubmed/23489023,http://www.ncbi.nlm.nih.gov/pubmed/23524406,http://www.ncbi.nlm.nih.gov/pubmed/27080216,https://www.google.com/#q=ASCO 2013 (abstr 8009),https://www.google.com/#q=ESMO 2014 (abstr LBA38_PR)
+BRAF p.Val600Glu	false	false	Dabrafenib	false	C	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/23524406
+BRAF p.Val600Glu	false	false	Dabrafenib + Mab + Panitumumab	false	C	RESPONSIVE	vicc_cgi	https://www.google.com/#q=ENA 2014 (abstr 11LBA)
+BRAF p.Val600Glu	false	false	Dabrafenib + Mab + Panitumumab + Trametinib	false	C	RESPONSIVE	vicc_cgi	https://www.google.com/#q=ASCO 2014 (abstr 3515),https://www.google.com/#q=ASCO 2015 (abstr 103)
+BRAF p.Val600Glu	false	false	Dabrafenib + Trametinib	false	C	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/26392102,http://www.ncbi.nlm.nih.gov/pubmed/27048246,https://www.google.com/#q=ASCO 2015 (abstr 8006)
+BRAF p.Val600Glu	false	false	Dabrafenib + Trametinib + Vemurafenib	false	C	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/27048246
+BRAF p.Val600Glu	false	false	Egfr	false	C	RESISTANT	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/22773810
+BRAF p.Val600Glu	false	false	Glu-arg-lys	false	C	RESPONSIVE	vicc_cgi	https://www.google.com/#q=ASCO 2017 (abstr 2508)
+BRAF p.Val600Glu	false	false	Irinotecan	false	C	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/19603018
+BRAF p.Val600Glu	false	false	Mab	false	C	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/28363909
+BRAF p.Val600Glu	false	false	Panitumumab + Vemurafenib	false	C	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/27325282
+BRAF p.Val600Glu	false	false	Selumetinib	false	C	RESPONSIVE	vicc_cgi	https://www.google.com/#q=NCT01089101
+BRAF p.Val600Glu	false	false	Vemurafenib	false	C	RESPONSIVE	vicc_cgi,vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/20818844,http://www.ncbi.nlm.nih.gov/pubmed/22586120,http://www.ncbi.nlm.nih.gov/pubmed/22608338,http://www.ncbi.nlm.nih.gov/pubmed/22621641,http://www.ncbi.nlm.nih.gov/pubmed/22743296,http://www.ncbi.nlm.nih.gov/pubmed/23278307,http://www.ncbi.nlm.nih.gov/pubmed/23300174,http://www.ncbi.nlm.nih.gov/pubmed/23489023,http://www.ncbi.nlm.nih.gov/pubmed/23612012,http://www.ncbi.nlm.nih.gov/pubmed/23733758,http://www.ncbi.nlm.nih.gov/pubmed/24335681,http://www.ncbi.nlm.nih.gov/pubmed/24725538,http://www.ncbi.nlm.nih.gov/pubmed/24821190,http://www.ncbi.nlm.nih.gov/pubmed/24888229,http://www.ncbi.nlm.nih.gov/pubmed/24987354,http://www.ncbi.nlm.nih.gov/pubmed/24997557,http://www.ncbi.nlm.nih.gov/pubmed/25092772,http://www.ncbi.nlm.nih.gov/pubmed/25209580,http://www.ncbi.nlm.nih.gov/pubmed/25353071,http://www.ncbi.nlm.nih.gov/pubmed/25524464,http://www.ncbi.nlm.nih.gov/pubmed/25815361,http://www.ncbi.nlm.nih.gov/pubmed/26286452,http://www.ncbi.nlm.nih.gov/pubmed/26287849,http://www.ncbi.nlm.nih.gov/pubmed/26490654,http://www.ncbi.nlm.nih.gov/pubmed/26579623,http://www.ncbi.nlm.nih.gov/pubmed/26776917,http://www.ncbi.nlm.nih.gov/pubmed/27116997,http://www.ncbi.nlm.nih.gov/pubmed/27520988
+BRAF p.Val600Glu	false	false	0325901	true	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/16273091,http://www.ncbi.nlm.nih.gov/pubmed/16424035
+BRAF p.Val600Glu	false	false	391210-10-9 + Trametinib	true	D	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/24576830
+BRAF p.Val600Glu	false	false	Braf	true	D	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/21156289,http://www.ncbi.nlm.nih.gov/pubmed/22389471
+BRAF p.Val600Glu	false	false	Braf + Cdk2	true	D	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/22997239
+BRAF p.Val600Glu	false	false	Braf + Hsp90	true	D	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/22351686
+BRAF p.Val600Glu	false	false	Cobimetinib	true	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/23934108
+BRAF p.Val600Glu	false	false	Dabrafenib	true	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/16424035,http://www.ncbi.nlm.nih.gov/pubmed/20818844,http://www.ncbi.nlm.nih.gov/pubmed/21107320,http://www.ncbi.nlm.nih.gov/pubmed/21107323
+BRAF p.Val600Glu	false	false	Dactolisib + Nvp + Selumetinib	true	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/26678033
+BRAF p.Val600Glu	false	false	Dasatinib	true	D	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/19671763
+BRAF p.Val600Glu	false	false	Glu-arg-lys	true	D	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/22997239,http://www.ncbi.nlm.nih.gov/pubmed/23614898
+BRAF p.Val600Glu	false	false	Gsk	true	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/16424035
+BRAF p.Val600Glu	false	false	Selumetinib	true	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/16424035,http://www.ncbi.nlm.nih.gov/pubmed/18172275
+BRAF p.Val600Glu	false	false	Sorafenib	true	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/15781657,http://www.ncbi.nlm.nih.gov/pubmed/16424035
+BRAF p.Val600Glu	false	false	Trametinib	true	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/16424035,http://www.ncbi.nlm.nih.gov/pubmed/22169769
+BRAF p.Val600Glu	false	false	Vemurafenib	true	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/16424035,http://www.ncbi.nlm.nih.gov/pubmed/18287029,http://www.ncbi.nlm.nih.gov/pubmed/20149136,http://www.ncbi.nlm.nih.gov/pubmed/20551065,http://www.ncbi.nlm.nih.gov/pubmed/21107320,http://www.ncbi.nlm.nih.gov/pubmed/21107323,http://www.ncbi.nlm.nih.gov/pubmed/22241959,http://www.ncbi.nlm.nih.gov/pubmed/26070258
+BRAF p.Val600Glu	false	false	Vemurafenib	true	D	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/24576830
+BRAF p.Val600Glu	false	false	0325901	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/19010912
+BRAF p.Val600Glu	false	false	0879 + Dactolisib + Gdc + Nvp	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/23549875
+BRAF p.Val600Glu	false	false	119	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/21351275
+BRAF p.Val600Glu	false	false	2-butanone	false	D	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/19018267
+BRAF p.Val600Glu	false	false	957054-30-7 + Plx-4720	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/23845441
+BRAF p.Val600Glu	false	false	Bevacizumab + Capecitabine + Vemurafenib	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/22180495
+BRAF p.Val600Glu	false	false	Braf	false	D	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/22038996,http://www.ncbi.nlm.nih.gov/pubmed/22586120
+BRAF p.Val600Glu	false	false	Cetuximab	false	D	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/22586653
+BRAF p.Val600Glu	false	false	Cetuximab + Gefitinib + Vemurafenib	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/22281684
+BRAF p.Val600Glu	false	false	Cetuximab + Sorafenib	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/19001320
+BRAF p.Val600Glu	false	false	Ci-1040	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/17911174
+BRAF p.Val600Glu	false	false	Dasatinib	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/23729178
+BRAF p.Val600Glu	false	false	Nutlin + Plx-4720	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/23812671
+BRAF p.Val600Glu	false	false	Panitumumab + Sorafenib	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/19001320
+BRAF p.Val600Glu	false	false	Plx-4720	false	D	RESPONSIVE	vicc_cgi	https://www.google.com/#q=PMC3638050
+BRAF p.Val600Glu	false	false	Regorafenib	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/26865419
+BRAF p.Val600Glu	false	false	Selumetinib	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/20806365
+BRAF p.Val600Glu	false	false	Sorafenib	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/16533790
+BRAF p.Val600Glu	false	false	Vemurafenib	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/18458053,http://www.ncbi.nlm.nih.gov/pubmed/21185263,http://www.ncbi.nlm.nih.gov/pubmed/22038996,http://www.ncbi.nlm.nih.gov/pubmed/22180495,http://www.ncbi.nlm.nih.gov/pubmed/22448344,http://www.ncbi.nlm.nih.gov/pubmed/25706985,http://www.ncbi.nlm.nih.gov/pubmed/26456083
+CDKN2A p.Ala68fs	false	false	Cdk4	true	C	RESPONSIVE	vicc_cgi	https://www.google.com/#q=ASCO 2013 (abstr 2500)
+CDKN2A p.Ala68fs	false	false	Ilorasertib	true	C	RESPONSIVE	vicc_cgi	https://www.google.com/#q=NCT02478320
+CDKN2A p.Ala68fs	false	false	Cdk4	true	D	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/22471707,http://www.ncbi.nlm.nih.gov/pubmed/22586120,http://www.ncbi.nlm.nih.gov/pubmed/22711607
+CDKN2A p.Ala68fs	false	false	Cdk4	false	D	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/22471707,http://www.ncbi.nlm.nih.gov/pubmed/22586120,http://www.ncbi.nlm.nih.gov/pubmed/22711607
+HDAC2 p.Arg409*	false	false	Olaparib	false	C	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/26510020
+PTEN partial loss	false	false	1-tert-butyl-3-[6-(3 + 3-d]pyrimidin-7-yl]-urea + 5-dimethoxy-phenyl)-2-(4-diethylamino-butylamino)-pyrido[2	true	C	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/26645196
+PTEN partial loss	false	false	Everolimus	true	C	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/28330462
+PTEN partial loss	false	false	Sirolimus	true	C	RESPONSIVE	vicc_cgi	https://www.google.com/#q=ASCO 2013 (abstr 2532)
+PTEN partial loss	false	false	10-decarboxymethylaclacinomycin t (dcmat)	false	C	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/22025163
+PTEN partial loss	false	false	2206	false	C	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/22025163
+PTEN partial loss	false	false	Byl-719	false	C	RESISTANT	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/25409150
+PTEN partial loss	false	false	Cetuximab + Mab	false	C	RESISTANT	vicc_cgi	https://www.google.com/#q=Caris molecular intelligence
+PTEN partial loss	false	false	Everolimus	false	C	RESPONSIVE	vicc_cgi,vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/23238879,http://www.ncbi.nlm.nih.gov/pubmed/23582881,http://www.ncbi.nlm.nih.gov/pubmed/27091708
+PTEN partial loss	false	false	Mab + Panitumumab	false	C	RESISTANT	vicc_cgi	https://www.google.com/#q=Caris molecular intelligence
+PTEN partial loss	false	false	Parp inhibitors	false	C	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/20944090,http://www.ncbi.nlm.nih.gov/pubmed/21468130
+PTEN partial loss	false	false	Pik3cb	false	C	RESPONSIVE	vicc_cgi	https://www.google.com/#q=ASCO 2014 (abstr 2514)
+PTEN partial loss	false	false	Azd5363	true	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/22294718
+PTEN partial loss	false	false	Ipatasertib	true	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/23287563
+PTEN partial loss	false	false	Pi3k pathway inhibitors	true	D	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/17804702,http://www.ncbi.nlm.nih.gov/pubmed/21191045,http://www.ncbi.nlm.nih.gov/pubmed/21289267,http://www.ncbi.nlm.nih.gov/pubmed/21325073,http://www.ncbi.nlm.nih.gov/pubmed/21632463,http://www.ncbi.nlm.nih.gov/pubmed/21673091,http://www.ncbi.nlm.nih.gov/pubmed/21998291,http://www.ncbi.nlm.nih.gov/pubmed/22662154,http://www.ncbi.nlm.nih.gov/pubmed/22932669,http://www.ncbi.nlm.nih.gov/pubmed/23085766,http://www.ncbi.nlm.nih.gov/pubmed/23136191,http://www.ncbi.nlm.nih.gov/pubmed/23287563
+PTEN partial loss	false	false	Uprosertib	true	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/24735930
+PTEN partial loss	false	false	154447-36-6 + Trastuzumab	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/15324695
+PTEN partial loss	false	false	2-butanone	false	D	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/21632463
+PTEN partial loss	false	false	3'-azido-3'-deoxythymidine-5'-monophosphate	false	D	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/27397505
+PTEN partial loss	false	false	Alpelisib	false	D	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/25409150
+PTEN partial loss	false	false	Alpelisib + Azd8186 + Enzalutamide	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/25544636
+PTEN partial loss	false	false	Azd5363 + Docetaxel	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/24088382
+PTEN partial loss	false	false	Azd8186	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/25398829
+PTEN partial loss	false	false	Cisplatin	false	D	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/15790433
+PTEN partial loss	false	false	Everolimus + Pp242	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/21358673
+PTEN partial loss	false	false	Gdc + Taselisib	false	D	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/26589432
+PTEN partial loss	false	false	N-alpha-l-acetyl-arginine + Pictilisib	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/25855885
+PTEN partial loss	false	false	Pi3k pathway inhibitor + ar antagonists	false	D	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/21575859
+PTEN partial loss	false	false	Pi3k pathway inhibitors	false	D	RESPONSIVE	vicc_cgi	http://www.ncbi.nlm.nih.gov/pubmed/17804702,http://www.ncbi.nlm.nih.gov/pubmed/21191045,http://www.ncbi.nlm.nih.gov/pubmed/21289267,http://www.ncbi.nlm.nih.gov/pubmed/21325073,http://www.ncbi.nlm.nih.gov/pubmed/21632463,http://www.ncbi.nlm.nih.gov/pubmed/21673091,http://www.ncbi.nlm.nih.gov/pubmed/21998291,http://www.ncbi.nlm.nih.gov/pubmed/22662154,http://www.ncbi.nlm.nih.gov/pubmed/22932669,http://www.ncbi.nlm.nih.gov/pubmed/23085766,http://www.ncbi.nlm.nih.gov/pubmed/23136191,http://www.ncbi.nlm.nih.gov/pubmed/23287563
+PTEN partial loss	false	false	Temsirolimus	false	D	RESPONSIVE	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/11504908,http://www.ncbi.nlm.nih.gov/pubmed/23674493
+PTEN partial loss	false	false	Trastuzumab	false	D	RESISTANT	vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/17936563
