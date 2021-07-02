@@ -81,7 +81,7 @@ public class GenerateGenePanelRefSeq
         }
 
         String geneFile = String.format("%sall_genes.%s.tsv", outputDir, refGenomeVersion.identifier());
-        generateGenes(context, geneFile, refGenomeVersion, "sql/ensembl_gene_query.sql");
+        generateGenes(context, geneFile, refGenomeVersion, "sql/ensembl_gene_panel.sql");
 
         String reqSeqFile = String.format("%sref_seq.%s.tsv", outputDir, refGenomeVersion.identifier());
         generateRefSeqMapping(context, reqSeqFile, refGenomeVersion);
@@ -94,7 +94,7 @@ public class GenerateGenePanelRefSeq
     {
         try
         {
-            final Result<Record> results = context.fetch(read(Resources.getResource(genePanelQuery)));
+            final Result<Record> results = context.fetch(readQueryString(Resources.getResource(genePanelQuery)));
             GU_LOGGER.debug("gene query returned {} entries", results.size());
 
             BufferedWriter writer = createBufferedWriter(outputFile, false);
@@ -176,25 +176,25 @@ public class GenerateGenePanelRefSeq
 
     private static void generateRefSeqMapping(final DSLContext context, final String outputFile, final RefGenomeVersion refGenomeVersion)
     {
+        final Result<Record> refseqMappingResult = context.fetch(readQueryString(Resources.getResource("sql/ensembl_refseq_mapping.sql")));
+        GU_LOGGER.info("RefSeq mapping query returned {} entries", refseqMappingResult.size());
+
+        writeAsTsv(outputFile, refseqMappingResult);
+        GU_LOGGER.info("written RefSeq mapping output to {}", outputFile);
+    }
+
+    public static String readQueryString(final URL queryResource)
+    {
         try
         {
-            final Result<Record> refseqMappingResult = context.fetch(read(Resources.getResource("sql/ensembl_refseq_mapping_query.sql")));
-            GU_LOGGER.info("RefSeq mapping query returned {} entries", refseqMappingResult.size());
-
-            writeAsTsv(outputFile, refseqMappingResult);
-            GU_LOGGER.info("written RefSeq mapping output to {}", outputFile);
+            final List<String> lines = Resources.readLines(queryResource, Charset.defaultCharset());
+            return StringUtils.join(lines.toArray(), "\n");
         }
         catch (final IOException e)
         {
-            GU_LOGGER.error("error writing req-seq mapping file: {}", e.toString());
-            return;
+            GU_LOGGER.error("failed to load query from file: {}", queryResource, e.toString());
+            return "";
         }
-    }
-
-    private static String read(final URL queryResource) throws IOException
-    {
-        final List<String> lines = Resources.readLines(queryResource, Charset.defaultCharset());
-        return StringUtils.join(lines.toArray(), "\n");
     }
 
     private static void writeAsTsv(final String outputFile, final Result<Record> records)

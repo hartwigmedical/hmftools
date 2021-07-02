@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+import static com.hartwig.hmftools.geneutils.ensembl.GenerateGenePanelRefSeq.readQueryString;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -22,6 +23,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
@@ -40,6 +42,9 @@ public class EnsemblDAO
     private static final String DB_URL = "ensembl_db";
     private static final String DB_USER = "ensembl_user";
     private static final String DB_PASS = "ensembl_pass";
+
+    private static final int COORD_SYSTEM_V37 = 2;
+    private static final int COORD_SYSTEM_V38 = 4;
 
     private DSLContext mDbContext;
     private final int mCoordSystemId;
@@ -161,7 +166,7 @@ public class EnsemblDAO
             writer.write("GeneId,GeneName,Chromosome,Strand,GeneStart,GeneEnd,KaryotypeBand,Synonyms");
             writer.newLine();
 
-            Result<?> results = queryAllGeneData();
+            Result<Record> results = queryAllGeneData();
 
             final Map<String,List<EnsemblGeneData>> chrGeneMap = Maps.newHashMap();
 
@@ -237,8 +242,9 @@ public class EnsemblDAO
         }
     }
 
-    private Result<?> queryAllGeneData()
+    private Result<Record> queryAllGeneData()
     {
+        /*
         final String queryStr = "select gene.stable_id as GeneId, display_xref.display_label as GeneName, entrez_xref.display_label as EntrezId,"
                 + " case when entrez_xref.external_db_id = 1100 then 1100 else 0 end as ExtDbId, seq_region.name as Chromosome,"
                 + " gene.seq_region_strand as Strand, gene.seq_region_start as GeneStart, gene.seq_region_end as GeneEnd,"
@@ -258,7 +264,10 @@ public class EnsemblDAO
                 + " and seq_region.coord_system_id = " + mCoordSystemId
                 + " group by GeneId, GeneName, EntrezId, ExtDbId, Chromosome, Strand, GeneStart, GeneEnd"
                 + " order by GeneName, ExtDbId desc;";
+         */
 
+        String queryStr = readQueryString(Resources.getResource("sql/ensembl_gene_data.sql"));
+        queryStr = queryStr.replaceAll("COORD_SYSTEM", String.valueOf(mCoordSystemId));
         GU_LOGGER.debug("gene query: {}", queryStr);
 
         return mDbContext.fetch(queryStr);
@@ -324,27 +333,10 @@ public class EnsemblDAO
         }
     }
 
-    private Result<?> queryAllTranscriptExonData()
+    private Result<Record> queryAllTranscriptExonData()
     {
-        final String queryStr = "select q1.*,"
-                + " if(Strand = -1, ce.seq_region_end - tl.seq_end + 1, cs.seq_region_start + tl.seq_start - 1) as CodingStart,"
-                + " if(Strand = -1, cs.seq_region_end - tl.seq_start + 1, ce.seq_region_start + tl.seq_end - 1) as CodingEnd"
-                + " from ("
-                + " select g.stable_id As GeneId, g.canonical_transcript_id as CanonicalTranscriptId,"
-                + " t.seq_region_strand as Strand, t.transcript_id as TransId, t.stable_id as Trans, t.biotype as BioType,"
-                + " t.seq_region_start as TransStart, t.seq_region_end as TransEnd,"
-                + " et.rank as ExonRank, e.seq_region_start as ExonStart, e.seq_region_end as ExonEnd, e.phase as ExonPhase, e.end_phase as ExonEndPhase"
-                + " from transcript as t, exon as e, exon_transcript as et, gene as g, xref as x"
-                + " where t.transcript_id = et.transcript_id and e.exon_id = et.exon_id and g.display_xref_id = x.xref_id"
-                + " and t.gene_id = g.gene_id"
-                + " ) as q1"
-                + " left join translation tl on tl.transcript_id = TransId"
-                + " left join exon cs on cs.exon_id = tl.start_exon_id"
-                + " left join exon ce on ce.exon_id = tl.end_exon_id"
-                + " order by GeneId, TransId, ExonStart";
-
+        final String queryStr = readQueryString(Resources.getResource("sql/ensembl_transcript.sql"));
         GU_LOGGER.debug("transcript query: {}", queryStr);
-
         return mDbContext.fetch(queryStr);
     }
 
@@ -359,7 +351,8 @@ public class EnsemblDAO
             writer.write("TranscriptId,TranslationId,ProteinFeatureId,SeqStart,SeqEnd,HitDescription");
             writer.newLine();
 
-            Result<?> results = queryAllProteinData();
+            final String queryStr = readQueryString(Resources.getResource("sql/ensembl_protein.sql"));
+            Result<Record> results = mDbContext.fetch(queryStr);
 
             for(final Record record : results)
             {
@@ -385,18 +378,6 @@ public class EnsemblDAO
         {
             GU_LOGGER.error("error writing Ensembl trans-protein data file: {}", e.toString());
         }
-    }
-
-    private Result<?> queryAllProteinData()
-    {
-        final String queryStr = "select tl.transcript_id as TranscriptId, tl.translation_id as TranslationId, protein_feature_id as ProteinFeatureId,"
-                + " pf.seq_start as SeqStart, pf.seq_end as SeqEnd, hit_description as HitDescription"
-                + " from protein_feature pf, analysis_description ad, translation tl, transcript t"
-                + " where pf.analysis_id = ad.analysis_id and pf.translation_id = tl.translation_id and t.transcript_id = tl.transcript_id"
-                + " and display_label = 'PROSITE profiles'"
-                + " order by tl.transcript_id, tl.translation_id, pf.seq_start";
-
-        return mDbContext.fetch(queryStr);
     }
 
 }
