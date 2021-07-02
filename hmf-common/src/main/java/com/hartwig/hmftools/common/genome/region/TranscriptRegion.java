@@ -7,8 +7,6 @@ public interface TranscriptRegion extends GenomeRegion {
     @NotNull
     String transcriptID();
 
-    int transcriptVersion();
-
     @NotNull
     String gene();
 

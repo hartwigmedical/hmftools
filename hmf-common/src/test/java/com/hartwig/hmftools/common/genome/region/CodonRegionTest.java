@@ -301,7 +301,6 @@ public class CodonRegionTest
                 .gene("gene")
                 .geneID("geneID")
                 .transcriptID("transcriptID")
-                .transcriptVersion(1)
                 .geneStart(1)
                 .geneEnd(29)
                 .exome(exome)

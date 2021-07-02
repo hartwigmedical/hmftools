@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep21;
+import org.jooq.InsertValuesStep20;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -54,7 +54,6 @@ class GeneCopyNumberDAO {
                     .germlineHomRegions(record.getValue(GENECOPYNUMBER.GERMLINEHOMDELETIONREGIONS))
                     .germlineHet2HomRegions(record.getValue(GENECOPYNUMBER.GERMLINEHETTOHOMDELETIONREGIONS))
                     .transcriptID(record.getValue(GENECOPYNUMBER.TRANSCRIPTID))
-                    .transcriptVersion(record.getValue(GENECOPYNUMBER.TRANSCRIPTVERSION))
                     .chromosomeBand(record.getValue(GENECOPYNUMBER.CHROMOSOMEBAND))
                     .minRegions(record.getValue(GENECOPYNUMBER.MINREGIONS))
                     .minRegionStart(record.getValue(GENECOPYNUMBER.MINREGIONSTART))
@@ -73,7 +72,7 @@ class GeneCopyNumberDAO {
         deleteGeneCopyNumberForSample(sample);
 
         for (List<GeneCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep21 inserter = context.insertInto(GENECOPYNUMBER,
+            InsertValuesStep20 inserter = context.insertInto(GENECOPYNUMBER,
                     GENECOPYNUMBER.SAMPLEID,
                     GENECOPYNUMBER.CHROMOSOME,
                     GENECOPYNUMBER.START,
@@ -85,7 +84,6 @@ class GeneCopyNumberDAO {
                     GENECOPYNUMBER.GERMLINEHOMDELETIONREGIONS,
                     GENECOPYNUMBER.GERMLINEHETTOHOMDELETIONREGIONS,
                     GENECOPYNUMBER.TRANSCRIPTID,
-                    GENECOPYNUMBER.TRANSCRIPTVERSION,
                     GENECOPYNUMBER.CHROMOSOMEBAND,
                     GENECOPYNUMBER.MINREGIONS,
                     GENECOPYNUMBER.MINREGIONSTART,
@@ -100,7 +98,7 @@ class GeneCopyNumberDAO {
         }
     }
 
-    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep21 inserter, @NotNull String sample,
+    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep20 inserter, @NotNull String sample,
             @NotNull GeneCopyNumber gene) {
         inserter.values(sample,
                 gene.chromosome(),
@@ -113,7 +111,6 @@ class GeneCopyNumberDAO {
                 gene.germlineHomRegions(),
                 gene.germlineHet2HomRegions(),
                 gene.transcriptID(),
-                gene.transcriptVersion(),
                 gene.chromosomeBand(),
                 gene.minRegions(),
                 gene.minRegionStart(),

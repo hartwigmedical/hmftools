@@ -61,7 +61,6 @@ public class NamedBedFactoryTest {
                 .strand(Strand.REVERSE)
                 .geneID("geneId")
                 .transcriptID("transcriptId")
-                .transcriptVersion(2)
                 .build();
 
     }

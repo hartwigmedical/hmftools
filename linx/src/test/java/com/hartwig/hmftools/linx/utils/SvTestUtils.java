@@ -208,7 +208,6 @@ public class SvTestUtils
                 .minRegionMethod(BAF_WEIGHTED)
                 .minMinorAlleleCopyNumber(0)
                 .transcriptID("")
-                .transcriptVersion(1)
                 .build();
     }
 

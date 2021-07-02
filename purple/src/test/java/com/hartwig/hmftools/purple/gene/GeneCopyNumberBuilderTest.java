@@ -136,7 +136,6 @@ public class GeneCopyNumberBuilderTest
                 .end(end)
                 .gene("GENE")
                 .transcriptID("ID")
-                .transcriptVersion(1)
                 .chromosomeBand("BAND")
                 .entrezId(Collections.singletonList(1))
                 .geneID("ID")

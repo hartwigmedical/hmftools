@@ -2,11 +2,14 @@ package com.hartwig.hmftools.common.purple.gene;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -58,7 +61,8 @@ public final class GeneCopyNumberFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("chromosome")
+        return new StringJoiner(DELIMITER, "", "")
+                .add("chromosome")
                 .add("start")
                 .add("end")
                 .add("gene")
@@ -69,7 +73,6 @@ public final class GeneCopyNumberFile {
                 .add("germlineHomDeletionRegions")
                 .add("germlineHetToHomDeletionRegions")
                 .add("transcriptId")
-                .add("transcriptVersion")
                 .add("chromosomeBand")
                 .add("minRegions")
                 .add("minRegionStart")
@@ -95,7 +98,6 @@ public final class GeneCopyNumberFile {
                 .add(String.valueOf(geneCopyNumber.germlineHomRegions()))
                 .add(String.valueOf(geneCopyNumber.germlineHet2HomRegions()))
                 .add(geneCopyNumber.transcriptID())
-                .add(String.valueOf(geneCopyNumber.transcriptVersion()))
                 .add(geneCopyNumber.chromosomeBand())
                 .add(String.valueOf(geneCopyNumber.minRegions()))
                 .add(String.valueOf(geneCopyNumber.minRegionStart()))
@@ -110,16 +112,68 @@ public final class GeneCopyNumberFile {
     @NotNull
     @VisibleForTesting
     static List<GeneCopyNumber> fromLines(@NotNull List<String> lines) {
-        return lines.stream()
-                .skip(1)
-                .map(GeneCopyNumberFile::fromString)
-                .collect(toList());
+
+        final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+        lines.remove(0);
+
+        int chrIndex = fieldsIndexMap.get("chromosome");
+        int startIndex = fieldsIndexMap.get("start");
+        int endIndex = fieldsIndexMap.get("end");
+        int geneIndex = fieldsIndexMap.get("gene");
+        int minCnIndex = fieldsIndexMap.get("minCopyNumber");
+        int maxCnIndex = fieldsIndexMap.get("maxCopyNumber");
+        //int Index = fieldsIndexMap.get("unused");
+        int somRegionsIndex = fieldsIndexMap.get("somaticRegions");
+        int germHmDelRegionsIndex = fieldsIndexMap.get("germlineHomDeletionRegions");
+        int germHtHDelRegionsIndex = fieldsIndexMap.get("germlineHetToHomDeletionRegions");
+        int transIdIndex = fieldsIndexMap.get("transcriptId");
+        int chrBandIndex = fieldsIndexMap.get("chromosomeBand");
+        int minRegionIndex = fieldsIndexMap.get("minRegions");
+        int minRegionStartIndex = fieldsIndexMap.get("minRegionStart");
+        int minRegionEndIndex = fieldsIndexMap.get("minRegionEnd");
+        int minRegionStartSupIndex = fieldsIndexMap.get("minRegionStartSupport");
+        int minRegionEndSupIndex = fieldsIndexMap.get("minRegionEndSupport");
+        int minRegionMethodIndex = fieldsIndexMap.get("minRegionMethod");
+        int mmACnIndex = fieldsIndexMap.get("minMinorAlleleCopyNumber");
+
+        List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
+
+        for(final String line : lines)
+        {
+            String[] values = line.split(DELIMITER, -1);
+
+            final ImmutableGeneCopyNumber.Builder builder = ImmutableGeneCopyNumber.builder()
+                    .chromosome(values[chrIndex])
+                    .start(Long.parseLong(values[startIndex]))
+                    .end(Long.parseLong(values[endIndex]))
+                    .gene(values[geneIndex])
+                    .minCopyNumber(Double.parseDouble(values[minCnIndex]))
+                    .maxCopyNumber(Double.parseDouble(values[maxCnIndex]))
+                    .somaticRegions(Integer.parseInt(values[somRegionsIndex]))
+                    .germlineHomRegions(Integer.parseInt(values[germHmDelRegionsIndex]))
+                    .germlineHet2HomRegions(Integer.parseInt(values[germHtHDelRegionsIndex]))
+                    .transcriptID(values[transIdIndex])
+                    .chromosomeBand(values[chrBandIndex])
+                    .minRegions(minRegionIndex)
+                    .minRegionStart(Long.parseLong(values[minRegionStartIndex]))
+                    .minRegionEnd(Long.parseLong(values[minRegionEndIndex]))
+                    .minRegionMethod(CopyNumberMethod.valueOf(values[minRegionMethodIndex]))
+                    .minRegionStartSupport(SegmentSupport.valueOf(values[minRegionStartSupIndex]))
+                    .minRegionEndSupport(SegmentSupport.valueOf(values[minRegionEndSupIndex]))
+                    .minMinorAlleleCopyNumber(Double.parseDouble(values[mmACnIndex]));
+
+            geneCopyNumbers.add(builder.build());
+        }
+
+        return geneCopyNumbers;
     }
 
     @VisibleForTesting
     @NotNull
     static GeneCopyNumber fromString(@NotNull final String line) {
+
         String[] values = line.split(DELIMITER);
+
 
         final ImmutableGeneCopyNumber.Builder builder = ImmutableGeneCopyNumber.builder()
                 .chromosome(values[0])
@@ -132,7 +186,6 @@ public final class GeneCopyNumberFile {
                 .germlineHomRegions(Integer.parseInt(values[8]))
                 .germlineHet2HomRegions(Integer.parseInt(values[9]))
                 .transcriptID(values[10])
-                .transcriptVersion(Integer.parseInt(values[11]))
                 .chromosomeBand(values[12]);
 
         builder.minRegions(0)

@@ -120,7 +120,6 @@ public final class HmfTranscriptRegionFile
         int entrezIdsIndex = fieldsIndexMap.get("EntrezIds");
         int chrBandIndex = fieldsIndexMap.get("ChrBand");
         int transIdIndex = fieldsIndexMap.get("TranscriptId");
-        int transVersionIndex = fieldsIndexMap.get("TransVersion");
         int transStartIndex = fieldsIndexMap.get("TransStart");
         int transEndIndex = fieldsIndexMap.get("TransEnd");
         int codingStartIndex = fieldsIndexMap.get("CodingStart");
@@ -183,7 +182,6 @@ public final class HmfTranscriptRegionFile
                     .entrezId(entrezIds)
                     .chromosomeBand(values[chrBandIndex])
                     .transcriptID(values[transIdIndex])
-                    .transcriptVersion(Integer.parseInt(values[transVersionIndex]))
                     .start(Integer.parseInt(values[transStartIndex]))
                     .end(Integer.parseInt(values[transEndIndex]))
                     .codingStart(codingStart)
