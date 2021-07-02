@@ -119,7 +119,7 @@ final class SomaticKernelDensityPeaks
                 final double alleleFrequency = vafs[i];
                 final int peakCount = count(alleleFrequency, sample);
                 final SomaticPeak peak = ImmutableSomaticPeak.builder().alleleFrequency(alleleFrequency).count(peakCount).build();
-                PPL_LOGGER.debug("Discovered peak {}", peak);
+                PPL_LOGGER.debug("discovered peak {}", peak);
                 results.add(peak);
             }
         }
