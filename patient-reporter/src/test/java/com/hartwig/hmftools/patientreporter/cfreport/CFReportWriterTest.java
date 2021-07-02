@@ -125,6 +125,17 @@ public class CFReportWriterTest {
     }
 
     @Test
+    public void canGeneratePatientReportForACTINSample() throws IOException {
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("ACTN_FULL")
+                .limsCohortConfig(LimsCohortTestFactory.createACTINCohortConfig())
+                .build();
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
+    }
+
+    @Test
     public void canGeneratePatientReportForCORESample() throws IOException {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CORE01_FULL")
                 .limsCohortConfig(LimsCohortTestFactory.createCORECohortConfig())
