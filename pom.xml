@@ -37,7 +37,6 @@
         <module>serve</module>
         <module>protect</module>
         <module>orange</module>
-        <module>telo</module>
         <module>gene-utils</module>
         <module>patient-reporter</module>
     </modules>
