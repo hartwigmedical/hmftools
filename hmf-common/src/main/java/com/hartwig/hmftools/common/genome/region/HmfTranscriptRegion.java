@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.genome.region;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
@@ -12,8 +12,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Modifiable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class HmfTranscriptRegion implements TranscriptRegion {
-
+public abstract class HmfTranscriptRegion implements TranscriptRegion
+{
     @NotNull
     public abstract String geneID();
 
@@ -35,11 +35,13 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
     public abstract List<HmfExonRegion> exome();
 
     @Nullable
-    public HmfExonRegion exonByIndex(int index) {
+    public HmfExonRegion exonByIndex(int index)
+    {
         int effectiveIndex = index - 1;
         List<HmfExonRegion> strandSortedExome = strandSortedExome();
 
-        if (effectiveIndex >= 0 && effectiveIndex < strandSortedExome.size()) {
+        if(effectiveIndex >= 0 && effectiveIndex < strandSortedExome.size())
+        {
             return strandSortedExome.get(effectiveIndex);
         }
 
@@ -47,7 +49,8 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
     }
 
     @NotNull
-    public List<HmfExonRegion> strandSortedExome() {
+    public List<HmfExonRegion> strandSortedExome()
+    {
         return strand() == Strand.FORWARD ? exome() : Lists.reverse(exome());
     }
 }

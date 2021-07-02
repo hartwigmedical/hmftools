@@ -101,7 +101,7 @@ public class EnsemblDAO
             Connection conn = DriverManager.getConnection(jdbcUrl, userName, password);
             String catalog = conn.getCatalog();
 
-            GU_LOGGER.debug("connecting to database {}", catalog);
+            GU_LOGGER.info("connecting to database {}", catalog);
             return DSL.using(conn, SQLDialect.MYSQL);
         }
         catch(SQLException e)
