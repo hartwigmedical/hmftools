@@ -124,8 +124,8 @@ public class RnaDataLoader
 
                 if(geneIdIndex == null)
                 {
-                    CUP_LOGGER.error("unknown geneId({}) in sample file({})", geneId, filename);
-                    return null;
+                    CUP_LOGGER.warn("unknown geneId({}) in sample file({})", geneId, filename);
+                    continue;
                 }
 
                 double logTpm = log(adjTpm + 1);
