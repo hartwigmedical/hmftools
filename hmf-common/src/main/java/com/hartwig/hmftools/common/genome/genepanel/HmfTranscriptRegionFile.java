@@ -96,7 +96,7 @@ public final class HmfTranscriptRegionFile
         return fromLines(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
     }
 
-    public static List<HmfTranscriptRegion> fromLines(@NotNull List<String> lines)
+    private static List<HmfTranscriptRegion> fromLines(final List<String> lines)
     {
         List<HmfTranscriptRegion> transcriptRegions = Lists.newArrayList();
 
