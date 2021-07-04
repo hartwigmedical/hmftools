@@ -37,3 +37,19 @@ java -cp gene-utils.jar com.hartwig.hmftools.geneutils.ensembl.GenerateGenePanel
     -ensembl_db [ensembl_URL, see below] -ensembl_user [ensembl_user] -ensembl_pass [password] 
     -output_dir /path_to_write_data_files/ -ref_genome_version [37 or 38]
 ```
+
+
+### Gene Mapping between Ref Genomes
+A routine to map gene definitions between ref-genome 37 and 38 can be run. It will generate a file mapping GeneId and GeneName between the 2 versions.
+Gene matches are tried in the following order:
+- GENE_ID - if unchanged
+- GENE_NAME - if GeneId ID has changed but GeneName remains the same
+- SYNONYM - genes have the same Entrez (typically HGNC) IDs
+- COORD - if a lift-over BED file is provided, then a coordinate match is attempted
+
+```
+java -cp gene-utils.jar com.hartwig.hmftools.geneutils.mapping.EnsemblGeneMapper
+    -ensembl_dir_37 [path_to_ensembl_data_cache_v37] -ensembl_dir_38 [path_to_ensembl_data_cache_v38]
+    -lift_over_file [genes_37_lift_over_to_38.bed] 
+    -output_dir /path_to_write_mapping_output/
+```
