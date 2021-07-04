@@ -11,21 +11,17 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO.createEnsemblDbConnection;
+import static com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO.readQueryString;
+import static com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO.writeRecordsAsTsv;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -36,16 +32,11 @@ import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
 
-import org.jooq.CSVFormat;
-import org.jooq.tools.StringUtils;
 import org.jooq.types.UInteger;
 import org.jooq.types.ULong;
-import org.jooq.types.UShort;
 
 public class GenerateGenePanelRefSeq
 {
-    private static final String TEST_MODE = "test_mode";
-
     public static void main(String[] args) throws ParseException, IOException, SQLException
     {
         final Options options = createOptions();
@@ -72,19 +63,11 @@ public class GenerateGenePanelRefSeq
 
         GU_LOGGER.debug("database connection established");
 
-        boolean testMode = cmd.hasOption(TEST_MODE);
-
-        if(testMode)
-        {
-            testQuery(context, outputDir, refGenomeVersion);
-            System.exit(0);
-        }
-
         String geneFile = String.format("%sall_genes.%s.tsv", outputDir, refGenomeVersion.identifier());
         generateGenes(context, geneFile, refGenomeVersion, "sql/ensembl_gene_panel.sql");
 
         String reqSeqFile = String.format("%sref_seq.%s.tsv", outputDir, refGenomeVersion.identifier());
-        generateRefSeqMapping(context, reqSeqFile, refGenomeVersion);
+        generateRefSeqMapping(context, reqSeqFile);
 
         GU_LOGGER.info("complete");
     }
@@ -100,6 +83,7 @@ public class GenerateGenePanelRefSeq
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
             writer.write(HmfTranscriptRegionFile.header());
+            writer.write(",EntrezIdsHgnc");
             writer.newLine();
 
             int recordIndex = 0;
@@ -117,10 +101,10 @@ public class GenerateGenePanelRefSeq
                 Byte strand = (Byte) record.get("strand");
 
                 String entrezIds = record.get("entrezId") == null ? "" : (String) record.get("entrezId");
+                String entrezIdsHgnc = record.get("entrezId") == null ? "" : (String) record.get("entrezIdHgnc");
                 String chrBand = (String) record.get("chromosome_band");
 
                 String transId = (String) record.get("transcript_id");
-                UShort transVersionId = (UShort) record.get("transcript_version");
                 UInteger transStart = (UInteger) record.get("transcript_start");
                 UInteger transEnd = (UInteger) record.get("transcript_end");
                 ULong codingStart = (ULong) record.get("coding_start");
@@ -152,7 +136,6 @@ public class GenerateGenePanelRefSeq
                 sj.add(chrBand);
 
                 sj.add(transId);
-                sj.add(String.valueOf(transVersionId));
                 sj.add(String.valueOf(transStart));
                 sj.add(String.valueOf(transEnd));
                 sj.add(codingStart != null ? String.valueOf(codingStart) : "");
@@ -160,6 +143,7 @@ public class GenerateGenePanelRefSeq
                 sj.add(exonData.toString());
 
                 writer.write(sj.toString());
+                writer.write(String.format(",%s", entrezIdsHgnc));
                 writer.newLine();
             }
 
@@ -174,62 +158,13 @@ public class GenerateGenePanelRefSeq
         }
     }
 
-    private static void generateRefSeqMapping(final DSLContext context, final String outputFile, final RefGenomeVersion refGenomeVersion)
+    private static void generateRefSeqMapping(final DSLContext context, final String outputFile)
     {
         final Result<Record> refseqMappingResult = context.fetch(readQueryString(Resources.getResource("sql/ensembl_refseq_mapping.sql")));
         GU_LOGGER.info("RefSeq mapping query returned {} entries", refseqMappingResult.size());
 
-        writeAsTsv(outputFile, refseqMappingResult);
+        writeRecordsAsTsv(outputFile, refseqMappingResult);
         GU_LOGGER.info("written RefSeq mapping output to {}", outputFile);
-    }
-
-    public static String readQueryString(final URL queryResource)
-    {
-        try
-        {
-            final List<String> lines = Resources.readLines(queryResource, Charset.defaultCharset());
-            return StringUtils.join(lines.toArray(), "\n");
-        }
-        catch (final IOException e)
-        {
-            GU_LOGGER.error("failed to load query from file: {}", queryResource, e.toString());
-            return "";
-        }
-    }
-
-    private static void writeAsTsv(final String outputFile, final Result<Record> records)
-    {
-        try
-        {
-            BufferedWriter writer = createBufferedWriter(outputFile, false);
-
-            final CSVFormat format = new CSVFormat().header(false).delimiter('\t').nullString("").quoteString("");
-            writer.write(records.formatCSV(format));
-        }
-        catch (final IOException e)
-        {
-            GU_LOGGER.error("error writing Ensembl gene data file: {}", e.toString());
-        }
-    }
-
-    private static void testQuery(final DSLContext context, final String outputDir, final RefGenomeVersion refGenomeVersion)
-    {
-        String outputFile = String.format("%stest_genes.%s.tsv", outputDir, refGenomeVersion.identifier());
-
-        try
-        {
-            generateGenes(context, outputFile, refGenomeVersion, "sql/test_gene_query.sql");
-            System.exit(0);
-
-            List<String> transRegionLines = Files.readAllLines(Paths.get(outputFile));
-            List<HmfTranscriptRegion> transRegions = HmfTranscriptRegionFile.fromLines(transRegionLines);
-
-            GU_LOGGER.info("re-loaded test file with {} entries", transRegions.size());
-        }
-        catch (final IOException e)
-        {
-            GU_LOGGER.error("error writing/reoading test gene data file: {}", e.toString());
-        }
     }
 
     private static Options createOptions()
@@ -240,7 +175,6 @@ public class GenerateGenePanelRefSeq
         EnsemblDAO.addCmdLineArgs(options);
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
-        options.addOption(TEST_MODE, false, "Exceute test gene-panel query");
         return options;
     }
 

@@ -50,7 +50,6 @@ public final class HmfTranscriptRegionFile
         header.add("EntrezIds");
         header.add("ChrBand");
         header.add("TranscriptId");
-        header.add("TransVersion");
         header.add("TransStart");
         header.add("TransEnd");
         header.add("CodingStart");
@@ -96,7 +95,7 @@ public final class HmfTranscriptRegionFile
         return fromLines(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
     }
 
-    private static List<HmfTranscriptRegion> fromLines(final List<String> lines)
+    public static List<HmfTranscriptRegion> fromLines(final List<String> lines)
     {
         List<HmfTranscriptRegion> transcriptRegions = Lists.newArrayList();
 

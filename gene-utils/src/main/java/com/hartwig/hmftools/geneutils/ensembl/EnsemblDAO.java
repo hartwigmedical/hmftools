@@ -8,11 +8,14 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
-import static com.hartwig.hmftools.geneutils.ensembl.GenerateGenePanelRefSeq.readQueryString;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -29,11 +32,13 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.jooq.CSVFormat;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
+import org.jooq.tools.StringUtils;
 import org.jooq.types.UInteger;
 import org.jooq.types.ULong;
 
@@ -90,7 +95,7 @@ public class EnsemblDAO
 
     public static boolean hasDatabaseConfig(final CommandLine cmd)
     {
-        return cmd.hasOption(DB_URL) && cmd.hasOption(DB_USER) && cmd.hasOption(DB_PASS);
+        return cmd.hasOption(DB_URL) && cmd.hasOption(DB_USER);
     }
 
     public static DSLContext createEnsemblDbConnection(final CommandLine cmd)
@@ -135,6 +140,49 @@ public class EnsemblDAO
         }
 
         return -1;
+    }
+
+    public static String readQueryString(final URL queryResource)
+    {
+        try
+        {
+            List<String> lines = Resources.readLines(queryResource, Charset.defaultCharset());
+            return StringUtils.join(lines.toArray(), "\n");
+        }
+        catch (final IOException e)
+        {
+            GU_LOGGER.error("failed to load query resource({}): {}", queryResource, e.toString());
+            return "";
+        }
+    }
+
+    public static String readQueryString(final String filename)
+    {
+        try
+        {
+            List<String> lines = Files.readAllLines(Paths.get(filename));
+            return StringUtils.join(lines.toArray(), "\n");
+        }
+        catch (final IOException e)
+        {
+            GU_LOGGER.error("failed to load query file({}): {}", filename, e.toString());
+            return "";
+        }
+    }
+
+    public static void writeRecordsAsTsv(final String outputFile, final Result<Record> records)
+    {
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(outputFile, false);
+
+            final CSVFormat format = new CSVFormat().header(true).delimiter('\t').nullString("").quoteString("");
+            writer.write(records.formatCSV(format));
+        }
+        catch (final IOException e)
+        {
+            GU_LOGGER.error("error writing query results file: {}", e.toString());
+        }
     }
 
     public void writeDataCacheFiles(final String outputDir)
@@ -244,31 +292,9 @@ public class EnsemblDAO
 
     private Result<Record> queryAllGeneData()
     {
-        /*
-        final String queryStr = "select gene.stable_id as GeneId, display_xref.display_label as GeneName, entrez_xref.display_label as EntrezId,"
-                + " case when entrez_xref.external_db_id = 1100 then 1100 else 0 end as ExtDbId, seq_region.name as Chromosome,"
-                + " gene.seq_region_strand as Strand, gene.seq_region_start as GeneStart, gene.seq_region_end as GeneEnd,"
-                + " GROUP_CONCAT(DISTINCT entrez_xref.dbprimary_acc ORDER BY entrez_xref.dbprimary_acc SEPARATOR ';') as EntrezIds,"
-                + " GROUP_CONCAT(DISTINCT karyotype.band ORDER BY karyotype.band SEPARATOR '-') as KaryotypeBand,"
-                + " GROUP_CONCAT(DISTINCT syn_xref.dbprimary_acc ORDER BY syn_xref.dbprimary_acc SEPARATOR ';') as Synonyms"
-                + " from gene"
-                + " inner join object_xref as ox on gene.gene_id = ox.ensembl_id and ox.ensembl_object_type = 'GENE'"
-                + " inner join xref as display_xref on display_xref.xref_id = gene.display_xref_id"
-                + " inner join karyotype on gene.seq_region_id = karyotype.seq_region_id"
-                + " inner join seq_region on gene.seq_region_id = seq_region.seq_region_id"
-                + " left join xref as entrez_xref on (entrez_xref.xref_id = ox.xref_id and entrez_xref.external_db_id = 1100)"
-                + " inner join xref as syn_xref on syn_xref.xref_id = ox.xref_id"
-                + " where seq_region.name in ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y')"
-                + " and ((gene.seq_region_start >= karyotype.seq_region_start and gene.seq_region_start <= karyotype.seq_region_end)"
-                + " or (gene.seq_region_end >= karyotype.seq_region_start and gene.seq_region_end <= karyotype.seq_region_end))"
-                + " and seq_region.coord_system_id = " + mCoordSystemId
-                + " group by GeneId, GeneName, EntrezId, ExtDbId, Chromosome, Strand, GeneStart, GeneEnd"
-                + " order by GeneName, ExtDbId desc;";
-         */
-
         String queryStr = readQueryString(Resources.getResource("sql/ensembl_gene_data.sql"));
         queryStr = queryStr.replaceAll("COORD_SYSTEM", String.valueOf(mCoordSystemId));
-        GU_LOGGER.debug("gene query: {}", queryStr);
+        // GU_LOGGER.debug("gene query: {}", queryStr);
 
         return mDbContext.fetch(queryStr);
     }
@@ -336,7 +362,7 @@ public class EnsemblDAO
     private Result<Record> queryAllTranscriptExonData()
     {
         final String queryStr = readQueryString(Resources.getResource("sql/ensembl_transcript.sql"));
-        GU_LOGGER.debug("transcript query: {}", queryStr);
+        // GU_LOGGER.debug("transcript query: {}", queryStr);
         return mDbContext.fetch(queryStr);
     }
 

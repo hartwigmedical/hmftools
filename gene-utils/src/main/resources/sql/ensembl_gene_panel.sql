@@ -47,7 +47,7 @@ where
      'ENSG00000250264','ENSG00000173366','ENSG00000254692','ENSG00000241690','ENSG00000198211','ENSG00000264668','ENSG00000232748','ENSG00000196826',
      'ENSG00000267179','ENSG00000188474','ENSG00000273045','ENSG00000255994','ENSG00000233050','ENSG00000256977','ENSG00000213906','ENSG00000273155',
      'ENSG00000228273','ENSG00000262621','ENSG00000233024','ENSG00000214967','ENSG00000272962','ENSG00000184040','ENSG00000173610','ENSG00000273439')
-group by chromosome, gene_start, gene_end, gene_id, gene_name, transcript_id, transcript_version, transcript_start, transcript_end, exon_id, exon_start, exon_end, coding_start, coding_end, strand)
+group by chromosome, gene_start, gene_end, gene_id, gene_name, transcript_id, transcript_start, transcript_end, exon_id, exon_start, exon_end, coding_start, coding_end, strand)
 UNION
 (select
 	seq_region.name as chromosome,
@@ -86,7 +86,7 @@ where
     and t.biotype <> 'protein_coding'
     and display_xref.display_label not in
     ('hsa-mir-3180-3','MIR1587','MIR3615','MIR3916','MIR4461','MIR4519','MIR4523')
-group by chromosome, gene_start, gene_end, gene_id, gene_name, transcript_id, transcript_version, transcript_start, transcript_end, exon_id, exon_start, exon_end, coding_start, coding_end, strand)
+group by chromosome, gene_start, gene_end, gene_id, gene_name, transcript_id, transcript_start, transcript_end, exon_id, exon_start, exon_end, coding_start, coding_end, strand)
 UNION
 (select
  	 seq_region.name as chromosome,
@@ -124,6 +124,6 @@ UNION
  		or (gene.seq_region_end >= karyotype.seq_region_start and gene.seq_region_end <= karyotype.seq_region_end))
  	 and t.biotype = 'protein_coding'
      and gene.stable_id = "ENSG00000147889"
-group by chromosome, gene_start, gene_end, gene_id, gene_name, transcript_id, transcript_version, transcript_start, transcript_end, exon_id, exon_start, exon_end, coding_start, coding_end, strand)
+group by chromosome, gene_start, gene_end, gene_id, gene_name, transcript_id, transcript_start, transcript_end, exon_id, exon_start, exon_end, coding_start, coding_end, strand)
 order by if(cast(chromosome as SIGNED) = 0, ascii(chromosome), cast(chromosome as SIGNED)), gene_start, gene_id, transcript_id, exon_start
 

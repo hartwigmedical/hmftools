@@ -77,11 +77,7 @@ public class GenerateEnsemblDataCache
         // generate a cache file of the nearest upstream splice acceptor from another gene for each transcript
         try
         {
-            String outputFile = outputDir;
-            if (!outputFile.endsWith(File.separator))
-                outputFile += File.separator;
-
-            outputFile += ENSEMBL_TRANS_SPLICE_DATA_FILE;
+            String outputFile = outputDir + ENSEMBL_TRANS_SPLICE_DATA_FILE;
 
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
