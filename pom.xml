@@ -56,34 +56,33 @@
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
 
-        <patient-db.version>3.61</patient-db.version>
-        <hmf-id-generator.version>2.7</hmf-id-generator.version>
-        <health-checker.version>3.2</health-checker.version>
-        <paddle.version>1.0</paddle.version>
-        <compar.version>1.0</compar.version>
         <amber.version>3.5</amber.version>
-        <cobalt.version>1.12</cobalt.version>
-        <sage.version>3.0</sage.version>
-        <gripss.version>1.11</gripss.version>
-        <purple.version>3.2</purple.version>
-        <linx.version>1.16</linx.version>
-        <sv-tools.version>1.0</sv-tools.version>
-        <virus-interpreter.version>1.0</virus-interpreter.version>
-        <lilac.version>1.0</lilac.version>
-        <neo.version>1.0</neo.version>
-        <sigs.version>1.0</sigs.version>
-        <telo.version>1.0</telo.version>
-        <cuppa.version>1.4</cuppa.version>
-        <isofox.version>1.3</isofox.version>
         <ckb-importer.version>1.1</ckb-importer.version>
-        <iclusion-importer.version>1.3</iclusion-importer.version>
-        <vicc-importer.version>1.1</vicc-importer.version>
-        <serve.version>1.5</serve.version>
-        <protect.version>1.4</protect.version>
-        <orange.version>0.1</orange.version>
-        <telo.version>1.0</telo.version>
+        <cobalt.version>1.12</cobalt.version>
+        <compar.version>1.0</compar.version>
+        <cuppa.version>1.4</cuppa.version>
         <gene-utils.version>1.0</gene-utils.version>
+        <gripss.version>1.11</gripss.version>
+        <health-checker.version>3.2</health-checker.version>
+        <hmf-id-generator.version>2.7</hmf-id-generator.version>
+        <iclusion-importer.version>1.3</iclusion-importer.version>
+        <isofox.version>1.4</isofox.version>
+        <lilac.version>1.0</lilac.version>
+        <linx.version>1.16</linx.version>
+        <neo.version>1.0</neo.version>
+        <orange.version>0.1</orange.version>
+        <paddle.version>1.0</paddle.version>
+        <patient-db.version>3.61</patient-db.version>
         <patient-reporter.version>7.24</patient-reporter.version>
+        <protect.version>1.4</protect.version>
+        <purple.version>3.2</purple.version>
+        <sage.version>3.0</sage.version>
+        <serve.version>1.5</serve.version>
+        <sigs.version>1.0</sigs.version>
+        <sv-tools.version>1.0</sv-tools.version>
+        <telo.version>1.0</telo.version>
+        <vicc-importer.version>1.1</vicc-importer.version>
+        <virus-interpreter.version>1.0</virus-interpreter.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
         <immutables.version>2.4.4</immutables.version>
