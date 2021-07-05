@@ -71,6 +71,7 @@ public final class GeneCopyNumberFile {
                 .add("germlineHomDeletionRegions")
                 .add("germlineHetToHomDeletionRegions")
                 .add("transcriptId")
+                .add("transcriptVersion")
                 .add("chromosomeBand")
                 .add("minRegions")
                 .add("minRegionStart")
@@ -91,11 +92,12 @@ public final class GeneCopyNumberFile {
                 .add(geneCopyNumber.gene())
                 .add(FORMAT.format(geneCopyNumber.minCopyNumber()))
                 .add(FORMAT.format(geneCopyNumber.maxCopyNumber()))
-                .add(String.valueOf(0))
+                .add(String.valueOf(0)) // for backwards compatibility until all users have switched to loading by the fields-index map
                 .add(String.valueOf(geneCopyNumber.somaticRegions()))
                 .add(String.valueOf(geneCopyNumber.germlineHomRegions()))
                 .add(String.valueOf(geneCopyNumber.germlineHet2HomRegions()))
                 .add(geneCopyNumber.transcriptID())
+                .add(String.valueOf(0)) // as above
                 .add(geneCopyNumber.chromosomeBand())
                 .add(String.valueOf(geneCopyNumber.minRegions()))
                 .add(String.valueOf(geneCopyNumber.minRegionStart()))
