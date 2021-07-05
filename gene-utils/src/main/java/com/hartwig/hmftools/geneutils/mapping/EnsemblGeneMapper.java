@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.geneutils.mapping;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_TRANS_SPLICE_DATA_FILE;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData.SYNONYM_DELIM;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.enforceChrPrefix;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
@@ -12,7 +11,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
-import static com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO.readQueryString;
 import static com.hartwig.hmftools.geneutils.mapping.MappingType.GENE_ID;
 import static com.hartwig.hmftools.geneutils.mapping.MappingType.GENE_NAME;
 
@@ -128,7 +126,7 @@ public class EnsemblGeneMapper
                 {
                     if(matchOnSynonyms(geneData37, gene38))
                     {
-                        writeMappingData(geneData37, null, MappingType.SYNONYM);
+                        writeMappingData(geneData37, gene38, MappingType.SYNONYM);
                         found = true;
                         break;
                     }
@@ -138,7 +136,7 @@ public class EnsemblGeneMapper
 
                     if(liftOverRegion != null && liftOverRegion.positionMatches(gene38.GeneStart, gene38.GeneEnd, GENE_COORD_BUFFER))
                     {
-                        writeMappingData(geneData37, null, MappingType.COORDS);
+                        writeMappingData(geneData37, gene38, MappingType.COORDS);
                         found = true;
                         break;
                     }
@@ -291,13 +289,11 @@ public class EnsemblGeneMapper
     {
         final Options options = new Options();
         options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version (V37 or V38))");
-        options.addOption(ENSEMBL_DATA_DIR, true, "Path to Ensembl data cache files");
-        EnsemblDAO.addCmdLineArgs(options);
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
         options.addOption(ENSEMBL_DIR_37, true, "Ensembl data cache dir for ref-genome v37");
         options.addOption(ENSEMBL_DIR_38, true, "Ensembl data cache dir for ref-genome v38");
         options.addOption(LIFT_OVER_INFO_FILE, true, "Unmatched v37 locations lifted-over to v38");
+        options.addOption(OUTPUT_DIR, true, "Output directory");
+        options.addOption(LOG_DEBUG, false, "Log verbose");
         return options;
     }
 

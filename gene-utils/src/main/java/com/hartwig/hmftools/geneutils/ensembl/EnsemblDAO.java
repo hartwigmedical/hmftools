@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.readQueryString;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -142,49 +143,6 @@ public class EnsemblDAO
         return -1;
     }
 
-    public static String readQueryString(final URL queryResource)
-    {
-        try
-        {
-            List<String> lines = Resources.readLines(queryResource, Charset.defaultCharset());
-            return StringUtils.join(lines.toArray(), "\n");
-        }
-        catch (final IOException e)
-        {
-            GU_LOGGER.error("failed to load query resource({}): {}", queryResource, e.toString());
-            return "";
-        }
-    }
-
-    public static String readQueryString(final String filename)
-    {
-        try
-        {
-            List<String> lines = Files.readAllLines(Paths.get(filename));
-            return StringUtils.join(lines.toArray(), "\n");
-        }
-        catch (final IOException e)
-        {
-            GU_LOGGER.error("failed to load query file({}): {}", filename, e.toString());
-            return "";
-        }
-    }
-
-    public static void writeRecordsAsTsv(final String outputFile, final Result<Record> records)
-    {
-        try
-        {
-            BufferedWriter writer = createBufferedWriter(outputFile, false);
-
-            final CSVFormat format = new CSVFormat().header(true).delimiter('\t').nullString("").quoteString("");
-            writer.write(records.formatCSV(format));
-        }
-        catch (final IOException e)
-        {
-            GU_LOGGER.error("error writing query results file: {}", e.toString());
-        }
-    }
-
     public void writeDataCacheFiles(final String outputDir)
     {
         if(mDbContext == null)
@@ -214,7 +172,10 @@ public class EnsemblDAO
             writer.write("GeneId,GeneName,Chromosome,Strand,GeneStart,GeneEnd,KaryotypeBand,Synonyms");
             writer.newLine();
 
-            Result<Record> results = queryAllGeneData();
+            String queryStr = readQueryString(Resources.getResource("sql/ensembl_gene_data.sql"));
+            queryStr = queryStr.replaceAll("COORD_SYSTEM", String.valueOf(mCoordSystemId));
+            // GU_LOGGER.debug("gene query: {}", queryStr);
+            Result<Record> results = mDbContext.fetch(queryStr);
 
             final Map<String,List<EnsemblGeneData>> chrGeneMap = Maps.newHashMap();
 
@@ -290,15 +251,6 @@ public class EnsemblDAO
         }
     }
 
-    private Result<Record> queryAllGeneData()
-    {
-        String queryStr = readQueryString(Resources.getResource("sql/ensembl_gene_data.sql"));
-        queryStr = queryStr.replaceAll("COORD_SYSTEM", String.valueOf(mCoordSystemId));
-        // GU_LOGGER.debug("gene query: {}", queryStr);
-
-        return mDbContext.fetch(queryStr);
-    }
-
     private void writeTranscriptExonData(final String outputFile)
     {
         GU_LOGGER.info("caching transcript & exon data to {}", outputFile);
@@ -311,7 +263,9 @@ public class EnsemblDAO
             writer.write(",ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase,CodingStart,CodingEnd");
             writer.newLine();
 
-            Result<?> results = queryAllTranscriptExonData();
+            final String queryStr = readQueryString(Resources.getResource("sql/ensembl_transcript.sql"));
+            // GU_LOGGER.debug("transcript query: {}", queryStr);
+            Result<Record> results = mDbContext.fetch(queryStr);
 
             for(final Record record : results)
             {
@@ -357,13 +311,6 @@ public class EnsemblDAO
         {
             GU_LOGGER.error("error writing Ensembl trans-exon data file: {}", e.toString());
         }
-    }
-
-    private Result<Record> queryAllTranscriptExonData()
-    {
-        final String queryStr = readQueryString(Resources.getResource("sql/ensembl_transcript.sql"));
-        // GU_LOGGER.debug("transcript query: {}", queryStr);
-        return mDbContext.fetch(queryStr);
     }
 
     private void writeTranscriptProteinData(final String outputFile)

@@ -6,9 +6,9 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.readQueryString;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.writeRecordsAsTsv;
 import static com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO.createEnsemblDbConnection;
-import static com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO.readQueryString;
-import static com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO.writeRecordsAsTsv;
 
 import java.io.IOException;
 import java.sql.SQLException;

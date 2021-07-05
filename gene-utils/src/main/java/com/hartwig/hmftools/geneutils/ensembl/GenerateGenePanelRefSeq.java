@@ -10,9 +10,9 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.readQueryString;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.writeRecordsAsTsv;
 import static com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO.createEnsemblDbConnection;
-import static com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO.readQueryString;
-import static com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO.writeRecordsAsTsv;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -171,8 +171,8 @@ public class GenerateGenePanelRefSeq
     {
         final Options options = new Options();
         options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version (V37 or V38))");
-        options.addOption(ENSEMBL_DATA_DIR, true, "Path to Ensembl data cache files");
         EnsemblDAO.addCmdLineArgs(options);
+        options.addOption(ENSEMBL_DATA_DIR, true, "Path to Ensembl data cache files");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
         return options;
