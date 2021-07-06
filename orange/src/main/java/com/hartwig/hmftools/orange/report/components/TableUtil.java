@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.orange.report.components;
 
-import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
@@ -34,33 +33,6 @@ public class TableUtil {
     }
 
     @NotNull
-    public static Table createNoneReportTable(@NotNull String tableTitle) {
-        Cell headerCell = new Cell().setBorder(Border.NO_BORDER)
-                .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle()
-                        .setFontColor(ReportResources.PALETTE_LIGHT_GREY)));
-
-        Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] { headerCell });
-        table.setKeepTogether(true);
-        table.setMarginBottom(TABLE_BOTTOM_MARGIN);
-        table.addCell(TableUtil.createDisabledContentCell(new Paragraph(DataUtil.NONE_STRING)));
-
-        return table;
-    }
-
-    @NotNull
-    public static Table createNAReportTable(@NotNull String tableTitle) {
-        Cell headerCell = new Cell().setBorder(Border.NO_BORDER)
-                .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle()
-                        .setFontColor(ReportResources.PALETTE_LIGHT_GREY)));
-
-        Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] { headerCell });
-        table.setKeepTogether(true);
-        table.setMarginBottom(TABLE_BOTTOM_MARGIN);
-        table.addCell(TableUtil.createDisabledContentCell(new Paragraph(DataUtil.NA_STRING)));
-        return table;
-    }
-
-    @NotNull
     public static Table createWrappingReportTable(@NotNull Table contentTable) {
         return createWrappingReportTable(contentTable, null);
     }
@@ -83,7 +55,7 @@ public class TableUtil {
         if (tableTitle != null) {
             table.addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
                     .setPadding(0)
-                    .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle())));
+                    .add(new Paragraph(tableTitle).addStyle(ReportResources.tableTitleStyle())));
         }
 
         table.addCell(new Cell().add(continuedWrapTable).setPadding(0).setBorder(Border.NO_BORDER));
@@ -119,57 +91,10 @@ public class TableUtil {
     public static Cell createContentCell(@NotNull IBlockElement element) {
         Cell c = new Cell();
         c.setBorder(Border.NO_BORDER);
-        c.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25f));
+        c.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
         c.addStyle(ReportResources.tableContentStyle());
         c.setKeepTogether(true);
         c.add(element);
-        return c;
-    }
-
-    @NotNull
-    public static Cell createContentCellPurityPloidy(@NotNull String text) {
-        return createContentCellPurityPloidy(new Paragraph(text));
-    }
-
-    @NotNull
-    public static Cell createContentCellPurityPloidy(@NotNull IBlockElement element) {
-        Cell c = new Cell();
-        c.setBorder(Border.NO_BORDER);
-        c.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25f));
-        c.addStyle(ReportResources.dataHighlightStyle());
-        c.setKeepTogether(true);
-        c.add(element);
-        return c;
-    }
-
-    @NotNull
-    private static Cell createDisabledContentCell(@NotNull IBlockElement element) {
-        Cell c = new Cell();
-        c.setBorder(Border.NO_BORDER);
-        c.setBorderBottom(new SolidBorder(ReportResources.PALETTE_LIGHT_GREY, 0.25f));
-        c.addStyle(ReportResources.tableContentStyle().setFontColor(ReportResources.PALETTE_LIGHT_GREY));
-        c.setKeepTogether(true);
-        c.add(element);
-        return c;
-    }
-
-    @NotNull
-    public static Cell createLayoutCell() {
-        return createLayoutCell(1, 1);
-    }
-
-    @NotNull
-    public static Cell createLayoutCellSummary() {
-        return createLayoutCell(2, 2);
-    }
-
-    @NotNull
-    public static Cell createLayoutCell(int rowSpan, int colSpan) {
-        Cell c = new Cell(rowSpan, colSpan);
-        c.setBorder(Border.NO_BORDER);
-        c.setKeepTogether(true);
-        c.setPadding(0);
-        c.setMargin(0);
         return c;
     }
 }

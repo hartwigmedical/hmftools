@@ -34,13 +34,23 @@ public class FrontPageChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document document) {
-        Table content = TableUtil.createReportContentTable(new float[] { 1, 1 },
+        Table primaryTumorTable = TableUtil.createReportContentTable(new float[] { 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"), TableUtil.createHeaderCell("Cuppa Primary Tumor") });
 
-        content.addCell(TableUtil.createContentCell(toConfiguredTumorType(report.configuredPrimaryTumor())));
-        content.addCell(TableUtil.createContentCell(report.cuppaPrimaryTumor()));
+        primaryTumorTable.addCell(TableUtil.createContentCell(toConfiguredTumorType(report.configuredPrimaryTumor())));
+        primaryTumorTable.addCell(TableUtil.createContentCell(report.cuppaPrimaryTumor()));
+        document.add(TableUtil.createWrappingReportTable(primaryTumorTable));
 
-        document.add(TableUtil.createWrappingReportTable(content));
+        Table purpleFitTable = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1 },
+                new Cell[] { TableUtil.createHeaderCell("QC"), TableUtil.createHeaderCell("Purity"),
+                        TableUtil.createHeaderCell("Ploidy"),
+                        TableUtil.createHeaderCell("Fit Method") });
+
+        purpleFitTable.addCell(TableUtil.createContentCell("PASS"));
+        purpleFitTable.addCell(TableUtil.createContentCell("99% (97%-100%)"));
+        purpleFitTable.addCell(TableUtil.createContentCell("3.1 (3.1 - 3.15)"));
+        purpleFitTable.addCell(TableUtil.createContentCell("NORMAL"));
+        document.add(purpleFitTable);
 
         String circosPath = report.plots().purpleCircosPlot();
         try {
