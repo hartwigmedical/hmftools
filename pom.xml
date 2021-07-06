@@ -11,6 +11,7 @@
     <modules>
         <module>hmf-common</module>
         <module>patient-db</module>
+        <module>gene-utils</module>
         <module>stat-calcs</module>
         <module>hmf-id-generator</module>
         <module>fastq-stats</module>
@@ -37,7 +38,6 @@
         <module>serve</module>
         <module>protect</module>
         <module>orange</module>
-        <module>gene-utils</module>
         <module>patient-reporter</module>
     </modules>
 

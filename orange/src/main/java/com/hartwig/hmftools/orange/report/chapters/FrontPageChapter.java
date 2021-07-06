@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
 import java.net.MalformedURLException;
+import java.util.Set;
 
+import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.components.TableUtil;
 import com.itextpdf.io.IOException;
@@ -32,10 +34,10 @@ public class FrontPageChapter implements ReportChapter {
     @Override
     public void render(@NotNull Document document) {
         Table content = TableUtil.createReportContentTable(new float[] { 1, 1 },
-                new Cell[] { TableUtil.createHeaderCell("Clinical Tumor Type"), TableUtil.createHeaderCell("Molecular Tumor Type") });
+                new Cell[] { TableUtil.createHeaderCell("Configured Tumor Type"), TableUtil.createHeaderCell("CUPPA Tumor Type") });
 
-        content.addCell(TableUtil.createContentCell("8923 - Melanoma"));
-        content.addCell(TableUtil.createContentCell("Melanoma"));
+        content.addCell(TableUtil.createContentCell(toConfiguredTumorType(report.configuredTumorLocation())));
+        content.addCell(TableUtil.createContentCell(report.cuppaTumorLocation()));
 
         document.add(TableUtil.createWrappingReportTable(content));
 
@@ -49,5 +51,17 @@ public class FrontPageChapter implements ReportChapter {
         } catch (MalformedURLException e) {
             throw new IOException("Failed to read circos plot image at " + circosPath);
         }
+    }
+
+    @NotNull
+    private static String toConfiguredTumorType(@NotNull Set<DoidNode> nodes) {
+        StringBuilder builder = new StringBuilder();
+
+        for (DoidNode node : nodes) {
+            builder.append(node.doidTerm() + " (" + node.doid() + ")");
+        }
+
+        return builder.toString();
+
     }
 }

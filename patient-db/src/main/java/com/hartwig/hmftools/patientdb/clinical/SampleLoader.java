@@ -12,7 +12,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.reportingdb.ReportingDatabase;
 import com.hartwig.hmftools.common.lims.reportingdb.ReportingEntry;
-import com.hartwig.hmftools.common.runcontext.RunContext;
+import com.hartwig.hmftools.patientdb.clinical.context.RunContext;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 import com.hartwig.hmftools.patientdb.clinical.readers.LimsSampleReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.RunsFolderReader;

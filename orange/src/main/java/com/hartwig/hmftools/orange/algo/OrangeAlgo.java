@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.protect.chord.ChordDataLoader;
 import com.hartwig.hmftools.protect.linx.LinxData;
@@ -50,6 +51,7 @@ public class OrangeAlgo {
 
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
+                .pipelineVersion(PipelineVersionFile.majorDotMinorVersion(config.pipelineVersionFile()))
                 .configuredTumorLocation(loadConfiguredTumorLocation(config))
                 .cuppaTumorLocation(loadCuppaTumorLocation(config))
                 .purpleData(loadPurpleData(config))
