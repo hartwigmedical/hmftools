@@ -52,6 +52,8 @@ public interface PurpleData {
 
     int tumorMutationalLoad();
 
+    int svTumorMutationalBurden();
+
     @NotNull
     TumorMutationalStatus tumorMutationalLoadStatus();
 

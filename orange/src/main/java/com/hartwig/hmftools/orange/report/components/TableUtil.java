@@ -74,12 +74,12 @@ public class TableUtil {
 
     @NotNull
     private static Cell createHeaderCell(int colSpan) {
-        Cell c = new Cell(1, colSpan);
-        c.setHeight(23); // Set fixed height to create consistent spacing between table title and header
-        c.setBorder(Border.NO_BORDER);
-        c.setVerticalAlignment(VerticalAlignment.BOTTOM);
-        c.addStyle(ReportResources.tableHeaderStyle());
-        return c;
+        Cell cell = new Cell(1, colSpan);
+        cell.setHeight(23); // Set fixed height to create consistent spacing between table title and header
+        cell.setBorder(Border.NO_BORDER);
+        cell.setVerticalAlignment(VerticalAlignment.BOTTOM);
+        cell.addStyle(ReportResources.tableHeaderStyle());
+        return cell;
     }
 
     @NotNull
@@ -89,12 +89,42 @@ public class TableUtil {
 
     @NotNull
     public static Cell createContentCell(@NotNull IBlockElement element) {
-        Cell c = new Cell();
-        c.setBorder(Border.NO_BORDER);
-        c.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
-        c.addStyle(ReportResources.tableContentStyle());
-        c.setKeepTogether(true);
-        c.add(element);
-        return c;
+        Cell cell = new Cell();
+        cell.setBorder(Border.NO_BORDER);
+        cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
+        cell.addStyle(ReportResources.tableContentStyle());
+        cell.setKeepTogether(true);
+        cell.add(element);
+        return cell;
+    }
+
+    @NotNull
+    public static Cell createKeyCell(@NotNull String text) {
+        return createKeyCell(new Paragraph(text));
+    }
+
+    @NotNull
+    public static Cell createKeyCell(@NotNull IBlockElement element) {
+        Cell cell = new Cell();
+        cell.setBorder(Border.NO_BORDER);
+        cell.addStyle(ReportResources.tableHeaderStyle());
+        cell.setKeepTogether(true);
+        cell.add(element);
+        return cell;
+    }
+
+    @NotNull
+    public static Cell createValueCell(@NotNull String text) {
+        return createValueCell(new Paragraph(text));
+    }
+
+    @NotNull
+    public static Cell createValueCell(@NotNull IBlockElement element) {
+        Cell cell = new Cell();
+        cell.setBorder(Border.NO_BORDER);
+        cell.addStyle(ReportResources.tableContentStyle());
+        cell.setKeepTogether(true);
+        cell.add(element);
+        return cell;
     }
 }

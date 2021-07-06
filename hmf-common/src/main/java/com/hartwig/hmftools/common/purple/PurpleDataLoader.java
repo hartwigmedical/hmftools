@@ -139,6 +139,7 @@ public final class PurpleDataLoader {
                 .microsatelliteStatus(purityContext.microsatelliteStatus())
                 .tumorMutationalBurdenPerMb(purityContext.tumorMutationalBurdenPerMb())
                 .tumorMutationalLoad(purityContext.tumorMutationalLoad())
+                .svTumorMutationalBurden(purityContext.svTumorMutationalBurden())
                 .tumorMutationalLoadStatus(purityContext.tumorMutationalLoadStatus())
                 .reportableSomaticVariants(reportableSomaticVariants)
                 .unreportedSomaticVariants(unreportedSomaticVariants)
