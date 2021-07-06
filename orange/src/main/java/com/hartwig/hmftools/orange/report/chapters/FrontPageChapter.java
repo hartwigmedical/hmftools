@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import java.net.MalformedURLException;
 import java.util.Set;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
@@ -55,13 +56,12 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private static String toConfiguredTumorType(@NotNull Set<DoidNode> nodes) {
-        StringBuilder builder = new StringBuilder();
+        StringJoiner joiner = new StringJoiner(", ");
 
         for (DoidNode node : nodes) {
-            builder.append(node.doidTerm() + " (" + node.doid() + ")");
+            joiner.add(node.doidTerm() + " (DOID " + node.doid() + ")");
         }
 
-        return builder.toString();
-
+        return joiner.toString();
     }
 }
