@@ -21,10 +21,15 @@ public final class ReportResources {
     static final String METADATA_TITLE = "HMF ORANGE Report v" + OrangeApplication.VERSION;
     static final String METADATA_AUTHOR = "Hartwig Platinum Pipeline";
 
-    static final float PAGE_MARGIN_TOP = 150; // Top margin also excludes the chapter title, which is rendered in the header
-    public static final float PAGE_MARGIN_LEFT = 55.5F;
-    static final float PAGE_MARGIN_RIGHT = 29;
+    static final float PAGE_MARGIN_TOP = 100; // Top margin also excludes the chapter title, which is rendered in the header
+    public static final float PAGE_MARGIN_LEFT = 30;
+    static final float PAGE_MARGIN_RIGHT = 30;
     static final float PAGE_MARGIN_BOTTOM = 62;
+
+    public static final float CONTENT_WIDTH_NARROW = 330; // Width of the content on a narrow page (page with full side panel)
+    public static final float CONTENT_WIDTH_WIDE = 510; // Width of the content on a narrow page (page without full side panel)
+    public static final float CONTENT_WIDTH_WIDE_SUMMARY = 320; // Width of the content on a narrow page (page without full side panel)
+    public static final float CONTENT_WIDTH_WIDE_SMALL = 240; // Width of the content on a narrow page (page with full side panel)
 
     public static final DeviceRgb PALETTE_WHITE = new DeviceRgb(255, 255, 255);
     public static final DeviceRgb PALETTE_BLACK = new DeviceRgb(0, 0, 0);
@@ -91,10 +96,6 @@ public final class ReportResources {
     public static PdfFont iconFont() {
         // Cannot be created statically as every PDF needs their own private font objects.
         return createFontFromProgram(loadFontProgram(ICON_FONT_PATH));
-    }
-
-    public static Style chapterTitleStyle() {
-        return new Style().setFont(fontBold()).setFontSize(16).setFontColor(ReportResources.PALETTE_BLUE).setMarginTop(0);
     }
 
     public static Style sectionTitleStyle() {

@@ -122,7 +122,8 @@ public final class PurpleDataLoader {
             LOGGER.info(" Skipped loading germline variants since no reference sample configured");
         }
 
-        List<SomaticVariant> somaticVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSample, somaticVariantVcf);
+        List<SomaticVariant> somaticVariants =
+                SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSample, referenceSample, somaticVariantVcf);
         List<ReportableVariant> reportableSomaticVariants =
                 ReportableVariantFactory.toReportableSomaticVariants(somaticVariants, somaticDriverCatalog);
         LOGGER.info(" Loaded {} reportable somatic variants from {}", reportableSomaticVariants.size(), somaticVariantVcf);

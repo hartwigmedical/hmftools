@@ -1,14 +1,11 @@
 package com.hartwig.hmftools.orange.report.component;
 
 import java.net.MalformedURLException;
-import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.geom.Rectangle;
-import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
@@ -27,25 +24,24 @@ public class Header {
     private static final Logger LOGGER = LogManager.getLogger(Header.class);
 
     @Nullable
-    private final PdfImageXObject orangeImageObj;
-    private final List<ChapterPageCounter> chapterPageCounters = Lists.newArrayList();
+    private final PdfImageXObject orangeCircosObj;
 
-    public Header(@NotNull String orangeImagePath) {
+    public Header(@NotNull String orangeCircosPath) {
         ImageData orangeImage = null;
         try {
-            orangeImage = ImageDataFactory.create(orangeImagePath);
+            orangeImage = ImageDataFactory.create(orangeCircosPath);
         } catch (MalformedURLException e) {
-            LOGGER.warn("Could not orange image from {}", orangeImagePath);
+            LOGGER.warn("Could not orange image from {}", orangeCircosPath);
         }
-        orangeImageObj = orangeImage != null ? new PdfImageXObject(orangeImage) : null;
+        orangeCircosObj = orangeImage != null ? new PdfImageXObject(orangeImage) : null;
     }
 
-    public void renderHeader(@NotNull String chapterTitle, boolean firstPageOfChapter, @NotNull PdfPage page) {
+    public void renderHeader(@NotNull PdfPage page) {
         PdfCanvas pdfCanvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Canvas cv = new Canvas(pdfCanvas, page.getDocument(), page.getPageSize());
 
-        if (orangeImageObj != null) {
-            pdfCanvas.addXObject(orangeImageObj, 52, 772, 60, false);
+        if (orangeCircosObj != null) {
+            pdfCanvas.addXObject(orangeCircosObj, 52, 772, 60, false);
         }
 
         cv.add(new Paragraph().add(new Text("O").setFont(ReportResources.fontBold())
@@ -59,48 +55,8 @@ public class Header {
                 .add(new Text(" Report").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLACK))
                 .setFixedPosition(200, 800, 300));
 
-        if (firstPageOfChapter) {
-            chapterPageCounters.add(new ChapterPageCounter(chapterTitle));
-        }
-
-        PdfFormXObject chapterTitleTemplate = new PdfFormXObject(new Rectangle(0, 0, 500, 30));
-        pdfCanvas.addXObject(chapterTitleTemplate, ReportResources.PAGE_MARGIN_LEFT, 721);
-        chapterPageCounters.get(chapterPageCounters.size() - 1).addPage(chapterTitleTemplate);
+        pdfCanvas.addXObject(new PdfFormXObject(new Rectangle(0, 0, 200, 0)), ReportResources.PAGE_MARGIN_LEFT, 200);
 
         pdfCanvas.release();
-    }
-
-    public void writeChapterTitles(@NotNull PdfDocument document) {
-        for (ChapterPageCounter cpc : chapterPageCounters) {
-            cpc.renderChapterTitles(document);
-        }
-    }
-
-    private static class ChapterPageCounter {
-
-        @NotNull
-        private final String chapterTitle;
-        private final List<PdfFormXObject> templates = Lists.newArrayList();
-
-        ChapterPageCounter(@NotNull String chapterTitle) {
-            this.chapterTitle = chapterTitle;
-        }
-
-        void addPage(@NotNull PdfFormXObject chapterTitleTemplate) {
-            templates.add(chapterTitleTemplate);
-        }
-
-        void renderChapterTitles(@NotNull PdfDocument document) {
-            int totalChapterPages = templates.size();
-
-            for (int i = 0; i < templates.size(); i++) {
-                PdfFormXObject tpl = templates.get(i);
-
-                String text = chapterTitle + (totalChapterPages > 1 ? " (" + (i + 1) + "/" + totalChapterPages + ")" : "");
-
-                Canvas canvas = new Canvas(tpl, document);
-                canvas.add(new Paragraph(text).addStyle(ReportResources.chapterTitleStyle()));
-            }
-        }
     }
 }
