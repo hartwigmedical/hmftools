@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.msi;
+package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
@@ -18,7 +18,9 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
-public class MicrosatelliteIndels implements Consumer<VariantContext> {
+public class MicrosatelliteIndels
+{
+    private int mIndelCount;
 
     public static final double NUMBER_OF_MB_PER_GENOME = 2859D;
     private static final int MIN_SEQUENCE_LENGTH_FOR_LONG_REPEATS = 2;
@@ -29,43 +31,42 @@ public class MicrosatelliteIndels implements Consumer<VariantContext> {
     private static final int MAX_REF_ALT_LENGTH = 50;
 
     private static final VariantContextFilter PASS = new PassingVariantFilter();
-    private int indelCount;
 
-    public double microsatelliteIndelsPerMb() {
-        return (double) indelCount / NUMBER_OF_MB_PER_GENOME;
+    public double microsatelliteIndelsPerMb()
+    {
+        return (double) mIndelCount / NUMBER_OF_MB_PER_GENOME;
     }
 
-    @Override
-    public void accept(@NotNull final VariantContext context) {
-        if (isPassIndel(context)) {
+    public void processVariant(final VariantContext context)
+    {
+        if(isPassIndel(context))
+        {
             int repeatCount = context.getAttributeAsInt(REPEAT_COUNT_FLAG, 0);
             int repeatSequenceLength = context.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY).length();
 
-            if (repeatContextIsRelevant(repeatCount, repeatSequenceLength)) {
-                indelCount++;
+            if(repeatContextIsRelevant(repeatCount, repeatSequenceLength))
+            {
+                mIndelCount++;
             }
         }
     }
 
-    public void accept(@NotNull final SomaticVariant variant) {
-        if (isPassIndel(variant) && repeatContextIsRelevant(variant.repeatCount(), variant.repeatSequence())) {
-            indelCount++;
-        }
-    }
-
-    private static boolean isPassIndel(@NotNull SomaticVariant variant) {
+    private static boolean isPassIndel(final SomaticVariant variant)
+    {
         return variant.type() == VariantType.INDEL && variant.ref().length() < MAX_REF_ALT_LENGTH
                 && variant.alt().length() < MAX_REF_ALT_LENGTH && !variant.isFiltered();
     }
 
-    private static boolean isPassIndel(@NotNull final VariantContext context) {
+    private static boolean isPassIndel(final VariantContext context)
+    {
         int altLength = alt(context).length();
         int refLength = context.getReference().getBaseString().length();
 
         return context.isIndel() && refLength < MAX_REF_ALT_LENGTH && altLength < MAX_REF_ALT_LENGTH && PASS.test(context);
     }
 
-    private static boolean repeatContextIsRelevant(int repeatCount, int repeatSequenceLength) {
+    private static boolean repeatContextIsRelevant(int repeatCount, int repeatSequenceLength)
+    {
         final boolean longRepeatRelevant =
                 repeatSequenceLength >= MIN_SEQUENCE_LENGTH_FOR_LONG_REPEATS && repeatSequenceLength <= MAX_SEQUENCE_LENGTH_FOR_LONG_REPEATS
                         && repeatCount >= MIN_REPEAT_COUNT_FOR_LONG_REPEATS;
@@ -74,12 +75,14 @@ public class MicrosatelliteIndels implements Consumer<VariantContext> {
     }
 
     @VisibleForTesting
-    static boolean repeatContextIsRelevant(int repeatCount, @NotNull String sequence) {
+    static boolean repeatContextIsRelevant(int repeatCount, String sequence)
+    {
         return repeatContextIsRelevant(repeatCount, sequence.length());
     }
 
     @NotNull
-    private static String alt(@NotNull final VariantContext context) {
+    private static String alt(final VariantContext context)
+    {
         return String.join(",", context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.toList()));
     }
 }

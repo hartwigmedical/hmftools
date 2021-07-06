@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.msi;
+package com.hartwig.hmftools.purple.somatic;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
