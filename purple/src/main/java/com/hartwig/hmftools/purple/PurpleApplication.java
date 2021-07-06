@@ -381,17 +381,13 @@ public class PurpleApplication
             {
                 PPL_LOGGER.info("Generating charts");
 
-                mCharts.write(referenceId,
-                        tumorSample,
-                        !sampleDataFiles.SomaticVcfFile.isEmpty(),
-                        cobaltGender,
-                        copyNumbers,
-                        somaticStream.downsampledVariants(),
-                        sampleData.SvCache.variants(),
-                        fittedRegions,
-                        Lists.newArrayList(amberData.ChromosomeBafs.values()));
+                mCharts.write(
+                        referenceId, tumorSample, !sampleDataFiles.SomaticVcfFile.isEmpty(),
+                        cobaltGender, copyNumbers, somaticStream.downsampledVariants(), sampleData.SvCache.variants(),
+                        fittedRegions, Lists.newArrayList(amberData.ChromosomeBafs.values()));
             }
-        } catch(Exception e)
+        }
+        catch(Exception e)
         {
             PPL_LOGGER.error("failed processing sample({}): {}", tumorSample, e.toString());
             e.printStackTrace();
