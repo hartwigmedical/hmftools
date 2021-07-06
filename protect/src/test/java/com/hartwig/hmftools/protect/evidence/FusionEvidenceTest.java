@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
-import com.hartwig.hmftools.protect.ProtectTestFactory;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
@@ -47,7 +46,7 @@ public class FusionEvidenceTest {
                 .geneDown(geneDown)
                 .build();
 
-        FusionEvidence fusionEvidence = new FusionEvidence(ProtectTestFactory.createTestEvidenceFactory(),
+        FusionEvidence fusionEvidence = new FusionEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
                 Lists.newArrayList(promiscuous, amp),
                 Lists.newArrayList(fusion));
 
@@ -103,7 +102,7 @@ public class FusionEvidenceTest {
                 .build();
 
         FusionEvidence fusionEvidence =
-                new FusionEvidence(ProtectTestFactory.createTestEvidenceFactory(), Lists.newArrayList(), Lists.newArrayList(fusion));
+                new FusionEvidence(EvidenceTestFactory.createTestEvidenceFactory(), Lists.newArrayList(), Lists.newArrayList(fusion));
 
         ImmutableLinxFusion.Builder builder = linxFusionBuilder().reported(true).geneStart(geneUp).geneEnd(geneDown);
 

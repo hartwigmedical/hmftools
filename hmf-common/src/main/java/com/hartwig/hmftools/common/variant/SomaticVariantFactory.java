@@ -124,7 +124,7 @@ public class SomaticVariantFactory implements VariantContextFilter {
         final Genotype genotype = context.getGenotype(sample);
 
         final VariantContextDecorator decorator = new VariantContextDecorator(context);
-        GenotypeStatus genotypeStatus = decorator.genotypeStatus(reference);
+        final GenotypeStatus genotypeStatus = reference != null ? decorator.genotypeStatus(reference) : null;
 
         if (filter.test(context) && AllelicDepth.containsAllelicDepth(genotype)) {
             final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
@@ -140,7 +140,10 @@ public class SomaticVariantFactory implements VariantContextFilter {
                     .map(AllelicDepth::fromGenotype);
 
             if (tumorDepth.totalReadCount() > 0) {
-                return Optional.of(createVariantBuilder(tumorDepth, context).genotypeStatus(genotypeStatus))
+                ImmutableSomaticVariantImpl.Builder builder = createVariantBuilder(tumorDepth, context);
+                builder.genotypeStatus(genotypeStatus != null ? genotypeStatus : GenotypeStatus.UNKNOWN);
+
+                return Optional.of(builder)
                         .map(x -> x.rnaDepth(rnaDepth.orElse(null)))
                         .map(x -> x.referenceDepth(referenceDepth.orElse(null)))
                         .map(ImmutableSomaticVariantImpl.Builder::build);

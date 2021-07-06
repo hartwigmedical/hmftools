@@ -7,13 +7,12 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
+import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
-import com.hartwig.hmftools.protect.ProtectTestFactory;
-import com.hartwig.hmftools.protect.purple.ImmutablePurpleData;
-import com.hartwig.hmftools.protect.purple.PurpleData;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableCharacteristic;
@@ -41,7 +40,7 @@ public class PurpleSignatureEvidenceTest {
                 .name(TumorCharacteristic.MICROSATELLITE_UNSTABLE)
                 .build();
 
-        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(ProtectTestFactory.createTestEvidenceFactory(),
+        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
                 Lists.newArrayList(signature1, signature2, signature3));
 
         PurpleData all = createPurpleData(MicrosatelliteStatus.MSI, TumorMutationalStatus.HIGH);

@@ -1,10 +1,7 @@
-package com.hartwig.hmftools.protect;
+package com.hartwig.hmftools.common.protect;
 
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.protect.evidence.PersonalizedEvidenceFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -12,11 +9,6 @@ import org.jetbrains.annotations.NotNull;
 public final class ProtectTestFactory {
 
     private ProtectTestFactory() {
-    }
-
-    @NotNull
-    public static PersonalizedEvidenceFactory createTestEvidenceFactory() {
-        return new PersonalizedEvidenceFactory(Sets.newHashSet());
     }
 
     @NotNull

@@ -222,11 +222,6 @@
                 <artifactId>serve</artifactId>
                 <version>${serve.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>protect</artifactId>
-                <version>${protect.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>com.github.samtools</groupId>

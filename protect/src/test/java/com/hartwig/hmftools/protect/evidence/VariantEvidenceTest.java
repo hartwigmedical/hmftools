@@ -11,13 +11,12 @@ import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.protect.ProtectTestFactory;
-import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
-import com.hartwig.hmftools.protect.purple.ReportableVariant;
-import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
@@ -49,7 +48,7 @@ public class VariantEvidenceTest {
                 .alt(alt)
                 .build();
 
-        VariantEvidence variantEvidence = new VariantEvidence(ProtectTestFactory.createTestEvidenceFactory(),
+        VariantEvidence variantEvidence = new VariantEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
                 Lists.newArrayList(hotspot),
                 Lists.newArrayList(),
                 Lists.newArrayList());
@@ -108,7 +107,7 @@ public class VariantEvidenceTest {
                 .mutationType(mutationTypeFilter)
                 .build();
 
-        VariantEvidence variantEvidence = new VariantEvidence(ProtectTestFactory.createTestEvidenceFactory(),
+        VariantEvidence variantEvidence = new VariantEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
                 Lists.newArrayList(),
                 Lists.newArrayList(range),
                 Lists.newArrayList());
@@ -166,7 +165,7 @@ public class VariantEvidenceTest {
                 .event(GeneLevelEvent.AMPLIFICATION)
                 .build();
 
-        VariantEvidence variantEvidence = new VariantEvidence(ProtectTestFactory.createTestEvidenceFactory(),
+        VariantEvidence variantEvidence = new VariantEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
                 Lists.newArrayList(actionableGene1, actionableGene2, actionableGene3));

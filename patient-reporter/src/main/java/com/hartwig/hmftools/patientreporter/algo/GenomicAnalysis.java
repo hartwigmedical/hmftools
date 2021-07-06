@@ -4,17 +4,17 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
+import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
-import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
-import com.hartwig.hmftools.protect.purple.ReportableVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

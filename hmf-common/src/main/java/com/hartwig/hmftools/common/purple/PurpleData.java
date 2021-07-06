@@ -1,12 +1,12 @@
-package com.hartwig.hmftools.protect.purple;
+package com.hartwig.hmftools.common.purple;
 
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
@@ -22,18 +22,18 @@ public interface PurpleData {
     @NotNull
     Set<PurpleQCStatus> purpleQC();
 
+    boolean hasReliableQuality();
+
     @NotNull
     FittedPurityMethod fittedPurityMethod();
+
+    boolean hasReliablePurity();
 
     double purity();
 
     double minPurity();
 
     double maxPurity();
-
-    boolean hasReliablePurity();
-
-    boolean hasReliableQuality();
 
     double ploidy();
 

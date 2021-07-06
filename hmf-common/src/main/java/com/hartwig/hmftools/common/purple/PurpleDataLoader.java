@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.purple;
+package com.hartwig.hmftools.common.purple;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,8 +20,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
-import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeFactory;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
@@ -32,9 +30,10 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.protect.ProtectConfig;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
@@ -52,34 +51,20 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    public static PurpleData load(@NotNull ProtectConfig config) throws IOException {
-        return load(config.tumorSampleId(),
-                config.referenceSampleId(),
-                config.purpleQcFile(),
-                config.purplePurityTsv(),
-                config.purpleSomaticDriverCatalogTsv(),
-                config.purpleSomaticVariantVcf(),
-                config.purpleGermlineDriverCatalogTsv(),
-                config.purpleGermlineVariantVcf(),
-                config.purpleGeneCopyNumberTsv(),
-                null,
-                config.refGenomeVersion());
-    }
-
-    @NotNull
     public static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @NotNull String qcFile,
             @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
             @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @Nullable String purpleGeneCopyNumberTsv,
             @Nullable String purpleSomaticCopynumberTsv, @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
         LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
 
-        DecimalFormat purityFormat = new DecimalFormat("#'%'");
         PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
+
+        DecimalFormat purityFormat = new DecimalFormat("#'%'");
         LOGGER.info("  QC status: {}", purityContext.qc().toString());
         LOGGER.info("  Tumor purity: {} ({}-{})",
                 purityFormat.format(purityContext.bestFit().purity() * 100),
-                purityFormat.format(purityContext.score().minPurity()),
-                purityFormat.format(purityContext.score().maxPurity()));
+                purityFormat.format(purityContext.score().minPurity() * 100),
+                purityFormat.format(purityContext.score().maxPurity() * 100));
         LOGGER.info("  Tumor ploidy: {} ({}-{})",
                 purityContext.bestFit().ploidy(),
                 purityContext.score().minPloidy(),
@@ -140,12 +125,12 @@ public final class PurpleDataLoader {
 
         return ImmutablePurpleData.builder()
                 .purpleQC(purityContext.qc().status())
+                .hasReliableQuality(purityContext.qc().pass())
                 .fittedPurityMethod(purityContext.method())
+                .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
                 .purity(purityContext.bestFit().purity())
                 .minPurity(purityContext.score().minPurity())
                 .maxPurity(purityContext.score().maxPurity())
-                .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
-                .hasReliableQuality(purityContext.qc().pass())
                 .ploidy(purityContext.bestFit().ploidy())
                 .minPloidy(purityContext.score().minPloidy())
                 .maxPloidy(purityContext.score().maxPloidy())

@@ -6,10 +6,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.linx.ImmutableReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.protect.ProtectTestFactory;
-import com.hartwig.hmftools.protect.linx.ImmutableReportableHomozygousDisruption;
-import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
@@ -41,7 +40,7 @@ public class DisruptionEvidenceTest {
                 .build();
 
         DisruptionEvidence disruptionEvidence =
-                new DisruptionEvidence(ProtectTestFactory.createTestEvidenceFactory(), Lists.newArrayList(amp, inactivation, deletion));
+                new DisruptionEvidence(EvidenceTestFactory.createTestEvidenceFactory(), Lists.newArrayList(amp, inactivation, deletion));
 
         ReportableHomozygousDisruption match = create(gene);
         ReportableHomozygousDisruption nonMatch = create("other gene");

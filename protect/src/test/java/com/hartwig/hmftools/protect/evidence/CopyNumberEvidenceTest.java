@@ -7,10 +7,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.purple.PurpleTestFactory;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.protect.ProtectTestFactory;
-import com.hartwig.hmftools.protect.PurpleTestFactory;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
@@ -40,7 +39,7 @@ public class CopyNumberEvidenceTest {
                 .build();
 
         CopyNumberEvidence copyNumberEvidence =
-                new CopyNumberEvidence(ProtectTestFactory.createTestEvidenceFactory(), Lists.newArrayList(amp, inactivation, fusion));
+                new CopyNumberEvidence(EvidenceTestFactory.createTestEvidenceFactory(), Lists.newArrayList(amp, inactivation, fusion));
 
         ReportableGainLoss reportableAmp = PurpleTestFactory.testReportableGainLoss(gene, CopyNumberInterpretation.FULL_GAIN);
         ReportableGainLoss reportableDel = PurpleTestFactory.testReportableGainLoss(gene, CopyNumberInterpretation.FULL_LOSS);
