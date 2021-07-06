@@ -127,6 +127,7 @@ public final class PurpleDataLoader {
                 .purpleQC(purityContext.qc().status())
                 .hasReliableQuality(purityContext.qc().pass())
                 .fittedPurityMethod(purityContext.method())
+                .wholeGenomeDuplication(purityContext.wholeGenomeDuplication())
                 .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
                 .purity(purityContext.bestFit().purity())
                 .minPurity(purityContext.score().minPurity())

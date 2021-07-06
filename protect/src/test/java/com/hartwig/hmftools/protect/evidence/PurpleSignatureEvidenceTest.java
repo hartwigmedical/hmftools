@@ -7,10 +7,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
 import com.hartwig.hmftools.common.purple.PurpleData;
-import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
+import com.hartwig.hmftools.common.purple.PurpleTestFactory;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.serve.ServeTestFactory;
@@ -61,22 +59,6 @@ public class PurpleSignatureEvidenceTest {
 
     @NotNull
     private static PurpleData createPurpleData(@NotNull MicrosatelliteStatus msStatus, @NotNull TumorMutationalStatus tmlStatus) {
-        return ImmutablePurpleData.builder()
-                .addPurpleQC(PurpleQCStatus.PASS)
-                .fittedPurityMethod(FittedPurityMethod.NORMAL)
-                .purity(0D)
-                .minPurity(0D)
-                .maxPurity(0D)
-                .hasReliablePurity(true)
-                .hasReliableQuality(true)
-                .ploidy(0D)
-                .minPloidy(0D)
-                .maxPloidy(0D)
-                .microsatelliteIndelsPerMb(0D)
-                .microsatelliteStatus(msStatus)
-                .tumorMutationalBurdenPerMb(0D)
-                .tumorMutationalLoad(0)
-                .tumorMutationalLoadStatus(tmlStatus)
-                .build();
+        return PurpleTestFactory.testPurpleDataBuilder().microsatelliteStatus(msStatus).tumorMutationalLoadStatus(tmlStatus).build();
     }
 }

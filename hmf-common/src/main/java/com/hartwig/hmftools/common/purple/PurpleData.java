@@ -27,6 +27,8 @@ public interface PurpleData {
     @NotNull
     FittedPurityMethod fittedPurityMethod();
 
+    boolean wholeGenomeDuplication();
+
     boolean hasReliablePurity();
 
     double purity();

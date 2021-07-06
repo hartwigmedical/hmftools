@@ -38,21 +38,32 @@ public class FrontPageChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document document) {
+        addPrimaryTumorTable(document);
+        addPurityFitTable(document);
+        addCircos(document);
+    }
+
+    private void addPrimaryTumorTable(@NotNull Document document) {
         Table primaryTumorTable = TableUtil.createReportContentTable(new float[] { 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"), TableUtil.createHeaderCell("Cuppa Primary Tumor") });
         primaryTumorTable.addCell(TableUtil.createContentCell(toConfiguredTumorType(report.configuredPrimaryTumor())));
         primaryTumorTable.addCell(TableUtil.createContentCell(report.cuppaPrimaryTumor()));
         document.add(TableUtil.createWrappingReportTable(primaryTumorTable));
+    }
 
-        Table purpleFitTable = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1 },
+    private void addPurityFitTable(@NotNull Document document) {
+        Table purpleFitTable = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("QC"), TableUtil.createHeaderCell("Purity"), TableUtil.createHeaderCell("Ploidy"),
-                        TableUtil.createHeaderCell("Fit Method") });
+                        TableUtil.createHeaderCell("Fit Method"), TableUtil.createHeaderCell("WGD") });
         purpleFitTable.addCell(TableUtil.createContentCell(purpleQCString()));
         purpleFitTable.addCell(TableUtil.createContentCell(purityString()));
         purpleFitTable.addCell(TableUtil.createContentCell(ploidyString()));
         purpleFitTable.addCell(TableUtil.createContentCell(report.purple().fittedPurityMethod().toString()));
+        purpleFitTable.addCell(TableUtil.createContentCell(report.purple().wholeGenomeDuplication() ? "Yes" : "No"));
         document.add(purpleFitTable);
+    }
 
+    private void addCircos(@NotNull Document document) {
         String circosPath = report.plots().purpleCircosPlot();
         try {
             Image circosImage = new Image(ImageDataFactory.create(circosPath));
