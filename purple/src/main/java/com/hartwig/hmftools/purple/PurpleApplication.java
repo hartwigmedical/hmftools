@@ -293,12 +293,9 @@ public class PurpleApplication
 
             PPL_LOGGER.info("Enriching somatic variants");
 
-            final SomaticStream somaticStream = new SomaticStream(mConfig,
-                    mReferenceData,
-                    somaticPeakStream.snpCount(),
-                    somaticPeakStream.indelCount(),
-                    somaticPeaks,
-                    sampleDataFiles.SomaticVcfFile);
+            final SomaticStream somaticStream = new SomaticStream(
+                    mConfig, mReferenceData, somaticPeakStream.snpCount(), somaticPeakStream.indelCount(),
+                    somaticPeaks, sampleDataFiles.SomaticVcfFile);
 
             somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions);
 
