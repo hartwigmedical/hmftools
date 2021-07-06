@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.chapter;
+package com.hartwig.hmftools.orange.report.chapters;
 
 import com.itextpdf.layout.Document;
 

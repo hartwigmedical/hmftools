@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.component;
+package com.hartwig.hmftools.orange.report.components;
 
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.itextpdf.layout.borders.SolidBorder;

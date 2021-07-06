@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.orange.report.chapter;
+package com.hartwig.hmftools.orange.report.chapters;
 
 import java.net.MalformedURLException;
 
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.report.component.TableUtil;
+import com.hartwig.hmftools.orange.report.components.TableUtil;
 import com.itextpdf.io.IOException;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.layout.Document;

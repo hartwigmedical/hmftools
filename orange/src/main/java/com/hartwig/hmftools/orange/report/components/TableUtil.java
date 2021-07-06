@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.component;
+package com.hartwig.hmftools.orange.report.components;
 
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -88,40 +88,6 @@ public class TableUtil {
 
         table.addCell(new Cell().add(continuedWrapTable).setPadding(0).setBorder(Border.NO_BORDER));
         return table;
-    }
-
-    @NotNull
-    public static Table createReportContentTableSummary(@NotNull float[] columnPercentageWidths, @NotNull Cell[] headerCells) {
-        Table table = new Table(UnitValue.createPercentArray(columnPercentageWidths)).setWidth(ReportResources.CONTENT_WIDTH_WIDE_SUMMARY);
-        table.setFixedLayout();
-
-        for (Cell headerCell : headerCells) {
-            table.addHeaderCell(headerCell);
-        }
-
-        return table;
-    }
-
-    @NotNull
-    public static Table createWrappingReportTableSummary(@NotNull String tableTitle, @NotNull Table contentTable) {
-        contentTable.addFooterCell(new Cell(1, contentTable.getNumberOfColumns()).setBorder(Border.NO_BORDER)
-                .setPaddingTop(5)
-                .setPaddingBottom(5)
-                .add(new Paragraph("The table continues on the next page".toUpperCase()).addStyle(ReportResources.subTextStyle())))
-                .setSkipLastFooter(true);
-
-        Table continuedWrapTable = new Table(1).setMinWidth(contentTable.getWidth())
-                .addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
-                        .add(new Paragraph("Continued from the previous page".toUpperCase()).addStyle(ReportResources.subTextStyle())))
-                .setSkipFirstHeader(true)
-                .addCell(new Cell().add(contentTable).setPadding(0).setBorder(Border.NO_BORDER));
-
-        return new Table(1).setMinWidth(contentTable.getWidth())
-                .setMarginBottom(TABLE_BOTTOM_MARGIN)
-                .addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
-                        .setPadding(0)
-                        .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle())))
-                .addCell(new Cell().add(continuedWrapTable).setPadding(0).setBorder(Border.NO_BORDER));
     }
 
     @NotNull

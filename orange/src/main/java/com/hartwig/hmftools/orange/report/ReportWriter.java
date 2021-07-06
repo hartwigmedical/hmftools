@@ -5,8 +5,8 @@ import java.io.File;
 import java.io.IOException;
 
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.report.chapter.FrontPageChapter;
-import com.hartwig.hmftools.orange.report.chapter.ReportChapter;
+import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;
+import com.hartwig.hmftools.orange.report.chapters.ReportChapter;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;

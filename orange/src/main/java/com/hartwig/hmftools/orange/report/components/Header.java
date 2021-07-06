@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.component;
+package com.hartwig.hmftools.orange.report.components;
 
 import java.net.MalformedURLException;
 
@@ -27,13 +27,13 @@ public class Header {
     private final PdfImageXObject orangeCircosObj;
 
     public Header(@NotNull String orangeCircosPath) {
-        ImageData orangeImage = null;
+        ImageData orangeCircos = null;
         try {
-            orangeImage = ImageDataFactory.create(orangeCircosPath);
+            orangeCircos = ImageDataFactory.create(orangeCircosPath);
         } catch (MalformedURLException e) {
-            LOGGER.warn("Could not orange image from {}", orangeCircosPath);
+            LOGGER.warn("Could not load ORANGE circos image from {}", orangeCircosPath);
         }
-        orangeCircosObj = orangeImage != null ? new PdfImageXObject(orangeImage) : null;
+        orangeCircosObj = orangeCircos != null ? new PdfImageXObject(orangeCircos) : null;
     }
 
     public void renderHeader(@NotNull PdfPage page) {

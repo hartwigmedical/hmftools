@@ -2,9 +2,9 @@ package com.hartwig.hmftools.orange.report;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.report.component.Footer;
-import com.hartwig.hmftools.orange.report.component.Header;
-import com.hartwig.hmftools.orange.report.component.SidePanel;
+import com.hartwig.hmftools.orange.report.components.Footer;
+import com.hartwig.hmftools.orange.report.components.Header;
+import com.hartwig.hmftools.orange.report.components.SidePanel;
 import com.itextpdf.kernel.events.Event;
 import com.itextpdf.kernel.events.IEventHandler;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
