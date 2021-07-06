@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.VariantHeader.REPORTED_FLAG;
+import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,8 +30,6 @@ import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.plot.RChartData;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
@@ -44,7 +43,7 @@ public class SomaticStream
     private final ReferenceData mReferenceData;
     private final PurpleConfig mConfig;
 
-    private final String inputVCF;
+    private final String mInputVCF;
     private boolean mEnabled;
     private final String mOutputVCF;
     private final TumorMutationalLoad mTumorMutationalLoad;
@@ -55,8 +54,7 @@ public class SomaticStream
     private final DriverGenePanel mGenePanel;
     private final List<PeakModel> mPeakModel;
     private final Set<String> mReportedGenes;
-    private final List<VariantContext> mDownsampledSnp;
-    private final List<VariantContext> mDownsampledIndel;
+    private final List<VariantContextDecorator> mDownsampledVariants; // cached for charting
     private final int mSnpMod;
     private final int mIndelMod;
     private int mSnpCount;
@@ -76,7 +74,7 @@ public class SomaticStream
         mPeakModel = peakModel;
         mOutputVCF = config.OutputDir + config.TumorId + ".purple.somatic.vcf.gz";
         mEnabled = !somaticVcfFilename.isEmpty();
-        inputVCF = somaticVcfFilename;
+        mInputVCF = somaticVcfFilename;
         mTumorMutationalLoad = new TumorMutationalLoad();
         mMicrosatelliteIndels = new MicrosatelliteIndels();
         mDrivers = new SomaticVariantDrivers(mGenePanel);
@@ -84,8 +82,7 @@ public class SomaticStream
         mRChartData = new RChartData(config.OutputDir, config.TumorId);
 
         mReportedGenes = Sets.newHashSet();
-        mDownsampledSnp = Lists.newArrayList();
-        mDownsampledIndel = Lists.newArrayList();
+        mDownsampledVariants = Lists.newArrayList();
     }
 
     public double microsatelliteIndelsPerMb()
@@ -93,7 +90,6 @@ public class SomaticStream
         return mMicrosatelliteIndels.microsatelliteIndelsPerMb();
     }
 
-    @NotNull
     public MicrosatelliteStatus microsatelliteStatus()
     {
         return mEnabled ? MicrosatelliteStatus.fromIndelsPerMb(microsatelliteIndelsPerMb()) : MicrosatelliteStatus.UNKNOWN;
@@ -109,60 +105,50 @@ public class SomaticStream
         return mTumorMutationalLoad.load();
     }
 
-    @NotNull
     public TumorMutationalStatus tumorMutationalBurdenPerMbStatus()
     {
         return mEnabled ? TumorMutationalStatus.fromBurdenPerMb(tumorMutationalBurdenPerMb()) : TumorMutationalStatus.UNKNOWN;
     }
 
-    @NotNull
     public TumorMutationalStatus tumorMutationalLoadStatus()
     {
         return mEnabled ? TumorMutationalStatus.fromLoad(tumorMutationalLoad()) : TumorMutationalStatus.UNKNOWN;
     }
 
-    @NotNull
-    public List<DriverCatalog> drivers(@NotNull final List<GeneCopyNumber> geneCopyNumbers)
+    public List<DriverCatalog> drivers(final List<GeneCopyNumber> geneCopyNumbers)
     {
         return mDrivers.build(geneCopyNumbers);
     }
 
-    @NotNull
     public Set<String> reportedGenes()
     {
         return mReportedGenes;
     }
 
-    @NotNull
-    public List<VariantContext> downsampledVariants()
-    {
-        List<VariantContext> result = Lists.newArrayList();
-        result.addAll(mDownsampledIndel);
-        result.addAll(mDownsampledSnp);
+    public List<VariantContextDecorator> downsampledVariants() { return mDownsampledVariants; }
 
-        return result;
-    }
-
-    public void processAndWrite(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
-            @NotNull final List<FittedRegion> fittedRegions) throws IOException
+    public void processAndWrite(
+            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<FittedRegion> fittedRegions)
     {
         final Consumer<VariantContext> downsampleConsumer = context ->
         {
             VariantContextDecorator variant = new VariantContextDecorator(context);
-            if(variant.type() == VariantType.INDEL)
+
+            if(variant.isPass())
             {
-                mIndelCount++;
-                if(mIndelCount % mIndelMod == 0)
+                if(variant.type() == VariantType.INDEL)
                 {
-                    mDownsampledIndel.add(context);
+                    mIndelCount++;
+
+                    if(mIndelCount % mIndelMod == 0)
+                        mDownsampledVariants.add(variant);
                 }
-            }
-            else
-            {
-                mSnpCount++;
-                if(mSnpCount % mSnpMod == 0)
+                else
                 {
-                    mDownsampledSnp.add(context);
+                    mSnpCount++;
+
+                    if(mSnpCount % mSnpMod == 0)
+                        mDownsampledVariants.add(variant);
                 }
             }
         };
@@ -180,12 +166,14 @@ public class SomaticStream
 
         if(mEnabled)
         {
-            try (
-                    VCFFileReader vcfReader = new VCFFileReader(new File(inputVCF), false);
-                    VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(mOutputVCF)
-                            .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
-                            .build())
+            try
             {
+                VCFFileReader vcfReader = new VCFFileReader(new File(mInputVCF), false);
+
+                VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(mOutputVCF)
+                        .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
+                        .build();
+
                 final Consumer<VariantContext> consumer = mTumorMutationalLoad.andThen(mMicrosatelliteIndels)
                         .andThen(driverConsumer)
                         .andThen(writer::add)
@@ -193,31 +181,34 @@ public class SomaticStream
                         .andThen(downsampleConsumer);
 
                 final SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(
-                        mConfig.DriverEnabled,
-                        mConfig.SomaticFitting.clonalityBinWidth(),
-                        mConfig.Version,
-                        mConfig.ReferenceId,
-                        mConfig.TumorId,
-                        mReferenceData.RefGenome,
-                        purityAdjuster,
-                        mGenePanel,
-                        copyNumbers,
-                        fittedRegions,
-                        mReferenceData.SomaticHotspots,
-                        mReferenceData.TranscriptRegions,
-                        mPeakModel,
-                        consumer);
+                        mConfig.DriverEnabled, mConfig.SomaticFitting.clonalityBinWidth(), mConfig.Version,
+                        mConfig.ReferenceId, mConfig.TumorId, mReferenceData.RefGenome,
+                        purityAdjuster, mGenePanel, copyNumbers, fittedRegions,
+                        mReferenceData.SomaticHotspots, mReferenceData.TranscriptRegions, mPeakModel, consumer);
 
                 final VCFHeader header = enricher.enrichHeader(vcfReader.getFileHeader());
                 writer.writeHeader(header);
 
+                int flushCount = 10000;
+                int varCount = 0;
+
                 for(VariantContext context : vcfReader)
                 {
                     enricher.accept(context);
+                    ++varCount;
+
+                    if(varCount > 0 && (varCount % flushCount) == 0)
+                    {
+                        PPL_LOGGER.debug("enriched {} somatic variants", varCount);
+                        enricher.flush();
+                    }
                 }
 
-                enricher.flush();
                 mRChartData.write();
+            }
+            catch(IOException e)
+            {
+                PPL_LOGGER.error("failed to enrich somatic variants: {}", e.toString());
             }
         }
 

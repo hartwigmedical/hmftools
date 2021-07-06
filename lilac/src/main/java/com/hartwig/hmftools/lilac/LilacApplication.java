@@ -344,7 +344,7 @@ public class LilacApplication
             System.exit(1);
         }
 
-        mHlaYCoverage = new HlaYCoverage(mRefData.HlaYNucleotideSequences, geneAminoAcidHetLociMap);
+        mHlaYCoverage = new HlaYCoverage(mRefData.HlaYNucleotideSequences, geneAminoAcidHetLociMap, mConfig.outputPrefix());
         mHlaYCoverage.checkThreshold(mRefFragAlleles, refAminoAcidFrags);
 
         // build and score complexes
@@ -606,7 +606,7 @@ public class LilacApplication
 
         FragmentUtils.writeFragmentData(String.format("%s.fragments.csv", mConfig.outputPrefix()), mRefNucleotideFrags);
 
-        mHlaYCoverage.writeAlleleCounts(mConfig.outputPrefix());
+        mHlaYCoverage.writeAlleleCounts(mConfig.Sample);
     }
 
     private boolean validateFragments(final List<Fragment> fragments)
