@@ -29,16 +29,16 @@ public abstract class OrangeReport {
     public abstract String cuppaPrimaryTumor();
 
     @NotNull
-    public abstract PurpleData purpleData();
+    public abstract PurpleData purple();
 
     @NotNull
-    public abstract LinxData linxData();
+    public abstract LinxData linx();
 
     @NotNull
-    public abstract VirusInterpreterData virusInterpreterData();
+    public abstract VirusInterpreterData virusInterpreter();
 
     @NotNull
-    public abstract ChordAnalysis chordAnalysis();
+    public abstract ChordAnalysis chord();
 
     @NotNull
     public abstract OrangePlots plots();

@@ -73,11 +73,18 @@ public final class PurpleDataLoader {
             @Nullable String purpleSomaticCopynumberTsv, @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
         LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
 
+        DecimalFormat purityFormat = new DecimalFormat("#'%'");
         PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
         LOGGER.info("  QC status: {}", purityContext.qc().toString());
-        LOGGER.info("  Tumor purity: {}", new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100));
+        LOGGER.info("  Tumor purity: {} ({}-{})",
+                purityFormat.format(purityContext.bestFit().purity() * 100),
+                purityFormat.format(purityContext.score().minPurity()),
+                purityFormat.format(purityContext.score().maxPurity()));
+        LOGGER.info("  Tumor ploidy: {} ({}-{})",
+                purityContext.bestFit().ploidy(),
+                purityContext.score().minPloidy(),
+                purityContext.score().maxPloidy());
         LOGGER.info("  Fit method: {}", purityContext.method());
-        LOGGER.info("  Average tumor ploidy: {}", purityContext.bestFit().ploidy());
         LOGGER.info("  Whole genome duplication: {}", purityContext.wholeGenomeDuplication() ? "yes" : "no");
         LOGGER.info("  Microsatellite status: {}", purityContext.microsatelliteStatus().display());
         LOGGER.info("  Tumor mutational load status: {}", purityContext.tumorMutationalLoadStatus().display());
@@ -132,10 +139,16 @@ public final class PurpleDataLoader {
         LOGGER.info(" Loaded {} unreported somatic variants from {}", unreportedSomaticVariants.size(), somaticVariantVcf);
 
         return ImmutablePurpleData.builder()
+                .purpleQC(purityContext.qc().status())
+                .fittedPurityMethod(purityContext.method())
                 .purity(purityContext.bestFit().purity())
+                .minPurity(purityContext.score().minPurity())
+                .maxPurity(purityContext.score().maxPurity())
                 .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
                 .hasReliableQuality(purityContext.qc().pass())
                 .ploidy(purityContext.bestFit().ploidy())
+                .minPloidy(purityContext.score().minPloidy())
+                .maxPloidy(purityContext.score().maxPloidy())
                 .microsatelliteIndelsPerMb(purityContext.microsatelliteIndelsPerMb())
                 .microsatelliteStatus(purityContext.microsatelliteStatus())
                 .tumorMutationalBurdenPerMb(purityContext.tumorMutationalBurdenPerMb())

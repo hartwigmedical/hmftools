@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.protect.purple;
 
 import java.util.List;
+import java.util.Set;
 
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityMethod;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
@@ -16,13 +19,27 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface PurpleData {
 
+    @NotNull
+    Set<PurpleQCStatus> purpleQC();
+
+    @NotNull
+    FittedPurityMethod fittedPurityMethod();
+
     double purity();
+
+    double minPurity();
+
+    double maxPurity();
 
     boolean hasReliablePurity();
 
     boolean hasReliableQuality();
 
     double ploidy();
+
+    double minPloidy();
+
+    double maxPloidy();
 
     double microsatelliteIndelsPerMb();
 

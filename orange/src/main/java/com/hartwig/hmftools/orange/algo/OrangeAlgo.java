@@ -54,10 +54,10 @@ public class OrangeAlgo {
                 .pipelineVersion(loadPipelineVersion(config))
                 .configuredPrimaryTumor(loadConfiguredPrimaryTumor(config))
                 .cuppaPrimaryTumor(loadCuppaPrimaryTumor(config))
-                .purpleData(loadPurpleData(config))
-                .linxData(loadLinxData(config))
-                .virusInterpreterData(loadVirusInterpreterData(config))
-                .chordAnalysis(loadChordAnalysis(config))
+                .purple(loadPurpleData(config))
+                .linx(loadLinxData(config))
+                .virusInterpreter(loadVirusInterpreterData(config))
+                .chord(loadChordAnalysis(config))
                 .plots(plots)
                 .build();
     }

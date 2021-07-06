@@ -16,7 +16,7 @@ import org.junit.Test;
 public class PurpleDataLoaderTest {
 
     @Test
-    public void canSeparareReportedFromUnreportedGainsLosses() {
+    public void canSeparateReportedFromUnreportedGainsLosses() {
         ReportableGainLoss gain = PurpleTestFactory.testReportableGainLoss("gene1", CopyNumberInterpretation.FULL_GAIN);
         ReportableGainLoss loss = PurpleTestFactory.testReportableGainLoss("gene2", CopyNumberInterpretation.FULL_LOSS);
 
