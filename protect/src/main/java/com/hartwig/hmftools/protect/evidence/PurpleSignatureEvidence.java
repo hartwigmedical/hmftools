@@ -5,9 +5,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
-import com.hartwig.hmftools.protect.purple.PurpleData;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.purple;
+package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
 import java.util.Map;
@@ -8,7 +8,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 

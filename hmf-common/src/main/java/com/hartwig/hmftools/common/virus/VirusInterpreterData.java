@@ -1,8 +1,6 @@
-package com.hartwig.hmftools.protect.virusinterpreter;
+package com.hartwig.hmftools.common.virus;
 
 import java.util.List;
-
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

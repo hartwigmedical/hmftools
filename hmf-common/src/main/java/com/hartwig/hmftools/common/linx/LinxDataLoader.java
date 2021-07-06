@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.linx;
+package com.hartwig.hmftools.common.linx;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
-import com.hartwig.hmftools.protect.ProtectConfig;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
@@ -19,11 +18,6 @@ public final class LinxDataLoader {
     private static final Logger LOGGER = LogManager.getLogger(LinxDataLoader.class);
 
     private LinxDataLoader() {
-    }
-
-    @NotNull
-    public static LinxData load(@NotNull ProtectConfig config) throws IOException {
-        return load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
     }
 
     @NotNull

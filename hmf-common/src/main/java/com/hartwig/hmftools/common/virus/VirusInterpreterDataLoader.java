@@ -1,13 +1,10 @@
-package com.hartwig.hmftools.protect.virusinterpreter;
+package com.hartwig.hmftools.common.virus;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
-import com.hartwig.hmftools.protect.ProtectConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,11 +15,6 @@ public final class VirusInterpreterDataLoader {
     private static final Logger LOGGER = LogManager.getLogger(VirusInterpreterDataLoader.class);
 
     private VirusInterpreterDataLoader() {
-    }
-
-    @NotNull
-    public static VirusInterpreterData load(@NotNull ProtectConfig config) throws IOException {
-        return load(config.annotatedVirusTsv());
     }
 
     @NotNull

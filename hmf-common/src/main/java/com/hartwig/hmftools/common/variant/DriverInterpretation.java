@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.purple;
+package com.hartwig.hmftools.common.variant;
 
 import org.jetbrains.annotations.NotNull;
 

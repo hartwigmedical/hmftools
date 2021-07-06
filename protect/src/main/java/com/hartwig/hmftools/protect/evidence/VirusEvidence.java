@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusInterpretation;
-import com.hartwig.hmftools.protect.virusinterpreter.VirusInterpreterData;
+import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 

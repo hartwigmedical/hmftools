@@ -9,11 +9,10 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpretation;
+import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
-import com.hartwig.hmftools.protect.ProtectTestFactory;
-import com.hartwig.hmftools.protect.virusinterpreter.ImmutableVirusInterpreterData;
-import com.hartwig.hmftools.protect.virusinterpreter.VirusInterpreterData;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableCharacteristic;
@@ -39,7 +38,7 @@ public class VirusEvidenceTest {
                 .build();
 
         VirusEvidence virusEvidence =
-                new VirusEvidence(ProtectTestFactory.createTestEvidenceFactory(), Lists.newArrayList(hpvEvidence, ebvEvidence));
+                new VirusEvidence(EvidenceTestFactory.createTestEvidenceFactory(), Lists.newArrayList(hpvEvidence, ebvEvidence));
 
         List<ProtectEvidence> evidences = virusEvidence.evidence(testData);
         assertEquals(2, evidences.size());

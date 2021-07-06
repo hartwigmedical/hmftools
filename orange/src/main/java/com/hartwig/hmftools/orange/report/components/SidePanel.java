@@ -34,7 +34,7 @@ public final class SidePanel {
         Canvas cv = new Canvas(canvas, page.getDocument(), page.getPageSize());
 
         cv.add(createSidePanelDiv(++sideTextIndex, "Sample", report.sampleId()));
-        cv.add(createSidePanelDiv(++sideTextIndex, "Pipeline", report.pipelineVersion()));
+        cv.add(createSidePanelDiv(++sideTextIndex, "Platinum version", report.pipelineVersion()));
 
         canvas.release();
     }

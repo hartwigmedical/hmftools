@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.linx;
+package com.hartwig.hmftools.common.linx;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

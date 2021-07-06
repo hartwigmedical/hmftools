@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.purple;
+package com.hartwig.hmftools.common.purple;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -9,14 +9,13 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.protect.PurpleTestFactory;
 
 import org.junit.Test;
 
 public class PurpleDataLoaderTest {
 
     @Test
-    public void canSeparareReportedFromUnreportedGainsLosses() {
+    public void canSeparateReportedFromUnreportedGainsLosses() {
         ReportableGainLoss gain = PurpleTestFactory.testReportableGainLoss("gene1", CopyNumberInterpretation.FULL_GAIN);
         ReportableGainLoss loss = PurpleTestFactory.testReportableGainLoss("gene2", CopyNumberInterpretation.FULL_LOSS);
 

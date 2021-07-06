@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import com.hartwig.hmftools.protect.purple.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

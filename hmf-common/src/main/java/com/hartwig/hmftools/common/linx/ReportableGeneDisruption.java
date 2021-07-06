@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.linx;
+package com.hartwig.hmftools.common.linx;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

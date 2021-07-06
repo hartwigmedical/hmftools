@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.protect.purple;
+package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.protect.purple.ReportableVariantFactory.toReportableSomaticVariants;
+import static com.hartwig.hmftools.common.variant.ReportableVariantFactory.toReportableSomaticVariants;
 
 import static org.junit.Assert.assertEquals;
 
@@ -12,8 +12,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
