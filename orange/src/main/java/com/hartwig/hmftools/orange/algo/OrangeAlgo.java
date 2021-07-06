@@ -36,7 +36,7 @@ public class OrangeAlgo {
 
     @NotNull
     public static OrangeAlgo fromConfig(@NotNull OrangeConfig config) throws IOException {
-        LOGGER.info("Loading DOID from {}", config.doidJsonFile());
+        LOGGER.info("Loading DOID database from {}", config.doidJsonFile());
         DoidEntry doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJsonFile());
         return new OrangeAlgo(doidEntry);
     }
@@ -51,9 +51,9 @@ public class OrangeAlgo {
 
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
-                .pipelineVersion(PipelineVersionFile.majorDotMinorVersion(config.pipelineVersionFile()))
-                .configuredTumorLocation(loadConfiguredTumorLocation(config))
-                .cuppaTumorLocation(loadCuppaTumorLocation(config))
+                .pipelineVersion(loadPipelineVersion(config))
+                .configuredPrimaryTumor(loadConfiguredPrimaryTumor(config))
+                .cuppaPrimaryTumor(loadCuppaPrimaryTumor(config))
                 .purpleData(loadPurpleData(config))
                 .linxData(loadLinxData(config))
                 .virusInterpreterData(loadVirusInterpreterData(config))
@@ -63,11 +63,20 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private Set<DoidNode> loadConfiguredTumorLocation(@NotNull OrangeConfig config) {
+    private static String loadPipelineVersion(@NotNull OrangeConfig config) throws IOException {
+        String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(config.pipelineVersionFile());
+        LOGGER.info("Loaded pipeline version '{}'", pipelineVersion);
+        return pipelineVersion;
+    }
+
+    @NotNull
+    private Set<DoidNode> loadConfiguredPrimaryTumor(@NotNull OrangeConfig config) {
         Set<DoidNode> nodes = Sets.newHashSet();
+        LOGGER.info("Determining configured primary tumor");
         for (String doid : config.primaryTumorDoids()) {
             DoidNode node = resolveDoid(doidEntry.nodes(), doid);
             if (node != null) {
+                LOGGER.info(" Adding DOID {} ({}) as configured primary tumor", doid, node.doidTerm());
                 nodes.add(node);
             } else {
                 LOGGER.warn("Could not resolve doid '{}'", doid);
@@ -87,10 +96,10 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static String loadCuppaTumorLocation(@NotNull OrangeConfig config) throws IOException {
+    private static String loadCuppaPrimaryTumor(@NotNull OrangeConfig config) throws IOException {
         LOGGER.info("Loading Cuppa result from {}", new File(config.cuppaConclusionTxt()).getParent());
         String cuppaTumorLocation = MolecularTissueOriginFile.read(config.cuppaConclusionTxt()).conclusion();
-        LOGGER.info(" Cuppa predicted tumor location: {}", cuppaTumorLocation);
+        LOGGER.info(" Cuppa predicted primary tumor: {}", cuppaTumorLocation);
         return cuppaTumorLocation;
     }
 

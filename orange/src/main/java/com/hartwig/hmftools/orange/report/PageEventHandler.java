@@ -33,7 +33,7 @@ public class PageEventHandler implements IEventHandler {
     PageEventHandler(@NotNull final OrangeReport report) {
         this.report = report;
 
-        this.header = new Header(Resources.getResource("orange_circos.png").getPath());
+        this.header = new Header(Resources.getResource("orange_circos.png"));
         this.footer = new Footer();
     }
 

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.report.components;
 
-import java.net.MalformedURLException;
+import java.net.URL;
 
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.itextpdf.io.image.ImageData;
@@ -14,26 +14,17 @@ import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Text;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class Header {
 
-    private static final Logger LOGGER = LogManager.getLogger(Header.class);
-
     @Nullable
     private final PdfImageXObject orangeCircosObj;
 
-    public Header(@NotNull String orangeCircosPath) {
-        ImageData orangeCircos = null;
-        try {
-            orangeCircos = ImageDataFactory.create(orangeCircosPath);
-        } catch (MalformedURLException e) {
-            LOGGER.warn("Could not load ORANGE circos image from {}", orangeCircosPath);
-        }
-        orangeCircosObj = orangeCircos != null ? new PdfImageXObject(orangeCircos) : null;
+    public Header(@NotNull URL orangeCircosPath) {
+        ImageData orangeCircos = ImageDataFactory.create(orangeCircosPath);
+        orangeCircosObj = new PdfImageXObject(orangeCircos);
     }
 
     public void renderHeader(@NotNull PdfPage page) {

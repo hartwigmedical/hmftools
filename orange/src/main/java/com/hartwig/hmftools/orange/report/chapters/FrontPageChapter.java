@@ -35,10 +35,10 @@ public class FrontPageChapter implements ReportChapter {
     @Override
     public void render(@NotNull Document document) {
         Table content = TableUtil.createReportContentTable(new float[] { 1, 1 },
-                new Cell[] { TableUtil.createHeaderCell("Configured Tumor Type"), TableUtil.createHeaderCell("CUPPA Tumor Type") });
+                new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"), TableUtil.createHeaderCell("Cuppa Primary Tumor") });
 
-        content.addCell(TableUtil.createContentCell(toConfiguredTumorType(report.configuredTumorLocation())));
-        content.addCell(TableUtil.createContentCell(report.cuppaTumorLocation()));
+        content.addCell(TableUtil.createContentCell(toConfiguredTumorType(report.configuredPrimaryTumor())));
+        content.addCell(TableUtil.createContentCell(report.cuppaPrimaryTumor()));
 
         document.add(TableUtil.createWrappingReportTable(content));
 
@@ -50,7 +50,7 @@ public class FrontPageChapter implements ReportChapter {
             circosImage.setMarginBottom(8);
             document.add(circosImage);
         } catch (MalformedURLException e) {
-            throw new IOException("Failed to read circos plot image at " + circosPath);
+            throw new IOException("Failed to read circos plot at " + circosPath);
         }
     }
 
