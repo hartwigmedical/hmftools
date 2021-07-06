@@ -49,7 +49,7 @@ public class FrontPageChapter implements ReportChapter {
     @Override
     public void render(@NotNull Document document) {
         addSummaryTable(document);
-        addDetailsAndCircos(document);
+        addDetailsAndPlots(document);
     }
 
     private void addSummaryTable(@NotNull Document document) {
@@ -62,16 +62,15 @@ public class FrontPageChapter implements ReportChapter {
         document.add(TableUtil.createWrappingReportTable(primaryTumorTable));
     }
 
-    private void addDetailsAndCircos(@NotNull Document document) {
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(ReportResources.CONTENT_WIDTH_WIDE);
+    private void addDetailsAndPlots(@NotNull Document document) {
+        Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(ReportResources.CONTENT_WIDTH_WIDE - 5);
 
         Table summary = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
-
         summary.addCell(TableUtil.createKeyCell("Purity:"));
         summary.addCell(TableUtil.createValueCell(purityString()));
         summary.addCell(TableUtil.createKeyCell("Ploidy:"));
         summary.addCell(TableUtil.createValueCell(ploidyString()));
-        summary.addCell(TableUtil.createKeyCell("Fit Method:"));
+        summary.addCell(TableUtil.createKeyCell("Fit method:"));
         summary.addCell(TableUtil.createValueCell(report.purple().fittedPurityMethod().toString()));
         summary.addCell(TableUtil.createKeyCell("Whole genome duplicated:"));
         summary.addCell(TableUtil.createValueCell(report.purple().wholeGenomeDuplication() ? "Yes" : "No"));
@@ -102,7 +101,7 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createKeyCell("Off-label reported treatments:"));
         summary.addCell(TableUtil.createValueCell("todo"));
 
-        String circosPath = report.plots().purpleCircosPlot();
+        String circosPath = report.plots().purpleComprehensiveCircosPlot();
         Image circosImage;
         try {
             circosImage = new Image(ImageDataFactory.create(circosPath));
@@ -112,9 +111,23 @@ public class FrontPageChapter implements ReportChapter {
         circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         circosImage.setMaxHeight(300);
 
-        table.addCell(summary);
-        table.addCell(circosImage);
+        topTable.addCell(summary);
+        topTable.addCell(circosImage);
 
+        Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(ReportResources.CONTENT_WIDTH_WIDE).setPadding(0);
+        table.addCell(topTable);
+
+        String clonalityPath = report.plots().purpleClonalityPlot();
+        Image clonalityImage;
+        try {
+            clonalityImage = new Image(ImageDataFactory.create(clonalityPath));
+        } catch (MalformedURLException e) {
+            throw new IOException("Could not read clonality image from " + clonalityPath);
+        }
+        clonalityImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        clonalityImage.setMaxHeight(300);
+
+        table.addCell(clonalityImage);
         document.add(table);
     }
 

@@ -47,8 +47,6 @@ public class OrangeAlgo {
 
     @NotNull
     public OrangeReport run(@NotNull OrangeConfig config) throws IOException {
-        OrangePlots plots = ImmutableOrangePlots.builder().purpleCircosPlot(config.purpleCircosPlot()).build();
-
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
                 .pipelineVersion(loadPipelineVersion(config))
@@ -58,7 +56,15 @@ public class OrangeAlgo {
                 .linx(loadLinxData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
-                .plots(plots)
+                .plots(buildPlots(config))
+                .build();
+    }
+
+    @NotNull
+    private static OrangePlots buildPlots(@NotNull OrangeConfig config) {
+        return ImmutableOrangePlots.builder()
+                .purpleComprehensiveCircosPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".circos.png")
+                .purpleClonalityPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".somatic.clonality.png")
                 .build();
     }
 

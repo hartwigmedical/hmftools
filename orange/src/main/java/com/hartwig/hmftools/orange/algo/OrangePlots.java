@@ -9,5 +9,8 @@ import org.jetbrains.annotations.Nullable;
 public abstract class OrangePlots {
 
     @NotNull
-    public abstract String purpleCircosPlot();
+    public abstract String purpleComprehensiveCircosPlot();
+
+    @NotNull
+    public abstract String purpleClonalityPlot();
 }
