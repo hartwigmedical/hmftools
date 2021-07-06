@@ -175,7 +175,7 @@ public class HlaYCoverage
 
             List<Integer> fragNucleotideLoci = fragment.getNucleotideLoci();
 
-            updateMiscCounts(miscCounts, fragAminoAcidLoci);
+            updateMiscCounts(fragment, miscCounts);
 
             FragmentAlleles matchedFragment = fragAlleles.stream()
                     .filter(x -> x.getFragment().id().equals(fragment.id()))
@@ -237,7 +237,7 @@ public class HlaYCoverage
         return alleles.stream().anyMatch(x -> fragmentAlleles.contains(x));
     }
 
-    public void writeAlleleCounts()
+    public void writeAlleleCounts(final String sampleId)
     {
         if(mOutputPrefix == null || !mExceedsThreshold)
             return;
@@ -247,10 +247,10 @@ public class HlaYCoverage
             final String source = entry.getKey();
             final int[] miscCounts = entry.getValue();
 
-            String outcome = (miscCounts[Y0101_X] == 0 && miscCounts[EXON_3] == 0) ? "NOVEL" : "REF";
+            String outcome = (miscCounts[Y0101_X] == 0 && miscCounts[EXON_3] > 0) ? "NOVEL" : "REF";
 
-            LL_LOGGER.info("HLA-Y_MISC_COUNTS:{},{},{},{}",
-                    source, miscCounts[Y0101_X], miscCounts[EXON_3], outcome);
+            LL_LOGGER.info("HLA-Y_MISC_COUNTS:{},{},{},{},{}",
+                    sampleId, source, miscCounts[Y0101_X], miscCounts[EXON_3], outcome);
         }
 
         String fileName = mOutputPrefix + ".hlay.coverage.csv";
@@ -290,15 +290,17 @@ public class HlaYCoverage
         }
     }
 
-    private void updateMiscCounts(final int[] miscCounts, final List<Integer> fragAminoAcidLoci)
+    private static final int Y0101_X_LOCUS = 227;
+
+    private void updateMiscCounts(final Fragment fragment, final int[] miscCounts)
     {
-        if(fragAminoAcidLoci.contains(227))
+        if(fragment.getAminoAcidLoci().contains(Y0101_X_LOCUS) && fragment.aminoAcid(Y0101_X_LOCUS).equals("X"))
             ++miscCounts[Y0101_X];
 
-        int exon3Start = A_EXON_BOUNDARIES.get(2) + 1;
-        int exon3End = A_EXON_BOUNDARIES.get(3);
+        int exon3Start = A_EXON_BOUNDARIES.get(1) + 1;
+        int exon3End = A_EXON_BOUNDARIES.get(2);
 
-        if(fragAminoAcidLoci.get(0) >= exon3Start && fragAminoAcidLoci.get(fragAminoAcidLoci.size() - 1) <= exon3End)
+        if(fragment.getAminoAcidLoci().get(0) >= exon3Start && fragment.getAminoAcidLoci().get(fragment.getAminoAcidLoci().size() - 1) <= exon3End)
             ++miscCounts[EXON_3];
     }
 

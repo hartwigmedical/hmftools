@@ -606,7 +606,7 @@ public class LilacApplication
 
         FragmentUtils.writeFragmentData(String.format("%s.fragments.csv", mConfig.outputPrefix()), mRefNucleotideFrags);
 
-        mHlaYCoverage.writeAlleleCounts();
+        mHlaYCoverage.writeAlleleCounts(mConfig.Sample);
     }
 
     private boolean validateFragments(final List<Fragment> fragments)
