@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.component;
+package com.hartwig.hmftools.orange.report.components;
 
 import java.util.List;
 

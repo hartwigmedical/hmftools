@@ -20,10 +20,13 @@ public abstract class OrangeReport {
     public abstract String sampleId();
 
     @NotNull
-    public abstract Set<DoidNode> configuredTumorLocation();
+    public abstract String pipelineVersion();
 
     @NotNull
-    public abstract String cuppaTumorLocation();
+    public abstract Set<DoidNode> configuredPrimaryTumor();
+
+    @NotNull
+    public abstract String cuppaPrimaryTumor();
 
     @NotNull
     public abstract PurpleData purpleData();

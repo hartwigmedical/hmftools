@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.clinical.context.ProductionRunContextFactory;
-import com.hartwig.hmftools.common.runcontext.RunContext;
+import com.hartwig.hmftools.patientdb.clinical.context.RunContext;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

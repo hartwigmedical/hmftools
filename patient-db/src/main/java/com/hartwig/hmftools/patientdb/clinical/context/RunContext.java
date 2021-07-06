@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.runcontext;
+package com.hartwig.hmftools.patientdb.clinical.context;
 
 import org.jetbrains.annotations.NotNull;
 

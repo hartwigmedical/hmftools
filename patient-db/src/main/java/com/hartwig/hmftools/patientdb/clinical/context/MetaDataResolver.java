@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.runcontext;
+package com.hartwig.hmftools.patientdb.clinical.context;
 
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.nullableString;
 import static com.hartwig.hmftools.common.utils.json.JsonFunctions.optionalNullableString;
@@ -7,14 +7,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,17 +71,6 @@ public final class MetaDataResolver {
     }
 
     @Nullable
-    public static String majorDotMinorVersion(@NotNull File pipelineVersionFile) throws IOException {
-        String version = readPipelineVersion(pipelineVersionFile);
-        if (version == null) {
-            return null;
-        } else {
-            String[] versionSplit = version.split("\\.");
-            return versionSplit[0] + "." + versionSplit[1];
-        }
-    }
-
-    @Nullable
     private static RunContext fromPv4MetaData(@NotNull String runDirectory, @NotNull File pv4MetadataFile) throws FileNotFoundException {
         JsonObject json = GSON.fromJson(new FileReader(pv4MetadataFile), JsonObject.class);
 
@@ -123,7 +111,7 @@ public final class MetaDataResolver {
             @NotNull File pipelineVersionFile) throws IOException {
         JsonObject json = GSON.fromJson(new FileReader(pv5MetadataFile), JsonObject.class);
 
-        String pipelineVersion = readPipelineVersion(pipelineVersionFile);
+        String pipelineVersion = PipelineVersionFile.readPipelineVersion(pipelineVersionFile.getPath());
 
         String refSample = sampleIdP5(json, REF_SAMPLE_OBJECT_P5);
         String tumorSample = sampleIdP5(json, TUMOR_SAMPLE_OBJECT_P5);
@@ -176,21 +164,6 @@ public final class MetaDataResolver {
         } else {
             // this is pre 5.15 pipelines
             return optionalNullableString(object, "sampleId");
-        }
-    }
-
-    @Nullable
-    private static String readPipelineVersion(@NotNull File pipelineVersionFile) throws IOException {
-        List<String> lines = Files.readAllLines(pipelineVersionFile.toPath());
-        if (lines.isEmpty()) {
-            throw new IOException("Pipeline version file seems empty on " + pipelineVersionFile.getPath());
-        } else {
-            if (lines.size() == 1) {
-                return lines.get(0);
-            } else {
-                LOGGER.warn("Too many lines in pipeline version file {}!", pipelineVersionFile);
-                return null;
-            }
         }
     }
 

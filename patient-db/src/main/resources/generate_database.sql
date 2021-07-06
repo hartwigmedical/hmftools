@@ -1,10 +1,5 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
--- TODO Cleanup per 1st of july 2021
-DROP TABLE IF EXISTS germlineVariant2;
-DROP TABLE IF EXISTS cuppaResult;
-DROP TABLE IF EXISTS copyNumberChromosomeArm;
-
 -- TODO Cleanup per 1st of August 2021
 DROP TABLE IF EXISTS rna;
 

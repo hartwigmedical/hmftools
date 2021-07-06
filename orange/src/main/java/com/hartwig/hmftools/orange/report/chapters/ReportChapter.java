@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.chapter;
+package com.hartwig.hmftools.orange.report.chapters;
 
 import com.itextpdf.layout.Document;
 
@@ -9,6 +9,6 @@ public interface ReportChapter {
     @NotNull
     String name();
 
-    void render(@NotNull Document reportDocument);
+    void render(@NotNull Document document);
 
 }

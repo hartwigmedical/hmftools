@@ -5,8 +5,8 @@ import java.io.File;
 import java.io.IOException;
 
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.report.chapter.ReportChapter;
-import com.hartwig.hmftools.orange.report.chapter.SummaryChapter;
+import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;
+import com.hartwig.hmftools.orange.report.chapters.ReportChapter;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -33,7 +33,7 @@ public class ReportWriter {
     }
 
     public void write(@NotNull OrangeReport report) throws IOException {
-        ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report) };
+        ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report) };
         writeReport(report, chapters);
     }
 

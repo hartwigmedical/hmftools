@@ -2,9 +2,9 @@ package com.hartwig.hmftools.orange.report;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.report.component.Footer;
-import com.hartwig.hmftools.orange.report.component.Header;
-import com.hartwig.hmftools.orange.report.component.SidePanel;
+import com.hartwig.hmftools.orange.report.components.Footer;
+import com.hartwig.hmftools.orange.report.components.Header;
+import com.hartwig.hmftools.orange.report.components.SidePanel;
 import com.itextpdf.kernel.events.Event;
 import com.itextpdf.kernel.events.IEventHandler;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
@@ -33,7 +33,7 @@ public class PageEventHandler implements IEventHandler {
     PageEventHandler(@NotNull final OrangeReport report) {
         this.report = report;
 
-        this.header = new Header(Resources.getResource("logo.png").getPath());
+        this.header = new Header(Resources.getResource("orange_circos.png"));
         this.footer = new Footer();
     }
 
@@ -43,7 +43,7 @@ public class PageEventHandler implements IEventHandler {
         if (documentEvent.getType().equals(PdfDocumentEvent.START_PAGE)) {
             PdfPage page = documentEvent.getPage();
 
-            header.renderHeader(chapterTitle, firstPageOfChapter, page);
+            header.renderHeader(page);
             if (firstPageOfChapter) {
                 firstPageOfChapter = false;
 
@@ -64,7 +64,6 @@ public class PageEventHandler implements IEventHandler {
     }
 
     void writeDynamicTextParts(@NotNull PdfDocument document) {
-        header.writeChapterTitles(document);
         footer.writeTotalPageCount(document);
     }
 

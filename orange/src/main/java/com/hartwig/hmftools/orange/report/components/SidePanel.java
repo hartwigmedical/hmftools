@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.component;
+package com.hartwig.hmftools.orange.report.components;
 
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -34,7 +34,7 @@ public final class SidePanel {
         Canvas cv = new Canvas(canvas, page.getDocument(), page.getPageSize());
 
         cv.add(createSidePanelDiv(++sideTextIndex, "Sample", report.sampleId()));
-        cv.add(createSidePanelDiv(++sideTextIndex, "Pipeline", "v5.23"));
+        cv.add(createSidePanelDiv(++sideTextIndex, "Pipeline", report.pipelineVersion()));
 
         canvas.release();
     }

@@ -21,10 +21,12 @@ public final class ReportResources {
     static final String METADATA_TITLE = "HMF ORANGE Report v" + OrangeApplication.VERSION;
     static final String METADATA_AUTHOR = "Hartwig Platinum Pipeline";
 
-    static final float PAGE_MARGIN_TOP = 150; // Top margin also excludes the chapter title, which is rendered in the header
-    public static final float PAGE_MARGIN_LEFT = 55.5F;
-    static final float PAGE_MARGIN_RIGHT = 29;
+    static final float PAGE_MARGIN_TOP = 100; // Top margin also excludes the chapter title, which is rendered in the header
+    public static final float PAGE_MARGIN_LEFT = 30;
+    static final float PAGE_MARGIN_RIGHT = 30;
     static final float PAGE_MARGIN_BOTTOM = 62;
+
+    public static final float CONTENT_WIDTH_WIDE = 510; // Width of the content on a narrow page (page without full side panel)
 
     public static final DeviceRgb PALETTE_WHITE = new DeviceRgb(255, 255, 255);
     public static final DeviceRgb PALETTE_BLACK = new DeviceRgb(0, 0, 0);
@@ -51,9 +53,6 @@ public final class ReportResources {
 
     private static final String FONT_REGULAR_PATH = "fonts/nimbus-sans/NimbusSansL-Regular.ttf";
     private static final String FONT_BOLD_PATH = "fonts/nimbus-sans/NimbusSansL-Bold.ttf";
-    private static final String ICON_FONT_PATH = "fonts/hmf-icons/hmf-icons.ttf";
-
-    public static final float BODY_TEXT_LEADING = 10F;
 
     public static float maxPointSizeForWidth(@NotNull PdfFont font, float initialFontSize, float minFontSize, @NotNull String text,
             float maxWidth) {
@@ -87,18 +86,8 @@ public final class ReportResources {
         return createFontFromProgram(loadFontProgram(FONT_BOLD_PATH));
     }
 
-    @NotNull
-    public static PdfFont iconFont() {
-        // Cannot be created statically as every PDF needs their own private font objects.
-        return createFontFromProgram(loadFontProgram(ICON_FONT_PATH));
-    }
-
-    public static Style chapterTitleStyle() {
-        return new Style().setFont(fontBold()).setFontSize(16).setFontColor(ReportResources.PALETTE_BLUE).setMarginTop(0);
-    }
-
-    public static Style sectionTitleStyle() {
-        return new Style().setFont(fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLUE);
+    public static Style tableTitleStyle() {
+        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_BLUE);
     }
 
     public static Style tableHeaderStyle() {
@@ -106,47 +95,15 @@ public final class ReportResources {
     }
 
     public static Style tableContentStyle() {
-        return new Style().setFont(fontRegular()).setFontSize(8).setFontColor(ReportResources.PALETTE_DARK_GREY);
-    }
-
-    public static Style bodyTextStyle() {
-        return new Style().setFont(fontRegular()).setFontSize(8).setFontColor(ReportResources.PALETTE_BLACK);
-    }
-
-    public static Style smallBodyHeadingStyle() {
-        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_BLACK);
-    }
-
-    public static Style smallBodyTextStyle() {
-        return new Style().setFont(fontRegular()).setFontSize(7).setFontColor(ReportResources.PALETTE_BLACK);
-    }
-
-    public static Style smallBodyTextStyleRed() {
-        return new Style().setFont(fontRegular()).setFontSize(7).setFontColor(ReportResources.PALETTE_RED);
-    }
-
-    public static Style smallBodyBoldTextStyle() {
-        return new Style().setFont(fontBold()).setFontSize(7).setFontColor(ReportResources.PALETTE_BLACK);
+        return new Style().setFont(fontRegular()).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
     }
 
     public static Style subTextStyle() {
-        return new Style().setFont(fontRegular()).setFontSize(7).setFontColor(ReportResources.PALETTE_BLACK);
-    }
-
-    public static Style subTextSmallStyle() {
-        return new Style().setFont(fontRegular()).setFontSize(5).setFontColor(ReportResources.PALETTE_BLACK);
-    }
-
-    public static Style subTextBoldStyle() {
-        return new Style().setFont(fontBold()).setFontSize(7).setFontColor(ReportResources.PALETTE_BLACK);
+        return new Style().setFont(fontRegular()).setFontSize(6).setFontColor(ReportResources.PALETTE_BLACK);
     }
 
     public static Style dataHighlightStyle() {
         return new Style().setFont(fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLUE);
-    }
-
-    public static Style dataHighlightNaStyle() {
-        return new Style().setFont(fontBold()).setFontSize(7).setFontColor(ReportResources.PALETTE_BLUE);
     }
 
     public static Style pageNumberStyle() {
@@ -159,10 +116,6 @@ public final class ReportResources {
 
     public static Style sidePanelValueStyle() {
         return new Style().setFont(fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_WHITE);
-    }
-
-    public static Style dataHighlightLinksStyle() {
-        return new Style().setFont(fontRegular()).setFontSize(8).setFontColor(ReportResources.PALETTE_BLUE);
     }
 
     @NotNull

@@ -36,6 +36,7 @@ public interface OrangeConfig {
     String DOID_JSON = "doid_json";
 
     // Files containing the actual genomic results for this sample.
+    String PIPELINE_VERSION_FILE = "pipeline_version_file";
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
     String PURPLE_QC_FILE = "purple_qc_file";
     String PURPLE_GENE_COPY_NUMBER_TSV = "purple_gene_copy_number_tsv";
@@ -68,6 +69,7 @@ public interface OrangeConfig {
 
         options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
 
+        options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version file.");
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
         options.addOption(PURPLE_GENE_COPY_NUMBER_TSV, true, "Path towards the purple gene copynumber TSV.");
@@ -105,6 +107,9 @@ public interface OrangeConfig {
 
     @NotNull
     String doidJsonFile();
+
+    @NotNull
+    String pipelineVersionFile();
 
     @NotNull
     String purplePurityTsv();
@@ -170,6 +175,7 @@ public interface OrangeConfig {
                 .primaryTumorDoids(toStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
+                .pipelineVersionFile(nonOptionalFile(cmd, PIPELINE_VERSION_FILE))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
                 .purpleGeneCopyNumberTsv(nonOptionalFile(cmd, PURPLE_GENE_COPY_NUMBER_TSV))
