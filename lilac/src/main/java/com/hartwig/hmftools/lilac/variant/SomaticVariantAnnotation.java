@@ -62,7 +62,7 @@ public class SomaticVariantAnnotation
 
         List<SomaticVariant> variants = loadSomaticVariants();
 
-        for(SomaticVariant variant : mSomaticVariants)
+        for(SomaticVariant variant : variants)
         {
             int variantNucleotideLoci = mLociPositionFinder.calcNucelotideLocus(variant.Position);
 
@@ -253,7 +253,7 @@ public class SomaticVariantAnnotation
             }
         }
 
-        LL_LOGGER.info("  found {} HLA variants", variants.size());
+        LL_LOGGER.info("  found {} HLA somatic variants", variants.size());
         return variants;
     }
 

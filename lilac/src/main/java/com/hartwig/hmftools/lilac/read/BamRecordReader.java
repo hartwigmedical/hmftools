@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
+import static com.hartwig.hmftools.lilac.LilacConstants.SPLICE_VARIANT_BUFFER;
 import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
 import static com.hartwig.hmftools.lilac.ReferenceData.INDEL_PON;
 
@@ -19,6 +20,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.FragmentUtils;
@@ -159,41 +161,54 @@ public class BamRecordReader implements BamReader
 
             for(NamedBed codingRegion : codingRegions)
             {
-                if (codingRegion.contains(variantPosition)
-                || abs(codingRegion.start() - variant.Position) <= 5 || abs(codingRegion.end() - variant.Position) <= 5)
+                if(!regionCoversVariant(codingRegion, variant))
+                    continue;
+
+                List<BamCodingRecord> regionCodingRecords = query(reverseStrand, variantPosition, codingRegion, mBamFile);
+                List<BamCodingRecord> codingRecords = Lists.newArrayList();
+
+                for(BamCodingRecord record : regionCodingRecords)
                 {
-                    List<BamCodingRecord> regionCodingRecords = query(reverseStrand, variantPosition, codingRegion, mBamFile);
-                    List<BamCodingRecord> codingRecords = Lists.newArrayList();
+                    if(!recordContainsVariant(variant, record))
+                        continue;
 
-                    for(BamCodingRecord record : regionCodingRecords)
-                    {
-                        if(!recordContainsVariant(variant, record))
-                            continue;
+                    if(codingRecords.stream().anyMatch(x -> x.getSamRecord().hashCode() == record.getSamRecord().hashCode()))
+                        continue;
 
-                        if(codingRecords.stream().anyMatch(x -> x.getSamRecord().hashCode() == record.getSamRecord().hashCode()))
-                            continue;
-
-                        codingRecords.add(record);
-                    }
-
-                    final List<Fragment> readFragments = codingRecords.stream()
-                            .map(x -> mFragmentFactory.createAlignmentFragments(x, codingRegion))
-                            .filter(x -> x != null)
-                            .collect(Collectors.toList());
-
-                    List<Fragment> mateFragments = queryMateFragments(geneName, transcript, codingRecords);
-                    readFragments.addAll(mateFragments);
-
-                    List<Fragment> readGroupFragments = FragmentUtils.mergeFragmentsById(readFragments);
-                    return readGroupFragments;
+                    codingRecords.add(record);
                 }
+
+                final List<Fragment> readFragments = codingRecords.stream()
+                        .map(x -> mFragmentFactory.createAlignmentFragments(x, codingRegion))
+                        .filter(x -> x != null)
+                        .collect(Collectors.toList());
+
+                List<Fragment> mateFragments = queryMateFragments(geneName, transcript, codingRecords);
+                readFragments.addAll(mateFragments);
+
+                List<Fragment> readGroupFragments = FragmentUtils.mergeFragmentsById(readFragments);
+                return readGroupFragments;
             }
         }
 
         return Lists.newArrayList();
     }
 
-    private final boolean recordContainsVariant(final SomaticVariant variant, final BamCodingRecord record)
+    private static boolean regionCoversVariant(final NamedBed codingRegion, final SomaticVariant variant)
+    {
+        // allow a margin for splice variants
+        if(variant.CanonicalCodingEffect == CodingEffect.SPLICE)
+        {
+            return abs(variant.Position - codingRegion.start()) <= SPLICE_VARIANT_BUFFER
+                || abs(variant.Position - codingRegion.end()) <= SPLICE_VARIANT_BUFFER;
+        }
+        else
+        {
+            return codingRegion.start() <= variant.Position && variant.Position <= codingRegion.end();
+        }
+    }
+
+    private boolean recordContainsVariant(final SomaticVariant variant, final BamCodingRecord record)
     {
         if (variant.Alt.length() != variant.Ref.length())
         {

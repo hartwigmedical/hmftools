@@ -52,6 +52,9 @@ public class NucleotideFragmentFactory
 
     public final Fragment createFragment(final BamCodingRecord record, final NamedBed codingRegion)
     {
+        if(record.ReadStart < 0 || record.ReadEnd < record.ReadStart)
+            return null;
+
         boolean reverseStrand = record.ReverseStrand;
 
         int samCodingStartLoci = reverseStrand

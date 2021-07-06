@@ -78,6 +78,8 @@ public class LilacConstants
 
     public static final Map<String,List<Integer>> NUCLEOTIDE_EXON_BOUNDARIES = Maps.newHashMap();
 
+    public static final int SPLICE_VARIANT_BUFFER = 5;
+
     public static final int COMPLEX_PERMS_THRESHOLD = 100000;
 
     // technical
@@ -104,4 +106,20 @@ public class LilacConstants
     {
         return gene.length() == 1 ? HLA_PREFIX + gene : gene;
     }
+
+    // output file IDs
+    public static String LILAC_FILE_SUMMARY = "lilac.csv";
+    public static String LILAC_FILE_QC = "lilac.qc.csv";
+    public static String LILAC_FILE_CANDIDATE_COVERAGE = "candidates.coverage.csv";
+    public static String LILAC_FILE_CANDIDATE_FRAGS = "candidates.fragments.csv";
+    public static String LILAC_FILE_ALL_FRAGMENTS = "fragments.csv";
+
+    public static String LILAC_FILE_CANDIDATE_AA = "candidates.aminoacids.txt";
+    public static String LILAC_FILE_CANDIDATE_NUC = "candidates.nucleotides.txt";
+
+    public static String LILAC_FILE_SOMATIC_VCF = "lilac.somatic.vcf.gz";
+    public static String LILAC_FILE_HLA_Y_COVERAGE = "hlay.coverage.csv";
+    public static String LILAC_FILE_HLA_Y_FRAGMENTS = "hlay.fragments.csv";
+
+
 }

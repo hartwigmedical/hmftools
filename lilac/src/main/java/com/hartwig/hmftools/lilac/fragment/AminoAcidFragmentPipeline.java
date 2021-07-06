@@ -190,18 +190,18 @@ public class AminoAcidFragmentPipeline
         return fragment.containsAminoAcid(variant.Loci) && fragment.aminoAcid(variant.Loci).equals(variant.Sequence);
     }
 
-    public void writeCounts(final String outputPrefix)
+    public void writeCounts(final LilacConfig config)
     {
         for(Map.Entry<String,SequenceCount> entry : mRefAminoAcidCounts.entrySet())
         {
             String gene = entry.getKey();
-            entry.getValue().writeVertically(outputPrefix + '.' + gene + ".aminoacids.txt");
+            entry.getValue().writeVertically(config.formFileId(gene + ".aminoacids.txt"));
         }
 
         for(Map.Entry<String,SequenceCount> entry : mRefNucleotideCounts.entrySet())
         {
             String gene = entry.getKey();
-            entry.getValue().writeVertically(outputPrefix + '.' + gene + ".nucleotides.txt");
+            entry.getValue().writeVertically(config.formFileId(gene + ".nucleotides.txt"));
         }
     }
 
