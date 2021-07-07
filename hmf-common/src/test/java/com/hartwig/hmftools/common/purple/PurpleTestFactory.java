@@ -44,6 +44,7 @@ public final class PurpleTestFactory {
                 .microsatelliteStatus(MicrosatelliteStatus.UNKNOWN)
                 .tumorMutationalBurdenPerMb(0D)
                 .tumorMutationalLoad(0)
-                .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN);
+                .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN)
+                .svTumorMutationalBurden(0);
     }
 }
