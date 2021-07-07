@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
-public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
+public class AlleleCoverage implements Comparable<AlleleCoverage>
 {
     public final HlaAllele Allele;
     public final int UniqueCoverage;
@@ -20,7 +20,7 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
     public final double WildCoverage;
     public final double TotalCoverage;
 
-    public HlaAlleleCoverage(final HlaAllele allele, int uniqueCoverage, double sharedCoverage, double wildCoverage)
+    public AlleleCoverage(final HlaAllele allele, int uniqueCoverage, double sharedCoverage, double wildCoverage)
     {
         Allele = allele;
         UniqueCoverage = uniqueCoverage;
@@ -29,7 +29,7 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
         TotalCoverage = UniqueCoverage + SharedCoverage + WildCoverage;
     }
 
-    public int compareTo(final HlaAlleleCoverage other)
+    public int compareTo(final AlleleCoverage other)
     {
         if(UniqueCoverage != other.UniqueCoverage)
             return UniqueCoverage > other.UniqueCoverage ? 1 : -1;
@@ -46,27 +46,27 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
                 Allele.toString(), TotalCoverage, UniqueCoverage, SharedCoverage, WildCoverage);
     }
 
-    public static String toString(final List<HlaAlleleCoverage> coverage)
+    public static String toString(final List<AlleleCoverage> coverage)
     {
         StringJoiner sj = new StringJoiner(", ");
         coverage.forEach(x -> sj.add(x.toString()));
         return sj.toString();
     }
 
-    public static List<HlaAlleleCoverage> proteinCoverage(final List<FragmentAlleles> fragAlleles)
+    public static List<AlleleCoverage> proteinCoverage(final List<FragmentAlleles> fragAlleles)
     {
         return buildCoverage(fragAlleles, false);
     }
 
-    public static List<HlaAlleleCoverage> groupCoverage(final List<FragmentAlleles> fragAlleles)
+    public static List<AlleleCoverage> groupCoverage(final List<FragmentAlleles> fragAlleles)
     {
         return buildCoverage(fragAlleles, true);
     }
 
-    private static List<HlaAlleleCoverage> buildCoverage(final List<FragmentAlleles> fragAlleles, boolean asAlleleGroup)
+    private static List<AlleleCoverage> buildCoverage(final List<FragmentAlleles> fragAlleles, boolean asAlleleGroup)
     {
         // attributes coverage counts to each allele amongst the set of alleles present across all fragments
-        List<HlaAlleleCoverage> results = Lists.newArrayList();
+        List<AlleleCoverage> results = Lists.newArrayList();
 
         Map<HlaAllele,Integer> uniqueCoverageMap = Maps.newHashMap();
         Map<HlaAllele,Double> combinedCoverageMap = Maps.newHashMap();
@@ -102,7 +102,7 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
             Double combinedCoverage = combinedCoverageMap.get(allele);
             Double wildCoverage = wildCoverageMap.get(allele);
 
-            results.add(new HlaAlleleCoverage(
+            results.add(new AlleleCoverage(
                     allele,
                     uniqueCoverage != null ? uniqueCoverage : 0,
                     combinedCoverage != null ? combinedCoverage : 0,
@@ -139,15 +139,15 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
         entry.setValue(entry.getValue() + value);
     }
 
-    public static List<HlaAllele> coverageAlleles(final List<HlaAlleleCoverage> coverage)
+    public static List<HlaAllele> coverageAlleles(final List<AlleleCoverage> coverage)
     {
         return coverage.stream().map(x -> x.Allele).collect(Collectors.toList());
     }
 
-    public static class TotalCoverageSorter implements Comparator<HlaAlleleCoverage>
+    public static class TotalCoverageSorter implements Comparator<AlleleCoverage>
     {
         // sorts by total coverage descending
-        public int compare(final HlaAlleleCoverage first, final HlaAlleleCoverage second)
+        public int compare(final AlleleCoverage first, final AlleleCoverage second)
         {
             if(first.TotalCoverage != second.TotalCoverage)
                 return first.TotalCoverage < second.TotalCoverage ? 1 : -1;
@@ -156,9 +156,9 @@ public class HlaAlleleCoverage implements Comparable<HlaAlleleCoverage>
         }
     }
 
-    public static class AlleleSorter implements Comparator<HlaAlleleCoverage>
+    public static class AlleleSorter implements Comparator<AlleleCoverage>
     {
-        public int compare(final HlaAlleleCoverage first, final HlaAlleleCoverage second)
+        public int compare(final AlleleCoverage first, final AlleleCoverage second)
         {
             return first.Allele.toString().compareTo(second.Allele.toString());
         }

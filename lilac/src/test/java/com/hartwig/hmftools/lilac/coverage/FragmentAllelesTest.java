@@ -196,7 +196,7 @@ public class FragmentAllelesTest
 
         FragmentAlleleMatrix matrix = new FragmentAlleleMatrix(fragmentAlleles, alleles);
 
-        List<HlaAlleleCoverage> coverages = matrix.create(complex);
+        List<AlleleCoverage> coverages = matrix.create(complex);
         assertEquals(3, coverages.size());
         assertEquals(1.67, coverages.get(0).TotalCoverage, 0.01);
         assertEquals(1.67, coverages.get(1).TotalCoverage, 0.01);

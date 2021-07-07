@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.LociPosition;
-import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
+import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.read.BamReader;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
@@ -87,14 +87,14 @@ public class SomaticVariantAnnotation
 
     public List<SomaticVariant> getSomaticVariants() { return mSomaticVariants; }
 
-    public final List<HlaAlleleCoverage> assignAlleleCoverage(
+    public final List<AlleleCoverage> assignAlleleCoverage(
             final SomaticVariant variant, final BamReader reader, final List<HlaSequenceLoci> winners)
     {
         List<Fragment> fragments = reader.readFromBam(variant);
         fragments.forEach(x -> x.qualityFilter(mConfig.MinBaseQual));
         fragments.forEach(x -> x.buildAminoAcids());
 
-        List<HlaAlleleCoverage> coverages = Lists.newArrayList();
+        List<AlleleCoverage> coverages = Lists.newArrayList();
 
         for(HlaSequenceLoci sequenceLoci : winners)
         {
@@ -159,11 +159,11 @@ public class SomaticVariantAnnotation
             }
 
             if(supportCount > 0)
-                coverages.add(new HlaAlleleCoverage(sequenceLoci.Allele, supportCount, 0, 0));
+                coverages.add(new AlleleCoverage(sequenceLoci.Allele, supportCount, 0, 0));
         }
 
         // take top allele and any matching
-        Collections.sort(coverages, new HlaAlleleCoverage.TotalCoverageSorter());
+        Collections.sort(coverages, new AlleleCoverage.TotalCoverageSorter());
         return coverages.stream().filter(x -> x.TotalCoverage == coverages.get(0).TotalCoverage).collect(Collectors.toList());
     }
 

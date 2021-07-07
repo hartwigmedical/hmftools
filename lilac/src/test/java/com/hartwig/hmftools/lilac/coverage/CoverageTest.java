@@ -24,22 +24,22 @@ public class CoverageTest
         HlaAllele allele6 = HlaAllele.fromString("C*02:01");
 
         // standard 6-allele solution
-        HlaAlleleCoverage cov1 = new HlaAlleleCoverage(allele1, 10,20, 0);
-        HlaAlleleCoverage cov2 = new HlaAlleleCoverage(allele2, 10,20, 0);
-        HlaAlleleCoverage cov3 = new HlaAlleleCoverage(allele3, 10,20, 0);
-        HlaAlleleCoverage cov4 = new HlaAlleleCoverage(allele4, 10,20, 0);
-        HlaAlleleCoverage cov5 = new HlaAlleleCoverage(allele5, 10,20, 0);
-        HlaAlleleCoverage cov6 = new HlaAlleleCoverage(allele6, 10,20, 0);
-        List<HlaAlleleCoverage> coverageList = Lists.newArrayList(cov1, cov2, cov3, cov4, cov5, cov6);
+        AlleleCoverage cov1 = new AlleleCoverage(allele1, 10,20, 0);
+        AlleleCoverage cov2 = new AlleleCoverage(allele2, 10,20, 0);
+        AlleleCoverage cov3 = new AlleleCoverage(allele3, 10,20, 0);
+        AlleleCoverage cov4 = new AlleleCoverage(allele4, 10,20, 0);
+        AlleleCoverage cov5 = new AlleleCoverage(allele5, 10,20, 0);
+        AlleleCoverage cov6 = new AlleleCoverage(allele6, 10,20, 0);
+        List<AlleleCoverage> coverageList = Lists.newArrayList(cov1, cov2, cov3, cov4, cov5, cov6);
 
-        HlaComplexCoverage complexCoverage = HlaComplexCoverage.create(coverageList);
+        ComplexCoverage complexCoverage = ComplexCoverage.create(coverageList);
         assertEquals(60, complexCoverage.UniqueCoverage);
         assertEquals(180, complexCoverage.TotalCoverage);
 
         // homozygous solution
         coverageList = Lists.newArrayList(cov1, cov3, cov5);
 
-        complexCoverage = HlaComplexCoverage.create(coverageList);
+        complexCoverage = ComplexCoverage.create(coverageList);
         complexCoverage.expandToSixAlleles();
         assertEquals(EXPECTED_ALLELE_COUNT, complexCoverage.getAlleleCoverage().size());
         assertEquals(30, complexCoverage.UniqueCoverage);
@@ -55,7 +55,7 @@ public class CoverageTest
 
         List<HlaAllele> alleleList = Lists.newArrayList(allele1, allele2, allele3, allele4, allele5, allele6);
 
-        complexCoverage = HlaComplexCoverage.create(coverageList);
+        complexCoverage = ComplexCoverage.create(coverageList);
         complexCoverage.populateMissingCoverage(alleleList);
         assertEquals(EXPECTED_ALLELE_COUNT, complexCoverage.getAlleleCoverage().size());
         assertEquals(90, complexCoverage.TotalCoverage);

@@ -26,13 +26,14 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 public final class LilacQC
 {
     public final Set<LilacQCStatus> Status;
     public final double ScoreMargin;
     public final String NextSolutionInfo;
-    public final boolean HasHlaY;
+    public final HlaAllele HlaYAllele;
     public final int MedianBaseQual;
 
     public final AminoAcidQC AminoAcidQC;
@@ -42,7 +43,7 @@ public final class LilacQC
     public final SomaticVariantQC SomaticVariantQC;
 
     public LilacQC(
-            boolean hasHlaY, double scoreMargin, final String nextSolutionInfo, int medianBaseQual,
+            double scoreMargin, final String nextSolutionInfo, int medianBaseQual, final HlaAllele hlaYAllele,
             final AminoAcidQC aminoAcidQC, final BamQC bamQC,
             final CoverageQC coverageQC, final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
     {
@@ -50,7 +51,7 @@ public final class LilacQC
         NextSolutionInfo = nextSolutionInfo;
         MedianBaseQual = medianBaseQual;
 
-        HasHlaY = hasHlaY;
+        HlaYAllele = hlaYAllele;
         AminoAcidQC = aminoAcidQC;
         BamQC = bamQC;
         CoverageQC = coverageQC;
@@ -65,10 +66,10 @@ public final class LilacQC
     {
         List<String> columns = Lists.newArrayList();
         columns.add("Status");
-        columns.add("HlaY");
         columns.add("ScoreMargin");
         columns.add("NextSolutionAlleles");
         columns.add("MedianBaseQuality");
+        columns.add("HlaYAllele");
         columns.addAll(BamQC.header());
         columns.addAll(CoverageQC.header());
         columns.addAll(AminoAcidQC.header());
@@ -85,10 +86,10 @@ public final class LilacQC
         Status.forEach(x -> sj.add(x.toString()));
         columns.add(sj.toString());
 
-        columns.add(String.valueOf(HasHlaY));
         columns.add(String.format("%.3f", ScoreMargin));
         columns.add(NextSolutionInfo);
         columns.add(String.valueOf(MedianBaseQual));
+        columns.add(HlaYAllele != null ? HlaYAllele.toString() : "NONE");
         columns.addAll(BamQC.body());
         columns.addAll(CoverageQC.body());
         columns.addAll(AminoAcidQC.body());

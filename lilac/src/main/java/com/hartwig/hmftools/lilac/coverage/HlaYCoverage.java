@@ -35,6 +35,7 @@ public class HlaYCoverage
     private final List<FragmentAlleles> mRemovedRefFragAlleles;
 
     private boolean mExceedsThreshold;
+
     private final Map<String,Map<HlaAllele,int[]>> mSourceAlleleFragmentCounts;
     private final Map<String,int[]> mSourceMiscCounts;
 
@@ -66,6 +67,33 @@ public class HlaYCoverage
     }
 
     public boolean exceedsThreshold() { return mExceedsThreshold; }
+
+    public HlaAllele getSelectedAllele()
+    {
+        if(!mExceedsThreshold)
+            return null;
+
+        Map<HlaAllele,int[]> alleleCounts = mSourceAlleleFragmentCounts.get(REF_SOURCE);
+
+        if(alleleCounts == null)
+            return null;
+
+        HlaAllele maxAllele = null;
+        int maxUniqueCount = 0;
+
+        for(Map.Entry<HlaAllele,int[]> entry : alleleCounts.entrySet())
+        {
+            int uniqueCount = entry.getValue()[UNIQUE];
+
+            if(uniqueCount > 0 && uniqueCount > maxUniqueCount)
+            {
+                maxUniqueCount = uniqueCount;
+                maxAllele = entry.getKey();
+            }
+        }
+
+        return maxAllele;
+    }
 
     public void updateAminoAcidLoci(final Map<String,Map<Integer,Set<String>>> geneAminoAcidHetLociMap)
     {

@@ -30,24 +30,24 @@ import org.apache.commons.compress.utils.Lists;
     - where 2 or more solutions have the same score, take the numerically (alphabetically) lowest solution
 */
 
-public class HlaComplexCoverageRanking
+public class ComplexCoverageRanking
 {
     private final double mMaxScoreDifference;
     private final ReferenceData mRefData;
 
-    public HlaComplexCoverageRanking(double maxScoreDifference, final ReferenceData refData)
+    public ComplexCoverageRanking(double maxScoreDifference, final ReferenceData refData)
     {
         mMaxScoreDifference = maxScoreDifference;
         mRefData = refData;
     }
 
-    public List<HlaComplexCoverage> rankCandidates(
-            final List<HlaComplexCoverage> complexes, final List<HlaAllele> recoveredAlleles, final List<HlaSequenceLoci> sequences)
+    public List<ComplexCoverage> rankCandidates(
+            final List<ComplexCoverage> complexes, final List<HlaAllele> recoveredAlleles, final List<HlaSequenceLoci> sequences)
     {
         if(complexes.isEmpty())
             return complexes;
 
-        for(HlaComplexCoverage complexCoverage : complexes)
+        for(ComplexCoverage complexCoverage : complexes)
         {
             calcCohortFrequency(complexCoverage);
             calcRecoveryPenalty(complexCoverage, recoveredAlleles);
@@ -67,12 +67,12 @@ public class HlaComplexCoverageRanking
 
         // initial cull before sort
         double baseThreshold = topScore - 0.25 * topCoverage;
-        List<HlaComplexCoverage> candidateResults = complexes.stream().filter(x -> x.getScore() >= baseThreshold).collect(Collectors.toList());
+        List<ComplexCoverage> candidateResults = complexes.stream().filter(x -> x.getScore() >= baseThreshold).collect(Collectors.toList());
         Collections.sort(candidateResults, new ComplexCoverageSorter());
 
-        List<HlaComplexCoverage> results = Lists.newArrayList();
+        List<ComplexCoverage> results = Lists.newArrayList();
 
-        for(HlaComplexCoverage complexCoverage : candidateResults)
+        for(ComplexCoverage complexCoverage : candidateResults)
         {
             if(complexCoverage.getScore() >= inclusionThreshold || results.size() < 2)
             {
@@ -87,7 +87,7 @@ public class HlaComplexCoverageRanking
         return results;
     }
 
-    private void calcRecoveryPenalty(final HlaComplexCoverage complexCoverage, final List<HlaAllele> recoveredAlleles)
+    private void calcRecoveryPenalty(final ComplexCoverage complexCoverage, final List<HlaAllele> recoveredAlleles)
     {
         int recoveredCount = (int)complexCoverage.getAlleles().stream()
                 .filter(x -> recoveredAlleles.contains(x))
@@ -95,7 +95,7 @@ public class HlaComplexCoverageRanking
         complexCoverage.setRecoveredCount(recoveredCount);
     }
 
-    private void calcWildcardPenalty(final HlaComplexCoverage complexCoverage, final List<HlaSequenceLoci> sequences)
+    private void calcWildcardPenalty(final ComplexCoverage complexCoverage, final List<HlaSequenceLoci> sequences)
     {
         if(sequences.isEmpty())
             return;
@@ -116,7 +116,7 @@ public class HlaComplexCoverageRanking
         complexCoverage.setWildcardCount(wildcardCount);
     }
 
-    private void calcCohortFrequency(final HlaComplexCoverage complexCoverage)
+    private void calcCohortFrequency(final ComplexCoverage complexCoverage)
     {
         final CohortFrequency cohortFrequency = mRefData.getAlleleFrequencies();
 
@@ -137,7 +137,7 @@ public class HlaComplexCoverageRanking
         complexCoverage.setCohortFrequencyTotal(cohortFrequencyTotal);
     }
 
-    private void calcComplexScore(final HlaComplexCoverage complexCoverage)
+    private void calcComplexScore(final ComplexCoverage complexCoverage)
     {
         int totalCoverage = complexCoverage.TotalCoverage;
 
@@ -150,10 +150,10 @@ public class HlaComplexCoverageRanking
         complexCoverage.setScore(score);
     }
 
-    public static class ComplexCoverageSorter implements Comparator<HlaComplexCoverage>
+    public static class ComplexCoverageSorter implements Comparator<ComplexCoverage>
     {
         // sorts by score then numerically if required
-        public int compare(final HlaComplexCoverage first, final HlaComplexCoverage second)
+        public int compare(final ComplexCoverage first, final ComplexCoverage second)
         {
             if(abs(first.getScore() - second.getScore()) > 0.0001)
                 return first.getScore() < second.getScore() ? 1 : -1;

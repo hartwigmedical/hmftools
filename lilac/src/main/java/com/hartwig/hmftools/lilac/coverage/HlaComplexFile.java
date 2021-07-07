@@ -38,7 +38,7 @@ public class HlaComplexFile
         return sb.toString();
     }
 
-    public static void writeToFile(final String fileName, final List<HlaComplexCoverage> coverages)
+    public static void writeToFile(final String fileName, final List<ComplexCoverage> coverages)
     {
         try
         {
@@ -47,7 +47,7 @@ public class HlaComplexFile
             writer.write(header());
             writer.newLine();
 
-            for(HlaComplexCoverage coverage : coverages)
+            for(ComplexCoverage coverage : coverages)
             {
                 writer.write(asString(coverage));
                 writer.newLine();
@@ -62,7 +62,7 @@ public class HlaComplexFile
         }
     }
 
-    public static String asString(final HlaComplexCoverage coverage)
+    public static String asString(final ComplexCoverage coverage)
     {
         StringJoiner sj = new StringJoiner(DELIM);
 
@@ -81,7 +81,7 @@ public class HlaComplexFile
     }
 
     public static void writeFragmentAssignment(
-            final String fileName, final List<HlaComplexCoverage> coverages, final List<FragmentAlleles> fragAlleles)
+            final String fileName, final List<ComplexCoverage> coverages, final List<FragmentAlleles> fragAlleles)
     {
         try
         {
@@ -97,7 +97,7 @@ public class HlaComplexFile
             writer.write(sb.toString());
             writer.newLine();
 
-            for(HlaComplexCoverage complexCoverage : coverages)
+            for(ComplexCoverage complexCoverage : coverages)
             {
                 StringJoiner complexAlleles = new StringJoiner(ITEM_DELIM);
                 complexCoverage.getAlleles().forEach(x -> complexAlleles.add(x.toString()));

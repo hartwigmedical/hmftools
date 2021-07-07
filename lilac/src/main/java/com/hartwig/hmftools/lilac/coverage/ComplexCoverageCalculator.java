@@ -24,7 +24,7 @@ public class ComplexCoverageCalculator
         mTopScoreThreshold = topScoreThreshold;
     }
 
-    public List<HlaComplexCoverage> calculateComplexCoverages(final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes)
+    public List<ComplexCoverage> calculateComplexCoverages(final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes)
     {
         List<HlaAllele> alleles = Lists.newArrayList();
         complexes.stream().forEach(x -> x.Alleles.stream().filter(y -> !alleles.contains(y)).forEach(y -> alleles.add(y)));
@@ -40,7 +40,7 @@ public class ComplexCoverageCalculator
         return calcTask.getCoverageResults();
     }
 
-    private List<HlaComplexCoverage> calcMultiThreadResults(final List<HlaComplex> complexes, final FragmentAlleleMatrix fragAlleleMatrix)
+    private List<ComplexCoverage> calcMultiThreadResults(final List<HlaComplex> complexes, final FragmentAlleleMatrix fragAlleleMatrix)
     {
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Lilac-%d").build();
         ExecutorService executorService = Executors.newFixedThreadPool(mThreadCount, namedThreadFactory);
@@ -88,7 +88,7 @@ public class ComplexCoverageCalculator
 
             coverageCalcTasks.forEach(x -> x.logPerfResults());
 
-            List<HlaComplexCoverage> results = Lists.newArrayList();
+            List<ComplexCoverage> results = Lists.newArrayList();
             coverageCalcTasks.forEach(x -> results.addAll(x.getCoverageResults()));
             return results;
 

@@ -24,7 +24,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.LilacApplication;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.ReferenceData;
-import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
+import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.qc.LilacQC;
@@ -93,7 +93,7 @@ public class LilacAppTest
         // check various outputs
 
         assertEquals(1, lilac.getRankedComplexes().size());
-        HlaComplexCoverage winningComplex = lilac.getRankedComplexes().get(0);
+        ComplexCoverage winningComplex = lilac.getRankedComplexes().get(0);
         assertEquals(0, winningComplex.homozygousCount());
         assertEquals(1, winningComplex.recoveredCount());
         assertEquals(-6.0, winningComplex.cohortFrequencyTotal(), 0.01);
@@ -111,7 +111,7 @@ public class LilacAppTest
         LilacQC qcMetrics = lilac.getSummaryMetrics();
 
         assertTrue(qcMetrics.Status.contains(PASS));
-        assertFalse(qcMetrics.HasHlaY);
+        assertTrue(qcMetrics.HlaYAllele == null);
         assertEquals(0, qcMetrics.AminoAcidQC.UnusedAminoAcids);
         assertTrue(qcMetrics.HaplotypeQC.UnmatchedHaplotypes.isEmpty());
         assertEquals(fragCount * EXPECTED_ALLELE_COUNT - 150, qcMetrics.CoverageQC.TotalFragments);
@@ -168,7 +168,7 @@ public class LilacAppTest
         // check various outputs
 
         assertEquals(1, lilac.getRankedComplexes().size());
-        HlaComplexCoverage winningComplex = lilac.getRankedComplexes().get(0);
+        ComplexCoverage winningComplex = lilac.getRankedComplexes().get(0);
         assertEquals(0, winningComplex.homozygousCount());
         assertEquals(1, winningComplex.recoveredCount());
         assertEquals(-9.0, winningComplex.cohortFrequencyTotal(), 0.01);
@@ -187,7 +187,7 @@ public class LilacAppTest
 
         // C*01:01 will cause unmatched haplotypes
         assertTrue(qcMetrics.Status.contains(WARN_UNMATCHED_HAPLOTYPE));
-        assertFalse(qcMetrics.HasHlaY);
+        assertTrue(qcMetrics.HlaYAllele == null);
         assertEquals(0, qcMetrics.AminoAcidQC.UnusedAminoAcids);
         assertEquals(5, qcMetrics.HaplotypeQC.UnmatchedHaplotypes.size());
         assertEquals(370, qcMetrics.CoverageQC.TotalFragments);
@@ -245,7 +245,7 @@ public class LilacAppTest
         // check various outputs
 
         assertEquals(1, lilac.getRankedComplexes().size());
-        HlaComplexCoverage winningComplex = lilac.getRankedComplexes().get(0);
+        ComplexCoverage winningComplex = lilac.getRankedComplexes().get(0);
         assertEquals(1, winningComplex.homozygousCount());
         assertEquals(0, winningComplex.recoveredCount());
         assertEquals(-9.0, winningComplex.cohortFrequencyTotal(), 0.01);
@@ -263,7 +263,7 @@ public class LilacAppTest
 
         // C*01:01 will cause unmatched haplotypes
         assertTrue(qcMetrics.Status.contains(PASS));
-        assertFalse(qcMetrics.HasHlaY);
+        assertTrue(qcMetrics.HlaYAllele == null);
         assertEquals(0, qcMetrics.AminoAcidQC.UnusedAminoAcids);
         assertTrue(!qcMetrics.HaplotypeQC.UnmatchedHaplotypes.isEmpty());
         assertTrue(qcMetrics.CoverageQC.PercentWildcard > 0);

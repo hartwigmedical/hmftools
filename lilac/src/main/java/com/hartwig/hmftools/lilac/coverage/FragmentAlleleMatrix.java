@@ -66,7 +66,7 @@ public class FragmentAlleleMatrix
         }
     }
 
-    public List<HlaAlleleCoverage> create(final HlaComplex complex)
+    public List<AlleleCoverage> create(final HlaComplex complex)
     {
         List<HlaAllele> alleles = complex.Alleles;
         int alleleCount = alleles.size();
@@ -134,11 +134,11 @@ public class FragmentAlleleMatrix
             }
         }
 
-        List<HlaAlleleCoverage> alleleCoverages = Lists.newArrayListWithExpectedSize(alleleCount);
+        List<AlleleCoverage> alleleCoverages = Lists.newArrayListWithExpectedSize(alleleCount);
 
         for(int i = 0; i < alleleCount; ++i)
         {
-            alleleCoverages.add(new HlaAlleleCoverage(alleles.get(i), uniqueCoverage[i], combinedCoverage[i], wildCoverage[i]));
+            alleleCoverages.add(new AlleleCoverage(alleles.get(i), uniqueCoverage[i], combinedCoverage[i], wildCoverage[i]));
         }
 
         return alleleCoverages;
