@@ -54,20 +54,6 @@ public final class ReportResources {
     private static final String FONT_REGULAR_PATH = "fonts/nimbus-sans/NimbusSansL-Regular.ttf";
     private static final String FONT_BOLD_PATH = "fonts/nimbus-sans/NimbusSansL-Bold.ttf";
 
-    public static float maxPointSizeForWidth(@NotNull PdfFont font, float initialFontSize, float minFontSize, @NotNull String text,
-            float maxWidth) {
-        float fontIncrement = 0.1f;
-
-        float fontSize = initialFontSize;
-        float width = font.getWidth(text, initialFontSize);
-        while (width > maxWidth && fontSize > minFontSize) {
-            fontSize -= fontIncrement;
-            width = font.getWidth(text, fontSize);
-        }
-
-        return fontSize;
-    }
-
     @NotNull
     public static DecimalFormat decimalFormat(@NotNull String format) {
         // To make sure every decimal format uses a dot as separator rather than a comma.
@@ -87,7 +73,7 @@ public final class ReportResources {
     }
 
     public static Style tableTitleStyle() {
-        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_BLUE);
+        return new Style().setFont(fontBold()).setFontSize(8).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
     public static Style tableHeaderStyle() {
@@ -102,12 +88,8 @@ public final class ReportResources {
         return new Style().setFont(fontRegular()).setFontSize(6).setFontColor(ReportResources.PALETTE_BLACK);
     }
 
-    public static Style dataHighlightStyle() {
-        return new Style().setFont(fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLUE);
-    }
-
     public static Style pageNumberStyle() {
-        return new Style().setFont(fontBold()).setFontSize(8).setFontColor(ReportResources.PALETTE_BLUE);
+        return new Style().setFont(fontBold()).setFontSize(7).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
     public static Style sidePanelLabelStyle() {
@@ -115,7 +97,7 @@ public final class ReportResources {
     }
 
     public static Style sidePanelValueStyle() {
-        return new Style().setFont(fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_WHITE);
+        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_WHITE);
     }
 
     @NotNull

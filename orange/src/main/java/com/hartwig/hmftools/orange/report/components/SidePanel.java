@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.report.components;
 
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
@@ -54,7 +55,7 @@ public final class SidePanel {
         div.add(new Paragraph(label.toUpperCase()).addStyle(ReportResources.sidePanelLabelStyle())
                 .setFixedPosition(CONTENT_X_START, yPos, MAX_WIDTH));
 
-        float valueFontSize = ReportResources.maxPointSizeForWidth(ReportResources.fontBold(), 11, 6, value, MAX_WIDTH);
+        float valueFontSize = maxPointSizeForWidth(ReportResources.fontBold(), 11, 6, value, MAX_WIDTH);
         yPos -= VALUE_TEXT_Y_OFFSET;
         div.add(new Paragraph(value).addStyle(ReportResources.sidePanelValueStyle().setFontSize(valueFontSize))
                 .setHeight(15)
@@ -62,5 +63,19 @@ public final class SidePanel {
                 .setFixedLeading(valueFontSize));
 
         return div;
+    }
+
+    private static float maxPointSizeForWidth(@NotNull PdfFont font, float initialFontSize, float minFontSize, @NotNull String text,
+            float maxWidth) {
+        float fontIncrement = 0.1F;
+
+        float fontSize = initialFontSize;
+        float width = font.getWidth(text, initialFontSize);
+        while (width > maxWidth && fontSize > minFontSize) {
+            fontSize -= fontIncrement;
+            width = font.getWidth(text, fontSize);
+        }
+
+        return fontSize;
     }
 }
