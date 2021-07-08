@@ -26,7 +26,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -50,8 +49,6 @@ public class EnsemblGeneMapper
 
     public EnsemblGeneMapper(final CommandLine cmd)
     {
-        GU_LOGGER.info("running Ensembl gene mapping");
-
         String outputDir = parseOutputDir(cmd);
         String ensemblDir37 = cmd.getOptionValue(ENSEMBL_DIR_37);
         String ensemblDir38 = cmd.getOptionValue(ENSEMBL_DIR_38);
@@ -274,7 +271,7 @@ public class EnsemblGeneMapper
         }
     }
 
-    public static void main(String[] args) throws ParseException, IOException, SQLException
+    public static void main(String[] args) throws ParseException
     {
         final Options options = createOptions();
         final CommandLine cmd = new DefaultParser().parse(options, args);

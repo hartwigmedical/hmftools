@@ -101,9 +101,9 @@ public class EnsemblDataCache
 
     public void setRequireGeneSynonyms() { mRequireGeneSynonyms = true; }
 
-    public final Map<String, List<TranscriptData>> getTranscriptDataMap() { return mTranscriptDataMap; }
-    public final Map<String, List<EnsemblGeneData>> getChrGeneDataMap() { return mChrGeneDataMap; }
-    public Map<Integer, List<TranscriptProteinData>> getTranscriptProteinDataMap() { return mEnsemblProteinDataMap; }
+    public final Map<String,List<TranscriptData>> getTranscriptDataMap() { return mTranscriptDataMap; }
+    public final Map<String,List<EnsemblGeneData>> getChrGeneDataMap() { return mChrGeneDataMap; }
+    public Map<Integer,List<TranscriptProteinData>> getTranscriptProteinDataMap() { return mEnsemblProteinDataMap; }
     public Map<Integer,Integer> getTransSpliceAcceptorPosDataMap() { return mTransSpliceAcceptorPosDataMap; }
 
     public final EnsemblGeneData getGeneDataByName(final String geneName)
