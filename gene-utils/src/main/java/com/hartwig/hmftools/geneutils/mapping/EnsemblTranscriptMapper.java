@@ -67,18 +67,33 @@ public class EnsemblTranscriptMapper
 
         if(cmd.hasOption(SPECIFIC_GENE_IDS))
         {
-            Arrays.stream(cmd.getOptionValue(SPECIFIC_GENE_IDS).split(";")).forEach(x -> mSpecificGeneIds.add(x));
+            String specificGeneIds = cmd.getOptionValue(SPECIFIC_GENE_IDS);
+            GU_LOGGER.info("loaded specific gene id(s): {}", specificGeneIds);
+            Arrays.stream(specificGeneIds.split(";")).forEach(x -> mSpecificGeneIds.add(x));
         }
 
         // version makes no difference for transcript mapping since only appends 'chr' prefix
         mGeneCacheSrc = new EnsemblDataCache(ensemblDirSrc, RefGenomeVersion.V38);
         mGeneCacheSrc.setRequiredData(true, false, false, true);
-        mGeneCacheSrc.load(false);
-        mGeneCacheSrc.createGeneIdDataMap();
 
         mGeneCacheDest = new EnsemblDataCache(ensemblDirDest, RefGenomeVersion.V38);
         mGeneCacheDest.setRequiredData(true, false, false, false);
-        mGeneCacheDest.load(false);
+
+        if(!mSpecificGeneIds.isEmpty())
+        {
+            mGeneCacheSrc.load(true);
+            mGeneCacheSrc.loadTranscriptData(mSpecificGeneIds);
+
+            mGeneCacheDest.load(true);
+            mGeneCacheDest.loadTranscriptData(mSpecificGeneIds);
+        }
+        else
+        {
+            mGeneCacheSrc.load(false);
+            mGeneCacheDest.load(false);
+        }
+
+        mGeneCacheSrc.createGeneIdDataMap();
 
         mWriter = initialiseWriter(outputDir);
     }
@@ -132,6 +147,7 @@ public class EnsemblTranscriptMapper
 
     private void mapTranscripts(final EnsemblGeneData geneData, final TranscriptData transDataSrc, final List<TranscriptData> transDataDests)
     {
+        // find any transcript which matches coding regions exactly
         int codingStart = transDataSrc.CodingStart;
         int codingEnd = transDataSrc.CodingEnd;
 
