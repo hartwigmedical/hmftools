@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -106,18 +107,10 @@ public class ComparConfig
     {
         if(cmd.hasOption(SAMPLE_ID_FILE))
         {
-            try
-            {
-                final List<String> sampleIds = Files.readAllLines(new File(cmd.getOptionValue(SAMPLE_ID_FILE)).toPath());
+            SampleIds.addAll(ConfigUtils.loadSampleIdFile(cmd.getOptionValue(SAMPLE_ID_FILE)));
 
-                if(sampleIds.get(0).equals("SampleId"))
-                    sampleIds.remove(0);
-
-                SampleIds.addAll(sampleIds);
-            }
-            catch (IOException e)
+            if(SampleIds.isEmpty())
             {
-                CMP_LOGGER.error("failed to read sampleId file: {}", e.toString());
                 mIsValid = false;
             }
         }

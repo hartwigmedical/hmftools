@@ -1,7 +1,15 @@
 package com.hartwig.hmftools.common.utils;
 
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.Lists;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
@@ -43,6 +51,71 @@ public class ConfigUtils
     public static boolean getConfigValue(final CommandLine cmd, final String configName, boolean defaultValue)
     {
         return cmd.hasOption(configName) ? Boolean.parseBoolean(cmd.getOptionValue(configName)) : defaultValue;
+    }
+
+    public static List<String> loadSampleIdFile(final String filename)
+    {
+        final List<String> sampleIds = Lists.newArrayList();
+
+        if(filename == null || filename.isEmpty())
+        {
+            LOGGER.error("sampleId file({}) missing or invalid", filename);
+            return sampleIds;
+        }
+
+        try
+        {
+            Files.readAllLines(new File(filename).toPath()).stream()
+                    .filter(x -> !x.equalsIgnoreCase("SampleId"))
+                    .filter(x -> !x.isEmpty())
+                    .forEach(x -> sampleIds.add(x));
+        }
+        catch (IOException e)
+        {
+            LOGGER.error("failed to read sampleId file({}): {}", filename, e.toString());
+        }
+
+        return sampleIds;
+    }
+
+    public static List<String> loadDelimitedSampleIdFile(final String filename, final String delim)
+    {
+        final List<String> sampleIds = Lists.newArrayList();
+
+        if(filename == null || filename.isEmpty())
+        {
+            LOGGER.error("sampleId file({}) missing or invalid", filename);
+            return sampleIds;
+        }
+
+        try
+        {
+            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
+
+            if(fileContents.isEmpty())
+                return sampleIds;
+
+            String header = fileContents.get(0);
+
+            if(!header.contains("SampleId"))
+                return sampleIds;
+
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, delim);
+            fileContents.remove(0);
+            int sampleIdIndex = fieldsIndexMap.get("SampleId");
+
+            for(String sampleData : fileContents)
+            {
+                String[] items = sampleData.split(delim, -1);
+                sampleIds.add(items[sampleIdIndex]);
+            }
+        }
+        catch (IOException e)
+        {
+            LOGGER.error("failed to read sampleId file({}): {}", filename, e.toString());
+        }
+
+        return sampleIds;
     }
 
     @NotNull

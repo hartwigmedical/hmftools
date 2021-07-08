@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 
 import org.apache.commons.cli.CommandLine;
@@ -256,7 +257,8 @@ public class LinxConfig
             }
             else if(configSampleStr.contains(".csv"))
             {
-                sampleIds.addAll(loadSampleListFile(configSampleStr));
+                sampleIds.addAll(ConfigUtils.loadSampleIdFile(configSampleStr));
+                LNX_LOGGER.info("Loaded {} specific sample IDs", sampleIds.size());
             }
             else
             {
@@ -376,25 +378,4 @@ public class LinxConfig
 
         LinxOutput.addCmdLineArgs(options);
     }
-
-    private static List<String> loadSampleListFile(final String filename)
-    {
-        try
-        {
-            final List<String> sampleIds = Files.readAllLines(new File(filename).toPath()).stream()
-                    .filter(x -> !x.equals("SampleId"))
-                    .filter(x -> !x.isEmpty())
-                    .collect(Collectors.toList());
-
-            LNX_LOGGER.info("Loaded {} specific sample IDs", sampleIds.size());
-
-            return sampleIds;
-        }
-        catch (IOException exception)
-        {
-            LNX_LOGGER.error("failed to read sample list input CSV file({}): {}", filename, exception.toString());
-            return Lists.newArrayList();
-        }
-    }
-
 }

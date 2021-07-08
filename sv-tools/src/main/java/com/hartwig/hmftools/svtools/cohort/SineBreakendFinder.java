@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -66,22 +67,9 @@ public class SineBreakendFinder
 
     public SineBreakendFinder(final CommandLine cmd)
     {
-        mSampleIds = Lists.newArrayList();
-
-        if(cmd.hasOption(SAMPLE_ID_FILE))
-        {
-            try
-            {
-                mSampleIds.addAll(Files.readAllLines(new File(cmd.getOptionValue(SAMPLE_ID_FILE)).toPath()).stream()
-                        .filter(x -> !x.equals("SampleId")).collect(Collectors.toList()));
-
-                LOGGER.info("loaded {} samples from file()", mSampleIds.size(), cmd.getOptionValue(SAMPLE_ID_FILE));
-            }
-            catch (Exception e)
-            {
-                LOGGER.error("failed to load ref genome: {}", e.toString());
-            }
-        }
+        String sampleIdsFile = cmd.getOptionValue(SAMPLE_ID_FILE);
+        mSampleIds = ConfigUtils.loadSampleIdFile(sampleIdsFile);
+        LOGGER.info("loaded {} samples from file()", mSampleIds.size(), cmd.getOptionValue(SAMPLE_ID_FILE));
 
         mRmTypes = Lists.newArrayList();
 
