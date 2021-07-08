@@ -33,6 +33,11 @@ public final class LimsCohortTestFactory {
     }
 
     @NotNull
+    public static LimsCohortConfig createACTINCohortConfig() {
+        return createCohortConfig("ACTIN", true, true, false, false, true, true, false, false, false, false, false);
+    }
+
+    @NotNull
     public static LimsCohortConfig createAllDisabledCohortConfig(@NotNull String cohortId) {
         return allDisabledBuilder().cohortId(cohortId).build();
     }
