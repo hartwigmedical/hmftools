@@ -55,6 +55,10 @@ public class DriverData implements ComparableItem
         if(matchLevel == REPORTABLE)
             return diffs;
 
+        checkDiff(
+                diffs, "likelihoodMethod",
+                DriverCatalog.likelihoodMethod().toString(), otherDriver.DriverCatalog.likelihoodMethod().toString());
+
         checkDiff(diffs, "likelihood", DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood());
 
         // check matches in Linx cluster event types
