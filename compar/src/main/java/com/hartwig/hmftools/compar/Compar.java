@@ -1,13 +1,15 @@
 package com.hartwig.hmftools.compar;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.compar.Category.COPY_NUMBER;
 import static com.hartwig.hmftools.compar.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.Category.FUSION;
 import static com.hartwig.hmftools.compar.Category.LINX_DATA;
+import static com.hartwig.hmftools.compar.Category.PURITY;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.ComparConfig.LOG_DEBUG;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -18,14 +20,14 @@ import com.hartwig.hmftools.compar.driver.DriverComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
 import com.hartwig.hmftools.compar.linx.FusionComparer;
 import com.hartwig.hmftools.compar.linx.LinxSvComparer;
+import com.hartwig.hmftools.compar.purple.CopyNumberComparer;
+import com.hartwig.hmftools.compar.purple.PurityComparer;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class Compar
@@ -41,6 +43,12 @@ public class Compar
         mConfig = new ComparConfig(cmd);
 
         mComparators = Lists.newArrayList();
+
+        if(mConfig.Categories.containsKey(PURITY))
+            mComparators.add(new PurityComparer(mConfig));
+
+        if(mConfig.Categories.containsKey(COPY_NUMBER))
+            mComparators.add(new CopyNumberComparer(mConfig));
 
         if(mConfig.Categories.containsKey(DRIVER))
             mComparators.add(new DriverComparer(mConfig));
@@ -160,10 +168,7 @@ public class Compar
 
         final CommandLine cmd = createCommandLine(args, options);
 
-        if (cmd.hasOption(LOG_DEBUG))
-        {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
+        setLogLevel(cmd);
 
         Compar compar = new Compar(cmd);
         compar.run();

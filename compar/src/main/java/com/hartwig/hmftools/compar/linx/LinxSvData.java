@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.Category.LINX_DATA;
 import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
+import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
 import static com.hartwig.hmftools.compar.CommonUtils.diffValue;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
@@ -66,26 +67,17 @@ public class LinxSvData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        if(!Cluster.resolvedType().equals(otherSv.Cluster.resolvedType()))
-        {
-            diffs.add(String.format("resolvedType(%s/%s)", Cluster.resolvedType(), otherSv.Cluster.resolvedType()));
-        }
+        checkDiff(diffs, "resolvedType", Cluster.resolvedType(), otherSv.Cluster.resolvedType());
 
         if(matchLevel == REPORTABLE)
             return diffs;
 
-        if(Cluster.clusterCount() != otherSv.Cluster.clusterCount())
-        {
-            diffs.add(String.format("clusterCount(%d/%d)", Cluster.clusterCount(), otherSv.Cluster.clusterCount()));
-        }
+        checkDiff(diffs, "clusterCount", Cluster.clusterCount(), otherSv.Cluster.clusterCount());
 
         double jcn = Annotation.junctionCopyNumberMin() + Annotation.junctionCopyNumberMax();
         double jcnOther = otherSv.Annotation.junctionCopyNumberMin() + otherSv.Annotation.junctionCopyNumberMax();
 
-        if(diffValue(jcn, jcnOther))
-        {
-            diffs.add(String.format("jcn(%.1f/%.1f)", jcn, jcnOther));
-        }
+        checkDiff(diffs, "jcn", jcn, jcnOther);
 
         if(!genesEqual(Annotation.geneStart(), otherSv.Annotation.geneStart()) || !genesEqual(Annotation.geneEnd(), otherSv.Annotation.geneEnd()))
         {
@@ -93,10 +85,7 @@ public class LinxSvData implements ComparableItem
                     Annotation.geneStart(), Annotation.geneEnd(), otherSv.Annotation.geneStart(), otherSv.Annotation.geneEnd()));
         }
 
-        if(Annotation.isFoldback() != otherSv.Annotation.isFoldback())
-        {
-            diffs.add(String.format("foldback(%s/%s)", Annotation.isFoldback(), otherSv.Annotation.isFoldback()));
-        }
+        checkDiff(diffs, "foldback", Annotation.isFoldback(), otherSv.Annotation.isFoldback());
 
         if((ViralInsertion == null) != (otherSv.ViralInsertion == null))
         {
