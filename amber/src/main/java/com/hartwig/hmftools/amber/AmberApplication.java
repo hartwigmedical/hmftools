@@ -159,11 +159,10 @@ public class AmberApplication implements AutoCloseable
         mPersistence.persistBAF(amberBAFList);
     }
 
-    @NotNull
-    private ListMultimap<Chromosome, BaseDepth> normalDepth(final SamReaderFactory readerFactory, final String bamPath,
+    private ListMultimap<Chromosome, BaseDepth> normalDepth(
+            final SamReaderFactory readerFactory, final String bamPath,
             final ListMultimap<Chromosome, AmberSite> bedRegionsSortedSet) throws InterruptedException, ExecutionException
     {
-
         final int partitionSize = Math.max(mConfig.minPartition(), bedRegionsSortedSet.size() / mConfig.ThreadCount);
 
         AMB_LOGGER.info("Processing {} potential sites in reference bam {}", bedRegionsSortedSet.values().size(), bamPath);
@@ -187,8 +186,7 @@ public class AmberApplication implements AutoCloseable
         return normalEvidence;
     }
 
-    @NotNull
-    private ListMultimap<Chromosome, BaseDepth> emptyNormalHetSites(@NotNull final ListMultimap<Chromosome, AmberSite> sites)
+    private ListMultimap<Chromosome, BaseDepth> emptyNormalHetSites(final ListMultimap<Chromosome, AmberSite> sites)
     {
         final ListMultimap<Chromosome, BaseDepth> result = ArrayListMultimap.create();
         for(Chromosome chromosome : sites.keySet())
@@ -199,9 +197,8 @@ public class AmberApplication implements AutoCloseable
         return result;
     }
 
-    @NotNull
-    private ListMultimap<Chromosome, TumorBAF> tumorBAF(@NotNull final SamReaderFactory readerFactory,
-            @NotNull final ListMultimap<Chromosome, BaseDepth> normalHetSites) throws ExecutionException, InterruptedException
+    private ListMultimap<Chromosome, TumorBAF> tumorBAF(final SamReaderFactory readerFactory,
+            final ListMultimap<Chromosome, BaseDepth> normalHetSites) throws ExecutionException, InterruptedException
     {
         final int partitionSize = Math.max(mConfig.minPartition(), normalHetSites.values().size() / mConfig.ThreadCount);
 
@@ -234,9 +231,9 @@ public class AmberApplication implements AutoCloseable
         return result;
     }
 
-    @NotNull
-    private ListMultimap<Chromosome, TumorContamination> contamination(@NotNull final SamReaderFactory readerFactory,
-            @NotNull final ListMultimap<Chromosome, BaseDepth> normalHomSites) throws ExecutionException, InterruptedException
+    private ListMultimap<Chromosome, TumorContamination> contamination(
+            final SamReaderFactory readerFactory,
+            final ListMultimap<Chromosome, BaseDepth> normalHomSites) throws ExecutionException, InterruptedException
     {
         final int partitionSize = Math.max(mConfig.minPartition(), normalHomSites.values().size() / mConfig.ThreadCount);
 
@@ -269,20 +266,18 @@ public class AmberApplication implements AutoCloseable
         return result;
     }
 
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException
+    private static CommandLine createCommandLine(String[] args, Options options) throws ParseException
     {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 
-    private static boolean isValid(@NotNull final AmberBAF baf)
+    private static boolean isValid(final AmberBAF baf)
     {
         return Double.isFinite(baf.tumorBAF()) & Double.isFinite(baf.normalBAF());
     }
 
-    @NotNull
-    private static <T> List<T> getFuture(@NotNull final List<Future<T>> futures) throws ExecutionException, InterruptedException
+    private static <T> List<T> getFuture(final List<Future<T>> futures) throws ExecutionException, InterruptedException
     {
         final List<T> result = Lists.newArrayList();
         for(Future<T> chromosomeBAFEvidenceFuture : futures)
@@ -292,8 +287,7 @@ public class AmberApplication implements AutoCloseable
         return result;
     }
 
-    @NotNull
-    private static SamReaderFactory readerFactory(@NotNull final AmberConfig config)
+    private static SamReaderFactory readerFactory(final AmberConfig config)
     {
         final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(config.Stringency);
         if(!config.RefGenomePath.isEmpty())

@@ -128,8 +128,11 @@ public class AltSjClassifier implements CuppaClassifier
 
         if(cmd.hasOption(SAMPLE_ALT_SJ_FILE))
         {
+            String altSjMatrixFile = cmd.getOptionValue(SAMPLE_ALT_SJ_FILE);
+            CUP_LOGGER.debug("loading sample alt-SJ matrix data file({})", altSjMatrixFile);
+
             List<String> asjLocations = Lists.newArrayList();
-            mSampleFragCounts = loadSampleAltSjMatrixData(cmd.getOptionValue(SAMPLE_ALT_SJ_FILE), mSampleIndexMap, asjLocations);
+            mSampleFragCounts = loadSampleAltSjMatrixData(altSjMatrixFile, mSampleIndexMap, asjLocations);
 
             if(mSampleFragCounts ==  null)
             {

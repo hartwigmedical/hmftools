@@ -52,13 +52,16 @@ public class NucleotideFragmentFactory
 
     public final Fragment createFragment(final BamCodingRecord record, final NamedBed codingRegion)
     {
+        if(record.ReadStart < 0 || record.ReadEnd < record.ReadStart)
+            return null;
+
         boolean reverseStrand = record.ReverseStrand;
 
         int samCodingStartLoci = reverseStrand
-                ? mLociPosition.nucelotideLoci(record.PositionEnd) : mLociPosition.nucelotideLoci(record.PositionStart);
+                ? mLociPosition.calcNucelotideLocus(record.PositionEnd) : mLociPosition.calcNucelotideLocus(record.PositionStart);
 
         int samCodingEndLoci = reverseStrand
-                ? mLociPosition.nucelotideLoci(record.PositionStart) : mLociPosition.nucelotideLoci(record.PositionEnd);
+                ? mLociPosition.calcNucelotideLocus(record.PositionStart) : mLociPosition.calcNucelotideLocus(record.PositionEnd);
 
         final char[] codingRegionRead = record.codingRegionRead(reverseStrand);
         final int[] codingRegionQuality = record.codingRegionQuality(reverseStrand);
@@ -100,7 +103,8 @@ public class NucleotideFragmentFactory
         List<String> nucleotides = arrayToList(codingRegionRead);
         List<Integer> qualities = arrayToList(codingRegionQuality);
 
-        return new Fragment(record.Id, record.readInfo(), Sets.newHashSet(codingRegion.name()), lociRange, qualities, nucleotides);
+        return new Fragment(
+                record.Id, record.readInfo(), codingRegion.name(), Sets.newHashSet(codingRegion.name()), lociRange, qualities, nucleotides);
     }
 
     private Fragment checkMatchedInsertDeleteSequence(
@@ -157,7 +161,8 @@ public class NucleotideFragmentFactory
         List<Integer> qualities = nucleotideLoci.stream().map(x -> mMinBaseQuality).collect(Collectors.toList());
 
         return new Fragment(
-                record.Id, record.readInfo(), Sets.newHashSet(codingRegion.name()), nucleotideLoci, qualities, nucleotides);
+                record.Id, record.readInfo(), codingRegion.name(), Sets.newHashSet(codingRegion.name()),
+                nucleotideLoci, qualities, nucleotides);
     }
 
     private int endLoci(int startLoci, final String bamSequence, final HlaSequenceLoci hlaSequence)
@@ -242,15 +247,12 @@ public class NucleotideFragmentFactory
 
         for(Fragment fragment : fragments)
         {
-            for(String gene : fragment.getGenes())
-            {
-                int[] baseDepth = geneBaseDepth.get(gene);
+            int[] baseDepth = geneBaseDepth.get(fragment.readGene());
 
-                for(int locus : fragment.getRawNucleotideLoci())
-                {
-                    if(locus < baseDepth.length)
-                        ++baseDepth[locus];
-                }
+            for(int locus : fragment.getRawNucleotideLoci())
+            {
+                if(locus < baseDepth.length)
+                    ++baseDepth[locus];
             }
         }
 

@@ -55,7 +55,7 @@ public class FragmentAllelesTest
         List<Set<String>> refNucleotides = Lists.newArrayList();
 
         // basic match
-        Fragment frag1 = new Fragment("01", readInfo, aGenes, emptyLoci, emptyQuals, emptyNucs);
+        Fragment frag1 = new Fragment("01", readInfo, HLA_A, aGenes, emptyLoci, emptyQuals, emptyNucs);
         frag1.setAminoAcids(Lists.newArrayList(0, 2, 3), Lists.newArrayList("A", "C", "D"));
         List<Fragment> fragments = Lists.newArrayList(frag1);
 
@@ -75,7 +75,7 @@ public class FragmentAllelesTest
         HlaSequenceLoci seq2 = new HlaSequenceLoci(allele2, Lists.newArrayList("A", "B", "C", "D"));
         sequences = Lists.newArrayList(seq2);
 
-        Fragment frag2 = new Fragment("02", readInfo, bGenes, emptyLoci, emptyQuals, emptyNucs);
+        Fragment frag2 = new Fragment("02", readInfo, GENE_B, bGenes, emptyLoci, emptyQuals, emptyNucs);
         frag2.setAminoAcids(Lists.newArrayList(0, 1, 2, 3), Lists.newArrayList("L", "B", "L", "D"));
         fragments = Lists.newArrayList(frag2);
 
@@ -90,7 +90,7 @@ public class FragmentAllelesTest
         HlaSequenceLoci seq3 = new HlaSequenceLoci(allele3, Lists.newArrayList("*", "B", "C", "*"));
         sequences = Lists.newArrayList(seq3);
 
-        Fragment frag3 = new Fragment("03", readInfo, aGenes, emptyLoci, emptyQuals, emptyNucs);
+        Fragment frag3 = new Fragment("03", readInfo, GENE_A, aGenes, emptyLoci, emptyQuals, emptyNucs);
         frag3.setAminoAcids(Lists.newArrayList(0, 1, 2, 3), Lists.newArrayList("A", "B", "C", "D"));
         fragments = Lists.newArrayList(frag3);
 
@@ -141,7 +141,7 @@ public class FragmentAllelesTest
         nucQuals.set(1, 2);
         nucQuals.set(4, 2);
         nucQuals.set(11, 2);
-        Fragment frag1 = new Fragment("01", readInfo, aGenes, nucLoci, nucQuals, nucleotides);
+        Fragment frag1 = new Fragment("01", readInfo, GENE_A, aGenes, nucLoci, nucQuals, nucleotides);
 
         assertTrue(frag1.validate());
 
@@ -196,7 +196,7 @@ public class FragmentAllelesTest
 
         FragmentAlleleMatrix matrix = new FragmentAlleleMatrix(fragmentAlleles, alleles);
 
-        List<HlaAlleleCoverage> coverages = matrix.create(complex);
+        List<AlleleCoverage> coverages = matrix.create(complex);
         assertEquals(3, coverages.size());
         assertEquals(1.67, coverages.get(0).TotalCoverage, 0.01);
         assertEquals(1.67, coverages.get(1).TotalCoverage, 0.01);

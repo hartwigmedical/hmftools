@@ -99,6 +99,11 @@ public class SvVisualiser implements AutoCloseable
 
     private void run() throws InterruptedException, ExecutionException
     {
+        if(!mCircosConfig.isValid())
+        {
+            System.exit(1);
+        }
+
         final List<Future<Object>> futures = Lists.newArrayList();
 
         if(mConfig.PlotReportableEvents)

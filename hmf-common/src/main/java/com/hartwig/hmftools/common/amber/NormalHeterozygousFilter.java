@@ -4,13 +4,13 @@ import java.util.function.Predicate;
 
 public class NormalHeterozygousFilter implements Predicate<BaseDepth>
 {
-    private final double minHetAFPercentage;
-    private final double maxHetAFPercentage;
+    private final double mMinHetAFPercentage;
+    private final double mMaxHetAFPercentage;
 
     public NormalHeterozygousFilter(final double minHetAFPercentage, final double maxHetAFPercentage)
     {
-        this.minHetAFPercentage = minHetAFPercentage;
-        this.maxHetAFPercentage = maxHetAFPercentage;
+        mMinHetAFPercentage = minHetAFPercentage;
+        mMaxHetAFPercentage = maxHetAFPercentage;
     }
 
     @Override
@@ -23,15 +23,15 @@ public class NormalHeterozygousFilter implements Predicate<BaseDepth>
 
     private boolean isHeterozygousRef(int refSupport, int readDepth)
     {
-        final int minCount = (int) Math.round((1 - maxHetAFPercentage) * readDepth);
-        final int maxCount = (int) Math.round((1 - minHetAFPercentage) * readDepth);
+        final int minCount = (int) Math.round((1 - mMaxHetAFPercentage) * readDepth);
+        final int maxCount = (int) Math.round((1 - mMinHetAFPercentage) * readDepth);
         return between(refSupport, minCount, maxCount);
     }
 
     private boolean isHeterozygousAlt(int altSupport, int readDepth)
     {
-        final int minCount = (int) Math.round(minHetAFPercentage * readDepth);
-        final int maxCount = (int) Math.round(maxHetAFPercentage * readDepth);
+        final int minCount = (int) Math.round(mMinHetAFPercentage * readDepth);
+        final int maxCount = (int) Math.round(mMaxHetAFPercentage * readDepth);
         return between(altSupport, minCount, maxCount);
     }
 

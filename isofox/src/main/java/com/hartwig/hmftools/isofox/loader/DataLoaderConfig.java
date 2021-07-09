@@ -87,6 +87,8 @@ public class DataLoaderConfig
                     .split(ITEM_DELIM, -1))
                     .map(x -> DataLoadType.valueOf(x))
                     .collect(Collectors.toList()));
+
+            ISF_LOGGER.info("loading types: {}", LoadTypes);
         }
 
         if(cmd.hasOption(CANCER_TYPES_FILE))
@@ -99,7 +101,7 @@ public class DataLoaderConfig
             }
             catch(IOException e)
             {
-                ISF_LOGGER.warn("invalid sampleId file: {}", e.toString());
+                ISF_LOGGER.warn("invalid cancer ypes file: {}", e.toString());
             }
         }
 

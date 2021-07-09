@@ -11,33 +11,34 @@
     <modules>
         <module>hmf-common</module>
         <module>patient-db</module>
-        <module>hmf-ensembl-resources</module>
+        <module>gene-utils</module>
+        <module>stat-calcs</module>
         <module>hmf-id-generator</module>
-        <module>gripss</module>
-        <module>lilac</module>
-        <module>paddle</module>
-        <module>health-checker</module>
         <module>fastq-stats</module>
+        <module>health-checker</module>
+        <module>paddle</module>
         <module>compar</module>
         <module>amber</module>
         <module>cobalt</module>
-        <module>purple</module>
         <module>sage</module>
+        <module>gripss</module>
+        <module>purple</module>
         <module>linx</module>
         <module>sv-tools</module>
         <module>virus-interpreter</module>
+        <module>lilac</module>
         <module>neo</module>
         <module>sigs</module>
+        <module>telo</module>
         <module>cuppa</module>
         <module>isofox</module>
-        <module>stat-calcs</module>
         <module>ckb-importer</module>
         <module>iclusion-importer</module>
         <module>vicc-importer</module>
         <module>serve</module>
         <module>protect</module>
-        <module>patient-reporter</module>
         <module>orange</module>
+        <module>patient-reporter</module>
     </modules>
 
     <properties>
@@ -55,31 +56,33 @@
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
 
-        <patient-db.version>3.60</patient-db.version>
-        <hmf-id-generator.version>2.7</hmf-id-generator.version>
-        <sage.version>3.0</sage.version>
         <amber.version>3.5</amber.version>
-        <cobalt.version>1.12</cobalt.version>
-        <purple.version>3.1</purple.version>
-        <gripss.version>1.11</gripss.version>
-        <lilac.version>1.0</lilac.version>
-        <linx.version>1.16</linx.version>
-        <sv-tools.version>1.0</sv-tools.version>
-        <virus-interpreter.version>1.0</virus-interpreter.version>
-        <health-checker.version>3.2</health-checker.version>
-        <neo.version>1.0</neo.version>
-        <sigs.version>1.0</sigs.version>
-        <cuppa.version>1.4</cuppa.version>
-        <compar.version>1.0</compar.version>
-        <isofox.version>1.3</isofox.version>
-        <paddle.version>1.0</paddle.version>
-        <vicc-importer.version>1.1</vicc-importer.version>
-        <iclusion-importer.version>1.3</iclusion-importer.version>
         <ckb-importer.version>1.1</ckb-importer.version>
-        <serve.version>1.5</serve.version>
-        <protect.version>1.4</protect.version>
-        <patient-reporter.version>7.23</patient-reporter.version>
+        <cobalt.version>1.12</cobalt.version>
+        <compar.version>1.0</compar.version>
+        <cuppa.version>1.4</cuppa.version>
+        <gene-utils.version>1.0</gene-utils.version>
+        <gripss.version>1.11</gripss.version>
+        <health-checker.version>3.2</health-checker.version>
+        <hmf-id-generator.version>2.7</hmf-id-generator.version>
+        <iclusion-importer.version>1.3</iclusion-importer.version>
+        <isofox.version>1.3</isofox.version>
+        <lilac.version>1.0</lilac.version>
+        <linx.version>1.17</linx.version>
+        <neo.version>1.0</neo.version>
         <orange.version>0.1</orange.version>
+        <paddle.version>1.0</paddle.version>
+        <patient-db.version>3.62</patient-db.version>
+        <patient-reporter.version>7.24</patient-reporter.version>
+        <protect.version>1.4</protect.version>
+        <purple.version>3.2</purple.version>
+        <sage.version>3.0</sage.version>
+        <serve.version>1.5</serve.version>
+        <sigs.version>1.0</sigs.version>
+        <sv-tools.version>1.0</sv-tools.version>
+        <telo.version>1.0</telo.version>
+        <vicc-importer.version>1.1</vicc-importer.version>
+        <virus-interpreter.version>1.0</virus-interpreter.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
         <immutables.version>2.4.4</immutables.version>
@@ -218,11 +221,6 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>serve</artifactId>
                 <version>${serve.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hartwig</groupId>
-                <artifactId>protect</artifactId>
-                <version>${protect.version}</version>
             </dependency>
 
             <dependency>

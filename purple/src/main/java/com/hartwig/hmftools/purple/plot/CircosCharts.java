@@ -62,9 +62,9 @@ public class CircosCharts
 
     public void write(
             final String referenceId, final String sampleId,
-            @NotNull final Gender gender, @NotNull final List<PurpleCopyNumber> copyNumber,
-            @NotNull final List<VariantContext> somaticVariants, @NotNull final List<StructuralVariant> structuralVariants,
-            @NotNull final List<FittedRegion> regions, @NotNull final List<AmberBAF> bafs) throws IOException
+            final Gender gender, final List<PurpleCopyNumber> copyNumber,
+            final List<VariantContextDecorator> somaticVariants, final List<StructuralVariant> structuralVariants,
+            final List<FittedRegion> regions, final List<AmberBAF> bafs) throws IOException
     {
         mCurrentReferenceId = referenceId;
         mCurrentSampleId = sampleId;
@@ -72,8 +72,6 @@ public class CircosCharts
         mBaseCircosReferenceSample = mConfig.CircosDirectory + File.separator + mCurrentReferenceId;
 
         final List<VariantContextDecorator> somatics = somaticVariants.stream()
-                .map(VariantContextDecorator::new)
-                .filter(VariantContextDecorator::isPass)
                 .filter(x -> HumanChromosome.contains(x.chromosome()))
                 .collect(Collectors.toList());
 

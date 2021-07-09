@@ -155,26 +155,6 @@ java -jar linx.jar
     -write_all
 ```
 
-### Generating cached Ensembl data files
-To annotate SVs with gene information and to support fusion detection, Linx uses gene, transcript, exon and protein domain information from the Ensembl database. 
-To improve performance, this data is first extracted into 4 CSV data files and then loaded into memory each time Linx runs.
-
-To generate these 4 data files, first run Linx with these command line options:
-
-```
-java -cp linx.jar com.hartwig.hmftools.linx.gene.GenerateEnsemblDataCache
-    -ensembl_db [see below] -ensembl_user "anonymous" -ensembl_pass "" 
-    -output_dir /path_to_write_data_files/ -ref_genome_version [37 or 38]
-```
-
-Ensembl database URLs for 19/37 & 38 are:
-- mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_89_37
-- mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_102_38
-
-By default Linx will use version 37, but this can be overridden using the ref_genome_version config described above.
-
-Note that ENST00000467125 is blacklisted from Ensembl as it is shares a splice boundary with a chimeric pathogenic GOPC_ROS1 fusion transcript.
-
 ## Outputs
 Linx writes all output to tsv files, each of which is described below.
 
@@ -875,7 +855,7 @@ Allow early chain termination or disruption by intermediate splice acceptor or d
 '# Out of frame also reported for exonic to exonic EXON_DEL_DUP only (under assumption of possible phased indel)
 '## Skipped exons are allowed if a known exon range is configured, but only if the breakend and fused exon must be within the specified range on the promiscuous side, and any skipping is allowed on the non-promiscuous gene.
 
-Additionally, Linx checks that the protein domains retained in the 4’ partner may form a viable protein. Specifically The following domains must be preserved intact in the 3’ partner if they exist: Ets domain; Protein kinase domain; Epidermal growth factor-like domain; Ankyrin repeat-containing domain, Basic-leucine zipper domain,High mobility group box domain. The Raf-like Ras-binding domain must be disrupted if it exists (mainly affects BRAF). 
+Additionally, Linx checks that the protein domains retained in the 3’ partner may form a viable protein. Specifically The following domains must be preserved intact in the 3’ partner if they exist: Ets domain; Protein kinase domain; Epidermal growth factor-like domain; Ankyrin repeat-containing domain, Basic-leucine zipper domain,High mobility group box domain. The Raf-like Ras-binding domain must be disrupted if it exists (mainly affects BRAF). 
 
 Finally linx sets a likelihood for each reported fusion. KNOWN_PAIR, IG_KNOWN_PAIR and EXON_DEL_DUP are set to HIGH likelihood. PROMISCUOUS fusions are set to HIGH likelihood only if the fused exon matches the known exon range, or else LOW otherwise.
 
@@ -915,6 +895,8 @@ Shown below is an example of a SS18-SSX1 fusion:
 
 
 ## Version History
+
+- [1.16](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.16)
 
 - [1.15](https://github.com/hartwigmedical/hmftools/releases/tag/sv-linx-v1.15)
 

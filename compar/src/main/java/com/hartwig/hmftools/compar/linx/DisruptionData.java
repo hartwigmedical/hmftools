@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.Category.FUSION;
+import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.List;
@@ -37,9 +38,6 @@ public class DisruptionData implements ComparableItem
         if(!otherBreakend.Breakend.transcriptId().equals(Breakend.transcriptId()))
             return false;
 
-        if(otherBreakend.Breakend.isStart() != Breakend.isStart())
-            return false;
-
         if(otherBreakend.Breakend.nextSpliceExonRank() != Breakend.nextSpliceExonRank())
             return false;
 
@@ -61,15 +59,8 @@ public class DisruptionData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        if(Breakend.reportedDisruption() != otherBreakend.Breakend.reportedDisruption())
-        {
-            diffs.add(String.format("reported(%s/%s)", Breakend.reportedDisruption(), otherBreakend.Breakend.reportedDisruption()));
-        }
-
-        if(Breakend.disruptive() != otherBreakend.Breakend.disruptive())
-        {
-            diffs.add(String.format("disruptive(%s/%s)", Breakend.disruptive(), otherBreakend.Breakend.disruptive()));
-        }
+        checkDiff(diffs, "reported", Breakend.reportedDisruption(), otherBreakend.Breakend.reportedDisruption());
+        checkDiff(diffs, "disruptive", Breakend.disruptive(), otherBreakend.Breakend.disruptive());
 
         if(matchLevel == REPORTABLE)
             return diffs;

@@ -8,11 +8,8 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.runcontext.MetaDataResolver;
-import com.hartwig.hmftools.common.runcontext.RunContext;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class MetaDataResolverTest {
@@ -83,21 +80,5 @@ public class MetaDataResolverTest {
         assertEquals(setName, runContext.setName());
         assertEquals(runDirectory, runContext.runDirectory());
         assertEquals("AB456", runContext.tumorBarcodeSample());
-    }
-
-    @Test
-    public void canresolvePipelineVersionPre() throws IOException{
-        String setName = "RunDirP5";
-        String runDirectory = RESOURCE_DIR + File.separator + setName;
-        String pipelineVersion = MetaDataResolver.majorDotMinorVersion(new File(runDirectory + File.separator + "pipeline.version"));
-        assertEquals("5.7", pipelineVersion);
-    }
-
-    @Test
-    public void canresolvePipelineVersionPost() throws IOException{
-        String setName = "RunDirPostP5_15";
-        String runDirectory = RESOURCE_DIR + File.separator + setName;
-        String pipelineVersion = MetaDataResolver.majorDotMinorVersion(new File(runDirectory + File.separator + "pipeline.version"));
-        assertEquals("5.15", pipelineVersion);
     }
 }

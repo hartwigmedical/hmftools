@@ -11,7 +11,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.region.ReplicationOriginRegion;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -93,7 +92,7 @@ public class ReplicationOriginAnnotator
 
             for(final SvBreakend breakend : breakendList)
             {
-                while(currentRegion.End < breakend.position())
+                while(currentRegion.Region.end() < breakend.position())
                 {
                     ++regionIndex;
 
@@ -132,7 +131,7 @@ public class ReplicationOriginAnnotator
 
         for(final ReplicationOriginRegion region : regions)
         {
-            if(region.Start <= position && region.End >= position)
+            if(region.Region.containsPosition(position))
             {
                 return region.OriginValue;
 

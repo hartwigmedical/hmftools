@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.DataUtil;
+import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.protect.purple.DriverInterpretation;
-import com.hartwig.hmftools.protect.purple.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

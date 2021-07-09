@@ -179,6 +179,7 @@ public class LilacConfig
     }
 
     public String outputPrefix() { return OutputDir + Sample; }
+    public String formFileId(final String fileId) { return OutputDir + Sample + "." + fileId; }
 
     public double calcMinEvidence(int totalFragments) { return max(MinEvidence, totalFragments * MinEvidenceFactor); }
     public double calcMinHighQualEvidence(int totalFragments) { return totalFragments * MinHighQualEvidenceFactor; }

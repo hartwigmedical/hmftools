@@ -6,15 +6,14 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXPECTED_ALLELE_COUNT;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
 import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
-import static com.hartwig.hmftools.lilac.LilacConstants.shortGeneName;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.lilac.LilacConfig;
-import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
-import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
+import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
+import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import java.io.File;
@@ -23,8 +22,6 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import org.apache.logging.log4j.core.util.FileUtils;
 
 public class CopyNumberAssignment
 {
@@ -131,7 +128,7 @@ public class CopyNumberAssignment
 
     public void assign(
             final String sampleId, final List<HlaAllele> winners,
-            final HlaComplexCoverage refCoverage, final HlaComplexCoverage tumorCoverage, final List<Double> copyNumbers)
+            final ComplexCoverage refCoverage, final ComplexCoverage tumorCoverage, final List<Double> copyNumbers)
     {
         LL_LOGGER.info("calculating tumor copy number of winning alleles");
 
@@ -147,11 +144,11 @@ public class CopyNumberAssignment
 
         for(int index = 0; index < EXPECTED_ALLELE_COUNT; index = index + 2)
         {
-            HlaAlleleCoverage refCoverage1 = refCoverage.getAlleleCoverage().get(index);
-            HlaAlleleCoverage refCoverage2 = refCoverage.getAlleleCoverage().get(index + 1);
+            AlleleCoverage refCoverage1 = refCoverage.getAlleleCoverage().get(index);
+            AlleleCoverage refCoverage2 = refCoverage.getAlleleCoverage().get(index + 1);
 
-            HlaAlleleCoverage tumorCoverage1 = tumorCoverage.getAlleleCoverage().get(index);
-            HlaAlleleCoverage tumorCoverage2 = tumorCoverage.getAlleleCoverage().get(index + 1);
+            AlleleCoverage tumorCoverage1 = tumorCoverage.getAlleleCoverage().get(index);
+            AlleleCoverage tumorCoverage2 = tumorCoverage.getAlleleCoverage().get(index + 1);
 
             String gene = longGeneName(refCoverage1.Allele.Gene);
             CopyNumberData cnData = cnDataList.stream().filter(x -> x.Gene.equals(gene)).findFirst().orElse(null);
@@ -170,8 +167,8 @@ public class CopyNumberAssignment
 
     private void alleleCopyNumber(
             final CopyNumberData copyNumberData, final List<Double> alleleCopyNumbers,
-            final HlaAlleleCoverage refCoverage1, final HlaAlleleCoverage refCoverage2,
-            final HlaAlleleCoverage tumorCoverage1, final HlaAlleleCoverage tumorCoverage2)
+            final AlleleCoverage refCoverage1, final AlleleCoverage refCoverage2,
+            final AlleleCoverage tumorCoverage1, final AlleleCoverage tumorCoverage2)
     {
         double minor = copyNumberData.MinMinorAlleleCopyNumber;
         double major = copyNumberData.MinCopyNumber - minor;

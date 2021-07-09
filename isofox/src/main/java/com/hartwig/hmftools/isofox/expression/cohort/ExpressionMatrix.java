@@ -19,6 +19,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -190,7 +191,7 @@ public class ExpressionMatrix
 
             if(manualLookupCount > 0)
             {
-                ISF_LOGGER.info("required {} manual gene look-ups", manualLookupCount);
+                ISF_LOGGER.debug("required {} manual gene look-ups", manualLookupCount);
             }
         }
         catch(IOException e)

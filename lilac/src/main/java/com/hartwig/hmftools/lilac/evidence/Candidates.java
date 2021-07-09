@@ -99,6 +99,7 @@ public final class Candidates
                 continue;
 
             int index = 0;
+            // List<HlaAllele> removedAlleles = Lists.newArrayList();
             while(index < candidateSequences.size())
             {
                 HlaSequenceLoci sequence = candidateSequences.get(index);
@@ -115,14 +116,15 @@ public final class Candidates
                 }
 
                 candidateSequences.remove(index);
+                // removedAlleles.add(sequence.Allele);
             }
 
             /*
-            final int lociConst = loci;
-
-            results = results.stream()
-                    .filter(x -> x.consistentWithAny(expectedSequences, Lists.newArrayList(lociConst)))
-                    .collect(Collectors.toList());
+            if(!removedAlleles.isEmpty())
+            {
+                LL_LOGGER.debug("locus({}) seq({}) removed {} alleles: {}",
+                        locus, expectedSequences, removedAlleles.size(), HlaAllele.toString(removedAlleles, 50));
+            }
             */
         }
 

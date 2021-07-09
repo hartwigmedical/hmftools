@@ -12,6 +12,8 @@ public class EnsemblGeneData
 
     private String mSynonyms;
 
+    public static final String SYNONYM_DELIM = ";";
+
     public EnsemblGeneData(
             String geneId, String geneName, String chromosome, byte strand, int geneStart, int geneEnd, String karyotypeBand)
     {

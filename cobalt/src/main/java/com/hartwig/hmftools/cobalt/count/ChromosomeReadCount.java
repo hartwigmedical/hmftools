@@ -34,7 +34,7 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
     private int mCount;
 
     public ChromosomeReadCount(
-            final File inputFile, final SamReaderFactory readerFactory, @NotNull final String chromosome,
+            final File inputFile, final SamReaderFactory readerFactory, final String chromosome,
             final long chromosomeLength, final int windowSize, final int minMappingQuality)
     {
         mInputFile = inputFile;

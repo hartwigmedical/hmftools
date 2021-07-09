@@ -114,6 +114,8 @@ public class RnaDataLoader
             int geneIdCol = fieldsIndexMap.get("GeneId");
             int adjTPM = fieldsIndexMap.get("AdjTPM");
 
+            int unknownGeneCount = 0;
+
             for(String line : fileData)
             {
                 final String[] items = line.split(DATA_DELIM, -1);
@@ -124,13 +126,19 @@ public class RnaDataLoader
 
                 if(geneIdIndex == null)
                 {
-                    CUP_LOGGER.error("unknown geneId({}) in sample file({})", geneId, filename);
-                    return null;
+                    CUP_LOGGER.trace("unknown geneId({}) in sample file({})", geneId, filename);
+                    ++unknownGeneCount;
+                    continue;
                 }
 
                 double logTpm = log(adjTpm + 1);
 
                 matrix.set(geneIdIndex, 0, logTpm);
+            }
+
+            if(unknownGeneCount > 0)
+            {
+                CUP_LOGGER.warn("sample file({}) ignored {} unknown genes", filename, unknownGeneCount);
             }
 
             return matrix;

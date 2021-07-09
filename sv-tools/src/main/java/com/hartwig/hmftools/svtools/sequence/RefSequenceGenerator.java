@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.svtools.sequence;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.utils.Strings.reverseString;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -210,7 +209,6 @@ public class RefSequenceGenerator
     {
         final Options options = new Options();
         options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(ENSEMBL_DATA_DIR, true, "Ensembl gene transcript data cache directory");
         options.addOption(KMER_INPUT_FILE, true, "File specifying locations for which to produce K-mers");
         options.addOption(BED_FILE, true, "File specifying locations for which to produce ref-genome sequences");
         options.addOption(REF_GENOME_FILE, true, "Ref genome file");

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.lilac.coverage;
 
-import static java.lang.Math.exp;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -10,13 +9,12 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
 public class CoverageCalcTask implements Callable
 {
     private final int mId;
     private final List<HlaComplex> mComplexes;
-    private List<HlaComplexCoverage> mCoverageResults;
+    private List<ComplexCoverage> mCoverageResults;
 
     private final FragmentAlleleMatrix mFragAlleleMatrix;
     private final double mTopScorePercDiff;
@@ -39,8 +37,8 @@ public class CoverageCalcTask implements Callable
         mLowScoreCount = 0;
     }
 
-    public HlaComplexCoverage getCoverage() { return mCoverageResults.get(0); }
-    public List<HlaComplexCoverage> getCoverageResults() { return mCoverageResults; }
+    public ComplexCoverage getCoverage() { return mCoverageResults.get(0); }
+    public List<ComplexCoverage> getCoverageResults() { return mCoverageResults; }
 
     @Override
     public Long call()
@@ -51,11 +49,11 @@ public class CoverageCalcTask implements Callable
         {
             if(checkCull && i > 0 && (i % LOG_COMPLEX_COUNT) == 0)
             {
-                LL_LOGGER.info(String.format("thread %d: complexes(%d) processed, discard(%d, %.0f%%)",
+                LL_LOGGER.debug(String.format("thread %d: complexes(%d) processed, discard(%d, %.0f%%)",
                         mId, i, mLowScoreCount, 100.0 * mLowScoreCount / i));
             }
 
-            HlaComplexCoverage result = calcCoverage(mComplexes.get(i));
+            ComplexCoverage result = calcCoverage(mComplexes.get(i));
 
             if(checkCull && canCull(result))
                 continue;
@@ -66,7 +64,7 @@ public class CoverageCalcTask implements Callable
         return (long)0;
     }
 
-    private boolean canCull(final HlaComplexCoverage result)
+    private boolean canCull(final ComplexCoverage result)
     {
         if(result.TotalCoverage > mMaxFragments)
         {
@@ -84,10 +82,10 @@ public class CoverageCalcTask implements Callable
         return true;
     }
 
-    private HlaComplexCoverage calcCoverage(final HlaComplex complex)
+    private ComplexCoverage calcCoverage(final HlaComplex complex)
     {
-        List<HlaAlleleCoverage> alleleCoverage = mFragAlleleMatrix.create(complex);
-        return HlaComplexCoverage.create(alleleCoverage);
+        List<AlleleCoverage> alleleCoverage = mFragAlleleMatrix.create(complex);
+        return ComplexCoverage.create(alleleCoverage);
     }
 
     public void logPerfResults()

@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 
 import org.jetbrains.annotations.NotNull;
 

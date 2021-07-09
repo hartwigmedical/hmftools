@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeTestFactory;
+import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 
@@ -18,12 +19,13 @@ public class ReportWriterTest {
 
     @Test
     public void canWriteTestReport() throws IOException {
-        // TODO Make real test data
         OrangeConfig config = OrangeTestFactory.createTestOrangeConfig();
         OrangeReport report = OrangeAlgo.fromConfig(config).run(config);
 
-        ReportWriter writer = new ReportWriter(REPORT_BASE_DIR);
+        ReportWriter writer = new ReportWriter(WRITE_TO_PDF, REPORT_BASE_DIR, config.reportGermline());
 
-        writer.write(report, WRITE_TO_PDF);
+        OrangeReport reportWithTestSampleId = ImmutableOrangeReport.builder().from(report).sampleId("Test").build();
+
+        writer.write(reportWithTestSampleId);
     }
 }

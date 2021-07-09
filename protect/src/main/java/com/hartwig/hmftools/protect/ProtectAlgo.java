@@ -7,8 +7,14 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordDataLoader;
+import com.hartwig.hmftools.common.linx.LinxData;
+import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.protect.chord.ChordDataLoader;
+import com.hartwig.hmftools.common.purple.PurpleData;
+import com.hartwig.hmftools.common.purple.PurpleDataLoader;
+import com.hartwig.hmftools.common.virus.VirusInterpreterData;
+import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.protect.evidence.ChordEvidence;
 import com.hartwig.hmftools.protect.evidence.CopyNumberEvidence;
 import com.hartwig.hmftools.protect.evidence.DisruptionEvidence;
@@ -17,12 +23,6 @@ import com.hartwig.hmftools.protect.evidence.PersonalizedEvidenceFactory;
 import com.hartwig.hmftools.protect.evidence.PurpleSignatureEvidence;
 import com.hartwig.hmftools.protect.evidence.VariantEvidence;
 import com.hartwig.hmftools.protect.evidence.VirusEvidence;
-import com.hartwig.hmftools.protect.linx.LinxData;
-import com.hartwig.hmftools.protect.linx.LinxDataLoader;
-import com.hartwig.hmftools.protect.purple.PurpleData;
-import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
-import com.hartwig.hmftools.protect.virusinterpreter.VirusInterpreterData;
-import com.hartwig.hmftools.protect.virusinterpreter.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 
 import org.apache.logging.log4j.LogManager;
@@ -89,12 +89,37 @@ public class ProtectAlgo {
 
     @NotNull
     public List<ProtectEvidence> run(@NotNull ProtectConfig config) throws IOException {
-        PurpleData purpleData = PurpleDataLoader.load(config);
-        LinxData linxData = LinxDataLoader.load(config);
-        VirusInterpreterData virusInterpreterData = VirusInterpreterDataLoader.load(config);
-        ChordAnalysis chordAnalysis = ChordDataLoader.load(config);
+        PurpleData purpleData = loadPurpleData(config);
+        LinxData linxData = loadLinxData(config);
+        VirusInterpreterData virusInterpreterData = loadVirusInterpreterData(config);
+        ChordAnalysis chordAnalysis = ChordDataLoader.load(config.chordPredictionTxt());
 
         return determineEvidence(purpleData, linxData, virusInterpreterData, chordAnalysis);
+    }
+
+    @NotNull
+    private static PurpleData loadPurpleData(@NotNull ProtectConfig config) throws IOException {
+        return PurpleDataLoader.load(config.tumorSampleId(),
+                config.referenceSampleId(),
+                config.purpleQcFile(),
+                config.purplePurityTsv(),
+                config.purpleSomaticDriverCatalogTsv(),
+                config.purpleSomaticVariantVcf(),
+                config.purpleGermlineDriverCatalogTsv(),
+                config.purpleGermlineVariantVcf(),
+                config.purpleGeneCopyNumberTsv(),
+                null,
+                config.refGenomeVersion());
+    }
+
+    @NotNull
+    private static LinxData loadLinxData(@NotNull ProtectConfig config) throws IOException {
+        return LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
+    }
+
+    @NotNull
+    private static VirusInterpreterData loadVirusInterpreterData(@NotNull ProtectConfig config) throws IOException {
+        return VirusInterpreterDataLoader.load(config.annotatedVirusTsv());
     }
 
     @NotNull

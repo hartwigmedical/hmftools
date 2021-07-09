@@ -135,6 +135,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
         if(mConfig.SampleGeneExpFile.equals(mConfig.RefGeneExpSampleFile))
         {
+            CUP_LOGGER.debug("re-using ref sample gene-expression matrix data for samples");
             mSampleGeneExpression = mRefSampleGeneExpression;
             mSampleIndexMap.putAll(mRefSampleGeneExpIndexMap);
         }
@@ -144,12 +145,14 @@ public class GeneExpressionClassifier implements CuppaClassifier
             {
                 final String sampleId = mSampleDataCache.SampleIds.get(0);
                 final String filename = GeneExpressionFile.generateFilename(mConfig.SampleDataDir, sampleId);
+                CUP_LOGGER.debug("loading sample gene-expression data file({})", filename);
 
                 mSampleIndexMap.put(sampleId, 0);
                 mSampleGeneExpression = loadSampleGeneExpressionFile(filename, mGeneIdIndexMap);
             }
             else
             {
+                CUP_LOGGER.debug("loading non-ref sample gene-expression matrix data file({})", mConfig.SampleGeneExpFile);
                 mSampleGeneExpression = loadSampleGeneExpressionMatrix(mConfig.SampleGeneExpFile, mGeneIdIndexMap, mSampleIndexMap);
             }
 

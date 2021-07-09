@@ -6,9 +6,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 
-import com.hartwig.hmftools.lilac.coverage.HlaAlleleCoverage;
-import com.hartwig.hmftools.lilac.coverage.HlaComplexCoverage;
-import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
+import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
 
 import java.io.BufferedWriter;
@@ -16,21 +15,20 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 public class SolutionSummary
 {
-    public final HlaComplexCoverage ReferenceCoverage;
-    public final HlaComplexCoverage TumorCoverage;
+    public final ComplexCoverage ReferenceCoverage;
+    public final ComplexCoverage TumorCoverage;
     public final List<Double> TumorCopyNumber;
     public final List<SomaticCodingCount> SomaticCodingCount;
-    public final HlaComplexCoverage RnaCoverage;
+    public final ComplexCoverage RnaCoverage;
 
     public SolutionSummary(
-            final HlaComplexCoverage referenceCoverage, final HlaComplexCoverage tumorCoverage,
-            final List<Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount, final HlaComplexCoverage rnaCoverage)
+            final ComplexCoverage referenceCoverage, final ComplexCoverage tumorCoverage,
+            final List<Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount, final ComplexCoverage rnaCoverage)
     {
         ReferenceCoverage = referenceCoverage;
         TumorCoverage = tumorCoverage;
@@ -90,13 +88,13 @@ public class SolutionSummary
 
     private final String generateAlleleBody(int index)
     {
-        HlaAlleleCoverage ref = ReferenceCoverage.getAlleleCoverage().get(index);
+        AlleleCoverage ref = ReferenceCoverage.getAlleleCoverage().get(index);
 
-        HlaAlleleCoverage tumor = !TumorCoverage.getAlleleCoverage().isEmpty() ?
-                TumorCoverage.getAlleleCoverage().get(index) : new HlaAlleleCoverage(ref.Allele, 0, 0, 0);
+        AlleleCoverage tumor = !TumorCoverage.getAlleleCoverage().isEmpty() ?
+                TumorCoverage.getAlleleCoverage().get(index) : new AlleleCoverage(ref.Allele, 0, 0, 0);
 
-        HlaAlleleCoverage rna = !RnaCoverage.getAlleleCoverage().isEmpty() ?
-                RnaCoverage.getAlleleCoverage().get(index) : new HlaAlleleCoverage(ref.Allele, 0, 0, 0);
+        AlleleCoverage rna = !RnaCoverage.getAlleleCoverage().isEmpty() ?
+                RnaCoverage.getAlleleCoverage().get(index) : new AlleleCoverage(ref.Allele, 0, 0, 0);
 
         double copyNumber = TumorCopyNumber.get(index);
         SomaticCodingCount codingCount = SomaticCodingCount.get(index);
@@ -126,8 +124,8 @@ public class SolutionSummary
     }
 
     public static SolutionSummary create(
-            final HlaComplexCoverage referenceCoverage, final HlaComplexCoverage tumorCoverage,
-            final List<Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount, final HlaComplexCoverage rnaCoverage)
+            final ComplexCoverage referenceCoverage, final ComplexCoverage tumorCoverage,
+            final List<Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount, final ComplexCoverage rnaCoverage)
     {
         List<SomaticCodingCount> sortedCodingCount = somaticCodingCount.stream().collect(Collectors.toList());
         Collections.sort(sortedCodingCount, new SomaticCodingCountSorter());

@@ -36,6 +36,7 @@ public interface OrangeConfig {
     String DOID_JSON = "doid_json";
 
     // Files containing the actual genomic results for this sample.
+    String PIPELINE_VERSION_FILE = "pipeline_version_file";
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
     String PURPLE_QC_FILE = "purple_qc_file";
     String PURPLE_GENE_COPY_NUMBER_TSV = "purple_gene_copy_number_tsv";
@@ -43,7 +44,7 @@ public interface OrangeConfig {
     String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = "purple_germline_driver_catalog_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
-    String PURPLE_CIRCOS_PLOT = "purple_circos_plot";
+    String PURPLE_PLOT_DIRECTORY = "purple_plot_directory";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
@@ -55,6 +56,7 @@ public interface OrangeConfig {
     String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
 
     // Some additional optional params and flags
+    String DISABLE_GERMLINE = "disable_germline";
     String LOG_DEBUG = "log_debug";
 
     @NotNull
@@ -68,6 +70,7 @@ public interface OrangeConfig {
 
         options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
 
+        options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version file.");
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
         options.addOption(PURPLE_GENE_COPY_NUMBER_TSV, true, "Path towards the purple gene copynumber TSV.");
@@ -75,7 +78,7 @@ public interface OrangeConfig {
         options.addOption(PURPLE_GERMLINE_DRIVER_CATALOG_TSV, true, "Path towards the purple germline driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
-        options.addOption(PURPLE_CIRCOS_PLOT, true, "Path towards the purple circos plot.");
+        options.addOption(PURPLE_PLOT_DIRECTORY, true, "Path towards the directory holding all purple plots.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the LINX fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the LINX breakend TSV.");
         options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
@@ -87,6 +90,7 @@ public interface OrangeConfig {
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
 
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
+        options.addOption(DISABLE_GERMLINE, false, "If provided, germline results are not added to the report");
 
         return options;
     }
@@ -97,6 +101,8 @@ public interface OrangeConfig {
     @Nullable
     String referenceSampleId();
 
+    boolean reportGermline();
+
     @NotNull
     Set<String> primaryTumorDoids();
 
@@ -105,6 +111,9 @@ public interface OrangeConfig {
 
     @NotNull
     String doidJsonFile();
+
+    @NotNull
+    String pipelineVersionFile();
 
     @NotNull
     String purplePurityTsv();
@@ -128,7 +137,7 @@ public interface OrangeConfig {
     String purpleGermlineVariantVcf();
 
     @NotNull
-    String purpleCircosPlot();
+    String purplePlotDirectory();
 
     @NotNull
     String linxFusionTsv();
@@ -167,9 +176,11 @@ public interface OrangeConfig {
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .referenceSampleId(optionalValue(cmd, REFERENCE_SAMPLE_ID))
+                .reportGermline(!cmd.hasOption(DISABLE_GERMLINE))
                 .primaryTumorDoids(toStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
+                .pipelineVersionFile(nonOptionalFile(cmd, PIPELINE_VERSION_FILE))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
                 .purpleGeneCopyNumberTsv(nonOptionalFile(cmd, PURPLE_GENE_COPY_NUMBER_TSV))
@@ -177,7 +188,7 @@ public interface OrangeConfig {
                 .purpleGermlineDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV))
                 .purpleSomaticVariantVcf(nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF))
                 .purpleGermlineVariantVcf(nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF))
-                .purpleCircosPlot(nonOptionalFile(cmd, PURPLE_CIRCOS_PLOT))
+                .purplePlotDirectory(nonOptionalDir(cmd, PURPLE_PLOT_DIRECTORY))
                 .linxFusionTsv(nonOptionalFile(cmd, LINX_FUSION_TSV))
                 .linxBreakendTsv(nonOptionalFile(cmd, LINX_BREAKEND_TSV))
                 .linxDriverCatalogTsv(nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
@@ -229,6 +240,17 @@ public interface OrangeConfig {
     }
 
     @NotNull
+    static String nonOptionalDir(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+        String value = nonOptionalValue(cmd, param);
+
+        if (!pathExists(value) || !pathIsDirectory(value)) {
+            throw new ParseException("Parameter '" + param + "' must be an existing directory: " + value);
+        }
+
+        return value;
+    }
+
+    @NotNull
     static String nonOptionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
         String value = nonOptionalValue(cmd, param);
 
@@ -241,5 +263,9 @@ public interface OrangeConfig {
 
     static boolean pathExists(@NotNull String path) {
         return Files.exists(new File(path).toPath());
+    }
+
+    static boolean pathIsDirectory(@NotNull String path) {
+        return Files.isDirectory(new File(path).toPath());
     }
 }

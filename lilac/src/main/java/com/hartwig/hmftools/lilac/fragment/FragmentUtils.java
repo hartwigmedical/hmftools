@@ -117,7 +117,7 @@ public class FragmentUtils
     {
         // ignores all state, just starts with original information
         return new Fragment(
-                fragment.id(), fragment.readInfo(), fragment.getGenes(),
+                fragment.id(), fragment.readInfo(), fragment.readGene(), fragment.getGenes(),
                 fragment.getRawNucleotideLoci(), fragment.getRawNucleotideQuality(), fragment.getRawNucleotides());
     }
 

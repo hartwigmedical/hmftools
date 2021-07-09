@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles.PAN_CANCER;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.PASS_FUSION_FILE_ID;
+import static com.hartwig.hmftools.isofox.loader.DataLoadType.NOVEL_JUNCTION;
 import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_SPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
@@ -225,7 +226,7 @@ public class IsofoxDataLoader
 
     private void loadNovelJunctions(final String sampleId, final IsofoxDAO rnaDAO)
     {
-        if(!mConfig.loadDataType(DataLoadType.NOVEL_JUNCTION))
+        if(!mConfig.loadDataType(NOVEL_JUNCTION))
             return;
 
         final List<NovelSpliceJunction> novelJunctions = Lists.newArrayList();
@@ -356,6 +357,9 @@ public class IsofoxDataLoader
 
     private void loadAltSjCohortFile()
     {
+        if(!mConfig.loadDataType(NOVEL_JUNCTION))
+            return;
+
         // isofox.driver_fusion_2212.alt_sj_cohort.csv
         // GeneId,SampleCount,Chromosome,Type,SjStart,SjEnd,
 

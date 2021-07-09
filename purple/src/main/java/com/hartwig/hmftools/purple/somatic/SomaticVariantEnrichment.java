@@ -81,7 +81,6 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
         mKataegisEnrichment.flush();
         mPurityEnrichment.flush();
         mSubclonalLikelihoodEnrichment.flush();
-        // mGenotypeEnrichment.flush();
     }
 
     @NotNull

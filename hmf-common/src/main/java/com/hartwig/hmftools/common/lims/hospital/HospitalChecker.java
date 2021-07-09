@@ -23,6 +23,7 @@ public final class HospitalChecker {
         Set<String> keyDRUP = hospitalModel.hospitalPersonsDRUP().keySet();
         Set<String> keyWIDE = hospitalModel.hospitalPersonsWIDE().keySet();
         Set<String> keyCOREDB = hospitalModel.hospitalPersonsCOREDB().keySet();
+        Set<String> keyACTIN = hospitalModel.hospitalPersonsACTIN().keySet();
         Set<String> keySampleMapping = Sets.newHashSet(hospitalModel.sampleToHospitalMapping().values());
 
         boolean allCorrect = true;
@@ -51,6 +52,13 @@ public final class HospitalChecker {
             if (!hospitalIdsInAddressList.contains(COREDB)) {
                 allCorrect = false;
                 LOGGER.warn("COREDB hospital ID is not present in hospital address list: '{}'", COREDB);
+            }
+        }
+
+        for (String ACTIN : keyACTIN) {
+            if (!hospitalIdsInAddressList.contains(ACTIN)) {
+                allCorrect = false;
+                LOGGER.warn("ACTIN hospital ID is not present in hospital address list: '{}'", ACTIN);
             }
         }
 

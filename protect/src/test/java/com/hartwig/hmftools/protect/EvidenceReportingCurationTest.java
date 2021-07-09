@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.protect;
 
-import static com.hartwig.hmftools.protect.ProtectTestFactory.testEvidenceBuilder;
+import static com.hartwig.hmftools.common.protect.ProtectTestFactory.testEvidenceBuilder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

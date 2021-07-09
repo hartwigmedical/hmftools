@@ -9,5 +9,5 @@ import org.jetbrains.annotations.Nullable;
 public abstract class HmfExonRegion implements GenomeRegion {
 
     @NotNull
-    public abstract String exonID();
+    public abstract int exonRank();
 }

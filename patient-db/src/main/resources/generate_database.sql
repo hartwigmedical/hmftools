@@ -1,10 +1,7 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
--- TODO Cleanup per 1st of july 2021
-DROP TABLE IF EXISTS germlineVariant2;
-DROP TABLE IF EXISTS cuppaResult;
-DROP TABLE IF EXISTS copyNumberChromosomeArm;
-
+-- TODO Cleanup per 1st of August 2021
+DROP TABLE IF EXISTS rna;
 
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
@@ -85,12 +82,6 @@ CREATE TABLE sample
     pathologyTumorPercentage varchar(100),
     PRIMARY KEY (sampleId),
     FOREIGN KEY (patientId) REFERENCES patient(id)
-);
-
-DROP TABLE IF EXISTS rna;
-CREATE TABLE rna
-(   sampleId varchar(255) NOT NULL,
-    PRIMARY KEY (sampleId)
 );
 
 DROP TABLE IF EXISTS snpcheck;
@@ -433,7 +424,6 @@ CREATE TABLE canonicalTranscript
     geneStart int not null,
     geneEnd int not null,
     transcriptId varchar(255) NOT NULL,
-    transcriptVersion int not null,
     transcriptStart int not null,
     transcriptEnd int not null,
     exons int not null,
@@ -775,7 +765,6 @@ CREATE TABLE geneCopyNumber
     gene varchar(255) NOT NULL,
     chromosomeBand varchar(255) NOT NULL,
     transcriptId varchar(255) NOT NULL,
-    transcriptVersion int not null,
     minCopyNumber DOUBLE PRECISION not null,
     maxCopyNumber DOUBLE PRECISION not null,
     somaticRegions int not null,
@@ -1239,7 +1228,7 @@ CREATE TABLE geneExpression
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
-    gene VARCHAR(20) NOT NULL,
+    gene VARCHAR(30) NOT NULL,
     tpm DOUBLE PRECISION NOT NULL,
     splicedFragments int NOT NULL,
     unsplicedFragments int NOT NULL,

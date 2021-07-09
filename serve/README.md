@@ -311,6 +311,8 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
+- [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.5)
+  - "Advanced solid tumor" in CKB is mapped to DOID 162 rather than 0050586 to avoid missing it for tumors with unknown tumor type
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.4)
   - Various additional checks to ref genome lift-over (such as filtering of events on genes for which strand has flipped).
   - CKB FLEX filtering framework has been added.

@@ -11,7 +11,7 @@
     <artifactId>cuppa</artifactId>
     <packaging>jar</packaging>
     <version>${cuppa.version}</version>
-    <name>HMF Tools - CUP Analyser</name>
+    <name>HMF Tools - Cuppa</name>
 
     <dependencies>
         <dependency>

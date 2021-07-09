@@ -11,7 +11,7 @@
     <artifactId>purple</artifactId>
     <packaging>jar</packaging>
     <version>${purple.version}</version>
-    <name>HMF Tools - Purity Ploidy Estimator</name>
+    <name>HMF Tools - PURPLE</name>
 
     <dependencies>
         <dependency>

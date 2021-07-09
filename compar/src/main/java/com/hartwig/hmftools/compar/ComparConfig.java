@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.compar.Category.ALL_CATEGORIES;
@@ -47,7 +48,6 @@ public class ComparConfig
 
     public static final String SAMPLE = "sample";
     public static final String SAMPLE_ID_FILE = "sample_id_file";
-    public static final String LOG_DEBUG = "log_debug";
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
 

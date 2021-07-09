@@ -6,7 +6,7 @@ import java.io.File;
 import java.util.List;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.runcontext.RunContext;
+import com.hartwig.hmftools.patientdb.clinical.context.RunContext;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

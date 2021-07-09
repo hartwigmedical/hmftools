@@ -65,6 +65,8 @@ public abstract class LimsCohortModel {
             return "CORERI02";
         } else if (sampleId.startsWith("CORE")) {
             return "CORE";
+        } else if (sampleId.startsWith("ACTN")) {
+            return "ACTIN";
         } else {
             return null;
         }

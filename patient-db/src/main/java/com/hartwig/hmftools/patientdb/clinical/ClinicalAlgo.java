@@ -83,14 +83,19 @@ public class ClinicalAlgo {
         LOGGER.info(" Finished curation of {} WIDE patients", widePatients.size());
 
         LOGGER.info("Interpreting and curating data for CORE patients");
-        List<Patient> corePatients = readCorePatients(samplesPerPatient);
+        List<Patient> corePatients = readCoreAndActinPatients(samplesPerPatient, "CORE");
         LOGGER.info(" Finished curation of {} CORE patients", corePatients.size());
+
+        LOGGER.info("Interpreting and curating data for ACTIN patients");
+        List<Patient> actinPatients = readCoreAndActinPatients(samplesPerPatient, "ACTIN");
+        LOGGER.info(" Finished curation of {} ACTIN patients", actinPatients.size());
 
         List<Patient> mergedPatients = Lists.newArrayList();
         mergedPatients.addAll(cpctPatients);
         mergedPatients.addAll(drupPatients);
         mergedPatients.addAll(widePatients);
         mergedPatients.addAll(corePatients);
+        mergedPatients.addAll(actinPatients);
         mergedPatients.addAll(readColoPatients(lims));
         return mergedPatients;
     }
@@ -124,13 +129,13 @@ public class ClinicalAlgo {
     }
 
     @NotNull
-    private List<Patient> readCorePatients(@NotNull Map<String, List<SampleData>> samplesPerPatient) {
+    private List<Patient> readCoreAndActinPatients(@NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull String cohort) {
         List<Patient> patients = Lists.newArrayList();
         CorePatientReader corePatientReader = new CorePatientReader(primaryTumorCurator);
 
         for (Map.Entry<String, List<SampleData>> entry : samplesPerPatient.entrySet()) {
             List<SampleData> tumorSamples = tumorSamplesOnly(entry.getValue());
-            if (!tumorSamples.isEmpty() && tumorSamples.get(0).cohortId().contains("CORE")) {
+            if (!tumorSamples.isEmpty() && tumorSamples.get(0).cohortId().contains(cohort)) {
                 String patientId = entry.getKey();
                 // We assume every sample for a single patient has the same primary tumor.
                 String primaryTumor = tumorSamples.get(0).limsPrimaryTumor();
