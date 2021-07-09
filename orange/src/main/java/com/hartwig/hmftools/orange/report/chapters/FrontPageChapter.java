@@ -88,7 +88,7 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createValueCell(disruptionDriverString()));
         summary.addCell(TableUtil.createKeyCell("Fusion drivers:"));
         summary.addCell(TableUtil.createValueCell(fusionDriverString()));
-        summary.addCell(TableUtil.createKeyCell("Integrated viruses:"));
+        summary.addCell(TableUtil.createKeyCell("Viral presence:"));
         summary.addCell(TableUtil.createValueCell(virusString()));
         summary.addCell(TableUtil.createKeyCell("Microsatellite indels per Mb:"));
         summary.addCell(TableUtil.createValueCell(msiString()));
@@ -100,9 +100,9 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createValueCell(SINGLE_DIGIT.format(report.purple().tumorMutationalBurdenPerMb())));
         summary.addCell(TableUtil.createKeyCell("Number of SVs:"));
         summary.addCell(TableUtil.createValueCell(Integer.toString(report.purple().svTumorMutationalBurden())));
-        summary.addCell(TableUtil.createKeyCell("On-label reported treatments:"));
+        summary.addCell(TableUtil.createKeyCell("On-label treatments:"));
         summary.addCell(TableUtil.createValueCell(onLabelTreatmentString()));
-        summary.addCell(TableUtil.createKeyCell("Off-label reported treatments:"));
+        summary.addCell(TableUtil.createKeyCell("Off-label treatments:"));
         summary.addCell(TableUtil.createValueCell(offLabelTreatmentString()));
 
         String circosPath = report.plots().purpleComprehensiveCircosPlot();
@@ -295,12 +295,16 @@ public class FrontPageChapter implements ReportChapter {
             }
         }
 
-        StringJoiner joiner = new StringJoiner(", ");
-        for (EvidenceLevel level : levels) {
-            joiner.add(level.toString());
-        }
+        if (treatments.isEmpty()) {
+            return "None";
+        } else {
+            StringJoiner joiner = new StringJoiner(", ");
+            for (EvidenceLevel level : levels) {
+                joiner.add(level.toString());
+            }
 
-        return treatments.size() + " (" + joiner.toString() + ")";
+            return treatments.size() + " (" + joiner.toString() + ")";
+        }
     }
 
     @NotNull

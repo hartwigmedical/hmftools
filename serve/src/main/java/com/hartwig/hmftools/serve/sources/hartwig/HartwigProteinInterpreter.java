@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.serve.sources.hartwig;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.serve.util.AminoAcidFunctions;
+import com.hartwig.hmftools.common.codon.AminoAcidFunctions;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

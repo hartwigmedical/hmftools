@@ -9,9 +9,13 @@ import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 public class ReportWriterTest {
+
+    private static final Logger LOGGER = LogManager.getLogger(ReportWriter.class);
 
     private static final boolean WRITE_TO_PDF = false;
 
@@ -22,10 +26,18 @@ public class ReportWriterTest {
         OrangeConfig config = OrangeTestFactory.createTestOrangeConfig();
         OrangeReport report = OrangeAlgo.fromConfig(config).run(config);
 
-        ReportWriter writer = new ReportWriter(WRITE_TO_PDF, REPORT_BASE_DIR, config.reportGermline());
+        ReportWriter writer = new ReportWriter(WRITE_TO_PDF, REPORT_BASE_DIR, config.reportConfig());
 
         OrangeReport reportWithTestSampleId = ImmutableOrangeReport.builder().from(report).sampleId("Test").build();
 
-        writer.write(reportWithTestSampleId);
+        if (WRITE_TO_PDF) {
+            if (!new File(REPORT_BASE_DIR).isDirectory()) {
+                LOGGER.warn("{} is not a directory. Can't write PDF", REPORT_BASE_DIR);
+            } else {
+                writer.write(reportWithTestSampleId);
+            }
+        } else {
+            writer.write(reportWithTestSampleId);
+        }
     }
 }
