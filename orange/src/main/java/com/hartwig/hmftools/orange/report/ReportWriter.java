@@ -31,19 +31,20 @@ public class ReportWriter {
     private final boolean writeToFile;
     @NotNull
     private final String outputDir;
-    private final boolean reportGermline;
+    @NotNull
+    private final ReportConfig reportConfig;
 
-    public ReportWriter(final boolean writeToFile, @NotNull final String outputDir, final boolean reportGermline) {
+    public ReportWriter(final boolean writeToFile, @NotNull final String outputDir, @NotNull final ReportConfig reportConfig) {
         this.writeToFile = writeToFile;
         this.outputDir = outputDir;
-        this.reportGermline = reportGermline;
+        this.reportConfig = reportConfig;
     }
 
     public void write(@NotNull OrangeReport report) throws IOException {
-        ReportChapter[] chapters =
-                new ReportChapter[] { new FrontPageChapter(report, reportGermline), new ClinicalEvidenceChapter(report, reportGermline),
-                        new SomaticDriverChapter(report), new GermlineFindingsChapter(report, reportGermline),
-                        new DatabaseCompareChapter(report), new QualityControlChapter(report) };
+        ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report, reportConfig.reportGermline()),
+                new ClinicalEvidenceChapter(report, reportConfig), new SomaticDriverChapter(report),
+                new GermlineFindingsChapter(report, reportConfig.reportGermline()), new DatabaseCompareChapter(report),
+                new QualityControlChapter(report) };
         writeReport(report, chapters);
     }
 
@@ -77,7 +78,7 @@ public class ReportWriter {
         PdfWriter writer;
         if (writeToFile) {
             String outputFilePath = outputDir + File.separator + report.sampleId() + ".orange.pdf";
-            LOGGER.info("Writing report {}", outputFilePath);
+            LOGGER.info("Writing report to {}", outputFilePath);
             writer = new PdfWriter(outputFilePath);
         } else {
             LOGGER.info("Generating report {}", report);

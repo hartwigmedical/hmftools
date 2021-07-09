@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.transvar;
 
-import static com.hartwig.hmftools.serve.util.AminoAcidFunctions.reverseAndFlip;
+import static com.hartwig.hmftools.common.codon.AminoAcidFunctions.reverseAndFlip;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.codon.AminoAcidFunctions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
@@ -20,7 +21,6 @@ import com.hartwig.hmftools.serve.transvar.datamodel.TransvarFrameshift;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarInsertion;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarSnvMnv;
-import com.hartwig.hmftools.serve.util.AminoAcidFunctions;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

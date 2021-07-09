@@ -6,6 +6,9 @@ import java.nio.file.Files;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.orange.report.ImmutableReportConfig;
+import com.hartwig.hmftools.orange.report.ReportConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -57,6 +60,7 @@ public interface OrangeConfig {
 
     // Some additional optional params and flags
     String DISABLE_GERMLINE = "disable_germline";
+    String MAX_REPORTING_LEVEL = "max_reporting_level";
     String LOG_DEBUG = "log_debug";
 
     @NotNull
@@ -91,6 +95,7 @@ public interface OrangeConfig {
 
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         options.addOption(DISABLE_GERMLINE, false, "If provided, germline results are not added to the report");
+        options.addOption(MAX_REPORTING_LEVEL, true, "If provided, only evidence up to provided maximum level are reported");
 
         return options;
     }
@@ -101,7 +106,8 @@ public interface OrangeConfig {
     @Nullable
     String referenceSampleId();
 
-    boolean reportGermline();
+    @NotNull
+    ReportConfig reportConfig();
 
     @NotNull
     Set<String> primaryTumorDoids();
@@ -173,10 +179,25 @@ public interface OrangeConfig {
             LOGGER.debug("Switched root level logging to DEBUG");
         }
 
+        ReportConfig report = ImmutableReportConfig.builder()
+                .reportGermline(!cmd.hasOption(DISABLE_GERMLINE))
+                .maxReportingLevel(cmd.hasOption(MAX_REPORTING_LEVEL)
+                        ? EvidenceLevel.valueOf(cmd.getOptionValue(MAX_REPORTING_LEVEL))
+                        : null)
+                .build();
+
+        if (!report.reportGermline()) {
+            LOGGER.info("Germline reporting has been disabled");
+        }
+
+        if (report.maxReportingLevel() != null) {
+            LOGGER.info("Max reporting level configured to '{}'", report.maxReportingLevel());
+        }
+
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .referenceSampleId(optionalValue(cmd, REFERENCE_SAMPLE_ID))
-                .reportGermline(!cmd.hasOption(DISABLE_GERMLINE))
+                .reportConfig(report)
                 .primaryTumorDoids(toStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))

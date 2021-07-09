@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.orange;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.orange.report.ImmutableReportConfig;
+import com.hartwig.hmftools.orange.report.ReportConfig;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -27,6 +30,7 @@ public final class OrangeTestFactory {
     private static final String LINX_DRIVER_CATALOG_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.driver.catalog.tsv";
     private static final String CHORD_PREDICTION_TXT = RUN_DIRECTORY + "/chord/tumor_sample_chord_prediction.txt";
     private static final String CUPPA_CONCLUSION_TXT = RUN_DIRECTORY + "/cuppa/tumor_sample.cuppa.conclusion.txt";
+    private static final String CUPPA_RESULT_CSV = RUN_DIRECTORY + "/cuppa/tumor_sample.cup.data.csv";
     private static final String ANNOTATED_VIRUS_TSV = RUN_DIRECTORY + "/virusbreakend/tumor_sample.virus.annotated.tsv";
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/tumor_sample.peach.genotype.tsv";
     private static final String PROTECT_EVIDENCE_TSV = RUN_DIRECTORY + "/protect/tumor_sample.protect.tsv";
@@ -38,10 +42,12 @@ public final class OrangeTestFactory {
 
     @NotNull
     public static OrangeConfig createTestOrangeConfig() {
+        ReportConfig reportConfig = ImmutableReportConfig.builder().reportGermline(true).maxReportingLevel(EvidenceLevel.B).build();
+
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(TUMOR_SAMPLE_ID)
                 .referenceSampleId(REFERENCE_SAMPLE_ID)
-                .reportGermline(true)
+                .reportConfig(reportConfig)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
                 .outputDir(Strings.EMPTY)
                 .doidJsonFile(DOID_JSON)
@@ -59,7 +65,7 @@ public final class OrangeTestFactory {
                 .linxDriverCatalogTsv(LINX_DRIVER_CATALOG_TSV)
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .cuppaConclusionTxt(CUPPA_CONCLUSION_TXT)
-                .cuppaResultCsv("")
+                .cuppaResultCsv(CUPPA_RESULT_CSV)
                 .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                 .peachGenotypeTsv(PEACH_GENOTYPE_TSV)
                 .protectEvidenceTsv(PROTECT_EVIDENCE_TSV)

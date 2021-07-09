@@ -83,6 +83,22 @@ public class TableUtil {
     }
 
     @NotNull
+    public static Cell createTransparentCell(@NotNull String text) {
+        return createTransparentCell(new Paragraph(text));
+    }
+
+    @NotNull
+    public static Cell createTransparentCell(@NotNull IBlockElement element) {
+        Cell cell = new Cell();
+        cell.setBorder(Border.NO_BORDER);
+        cell.setBorderBottom(Border.NO_BORDER);
+        cell.addStyle(ReportResources.tableContentStyle());
+        cell.setKeepTogether(true);
+        cell.add(element);
+        return cell;
+    }
+
+    @NotNull
     public static Cell createContentCell(@NotNull String text) {
         return createContentCell(new Paragraph(text));
     }

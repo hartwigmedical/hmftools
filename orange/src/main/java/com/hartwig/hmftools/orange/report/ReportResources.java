@@ -33,6 +33,7 @@ public final class ReportResources {
 
     public static final DeviceRgb PALETTE_DARK_GREY = new DeviceRgb(39, 47, 50);
     public static final DeviceRgb PALETTE_MID_GREY = new DeviceRgb(101, 106, 108);
+    public static final DeviceRgb PALETTE_BLUE = new DeviceRgb(38, 90, 166);
 
     public static final DeviceRgb PALETTE_ORANGE = new DeviceRgb(242, 139, 31);
     public static final DeviceRgb PALETTE_ORANGE_1 = new DeviceRgb(255, 165, 0);
@@ -93,6 +94,10 @@ public final class ReportResources {
 
     public static Style sidePanelValueStyle() {
         return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_WHITE);
+    }
+
+    public static Style urlStyle() {
+        return new Style().setFont(fontRegular()).setFontSize(7).setFontColor(ReportResources.PALETTE_BLUE);
     }
 
     @NotNull
