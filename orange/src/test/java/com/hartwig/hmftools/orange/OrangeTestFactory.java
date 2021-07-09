@@ -41,7 +41,7 @@ public final class OrangeTestFactory {
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(TUMOR_SAMPLE_ID)
                 .referenceSampleId(REFERENCE_SAMPLE_ID)
-                .reportGermline(false)
+                .reportGermline(true)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
                 .outputDir(Strings.EMPTY)
                 .doidJsonFile(DOID_JSON)

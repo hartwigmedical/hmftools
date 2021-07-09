@@ -9,8 +9,10 @@ import java.util.StringJoiner;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
@@ -99,9 +101,9 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createKeyCell("Number of SVs:"));
         summary.addCell(TableUtil.createValueCell(Integer.toString(report.purple().svTumorMutationalBurden())));
         summary.addCell(TableUtil.createKeyCell("On-label reported treatments:"));
-        summary.addCell(TableUtil.createValueCell("todo"));
+        summary.addCell(TableUtil.createValueCell(onLabelTreatmentString()));
         summary.addCell(TableUtil.createKeyCell("Off-label reported treatments:"));
-        summary.addCell(TableUtil.createValueCell("todo"));
+        summary.addCell(TableUtil.createValueCell(offLabelTreatmentString()));
 
         String circosPath = report.plots().purpleComprehensiveCircosPlot();
         Image circosImage;
@@ -152,7 +154,7 @@ public class FrontPageChapter implements ReportChapter {
         if (variants.isEmpty()) {
             return "None";
         } else {
-            Set<String> highDriverGenes = Sets.newHashSet();
+            Set<String> highDriverGenes = Sets.newTreeSet();
             for (ReportableVariant variant : variants) {
                 if (variant.driverLikelihoodInterpretation() == DriverInterpretation.HIGH) {
                     highDriverGenes.add(variant.gene());
@@ -212,7 +214,7 @@ public class FrontPageChapter implements ReportChapter {
         if (report.virusInterpreter().reportableViruses().isEmpty()) {
             return "None";
         } else {
-            Set<String> viruses = Sets.newHashSet();
+            Set<String> viruses = Sets.newTreeSet();
             for (AnnotatedVirus virus : report.virusInterpreter().reportableViruses()) {
                 if (virus.interpretation() != null) {
                     viruses.add(virus.interpretation().toString());
@@ -270,6 +272,35 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String chordString() {
         return SINGLE_DIGIT.format(report.chord().hrdValue()) + " (" + report.chord().hrStatus().display() + ")";
+    }
+
+    @NotNull
+    private String onLabelTreatmentString() {
+        return treatmentString(report.protect(), true, reportGermline);
+    }
+
+    @NotNull
+    private String offLabelTreatmentString() {
+        return treatmentString(report.protect(), false, reportGermline);
+    }
+
+    @NotNull
+    private static String treatmentString(@NotNull List<ProtectEvidence> evidences, boolean requireOnLabel, boolean reportGermline) {
+        Set<EvidenceLevel> levels = Sets.newTreeSet();
+        Set<String> treatments = Sets.newHashSet();
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.onLabel() == requireOnLabel && (reportGermline || !evidence.germline())) {
+                treatments.add(evidence.treatment());
+                levels.add(evidence.level());
+            }
+        }
+
+        StringJoiner joiner = new StringJoiner(", ");
+        for (EvidenceLevel level : levels) {
+            joiner.add(level.toString());
+        }
+
+        return treatments.size() + " (" + joiner.toString() + ")";
     }
 
     @NotNull
