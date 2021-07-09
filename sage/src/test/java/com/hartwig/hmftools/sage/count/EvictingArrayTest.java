@@ -14,7 +14,6 @@ import org.junit.Test;
 
 public class EvictingArrayTest
 {
-
     private static final int CAPACITY = 256;
 
     private EvictingArray<GenomePosition> victim;
@@ -89,7 +88,6 @@ public class EvictingArrayTest
 
     static class EvictionHandler implements Consumer<GenomePosition>
     {
-
         private final List<GenomePosition> list = Lists.newArrayList();
 
         @Override

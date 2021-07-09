@@ -45,89 +45,90 @@ public class RefContextConsumer implements Consumer<SAMRecord>
     @Override
     public void accept(final SAMRecord record)
     {
-        if(inBounds(record) && !reachedDepthLimit(record))
+        if(!inBounds(record) || reachedDepthLimit(record))
+            return;
+
+        final List<AltRead> altReads = Lists.newArrayList();
+        final IndexedBases refBases = mRefGenome.alignment();
+
+        int numberOfEvents = NumberEvents.numberOfEvents(record, mRefGenome);
+
+        final CigarHandler handler = new CigarHandler()
         {
-            final List<AltRead> altReads = Lists.newArrayList();
-            final IndexedBases refBases = mRefGenome.alignment();
-
-            int numberOfEvents = NumberEvents.numberOfEvents(record, mRefGenome);
-
-            final CigarHandler handler = new CigarHandler()
+            @Override
+            public void handleAlignment(final SAMRecord record, final CigarElement element, final int readIndex,
+                    final int refPosition)
             {
-                @Override
-                public void handleAlignment(final SAMRecord record, final CigarElement element, final int readIndex,
-                        final int refPosition)
-                {
-                    altReads.addAll(processAlignment(record, readIndex, refPosition, element.getLength(), refBases, numberOfEvents));
+                altReads.addAll(processAlignment(record, readIndex, refPosition, element.getLength(), refBases, numberOfEvents));
+            }
 
-                }
-
-                @Override
-                public void handleInsert(final SAMRecord record, final CigarElement element, final int readIndex,
-                        final int refPosition)
-                {
-                    Optional.ofNullable(processInsert(element, record, readIndex, refPosition, refBases, numberOfEvents))
-                            .ifPresent(altReads::add);
-                }
-
-                @Override
-                public void handleDelete(final SAMRecord record, final CigarElement element, final int readIndex,
-                        final int refPosition)
-                {
-                    Optional.ofNullable(processDel(element, record, readIndex, refPosition, refBases, numberOfEvents))
-                            .ifPresent(altReads::add);
-                }
-            };
-            CigarTraversal.traverseCigar(record, handler);
-
-            // if an SNV core overlaps an indel core, then extend the cores of both
-            for(int i = 0; i < altReads.size(); i++)
+            @Override
+            public void handleInsert(final SAMRecord record, final CigarElement element, final int readIndex,
+                    final int refPosition)
             {
-                final AltRead snv = altReads.get(i);
-                if(!snv.isIndel() && snv.containsReadContext())
+                Optional.ofNullable(processInsert(element, record, readIndex, refPosition, refBases, numberOfEvents))
+                        .ifPresent(altReads::add);
+            }
+
+            @Override
+            public void handleDelete(final SAMRecord record, final CigarElement element, final int readIndex,
+                    final int refPosition)
+            {
+                Optional.ofNullable(processDel(element, record, readIndex, refPosition, refBases, numberOfEvents))
+                        .ifPresent(altReads::add);
+            }
+        };
+
+        CigarTraversal.traverseCigar(record, handler);
+
+        // if an SNV core overlaps an indel core, then extend the cores of both
+        for(int i = 0; i < altReads.size(); i++)
+        {
+            final AltRead snv = altReads.get(i);
+            if(!snv.isIndel() && snv.containsReadContext())
+            {
+                for(int j = altReads.size() - 1; j > i; j--)
                 {
-                    for(int j = altReads.size() - 1; j > i; j--)
+                    final AltRead nextIndel = altReads.get(j);
+                    if(nextIndel != null && nextIndel.isIndel() && nextIndel.containsReadContext())
                     {
-                        final AltRead nextIndel = altReads.get(j);
-                        if(nextIndel != null && nextIndel.isIndel() && nextIndel.containsReadContext())
+                        if(nextIndel.leftCoreIndex() - nextIndel.length() <= snv.rightCoreIndex())
                         {
-                            if(nextIndel.leftCoreIndex() - nextIndel.length() <= snv.rightCoreIndex())
-                            {
-                                snv.extend(nextIndel);
-                                nextIndel.extend(snv);
-                            }
+                            snv.extend(nextIndel);
+                            nextIndel.extend(snv);
                         }
                     }
                 }
             }
-
-            for(int i = altReads.size() - 1; i >= 0; i--)
-            {
-                final AltRead snv = altReads.get(i);
-                if(!snv.isIndel() && snv.containsReadContext())
-                {
-                    for(int j = 0; j < i; j++)
-                    {
-                        final AltRead previousIndel = altReads.get(j);
-                        if(previousIndel != null && previousIndel.isIndel() && previousIndel.containsReadContext())
-                        {
-                            if(previousIndel.rightCoreIndex() + previousIndel.length() >= snv.leftCoreIndex())
-                            {
-                                previousIndel.extend(snv);
-                                snv.extend(previousIndel);
-                            }
-                        }
-                    }
-
-                }
-            }
-
-            altReads.forEach(AltRead::updateRefContext);
         }
+
+        for(int i = altReads.size() - 1; i >= 0; i--)
+        {
+            final AltRead snv = altReads.get(i);
+            if(!snv.isIndel() && snv.containsReadContext())
+            {
+                for(int j = 0; j < i; j++)
+                {
+                    final AltRead previousIndel = altReads.get(j);
+                    if(previousIndel != null && previousIndel.isIndel() && previousIndel.containsReadContext())
+                    {
+                        if(previousIndel.rightCoreIndex() + previousIndel.length() >= snv.leftCoreIndex())
+                        {
+                            previousIndel.extend(snv);
+                            snv.extend(previousIndel);
+                        }
+                    }
+                }
+
+            }
+        }
+
+        altReads.forEach(AltRead::updateRefContext);
     }
 
     @Nullable
-    private AltRead processInsert(final CigarElement e, final SAMRecord record, int readIndex, int refPosition,
+    private AltRead processInsert(
+            final CigarElement element, final SAMRecord record, int readIndex, int refPosition,
             final IndexedBases refBases, int numberOfEvents)
     {
         int refIndex = refBases.index(refPosition);
@@ -136,7 +137,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         if(refPosition <= mBounds.end() && refPosition >= mBounds.start())
         {
             final String ref = new String(refBases.Bases, refIndex, 1);
-            final String alt = new String(record.getReadBases(), readIndex, e.getLength() + 1);
+            final String alt = new String(record.getReadBases(), readIndex, element.getLength() + 1);
             boolean findReadContext = findReadContext(readIndex, record);
 
             final RefContext refContext = mCandidates.refContext(record.getContig(), refPosition);
@@ -153,7 +154,8 @@ public class RefContextConsumer implements Consumer<SAMRecord>
     }
 
     @Nullable
-    private AltRead processDel(final CigarElement e, final SAMRecord record, int readIndex, int refPosition,
+    private AltRead processDel(
+            final CigarElement element, final SAMRecord record, int readIndex, int refPosition,
             final IndexedBases refBases, int numberOfEvents)
     {
         int refIndex = refBases.index(refPosition);
@@ -161,7 +163,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
         if(refPosition <= mBounds.end() && refPosition >= mBounds.start())
         {
-            final String ref = new String(refBases.Bases, refIndex, e.getLength() + 1);
+            final String ref = new String(refBases.Bases, refIndex, element.getLength() + 1);
             final String alt = new String(record.getReadBases(), readIndex, 1);
             boolean findReadContext = findReadContext(readIndex, record);
 
@@ -179,7 +181,8 @@ public class RefContextConsumer implements Consumer<SAMRecord>
     }
 
     @NotNull
-    private List<AltRead> processAlignment(final SAMRecord record, int readBasesStartIndex, int refPositionStart,
+    private List<AltRead> processAlignment(
+            final SAMRecord record, int readBasesStartIndex, int refPositionStart,
             int alignmentLength, final IndexedBases refBases, int numberOfEvents)
     {
         final List<AltRead> result = Lists.newArrayList();
@@ -291,7 +294,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         return record.getEnd() >= mBounds.start() && record.getStart() <= mBounds.end();
     }
 
-    private boolean inBounds(final long position)
+    private boolean inBounds(int position)
     {
         return position >= mBounds.start() && position <= mBounds.end();
     }

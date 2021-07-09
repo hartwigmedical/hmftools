@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage;
+package com.hartwig.hmftools.sage.apps;
 
 import static com.hartwig.hmftools.sage.SageApplication.createCommandLine;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;

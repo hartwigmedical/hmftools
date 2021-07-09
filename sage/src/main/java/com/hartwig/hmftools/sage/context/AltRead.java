@@ -5,7 +5,7 @@ import com.hartwig.hmftools.sage.read.ReadContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class AltRead
+public class AltRead
 {
     @Nullable
     public final RefContext RefContext;
@@ -17,9 +17,9 @@ class AltRead
     
     private ReadContext mReadContext;
 
-    AltRead(final RefContext refContext, final String ref, final String alt, final int baseQuality, final int numberOfEvents,
-            final boolean sufficientMapQuality,
-            @Nullable final ReadContext readContext)
+    public AltRead(
+            final RefContext refContext, final String ref, final String alt, final int baseQuality, final int numberOfEvents,
+            final boolean sufficientMapQuality, final ReadContext readContext)
     {
         RefContext = refContext;
         Ref = ref;
