@@ -56,6 +56,7 @@ public interface OrangeConfig {
     String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
 
     // Some additional optional params and flags
+    String DISABLE_GERMLINE = "disable_germline";
     String LOG_DEBUG = "log_debug";
 
     @NotNull
@@ -89,6 +90,7 @@ public interface OrangeConfig {
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
 
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
+        options.addOption(DISABLE_GERMLINE, false, "If provided, germline results are not added to the report");
 
         return options;
     }
@@ -98,6 +100,8 @@ public interface OrangeConfig {
 
     @Nullable
     String referenceSampleId();
+
+    boolean reportGermline();
 
     @NotNull
     Set<String> primaryTumorDoids();
@@ -172,6 +176,7 @@ public interface OrangeConfig {
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .referenceSampleId(optionalValue(cmd, REFERENCE_SAMPLE_ID))
+                .reportGermline(!cmd.hasOption(DISABLE_GERMLINE))
                 .primaryTumorDoids(toStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))

@@ -35,9 +35,11 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private final OrangeReport report;
+    private final boolean reportGermline;
 
-    public FrontPageChapter(@NotNull final OrangeReport report) {
+    public FrontPageChapter(@NotNull final OrangeReport report, final boolean reportGermline) {
         this.report = report;
+        this.reportGermline = reportGermline;
     }
 
     @NotNull
@@ -133,7 +135,11 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String germlineDriverString() {
-        return variantDriverString(report.purple().reportableGermlineVariants());
+        if (reportGermline) {
+            return variantDriverString(report.purple().reportableGermlineVariants());
+        } else {
+            return "N/A";
+        }
     }
 
     @NotNull

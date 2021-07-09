@@ -50,7 +50,7 @@ public class OrangeApplication {
         OrangeReport report = algo.run(config);
 
         LOGGER.info("Writing report");
-        ReportWriter writer = new ReportWriter(true, config.outputDir());
+        ReportWriter writer = new ReportWriter(true, config.outputDir(), config.reportGermline());
         writer.write(report);
 
         LOGGER.info("Done!");

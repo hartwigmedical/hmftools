@@ -11,9 +11,11 @@ public class GermlineFindingsChapter implements ReportChapter {
 
     @NotNull
     private final OrangeReport report;
+    private final boolean reportGermline;
 
-    public GermlineFindingsChapter(@NotNull final OrangeReport report) {
+    public GermlineFindingsChapter(@NotNull final OrangeReport report, final boolean reportGermline) {
         this.report = report;
+        this.reportGermline = reportGermline;
     }
 
     @NotNull
@@ -25,9 +27,13 @@ public class GermlineFindingsChapter implements ReportChapter {
     @Override
     public void render(@NotNull final Document document) {
         document.add(new Paragraph("Germline Findings"));
-        document.add(new Paragraph("TODO: Add Germline variants").addStyle(ReportResources.tableContentStyle()));
-        document.add(new Paragraph("TODO: Add MVLH Analysis").addStyle(ReportResources.tableContentStyle()));
-        document.add(new Paragraph("TODO: Add Germline CN aberrations").addStyle(ReportResources.tableContentStyle()));
-        document.add(new Paragraph("TODO: Add PEACH").addStyle(ReportResources.tableContentStyle()));
+        if (reportGermline) {
+            document.add(new Paragraph("TODO: Add Germline variants").addStyle(ReportResources.tableContentStyle()));
+            document.add(new Paragraph("TODO: Add MVLH Analysis").addStyle(ReportResources.tableContentStyle()));
+            document.add(new Paragraph("TODO: Add Germline CN aberrations").addStyle(ReportResources.tableContentStyle()));
+            document.add(new Paragraph("TODO: Add PEACH").addStyle(ReportResources.tableContentStyle()));
+        } else {
+            document.add(new Paragraph("N/A").addStyle(ReportResources.tableContentStyle()));
+        }
     }
 }
